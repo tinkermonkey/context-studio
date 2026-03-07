@@ -7,14 +7,14 @@
 
 import React, { useState } from "react";
 import {
-  Card,
+  Badge,
   Button,
+  Card,
+  Label,
+  Progress,
+  Spinner,
   TextInput,
   Textarea,
-  Label,
-  Badge,
-  Spinner,
-  Progress,
 } from "flowbite-react";
 import { ArrowLeft, ArrowRight, Check, X } from "lucide-react";
 import {
@@ -22,7 +22,10 @@ import {
   useExternalPredicates,
 } from "@/api/hooks/predicates";
 import { useButterToast } from "@/hooks/useButterToast";
-import type { PredicateOut } from "@/api/services/predicates";
+import type {
+  PredicateOut,
+  ExternalPredicateOut,
+} from "@/api/services/predicates";
 
 export interface MappingCreationWorkflowProps {
   predicateIds: string[];
@@ -32,11 +35,9 @@ export interface MappingCreationWorkflowProps {
 
 type Step = "review" | "create" | "confirm";
 
-export const MappingCreationWorkflow: React.FC<MappingCreationWorkflowProps> = ({
-  predicateIds,
-  onComplete,
-  onCancel,
-}) => {
+export const MappingCreationWorkflow: React.FC<
+  MappingCreationWorkflowProps
+> = ({ predicateIds, onComplete, onCancel }) => {
   const [step, setStep] = useState<Step>("review");
   const [title, setTitle] = useState<string>("");
   const [definition, setDefinition] = useState<string>("");
@@ -66,9 +67,11 @@ export const MappingCreationWorkflow: React.FC<MappingCreationWorkflowProps> = (
 
   // Filter predicates by IDs in the cluster
   const clusterPredicates = React.useMemo(() => {
-    if (!predicatesData?.items) return [];
-    return predicatesData.items.filter((p) => predicateIds.includes(p.id));
-  }, [predicatesData?.items, predicateIds]);
+    if (!predicatesData?.data) return [];
+    return predicatesData.data.filter((p: ExternalPredicateOut) =>
+      predicateIds.includes(p.id),
+    );
+  }, [predicatesData?.data, predicateIds]);
 
   // Auto-generate identifier from title
   const generateIdentifier = (title: string): string => {
@@ -84,14 +87,14 @@ export const MappingCreationWorkflow: React.FC<MappingCreationWorkflowProps> = (
     if (clusterPredicates.length === 0) return;
 
     // Use the most common words in titles
-    const titles = clusterPredicates.map((p) => p.title);
+    const titles = clusterPredicates.map((p: ExternalPredicateOut) => p.title);
     // Simple heuristic: use the shortest title as the base
     const sortedTitles = [...titles].sort((a, b) => a.length - b.length);
     setTitle(sortedTitles[0] || "");
 
     // Combine definitions
     const definitions = clusterPredicates
-      .map((p) => p.definition)
+      .map((p: ExternalPredicateOut) => p.definition)
       .filter(Boolean)
       .slice(0, 3);
     if (definitions.length > 0) {
@@ -168,7 +171,9 @@ export const MappingCreationWorkflow: React.FC<MappingCreationWorkflowProps> = (
       {/* Step: Review Cluster */}
       {step === "review" && (
         <Card>
-          <h4 className="mb-4 text-lg font-medium">Review Cluster Predicates</h4>
+          <h4 className="mb-4 text-lg font-medium">
+            Review Cluster Predicates
+          </h4>
 
           {isLoading && (
             <div className="flex items-center justify-center py-8">
@@ -191,7 +196,7 @@ export const MappingCreationWorkflow: React.FC<MappingCreationWorkflowProps> = (
               </div>
 
               <div className="max-h-96 space-y-2 overflow-y-auto">
-                {clusterPredicates.map((predicate) => (
+                {clusterPredicates.map((predicate: ExternalPredicateOut) => (
                   <div
                     key={predicate.id}
                     className="rounded-lg border border-gray-200 p-3 dark:border-gray-700"

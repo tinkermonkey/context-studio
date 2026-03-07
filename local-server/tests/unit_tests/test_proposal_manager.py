@@ -11,16 +11,16 @@ sys.path.append(
     os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 )
 
-import pytest
-import uuid
-from unittest.mock import Mock, patch
+import pytest  # noqa: E402
+import uuid  # noqa: E402
+from unittest.mock import Mock, patch  # noqa: E402
 
-from services.proposal_manager import ProposalManager
-from services.collaboration_models import (
+from services.proposal_manager import ProposalManager  # noqa: E402
+from services.collaboration_models import (  # noqa: E402
     Proposal, ProposalStatus, ChangesetState, Changeset
 )
-from services.changeset_manager import ChangesetManager
-from services.s3_sync_manager import S3SyncManager
+from services.changeset_manager import ChangesetManager  # noqa: E402
+from services.s3_sync_manager import S3SyncManager  # noqa: E402
 
 
 class TestProposalManager:
@@ -91,7 +91,7 @@ class TestProposalManager:
 
         with patch('uuid.uuid4') as mock_uuid:
             mock_uuid.return_value = uuid.UUID('12345678-1234-5678-9abc-123456789abc')
-            
+
             proposal = proposal_manager.create_proposal(
                 changeset_id="changeset123",
                 title="Test Proposal",
@@ -154,7 +154,7 @@ class TestProposalManager:
                 with patch.object(proposal_manager, '_store_vote_locally'):
                     with patch.object(proposal_manager, '_push_vote_to_s3'):
                         with patch.object(proposal_manager, '_evaluate_proposal_status'):
-                            
+
                             vote = proposal_manager.vote_on_proposal(
                                 proposal_id="proposal123",
                                 user_id="user456",
@@ -191,7 +191,7 @@ class TestProposalManager:
         """Test voting on closed proposal."""
         mock_proposal = Mock()
         mock_proposal.status = ProposalStatus.APPROVED
-        
+
         with patch.object(proposal_manager, 'get_proposal', return_value=mock_proposal):
             with pytest.raises(ValueError, match="Cannot vote on proposal with status approved"):
                 proposal_manager.vote_on_proposal(
@@ -204,13 +204,13 @@ class TestProposalManager:
         """Test updating existing vote."""
         existing_vote = Mock()
         existing_vote.vote = "abstain"
-        
+
         with patch.object(proposal_manager, 'get_proposal', return_value=mock_proposal):
             with patch.object(proposal_manager, 'get_user_vote', return_value=existing_vote):
                 with patch.object(proposal_manager, '_store_vote_locally') as mock_store:
                     with patch.object(proposal_manager, '_push_vote_to_s3'):
                         with patch.object(proposal_manager, '_evaluate_proposal_status'):
-                            
+
                             proposal_manager.vote_on_proposal(
                                 proposal_id="proposal123",
                                 user_id="user456",
@@ -341,7 +341,7 @@ class TestProposalManager:
                 with patch.object(proposal_manager, 'get_vote_summary', return_value=vote_summary):
                     with patch.object(proposal_manager, '_update_proposal_status') as mock_update:
                         with patch.object(proposal_manager, '_auto_merge_if_enabled'):
-                            
+
                             proposal_manager._evaluate_proposal_status("proposal123")
 
         mock_update.assert_called_once_with("proposal123", ProposalStatus.APPROVED)
@@ -363,7 +363,7 @@ class TestProposalManager:
             with patch.object(proposal_manager, 'get_proposal_votes', return_value=[]):
                 with patch.object(proposal_manager, 'get_vote_summary', return_value=vote_summary):
                     with patch.object(proposal_manager, '_update_proposal_status') as mock_update:
-                        
+
                         proposal_manager._evaluate_proposal_status("proposal123")
 
         mock_update.assert_called_once_with("proposal123", ProposalStatus.REJECTED)
@@ -372,7 +372,7 @@ class TestProposalManager:
         """Test proposal status update also updates changeset state."""
         mock_proposal = Mock()
         mock_proposal.changeset_id = "changeset123"
-        
+
         with patch.object(proposal_manager, 'get_proposal', return_value=mock_proposal):
             proposal_manager._update_proposal_status("proposal123", ProposalStatus.APPROVED)
 

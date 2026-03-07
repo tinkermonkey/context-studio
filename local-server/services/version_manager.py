@@ -7,12 +7,13 @@ handling version creation, tracking, and retrieval with SQLite storage.
 
 import json
 import uuid
-from typing import Optional, List, Dict, Any
+from typing import Optional, List, Dict, Any, cast
 from datetime import datetime, timezone
 from dataclasses import dataclass
 from enum import Enum
 from sqlalchemy.orm import Session
 from sqlalchemy import text
+from sqlalchemy.engine.cursor import CursorResult
 
 from utils.logger import get_logger
 
@@ -113,7 +114,7 @@ class VersionManager:
             """
                 ),
                 {"parent_id": parent_version_id},
-            ).fetchone()
+            ).scalar()
 
             if not parent_exists:
                 raise ValueError(f"Parent version {parent_version_id} does not exist")
@@ -200,7 +201,7 @@ class VersionManager:
                     """
                 SELECT id, entity_type, entity_id, version_number, content, state,
                        parent_version_id, changeset_id, author_id, created_at, metadata
-                FROM entity_versions 
+                FROM entity_versions
                 WHERE entity_type = :entity_type AND entity_id = :entity_id
                 ORDER BY version_number ASC
             """
@@ -208,7 +209,7 @@ class VersionManager:
                 {"entity_type": entity_type, "entity_id": entity_id},
             ).fetchall()
 
-            versions = []
+            versions: List[EntityVersion] = []
             for row in results:
                 versions.append(self._row_to_entity_version(row))
 
@@ -247,8 +248,8 @@ class VersionManager:
                     """
                 SELECT id, entity_type, entity_id, version_number, content, state,
                        parent_version_id, changeset_id, author_id, created_at, metadata
-                FROM entity_versions 
-                WHERE entity_type = :entity_type AND entity_id = :entity_id 
+                FROM entity_versions
+                WHERE entity_type = :entity_type AND entity_id = :entity_id
                   AND version_number = :version_number
             """
                 ),
@@ -294,9 +295,9 @@ class VersionManager:
                     """
                 SELECT id, entity_type, entity_id, version_number, content, state,
                        parent_version_id, changeset_id, author_id, created_at, metadata
-                FROM entity_versions 
+                FROM entity_versions
                 WHERE entity_type = :entity_type AND entity_id = :entity_id
-                ORDER BY version_number DESC 
+                ORDER BY version_number DESC
                 LIMIT 1
             """
                 ),
@@ -386,15 +387,18 @@ class VersionManager:
         logger.info(f"Updating version {version_id} state to {new_state.value}")
 
         try:
-            result = self.db.execute(
-                text(
-                    """
-                UPDATE entity_versions 
-                SET state = :new_state 
+            result = cast(
+                CursorResult,
+                self.db.execute(
+                    text(
+                        """
+                UPDATE entity_versions
+                SET state = :new_state
                 WHERE id = :version_id
             """
+                    ),
+                    {"new_state": new_state.value, "version_id": version_id},
                 ),
-                {"new_state": new_state.value, "version_id": version_id},
             )
 
             if result.rowcount > 0:
@@ -428,7 +432,7 @@ class VersionManager:
                     """
                 SELECT id, entity_type, entity_id, version_number, content, state,
                        parent_version_id, changeset_id, author_id, created_at, metadata
-                FROM entity_versions 
+                FROM entity_versions
                 WHERE state = :state
                 ORDER BY created_at DESC
             """
@@ -436,7 +440,7 @@ class VersionManager:
                 {"state": state.value},
             ).fetchall()
 
-            versions = []
+            versions: List[EntityVersion] = []
             for row in results:
                 versions.append(self._row_to_entity_version(row))
 
@@ -452,7 +456,7 @@ class VersionManager:
         result = self.db.execute(
             text(
                 """
-            SELECT MAX(version_number) FROM entity_versions 
+            SELECT MAX(version_number) FROM entity_versions
             WHERE entity_type = :entity_type AND entity_id = :entity_id
         """
             ),
@@ -461,10 +465,10 @@ class VersionManager:
 
         return (result or 0) + 1
 
-    def _row_to_entity_version(self, row) -> EntityVersion:
+    def _row_to_entity_version(self, row: Any) -> EntityVersion:
         """Convert database row to EntityVersion instance."""
-        content = json.loads(row[4]) if row[4] else {}
-        metadata = json.loads(row[10]) if row[10] else None
+        content: Dict[str, Any] = json.loads(row[4]) if row[4] else {}
+        metadata: Optional[Dict[str, Any]] = json.loads(row[10]) if row[10] else None
 
         return EntityVersion(
             id=row[0],

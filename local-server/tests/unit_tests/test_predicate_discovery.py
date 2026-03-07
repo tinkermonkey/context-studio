@@ -13,19 +13,14 @@ import sys
 import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-import pytest
-import asyncio
-from unittest.mock import Mock, AsyncMock, patch, MagicMock
-from datetime import datetime, date
-from typing import Dict, Any
+import pytest  # noqa: E402
+from unittest.mock import Mock, AsyncMock, patch  # noqa: E402
+from datetime import date  # noqa: E402
 
-from reference_db.predicate_discovery import PredicateDiscoveryService, CONCEPTNET_RELATIONS
-from reference_db.models import ExternalPredicate
-from reference_db.config import ReferenceConfig
-from config import SourceConfig, SourceType
-from reference_api.sources.conceptnet import ConceptNetSource
-from reference_api.sources.dbpedia import DBpediaSource
-from reference_api.sources.wikidata import WikidataSource
+from reference_db.predicate_discovery import PredicateDiscoveryService, CONCEPTNET_RELATIONS  # noqa: E402, E501
+from reference_db.models import ExternalPredicate  # noqa: E402
+from reference_db.config import ReferenceConfig  # noqa: E402
+from config import SourceConfig  # noqa: E402
 
 
 @pytest.fixture
@@ -65,7 +60,7 @@ def mock_source_configs():
 @pytest.fixture
 def mock_ref_config(tmp_path):
     """Create mock reference configuration."""
-    db_path = tmp_path / "test_reference.db"
+    tmp_path / "test_reference.db"
     config = ReferenceConfig()
     return config
 
@@ -131,6 +126,7 @@ class TestPredicateDiscoveryService:
             mock_model = Mock()
             import numpy as np
             # Return different batch sizes based on input
+
             def mock_encode(batch):
                 return [np.random.rand(768).astype(np.float32) for _ in range(len(batch))]
             mock_model.encode.side_effect = mock_encode
@@ -196,7 +192,7 @@ class TestPredicateDiscoveryService:
             existing_predicate.definition = "Old definition"
             mock_manager.get_external_predicate_by_source.return_value = existing_predicate
 
-            result = service._upsert_predicate(
+            service._upsert_predicate(
                 title="Updated Title",
                 definition="Updated definition",
                 source="test_source",

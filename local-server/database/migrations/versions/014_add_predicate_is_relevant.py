@@ -25,7 +25,7 @@ class Migration014(Migration):
         # SQLite doesn't support DROP COLUMN directly, so we need to recreate the table
         connection.execute(text("""
             CREATE TABLE predicates_backup AS
-            SELECT id, identifier, title, definition, mapping, date_created, date_modified
+            SELECT id, identifier, title, definition, mapping, date_created, date_modified  
             FROM predicates
         """))
 
@@ -44,8 +44,8 @@ class Migration014(Migration):
         """))
 
         connection.execute(text("""
-            INSERT INTO predicates (id, identifier, title, definition, mapping, date_created, date_modified)
-            SELECT id, identifier, title, definition, mapping, date_created, date_modified
+            INSERT INTO predicates (id, identifier, title, definition, mapping, date_created, date_modified)  
+            SELECT id, identifier, title, definition, mapping, date_created, date_modified  
             FROM predicates_backup
         """))
 

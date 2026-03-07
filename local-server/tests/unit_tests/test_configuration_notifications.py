@@ -11,7 +11,7 @@ from typing import List, Tuple
 # Add the project root to Python path for imports
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from config import get_config_manager, get_config_notifier, ConfigurationNotifier
+from config import get_config_manager, get_config_notifier, ConfigurationNotifier  # noqa: E402, E501
 
 
 class NotificationCapture:

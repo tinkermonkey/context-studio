@@ -2,20 +2,20 @@
 Integration Test Template for Service Factory Migration
 
 This template demonstrates how to migrate existing integration tests to use the
-service factory pattern while maintaining test isolation and performance benefits.
+service factory pattern while maintaining test isolation and performance benefits.  # noqa: E501
 """
 
 import sys
 import os
 
 sys.path.append(
-    os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))  # noqa: E501
 )
 
-import pytest
+import pytest  # noqa: E402
 
 # Import the new service factory dependencies
-from services.node_service import NodeService
+from services.node_service import NodeService  # noqa: E402
 
 # Example of migrating an existing integration test
 
@@ -30,7 +30,7 @@ class TestServiceFactoryIntegration:
         """
         Example: Test that service factory works with real database operations.
 
-        This demonstrates how to write integration tests that verify the service factory
+        This demonstrates how to write integration tests that verify the service factory  # noqa: E501
         creates services that can perform real database operations.
         """
         client = shared_client
@@ -44,7 +44,7 @@ class TestServiceFactoryIntegration:
             json={
                 "node_type": "layer",
                 "title": "Test Layer for Service Factory",
-                "definition": "A test layer to verify service factory integration",
+                "definition": "A test layer to verify service factory integration",  # noqa: E501
             },
         )
 
@@ -67,7 +67,7 @@ class TestServiceFactoryIntegration:
         assert delete_response.status_code == 204
 
     @pytest.mark.skip_suite
-    def test_service_caching_across_requests(self, shared_client, test_service_factory):
+    def test_service_caching_across_requests(self, shared_client, test_service_factory):  # noqa: E501
         """
         Test that service factory caching works across multiple API requests.
         """
@@ -100,26 +100,26 @@ class TestServiceFactoryIntegration:
             cache_hits = node_service_metrics["cache_hits"]
             cache_misses = node_service_metrics["cache_misses"]
 
-            # Verify services were created (should be at least 1 per request type)
-            assert total_created > 0, "Expected at least some services to be created"
+            # Verify services were created (should be at least 1 per request type)  # noqa: E501
+            assert total_created > 0, "Expected at least some services to be created"  # noqa: E501
 
-            # Verify that requests were processed (either hits or misses should occur)
+            # Verify that requests were processed (either hits or misses should occur)  # noqa: E501
             total_requests = cache_hits + cache_misses
-            assert total_requests > 0, "Expected cache hits or misses to be recorded"
+            assert total_requests > 0, "Expected cache hits or misses to be recorded"  # noqa: E501
 
         # Clean up
         for created_id in created_ids:
-            delete_response = client.delete(f"/api/structure_nodes/{created_id}")
+            delete_response = client.delete(f"/api/structure_nodes/{created_id}")  # noqa: E501
             assert delete_response.status_code == 204
 
     def test_database_manager_with_service_factory(
-        self, optimized_db_session, test_service_factory
+        self, managed_db_session, test_service_factory
     ):
         """
-        Test that the database manager works correctly with the service factory.
+        Test that the database manager works correctly with the service factory.  # noqa: E501
         """
-        # This test uses the optimized_db_session fixture which uses DatabaseManager
-        db = optimized_db_session
+        # This test uses the managed_db_session fixture which uses DatabaseManager  # noqa: E501
+        db = managed_db_session
 
         # Get a service from the factory that uses the database
         factory = test_service_factory
@@ -129,7 +129,7 @@ class TestServiceFactoryIntegration:
         assert isinstance(node_service, NodeService)
 
         # Test that we can perform database operations
-        # (This would normally create actual data, but we're just testing the connection)
+        # (This would normally create actual data, but we're just testing the connection)  # noqa: E501
         from sqlalchemy import text
 
         result = db.execute(text("SELECT 1")).scalar()
@@ -139,7 +139,7 @@ class TestServiceFactoryIntegration:
         self, shared_client, test_service_factory
     ):
         """
-        Test error handling integration between service factory and API endpoints.
+        Test error handling integration between service factory and API endpoints.  # noqa: E501
         """
         client = shared_client
         test_service_factory.clear_cache()
@@ -148,7 +148,7 @@ class TestServiceFactoryIntegration:
         response = client.post(
             "/api/structure_nodes/",
             json={
-                "node_type": "invalid_type",  # This should cause validation error
+                "node_type": "invalid_type",  # This should cause validation error  # noqa: E501
                 "title": "",  # Empty title should also cause error
                 "definition": "",
             },
@@ -169,7 +169,7 @@ class TestServiceFactoryIntegration:
         self, shared_client, test_service_factory
     ):
         """
-        Test that service factory provides performance benefits in integration scenarios.
+        Test that service factory provides performance benefits in integration scenarios.  # noqa: E501
         """
         import time
 
@@ -179,7 +179,7 @@ class TestServiceFactoryIntegration:
         # Time multiple similar operations
         start_time = time.time()
 
-        # Create multiple layers (similar operations that should benefit from caching)
+        # Create multiple layers (similar operations that should benefit from caching)  # noqa: E501
         created_ids = []
         for i in range(5):
             response = client.post(
@@ -197,11 +197,10 @@ class TestServiceFactoryIntegration:
         total_time = end_time - start_time
 
         # Check service factory performance metrics
-        stats = test_service_factory.get_cache_stats()
         performance_summary = test_service_factory.get_performance_summary()
 
         # Should have reasonable cache hit rate after first operation
-        overall_hit_rate = performance_summary["overall_cache_hit_rate_percent"]
+        overall_hit_rate = performance_summary["overall_cache_hit_rate_percent"]  # noqa: E501
 
         # Log performance for analysis
         print(f"Total time for 5 operations: {total_time:.3f}s")
@@ -209,14 +208,14 @@ class TestServiceFactoryIntegration:
 
         # Clean up
         for created_id in created_ids:
-            delete_response = client.delete(f"/api/structure_nodes/{created_id}")
+            delete_response = client.delete(f"/api/structure_nodes/{created_id}")  # noqa: E501
             assert delete_response.status_code == 204
 
 
 # Example of how to migrate existing integration tests
 class TestMigratedIntegrationTest:
     """
-    Example of migrating an existing integration test to use service factory patterns.
+    Example of migrating an existing integration test to use service factory patterns.  # noqa: E501
 
     Before: Test used direct service instantiation
     After: Test uses service factory and includes performance monitoring
@@ -224,12 +223,12 @@ class TestMigratedIntegrationTest:
 
     # BEFORE (Old pattern):
     # def test_create_layer_old_pattern(self, db_session):
-    #     node_service = NodeService(db=db_session, graph_service=GraphService(db_session))
+    #     node_service = NodeService(db=db_session, graph_service=GraphService(db_session))  # noqa: E501
     #     result = node_service.create_layer(...)
 
     # AFTER (New pattern with service factory):
     @pytest.mark.skip_suite
-    def test_create_layer_new_pattern(self, shared_client, test_service_factory):
+    def test_create_layer_new_pattern(self, shared_client, test_service_factory):  # noqa: E501
         """
         Migrated test that uses service factory and monitoring.
         """
@@ -246,7 +245,7 @@ class TestMigratedIntegrationTest:
         )
 
         # After clear_cache, initial count should be 0
-        assert initial_service_count == 0, "Expected initial service count to be 0 after clear_cache"
+        assert initial_service_count == 0, "Expected initial service count to be 0 after clear_cache"  # noqa: E501
 
         # Perform the actual test
         response = client.post(
@@ -254,7 +253,7 @@ class TestMigratedIntegrationTest:
             json={
                 "node_type": "layer",
                 "title": "Migrated Test Layer",
-                "definition": "A layer created using the new service factory pattern",
+                "definition": "A layer created using the new service factory pattern",  # noqa: E501
             },
         )
 
@@ -270,39 +269,37 @@ class TestMigratedIntegrationTest:
         )
 
         # Should have created services for the request
-        assert final_service_count > 0, "Expected services to be created for the API request"
+        assert final_service_count > 0, "Expected services to be created for the API request"  # noqa: E501
 
         # Clean up
-        delete_response = client.delete(f"/api/structure_nodes/{layer_data['id']}")
+        delete_response = client.delete(f"/api/structure_nodes/{layer_data['id']}")  # noqa: E501
         assert delete_response.status_code == 204
 
 
 # Template for creating new integration tests with service factory support
 class TestNewIntegrationTestTemplate:
     """
-    Template for writing new integration tests that properly use the service factory.
+    Template for writing new integration tests that properly use the service factory.  # noqa: E501
     """
 
     def test_new_feature_with_service_factory(
-        self, shared_client, test_service_factory, optimized_db_session
+        self, test_service_factory, managed_db_session
     ):
         """
         Template for new integration tests.
 
         This template shows the recommended pattern for new integration tests:
-        1. Use shared_client for API testing
+        1. Use shared_client for API testing (if needed)
         2. Use test_service_factory for service monitoring
-        3. Use optimized_db_session when direct DB access is needed
+        3. Use managed_db_session when direct DB access is needed
         4. Always clean up resources
         5. Include service factory performance monitoring
         """
-        client = shared_client
 
         # 1. Reset service factory state for test isolation
         test_service_factory.clear_cache()
 
         # 2. Record baseline metrics
-        baseline_stats = test_service_factory.get_cache_stats()
 
         # 3. Perform the test operations
         # ... your test logic here ...
@@ -324,7 +321,7 @@ class TestNewIntegrationTestTemplate:
             performance = test_service_factory.get_performance_summary()
             print(f"Test used {total_services_used} total services")
             print(
-                f"Cache hit rate: {performance['overall_cache_hit_rate_percent']:.1f}%"
+                f"Cache hit rate: {performance['overall_cache_hit_rate_percent']:.1f}%"  # noqa: E501
             )
 
         # 6. Clean up any created resources

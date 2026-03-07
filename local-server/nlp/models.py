@@ -1,7 +1,7 @@
 """
 Pydantic models for NLP analysis requests and responses.
 """
-from typing import List, Optional, Any, Dict
+from typing import List, Optional, Any
 from pydantic import BaseModel, Field
 
 class NLPAnalysisRequest(BaseModel):
@@ -23,8 +23,8 @@ class ConcepcyRelation(BaseModel):
     """
     Represents a single relation in Concepcy.
     """
-    subject: ConcepcyNode = Field(None, description="The 'start' of the concepcy relation.")
-    object: ConcepcyNode = Field(None, description="The 'end' of the concepcy relation.")
+    subject: Optional[ConcepcyNode] = Field(None, description="The 'start' of the concepcy relation.")
+    object: Optional[ConcepcyNode] = Field(None, description="The 'end' of the concepcy relation.")
     relation: str = Field(..., description="The type of the concepcy relation.")
     text: Optional[str] = Field(None, description="Text representation of the relation.")
     weight: Optional[float] = Field(None, description="Weight of the relation.")
@@ -33,7 +33,10 @@ class ConcepcyData(BaseModel):
     """
     ConceptNet/Concepcy data for a token.
     """
-    related_terms: Optional[List[ConcepcyRelation]] = Field(default_factory=list, description="Related terms from ConceptNet.")
+    related_terms: Optional[List[ConcepcyRelation]] = Field(
+        default_factory=list,
+        description="Related terms from ConceptNet.",
+    )
 
 class WordNetData(BaseModel):
     """
@@ -41,7 +44,11 @@ class WordNetData(BaseModel):
     """
     synsets: Optional[List[dict]] = Field(
         default_factory=list,
-        description="WordNet synsets with attributes, including domain context. Each synset dict includes: name, definition, lemmas, pos, offset, domain."
+        description=(
+            "WordNet synsets with attributes, including domain context. "
+            "Each synset dict includes: name, definition, lemmas, pos, "
+            "offset, domain."
+        ),
     )
     lemmas: Optional[List[dict]] = Field(default_factory=list, description="WordNet lemmas with attributes.")
     definitions: Optional[List[str]] = Field(default_factory=list, description="WordNet definitions.")

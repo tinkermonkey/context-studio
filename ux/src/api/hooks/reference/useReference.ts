@@ -23,7 +23,9 @@ export const useFilterStatistics = (
   options?: UseQueryOptions<FilterStatistics, Error>,
 ) => {
   return useQuery({
-    queryKey: createQueryKey(QUERY_KEYS.REFERENCE, "filter", { type: "statistics" }),
+    queryKey: createQueryKey(QUERY_KEYS.REFERENCE, "filter", {
+      type: "statistics",
+    }),
     queryFn: () => referenceService.getFilterStatistics(),
     staleTime: 5 * 60 * 1000, // 5 minutes
     ...options,
@@ -81,7 +83,8 @@ export const usePredicateExamples = (
       externalId,
       limit,
     } as Record<string, unknown>),
-    queryFn: () => referenceService.getPredicateExamples(source!, externalId!, limit),
+    queryFn: () =>
+      referenceService.getPredicateExamples(source!, externalId!, limit),
     enabled: !!source && !!externalId,
     staleTime: 10 * 60 * 1000, // 10 minutes
     ...options,

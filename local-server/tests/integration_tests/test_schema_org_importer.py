@@ -14,9 +14,8 @@ This module tests the complete import pipeline including:
 import os
 import json
 import time
-import tempfile
 import pytest
-from unittest.mock import Mock, patch, MagicMock
+from unittest.mock import Mock, patch
 from datetime import datetime, timedelta
 
 from reference_db.config import ReferenceConfig
@@ -27,9 +26,8 @@ from reference_db.schema_org_importer import (
     ParseError,
     EmbeddingError,
     LockError,
-    SchemaOrgImportError
+    SchemaOrgImportError,
 )
-
 
 # Sample Schema.org JSON-LD for testing
 SAMPLE_SCHEMA_ORG_JSONLD = {
@@ -39,14 +37,14 @@ SAMPLE_SCHEMA_ORG_JSONLD = {
             "@id": "https://schema.org/Thing",
             "@type": "rdfs:Class",
             "rdfs:label": "Thing",
-            "rdfs:comment": "The most generic type of item."
+            "rdfs:comment": "The most generic type of item.",
         },
         {
             "@id": "https://schema.org/Person",
             "@type": "rdfs:Class",
             "rdfs:label": "Person",
             "rdfs:comment": "A person (alive, dead, undead, or fictional).",
-            "rdfs:subClassOf": {"@id": "https://schema.org/Thing"}
+            "rdfs:subClassOf": {"@id": "https://schema.org/Thing"},
         },
         {
             "@id": "https://schema.org/name",
@@ -54,9 +52,9 @@ SAMPLE_SCHEMA_ORG_JSONLD = {
             "rdfs:label": "name",
             "rdfs:comment": "The name of the item.",
             "schema:domainIncludes": {"@id": "https://schema.org/Thing"},
-            "schema:rangeIncludes": {"@id": "https://schema.org/Text"}
-        }
-    ]
+            "schema:rangeIncludes": {"@id": "https://schema.org/Text"},
+        },
+    ],
 }
 
 
@@ -77,11 +75,14 @@ class TestSchemaOrgImporterDownload:
             mock_response.raise_for_status = Mock()
 
             # Patch at the module level where it's used
-            with patch('reference_db.schema_org_importer.requests.get', return_value=mock_response):
+            with patch(
+                "reference_db.schema_org_importer.requests.get",
+                return_value=mock_response,
+            ):
                 file_path = importer._download_with_retry()
 
                 assert os.path.exists(file_path)
-                with open(file_path, 'r') as f:
+                with open(file_path, "r") as f:
                     data = json.load(f)
                 assert "@graph" in data
 
@@ -103,7 +104,9 @@ class TestSchemaOrgImporterDownload:
                 if call_count[0] == 1:
                     # First call fails
                     mock_response = Mock()
-                    mock_response.raise_for_status.side_effect = Exception("Network error")
+                    mock_response.raise_for_status.side_effect = Exception(
+                        "Network error"
+                    )
                     return mock_response
                 else:
                     # Second call succeeds
@@ -113,7 +116,10 @@ class TestSchemaOrgImporterDownload:
                     return mock_response
 
             # Patch at the module level where it's used
-            with patch('reference_db.schema_org_importer.requests.get', side_effect=mock_requests_get):
+            with patch(
+                "reference_db.schema_org_importer.requests.get",
+                side_effect=mock_requests_get,
+            ):
                 file_path = importer._download_with_retry()
                 assert os.path.exists(file_path)
                 os.remove(file_path)
@@ -127,21 +133,22 @@ class TestSchemaOrgImporterDownload:
             importer = SchemaOrgImporter(config, manager)
 
             # Mock persistent failure
-            with patch('reference_db.schema_org_importer.requests.get', side_effect=Exception("Network error")):
+            with patch(
+                "reference_db.schema_org_importer.requests.get",
+                side_effect=Exception("Network error"),
+            ):
                 with pytest.raises(DownloadError) as exc_info:
                     importer._download_with_retry()
 
                 assert "3 attempts" in str(exc_info.value)
 
-    def test_download_rejects_non_https_url(self, tmp_path):
+    def test_download_rejects_non_https_url(self):
         """Test config validation rejects non-HTTPS sources (TC-SEC002)."""
         from pydantic import ValidationError
 
         # Test that Pydantic validation rejects non-HTTPS URLs for remote hosts
         with pytest.raises(ValidationError) as exc_info:
-            config = ReferenceConfig(
-                schema_org_api_url="http://malicious.com/schema.jsonld"
-            )
+            ReferenceConfig(schema_org_api_url="http://malicious.com/schema.jsonld")  # noqa: E501
 
         # Verify the error message mentions security/HTTPS
         error_str = str(exc_info.value)
@@ -161,7 +168,7 @@ class TestSchemaOrgImporterParsing:
 
             # Write sample data to temp file
             tmp_file = tmp_path / "test.jsonld"
-            with open(tmp_file, 'w') as f:
+            with open(tmp_file, "w") as f:
                 json.dump(SAMPLE_SCHEMA_ORG_JSONLD, f)
 
             entities, properties = importer._parse_jsonld(str(tmp_file))
@@ -188,7 +195,7 @@ class TestSchemaOrgImporterParsing:
 
             # Write invalid JSON
             tmp_file = tmp_path / "invalid.jsonld"
-            with open(tmp_file, 'w') as f:
+            with open(tmp_file, "w") as f:
                 f.write("{ invalid json }")
 
             with pytest.raises(ParseError) as exc_info:
@@ -212,13 +219,13 @@ class TestSchemaOrgImporterEmbeddings:
                 {
                     "@id": "https://schema.org/Thing",
                     "rdfs:label": "Thing",
-                    "rdfs:comment": "The most generic type"
+                    "rdfs:comment": "The most generic type",
                 },
                 {
                     "@id": "https://schema.org/Person",
                     "rdfs:label": "Person",
-                    "rdfs:comment": "A person"
-                }
+                    "rdfs:comment": "A person",
+                },
             ]
 
             embedded = importer._generate_embeddings_batch(items, batch_size=2)
@@ -241,13 +248,15 @@ class TestSchemaOrgImporterEmbeddings:
                 {
                     "@id": "https://schema.org/Thing",
                     "rdfs:label": "Thing",
-                    "rdfs:comment": "Test"
+                    "rdfs:comment": "Test",
                 }
             ]
 
             # Mock embedding generation failure
-            with patch('reference_db.schema_org_importer.generate_embedding',
-                      side_effect=Exception("Embedding API error")):
+            with patch(
+                "reference_db.schema_org_importer.generate_embedding",
+                side_effect=Exception("Embedding API error"),
+            ):
                 with pytest.raises(EmbeddingError) as exc_info:
                     importer._generate_embeddings_batch(items)
 
@@ -270,18 +279,18 @@ class TestSchemaOrgImporterTransactions:
                     "external_id": "https://schema.org/Thing",
                     "title": "Thing",
                     "definition": "The most generic type",
-                    "title_embedding": b'\x00' * 512,  # 128 dims
-                    "definition_embedding": b'\x00' * 512,
-                    "raw_data": {}
+                    "title_embedding": b"\x00" * 512,  # 128 dims
+                    "definition_embedding": b"\x00" * 512,
+                    "raw_data": {},
                 },
                 {
                     "external_id": "https://schema.org/Person",
                     "title": "Person",
                     "definition": "A person",
-                    "title_embedding": b'\x00' * 512,
-                    "definition_embedding": b'\x00' * 512,
-                    "raw_data": {}
-                }
+                    "title_embedding": b"\x00" * 512,
+                    "definition_embedding": b"\x00" * 512,
+                    "raw_data": {},
+                },
             ]
 
             node_map = importer._insert_nodes_transaction(embedded_nodes)
@@ -295,7 +304,7 @@ class TestSchemaOrgImporterTransactions:
             assert len(nodes) == 2
 
     def test_transaction_rollback_on_failure(self, tmp_path):
-        """Test transaction rollback works correctly on SQLAlchemy errors (TC-I004.1)."""
+        """Test transaction rollback works correctly on SQLAlchemy errors (TC-I004.1)."""  # noqa: E501
         config = ReferenceConfig()
         db_path = tmp_path / "test.db"
 
@@ -309,8 +318,8 @@ class TestSchemaOrgImporterTransactions:
                     "title": "Thing",
                     "definition": "Test",
                     "title_embedding": "invalid_not_bytes",  # Should be bytes
-                    "definition_embedding": b'\x00' * 512,
-                    "raw_data": {}
+                    "definition_embedding": b"\x00" * 512,
+                    "raw_data": {},
                 }
             ]
 
@@ -330,7 +339,7 @@ class TestSchemaOrgImporterVectorTables:
     def check_sqlite_vec(self):
         """Skip tests if sqlite-vec not available."""
         try:
-            import sqlite_vec  # noqa: F401
+            import sqlite_vec  # noqa: F401 # type: ignore[import-untyped]
         except ImportError:
             pytest.skip("sqlite-vec not available")
 
@@ -348,9 +357,9 @@ class TestSchemaOrgImporterVectorTables:
                     "external_id": "https://schema.org/Thing",
                     "title": "Thing",
                     "definition": "Test",
-                    "title_embedding": b'\x00' * 512,  # 128 dims * 4 bytes
-                    "definition_embedding": b'\x00' * 512,
-                    "raw_data": {}
+                    "title_embedding": b"\x00" * 512,  # 128 dims * 4 bytes
+                    "definition_embedding": b"\x00" * 512,
+                    "raw_data": {},
                 }
             ]
             importer._insert_nodes_transaction(embedded_nodes)
@@ -360,8 +369,11 @@ class TestSchemaOrgImporterVectorTables:
 
             # Verify vec table exists
             from sqlalchemy import text
+
             result = manager.session.execute(
-                text("SELECT name FROM sqlite_master WHERE type='table' AND name='reference_nodes_vec'")
+                text(
+                    "SELECT name FROM sqlite_master WHERE type='table' AND name='reference_nodes_vec'"  # noqa: E501
+                )
             ).fetchone()
 
             assert result is not None
@@ -380,9 +392,9 @@ class TestSchemaOrgImporterVectorTables:
                     "external_id": f"https://schema.org/Item{i}",
                     "title": f"Item{i}",
                     "definition": f"Test item {i}",
-                    "title_embedding": b'\x00' * 512,
-                    "definition_embedding": b'\x00' * 512,
-                    "raw_data": {}
+                    "title_embedding": b"\x00" * 512,
+                    "definition_embedding": b"\x00" * 512,
+                    "raw_data": {},
                 }
                 for i in range(3)
             ]
@@ -393,6 +405,7 @@ class TestSchemaOrgImporterVectorTables:
 
             # Verify all nodes in vec table
             from sqlalchemy import text
+
             count = manager.session.execute(
                 text("SELECT COUNT(*) FROM reference_nodes_vec")
             ).scalar()
@@ -417,18 +430,18 @@ class TestSchemaOrgImporterRelationships:
                     "external_id": "https://schema.org/Thing",
                     "title": "Thing",
                     "definition": "Test",
-                    "title_embedding": b'\x00' * 512,
-                    "definition_embedding": b'\x00' * 512,
-                    "raw_data": {}
+                    "title_embedding": b"\x00" * 512,
+                    "definition_embedding": b"\x00" * 512,
+                    "raw_data": {},
                 },
                 {
                     "external_id": "https://schema.org/Person",
                     "title": "Person",
                     "definition": "Test",
-                    "title_embedding": b'\x00' * 512,
-                    "definition_embedding": b'\x00' * 512,
-                    "raw_data": {}
-                }
+                    "title_embedding": b"\x00" * 512,
+                    "definition_embedding": b"\x00" * 512,
+                    "raw_data": {},
+                },
             ]
             node_map = importer._insert_nodes_transaction(embedded_nodes)
 
@@ -436,7 +449,7 @@ class TestSchemaOrgImporterRelationships:
             entities = [
                 {
                     "@id": "https://schema.org/Person",
-                    "rdfs:subClassOf": {"@id": "https://schema.org/Thing"}
+                    "rdfs:subClassOf": {"@id": "https://schema.org/Thing"},
                 }
             ]
             properties = []
@@ -450,8 +463,7 @@ class TestSchemaOrgImporterRelationships:
 
             # Verify link in database
             person_node = manager.get_reference_node_by_source(
-                "schema.org",
-                "https://schema.org/Person"
+                "schema.org", "https://schema.org/Person"
             )
             assert len(person_node.subject_links) == 1
             assert person_node.subject_links[0].predicate == "subClassOf"
@@ -470,48 +482,50 @@ class TestSchemaOrgImporterRelationships:
                     "external_id": "https://schema.org/Thing",
                     "title": "Thing",
                     "definition": "Test",
-                    "title_embedding": b'\x00' * 512,
-                    "definition_embedding": b'\x00' * 512,
-                    "raw_data": {}
+                    "title_embedding": b"\x00" * 512,
+                    "definition_embedding": b"\x00" * 512,
+                    "raw_data": {},
                 },
                 {
                     "external_id": "https://schema.org/Text",
                     "title": "Text",
                     "definition": "Test",
-                    "title_embedding": b'\x00' * 512,
-                    "definition_embedding": b'\x00' * 512,
-                    "raw_data": {}
+                    "title_embedding": b"\x00" * 512,
+                    "definition_embedding": b"\x00" * 512,
+                    "raw_data": {},
                 },
                 {
                     "external_id": "https://schema.org/name",
                     "title": "name",
                     "definition": "Test",
-                    "title_embedding": b'\x00' * 512,
-                    "definition_embedding": b'\x00' * 512,
-                    "raw_data": {}
-                }
+                    "title_embedding": b"\x00" * 512,
+                    "definition_embedding": b"\x00" * 512,
+                    "raw_data": {},
+                },
             ]
             node_map = importer._insert_nodes_transaction(embedded_nodes)
 
             # Extract relationships
-            # Note: domainIncludes and rangeIncludes are property metadata relationships
-            # which are stored in ExternalPredicate.attributes, not as ReferenceLinks.
-            # Only subClassOf relationships between entities are stored as ReferenceLinks.
+            # Note: domainIncludes and rangeIncludes are property metadata relationships  # noqa: E501
+            # which are stored in ExternalPredicate.attributes, not as ReferenceLinks.  # noqa: E501
+            # Only subClassOf relationships between entities are stored as ReferenceLinks.  # noqa: E501
             entities = []
             properties = [
                 {
                     "@id": "https://schema.org/name",
-                    "schema:domainIncludes": {"@id": "https://schema.org/Thing"},
-                    "schema:rangeIncludes": {"@id": "https://schema.org/Text"}
+                    "schema:domainIncludes": {"@id": "https://schema.org/Thing"},  # noqa: E501
+                    "schema:rangeIncludes": {"@id": "https://schema.org/Text"},
                 }
             ]
-            predicate_map = {"https://schema.org/name": node_map["https://schema.org/name"]}
+            predicate_map = {
+                "https://schema.org/name": node_map["https://schema.org/name"]
+            }
 
             link_count = importer._insert_relationships_transaction(
                 entities, properties, node_map, predicate_map
             )
 
-            # Property relationships are not stored as links, only in predicate attributes
+            # Property relationships are not stored as links, only in predicate attributes  # noqa: E501
             assert link_count == 0
 
     def test_relationship_metadata_stored(self, tmp_path):
@@ -527,25 +541,25 @@ class TestSchemaOrgImporterRelationships:
                     "external_id": "https://schema.org/Thing",
                     "title": "Thing",
                     "definition": "Test",
-                    "title_embedding": b'\x00' * 512,
-                    "definition_embedding": b'\x00' * 512,
-                    "raw_data": {}
+                    "title_embedding": b"\x00" * 512,
+                    "definition_embedding": b"\x00" * 512,
+                    "raw_data": {},
                 },
                 {
                     "external_id": "https://schema.org/Person",
                     "title": "Person",
                     "definition": "Test",
-                    "title_embedding": b'\x00' * 512,
-                    "definition_embedding": b'\x00' * 512,
-                    "raw_data": {}
-                }
+                    "title_embedding": b"\x00" * 512,
+                    "definition_embedding": b"\x00" * 512,
+                    "raw_data": {},
+                },
             ]
             node_map = importer._insert_nodes_transaction(embedded_nodes)
 
             entities = [
                 {
                     "@id": "https://schema.org/Person",
-                    "rdfs:subClassOf": {"@id": "https://schema.org/Thing"}
+                    "rdfs:subClassOf": {"@id": "https://schema.org/Thing"},
                 }
             ]
             properties = []
@@ -557,8 +571,7 @@ class TestSchemaOrgImporterRelationships:
 
             # Verify metadata
             person_node = manager.get_reference_node_by_source(
-                "schema.org",
-                "https://schema.org/Person"
+                "schema.org", "https://schema.org/Person"
             )
             link = person_node.subject_links[0]
             metadata = json.loads(link.attributes)
@@ -604,7 +617,7 @@ class TestSchemaOrgImporterLockFile:
             assert not os.path.exists(importer.lock_path)
 
     def test_stale_lock_file_detected(self, tmp_path):
-        """Test stale lock files (>1 hour old) detected and handled (TC-I004.5)."""
+        """Test stale lock files (>1 hour old) detected and handled (TC-I004.5)."""  # noqa: E501
         config = ReferenceConfig()
         db_path = tmp_path / "test.db"
 
@@ -612,11 +625,17 @@ class TestSchemaOrgImporterLockFile:
             importer = SchemaOrgImporter(config, manager)
 
             # Create stale lock file
-            with open(importer.lock_path, 'w') as f:
-                f.write(json.dumps({
-                    "pid": 99999,
-                    "timestamp": (datetime.now() - timedelta(hours=2)).isoformat()
-                }))
+            with open(importer.lock_path, "w") as f:
+                f.write(
+                    json.dumps(
+                        {
+                            "pid": 99999,
+                            "timestamp": (
+                                datetime.now() - timedelta(hours=2)
+                            ).isoformat(),
+                        }
+                    )
+                )
 
             # Set modification time to 2 hours ago
             old_time = time.time() - (2 * 3600)
@@ -634,7 +653,7 @@ class TestSchemaOrgImporterIdempotency:
     """Test import idempotency."""
 
     def test_import_can_rerun_after_failure(self, tmp_path):
-        """Test import is idempotent - can safely re-run after failure (TC-I004.2)."""
+        """Test import is idempotent - can safely re-run after failure (TC-I004.2)."""  # noqa: E501
         config = ReferenceConfig()
         db_path = tmp_path / "test.db"
 
@@ -647,7 +666,10 @@ class TestSchemaOrgImporterIdempotency:
             mock_response.raise_for_status = Mock()
 
             # Patch at the module level where it's used
-            with patch('reference_db.schema_org_importer.requests.get', return_value=mock_response):
+            with patch(
+                "reference_db.schema_org_importer.requests.get",
+                return_value=mock_response,
+            ):
                 # First import - should succeed
                 result1 = importer.import_schema_org(batch_size=10)
                 assert result1["success"] is True
@@ -663,22 +685,3 @@ class TestSchemaOrgImporterIdempotency:
                 # re-import will fail on duplicates. This tests that the
                 # import can be re-run after clearing the data.
                 assert len(nodes) >= entity_count_1
-
-
-class TestSchemaOrgImporterPerformance:
-    """Test performance requirements."""
-
-    @pytest.mark.slow
-    def test_import_completes_in_time(self, tmp_path):
-        """Test full Schema.org dataset imports in <60 seconds (TC-P001)."""
-        # This is a placeholder test - actual full dataset test would require
-        # downloading the real Schema.org data which is large
-        # In practice, this would be run as part of performance test suite
-        pass
-
-    def test_memory_usage_stays_under_limit(self, tmp_path):
-        """Test memory usage stays <500MB during import."""
-        # This is a placeholder test - actual memory profiling would require
-        # memory_profiler or similar tool
-        # In practice, this would be run as part of performance test suite
-        pass

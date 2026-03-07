@@ -1,3 +1,4 @@
+# mypy: ignore-errors
 import sqlite3
 import os
 import sqlite_vec

@@ -7,18 +7,18 @@
 
 import React, { useState, useRef, useEffect } from "react";
 import { Button, Spinner, Tooltip } from "flowbite-react";
-import { Trash2, Plus } from "lucide-react";
+import { Plus, Trash2 } from "lucide-react";
 import { RecordSelector } from "@/components/node_selectors/record_selector";
 import {
   useCreateAnnotation,
   useDeleteAnnotation,
 } from "@/api/hooks/ragExperiments";
 import { useStructureNodeSearch } from "@/api/hooks/structure_nodes/useStructureNodes";
+import type { TestParagraphResponse } from "@/api/services/ragExperiments";
 import type {
-  TestParagraphResponse,
-  AnnotationResponse,
-} from "@/api/services/ragExperiments";
-import type { StructureNode, FindStructureNodeResult } from "@/api/types/structureNodes";
+  StructureNode,
+  FindStructureNodeResult,
+} from "@/api/types/structureNodes";
 
 export interface AnnotationSelectorProps {
   paragraph: TestParagraphResponse;
@@ -54,23 +54,26 @@ export const AnnotationSelector: React.FC<AnnotationSelectorProps> = ({
   }, [searchInput]);
 
   // Use vector search for structure nodes based on debounced search query
-  const { data: searchResults, isLoading: nodesLoading } = useStructureNodeSearch(
-    { query: debouncedSearchQuery || " ", limit: 100, threshold: 0.0 },
-    { enabled: debouncedSearchQuery.length > 0 }
-  );
+  const { data: searchResults, isLoading: nodesLoading } =
+    useStructureNodeSearch({
+      query: debouncedSearchQuery,
+      limit: 100,
+      threshold: 0.0,
+    });
 
   // Convert search results to StructureNode format for RecordSelector
-  const structureNodes: StructureNode[] = searchResults?.map((result: FindStructureNodeResult) => ({
-    id: result.id,
-    node_type: result.node_type,
-    parent_node_id: result.parent_node_id,
-    title: result.title,
-    definition: result.definition,
-    structural_predicate_id: result.structural_predicate_id,
-    created_at: result.created_at,
-    version: result.version,
-    last_modified: result.last_modified,
-  })) || [];
+  const structureNodes: StructureNode[] =
+    searchResults?.map((result: FindStructureNodeResult) => ({
+      id: result.id,
+      node_type: result.node_type,
+      parent_node_id: result.parent_node_id,
+      title: result.title,
+      definition: result.definition,
+      structural_predicate_id: result.structural_predicate_id,
+      created_at: result.created_at,
+      version: result.version,
+      last_modified: result.last_modified,
+    })) || [];
 
   // Handle text selection
   const handleTextSelection = () => {
@@ -152,7 +155,7 @@ export const AnnotationSelector: React.FC<AnnotationSelectorProps> = ({
 
     // Sort annotations by start position
     const sortedAnnotations = [...annotations].sort(
-      (a, b) => a.start_char - b.start_char
+      (a, b) => a.start_char - b.start_char,
     );
 
     const segments: React.ReactNode[] = [];
@@ -164,17 +167,17 @@ export const AnnotationSelector: React.FC<AnnotationSelectorProps> = ({
         segments.push(
           <span key={`text-${index}`}>
             {text.substring(currentPos, annotation.start_char)}
-          </span>
+          </span>,
         );
       }
 
       // Add annotated text with highlighting
       const annotatedText = text.substring(
         annotation.start_char,
-        annotation.end_char
+        annotation.end_char,
       );
       const nodeInfo = (structureNodes || []).find(
-        (n: StructureNode) => n.id === annotation.structure_node_id
+        (n: StructureNode) => n.id === annotation.structure_node_id,
       );
 
       segments.push(
@@ -183,7 +186,7 @@ export const AnnotationSelector: React.FC<AnnotationSelectorProps> = ({
           content={
             <div className="max-w-xs">
               <p className="font-medium">{nodeInfo?.title || "Unknown Node"}</p>
-              <p className="text-xs mt-1">Click to remove annotation</p>
+              <p className="mt-1 text-xs">Click to remove annotation</p>
             </div>
           }
         >
@@ -193,7 +196,7 @@ export const AnnotationSelector: React.FC<AnnotationSelectorProps> = ({
           >
             {annotatedText}
           </span>
-        </Tooltip>
+        </Tooltip>,
       );
 
       currentPos = annotation.end_char;
@@ -201,17 +204,11 @@ export const AnnotationSelector: React.FC<AnnotationSelectorProps> = ({
 
     // Add remaining text
     if (currentPos < text.length) {
-      segments.push(
-        <span key="text-end">{text.substring(currentPos)}</span>
-      );
+      segments.push(<span key="text-end">{text.substring(currentPos)}</span>);
     }
 
     return <>{segments}</>;
   };
-
-  const selectedNode = selectedNodeId
-    ? (structureNodes || []).find((n: StructureNode) => n.id === selectedNodeId)
-    : undefined;
 
   return (
     <div className="space-y-4" data-testid="annotation-selector">
@@ -219,7 +216,7 @@ export const AnnotationSelector: React.FC<AnnotationSelectorProps> = ({
       <div className="rounded-lg border border-gray-300 bg-white p-4">
         <div
           ref={textRef}
-          className="select-text whitespace-pre-wrap font-mono text-sm leading-relaxed"
+          className="font-mono text-sm leading-relaxed whitespace-pre-wrap select-text"
           onMouseUp={handleTextSelection}
         >
           {renderAnnotatedText()}
@@ -243,9 +240,15 @@ export const AnnotationSelector: React.FC<AnnotationSelectorProps> = ({
               </label>
               <RecordSelector
                 records={structureNodes || []}
-                fieldMap={{ value: "id", title: "title", definition: "definition" }}
+                fieldMap={{
+                  value: "id",
+                  title: "title",
+                  definition: "definition",
+                }}
                 value={selectedNodeId}
-                onSelect={(node: StructureNode) => setSelectedNodeId(node?.id || "")}
+                onSelect={(node: StructureNode) =>
+                  setSelectedNodeId(node?.id || "")
+                }
                 search={searchInput}
                 onSearchChange={setSearchInput}
                 loading={nodesLoading}
@@ -301,7 +304,7 @@ export const AnnotationSelector: React.FC<AnnotationSelectorProps> = ({
           <div className="space-y-2">
             {paragraph.annotations.map((annotation) => {
               const nodeInfo = (structureNodes || []).find(
-                (n: StructureNode) => n.id === annotation.structure_node_id
+                (n: StructureNode) => n.id === annotation.structure_node_id,
               );
               return (
                 <div

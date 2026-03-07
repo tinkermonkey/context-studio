@@ -124,7 +124,9 @@ const TreeMenuNode: React.FC<TreeMenuNodeProps> = ({
             node.childIndex,
           )}
           fill={nodeColor}
-          fillOpacity={isHovered  || isHighlighted ? 0.5 : (isDefinitionDisplayed ? 0 : 0.1)}
+          fillOpacity={
+            isHovered || isHighlighted ? 0.5 : isDefinitionDisplayed ? 0 : 0.1
+          }
           style={{ transition: "fill 0.1s ease-in-out" }}
         />
 

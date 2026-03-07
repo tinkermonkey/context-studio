@@ -11,14 +11,14 @@ sys.path.append(
     os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 )
 
-from llm.service import LLMService
-from llm.models import (
+from llm.service import LLMService  # noqa: E402
+from llm.models import (  # noqa: E402
     PipelineExecutionRequest,
     PipelineExecutionResponse,
     PipelineType,
     StreamingLLMResponse
 )
-from llm.exceptions import (
+from llm.exceptions import (  # noqa: E402
     LLMProcessingError,
     LLMTimeoutError
 )
@@ -131,16 +131,16 @@ class TestGenericPipelineExecution:
         # Mock dependencies
         mock_llm_service.flavor_service.get_default_flavor.return_value = mock_flavor
         mock_llm_service.execution_tracker.start_execution.return_value = "exec-123"
-        
+
         # Mock LLM timeout
         mock_llm = AsyncMock()
-        
+
         with patch.object(mock_llm_service, '_create_llm_from_flavor', return_value=mock_llm):
             with patch.object(mock_llm_service, '_get_flavor', return_value=mock_flavor):
                 with patch('asyncio.wait_for', side_effect=TimeoutError()):
                     with pytest.raises(LLMTimeoutError):
                         await mock_llm_service.execute_pipeline_flavor(sample_request)
-        
+
         # Verify error tracking
         mock_llm_service.execution_tracker.complete_execution.assert_called_once()
         call_args = mock_llm_service.execution_tracker.complete_execution.call_args
@@ -154,18 +154,18 @@ class TestGenericPipelineExecution:
         # Mock dependencies
         mock_llm_service.flavor_service.get_default_flavor.return_value = mock_flavor
         mock_llm_service.execution_tracker.start_execution.return_value = "exec-123"
-        
+
         # Mock LLM error
         mock_llm = AsyncMock()
         mock_llm.ainvoke.side_effect = Exception("Test processing error")
-        
+
         with patch.object(mock_llm_service, '_create_llm_from_flavor', return_value=mock_llm):
             with patch.object(mock_llm_service, '_get_flavor', return_value=mock_flavor):
                 with pytest.raises(LLMProcessingError) as exc_info:
                     await mock_llm_service.execute_pipeline_flavor(sample_request)
-        
+
         assert "Failed to execute pipeline" in str(exc_info.value)
-        
+
         # Verify error tracking
         mock_llm_service.execution_tracker.complete_execution.assert_called_once()
         call_args = mock_llm_service.execution_tracker.complete_execution.call_args
@@ -178,7 +178,7 @@ class TestGenericPipelineExecution:
         # Mock dependencies
         mock_llm_service.flavor_service.get_default_flavor.return_value = mock_flavor
         mock_llm_service.execution_tracker.start_execution.return_value = "exec-123"
-        
+
         # Mock streaming LLM response
         mock_llm = AsyncMock()
         mock_chunks = [
@@ -186,7 +186,7 @@ class TestGenericPipelineExecution:
             MagicMock(content=" world"),
             MagicMock(content="!")
         ]
-        
+
         async def async_chunks():
             for chunk in mock_chunks:
                 yield chunk
@@ -197,23 +197,23 @@ class TestGenericPipelineExecution:
                 yield chunk
 
         mock_llm.astream = mock_astream
-        
+
         with patch.object(mock_llm_service, '_create_llm_from_flavor', return_value=mock_llm):
             with patch.object(mock_llm_service, '_get_flavor', return_value=mock_flavor):
                 chunks = []
                 async for chunk in mock_llm_service.execute_pipeline_flavor_streaming(sample_request):
                     chunks.append(chunk)
-        
+
         # Verify streaming response structure
         assert len(chunks) >= 3  # Initial response + content chunks + completion
-        
+
         # Check initial response
         initial_chunk = chunks[0]
         assert isinstance(initial_chunk, StreamingLLMResponse)
         assert initial_chunk.execution_id == "exec-123"
         assert initial_chunk.flavor_id == "test-flavor-id"
         assert initial_chunk.done is False
-        
+
         # Check completion signal
         final_chunk = chunks[-1]
         assert final_chunk.done is True
@@ -258,9 +258,9 @@ class TestGenericPipelineExecution:
             "domain_title": "Food",
             "current_definition": "A fruit"
         }
-        
+
         result = mock_llm_service._render_user_prompt_generic(template, context_data)
-        
+
         expected = "Define the term: apple in domain: Food. Current definition: A fruit"
         assert result == expected
 
@@ -297,9 +297,9 @@ class TestGenericPipelineExecution:
         context_data = {
             "context": {"key1": "value1", "key2": "value2"}
         }
-        
+
         result = mock_llm_service._render_user_prompt_generic(template, context_data)
-        
+
         assert "Context: " in result
         assert "key1" in result
 
@@ -336,7 +336,7 @@ class TestGenericPipelineExecution:
                 pipeline_type=PipelineType.SUGGEST_TERM_DEFINITION,
                 context_data={}
             )
-        
+
         assert "context_data cannot be empty" in str(exc_info.value)
 
     def test_generic_pipeline_response_creation(self):
@@ -348,7 +348,7 @@ class TestGenericPipelineExecution:
             pipeline_type="suggest_term_definition",
             token_usage={"input_tokens": 10, "output_tokens": 20, "total_tokens": 30}
         )
-        
+
         assert response.response_content == "Test response"
         assert response.execution_id == "exec-123"
         assert response.flavor_id == "flavor-456"

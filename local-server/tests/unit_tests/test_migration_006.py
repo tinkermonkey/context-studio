@@ -1,3 +1,4 @@
+# mypy: ignore-errors
 """
 Unit tests for Migration 006 - The Great Normalization.
 
@@ -12,13 +13,13 @@ sys.path.append(
     os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 )
 
-import pytest
-import tempfile
-from typing import Dict, List
-from sqlalchemy import create_engine, text
+import pytest  # noqa: E402
+import tempfile  # noqa: E402
+from typing import Dict, List  # noqa: E402
+from sqlalchemy import create_engine, text  # noqa: E402
 
-from database.migrations.migration_manager import MigrationManager
-from database.utils import init_db
+from database.migrations.migration_manager import MigrationManager  # noqa: E402, E501
+from database.utils import init_db  # noqa: E402
 
 
 class MigrationTestHarness:
@@ -82,7 +83,7 @@ class MigrationTestHarness:
             cursor.execute(
                 """
                 INSERT INTO layers (id, title, definition, created_at, version, last_modified)
-                VALUES 
+                VALUES
                     ('layer-1', 'Science Layer', 'Scientific concepts', '2023-01-01 10:00:00', 1, '2023-01-01 10:00:00'),
                     ('layer-2', 'Technology Layer', 'Technical concepts', '2023-01-02 10:00:00', 1, '2023-01-02 10:00:00')
             """
@@ -92,7 +93,7 @@ class MigrationTestHarness:
             cursor.execute(
                 """
                 INSERT INTO domains (id, layer_id, title, definition, primary_predicate_id, created_at, version, last_modified)
-                VALUES 
+                VALUES
                     ('domain-1', 'layer-1', 'Biology', 'Study of living organisms', 'pred-1', '2023-01-03 10:00:00', 1, '2023-01-03 10:00:00'),
                     ('domain-2', 'layer-1', 'Chemistry', 'Study of matter and chemical reactions', 'pred-2', '2023-01-04 10:00:00', 1, '2023-01-04 10:00:00'),
                     ('domain-3', 'layer-2', 'Software Engineering', 'Development of software systems', NULL, '2023-01-05 10:00:00', 1, '2023-01-05 10:00:00')
@@ -103,7 +104,7 @@ class MigrationTestHarness:
             cursor.execute(
                 """
                 INSERT INTO terms (id, domain_id, layer_id, title, definition, parent_term_id, created_at, version, last_modified)
-                VALUES 
+                VALUES
                     ('term-1', 'domain-1', 'layer-1', 'Cell', 'Basic unit of life', NULL, '2023-01-06 10:00:00', 1, '2023-01-06 10:00:00'),
                     ('term-2', 'domain-1', 'layer-1', 'Animal Cell', 'Cell from animal organism', 'term-1', '2023-01-07 10:00:00', 1, '2023-01-07 10:00:00'),
                     ('term-3', 'domain-1', 'layer-1', 'Plant Cell', 'Cell from plant organism', 'term-1', '2023-01-08 10:00:00', 1, '2023-01-08 10:00:00'),
@@ -117,7 +118,7 @@ class MigrationTestHarness:
             cursor.execute(
                 """
                 INSERT INTO term_relationships (id, source_term_id, target_term_id, predicate, predicate_id, created_at)
-                VALUES 
+                VALUES
                     ('rel-1', 'term-2', 'term-3', 'related_to', 'pred-3', '2023-01-12 10:00:00'),
                     ('rel-2', 'term-1', 'term-4', 'composed_of', 'pred-4', '2023-01-13 10:00:00')
             """
@@ -127,7 +128,7 @@ class MigrationTestHarness:
             cursor.execute(
                 """
                 INSERT INTO graph_events (event_type, entity_type, old_data, new_data, timestamp, processed)
-                VALUES 
+                VALUES
                     ('create', 'layer', NULL, '{"id": "layer-1", "title": "Science Layer"}', '2023-01-01 10:00:00', 0),
                     ('create', 'domain', NULL, '{"id": "domain-1", "title": "Biology"}', '2023-01-03 10:00:00', 1),
                     ('create', 'term', NULL, '{"id": "term-1", "title": "Cell"}', '2023-01-06 10:00:00', 0)
@@ -267,7 +268,7 @@ class MigrationTestHarness:
             cursor.execute(
                 """
                 SELECT COUNT(*) FROM structure_nodes n1
-                WHERE n1.parent_node_id IS NOT NULL 
+                WHERE n1.parent_node_id IS NOT NULL
                 AND NOT EXISTS (SELECT 1 FROM structure_nodes n2 WHERE n2.id = n1.parent_node_id)
             """
             )
@@ -286,11 +287,11 @@ class MigrationTestHarness:
             # Check if any structure_nodes have embeddings
             cursor.execute(
                 """
-                SELECT COUNT(*) FROM structure_nodes 
+                SELECT COUNT(*) FROM structure_nodes
                 WHERE title_embedding IS NOT NULL OR definition_embedding IS NOT NULL
             """
             )
-            nodes_with_embeddings = cursor.fetchone()[0]
+            cursor.fetchone()[0]
 
             # For this test, we'll assume embeddings migration is successful if no error occurs
             # In real scenarios, you'd have actual embedding data to validate
@@ -732,7 +733,7 @@ class TestMigration006EdgeCases:
             )
             cursor.execute(
                 """
-                INSERT INTO domains (id, layer_id, title, definition, primary_predicate_id) 
+                INSERT INTO domains (id, layer_id, title, definition, primary_predicate_id)
                 VALUES ('domain-test', 'layer-test', 'Test Domain', 'Test', 'nonexistent-predicate')
             """
             )

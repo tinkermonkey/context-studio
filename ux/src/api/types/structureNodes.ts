@@ -76,9 +76,11 @@ export interface ChangeEvent {
   event_type: "create" | "update" | "delete";
   record_type: RecordType; // Replaces node_type
   record_id?: string; // Replaces node_id
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   old_data?: any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   new_data?: any;
-  timestamp: string;
+  event_timestamp: string;
   processed: boolean;
 }
 
@@ -201,7 +203,12 @@ export interface MoveNodesResponse {
 }
 
 // Attribute types for structure nodes
-export type AttributeValueType = "string" | "number" | "boolean" | "date" | "url";
+export type AttributeValueType =
+  | "string"
+  | "number"
+  | "boolean"
+  | "date"
+  | "url";
 
 export interface StructureNodeAttribute {
   key: string;

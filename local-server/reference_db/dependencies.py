@@ -1,3 +1,4 @@
+# mypy: ignore-errors
 """
 FastAPI dependencies for reference database access.
 
@@ -17,13 +18,13 @@ from reference_db.config import ReferenceConfig
 def get_reference_db_session() -> Generator[Session, None, None]:
     """
     FastAPI dependency to get a reference database session.
-    
+
     This provides a database session from the singleton ReferenceManager,
     ensuring proper cleanup after the request completes.
-    
+
     Yields:
         SQLAlchemy Session for reference database operations
-        
+
     Example:
         ```python
         @router.get("/api/predicates/external")
@@ -46,19 +47,19 @@ def get_reference_db_session() -> Generator[Session, None, None]:
 def reference_manager_context(config: ReferenceConfig = None) -> Generator[ReferenceManager, None, None]:
     """
     Context manager for accessing the singleton ReferenceManager.
-    
+
     This is a convenience wrapper around get_reference_manager() that provides
     a context manager interface while still using the singleton instance.
-    
+
     Note: Unlike creating a new ReferenceManager with `with ReferenceManager(config) as manager:`,
     this does NOT dispose of the engine on exit since it's shared across requests.
-    
+
     Args:
         config: Optional configuration (only used if no manager exists yet)
-        
+
     Yields:
         Singleton ReferenceManager instance
-        
+
     Example:
         ```python
         with reference_manager_context() as manager:

@@ -1,11 +1,11 @@
 from fastapi import APIRouter, Depends, HTTPException, Path, Query
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
-from typing import Optional, Dict, Any, List
+from typing import Optional, Dict, Any
 from datetime import datetime
 
 from database.utils import get_db
-from services.service_factory import get_service_factory, get_incremental_sync_engine_via_factory
+from services.service_factory import get_service_factory
 from utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -24,8 +24,6 @@ class SyncResponse(BaseModel):
     status: str
     message: str
     data: Optional[Dict[str, Any]] = None
-
-
 
 
 @router.post("/push", response_model=SyncResponse)
@@ -84,8 +82,6 @@ async def pull_changes(
         raise HTTPException(status_code=500, detail=f"Pull failed: {str(e)}")
 
 
-
-
 @router.get("/test", response_model=SyncResponse)
 async def test_s3_connection(db: Session = Depends(get_db)) -> SyncResponse:
     """Test S3 connectivity."""
@@ -107,13 +103,11 @@ async def test_s3_connection(db: Session = Depends(get_db)) -> SyncResponse:
 
     except Exception as e:
         logger.error(f"S3 connection test error: {e}")
-        raise HTTPException(status_code=500, detail=f"Connection test failed: {str(e)}")
-
-
+        raise HTTPException(status_code=500, detail=f"Connection test failed: {str(e)}")  # noqa: E501
 
 
 @router.get("/operations/{sync_id}")
-async def get_sync_operation(sync_id: str = Path(..., description="Sync operation ID")):
+async def get_sync_operation(sync_id: str = Path(..., description="Sync operation ID")):  # noqa: E501
     """Get sync operation details."""
 
     try:
@@ -134,7 +128,7 @@ async def get_sync_operation(sync_id: str = Path(..., description="Sync operatio
 
     except Exception as e:
         logger.error(f"Get sync operation error: {e}")
-        raise HTTPException(status_code=500, detail=f"Failed to get sync operation: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to get sync operation: {str(e)}")  # noqa: E501
 
 
 @router.get("/performance")
@@ -158,15 +152,11 @@ async def get_sync_performance(days: int = 7):
 
     except Exception as e:
         logger.error(f"Get sync performance error: {e}")
-        raise HTTPException(status_code=500, detail=f"Failed to get sync performance: {str(e)}")
-
-
-
-
+        raise HTTPException(status_code=500, detail=f"Failed to get sync performance: {str(e)}")  # noqa: E501
 
 
 @router.post("/validate-data")
-async def validate_sync_data(sample_size: int = Query(default=1000, ge=100, le=10000)):
+async def validate_sync_data(sample_size: int = Query(default=1000, ge=100, le=10000)):  # noqa: E501
     """Validate data integrity for sync operations."""
 
     try:
@@ -180,4 +170,4 @@ async def validate_sync_data(sample_size: int = Query(default=1000, ge=100, le=1
 
     except Exception as e:
         logger.error(f"Validate sync data error: {e}")
-        raise HTTPException(status_code=500, detail=f"Failed to validate sync data: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to validate sync data: {str(e)}")  # noqa: E501

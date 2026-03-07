@@ -10,6 +10,7 @@ import type { AxiosInstance } from "axios";
  */
 export function forceMSWCompatibleAdapter(client: AxiosInstance): void {
   // Use a lazy-loading adapter that imports http/https at request time
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   client.defaults.adapter = function mswCompatibleAdapter(config: any) {
     // Import http/https inside the adapter function to ensure MSW patches are applied
     const http = require("http");
@@ -57,18 +58,20 @@ export function forceMSWCompatibleAdapter(client: AxiosInstance): void {
           timeout: config.timeout,
         };
 
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const req = transport.request(requestOptions, (res: any) => {
           const chunks: Buffer[] = [];
           res.on("data", (chunk: Buffer) => chunks.push(chunk));
           res.on("end", () => {
             const buffer = Buffer.concat(chunks);
             const contentType = res.headers["content-type"] || "";
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             let data: any = buffer.toString();
 
             if (contentType.includes("application/json")) {
               try {
                 data = JSON.parse(data);
-              } catch (e) {
+              } catch (_e) {
                 // keep raw string if JSON parsing fails
               }
             }
@@ -86,6 +89,7 @@ export function forceMSWCompatibleAdapter(client: AxiosInstance): void {
           });
         });
 
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         req.on("error", (err: any) => reject(err));
 
         if (requestOptions.timeout) {

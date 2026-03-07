@@ -1,0 +1,30 @@
+# Development dependencies for type checking (mypy) and code quality
+# Install with: pip install -r requirements-dev.txt
+
+# Code quality tools
+pytest
+pytest-cov
+black
+flake8
+mypy
+
+# SQLAlchemy mypy plugin for proper ORM type resolution
+sqlalchemy[mypy]
+
+# Type stubs for third-party packages
+boto3-stubs[all]
+botocore-stubs
+pandas-stubs
+types-cachetools
+types-cryptography
+types-jsonschema
+types-networkx
+types-Pillow
+types-psutil
+types-PyYAML
+types-python-dateutil
+types-requests
+types-setuptools
+types-toml
+types-urllib3
+types-Werkzeug

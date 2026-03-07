@@ -6,7 +6,6 @@ including Schema.org API access, embedding models, and operational parameters.
 """
 
 from pydantic import BaseModel, Field, field_validator
-from typing import Optional
 
 
 # Schema version for the reference database structure

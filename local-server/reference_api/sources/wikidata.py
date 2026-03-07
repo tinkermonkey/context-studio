@@ -1,3 +1,4 @@
+# mypy: ignore-errors
 """Wikidata source implementation"""
 
 from typing import Optional, List

@@ -4,11 +4,19 @@
  * Main search interface for unified reference search across multiple sources
  */
 
-import React, { useState, useCallback, useEffect } from "react";
-import { TextInput, Spinner, Button, Badge } from "flowbite-react";
+import React, { useState, useCallback } from "react";
+import { Badge, Button, Spinner, TextInput } from "flowbite-react";
 import { Search, X, Clock, CheckCircle, XCircle } from "lucide-react";
-import { useStreamingUnifiedSearch, useSourceLoadingStates } from "@/api/hooks/unifiedReference/useStreamingReference";
-import { UnifiedSearchRequest, SourceType, UnifiedNode, SOURCE_METADATA } from "@/api/types/unified";
+import {
+  useStreamingUnifiedSearch,
+  useSourceLoadingStates,
+} from "@/api/hooks/unifiedReference/useStreamingReference";
+import {
+  UnifiedSearchRequest,
+  SourceType,
+  UnifiedNode,
+  SOURCE_METADATA,
+} from "@/api/types/unified";
 import { SourceDropdown } from "./SourceDropdown";
 
 interface UnifiedSearchBarProps {
@@ -28,7 +36,6 @@ interface UnifiedSearchBarProps {
 export const UnifiedSearchBar: React.FC<UnifiedSearchBarProps> = ({
   placeholder = "Search across all reference sources...",
   minQueryLength = 2,
-  debounceMs = 300,
   autoFocus = false,
   disabled = false,
   onSearchStart,
@@ -40,16 +47,7 @@ export const UnifiedSearchBar: React.FC<UnifiedSearchBarProps> = ({
 }) => {
   const [localQuery, setLocalQuery] = useState("");
 
-  const {
-    search,
-    searchState,
-    isSearching,
-    hasResults,
-    results,
-    totalResults,
-    completedSources,
-    errorSources,
-  } = useStreamingUnifiedSearch({
+  const { search, searchState, isSearching } = useStreamingUnifiedSearch({
     onComplete: (state) => {
       onSearchComplete?.(state.aggregatedResults, state.totalResults);
     },
@@ -99,7 +97,7 @@ export const UnifiedSearchBar: React.FC<UnifiedSearchBarProps> = ({
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter') {
+    if (e.key === "Enter") {
       e.preventDefault();
       performSearch();
     }
@@ -161,7 +159,11 @@ export const UnifiedSearchBar: React.FC<UnifiedSearchBarProps> = ({
         {/* Search Button */}
         <Button
           onClick={handleSearchClick}
-          disabled={disabled || hasNoSources || localQuery.trim().length < minQueryLength}
+          disabled={
+            disabled ||
+            hasNoSources ||
+            localQuery.trim().length < minQueryLength
+          }
           className="flex items-center gap-2"
         >
           <Search className="h-4 w-4" />
@@ -193,9 +195,15 @@ export const UnifiedSearchBar: React.FC<UnifiedSearchBarProps> = ({
         <div className="flex flex-wrap gap-2">
           {Object.entries(searchState.sources).map(([source, sourceUpdate]) => {
             const metadata = SOURCE_METADATA[source as SourceType];
-            const isLoading = sourceLoadingStates.isSourceLoading(source as SourceType);
-            const isComplete = sourceLoadingStates.isSourceComplete(source as SourceType);
-            const isError = sourceLoadingStates.isSourceError(source as SourceType);
+            const isLoading = sourceLoadingStates.isSourceLoading(
+              source as SourceType,
+            );
+            const isComplete = sourceLoadingStates.isSourceComplete(
+              source as SourceType,
+            );
+            const isError = sourceLoadingStates.isSourceError(
+              source as SourceType,
+            );
             const resultCount = sourceUpdate.results?.length || 0;
 
             let icon;
@@ -213,7 +221,11 @@ export const UnifiedSearchBar: React.FC<UnifiedSearchBarProps> = ({
             }
 
             return (
-              <Badge key={source} color={color} className="flex items-center gap-1 text-xs">
+              <Badge
+                key={source}
+                color={color}
+                className="flex items-center gap-1 text-xs"
+              >
                 {icon}
                 {metadata?.label || source}
                 {isComplete && ` (${resultCount})`}

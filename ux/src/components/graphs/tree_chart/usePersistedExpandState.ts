@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { ExpandState, toggleExpandState } from "./tree_chart_layout";
 
 const EXPAND_STATE_STORAGE_KEY_PREFIX = "tree-chart-expand-state";
@@ -17,8 +17,12 @@ interface ScrollState {
  */
 export const usePersistedExpandState = (viewId?: string) => {
   // Generate view-specific storage keys if viewId is provided
-  const expandStateKey = viewId ? `${EXPAND_STATE_STORAGE_KEY_PREFIX}-${viewId}` : null;
-  const scrollStateKey = viewId ? `${SCROLL_STATE_STORAGE_KEY_PREFIX}-${viewId}` : null;
+  const expandStateKey = viewId
+    ? `${EXPAND_STATE_STORAGE_KEY_PREFIX}-${viewId}`
+    : null;
+  const scrollStateKey = viewId
+    ? `${SCROLL_STATE_STORAGE_KEY_PREFIX}-${viewId}`
+    : null;
   // Initialize expand state from session storage or with empty Map
   const [expandState, setExpandState] = useState<ExpandState>(() => {
     // Only load from session storage if we have a viewId
@@ -54,10 +58,7 @@ export const usePersistedExpandState = (viewId?: string) => {
     try {
       // Convert Map to plain object for JSON serialization
       const stateObject = Object.fromEntries(expandState);
-      sessionStorage.setItem(
-        expandStateKey,
-        JSON.stringify(stateObject),
-      );
+      sessionStorage.setItem(expandStateKey, JSON.stringify(stateObject));
     } catch (error) {
       console.warn("Failed to save expand state to session storage:", error);
     }
@@ -75,10 +76,7 @@ export const usePersistedExpandState = (viewId?: string) => {
       scrollLeft: window.scrollX || document.documentElement.scrollLeft,
     };
     try {
-      sessionStorage.setItem(
-        scrollStateKey,
-        JSON.stringify(scrollState),
-      );
+      sessionStorage.setItem(scrollStateKey, JSON.stringify(scrollState));
     } catch (error) {
       console.warn("Failed to save scroll state to session storage:", error);
     }

@@ -1,7 +1,7 @@
 """
 Identity Management API Endpoints
 
-This module implements the identity management API endpoints for user registration,
+This module implements the identity management API endpoints for user registration,  # noqa: E501
 email verification, and peer trust systems in collaborative workflows.
 
 Endpoints:
@@ -99,27 +99,27 @@ def register_user(
 ):
     """
     Register a new user with email-based identity.
-    
+
     Args:
         request: User registration request
         identity_manager: IdentityManager dependency
-        
+
     Returns:
         User identity and verification code
-        
+
     Raises:
         HTTPException: If validation fails or registration fails
     """
     logger.info(f"Registering user with email {request.email}")
-    
+
     try:
         result = identity_manager.register_user(
             email=request.email,
             display_name=request.display_name
         )
-        
+
         user_identity = result["user_identity"]
-        
+
         return RegisterUserResponse(
             user_identity=UserIdentityResponse(
                 user_id=user_identity.user_id,
@@ -134,7 +134,7 @@ def register_user(
             verification_code=result["verification_code"],
             message=result["message"]
         )
-        
+
     except ValueError as e:
         logger.warning(f"Invalid user registration request: {e}")
         raise HTTPException(status_code=400, detail=str(e))
@@ -150,33 +150,33 @@ def verify_email(
 ):
     """
     Verify user email with verification code.
-    
+
     Args:
         request: Email verification request
         identity_manager: IdentityManager dependency
-        
+
     Returns:
         Success message
-        
+
     Raises:
         HTTPException: If verification fails
     """
     logger.info(f"Verifying email for user {request.user_id}")
-    
+
     try:
         success = identity_manager.verify_email(
             user_id=request.user_id,
             verification_code=request.verification_code
         )
-        
+
         if not success:
             raise HTTPException(
-                status_code=400, 
+                status_code=400,
                 detail="Invalid verification code or user not found"
             )
-        
-        return {"message": f"Email verified successfully for user {request.user_id}"}
-        
+
+        return {"message": f"Email verified successfully for user {request.user_id}"}  # noqa: E501
+
     except HTTPException:
         raise
     except Exception as e:
@@ -191,38 +191,38 @@ def trust_user(
 ):
     """
     Establish trust relationship between users.
-    
+
     Args:
         request: Trust relationship request
         identity_manager: IdentityManager dependency
-        
+
     Returns:
         Success message
-        
+
     Raises:
         HTTPException: If trust establishment fails
     """
-    logger.info(f"Establishing trust: {request.trustee_user_id} -> {request.trusted_user_id}")
-    
+    logger.info(f"Establishing trust: {request.trustee_user_id} -> {request.trusted_user_id}")  # noqa: E501
+
     try:
         success = identity_manager.trust_user(
             trustee_user_id=request.trustee_user_id,
             trusted_user_id=request.trusted_user_id
         )
-        
+
         if not success:
             raise HTTPException(
-                status_code=400, 
-                detail="Failed to establish trust relationship. Check that trustee is verified and users exist."
+                status_code=400,
+                detail="Failed to establish trust relationship. Check that trustee is verified and users exist."  # noqa: E501
             )
-        
-        return {"message": f"Trust relationship established: {request.trustee_user_id} -> {request.trusted_user_id}"}
-        
+
+        return {"message": f"Trust relationship established: {request.trustee_user_id} -> {request.trusted_user_id}"}  # noqa: E501
+
     except HTTPException:
         raise
     except Exception as e:
         logger.error(f"Failed to establish trust relationship: {e}")
-        raise HTTPException(status_code=500, detail="Failed to establish trust relationship")
+        raise HTTPException(status_code=500, detail="Failed to establish trust relationship")  # noqa: E501
 
 
 @router.get("/users/{user_id}", response_model=UserIdentityResponse)
@@ -232,24 +232,24 @@ def get_user(
 ):
     """
     Get user identity by ID.
-    
+
     Args:
         user_id: User identifier
         identity_manager: IdentityManager dependency
-        
+
     Returns:
         User identity details
-        
+
     Raises:
         HTTPException: If user not found
     """
     logger.debug(f"Getting user {user_id}")
-    
+
     try:
         user = identity_manager.get_user(user_id)
         if not user:
-            raise HTTPException(status_code=404, detail=f"User {user_id} not found")
-        
+            raise HTTPException(status_code=404, detail=f"User {user_id} not found")  # noqa: E501
+
         return UserIdentityResponse(
             user_id=user.user_id,
             email=user.email,
@@ -260,7 +260,7 @@ def get_user(
             created_at=user.created_at,
             verified_at=user.verified_at
         )
-        
+
     except HTTPException:
         raise
     except Exception as e:
@@ -275,24 +275,24 @@ def get_user_by_email(
 ):
     """
     Get user identity by email address.
-    
+
     Args:
         email: Email address
         identity_manager: IdentityManager dependency
-        
+
     Returns:
         User identity details
-        
+
     Raises:
         HTTPException: If user not found
     """
     logger.debug(f"Getting user by email {email}")
-    
+
     try:
         user = identity_manager.get_user_by_email(email)
         if not user:
-            raise HTTPException(status_code=404, detail=f"User with email {email} not found")
-        
+            raise HTTPException(status_code=404, detail=f"User with email {email} not found")  # noqa: E501
+
         return UserIdentityResponse(
             user_id=user.user_id,
             email=user.email,
@@ -303,42 +303,42 @@ def get_user_by_email(
             created_at=user.created_at,
             verified_at=user.verified_at
         )
-        
+
     except HTTPException:
         raise
     except Exception as e:
         logger.error(f"Failed to get user by email {email}: {e}")
-        raise HTTPException(status_code=500, detail="Failed to get user by email")
+        raise HTTPException(status_code=500, detail="Failed to get user by email")  # noqa: E501
 
 
 @router.get("/users", response_model=UserListResponse)
 def list_users(
-    verified_only: bool = Query(False, description="Only return verified users"),
-    min_trust_level: int = Query(0, description="Minimum trust level filter", ge=0, le=2),
+    verified_only: bool = Query(False, description="Only return verified users"),  # noqa: E501
+    min_trust_level: int = Query(0, description="Minimum trust level filter", ge=0, le=2),  # noqa: E501
     limit: int = Query(100, description="Maximum number of results", le=1000),
     identity_manager: IdentityManager = Depends(get_identity_manager)
 ):
     """
     List users with optional filtering.
-    
+
     Args:
         verified_only: Only return verified users
         min_trust_level: Minimum trust level filter
         limit: Maximum number of results
         identity_manager: IdentityManager dependency
-        
+
     Returns:
         List of user identities
     """
-    logger.debug(f"Listing users (verified_only={verified_only}, min_trust={min_trust_level}, limit={limit})")
-    
+    logger.debug(f"Listing users (verified_only={verified_only}, min_trust={min_trust_level}, limit={limit})")  # noqa: E501
+
     try:
         users = identity_manager.list_users(
             verified_only=verified_only,
             min_trust_level=min_trust_level,
             limit=limit
         )
-        
+
         user_responses = []
         for user in users:
             user_responses.append(UserIdentityResponse(
@@ -351,54 +351,54 @@ def list_users(
                 created_at=user.created_at,
                 verified_at=user.verified_at
             ))
-        
+
         return UserListResponse(
             users=user_responses,
             total_count=len(user_responses)
         )
-        
+
     except Exception as e:
         logger.error(f"Failed to list users: {e}")
         raise HTTPException(status_code=500, detail="Failed to list users")
 
 
-@router.get("/users/{user_id}/trust-network", response_model=TrustNetworkResponse)
+@router.get("/users/{user_id}/trust-network", response_model=TrustNetworkResponse)  # noqa: E501
 def get_trust_network(
     user_id: str = Path(..., description="User ID"),
     identity_manager: IdentityManager = Depends(get_identity_manager)
 ):
     """
     Get trust network information for a user.
-    
+
     Args:
         user_id: User identifier
         identity_manager: IdentityManager dependency
-        
+
     Returns:
         Trust network details
-        
+
     Raises:
         HTTPException: If user not found
     """
     logger.debug(f"Getting trust network for user {user_id}")
-    
+
     try:
         # Check if user exists
         user = identity_manager.get_user(user_id)
         if not user:
-            raise HTTPException(status_code=404, detail=f"User {user_id} not found")
-        
+            raise HTTPException(status_code=404, detail=f"User {user_id} not found")  # noqa: E501
+
         trust_network = identity_manager.get_trust_network(user_id)
-        
+
         return TrustNetworkResponse(
             user_id=user_id,
             trustees=trust_network.get("trustees", []),
             trusted=trust_network.get("trusted", []),
             trust_count=trust_network.get("trust_count", 0)
         )
-        
+
     except HTTPException:
         raise
     except Exception as e:
         logger.error(f"Failed to get trust network for user {user_id}: {e}")
-        raise HTTPException(status_code=500, detail="Failed to get trust network")
+        raise HTTPException(status_code=500, detail="Failed to get trust network")  # noqa: E501

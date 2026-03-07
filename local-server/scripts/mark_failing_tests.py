@@ -124,31 +124,31 @@ FAILING_TESTS = {
 def add_skip_marker_to_test(file_path: Path, test_name: str) -> bool:
     """Add @pytest.mark.skip_suite marker to a specific test function."""
     content = file_path.read_text()
-    
+
     # Pattern to find the test function definition
     # Matches: def test_name( or async def test_name( with any indentation
     pattern = rf'([ ]*)(?:async )?def {test_name}\('
-    
+
     # Check if marker already exists
     check_pattern = rf'@pytest\.mark\.skip_suite\s*\n\s*(?:async )?def {test_name}\('
     if re.search(check_pattern, content):
         print(f"  ✓ {test_name} already has skip marker")
         return False
-    
+
     # Find all matches and their indentation
     matches = list(re.finditer(pattern, content))
     if not matches:
         print(f"  ✗ Could not find {test_name}")
         return False
-    
+
     # Get the first match (should only be one)
     match = matches[0]
     indent = match.group(1)
-    
+
     # Add the marker before the function definition
     replacement = f'{indent}@pytest.mark.skip_suite\n{match.group(0)}'
     new_content = content[:match.start()] + replacement + content[match.end():]
-    
+
     file_path.write_text(new_content)
     print(f"  ✓ Added skip marker to {test_name}")
     return True
@@ -157,10 +157,10 @@ def add_skip_marker_to_test(file_path: Path, test_name: str) -> bool:
 def ensure_pytest_import(file_path: Path) -> None:
     """Ensure pytest is imported at the top of the file."""
     content = file_path.read_text()
-    
+
     if 'import pytest' in content:
         return
-    
+
     # Add pytest import after the first import block
     lines = content.split('\n')
     for i, line in enumerate(lines):
@@ -175,40 +175,40 @@ def ensure_pytest_import(file_path: Path) -> None:
             if line.strip() and not line.strip().startswith('#') and not line.strip().startswith('"""'):
                 lines.insert(i, 'import pytest')
                 break
-    
+
     file_path.write_text('\n'.join(lines))
-    print(f"  ✓ Added pytest import")
+    print("  ✓ Added pytest import")
 
 
 def main():
     """Main function to mark all failing tests."""
     tests_dir = Path(__file__).parent.parent / "tests" / "integration_tests"
-    
+
     if not tests_dir.exists():
         print(f"Error: Tests directory not found: {tests_dir}")
         sys.exit(1)
-    
+
     total_marked = 0
-    
+
     for filename, test_names in FAILING_TESTS.items():
         file_path = tests_dir / filename
-        
+
         if not file_path.exists():
             print(f"⚠ File not found: {filename}")
             continue
-        
+
         print(f"\nProcessing {filename}...")
         ensure_pytest_import(file_path)
-        
+
         for test_name in test_names:
             if add_skip_marker_to_test(file_path, test_name):
                 total_marked += 1
-    
+
     print(f"\n✅ Marked {total_marked} tests with @pytest.mark.skip_suite")
-    print(f"\nTo run tests without the failing ones:")
-    print(f"  pytest tests/integration_tests/ -m 'not skip_suite'")
-    print(f"\nTo run only the marked tests:")
-    print(f"  pytest tests/integration_tests/ -m 'skip_suite'")
+    print("\nTo run tests without the failing ones:")
+    print("  pytest tests/integration_tests/ -m 'not skip_suite'")
+    print("\nTo run only the marked tests:")
+    print("  pytest tests/integration_tests/ -m 'skip_suite'")
 
 
 if __name__ == "__main__":

@@ -7,10 +7,10 @@ from database.migrations.migration_manager import Migration
 
 class Migration002(Migration):
     """Add graph events table for change tracking."""
-    
+
     version = 2
     description = "Add graph events"
-    
+
     def up(self, connection: Connection) -> None:
         """Apply the migration."""
         connection.execute(text("""
@@ -24,7 +24,7 @@ class Migration002(Migration):
                 processed BOOLEAN DEFAULT FALSE
             )
         """))
-    
+
     def down(self, connection: Connection) -> None:
         """Rollback the migration."""
         connection.execute(text("DROP TABLE IF EXISTS graph_events"))

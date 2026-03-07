@@ -31,6 +31,7 @@ vi.mock("@/api/hooks/graph/useGraph", () => ({
 
 // Mock the TreeMenu component
 vi.mock("@/components/graphs/tree_menu/tree_menu", () => ({
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   TreeMenu: ({ chartData }: any) => (
     <div data-testid="tree-menu">
       Tree Menu - Root: {chartData?.root?.title || "No data"}
@@ -80,6 +81,7 @@ describe("TreeChartPanel", () => {
       data: undefined,
       isLoading: false,
       error: null,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } as any);
   });
 
@@ -88,16 +90,19 @@ describe("TreeChartPanel", () => {
       data: undefined,
       isLoading: true,
       error: null,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } as any);
     mockUseDomainNodes.mockReturnValue({
       data: undefined,
       isLoading: true,
       error: null,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } as any);
     mockUseStructureNodeNodes.mockReturnValue({
       data: undefined,
       isLoading: true,
       error: null,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } as any);
 
     render(
@@ -111,7 +116,9 @@ describe("TreeChartPanel", () => {
 
   it("displays error state when data loading fails", () => {
     // Suppress expected error logs during this test
-    const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+    const consoleErrorSpy = vi
+      .spyOn(console, "error")
+      .mockImplementation(() => {});
 
     const testError = new Error("Failed to load data");
 
@@ -119,16 +126,19 @@ describe("TreeChartPanel", () => {
       data: undefined,
       isLoading: false,
       error: testError,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } as any);
     mockUseDomainNodes.mockReturnValue({
       data: undefined,
       isLoading: false,
       error: null,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } as any);
     mockUseStructureNodeNodes.mockReturnValue({
       data: undefined,
       isLoading: false,
       error: null,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } as any);
 
     render(
@@ -143,7 +153,7 @@ describe("TreeChartPanel", () => {
     // Verify error was logged and restore console.error
     expect(consoleErrorSpy).toHaveBeenCalledWith(
       expect.stringContaining("[API ERROR] TreeChartPanel error"),
-      expect.objectContaining({ error: testError })
+      expect.objectContaining({ error: testError }),
     );
     consoleErrorSpy.mockRestore();
   });
@@ -153,16 +163,19 @@ describe("TreeChartPanel", () => {
       data: mockLayers,
       isLoading: false,
       error: null,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } as any);
     mockUseDomainNodes.mockReturnValue({
       data: mockDomains,
       isLoading: false,
       error: null,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } as any);
     mockUseStructureNodeNodes.mockReturnValue({
       data: mockTerms,
       isLoading: false,
       error: null,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } as any);
 
     render(
@@ -192,21 +205,25 @@ describe("TreeChartPanel", () => {
       data: mockLayers,
       isLoading: false,
       error: null,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } as any);
     mockUseDomainNodes.mockReturnValue({
       data: mockDomains,
       isLoading: false,
       error: null,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } as any);
     mockUseStructureNodeNodes.mockReturnValue({
       data: mockTermsWithTarget,
       isLoading: false,
       error: null,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } as any);
     mockUseStructureNode.mockReturnValue({
       data: mockTargetTerm,
       isLoading: false,
       error: null,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } as any);
 
     render(
@@ -232,16 +249,19 @@ describe("TreeChartPanel", () => {
       data: undefined,
       isLoading: true,
       error: null,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } as any);
     mockUseDomainNodes.mockReturnValue({
       data: undefined,
       isLoading: true,
       error: null,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } as any);
     mockUseStructureNodeNodes.mockReturnValue({
       data: undefined,
       isLoading: true,
       error: null,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } as any);
 
     render(
@@ -256,7 +276,9 @@ describe("TreeChartPanel", () => {
 
   it("displays custom error component when provided", () => {
     // Suppress expected error logs during this test
-    const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+    const consoleErrorSpy = vi
+      .spyOn(console, "error")
+      .mockImplementation(() => {});
 
     const customErrorComponent = (
       <div data-testid="custom-error">Custom error message</div>
@@ -267,16 +289,19 @@ describe("TreeChartPanel", () => {
       data: undefined,
       isLoading: false,
       error: testError,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } as any);
     mockUseDomainNodes.mockReturnValue({
       data: undefined,
       isLoading: false,
       error: null,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } as any);
     mockUseStructureNodeNodes.mockReturnValue({
       data: undefined,
       isLoading: false,
       error: null,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } as any);
 
     render(
@@ -291,7 +316,7 @@ describe("TreeChartPanel", () => {
     // Verify error was logged and restore console.error
     expect(consoleErrorSpy).toHaveBeenCalledWith(
       expect.stringContaining("[API ERROR] TreeChartPanel error"),
-      expect.objectContaining({ error: testError })
+      expect.objectContaining({ error: testError }),
     );
     consoleErrorSpy.mockRestore();
   });
@@ -301,16 +326,19 @@ describe("TreeChartPanel", () => {
       data: mockLayers,
       isLoading: false,
       error: null,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } as any);
     mockUseDomainNodes.mockReturnValue({
       data: mockDomains,
       isLoading: false,
       error: null,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } as any);
     mockUseStructureNodeNodes.mockReturnValue({
       data: mockTerms,
       isLoading: false,
       error: null,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } as any);
 
     const { container } = render(

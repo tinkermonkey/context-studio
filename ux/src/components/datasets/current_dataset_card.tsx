@@ -1,17 +1,17 @@
 import React, { useEffect, useRef } from "react";
-import { Card, Spinner, Badge, Button, Progress } from "flowbite-react";
+import { Badge, Button, Card, Progress, Spinner } from "flowbite-react";
 import {
+  Activity,
+  AlertCircle,
   Calendar,
+  ChevronRight,
+  Clock,
   Database,
   FileText,
   Hash,
-  Activity,
-  Settings,
-  Clock,
-  ChevronRight,
   RefreshCw,
+  Settings,
   Square,
-  AlertCircle,
 } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 import { useActiveDataset } from "@/api/hooks/datasets/useDatasets";
@@ -31,7 +31,7 @@ export const CurrentDatasetCard: React.FC<CurrentDatasetCardProps> = ({
     error: embeddingError,
     connect,
     disconnect,
-    stopRegeneration
+    stopRegeneration,
   } = useEmbeddingRegeneration();
 
   const previousDatasetId = useRef<string | null>(null);
@@ -46,11 +46,6 @@ export const CurrentDatasetCard: React.FC<CurrentDatasetCardProps> = ({
     });
   };
 
-  const formatFileSize = (filename: string) => {
-    // This would ideally come from the API, but we can estimate or show filename for now
-    return filename;
-  };
-
   const handleStartRegeneration = (force = false) => {
     connect(force);
   };
@@ -59,16 +54,18 @@ export const CurrentDatasetCard: React.FC<CurrentDatasetCardProps> = ({
     await stopRegeneration();
   };
 
-  const isEmbeddingRunning = embeddingStatus === 'running';
+  const isEmbeddingRunning = embeddingStatus === "running";
 
   // Reset embedding status when dataset actually changes
   useEffect(() => {
     const currentDatasetId = activeDataset?.id;
 
     // If dataset actually changed (not just initial load)
-    if (previousDatasetId.current &&
-        previousDatasetId.current !== currentDatasetId &&
-        embeddingStatus !== 'disconnected') {
+    if (
+      previousDatasetId.current &&
+      previousDatasetId.current !== currentDatasetId &&
+      embeddingStatus !== "disconnected"
+    ) {
       disconnect();
     }
 
@@ -217,7 +214,11 @@ export const CurrentDatasetCard: React.FC<CurrentDatasetCardProps> = ({
           </h4>
           <div className="flex items-center space-x-2">
             {isEmbeddingRunning ? (
-              <Button size="xs" color="failure" onClick={handleStopRegeneration}>
+              <Button
+                size="xs"
+                color="failure"
+                onClick={handleStopRegeneration}
+              >
                 <Square className="mr-1 h-3 w-3" />
                 Stop
               </Button>
@@ -238,8 +239,13 @@ export const CurrentDatasetCard: React.FC<CurrentDatasetCardProps> = ({
         {isEmbeddingRunning && embeddingProgress && (
           <div className="space-y-2">
             <div className="flex justify-between text-xs text-gray-600 dark:text-gray-400">
-              <span>{embeddingProgress.completion_percentage.toFixed(1)}% Complete</span>
-              <span>{embeddingProgress.completed_nodes} / {embeddingProgress.total_nodes} nodes</span>
+              <span>
+                {embeddingProgress.completion_percentage.toFixed(1)}% Complete
+              </span>
+              <span>
+                {embeddingProgress.completed_nodes} /{" "}
+                {embeddingProgress.total_nodes} nodes
+              </span>
             </div>
             <Progress
               progress={embeddingProgress.completion_percentage}
@@ -248,10 +254,12 @@ export const CurrentDatasetCard: React.FC<CurrentDatasetCardProps> = ({
             />
             <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400">
               <span>
-                {embeddingProgress.current_node_type}: {embeddingProgress.current_node_title}
+                {embeddingProgress.current_node_type}:{" "}
+                {embeddingProgress.current_node_title}
               </span>
               <span>
-                ETA: {Math.round(embeddingProgress.estimated_remaining_seconds)}s
+                ETA: {Math.round(embeddingProgress.estimated_remaining_seconds)}
+                s
               </span>
             </div>
             {embeddingProgress.error_count > 0 && (
@@ -272,7 +280,7 @@ export const CurrentDatasetCard: React.FC<CurrentDatasetCardProps> = ({
         )}
 
         {/* Status Badge */}
-        {embeddingStatus === 'completed' && (
+        {embeddingStatus === "completed" && (
           <div className="text-center">
             <Badge color="success" size="sm">
               Embeddings Updated

@@ -10,7 +10,7 @@ import os
 from uuid import uuid4
 
 sys.path.insert(
-    0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))  # noqa: E501
 )
 
 
@@ -33,7 +33,7 @@ class TestWordSenseUpdateAPI:
             "title": f"Test Domain {uuid4()}",
             "parent_node_id": layer["id"],
         }
-        domain_response = client.post("/api/structure_nodes/", json=domain_data)
+        domain_response = client.post("/api/structure_nodes/", json=domain_data)  # noqa: E501
         domain = domain_response.json()
 
         term_data = {
@@ -73,7 +73,7 @@ class TestWordSenseUpdateAPI:
         assert result[0]["definition"] == "a test definition"
 
         # Verify persisted by fetching again
-        get_response = client.get(f"/api/structure_nodes/{node_id}/word_senses")
+        get_response = client.get(f"/api/structure_nodes/{node_id}/word_senses")  # noqa: E501
         assert get_response.status_code == 200
         fetched = get_response.json()
         assert len(fetched) == 1
@@ -94,7 +94,7 @@ class TestWordSenseUpdateAPI:
             "title": f"Test Domain {uuid4()}",
             "parent_node_id": layer["id"],
         }
-        domain_response = client.post("/api/structure_nodes/", json=domain_data)
+        domain_response = client.post("/api/structure_nodes/", json=domain_data)  # noqa: E501
         domain = domain_response.json()
 
         term_data = {
@@ -179,7 +179,7 @@ class TestWordSenseUpdateAPI:
             "title": f"Test Domain {uuid4()}",
             "parent_node_id": layer["id"],
         }
-        domain_response = client.post("/api/structure_nodes/", json=domain_data)
+        domain_response = client.post("/api/structure_nodes/", json=domain_data)  # noqa: E501
         domain = domain_response.json()
 
         term_data = {
@@ -253,7 +253,7 @@ class TestWordSenseUpdateAPI:
             "title": f"Test Domain {uuid4()}",
             "parent_node_id": layer["id"],
         }
-        domain_response = client.post("/api/structure_nodes/", json=domain_data)
+        domain_response = client.post("/api/structure_nodes/", json=domain_data)  # noqa: E501
         domain = domain_response.json()
 
         term_data = {
@@ -324,7 +324,7 @@ class TestWordSenseUpdateAPI:
             "title": f"Test Domain {uuid4()}",
             "parent_node_id": layer["id"],
         }
-        domain_response = client.post("/api/structure_nodes/", json=domain_data)
+        domain_response = client.post("/api/structure_nodes/", json=domain_data)  # noqa: E501
         domain = domain_response.json()
 
         term_data = {
@@ -335,7 +335,7 @@ class TestWordSenseUpdateAPI:
         term_response = client.post("/api/structure_nodes/", json=term_data)
         term = term_response.json()
         node_id = term["id"]
-        initial_version = term["version"]  # Get initial version from create response
+        initial_version = term["version"]  # Get initial version from create response  # noqa: E501
 
         # Update word senses
         word_senses_data = {
@@ -361,7 +361,7 @@ class TestWordSenseUpdateAPI:
         assert updated_node["version"] == initial_version + 1
 
     def test_update_word_senses_empty_list(self, client):
-        """Test updating with empty list removes all senses for specified terms."""
+        """Test updating with empty list removes all senses for specified terms."""  # noqa: E501
         # Create a test node
         layer_data = {
             "node_type": "layer",
@@ -375,7 +375,7 @@ class TestWordSenseUpdateAPI:
             "title": f"Test Domain {uuid4()}",
             "parent_node_id": layer["id"],
         }
-        domain_response = client.post("/api/structure_nodes/", json=domain_data)
+        domain_response = client.post("/api/structure_nodes/", json=domain_data)  # noqa: E501
         domain = domain_response.json()
 
         term_data = {
@@ -404,7 +404,7 @@ class TestWordSenseUpdateAPI:
             json=initial_senses
         )
 
-        # Update with empty list (technically no terms to update, so all senses preserved)
+        # Update with empty list (technically no terms to update, so all senses preserved)  # noqa: E501
         empty_update = {
             "selected_senses": []
         }
@@ -417,7 +417,7 @@ class TestWordSenseUpdateAPI:
         assert response.status_code == 200
         result = response.json()
 
-        # Since we're not updating any terms, existing senses should be preserved
+        # Since we're not updating any terms, existing senses should be preserved  # noqa: E501
         assert len(result) == 1
         assert result[0]["sense_id"] == "test.n.01"
 

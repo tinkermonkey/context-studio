@@ -8,8 +8,6 @@
 import { BaseService } from "./base";
 import {
   UnifiedSearchRequest,
-  UnifiedNode,
-  SearchLink,
   SourceType,
   MultiSourceSearchResponse,
   UnifiedReferenceError,
@@ -18,29 +16,21 @@ import {
   StreamingSearchState,
   StreamingSearchOptions,
   StreamingSearchControl,
-  SourceSearchUpdate,
   StreamingUpdateCallback,
-  StreamingStateCallback,
   createInitialStreamingState,
   updateStreamingState,
   getEnabledSources,
   SOURCE_ENDPOINTS,
   StreamingSearchError,
-  StreamingTimeoutError,
 } from "../types/streamingReference";
 
 export class StreamingReferenceService extends BaseService {
-
-
-
-
-
   /**
    * Search all enabled reference sources in parallel with real-time updates
    */
   async searchStreaming(
     request: UnifiedSearchRequest,
-    options: StreamingSearchOptions = {}
+    options: StreamingSearchOptions = {},
   ): Promise<StreamingSearchControl> {
     return this.withErrorContext(async () => {
       this.validateSearchRequest(request);
@@ -50,12 +40,13 @@ export class StreamingReferenceService extends BaseService {
         onStateChange,
         timeout = 30000,
         retryAttempts = 1,
-        includePartialResults = true,
       } = options;
 
       const enabledSources = getEnabledSources();
       if (enabledSources.length === 0) {
-        throw new StreamingSearchError("No enabled reference sources available");
+        throw new StreamingSearchError(
+          "No enabled reference sources available",
+        );
       }
 
       let state = createInitialStreamingState(request);
@@ -66,7 +57,7 @@ export class StreamingReferenceService extends BaseService {
       onStateChange?.(state);
 
       // Start search for each enabled source
-      const sourcePromises = enabledSources.map(source =>
+      const sourcePromises = enabledSources.map((source) =>
         this.searchSingleSource(
           source,
           request,
@@ -79,8 +70,8 @@ export class StreamingReferenceService extends BaseService {
             state = updateStreamingState(state, update);
             onSourceUpdate?.(update);
             onStateChange?.(state);
-          }
-        )
+          },
+        ),
       );
 
       // Don't await all promises - let them resolve individually
@@ -113,7 +104,7 @@ export class StreamingReferenceService extends BaseService {
     signal: AbortSignal,
     timeoutMs: number,
     retryAttempts: number,
-    onUpdate: StreamingUpdateCallback
+    onUpdate: StreamingUpdateCallback,
   ): Promise<void> {
     const config = SOURCE_ENDPOINTS[source];
     if (!config.enabled) {
@@ -128,8 +119,6 @@ export class StreamingReferenceService extends BaseService {
       links: [],
     });
 
-    let lastError: Error | undefined;
-
     for (let attempt = 0; attempt <= retryAttempts; attempt++) {
       if (signal.aborted) {
         return;
@@ -140,15 +129,21 @@ export class StreamingReferenceService extends BaseService {
 
         // Create timeout for this specific request
         const timeoutController = new AbortController();
-        const timeoutId = setTimeout(() => timeoutController.abort(), timeoutMs);
+        const timeoutId = setTimeout(
+          () => timeoutController.abort(),
+          timeoutMs,
+        );
 
         // Combine abort signals
-        const combinedSignal = this.combineAbortSignals(signal, timeoutController.signal);
+        const combinedSignal = this.combineAbortSignals(
+          signal,
+          timeoutController.signal,
+        );
 
         const response = await this.searchSourceEndpoint(
           source,
           request,
-          combinedSignal
+          combinedSignal,
         );
 
         clearTimeout(timeoutId);
@@ -161,19 +156,17 @@ export class StreamingReferenceService extends BaseService {
           results: response.results || [],
           links: response.links || [],
           execution_time_ms: executionTime,
-          total_results: response.total_results || response.results?.length || 0,
+          total_results:
+            response.total_results || response.results?.length || 0,
         });
 
         return; // Success - exit retry loop
-
       } catch (error) {
-        lastError = error as Error;
-
         if (signal.aborted) {
           return;
         }
 
-        if (error instanceof Error && error.name === 'AbortError') {
+        if (error instanceof Error && error.name === "AbortError") {
           // Timeout occurred
           onUpdate({
             source,
@@ -209,7 +202,7 @@ export class StreamingReferenceService extends BaseService {
   private async searchSourceEndpoint(
     source: SourceType,
     request: UnifiedSearchRequest,
-    signal: AbortSignal
+    signal: AbortSignal,
   ): Promise<MultiSourceSearchResponse> {
     const config = SOURCE_ENDPOINTS[source];
 
@@ -230,20 +223,22 @@ export class StreamingReferenceService extends BaseService {
         timeout: config.timeout || 5000,
       });
 
-      console.log(`Streaming search: ${source} returned ${response.results.length} results`, {
-        source,
-        resultCount: response.results.length,
-        totalResults: response.total_results,
-        executionTime: response.search_time_ms
-      });
+      console.log(
+        `Streaming search: ${source} returned ${response.results.length} results`,
+        {
+          source,
+          resultCount: response.results.length,
+          totalResults: response.total_results,
+          executionTime: response.search_time_ms,
+        },
+      );
 
       return response;
-
     } catch (error) {
       throw new StreamingSearchError(
         `Failed to search ${source}`,
         source,
-        error as Error
+        error as Error,
       );
     }
   }
@@ -253,27 +248,26 @@ export class StreamingReferenceService extends BaseService {
    */
   async searchAllSources(
     request: UnifiedSearchRequest,
-    options: StreamingSearchOptions = {}
+    options: StreamingSearchOptions = {},
   ): Promise<StreamingSearchState> {
     return new Promise((resolve, reject) => {
-      let finalState: StreamingSearchState;
-
       this.searchStreaming(request, {
         ...options,
         onStateChange: (state) => {
-          finalState = state;
           options.onStateChange?.(state);
 
           if (state.isComplete) {
             resolve(state);
           }
         },
-      }).then(control => {
-        // Handle the case where search completes synchronously
-        if (control.getState().isComplete) {
-          resolve(control.getState());
-        }
-      }).catch(reject);
+      })
+        .then((control) => {
+          // Handle the case where search completes synchronously
+          if (control.getState().isComplete) {
+            resolve(control.getState());
+          }
+        })
+        .catch(reject);
     });
   }
 
@@ -282,11 +276,12 @@ export class StreamingReferenceService extends BaseService {
    */
   async getSourceStatus(): Promise<Record<SourceType, boolean>> {
     const sources = getEnabledSources();
-    const status: Record<SourceType, boolean> = {} as Record<SourceType, boolean>;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const status: Record<SourceType, boolean> = {} as any;
 
     // For now, just return enabled status
     // Could be enhanced to actually ping each endpoint
-    sources.forEach(source => {
+    sources.forEach((source) => {
       status[source] = SOURCE_ENDPOINTS[source].enabled;
     });
 
@@ -303,7 +298,7 @@ export class StreamingReferenceService extends BaseService {
 
     if (request.query.trim().length < 2) {
       throw new UnifiedReferenceError(
-        "Search query must be at least 2 characters"
+        "Search query must be at least 2 characters",
       );
     }
   }
@@ -312,13 +307,13 @@ export class StreamingReferenceService extends BaseService {
    * Format error message for a specific source
    */
   private formatSourceError(error: Error, source: SourceType): string {
-    if (error.message.includes('404')) {
+    if (error.message.includes("404")) {
       return `${source} search endpoint not available`;
     }
-    if (error.message.includes('timeout')) {
+    if (error.message.includes("timeout")) {
       return `${source} search timed out`;
     }
-    if (error.message.includes('Network Error')) {
+    if (error.message.includes("Network Error")) {
       return `Unable to connect to ${source}`;
     }
     return `${source} search failed: ${error.message}`;
@@ -330,11 +325,13 @@ export class StreamingReferenceService extends BaseService {
   private combineAbortSignals(...signals: AbortSignal[]): AbortSignal {
     const controller = new AbortController();
 
-    signals.forEach(signal => {
+    signals.forEach((signal) => {
       if (signal.aborted) {
         controller.abort();
       } else {
-        signal.addEventListener('abort', () => controller.abort(), { once: true });
+        signal.addEventListener("abort", () => controller.abort(), {
+          once: true,
+        });
       }
     });
 
@@ -345,7 +342,7 @@ export class StreamingReferenceService extends BaseService {
    * Delay utility for retries
    */
   private delay(ms: number): Promise<void> {
-    return new Promise(resolve => setTimeout(resolve, ms));
+    return new Promise((resolve) => setTimeout(resolve, ms));
   }
 }
 

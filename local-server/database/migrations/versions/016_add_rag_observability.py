@@ -26,19 +26,19 @@ class Migration016(Migration):
                 request_id TEXT NOT NULL,
                 sentence_text TEXT NOT NULL,
 
-                -- Layer 0: Knowledge Graph Context Preparation (vector search for relevant KG concepts)
+                -- Layer 0: Knowledge Graph Context Preparation (vector search for relevant KG concepts)  
                 layer_0_time_ms INTEGER,
                 layer_0_count INTEGER,
 
-                -- Layer 1: LLM-based Entity Extraction (primary concept extraction using LLM)
+                -- Layer 1: LLM-based Entity Extraction (primary concept extraction using LLM)  
                 layer_1_time_ms INTEGER,
                 layer_1_count INTEGER,
 
-                -- Layer 2: spaCy Syntactic Gap Analysis (grammatical analysis for unrecognized spans)
+                -- Layer 2: spaCy Syntactic Gap Analysis (grammatical analysis for unrecognized spans)  
                 layer_2_time_ms INTEGER,
                 layer_2_count INTEGER,
 
-                -- Layer 3: Concept Resolution via KG and Web Search (resolve unrecognized concepts)
+                -- Layer 3: Concept Resolution via KG and Web Search (resolve unrecognized concepts)  
                 layer_3_time_ms INTEGER,
                 layer_3_count INTEGER,
 
@@ -83,10 +83,10 @@ class Migration016(Migration):
                 -- Timestamp for retention management
                 timestamp DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL,
 
-                -- Retention period: 7 days for traces (more detailed, shorter retention)
+                -- Retention period: 7 days for traces (more detailed, shorter retention)  
                 retention_days INTEGER DEFAULT 7 NOT NULL
 
-                -- Note: No foreign key constraint to allow independent trace storage
+                -- Note: No foreign key constraint to allow independent trace storage  
             )
         """))
 

@@ -4,28 +4,23 @@ import sys
 import os
 
 sys.path.append(
-    os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    os.path.dirname(
+        os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    )  # noqa: E501
 )
 
-import pytest
-from sqlalchemy import text
-from services.change_event_handler import ChangeEventHandler
-from utils.event_processor import EventProcessor
-from database.models import ChangeEvent
-from database.enums import RecordType
-import time
-import json
-from uuid import uuid4
+import pytest  # noqa: E402
+from sqlalchemy import text  # noqa: E402
+from services.change_event_handler import ChangeEventHandler  # noqa: E402
+from database.enums import RecordType  # noqa: E402
+import json  # noqa: E402
+from uuid import uuid4  # noqa: E402
 
 
 @pytest.fixture
 def change_event_handler(db_session):
     """Create a ChangeEventHandler for testing."""
     return ChangeEventHandler(db_session)
-
-
-
-
 
 
 def test_event_statistics_integration(db_session, change_event_handler):
@@ -69,7 +64,9 @@ def test_event_statistics_integration(db_session, change_event_handler):
 
     # Verify stats increased
     assert new_stats["total_events"] == initial_stats["total_events"] + 5
-    assert new_stats["unprocessed_events"] == initial_stats["unprocessed_events"] + 5
+    assert (
+        new_stats["unprocessed_events"] == initial_stats["unprocessed_events"] + 5
+    )  # noqa: E501
 
     # Verify event type breakdown
     assert (
@@ -96,7 +93,8 @@ def test_event_statistics_integration(db_session, change_event_handler):
     )
     assert (
         new_stats["events_by_record_type"]["structure_node_link"]
-        == initial_stats["events_by_record_type"].get("structure_node_link", 0) + 1
+        == initial_stats["events_by_record_type"].get("structure_node_link", 0)
+        + 1  # noqa: E501
     )
 
 
@@ -113,29 +111,24 @@ def test_database_trigger_integration(db_session):
     # Get the engine from the db_session's bind
     engine = db_session.bind
 
-    # Insert a structure_node directly (would trigger change_events via database trigger)
+    # Insert a structure_node directly (would trigger change_events via database trigger)  # noqa: E501
     # This is a simulated test since we'd need the actual triggers in place
     with engine.connect() as conn:
         # First check if change_events table exists
-        table_exists = conn.execute(
-            text(
-                """
-            SELECT name FROM sqlite_master 
+        table_exists = conn.execute(text("""
+            SELECT name FROM sqlite_master
             WHERE type='table' AND name='change_events'
-        """
-            )
-        ).fetchone()
+        """)).fetchone()
 
         if table_exists:
             # Simulate what a trigger would do
             conn.execute(
-                text(
-                    """
-                INSERT INTO change_events (event_type, record_type, record_id, old_data, new_data, processed)
-                VALUES ('create', 'structure_node', :node_id, NULL, 
+                text("""
+                INSERT INTO change_events
+                (event_type, record_type, record_id, old_data, new_data, processed)
+                VALUES ('create', 'structure_node', :node_id, NULL,
                         :node_data, 0)
-            """
-                ),
+            """),  # noqa: E501
                 {
                     "node_id": trigger_node_id,
                     "node_data": json.dumps(
@@ -151,11 +144,9 @@ def test_database_trigger_integration(db_session):
 
             # Verify the event was created
             event_count = conn.execute(
-                text(
-                    """
+                text("""
                 SELECT COUNT(*) FROM change_events WHERE record_id = :node_id
-            """
-                ),
+            """),
                 {"node_id": trigger_node_id},
             ).scalar()
 
@@ -163,11 +154,9 @@ def test_database_trigger_integration(db_session):
 
             # Clean up
             conn.execute(
-                text(
-                    """
+                text("""
                 DELETE FROM change_events WHERE record_id = :node_id
-            """
-                ),
+            """),
                 {"node_id": trigger_node_id},
             )
             conn.commit()
@@ -189,12 +178,15 @@ def test_update_node_type_trigger(db_session):
                 INSERT INTO structure_nodes (id, node_type, title, definition)
                 VALUES (:node_id, 'term', 'Test Node', 'Test definition')
             """),
-            {"node_id": node_id}
+            {"node_id": node_id},
         )
         conn.commit()
 
         # Clear any create events from the insert
-        conn.execute(text("DELETE FROM change_events WHERE record_id = :node_id"), {"node_id": node_id})
+        conn.execute(
+            text("DELETE FROM change_events WHERE record_id = :node_id"),
+            {"node_id": node_id},
+        )  # noqa: E501
         conn.commit()
 
         # Update the node_type
@@ -204,7 +196,7 @@ def test_update_node_type_trigger(db_session):
                 SET node_type = 'domain'
                 WHERE id = :node_id
             """),
-            {"node_id": node_id}
+            {"node_id": node_id},
         )
         conn.commit()
 
@@ -215,7 +207,7 @@ def test_update_node_type_trigger(db_session):
                 FROM change_events
                 WHERE record_id = :node_id AND event_type = 'update-type'
             """),
-            {"node_id": node_id}
+            {"node_id": node_id},
         ).fetchone()
 
         assert event is not None, "Expected update-type event not found"
@@ -232,13 +224,19 @@ def test_update_node_type_trigger(db_session):
         assert new_data["node_type"] == "domain"
 
         # Clean up
-        conn.execute(text("DELETE FROM change_events WHERE record_id = :node_id"), {"node_id": node_id})
-        conn.execute(text("DELETE FROM structure_nodes WHERE id = :node_id"), {"node_id": node_id})
+        conn.execute(
+            text("DELETE FROM change_events WHERE record_id = :node_id"),
+            {"node_id": node_id},
+        )  # noqa: E501
+        conn.execute(
+            text("DELETE FROM structure_nodes WHERE id = :node_id"),
+            {"node_id": node_id},
+        )  # noqa: E501
         conn.commit()
 
 
 def test_move_node_trigger(db_session):
-    """Test that moving a node (changing parent_node_id) generates a move event."""
+    """Test that moving a node (changing parent_node_id) generates a move event."""  # noqa: E501
 
     # Generate unique IDs for this test
     node_id = f"move-node-{uuid4()}"
@@ -255,14 +253,14 @@ def test_move_node_trigger(db_session):
                 INSERT INTO structure_nodes (id, node_type, title, definition)
                 VALUES (:parent_id, 'domain', 'Old Parent', 'Old parent definition')
             """),
-            {"parent_id": old_parent_id}
+            {"parent_id": old_parent_id},
         )
         conn.execute(
             text("""
                 INSERT INTO structure_nodes (id, node_type, title, definition)
                 VALUES (:parent_id, 'domain', 'New Parent', 'New parent definition')
             """),
-            {"parent_id": new_parent_id}
+            {"parent_id": new_parent_id},
         )
 
         # Insert a structure_node with old parent
@@ -271,13 +269,21 @@ def test_move_node_trigger(db_session):
                 INSERT INTO structure_nodes (id, node_type, parent_node_id, title, definition)
                 VALUES (:node_id, 'term', :old_parent_id, 'Test Node', 'Test definition')
             """),
-            {"node_id": node_id, "old_parent_id": old_parent_id}
+            {"node_id": node_id, "old_parent_id": old_parent_id},
         )
         conn.commit()
 
         # Clear any create events from the inserts
-        conn.execute(text("DELETE FROM change_events WHERE record_id IN (:node_id, :old_parent_id, :new_parent_id)"),
-                    {"node_id": node_id, "old_parent_id": old_parent_id, "new_parent_id": new_parent_id})
+        conn.execute(
+            text(
+                "DELETE FROM change_events WHERE record_id IN (:node_id, :old_parent_id, :new_parent_id)"
+            ),  # noqa: E501
+            {
+                "node_id": node_id,
+                "old_parent_id": old_parent_id,
+                "new_parent_id": new_parent_id,
+            },
+        )  # noqa: E501, E128
         conn.commit()
 
         # Move the node to new parent
@@ -287,7 +293,7 @@ def test_move_node_trigger(db_session):
                 SET parent_node_id = :new_parent_id
                 WHERE id = :node_id
             """),
-            {"node_id": node_id, "new_parent_id": new_parent_id}
+            {"node_id": node_id, "new_parent_id": new_parent_id},
         )
         conn.commit()
 
@@ -298,7 +304,7 @@ def test_move_node_trigger(db_session):
                 FROM change_events
                 WHERE record_id = :node_id AND event_type = 'move'
             """),
-            {"node_id": node_id}
+            {"node_id": node_id},
         ).fetchone()
 
         assert event is not None, "Expected move event not found"
@@ -315,8 +321,24 @@ def test_move_node_trigger(db_session):
         assert new_data["parent_node_id"] == new_parent_id
 
         # Clean up
-        conn.execute(text("DELETE FROM change_events WHERE record_id IN (:node_id, :old_parent_id, :new_parent_id)"),
-                    {"node_id": node_id, "old_parent_id": old_parent_id, "new_parent_id": new_parent_id})
-        conn.execute(text("DELETE FROM structure_nodes WHERE id IN (:node_id, :old_parent_id, :new_parent_id)"),
-                    {"node_id": node_id, "old_parent_id": old_parent_id, "new_parent_id": new_parent_id})
+        conn.execute(
+            text(
+                "DELETE FROM change_events WHERE record_id IN (:node_id, :old_parent_id, :new_parent_id)"
+            ),  # noqa: E501
+            {
+                "node_id": node_id,
+                "old_parent_id": old_parent_id,
+                "new_parent_id": new_parent_id,
+            },
+        )  # noqa: E501, E128
+        conn.execute(
+            text(
+                "DELETE FROM structure_nodes WHERE id IN (:node_id, :old_parent_id, :new_parent_id)"
+            ),  # noqa: E501
+            {
+                "node_id": node_id,
+                "old_parent_id": old_parent_id,
+                "new_parent_id": new_parent_id,
+            },
+        )  # noqa: E501, E128
         conn.commit()

@@ -5,7 +5,6 @@
  */
 
 import React from "react";
-import { PredicateOut } from "@/api/services/predicates";
 import { usePredicates } from "@/api/hooks/predicates";
 import { PortalRecordSelector } from "@/components/node_selectors/portal_record_selector";
 

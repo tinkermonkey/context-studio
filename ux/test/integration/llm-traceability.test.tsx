@@ -6,7 +6,7 @@
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { render, waitFor, screen } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 import { userEvent } from "@testing-library/user-event";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import React from "react";
@@ -44,18 +44,13 @@ const TestWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => {
         refetchOnWindowFocus: false,
         refetchOnMount: false,
         refetchOnReconnect: false,
+
         staleTime: 0,
         gcTime: 0,
       },
       mutations: {
         retry: false,
-        retryOnMount: false,
       },
-    },
-    logger: {
-      log: () => {},
-      warn: () => {},
-      error: () => {},
     },
   });
 
@@ -123,6 +118,7 @@ const mockSelectionResponse = {
 };
 
 describe("LLM Traceability Integration", () => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let mockService: any;
 
   beforeEach(() => {
@@ -278,10 +274,7 @@ describe("LLM Traceability Integration", () => {
         };
 
         return (
-          <button
-            onClick={handleClick}
-            data-testid="suggestion-button"
-          >
+          <button onClick={handleClick} data-testid="suggestion-button">
             Accept Suggestion
           </button>
         );
@@ -496,10 +489,10 @@ describe("LLM Traceability Integration", () => {
       );
 
       const TestComponent = () => {
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const { data, isLoading, error } = useExecutionAnalytics(null, {
-          retry: false,
-          retryDelay: 0,
-        });
+          retry: 0,
+        } as never);
 
         if (isLoading) return <div>Loading...</div>;
         if (error) return <div data-testid="error">Analytics unavailable</div>;
@@ -531,10 +524,10 @@ describe("LLM Traceability Integration", () => {
       );
 
       const TestComponent = () => {
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const { data, isLoading, error } = useLLMTraceabilityHealth({
-          retry: false,
-          retryDelay: 0,
-        });
+          retry: 0,
+        } as never);
 
         if (isLoading) return <div>Checking health...</div>;
         if (error)

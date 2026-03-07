@@ -1,3 +1,4 @@
+# mypy: ignore-errors
 from nltk.corpus import wordnet
 synsets = wordnet.synsets('truck')
 

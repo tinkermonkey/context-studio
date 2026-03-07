@@ -8,16 +8,16 @@ import sys
 import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-import pytest
-import json
-from unittest.mock import Mock, MagicMock, patch
-from sqlalchemy.orm import Session
+import pytest  # noqa: E402
+import json  # noqa: E402
+from unittest.mock import Mock, patch  # noqa: E402
+from sqlalchemy.orm import Session  # noqa: E402
 
-from services.reference_link_service import ReferenceLinkService
-from api.models.structure_nodes import ReferenceLink
-from database.models import StructureNode
-from database.enums import NodeType
-from services.exceptions import NotFoundError, ReferenceNotFoundError, ValidationError
+from services.reference_link_service import ReferenceLinkService  # noqa: E402
+from api.models.structure_nodes import ReferenceLink  # noqa: E402
+from database.models import StructureNode  # noqa: E402
+from database.enums import NodeType  # noqa: E402
+from services.exceptions import NotFoundError, ReferenceNotFoundError, ValidationError  # noqa: E402, E501
 
 
 class TestReferenceLinkService:
@@ -94,7 +94,7 @@ class TestReferenceLinkService:
             mock_ref_mgr.return_value = mock_manager
 
             # Execute & Assert
-            with pytest.raises(ReferenceNotFoundError, match="Reference not found in reference.db"):
+            with pytest.raises(ReferenceNotFoundError, match="Reference not found: schema.org:Person"):
                 service.add_reference_links("test-node-123", sample_links)
 
     def test_add_reference_links_prevents_duplicates(self, service, mock_db, sample_node):
@@ -281,7 +281,7 @@ class TestReferenceLinkService:
             mock_ref_mgr.return_value = mock_manager
 
             # Execute & Assert
-            with pytest.raises(ReferenceNotFoundError, match="Reference not found in reference.db"):
+            with pytest.raises(ReferenceNotFoundError, match="Reference not found: schema.org:NonExistent"):
                 service.validate_reference_link("schema.org", "NonExistent")
 
     def test_commit_failure_rollback(self, service, mock_db, sample_node, sample_links):
@@ -301,7 +301,6 @@ class TestReferenceLinkService:
 
             # Verify rollback was called
             mock_db.rollback.assert_called_once()
-
 
     def test_validate_node_reference_links_success(self, service, mock_db, sample_node):
         """Test successful validation of node reference links."""

@@ -30,9 +30,7 @@ export const SourceDropdown: React.FC<SourceDropdownProps> = ({
 
   // Create dropdown options
   const getDropdownOptions = () => {
-    const options = [
-      { value: "all", label: "All Sources" },
-    ];
+    const options = [{ value: "all", label: "All Sources" }];
 
     // Add individual source options
     DEFAULT_SOURCES.forEach((source) => {
@@ -101,11 +99,11 @@ export const SourceDropdown: React.FC<SourceDropdownProps> = ({
 
         {/* Show custom option if multiple but not all sources are selected */}
         {selectedSources.length > 1 &&
-         selectedSources.length < DEFAULT_SOURCES.length && (
-          <option value="custom">
-            Custom ({selectedSources.length} sources)
-          </option>
-        )}
+          selectedSources.length < DEFAULT_SOURCES.length && (
+            <option value="custom">
+              Custom ({selectedSources.length} sources)
+            </option>
+          )}
       </Select>
     </div>
   );

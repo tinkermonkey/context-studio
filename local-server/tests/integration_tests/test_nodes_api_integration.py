@@ -12,12 +12,12 @@ import pytest
 from uuid import uuid4
 
 sys.path.insert(
-    0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))  # noqa: E501
 )
 
 
 class TestNodesAPICRUD:
-    """Test complete CRUD operations on nodes API as specified in the design."""
+    """Test complete CRUD operations on nodes API as specified in the design."""  # noqa: E501
 
     def test_create_layer_success(self, client):
         """Test successful layer creation."""
@@ -95,7 +95,7 @@ class TestNodesAPICRUD:
             "definition": "Domain for term test",
             "parent_node_id": layer["id"],
         }
-        domain_response = client.post("/api/structure_nodes/", json=domain_data)
+        domain_response = client.post("/api/structure_nodes/", json=domain_data)  # noqa: E501
         domain = domain_response.json()
 
         # Create term
@@ -164,7 +164,7 @@ class TestNodesAPICRUD:
 
         # Update the layer
         updated_title = f"Updated Title {uuid4()}"
-        update_data = {"title": updated_title, "definition": "Updated definition"}
+        update_data = {"title": updated_title, "definition": "Updated definition"}  # noqa: E501
         response = client.put(
             f"/api/structure_nodes/{created_layer['id']}", json=update_data
         )
@@ -195,7 +195,7 @@ class TestNodesAPICRUD:
         assert response.status_code == 204
 
         # Verify the layer is deleted
-        get_response = client.get(f"/api/structure_nodes/{created_layer['id']}")
+        get_response = client.get(f"/api/structure_nodes/{created_layer['id']}")  # noqa: E501
         assert get_response.status_code == 404
 
     def test_delete_node_cascade(self, client):
@@ -212,7 +212,7 @@ class TestNodesAPICRUD:
             "title": unique_domain_title,
             "parent_node_id": layer["id"],
         }
-        domain_response = client.post("/api/structure_nodes/", json=domain_data)
+        domain_response = client.post("/api/structure_nodes/", json=domain_data)  # noqa: E501
         domain = domain_response.json()
 
         unique_term_title = f"Cascade Test Term {uuid4()}"
@@ -229,9 +229,9 @@ class TestNodesAPICRUD:
         assert delete_response.status_code == 204
 
         # Verify all nodes are deleted
-        assert client.get(f"/api/structure_nodes/{layer['id']}").status_code == 404
-        assert client.get(f"/api/structure_nodes/{domain['id']}").status_code == 404
-        assert client.get(f"/api/structure_nodes/{term['id']}").status_code == 404
+        assert client.get(f"/api/structure_nodes/{layer['id']}").status_code == 404  # noqa: E501
+        assert client.get(f"/api/structure_nodes/{domain['id']}").status_code == 404  # noqa: E501
+        assert client.get(f"/api/structure_nodes/{term['id']}").status_code == 404  # noqa: E501
 
 
 class TestNodesAPIFiltering:
@@ -263,7 +263,7 @@ class TestNodesAPIFiltering:
         """Test filtering nodes by node_type as specified in the design."""
         # Create layer and domain
         unique_id = str(uuid4())
-        layer_data = {"node_type": "layer", "title": f"Filter Test Layer {unique_id}"}
+        layer_data = {"node_type": "layer", "title": f"Filter Test Layer {unique_id}"}  # noqa: E501
         layer_response = client.post("/api/structure_nodes/", json=layer_data)
         layer = layer_response.json()
 
@@ -311,7 +311,7 @@ class TestNodesAPIFiltering:
         client.post("/api/structure_nodes/", json=domain2_data)
 
         # Filter by parent ID
-        response = client.get(f"/api/structure_nodes/?parent_node_id={layer['id']}")
+        response = client.get(f"/api/structure_nodes/?parent_node_id={layer['id']}")  # noqa: E501
 
         assert response.status_code == 200
         data = response.json()
@@ -347,14 +347,14 @@ class TestNodesAPIFiltering:
         """Test sorting by different fields."""
         # Create layers with different titles (to test title sorting)
         unique_id = str(uuid4())
-        layer_data1 = {"node_type": "layer", "title": f"Z Last Layer {unique_id}"}
-        layer_data2 = {"node_type": "layer", "title": f"A First Layer {unique_id}"}
+        layer_data1 = {"node_type": "layer", "title": f"Z Last Layer {unique_id}"}  # noqa: E501
+        layer_data2 = {"node_type": "layer", "title": f"A First Layer {unique_id}"}  # noqa: E501
 
         client.post("/api/structure_nodes/", json=layer_data1)
         client.post("/api/structure_nodes/", json=layer_data2)
 
         # Sort by title
-        response = client.get("/api/structure_nodes/?sort_by=title&node_type=layer")
+        response = client.get("/api/structure_nodes/?sort_by=title&node_type=layer")  # noqa: E501
 
         assert response.status_code == 200
         data = response.json()
@@ -382,14 +382,14 @@ class TestNodesAPIValidation:
         detail = response.json()["detail"]
         # Handle both string and list formats
         if isinstance(detail, list):
-            error_messages = [str(error.get("msg", "")).lower() for error in detail]
-            assert any("layers cannot have parent" in msg for msg in error_messages)
+            error_messages = [str(error.get("msg", "")).lower() for error in detail]  # noqa: E501
+            assert any("layers cannot have parent" in msg for msg in error_messages)  # noqa: E501
         else:
             assert "layers cannot have parent" in detail.lower()
 
     def test_create_domain_without_parent_fails(self, client):
-        """Test that creating domain without parent returns validation error."""
-        domain_data = {"node_type": "domain", "title": f"Invalid Domain {str(uuid4())}"}
+        """Test that creating domain without parent returns validation error."""  # noqa: E501
+        domain_data = {"node_type": "domain", "title": f"Invalid Domain {str(uuid4())}"}  # noqa: E501
 
         response = client.post("/api/structure_nodes/", json=domain_data)
 
@@ -398,7 +398,7 @@ class TestNodesAPIValidation:
 
     def test_create_term_without_parent_fails(self, client):
         """Test that creating term without parent returns validation error."""
-        term_data = {"node_type": "term", "title": f"Invalid Term {str(uuid4())}"}
+        term_data = {"node_type": "term", "title": f"Invalid Term {str(uuid4())}"}  # noqa: E501
 
         response = client.post("/api/structure_nodes/", json=term_data)
 
@@ -418,7 +418,7 @@ class TestNodesAPIValidation:
             "title": f"Test Domain {unique_id}",
             "parent_node_id": layer["id"],
         }
-        domain_response = client.post("/api/structure_nodes/", json=domain_data)
+        domain_response = client.post("/api/structure_nodes/", json=domain_data)  # noqa: E501
         domain = domain_response.json()
 
         # Try to create domain with domain parent (should fail)
@@ -428,7 +428,7 @@ class TestNodesAPIValidation:
             "parent_node_id": domain["id"],
         }
 
-        response = client.post("/api/structure_nodes/", json=invalid_domain_data)
+        response = client.post("/api/structure_nodes/", json=invalid_domain_data)  # noqa: E501
 
         assert response.status_code == 400
         assert "parent must be a layer" in response.json()["detail"].lower()
@@ -451,7 +451,7 @@ class TestNodesAPIValidation:
         response = client.post("/api/structure_nodes/", json=term_data)
 
         assert response.status_code == 400
-        assert "parent must be a domain or term" in response.json()["detail"].lower()
+        assert "parent must be a domain or term" in response.json()["detail"].lower()  # noqa: E501
 
     def test_duplicate_layer_title_fails(self, client):
         """Test that creating layer with duplicate title fails."""
@@ -477,7 +477,7 @@ class TestNodesAPIValidation:
         assert "must be unique" in detail_str.lower()
 
     def test_duplicate_domain_title_within_layer_fails(self, client):
-        """Test that creating domain with duplicate title in same layer fails."""
+        """Test that creating domain with duplicate title in same layer fails."""  # noqa: E501
         # Create layer
         unique_id = str(uuid4())
         layer_data = {"node_type": "layer", "title": f"Test Layer {unique_id}"}
@@ -506,7 +506,7 @@ class TestNodesAPIValidation:
         assert "must be unique" in detail_str.lower()
 
     def test_duplicate_term_title_within_domain_fails(self, client):
-        """Test that creating term with duplicate title in same domain fails."""
+        """Test that creating term with duplicate title in same domain fails."""  # noqa: E501
         # Create layer -> domain
         unique_id = str(uuid4())
         layer_data = {"node_type": "layer", "title": f"Test Layer {unique_id}"}
@@ -518,7 +518,7 @@ class TestNodesAPIValidation:
             "title": f"Test Domain {unique_id}",
             "parent_node_id": layer["id"],
         }
-        domain_response = client.post("/api/structure_nodes/", json=domain_data)
+        domain_response = client.post("/api/structure_nodes/", json=domain_data)  # noqa: E501
         domain = domain_response.json()
 
         term_data = {
@@ -548,7 +548,7 @@ class TestNodesAPICompleteFlow:
 
     def test_complete_hierarchy_creation_and_management(self, client):
         """
-        Test complete CRUD operations on nodes API as specified in design example.
+        Test complete CRUD operations on nodes API as specified in design example.  # noqa: E501
 
         This test follows the exact pattern from section 8.3:
         1. Create layer
@@ -617,14 +617,14 @@ class TestNodesAPICompleteFlow:
 
         # 5. Test hierarchy filtering
         # Get domains under the layer
-        response = client.get(f"/api/structure_nodes/?parent_node_id={layer['id']}")
+        response = client.get(f"/api/structure_nodes/?parent_node_id={layer['id']}")  # noqa: E501
         assert response.status_code == 200
         data = response.json()
         assert len(data["data"]) >= 1
         assert data["data"][0]["node_type"] == "domain"
 
         # Get terms under the domain
-        response = client.get(f"/api/structure_nodes/?parent_node_id={domain['id']}")
+        response = client.get(f"/api/structure_nodes/?parent_node_id={domain['id']}")  # noqa: E501
         assert response.status_code == 200
         data = response.json()
         assert len(data["data"]) >= 1
@@ -632,7 +632,7 @@ class TestNodesAPICompleteFlow:
 
         # 6. Update nodes
         layer_update = {"title": f"Updated Layer Title {unique_id}"}
-        response = client.put(f"/api/structure_nodes/{layer['id']}", json=layer_update)
+        response = client.put(f"/api/structure_nodes/{layer['id']}", json=layer_update)  # noqa: E501
         assert response.status_code == 200
         updated_layer = response.json()
         assert updated_layer["title"] == f"Updated Layer Title {unique_id}"
@@ -643,9 +643,9 @@ class TestNodesAPICompleteFlow:
         assert response.status_code == 204
 
         # Verify all nodes in hierarchy are deleted
-        assert client.get(f"/api/structure_nodes/{layer['id']}").status_code == 404
-        assert client.get(f"/api/structure_nodes/{domain['id']}").status_code == 404
-        assert client.get(f"/api/structure_nodes/{term['id']}").status_code == 404
+        assert client.get(f"/api/structure_nodes/{layer['id']}").status_code == 404  # noqa: E501
+        assert client.get(f"/api/structure_nodes/{domain['id']}").status_code == 404  # noqa: E501
+        assert client.get(f"/api/structure_nodes/{term['id']}").status_code == 404  # noqa: E501
 
     def test_multiple_layers_with_domains(self, client):
         """Test creating multiple layers each with their own domains."""
@@ -672,7 +672,7 @@ class TestNodesAPICompleteFlow:
                     "definition": f"Domain {j+1} under layer {i+1}",
                     "parent_node_id": layer["id"],
                 }
-                response = client.post("/api/structure_nodes/", json=domain_data)
+                response = client.post("/api/structure_nodes/", json=domain_data)  # noqa: E501
                 assert response.status_code == 201
                 domains.append(response.json())
 
@@ -689,7 +689,7 @@ class TestNodesAPICompleteFlow:
 
         # Each layer should have exactly 2 domains
         for layer in layers:
-            response = client.get(f"/api/structure_nodes/?parent_node_id={layer['id']}")
+            response = client.get(f"/api/structure_nodes/?parent_node_id={layer['id']}")  # noqa: E501
             assert response.status_code == 200
             layer_domains = response.json()["data"]
             assert len(layer_domains) == 2
@@ -715,7 +715,7 @@ class TestNodesAPIErrorHandling:
     def test_missing_required_fields(self, client):
         """Test creating node with missing required fields."""
         # Missing title
-        response = client.post("/api/structure_nodes/", json={"node_type": "layer"})
+        response = client.post("/api/structure_nodes/", json={"node_type": "layer"})  # noqa: E501
         assert response.status_code == 422
 
         # Missing node_type
@@ -756,7 +756,7 @@ class TestNodesAPIErrorHandling:
         fake_id = str(uuid.uuid4())
         update_data = {"title": "Updated Title"}
 
-        response = client.put(f"/api/structure_nodes/{fake_id}", json=update_data)
+        response = client.put(f"/api/structure_nodes/{fake_id}", json=update_data)  # noqa: E501
 
         assert response.status_code == 404
         assert "not found" in response.json()["detail"].lower()
@@ -777,39 +777,54 @@ class TestMoveWithTypeConversionAPI:
     def test_move_domain_to_term_conversion(self, client):
         """Test moving a domain under another domain converts it to a term."""
         # Create: Layer1 -> Domain1, Layer2 -> Domain2
-        layer1 = client.post("/api/structure_nodes/", json={
-            "node_type": "layer",
-            "title": f"Layer1 {uuid4()}",
-        }).json()
+        layer1 = client.post(
+            "/api/structure_nodes/",
+            json={
+                "node_type": "layer",
+                "title": f"Layer1 {uuid4()}",
+            },
+        ).json()
 
-        layer2 = client.post("/api/structure_nodes/", json={
-            "node_type": "layer",
-            "title": f"Layer2 {uuid4()}",
-        }).json()
+        layer2 = client.post(
+            "/api/structure_nodes/",
+            json={
+                "node_type": "layer",
+                "title": f"Layer2 {uuid4()}",
+            },
+        ).json()
 
-        domain1 = client.post("/api/structure_nodes/", json={
-            "node_type": "domain",
-            "title": f"Domain1 {uuid4()}",
-            "parent_node_id": layer1["id"],
-        }).json()
+        domain1 = client.post(
+            "/api/structure_nodes/",
+            json={
+                "node_type": "domain",
+                "title": f"Domain1 {uuid4()}",
+                "parent_node_id": layer1["id"],
+            },
+        ).json()
 
-        domain2 = client.post("/api/structure_nodes/", json={
-            "node_type": "domain",
-            "title": f"Domain2 {uuid4()}",
-            "parent_node_id": layer2["id"],
-        }).json()
+        domain2 = client.post(
+            "/api/structure_nodes/",
+            json={
+                "node_type": "domain",
+                "title": f"Domain2 {uuid4()}",
+                "parent_node_id": layer2["id"],
+            },
+        ).json()
 
         # Verify initial types
         assert domain1["node_type"] == "domain"
         assert domain2["node_type"] == "domain"
 
         # Move domain1 under domain2 (should convert domain1 to term)
-        move_response = client.post("/api/structure_nodes/move", json={
-            "node_ids": [domain1["id"]],
-            "target_parent_id": domain2["id"],
-            "move_children": True,
-            "handle_conflicts": "warn",
-        })
+        move_response = client.post(
+            "/api/structure_nodes/move",
+            json={
+                "node_ids": [domain1["id"]],
+                "target_parent_id": domain2["id"],
+                "move_children": True,
+                "handle_conflicts": "warn",
+            },
+        )
 
         assert move_response.status_code == 200
         move_result = move_response.json()
@@ -830,33 +845,45 @@ class TestMoveWithTypeConversionAPI:
     def test_move_term_to_domain_conversion(self, client):
         """Test moving a term under a layer converts it to a domain."""
         # Create: Layer -> Domain -> Term
-        layer = client.post("/api/structure_nodes/", json={
-            "node_type": "layer",
-            "title": f"Layer {uuid4()}",
-        }).json()
+        layer = client.post(
+            "/api/structure_nodes/",
+            json={
+                "node_type": "layer",
+                "title": f"Layer {uuid4()}",
+            },
+        ).json()
 
-        domain = client.post("/api/structure_nodes/", json={
-            "node_type": "domain",
-            "title": f"Domain {uuid4()}",
-            "parent_node_id": layer["id"],
-        }).json()
+        domain = client.post(
+            "/api/structure_nodes/",
+            json={
+                "node_type": "domain",
+                "title": f"Domain {uuid4()}",
+                "parent_node_id": layer["id"],
+            },
+        ).json()
 
-        term = client.post("/api/structure_nodes/", json={
-            "node_type": "term",
-            "title": f"Term {uuid4()}",
-            "parent_node_id": domain["id"],
-        }).json()
+        term = client.post(
+            "/api/structure_nodes/",
+            json={
+                "node_type": "term",
+                "title": f"Term {uuid4()}",
+                "parent_node_id": domain["id"],
+            },
+        ).json()
 
         # Verify initial type
         assert term["node_type"] == "term"
 
         # Move term under layer (should convert to domain)
-        move_response = client.post("/api/structure_nodes/move", json={
-            "node_ids": [term["id"]],
-            "target_parent_id": layer["id"],
-            "move_children": True,
-            "handle_conflicts": "warn",
-        })
+        move_response = client.post(
+            "/api/structure_nodes/move",
+            json={
+                "node_ids": [term["id"]],
+                "target_parent_id": layer["id"],
+                "move_children": True,
+                "handle_conflicts": "warn",
+            },
+        )
 
         assert move_response.status_code == 200
         move_result = move_response.json()
@@ -876,41 +903,60 @@ class TestMoveWithTypeConversionAPI:
     def test_move_with_recursive_child_conversion(self, client):
         """Test moving a node converts all children recursively."""
         # Create: Layer1 -> Domain -> Term1 -> Term2, Layer2
-        layer1 = client.post("/api/structure_nodes/", json={
-            "node_type": "layer",
-            "title": f"Layer1 {uuid4()}",
-        }).json()
+        layer1 = client.post(
+            "/api/structure_nodes/",
+            json={
+                "node_type": "layer",
+                "title": f"Layer1 {uuid4()}",
+            },
+        ).json()
 
-        layer2 = client.post("/api/structure_nodes/", json={
-            "node_type": "layer",
-            "title": f"Layer2 {uuid4()}",
-        }).json()
+        layer2 = client.post(
+            "/api/structure_nodes/",
+            json={
+                "node_type": "layer",
+                "title": f"Layer2 {uuid4()}",
+            },
+        ).json()
 
-        domain = client.post("/api/structure_nodes/", json={
-            "node_type": "domain",
-            "title": f"Domain {uuid4()}",
-            "parent_node_id": layer1["id"],
-        }).json()
+        domain = client.post(
+            "/api/structure_nodes/",
+            json={
+                "node_type": "domain",
+                "title": f"Domain {uuid4()}",
+                "parent_node_id": layer1["id"],
+            },
+        ).json()
 
-        term1 = client.post("/api/structure_nodes/", json={
-            "node_type": "term",
-            "title": f"Term1 {uuid4()}",
-            "parent_node_id": domain["id"],
-        }).json()
+        term1 = client.post(
+            "/api/structure_nodes/",
+            json={
+                "node_type": "term",
+                "title": f"Term1 {uuid4()}",
+                "parent_node_id": domain["id"],
+            },
+        ).json()
 
-        term2 = client.post("/api/structure_nodes/", json={
-            "node_type": "term",
-            "title": f"Term2 {uuid4()}",
-            "parent_node_id": term1["id"],
-        }).json()
+        # Create a nested term under term1 to test recursive conversion
+        client.post(
+            "/api/structure_nodes/",
+            json={
+                "node_type": "term",
+                "title": f"Term2 {uuid4()}",
+                "parent_node_id": term1["id"],
+            },
+        )
 
-        # Move domain under layer2 (domain stays domain, but children should convert)
-        move_response = client.post("/api/structure_nodes/move", json={
-            "node_ids": [domain["id"]],
-            "target_parent_id": layer2["id"],
-            "move_children": True,
-            "handle_conflicts": "warn",
-        })
+        # Move domain under layer2 (domain stays domain, but children should convert)  # noqa: E501
+        move_response = client.post(
+            "/api/structure_nodes/move",
+            json={
+                "node_ids": [domain["id"]],
+                "target_parent_id": layer2["id"],
+                "move_children": True,
+                "handle_conflicts": "warn",
+            },
+        )
 
         assert move_response.status_code == 200
         move_result = move_response.json()
@@ -918,21 +964,27 @@ class TestMoveWithTypeConversionAPI:
         # Domain doesn't change type (domain under layer is correct)
         # Children were already terms and remain terms
         assert len(move_result["moved_nodes"]) == 1
-        assert len(move_result["converted_nodes"]) == 0  # No type changes needed
+        assert len(move_result["converted_nodes"]) == 0  # No type changes needed  # noqa: E501
 
-        # Now move domain under another domain (should convert to term + children)
-        domain2 = client.post("/api/structure_nodes/", json={
-            "node_type": "domain",
-            "title": f"Domain2 {uuid4()}",
-            "parent_node_id": layer2["id"],
-        }).json()
+        # Now move domain under another domain (should convert to term + children)  # noqa: E501
+        domain2 = client.post(
+            "/api/structure_nodes/",
+            json={
+                "node_type": "domain",
+                "title": f"Domain2 {uuid4()}",
+                "parent_node_id": layer2["id"],
+            },
+        ).json()
 
-        move_response2 = client.post("/api/structure_nodes/move", json={
-            "node_ids": [domain["id"]],
-            "target_parent_id": domain2["id"],
-            "move_children": True,
-            "handle_conflicts": "warn",
-        })
+        move_response2 = client.post(
+            "/api/structure_nodes/move",
+            json={
+                "node_ids": [domain["id"]],
+                "target_parent_id": domain2["id"],
+                "move_children": True,
+                "handle_conflicts": "warn",
+            },
+        )
 
         assert move_response2.status_code == 200
         move_result2 = move_response2.json()
@@ -945,39 +997,54 @@ class TestMoveWithTypeConversionAPI:
     def test_move_with_title_conflict_warn_mode(self, client):
         """Test move with title conflict in warn mode."""
         # Create two layers with same title structure
-        layer1 = client.post("/api/structure_nodes/", json={
-            "node_type": "layer",
-            "title": f"Layer1 {uuid4()}",
-        }).json()
+        layer1 = client.post(
+            "/api/structure_nodes/",
+            json={
+                "node_type": "layer",
+                "title": f"Layer1 {uuid4()}",
+            },
+        ).json()
 
-        layer2 = client.post("/api/structure_nodes/", json={
-            "node_type": "layer",
-            "title": f"Layer2 {uuid4()}",
-        }).json()
+        layer2 = client.post(
+            "/api/structure_nodes/",
+            json={
+                "node_type": "layer",
+                "title": f"Layer2 {uuid4()}",
+            },
+        ).json()
 
         conflicting_title = f"ConflictDomain {uuid4()}"
 
         # Create domain under layer1
-        domain1 = client.post("/api/structure_nodes/", json={
-            "node_type": "domain",
-            "title": conflicting_title,
-            "parent_node_id": layer1["id"],
-        }).json()
+        domain1 = client.post(
+            "/api/structure_nodes/",
+            json={
+                "node_type": "domain",
+                "title": conflicting_title,
+                "parent_node_id": layer1["id"],
+            },
+        ).json()
 
-        # Create domain under layer2 with SAME title
-        domain2 = client.post("/api/structure_nodes/", json={
-            "node_type": "domain",
-            "title": conflicting_title,
-            "parent_node_id": layer2["id"],
-        }).json()
+        # Create domain under layer2 with SAME title to cause conflict
+        client.post(
+            "/api/structure_nodes/",
+            json={
+                "node_type": "domain",
+                "title": conflicting_title,
+                "parent_node_id": layer2["id"],
+            },
+        )
 
         # Try to move domain1 under layer2 (conflict with domain2)
-        move_response = client.post("/api/structure_nodes/move", json={
-            "node_ids": [domain1["id"]],
-            "target_parent_id": layer2["id"],
-            "move_children": True,
-            "handle_conflicts": "warn",
-        })
+        move_response = client.post(
+            "/api/structure_nodes/move",
+            json={
+                "node_ids": [domain1["id"]],
+                "target_parent_id": layer2["id"],
+                "move_children": True,
+                "handle_conflicts": "warn",
+            },
+        )
 
         assert move_response.status_code == 200
         move_result = move_response.json()
@@ -989,46 +1056,64 @@ class TestMoveWithTypeConversionAPI:
     def test_move_with_title_conflict_rename_mode(self, client):
         """Test move with title conflict in rename mode."""
         # Create hierarchy with conflict
-        layer = client.post("/api/structure_nodes/", json={
-            "node_type": "layer",
-            "title": f"Layer {uuid4()}",
-        }).json()
+        layer = client.post(
+            "/api/structure_nodes/",
+            json={
+                "node_type": "layer",
+                "title": f"Layer {uuid4()}",
+            },
+        ).json()
 
         conflicting_title = f"ConflictDomain {uuid4()}"
 
-        domain1 = client.post("/api/structure_nodes/", json={
-            "node_type": "domain",
-            "title": conflicting_title,
-            "parent_node_id": layer["id"],
-        }).json()
+        domain1 = client.post(
+            "/api/structure_nodes/",
+            json={
+                "node_type": "domain",
+                "title": conflicting_title,
+                "parent_node_id": layer["id"],
+            },
+        ).json()
 
         # Create another layer and domain
-        layer2 = client.post("/api/structure_nodes/", json={
-            "node_type": "layer",
-            "title": f"Layer2 {uuid4()}",
-        }).json()
+        layer2 = client.post(
+            "/api/structure_nodes/",
+            json={
+                "node_type": "layer",
+                "title": f"Layer2 {uuid4()}",
+            },
+        ).json()
 
-        domain2 = client.post("/api/structure_nodes/", json={
-            "node_type": "domain",
-            "title": f"OtherDomain {uuid4()}",
-            "parent_node_id": layer2["id"],
-        }).json()
+        # Create a separate domain (not used, just setup)
+        client.post(
+            "/api/structure_nodes/",
+            json={
+                "node_type": "domain",
+                "title": f"OtherDomain {uuid4()}",
+                "parent_node_id": layer2["id"],
+            },
+        )
 
-        # Move domain1 to layer2 (no conflict initially)
-        # Then create a conflict and try rename mode
-        domain3 = client.post("/api/structure_nodes/", json={
-            "node_type": "domain",
-            "title": conflicting_title,
-            "parent_node_id": layer2["id"],
-        }).json()
+        # Create a conflicting domain to test rename mode
+        client.post(
+            "/api/structure_nodes/",
+            json={
+                "node_type": "domain",
+                "title": conflicting_title,
+                "parent_node_id": layer2["id"],
+            },
+        )
 
         # Move domain1 under layer2 with rename mode (should rename domain1)
-        move_response = client.post("/api/structure_nodes/move", json={
-            "node_ids": [domain1["id"]],
-            "target_parent_id": layer2["id"],
-            "move_children": True,
-            "handle_conflicts": "rename",
-        })
+        move_response = client.post(
+            "/api/structure_nodes/move",
+            json={
+                "node_ids": [domain1["id"]],
+                "target_parent_id": layer2["id"],
+                "move_children": True,
+                "handle_conflicts": "rename",
+            },
+        )
 
         assert move_response.status_code == 200
         move_result = move_response.json()
@@ -1041,41 +1126,58 @@ class TestMoveWithTypeConversionAPI:
         node_response = client.get(f"/api/structure_nodes/{domain1['id']}")
         updated_node = node_response.json()
         assert updated_node["title"] != conflicting_title
-        assert conflicting_title in updated_node["title"]  # Original title in renamed version
+        assert (
+            conflicting_title in updated_node["title"]
+        )  # Original title in renamed version
 
     def test_move_term_under_term_allowed(self, client):
         """Test that terms can be moved under other terms."""
         # Create: Layer -> Domain -> Term1, Term2
-        layer = client.post("/api/structure_nodes/", json={
-            "node_type": "layer",
-            "title": f"Layer {uuid4()}",
-        }).json()
+        layer = client.post(
+            "/api/structure_nodes/",
+            json={
+                "node_type": "layer",
+                "title": f"Layer {uuid4()}",
+            },
+        ).json()
 
-        domain = client.post("/api/structure_nodes/", json={
-            "node_type": "domain",
-            "title": f"Domain {uuid4()}",
-            "parent_node_id": layer["id"],
-        }).json()
+        domain = client.post(
+            "/api/structure_nodes/",
+            json={
+                "node_type": "domain",
+                "title": f"Domain {uuid4()}",
+                "parent_node_id": layer["id"],
+            },
+        ).json()
 
-        term1 = client.post("/api/structure_nodes/", json={
-            "node_type": "term",
-            "title": f"Term1 {uuid4()}",
-            "parent_node_id": domain["id"],
-        }).json()
+        term1 = client.post(
+            "/api/structure_nodes/",
+            json={
+                "node_type": "term",
+                "title": f"Term1 {uuid4()}",
+                "parent_node_id": domain["id"],
+            },
+        ).json()
 
-        term2 = client.post("/api/structure_nodes/", json={
-            "node_type": "term",
-            "title": f"Term2 {uuid4()}",
-            "parent_node_id": domain["id"],
-        }).json()
+        term2 = client.post(
+            "/api/structure_nodes/",
+            json={
+                "node_type": "term",
+                "title": f"Term2 {uuid4()}",
+                "parent_node_id": domain["id"],
+            },
+        ).json()
 
         # Move term2 under term1 (should be allowed)
-        move_response = client.post("/api/structure_nodes/move", json={
-            "node_ids": [term2["id"]],
-            "target_parent_id": term1["id"],
-            "move_children": True,
-            "handle_conflicts": "warn",
-        })
+        move_response = client.post(
+            "/api/structure_nodes/move",
+            json={
+                "node_ids": [term2["id"]],
+                "target_parent_id": term1["id"],
+                "move_children": True,
+                "handle_conflicts": "warn",
+            },
+        )
 
         assert move_response.status_code == 200
         move_result = move_response.json()
@@ -1090,7 +1192,6 @@ class TestMoveWithTypeConversionAPI:
         assert updated_node["node_type"] == "term"
         assert updated_node["parent_node_id"] == term1["id"]
 
-
     def test_list_node_links_pagination_metadata(self, client):
         """Test pagination metadata in node links endpoint."""
         import time
@@ -1101,7 +1202,7 @@ class TestMoveWithTypeConversionAPI:
             node_data = {
                 "title": f"{title} {int(time.time() * 1000)}",
                 "node_type": node_type,
-                "definition": f"Test {node_type} for pagination test"
+                "definition": f"Test {node_type} for pagination test",
             }
             if parent_id:
                 node_data["parent_node_id"] = parent_id
@@ -1110,22 +1211,26 @@ class TestMoveWithTypeConversionAPI:
             assert response.status_code == 201
             return response.json()
 
-        # Create test nodes - need terms to link between (links must be same type)
+        # Create test nodes - need terms to link between (links must be same type)  # noqa: E501
         layer = create_test_node("Layer", node_type="layer")
-        domain = create_test_node("Domain", node_type="domain", parent_id=layer["id"])
+        domain = create_test_node("Domain", node_type="domain", parent_id=layer["id"])  # noqa: E501
 
         # Create a source term that will have 15 outgoing links
-        source_term = create_test_node("SourceTerm", node_type="term", parent_id=domain["id"])
+        source_term = create_test_node(
+            "SourceTerm", node_type="term", parent_id=domain["id"]
+        )
 
         # Create a predicate for linking with unique identifier
         unique_id = uuid4().hex[:8]
         predicate_data = {
             "title": f"TestRelationship{unique_id}",
             "identifier": f"test_rel_{unique_id}",
-            "definition": "Test predicate for pagination"
+            "definition": "Test predicate for pagination",
         }
         predicate_resp = client.post("/api/predicates/", json=predicate_data)
-        assert predicate_resp.status_code == 201, f"Failed to create predicate: {predicate_resp.json()}"
+        assert (
+            predicate_resp.status_code == 201
+        ), f"Failed to create predicate: {predicate_resp.json()}"
         predicate = predicate_resp.json()
 
         # Create 15 test links from source_term to various target terms
@@ -1133,29 +1238,25 @@ class TestMoveWithTypeConversionAPI:
         for i in range(15):
             # Create target term
             target_term = create_test_node(
-                f"TargetTerm{i}",
-                node_type="term",
-                parent_id=domain["id"]
+                f"TargetTerm{i}", node_type="term", parent_id=domain["id"]
             )
 
             # Create link (term to term)
             link_data = {
                 "source_node_id": source_term["id"],
                 "target_node_id": target_term["id"],
-                "predicate": predicate["identifier"]
+                "predicate": predicate["identifier"],
             }
-            link_resp = client.post("/api/structure_nodes/links", json=link_data)
-            assert link_resp.status_code == 201, f"Failed to create link {i}: {link_resp.json() if link_resp.status_code != 201 else ''}"
+            link_resp = client.post("/api/structure_nodes/links", json=link_data)  # noqa: E501
+            assert (
+                link_resp.status_code == 201
+            ), f"Failed to create link {i}: {link_resp.json() if link_resp.status_code != 201 else ''}"  # noqa: E501
             link_ids.append(link_resp.json()["id"])
 
         # Test pagination with skip=5, limit=5
         response = client.get(
-            f"/api/structure_nodes/links",
-            params={
-                "source_node_id": source_term["id"],
-                "skip": 5,
-                "limit": 5
-            }
+            "/api/structure_nodes/links",
+            params={"source_node_id": source_term["id"], "skip": 5, "limit": 5},  # noqa: E501
         )
 
         assert response.status_code == 200
@@ -1170,16 +1271,12 @@ class TestMoveWithTypeConversionAPI:
         assert data["total"] == 15, f"Total should be 15, got {data['total']}"
         assert data["skip"] == 5, f"Skip should be 5, got {data['skip']}"
         assert data["limit"] == 5, f"Limit should be 5, got {data['limit']}"
-        assert len(data["data"]) == 5, f"Should return 5 links, got {len(data['data'])}"
+        assert len(data["data"]) == 5, f"Should return 5 links, got {len(data['data'])}"  # noqa: E501
 
         # Test last page (skip=10, limit=5 should return 5 links)
         response = client.get(
-            f"/api/structure_nodes/links",
-            params={
-                "source_node_id": source_term["id"],
-                "skip": 10,
-                "limit": 5
-            }
+            "/api/structure_nodes/links",
+            params={"source_node_id": source_term["id"], "skip": 10, "limit": 5},  # noqa: E501
         )
 
         assert response.status_code == 200
@@ -1190,12 +1287,8 @@ class TestMoveWithTypeConversionAPI:
 
         # Test beyond last page (skip=15, limit=5 should return 0 links)
         response = client.get(
-            f"/api/structure_nodes/links",
-            params={
-                "source_node_id": source_term["id"],
-                "skip": 15,
-                "limit": 5
-            }
+            "/api/structure_nodes/links",
+            params={"source_node_id": source_term["id"], "skip": 15, "limit": 5},  # noqa: E501
         )
 
         assert response.status_code == 200
@@ -1206,7 +1299,7 @@ class TestMoveWithTypeConversionAPI:
 
 
 class TestNodeAttributesAPI:
-    """Test attribute API endpoints for getting, setting, and removing attributes."""
+    """Test attribute API endpoints for getting, setting, and removing attributes."""  # noqa: E501
 
     @pytest.fixture
     def sample_nodes_with_links(self, client):
@@ -1228,7 +1321,7 @@ class TestNodeAttributesAPI:
             "definition": "Domain for attribute tests",
             "parent_node_id": layer["id"],
         }
-        domain_response = client.post("/api/structure_nodes/", json=domain_data)
+        domain_response = client.post("/api/structure_nodes/", json=domain_data)  # noqa: E501
         assert domain_response.status_code == 201
         domain = domain_response.json()
 
@@ -1245,8 +1338,8 @@ class TestNodeAttributesAPI:
 
         return layer, domain, term
 
-    def test_get_node_attributes_endpoint(self, client, sample_nodes_with_links):
-        """Test GET /api/structure_nodes/{id}/attributes returns resolved attributes."""
+    def test_get_node_attributes_endpoint(self, client, sample_nodes_with_links):  # noqa: E501
+        """Test GET /api/structure_nodes/{id}/attributes returns resolved attributes."""  # noqa: E501
         layer, domain, term = sample_nodes_with_links
 
         # Set some attributes on the domain
@@ -1255,26 +1348,24 @@ class TestNodeAttributesAPI:
                 "key": "jurisdiction",
                 "title": "Jurisdiction",
                 "value": "US Federal",
-                "value_type": "string"
+                "value_type": "string",
             }
         ]
 
         response = client.post(
             f"/api/structure_nodes/{domain['id']}/attributes",
-            json={"attributes": attributes}
+            json={"attributes": attributes},
         )
         assert response.status_code == 200
 
         # Get attributes from the term (should inherit from domain)
-        response = client.get(
-            f"/api/structure_nodes/{term['id']}/attributes"
-        )
+        response = client.get(f"/api/structure_nodes/{term['id']}/attributes")
 
         assert response.status_code == 200
         data = response.json()
         assert isinstance(data, list)
 
-    def test_set_node_attributes_endpoint(self, client, sample_nodes_with_links):
+    def test_set_node_attributes_endpoint(self, client, sample_nodes_with_links):  # noqa: E501
         """Test POST /api/structure_nodes/{id}/attributes stores attributes."""
         layer, domain, term = sample_nodes_with_links
 
@@ -1283,25 +1374,25 @@ class TestNodeAttributesAPI:
                 "key": "category",
                 "title": "Category",
                 "value": "legal",
-                "value_type": "string"
+                "value_type": "string",
             },
             {
                 "key": "jurisdiction",
                 "title": "Jurisdiction",
                 "value": "US Federal",
-                "value_type": "string"
-            }
+                "value_type": "string",
+            },
         ]
 
         response = client.post(
             f"/api/structure_nodes/{domain['id']}/attributes",
-            json={"attributes": attributes}
+            json={"attributes": attributes},
         )
 
         assert response.status_code == 200
 
-    def test_remove_node_attribute_endpoint(self, client, sample_nodes_with_links):
-        """Test DELETE /api/structure_nodes/{id}/attributes/{key} removes attribute."""
+    def test_remove_node_attribute_endpoint(self, client, sample_nodes_with_links):  # noqa: E501
+        """Test DELETE /api/structure_nodes/{id}/attributes/{key} removes attribute."""  # noqa: E501
         layer, domain, term = sample_nodes_with_links
 
         # First set an attribute
@@ -1310,13 +1401,13 @@ class TestNodeAttributesAPI:
                 "key": "test_key",
                 "title": "Test Key",
                 "value": "test_value",
-                "value_type": "string"
+                "value_type": "string",
             }
         ]
 
         client.post(
             f"/api/structure_nodes/{domain['id']}/attributes",
-            json={"attributes": attributes}
+            json={"attributes": attributes},
         )
 
         # Remove the attribute
@@ -1326,8 +1417,8 @@ class TestNodeAttributesAPI:
 
         assert response.status_code == 200
 
-    def test_attributes_inheritance_via_api(self, client, sample_nodes_with_links):
-        """Test end-to-end inheritance through API (Legal Domain hierarchy example)."""
+    def test_attributes_inheritance_via_api(self, client, sample_nodes_with_links):  # noqa: E501
+        """Test end-to-end inheritance through API (Legal Domain hierarchy example)."""  # noqa: E501
         layer, domain, term = sample_nodes_with_links
 
         # Set attribute on layer
@@ -1336,12 +1427,12 @@ class TestNodeAttributesAPI:
                 "key": "category",
                 "title": "Category",
                 "value": "legal",
-                "value_type": "string"
+                "value_type": "string",
             }
         ]
         client.post(
             f"/api/structure_nodes/{layer['id']}/attributes",
-            json={"attributes": layer_attrs}
+            json={"attributes": layer_attrs},
         )
 
         # Set attribute on domain (should inherit from layer)
@@ -1350,24 +1441,22 @@ class TestNodeAttributesAPI:
                 "key": "jurisdiction",
                 "title": "Jurisdiction",
                 "value": "US Federal",
-                "value_type": "string"
+                "value_type": "string",
             }
         ]
         client.post(
             f"/api/structure_nodes/{domain['id']}/attributes",
-            json={"attributes": domain_attrs}
+            json={"attributes": domain_attrs},
         )
 
         # Get attributes from term (should have inherited attributes)
-        response = client.get(
-            f"/api/structure_nodes/{term['id']}/attributes"
-        )
+        response = client.get(f"/api/structure_nodes/{term['id']}/attributes")
 
         assert response.status_code == 200
         data = response.json()
         assert isinstance(data, list)
 
-    def test_attribute_validation_errors(self, client, sample_nodes_with_links):
+    def test_attribute_validation_errors(self, client, sample_nodes_with_links):  # noqa: E501
         """Test invalid attributes return 422 validation error."""
         layer, domain, term = sample_nodes_with_links
 
@@ -1381,7 +1470,7 @@ class TestNodeAttributesAPI:
 
         response = client.post(
             f"/api/structure_nodes/{domain['id']}/attributes",
-            json={"attributes": invalid_attributes}
+            json={"attributes": invalid_attributes},
         )
 
         assert response.status_code == 422
@@ -1391,23 +1480,16 @@ class TestNodeAttributesAPI:
         non_existent_id = "00000000-0000-0000-0000-000000000000"
 
         # Test GET non-existent node
-        response = client.get(
-            f"/api/structure_nodes/{non_existent_id}/attributes"
-        )
+        response = client.get(f"/api/structure_nodes/{non_existent_id}/attributes")  # noqa: E501
         assert response.status_code == 404
 
         # Test POST to non-existent node
         attributes = [
-            {
-                "key": "test",
-                "title": "Test",
-                "value": "test",
-                "value_type": "string"
-            }
+            {"key": "test", "title": "Test", "value": "test", "value_type": "string"}  # noqa: E501
         ]
         response = client.post(
             f"/api/structure_nodes/{non_existent_id}/attributes",
-            json={"attributes": attributes}
+            json={"attributes": attributes},
         )
         assert response.status_code == 404
 

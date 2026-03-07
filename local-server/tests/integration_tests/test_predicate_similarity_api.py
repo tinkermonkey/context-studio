@@ -11,7 +11,6 @@ import pytest
 import tempfile
 import os
 import uuid
-from datetime import date
 
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
@@ -19,18 +18,18 @@ from sqlalchemy.orm import sessionmaker
 
 # Setup test environment
 import sys
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))  # noqa: E501
 
-from app import app
-from database.models import Base, Predicate
-from database.utils import get_db
-from reference_db.config import ReferenceConfig
-from reference_db.manager import ReferenceManager
-from embeddings.generate_embeddings import generate_embedding
+from app import app  # noqa: E402
+from database.models import Base, Predicate  # noqa: E402
+from database.utils import get_db  # noqa: E402
+from reference_db.config import ReferenceConfig  # noqa: E402
+from reference_db.manager import ReferenceManager  # noqa: E402
+from embeddings.generate_embeddings import generate_embedding  # noqa: E402
 
 
 # Skip if embeddings not available
-pytest.importorskip("embeddings.generate_embeddings", reason="embeddings module not available")
+pytest.importorskip("embeddings.generate_embeddings", reason="embeddings module not available")  # noqa: E501
 
 
 @pytest.fixture(scope="module")
@@ -164,7 +163,7 @@ class TestFindSimilarEndpoint:
         """Test basic similarity search."""
         # Get test predicate UUID
         pred_id = client.test_predicate_ids["pred_1"]
-        
+
         response = client.post(
             f"/api/predicates/{pred_id}/find-similar",
             params={
@@ -209,7 +208,7 @@ class TestFindSimilarEndpoint:
     def test_find_similar_with_source_filter(self, client):
         """Test similarity search with source filter."""
         pred_id = client.test_predicate_ids["pred_2"]
-        
+
         response = client.post(
             f"/api/predicates/{pred_id}/find-similar",
             params={
@@ -230,7 +229,7 @@ class TestFindSimilarEndpoint:
     def test_find_similar_with_caching(self, client):
         """Test similarity search with caching."""
         pred_id = client.test_predicate_ids["pred_1"]
-        
+
         # First request (may or may not be cached depending on test run order)
         response1 = client.post(
             f"/api/predicates/{pred_id}/find-similar",
@@ -243,7 +242,7 @@ class TestFindSimilarEndpoint:
 
         assert response1.status_code == 200
         data1 = response1.json()
-        # Note: First request cached status may vary depending on test execution order
+        # Note: First request cached status may vary depending on test execution order  # noqa: E501
 
         # Second request (should be consistent with first)
         response2 = client.post(
@@ -277,7 +276,7 @@ class TestFindSimilarEndpoint:
     def test_find_similar_nonexistent_predicate(self, client):
         """Test similarity search with nonexistent predicate."""
         response = client.post(
-            "/api/predicates/00000000-0000-0000-0000-000000000000/find-similar",
+            "/api/predicates/00000000-0000-0000-0000-000000000000/find-similar",  # noqa: E501
             params={"limit": 10, "threshold": 0.7}
         )
 
@@ -286,7 +285,7 @@ class TestFindSimilarEndpoint:
     def test_find_similar_parameter_validation(self, client):
         """Test parameter validation."""
         pred_id = client.test_predicate_ids["pred_1"]
-        
+
         # Invalid limit (too high)
         response = client.post(
             f"/api/predicates/{pred_id}/find-similar",
@@ -351,10 +350,10 @@ class TestClusterPredicatesEndpoint:
         """Test clustering specific predicates."""
         pred_ids = [
             client.test_predicate_ids["pred_1"],
-            client.test_predicate_ids["pred_2"], 
+            client.test_predicate_ids["pred_2"],
             client.test_predicate_ids["pred_3"]
         ]
-        
+
         response = client.post(
             "/api/predicates/cluster-predicates",
             params={
@@ -377,7 +376,7 @@ class TestClusterPredicatesEndpoint:
     def test_cluster_insufficient_predicates(self, client):
         """Test clustering with insufficient predicates."""
         pred_id = client.test_predicate_ids["pred_1"]
-        
+
         response = client.post(
             "/api/predicates/cluster-predicates",
             params={
@@ -435,7 +434,7 @@ class TestEndToEndWorkflow:
     def test_search_cluster_workflow(self, client):
         """Test complete workflow: search -> cluster -> invalidate cache."""
         pred_id = client.test_predicate_ids["pred_1"]
-        
+
         # 1. Find similar predicates
         search_response = client.post(
             f"/api/predicates/{pred_id}/find-similar",
@@ -455,14 +454,14 @@ class TestEndToEndWorkflow:
         assert cluster_data["total_clusters"] >= 0
 
         # 3. Invalidate cache
-        cache_response = client.post("/api/predicates/invalidate-similarity-cache")
+        cache_response = client.post("/api/predicates/invalidate-similarity-cache")  # noqa: E501
         assert cache_response.status_code == 200
         assert cache_response.json()["success"] is True
 
     def test_multiple_searches_with_cache(self, client):
         """Test multiple searches to verify caching behavior."""
         pred_id = client.test_predicate_ids["pred_2"]
-        
+
         # Invalidate cache first
         client.post("/api/predicates/invalidate-similarity-cache")
 

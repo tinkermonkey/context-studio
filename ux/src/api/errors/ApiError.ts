@@ -31,14 +31,16 @@ export class ApiError extends Error {
   ): ApiError {
     const message =
       typeof response.data === "object" && response.data !== null
-        ? (response.data as any).message || fallbackMessage
+        ? // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          (response.data as any).message || fallbackMessage
         : fallbackMessage;
 
     return new ApiError(
       response.status,
       message,
       typeof response.data === "object" && response.data !== null
-        ? (response.data as any).code
+        ? // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          (response.data as any).code
         : undefined,
       response.data,
       endpoint,

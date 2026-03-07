@@ -11,10 +11,10 @@ sys.path.append(
     os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 )
 
-import pytest
-from pydantic import ValidationError
-from uuid import UUID
-from rag.models import (
+import pytest  # noqa: E402
+from pydantic import ValidationError  # noqa: E402
+from uuid import UUID  # noqa: E402
+from rag.models import (  # noqa: E402
     RAGExtractionRequest,
     RAGExtractionResponse,
     ExtractedEntity,

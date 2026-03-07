@@ -5,14 +5,14 @@ import os
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-import pytest
-import json
-import uuid
-from unittest.mock import Mock, patch
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
-from database.models import Base, Predicate, StructureNode, StructureNodeLink
-from database.predicate_utils import generate_identifier_from_title
+import pytest  # noqa: E402
+import json  # noqa: E402
+import uuid  # noqa: E402
+from unittest.mock import Mock, patch  # noqa: E402
+from sqlalchemy import create_engine  # noqa: E402
+from sqlalchemy.orm import sessionmaker  # noqa: E402
+from database.models import Base, Predicate, StructureNode, StructureNodeLink  # noqa: E402, E501
+from database.predicate_utils import generate_identifier_from_title  # noqa: E402, E501
 
 
 class TestPredicateCRUDOperations:
@@ -130,8 +130,6 @@ class TestPredicateCRUDOperations:
         predicate = Predicate(identifier="test", title="Original Title")
         db_session.add(predicate)
         db_session.commit()
-
-        original_modified = predicate.date_modified
 
         # Update predicate
         predicate.title = "Updated Title"
@@ -307,7 +305,7 @@ class TestConceptNetMapping:
             if not predicate.mapping:
                 return None
             try:
-                mapping = json.loads(predicate.mapping)
+                mapping = json.loads(predicate.mapping)  # type: ignore
                 return mapping.get("conceptnet", {}).get("relation")
             except (json.JSONDecodeError, KeyError):
                 return None

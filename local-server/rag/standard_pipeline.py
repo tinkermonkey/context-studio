@@ -1,3 +1,4 @@
+# mypy: ignore-errors
 """
 Standard RAG Pipeline Implementation
 

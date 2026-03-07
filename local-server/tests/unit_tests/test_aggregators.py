@@ -4,11 +4,10 @@ import sys
 import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
-import pytest
-from typing import List
+import pytest  # noqa: E402
 
-from reference_api.aggregators import ResultAggregator
-from reference_api.models import (
+from reference_api.aggregators import ResultAggregator  # noqa: E402
+from reference_api.models import (  # noqa: E402
     SourceType, SearchNode, SearchLink, MultiSourceSearchResponse
 )
 

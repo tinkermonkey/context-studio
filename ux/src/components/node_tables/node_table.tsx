@@ -6,25 +6,25 @@ import {
   getPaginationRowModel,
 } from "@tanstack/react-table";
 import {
-  Table,
-  TableHead,
-  TableHeadCell,
-  TableBody,
-  TableRow,
-  TableCell,
-  Button,
   Badge,
-  Spinner,
-  Modal,
-  ModalHeader,
-  ModalBody,
+  Button,
   Dropdown,
   DropdownItem,
-  TextInput,
-  Pagination,
-  Select,
-  Radio,
   Label,
+  Modal,
+  ModalBody,
+  ModalHeader,
+  Pagination,
+  Radio,
+  Select,
+  Spinner,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeadCell,
+  TableRow,
+  TextInput,
 } from "flowbite-react";
 import {
   RefreshCcw,
@@ -41,6 +41,7 @@ import {
 } from "@/components/misc/query_filters";
 
 export interface BaseNodeTableProps<T> {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   columns: any[];
   data: T[];
   isLoading?: boolean;
@@ -114,7 +115,6 @@ function BaseNodeTable<T>({
   onQueryParamsChange,
   searchEnabled = true,
   searchPlaceholder,
-  onSearchChange,
   filterFields = [],
   filtersEnabled = false,
   linkGenerator,
@@ -128,7 +128,9 @@ function BaseNodeTable<T>({
   const [showCreateModal, setShowCreateModal] = React.useState(false);
   const [showDeleteModal, setShowDeleteModal] = React.useState(false);
   const [showMoveModal, setShowMoveModal] = React.useState(false);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [pendingDeleteRows, setPendingDeleteRows] = React.useState<any[]>([]);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [pendingMoveRows, setPendingMoveRows] = React.useState<any[]>([]);
   const [childrenToHandle, setChildrenToHandle] = React.useState<T[]>([]);
   const [deleteOption, setDeleteOption] = React.useState<"delete" | "orphan">(
@@ -138,7 +140,8 @@ function BaseNodeTable<T>({
     undefined,
   );
   const [selectedCount, setSelectedCount] = React.useState(0);
-  const [isProcessing, setIsProcessing] = React.useState(false);
+  const [, setIsProcessing] = React.useState(false);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const tableRef = React.useRef<any>(null);
   const [columnVisibility, setColumnVisibility] = React.useState<
     Record<string, boolean>
@@ -151,7 +154,6 @@ function BaseNodeTable<T>({
   const [searchTerm, setSearchTerm] = React.useState<string>("");
 
   // Track if we initiated the query change to avoid circular updates
-  const searchUpdateSourceRef = React.useRef<'user' | 'external'>('external');
 
   // Initialize search term from URL on mount only
   React.useEffect(() => {
@@ -315,18 +317,22 @@ function BaseNodeTable<T>({
     }
 
     const searchLower = debouncedSearchTerm.toLowerCase().trim();
-    return (data ?? []).filter((item: any) => {
-      // Search in title and definition fields
-      const title = item.title?.toLowerCase() || "";
-      const definition = item.definition?.toLowerCase() || "";
-      const id = item.id?.toLowerCase() || "";
 
-      return (
-        title.includes(searchLower) ||
-        definition.includes(searchLower) ||
-        id.includes(searchLower)
-      );
-    });
+    return (data ?? []).filter(
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (item: any) => {
+        // Search in title and definition fields
+        const title = item.title?.toLowerCase() || "";
+        const definition = item.definition?.toLowerCase() || "";
+        const id = item.id?.toLowerCase() || "";
+
+        return (
+          title.includes(searchLower) ||
+          definition.includes(searchLower) ||
+          id.includes(searchLower)
+        );
+      },
+    );
   }, [data, debouncedSearchTerm]);
 
   // Handle filter changes
@@ -478,7 +484,12 @@ function BaseNodeTable<T>({
       }
 
       // Then delete the selected items
-      await onDelete(pendingDeleteRows.map((row: any) => getId(row.original)));
+      await onDelete(
+        pendingDeleteRows.map(
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          (row: any) => getId(row.original),
+        ),
+      );
       setPendingDeleteRows([]);
       setChildrenToHandle([]);
 
@@ -505,7 +516,10 @@ function BaseNodeTable<T>({
         />
       )}
 
-      <div className="mb-4 flex items-center justify-between" data-testid={`${typeName.toLowerCase()}-table-toolbar`}>
+      <div
+        className="mb-4 flex items-center justify-between"
+        data-testid={`${typeName.toLowerCase()}-table-toolbar`}
+      >
         <div className="flex grow justify-start">
           {searchEnabled && (
             <TextInput
@@ -545,12 +559,18 @@ function BaseNodeTable<T>({
             data-testid={`${typeName.toLowerCase()}-actions-dropdown`}
           >
             {MoveForm && (
-              <DropdownItem onClick={handleMoveSelected} data-testid={`${typeName.toLowerCase()}-move-selected-action`}>
+              <DropdownItem
+                onClick={handleMoveSelected}
+                data-testid={`${typeName.toLowerCase()}-move-selected-action`}
+              >
                 <Move className="mr-2 h-4 w-4" />
                 Move Selected
               </DropdownItem>
             )}
-            <DropdownItem onClick={handleDeleteSelected} data-testid={`${typeName.toLowerCase()}-delete-selected-action`}>
+            <DropdownItem
+              onClick={handleDeleteSelected}
+              data-testid={`${typeName.toLowerCase()}-delete-selected-action`}
+            >
               Delete Selected
             </DropdownItem>
             {customBulkActions.map((action, index) => (
@@ -580,7 +600,11 @@ function BaseNodeTable<T>({
         </div>
       </div>
 
-      <Table hoverable className="max-w-full" data-testid={`${typeName.toLowerCase()}-table`}>
+      <Table
+        hoverable
+        className="max-w-full"
+        data-testid={`${typeName.toLowerCase()}-table`}
+      >
         <TableHead>
           <TableRow>
             {table
@@ -703,7 +727,8 @@ function BaseNodeTable<T>({
                 <span className="font-bold">
                   {Math.min((pageIndex + 1) * pageSize, filteredData.length)}
                 </span>
-                &nbsp;of&nbsp;<span className="font-bold">{filteredData.length}</span>
+                &nbsp;of&nbsp;
+                <span className="font-bold">{filteredData.length}</span>
                 {debouncedSearchTerm && (
                   <span className="ml-1 text-gray-500">
                     (filtered from {data.length})
@@ -736,7 +761,8 @@ function BaseNodeTable<T>({
             <span className="font-bold">
               {Math.min((pageIndex + 1) * pageSize, filteredData.length)}
             </span>
-            &nbsp;of&nbsp;<span className="font-bold">{filteredData.length}</span>
+            &nbsp;of&nbsp;
+            <span className="font-bold">{filteredData.length}</span>
             {debouncedSearchTerm && (
               <span className="ml-1 text-gray-500">
                 (filtered from {data.length})
@@ -745,7 +771,11 @@ function BaseNodeTable<T>({
           </div>
         )}
       </div>
-      <Modal show={showDeleteModal} onClose={() => setShowDeleteModal(false)} data-testid={`${typeName.toLowerCase()}-delete-modal`}>
+      <Modal
+        show={showDeleteModal}
+        onClose={() => setShowDeleteModal(false)}
+        data-testid={`${typeName.toLowerCase()}-delete-modal`}
+      >
         <ModalHeader className="border-b-0">
           <div className="flex items-center gap-2">
             <AlertTriangle className="h-5 w-5 text-red-500" />
@@ -829,10 +859,18 @@ function BaseNodeTable<T>({
           </div>
 
           <div className="flex justify-end gap-2">
-            <Button color="gray" onClick={() => setShowDeleteModal(false)} data-testid={`${typeName.toLowerCase()}-delete-cancel-button`}>
+            <Button
+              color="gray"
+              onClick={() => setShowDeleteModal(false)}
+              data-testid={`${typeName.toLowerCase()}-delete-cancel-button`}
+            >
               Cancel
             </Button>
-            <Button color="red" onClick={confirmDeleteSelected} data-testid={`${typeName.toLowerCase()}-delete-confirm-button`}>
+            <Button
+              color="red"
+              onClick={confirmDeleteSelected}
+              data-testid={`${typeName.toLowerCase()}-delete-confirm-button`}
+            >
               Delete
             </Button>
           </div>
@@ -878,14 +916,22 @@ function BaseNodeTable<T>({
         </Modal>
       )}
       {/* Create Modal */}
-      <Modal show={showCreateModal} onClose={() => setShowCreateModal(false)} data-testid={`${typeName.toLowerCase()}-create-modal`}>
+      <Modal
+        show={showCreateModal}
+        onClose={() => setShowCreateModal(false)}
+        data-testid={`${typeName.toLowerCase()}-create-modal`}
+      >
         <ModalHeader className="border-b-0">Create New {typeName}</ModalHeader>
         <ModalBody>
           <CreateForm onSuccess={() => setShowCreateModal(false)} />
         </ModalBody>
       </Modal>
       {/* Edit Modal */}
-      <Modal show={!!editNodeId} onClose={() => setEditNodeId(undefined)} data-testid={`${typeName.toLowerCase()}-edit-modal`}>
+      <Modal
+        show={!!editNodeId}
+        onClose={() => setEditNodeId(undefined)}
+        data-testid={`${typeName.toLowerCase()}-edit-modal`}
+      >
         <ModalHeader className="border-b-0">Edit {typeName}</ModalHeader>
         <ModalBody>
           {editNode && (

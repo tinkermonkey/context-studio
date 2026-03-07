@@ -13,7 +13,7 @@ const TreeTrunk: React.FC<TreeTrunkProps> = ({ rootNode }) => {
 
   return (
     <g>
-      <circle cx={x-1} cy={y} r={10} style={ChartStyles.mainNode} />
+      <circle cx={x - 1} cy={y} r={10} style={ChartStyles.mainNode} />
     </g>
   );
 };

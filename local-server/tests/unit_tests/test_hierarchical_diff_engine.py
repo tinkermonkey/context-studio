@@ -10,10 +10,10 @@ import time
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
-import pytest
-from unittest.mock import Mock, patch
+import pytest  # noqa: E402
+from unittest.mock import Mock, patch  # noqa: E402
 
-from services.hierarchical_diff_engine import HierarchicalDiffEngine, ConflictDescriptor
+from services.hierarchical_diff_engine import HierarchicalDiffEngine, ConflictDescriptor  # noqa: E402, E501
 
 
 class TestHierarchicalDiffEngine:
@@ -460,6 +460,4 @@ class TestConflictDescriptor:
 
 
 if __name__ == "__main__":
-    import time
-
     pytest.main([__file__, "-v"])

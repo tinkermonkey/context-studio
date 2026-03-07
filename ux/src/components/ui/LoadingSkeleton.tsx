@@ -125,9 +125,7 @@ export const TableRowSkeleton: React.FC<{
 /**
  * Skeleton for a button
  */
-export const ButtonSkeleton: React.FC<SkeletonProps> = ({
-  className = "",
-}) => {
+export const ButtonSkeleton: React.FC<SkeletonProps> = ({ className = "" }) => {
   return <Skeleton className={`h-10 w-24 rounded-lg ${className}`} />;
 };
 

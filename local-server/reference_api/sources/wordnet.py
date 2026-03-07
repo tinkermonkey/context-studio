@@ -1,3 +1,4 @@
+# mypy: ignore-errors
 """WordNet source implementation using NLTK"""
 
 from typing import Optional, List

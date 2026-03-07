@@ -7,10 +7,7 @@
 import { useState, useCallback, useRef, useEffect } from "react";
 import { useQueryClient, useMutation } from "@tanstack/react-query";
 import { streamingReferenceService } from "../../services/streamingReference";
-import {
-  UnifiedSearchRequest,
-  SourceType,
-} from "../../types/unified";
+import { UnifiedSearchRequest, SourceType } from "../../types/unified";
 import {
   StreamingSearchState,
   StreamingSearchControl,
@@ -40,67 +37,78 @@ export const useStreamingUnifiedSearch = (options?: {
   timeout?: number;
 }) => {
   const queryClient = useQueryClient();
-  const [searchState, setSearchState] = useState<StreamingSearchState | null>(null);
+  const [searchState, setSearchState] = useState<StreamingSearchState | null>(
+    null,
+  );
   const [isSearching, setIsSearching] = useState(false);
   const controlRef = useRef<StreamingSearchControl | null>(null);
 
-  const search = useCallback(async (request: UnifiedSearchRequest) => {
-    // Cancel any existing search
-    if (controlRef.current) {
-      controlRef.current.cancel();
-    }
+  const search = useCallback(
+    async (request: UnifiedSearchRequest) => {
+      // Cancel any existing search
+      if (controlRef.current) {
+        controlRef.current.cancel();
+      }
 
-    setIsSearching(true);
-    setSearchState(createInitialStreamingState(request));
+      setIsSearching(true);
+      setSearchState(createInitialStreamingState(request));
 
-    try {
-      const control = await streamingReferenceService.searchStreaming(request, {
-        timeout: options?.timeout,
-        includePartialResults: options?.includePartialResults,
-        onSourceUpdate: (update) => {
-          options?.onSourceUpdate?.(update);
-        },
-        onStateChange: (state) => {
-          setSearchState(state);
+      try {
+        const control = await streamingReferenceService.searchStreaming(
+          request,
+          {
+            timeout: options?.timeout,
+            includePartialResults: options?.includePartialResults,
+            onSourceUpdate: (update) => {
+              options?.onSourceUpdate?.(update);
+            },
+            onStateChange: (state) => {
+              setSearchState(state);
 
-          // Cache results as they come in
-          if (state.aggregatedResults.length > 0) {
-            queryClient.setQueryData(
-              createQueryKey(
-                STREAMING_QUERY_KEYS.STREAMING_REFERENCE,
-                "search",
-                request as unknown as Record<string, unknown>
-              ),
-              state
-            );
+              // Cache results as they come in
+              if (state.aggregatedResults.length > 0) {
+                queryClient.setQueryData(
+                  createQueryKey(
+                    STREAMING_QUERY_KEYS.STREAMING_REFERENCE,
+                    "search",
+                    request as unknown as Record<string, unknown>,
+                  ),
+                  state,
+                );
 
-            // Cache individual nodes
-            state.aggregatedResults.forEach((node) => {
-              queryClient.setQueryData(
-                createQueryKey(STREAMING_QUERY_KEYS.STREAMING_REFERENCE, "node", {
-                  nodeId: node.id,
-                }),
-                node
-              );
-            });
-          }
+                // Cache individual nodes
+                state.aggregatedResults.forEach((node) => {
+                  queryClient.setQueryData(
+                    createQueryKey(
+                      STREAMING_QUERY_KEYS.STREAMING_REFERENCE,
+                      "node",
+                      {
+                        nodeId: node.id,
+                      },
+                    ),
+                    node,
+                  );
+                });
+              }
 
-          // Notify completion
-          if (state.isComplete) {
-            setIsSearching(false);
-            options?.onComplete?.(state);
-          }
-        },
-      });
+              // Notify completion
+              if (state.isComplete) {
+                setIsSearching(false);
+                options?.onComplete?.(state);
+              }
+            },
+          },
+        );
 
-      controlRef.current = control;
-      return control;
-
-    } catch (error) {
-      setIsSearching(false);
-      throw error;
-    }
-  }, [queryClient, options]);
+        controlRef.current = control;
+        return control;
+      } catch (error) {
+        setIsSearching(false);
+        throw error;
+      }
+    },
+    [queryClient, options],
+  );
 
   const cancelSearch = useCallback(() => {
     if (controlRef.current) {
@@ -139,18 +147,27 @@ export const useStreamingUnifiedSearch = (options?: {
  * Hook for tracking source-specific loading states
  * Useful for showing individual source progress indicators
  */
-export const useSourceLoadingStates = (searchState: StreamingSearchState | null) => {
-  const sourceStates: Record<SourceType, SourceSearchUpdate> = searchState?.sources || {} as Record<SourceType, SourceSearchUpdate>;
+export const useSourceLoadingStates = (
+  searchState: StreamingSearchState | null,
+) => {
+  const sourceStates: Record<SourceType, SourceSearchUpdate> =
+    searchState?.sources || ({} as Record<SourceType, SourceSearchUpdate>);
 
   return {
     sourceStates,
-    getSourceStatus: (source: SourceType) => sourceStates[source]?.status || "pending",
-    getSourceResults: (source: SourceType) => sourceStates[source]?.results || [],
+    getSourceStatus: (source: SourceType) =>
+      sourceStates[source]?.status || "pending",
+    getSourceResults: (source: SourceType) =>
+      sourceStates[source]?.results || [],
     getSourceError: (source: SourceType) => sourceStates[source]?.error,
-    getSourceExecutionTime: (source: SourceType) => sourceStates[source]?.execution_time_ms,
-    isSourceLoading: (source: SourceType) => sourceStates[source]?.status === "loading",
-    isSourceComplete: (source: SourceType) => sourceStates[source]?.status === "completed",
-    isSourceError: (source: SourceType) => sourceStates[source]?.status === "error",
+    getSourceExecutionTime: (source: SourceType) =>
+      sourceStates[source]?.execution_time_ms,
+    isSourceLoading: (source: SourceType) =>
+      sourceStates[source]?.status === "loading",
+    isSourceComplete: (source: SourceType) =>
+      sourceStates[source]?.status === "completed",
+    isSourceError: (source: SourceType) =>
+      sourceStates[source]?.status === "error",
   };
 };
 
@@ -158,33 +175,41 @@ export const useSourceLoadingStates = (searchState: StreamingSearchState | null)
  * Hook for optimized streaming search with mutation pattern
  * Integrates with React Query mutations for consistent error handling
  */
-export const useStreamingSearchMutation = (options?: StreamingSearchOptions) => {
+export const useStreamingSearchMutation = (
+  options?: StreamingSearchOptions,
+) => {
   const queryClient = useQueryClient();
-  const [streamingState, setStreamingState] = useState<StreamingSearchState | null>(null);
+  const [streamingState, setStreamingState] =
+    useState<StreamingSearchState | null>(null);
   const controlRef = useRef<StreamingSearchControl | null>(null);
 
   const mutation = useMutation({
-    mutationFn: async (request: UnifiedSearchRequest): Promise<StreamingSearchState> => {
+    mutationFn: async (
+      request: UnifiedSearchRequest,
+    ): Promise<StreamingSearchState> => {
       // Cancel any existing search
       if (controlRef.current) {
         controlRef.current.cancel();
       }
 
       return new Promise((resolve, reject) => {
-        streamingReferenceService.searchStreaming(request, {
-          ...options,
-          onStateChange: (state) => {
-            setStreamingState(state);
-            options?.onStateChange?.(state);
+        streamingReferenceService
+          .searchStreaming(request, {
+            ...options,
+            onStateChange: (state) => {
+              setStreamingState(state);
+              options?.onStateChange?.(state);
 
-            if (state.isComplete) {
-              resolve(state);
-            }
-          },
-          onSourceUpdate: options?.onSourceUpdate,
-        }).then(control => {
-          controlRef.current = control;
-        }).catch(reject);
+              if (state.isComplete) {
+                resolve(state);
+              }
+            },
+            onSourceUpdate: options?.onSourceUpdate,
+          })
+          .then((control) => {
+            controlRef.current = control;
+          })
+          .catch(reject);
       });
     },
     onSuccess: (data, variables) => {
@@ -193,9 +218,9 @@ export const useStreamingSearchMutation = (options?: StreamingSearchOptions) => 
         createQueryKey(
           STREAMING_QUERY_KEYS.STREAMING_REFERENCE,
           "search",
-          variables as unknown as Record<string, unknown>
+          variables as unknown as Record<string, unknown>,
         ),
-        data
+        data,
       );
 
       // Cache individual nodes
@@ -204,7 +229,7 @@ export const useStreamingSearchMutation = (options?: StreamingSearchOptions) => 
           createQueryKey(STREAMING_QUERY_KEYS.STREAMING_REFERENCE, "node", {
             nodeId: node.id,
           }),
-          node
+          node,
         );
       });
     },
@@ -235,12 +260,12 @@ export const useStreamingSearchMutation = (options?: StreamingSearchOptions) => 
   };
 };
 
-
-
 /**
  * Hook to get cached streaming search results
  */
-export const useCachedStreamingResults = (request: UnifiedSearchRequest | null) => {
+export const useCachedStreamingResults = (
+  request: UnifiedSearchRequest | null,
+) => {
   const queryClient = useQueryClient();
 
   if (!request) return null;
@@ -248,7 +273,7 @@ export const useCachedStreamingResults = (request: UnifiedSearchRequest | null) 
   const cacheKey = createQueryKey(
     STREAMING_QUERY_KEYS.STREAMING_REFERENCE,
     "search",
-    request as unknown as Record<string, unknown>
+    request as unknown as Record<string, unknown>,
   );
 
   return queryClient.getQueryData<StreamingSearchState>(cacheKey);

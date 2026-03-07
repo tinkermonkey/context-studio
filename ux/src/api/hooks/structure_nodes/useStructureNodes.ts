@@ -4,7 +4,11 @@
  * React Query hooks for unified structure node entities (layers, domains, terms)
  */
 
-import { useQuery, useQueryClient, UseQueryOptions } from "@tanstack/react-query";
+import {
+  useQuery,
+  useQueryClient,
+  UseQueryOptions,
+} from "@tanstack/react-query";
 import { structureNodeService } from "../../services/structureNodes";
 import { QUERY_KEYS } from "../../config";
 import { createQueryKey } from "../../utils/queryClient";
@@ -83,10 +87,10 @@ export const useStructureNode = (
       const nodeTypes = [NodeType.LAYER, NodeType.DOMAIN, NodeType.TERM];
       for (const nodeType of nodeTypes) {
         const listData = queryClient.getQueryData<StructureNode[]>(
-          createQueryKey(QUERY_KEYS.STRUCTURE_NODES, "type", { nodeType })
+          createQueryKey(QUERY_KEYS.STRUCTURE_NODES, "type", { nodeType }),
         );
         if (listData) {
-          const node = listData.find(n => n.id === id);
+          const node = listData.find((n) => n.id === id);
           if (node) {
             return node;
           }
@@ -157,8 +161,8 @@ export const useStructureNodeSearch = (
       params,
     ),
     queryFn: () => structureNodeService.find(params),
-    enabled: !!params.query,
     ...options,
+    enabled: options?.enabled ?? !!params.query,
   });
 };
 

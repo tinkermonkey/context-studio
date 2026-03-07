@@ -11,11 +11,11 @@ sys.path.append(
     os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 )
 
-import pytest
+import pytest  # noqa: E402
 
-from services.version_manager import VersionManager
-from services.working_tree_manager import WorkingTreeManager
-from services.diff_generator import DiffGenerator, EntityDiff, DiffSummary
+from services.version_manager import VersionManager  # noqa: E402
+from services.working_tree_manager import WorkingTreeManager  # noqa: E402
+from services.diff_generator import DiffGenerator, EntityDiff, DiffSummary  # noqa: E402, E501
 
 
 class TestDiffGenerator:
@@ -111,14 +111,14 @@ class TestDiffGenerator:
         version_manager, working_tree_manager, diff_generator = managers
 
         # Create two versions
-        version1 = version_manager.create_version(
+        version_manager.create_version(
             entity_type="structure_node",
             entity_id="test-123",
             content=sample_content_v1,
             author_id="test-user",
         )
 
-        version2 = version_manager.create_version(
+        version_manager.create_version(
             entity_type="structure_node",
             entity_id="test-123",
             content=sample_content_v2,
@@ -142,7 +142,7 @@ class TestDiffGenerator:
         version_manager, working_tree_manager, diff_generator = managers
 
         # Create one version
-        version1 = version_manager.create_version(
+        version_manager.create_version(
             entity_type="structure_node",
             entity_id="test-123",
             content=sample_content_v1,
@@ -166,7 +166,7 @@ class TestDiffGenerator:
         version_manager, working_tree_manager, diff_generator = managers
 
         # Create one version
-        version1 = version_manager.create_version(
+        version_manager.create_version(
             entity_type="structure_node",
             entity_id="test-123",
             content=sample_content_v1,
@@ -366,14 +366,14 @@ class TestDiffGenerator:
         version_manager, working_tree_manager, diff_generator = managers
 
         # Create versions and diff
-        version1 = version_manager.create_version(
+        version_manager.create_version(
             entity_type="structure_node",
             entity_id="test-123",
             content=sample_content_v1,
             author_id="test-user",
         )
 
-        version2 = version_manager.create_version(
+        version_manager.create_version(
             entity_type="structure_node",
             entity_id="test-123",
             content=sample_content_v2,
@@ -400,14 +400,14 @@ class TestDiffGenerator:
         version_manager, working_tree_manager, diff_generator = managers
 
         # Create versions and diff
-        version1 = version_manager.create_version(
+        version_manager.create_version(
             entity_type="structure_node",
             entity_id="test-123",
             content=sample_content_v1,
             author_id="test-user",
         )
 
-        version2 = version_manager.create_version(
+        version_manager.create_version(
             entity_type="structure_node",
             entity_id="test-123",
             content=sample_content_v2,
@@ -433,14 +433,14 @@ class TestDiffGenerator:
         version_manager, working_tree_manager, diff_generator = managers
 
         # Create versions and diff
-        version1 = version_manager.create_version(
+        version_manager.create_version(
             entity_type="structure_node",
             entity_id="test-123",
             content=sample_content_v1,
             author_id="test-user",
         )
 
-        version2 = version_manager.create_version(
+        version_manager.create_version(
             entity_type="structure_node",
             entity_id="test-123",
             content=sample_content_v2,
@@ -466,7 +466,7 @@ class TestDiffGenerator:
         version_manager, working_tree_manager, diff_generator = managers
 
         # Create version and diff
-        version1 = version_manager.create_version(
+        version_manager.create_version(
             entity_type="structure_node",
             entity_id="test-123",
             content=sample_content_v1,

@@ -2,9 +2,9 @@ import sys
 import os
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-import pytest
-from nlp.pipeline import get_pipeline
-from nlp.processors import extract_token_data
+import pytest  # noqa: E402
+from nlp.pipeline import get_pipeline  # noqa: E402
+from nlp.processors import extract_token_data  # noqa: E402
 
 
 @pytest.fixture(scope="function")

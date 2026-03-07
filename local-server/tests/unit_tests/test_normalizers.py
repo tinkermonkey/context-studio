@@ -4,16 +4,14 @@ import sys
 import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
-import pytest
-from datetime import datetime, UTC
-from unittest.mock import Mock
+import pytest  # noqa: E402
+from datetime import datetime, UTC  # noqa: E402
+from unittest.mock import Mock  # noqa: E402
 
-from reference_api.normalizers import ResultNormalizer
-from reference_api.models import (
-    SourceType, SearchNode, SearchLink,
-    DBpediaSearchResponse, DBpediaSearchResult, DBpediaResourceResponse, DBpediaSparqlResponse,
-    ConceptNetQueryResponse, ConceptNetEdge, ConceptNetConceptResponse, ConceptNetRelatedResponse,
-    ConceptNetRelatedConcept, WikidataSparqlResponse, WikidataEntityResponse,
+from reference_api.normalizers import ResultNormalizer  # noqa: E402
+from reference_api.models import (  # noqa: E402
+    SourceType, DBpediaSearchResponse, DBpediaSearchResult, DBpediaResourceResponse, ConceptNetQueryResponse, ConceptNetConceptResponse, ConceptNetRelatedResponse,
+    WikidataSparqlResponse, WikidataEntityResponse,
     SchemaOrgSearchResponse, SchemaOrgSearchResult, SchemaOrgEntityResponse, SchemaOrgEntity,
     SchemaOrgPropertyResponse, SchemaOrgPropertyData
 )
@@ -191,13 +189,13 @@ class TestResultNormalizer:
         assert animal_node.id == "conceptnet:/c/en/animal"
 
         # Check links
-        isa_link = next(l for l in links if l.predicate == "IsA")
+        isa_link = next(lnk for lnk in links if lnk.predicate == "IsA")
         assert isa_link.source == SourceType.CONCEPTNET
         assert isa_link.subject == "conceptnet:/c/en/dog"
         assert isa_link.object == "conceptnet:/c/en/animal"
         assert isa_link.weight == 0.8
 
-        external_link = next(l for l in links if l.predicate == "externalURL")
+        external_link = next(lnk for lnk in links if lnk.predicate == "externalURL")
         assert external_link.source == SourceType.CONCEPTNET
         assert external_link.subject == "conceptnet:/c/en/dog"
         assert external_link.object == "dbpedia:http://dbpedia.org/resource/Dog"

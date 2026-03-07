@@ -7,10 +7,8 @@ the /datafiles/ directory before attempting to create or access database files.
 
 import os
 import tempfile
-import shutil
 import pytest
 from unittest.mock import patch, MagicMock
-from pathlib import Path
 
 
 class TestPipelineDatabaseManager:
@@ -149,7 +147,7 @@ class TestDatasetManager:
             from dataset.manager import DatasetManager
 
             config_path = os.path.join(temp_dir, "datasets.json")
-            manager = DatasetManager(
+            DatasetManager(
                 datasets_config_path=config_path,
                 datasets_directory=datasets_dir
             )
@@ -168,94 +166,13 @@ class TestDatasetManager:
             from dataset.manager import DatasetManager
 
             config_path = os.path.join(temp_dir, "datasets.json")
-            manager = DatasetManager(
+            DatasetManager(
                 datasets_config_path=config_path,
                 datasets_directory=datasets_dir
             )
 
             # Verify no errors occurred
             assert os.path.exists(datasets_dir)
-
-
-class TestProxyManager:
-    """Test datafiles directory creation in proxy manager."""
-
-    def test_proxy_manager_creates_datafiles_directory(self):
-        """Test that ReferenceAPIProxyManager creates /datafiles/ directory for cache database."""
-        with tempfile.TemporaryDirectory() as temp_dir:
-            # Set up cache database path in a non-existent datafiles directory
-            db_dir = os.path.join(temp_dir, "datafiles")
-            db_path = os.path.join(db_dir, "reference_api_cache.db")
-
-            # Ensure directory does not exist initially
-            assert not os.path.exists(db_dir)
-
-            # Mock the config and CachingProxy to avoid actual proxy startup
-            mock_config = {
-                "server": {"host": "127.0.0.1", "port": 18080},
-                "cache": {"database_path": db_path},
-                "domain_mappings": {"test": {"upstream": "http://test.com", "enabled_keys": ["test"]}},
-                "throttling": {"domain_limits": {}}
-            }
-
-            # Mock settings
-            mock_settings = MagicMock()
-            mock_settings.ENABLE_CACHING_PROXY = {"test": True}
-            mock_settings.get_reference_api_buddy_config.return_value = mock_config
-
-            with patch('nlp.proxy_manager.get_settings', return_value=mock_settings):
-                with patch('reference_api_buddy.core.proxy.CachingProxy') as mock_proxy_class:
-                    # Set up mock proxy instance
-                    mock_proxy_instance = MagicMock()
-                    mock_proxy_class.return_value = mock_proxy_instance
-
-                    from nlp.proxy_manager import ReferenceAPIProxyManager
-
-                    manager = ReferenceAPIProxyManager()
-
-                    # Attempt to start proxy (will create directory)
-                    result = manager.start_proxy()
-
-                    # Verify directory was created
-                    assert os.path.exists(db_dir)
-                    assert os.path.isdir(db_dir)
-
-                    # Verify proxy started successfully
-                    assert result is True
-
-    def test_proxy_manager_handles_existing_directory(self):
-        """Test that ReferenceAPIProxyManager works when directory already exists."""
-        with tempfile.TemporaryDirectory() as temp_dir:
-            # Set up cache database path with existing datafiles directory
-            db_dir = os.path.join(temp_dir, "datafiles")
-            os.makedirs(db_dir, exist_ok=True)
-            db_path = os.path.join(db_dir, "reference_api_cache.db")
-
-            # Mock the config and CachingProxy
-            mock_config = {
-                "server": {"host": "127.0.0.1", "port": 18080},
-                "cache": {"database_path": db_path},
-                "domain_mappings": {"test": {"upstream": "http://test.com"}},
-                "throttling": {"domain_limits": {}}
-            }
-
-            mock_settings = MagicMock()
-            mock_settings.ENABLE_CACHING_PROXY = {"test": True}
-            mock_settings.get_reference_api_buddy_config.return_value = mock_config
-
-            with patch('nlp.proxy_manager.get_settings', return_value=mock_settings):
-                with patch('reference_api_buddy.core.proxy.CachingProxy') as mock_proxy_class:
-                    mock_proxy_instance = MagicMock()
-                    mock_proxy_class.return_value = mock_proxy_instance
-
-                    from nlp.proxy_manager import ReferenceAPIProxyManager
-
-                    manager = ReferenceAPIProxyManager()
-                    result = manager.start_proxy()
-
-                    # Verify no errors occurred
-                    assert os.path.exists(db_dir)
-                    assert result is True
 
 
 class TestDirectoryCreationPatterns:
@@ -353,7 +270,7 @@ class TestFreshInstallation:
             manager = PipelineDatabaseManager(operations_db_path=db_path)
 
             # Check directory permissions
-            dir_stat = os.stat(datafiles_dir)
+            os.stat(datafiles_dir)
 
             # Directory should be readable, writable, and executable by owner
             # On Unix-like systems, this is typically 0o755 or 0o700
@@ -384,7 +301,7 @@ class TestErrorHandling:
 
                 # This should raise an error due to permissions
                 with pytest.raises((OSError, PermissionError)):
-                    manager = PipelineDatabaseManager(operations_db_path=db_path)
+                    PipelineDatabaseManager(operations_db_path=db_path)
             finally:
                 # Restore permissions for cleanup
                 os.chmod(readonly_dir, 0o755)

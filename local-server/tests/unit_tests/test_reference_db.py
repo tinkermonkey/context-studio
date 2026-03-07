@@ -10,9 +10,8 @@ import tempfile
 import pytest
 from datetime import date
 from uuid import uuid4
-from sqlalchemy import text
 
-from reference_db.models import ReferenceNode, ReferenceLink, ExternalPredicate
+from reference_db.models import ReferenceNode, ReferenceLink
 from reference_db.config import ReferenceConfig, REFERENCE_SCHEMA_VERSION
 from reference_db.manager import ReferenceManager
 
@@ -449,8 +448,8 @@ class TestReferenceManagerCore:
             # For this test, we'll just verify the backup logic by checking
             # that a backup was created
             backup_pattern = f"{db_path}.backup."
-            backup_files = [f for f in os.listdir(os.path.dirname(db_path))
-                          if f.startswith(os.path.basename(backup_pattern))]
+            [f for f in os.listdir(os.path.dirname(db_path))
+                          if f.startswith(os.path.basename(backup_pattern))]  # noqa: E127, E501
 
             # Note: In actual usage, backup is only created during rebuild
             # This test validates the concept; actual rebuild testing requires
@@ -472,7 +471,7 @@ class TestReferenceManagerVector:
     def check_sqlite_vec(self):
         """Check if sqlite-vec is available, skip tests if not."""
         try:
-            import sqlite_vec  # noqa: F401
+            import sqlite_vec  # noqa: F401 # type: ignore[import-untyped]
         except ImportError:
             pytest.skip("sqlite-vec not available (expected in Docker environment)")
 

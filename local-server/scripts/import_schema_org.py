@@ -38,23 +38,23 @@ def main():
     logger.info("=" * 80)
     logger.info("Starting Schema.org Import")
     logger.info("=" * 80)
-    
+
     try:
         # Initialize config and manager
         config = ReferenceConfig()
         manager = ReferenceManager(config)
-        
+
         logger.info(f"Database: {manager.db_path}")
         logger.info(f"Schema.org URL: {config.schema_org_api_url}")
         logger.info("")
-        
+
         # Create importer
         importer = SchemaOrgImporter(config, manager)
-        
+
         # Run import with default batch size (200)
         # You can adjust batch_size if needed: importer.import_schema_org(batch_size=500)
         result = importer.import_schema_org()
-        
+
         # Print results
         logger.info("")
         logger.info("=" * 80)
@@ -68,9 +68,9 @@ def main():
         logger.info("Next steps:")
         logger.info("1. Test predicate discovery: curl -X POST 'http://localhost:8000/api/predicates/discover?sources=schema_org'")
         logger.info("2. View predicates in UI: Navigate to External Predicates tab and filter by 'schema.org'")
-        
+
         return 0
-        
+
     except Exception as e:
         logger.error(f"Import failed: {e}", exc_info=True)
         logger.error("")

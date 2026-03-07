@@ -1,7 +1,7 @@
 """
 Dependency injection for Graph services
 
-This module provides optimized dependency injection for all graph-related services
+This module provides optimized dependency injection for all graph-related services  # noqa: E501
 using the service factory pattern for better performance.
 """
 
@@ -43,10 +43,10 @@ def get_graph_service(db: Session = Depends(get_db)) -> GraphService:
 def get_network_service(db: Session = Depends(get_db)) -> NetworkService:
     """
     Optimized dependency injection for NetworkService using service factory.
-    
+
     Args:
         db: Database session from dependency injection
-        
+
     Returns:
         NetworkService instance configured with the request's database session
     """
@@ -57,10 +57,10 @@ def get_network_service(db: Session = Depends(get_db)) -> NetworkService:
 def get_sparql_service(db: Session = Depends(get_db)) -> SPARQLService:
     """
     Optimized dependency injection for SPARQLService using service factory.
-    
+
     Args:
         db: Database session from dependency injection
-        
+
     Returns:
         SPARQLService instance configured with the request's database session
     """
@@ -73,10 +73,10 @@ def get_all_graph_services(
 ) -> tuple[GraphService, NetworkService, SPARQLService]:
     """
     Get all graph services in one dependency call for efficiency.
-    
+
     Args:
         db: Database session from dependency injection
-        
+
     Returns:
         Tuple of (GraphService, NetworkService, SPARQLService) instances
     """

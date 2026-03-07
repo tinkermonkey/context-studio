@@ -10,7 +10,7 @@ sys.path.append(
     os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 )
 
-from utils.logger import get_logger
+from utils.logger import get_logger  # noqa: E402
 
 logger = get_logger("test")
 

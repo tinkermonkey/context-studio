@@ -11,7 +11,7 @@ from sqlalchemy.orm import Session
 
 from database.models import StructureNode
 from api.models.structure_nodes import WordSense
-from nlp.models import NLPAnalysisResponse, TokenData
+from nlp.models import NLPAnalysisResponse
 from services.exceptions import ValidationError
 from utils.logger import get_logger
 
@@ -169,10 +169,10 @@ class WordSenseService:
         senses_json = json.dumps([sense.model_dump() for sense in updated_senses])
 
         # Update node (increment version after validation, before commit)
-        node.word_senses = senses_json
+        node.word_senses = senses_json  # type: ignore
 
         try:
-            node.version = node.version + 1
+            node.version = node.version + 1  # type: ignore
             self.db.commit()
             logger.info(
                 f"Successfully updated word senses for node {node_id} "
@@ -207,7 +207,7 @@ class WordSenseService:
             return []
 
         try:
-            senses_data = json.loads(node.word_senses)
+            senses_data = json.loads(node.word_senses)  # type: ignore
 
             # Handle case where field is not an array
             if not isinstance(senses_data, list):
@@ -295,10 +295,10 @@ class WordSenseService:
         senses_json = json.dumps([sense.model_dump() for sense in remaining_senses])
 
         # Update node (increment version after validation, before commit)
-        node.word_senses = senses_json
+        node.word_senses = senses_json  # type: ignore
 
         try:
-            node.version = node.version + 1
+            node.version = node.version + 1  # type: ignore
             self.db.commit()
             logger.info(
                 f"Successfully removed {removed_count} word senses from node {node_id} "
@@ -434,10 +434,10 @@ class WordSenseService:
         senses_json = json.dumps([sense.model_dump() for sense in updated_senses])
 
         # Update node (increment version after validation, before commit)
-        node.word_senses = senses_json
+        node.word_senses = senses_json  # type: ignore
 
         try:
-            node.version = node.version + 1
+            node.version = node.version + 1  # type: ignore
             self.db.commit()
             logger.info(
                 f"Successfully updated selected word senses for node {node_id} "

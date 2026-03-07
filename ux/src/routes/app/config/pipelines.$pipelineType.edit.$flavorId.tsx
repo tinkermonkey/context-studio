@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { ArrowLeft, Home, Settings } from "lucide-react";
+import { Home } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 import { Spinner, Alert, Breadcrumb } from "flowbite-react";
 import { CsMainTitle } from "@/components/layout/cs_main";
@@ -81,7 +81,7 @@ function EditFlavorPage() {
         </div>
       </Breadcrumb>
 
-      <CsMainTitle >Edit Flavor</CsMainTitle>
+      <CsMainTitle>Edit Flavor</CsMainTitle>
 
       <div className="mt-6">
         <PipelineFlavorEditor

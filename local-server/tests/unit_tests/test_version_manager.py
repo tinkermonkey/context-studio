@@ -11,10 +11,10 @@ sys.path.append(
     os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 )
 
-import pytest
-from datetime import datetime, timezone
+import pytest  # noqa: E402
+from datetime import datetime, timezone  # noqa: E402
 
-from services.version_manager import VersionManager, ChangeState
+from services.version_manager import VersionManager, ChangeState  # noqa: E402
 
 
 class TestVersionManager:
@@ -292,7 +292,7 @@ class TestVersionManager:
             state=ChangeState.WORKING,
         )
 
-        version2 = version_manager.create_version(
+        version_manager.create_version(
             entity_type="structure_node",
             entity_id="test-456",
             content=sample_content,

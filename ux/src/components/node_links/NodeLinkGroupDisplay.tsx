@@ -4,8 +4,9 @@
  * Displays a group of links that share the same predicate
  */
 
-import React from "react";
 import { Badge } from "flowbite-react";
+import React from "react";
+// removed import;
 
 import { StructureNodeLink } from "@/api/types/structureNodes";
 import { NodeLinkItem } from "./NodeLinkItem";
@@ -38,7 +39,11 @@ export const NodeLinkGroupDisplay: React.FC<NodeLinkGroupDisplayProps> = ({
         </span>
       </h4>
 
-      <div className="space-y-2 pl-2" role="list" aria-label={`Links with predicate ${predicate}`}>
+      <div
+        className="space-y-2 pl-2"
+        role="list"
+        aria-label={`Links with predicate ${predicate}`}
+      >
         {links.map((link) => (
           <NodeLinkItem
             key={link.id}

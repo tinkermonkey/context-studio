@@ -10,11 +10,11 @@ import os
 
 # Add the project root to the path to import utils
 sys.path.append(
-    os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))  # noqa: E501
 )
 
 try:
-    from utils.monitoring_analysis import analyze_proxy_health, get_performance_summary
+    from utils.monitoring_analysis import analyze_proxy_health, get_performance_summary  # noqa: E501
 
     ANALYSIS_AVAILABLE = True
 except ImportError:
@@ -22,7 +22,7 @@ except ImportError:
     print("Warning: Monitoring analysis utilities not available")
 
 
-def test_proxy_monitoring():
+def test_proxy_monitoring() -> None:
     """Test the new proxy monitoring endpoint"""
     base_url = "http://localhost:8000"
 
@@ -74,7 +74,7 @@ def test_proxy_monitoring():
                     if stat_type in stats and stats[stat_type]:
                         print(f"\n{stat_type.replace('_', ' ').title()}:")
                         stat_data = stats[stat_type]
-                        if isinstance(stat_data, dict) and "error" not in stat_data:
+                        if isinstance(stat_data, dict) and "error" not in stat_data:  # noqa: E501
                             print(json.dumps(stat_data, indent=2))
                         else:
                             print(f"  Error or unavailable: {stat_data}")
@@ -88,16 +88,16 @@ def test_proxy_monitoring():
                     # Get health analysis
                     health_analysis = analyze_proxy_health(stats)
                     print(
-                        f"\nOverall Health: {health_analysis['overall_health'].upper()}"
+                        f"\nOverall Health: {health_analysis['overall_health'].upper()}"  # noqa: E501
                     )
 
                     if health_analysis["alerts"]:
                         print("\nAlerts:")
                         for alert in health_analysis["alerts"]:
                             print(
-                                f"  [{alert['level'].upper()}] {alert['type']}: {alert['message']}"
+                                f"  [{alert['level'].upper()}] {alert['type']}: {alert['message']}"  # noqa: E501
                             )
-                            print(f"    Recommendation: {alert['recommendation']}")
+                            print(f"    Recommendation: {alert['recommendation']}")  # noqa: E501
 
                     # Get performance summary
                     perf_summary = get_performance_summary(stats)

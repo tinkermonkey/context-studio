@@ -12,13 +12,13 @@ sys.path.append(
     os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 )
 
-import pytest
-import tempfile
-import threading
-from sqlalchemy import text
-from sqlalchemy.pool import NullPool, StaticPool
+import pytest  # noqa: E402
+import tempfile  # noqa: E402
+import threading  # noqa: E402
+from sqlalchemy import text  # noqa: E402
+from sqlalchemy.pool import NullPool, StaticPool  # noqa: E402
 
-from database.utils import (
+from database.utils import (  # noqa: E402
     DatabaseManager,
     PoolStrategy,
     PoolConfiguration,
@@ -59,18 +59,18 @@ class TestDatabaseManager:
         assert database_manager._loaded_connections == {}
         assert database_manager._connection_lifecycles == {}
 
-    def test_get_optimal_pool_strategy(self, database_manager):
+    def test_get_pool_strategy(self, database_manager):
         """Test optimal pool strategy selection."""
         # SQLite file database should use NULL_POOL
-        strategy = database_manager.get_optimal_pool_strategy("sqlite:///test.db")
+        strategy = database_manager.get_pool_strategy("sqlite:///test.db")
         assert strategy == PoolStrategy.NULL_POOL
 
         # SQLite in-memory should use STATIC_POOL
-        strategy = database_manager.get_optimal_pool_strategy("sqlite:///:memory:")
+        strategy = database_manager.get_pool_strategy("sqlite:///:memory:")
         assert strategy == PoolStrategy.STATIC_POOL
 
         # PostgreSQL should use QUEUE_POOL
-        strategy = database_manager.get_optimal_pool_strategy(
+        strategy = database_manager.get_pool_strategy(
             "postgresql://user:pass@host/db"
         )
         assert strategy == PoolStrategy.QUEUE_POOL
@@ -95,9 +95,9 @@ class TestDatabaseManager:
         config = database_manager.get_pool_configuration("postgresql://test")
         assert config.connect_args == {}  # Should be empty for non-SQLite
 
-    def test_create_optimized_engine_sqlite_file(self, database_manager, test_db_url):
+    def test_create_managed_engine_sqlite_file(self, database_manager, test_db_url):
         """Test optimized engine creation for SQLite file database."""
-        engine = database_manager.create_optimized_engine(test_db_url, "test_engine")
+        engine = database_manager.create_managed_engine(test_db_url, "test_engine")
 
         assert engine is not None
         assert "test_engine" in database_manager._engines
@@ -107,17 +107,17 @@ class TestDatabaseManager:
         assert isinstance(engine.pool, NullPool)
 
         # Test that same engine ID returns cached engine
-        engine2 = database_manager.create_optimized_engine(test_db_url, "test_engine")
+        engine2 = database_manager.create_managed_engine(test_db_url, "test_engine")
         assert engine is engine2
 
         # Cleanup
         engine.dispose()
 
-    def test_create_optimized_engine_sqlite_memory(
+    def test_create_managed_engine_sqlite_memory(
         self, database_manager, memory_db_url
     ):
         """Test optimized engine creation for SQLite in-memory database."""
-        engine = database_manager.create_optimized_engine(
+        engine = database_manager.create_managed_engine(
             memory_db_url, "memory_engine"
         )
 
@@ -130,7 +130,7 @@ class TestDatabaseManager:
         # Cleanup
         engine.dispose()
 
-    def test_create_optimized_engine_custom_config(self, database_manager, test_db_url):
+    def test_create_managed_engine_custom_config(self, database_manager, test_db_url):
         """Test engine creation with custom pool configuration."""
         custom_config = PoolConfiguration(
             pool_size=10,
@@ -140,7 +140,7 @@ class TestDatabaseManager:
             pool_pre_ping=False,
         )
 
-        engine = database_manager.create_optimized_engine(
+        engine = database_manager.create_managed_engine(
             test_db_url, "custom_engine", custom_config
         )
 
@@ -150,15 +150,15 @@ class TestDatabaseManager:
         # Cleanup
         engine.dispose()
 
-    def test_get_optimized_session_context_manager(self, database_manager, test_db_url):
+    def test_get_session_context_manager(self, database_manager, test_db_url):
         """Test optimized session context manager."""
         engine_id = "session_test"
 
         # Create engine first
-        database_manager.create_optimized_engine(test_db_url, engine_id)
+        database_manager.create_managed_engine(test_db_url, engine_id)
 
         # Test context manager
-        with database_manager.get_optimized_session(engine_id) as session:
+        with database_manager.get_session(engine_id) as session:
             assert session is not None
             # Test basic query
             result = session.execute(text("SELECT 1")).scalar()
@@ -173,13 +173,13 @@ class TestDatabaseManager:
         # Cleanup
         database_manager._engines[engine_id].dispose()
 
-    def test_get_optimized_session_auto_create_engine(
+    def test_get_session_auto_create_engine(
         self, database_manager, test_db_url
     ):
         """Test auto-creation of engine when not found."""
         engine_id = "auto_create_test"
 
-        with database_manager.get_optimized_session(engine_id, test_db_url) as session:
+        with database_manager.get_session(engine_id, test_db_url) as session:
             assert session is not None
             # Engine should have been created automatically
             assert engine_id in database_manager._engines
@@ -196,7 +196,7 @@ class TestDatabaseManager:
         assert factory is None
 
         # Create engine
-        database_manager.create_optimized_engine(test_db_url, engine_id)
+        database_manager.create_managed_engine(test_db_url, engine_id)
 
         # Factory should now exist
         factory = database_manager.get_session_factory(engine_id)
@@ -214,7 +214,7 @@ class TestDatabaseManager:
         """Test health check functionality."""
         # Create engine
         engine_id = "health_test"
-        database_manager.create_optimized_engine(test_db_url, engine_id)
+        database_manager.create_managed_engine(test_db_url, engine_id)
 
         # Perform health check
         health_status = database_manager.perform_health_check()
@@ -247,7 +247,7 @@ class TestDatabaseManager:
         """Test health check result caching."""
         # Create engine
         engine_id = "cache_test"
-        database_manager.create_optimized_engine(test_db_url, engine_id)
+        database_manager.create_managed_engine(test_db_url, engine_id)
 
         # First health check
         health1 = database_manager.perform_health_check()
@@ -266,10 +266,10 @@ class TestDatabaseManager:
         """Test metrics summary generation."""
         # Create engine and do some operations
         engine_id = "metrics_test"
-        database_manager.create_optimized_engine(test_db_url, engine_id)
+        database_manager.create_managed_engine(test_db_url, engine_id)
 
         # Use session to generate metrics
-        with database_manager.get_optimized_session(engine_id) as session:
+        with database_manager.get_session(engine_id) as session:
             session.execute(text("SELECT 1"))
 
         # Get metrics
@@ -299,17 +299,17 @@ class TestDatabaseManager:
         # Cleanup
         database_manager._engines[engine_id].dispose()
 
-    def test_optimize_for_workload(self, database_manager, test_db_url):
+    def test_configure_for_workload(self, database_manager, test_db_url):
         """Test workload optimization."""
         # Create engine
         engine_id = "workload_test"
-        database_manager.create_optimized_engine(test_db_url, engine_id)
+        database_manager.create_managed_engine(test_db_url, engine_id)
 
         # Test different workload optimizations
         workload_types = ["read_heavy", "write_heavy", "analytics", "mixed"]
 
         for workload in workload_types:
-            result = database_manager.optimize_for_workload(workload)
+            result = database_manager.configure_for_workload(workload)
 
             assert "workload_type" in result
             assert "optimizations_applied" in result
@@ -325,7 +325,7 @@ class TestDatabaseManager:
         # Create multiple engines
         engine_ids = ["cleanup_test1", "cleanup_test2"]
         for engine_id in engine_ids:
-            database_manager.create_optimized_engine(test_db_url, engine_id)
+            database_manager.create_managed_engine(test_db_url, engine_id)
 
         assert len(database_manager._engines) == 2
         assert len(database_manager._session_locals) == 2
@@ -343,9 +343,9 @@ class TestDatabaseManager:
         """Test performance report generation."""
         # Create engine and generate some activity
         engine_id = "perf_test"
-        database_manager.create_optimized_engine(test_db_url, engine_id)
+        database_manager.create_managed_engine(test_db_url, engine_id)
 
-        with database_manager.get_optimized_session(engine_id) as session:
+        with database_manager.get_session(engine_id) as session:
             session.execute(text("SELECT 1"))
 
         # Get performance report
@@ -371,13 +371,13 @@ class TestDatabaseManager:
         """Test performance recommendation generation with actual database activity."""
         # Create engine and generate some database activity
         engine_id = "recommendations_test"
-        database_manager.create_optimized_engine(test_db_url, engine_id)
+        database_manager.create_managed_engine(test_db_url, engine_id)
 
         # Reset metrics for clean start
         database_manager.metrics.reset()
 
         # Generate some database activity to create realistic metrics
-        with database_manager.get_optimized_session(engine_id) as session:
+        with database_manager.get_session(engine_id) as session:
             # Execute several queries to generate pool activity
             for _ in range(10):
                 session.execute(text("SELECT 1"))
@@ -412,9 +412,9 @@ class TestDatabaseManager:
         def create_engine_and_session():
             try:
                 engine_id = f"thread_test_{threading.current_thread().ident}"
-                database_manager.create_optimized_engine(test_db_url, engine_id)
+                database_manager.create_managed_engine(test_db_url, engine_id)
 
-                with database_manager.get_optimized_session(engine_id) as session:
+                with database_manager.get_session(engine_id) as session:
                     result = session.execute(text("SELECT 1")).scalar()
                     results.append(result)
 
@@ -542,11 +542,11 @@ class TestGlobalDatabaseManager:
         test_db_url = f"sqlite:///{db_path}"
 
         # Create test engine
-        manager.create_optimized_engine(test_db_url, "cleanup_global_test")
+        manager.create_managed_engine(test_db_url, "cleanup_global_test")
 
         # Should have our test engine
         assert "cleanup_global_test" in manager._engines
-        original_engine_count = len(manager._engines)
+        len(manager._engines)
 
         # Perform cleanup
         cleanup_database_resources()

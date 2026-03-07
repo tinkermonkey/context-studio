@@ -3,13 +3,14 @@
  */
 
 import React from "react";
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { TestParagraphEditor } from "../TestParagraphEditor";
 import type { TestParagraphResponse } from "@/api/services/ragExperiments";
 import { vi, describe, it, expect, beforeEach } from "vitest";
 import "@testing-library/jest-dom";
 import * as ragExperimentsHooks from "@/api/hooks/ragExperiments";
+import type { UseMutationResult } from "@tanstack/react-query";
 
 // Mock the hooks
 vi.mock("@/api/hooks/ragExperiments", () => ({
@@ -20,19 +21,45 @@ vi.mock("@/api/hooks/ragExperiments", () => ({
 // Default mock implementations
 const defaultCreateMock = {
   mutate: vi.fn(),
+  mutateAsync: vi.fn(),
   isPending: false,
   isSuccess: false,
   error: null,
-  data: null,
-};
+  data: undefined,
+  isError: false,
+  isIdle: true,
+  status: "idle",
+  reset: vi.fn(),
+  variables: undefined,
+  context: undefined,
+  submittedAt: 0,
+} as unknown as UseMutationResult<
+  TestParagraphResponse,
+  Error,
+  { text: string; notes?: string },
+  unknown
+>;
 
 const defaultUpdateMock = {
   mutate: vi.fn(),
+  mutateAsync: vi.fn(),
   isPending: false,
   isSuccess: false,
   error: null,
-  data: null,
-};
+  data: undefined,
+  isError: false,
+  isIdle: true,
+  status: "idle",
+  reset: vi.fn(),
+  variables: undefined,
+  context: undefined,
+  submittedAt: 0,
+} as unknown as UseMutationResult<
+  TestParagraphResponse,
+  Error,
+  { paragraphId: string; text?: string; notes?: string },
+  unknown
+>;
 
 const createWrapper = () => {
   const queryClient = new QueryClient({
@@ -50,8 +77,12 @@ describe("TestParagraphEditor", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     // Reset to default mocks
-    vi.mocked(ragExperimentsHooks.useCreateTestParagraph).mockReturnValue(defaultCreateMock);
-    vi.mocked(ragExperimentsHooks.useUpdateTestParagraph).mockReturnValue(defaultUpdateMock);
+    vi.mocked(ragExperimentsHooks.useCreateTestParagraph).mockReturnValue(
+      defaultCreateMock,
+    );
+    vi.mocked(ragExperimentsHooks.useUpdateTestParagraph).mockReturnValue(
+      defaultUpdateMock,
+    );
   });
 
   it("renders create form when no paragraph provided", () => {
@@ -109,11 +140,24 @@ describe("TestParagraphEditor", () => {
   it("shows loading state during submission", () => {
     vi.mocked(ragExperimentsHooks.useCreateTestParagraph).mockReturnValue({
       mutate: vi.fn(),
+      mutateAsync: vi.fn(),
       isPending: true,
       isSuccess: false,
       error: null,
-      data: null,
-    });
+      data: undefined,
+      isError: false,
+      isIdle: false,
+      status: "pending",
+      reset: vi.fn(),
+      variables: undefined,
+      context: undefined,
+      submittedAt: 0,
+    } as unknown as UseMutationResult<
+      TestParagraphResponse,
+      Error,
+      { text: string; notes?: string },
+      unknown
+    >);
 
     render(<TestParagraphEditor />, { wrapper: createWrapper() });
 
@@ -126,11 +170,24 @@ describe("TestParagraphEditor", () => {
   it("shows error state on submission failure", () => {
     vi.mocked(ragExperimentsHooks.useCreateTestParagraph).mockReturnValue({
       mutate: vi.fn(),
+      mutateAsync: vi.fn(),
       isPending: false,
       isSuccess: false,
       error: new Error("Submission failed"),
-      data: null,
-    });
+      data: undefined,
+      isError: true,
+      isIdle: false,
+      status: "error",
+      reset: vi.fn(),
+      variables: undefined,
+      context: undefined,
+      submittedAt: 0,
+    } as unknown as UseMutationResult<
+      TestParagraphResponse,
+      Error,
+      { text: string; notes?: string },
+      unknown
+    >);
 
     render(<TestParagraphEditor />, { wrapper: createWrapper() });
 
@@ -141,11 +198,24 @@ describe("TestParagraphEditor", () => {
     const mutateFn = vi.fn();
     vi.mocked(ragExperimentsHooks.useCreateTestParagraph).mockReturnValue({
       mutate: mutateFn,
+      mutateAsync: vi.fn(),
       isPending: false,
       isSuccess: false,
       error: null,
-      data: null,
-    });
+      data: undefined,
+      isError: false,
+      isIdle: true,
+      status: "idle",
+      reset: vi.fn(),
+      variables: undefined,
+      context: undefined,
+      submittedAt: 0,
+    } as unknown as UseMutationResult<
+      TestParagraphResponse,
+      Error,
+      { text: string; notes?: string },
+      unknown
+    >);
 
     render(<TestParagraphEditor />, { wrapper: createWrapper() });
 
@@ -156,7 +226,7 @@ describe("TestParagraphEditor", () => {
     fireEvent.click(submitButton);
 
     expect(mutateFn).toHaveBeenCalledWith(
-      expect.objectContaining({ text: "Test text" })
+      expect.objectContaining({ text: "Test text" }),
     );
   });
 

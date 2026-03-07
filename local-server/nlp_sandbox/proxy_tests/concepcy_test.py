@@ -1,3 +1,4 @@
+# mypy: ignore-errors
 #!/usr/bin/env python3
 """
 Simple test to verify concepCy requests can be made through a proxy.

@@ -11,13 +11,13 @@ sys.path.append(
     os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 )
 
-import pytest
-from datetime import datetime, timezone
-from unittest.mock import Mock, patch
+import pytest  # noqa: E402
+from datetime import datetime, timezone  # noqa: E402
+from unittest.mock import Mock, patch  # noqa: E402
 
-from services.identity_manager import IdentityManager
-from services.collaboration_models import UserIdentity
-from services.s3_sync_manager import S3SyncManager
+from services.identity_manager import IdentityManager  # noqa: E402
+from services.collaboration_models import UserIdentity  # noqa: E402
+from services.s3_sync_manager import S3SyncManager  # noqa: E402
 
 
 class TestIdentityManager:
@@ -84,7 +84,7 @@ class TestIdentityManager:
                 with patch.object(identity_manager, '_store_identity_locally'):
                     with patch.object(identity_manager, '_generate_verification_code', return_value="123456"):
                         with patch.object(identity_manager, '_store_verification_code'):
-                            
+
                             result = identity_manager.register_user(
                                 email="test@example.com",
                                 display_name="Test User"
@@ -102,7 +102,7 @@ class TestIdentityManager:
             with patch.object(identity_manager, '_generate_user_id', return_value="user123"):
                 with patch.object(identity_manager, '_generate_verification_code', return_value="654321"):
                     with patch.object(identity_manager, '_store_verification_code'):
-                        
+
                         result = identity_manager.register_user(
                             email="test@example.com",
                             display_name="Test User"
@@ -145,7 +145,7 @@ class TestIdentityManager:
         with patch.object(identity_manager, '_get_verification_code', return_value="123456"):
             with patch.object(identity_manager, '_delete_verification_code'):
                 mock_db_session.execute.return_value.rowcount = 1
-                
+
                 success = identity_manager.verify_email("user123", "123456")
 
         assert success is True
@@ -168,7 +168,7 @@ class TestIdentityManager:
         """Test email verification when user not found."""
         with patch.object(identity_manager, '_get_verification_code', return_value="123456"):
             mock_db_session.execute.return_value.rowcount = 0
-            
+
             success = identity_manager.verify_email("nonexistent", "123456")
 
         assert success is False
@@ -186,7 +186,7 @@ class TestIdentityManager:
         with patch.object(identity_manager, 'get_user') as mock_get_user:
             mock_get_user.side_effect = [mock_trustee, mock_trusted]
             with patch.object(identity_manager, '_count_trust_relationships', return_value=1):
-                
+
                 success = identity_manager.trust_user("trustee123", "trusted456")
 
         assert success is True
@@ -217,7 +217,7 @@ class TestIdentityManager:
 
         with patch.object(identity_manager, 'get_user') as mock_get_user:
             mock_get_user.side_effect = [mock_trustee, None]
-            
+
             success = identity_manager.trust_user("trustee123", "nonexistent")
 
         assert success is False
@@ -246,7 +246,7 @@ class TestIdentityManager:
         with patch.object(identity_manager, 'get_user') as mock_get_user:
             mock_get_user.side_effect = [mock_trustee, mock_trusted]
             with patch.object(identity_manager, '_count_trust_relationships', return_value=2):
-                
+
                 success = identity_manager.trust_user("trustee123", "trusted456")
 
         assert success is True
@@ -350,17 +350,17 @@ class TestIdentityManager:
     def test_generate_user_id_deterministic(self, identity_manager):
         """Test user ID generation is deterministic."""
         email = "test@example.com"
-        
+
         user_id1 = identity_manager._generate_user_id(email)
         user_id2 = identity_manager._generate_user_id(email)
-        
+
         assert user_id1 == user_id2
         assert len(user_id1) == 16  # First 16 chars of SHA-256
 
     def test_generate_verification_code_format(self, identity_manager):
         """Test verification code generation format."""
         code = identity_manager._generate_verification_code()
-        
+
         assert len(code) == 6
         assert code.isdigit()
 
@@ -410,7 +410,7 @@ class TestIdentityManager:
         with patch.object(identity_manager, '_get_verification_code', return_value="123456"):
             with patch.object(identity_manager, '_delete_verification_code') as mock_delete:
                 mock_db_session.execute.return_value.rowcount = 1
-                
+
                 success = identity_manager.verify_email("user123", "123456")
 
         assert success is True

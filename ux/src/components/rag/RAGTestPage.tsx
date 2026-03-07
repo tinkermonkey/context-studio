@@ -4,26 +4,38 @@
  * Test interface for the RAG entity extraction API endpoint
  */
 
-import { useState, useEffect, useMemo } from "react";
-import { Button, Card, Label, Textarea, Spinner, Alert, Checkbox, Badge } from "flowbite-react";
+import { useState, useMemo } from "react";
+import {
+  Alert,
+  Badge,
+  Button,
+  Card,
+  Checkbox,
+  Label,
+  Spinner,
+  Textarea,
+} from "flowbite-react";
 import { useExtractEntities, useRAGTrace } from "@/api/hooks/rag";
 import { useStructureNode } from "@/api/hooks/structure_nodes/useStructureNodes";
 import { Info, ExternalLink } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 
 // Component to render a single entity with its matched node link
-function EntityItem({ entity }: { entity: any }) {
+
+function EntityItem(
+  { entity }: { entity: any }, // eslint-disable-line @typescript-eslint/no-explicit-any
+) {
   const { data: node, isLoading } = useStructureNode(
     entity.metadata?.matched_kg_node,
-    {
-      enabled: !!entity.metadata?.matched_kg_node,
-    }
   );
 
   const linkProps = useMemo(() => {
     if (!node?.id || !node?.node_type) return null;
 
-    return { to: '/app/structure_nodes/$nodeId' as const, params: { nodeId: node.id } };
+    return {
+      to: "/app/structure_nodes/$nodeId" as const,
+      params: { nodeId: node.id },
+    };
   }, [node]);
 
   return (
@@ -77,10 +89,15 @@ export default function RAGTestPage() {
   const [inputText, setInputText] = useState("");
   const [enableTrace, setEnableTrace] = useState(true);
   const [enableLlmLayer, setEnableLlmLayer] = useState(false);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [result, setResult] = useState<any>(null);
   const [requestId, setRequestId] = useState<string | null>(null);
 
-  const { mutate: extractEntities, isPending, error } = useExtractEntities({
+  const {
+    mutate: extractEntities,
+    isPending,
+    error,
+  } = useExtractEntities({
     onSuccess: (data) => {
       setResult(data);
       // Set request ID to trigger trace fetch if trace is available
@@ -94,12 +111,11 @@ export default function RAGTestPage() {
   });
 
   // Fetch trace data when request ID is set and trace is available
-  const { data: traceData, isLoading: isLoadingTrace, error: traceError } = useRAGTrace(
-    requestId,
-    {
-      enabled: !!requestId && result?.trace_available === true,
-    }
-  );
+  const {
+    data: traceData,
+    isLoading: isLoadingTrace,
+    error: traceError,
+  } = useRAGTrace(requestId);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -132,7 +148,7 @@ export default function RAGTestPage() {
         <form onSubmit={handleSubmit}>
           <div className="mb-4">
             <div className="mb-2 flex items-center justify-between">
-              <Label htmlFor="input-text" value="Input Text" />
+              <Label htmlFor="input-text">Input Text</Label>
               <div className="flex items-center gap-4">
                 <div className="flex items-center gap-2">
                   <Checkbox
@@ -262,6 +278,7 @@ export default function RAGTestPage() {
                   typeof value === "object" &&
                   value !== null
                 ) {
+                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
                   const layerMetrics = value as any;
                   return (
                     <div
@@ -277,7 +294,8 @@ export default function RAGTestPage() {
                             Time:
                           </span>
                           <span className="font-mono text-gray-900 dark:text-white">
-                            {(layerMetrics.execution_time_ms / 1000).toFixed(1)}s
+                            {(layerMetrics.execution_time_ms / 1000).toFixed(1)}
+                            s
                           </span>
                         </div>
                         <div className="flex justify-between">
@@ -319,9 +337,15 @@ export default function RAGTestPage() {
                 Extracted Entities ({result.entities.length})
               </h3>
               <div className="space-y-2">
-                {result.entities.map((entity: any, index: number) => (
-                  <EntityItem key={index} entity={entity} />
-                ))}
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                {result.entities.map(
+                  (
+                    entity: any, // eslint-disable-line @typescript-eslint/no-explicit-any
+                    index: number,
+                  ) => (
+                    <EntityItem key={index} entity={entity} />
+                  ),
+                )}
               </div>
             </div>
           )}
@@ -358,19 +382,21 @@ export default function RAGTestPage() {
 
           {traceError && (
             <Alert color="failure">
-              <span className="font-medium">Error loading trace:</span> {traceError.message}
+              <span className="font-medium">Error loading trace:</span>{" "}
+              {traceError.message}
             </Alert>
           )}
 
-          {traceData && (
+          {traceData ? (
             <div>
               <pre className="overflow-auto rounded-lg bg-gray-50 p-4 text-xs dark:bg-gray-900">
                 <code className="text-gray-900 dark:text-white">
-                  {JSON.stringify(traceData, null, 2)}
+                  {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+                  {JSON.stringify(traceData as any, null, 2)}
                 </code>
               </pre>
             </div>
-          )}
+          ) : null}
         </Card>
       )}
     </div>

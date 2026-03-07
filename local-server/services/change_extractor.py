@@ -38,9 +38,7 @@ class ChangeExtractor:
     ) -> List[ChangeRecord]:
         """Extract changes that need to be synchronized to S3."""
 
-        query = self.db_session.query(ChangeEvent).filter(
-            ChangeEvent.processed == False
-        )
+        query = self.db_session.query(ChangeEvent).filter(~ChangeEvent.processed)
 
         if since:
             query = query.filter(ChangeEvent.timestamp > since)
@@ -58,11 +56,11 @@ class ChangeExtractor:
         for event in change_events:
             change = ChangeRecord(
                 change_id=str(event.id),
-                event_type=event.event_type,
-                record_type=event.record_type,
-                record_id=event.record_id or "",
-                old_data=event.old_data,
-                new_data=event.new_data,
+                event_type=str(event.event_type),
+                record_type=str(event.record_type),  # RecordType enum requires explicit conversion to string
+                record_id=str(event.record_id or ""),
+                old_data=event.old_data,  # type: ignore
+                new_data=event.new_data,  # type: ignore
                 timestamp=event.timestamp.isoformat(),
                 batch_id=batch_id,
             )

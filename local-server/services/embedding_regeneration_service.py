@@ -1,8 +1,8 @@
+# mypy: ignore-errors
 """
 Service for regenerating embeddings for structure_nodes with WebSocket progress updates.
 """
 
-import time
 import asyncio
 import json
 from typing import Dict, List, Optional

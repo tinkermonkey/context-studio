@@ -1,22 +1,24 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import ReactDOM from "react-dom";
 import {
-  Button,
   Badge,
-  TextInput,
-  Spinner,
+  Button,
   Checkbox,
   Label,
+  Spinner,
+  TextInput,
 } from "flowbite-react";
 import { ChevronDown, Search, X, CircleX } from "lucide-react";
 import SearchHighlight from "@/components/misc/search_highlight";
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export interface FieldMap<T = any> {
   value: keyof T | string;
   title: keyof T | string;
   definition?: keyof T | string;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export interface PortalRecordSelectorProps<T = any> {
   records: T[];
   loading?: boolean;
@@ -29,16 +31,16 @@ export interface PortalRecordSelectorProps<T = any> {
   onSelect?: (record?: T) => void; // single select
   onSelectionChange?: (ids: string[]) => void; // multi select
   maxSelections?: number;
-  'data-testid'?: string;
+  "data-testid"?: string;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function PortalRecordSelector<T = any>(
   props: PortalRecordSelectorProps<T>,
 ): React.ReactElement {
   const {
     records,
     loading = false,
-    error = null,
     fieldMap,
     placeholder = "Select Record",
     disabled = false,
@@ -47,7 +49,7 @@ export function PortalRecordSelector<T = any>(
     onSelect,
     onSelectionChange,
     maxSelections,
-    'data-testid': dataTestId,
+    "data-testid": dataTestId,
   } = props;
 
   const [searchTerm, setSearchTerm] = useState("");
@@ -60,8 +62,13 @@ export function PortalRecordSelector<T = any>(
   const optionRefs = useRef<Record<string, HTMLDivElement | null>>({});
   const [menuStyle, setMenuStyle] = useState<React.CSSProperties>({});
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const getValue = (item: any) => String(item[fieldMap.value as string] ?? "");
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const getTitle = (item: any) => String(item[fieldMap.title as string] ?? "");
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const getDefinition = (item: any) =>
     fieldMap.definition
       ? String(item[fieldMap.definition as string] ?? "")

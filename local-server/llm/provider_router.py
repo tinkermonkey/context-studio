@@ -7,17 +7,11 @@ This module handles routing LLM requests to the appropriate provider
 
 import os
 import warnings
-from typing import Optional, Dict, Any, Union
+from typing import Optional, Dict, Any, cast
 from langchain.chat_models import init_chat_model
-from langchain_core.messages import BaseMessage
 
-from .enabled_models import (
-    EnabledModelsManager,
-    ProviderType,
-    EnabledModelConfig,
-    get_enabled_models_manager
-)
-from .model_capabilities import get_model_capabilities, validate_model_config
+from .enabled_models import ProviderType, EnabledModelConfig, get_enabled_models_manager
+from .model_capabilities import validate_model_config
 from .exceptions import LLMConfigurationError
 from utils.logger import get_logger
 
@@ -64,19 +58,23 @@ class ProviderRouter:
         # Cache the LLM instance
         self._llm_cache[cache_key] = llm
 
-        self.logger.info(f"Created LLM for model: {model_name} via {config.provider_type.value}")
+        self.logger.info(
+            f"Created LLM for model: {model_name} via {config.provider_type.value}"
+        )
         return llm
 
-    def _get_cache_key(self, model_name: str, config: EnabledModelConfig, kwargs: Dict) -> str:
+    def _get_cache_key(
+        self, model_name: str, config: EnabledModelConfig, kwargs: Dict
+    ) -> str:
         """Generate cache key for LLM instance"""
         # Include key parameters that affect LLM initialization
         key_params = {
-            'model': model_name,
-            'provider': config.provider_type.value,
-            'temperature': kwargs.get('temperature', 0),
-            'api_key_var': config.api_key_env_var,
-            'endpoint': config.custom_endpoint,
-            'model_override': config.model_override
+            "model": model_name,
+            "provider": config.provider_type.value,
+            "temperature": kwargs.get("temperature", 0),
+            "api_key_var": config.api_key_env_var,
+            "endpoint": config.custom_endpoint,
+            "model_override": config.model_override,
         }
         return str(sorted(key_params.items()))
 
@@ -92,7 +90,9 @@ class ProviderRouter:
         elif config.provider_type == ProviderType.OPENROUTER:
             return self._create_openrouter_llm(config, **kwargs)
         else:
-            raise LLMConfigurationError(f"Unsupported provider type: {config.provider_type}")
+            raise LLMConfigurationError(
+                f"Unsupported provider type: {config.provider_type}"
+            )
 
     def _create_openai_llm(self, config: EnabledModelConfig, **kwargs) -> Any:
         """Create OpenAI LLM via LangChain"""
@@ -101,17 +101,20 @@ class ProviderRouter:
             api_key_var = config.api_key_env_var or "OPENAI_API_KEY"
             api_key = os.getenv(api_key_var)
             if not api_key:
-                raise LLMConfigurationError(f"Environment variable '{api_key_var}' not set")
+                raise LLMConfigurationError(
+                    f"Environment variable '{api_key_var}' not set"
+                )
 
             # Validate API key format
             if not api_key.startswith("sk-"):
-                raise LLMConfigurationError(f"Invalid OpenAI API key format in '{api_key_var}'")
+                raise LLMConfigurationError(
+                    f"Invalid OpenAI API key format in '{api_key_var}'"
+                )
 
             # Determine model name (allow override)
             model_name = config.model_override or config.model_name
 
             # Apply model capabilities validation
-            capabilities = get_model_capabilities(model_name)
             validated_config, warnings_list = validate_model_config(model_name, kwargs)
 
             # Log warnings
@@ -120,26 +123,31 @@ class ProviderRouter:
 
             # Create LLM
             llm_params = {
-                'model': model_name,
-                'model_provider': 'openai',
-                'openai_api_key': api_key,
-                **validated_config
+                "model": model_name,
+                "model_provider": "openai",
+                "openai_api_key": api_key,
+                **validated_config,
             }
 
             # Add custom endpoint if specified
             if config.custom_endpoint:
-                llm_params['openai_api_base'] = config.custom_endpoint
+                llm_params["openai_api_base"] = config.custom_endpoint
             else:
                 # Check if caching proxy is enabled for OpenAI
                 from config import get_settings
+
                 settings = get_settings()
-                if (settings.reference_sources.openai.enabled and
-                    settings.reference_sources.openai.use_proxy and
-                    settings.proxy_server.enabled):
+                if (
+                    settings.reference_sources.openai.enabled
+                    and settings.reference_sources.openai.use_proxy
+                    and settings.proxy_server.enabled
+                ):
                     # Route through caching proxy
                     proxy_url = f"http://{settings.proxy_server.host}:{settings.proxy_server.port}"
-                    llm_params['openai_proxy'] = proxy_url
-                    self.logger.info(f"OpenAI LLM configured to use caching proxy: {proxy_url}")
+                    llm_params["openai_proxy"] = proxy_url
+                    self.logger.info(
+                        f"OpenAI LLM configured to use caching proxy: {proxy_url}"
+                    )
 
             # Suppress LangChain warnings about JSON schema
             with warnings.catch_warnings():
@@ -150,7 +158,9 @@ class ProviderRouter:
             return llm
 
         except Exception as e:
-            self.logger.error(f"Failed to create OpenAI LLM for {config.model_name}: {e}")
+            self.logger.error(
+                f"Failed to create OpenAI LLM for {config.model_name}: {e}"
+            )
             raise LLMConfigurationError(f"OpenAI LLM creation failed: {str(e)}")
 
     def _create_anthropic_llm(self, config: EnabledModelConfig, **kwargs) -> Any:
@@ -160,13 +170,14 @@ class ProviderRouter:
             api_key_var = config.api_key_env_var or "ANTHROPIC_API_KEY"
             api_key = os.getenv(api_key_var)
             if not api_key:
-                raise LLMConfigurationError(f"Environment variable '{api_key_var}' not set")
+                raise LLMConfigurationError(
+                    f"Environment variable '{api_key_var}' not set"
+                )
 
             # Determine model name (allow override)
             model_name = config.model_override or config.model_name
 
             # Apply model capabilities validation
-            capabilities = get_model_capabilities(model_name)
             validated_config, warnings_list = validate_model_config(model_name, kwargs)
 
             # Log warnings
@@ -175,26 +186,31 @@ class ProviderRouter:
 
             # Create LLM
             llm_params = {
-                'model': model_name,
-                'model_provider': 'anthropic',
-                'anthropic_api_key': api_key,
-                **validated_config
+                "model": model_name,
+                "model_provider": "anthropic",
+                "anthropic_api_key": api_key,
+                **validated_config,
             }
 
             # Add custom endpoint if specified
             if config.custom_endpoint:
-                llm_params['anthropic_api_url'] = config.custom_endpoint
+                llm_params["anthropic_api_url"] = config.custom_endpoint
             else:
                 # Check if caching proxy is enabled for Anthropic
                 from config import get_settings
+
                 settings = get_settings()
-                if (settings.reference_sources.anthropic.enabled and
-                    settings.reference_sources.anthropic.use_proxy and
-                    settings.proxy_server.enabled):
+                if (
+                    settings.reference_sources.anthropic.enabled
+                    and settings.reference_sources.anthropic.use_proxy
+                    and settings.proxy_server.enabled
+                ):
                     # Route through caching proxy
                     proxy_url = f"http://{settings.proxy_server.host}:{settings.proxy_server.port}"
-                    llm_params['anthropic_proxy'] = proxy_url
-                    self.logger.info(f"Anthropic LLM configured to use caching proxy: {proxy_url}")
+                    llm_params["anthropic_proxy"] = proxy_url
+                    self.logger.info(
+                        f"Anthropic LLM configured to use caching proxy: {proxy_url}"
+                    )
 
             llm = init_chat_model(**llm_params)
 
@@ -202,7 +218,9 @@ class ProviderRouter:
             return llm
 
         except Exception as e:
-            self.logger.error(f"Failed to create Anthropic LLM for {config.model_name}: {e}")
+            self.logger.error(
+                f"Failed to create Anthropic LLM for {config.model_name}: {e}"
+            )
             raise LLMConfigurationError(f"Anthropic LLM creation failed: {str(e)}")
 
     def _create_google_llm(self, config: EnabledModelConfig, **kwargs) -> Any:
@@ -212,13 +230,14 @@ class ProviderRouter:
             api_key_var = config.api_key_env_var or "GOOGLE_API_KEY"
             api_key = os.getenv(api_key_var)
             if not api_key:
-                raise LLMConfigurationError(f"Environment variable '{api_key_var}' not set")
+                raise LLMConfigurationError(
+                    f"Environment variable '{api_key_var}' not set"
+                )
 
             # Determine model name (allow override)
             model_name = config.model_override or config.model_name
 
             # Apply model capabilities validation
-            capabilities = get_model_capabilities(model_name)
             validated_config, warnings_list = validate_model_config(model_name, kwargs)
 
             # Log warnings
@@ -227,15 +246,15 @@ class ProviderRouter:
 
             # Create LLM
             llm_params = {
-                'model': model_name,
-                'model_provider': 'google-genai',  # or 'google-vertexai' depending on setup
-                'google_api_key': api_key,
-                **validated_config
+                "model": model_name,
+                "model_provider": "google-genai",  # or 'google-vertexai' depending on setup
+                "google_api_key": api_key,
+                **validated_config,
             }
 
             # Add custom endpoint if specified
             if config.custom_endpoint:
-                llm_params['google_api_base'] = config.custom_endpoint
+                llm_params["google_api_base"] = config.custom_endpoint
 
             llm = init_chat_model(**llm_params)
 
@@ -243,7 +262,9 @@ class ProviderRouter:
             return llm
 
         except Exception as e:
-            self.logger.error(f"Failed to create Google LLM for {config.model_name}: {e}")
+            self.logger.error(
+                f"Failed to create Google LLM for {config.model_name}: {e}"
+            )
             raise LLMConfigurationError(f"Google LLM creation failed: {str(e)}")
 
     def _create_openrouter_llm(self, config: EnabledModelConfig, **kwargs) -> Any:
@@ -253,14 +274,15 @@ class ProviderRouter:
             api_key_var = config.api_key_env_var or "OPENROUTER_API_KEY"
             api_key = os.getenv(api_key_var)
             if not api_key:
-                raise LLMConfigurationError(f"Environment variable '{api_key_var}' not set")
+                raise LLMConfigurationError(
+                    f"Environment variable '{api_key_var}' not set"
+                )
 
             # Determine model name (allow override)
             model_name = config.model_override or config.model_name
 
             # OpenRouter uses OpenAI-compatible API
             # Apply model capabilities validation
-            capabilities = get_model_capabilities(model_name)
             validated_config, warnings_list = validate_model_config(model_name, kwargs)
 
             # Log warnings
@@ -268,14 +290,16 @@ class ProviderRouter:
                 self.logger.warning(warning)
 
             # Create LLM using OpenAI provider but with OpenRouter endpoint
-            openrouter_endpoint = config.custom_endpoint or "https://openrouter.ai/api/v1"
+            openrouter_endpoint = (
+                config.custom_endpoint or "https://openrouter.ai/api/v1"
+            )
 
             llm_params = {
-                'model': model_name,
-                'model_provider': 'openai',  # OpenRouter is OpenAI-compatible
-                'openai_api_key': api_key,
-                'openai_api_base': openrouter_endpoint,
-                **validated_config
+                "model": model_name,
+                "model_provider": "openai",  # OpenRouter is OpenAI-compatible
+                "openai_api_key": api_key,
+                "openai_api_base": openrouter_endpoint,
+                **validated_config,
             }
 
             # Suppress LangChain warnings about JSON schema
@@ -287,7 +311,9 @@ class ProviderRouter:
             return llm
 
         except Exception as e:
-            self.logger.error(f"Failed to create OpenRouter LLM for {config.model_name}: {e}")
+            self.logger.error(
+                f"Failed to create OpenRouter LLM for {config.model_name}: {e}"
+            )
             raise LLMConfigurationError(f"OpenRouter LLM creation failed: {str(e)}")
 
     def clear_cache(self) -> None:
@@ -297,15 +323,17 @@ class ProviderRouter:
 
     def get_enabled_models(self) -> list[str]:
         """Get list of currently enabled model names"""
-        return [config.model_name for config in self.models_manager.get_enabled_models()]
+        return [
+            config.model_name for config in self.models_manager.get_enabled_models()
+        ]
 
     def is_model_available(self, model_name: str) -> bool:
         """Check if a model is available (enabled and configured)"""
-        return self.models_manager.is_model_enabled(model_name)
+        return cast(bool, self.models_manager.is_model_enabled(model_name))
 
     def get_provider_for_model(self, model_name: str) -> Optional[ProviderType]:
         """Get the provider type for a model"""
-        return self.models_manager.get_provider_for_model(model_name)
+        return cast(Optional[ProviderType], self.models_manager.get_provider_for_model(model_name))
 
 
 # Global instance

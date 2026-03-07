@@ -7,14 +7,13 @@ a full database setup.
 
 import json
 import pytest
-from unittest.mock import Mock, patch, MagicMock
-from datetime import datetime, timedelta
+from unittest.mock import Mock, patch
+from datetime import datetime
 
 from reference_db.config import ReferenceConfig
 from reference_db.schema_org_importer import (
     SchemaOrgImporter,
     DownloadError,
-    ParseError,
     EmbeddingError,
     LockError
 )
@@ -128,7 +127,7 @@ class TestURLValidation:
         from pydantic import ValidationError
 
         with pytest.raises(ValidationError) as exc_info:
-            config = ReferenceConfig(
+            ReferenceConfig(
                 schema_org_api_url="http://evil.com/schema.jsonld"
             )
 
@@ -179,7 +178,7 @@ class TestBatchProcessing:
     def test_batch_size_configurable(self):
         """Test batch size is configurable."""
         config = ReferenceConfig(batch_size=50)
-        importer = SchemaOrgImporter(config, Mock())
+        SchemaOrgImporter(config, Mock())
 
         assert config.batch_size == 50
 
@@ -212,7 +211,7 @@ class TestBatchProcessing:
 
         # Mock embedding generation - patch where it's used, not where it's defined
         with patch('reference_db.schema_org_importer.generate_embedding',
-                  return_value=b'\x00' * (384 * 4)):  # 384 dimensions * 4 bytes per float32
+                  return_value=b'\x00' * (384 * 4)):  # 384 dimensions * 4 bytes per float32, E128
             result = importer._generate_embeddings_batch(items, batch_size=2)
 
             assert len(result) == 5
@@ -241,6 +240,7 @@ class TestEmbeddingFields:
         ]
 
         call_count = 0
+
         def mock_generate_embedding(text):
             nonlocal call_count
             call_count += 1
@@ -248,7 +248,7 @@ class TestEmbeddingFields:
             return b'\x00' * (384 * 4)
 
         with patch('reference_db.schema_org_importer.generate_embedding',
-                  side_effect=mock_generate_embedding):
+                  side_effect=mock_generate_embedding):  # noqa: E128
             result = importer._generate_embeddings_batch(items)
 
             assert len(result) == 1
@@ -273,7 +273,7 @@ class TestEmbeddingFields:
         ]
 
         with patch('reference_db.schema_org_importer.generate_embedding',
-                  return_value=b'\x00' * (384 * 4)) as mock_embed:
+                  return_value=b'\x00' * (384 * 4)) as mock_embed:  # noqa: E128, E501
             result = importer._generate_embeddings_batch(items)
 
             assert len(result) == 1
@@ -469,7 +469,7 @@ class TestErrorMessages:
         ]
 
         with patch('reference_db.schema_org_importer.generate_embedding',
-                  side_effect=Exception("API error")):
+                  side_effect=Exception("API error")):  # noqa: E128
             with pytest.raises(EmbeddingError) as exc_info:
                 importer._generate_embeddings_batch(items)
 

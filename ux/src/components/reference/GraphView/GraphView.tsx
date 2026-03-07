@@ -4,16 +4,21 @@
  * Main graph visualization component for search results using Reagraph
  */
 
-import React, { useMemo, useState, useEffect, useRef } from "react";
+import React, { useMemo, useState, useRef, useEffect } from "react";
 import { Alert, Spinner } from "flowbite-react";
 import { Info, AlertTriangle } from "lucide-react";
 import { GraphCanvas, lightTheme } from "reagraph";
-import { UnifiedNode, UnifiedSearchLink, SOURCE_METADATA } from "@/api/types/unified";
+import {
+  UnifiedNode,
+  UnifiedSearchLink,
+  SOURCE_METADATA,
+} from "@/api/types/unified";
 import {
   buildGroupedTreeStructure,
   convertToReagraphFormat,
-  analyzeGraphStructure
+  analyzeGraphStructure,
 } from "./graphUtils";
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { getSourceBadgeColor } from "@/utils/sourceUtils";
 
 interface GraphViewProps {
@@ -23,7 +28,7 @@ interface GraphViewProps {
   isSearching?: boolean;
   width?: number;
   height?: number;
-  layoutType?: 'cluster' | 'tree' | 'galaxy';
+  layoutType?: "cluster" | "tree" | "galaxy";
 }
 
 export const GraphView: React.FC<GraphViewProps> = ({
@@ -31,26 +36,35 @@ export const GraphView: React.FC<GraphViewProps> = ({
   searchLinks,
   onSelectNode,
   isSearching = false,
-  layoutType = 'tree',
+  layoutType = "tree",
 }) => {
   const [layoutError, setLayoutError] = useState<string | null>(null);
-  const [currentLayoutType, setCurrentLayoutType] = useState<string>('forceDirected2d');
+  const [currentLayoutType, setCurrentLayoutType] =
+    useState<string>("forceDirected2d");
   const [hoveredNode, setHoveredNode] = useState<UnifiedNode | null>(null);
-  const [tooltipPosition, setTooltipPosition] = useState<{ x: number; y: number } | null>(null);
+  const [tooltipPosition, setTooltipPosition] = useState<{
+    x: number;
+    y: number;
+  } | null>(null);
   const [pinnedNode, setPinnedNode] = useState<UnifiedNode | null>(null);
-  const [pinnedPosition, setPinnedPosition] = useState<{ x: number; y: number } | null>(null);
+  const [pinnedPosition, setPinnedPosition] = useState<{
+    x: number;
+    y: number;
+  } | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
   // Convert data based on layout type - use grouping for tree layout
   const { nodes, edges } = useMemo(() => {
-    if (layoutType === 'tree' && searchLinks.length > 0) {
+    if (layoutType === "tree" && searchLinks.length > 0) {
       // Use predicate grouping for tree layout
       const groupedStructure = buildGroupedTreeStructure(results, searchLinks);
       return convertToReagraphFormat(groupedStructure, SOURCE_METADATA);
     } else {
       // Use simple node/edge structure for cluster and galaxy layouts
-      const simpleNodes = results.map(node => {
-        const sourceMetadata = SOURCE_METADATA[node.source] || { color: "gray" };
+      const simpleNodes = results.map((node) => {
+        const sourceMetadata = SOURCE_METADATA[node.source] || {
+          color: "gray",
+        };
         const colorMap: Record<string, string> = {
           blue: "#3B82F6",
           orange: "#F97316",
@@ -64,21 +78,21 @@ export const GraphView: React.FC<GraphViewProps> = ({
           label: node.title || node.id,
           fill: colorMap[sourceMetadata.color] || colorMap.gray,
           size: 10 + (node.relevance_score || 0.5) * 10,
-          data: node // Store original node data
+          data: node, // Store original node data
         };
       });
 
       const simpleEdges = searchLinks
-        .filter(link => {
-          const nodeIds = new Set(results.map(node => node.id));
+        .filter((link) => {
+          const nodeIds = new Set(results.map((node) => node.id));
           return nodeIds.has(link.subject) && nodeIds.has(link.object);
         })
-        .map(link => ({
+        .map((link) => ({
           id: link.id,
           source: link.subject,
           target: link.object,
-            label: link.predicate,
-            data: link // Store original link data
+          label: link.predicate,
+          data: link, // Store original link data
         }));
 
       return { nodes: simpleNodes, edges: simpleEdges };
@@ -91,18 +105,26 @@ export const GraphView: React.FC<GraphViewProps> = ({
   }, [nodes, edges]);
 
   // Handle node selection
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleNodeClick = (node: any) => {
     if (node.data) {
       // For grouped structure, only handle clicks on data nodes (not predicate nodes)
-      if (layoutType === 'tree' && 'type' in node.data && node.data.type === 'predicate') {
+      if (
+        layoutType === "tree" &&
+        "type" in node.data &&
+        node.data.type === "predicate"
+      ) {
         // Don't handle clicks on predicate nodes
         return;
       }
 
       // For grouped structure, extract the original node
-      const originalNode = layoutType === 'tree' && 'originalNode' in node.data && node.data.originalNode
-        ? node.data.originalNode
-        : node.data;
+      const originalNode =
+        layoutType === "tree" &&
+        "originalNode" in node.data &&
+        node.data.originalNode
+          ? node.data.originalNode
+          : node.data;
 
       // Pin the hover card at current position
       setPinnedNode(originalNode);
@@ -142,7 +164,8 @@ export const GraphView: React.FC<GraphViewProps> = ({
 
     let x = position.x;
     let y = position.y;
-    let transform = '';
+    // eslint-disable-next-line no-useless-assignment
+    let transform = "";
 
     // Determine horizontal positioning
     const isNearRightEdge = x > containerWidth - tooltipWidth - offset;
@@ -151,15 +174,15 @@ export const GraphView: React.FC<GraphViewProps> = ({
     if (isNearRightEdge) {
       // Position to the left of cursor
       x = position.x - offset;
-      transform = 'translateX(-100%)';
+      transform = "translateX(-100%)";
     } else if (isNearLeftEdge) {
       // Position to the right of cursor
       x = position.x + offset;
-      transform = 'translateX(0%)';
+      transform = "translateX(0%)";
     } else {
       // Position centered horizontally on cursor (default)
       x = position.x;
-      transform = 'translateX(-50%)';
+      transform = "translateX(-50%)";
     }
 
     // Determine vertical positioning
@@ -169,15 +192,15 @@ export const GraphView: React.FC<GraphViewProps> = ({
     if (isNearBottomEdge) {
       // Position above cursor when near bottom edge
       y = position.y - offset;
-      transform += ' translateY(-100%)';
+      transform += " translateY(-100%)";
     } else if (isNearTopEdge) {
       // Position below cursor when near top edge
       y = position.y + offset;
-      transform += ' translateY(0%)';
+      transform += " translateY(0%)";
     } else {
       // Default: Position below cursor (don't cover the node)
       y = position.y + offset;
-      transform += ' translateY(0%)';
+      transform += " translateY(0%)";
     }
 
     return {
@@ -190,25 +213,28 @@ export const GraphView: React.FC<GraphViewProps> = ({
   // Determine layout type for Reagraph with fallback logic
   const getLayoutType = () => {
     switch (layoutType) {
-      case 'tree':
+      case "tree":
         // Only use hierarchical layout if the graph structure supports it
         if (graphAnalysis.isTreeLike && nodes.length > 1) {
-          return 'hierarchicalTd';
+          return "hierarchicalTd";
         }
         // Fallback to force-directed for non-tree structures
-        console.warn('Graph structure not suitable for tree layout, falling back to force-directed:', {
-          hasMultipleRoots: graphAnalysis.hasMultipleRoots,
-          hasCycles: graphAnalysis.hasCycles,
-          hasNoRoot: graphAnalysis.hasNoRoot,
-          nodeCount: nodes.length,
-          edgeCount: edges.length
-        });
-        return 'forceDirected2d';
-      case 'galaxy':
-        return 'radialOut2d';
-      case 'cluster':
+        console.warn(
+          "Graph structure not suitable for tree layout, falling back to force-directed:",
+          {
+            hasMultipleRoots: graphAnalysis.hasMultipleRoots,
+            hasCycles: graphAnalysis.hasCycles,
+            hasNoRoot: graphAnalysis.hasNoRoot,
+            nodeCount: nodes.length,
+            edgeCount: edges.length,
+          },
+        );
+        return "forceDirected2d";
+      case "galaxy":
+        return "radialOut2d";
+      case "cluster":
       default:
-        return 'forceDirected2d';
+        return "forceDirected2d";
     }
   };
 
@@ -217,31 +243,39 @@ export const GraphView: React.FC<GraphViewProps> = ({
     setLayoutError(null);
     const newLayoutType = getLayoutType();
     setCurrentLayoutType(newLayoutType);
-  }, [layoutType, nodes.length, edges.length, graphAnalysis.isTreeLike, graphAnalysis.hasMultipleRoots, graphAnalysis.hasCycles, graphAnalysis.hasNoRoot]);
+  }, [
+    layoutType,
+    nodes.length,
+    edges.length,
+    graphAnalysis.isTreeLike,
+    graphAnalysis.hasMultipleRoots,
+    graphAnalysis.hasCycles,
+    graphAnalysis.hasNoRoot,
+  ]);
 
   // Handle escape key to unpin hover card
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape' && pinnedNode) {
+      if (event.key === "Escape" && pinnedNode) {
         setPinnedNode(null);
         setPinnedPosition(null);
         setHoveredNode(null);
       }
     };
 
-    document.addEventListener('keydown', handleKeyDown);
+    document.addEventListener("keydown", handleKeyDown);
     return () => {
-      document.removeEventListener('keydown', handleKeyDown);
+      document.removeEventListener("keydown", handleKeyDown);
     };
   }, [pinnedNode]);
 
   // Error boundary for graph rendering
   const handleGraphError = (error: Error) => {
-    console.error('Graph rendering error:', error);
+    console.error("Graph rendering error:", error);
     setLayoutError(error.message);
     // Fallback to force-directed layout
-    if (currentLayoutType !== 'forceDirected2d') {
-      setCurrentLayoutType('forceDirected2d');
+    if (currentLayoutType !== "forceDirected2d") {
+      setCurrentLayoutType("forceDirected2d");
     }
   };
 
@@ -276,17 +310,28 @@ export const GraphView: React.FC<GraphViewProps> = ({
       {/* Graph stats */}
       <div className="flex items-center justify-between text-sm text-gray-600">
         <span>
-          {layoutType === 'tree' && searchLinks.length > 0 ? (
+          {layoutType === "tree" && searchLinks.length > 0 ? (
             <>
-              {results.length} data node{results.length !== 1 ? 's' : ''}, {
-                nodes.filter(n => n.data && 'type' in n.data && n.data.type === 'predicate').length
-              } predicate{nodes.filter(n => n.data && 'type' in n.data && n.data.type === 'predicate').length !== 1 ? 's' : ''}, {
-                edges.length
-              } link{edges.length !== 1 ? 's' : ''}
+              {results.length} data node{results.length !== 1 ? "s" : ""},{" "}
+              {
+                nodes.filter(
+                  (n) =>
+                    n.data && "type" in n.data && n.data.type === "predicate",
+                ).length
+              }{" "}
+              predicate
+              {nodes.filter(
+                (n) =>
+                  n.data && "type" in n.data && n.data.type === "predicate",
+              ).length !== 1
+                ? "s"
+                : ""}
+              , {edges.length} link{edges.length !== 1 ? "s" : ""}
             </>
           ) : (
             <>
-              {results.length} node{results.length !== 1 ? 's' : ''}, {edges.length} link{edges.length !== 1 ? 's' : ''}
+              {results.length} node{results.length !== 1 ? "s" : ""},{" "}
+              {edges.length} link{edges.length !== 1 ? "s" : ""}
             </>
           )}
         </span>
@@ -312,10 +357,10 @@ export const GraphView: React.FC<GraphViewProps> = ({
       )}
 
       {/* Graph visualization */}
-      <div className="border border-gray-200 rounded-lg bg-white">
+      <div className="rounded-lg border border-gray-200 bg-white">
         <div
           ref={containerRef}
-          className="w-full aspect-square relative"
+          className="relative aspect-square w-full"
           onMouseMove={handleMouseMove}
           onMouseLeave={() => {
             if (!pinnedNode) {
@@ -336,6 +381,7 @@ export const GraphView: React.FC<GraphViewProps> = ({
               nodes={nodes}
               edges={edges}
               theme={lightTheme}
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
               layoutType={currentLayoutType as any}
               onNodeClick={handleNodeClick}
               onCanvasClick={() => {
@@ -344,17 +390,25 @@ export const GraphView: React.FC<GraphViewProps> = ({
                 setPinnedPosition(null);
                 setHoveredNode(null);
               }}
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
               onNodePointerOver={(node: any) => {
                 if (node && node.data) {
                   // For grouped structure, only show tooltips for data nodes
-                  if (layoutType === 'tree' && 'type' in node.data && node.data.type === 'predicate') {
+                  if (
+                    layoutType === "tree" &&
+                    "type" in node.data &&
+                    node.data.type === "predicate"
+                  ) {
                     return;
                   }
 
                   // For grouped structure, extract the original node
-                  const originalNode = layoutType === 'tree' && 'originalNode' in node.data && node.data.originalNode
-                    ? node.data.originalNode
-                    : node.data;
+                  const originalNode =
+                    layoutType === "tree" &&
+                    "originalNode" in node.data &&
+                    node.data.originalNode
+                      ? node.data.originalNode
+                      : node.data;
 
                   // If hovering over a different node than the pinned one, unpin and show hover
                   if (pinnedNode && pinnedNode.id !== originalNode.id) {
@@ -383,10 +437,13 @@ export const GraphView: React.FC<GraphViewProps> = ({
           </ErrorBoundary>
 
           {/* Node Info Tooltip */}
-          {((hoveredNode && tooltipPosition) || (pinnedNode && pinnedPosition)) && (
+          {((hoveredNode && tooltipPosition) ||
+            (pinnedNode && pinnedPosition)) && (
             <div
-              className={`absolute z-50 bg-white border border-gray-300 rounded-lg shadow-lg p-4 w-80 animate-in fade-in duration-200 ${pinnedNode ? 'pointer-events-auto' : 'pointer-events-none'}`}
-              style={getTooltipStyle((pinnedNode && pinnedPosition) || tooltipPosition!)}
+              className={`animate-in fade-in absolute z-50 w-80 rounded-lg border border-gray-300 bg-white p-4 shadow-lg duration-200 ${pinnedNode ? "pointer-events-auto" : "pointer-events-none"}`}
+              style={getTooltipStyle(
+                (pinnedNode && pinnedPosition) || tooltipPosition!,
+              )}
             >
               <div className="space-y-3">
                 {(() => {
@@ -396,23 +453,30 @@ export const GraphView: React.FC<GraphViewProps> = ({
                   return (
                     <>
                       {/* Title */}
-                      <div className="font-semibold text-base text-gray-900">
+                      <div className="text-base font-semibold text-gray-900">
                         {currentNode.title}
                       </div>
 
                       {/* Image Display */}
                       {(() => {
                         // Check for file-based image content first (from normalized API)
-                        if (currentNode.attributes?.file_type === 'image' && currentNode.attributes?.file_url) {
+                        if (
+                          currentNode.attributes?.file_type === "image" &&
+                          currentNode.attributes?.file_url
+                        ) {
                           return (
-                            <div className="border rounded-lg overflow-hidden bg-gray-50">
+                            <div className="overflow-hidden rounded-lg border bg-gray-50">
                               <img
                                 src={String(currentNode.attributes.file_url)}
-                                alt={String(currentNode.attributes.file_name) || currentNode.title}
-                                className="w-full h-32 object-cover"
+                                alt={
+                                  String(currentNode.attributes.file_name) ||
+                                  currentNode.title
+                                }
+                                className="h-32 w-full object-cover"
                                 onError={(e) => {
                                   // Hide image if it fails to load
-                                  (e.target as HTMLElement).style.display = 'none';
+                                  (e.target as HTMLElement).style.display =
+                                    "none";
                                 }}
                                 loading="lazy"
                               />
@@ -429,16 +493,17 @@ export const GraphView: React.FC<GraphViewProps> = ({
                           currentNode.attributes?.picture ||
                           currentNode.attributes?.photo;
 
-                        if (imageUrl && typeof imageUrl === 'string') {
+                        if (imageUrl && typeof imageUrl === "string") {
                           return (
-                            <div className="border rounded-lg overflow-hidden bg-gray-50">
+                            <div className="overflow-hidden rounded-lg border bg-gray-50">
                               <img
                                 src={imageUrl}
                                 alt={currentNode.title}
-                                className="w-full h-32 object-cover"
+                                className="h-32 w-full object-cover"
                                 onError={(e) => {
                                   // Hide image if it fails to load
-                                  (e.target as HTMLElement).style.display = 'none';
+                                  (e.target as HTMLElement).style.display =
+                                    "none";
                                 }}
                                 loading="lazy"
                               />
@@ -450,23 +515,38 @@ export const GraphView: React.FC<GraphViewProps> = ({
 
                       {/* Basic Info */}
                       <div className="grid grid-cols-1 gap-1 text-xs text-gray-600">
-                        <div><span className="font-medium">ID:</span> <span className="font-mono text-xs">{currentNode.id}</span></div>
-                        <div><span className="font-medium">Source:</span> <span className="capitalize">{currentNode.source.replace('_', ' ')}</span></div>
+                        <div>
+                          <span className="font-medium">ID:</span>{" "}
+                          <span className="font-mono text-xs">
+                            {currentNode.id}
+                          </span>
+                        </div>
+                        <div>
+                          <span className="font-medium">Source:</span>{" "}
+                          <span className="capitalize">
+                            {currentNode.source.replace("_", " ")}
+                          </span>
+                        </div>
                         {currentNode.relevance_score && (
-                          <div><span className="font-medium">Relevance:</span> {(currentNode.relevance_score * 100).toFixed(1)}%</div>
+                          <div>
+                            <span className="font-medium">Relevance:</span>{" "}
+                            {(currentNode.relevance_score * 100).toFixed(1)}%
+                          </div>
                         )}
                       </div>
 
                       {/* Definition */}
                       {currentNode.definition && (
-                        <div className="text-xs text-gray-700 border-t pt-2">
-                          <div className="font-medium mb-1">Definition:</div>
-                          <div className="line-clamp-3">{currentNode.definition}</div>
+                        <div className="border-t pt-2 text-xs text-gray-700">
+                          <div className="mb-1 font-medium">Definition:</div>
+                          <div className="line-clamp-3">
+                            {currentNode.definition}
+                          </div>
                         </div>
                       )}
 
                       {/* Action Links */}
-                      <div className="border-t pt-2 flex gap-3">
+                      <div className="flex gap-3 border-t pt-2">
                         {/* View Details Button */}
                         <button
                           onClick={(e) => {
@@ -475,11 +555,21 @@ export const GraphView: React.FC<GraphViewProps> = ({
                               onSelectNode(currentNode);
                             }
                           }}
-                          className="inline-flex items-center gap-1 text-xs text-blue-600 hover:text-blue-800 underline font-medium"
+                          className="inline-flex items-center gap-1 text-xs font-medium text-blue-600 underline hover:text-blue-800"
                         >
                           View Details
-                          <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          <svg
+                            className="h-3 w-3"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                            />
                           </svg>
                         </button>
 
@@ -489,12 +579,22 @@ export const GraphView: React.FC<GraphViewProps> = ({
                             href={currentNode.source_url}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="inline-flex items-center gap-1 text-xs text-blue-600 hover:text-blue-800 underline font-medium"
+                            className="inline-flex items-center gap-1 text-xs font-medium text-blue-600 underline hover:text-blue-800"
                             onClick={(e) => e.stopPropagation()}
                           >
                             View Source
-                            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                            <svg
+                              className="h-3 w-3"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+                              />
                             </svg>
                           </a>
                         )}
@@ -502,14 +602,13 @@ export const GraphView: React.FC<GraphViewProps> = ({
 
                       {/* Pin indicator for pinned cards */}
                       {pinnedNode && (
-                        <div className="text-xs text-gray-500 border-t pt-2 italic">
+                        <div className="border-t pt-2 text-xs text-gray-500 italic">
                           Card pinned - Click elsewhere or press Escape to close
                         </div>
                       )}
                     </>
                   );
                 })()}
-
               </div>
             </div>
           )}
@@ -519,19 +618,19 @@ export const GraphView: React.FC<GraphViewProps> = ({
       {/* Legend */}
       <div className="flex flex-wrap gap-4 text-xs text-gray-600">
         <div className="flex items-center gap-2">
-          <div className="w-3 h-3 rounded-full bg-blue-500"></div>
+          <div className="h-3 w-3 rounded-full bg-blue-500"></div>
           <span>ConceptNet</span>
         </div>
         <div className="flex items-center gap-2">
-          <div className="w-3 h-3 rounded-full bg-orange-500"></div>
+          <div className="h-3 w-3 rounded-full bg-orange-500"></div>
           <span>DBpedia</span>
         </div>
         <div className="flex items-center gap-2">
-          <div className="w-3 h-3 rounded-full bg-purple-500"></div>
+          <div className="h-3 w-3 rounded-full bg-purple-500"></div>
           <span>Wikidata</span>
         </div>
         <div className="flex items-center gap-2">
-          <div className="w-3 h-3 rounded-full bg-red-500"></div>
+          <div className="h-3 w-3 rounded-full bg-red-500"></div>
           <span>Schema.org</span>
         </div>
       </div>
@@ -549,18 +648,24 @@ interface ErrorBoundaryState {
   hasError: boolean;
 }
 
-class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundaryState> {
+class ErrorBoundary extends React.Component<
+  ErrorBoundaryProps,
+  ErrorBoundaryState
+> {
   constructor(props: ErrorBoundaryProps) {
     super(props);
     this.state = { hasError: false };
   }
 
-  static getDerivedStateFromError(_: Error): ErrorBoundaryState {
+  static getDerivedStateFromError(
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    _: Error,
+  ): ErrorBoundaryState {
     return { hasError: true };
   }
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
-    console.error('ErrorBoundary caught an error:', error, errorInfo);
+    console.error("ErrorBoundary caught an error:", error, errorInfo);
     this.props.onError(error);
   }
 
@@ -574,12 +679,13 @@ class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundarySta
   render() {
     if (this.state.hasError) {
       return (
-        <div className="flex items-center justify-center h-full">
+        <div className="flex h-full items-center justify-center">
           <Alert color="failure" icon={AlertTriangle}>
             <div className="space-y-2">
               <p className="font-medium">Graph rendering failed</p>
               <p className="text-sm">
-                An error occurred while rendering the graph. Trying fallback layout...
+                An error occurred while rendering the graph. Trying fallback
+                layout...
               </p>
             </div>
           </Alert>

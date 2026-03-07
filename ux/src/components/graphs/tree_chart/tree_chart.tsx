@@ -5,7 +5,7 @@ import React, {
   useRef,
   useState,
 } from "react";
-import { type ChartData } from "./tree_data";
+import { type ChartData, type HierarchyNode } from "./tree_data";
 import { ChartStyles } from "./tree_chart_styles";
 import TreeTrunk from "./tree_trunk";
 import { TreeChartNode } from "./tree_chart_node";
@@ -41,7 +41,6 @@ const TreeChart: React.FC<TreeChartProps> = ({
   // Container ref to measure width
   const containerRef = useRef<HTMLDivElement>(null);
   const [containerWidth, setContainerWidth] = useState<number>(0);
-  const [containerHeight, setContainerHeight] = useState<number>(0);
 
   // Track hovered node for layout adjustments
   const [hoveredNodeId, setHoveredNodeId] = useState<string | null>(null);
@@ -93,10 +92,8 @@ const TreeChart: React.FC<TreeChartProps> = ({
     const measureDimensions = () => {
       if (containerRef.current) {
         const width = containerRef.current.clientWidth;
-        const height = containerRef.current.clientHeight;
         //console.log("Container dimensions measured:", { width, height });
         setContainerWidth(width);
-        setContainerHeight(height);
       }
     };
 
@@ -161,13 +158,20 @@ const TreeChart: React.FC<TreeChartProps> = ({
   }, []);
 
   // Node click handler to navigate to the node's details
-  const handleNodeClick = useCallback((node: any) => {
-    if (node.type === "term" || node.type === "domain" || node.type === "layer") {
-      navigate({ to: `/app/structure_nodes/${node.id}` });
-    } else {
-      console.warn("Clicked on unknown node:", node);
-    }
-  }, [navigate]);
+  const handleNodeClick = useCallback(
+    (node: HierarchyNode) => {
+      if (
+        node.type === "term" ||
+        node.type === "domain" ||
+        node.type === "layer"
+      ) {
+        navigate({ to: `/app/structure_nodes/${node.id}` });
+      } else {
+        console.warn("Clicked on unknown node:", node);
+      }
+    },
+    [navigate],
+  );
 
   return (
     <div
@@ -189,7 +193,7 @@ const TreeChart: React.FC<TreeChartProps> = ({
         }}
       >
         {/* Render all children of the root node */}
-        {root.children.map((child: any, index: number) => (
+        {root.children.map((child: HierarchyNode, index: number) => (
           <TreeChartNode
             key={child.id || index}
             node={child}

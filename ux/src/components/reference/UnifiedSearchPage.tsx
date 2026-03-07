@@ -5,14 +5,33 @@
  */
 
 import React, { useState } from "react";
-import { TextInput, Button, Alert, Spinner, Tabs, TabItem, Badge } from "flowbite-react";
-import { Search, Info, List, Network, Clock, CheckCircle, XCircle } from "lucide-react";
+import {
+  Alert,
+  Badge,
+  Button,
+  Spinner,
+  TabItem,
+  Tabs,
+  TextInput,
+} from "flowbite-react";
+import {
+  Search,
+  Info,
+  List,
+  Network,
+  Clock,
+  CheckCircle,
+  XCircle,
+} from "lucide-react";
 import { SearchResults } from "./UnifiedSearch";
 import { SourceSelector } from "./UnifiedSearch/SourceSelector";
 import { NodeDetails } from "./ReferenceViewer";
 import { GraphView } from "./GraphView";
-import { UnifiedNode, SourceType, UnifiedSearchLink, SOURCE_METADATA } from "@/api/types/unified";
-import { useStreamingUnifiedSearch, useSourceLoadingStates } from "@/api/hooks/unifiedReference/useStreamingReference";
+import { UnifiedNode, SourceType, SOURCE_METADATA } from "@/api/types/unified";
+import {
+  useStreamingUnifiedSearch,
+  useSourceLoadingStates,
+} from "@/api/hooks/unifiedReference/useStreamingReference";
 
 interface UnifiedSearchPageProps {
   title?: string;
@@ -28,7 +47,7 @@ export const UnifiedSearchPage: React.FC<UnifiedSearchPageProps> = ({
     "dbpedia",
     "schema_org",
     "conceptnet",
-    "wikidata"
+    "wikidata",
   ]);
   const [selectedNode, setSelectedNode] = useState<UnifiedNode | null>(null);
   const [showDetails, setShowDetails] = useState(false);
@@ -46,7 +65,7 @@ export const UnifiedSearchPage: React.FC<UnifiedSearchPageProps> = ({
     errorSources,
   } = useStreamingUnifiedSearch({
     onComplete: (state) => {
-      console.log('Search completed:', state);
+      console.log("Search completed:", state);
     },
     onSourceUpdate: (update) => {
       console.log(`Source ${update.source} update:`, update);
@@ -88,12 +107,18 @@ export const UnifiedSearchPage: React.FC<UnifiedSearchPageProps> = ({
     if (!searchState) return null;
 
     return (
-      <div className="flex flex-wrap gap-2 mb-4">
+      <div className="mb-4 flex flex-wrap gap-2">
         {Object.entries(searchState.sources).map(([source, sourceUpdate]) => {
           const metadata = SOURCE_METADATA[source as SourceType];
-          const isLoading = sourceLoadingStates.isSourceLoading(source as SourceType);
-          const isComplete = sourceLoadingStates.isSourceComplete(source as SourceType);
-          const isError = sourceLoadingStates.isSourceError(source as SourceType);
+          const isLoading = sourceLoadingStates.isSourceLoading(
+            source as SourceType,
+          );
+          const isComplete = sourceLoadingStates.isSourceComplete(
+            source as SourceType,
+          );
+          const isError = sourceLoadingStates.isSourceError(
+            source as SourceType,
+          );
           const resultCount = sourceUpdate.results?.length || 0;
 
           let icon;
@@ -111,7 +136,11 @@ export const UnifiedSearchPage: React.FC<UnifiedSearchPageProps> = ({
           }
 
           return (
-            <Badge key={source} color={color} className="flex items-center gap-1">
+            <Badge
+              key={source}
+              color={color}
+              className="flex items-center gap-1"
+            >
               {icon}
               {metadata?.label || source}
               {isComplete && ` (${resultCount})`}
@@ -126,7 +155,7 @@ export const UnifiedSearchPage: React.FC<UnifiedSearchPageProps> = ({
   return (
     <div className="container mx-auto max-w-6xl space-y-6 px-4 py-8">
       {/* Header */}
-      <div className="text-center space-y-2">
+      <div className="space-y-2 text-center">
         <h1 className="text-3xl font-bold text-gray-900">{title}</h1>
         <p className="text-gray-600">{description}</p>
       </div>
@@ -134,7 +163,7 @@ export const UnifiedSearchPage: React.FC<UnifiedSearchPageProps> = ({
       {/* Search Interface */}
       <div className="space-y-4">
         {/* Search Input Row */}
-        <div className="flex gap-2 items-center">
+        <div className="flex items-center gap-2">
           <TextInput
             data-testid="reference-search-input"
             icon={Search}
@@ -179,15 +208,16 @@ export const UnifiedSearchPage: React.FC<UnifiedSearchPageProps> = ({
 
           {/* Search Error */}
           {searchError && (
-            <Alert color="failure">
-              Search failed: {searchError.message}
-            </Alert>
+            <Alert color="failure">Search failed: {searchError.message}</Alert>
           )}
 
           {/* Source Errors */}
           {errorSources.length > 0 && (
             <Alert color="warning">
-              Some sources had errors: {errorSources.map(source => SOURCE_METADATA[source]?.label || source).join(", ")}
+              Some sources had errors:{" "}
+              {errorSources
+                .map((source) => SOURCE_METADATA[source]?.label || source)
+                .join(", ")}
             </Alert>
           )}
 
@@ -197,11 +227,14 @@ export const UnifiedSearchPage: React.FC<UnifiedSearchPageProps> = ({
               <div className="flex items-center gap-2">
                 <Spinner size="sm" />
                 <span>
-                  Searching... ({completedSources.length} of {Object.keys(searchState?.sources || {}).length} sources complete)
-                  {hasResults && ` - ${totalResults} deduplicated results so far`}
-                  {searchState?.deduplicationStats && searchState.deduplicationStats.duplicatesRemoved > 0 &&
-                    ` (${searchState.deduplicationStats.duplicatesRemoved} duplicates removed)`
-                  }
+                  Searching... ({completedSources.length} of{" "}
+                  {Object.keys(searchState?.sources || {}).length} sources
+                  complete)
+                  {hasResults &&
+                    ` - ${totalResults} deduplicated results so far`}
+                  {searchState?.deduplicationStats &&
+                    searchState.deduplicationStats.duplicatesRemoved > 0 &&
+                    ` (${searchState.deduplicationStats.duplicatesRemoved} duplicates removed)`}
                 </span>
               </div>
             </Alert>
@@ -211,12 +244,20 @@ export const UnifiedSearchPage: React.FC<UnifiedSearchPageProps> = ({
           {searchState?.isComplete && searchState?.deduplicationStats && (
             <Alert color="success">
               <div className="text-sm">
-                <strong>Search Complete:</strong> Found {totalResults} unique results
+                <strong>Search Complete:</strong> Found {totalResults} unique
+                results
                 {searchState.deduplicationStats.duplicatesRemoved > 0 && (
-                  <span> ({searchState.deduplicationStats.duplicatesRemoved} duplicates removed)</span>
+                  <span>
+                    {" "}
+                    ({searchState.deduplicationStats.duplicatesRemoved}{" "}
+                    duplicates removed)
+                  </span>
                 )}
                 {searchState.deduplicationStats.crossReferences > 0 && (
-                  <span>, {searchState.deduplicationStats.crossReferences} cross-references discovered</span>
+                  <span>
+                    , {searchState.deduplicationStats.crossReferences}{" "}
+                    cross-references discovered
+                  </span>
                 )}
                 {searchLinks.length > 0 && (
                   <span>, {searchLinks.length} total relationships</span>
@@ -228,11 +269,14 @@ export const UnifiedSearchPage: React.FC<UnifiedSearchPageProps> = ({
 
         {/* Results - searchResults and searchLinks are already deduplicated and normalized by the streaming service */}
         {hasSearched && (
-          <Tabs aria-label="Search Results" className="mt-4 border-b border-gray-200">
+          <Tabs
+            aria-label="Search Results"
+            className="mt-4 border-b border-gray-200"
+          >
             <TabItem active title="Graph View" icon={Network}>
               {/* Break out of container for full-width graph */}
               <div className="-mx-4 sm:-mx-6 lg:-mx-8 xl:-mx-12 2xl:-mx-16">
-                <div className="w-screen relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] px-8">
+                <div className="relative right-1/2 left-1/2 -mr-[50vw] -ml-[50vw] w-screen px-8">
                   <GraphView
                     results={searchResults}
                     searchLinks={searchLinks}

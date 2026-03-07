@@ -9,10 +9,9 @@ import sys
 import os
 import pytest
 from pathlib import Path
-from unittest.mock import MagicMock, patch, AsyncMock
 
 # Set up mock environment BEFORE any imports
-os.environ["OPENAI_API_KEY"] = "sk-test1234567890abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMN"
+os.environ["OPENAI_API_KEY"] = "sk-test1234567890abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMN"  # noqa: E501
 
 # Add local-server to path
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
@@ -39,7 +38,7 @@ def minimal_reference_client():
     from fastapi import FastAPI
     from fastapi.testclient import TestClient
     from api.reference import router
-    from services.service_factory import ServiceFactory, set_service_factory, get_service_factory
+    from services.service_factory import ServiceFactory, set_service_factory, get_service_factory  # noqa: E501
 
     # Save the current service factory to restore it later
     try:

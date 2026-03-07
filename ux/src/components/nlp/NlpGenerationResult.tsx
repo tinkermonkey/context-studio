@@ -47,6 +47,7 @@ export const NlpGenerationResult: React.FC<NlpGenerationResultProps> = ({
 }) => {
   const [apiContext, setApiContext] = React.useState<Record<
     string,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     any
   > | null>(null);
 
@@ -76,6 +77,7 @@ export const NlpGenerationResult: React.FC<NlpGenerationResultProps> = ({
   ]);
 
   // Group and sort the selected contexts by token (same logic as in NlpRefinementPanel)
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const groupedContexts = React.useMemo(() => {
     if (selectedNodeContext.size === 0) return [];
 
@@ -153,6 +155,7 @@ export const NlpGenerationResult: React.FC<NlpGenerationResultProps> = ({
   }, [selectedNodeContext]);
 
   // Utility function to normalize predicates to lowercase space-separated words
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const normalizePredicate = React.useCallback((predicate: string): string => {
     if (!predicate) return predicate;
 
@@ -170,212 +173,28 @@ export const NlpGenerationResult: React.FC<NlpGenerationResultProps> = ({
     );
   }, []);
 
+  // Build API context from selected node context
+  const buildApiContext = React.useCallback((): Record<string, unknown> => {
+    return {
+      selectedNodeContext: Array.from(selectedNodeContext.entries()),
+      term,
+      domainContext,
+      parentTermContext,
+      currentDefinition,
+    };
+  }, [
+    selectedNodeContext,
+    term,
+    domainContext,
+    parentTermContext,
+    currentDefinition,
+  ]);
+
   // Function to generate the API context JSON and prepare for pipeline execution
-  const handleGenerateDefinition = React.useCallback(() => {
-    const componentTerms = groupedContexts.map(({ tokenText, entries }) => {
-      const selectedDefinitions: string[] = [];
-      const selectedRelations: Array<{
-        predicate: string;
-        object: string;
-        weight: number;
-        text: string;
-      }> = [];
-
-      entries.forEach(({ context }) => {
-        if (context.type === "sense" && context.synset) {
-          selectedDefinitions.push(context.synset.definition);
-        } else if (
-          context.type === "relation" &&
-          context.relation &&
-          context.targetTerm
-        ) {
-          selectedRelations.push({
-            predicate: normalizePredicate(context.relationType || "unknown"),
-            object: context.targetTerm.label,
-            weight: context.relation.weight || 0,
-            text: context.relation.text || "",
-          });
-        }
-      });
-
-      return {
-        text: tokenText,
-        selected_definitions: selectedDefinitions,
-        selected_relations: selectedRelations,
-      };
-    });
-
-    // Build context based on pipeline type
-    let generatedContext: Record<string, any>;
-
-    if (pipelineType === "suggest_term_definition") {
-      // Generate term definition context
-      generatedContext = {
-        term: term,
-        domain_title: domainContext?.title || undefined,
-        domain_definition: domainContext?.definition || undefined,
-        parent_term_title: parentTermContext?.title || undefined,
-        parent_term_definition: parentTermContext?.definition || undefined,
-        parent_relationship_predicate:
-          normalizePredicate(parentTermContext?.relationshipPredicate || "") ||
-          undefined,
-        component_terms: componentTerms,
-        "current definition": currentDefinition || undefined,
-        dbpedia_context: {},
-      };
-    } else if (pipelineType === "suggest_domain_definition") {
-      // Generate domain definition context
-      generatedContext = {
-        domain_title: term, // Using term as domain title
-        layer_title: domainContext?.title || undefined,
-        layer_definition: domainContext?.definition || undefined,
-        current_definition: currentDefinition || undefined,
-        component_terms: componentTerms,
-        dbpedia_context: {},
-      };
-    } else if (pipelineType === "suggest_layer_definition") {
-      // Generate layer definition context
-      generatedContext = {
-        layer_title: term, // Using term as layer title
-        current_definition: currentDefinition || undefined,
-        component_terms: componentTerms,
-        dbpedia_context: {},
-      };
-    } else {
-      // Fallback to term definition for backward compatibility
-      generatedContext = {
-        term: term,
-        domain_title: domainContext?.title || undefined,
-        domain_definition: domainContext?.definition || undefined,
-        parent_term_title: parentTermContext?.title || undefined,
-        parent_term_definition: parentTermContext?.definition || undefined,
-        parent_relationship_predicate:
-          normalizePredicate(parentTermContext?.relationshipPredicate || "") ||
-          undefined,
-        component_terms: componentTerms,
-        "current definition": currentDefinition || undefined,
-        dbpedia_context: {},
-      };
-    }
-
-    console.log(
-      `Generated ${pipelineType} API Context:`,
-      JSON.stringify(generatedContext, null, 2),
-    );
-
-    // Set the context and show the pipeline run
-    setApiContext(generatedContext);
-  }, [
-    groupedContexts,
-    term,
-    domainContext,
-    parentTermContext,
-    currentDefinition,
-    normalizePredicate,
-    pipelineType,
-  ]);
-
-  // Build the generated API context from current props/groupedContexts
-  const buildApiContext = React.useCallback(() => {
-    const componentTerms = groupedContexts.map(({ tokenText, entries }) => {
-      const selectedDefinitions: string[] = [];
-      const selectedRelations: Array<{
-        predicate: string;
-        object: string;
-        weight: number;
-        text: string;
-      }> = [];
-
-      entries.forEach(({ context }) => {
-        if (context.type === "sense" && context.synset) {
-          selectedDefinitions.push(context.synset.definition);
-        } else if (
-          context.type === "relation" &&
-          context.relation &&
-          context.targetTerm
-        ) {
-          selectedRelations.push({
-            predicate: normalizePredicate(context.relationType || "unknown"),
-            object: context.targetTerm.label,
-            weight: context.relation.weight || 0,
-            text: context.relation.text || "",
-          });
-        }
-      });
-
-      return {
-        text: tokenText,
-        selected_definitions: selectedDefinitions,
-        selected_relations: selectedRelations,
-      };
-    });
-
-    // Build context based on pipeline type
-    let generatedContext: Record<string, any>;
-
-    if (pipelineType === "suggest_term_definition") {
-      generatedContext = {
-        term: term,
-        domain_title: domainContext?.title || undefined,
-        domain_definition: domainContext?.definition || undefined,
-        parent_term_title: parentTermContext?.title || undefined,
-        parent_term_definition: parentTermContext?.definition || undefined,
-        parent_relationship_predicate:
-          normalizePredicate(parentTermContext?.relationshipPredicate || "") ||
-          undefined,
-        component_terms: componentTerms,
-        "current definition": currentDefinition || undefined,
-        dbpedia_context: {},
-      };
-    } else if (pipelineType === "suggest_domain_definition") {
-      generatedContext = {
-        domain_title: term,
-        layer_title: domainContext?.title || undefined,
-        layer_definition: domainContext?.definition || undefined,
-        current_definition: currentDefinition || undefined,
-        component_terms: componentTerms,
-        dbpedia_context: {},
-      };
-    } else if (pipelineType === "suggest_layer_definition") {
-      generatedContext = {
-        layer_title: term,
-        current_definition: currentDefinition || undefined,
-        component_terms: componentTerms,
-        dbpedia_context: {},
-      };
-    } else {
-      generatedContext = {
-        term: term,
-        domain_title: domainContext?.title || undefined,
-        domain_definition: domainContext?.definition || undefined,
-        parent_term_title: parentTermContext?.title || undefined,
-        parent_term_definition: parentTermContext?.definition || undefined,
-        parent_relationship_predicate:
-          normalizePredicate(parentTermContext?.relationshipPredicate || "") ||
-          undefined,
-        component_terms: componentTerms,
-        "current definition": currentDefinition || undefined,
-        dbpedia_context: {},
-      };
-    }
-
-    return generatedContext;
-  }, [
-    groupedContexts,
-    term,
-    domainContext,
-    parentTermContext,
-    currentDefinition,
-    normalizePredicate,
-    pipelineType,
-  ]);
-
-  // PipelineResultView extracted to its own file to keep per-result save state isolated
-
-  // Debounced effect: update apiContext when upstream inputs change
   React.useEffect(() => {
     // debounce 300ms
     const handler = setTimeout(() => {
+      // Build context from selected node context
       const ctx = buildApiContext();
       console.log(
         `Auto-generated ${pipelineType} API Context:`,
@@ -406,16 +225,19 @@ export const NlpGenerationResult: React.FC<NlpGenerationResultProps> = ({
                 context={apiContext || {}}
                 flavorList={flavorList}
                 // Render each result with its own saving state
-                resultTemplate={(result: any) => (
-                  <PipelineResultView
-                    result={result}
-                    apiContext={apiContext}
-                    buildApiContext={buildApiContext}
-                    termId={termId}
-                    domainId={domainId}
-                    layerId={layerId}
-                  />
-                )}
+                resultTemplate={
+                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                  (result: any) => (
+                    <PipelineResultView
+                      result={result}
+                      apiContext={apiContext}
+                      buildApiContext={buildApiContext}
+                      termId={termId}
+                      domainId={domainId}
+                      layerId={layerId}
+                    />
+                  )
+                }
                 showTiming={false}
                 onExecutionStart={() => {
                   console.log("Pipeline execution started");

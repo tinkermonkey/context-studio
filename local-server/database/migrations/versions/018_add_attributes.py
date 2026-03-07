@@ -52,7 +52,7 @@ class Migration018(Migration):
                 created_at DATETIME,
                 version INTEGER DEFAULT 1,
                 last_modified DATETIME,
-                FOREIGN KEY (parent_node_id) REFERENCES structure_nodes(id) ON DELETE CASCADE,
+                FOREIGN KEY (parent_node_id) REFERENCES structure_nodes(id) ON DELETE CASCADE,  
                 FOREIGN KEY (structural_predicate_id) REFERENCES predicates(id)
             )
         """))
@@ -62,12 +62,12 @@ class Migration018(Migration):
             INSERT INTO structure_nodes_temp (
                 id, node_type, parent_node_id, title, definition,
                 structural_predicate_id, title_embedding, definition_embedding,
-                reference_links, word_senses, created_at, version, last_modified
+                reference_links, word_senses, created_at, version, last_modified  
             )
             SELECT
                 id, node_type, parent_node_id, title, definition,
                 structural_predicate_id, title_embedding, definition_embedding,
-                reference_links, word_senses, created_at, version, last_modified
+                reference_links, word_senses, created_at, version, last_modified  
             FROM structure_nodes
         """))
 

@@ -11,10 +11,10 @@ sys.path.append(
     os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 )
 
-import pytest
+import pytest  # noqa: E402
 
-from services.version_manager import VersionManager, ChangeState
-from services.working_tree_manager import (
+from services.version_manager import VersionManager, ChangeState  # noqa: E402
+from services.working_tree_manager import (  # noqa: E402
     WorkingTreeManager,
 )
 

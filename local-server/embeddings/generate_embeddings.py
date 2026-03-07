@@ -1,6 +1,5 @@
 from sentence_transformers import SentenceTransformer
 import numpy as np
-import torch
 import threading
 import time
 
@@ -75,6 +74,6 @@ def generate_embedding(text: str, retries: int = DEFAULT_EMBEDDING_RETRIES):
 def cleanup_model():
     """Clean up the singleton model instance."""
     global _model
-    
+
     if _model is not None:
         _model = None

@@ -5,13 +5,13 @@ import { useLayerNodes } from "@/api/hooks/structure_nodes/useStructureNodes";
 export interface LayerSelectorProps {
   onSelect?: (layer: StructureNode | undefined) => void;
   value?: string;
-  'data-testid'?: string;
+  "data-testid"?: string;
 }
 
 export const LayerSelector: React.FC<LayerSelectorProps> = ({
   onSelect,
   value,
-  'data-testid': dataTestId,
+  "data-testid": dataTestId,
 }) => {
   const { data: layers, isLoading, error } = useLayerNodes();
   return (

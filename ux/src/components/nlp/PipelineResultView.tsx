@@ -34,7 +34,9 @@ interface PipelineExecutionResult {
 
 interface PipelineResultViewProps {
   result: PipelineExecutionResult;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   apiContext: Record<string, any> | null;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   buildApiContext: () => Record<string, any>;
   termId?: string | null;
   domainId?: string | null;
@@ -66,14 +68,17 @@ const PipelineResultView: React.FC<PipelineResultViewProps> = ({
   // Check if there's any saveable content
   const hasSaveableContent = Boolean(
     result.data?.structured_output?.definition ||
-    result.data?.definition ||
-    result.data?.response_content
+      result.data?.definition ||
+      result.data?.response_content,
   );
 
   const currentContextSnapshotLocal = React.useMemo(() => {
     try {
       return JSON.stringify(apiContext || buildApiContext());
-    } catch (e) {
+    } catch (
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      _e
+    ) {
       return null;
     }
   }, [apiContext, buildApiContext]);
@@ -101,15 +106,18 @@ const PipelineResultView: React.FC<PipelineResultViewProps> = ({
     savedVisibleLocal,
   ]);
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleSaveLocal = async (res: any) => {
     // Extract definition from structured_output, legacy format, or raw response
-    const definition = res?.data?.structured_output?.definition ||
-                      res?.data?.definition ||
-                      res?.data?.response_content;
+    const definition =
+      res?.data?.structured_output?.definition ||
+      res?.data?.definition ||
+      res?.data?.response_content;
     if (!definition) return;
     setSaveMessageLocal(null);
     setIsSavingLocal(true);
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const payload: any = { definition };
     try {
       if (termId) {
@@ -129,12 +137,18 @@ const PipelineResultView: React.FC<PipelineResultViewProps> = ({
         const snapshot = JSON.stringify(apiContext || buildApiContext());
         setSavedContextSnapshotLocal(snapshot);
         setSavedVisibleLocal(true);
-      } catch (e) {
+      } catch (
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        _e
+      ) {
         setSavedContextSnapshotLocal(null);
         setSavedVisibleLocal(false);
       }
       setIsSavingLocal(false);
-    } catch (err: any) {
+    } catch (
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      err: any
+    ) {
       setSaveMessageLocal(err?.message || "Failed to save definition");
       setIsSavingLocal(false);
     }
@@ -201,7 +215,12 @@ const PipelineResultView: React.FC<PipelineResultViewProps> = ({
             <Button
               size="xs"
               onClick={() => handleSaveLocal(result)}
-              disabled={isSavingLocal || !canSaveLocal || !hasSaveableContent || savedVisibleLocal}
+              disabled={
+                isSavingLocal ||
+                !canSaveLocal ||
+                !hasSaveableContent ||
+                savedVisibleLocal
+              }
               title={
                 isSavingLocal
                   ? "Saving..."

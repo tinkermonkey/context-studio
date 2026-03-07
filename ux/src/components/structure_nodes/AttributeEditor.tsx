@@ -6,14 +6,7 @@
 
 import React, { useState } from "react";
 import { useForm } from "@tanstack/react-form";
-import {
-  TextInput,
-  Button,
-  Label,
-  Select,
-  Card,
-  Alert,
-} from "flowbite-react";
+import { TextInput, Button, Label, Select, Card, Alert } from "flowbite-react";
 import { AlertCircle, Plus, X } from "lucide-react";
 import type {
   StructureNodeAttribute,
@@ -111,7 +104,8 @@ export const AttributeEditor: React.FC<AttributeEditorProps> = ({
     defaultValues: {
       key: initialAttribute?.key ?? "",
       title: initialAttribute?.title ?? "",
-      value_type: (initialAttribute?.value_type ?? "string") as AttributeValueType,
+      value_type: (initialAttribute?.value_type ??
+        "string") as AttributeValueType,
       value: initialAttribute?.value ?? null,
     },
     onSubmit: async ({ value }) => {
@@ -142,11 +136,11 @@ export const AttributeEditor: React.FC<AttributeEditorProps> = ({
           value: value.value,
         });
         form.reset();
-      } catch (error: any) {
+      } catch (
+        error: any // eslint-disable-line @typescript-eslint/no-explicit-any
+      ) {
         const message =
-          error?.message ||
-          error?.detail ||
-          "Failed to save attribute";
+          error?.message || error?.detail || "Failed to save attribute";
         setSubmitError(message);
         console.error("Failed to save attribute:", error);
       }
@@ -154,7 +148,7 @@ export const AttributeEditor: React.FC<AttributeEditorProps> = ({
   });
 
   return (
-    <Card className="bg-gray-50 border border-gray-200">
+    <Card className="border border-gray-200 bg-gray-50">
       <form
         onSubmit={(e) => {
           e.preventDefault();
@@ -190,7 +184,7 @@ export const AttributeEditor: React.FC<AttributeEditorProps> = ({
                   sizing="sm"
                 />
                 {validationErrors.key && (
-                  <div className="mt-1 text-sm text-red-600 flex items-center gap-1">
+                  <div className="mt-1 flex items-center gap-1 text-sm text-red-600">
                     <AlertCircle className="h-4 w-4" />
                     {validationErrors.key}
                   </div>
@@ -259,6 +253,7 @@ export const AttributeEditor: React.FC<AttributeEditorProps> = ({
                   <AttributeValueInput
                     value={field.state.value}
                     valueType={typeField.state.value}
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     onChange={(newValue) => field.handleChange(newValue as any)}
                     error={validationErrors.value}
                     disabled={isLoading}
@@ -269,7 +264,7 @@ export const AttributeEditor: React.FC<AttributeEditorProps> = ({
           )}
         />
 
-        <div className="flex gap-2 justify-end">
+        <div className="flex justify-end gap-2">
           {onCancel && (
             <Button
               type="button"
@@ -277,12 +272,12 @@ export const AttributeEditor: React.FC<AttributeEditorProps> = ({
               onClick={onCancel}
               disabled={isLoading}
             >
-              <X className="h-4 w-4 mr-1" />
+              <X className="mr-1 h-4 w-4" />
               Cancel
             </Button>
           )}
           <Button type="submit" color="blue" disabled={isLoading}>
-            <Plus className="h-4 w-4 mr-1" />
+            <Plus className="mr-1 h-4 w-4" />
             {isEdit ? "Update" : "Add"} Attribute
           </Button>
         </div>

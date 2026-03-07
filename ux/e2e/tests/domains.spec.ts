@@ -1,5 +1,5 @@
-import { test, expect, Page } from '@playwright/test';
-import { apiRequest } from '../fixtures/test-helpers';
+import { test, expect } from "@playwright/test";
+import { apiRequest } from "../fixtures/test-helpers";
 
 /**
  * Domain Management E2E Tests
@@ -13,51 +13,65 @@ import { apiRequest } from '../fixtures/test-helpers';
  * - Domain-layer associations
  */
 
-test.describe('Domain Management', () => {
+test.describe("Domain Management", () => {
   let testLayerId: string;
 
   test.beforeEach(async ({ page }) => {
     // Create a test layer for domains to belong to
-    const layerResponse = await apiRequest<any>(page, '/api/structure_nodes', {
-      method: 'POST',
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const layerResponse = await apiRequest<any>(page, "/api/structure_nodes", {
+      method: "POST",
       body: {
         title: `E2E Test Layer ${Date.now()}`,
-        definition: 'Test layer for domain tests',
-        node_type: 'layer',
+        definition: "Test layer for domain tests",
+        node_type: "layer",
       },
     });
     testLayerId = layerResponse.id;
 
     // Navigate to domains page
-    await page.goto('/app/domains');
-    await page.waitForLoadState('networkidle');
+    await page.goto("/app/domains");
+    await page.waitForLoadState("networkidle");
   });
 
-  test('should display the domains table', async ({ page }) => {
+  test("should display the domains table", async ({ page }) => {
     // Wait for table to be visible with extended timeout
-    await expect(page.locator('[data-testid="domain-table"]')).toBeVisible({ timeout: 10000 });
+    await expect(page.locator('[data-testid="domain-table"]')).toBeVisible({
+      timeout: 10000,
+    });
 
     // Verify toolbar is visible with add button
-    await expect(page.locator('[data-testid="domain-table-toolbar"]')).toBeVisible();
-    await expect(page.locator('[data-testid="domain-add-button"]')).toBeVisible();
+    await expect(
+      page.locator('[data-testid="domain-table-toolbar"]'),
+    ).toBeVisible();
+    await expect(
+      page.locator('[data-testid="domain-add-button"]'),
+    ).toBeVisible();
   });
 
-  test('should create a new domain with layer selection', async ({ page }) => {
+  test("should create a new domain with layer selection", async ({ page }) => {
     const domainTitle = `E2E Test Domain ${Date.now()}`;
-    const domainDefinition = 'A test domain created by E2E tests';
+    const domainDefinition = "A test domain created by E2E tests";
 
     // Click "Add Domain" button
     await page.click('[data-testid="domain-add-button"]');
 
     // Wait for create modal to appear
-    await expect(page.getByRole('dialog', { name: 'Create New Domain' })).toBeVisible();
+    await expect(
+      page.getByRole("dialog", { name: "Create New Domain" }),
+    ).toBeVisible();
 
     // Fill in the form
     await page.fill('[data-testid="domain-title-input"]', domainTitle);
-    await page.fill('[data-testid="domain-definition-input"]', domainDefinition);
+    await page.fill(
+      '[data-testid="domain-definition-input"]',
+      domainDefinition,
+    );
 
     // Select layer - wait for selector to be ready, then click to open dropdown
-    const layerSelector = page.locator('[data-testid="domain-layer-selector"]').locator('button');
+    const layerSelector = page
+      .locator('[data-testid="domain-layer-selector"]')
+      .locator("button");
     await expect(layerSelector).toBeVisible({ timeout: 10000 });
     await expect(layerSelector).toBeEnabled({ timeout: 5000 });
 
@@ -71,11 +85,17 @@ test.describe('Domain Management', () => {
 
     // Wait for actual options to load by looking for our specific test layer
     // Get the test layer title first
-    const layerResponse = await apiRequest<any>(page, `/api/structure_nodes/${testLayerId}`);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const layerResponse = await apiRequest<any>(
+      page,
+      `/api/structure_nodes/${testLayerId}`,
+    );
     const testLayerTitle = layerResponse.title;
 
     // Find the option that contains our test layer title
-    const layerOption = page.locator(`div[role="option"]:has-text("${testLayerTitle}")`);
+    const layerOption = page.locator(
+      `div[role="option"]:has-text("${testLayerTitle}")`,
+    );
     await expect(layerOption).toBeVisible({ timeout: 10000 });
 
     // Wait a moment for options to be fully interactive
@@ -86,34 +106,46 @@ test.describe('Domain Management', () => {
     await page.click('[data-testid="domain-submit-button"]');
 
     // Wait for modal to close
-    await expect(page.getByRole('dialog', { name: 'Create New Domain' })).not.toBeVisible();
+    await expect(
+      page.getByRole("dialog", { name: "Create New Domain" }),
+    ).not.toBeVisible();
 
     // Verify domain appears in the table
-    await expect(page.locator('[data-testid="domain-table"]')).toContainText(domainTitle);
+    await expect(page.locator('[data-testid="domain-table"]')).toContainText(
+      domainTitle,
+    );
 
     // Verify domain exists in backend with correct layer association
-    const response = await apiRequest<{ data: any[] }>(page, '/api/structure_nodes?node_type=domain');
-    const createdDomain = response.data.find((n: any) => n.title === domainTitle);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const response = await apiRequest<{ data: any[] }>(
+      page,
+      "/api/structure_nodes?node_type=domain",
+    );
+    const createdDomain = response.data.find(
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (n: any) => n.title === domainTitle,
+    );
 
     expect(createdDomain).toBeDefined();
     expect(createdDomain?.definition).toBe(domainDefinition);
-    expect(createdDomain?.node_type).toBe('domain');
+    expect(createdDomain?.node_type).toBe("domain");
     expect(createdDomain?.parent_node_id).toBe(testLayerId);
   });
 
-  test('should edit a domain through the table', async ({ page }) => {
+  test("should edit a domain through the table", async ({ page }) => {
     // First, create a domain to edit
     const originalTitle = `E2E Edit Test ${Date.now()}`;
     const updatedTitle = `${originalTitle} (Updated)`;
-    const updatedDefinition = 'Updated definition via E2E test';
+    const updatedDefinition = "Updated definition via E2E test";
 
     // Create domain via API
-    const createResponse = await apiRequest<any>(page, '/api/structure_nodes', {
-      method: 'POST',
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const createResponse = await apiRequest<any>(page, "/api/structure_nodes", {
+      method: "POST",
       body: {
         title: originalTitle,
-        definition: 'Original definition',
-        node_type: 'domain',
+        definition: "Original definition",
+        node_type: "domain",
         parent_node_id: testLayerId,
       },
     });
@@ -121,42 +153,56 @@ test.describe('Domain Management', () => {
 
     // Refresh the page to see the new domain
     await page.reload();
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState("networkidle");
 
     // Double-click the domain row to edit
     await page.locator(`[data-testid="domain-row-${domainId}"]`).dblclick();
 
     // Wait for edit modal
-    await expect(page.getByRole('dialog', { name: 'Edit Domain' })).toBeVisible();
+    await expect(
+      page.getByRole("dialog", { name: "Edit Domain" }),
+    ).toBeVisible();
 
     // Clear and update the title
     await page.fill('[data-testid="domain-title-input"]', updatedTitle);
-    await page.fill('[data-testid="domain-definition-input"]', updatedDefinition);
+    await page.fill(
+      '[data-testid="domain-definition-input"]',
+      updatedDefinition,
+    );
 
     // Submit
     await page.click('[data-testid="domain-submit-button"]');
 
     // Wait for modal to close
-    await expect(page.getByRole('dialog', { name: 'Edit Domain' })).not.toBeVisible();
+    await expect(
+      page.getByRole("dialog", { name: "Edit Domain" }),
+    ).not.toBeVisible();
 
     // Verify updated values appear in table
-    await expect(page.locator('[data-testid="domain-table"]')).toContainText(updatedTitle);
+    await expect(page.locator('[data-testid="domain-table"]')).toContainText(
+      updatedTitle,
+    );
 
     // Verify backend was updated
-    const response = await apiRequest<any>(page, `/api/structure_nodes/${domainId}`);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const response = await apiRequest<any>(
+      page,
+      `/api/structure_nodes/${domainId}`,
+    );
     expect(response.title).toBe(updatedTitle);
     expect(response.definition).toBe(updatedDefinition);
   });
 
-  test('should delete a domain', async ({ page }) => {
+  test("should delete a domain", async ({ page }) => {
     // Create a domain to delete
     const domainTitle = `E2E Delete Test ${Date.now()}`;
-    const createResponse = await apiRequest<any>(page, '/api/structure_nodes', {
-      method: 'POST',
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const createResponse = await apiRequest<any>(page, "/api/structure_nodes", {
+      method: "POST",
       body: {
         title: domainTitle,
-        definition: 'Domain to be deleted',
-        node_type: 'domain',
+        definition: "Domain to be deleted",
+        node_type: "domain",
         parent_node_id: testLayerId,
       },
     });
@@ -164,7 +210,7 @@ test.describe('Domain Management', () => {
 
     // Refresh to see the domain
     await page.reload();
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState("networkidle");
 
     // Select the domain row by clicking its checkbox
     const row = page.locator(`[data-testid="domain-row-${domainId}"]`);
@@ -175,29 +221,35 @@ test.describe('Domain Management', () => {
     await page.click('[data-testid="domain-delete-selected-action"]');
 
     // Wait for delete confirmation modal
-    await expect(page.getByRole('dialog', { name: /Confirm Delete/i })).toBeVisible();
+    await expect(
+      page.getByRole("dialog", { name: /Confirm Delete/i }),
+    ).toBeVisible();
 
     // Confirm deletion
     await page.click('[data-testid="domain-delete-confirm-button"]');
 
     // Wait for modal to close
-    await expect(page.getByRole('dialog', { name: /Confirm Delete/i })).not.toBeVisible();
+    await expect(
+      page.getByRole("dialog", { name: /Confirm Delete/i }),
+    ).not.toBeVisible();
 
     // Verify domain is removed from table
-    await expect(page.locator('[data-testid="domain-table"]')).not.toContainText(domainTitle);
+    await expect(
+      page.locator('[data-testid="domain-table"]'),
+    ).not.toContainText(domainTitle);
 
     // Verify domain is deleted from backend
     try {
       await apiRequest(page, `/api/structure_nodes/${domainId}`);
       // If we get here, the domain wasn't deleted
       expect(false).toBe(true); // Force fail
-    } catch (error) {
+    } catch (_error) {
       // Expected - domain should be deleted
-      expect(error).toBeDefined();
+      expect(_error).toBeDefined();
     }
   });
 
-  test('should search for domains', async ({ page }) => {
+  test("should search for domains", async ({ page }) => {
     // Create multiple domains with distinct names
     const timestamp = Date.now();
     const domain1Title = `Alpha Domain ${timestamp}`;
@@ -206,27 +258,27 @@ test.describe('Domain Management', () => {
 
     // Create domains via API
     await Promise.all([
-      apiRequest(page, '/api/structure_nodes', {
-        method: 'POST',
+      apiRequest(page, "/api/structure_nodes", {
+        method: "POST",
         body: {
           title: domain1Title,
-          node_type: 'domain',
+          node_type: "domain",
           parent_node_id: testLayerId,
         },
       }),
-      apiRequest(page, '/api/structure_nodes', {
-        method: 'POST',
+      apiRequest(page, "/api/structure_nodes", {
+        method: "POST",
         body: {
           title: domain2Title,
-          node_type: 'domain',
+          node_type: "domain",
           parent_node_id: testLayerId,
         },
       }),
-      apiRequest(page, '/api/structure_nodes', {
-        method: 'POST',
+      apiRequest(page, "/api/structure_nodes", {
+        method: "POST",
         body: {
           title: domain3Title,
-          node_type: 'domain',
+          node_type: "domain",
           parent_node_id: testLayerId,
         },
       }),
@@ -234,44 +286,63 @@ test.describe('Domain Management', () => {
 
     // Refresh page
     await page.reload();
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState("networkidle");
 
     // Verify all domains are visible initially
-    await expect(page.locator('[data-testid="domain-table"]')).toContainText(domain1Title);
-    await expect(page.locator('[data-testid="domain-table"]')).toContainText(domain2Title);
-    await expect(page.locator('[data-testid="domain-table"]')).toContainText(domain3Title);
+    await expect(page.locator('[data-testid="domain-table"]')).toContainText(
+      domain1Title,
+    );
+    await expect(page.locator('[data-testid="domain-table"]')).toContainText(
+      domain2Title,
+    );
+    await expect(page.locator('[data-testid="domain-table"]')).toContainText(
+      domain3Title,
+    );
 
     // Search for "Beta"
-    await page.fill('[data-testid="domain-search-input"]', 'Beta');
+    await page.fill('[data-testid="domain-search-input"]', "Beta");
 
     // Wait a bit for search to filter (debounced)
     await page.waitForTimeout(500);
 
     // Verify only Beta domain is visible
-    await expect(page.locator('[data-testid="domain-table"]')).toContainText(domain2Title);
-    await expect(page.locator('[data-testid="domain-table"]')).not.toContainText(domain1Title);
-    await expect(page.locator('[data-testid="domain-table"]')).not.toContainText(domain3Title);
+    await expect(page.locator('[data-testid="domain-table"]')).toContainText(
+      domain2Title,
+    );
+    await expect(
+      page.locator('[data-testid="domain-table"]'),
+    ).not.toContainText(domain1Title);
+    await expect(
+      page.locator('[data-testid="domain-table"]'),
+    ).not.toContainText(domain3Title);
 
     // Clear search
-    await page.fill('[data-testid="domain-search-input"]', '');
+    await page.fill('[data-testid="domain-search-input"]', "");
     await page.waitForTimeout(500);
 
     // Verify all domains are visible again
-    await expect(page.locator('[data-testid="domain-table"]')).toContainText(domain1Title);
-    await expect(page.locator('[data-testid="domain-table"]')).toContainText(domain2Title);
-    await expect(page.locator('[data-testid="domain-table"]')).toContainText(domain3Title);
+    await expect(page.locator('[data-testid="domain-table"]')).toContainText(
+      domain1Title,
+    );
+    await expect(page.locator('[data-testid="domain-table"]')).toContainText(
+      domain2Title,
+    );
+    await expect(page.locator('[data-testid="domain-table"]')).toContainText(
+      domain3Title,
+    );
   });
 
-  test('should navigate to domain detail view', async ({ page }) => {
+  test("should navigate to domain detail view", async ({ page }) => {
     // Create a domain
     const domainTitle = `E2E Detail Test ${Date.now()}`;
-    const domainDefinition = 'Test domain for detail view';
-    const createResponse = await apiRequest<any>(page, '/api/structure_nodes', {
-      method: 'POST',
+    const domainDefinition = "Test domain for detail view";
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const createResponse = await apiRequest<any>(page, "/api/structure_nodes", {
+      method: "POST",
       body: {
         title: domainTitle,
         definition: domainDefinition,
-        node_type: 'domain',
+        node_type: "domain",
         parent_node_id: testLayerId,
       },
     });
@@ -279,7 +350,7 @@ test.describe('Domain Management', () => {
 
     // Refresh page
     await page.reload();
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState("networkidle");
 
     // Find and click the link icon to navigate to detail view
     const row = page.locator(`[data-testid="domain-row-${domainId}"]`);
@@ -295,21 +366,26 @@ test.describe('Domain Management', () => {
     await link.click();
 
     // Wait for navigation
-    await page.waitForURL(`**/app/structure_nodes/${domainId}`, { timeout: 15000 });
-    await page.waitForLoadState('networkidle');
+    await page.waitForURL(`**/app/structure_nodes/${domainId}`, {
+      timeout: 15000,
+    });
+    await page.waitForLoadState("networkidle");
 
     // Verify we're on the detail page
     expect(page.url()).toContain(`/app/structure_nodes/${domainId}`);
 
     // Verify domain details are displayed
-    await expect(page.locator('body')).toContainText(domainTitle, { timeout: 10000 });
+    await expect(page.locator("body")).toContainText(domainTitle, {
+      timeout: 10000,
+    });
   });
 
-  test('should cancel domain creation', async ({ page }) => {
+  test("should cancel domain creation", async ({ page }) => {
     // Get current domain count
-    const beforeResponse = await apiRequest<{ data: any[], total: number }>(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const beforeResponse = await apiRequest<{ data: any[]; total: number }>(
       page,
-      '/api/structure_nodes?node_type=domain'
+      "/api/structure_nodes?node_type=domain",
     );
     const beforeCount = beforeResponse.total;
 
@@ -317,102 +393,128 @@ test.describe('Domain Management', () => {
     await page.click('[data-testid="domain-add-button"]');
 
     // Wait for create modal
-    const createModal = page.getByRole('dialog', { name: 'Create New Domain' });
+    const createModal = page.getByRole("dialog", { name: "Create New Domain" });
     await expect(createModal).toBeVisible();
 
     // Fill in some data but don't submit
-    await page.fill('[data-testid="domain-title-input"]', 'Test Domain Not Submitted');
+    await page.fill(
+      '[data-testid="domain-title-input"]',
+      "Test Domain Not Submitted",
+    );
 
     // Navigate away to close the modal
-    await page.goto('/app/domains');
-    await page.waitForLoadState('networkidle');
+    await page.goto("/app/domains");
+    await page.waitForLoadState("networkidle");
 
     // Verify no new domain was created
-    const afterResponse = await apiRequest<{ data: any[], total: number }>(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const afterResponse = await apiRequest<{ data: any[]; total: number }>(
       page,
-      '/api/structure_nodes?node_type=domain'
+      "/api/structure_nodes?node_type=domain",
     );
     const afterCount = afterResponse.total;
 
     expect(afterCount).toBe(beforeCount);
 
     // Verify the specific test domain was not created
-    const testDomain = afterResponse.data.find((n: any) => n.title === 'Test Domain Not Submitted');
+    const testDomain = afterResponse.data.find(
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (n: any) => n.title === "Test Domain Not Submitted",
+    );
     expect(testDomain).toBeUndefined();
   });
 
-  test('should validate required fields', async ({ page }) => {
+  test("should validate required fields", async ({ page }) => {
     // Click "Add Domain" button
     await page.click('[data-testid="domain-add-button"]');
 
     // Wait for create modal
-    await expect(page.getByRole('dialog', { name: 'Create New Domain' })).toBeVisible();
+    await expect(
+      page.getByRole("dialog", { name: "Create New Domain" }),
+    ).toBeVisible();
 
     // Try to submit without filling in title (required field)
     await page.click('[data-testid="domain-submit-button"]');
 
     // Modal should still be visible (HTML5 validation prevented submission)
-    await expect(page.getByRole('dialog', { name: 'Create New Domain' })).toBeVisible();
+    await expect(
+      page.getByRole("dialog", { name: "Create New Domain" }),
+    ).toBeVisible();
 
     // Verify the title input field is marked as invalid
     const titleInput = page.locator('[data-testid="domain-title-input"]');
-    await expect(titleInput).toHaveAttribute('required');
+    await expect(titleInput).toHaveAttribute("required");
   });
 
-  test('should handle multiple domain selections and bulk delete', async ({ page }) => {
+  test("should handle multiple domain selections and bulk delete", async ({
+    page,
+  }) => {
     // Create multiple domains
     const timestamp = Date.now();
-    const domain1 = await apiRequest<any>(page, '/api/structure_nodes', {
-      method: 'POST',
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const domain1 = await apiRequest<any>(page, "/api/structure_nodes", {
+      method: "POST",
       body: {
         title: `Bulk Delete 1 ${timestamp}`,
-        node_type: 'domain',
+        node_type: "domain",
         parent_node_id: testLayerId,
       },
     });
-    const domain2 = await apiRequest<any>(page, '/api/structure_nodes', {
-      method: 'POST',
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const domain2 = await apiRequest<any>(page, "/api/structure_nodes", {
+      method: "POST",
       body: {
         title: `Bulk Delete 2 ${timestamp}`,
-        node_type: 'domain',
+        node_type: "domain",
         parent_node_id: testLayerId,
       },
     });
 
     // Refresh
     await page.reload();
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState("networkidle");
 
     // Select both domains
-    await page.locator(`[data-testid="domain-row-${domain1.id}"]`).locator('input[type="checkbox"]').check();
-    await page.locator(`[data-testid="domain-row-${domain2.id}"]`).locator('input[type="checkbox"]').check();
+    await page
+      .locator(`[data-testid="domain-row-${domain1.id}"]`)
+      .locator('input[type="checkbox"]')
+      .check();
+    await page
+      .locator(`[data-testid="domain-row-${domain2.id}"]`)
+      .locator('input[type="checkbox"]')
+      .check();
 
     // Delete selected
     await page.click('[data-testid="domain-actions-dropdown"]');
     await page.click('[data-testid="domain-delete-selected-action"]');
 
     // Confirm
-    const deleteModal = page.getByRole('dialog', { name: /Confirm Delete/i });
+    const deleteModal = page.getByRole("dialog", { name: /Confirm Delete/i });
     await expect(deleteModal).toBeVisible();
-    await expect(deleteModal).toContainText('2 selected');
+    await expect(deleteModal).toContainText("2 selected");
     await page.click('[data-testid="domain-delete-confirm-button"]');
 
     // Wait for modal to close
     await expect(deleteModal).not.toBeVisible();
 
     // Verify both domains are gone
-    await expect(page.locator('[data-testid="domain-table"]')).not.toContainText(`Bulk Delete 1 ${timestamp}`);
-    await expect(page.locator('[data-testid="domain-table"]')).not.toContainText(`Bulk Delete 2 ${timestamp}`);
+    await expect(
+      page.locator('[data-testid="domain-table"]'),
+    ).not.toContainText(`Bulk Delete 1 ${timestamp}`);
+    await expect(
+      page.locator('[data-testid="domain-table"]'),
+    ).not.toContainText(`Bulk Delete 2 ${timestamp}`);
   });
 
-  test('should filter domains by layer', async ({ page }) => {
+  test("should filter domains by layer", async ({ page }) => {
     // Create a second layer
-    const layer2Response = await apiRequest<any>(page, '/api/structure_nodes', {
-      method: 'POST',
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const layer2Response = await apiRequest<any>(page, "/api/structure_nodes", {
+      method: "POST",
       body: {
         title: `E2E Test Layer 2 ${Date.now()}`,
-        definition: 'Second test layer',
-        node_type: 'layer',
+        definition: "Second test layer",
+        node_type: "layer",
       },
     });
     const layer2Id = layer2Response.id;
@@ -420,38 +522,46 @@ test.describe('Domain Management', () => {
     const timestamp = Date.now();
 
     // Create domains in each layer
-    await apiRequest(page, '/api/structure_nodes', {
-      method: 'POST',
+    await apiRequest(page, "/api/structure_nodes", {
+      method: "POST",
       body: {
         title: `Domain Layer 1 ${timestamp}`,
-        node_type: 'domain',
+        node_type: "domain",
         parent_node_id: testLayerId,
       },
     });
 
-    await apiRequest(page, '/api/structure_nodes', {
-      method: 'POST',
+    await apiRequest(page, "/api/structure_nodes", {
+      method: "POST",
       body: {
         title: `Domain Layer 2 ${timestamp}`,
-        node_type: 'domain',
+        node_type: "domain",
         parent_node_id: layer2Id,
       },
     });
 
     // Navigate to domains with layer filter
     await page.goto(`/app/domains?parent_node_id=${testLayerId}`);
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState("networkidle");
 
     // Verify only domains from test layer are visible
-    await expect(page.locator('[data-testid="domain-table"]')).toContainText(`Domain Layer 1 ${timestamp}`);
-    await expect(page.locator('[data-testid="domain-table"]')).not.toContainText(`Domain Layer 2 ${timestamp}`);
+    await expect(page.locator('[data-testid="domain-table"]')).toContainText(
+      `Domain Layer 1 ${timestamp}`,
+    );
+    await expect(
+      page.locator('[data-testid="domain-table"]'),
+    ).not.toContainText(`Domain Layer 2 ${timestamp}`);
 
     // Navigate to see all domains
-    await page.goto('/app/domains');
-    await page.waitForLoadState('networkidle');
+    await page.goto("/app/domains");
+    await page.waitForLoadState("networkidle");
 
     // Verify both domains are visible
-    await expect(page.locator('[data-testid="domain-table"]')).toContainText(`Domain Layer 1 ${timestamp}`);
-    await expect(page.locator('[data-testid="domain-table"]')).toContainText(`Domain Layer 2 ${timestamp}`);
+    await expect(page.locator('[data-testid="domain-table"]')).toContainText(
+      `Domain Layer 1 ${timestamp}`,
+    );
+    await expect(page.locator('[data-testid="domain-table"]')).toContainText(
+      `Domain Layer 2 ${timestamp}`,
+    );
   });
 });

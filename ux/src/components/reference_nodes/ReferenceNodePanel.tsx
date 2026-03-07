@@ -5,75 +5,77 @@
  * Coordinates between search interface and persisted reference display.
  */
 
-import React, { useState } from "react"
-import { Button, Alert } from "flowbite-react"
-import { Search, Info } from "lucide-react"
+import React, { useState } from "react";
+import { Button, Alert } from "flowbite-react";
+import { Search, Info } from "lucide-react";
 
-import { UnifiedNode } from "@/api/types/unified"
-import { useReferenceLinks } from "@/api/hooks/structure_nodes/useReferenceLinks"
-import { ReferenceNodeSearch } from "./ReferenceNodeSearch"
-import { ReferenceNodeSelectionList } from "./ReferenceNodeSelectionList"
-import { ReferenceNodeDisplay } from "./ReferenceNodeDisplay"
+import { UnifiedNode } from "@/api/types/unified";
+import { useReferenceLinks } from "@/api/hooks/structure_nodes/useReferenceLinks";
+import { ReferenceNodeSearch } from "./ReferenceNodeSearch";
+import { ReferenceNodeSelectionList } from "./ReferenceNodeSelectionList";
+import { ReferenceNodeDisplay } from "./ReferenceNodeDisplay";
 
 interface ReferenceNodePanelProps {
-  nodeId: string
-  nodeTitle?: string
+  nodeId: string;
+  nodeTitle?: string;
 }
 
 // UUID validation regex
-const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+const UUID_REGEX =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 export const ReferenceNodePanel: React.FC<ReferenceNodePanelProps> = ({
   nodeId,
   nodeTitle,
 }) => {
-  const [isSearchActive, setIsSearchActive] = useState(false)
-  const [selectedNodes, setSelectedNodes] = useState<UnifiedNode[]>([])
+  const [isSearchActive, setIsSearchActive] = useState(false);
+  const [selectedNodes, setSelectedNodes] = useState<UnifiedNode[]>([]);
 
   // Validate UUID format before making API calls
-  const isValidUuid = UUID_REGEX.test(nodeId)
+  const isValidUuid = UUID_REGEX.test(nodeId);
 
   // Fetch persisted reference links only if UUID is valid
   const {
     data: persistedLinks = [],
     isLoading: linksLoading,
     error: linksError,
-  } = useReferenceLinks(isValidUuid ? nodeId : "")
+  } = useReferenceLinks(isValidUuid ? nodeId : "");
 
   // Handle adding a node to the selection list
   const handleAddNode = (node: UnifiedNode) => {
     // Check if node is already selected
     const isAlreadySelected = selectedNodes.some(
-      (n) => n.id === node.id && n.source === node.source
-    )
+      (n) => n.id === node.id && n.source === node.source,
+    );
     if (!isAlreadySelected) {
-      setSelectedNodes([...selectedNodes, node])
+      setSelectedNodes([...selectedNodes, node]);
     }
-  }
+  };
 
   // Handle removing a node from the selection list
   const handleRemoveNode = (node: UnifiedNode) => {
     setSelectedNodes(
       selectedNodes.filter(
-        (n) => !(n.id === node.id && n.source === node.source)
-      )
-    )
-  }
+        (n) => !(n.id === node.id && n.source === node.source),
+      ),
+    );
+  };
 
   // Handle clearing all selections
   const handleClearAll = () => {
-    setSelectedNodes([])
-  }
+    setSelectedNodes([]);
+  };
 
   // Handle successful save
   const handleSaveSuccess = () => {
-    setSelectedNodes([])
-    setIsSearchActive(false)
-  }
+    setSelectedNodes([]);
+    setIsSearchActive(false);
+  };
 
-  const hasPersistedLinks = persistedLinks.length > 0
-  const hasSelections = selectedNodes.length > 0
-  const shouldShowSearch = isSearchActive || (!hasPersistedLinks && !hasSelections)
+  const hasPersistedLinks = persistedLinks.length > 0;
+  const hasSelections = selectedNodes.length > 0;
+  const shouldShowSearch =
+    isSearchActive || (!hasPersistedLinks && !hasSelections);
 
   return (
     <div className="space-y-4">
@@ -145,18 +147,24 @@ export const ReferenceNodePanel: React.FC<ReferenceNodePanelProps> = ({
               </h3>
             </div>
           )}
-          <ReferenceNodeDisplay nodeId={nodeId} referenceLinks={persistedLinks} />
+          <ReferenceNodeDisplay
+            nodeId={nodeId}
+            referenceLinks={persistedLinks}
+          />
         </>
       )}
 
       {/* Empty State */}
-      {!hasPersistedLinks && !isSearchActive && !hasSelections && !linksLoading && (
-        <Alert color="info" icon={Info}>
-          <div className="space-y-2">
-            <p className="font-medium">No reference nodes associated</p>
-          </div>
-        </Alert>
-      )}
+      {!hasPersistedLinks &&
+        !isSearchActive &&
+        !hasSelections &&
+        !linksLoading && (
+          <Alert color="info" icon={Info}>
+            <div className="space-y-2">
+              <p className="font-medium">No reference nodes associated</p>
+            </div>
+          </Alert>
+        )}
 
       {/* Cancel Search Button */}
       {isSearchActive && hasPersistedLinks && (
@@ -165,8 +173,8 @@ export const ReferenceNodePanel: React.FC<ReferenceNodePanelProps> = ({
             size="sm"
             color="gray"
             onClick={() => {
-              setIsSearchActive(false)
-              setSelectedNodes([])
+              setIsSearchActive(false);
+              setSelectedNodes([]);
             }}
           >
             Cancel
@@ -174,7 +182,7 @@ export const ReferenceNodePanel: React.FC<ReferenceNodePanelProps> = ({
         </div>
       )}
     </div>
-  )
-}
+  );
+};
 
-export default ReferenceNodePanel
+export default ReferenceNodePanel;

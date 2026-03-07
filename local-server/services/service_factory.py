@@ -6,7 +6,7 @@ performance monitoring, and lifecycle management for better resource utilization
 """
 
 import uuid
-from typing import Dict, Any, Optional, TypeVar, Type, Callable, List
+from typing import Dict, Any, Optional, TypeVar, Type, Callable, List, cast
 from threading import RLock
 from time import time
 from datetime import datetime, timezone
@@ -29,8 +29,8 @@ from services.conflict_resolution_engine import ConflictResolutionEngine, Intell
 from services.duckdb_service import DuckDBService, ChangeAnalyticsEngine
 from services.incremental_sync_engine import IncrementalSyncEngine
 # Phase 5 Optimization Services
-from services.duckdb_query_optimizer import DuckDBQueryOptimizer
-from services.s3_storage_optimizer import S3StorageOptimizer
+from services.duckdb_query_analyzer import DuckDBQueryAnalyzer
+from services.s3_storage_manager import S3StorageManager
 from services.hierarchical_diff_engine import HierarchicalDiffEngine
 from services.batch_operation_processor import BatchOperationProcessor
 from services.performance_monitor import PerformanceMonitor
@@ -75,9 +75,9 @@ class ServiceType(Enum):
     DUCKDB_SERVICE = "duckdb_service"
     CHANGE_ANALYTICS_ENGINE = "change_analytics_engine"
     INCREMENTAL_SYNC_ENGINE = "incremental_sync_engine"
-    # Phase 5 Optimization Services
-    DUCKDB_QUERY_OPTIMIZER = "duckdb_query_optimizer"
-    S3_STORAGE_OPTIMIZER = "s3_storage_optimizer"
+    # Phase 5 Analysis and Management Services
+    DUCKDB_QUERY_ANALYZER = "duckdb_query_analyzer"
+    S3_STORAGE_MANAGER = "s3_storage_manager"
     HIERARCHICAL_DIFF_ENGINE = "hierarchical_diff_engine"
     BATCH_OPERATION_PROCESSOR = "batch_operation_processor"
     PERFORMANCE_MONITOR = "performance_monitor"
@@ -356,9 +356,9 @@ class ServiceFactory:
     def get_execution_tracker(self) -> ExecutionTracker:
         """
         Get ExecutionTracker instance.
-        
+
         ExecutionTracker is stateless and doesn't need caching.
-        
+
         Returns:
             ExecutionTracker instance
         """
@@ -374,32 +374,32 @@ class ServiceFactory:
         return self._create_service(ServiceType.REFERENCE_SERVICE, ReferenceService)
 
     def create_changeset_manager(
-        self, 
-        db: Session, 
+        self,
+        db: Session,
         s3_sync_manager: Optional[S3SyncManager] = None,
         working_tree_manager: Optional[WorkingTreeManager] = None,
         version_manager: Optional[VersionManager] = None
     ) -> ChangesetManager:
         """
         Create ChangesetManager with optimized instantiation.
-        
+
         Args:
             db: Database session for this request
             s3_sync_manager: Optional S3SyncManager dependency
             working_tree_manager: Optional WorkingTreeManager dependency
             version_manager: Optional VersionManager dependency
-            
+
         Returns:
             ChangesetManager instance
         """
-        def create_service():
+        def create_service() -> ChangesetManager:
             s3_sync = s3_sync_manager or self.get_s3_sync_manager(db)
             working_tree = working_tree_manager or self.create_working_tree_manager(db)
             version_mgr = version_manager or self.create_version_manager(db)
             return ChangesetManager(db, s3_sync, working_tree, version_mgr)
-        
+
         return self._create_service_with_factory(ServiceType.CHANGESET_MANAGER, create_service)
-    
+
     def create_proposal_manager(
         self,
         db: Session,
@@ -408,22 +408,22 @@ class ServiceFactory:
     ) -> ProposalManager:
         """
         Create ProposalManager with optimized instantiation.
-        
+
         Args:
             db: Database session for this request
             s3_sync_manager: Optional S3SyncManager dependency
             changeset_manager: Optional ChangesetManager dependency
-            
+
         Returns:
             ProposalManager instance
         """
-        def create_service():
+        def create_service() -> ProposalManager:
             s3_sync = s3_sync_manager or self.get_s3_sync_manager(db)
             changeset_mgr = changeset_manager or self.create_changeset_manager(db)
             return ProposalManager(db, s3_sync, changeset_mgr)
-        
+
         return self._create_service_with_factory(ServiceType.PROPOSAL_MANAGER, create_service)
-    
+
     def create_crdt_merge_engine(
         self,
         db: Session,
@@ -432,22 +432,22 @@ class ServiceFactory:
     ) -> CRDTMergeEngine:
         """
         Create CRDTMergeEngine with optimized instantiation.
-        
+
         Args:
             db: Database session for this request
             version_manager: Optional VersionManager dependency
             changeset_manager: Optional ChangesetManager dependency
-            
+
         Returns:
             CRDTMergeEngine instance
         """
-        def create_service():
+        def create_service() -> CRDTMergeEngine:
             version_mgr = version_manager or self.create_version_manager(db)
             changeset_mgr = changeset_manager or self.create_changeset_manager(db)
             return CRDTMergeEngine(db, version_mgr, changeset_mgr)
-        
+
         return self._create_service_with_factory(ServiceType.CRDT_MERGE_ENGINE, create_service)
-    
+
     def create_identity_manager(
         self,
         db: Session,
@@ -455,60 +455,70 @@ class ServiceFactory:
     ) -> IdentityManager:
         """
         Create IdentityManager with optimized instantiation.
-        
+
         Args:
             db: Database session for this request
             s3_sync_manager: Optional S3SyncManager dependency
-            
+
         Returns:
             IdentityManager instance
         """
-        def create_service():
+        def create_service() -> IdentityManager:
             s3_sync = s3_sync_manager or self.get_s3_sync_manager(db)
             return IdentityManager(db, s3_sync)
-        
+
         return self._create_service_with_factory(ServiceType.IDENTITY_MANAGER, create_service)
 
     # Phase 4 Advanced Features Services
-
 
     def create_conflict_resolution_engine(
         self, db: Session
     ) -> ConflictResolutionEngine:
         """
         Create ConflictResolutionEngine with optimized instantiation and dependency injection.
-        
+
         Args:
             db: Database session for this request
-            
+
         Returns:
             ConflictResolutionEngine instance
         """
-        def create_service():
-            conflict_detector = IntelligentConflictDetector()
+        def create_service() -> ConflictResolutionEngine:
             version_manager = self.create_version_manager(db)
+            conflict_detector = IntelligentConflictDetector(version_manager)
             return ConflictResolutionEngine(db, conflict_detector, version_manager)
-        
+
         return self._create_service_with_factory(ServiceType.CONFLICT_RESOLUTION_ENGINE, create_service)
 
     def create_duckdb_service(self, s3_config: Optional[Dict[str, str]] = None) -> DuckDBService:
         """
         Create DuckDBService with optimized instantiation.
-        
+
         Args:
             s3_config: Optional S3 configuration dictionary
-            
+
         Returns:
             DuckDBService instance
         """
-        def create_service():
+        def create_service() -> DuckDBService:
             if s3_config is None:
                 settings = get_settings()
-                s3_conf = settings.get_s3_config()
+                s3_config_obj = settings.get_s3_config()
+                # Convert S3Config to dict if needed
+                if s3_config_obj is not None:
+                    s3_conf = {
+                        'bucket': s3_config_obj.bucket,
+                        'region': s3_config_obj.region,
+                        'access_key': s3_config_obj.access_key or '',
+                        'secret_key': s3_config_obj.secret_key or '',
+                        'endpoint': s3_config_obj.endpoint or '',
+                    }
+                else:
+                    s3_conf = None
             else:
                 s3_conf = s3_config
             return DuckDBService(db_path=None, s3_config=s3_conf)
-        
+
         return self._create_service_with_factory(ServiceType.DUCKDB_SERVICE, create_service)
 
     def create_change_analytics_engine(
@@ -516,17 +526,17 @@ class ServiceFactory:
     ) -> ChangeAnalyticsEngine:
         """
         Create ChangeAnalyticsEngine with optimized instantiation and dependency injection.
-        
+
         Args:
             duckdb_service: Optional DuckDBService dependency
-            
+
         Returns:
             ChangeAnalyticsEngine instance
         """
-        def create_service():
+        def create_service() -> ChangeAnalyticsEngine:
             duckdb = duckdb_service or self.create_duckdb_service()
             return ChangeAnalyticsEngine(duckdb)
-        
+
         return self._create_service_with_factory(ServiceType.CHANGE_ANALYTICS_ENGINE, create_service)
 
     def create_incremental_sync_engine(
@@ -542,7 +552,7 @@ class ServiceFactory:
         Returns:
             IncrementalSyncEngine instance
         """
-        def create_service():
+        def create_service() -> IncrementalSyncEngine:
             # Create required dependencies with proper defaults
             duckdb_service = self.create_duckdb_service()
             version_manager = self.create_version_manager(db)
@@ -550,133 +560,192 @@ class ServiceFactory:
             # Get S3 config from settings or use defaults
             try:
                 settings = get_settings()
-                s3_config = settings.get_s3_config()
-            except Exception:
-                s3_config = None
+                s3_config_obj = settings.get_s3_config()
+            except Exception as e:
+                logger.error(f"Failed to retrieve S3 configuration for IncrementalSyncEngine: {e}", exc_info=True)
+                raise RuntimeError(
+                    f"Cannot create IncrementalSyncEngine without valid S3 configuration: {e}"
+                ) from e
 
-            if s3_config is None:
-                s3_config = {
-                    'aws_access_key_id': 'test',
-                    'aws_secret_access_key': 'test',
-                    'region': 'us-east-1',
-                    'bucket': 'test-bucket'
-                }
+            if s3_config_obj is None:
+                raise RuntimeError(
+                    "S3 configuration is required for IncrementalSyncEngine. "
+                    "Please configure S3 settings in your configuration."
+                )
 
-            return IncrementalSyncEngine(db, duckdb_service, version_manager, s3_config)
+            if not s3_config_obj.access_key:
+                raise RuntimeError(
+                    "S3 access_key is required but not configured for IncrementalSyncEngine."
+                )
+            if not s3_config_obj.secret_key:
+                raise RuntimeError(
+                    "S3 secret_key is required but not configured for IncrementalSyncEngine."
+                )
+            if not s3_config_obj.bucket:
+                raise RuntimeError(
+                    "S3 bucket is required but not configured for IncrementalSyncEngine."
+                )
+
+            s3_config_dict = {
+                'aws_access_key_id': s3_config_obj.access_key,
+                'aws_secret_access_key': s3_config_obj.secret_key,
+                'region': s3_config_obj.region,
+                'bucket': s3_config_obj.bucket
+            }
+
+            return IncrementalSyncEngine(db, duckdb_service, version_manager, s3_config_dict)
 
         return self._create_service_with_factory(ServiceType.INCREMENTAL_SYNC_ENGINE, create_service)
 
     # Phase 5 Optimization Services
 
-    def create_duckdb_query_optimizer(
-        self, duckdb_conn=None, s3_config: Optional[Dict[str, str]] = None
-    ) -> DuckDBQueryOptimizer:
+    def create_duckdb_query_analyzer(
+        self, duckdb_conn: Optional[Any] = None, s3_config: Optional[Dict[str, str]] = None
+    ) -> DuckDBQueryAnalyzer:
         """
-        Create DuckDBQueryOptimizer with optimized instantiation and dependency injection.
+        Create DuckDBQueryAnalyzer with optimized instantiation and dependency injection.
 
         Args:
             duckdb_conn: Optional DuckDB connection
             s3_config: Optional S3 configuration dictionary
 
         Returns:
-            DuckDBQueryOptimizer instance
+            DuckDBQueryAnalyzer instance
         """
-        def create_service():
+        def create_service() -> DuckDBQueryAnalyzer:
             if s3_config is None:
                 try:
                     settings = get_settings()
-                    s3_conf = settings.get_s3_config()
-                except Exception:
-                    s3_conf = None
+                    s3_config_obj = settings.get_s3_config()
+                except Exception as e:
+                    logger.error(f"Failed to retrieve S3 configuration for DuckDBQueryAnalyzer: {e}", exc_info=True)
+                    raise RuntimeError(
+                        f"Cannot create DuckDBQueryAnalyzer without valid S3 configuration: {e}"
+                    ) from e
 
+                if s3_config_obj is None:
+                    raise RuntimeError(
+                        "S3 configuration is required for DuckDBQueryAnalyzer. "
+                        "Please configure S3 settings in your configuration."
+                    )
+
+                if not s3_config_obj.bucket:
+                    raise RuntimeError(
+                        "S3 bucket is required but not configured for DuckDBQueryAnalyzer."
+                    )
+
+                s3_conf: Dict[str, str] = {
+                    "enable_analyzer": "True",
+                    "cache_size": "1000",
+                    "query_timeout": "30",
+                    "bucket_name": s3_config_obj.bucket
+                }
             else:
                 s3_conf = s3_config
-
-            if s3_conf is None:
-                s3_conf = {
-                    "enable_optimizer": True,
-                    "cache_size": 1000,
-                    "query_timeout": 30,
-                    "bucket_name": "test-bucket"
-                }
 
             if duckdb_conn is None:
                 try:
                     duckdb_service = self.create_duckdb_service(s3_conf)
                     duckdb_connection = duckdb_service.connection
-                except Exception:
-                    # For tests, use None connection
-                    duckdb_connection = None
+                except Exception as e:
+                    logger.error(f"Failed to create DuckDB service for DuckDBQueryAnalyzer: {e}", exc_info=True)
+                    raise RuntimeError(
+                        f"Cannot create DuckDBQueryAnalyzer without valid DuckDB connection: {e}"
+                    ) from e
             else:
-                duckdb_connection = duckdb_conn
+                duckdb_connection = cast(Any, duckdb_conn)
 
-            return DuckDBQueryOptimizer(duckdb_connection, s3_conf)
+            return DuckDBQueryAnalyzer(cast(Any, duckdb_connection), s3_conf)
 
-        return self._create_service_with_factory(ServiceType.DUCKDB_QUERY_OPTIMIZER, create_service)
+        return self._create_service_with_factory(ServiceType.DUCKDB_QUERY_ANALYZER, create_service)
 
-    def create_s3_storage_optimizer(
+    def create_s3_storage_manager(
         self, s3_config: Optional[Dict[str, str]] = None
-    ) -> S3StorageOptimizer:
+    ) -> S3StorageManager:
         """
-        Create S3StorageOptimizer with optimized instantiation and dependency injection.
-        
+        Create S3StorageManager with optimized instantiation and dependency injection.
+
         Args:
             s3_config: Optional S3 configuration dictionary
-            
-        Returns:
-            S3StorageOptimizer instance
-        """
-        def create_service():
-            if s3_config is None:
-                settings = get_settings()
-                s3_conf = settings.get_s3_config()
-            else:
-                s3_conf = s3_config
 
-            # If no S3 config available, use default/mock configuration
-            if s3_conf is None:
-                s3_conf = {
-                    'aws_access_key_id': 'test',
-                    'aws_secret_access_key': 'test',
-                    'region': 'us-east-1',
-                    'bucket_name': 'context-studio-default'
+        Returns:
+            S3StorageManager instance
+        """
+        def create_service() -> S3StorageManager:
+            # Use provided s3_config if available, otherwise retrieve from settings
+            s3_conf_dict: Dict[str, str]
+            if s3_config is not None:
+                s3_conf_dict = s3_config
+            else:
+                settings = get_settings()
+                s3_config_obj = settings.get_s3_config()
+
+                if s3_config_obj is None:
+                    raise RuntimeError(
+                        "S3 configuration is required for S3StorageManager. "
+                        "Please configure S3 settings in your configuration."
+                    )
+
+                if not s3_config_obj.access_key:
+                    raise RuntimeError(
+                        "S3 access_key is required but not configured for S3StorageManager."
+                    )
+                if not s3_config_obj.secret_key:
+                    raise RuntimeError(
+                        "S3 secret_key is required but not configured for S3StorageManager."
+                    )
+                if not s3_config_obj.bucket:
+                    raise RuntimeError(
+                        "S3 bucket is required but not configured for S3StorageManager."
+                    )
+
+                s3_conf_dict = {
+                    'aws_access_key_id': s3_config_obj.access_key,
+                    'aws_secret_access_key': s3_config_obj.secret_key,
+                    'region': s3_config_obj.region,
+                    'bucket_name': s3_config_obj.bucket
                 }
 
-            # Create S3 client and extract bucket name from config
+            # Create S3 client with validated configuration
             try:
-                import boto3
-                s3_client = boto3.client('s3',
-                    aws_access_key_id=s3_conf.get('aws_access_key_id'),
-                    aws_secret_access_key=s3_conf.get('aws_secret_access_key'),
-                    region_name=s3_conf.get('region', 'us-east-1')
+                import boto3  # type: ignore[import-untyped]
+                s3_client = boto3.client(
+                    's3',
+                    aws_access_key_id=s3_conf_dict.get('aws_access_key_id'),
+                    aws_secret_access_key=s3_conf_dict.get('aws_secret_access_key'),
+                    region_name=s3_conf_dict.get('region', 'us-east-1')
                 )
             except ImportError:
                 # boto3 not installed, create a mock S3 client
                 s3_client = None
 
-            bucket_name = s3_conf.get('bucket_name', 'context-studio-default')
+            bucket_name = s3_conf_dict.get('bucket_name')
+            if not bucket_name:
+                raise RuntimeError(
+                    "S3 bucket_name is required but missing from configuration for S3StorageManager."
+                )
 
-            return S3StorageOptimizer(s3_client, bucket_name)
-        
-        return self._create_service_with_factory(ServiceType.S3_STORAGE_OPTIMIZER, create_service)
+            return S3StorageManager(s3_client, bucket_name)
+
+        return self._create_service_with_factory(ServiceType.S3_STORAGE_MANAGER, create_service)
 
     def create_hierarchical_diff_engine(
         self, db: Session, nlp_service=None
     ) -> HierarchicalDiffEngine:
         """
         Create HierarchicalDiffEngine with optimized instantiation and dependency injection.
-        
+
         Args:
             db: Database session for this request
             nlp_service: Optional NLP service for semantic analysis
-            
+
         Returns:
             HierarchicalDiffEngine instance
         """
-        def create_service():
+        def create_service() -> HierarchicalDiffEngine:
             # nlp_service would come from actual NLP service dependency
             return HierarchicalDiffEngine(db, nlp_service)
-        
+
         return self._create_service_with_factory(ServiceType.HIERARCHICAL_DIFF_ENGINE, create_service)
 
     def create_batch_operation_processor(
@@ -684,20 +753,20 @@ class ServiceFactory:
     ) -> BatchOperationProcessor:
         """
         Create BatchOperationProcessor with optimized instantiation and dependency injection.
-        
+
         Args:
             db: Database session for this request
             s3_sync_manager: Optional S3SyncManager dependency
-            
+
         Returns:
             BatchOperationProcessor instance
         """
-        def create_service():
+        def create_service() -> BatchOperationProcessor:
             s3_sync = s3_sync_manager or self.get_s3_sync_manager(db)
             version_manager = self.create_version_manager(db)
             working_tree_manager = self.create_working_tree_manager(db)
             return BatchOperationProcessor(db, s3_sync, version_manager, working_tree_manager)
-        
+
         return self._create_service_with_factory(ServiceType.BATCH_OPERATION_PROCESSOR, create_service)
 
     def create_performance_monitor(
@@ -716,24 +785,28 @@ class ServiceFactory:
         """
         # DON'T cache PerformanceMonitor - it holds database connections that become stale
         # Create fresh instance each time to avoid session/connection issues
-        
+
         # Use provided connections or create defaults for tests
         sqlite_connection = db_connection
         if sqlite_connection is None:
             try:
                 sqlite_connection = self.get_database_connection()
-            except Exception:
-                # Use mock connection for tests
-                sqlite_connection = None
+            except Exception as e:
+                logger.error(f"Failed to get database connection for PerformanceMonitor: {e}", exc_info=True)
+                raise RuntimeError(
+                    f"Cannot create PerformanceMonitor without valid SQLite connection: {e}"
+                ) from e
 
         duckdb_connection = duckdb_conn
         if duckdb_connection is None:
             try:
                 duckdb_service = self.create_duckdb_service()
                 duckdb_connection = duckdb_service.connection
-            except Exception:
-                # Use None for tests
-                duckdb_connection = None
+            except Exception as e:
+                logger.error(f"Failed to create DuckDB service for PerformanceMonitor: {e}", exc_info=True)
+                raise RuntimeError(
+                    f"Cannot create PerformanceMonitor without valid DuckDB connection: {e}"
+                ) from e
 
         s3_sync = s3_sync_manager
 
@@ -756,7 +829,7 @@ class ServiceFactory:
         """
 
         # Create service with dependency injection for S3 config
-        def create_service():
+        def create_service() -> S3SyncManager:
             settings = get_settings()
             s3_config = settings.get_s3_config()
             return S3SyncManager(db_session, s3_config)
@@ -779,7 +852,6 @@ class ServiceFactory:
         Returns:
             Service instance
         """
-        start_time = time()
         service_key = service_type.value
         metrics = self._metrics[service_type.value]
 
@@ -839,7 +911,6 @@ class ServiceFactory:
         Returns:
             Service instance
         """
-        start_time = time()
         now = time()
 
         with self._lock:
@@ -867,7 +938,7 @@ class ServiceFactory:
                     logger.debug(
                         f"Cache HIT for {service_key} (access #{entry.access_count}, age: {entry.age_seconds:.1f}s)"
                     )
-                    return instance
+                    return cast(T, instance)
                 else:
                     # Cache expired
                     logger.debug(
@@ -899,7 +970,7 @@ class ServiceFactory:
                 f"Cache MISS for {service_key} - created new entry (creation: {creation_time_ms:.2f}ms)"
             )
 
-            return instance
+            return cast(T, instance)
 
     def _maybe_cleanup(self):
         """Perform periodic cleanup of expired cache entries."""
@@ -1299,26 +1370,26 @@ def get_incremental_sync_engine_via_factory(db: Session = Depends(get_db)) -> In
 
 # Phase 5 Optimization Service Dependencies
 
-def get_duckdb_query_optimizer_via_factory() -> DuckDBQueryOptimizer:
+def get_duckdb_query_analyzer_via_factory() -> DuckDBQueryAnalyzer:
     """
-    FastAPI dependency for DuckDBQueryOptimizer using optimized service factory.
+    FastAPI dependency for DuckDBQueryAnalyzer using optimized service factory.
 
     Returns:
-        DuckDBQueryOptimizer instance
+        DuckDBQueryAnalyzer instance
     """
     factory = get_service_factory()
-    return factory.create_duckdb_query_optimizer()
+    return factory.create_duckdb_query_analyzer()
 
 
-def get_s3_storage_optimizer_via_factory() -> S3StorageOptimizer:
+def get_s3_storage_manager_via_factory() -> S3StorageManager:
     """
-    FastAPI dependency for S3StorageOptimizer using optimized service factory.
+    FastAPI dependency for S3StorageManager using optimized service factory.
 
     Returns:
-        S3StorageOptimizer instance
+        S3StorageManager instance
     """
     factory = get_service_factory()
-    return factory.create_s3_storage_optimizer()
+    return factory.create_s3_storage_manager()
 
 
 def get_hierarchical_diff_engine_via_factory(db: Session = Depends(get_db)) -> HierarchicalDiffEngine:

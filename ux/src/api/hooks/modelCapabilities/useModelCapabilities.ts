@@ -2,7 +2,7 @@ import { useQuery, UseQueryOptions } from "@tanstack/react-query";
 import {
   modelCapabilitiesService,
   type ModelCapabilitiesResponse,
-  type ModelCapabilities
+  type ModelCapabilities,
 } from "@/api/services/modelCapabilities";
 
 /**
@@ -10,7 +10,10 @@ import {
  */
 export function useModelCapabilities(
   modelName: string | undefined,
-  options?: Omit<UseQueryOptions<ModelCapabilitiesResponse, Error>, 'queryKey' | 'queryFn'>
+  options?: Omit<
+    UseQueryOptions<ModelCapabilitiesResponse, Error>,
+    "queryKey" | "queryFn"
+  >,
 ) {
   return useQuery({
     queryKey: ["modelCapabilities", modelName],
@@ -29,7 +32,10 @@ export function useModelCapabilities(
  */
 export function useTypedModelCapabilities(
   modelName: string | undefined,
-  options?: Omit<UseQueryOptions<ModelCapabilities, Error>, 'queryKey' | 'queryFn'>
+  options?: Omit<
+    UseQueryOptions<ModelCapabilities, Error>,
+    "queryKey" | "queryFn"
+  >,
 ) {
   return useQuery({
     queryKey: ["typedModelCapabilities", modelName],
@@ -48,7 +54,13 @@ export function useTypedModelCapabilities(
  */
 export function useModelCapabilitiesByProvider(
   providerName: string | undefined,
-  options?: Omit<UseQueryOptions<import("@/api/services/modelCapabilities").SupportedModelsResponse, Error>, 'queryKey' | 'queryFn'>
+  options?: Omit<
+    UseQueryOptions<
+      import("@/api/services/modelCapabilities").SupportedModelsResponse,
+      Error
+    >,
+    "queryKey" | "queryFn"
+  >,
 ) {
   return useQuery({
     queryKey: ["modelCapabilitiesByProvider", providerName],
@@ -75,7 +87,7 @@ export function useValidateLLMConfig(
     frequency_penalty?: number;
     presence_penalty?: number;
   },
-  options?: Omit<UseQueryOptions<string[], Error>, 'queryKey' | 'queryFn'>
+  options?: Omit<UseQueryOptions<string[], Error>, "queryKey" | "queryFn">,
 ) {
   return useQuery({
     queryKey: ["validateLLMConfig", modelName, config],

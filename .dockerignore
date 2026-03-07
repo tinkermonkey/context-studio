@@ -16,7 +16,9 @@ dist
 build
 .eggs
 .venv
+.venv_integration_test
 venv
+venv_test
 env
 ENV
 test_env

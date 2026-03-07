@@ -2,13 +2,13 @@
 Embeddings API Endpoints
 
 This module provides endpoints for managing embeddings for structure_nodes,
-including WebSocket-based embedding regeneration with real-time progress updates.
+including WebSocket-based embedding regeneration with real-time progress updates.  # noqa: E501
 """
 
 import json
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect, Query
 
-from services.embedding_regeneration_service import get_embedding_regeneration_service
+from services.embedding_regeneration_service import get_embedding_regeneration_service  # noqa: E501
 from utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -19,10 +19,10 @@ router = APIRouter(prefix="/api/embeddings", tags=["embeddings"])
 @router.websocket("/regenerate")
 async def websocket_regenerate_embeddings(
     websocket: WebSocket,
-    force: bool = Query(False, description="Force regeneration even if embeddings exist")
+    force: bool = Query(False, description="Force regeneration even if embeddings exist")  # noqa: E501
 ):
     """
-    WebSocket endpoint for regenerating structure_nodes embeddings with real-time progress.
+    WebSocket endpoint for regenerating structure_nodes embeddings with real-time progress.  # noqa: E501
 
     Query Parameters:
     - force: If true, regenerate all embeddings even if they already exist
@@ -30,12 +30,12 @@ async def websocket_regenerate_embeddings(
     WebSocket Messages Sent:
     - {"type": "started", "message": "...", "start_time": "ISO timestamp"}
     - {"type": "progress", "progress": {...}} (see EmbeddingProgress.to_dict())
-    - {"type": "completed", "message": "...", "total_processed": int, "duration_seconds": float}
+    - {"type": "completed", "message": "...", "total_processed": int, "duration_seconds": float}  # noqa: E501
     - {"type": "error", "message": "..."}
 
     Example usage:
     ```javascript
-    const ws = new WebSocket('ws://localhost:8000/api/embeddings/regenerate?force=false');
+    const ws = new WebSocket('ws://localhost:8000/api/embeddings/regenerate?force=false');  # noqa: E501
     ws.onmessage = (event) => {
         const data = JSON.parse(event.data);
         if (data.type === 'progress') {
@@ -59,7 +59,7 @@ async def websocket_regenerate_embeddings(
         service = get_embedding_regeneration_service()
 
         # Start the regeneration process
-        await service.regenerate_all_embeddings(websocket, force_regenerate=force)
+        await service.regenerate_all_embeddings(websocket, force_regenerate=force)  # noqa: E501
 
     except WebSocketDisconnect:
         logger.info("WebSocket disconnected during embedding regeneration")
@@ -73,7 +73,7 @@ async def websocket_regenerate_embeddings(
                 "type": "error",
                 "message": f"Unexpected error: {str(e)}"
             }))
-        except:
+        except Exception:
             # WebSocket might be closed already
             pass
 

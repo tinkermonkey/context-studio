@@ -8,10 +8,7 @@ import React, {
 import { type ChartData } from "../tree_chart/tree_data";
 import { chartStyles } from "./config";
 import { TreeNode } from "./tree_menu_node";
-import {
-  useMeasurementSvg,
-  useMeasurementHtml,
-} from "./useMeasurementElement";
+import { useMeasurementSvg, useMeasurementHtml } from "./useMeasurementElement";
 import { calculateLayout, clearTextHeightCache } from "./layout";
 import { usePersistedExpandState } from "../tree_chart/usePersistedExpandState";
 import { Alert } from "flowbite-react";
@@ -35,7 +32,7 @@ interface TreeMenuProps {
   /**
    * Optional callback when a node is clicked
    */
-  onNodeClick?: (node: any) => void;
+  onNodeClick?: (node: any) => void; // eslint-disable-line @typescript-eslint/no-explicit-any
   /**
    * Optional view identifier for persisting expand state
    * If not provided, expand state will not be persisted to session storage
@@ -72,7 +69,7 @@ const TreeMenu: React.FC<TreeMenuProps> = ({
   const containerRef = useRef<HTMLDivElement>(null);
   // Initialize with cached width to avoid waiting for measurement on remount
   const [measuredWidth, setMeasuredWidth] = useState<number>(lastMeasuredWidth);
-  const [containerHeight, setContainerHeight] = useState<number>(0);
+
   const [isReady, setIsReady] = useState<boolean>(false);
 
   // Use prop width if provided, otherwise use measured width
@@ -116,11 +113,9 @@ const TreeMenu: React.FC<TreeMenuProps> = ({
     const measureDimensions = () => {
       if (containerRef.current) {
         const width = containerRef.current.clientWidth;
-        const height = containerRef.current.clientHeight;
         //console.log("Container dimensions measured:", { width, height });
         lastMeasuredWidth = width; // Cache for future mounts
         setMeasuredWidth(width);
-        setContainerHeight(height);
       }
     };
 
@@ -153,10 +148,12 @@ const TreeMenu: React.FC<TreeMenuProps> = ({
     // Don't calculate layout until container width is measured (unless provided via props)
     // This prevents zero-width calculations that can lead to cached zero heights
     if (!propContainerWidth && containerWidth === 0) {
-      console.warn("[TreeMenu] Waiting for container width measurement before calculating layout");
+      console.warn(
+        "[TreeMenu] Waiting for container width measurement before calculating layout",
+      );
       return {
         root: { ...chartData.root, children: [] },
-        dimensions: { width: 0, height: 0 }
+        dimensions: { width: 0, height: 0 },
       };
     }
 
@@ -174,11 +171,20 @@ const TreeMenu: React.FC<TreeMenuProps> = ({
 
     // Validate layout to detect zero-height issues
     if (layout.dimensions.height === 0 && chartData.root.children?.length > 0) {
-      console.error("[TreeMenu] Layout calculation resulted in zero height despite having children");
+      console.error(
+        "[TreeMenu] Layout calculation resulted in zero height despite having children",
+      );
     }
 
     return layout;
-  }, [chartData, expandState, containerWidth, showDefinitions, titleWidth, propContainerWidth]);
+  }, [
+    chartData,
+    expandState,
+    containerWidth,
+    showDefinitions,
+    titleWidth,
+    propContainerWidth,
+  ]);
 
   // Calculate the actual height needed for the chart content
   const chartHeight = useMemo(() => {
@@ -210,7 +216,9 @@ const TreeMenu: React.FC<TreeMenuProps> = ({
     const hasValidWidth = (propContainerWidth || containerWidth) > 0;
 
     if (hasChildren && hasZeroHeight && hasValidWidth && !recoveryAttempted) {
-      console.warn("[TreeMenu] Detected zero-height layout - attempting recovery by clearing measurement cache");
+      console.warn(
+        "[TreeMenu] Detected zero-height layout - attempting recovery by clearing measurement cache",
+      );
 
       // Clear the measurement cache to force remeasurement
       clearTextHeightCache();
@@ -233,33 +241,44 @@ const TreeMenu: React.FC<TreeMenuProps> = ({
   useEffect(() => {
     // Only mark as ready if we have a valid layout with non-zero dimensions
     // or if there are genuinely no children to render
-    const hasValidDimensions = dimensions.height > 0 || (root.children?.length === 0);
+    const hasValidDimensions =
+      dimensions.height > 0 || root.children?.length === 0;
     const hasValidWidth = propContainerWidth || containerWidth > 0;
 
     if (root && hasValidDimensions && hasValidWidth) {
       setIsReady(true);
     } else if (root && !hasValidDimensions && root.children?.length > 0) {
       // We have children but zero height - this indicates a measurement problem
-      console.warn("[TreeMenu] Detected zero-height layout with children present - delaying ready state");
+      console.warn(
+        "[TreeMenu] Detected zero-height layout with children present - delaying ready state",
+      );
       setIsReady(false);
     }
   }, [root, dimensions, containerWidth, propContainerWidth]);
 
   // Node click handler to navigate to the node's details
   // Uses provided onNodeClick if present, otherwise navigates to details page
-  const handleNodeClick = useCallback((node: any) => {
-    console.log("handleNodeClick:", node)
-    if (onNodeClick) {
-      onNodeClick(node);
-    } else {
-      // Default navigation behavior
-      if (node.type === "term" || node.type === "domain" || node.type === "layer") {
-        navigate({ to: `/app/structure_nodes/${node.id}` });
+  const handleNodeClick = useCallback(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (node: any) => {
+      console.log("handleNodeClick:", node);
+      if (onNodeClick) {
+        onNodeClick(node);
       } else {
-        console.warn("Clicked on unknown node:", node);
+        // Default navigation behavior
+        if (
+          node.type === "term" ||
+          node.type === "domain" ||
+          node.type === "layer"
+        ) {
+          navigate({ to: `/app/structure_nodes/${node.id}` });
+        } else {
+          console.warn("Clicked on unknown node:", node);
+        }
       }
-    }
-  }, [onNodeClick, navigate]);
+    },
+    [onNodeClick, navigate],
+  );
 
   return (
     <div
@@ -278,19 +297,25 @@ const TreeMenu: React.FC<TreeMenuProps> = ({
         style={{ display: "block" }} // Remove default inline spacing
       >
         {/* Render all children of the root node */}
-        {root.children.map((child: any, index: number) => {
-          child.childIndex = index;
-          return (
-            <TreeNode
-              key={child.id || index}
-              node={child}
-              parentNode={root}
-              onToggle={handleNodeToggle}
-              onNodeClick={handleNodeClick}
-              highlightedTermId={highlightedTermId}
-            />
-          );
-        })}
+        {}
+        {root.children.map(
+          (
+            child: any, // eslint-disable-line @typescript-eslint/no-explicit-any
+            index: number,
+          ) => {
+            child.childIndex = index;
+            return (
+              <TreeNode
+                key={child.id || index}
+                node={child}
+                parentNode={root}
+                onToggle={handleNodeToggle}
+                onNodeClick={handleNodeClick}
+                highlightedTermId={highlightedTermId}
+              />
+            );
+          },
+        )}
         <g>
           <circle cx={root.x} cy={root.y} r={2} style={chartStyles.mainNode} />
         </g>

@@ -24,9 +24,11 @@ interface WordAnalysisResult {
   pos?: string;
   tag?: string;
   concepcy?: {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     related_terms: any[];
   };
   wordnet?: {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     synsets: any[];
   };
 }
@@ -69,9 +71,8 @@ export const WordSenseSelector: React.FC<WordSenseSelectorProps> = ({
 
     words.forEach((word) => {
       // Find persisted sense for this word
-      const persistedSense = persistedSenses.find(
-        (s) => s.term.toLowerCase() === word
-      ) || null;
+      const persistedSense =
+        persistedSenses.find((s) => s.term.toLowerCase() === word) || null;
 
       initialMap.set(word, {
         word,
@@ -87,7 +88,9 @@ export const WordSenseSelector: React.FC<WordSenseSelectorProps> = ({
   });
 
   // State: selected node IDs for chart interaction visual feedback
-  const [selectedNodeIds, setSelectedNodeIds] = useState<Set<string>>(new Set());
+  const [selectedNodeIds, setSelectedNodeIds] = useState<Set<string>>(
+    new Set(),
+  );
 
   // Compute dirty flag by comparing current selections with persisted
   const isDirty = useMemo(() => {
@@ -103,10 +106,13 @@ export const WordSenseSelector: React.FC<WordSenseSelectorProps> = ({
     // Check if any selection changed
     for (const currentSense of currentSelections) {
       const persistedSense = persistedSenses.find(
-        (s) => s.term.toLowerCase() === currentSense.term.toLowerCase()
+        (s) => s.term.toLowerCase() === currentSense.term.toLowerCase(),
       );
 
-      if (!persistedSense || persistedSense.sense_id !== currentSense.sense_id) {
+      if (
+        !persistedSense ||
+        persistedSense.sense_id !== currentSense.sense_id
+      ) {
         return true;
       }
     }
@@ -160,36 +166,6 @@ export const WordSenseSelector: React.FC<WordSenseSelectorProps> = ({
     });
   }, []);
 
-  // Handle sense selection for a word
-  const handleSenseSelect = useCallback((word: string, synset: any) => {
-    // Create WordSense from synset
-    const wordSense: WordSense = {
-      term: word,
-      sense_type: "wordnet",
-      sense_id: synset.name,
-      definition: synset.definition,
-      domain: synset.domain || null,
-    };
-
-    setWordStates((prev) => {
-      const next = new Map(prev);
-      const state = next.get(word);
-
-      if (!state) return prev;
-
-      // Toggle: if same sense clicked, deselect it
-      const newSense =
-        state.selectedSense?.sense_id === wordSense.sense_id ? null : wordSense;
-
-      next.set(word, {
-        ...state,
-        selectedSense: newSense,
-      });
-
-      return next;
-    });
-  }, []);
-
   // Handle node click in the chart (for sense selection)
   const handleNodeClick = useCallback((word: string, nodeId: string) => {
     // Parse node ID to determine if it's a sense node
@@ -215,7 +191,9 @@ export const WordSenseSelector: React.FC<WordSenseSelectorProps> = ({
         };
 
         const newSense =
-          state.selectedSense?.sense_id === wordSense.sense_id ? null : wordSense;
+          state.selectedSense?.sense_id === wordSense.sense_id
+            ? null
+            : wordSense;
 
         next.set(word, {
           ...state,
@@ -257,10 +235,10 @@ export const WordSenseSelector: React.FC<WordSenseSelectorProps> = ({
 
   // Effect: Perform NLP analysis for words that need it
   useEffect(() => {
-    const analyzeWord = async (word: string, state: WordState) => {
+    const analyzeWord = async (word: string) => {
       try {
         const response = await fetch(
-          `/api/nlp/analyze?text=${encodeURIComponent(word)}`
+          `/api/nlp/analyze?text=${encodeURIComponent(word)}`,
         );
 
         if (!response.ok) {
@@ -310,7 +288,7 @@ export const WordSenseSelector: React.FC<WordSenseSelectorProps> = ({
     // Check if any word needs analysis
     for (const [word, state] of wordStates.entries()) {
       if (state.isAnalyzing && !state.analysis) {
-        analyzeWord(word, state);
+        analyzeWord(word);
       }
     }
   }, [wordStates]);
@@ -336,8 +314,8 @@ export const WordSenseSelector: React.FC<WordSenseSelectorProps> = ({
     const borderColorClass = state.isExpanded
       ? "border-blue-500"
       : state.selectedSense
-      ? "border-blue-300"
-      : "border-gray-300";
+        ? "border-blue-300"
+        : "border-gray-300";
 
     const bgColorClass = state.selectedSense ? "bg-blue-50" : "bg-gray-50";
 
@@ -357,14 +335,17 @@ export const WordSenseSelector: React.FC<WordSenseSelectorProps> = ({
               handleWordClick(word);
             }
           }}
-          className="mb-2 w-full text-left font-semibold text-gray-800 transition-colors duration-200 hover:text-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+          className="mb-2 w-full text-left font-semibold text-gray-800 transition-colors duration-200 hover:text-blue-600 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none"
           aria-expanded={state.isExpanded}
           aria-controls={`word-sense-${word}`}
-          aria-label={`${state.isExpanded ? 'Collapse' : 'Expand'} sense options for ${word}${state.selectedSense ? `, currently selected: ${state.selectedSense.sense_id}` : ''}`}
+          aria-label={`${state.isExpanded ? "Collapse" : "Expand"} sense options for ${word}${state.selectedSense ? `, currently selected: ${state.selectedSense.sense_id}` : ""}`}
         >
           {word}
           {state.selectedSense && (
-            <span className="ml-2 rounded-full bg-blue-600 px-2 py-0.5 text-xs text-white" aria-label="Selected sense">
+            <span
+              className="ml-2 rounded-full bg-blue-600 px-2 py-0.5 text-xs text-white"
+              aria-label="Selected sense"
+            >
               {state.selectedSense.sense_id}
             </span>
           )}
@@ -373,13 +354,17 @@ export const WordSenseSelector: React.FC<WordSenseSelectorProps> = ({
         {/* Show analysis when expanded */}
         {state.isExpanded && (
           <div
-            className="mt-2 animate-fade-in"
+            className="animate-fade-in mt-2"
             id={`word-sense-${word}`}
             role="region"
             aria-live="polite"
           >
             {state.isAnalyzing && (
-              <div className="flex items-center gap-2" role="status" aria-label="Loading word sense analysis">
+              <div
+                className="flex items-center gap-2"
+                role="status"
+                aria-label="Loading word sense analysis"
+              >
                 <Spinner size="sm" aria-hidden="true" />
                 <span className="text-sm text-gray-600">Analyzing...</span>
               </div>
@@ -401,27 +386,21 @@ export const WordSenseSelector: React.FC<WordSenseSelectorProps> = ({
                   text: state.analysis.text,
                   lemma: state.analysis.lemma || state.analysis.text,
                   pos: state.analysis.pos || state.analysis.tag || "",
-                  concepcy: {
-                    related_terms: state.analysis.concepcy?.related_terms || [],
-                  },
+                  inputTerm: state.analysis.text,
                   wordnet: {
-                    synsets: (state.analysis.wordnet?.synsets || []).map((s: any) => ({
-                      name: s.name || s.synset || s.id || s[0] || "unknown",
-                      definition: s.definition || s.gloss || s.def || "",
-                      lemmas: s.lemmas || [],
-                      pos: s.pos || s.partOfSpeech || state.analysis?.pos || "",
-                      offset: s.offset || 0,
-                      domain: s.domain || "general",
-                    })),
-                    definitions: (state.analysis.wordnet?.synsets || []).map(
-                      (s: any) => s.definition || s.gloss || s.def || ""
+                    synsets: (state.analysis.wordnet?.synsets || []).map(
+                      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                      (s: any) => ({
+                        name: s.name || s.synset || s.id || s[0] || "unknown",
+                        definition: s.definition || s.gloss || s.def || "",
+                        lemmas: s.lemmas || [],
+                        pos:
+                          s.pos || s.partOfSpeech || state.analysis?.pos || "",
+                        offset: s.offset || 0,
+                        domain: s.domain || "general",
+                      }),
                     ),
                   },
-                }}
-                config={{
-                  RelatedTo: 2,
-                  IsA: 3,
-                  HasA: 2,
                 }}
                 onNodeClick={(nodeId) => handleNodeClick(word, nodeId)}
                 selectedNodeIds={wordSelectedNodeIds}
@@ -442,7 +421,11 @@ export const WordSenseSelector: React.FC<WordSenseSelectorProps> = ({
     >
       {/* Save button - only show when dirty */}
       {isDirty && (
-        <div className="flex items-center justify-end" role="region" aria-label="Save actions">
+        <div
+          className="flex items-center justify-end"
+          role="region"
+          aria-label="Save actions"
+        >
           <button
             ref={saveButtonRef}
             onClick={handleSave}
@@ -453,7 +436,7 @@ export const WordSenseSelector: React.FC<WordSenseSelectorProps> = ({
               }
             }}
             disabled={isSaving || !updateWordSensesMutation}
-            className="inline-flex items-center rounded-lg bg-blue-700 px-4 py-2 text-sm font-medium text-white transition-colors duration-200 hover:bg-blue-800 focus:outline-none focus:ring-4 focus:ring-blue-300 disabled:cursor-not-allowed disabled:opacity-50"
+            className="inline-flex items-center rounded-lg bg-blue-700 px-4 py-2 text-sm font-medium text-white transition-colors duration-200 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
             aria-label={isSaving ? "Saving word senses" : "Save word senses"}
             aria-busy={isSaving}
           >
@@ -476,14 +459,16 @@ export const WordSenseSelector: React.FC<WordSenseSelectorProps> = ({
       <div
         className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
         role="list"
-        aria-label={`Word senses for ${words.length} word${words.length > 1 ? 's' : ''}`}
+        aria-label={`Word senses for ${words.length} word${words.length > 1 ? "s" : ""}`}
       >
         {words.map(renderWordChart)}
       </div>
 
       {/* Helper text */}
       <div className="text-xs text-gray-500" role="status" aria-live="polite">
-        Click a word to view and select its senses. Use Tab to navigate between words and Enter or Space to expand. Selected senses will be saved for this term.
+        Click a word to view and select its senses. Use Tab to navigate between
+        words and Enter or Space to expand. Selected senses will be saved for
+        this term.
       </div>
     </div>
   );

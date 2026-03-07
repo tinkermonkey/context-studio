@@ -6,10 +6,10 @@ from database.migrations.migration_manager import Migration
 
 class MigrationXXX(Migration):
     """Migration template."""
-    
+
     version = 0  # Replace with next version number
     description = "Description of what this migration does"
-    
+
     def up(self, connection: Connection) -> None:
         """Apply the migration."""
         # TODO: Add your migration SQL here
@@ -21,7 +21,7 @@ class MigrationXXX(Migration):
         #     )
         # """))
         pass
-    
+
     def down(self, connection: Connection) -> None:
         """Rollback the migration."""
         # TODO: Add your rollback SQL here

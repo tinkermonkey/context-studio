@@ -1,5 +1,0 @@
-configuration:
-  id: security.configuration
-  name: Security Configuration
-  type: security
-  documentation: Security configuration for Context Studio

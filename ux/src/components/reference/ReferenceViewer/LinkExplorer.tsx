@@ -5,23 +5,28 @@
  */
 
 import React, { useState, useMemo } from "react";
-import { Card, Badge, Button, Alert, Spinner, Select } from "flowbite-react";
+import { Alert, Badge, Button, Card, Select, Spinner } from "flowbite-react";
 import {
-  ArrowRight,
   ArrowLeft,
-  ArrowRightLeft,
+  ArrowRight,
   ExternalLink,
   Filter,
-  RotateCcw,
   Info,
+  RotateCcw,
 } from "lucide-react";
-import { UnifiedLink, UnifiedNode, UnifiedSearchLink } from "@/api/types/unified";
+import {
+  UnifiedLink,
+  UnifiedNode,
+  UnifiedSearchLink,
+} from "@/api/types/unified";
 import { SOURCE_METADATA } from "@/api/types/unified";
 import { useNodeDetails } from "@/api/hooks/unifiedReference/useUnifiedReference";
 import { getSourceBadgeColor, getSourceLabel } from "@/utils/sourceUtils";
 
 // Adapter function to convert SearchLink to UnifiedLink format
-const convertSearchLinkToUnifiedLink = (searchLink: UnifiedSearchLink): UnifiedLink => ({
+const convertSearchLinkToUnifiedLink = (
+  searchLink: UnifiedSearchLink,
+): UnifiedLink => ({
   id: searchLink.id,
   source_node_id: searchLink.subject,
   target_node_id: searchLink.object,
@@ -58,15 +63,21 @@ const LinkItem: React.FC<LinkItemProps> = ({
   const targetNodeId = isOutgoing ? link.target_node_id : link.source_node_id;
 
   // Try to find the target node in search results first, fallback to API call
-  const targetNodeFromSearch = searchResults.find(node => node.id === targetNodeId);
+  const targetNodeFromSearch = searchResults.find(
+    (node) => node.id === targetNodeId,
+  );
 
-  const { data: targetNodeFromAPI, isLoading: apiLoading, error: apiError } = useNodeDetails(
-    targetNodeFromSearch ? null : targetNodeId // Only call API if not found in search results
+  const {
+    data: targetNodeFromAPI,
+    isLoading: apiLoading,
+    error: apiError,
+  } = useNodeDetails(
+    targetNodeFromSearch ? null : targetNodeId, // Only call API if not found in search results
   );
 
   const targetNode = targetNodeFromSearch || targetNodeFromAPI;
   const isLoading = !targetNodeFromSearch && apiLoading;
-  const error = !targetNodeFromSearch ? apiError : null;
+  const error = apiError;
 
   const confidencePercent = Math.round(link.confidence_score * 100);
 
@@ -147,10 +158,7 @@ const LinkItem: React.FC<LinkItemProps> = ({
 
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <Badge
-                color={getSourceBadgeColor(targetNode.source)}
-                size="sm"
-              >
+              <Badge color={getSourceBadgeColor(targetNode.source)} size="sm">
                 {getSourceLabel(targetNode.source)}
               </Badge>
             </div>
@@ -164,7 +172,10 @@ const LinkItem: React.FC<LinkItemProps> = ({
                 <Button
                   size="xs"
                   color="gray"
-                  onClick={() => window.open(targetNode.source_url, "_blank")}
+                  onClick={() =>
+                    targetNode.source_url &&
+                    window.open(targetNode.source_url, "_blank")
+                  }
                 >
                   <ExternalLink className="h-3 w-3" />
                 </Button>
@@ -194,9 +205,9 @@ export const LinkExplorer: React.FC<LinkExplorerProps> = ({
 
   // Convert SearchLinks to UnifiedLinks if needed
   const links: UnifiedLink[] = useMemo(() => {
-    return rawLinks.map(link => {
+    return rawLinks.map((link) => {
       // Check if it's a SearchLink (has 'subject' property)
-      if ('subject' in link) {
+      if ("subject" in link) {
         return convertSearchLinkToUnifiedLink(link as UnifiedSearchLink);
       }
       // It's already a UnifiedLink

@@ -65,7 +65,10 @@ export const useNodeAttributeMutations = (
     onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: [
-          ...(createQueryKey(QUERY_KEYS.STRUCTURE_NODES, "attributes") as string[]),
+          ...(createQueryKey(
+            QUERY_KEYS.STRUCTURE_NODES,
+            "attributes",
+          ) as string[]),
           nodeId,
         ],
       });
@@ -82,7 +85,10 @@ export const useNodeAttributeMutations = (
     onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: [
-          ...(createQueryKey(QUERY_KEYS.STRUCTURE_NODES, "attributes") as string[]),
+          ...(createQueryKey(
+            QUERY_KEYS.STRUCTURE_NODES,
+            "attributes",
+          ) as string[]),
           nodeId,
         ],
       });

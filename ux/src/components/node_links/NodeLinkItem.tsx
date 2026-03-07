@@ -5,8 +5,15 @@
  */
 
 import React, { useState } from "react";
-import { Button, Modal, ModalHeader, ModalBody, Alert, Spinner } from "flowbite-react";
-import { Trash2, AlertCircle, Layers, Database, Hash } from "lucide-react";
+import {
+  Button,
+  Modal,
+  ModalHeader,
+  ModalBody,
+  Alert,
+  Spinner,
+} from "flowbite-react";
+import { AlertCircle, Database, Hash, Layers, Trash2 } from "lucide-react";
 import { useNavigate } from "@tanstack/react-router";
 
 import { StructureNodeLink, NodeType } from "@/api/types/structureNodes";
@@ -59,7 +66,7 @@ export const NodeLinkItem: React.FC<NodeLinkItemProps> = ({
 
   if (isLoading) {
     return (
-      <div className="flex items-center gap-2 border rounded-lg p-3 bg-gray-50">
+      <div className="flex items-center gap-2 rounded-lg border bg-gray-50 p-3">
         <Spinner size="sm" />
         <span className="text-sm text-gray-500">Loading...</span>
       </div>
@@ -68,7 +75,7 @@ export const NodeLinkItem: React.FC<NodeLinkItemProps> = ({
 
   if (!displayNode) {
     return (
-      <div className="flex items-center gap-2 border rounded-lg p-3 bg-gray-50">
+      <div className="flex items-center gap-2 rounded-lg border bg-gray-50 p-3">
         <span className="text-sm text-gray-500">Node not found</span>
       </div>
     );
@@ -78,15 +85,17 @@ export const NodeLinkItem: React.FC<NodeLinkItemProps> = ({
 
   return (
     <>
-      <div className="flex items-center justify-between border rounded-lg p-3 bg-gray-50 hover:bg-gray-100 transition-colors">
+      <div className="flex items-center justify-between rounded-lg border bg-gray-50 p-3 transition-colors hover:bg-gray-100">
         <button
           onClick={handleNavigate}
-          className="flex-1 flex items-center gap-2 text-left cursor-pointer hover:text-blue-600"
+          className="flex flex-1 cursor-pointer items-center gap-2 text-left hover:text-blue-600"
           aria-label={`Navigate to ${displayNode.title}`}
         >
           <NodeIcon className="h-4 w-4 flex-shrink-0" />
           <span className="font-medium">{displayNode.title}</span>
-          <span className="text-sm text-gray-500">({displayNode.node_type})</span>
+          <span className="text-sm text-gray-500">
+            ({displayNode.node_type})
+          </span>
         </button>
         <Button
           size="xs"
@@ -114,18 +123,20 @@ export const NodeLinkItem: React.FC<NodeLinkItemProps> = ({
               </p>
             </Alert>
 
-            <div className="border rounded-lg p-3 bg-gray-50">
-              <div className="flex items-center gap-2 mb-2">
+            <div className="rounded-lg border bg-gray-50 p-3">
+              <div className="mb-2 flex items-center gap-2">
                 <NodeIcon className="h-4 w-4" />
                 <span className="font-medium">{displayNode.title}</span>
-                <span className="text-sm text-gray-500">({displayNode.node_type})</span>
+                <span className="text-sm text-gray-500">
+                  ({displayNode.node_type})
+                </span>
               </div>
               <div className="text-sm text-gray-600">
                 via: <code className="font-mono">{link.predicate}</code>
               </div>
             </div>
 
-            <div className="flex gap-2 justify-end">
+            <div className="flex justify-end gap-2">
               <Button
                 color="gray"
                 onClick={() => setConfirmDelete(false)}

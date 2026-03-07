@@ -2,6 +2,7 @@
 Comprehensive test for 10.2.6 Configuration Updates implementation.
 Tests environment variables and configuration schema compliance.
 """
+# mypy: ignore-errors
 
 import sys
 import os
@@ -10,8 +11,8 @@ sys.path.append(
     os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 )
 
-from config import Settings
-from pydantic import ValidationError
+from config import Settings  # noqa: E402
+from pydantic import ValidationError  # noqa: E402
 
 
 def test_environment_variables():
@@ -189,7 +190,6 @@ def test_integration_with_existing_config(test_settings):
 
     # Test that new config doesn't break existing functionality
     try:
-        reference_sources = settings.reference_sources
         # Verify the new dbpedia split configuration
         assert hasattr(settings.reference_sources, 'dbpedia_lookup')
         assert hasattr(settings.reference_sources, 'dbpedia_sparql')

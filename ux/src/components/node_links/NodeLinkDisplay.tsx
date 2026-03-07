@@ -34,7 +34,7 @@ export const NodeLinkDisplay: React.FC<NodeLinkDisplayProps> = ({
     },
     onError: (error) => {
       toast.error(
-        error instanceof Error ? error.message : "Failed to delete link"
+        error instanceof Error ? error.message : "Failed to delete link",
       );
       setDeletingLinkId(undefined);
     },
@@ -47,8 +47,12 @@ export const NodeLinkDisplay: React.FC<NodeLinkDisplayProps> = ({
 
   // Separate links into outgoing and incoming
   const { outgoingLinks, incomingLinks } = useMemo(() => {
-    const outgoing = links.filter((link) => link.source_node_id === currentNodeId);
-    const incoming = links.filter((link) => link.target_node_id === currentNodeId);
+    const outgoing = links.filter(
+      (link) => link.source_node_id === currentNodeId,
+    );
+    const incoming = links.filter(
+      (link) => link.target_node_id === currentNodeId,
+    );
     return { outgoingLinks: outgoing, incomingLinks: incoming };
   }, [links, currentNodeId]);
 
@@ -65,11 +69,11 @@ export const NodeLinkDisplay: React.FC<NodeLinkDisplayProps> = ({
 
   const groupedOutgoing = useMemo(
     () => groupByPredicate(outgoingLinks),
-    [outgoingLinks]
+    [outgoingLinks],
   );
   const groupedIncoming = useMemo(
     () => groupByPredicate(incomingLinks),
-    [incomingLinks]
+    [incomingLinks],
   );
 
   const hasOutgoing = outgoingLinks.length > 0;

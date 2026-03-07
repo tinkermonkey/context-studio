@@ -7,19 +7,18 @@
 
 import React, { useState, useMemo } from "react";
 import {
-  Card,
-  Table,
-  Badge,
-  Button,
-  Select,
-  TextInput,
-  Spinner,
-  Alert,
-  Modal,
   Accordion,
+  AccordionContent,
   AccordionPanel,
   AccordionTitle,
-  AccordionContent,
+  Alert,
+  Badge,
+  Button,
+  Card,
+  Modal,
+  Select,
+  Spinner,
+  TextInput,
 } from "flowbite-react";
 import {
   useExecutionHistory,
@@ -296,12 +295,7 @@ export const ExecutionHistory: React.FC<ExecutionHistoryProps> = ({
   onExecutionSelected,
   showFilters = true,
 }) => {
-  const {
-    maxEntries = 50,
-    autoRefresh = false,
-    refreshInterval = 30 * 1000, // 30 seconds
-    showFilters: configShowFilters = true,
-  } = config;
+  const { maxEntries = 50, showFilters: configShowFilters = true } = config;
 
   // State for multi-execution mode
   const [filters, setFilters] = useState<ExecutionHistoryFilters>({
@@ -344,35 +338,38 @@ export const ExecutionHistory: React.FC<ExecutionHistoryProps> = ({
 
     // Convert flavor execution data to ExecutionHistoryResponse format
     // Map database fields to what the UI component expects
-    return flavorExecutionData.executions.map((exec: any) => ({
-      success: true,
-      data: {
-        execution: {
-          execution_id: exec.id, // Database uses 'id', UI expects 'execution_id'
-          pipeline_type: exec.pipeline_type,
-          status: exec.status as "completed" | "failed" | "in_progress",
-          execution_time: exec.execution_time_ms || 0,
-          tokens_used: exec.total_tokens || 0,
-          timestamp: exec.started_at,
-          input_data: (() => {
-            try {
-              return exec.request_context
-                ? JSON.parse(exec.request_context)
-                : {};
-            } catch (e) {
-              return { raw: exec.request_context };
-            }
-          })(),
-          output_data: exec.response_message
-            ? { message: exec.response_message }
-            : {},
-          error_details: exec.error_message || undefined,
-          user_prompt: exec.user_prompt || undefined,
-          response_message: exec.response_message || undefined,
+    return flavorExecutionData.executions.map(
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (exec: any) => ({
+        success: true,
+        data: {
+          execution: {
+            execution_id: exec.id, // Database uses 'id', UI expects 'execution_id'
+            pipeline_type: exec.pipeline_type,
+            status: exec.status as "completed" | "failed" | "in_progress",
+            execution_time: exec.execution_time_ms || 0,
+            tokens_used: exec.total_tokens || 0,
+            timestamp: exec.started_at,
+            input_data: (() => {
+              try {
+                return exec.request_context
+                  ? JSON.parse(exec.request_context)
+                  : {};
+              } catch {
+                return { raw: exec.request_context };
+              }
+            })(),
+            output_data: exec.response_message
+              ? { message: exec.response_message }
+              : {},
+            error_details: exec.error_message || undefined,
+            user_prompt: exec.user_prompt || undefined,
+            response_message: exec.response_message || undefined,
+          },
+          selections: [], // Will be populated separately if needed
         },
-        selections: [], // Will be populated separately if needed
-      },
-    })) as ExecutionHistoryResponse[];
+      }),
+    ) as ExecutionHistoryResponse[];
   }, [flavorExecutionData]);
 
   // Computed values

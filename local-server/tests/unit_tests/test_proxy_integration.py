@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# mypy: ignore-errors
 """
 Test script to verify the reference_api_buddy integration works correctly.
 """
@@ -10,7 +11,7 @@ sys.path.append(
     os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 )
 
-from nlp.proxy_manager import get_proxy_manager
+from nlp.proxy_manager import get_proxy_manager  # noqa: E402
 
 
 def test_proxy_basic_functionality(test_settings):

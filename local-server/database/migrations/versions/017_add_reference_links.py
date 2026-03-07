@@ -59,7 +59,7 @@ class Migration017(Migration):
                 created_at DATETIME,
                 version INTEGER DEFAULT 1,
                 last_modified DATETIME,
-                FOREIGN KEY (parent_node_id) REFERENCES structure_nodes(id) ON DELETE CASCADE,
+                FOREIGN KEY (parent_node_id) REFERENCES structure_nodes(id) ON DELETE CASCADE,  
                 FOREIGN KEY (structural_predicate_id) REFERENCES predicates(id)
             )
         """))

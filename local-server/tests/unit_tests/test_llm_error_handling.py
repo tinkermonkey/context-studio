@@ -10,14 +10,14 @@ from unittest.mock import patch
 # Add the project root to Python path for imports
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from llm.exceptions import (
+from llm.exceptions import (  # noqa: E402
     LLMConfigurationError,
     LLMProcessingError,
     LLMTimeoutError,
     LLMQuotaExceededError,
 )
-from api.llm import handle_llm_error
-from fastapi import HTTPException, status
+from api.llm import handle_llm_error  # noqa: E402
+from fastapi import HTTPException, status  # noqa: E402
 
 
 class TestLLMErrorHandling:
@@ -136,7 +136,7 @@ class TestLLMErrorHandling:
         # Find execute_pipeline endpoint
         execute_pipeline_route = None
         for route in router.routes:
-            if hasattr(route, "path") and "/execute_pipeline" in route.path and not "/stream" in route.path:
+            if hasattr(route, "path") and "/execute_pipeline" in route.path and "/stream" not in route.path:
                 execute_pipeline_route = route
                 break
 

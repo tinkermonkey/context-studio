@@ -1,3 +1,4 @@
+# mypy: ignore-errors
 import spacy
 import time
 import requests

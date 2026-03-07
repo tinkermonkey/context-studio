@@ -6,10 +6,9 @@ Users can enable/disable models and configure how they should be routed (native 
 """
 
 import json
-import os
 from typing import Dict, List, Optional, Any
 from enum import Enum
-from dataclasses import dataclass, asdict
+from dataclasses import dataclass, asdict, field
 from pathlib import Path
 
 from utils.logger import get_logger
@@ -41,11 +40,7 @@ class EnabledModelConfig:
     # Additional metadata
     description: Optional[str] = None      # Model description for UI
     cost_tier: Optional[str] = None        # Cost indicator (low/medium/high)
-    tags: List[str] = None                 # Tags for filtering/grouping
-
-    def __post_init__(self):
-        if self.tags is None:
-            self.tags = []
+    tags: List[str] = field(default_factory=list)  # Tags for filtering/grouping
 
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary for JSON serialization"""

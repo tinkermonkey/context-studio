@@ -8,13 +8,13 @@
 
 import React, { useState } from "react";
 import {
+  Badge,
   Button,
   Card,
-  Badge,
-  Spinner,
   Label,
-  TextInput,
   Select,
+  Spinner,
+  TextInput,
 } from "flowbite-react";
 import { GitBranch, Plus } from "lucide-react";
 import { useClusterPredicates } from "@/api/hooks/predicates";
@@ -24,12 +24,13 @@ export interface ClusterVisualizationTabProps {
   onCreateGlobalPredicate?: (clusterPredicates: string[]) => void;
 }
 
-export const ClusterVisualizationTab: React.FC<ClusterVisualizationTabProps> = ({
-  onCreateGlobalPredicate,
-}) => {
+export const ClusterVisualizationTab: React.FC<
+  ClusterVisualizationTabProps
+> = ({ onCreateGlobalPredicate }) => {
   const [minSamples, setMinSamples] = useState<number>(2);
   const [eps, setEps] = useState<number>(0.3);
   const [sourceFilter, setSourceFilter] = useState<string>("");
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [clusters, setClusters] = useState<any>(null);
   const toast = useButterToast();
 
@@ -37,8 +38,12 @@ export const ClusterVisualizationTab: React.FC<ClusterVisualizationTabProps> = (
   const clusterMutation = useClusterPredicates({
     onSuccess: (result) => {
       setClusters(result);
+      const clusteredCount = result.clusters.reduce(
+        (sum, c) => sum + c.size,
+        0,
+      );
       toast.success(
-        `Found ${result.num_clusters} clusters with ${result.num_noise_points} noise points`,
+        `Found ${result.total_clusters} clusters with ${clusteredCount} clustered predicates`,
       );
     },
     onError: (error: Error) => {
@@ -63,7 +68,9 @@ export const ClusterVisualizationTab: React.FC<ClusterVisualizationTabProps> = (
   };
 
   // Calculate cluster quality based on size and cohesion
-  const getClusterQuality = (cluster: any): { color: string; label: string } => {
+  const getClusterQuality = (
+    cluster: any, // eslint-disable-line @typescript-eslint/no-explicit-any
+  ): { color: string; label: string } => {
     const size = cluster.predicate_ids.length;
     const avgSimilarity = cluster.avg_similarity || 0;
 
@@ -177,7 +184,7 @@ export const ClusterVisualizationTab: React.FC<ClusterVisualizationTabProps> = (
             <div className="grid grid-cols-3 gap-4 text-center">
               <div>
                 <div className="text-3xl font-bold text-blue-600 dark:text-blue-400">
-                  {clusters.num_clusters}
+                  {clusters.total_clusters}
                 </div>
                 <div className="text-sm text-gray-600 dark:text-gray-400">
                   Clusters Found
@@ -185,7 +192,10 @@ export const ClusterVisualizationTab: React.FC<ClusterVisualizationTabProps> = (
               </div>
               <div>
                 <div className="text-3xl font-bold text-green-600 dark:text-green-400">
-                  {clusters.total_predicates - clusters.num_noise_points}
+                  {clusters.clusters.reduce(
+                    (sum: number, c: any) => sum + c.size, // eslint-disable-line @typescript-eslint/no-explicit-any
+                    0,
+                  )}
                 </div>
                 <div className="text-sm text-gray-600 dark:text-gray-400">
                   Clustered Predicates
@@ -193,77 +203,90 @@ export const ClusterVisualizationTab: React.FC<ClusterVisualizationTabProps> = (
               </div>
               <div>
                 <div className="text-3xl font-bold text-gray-600 dark:text-gray-400">
-                  {clusters.num_noise_points}
+                  {clusters.total_predicates -
+                    clusters.clusters.reduce(
+                      (sum: number, c: any) => sum + c.size, // eslint-disable-line @typescript-eslint/no-explicit-any
+                      0,
+                    )}
                 </div>
-                <div className="text-sm text-gray-600 dark:text-gray-400">Outliers</div>
+                <div className="text-sm text-gray-600 dark:text-gray-400">
+                  Outliers
+                </div>
               </div>
             </div>
           </Card>
 
           {/* Clusters */}
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {clusters.clusters.map((cluster: any, index: number) => {
-              const quality = getClusterQuality(cluster);
-              return (
-                <Card key={index}>
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <h5 className="mb-2 text-lg font-bold text-gray-900 dark:text-white">
-                        Cluster {cluster.cluster_id}
-                      </h5>
-                      <div className="mb-2 flex items-center gap-2">
-                        <Badge color="info" size="sm">
-                          {cluster.predicate_ids.length} predicates
-                        </Badge>
-                        <Badge color={quality.color} size="sm">
-                          {quality.label}
-                        </Badge>
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            {clusters.clusters.map(
+              (
+                cluster: any, // eslint-disable-line @typescript-eslint/no-explicit-any
+                index: number,
+              ) => {
+                const quality = getClusterQuality(cluster);
+                return (
+                  <Card key={index}>
+                    <div className="flex items-start justify-between">
+                      <div>
+                        <h5 className="mb-2 text-lg font-bold text-gray-900 dark:text-white">
+                          Cluster {cluster.cluster_id}
+                        </h5>
+                        <div className="mb-2 flex items-center gap-2">
+                          <Badge color="info" size="sm">
+                            {cluster.predicate_ids.length} predicates
+                          </Badge>
+                          <Badge color={quality.color} size="sm">
+                            {quality.label}
+                          </Badge>
+                        </div>
                       </div>
+                      <Button
+                        size="xs"
+                        onClick={() =>
+                          handleCreateGlobalPredicate(cluster.predicate_ids)
+                        }
+                      >
+                        <Plus className="h-3 w-3" />
+                      </Button>
                     </div>
-                    <Button
-                      size="xs"
-                      onClick={() =>
-                        handleCreateGlobalPredicate(cluster.predicate_ids)
-                      }
-                    >
-                      <Plus className="h-3 w-3" />
-                    </Button>
-                  </div>
 
-                  {cluster.representative_predicate && (
-                    <div className="mt-2 rounded-lg bg-gray-50 p-2 dark:bg-gray-700">
-                      <p className="text-sm font-medium text-gray-900 dark:text-white">
-                        {cluster.representative_predicate.title}
-                      </p>
-                      {cluster.representative_predicate.definition && (
-                        <p className="mt-1 text-xs text-gray-600 dark:text-gray-400">
-                          {cluster.representative_predicate.definition}
+                    {cluster.representative_predicate && (
+                      <div className="mt-2 rounded-lg bg-gray-50 p-2 dark:bg-gray-700">
+                        <p className="text-sm font-medium text-gray-900 dark:text-white">
+                          {cluster.representative_predicate.title}
                         </p>
-                      )}
-                    </div>
-                  )}
+                        {cluster.representative_predicate.definition && (
+                          <p className="mt-1 text-xs text-gray-600 dark:text-gray-400">
+                            {cluster.representative_predicate.definition}
+                          </p>
+                        )}
+                      </div>
+                    )}
 
-                  {cluster.avg_similarity && (
-                    <div className="mt-2 text-xs text-gray-600 dark:text-gray-400">
-                      Avg. Similarity: {(cluster.avg_similarity * 100).toFixed(1)}%
-                    </div>
-                  )}
+                    {cluster.avg_similarity && (
+                      <div className="mt-2 text-xs text-gray-600 dark:text-gray-400">
+                        Avg. Similarity:{" "}
+                        {(cluster.avg_similarity * 100).toFixed(1)}%
+                      </div>
+                    )}
 
-                  {cluster.sources && cluster.sources.length > 0 && (
-                    <div className="mt-2 flex flex-wrap gap-1">
-                      {cluster.sources.map((source: string) => (
-                        <Badge key={source} color="gray" size="xs">
-                          {source}
-                        </Badge>
-                      ))}
-                    </div>
-                  )}
-                </Card>
-              );
-            })}
+                    {cluster.sources && cluster.sources.length > 0 && (
+                      <div className="mt-2 flex flex-wrap gap-1">
+                        {cluster.sources.map((source: string) => (
+                          <Badge key={source} color="gray" size="xs">
+                            {source}
+                          </Badge>
+                        ))}
+                      </div>
+                    )}
+                  </Card>
+                );
+              },
+            )}
           </div>
 
-          {clusters.num_clusters === 0 && (
+          {clusters.total_clusters === 0 && (
             <Card>
               <div className="py-8 text-center text-gray-500">
                 No clusters found with the current parameters. Try adjusting the
@@ -277,8 +300,8 @@ export const ClusterVisualizationTab: React.FC<ClusterVisualizationTabProps> = (
       {!clusters && !clusterMutation.isPending && (
         <Card>
           <div className="py-8 text-center text-gray-500">
-            Configure clustering parameters and click "Run Clustering" to analyze
-            predicates
+            Configure clustering parameters and click "Run Clustering" to
+            analyze predicates
           </div>
         </Card>
       )}

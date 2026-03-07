@@ -4,7 +4,12 @@
  * React Query hooks for performance monitoring and tuning endpoints
  */
 
-import { useQuery, useMutation, UseQueryOptions, UseMutationOptions } from "@tanstack/react-query";
+import {
+  useQuery,
+  useMutation,
+  UseQueryOptions,
+  UseMutationOptions,
+} from "@tanstack/react-query";
 import { apiClient } from "@/api/client/axios";
 
 // API Response Types
@@ -164,8 +169,11 @@ export interface StorageCompressionResult {
 export interface DiffConflict {
   path: string;
   conflict_type: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   base_value: any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   local_value: any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   remote_value: any;
 }
 
@@ -187,6 +195,7 @@ export interface ThreeWayDiff {
 export interface BatchOperationError {
   item_index: number;
   error_message: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   item_data: any;
 }
 
@@ -204,6 +213,7 @@ export interface BatchOperationResult {
 export interface QueryTuningRequest {
   query: string;
   context?: {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     table_schemas?: Record<string, any>;
     expected_result_size?: number;
   };
@@ -216,14 +226,18 @@ export interface MaterializedViewRequest {
 }
 
 export interface ThreeWayDiffRequest {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   base: Record<string, any>;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   local: Record<string, any>;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   remote: Record<string, any>;
   enable_semantic_analysis?: boolean;
 }
 
 export interface BatchOperationRequest {
   operation_type: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   entity_data: Array<Record<string, any>>;
   author_id: string;
   options?: {
@@ -292,22 +306,30 @@ export function useSystemHealth(options?: UseQueryOptions<SystemHealth>) {
   });
 }
 
-export function usePerformanceDashboard(options?: UseQueryOptions<DashboardData>) {
+export function usePerformanceDashboard(
+  options?: UseQueryOptions<DashboardData>,
+) {
   return useQuery<DashboardData>({
     queryKey: performanceKeys.dashboard(),
     queryFn: async () => {
-      const response = await apiClient.get(`/api/optimization/performance/dashboard`);
+      const response = await apiClient.get(
+        `/api/optimization/performance/dashboard`,
+      );
       return response.data;
     },
     ...options,
   });
 }
 
-export function usePerformanceMetrics(options?: UseQueryOptions<PerformanceMetrics>) {
+export function usePerformanceMetrics(
+  options?: UseQueryOptions<PerformanceMetrics>,
+) {
   return useQuery<PerformanceMetrics>({
     queryKey: performanceKeys.metrics(),
     queryFn: async () => {
-      const response = await apiClient.get(`/api/optimization/performance/metrics`);
+      const response = await apiClient.get(
+        `/api/optimization/performance/metrics`,
+      );
       return response.data;
     },
     ...options,
@@ -316,14 +338,17 @@ export function usePerformanceMetrics(options?: UseQueryOptions<PerformanceMetri
 
 export function usePerformanceTrends(
   windowHours: number = 24,
-  options?: UseQueryOptions<PerformanceTrends>
+  options?: UseQueryOptions<PerformanceTrends>,
 ) {
   return useQuery<PerformanceTrends>({
     queryKey: performanceKeys.trends(windowHours),
     queryFn: async () => {
-      const response = await apiClient.get(`/api/optimization/performance/trends`, {
-        params: { window_hours: windowHours },
-      });
+      const response = await apiClient.get(
+        `/api/optimization/performance/trends`,
+        {
+          params: { window_hours: windowHours },
+        },
+      );
       return response.data;
     },
     ...options,
@@ -374,7 +399,9 @@ export function useBatchStats(options?: UseQueryOptions<BatchStats>) {
   });
 }
 
-export function usePerformanceConfig(options?: UseQueryOptions<PerformanceConfig>) {
+export function usePerformanceConfig(
+  options?: UseQueryOptions<PerformanceConfig>,
+) {
   return useQuery<PerformanceConfig>({
     queryKey: performanceKeys.config(),
     queryFn: async () => {
@@ -387,10 +414,16 @@ export function usePerformanceConfig(options?: UseQueryOptions<PerformanceConfig
 
 // Mutation Hooks
 
-export function useAutoTunePerformance(options?: UseMutationOptions<any, Error, void>) {
+export function useAutoTunePerformance(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  options?: UseMutationOptions<any, Error, void>,
+) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return useMutation<any, Error, void>({
     mutationFn: async () => {
-      const response = await apiClient.post(`/api/optimization/performance/auto-optimize`);
+      const response = await apiClient.post(
+        `/api/optimization/performance/auto-optimize`,
+      );
       return response.data;
     },
     ...options,
@@ -398,43 +431,59 @@ export function useAutoTunePerformance(options?: UseMutationOptions<any, Error, 
 }
 
 export function useTuneQuery(
-  options?: UseMutationOptions<QueryTuningResult, Error, QueryTuningRequest>
+  options?: UseMutationOptions<QueryTuningResult, Error, QueryTuningRequest>,
 ) {
   return useMutation<QueryTuningResult, Error, QueryTuningRequest>({
     mutationFn: async (request) => {
-      const response = await apiClient.post(`/api/optimization/query/optimize`, request);
+      const response = await apiClient.post(
+        `/api/optimization/query/optimize`,
+        request,
+      );
       return response.data;
     },
     ...options,
   });
 }
-
 export function useCreateMaterializedView(
-  options?: UseMutationOptions<any, Error, MaterializedViewRequest>
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  options?: UseMutationOptions<any, Error, MaterializedViewRequest>,
 ) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return useMutation<any, Error, MaterializedViewRequest>({
     mutationFn: async (request) => {
-      const response = await apiClient.post(`/api/optimization/query/materialized-view`, request);
+      const response = await apiClient.post(
+        `/api/optimization/query/materialized-view`,
+        request,
+      );
       return response.data;
     },
     ...options,
   });
 }
 
-export function useCompressStorage(options?: UseMutationOptions<StorageCompressionResult, Error, void>) {
+export function useCompressStorage(
+  options?: UseMutationOptions<StorageCompressionResult, Error, void>,
+) {
   return useMutation<StorageCompressionResult, Error, void>({
     mutationFn: async () => {
-      const response = await apiClient.post(`/api/optimization/storage/optimize`);
+      const response = await apiClient.post(
+        `/api/optimization/storage/optimize`,
+      );
       return response.data;
     },
     ...options,
   });
 }
-
-export function useSetupLifecyclePolicies(options?: UseMutationOptions<any, Error, void>) {
+export function useSetupLifecyclePolicies(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  options?: UseMutationOptions<any, Error, void>,
+) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return useMutation<any, Error, void>({
     mutationFn: async () => {
-      const response = await apiClient.post(`/api/optimization/storage/lifecycle-policies`);
+      const response = await apiClient.post(
+        `/api/optimization/storage/lifecycle-policies`,
+      );
       return response.data;
     },
     ...options,
@@ -442,11 +491,14 @@ export function useSetupLifecyclePolicies(options?: UseMutationOptions<any, Erro
 }
 
 export function useThreeWayDiff(
-  options?: UseMutationOptions<ThreeWayDiff, Error, ThreeWayDiffRequest>
+  options?: UseMutationOptions<ThreeWayDiff, Error, ThreeWayDiffRequest>,
 ) {
   return useMutation<ThreeWayDiff, Error, ThreeWayDiffRequest>({
     mutationFn: async (request) => {
-      const response = await apiClient.post(`/api/optimization/diff/three-way`, request);
+      const response = await apiClient.post(
+        `/api/optimization/diff/three-way`,
+        request,
+      );
       return response.data;
     },
     ...options,
@@ -454,11 +506,18 @@ export function useThreeWayDiff(
 }
 
 export function useBatchOperation(
-  options?: UseMutationOptions<BatchOperationResult, Error, BatchOperationRequest>
+  options?: UseMutationOptions<
+    BatchOperationResult,
+    Error,
+    BatchOperationRequest
+  >,
 ) {
   return useMutation<BatchOperationResult, Error, BatchOperationRequest>({
     mutationFn: async (request) => {
-      const response = await apiClient.post(`/api/optimization/batch/process`, request);
+      const response = await apiClient.post(
+        `/api/optimization/batch/process`,
+        request,
+      );
       return response.data;
     },
     ...options,
@@ -466,8 +525,10 @@ export function useBatchOperation(
 }
 
 export function useUpdatePerformanceConfig(
-  options?: UseMutationOptions<any, Error, PerformanceConfig>
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  options?: UseMutationOptions<any, Error, PerformanceConfig>,
 ) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return useMutation<any, Error, PerformanceConfig>({
     mutationFn: async (config) => {
       const response = await apiClient.put(`/api/optimization/config`, config);

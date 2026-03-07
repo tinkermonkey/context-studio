@@ -87,7 +87,8 @@ export interface LayersTableProps {
   columnVisibility?: Record<string, boolean>;
 }
 
-const LayersTable = React.forwardRef<any, LayersTableProps>((props, ref) => {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const LayersTable = React.forwardRef<any, LayersTableProps>((props) => {
   const { data: layers, isLoading, error, refetch } = useLayerNodes();
   const deleteLayer = useDeleteStructureNode();
 
@@ -120,7 +121,9 @@ const LayersTable = React.forwardRef<any, LayersTableProps>((props, ref) => {
       typeName="Layer"
       getId={(item) => item.id}
       columnVisibility={columnVisibility}
-      linkGenerator={(layer: StructureNode) => `/app/structure_nodes/${layer.id}`}
+      linkGenerator={(layer: StructureNode) =>
+        `/app/structure_nodes/${layer.id}`
+      }
     />
   );
 });

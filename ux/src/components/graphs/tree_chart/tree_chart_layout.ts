@@ -80,6 +80,7 @@ const textWidthCache = new SvgTextWidthCache();
 
 // Text height measurement cache to avoid recalculating heights for the same text
 // Font changes will require a complete chart redraw, so we only cache by text content
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 class HtmlTextHeightCache {
   private cache = new Map<string, number>();
   private textOptions = extractFontPropertiesFromStyles(
@@ -191,7 +192,10 @@ export function calculateLayout(
         : defaultExpandState;
 
     // Check if this node is hovered and calculate extra spacing
-    const isHovered = !!(hoveredNodeId && (node.id === hoveredNodeId || node.title === hoveredNodeId));
+    const isHovered = !!(
+      hoveredNodeId &&
+      (node.id === hoveredNodeId || node.title === hoveredNodeId)
+    );
     const extraVerticalSpacing = isHovered ? 16 : 0; // Total extra spacing for hovered node
 
     // If hovered, move the node down by half the extra spacing to center it in the added space
@@ -225,18 +229,21 @@ export function calculateLayout(
     // Otherwise, just use the node's Y position + spacing
     let currentBottomY: number;
 
-    if (node.definition && node.definitionHeight && node.definitionHeight > ChartStyles.nodeLabel.height) {
+    if (
+      node.definition &&
+      node.definitionHeight &&
+      node.definitionHeight > ChartStyles.nodeLabel.height
+    ) {
       // Definition is displayed and extends below the node label
       // Definition starts at nodeY - nodeLabel.height and extends downward by definitionHeight
       const definitionBottom =
-        y -
-        ChartStyles.nodeLabel.height +
-        node.definitionHeight;
-      currentBottomY = definitionBottom + config.spacing.vertical + (extraVerticalSpacing / 2);
+        y - ChartStyles.nodeLabel.height + node.definitionHeight;
+      currentBottomY =
+        definitionBottom + config.spacing.vertical + extraVerticalSpacing / 2;
     } else {
       // No definition or definition doesn't extend beyond label height
       // Next element should start after the node label + spacing
-      currentBottomY = y + config.spacing.vertical + (extraVerticalSpacing / 2);
+      currentBottomY = y + config.spacing.vertical + extraVerticalSpacing / 2;
     }
 
     // Only process children if node is expanded
@@ -283,7 +290,6 @@ export function calculateLayout(
     maxX + maxTextWidth + textPadding + (config.margins.right || 0);
 
   // Define minimum width to ensure chart remains usable
-  const minimumWidth = 300;
 
   // Use maxWidth constraint if provided, otherwise use natural width
   let finalWidth = naturalWidth;

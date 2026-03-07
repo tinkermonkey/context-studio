@@ -1,6 +1,0 @@
-system-administrators:
-  id: system-administrators
-  name: System Administrators
-  type: internal
-  documentation: System administrators managing Context Studio deployments and
-    ensuring data integrity and performance

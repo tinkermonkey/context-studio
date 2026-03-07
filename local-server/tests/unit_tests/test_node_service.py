@@ -16,12 +16,12 @@ sys.path.insert(
     0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 )
 
-from services.node_service import NodeService
-from database.models import StructureNode
-from database.enums import NodeType
-from graph.graph_service import GraphService
-from services.exceptions import InvalidHierarchyError, CircularReferenceError, NotFoundError
-from api.models.structure_nodes import StructureNodeAttribute, ResolvedAttribute
+from services.node_service import NodeService  # noqa: E402
+from database.models import StructureNode  # noqa: E402
+from database.enums import NodeType  # noqa: E402
+from graph.graph_service import GraphService  # noqa: E402
+from services.exceptions import InvalidHierarchyError, CircularReferenceError, NotFoundError  # noqa: E402, E501
+from api.models.structure_nodes import StructureNodeAttribute  # noqa: E402
 
 
 @pytest.fixture
@@ -283,7 +283,7 @@ class TestNodeServiceCRUD:
 
         # Test update
         update_data = {"title": "New Title"}
-        result = node_service.update_node(node_id, update_data)
+        node_service.update_node(node_id, update_data)
 
         # Verify updates
         assert existing_node.title == "New Title"
@@ -909,7 +909,7 @@ class TestNodeAttributeOperations:
         ]
 
         # Set attributes
-        result = node_service.set_node_attributes(node_id, attributes)
+        node_service.set_node_attributes(node_id, attributes)
 
         # Verify
         assert node.version == 2
@@ -930,7 +930,7 @@ class TestNodeAttributeOperations:
         mock_db.commit = Mock()
         mock_db.refresh = Mock()
 
-        result = node_service.set_node_attributes(node_id, [])
+        node_service.set_node_attributes(node_id, [])
 
         assert node.attributes == "[]"
         assert mock_db.commit.called
@@ -996,7 +996,7 @@ class TestNodeAttributeOperations:
         mock_db.commit = Mock()
         mock_db.refresh = Mock()
 
-        result = node_service.remove_node_attribute(node_id, "category")
+        node_service.remove_node_attribute(node_id, "category")
 
         # Verify category was removed
         remaining = node_service._parse_attributes_json(node.attributes)
@@ -1017,7 +1017,7 @@ class TestNodeAttributeOperations:
         mock_db.commit = Mock()
         mock_db.refresh = Mock()
 
-        result = node_service.remove_node_attribute(node_id, "nonexistent")
+        node_service.remove_node_attribute(node_id, "nonexistent")
 
         # Attributes should remain unchanged
         remaining = node_service._parse_attributes_json(node.attributes)
@@ -1037,7 +1037,7 @@ class TestNodeAttributeOperations:
         mock_db.commit = Mock()
         mock_db.refresh = Mock()
 
-        result = node_service.remove_node_attribute(node_id, "test")
+        node_service.remove_node_attribute(node_id, "test")
 
         remaining = node_service._parse_attributes_json(node.attributes)
         assert len(remaining) == 0

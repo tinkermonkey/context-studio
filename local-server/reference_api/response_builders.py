@@ -3,9 +3,8 @@
 This module provides consistent response construction for all reference service methods.
 """
 
-from typing import List, Dict, Optional, Any
+from typing import List, Dict, Optional
 import time
-from datetime import datetime, UTC
 
 from .models import SearchNode, SearchLink, SourceType, MultiSourceSearchResponse
 from utils.logger import get_logger

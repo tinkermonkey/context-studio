@@ -1,4 +1,4 @@
-import { LayoutConfig } from "@/components/graphs/tree_chart/tree_data"
+import { LayoutConfig } from "@/components/graphs/tree_chart/tree_data";
 import { ChartStyles } from "./tree_chart_styles";
 
 const treeTrunkCurveRadius = 14;
@@ -49,12 +49,12 @@ export const createMenuNodeBackgroundPath = (
   labelHeight: number,
   childIndex: number = 0,
   config: LayoutConfig,
-  styles: any,
+
+  styles: any, // eslint-disable-line @typescript-eslint/no-explicit-any
 ): string => {
-  const bgWidth = labelWidth + styles.branchLine.strokeWidth;
   const halfStroke = styles.branchLine.strokeWidth / 2;
   if (childIndex === 0) {
-    return `M ${x - (treeTrunkCurveRadius + halfStroke) - 3} ${y - labelHeight -4}
+    return `M ${x - (treeTrunkCurveRadius + halfStroke) - 3} ${y - labelHeight - 4}
           h ${labelWidth + 5 + (treeTrunkCurveRadius - 2)}
           v ${labelHeight + 3}
           h ${-(labelWidth + 3.5)}
@@ -154,7 +154,7 @@ export interface TextMeasurementOptions {
 
 // Extract font properties from chart styles with better parsing
 export function extractFontPropertiesFromStyles(
-  styleObject: any,
+  styleObject: any, // eslint-disable-line @typescript-eslint/no-explicit-any
 ): TextMeasurementOptions {
   // Parse the font shorthand property if it exists
   // Font shorthand format: [font-style] [font-variant] [font-weight] [font-size/line-height] [font-family]
@@ -271,7 +271,9 @@ export function measureSvgTextWidth(
 
   // Validate measurement - warn if we got zero for non-empty text
   if (width === 0 && text.length > 0) {
-    console.warn(`[NlpConceptChart] Measurement returned zero width for text: "${text.substring(0, 50)}..."`);
+    console.warn(
+      `[NlpConceptChart] Measurement returned zero width for text: "${text.substring(0, 50)}..."`,
+    );
     // Return a fallback based on character count
     return text.length * 8; // Approximate 8px per character
   }
@@ -287,7 +289,9 @@ export function measureHtmlTextHeight(
 ): number {
   if (!text) return 0;
   if (width <= 0) {
-    console.warn(`[NlpConceptChart] Invalid width (${width}) for text height measurement`);
+    console.warn(
+      `[NlpConceptChart] Invalid width (${width}) for text height measurement`,
+    );
     return 0;
   }
 
@@ -332,12 +336,13 @@ export function measureHtmlTextHeight(
   measurementHtml.style.maxWidth = `${width}px`; // Enforce max width
 
   // Get the bounding box height
-  const bbox = measurementHtml.getBoundingClientRect();
-  const height = Math.ceil(bbox.height);
+  const height = Math.ceil(measurementHtml.scrollHeight);
 
   // Validate measurement - warn if we got zero for non-empty text
   if (height === 0 && text.length > 0) {
-    console.warn(`[NlpConceptChart] Measurement returned zero height for text: "${text.substring(0, 50)}..." (width: ${width}px)`);
+    console.warn(
+      `[NlpConceptChart] Measurement returned zero height for text: "${text.substring(0, 50)}..." (width: ${width}px)`,
+    );
     // Return a fallback minimum height
     return 20; // Approximate minimum single-line height
   }

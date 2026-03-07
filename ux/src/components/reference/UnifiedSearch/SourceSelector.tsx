@@ -13,23 +13,28 @@ interface SourceSelectorProps {
   selectedSources: SourceType[];
   onSourcesChange: (sources: SourceType[]) => void;
   disabled?: boolean;
-  'data-testid'?: string;
+  "data-testid"?: string;
 }
 
-const ALL_SOURCES: SourceType[] = ["conceptnet", "dbpedia", "wikidata", "schema_org"];
+const ALL_SOURCES: SourceType[] = [
+  "conceptnet",
+  "dbpedia",
+  "wikidata",
+  "schema_org",
+];
 
 export const SourceSelector: React.FC<SourceSelectorProps> = ({
   selectedSources,
   onSourcesChange,
   disabled = false,
-  'data-testid': dataTestId,
+  "data-testid": dataTestId,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   const handleSourceToggle = (source: SourceType) => {
     if (selectedSources.includes(source)) {
-      onSourcesChange(selectedSources.filter(s => s !== source));
+      onSourcesChange(selectedSources.filter((s) => s !== source));
     } else {
       onSourcesChange([...selectedSources, source]);
     }
@@ -46,14 +51,17 @@ export const SourceSelector: React.FC<SourceSelectorProps> = ({
   // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
         setIsOpen(false);
       }
     };
 
-    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener("mousedown", handleClickOutside);
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener("mousedown", handleClickOutside);
     };
   }, []);
 
@@ -81,14 +89,18 @@ export const SourceSelector: React.FC<SourceSelectorProps> = ({
       >
         <Filter className="h-4 w-4" />
         {getButtonText()}
-        <ChevronDown className={`h-4 w-4 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+        <ChevronDown
+          className={`h-4 w-4 transition-transform ${isOpen ? "rotate-180" : ""}`}
+        />
       </Button>
 
       {isOpen && (
-        <div className="absolute top-full left-0 mt-1 w-64 bg-white border border-gray-200 rounded-lg shadow-lg z-50">
-          <div className="p-4 space-y-3">
+        <div className="absolute top-full left-0 z-50 mt-1 w-64 rounded-lg border border-gray-200 bg-white shadow-lg">
+          <div className="space-y-3 p-4">
             <div className="flex items-center justify-between">
-              <h3 className="text-sm font-medium text-gray-900">Reference Sources</h3>
+              <h3 className="text-sm font-medium text-gray-900">
+                Reference Sources
+              </h3>
               <button
                 onClick={handleSelectAll}
                 disabled={disabled}
@@ -99,7 +111,9 @@ export const SourceSelector: React.FC<SourceSelectorProps> = ({
             </div>
 
             {noneSelected && (
-              <p className="text-xs text-red-600">Please select at least one source</p>
+              <p className="text-xs text-red-600">
+                Please select at least one source
+              </p>
             )}
 
             <div className="space-y-2">
@@ -117,10 +131,10 @@ export const SourceSelector: React.FC<SourceSelectorProps> = ({
                     />
                     <Label
                       htmlFor={`source-${source}`}
-                      className="flex items-center gap-2 text-sm cursor-pointer"
+                      className="flex cursor-pointer items-center gap-2 text-sm"
                     >
                       <span
-                        className={`inline-block w-2 h-2 rounded-full bg-${metadata.color}-500`}
+                        className={`inline-block h-2 w-2 rounded-full bg-${metadata.color}-500`}
                       />
                       {metadata.label}
                     </Label>
@@ -129,7 +143,7 @@ export const SourceSelector: React.FC<SourceSelectorProps> = ({
               })}
             </div>
 
-            <div className="text-xs text-gray-500 border-t border-gray-100 pt-2">
+            <div className="border-t border-gray-100 pt-2 text-xs text-gray-500">
               {selectedSources.length} of {ALL_SOURCES.length} sources selected
             </div>
           </div>

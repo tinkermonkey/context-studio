@@ -1,18 +1,25 @@
-import { useQuery, useMutation, useQueryClient, UseQueryOptions } from "@tanstack/react-query";
+import {
+  useQuery,
+  useMutation,
+  useQueryClient,
+  UseQueryOptions,
+} from "@tanstack/react-query";
 import {
   configurationService,
   type ConfigurationResponse,
-  type ConfigurationData,
   type ReferenceSourcesResponse,
   type ReferenceSourcesStatusResponse,
-  type ReferenceSource
+  type ReferenceSource,
 } from "@/api/services/configuration";
 
 /**
  * Hook to get full configuration
  */
 export function useConfiguration(
-  options?: Omit<UseQueryOptions<ConfigurationResponse, Error>, 'queryKey' | 'queryFn'>
+  options?: Omit<
+    UseQueryOptions<ConfigurationResponse, Error>,
+    "queryKey" | "queryFn"
+  >,
 ) {
   return useQuery({
     queryKey: ["configuration"],
@@ -28,11 +35,14 @@ export function useConfiguration(
  */
 export function useConfigurationValue(
   path: string | undefined,
-  options?: Omit<UseQueryOptions<any, Error>, 'queryKey' | 'queryFn'>
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  options?: Omit<UseQueryOptions<any, Error>, "queryKey" | "queryFn">,
 ) {
   return useQuery({
     queryKey: ["configurationValue", path],
-    queryFn: path ? () => configurationService.getConfigurationValue(path) : undefined,
+    queryFn: path
+      ? () => configurationService.getConfigurationValue(path)
+      : undefined,
     enabled: Boolean(path),
     staleTime: 2 * 60 * 1000, // 2 minutes
     gcTime: 5 * 60 * 1000, // 5 minutes
@@ -44,7 +54,8 @@ export function useConfigurationValue(
  * Hook to get configuration schema
  */
 export function useConfigurationSchema(
-  options?: Omit<UseQueryOptions<any, Error>, 'queryKey' | 'queryFn'>
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  options?: Omit<UseQueryOptions<any, Error>, "queryKey" | "queryFn">,
 ) {
   return useQuery({
     queryKey: ["configurationSchema"],
@@ -59,7 +70,10 @@ export function useConfigurationSchema(
  * Hook to validate configuration
  */
 export function useValidateConfiguration(
-  options?: Omit<UseQueryOptions<{ valid: boolean; errors: string[] }, Error>, 'queryKey' | 'queryFn'>
+  options?: Omit<
+    UseQueryOptions<{ valid: boolean; errors: string[] }, Error>,
+    "queryKey" | "queryFn"
+  >,
 ) {
   return useQuery({
     queryKey: ["validateConfiguration"],
@@ -74,7 +88,10 @@ export function useValidateConfiguration(
  * Hook to get reference sources configuration
  */
 export function useReferenceSourcesConfig(
-  options?: Omit<UseQueryOptions<ReferenceSourcesResponse, Error>, 'queryKey' | 'queryFn'>
+  options?: Omit<
+    UseQueryOptions<ReferenceSourcesResponse, Error>,
+    "queryKey" | "queryFn"
+  >,
 ) {
   return useQuery({
     queryKey: ["referenceSourcesConfig"],
@@ -89,7 +106,10 @@ export function useReferenceSourcesConfig(
  * Hook to get reference sources status
  */
 export function useReferenceSourcesStatus(
-  options?: Omit<UseQueryOptions<ReferenceSourcesStatusResponse, Error>, 'queryKey' | 'queryFn'>
+  options?: Omit<
+    UseQueryOptions<ReferenceSourcesStatusResponse, Error>,
+    "queryKey" | "queryFn"
+  >,
 ) {
   return useQuery({
     queryKey: ["referenceSourcesStatus"],
@@ -106,11 +126,16 @@ export function useReferenceSourcesStatus(
  */
 export function useReferenceSourceConfig(
   sourceName: string | undefined,
-  options?: Omit<UseQueryOptions<ReferenceSource, Error>, 'queryKey' | 'queryFn'>
+  options?: Omit<
+    UseQueryOptions<ReferenceSource, Error>,
+    "queryKey" | "queryFn"
+  >,
 ) {
   return useQuery({
     queryKey: ["referenceSourceConfig", sourceName],
-    queryFn: sourceName ? () => configurationService.getReferenceSourceConfig(sourceName) : undefined,
+    queryFn: sourceName
+      ? () => configurationService.getReferenceSourceConfig(sourceName)
+      : undefined,
     enabled: Boolean(sourceName),
     staleTime: 2 * 60 * 1000, // 2 minutes
     gcTime: 5 * 60 * 1000, // 5 minutes
@@ -125,8 +150,9 @@ export function useUpdateConfigurationValue() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ path, value }: { path: string; value: any }) =>
-      configurationService.updateConfigurationValue(path, value),
+    mutationFn: (
+      { path, value }: { path: string; value: any }, // eslint-disable-line @typescript-eslint/no-explicit-any
+    ) => configurationService.updateConfigurationValue(path, value),
     onSuccess: (_, { path }) => {
       // Invalidate related queries
       queryClient.invalidateQueries({ queryKey: ["configuration"] });
@@ -143,12 +169,23 @@ export function useUpdateReferenceSourceConfig() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ sourceName, path, value }: { sourceName: string; path: string; value: any }) =>
+    mutationFn: ({
+      sourceName,
+      path,
+      value,
+    }: {
+      sourceName: string;
+      path: string;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      value: any;
+    }) =>
       configurationService.updateReferenceSourceConfig(sourceName, path, value),
     onSuccess: (_, { sourceName }) => {
       // Invalidate related queries
       queryClient.invalidateQueries({ queryKey: ["referenceSourcesConfig"] });
-      queryClient.invalidateQueries({ queryKey: ["referenceSourceConfig", sourceName] });
+      queryClient.invalidateQueries({
+        queryKey: ["referenceSourceConfig", sourceName],
+      });
       queryClient.invalidateQueries({ queryKey: ["referenceSourcesStatus"] });
       queryClient.invalidateQueries({ queryKey: ["validateConfiguration"] });
     },

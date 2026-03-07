@@ -5,11 +5,11 @@ This module defines the SQLAlchemy models for storing reference nodes and links
 from external knowledge sources (e.g., Schema.org, WikiData).
 """
 
-from sqlalchemy import Column, String, Integer, ForeignKey, UniqueConstraint, LargeBinary, Text
+from typing import Any
+from sqlalchemy import Column, String, ForeignKey, UniqueConstraint, LargeBinary, Text
 from sqlalchemy.orm import relationship, declarative_base
-from typing import Dict, Any
 
-Base = declarative_base()
+Base: Any = declarative_base()
 
 
 class ReferenceNode(Base):

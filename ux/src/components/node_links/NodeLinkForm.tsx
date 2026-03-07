@@ -7,9 +7,13 @@
 import React, { useState } from "react";
 import { useForm } from "@tanstack/react-form";
 import { Button, Alert, Label, Radio } from "flowbite-react";
-import { Info, ArrowRight, ArrowLeft } from "lucide-react";
+import { Info, ArrowRight } from "lucide-react";
 
-import { StructureNode, StructureNodeLink, StructureNodeLinkCreate } from "@/api/types/structureNodes";
+import {
+  StructureNode,
+  StructureNodeLink,
+  StructureNodeLinkCreate,
+} from "@/api/types/structureNodes";
 import { useCreateNodeLink } from "@/api/hooks/node_links/useNodeLinkMutations";
 import { PredicateSelector } from "@/components/node_selectors/predicate_selector";
 import { StructureNodeSelector } from "@/components/node_selectors/structure_node_selector";
@@ -70,13 +74,15 @@ export const NodeLinkForm: React.FC<NodeLinkFormProps> = ({
           return (
             link.source_node_id === currentNode.id &&
             link.target_node_id === value.targetNodeId &&
-            (link.predicate === value.predicate || link.predicate_id === value.predicateId)
+            (link.predicate === value.predicate ||
+              link.predicate_id === value.predicateId)
           );
         } else {
           return (
             link.source_node_id === value.targetNodeId &&
             link.target_node_id === currentNode.id &&
-            (link.predicate === value.predicate || link.predicate_id === value.predicateId)
+            (link.predicate === value.predicate ||
+              link.predicate_id === value.predicateId)
           );
         }
       });
@@ -97,7 +103,10 @@ export const NodeLinkForm: React.FC<NodeLinkFormProps> = ({
         };
 
         await createLinkMutation.mutateAsync(linkData);
-      } catch (error: any) {
+      } catch (
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        error: any
+      ) {
         let message = "An error occurred";
         const detail =
           error?.response?.data?.detail ||
@@ -106,6 +115,7 @@ export const NodeLinkForm: React.FC<NodeLinkFormProps> = ({
           error?.detail;
 
         if (Array.isArray(detail)) {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           message = detail.map((d: any) => d.msg).join("; ");
         } else if (error?.message) {
           message = error.message;
@@ -119,13 +129,14 @@ export const NodeLinkForm: React.FC<NodeLinkFormProps> = ({
   });
 
   return (
-    <div className="space-y-4 border rounded-lg p-4 bg-gray-50">
+    <div className="space-y-4 rounded-lg border bg-gray-50 p-4">
       {/* Context Info */}
       <div className="rounded-lg bg-blue-50 p-3 dark:bg-blue-900/20">
         <div className="flex items-center gap-2 text-sm text-blue-700 dark:text-blue-300">
           <Info className="h-4 w-4" />
           <span>
-            Creating link for: <strong>{currentNode.title}</strong> ({currentNode.node_type})
+            Creating link for: <strong>{currentNode.title}</strong> (
+            {currentNode.node_type})
           </span>
         </div>
       </div>
@@ -149,7 +160,10 @@ export const NodeLinkForm: React.FC<NodeLinkFormProps> = ({
                 checked={direction === "outgoing"}
                 onChange={() => setDirection("outgoing")}
               />
-              <Label htmlFor="direction-outgoing" className="flex items-center gap-2">
+              <Label
+                htmlFor="direction-outgoing"
+                className="flex items-center gap-2"
+              >
                 <span>{currentNode.title}</span>
                 <ArrowRight className="h-4 w-4" />
                 <span>Target</span>
@@ -163,7 +177,10 @@ export const NodeLinkForm: React.FC<NodeLinkFormProps> = ({
                 checked={direction === "incoming"}
                 onChange={() => setDirection("incoming")}
               />
-              <Label htmlFor="direction-incoming" className="flex items-center gap-2">
+              <Label
+                htmlFor="direction-incoming"
+                className="flex items-center gap-2"
+              >
                 <span>Target</span>
                 <ArrowRight className="h-4 w-4" />
                 <span>{currentNode.title}</span>
@@ -176,7 +193,10 @@ export const NodeLinkForm: React.FC<NodeLinkFormProps> = ({
         <form.Field name="predicateId">
           {(field) => (
             <div>
-              <Label htmlFor="link-predicate" className="mb-1 block font-medium">
+              <Label
+                htmlFor="link-predicate"
+                className="mb-1 block font-medium"
+              >
                 Predicate *
               </Label>
               <PredicateSelector
@@ -226,7 +246,7 @@ export const NodeLinkForm: React.FC<NodeLinkFormProps> = ({
         )}
 
         {/* Action Buttons */}
-        <div className="flex gap-2 justify-end">
+        <div className="flex justify-end gap-2">
           <Button
             type="button"
             color="gray"

@@ -6,7 +6,7 @@ for the Context Studio using both SPARQL (RDFLib) and NetworkX.
 
 Components:
 - sparql_service: SPARQL querying with RDFLib (temporarily disabled for Great Normalization)
-- network: Graph analytics with NetworkX  
+- network: Graph analytics with NetworkX
 - graph_service: Combined service interface
 """
 

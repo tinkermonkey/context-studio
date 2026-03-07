@@ -150,9 +150,7 @@ export const useSelectionTracking = (
     ) => {
       // Validate required parameters
       if (!executionId || !recordId || !suggestionField || !selectedContent) {
-        const error = new Error(
-          "Missing required parameters for selection tracking",
-        );
+        console.error("Missing required parameters for selection tracking");
 
         if (debug) {
           console.warn("Selection tracking aborted - missing parameters:", {
@@ -164,7 +162,9 @@ export const useSelectionTracking = (
         }
 
         statsRef.current.failedAttempts++;
-        onError?.(error);
+        onError?.(
+          new Error("Missing required parameters for selection tracking"),
+        );
         return;
       }
 
@@ -197,8 +197,6 @@ export const useSelectionTracking = (
         !request.suggestion_field ||
         !request.selected_content
       ) {
-        const error = new Error("Invalid selection request object");
-
         if (debug) {
           console.warn(
             "Selection tracking aborted - invalid request:",
@@ -207,7 +205,7 @@ export const useSelectionTracking = (
         }
 
         statsRef.current.failedAttempts++;
-        onError?.(error);
+        onError?.(new Error("Invalid selection tracking request"));
         return;
       }
 

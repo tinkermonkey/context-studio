@@ -8,9 +8,8 @@ import { useMutation, UseMutationOptions } from "@tanstack/react-query";
 import {
   nlpReferenceService,
   type DBpediaSparqlRequest,
-  type DBpediaSparqlResponse,
   type WikidataSparqlRequest,
-  type WikidataSparqlResponse,
+  type MultiSourceSearchResponse,
 } from "../../services/nlpReference";
 
 /**
@@ -18,7 +17,7 @@ import {
  */
 export const useDBpediaSparql = (
   options?: UseMutationOptions<
-    DBpediaSparqlResponse,
+    MultiSourceSearchResponse,
     Error,
     DBpediaSparqlRequest
   >,
@@ -35,7 +34,7 @@ export const useDBpediaSparql = (
  */
 export const useWikidataSparql = (
   options?: UseMutationOptions<
-    WikidataSparqlResponse,
+    MultiSourceSearchResponse,
     Error,
     WikidataSparqlRequest
   >,

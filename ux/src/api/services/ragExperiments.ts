@@ -10,28 +10,47 @@ import { ENDPOINTS } from "../config";
 import { components, operations } from "../client/types";
 
 // Type definitions from OpenAPI schema
-export type CreateTestParagraphRequest = components["schemas"]["CreateTestParagraphRequest"];
-export type UpdateTestParagraphRequest = components["schemas"]["UpdateTestParagraphRequest"];
-export type CreateAnnotationRequest = components["schemas"]["CreateAnnotationRequest"];
-export type RunPipelineTestRequest = components["schemas"]["RunPipelineTestRequest"];
-export type TestParagraphResponse = components["schemas"]["TestParagraphResponse"];
-export type TestParagraphListResponse = components["schemas"]["TestParagraphListResponse"];
+export type CreateTestParagraphRequest =
+  components["schemas"]["CreateTestParagraphRequest"];
+export type UpdateTestParagraphRequest =
+  components["schemas"]["UpdateTestParagraphRequest"];
+export type CreateAnnotationRequest =
+  components["schemas"]["CreateAnnotationRequest"];
+export type RunPipelineTestRequest =
+  components["schemas"]["RunPipelineTestRequest"];
+export type TestParagraphResponse =
+  components["schemas"]["TestParagraphResponse"];
+export type TestParagraphListResponse =
+  components["schemas"]["TestParagraphListResponse"];
 export type AnnotationResponse = components["schemas"]["AnnotationResponse"];
-export type RunPipelineTestResponse = components["schemas"]["RunPipelineTestResponse"];
-export type PipelineRunResultResponse = components["schemas"]["PipelineRunResultResponse"];
-export type PipelineComparisonResponse = components["schemas"]["PipelineComparisonResponse"];
-export type PipelineRunDetailsResponse = components["schemas"]["PipelineRunDetailsResponse"];
-export type ScoringDetailsResponse = components["schemas"]["ScoringDetailsResponse"];
+export type RunPipelineTestResponse =
+  components["schemas"]["RunPipelineTestResponse"];
+export type PipelineRunResultResponse =
+  components["schemas"]["PipelineRunResultResponse"];
+export type PipelineComparisonResponse =
+  components["schemas"]["PipelineComparisonResponse"];
+export type PipelineRunDetailsResponse =
+  components["schemas"]["PipelineRunDetailsResponse"];
+export type ScoringDetailsResponse =
+  components["schemas"]["ScoringDetailsResponse"];
 
 // Infer response types from operations
-type CreateParagraphResponse = operations["create_test_paragraph_api_rag_experiments_paragraphs_post"]["responses"]["201"]["content"]["application/json"];
-type ListParagraphsResponse = operations["list_test_paragraphs_api_rag_experiments_paragraphs_get"]["responses"]["200"]["content"]["application/json"];
-type GetParagraphResponse = operations["get_test_paragraph_api_rag_experiments_paragraphs__paragraph_id__get"]["responses"]["200"]["content"]["application/json"];
-type UpdateParagraphResponse = operations["update_test_paragraph_api_rag_experiments_paragraphs__paragraph_id__put"]["responses"]["200"]["content"]["application/json"];
-type CreateAnnotationResponse = operations["create_annotation_api_rag_experiments_paragraphs__paragraph_id__annotations_post"]["responses"]["201"]["content"]["application/json"];
-type RunTestResponse = operations["run_pipeline_test_api_rag_experiments_run_post"]["responses"]["200"]["content"]["application/json"];
-type GetComparisonResponse = operations["get_pipeline_comparison_api_rag_experiments_results_paragraphs__paragraph_id__get"]["responses"]["200"]["content"]["application/json"];
-type GetRunDetailsResponse = operations["get_pipeline_run_details_api_rag_experiments_results_runs__run_id__get"]["responses"]["200"]["content"]["application/json"];
+type CreateParagraphResponse =
+  operations["create_test_paragraph_api_rag_experiments_paragraphs_post"]["responses"]["201"]["content"]["application/json"];
+type ListParagraphsResponse =
+  operations["list_test_paragraphs_api_rag_experiments_paragraphs_get"]["responses"]["200"]["content"]["application/json"];
+type GetParagraphResponse =
+  operations["get_test_paragraph_api_rag_experiments_paragraphs__paragraph_id__get"]["responses"]["200"]["content"]["application/json"];
+type UpdateParagraphResponse =
+  operations["update_test_paragraph_api_rag_experiments_paragraphs__paragraph_id__put"]["responses"]["200"]["content"]["application/json"];
+type CreateAnnotationResponse =
+  operations["create_annotation_api_rag_experiments_paragraphs__paragraph_id__annotations_post"]["responses"]["201"]["content"]["application/json"];
+type RunTestResponse =
+  operations["run_pipeline_test_api_rag_experiments_run_post"]["responses"]["200"]["content"]["application/json"];
+type GetComparisonResponse =
+  operations["get_pipeline_comparison_api_rag_experiments_results_paragraphs__paragraph_id__get"]["responses"]["200"]["content"]["application/json"];
+type GetRunDetailsResponse =
+  operations["get_pipeline_run_details_api_rag_experiments_results_runs__run_id__get"]["responses"]["200"]["content"]["application/json"];
 
 export interface ListParagraphsParams {
   limit?: number;
@@ -52,7 +71,7 @@ export class RAGExperimentsService extends BaseService {
    */
   async createTestParagraph(
     text: string,
-    notes?: string
+    notes?: string,
   ): Promise<CreateParagraphResponse> {
     const sanitizedText = this.sanitizeString(text, "text");
     const sanitizedNotes = notes
@@ -65,7 +84,7 @@ export class RAGExperimentsService extends BaseService {
         {
           text: sanitizedText,
           notes: sanitizedNotes,
-        } as CreateTestParagraphRequest
+        } as CreateTestParagraphRequest,
       );
       return response;
     }, "creating test paragraph");
@@ -77,14 +96,14 @@ export class RAGExperimentsService extends BaseService {
    * @returns Paginated list of test paragraphs with annotations
    */
   async listTestParagraphs(
-    params: ListParagraphsParams = {}
+    params: ListParagraphsParams = {},
   ): Promise<ListParagraphsResponse> {
     const { limit = 100, offset = 0 } = params;
 
     return this.withErrorContext(async () => {
       const response = await this.getResource<ListParagraphsResponse>(
         ENDPOINTS.RAG_EXPERIMENTS.PARAGRAPHS,
-        { limit, offset }
+        { limit, offset },
       );
       return response;
     }, "listing test paragraphs");
@@ -95,14 +114,12 @@ export class RAGExperimentsService extends BaseService {
    * @param paragraphId Test paragraph ID
    * @returns Test paragraph with all annotations
    */
-  async getTestParagraph(
-    paragraphId: string
-  ): Promise<GetParagraphResponse> {
+  async getTestParagraph(paragraphId: string): Promise<GetParagraphResponse> {
     this.validateRequired(paragraphId, "paragraphId");
 
     return this.withErrorContext(async () => {
       const response = await this.getResource<GetParagraphResponse>(
-        ENDPOINTS.RAG_EXPERIMENTS.PARAGRAPH(paragraphId)
+        ENDPOINTS.RAG_EXPERIMENTS.PARAGRAPH(paragraphId),
       );
       return response;
     }, "getting test paragraph");
@@ -118,13 +135,11 @@ export class RAGExperimentsService extends BaseService {
   async updateTestParagraph(
     paragraphId: string,
     text?: string,
-    notes?: string
+    notes?: string,
   ): Promise<UpdateParagraphResponse> {
     this.validateRequired(paragraphId, "paragraphId");
 
-    const sanitizedText = text
-      ? this.sanitizeString(text, "text")
-      : undefined;
+    const sanitizedText = text ? this.sanitizeString(text, "text") : undefined;
     const sanitizedNotes = notes
       ? this.sanitizeString(notes, "notes")
       : undefined;
@@ -135,7 +150,7 @@ export class RAGExperimentsService extends BaseService {
         {
           text: sanitizedText,
           notes: sanitizedNotes,
-        } as UpdateTestParagraphRequest
+        } as UpdateTestParagraphRequest,
       );
       return response;
     }, "updating test paragraph");
@@ -150,7 +165,7 @@ export class RAGExperimentsService extends BaseService {
 
     return this.withErrorContext(async () => {
       await this.deleteResource<void>(
-        ENDPOINTS.RAG_EXPERIMENTS.PARAGRAPH(paragraphId)
+        ENDPOINTS.RAG_EXPERIMENTS.PARAGRAPH(paragraphId),
       );
     }, "deleting test paragraph");
   }
@@ -167,7 +182,7 @@ export class RAGExperimentsService extends BaseService {
     paragraphId: string,
     startChar: number,
     endChar: number,
-    structureNodeId: string
+    structureNodeId: string,
   ): Promise<CreateAnnotationResponse> {
     this.validateRequired(paragraphId, "paragraphId");
     this.validateRequired(structureNodeId, "structureNodeId");
@@ -179,7 +194,7 @@ export class RAGExperimentsService extends BaseService {
           start_char: startChar,
           end_char: endChar,
           structure_node_id: structureNodeId,
-        } as CreateAnnotationRequest
+        } as CreateAnnotationRequest,
       );
       return response;
     }, "creating annotation");
@@ -194,7 +209,7 @@ export class RAGExperimentsService extends BaseService {
 
     return this.withErrorContext(async () => {
       await this.deleteResource<void>(
-        ENDPOINTS.RAG_EXPERIMENTS.DELETE_ANNOTATION(annotationId)
+        ENDPOINTS.RAG_EXPERIMENTS.DELETE_ANNOTATION(annotationId),
       );
     }, "deleting annotation");
   }
@@ -211,7 +226,7 @@ export class RAGExperimentsService extends BaseService {
     paragraphIds: string[],
     pipelineNames: string[],
     enableTrace: boolean = false,
-    enableLlmLayer?: boolean
+    enableLlmLayer?: boolean,
   ): Promise<RunTestResponse> {
     this.validateRequired(paragraphIds, "paragraphIds");
     this.validateRequired(pipelineNames, "pipelineNames");
@@ -224,7 +239,7 @@ export class RAGExperimentsService extends BaseService {
           pipeline_names: pipelineNames,
           enable_trace: enableTrace,
           enable_llm_layer: enableLlmLayer,
-        } as RunPipelineTestRequest
+        } as RunPipelineTestRequest,
       );
       return response;
     }, "running pipeline test");
@@ -236,7 +251,7 @@ export class RAGExperimentsService extends BaseService {
    * @returns Comparison of pipeline results sorted by F1 score
    */
   async getPipelineComparison(
-    params: GetComparisonParams
+    params: GetComparisonParams,
   ): Promise<GetComparisonResponse> {
     const { paragraphId, pipelineNames } = params;
     this.validateRequired(paragraphId, "paragraphId");
@@ -248,7 +263,7 @@ export class RAGExperimentsService extends BaseService {
 
       const response = await this.getResource<GetComparisonResponse>(
         ENDPOINTS.RAG_EXPERIMENTS.COMPARISON(paragraphId),
-        queryParams
+        queryParams,
       );
       return response;
     }, "getting pipeline comparison");
@@ -259,14 +274,12 @@ export class RAGExperimentsService extends BaseService {
    * @param runId Pipeline run ID
    * @returns Detailed run results with full extraction data
    */
-  async getPipelineRunDetails(
-    runId: string
-  ): Promise<GetRunDetailsResponse> {
+  async getPipelineRunDetails(runId: string): Promise<GetRunDetailsResponse> {
     this.validateRequired(runId, "runId");
 
     return this.withErrorContext(async () => {
       const response = await this.getResource<GetRunDetailsResponse>(
-        ENDPOINTS.RAG_EXPERIMENTS.RUN_DETAILS(runId)
+        ENDPOINTS.RAG_EXPERIMENTS.RUN_DETAILS(runId),
       );
       return response;
     }, "getting pipeline run details");

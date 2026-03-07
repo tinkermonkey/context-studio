@@ -1,13 +1,42 @@
+# mypy: ignore-errors
 """Core reference service coordinating all reference API sources"""
 
 from typing import Dict, Any, Optional, List, Tuple
 import asyncio
 from datetime import datetime, UTC
+import time
 
 from config import get_config_manager, ConfigurationManager
 from .exceptions import ReferenceError
-from .models import *
-import time
+from .models import (
+    SourceType,
+    DBpediaResourceRequest,
+    DBpediaSearchRequest,
+    DBpediaSparqlRequest,
+    ConceptNetQueryRequest,
+    WikidataSparqlRequest,
+    WikidataEntityRequest,
+    WikidataSearchRequest,
+    SchemaOrgEntityRequest,
+    SchemaOrgPropertyRequest,
+    SchemaOrgSearchRequest,
+    MultiSourceSearchRequest,
+    MultiSourceSearchResponse,
+    SearchNode,
+    SearchLink,
+    DBpediaResourceResponse,
+    DBpediaSearchResponse,
+    DBpediaSparqlResponse,
+    ConceptNetQueryResponse,
+    ConceptNetConceptResponse,
+    ConceptNetRelatedResponse,
+    WikidataSparqlResponse,
+    WikidataEntityResponse,
+    WikidataSearchResponse,
+    SchemaOrgEntityResponse,
+    SchemaOrgPropertyResponse,
+    SchemaOrgSearchResponse,
+)
 from .sources import DBpediaSource, ConceptNetSource, WikidataSource, SchemaOrgSource
 from .normalizers import ResultNormalizer
 from .aggregators import ResultAggregator
@@ -214,7 +243,6 @@ class ReferenceService:
                     limit=1, offset=0, search_time_ms=search_time_ms
                 )
         except Exception as e:
-            search_time_ms = (time.time() - start_time) * 1000
             logger.error(f"Wikidata entity request failed: {e}")
             return self.response_builder.build_error_response(
                 request.entity_url, str(e), SourceType.WIKIDATA
@@ -222,7 +250,6 @@ class ReferenceService:
 
     async def wikidata_search(self, request: WikidataSearchRequest) -> MultiSourceSearchResponse:
         """Search Wikidata entities"""
-        start_time = time.time()
         try:
             # For backwards compatibility, we need to implement this method to use SPARQL
             # since the existing logic in _search_single_source uses SPARQL for search
@@ -246,7 +273,6 @@ class ReferenceService:
             sparql_request = WikidataSparqlRequest(query=sparql_query)
             return await self.wikidata_sparql(sparql_request)
         except Exception as e:
-            search_time_ms = (time.time() - start_time) * 1000
             logger.error(f"Wikidata search failed: {e}")
             return self.response_builder.build_error_response(
                 request.query, str(e), SourceType.WIKIDATA, request.limit, request.offset

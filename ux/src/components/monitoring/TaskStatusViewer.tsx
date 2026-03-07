@@ -4,7 +4,18 @@
  * Reusable component for displaying background task status and progress
  */
 
-import { Card, Badge, Progress, Button, Table } from "flowbite-react";
+import {
+  Badge,
+  Button,
+  Card,
+  Progress,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeadCell,
+  TableRow,
+} from "flowbite-react";
 import {
   Clock,
   CheckCircle,
@@ -12,7 +23,6 @@ import {
   Loader2,
   Play,
   StopCircle,
-  Trash2,
 } from "lucide-react";
 import type { TaskStatus } from "@/api/hooks/backgroundTasks/useBackgroundTasks";
 
@@ -47,7 +57,9 @@ export function TaskStatusViewer({
     }
   };
 
-  const getStatusColor = (status: string): "success" | "warning" | "failure" | "info" | "gray" => {
+  const getStatusColor = (
+    status: string,
+  ): "success" | "warning" | "failure" | "info" | "gray" => {
     switch (status.toLowerCase()) {
       case "completed":
         return "success";
@@ -96,34 +108,36 @@ export function TaskStatusViewer({
     <Card className={className}>
       <div className="overflow-x-auto">
         <Table>
-          <Table.Head>
-            <Table.HeadCell>Task ID</Table.HeadCell>
-            <Table.HeadCell>Type</Table.HeadCell>
-            <Table.HeadCell>Status</Table.HeadCell>
-            <Table.HeadCell>Progress</Table.HeadCell>
-            <Table.HeadCell>Duration</Table.HeadCell>
-            <Table.HeadCell>Created</Table.HeadCell>
-            {showActions && <Table.HeadCell>Actions</Table.HeadCell>}
-          </Table.Head>
-          <Table.Body className="divide-y">
+          <TableHead>
+            <TableRow>
+              <TableHeadCell>Task ID</TableHeadCell>
+              <TableHeadCell>Type</TableHeadCell>
+              <TableHeadCell>Status</TableHeadCell>
+              <TableHeadCell>Progress</TableHeadCell>
+              <TableHeadCell>Duration</TableHeadCell>
+              <TableHeadCell>Created</TableHeadCell>
+              {showActions && <TableHeadCell>Actions</TableHeadCell>}
+            </TableRow>
+          </TableHead>
+          <TableBody className="divide-y">
             {tasks.map((task) => (
-              <Table.Row
+              <TableRow
                 key={task.task_id}
                 className="bg-white dark:border-gray-700 dark:bg-gray-800"
               >
-                <Table.Cell className="whitespace-nowrap font-mono text-xs font-medium text-gray-900 dark:text-white">
+                <TableCell className="font-mono text-xs font-medium whitespace-nowrap text-gray-900 dark:text-white">
                   {task.task_id.substring(0, 8)}...
-                </Table.Cell>
-                <Table.Cell>{task.task_type}</Table.Cell>
-                <Table.Cell>
+                </TableCell>
+                <TableCell>{task.task_type}</TableCell>
+                <TableCell>
                   <div className="flex items-center gap-2">
                     {getStatusIcon(task.status)}
                     <Badge color={getStatusColor(task.status)} size="sm">
                       {task.status}
                     </Badge>
                   </div>
-                </Table.Cell>
-                <Table.Cell>
+                </TableCell>
+                <TableCell>
                   <div className="w-32">
                     <Progress
                       progress={task.progress * 100}
@@ -132,25 +146,26 @@ export function TaskStatusViewer({
                         task.status === "failed"
                           ? "red"
                           : task.status === "completed"
-                          ? "green"
-                          : "blue"
+                            ? "green"
+                            : "blue"
                       }
                     />
                     <span className="mt-1 text-xs text-gray-500">
                       {(task.progress * 100).toFixed(0)}%
                     </span>
                   </div>
-                </Table.Cell>
-                <Table.Cell className="text-sm">
+                </TableCell>
+                <TableCell className="text-sm">
                   {formatDuration(task.started_at, task.completed_at)}
-                </Table.Cell>
-                <Table.Cell className="text-sm">
+                </TableCell>
+                <TableCell className="text-sm">
                   {formatDate(task.created_at)}
-                </Table.Cell>
+                </TableCell>
                 {showActions && (
-                  <Table.Cell>
+                  <TableCell>
                     <div className="flex gap-2">
-                      {(task.status === "running" || task.status === "pending") &&
+                      {(task.status === "running" ||
+                        task.status === "pending") &&
                         onCancel && (
                           <Button
                             size="xs"
@@ -170,11 +185,11 @@ export function TaskStatusViewer({
                         </Button>
                       )}
                     </div>
-                  </Table.Cell>
+                  </TableCell>
                 )}
-              </Table.Row>
+              </TableRow>
             ))}
-          </Table.Body>
+          </TableBody>
         </Table>
       </div>
 

@@ -8,15 +8,11 @@ import sys
 import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-import pytest
-import asyncio
-import time
-import tempfile
-from fastapi.testclient import TestClient
-from unittest.mock import patch, AsyncMock, Mock
+import pytest  # noqa: E402
+import time  # noqa: E402
+from unittest.mock import patch  # noqa: E402
 
 # Import the FastAPI app
-from app import app
 
 
 @pytest.fixture
@@ -37,7 +33,7 @@ class TestPredicateDiscoveryE2E:
 
     def test_complete_discovery_workflow_conceptnet(self, client):
         """
-        Test complete workflow: Start discovery -> Poll status -> Verify results.
+        Test complete workflow: Start discovery -> Poll status -> Verify results.  # noqa: E501
 
         This simulates a user:
         1. Starting a ConceptNet discovery via POST /api/predicates/discover
@@ -60,7 +56,7 @@ class TestPredicateDiscoveryE2E:
                         "errors_truncated": False
                     }
                 }
-                _discovery_tasks[task_id]["completed_at"] = datetime.datetime.now(datetime.UTC).isoformat()
+                _discovery_tasks[task_id]["completed_at"] = datetime.datetime.now(datetime.UTC).isoformat()  # noqa: E501
 
             mock_task.side_effect = mock_discovery
 
@@ -118,12 +114,12 @@ class TestPredicateDiscoveryE2E:
                         "errors_truncated": True
                     }
                 }
-                _discovery_tasks[task_id]["completed_at"] = datetime.datetime.now(datetime.UTC).isoformat()
+                _discovery_tasks[task_id]["completed_at"] = datetime.datetime.now(datetime.UTC).isoformat()  # noqa: E501
 
             mock_task.side_effect = mock_discovery
 
             # Start discovery
-            response = client.post("/api/predicates/discover", params={"sources": ["conceptnet"]})
+            response = client.post("/api/predicates/discover", params={"sources": ["conceptnet"]})  # noqa: E501
             task_id = response.json()["task_id"]
 
             # Poll status
@@ -172,12 +168,11 @@ class TestPredicateDiscoveryE2E:
 
                 _discovery_tasks[task_id]["status"] = "completed"
                 _discovery_tasks[task_id]["results"] = results
-                _discovery_tasks[task_id]["completed_at"] = datetime.datetime.now(datetime.UTC).isoformat()
+                _discovery_tasks[task_id]["completed_at"] = datetime.datetime.now(datetime.UTC).isoformat()  # noqa: E501
 
             mock_task.side_effect = mock_discovery
 
             # Start discovery for all sources
-            start_time = time.time()
             response = client.post("/api/predicates/discover")
             assert response.status_code == 200
             task_id = response.json()["task_id"]
@@ -298,7 +293,7 @@ class TestPredicateDiscoveryE2E:
             )
 
         # Test filtering by source
-        response = client.get("/api/predicates/external?source=conceptnet&limit=50")
+        response = client.get("/api/predicates/external?source=conceptnet&limit=50")  # noqa: E501
         assert response.status_code == 200
         data = response.json()
 
@@ -335,12 +330,12 @@ class TestPredicateDiscoveryE2E:
                         "errors_truncated": False
                     }
                 }
-                _discovery_tasks[task_id]["completed_at"] = datetime.datetime.now(datetime.UTC).isoformat()
+                _discovery_tasks[task_id]["completed_at"] = datetime.datetime.now(datetime.UTC).isoformat()  # noqa: E501
 
             mock_task.side_effect = mock_first_discovery
 
             # First discovery
-            response = client.post("/api/predicates/discover", params={"sources": ["conceptnet"]})
+            response = client.post("/api/predicates/discover", params={"sources": ["conceptnet"]})  # noqa: E501
             task_id1 = response.json()["task_id"]
             time.sleep(0.1)
             response = client.get(f"/api/predicates/discover/{task_id1}")
@@ -364,11 +359,11 @@ class TestPredicateDiscoveryE2E:
                         "errors_truncated": False
                     }
                 }
-                _discovery_tasks[task_id]["completed_at"] = datetime.datetime.now(datetime.UTC).isoformat()
+                _discovery_tasks[task_id]["completed_at"] = datetime.datetime.now(datetime.UTC).isoformat()  # noqa: E501
 
             mock_task.side_effect = mock_second_discovery
 
-            response = client.post("/api/predicates/discover", params={"sources": ["conceptnet"]})
+            response = client.post("/api/predicates/discover", params={"sources": ["conceptnet"]})  # noqa: E501
             task_id2 = response.json()["task_id"]
             time.sleep(0.1)
             response = client.get(f"/api/predicates/discover/{task_id2}")
@@ -398,14 +393,14 @@ class TestPredicateDiscoveryE2E:
                         "errors": [], "errors_truncated": False
                     }
                 }
-                _discovery_tasks[task_id]["completed_at"] = datetime.datetime.now(datetime.UTC).isoformat()
+                _discovery_tasks[task_id]["completed_at"] = datetime.datetime.now(datetime.UTC).isoformat()  # noqa: E501
 
             mock_task.side_effect = mock_discovery
 
             # Start multiple discovery tasks
             task_ids = []
             for i in range(3):
-                response = client.post("/api/predicates/discover", params={"sources": ["conceptnet"]})
+                response = client.post("/api/predicates/discover", params={"sources": ["conceptnet"]})  # noqa: E501
                 assert response.status_code == 200
                 task_ids.append(response.json()["task_id"])
 

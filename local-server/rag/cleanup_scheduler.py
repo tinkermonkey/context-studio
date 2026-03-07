@@ -7,7 +7,7 @@ based on retention policies (30 days for metrics, 7 days for traces).
 import asyncio
 import sys
 from datetime import datetime
-from typing import Optional
+from typing import Optional, TypeVar, Callable, Any
 from concurrent.futures import ThreadPoolExecutor
 
 from sqlalchemy.orm import Session
@@ -24,8 +24,10 @@ HAS_ASYNCIO_TO_THREAD = PYTHON_VERSION >= (3, 9)
 # Thread pool executor for Python < 3.9 compatibility
 _thread_pool_executor = None if HAS_ASYNCIO_TO_THREAD else ThreadPoolExecutor(max_workers=2)
 
+T = TypeVar("T")
 
-async def _run_in_thread(func, *args):
+
+async def _run_in_thread(func: Callable[..., T], *args: Any) -> T:
     """
     Cross-version compatible way to run blocking code in a thread.
 
@@ -136,7 +138,7 @@ class RAGCleanupScheduler:
         except Exception as e:
             logger.error(f"Cleanup operation failed: {e}", exc_info=True)
 
-    async def run_now(self) -> dict:
+    async def run_now(self) -> dict[str, int]:
         """
         Run cleanup immediately (for manual triggering).
 

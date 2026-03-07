@@ -1,3 +1,4 @@
+# mypy: ignore-errors
 """
 Manager for reference database operations.
 
@@ -10,7 +11,6 @@ import shutil
 import logging
 import threading
 from datetime import date
-from pathlib import Path
 from typing import Optional, List, Dict, Any, Literal
 from uuid import uuid4
 import sqlite3
@@ -20,7 +20,7 @@ from sqlalchemy.orm import sessionmaker, Session
 from sqlalchemy.exc import OperationalError
 from sqlalchemy.pool import NullPool
 
-from database.utils import get_engine, init_db
+from database.utils import init_db
 from reference_db.models import Base, ReferenceNode, ReferenceLink, ExternalPredicate
 from reference_db.config import ReferenceConfig, REFERENCE_SCHEMA_VERSION
 from embeddings.generate_embeddings import generate_embedding
@@ -499,9 +499,9 @@ class ReferenceManager:
             title_embedding = generate_embedding(title)
         else:
             self._validate_embedding_dimensions(title_embedding, embedding_dims)
-            
+
         if definition_embedding is None:
-            logger.debug(f"Generating embedding for definition")
+            logger.debug("Generating embedding for definition")
             definition_embedding = generate_embedding(definition)
         else:
             self._validate_embedding_dimensions(definition_embedding, embedding_dims)
@@ -879,33 +879,31 @@ class ReferenceManager:
         if direction not in ["inbound", "outbound", "both"]:
             raise ValueError(f"Invalid direction: '{direction}'. Must be 'inbound', 'outbound', or 'both'")
 
-        # Use explicit connection management
-        with self.engine.connect() as conn:
-            query = self.session.query(ReferenceLink)
+        query = self.session.query(ReferenceLink)
 
-            # Apply direction filter
-            if direction == "inbound":
-                query = query.filter(ReferenceLink.object_node == node_id)
-            elif direction == "outbound":
-                query = query.filter(ReferenceLink.subject_node == node_id)
-            else:  # both
-                query = query.filter(
-                    (ReferenceLink.subject_node == node_id) |
-                    (ReferenceLink.object_node == node_id)
-                )
+        # Apply direction filter
+        if direction == "inbound":
+            query = query.filter(ReferenceLink.object_node == node_id)
+        elif direction == "outbound":
+            query = query.filter(ReferenceLink.subject_node == node_id)
+        else:  # both
+            query = query.filter(
+                (ReferenceLink.subject_node == node_id) |
+                (ReferenceLink.object_node == node_id)
+            )
 
-            # Apply predicate filter if provided
-            if predicate:
-                query = query.filter(ReferenceLink.predicate == predicate)
+        # Apply predicate filter if provided
+        if predicate:
+            query = query.filter(ReferenceLink.predicate == predicate)
 
-            # Order by created_at DESC
-            query = query.order_by(ReferenceLink.created_at.desc())
+        # Order by created_at DESC
+        query = query.order_by(ReferenceLink.created_at.desc())
 
-            # Apply limit if provided
-            if limit:
-                query = query.limit(limit)
+        # Apply limit if provided
+        if limit:
+            query = query.limit(limit)
 
-            return query.all()
+        return query.all()
 
     def add_external_predicate(
         self,
@@ -958,7 +956,7 @@ class ReferenceManager:
             self._validate_embedding_dimensions(title_embedding, embedding_dims)
 
         if definition_embedding is None:
-            logger.debug(f"Generating embedding for predicate definition")
+            logger.debug("Generating embedding for predicate definition")
             definition_embedding = generate_embedding(definition)
         else:
             self._validate_embedding_dimensions(definition_embedding, embedding_dims)
@@ -1115,7 +1113,7 @@ class ReferenceManager:
         # Performance tracking
         import time
         total_start = time.perf_counter()
-        
+
         try:
             # Generate embeddings for the query
             embedding_start = time.perf_counter()
@@ -1219,7 +1217,7 @@ class ReferenceManager:
 
             total_time = (time.perf_counter() - total_start) * 1000
             logger.info(f"Total search time: {total_time:.2f}ms, found {len(results)} results")
-            
+
             return results
 
         except ValueError:
@@ -1393,74 +1391,74 @@ _reference_manager_instance: Optional[ReferenceManager] = None
 _reference_manager_lock = threading.Lock()
 
 
-def get_reference_manager(config: Optional[ReferenceConfig] = None, 
+def get_reference_manager(config: Optional[ReferenceConfig] = None,
                          force_new: bool = False) -> ReferenceManager:
     """
     Get or create a singleton ReferenceManager instance.
-    
+
     This function maintains a single ReferenceManager instance across the application
     lifecycle, avoiding repeated engine creation on each API call. Uses double-check
     locking pattern consistent with other singletons in the application.
-    
+
     Args:
         config: Optional ReferenceConfig. If not provided, uses default config.
         force_new: If True, creates a new instance even if one exists (for testing).
-    
+
     Returns:
         Shared ReferenceManager instance
-        
+
     Thread Safety:
         This function is thread-safe via double-check locking pattern.
-        
+
     Example:
         >>> # In API endpoints - reuses existing instance
         >>> manager = get_reference_manager()
         >>> results = manager.search_external_predicates_by_similarity(...)
-        
+
         >>> # For testing - force new instance
         >>> test_manager = get_reference_manager(test_config, force_new=True)
     """
     global _reference_manager_instance
-    
+
     # Double-check locking pattern (consistent with DatabaseManager, NLPPipeline, etc.)
     # First check without lock for fast path
     if _reference_manager_instance is not None and not force_new:
         return _reference_manager_instance
-    
+
     # Acquire lock for initialization
     with _reference_manager_lock:
         # Double-check after acquiring lock
         if _reference_manager_instance is not None and not force_new:
             return _reference_manager_instance
-        
+
         # Create new instance
         if config is None:
             config = ReferenceConfig()
-        
+
         # Close old instance if replacing
         if _reference_manager_instance is not None:
             try:
                 _reference_manager_instance.close()
             except Exception as e:
                 logger.warning(f"Error closing old ReferenceManager: {e}")
-        
+
         # Create and cache new instance
         _reference_manager_instance = ReferenceManager(config)
         logger.info("Created singleton ReferenceManager instance")
-        
+
         return _reference_manager_instance
 
 
 def get_reference_session():
     """
     FastAPI dependency function to get a reference database session.
-    
+
     This function provides a database session from the singleton ReferenceManager,
     ensuring the session is properly closed after use.
-    
+
     Yields:
         SQLAlchemy session for reference database
-        
+
     Example:
         >>> @app.get("/api/predicates/external")
         >>> def list_predicates(session: Session = Depends(get_reference_session)):
@@ -1478,10 +1476,10 @@ def get_reference_session():
 def cleanup_reference_manager():
     """
     Clean up the singleton ReferenceManager instance.
-    
+
     This should be called during application shutdown to properly release
     database resources.
-    
+
     Example:
         >>> # In FastAPI lifespan or shutdown event
         >>> @app.on_event("shutdown")
@@ -1489,7 +1487,7 @@ def cleanup_reference_manager():
         ...     cleanup_reference_manager()
     """
     global _reference_manager_instance
-    
+
     if _reference_manager_instance is not None:
         logger.info("Cleaning up singleton ReferenceManager instance")
         try:

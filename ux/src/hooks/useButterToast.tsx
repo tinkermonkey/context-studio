@@ -21,61 +21,64 @@ export interface ToastOptions {
  * @returns {Function} showToast - Function to display a toast notification
  */
 export const useButterToast = () => {
-  const showToast = useCallback(({ type, message, duration = 5000 }: ToastOptions) => {
-    // Create toast container if it doesn't exist
-    let toastContainer = document.getElementById("toast-container");
-    if (!toastContainer) {
-      toastContainer = document.createElement("div");
-      toastContainer.id = "toast-container";
-      toastContainer.className = "fixed top-4 right-4 z-50 flex flex-col gap-2";
-      document.body.appendChild(toastContainer);
-    }
+  const showToast = useCallback(
+    ({ type, message, duration = 5000 }: ToastOptions) => {
+      // Create toast container if it doesn't exist
+      let toastContainer = document.getElementById("toast-container");
+      if (!toastContainer) {
+        toastContainer = document.createElement("div");
+        toastContainer.id = "toast-container";
+        toastContainer.className =
+          "fixed top-4 right-4 z-50 flex flex-col gap-2";
+        document.body.appendChild(toastContainer);
+      }
 
-    // Create toast element
-    const toastWrapper = document.createElement("div");
-    toastContainer.appendChild(toastWrapper);
+      // Create toast element
+      const toastWrapper = document.createElement("div");
+      toastContainer.appendChild(toastWrapper);
 
-    // Map type to icon and color
-    const iconMap = {
-      success: Check,
-      error: X,
-      warning: AlertTriangle,
-      info: Info,
-    };
+      // Map type to icon and color
+      const iconMap = {
+        success: Check,
+        error: X,
+        warning: AlertTriangle,
+        info: Info,
+      };
 
-    const Icon = iconMap[type];
+      const Icon = iconMap[type];
 
-    // Render toast using React
-    const root = (window as any).ReactDOM?.createRoot?.(toastWrapper);
-    if (root) {
-      root.render(
-        <Toast>
-          <div
-            className={`inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${
-              type === "success"
-                ? "bg-green-100 text-green-500 dark:bg-green-800 dark:text-green-200"
-                : type === "error"
-                  ? "bg-red-100 text-red-500 dark:bg-red-800 dark:text-red-200"
-                  : type === "warning"
-                    ? "bg-orange-100 text-orange-500 dark:bg-orange-700 dark:text-orange-200"
-                    : "bg-blue-100 text-blue-500 dark:bg-blue-800 dark:text-blue-200"
-            }`}
-          >
-            <Icon className="h-5 w-5" />
-          </div>
-          <div className="ml-3 text-sm font-normal">{message}</div>
-          <Toast.Toggle onDismiss={() => toastWrapper.remove()} />
-        </Toast>,
-      );
+      // Render toast using React
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const root = (window as any).ReactDOM?.createRoot?.(toastWrapper);
+      if (root) {
+        root.render(
+          <Toast>
+            <div
+              className={`inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${
+                type === "success"
+                  ? "bg-green-100 text-green-500 dark:bg-green-800 dark:text-green-200"
+                  : type === "error"
+                    ? "bg-red-100 text-red-500 dark:bg-red-800 dark:text-red-200"
+                    : type === "warning"
+                      ? "bg-orange-100 text-orange-500 dark:bg-orange-700 dark:text-orange-200"
+                      : "bg-blue-100 text-blue-500 dark:bg-blue-800 dark:text-blue-200"
+              }`}
+            >
+              <Icon className="h-5 w-5" />
+            </div>
+            <div className="ml-3 text-sm font-normal">{message}</div>
+            <Toast.Toggle onDismiss={() => toastWrapper.remove()} />
+          </Toast>,
+        );
 
-      // Auto-dismiss after duration
-      setTimeout(() => {
-        root.unmount();
-        toastWrapper.remove();
-      }, duration);
-    } else {
-      // Fallback to simple DOM manipulation if React root is not available
-      toastWrapper.innerHTML = `
+        // Auto-dismiss after duration
+        setTimeout(() => {
+          root.unmount();
+          toastWrapper.remove();
+        }, duration);
+      } else {
+        // Fallback to simple DOM manipulation if React root is not available
+        toastWrapper.innerHTML = `
         <div class="flex items-center w-full max-w-xs p-4 mb-4 text-gray-500 bg-white rounded-lg shadow dark:text-gray-400 dark:bg-gray-800" role="alert">
           <div class="inline-flex items-center justify-center flex-shrink-0 w-8 h-8 ${
             type === "success"
@@ -104,11 +107,13 @@ export const useButterToast = () => {
         </div>
       `;
 
-      setTimeout(() => {
-        toastWrapper.remove();
-      }, duration);
-    }
-  }, []);
+        setTimeout(() => {
+          toastWrapper.remove();
+        }, duration);
+      }
+    },
+    [],
+  );
 
   return {
     /**

@@ -4,11 +4,10 @@ import sys
 import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
-import pytest
-from typing import List
+import pytest  # noqa: E402
 
-from reference_api.response_builders import ResponseBuilder
-from reference_api.models import (
+from reference_api.response_builders import ResponseBuilder  # noqa: E402
+from reference_api.models import (  # noqa: E402
     SourceType, SearchNode, SearchLink, MultiSourceSearchResponse
 )
 
@@ -463,7 +462,6 @@ class TestResponseBuilder:
     def test_timing_wrapper_functionality(self, builder):
         """Test the timing wrapper decorator concept (though it's a static method)."""
         # This tests the concept shown in the timing wrapper
-        import time
         import asyncio
 
         @ResponseBuilder.create_timing_wrapper

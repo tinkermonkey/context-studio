@@ -13,14 +13,10 @@ import {
   UnifiedLink,
   MultiSourceSearchRequest,
   MultiSourceSearchResponse,
-  SearchNode,
   UnifiedReferenceError,
   SourceType,
 } from "../types/unified";
-import {
-  SOURCE_ENDPOINTS,
-  getEnabledSources,
-} from "../types/streamingReference";
+import { SOURCE_ENDPOINTS } from "../types/streamingReference";
 
 export class UnifiedReferenceService extends BaseService {
   private readonly SEARCH_ENDPOINT = `/api/reference/search`;
@@ -75,7 +71,8 @@ export class UnifiedReferenceService extends BaseService {
         if (error instanceof Error && error.message.includes("404")) {
           throw new UnifiedReferenceError(
             "Search endpoint not found. Please ensure the backend service is properly configured and running.",
-            { cause: error }
+            undefined,
+            error,
           );
         }
         throw error;
@@ -92,7 +89,7 @@ export class UnifiedReferenceService extends BaseService {
       this.sanitizeString(nodeId, "Node ID", 255);
 
       throw new UnifiedReferenceError(
-        "Node details endpoint is not yet implemented. Please ensure the backend service supports this functionality."
+        "Node details endpoint is not yet implemented. Please ensure the backend service supports this functionality.",
       );
     }, "get unified node");
   }
@@ -100,21 +97,16 @@ export class UnifiedReferenceService extends BaseService {
   /**
    * Get links for a specific node
    */
-  async getLinks(
-    nodeId: string,
-    direction: "from" | "to" | "both" = "both",
-  ): Promise<UnifiedLink[]> {
+  async getLinks(nodeId: string): Promise<UnifiedLink[]> {
     return this.withErrorContext(async () => {
       this.validateRequired(nodeId, "Node ID");
       this.sanitizeString(nodeId, "Node ID", 255);
 
       throw new UnifiedReferenceError(
-        "Node links endpoint is not yet implemented. Please ensure the backend service supports this functionality."
+        "Node links endpoint is not yet implemented. Please ensure the backend service supports this functionality.",
       );
     }, "get node links");
   }
-
-
 
   /**
    * Paginated search with load more functionality
@@ -136,7 +128,7 @@ export class UnifiedReferenceService extends BaseService {
    */
   async searchSource(
     source: SourceType,
-    request: UnifiedSearchRequest
+    request: UnifiedSearchRequest,
   ): Promise<UnifiedSearchResponse> {
     return this.withErrorContext(async () => {
       this.validateRequired(request, "Search request");
@@ -145,14 +137,14 @@ export class UnifiedReferenceService extends BaseService {
 
       if (request.query.trim().length < 2) {
         throw new UnifiedReferenceError(
-          "Search query must be at least 2 characters"
+          "Search query must be at least 2 characters",
         );
       }
 
       const config = SOURCE_ENDPOINTS[source];
       if (!config || !config.enabled) {
         throw new UnifiedReferenceError(
-          `Source ${source} is not available or not enabled`
+          `Source ${source} is not available or not enabled`,
         );
       }
 
@@ -165,7 +157,7 @@ export class UnifiedReferenceService extends BaseService {
 
         const response = await this.getResource<MultiSourceSearchResponse>(
           config.endpoint,
-          params
+          params,
         );
 
         // Backend now returns normalized data directly
@@ -185,7 +177,8 @@ export class UnifiedReferenceService extends BaseService {
         if (error instanceof Error && error.message.includes("404")) {
           throw new UnifiedReferenceError(
             `${source} search endpoint not found. Please ensure the backend service supports this source.`,
-            { cause: error }
+            undefined,
+            error,
           );
         }
         throw error;
@@ -193,13 +186,18 @@ export class UnifiedReferenceService extends BaseService {
     }, `${source} search`);
   }
 
-
   /**
    * Get available sources and their status
    */
-  async getAvailableSources(): Promise<Record<SourceType, { enabled: boolean; endpoint: string }>> {
+  async getAvailableSources(): Promise<
+    Record<SourceType, { enabled: boolean; endpoint: string }>
+  > {
     return this.withErrorContext(async () => {
-      const sources: Record<SourceType, { enabled: boolean; endpoint: string }> = {} as Record<SourceType, { enabled: boolean; endpoint: string }>;
+      const sources: Record<
+        SourceType,
+        { enabled: boolean; endpoint: string }
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      > = {} as any;
 
       Object.entries(SOURCE_ENDPOINTS).forEach(([source, config]) => {
         sources[source as SourceType] = {
@@ -258,10 +256,6 @@ export class UnifiedReferenceService extends BaseService {
       }
     }, `test ${source} connectivity`);
   }
-
-
-
-
 }
 
 // Export singleton instance

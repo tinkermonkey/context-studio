@@ -7,10 +7,10 @@ sys.path.append(
     os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 )
 
-import pytest
-from services.change_event_handler import ChangeEventHandler
-from database.models import ChangeEvent
-from database.enums import RecordType
+import pytest  # noqa: E402
+from services.change_event_handler import ChangeEventHandler  # noqa: E402
+from database.models import ChangeEvent  # noqa: E402
+from database.enums import RecordType  # noqa: E402
 
 
 def test_change_event_creation_with_record_type_enum(db_session):

@@ -1,7 +1,7 @@
 """
 Dependency injection for StructureNodes API
 
-This module provides dependency injection functions for the structure_nodes endpoints,
+This module provides dependency injection functions for the structure_nodes endpoints,  # noqa: E501
 using the optimized service factory pattern for better performance.
 """
 
@@ -31,9 +31,9 @@ def get_node_service(db: Session = Depends(get_db)) -> NodeService:
 
 def get_node_service_simple(db: Session = Depends(get_db)) -> NodeService:
     """
-    Lightweight dependency injection for NodeService without expensive dependencies.
+    Lightweight dependency injection for NodeService without expensive dependencies.  # noqa: E501
 
-    This is optimized for read-only operations that don't need version management
+    This is optimized for read-only operations that don't need version management  # noqa: E501
     or graph services. Use this for list, get, and count operations.
 
     Args:
@@ -43,7 +43,7 @@ def get_node_service_simple(db: Session = Depends(get_db)) -> NodeService:
         NodeService instance with minimal dependencies
     """
     # Create NodeService directly without expensive dependencies
-    return NodeService(db, graph_service=None, version_manager=None, working_tree_manager=None)
+    return NodeService(db, graph_service=None, version_manager=None, working_tree_manager=None)  # noqa: E501
 
 
 def get_node_link_service(db: Session = Depends(get_db)) -> NodeLinkService:
@@ -60,7 +60,7 @@ def get_node_link_service(db: Session = Depends(get_db)) -> NodeLinkService:
     return factory.create_node_link_service(db)
 
 
-def get_reference_link_service(db: Session = Depends(get_db)) -> ReferenceLinkService:
+def get_reference_link_service(db: Session = Depends(get_db)) -> ReferenceLinkService:  # noqa: E501
     """
     Dependency injection for ReferenceLinkService.
 

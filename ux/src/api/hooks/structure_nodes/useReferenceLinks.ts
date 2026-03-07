@@ -25,11 +25,9 @@ export const useReferenceLinks = (
   options?: UseQueryOptions<ReferenceLink[], Error>,
 ) => {
   return useQuery({
-    queryKey: createQueryKey(
-      QUERY_KEYS.STRUCTURE_NODES,
-      nodeId,
-      { type: "reference_links" },
-    ),
+    queryKey: createQueryKey(QUERY_KEYS.STRUCTURE_NODES, nodeId, {
+      type: "reference_links",
+    }),
     queryFn: () => structureNodeService.getReferenceLinks(nodeId),
     enabled: !!nodeId,
     ...options,
@@ -52,7 +50,9 @@ export const useAddReferenceLinks = (
     onSuccess: (data) => {
       // Update the reference links cache with the server response
       queryClient.setQueryData(
-        createQueryKey(QUERY_KEYS.STRUCTURE_NODES, nodeId, { type: "reference_links" }),
+        createQueryKey(QUERY_KEYS.STRUCTURE_NODES, nodeId, {
+          type: "reference_links",
+        }),
         data,
       );
 
@@ -64,10 +64,13 @@ export const useAddReferenceLinks = (
       // Show success feedback
       toast.success(`Added ${data.length} reference link(s)`);
     },
-    onError: (err, variables) => {
+    onError: (err) => {
       console.error(`Failed to add reference links to node ${nodeId}:`, err);
-      const message = err instanceof Error ? err.message : "Failed to add reference links";
-      toast.error(`Failed to add reference links: ${message}. Please try again.`);
+      const message =
+        err instanceof Error ? err.message : "Failed to add reference links";
+      toast.error(
+        `Failed to add reference links: ${message}. Please try again.`,
+      );
     },
     ...options,
   });
@@ -83,27 +86,36 @@ interface ReferenceLinkContext {
  */
 export const useRemoveReferenceLink = (
   nodeId: string,
-  options?: UseMutationOptions<ReferenceLink[], Error, ReferenceLink[], ReferenceLinkContext>,
+  options?: UseMutationOptions<
+    ReferenceLink[],
+    Error,
+    ReferenceLink[],
+    ReferenceLinkContext
+  >,
 ) => {
   const queryClient = useQueryClient();
 
-  return useMutation<ReferenceLink[], Error, ReferenceLink[], ReferenceLinkContext>({
+  return useMutation<
+    ReferenceLink[],
+    Error,
+    ReferenceLink[],
+    ReferenceLinkContext
+  >({
     mutationFn: (referenceLinks: ReferenceLink[]) =>
       structureNodeService.removeReferenceLinks(nodeId, referenceLinks),
     onMutate: async (
       variables: ReferenceLink[],
     ): Promise<ReferenceLinkContext> => {
       // Cancel any outgoing refetches
-      const queryKey = createQueryKey(
-        QUERY_KEYS.STRUCTURE_NODES,
-        nodeId,
-        { type: "reference_links" },
-      );
+      const queryKey = createQueryKey(QUERY_KEYS.STRUCTURE_NODES, nodeId, {
+        type: "reference_links",
+      });
 
       await queryClient.cancelQueries({ queryKey });
 
       // Snapshot the previous value for rollback
-      const previousReferenceLinks = queryClient.getQueryData<ReferenceLink[]>(queryKey);
+      const previousReferenceLinks =
+        queryClient.getQueryData<ReferenceLink[]>(queryKey);
 
       // Optimistically remove the links
       if (previousReferenceLinks) {
@@ -125,24 +137,30 @@ export const useRemoveReferenceLink = (
       // Rollback to the previous value on error
       if (context?.previousReferenceLinks) {
         queryClient.setQueryData(
-          createQueryKey(
-            QUERY_KEYS.STRUCTURE_NODES,
-            nodeId,
-            { type: "reference_links" },
-          ),
+          createQueryKey(QUERY_KEYS.STRUCTURE_NODES, nodeId, {
+            type: "reference_links",
+          }),
           context.previousReferenceLinks,
         );
       }
 
       // Show error feedback
-      console.error(`Failed to remove reference links from node ${nodeId}:`, err);
-      const message = err instanceof Error ? err.message : "Failed to remove reference links";
-      toast.error(`Failed to remove reference link: ${message}. Please try again.`);
+      console.error(
+        `Failed to remove reference links from node ${nodeId}:`,
+        err,
+      );
+      const message =
+        err instanceof Error ? err.message : "Failed to remove reference links";
+      toast.error(
+        `Failed to remove reference link: ${message}. Please try again.`,
+      );
     },
     onSuccess: (data) => {
       // Update the cache with the server response
       queryClient.setQueryData(
-        createQueryKey(QUERY_KEYS.STRUCTURE_NODES, nodeId, { type: "reference_links" }),
+        createQueryKey(QUERY_KEYS.STRUCTURE_NODES, nodeId, {
+          type: "reference_links",
+        }),
         data,
       );
 

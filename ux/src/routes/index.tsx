@@ -1,5 +1,12 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Card, Button, Badge, Spinner, DarkThemeToggle, Alert } from "flowbite-react";
+import {
+  Alert,
+  Badge,
+  Button,
+  Card,
+  DarkThemeToggle,
+  Spinner,
+} from "flowbite-react";
 import {
   Database,
   GitBranch,
@@ -117,14 +124,14 @@ function HomeComponent() {
       </div>
 
       {/* Hero Section */}
-      <div className="bg-gradient-to-br from-primary-600 to-primary-800 dark:from-primary-700 dark:to-primary-900 text-white py-16 px-4">
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-8">
-            <h1 className="text-5xl font-bold mb-4">Context Studio</h1>
-            <p className="text-xl text-primary-100 mb-6">
+      <div className="from-primary-600 to-primary-800 dark:from-primary-700 dark:to-primary-900 bg-gradient-to-br px-4 py-16 text-white">
+        <div className="mx-auto max-w-7xl">
+          <div className="mb-8 text-center">
+            <h1 className="mb-4 text-5xl font-bold">Context Studio</h1>
+            <p className="text-primary-100 mb-6 text-xl">
               Create and curate knowledge graphs for RAG and AI communication
             </p>
-            <div className="flex items-center justify-center gap-4 flex-wrap">
+            <div className="flex flex-wrap items-center justify-center gap-4">
               <Link to="/app">
                 <Button size="lg" color="light">
                   Get Started
@@ -140,8 +147,8 @@ function HomeComponent() {
           </div>
 
           {/* System Status */}
-          <div className="flex items-center justify-center gap-2 mt-6">
-            <span className="text-sm text-primary-100">System Status:</span>
+          <div className="mt-6 flex items-center justify-center gap-2">
+            <span className="text-primary-100 text-sm">System Status:</span>
             {healthLoading ? (
               <Spinner size="sm" aria-label="Loading system status" />
             ) : healthError ? (
@@ -167,19 +174,21 @@ function HomeComponent() {
       </div>
 
       {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-4 py-12">
+      <div className="mx-auto max-w-7xl px-4 py-12">
         {/* Statistics Grid */}
         <section className="mb-12" aria-labelledby="workspace-overview">
           <h2
             id="workspace-overview"
-            className="text-2xl font-bold text-gray-900 dark:text-white mb-6"
+            className="mb-6 text-2xl font-bold text-gray-900 dark:text-white"
           >
             Workspace Overview
           </h2>
 
           {statsError ? (
             <Alert color="failure" icon={AlertCircle}>
-              <span className="font-medium">Error loading workspace statistics:</span>{" "}
+              <span className="font-medium">
+                Error loading workspace statistics:
+              </span>{" "}
               {statsError.message || "An unknown error occurred"}
             </Alert>
           ) : statsLoading ? (
@@ -187,7 +196,7 @@ function HomeComponent() {
               <Spinner size="xl" aria-label="Loading workspace statistics" />
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
               <StatCard
                 title="Total Nodes"
                 value={totalNodes}
@@ -224,7 +233,7 @@ function HomeComponent() {
         <section className="mb-12" aria-labelledby="knowledge-graph">
           <h2
             id="knowledge-graph"
-            className="text-2xl font-bold text-gray-900 dark:text-white mb-6"
+            className="mb-6 text-2xl font-bold text-gray-900 dark:text-white"
           >
             Knowledge Graph Structure
           </h2>
@@ -243,11 +252,14 @@ function HomeComponent() {
                 }
                 errorComponent={
                   <div className="flex flex-col items-center justify-center py-12">
-                    <AlertCircle className="h-12 w-12 text-red-500 mb-4" aria-hidden="true" />
-                    <p className="text-gray-900 dark:text-white font-semibold mb-2">
+                    <AlertCircle
+                      className="mb-4 h-12 w-12 text-red-500"
+                      aria-hidden="true"
+                    />
+                    <p className="mb-2 font-semibold text-gray-900 dark:text-white">
                       Failed to load knowledge graph
                     </p>
-                    <p className="text-gray-600 dark:text-gray-400 text-sm">
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
                       Please try refreshing the page
                     </p>
                   </div>
@@ -261,14 +273,16 @@ function HomeComponent() {
         <section className="mb-12" aria-labelledby="recent-activity">
           <h2
             id="recent-activity"
-            className="text-2xl font-bold text-gray-900 dark:text-white mb-6"
+            className="mb-6 text-2xl font-bold text-gray-900 dark:text-white"
           >
             Recent Activity
           </h2>
 
           {eventsError ? (
             <Alert color="failure" icon={AlertCircle}>
-              <span className="font-medium">Error loading recent activity:</span>{" "}
+              <span className="font-medium">
+                Error loading recent activity:
+              </span>{" "}
               {eventsError.message || "An unknown error occurred"}
             </Alert>
           ) : eventsLoading ? (
@@ -279,8 +293,11 @@ function HomeComponent() {
             </Card>
           ) : !recentEvents || recentEvents.length === 0 ? (
             <Card>
-              <div className="text-center py-8">
-                <Clock className="h-12 w-12 text-gray-400 mx-auto mb-3" aria-hidden="true" />
+              <div className="py-8 text-center">
+                <Clock
+                  className="mx-auto mb-3 h-12 w-12 text-gray-400"
+                  aria-hidden="true"
+                />
                 <p className="text-gray-600 dark:text-gray-400">
                   No recent activity to display
                 </p>
@@ -292,16 +309,16 @@ function HomeComponent() {
                 {recentEvents.map((event) => (
                   <div
                     key={event.id}
-                    className="flex items-start gap-3 pb-4 border-b border-gray-200 dark:border-gray-700 last:border-b-0 last:pb-0"
+                    className="flex items-start gap-3 border-b border-gray-200 pb-4 last:border-b-0 last:pb-0 dark:border-gray-700"
                   >
-                    <div className="p-2 bg-primary-100 dark:bg-primary-900 rounded-lg flex-shrink-0">
+                    <div className="bg-primary-100 dark:bg-primary-900 flex-shrink-0 rounded-lg p-2">
                       <Activity
-                        className="h-4 w-4 text-primary-600 dark:text-primary-400"
+                        className="text-primary-600 dark:text-primary-400 h-4 w-4"
                         aria-hidden="true"
                       />
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-1">
+                    <div className="min-w-0 flex-1">
+                      <div className="mb-1 flex items-center gap-2">
                         <Badge color="info" size="sm">
                           {formatEventType(event.event_type)}
                         </Badge>
@@ -309,10 +326,10 @@ function HomeComponent() {
                           {event.record_type}
                         </Badge>
                       </div>
-                      <p className="text-sm text-gray-600 dark:text-gray-400 truncate">
+                      <p className="truncate text-sm text-gray-600 dark:text-gray-400">
                         Record ID: {event.record_id}
                       </p>
-                      <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">
+                      <p className="mt-1 text-xs text-gray-500 dark:text-gray-500">
                         {formatDate(event.event_timestamp)}
                       </p>
                     </div>
@@ -327,11 +344,11 @@ function HomeComponent() {
         <section className="mb-12" aria-labelledby="quick-access">
           <h2
             id="quick-access"
-            className="text-2xl font-bold text-gray-900 dark:text-white mb-6"
+            className="mb-6 text-2xl font-bold text-gray-900 dark:text-white"
           >
             Quick Access
           </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
             <QuickActionCard
               title="Knowledge Graph"
               description="Browse and manage layers, domains, and terms in your knowledge graph"
@@ -372,13 +389,14 @@ function HomeComponent() {
         </section>
 
         {/* Getting Started Section */}
-        <Card className="bg-gradient-to-r from-primary-50 to-primary-100 dark:from-gray-800 dark:to-gray-700 border-primary-200 dark:border-gray-600">
-          <div className="text-center py-6">
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-3">
+        <Card className="from-primary-50 to-primary-100 border-primary-200 bg-gradient-to-r dark:border-gray-600 dark:from-gray-800 dark:to-gray-700">
+          <div className="py-6 text-center">
+            <h2 className="mb-3 text-2xl font-bold text-gray-900 dark:text-white">
               Ready to get started?
             </h2>
-            <p className="text-gray-600 dark:text-gray-300 mb-6">
-              Explore your knowledge graph and start building with Context Studio
+            <p className="mb-6 text-gray-600 dark:text-gray-300">
+              Explore your knowledge graph and start building with Context
+              Studio
             </p>
             <Link to="/app">
               <Button size="lg" color="primary">
@@ -391,8 +409,8 @@ function HomeComponent() {
       </div>
 
       {/* Footer */}
-      <footer className="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 py-8 mt-12">
-        <div className="max-w-7xl mx-auto px-4 text-center">
+      <footer className="mt-12 border-t border-gray-200 bg-white py-8 dark:border-gray-700 dark:bg-gray-800">
+        <div className="mx-auto max-w-7xl px-4 text-center">
           <p className="text-gray-600 dark:text-gray-400">
             Context Studio - Local-first knowledge graph and RAG platform
           </p>

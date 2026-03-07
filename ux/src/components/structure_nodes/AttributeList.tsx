@@ -5,9 +5,12 @@
  */
 
 import React, { useMemo } from "react";
-import { Badge, Tooltip, Button } from "flowbite-react";
-import { Link, Trash2, Edit2 } from "lucide-react";
-import type { ResolvedAttribute, StructureNodeAttribute } from "@/api/types/structureNodes";
+import { Badge, Button, Tooltip } from "flowbite-react";
+import { Edit2, Link, Trash2 } from "lucide-react";
+import type {
+  ResolvedAttribute,
+  StructureNodeAttribute,
+} from "@/api/types/structureNodes";
 import { useStructureNode } from "@/api/hooks/structure_nodes/useStructureNodes";
 
 interface AttributeListProps {
@@ -33,10 +36,10 @@ const AttributeTypeDisplay: React.FC<{ type: string }> = ({ type }) => {
   );
 };
 
-const AttributeValueDisplay: React.FC<{ value: unknown; maxLength?: number }> = ({
-  value,
-  maxLength = 50,
-}) => {
+const AttributeValueDisplay: React.FC<{
+  value: unknown;
+  maxLength?: number;
+}> = ({ value, maxLength = 50 }) => {
   const displayValue =
     value === null || value === undefined ? "(empty)" : String(value);
   const isTruncated = displayValue.length > maxLength;
@@ -50,14 +53,14 @@ const AttributeValueDisplay: React.FC<{ value: unknown; maxLength?: number }> = 
 
   return (
     <Tooltip content={displayValue}>
-      <span className="text-gray-700 cursor-help">{truncatedValue}</span>
+      <span className="cursor-help text-gray-700">{truncatedValue}</span>
     </Tooltip>
   );
 };
 
-const InheritedAttributeInfo: React.FC<{ sourceNodeId: string | null | undefined }> = ({
-  sourceNodeId,
-}) => {
+const InheritedAttributeInfo: React.FC<{
+  sourceNodeId: string | null | undefined;
+}> = ({ sourceNodeId }) => {
   const { data: sourceNode } = useStructureNode(sourceNodeId || "");
 
   const sourceTitle = sourceNode?.title || "Unknown node";
@@ -90,7 +93,7 @@ export const AttributeList: React.FC<AttributeListProps> = ({
 
   if (isLoading) {
     return (
-      <div className="text-center py-4 text-gray-500">
+      <div className="py-4 text-center text-gray-500">
         <p>Loading attributes...</p>
       </div>
     );
@@ -98,7 +101,7 @@ export const AttributeList: React.FC<AttributeListProps> = ({
 
   if (attributes.length === 0) {
     return (
-      <div className="text-center py-4 text-gray-500">
+      <div className="py-4 text-center text-gray-500">
         <p>No attributes</p>
       </div>
     );
@@ -108,14 +111,14 @@ export const AttributeList: React.FC<AttributeListProps> = ({
     <div className="space-y-4">
       {localAttributes.length > 0 && (
         <div>
-          <h3 className="text-sm font-semibold text-gray-700 mb-2">
+          <h3 className="mb-2 text-sm font-semibold text-gray-700">
             Local Attributes
           </h3>
           <div className="space-y-2">
             {localAttributes.map((attr) => (
               <div
                 key={attr.key}
-                className="flex items-center justify-between p-2 bg-white border border-gray-200 rounded-md hover:bg-gray-50"
+                className="flex items-center justify-between rounded-md border border-gray-200 bg-white p-2 hover:bg-gray-50"
               >
                 <div className="flex-1 space-y-1">
                   <div className="flex items-center gap-2">
@@ -128,12 +131,14 @@ export const AttributeList: React.FC<AttributeListProps> = ({
                     <AttributeValueDisplay value={attr.value} />
                   </div>
                 </div>
-                <div className="flex gap-1 ml-2">
+                <div className="ml-2 flex gap-1">
                   {onEditAttribute && (
                     <Button
                       size="sm"
                       color="light"
-                      onClick={() => onEditAttribute(attr as StructureNodeAttribute)}
+                      onClick={() =>
+                        onEditAttribute(attr as StructureNodeAttribute)
+                      }
                       disabled={isLoading}
                     >
                       <Edit2 className="h-4 w-4" />
@@ -158,14 +163,14 @@ export const AttributeList: React.FC<AttributeListProps> = ({
 
       {inheritedAttributes.length > 0 && (
         <div>
-          <h3 className="text-sm font-semibold text-gray-700 mb-2">
+          <h3 className="mb-2 text-sm font-semibold text-gray-700">
             Inherited Attributes
           </h3>
           <div className="space-y-2">
             {inheritedAttributes.map((attr) => (
               <div
                 key={attr.key}
-                className="flex items-center justify-between p-2 bg-blue-50 border border-blue-200 rounded-md opacity-75"
+                className="flex items-center justify-between rounded-md border border-blue-200 bg-blue-50 p-2 opacity-75"
               >
                 <div className="flex-1 space-y-1">
                   <div className="flex items-center gap-2">
@@ -173,7 +178,9 @@ export const AttributeList: React.FC<AttributeListProps> = ({
                       {attr.title || attr.key}
                     </span>
                     <AttributeTypeDisplay type={attr.value_type} />
-                    <InheritedAttributeInfo sourceNodeId={attr.source_node_id} />
+                    <InheritedAttributeInfo
+                      sourceNodeId={attr.source_node_id}
+                    />
                   </div>
                   <div>
                     <AttributeValueDisplay value={attr.value} />

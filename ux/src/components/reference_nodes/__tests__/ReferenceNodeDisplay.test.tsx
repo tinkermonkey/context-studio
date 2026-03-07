@@ -3,7 +3,7 @@
  */
 
 import React from "react";
-import { render, screen, fireEvent, waitFor, cleanup } from "@testing-library/react";
+import { render, screen, cleanup } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { vi, describe, it, expect, beforeEach, afterEach } from "vitest";
 
@@ -15,7 +15,9 @@ import { ReferenceLink } from "@/api/types/structureNodes";
 vi.mock("@/api/hooks/structure_nodes/useReferenceLinks");
 vi.mock("@/utils/toast");
 
-const mockUseRemoveReferenceLink = useRemoveReferenceLink as ReturnType<typeof vi.fn>;
+const mockUseRemoveReferenceLink = useRemoveReferenceLink as ReturnType<
+  typeof vi.fn
+>;
 
 const createTestQueryClient = () =>
   new QueryClient({
@@ -42,12 +44,14 @@ describe("ReferenceNodeDisplay", () => {
 
     // Mock window.open and store reference
     mockWindowOpen = vi.fn().mockReturnValue(null);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     window.open = mockWindowOpen as any;
 
     // Default mock for remove mutation
     mockUseRemoveReferenceLink.mockReturnValue({
       mutate: vi.fn(),
       isPending: false,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } as any);
   });
 
@@ -63,7 +67,7 @@ describe("ReferenceNodeDisplay", () => {
     const { container } = render(
       <TestWrapper>
         <ReferenceNodeDisplay nodeId={mockNodeId} referenceLinks={[]} />
-      </TestWrapper>
+      </TestWrapper>,
     );
 
     expect(container.firstChild).toBeNull();
@@ -80,7 +84,7 @@ describe("ReferenceNodeDisplay", () => {
     render(
       <TestWrapper>
         <ReferenceNodeDisplay nodeId={mockNodeId} referenceLinks={mockLinks} />
-      </TestWrapper>
+      </TestWrapper>,
     );
 
     // Check that source labels are displayed
@@ -102,7 +106,7 @@ describe("ReferenceNodeDisplay", () => {
     render(
       <TestWrapper>
         <ReferenceNodeDisplay nodeId={mockNodeId} referenceLinks={mockLinks} />
-      </TestWrapper>
+      </TestWrapper>,
     );
 
     expect(screen.getByText("Test_Concept")).toBeInTheDocument();
@@ -117,7 +121,7 @@ describe("ReferenceNodeDisplay", () => {
     render(
       <TestWrapper>
         <ReferenceNodeDisplay nodeId={mockNodeId} referenceLinks={mockLinks} />
-      </TestWrapper>
+      </TestWrapper>,
     );
 
     const viewButtons = screen.getAllByText("View");
@@ -133,7 +137,7 @@ describe("ReferenceNodeDisplay", () => {
     render(
       <TestWrapper>
         <ReferenceNodeDisplay nodeId={mockNodeId} referenceLinks={mockLinks} />
-      </TestWrapper>
+      </TestWrapper>,
     );
 
     // Verify that remove buttons are rendered
@@ -150,17 +154,21 @@ describe("ReferenceNodeDisplay", () => {
     mockUseRemoveReferenceLink.mockReturnValue({
       mutate: mockMutate,
       isPending: false,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } as any);
 
     render(
       <TestWrapper>
         <ReferenceNodeDisplay nodeId={mockNodeId} referenceLinks={mockLinks} />
-      </TestWrapper>
+      </TestWrapper>,
     );
 
     // Verify the component renders without errors when using the mutation hook
     expect(screen.getByText("Test_Concept")).toBeInTheDocument();
-    expect(mockUseRemoveReferenceLink).toHaveBeenCalledWith(mockNodeId, expect.any(Object));
+    expect(mockUseRemoveReferenceLink).toHaveBeenCalledWith(
+      mockNodeId,
+      expect.any(Object),
+    );
   });
 
   it("sorts sources alphabetically", () => {
@@ -173,16 +181,22 @@ describe("ReferenceNodeDisplay", () => {
     render(
       <TestWrapper>
         <ReferenceNodeDisplay nodeId={mockNodeId} referenceLinks={mockLinks} />
-      </TestWrapper>
+      </TestWrapper>,
     );
 
     const headings = screen.getAllByRole("heading", { level: 4 });
     const sourceTexts = headings.map((h) => h.textContent);
 
     // Verify DBpedia comes before Schema.org and Wikidata
-    const dbpediaIndex = sourceTexts.findIndex((text) => text?.includes("DBpedia"));
-    const schemaIndex = sourceTexts.findIndex((text) => text?.includes("Schema.org"));
-    const wikidataIndex = sourceTexts.findIndex((text) => text?.includes("Wikidata"));
+    const dbpediaIndex = sourceTexts.findIndex((text) =>
+      text?.includes("DBpedia"),
+    );
+    const schemaIndex = sourceTexts.findIndex((text) =>
+      text?.includes("Schema.org"),
+    );
+    const wikidataIndex = sourceTexts.findIndex((text) =>
+      text?.includes("Wikidata"),
+    );
 
     expect(dbpediaIndex).toBeLessThan(schemaIndex);
     expect(schemaIndex).toBeLessThan(wikidataIndex);

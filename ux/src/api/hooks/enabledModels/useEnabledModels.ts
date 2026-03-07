@@ -1,4 +1,9 @@
-import { useQuery, useMutation, useQueryClient, UseQueryOptions } from "@tanstack/react-query";
+import {
+  useQuery,
+  useMutation,
+  useQueryClient,
+  UseQueryOptions,
+} from "@tanstack/react-query";
 import {
   enabledModelsService,
   type EnabledModelsResponse,
@@ -7,7 +12,7 @@ import {
   type ProviderType,
   type CostTier,
   type ModelCreateRequest,
-  type ModelUpdateRequest
+  type ModelUpdateRequest,
 } from "@/api/services/enabledModels";
 
 /**
@@ -19,7 +24,10 @@ export function useEnabledModels(
     provider_type?: ProviderType;
     tag?: string;
   },
-  options?: Omit<UseQueryOptions<EnabledModelsResponse, Error>, 'queryKey' | 'queryFn'>
+  options?: Omit<
+    UseQueryOptions<EnabledModelsResponse, Error>,
+    "queryKey" | "queryFn"
+  >,
 ) {
   return useQuery({
     queryKey: ["enabledModels", params],
@@ -35,11 +43,16 @@ export function useEnabledModels(
  */
 export function useEnabledModel(
   modelName: string | undefined,
-  options?: Omit<UseQueryOptions<EnabledModelConfig, Error>, 'queryKey' | 'queryFn'>
+  options?: Omit<
+    UseQueryOptions<EnabledModelConfig, Error>,
+    "queryKey" | "queryFn"
+  >,
 ) {
   return useQuery({
     queryKey: ["enabledModel", modelName],
-    queryFn: modelName ? () => enabledModelsService.getEnabledModel(modelName) : undefined,
+    queryFn: modelName
+      ? () => enabledModelsService.getEnabledModel(modelName)
+      : undefined,
     enabled: Boolean(modelName),
     staleTime: 2 * 60 * 1000, // 2 minutes
     gcTime: 5 * 60 * 1000, // 5 minutes
@@ -51,7 +64,10 @@ export function useEnabledModel(
  * Hook to get providers status summary
  */
 export function useProvidersStatus(
-  options?: Omit<UseQueryOptions<ProvidersStatusResponse, Error>, 'queryKey' | 'queryFn'>
+  options?: Omit<
+    UseQueryOptions<ProvidersStatusResponse, Error>,
+    "queryKey" | "queryFn"
+  >,
 ) {
   return useQuery({
     queryKey: ["providersStatus"],
@@ -67,7 +83,10 @@ export function useProvidersStatus(
  * Hook to get models grouped by provider
  */
 export function useModelsByProvider(
-  options?: Omit<UseQueryOptions<Record<ProviderType, EnabledModelConfig[]>, Error>, 'queryKey' | 'queryFn'>
+  options?: Omit<
+    UseQueryOptions<Record<ProviderType, EnabledModelConfig[]>, Error>,
+    "queryKey" | "queryFn"
+  >,
 ) {
   return useQuery({
     queryKey: ["modelsByProvider"],
@@ -82,7 +101,10 @@ export function useModelsByProvider(
  * Hook to get only enabled models
  */
 export function useEnabledModelsOnly(
-  options?: Omit<UseQueryOptions<EnabledModelConfig[], Error>, 'queryKey' | 'queryFn'>
+  options?: Omit<
+    UseQueryOptions<EnabledModelConfig[], Error>,
+    "queryKey" | "queryFn"
+  >,
 ) {
   return useQuery({
     queryKey: ["enabledModelsOnly"],
@@ -98,7 +120,10 @@ export function useEnabledModelsOnly(
  */
 export function useModelsByTag(
   tag: string | undefined,
-  options?: Omit<UseQueryOptions<EnabledModelConfig[], Error>, 'queryKey' | 'queryFn'>
+  options?: Omit<
+    UseQueryOptions<EnabledModelConfig[], Error>,
+    "queryKey" | "queryFn"
+  >,
 ) {
   return useQuery({
     queryKey: ["modelsByTag", tag],
@@ -115,11 +140,16 @@ export function useModelsByTag(
  */
 export function useModelsByCostTier(
   costTier: CostTier | undefined,
-  options?: Omit<UseQueryOptions<EnabledModelConfig[], Error>, 'queryKey' | 'queryFn'>
+  options?: Omit<
+    UseQueryOptions<EnabledModelConfig[], Error>,
+    "queryKey" | "queryFn"
+  >,
 ) {
   return useQuery({
     queryKey: ["modelsByCostTier", costTier],
-    queryFn: costTier ? () => enabledModelsService.getModelsByCostTier(costTier) : undefined,
+    queryFn: costTier
+      ? () => enabledModelsService.getModelsByCostTier(costTier)
+      : undefined,
     enabled: Boolean(costTier),
     staleTime: 2 * 60 * 1000, // 2 minutes
     gcTime: 5 * 60 * 1000, // 5 minutes
@@ -134,7 +164,8 @@ export function useCreateEnabledModel() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (config: ModelCreateRequest) => enabledModelsService.createEnabledModel(config),
+    mutationFn: (config: ModelCreateRequest) =>
+      enabledModelsService.createEnabledModel(config),
     onSuccess: () => {
       // Invalidate all enabled models queries
       queryClient.invalidateQueries({ queryKey: ["enabledModels"] });
@@ -152,8 +183,13 @@ export function useUpdateEnabledModel() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ modelName, updates }: { modelName: string; updates: ModelUpdateRequest }) =>
-      enabledModelsService.updateEnabledModel(modelName, updates),
+    mutationFn: ({
+      modelName,
+      updates,
+    }: {
+      modelName: string;
+      updates: ModelUpdateRequest;
+    }) => enabledModelsService.updateEnabledModel(modelName, updates),
     onSuccess: (_, { modelName }) => {
       // Invalidate related queries
       queryClient.invalidateQueries({ queryKey: ["enabledModels"] });
@@ -172,7 +208,8 @@ export function useDeleteEnabledModel() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (modelName: string) => enabledModelsService.deleteEnabledModel(modelName),
+    mutationFn: (modelName: string) =>
+      enabledModelsService.deleteEnabledModel(modelName),
     onSuccess: (_, modelName) => {
       // Invalidate and remove related queries
       queryClient.invalidateQueries({ queryKey: ["enabledModels"] });
@@ -191,8 +228,13 @@ export function useToggleModel() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ modelName, enabled }: { modelName: string; enabled: boolean }) =>
-      enabledModelsService.toggleModel(modelName, enabled),
+    mutationFn: ({
+      modelName,
+      enabled,
+    }: {
+      modelName: string;
+      enabled: boolean;
+    }) => enabledModelsService.toggleModel(modelName, enabled),
     onSuccess: (_, { modelName }) => {
       // Invalidate related queries
       queryClient.invalidateQueries({ queryKey: ["enabledModels"] });
@@ -211,7 +253,8 @@ export function useEnableModel() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (modelName: string) => enabledModelsService.enableModel(modelName),
+    mutationFn: (modelName: string) =>
+      enabledModelsService.enableModel(modelName),
     onSuccess: (_, modelName) => {
       // Invalidate related queries
       queryClient.invalidateQueries({ queryKey: ["enabledModels"] });
@@ -230,7 +273,8 @@ export function useDisableModel() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (modelName: string) => enabledModelsService.disableModel(modelName),
+    mutationFn: (modelName: string) =>
+      enabledModelsService.disableModel(modelName),
     onSuccess: (_, modelName) => {
       // Invalidate related queries
       queryClient.invalidateQueries({ queryKey: ["enabledModels"] });

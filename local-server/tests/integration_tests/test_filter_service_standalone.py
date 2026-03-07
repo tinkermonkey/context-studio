@@ -7,16 +7,16 @@ filtering logic with database interactions.
 
 import sys
 import os
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))  # noqa: E501
 
-import json
-from unittest.mock import Mock
-from sqlalchemy import create_engine, text
-from sqlalchemy.orm import sessionmaker
+import json  # noqa: E402
+from unittest.mock import Mock  # noqa: E402
+from sqlalchemy import create_engine  # noqa: E402
+from sqlalchemy.orm import sessionmaker  # noqa: E402
 
-from database.models import Base, Predicate
-from reference_db.models import Base as ReferenceBase, ReferenceNode, ReferenceLink, ExternalPredicate as ReferencePredicate
-from services.reference_filter_service import ReferenceFilterService
+from database.models import Base, Predicate  # noqa: E402
+from reference_db.models import Base as ReferenceBase, ExternalPredicate as ReferencePredicate  # noqa: E402, E501
+from services.reference_filter_service import ReferenceFilterService  # noqa: E402, E501
 
 
 def test_integration_filter_with_databases():
@@ -243,7 +243,7 @@ def test_error_handling():
 
     # Create mock reference manager that raises an error
     mock_manager = Mock()
-    mock_manager.list_external_predicates.side_effect = Exception("Database connection failed")
+    mock_manager.list_external_predicates.side_effect = Exception("Database connection failed")  # noqa: E501
 
     service = ReferenceFilterService(local_db, mock_manager)
 
@@ -254,7 +254,7 @@ def test_error_handling():
     # Should handle error gracefully
     filtered_links, stats = service.filter_links([link])
 
-    # When there's an error in filter service, it should return unfiltered links
+    # When there's an error in filter service, it should return unfiltered links  # noqa: E501
     # with filtering_active=False (no predicates marked = no filtering)
     assert len(filtered_links) == 1
     assert stats["filtering_active"] is False

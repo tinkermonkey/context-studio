@@ -10,6 +10,7 @@ import { Card } from "flowbite-react";
 export interface ChartDataPoint {
   label: string;
   value: number;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   metadata?: Record<string, any>;
 }
 
@@ -43,7 +44,7 @@ export function AnalyticsChart({
         )}
         <div className="overflow-x-auto">
           <table className="w-full text-left text-sm text-gray-500 dark:text-gray-400">
-            <thead className="bg-gray-50 text-xs uppercase text-gray-700 dark:bg-gray-700 dark:text-gray-400">
+            <thead className="bg-gray-50 text-xs text-gray-700 uppercase dark:bg-gray-700 dark:text-gray-400">
               <tr>
                 <th className="px-6 py-3">Label</th>
                 <th className="px-6 py-3 text-right">Value</th>

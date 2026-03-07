@@ -71,7 +71,7 @@ const CollapsibleLayersList: React.FC<CollapsibleLayersListProps> = ({
     <div className="mx-1 space-y-1">
       {displayedLayers.map((layer: StructureNode) => {
         const isSelected = selectedLayerId === layer.id;
-        const className = `text-sm cursor-pointer px-2 py-1 rounded transition-colors block ${
+        const className = `${
           isSelected
             ? "bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 font-medium"
             : "text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800"

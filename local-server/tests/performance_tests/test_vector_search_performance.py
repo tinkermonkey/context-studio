@@ -9,14 +9,14 @@ import tempfile
 import os
 import time
 import statistics
-from datetime import date
+from typing import cast
 
 from reference_db.config import ReferenceConfig
 from reference_db.manager import ReferenceManager
 
 
 # Skip if embeddings not available
-pytest.importorskip("embeddings.generate_embeddings", reason="embeddings module not available")
+pytest.importorskip("embeddings.generate_embeddings", reason="embeddings module not available")  # noqa: E501
 
 
 @pytest.fixture(scope="module")
@@ -45,15 +45,15 @@ def large_dataset_manager():
         "Review", "Rating", "Comment", "Question", "Answer",
         "Course", "EducationalOrganization", "School", "College", "University",
         "MedicalEntity", "Drug", "MedicalCondition", "Hospital", "Physician",
-        "Recipe", "NutritionInformation", "Diet", "ExercisePlan", "PhysicalActivity",
+        "Recipe", "NutritionInformation", "Diet", "ExercisePlan", "PhysicalActivity",  # noqa: E501
         "Vehicle", "Car", "Motorcycle", "BusOrCoach", "Airplane",
-        "TVSeries", "TVEpisode", "RadioSeries", "RadioEpisode", "PodcastSeries",
-        "JobPosting", "Occupation", "EducationalOccupationalCredential", "WorkersUnion", "ProfessionalService",
-        "GovernmentOrganization", "NGO", "Corporation", "LegalService", "PerformingGroup",
-        "MusicGroup", "DanceGroup", "TheaterGroup", "SportsTeam", "SportsOrganization",
+        "TVSeries", "TVEpisode", "RadioSeries", "RadioEpisode", "PodcastSeries",  # noqa: E501
+        "JobPosting", "Occupation", "EducationalOccupationalCredential", "WorkersUnion", "ProfessionalService",  # noqa: E501
+        "GovernmentOrganization", "NGO", "Corporation", "LegalService", "PerformingGroup",  # noqa: E501
+        "MusicGroup", "DanceGroup", "TheaterGroup", "SportsTeam", "SportsOrganization",  # noqa: E501
         "Airline", "Consortium", "FundingScheme", "Project", "ResearchProject",
         "Brand", "ContactPoint", "PostalAddress", "GeoCoordinates", "GeoShape",
-        "Country", "State", "City", "AdministrativeArea", "LandmarksOrHistoricalBuildings",
+        "Country", "State", "City", "AdministrativeArea", "LandmarksOrHistoricalBuildings",  # noqa: E501
         "Park", "Beach", "Mountain", "BodyOfWater", "Continent",
         "Cemetery", "Crematorium", "EventVenue", "CivicStructure", "Bridge",
         "BusStation", "Airport", "SubwayStation", "TrainStation", "TaxiStand",
@@ -104,7 +104,7 @@ class TestVectorSearchLatency:
         manager, db_path = large_dataset_manager
 
         def embedding_gen(text: str) -> bytes:
-            return generate_embedding(text)
+            return cast(bytes, generate_embedding(text))
 
         # Warm up queries
         for _ in range(3):
@@ -144,7 +144,7 @@ class TestVectorSearchLatency:
             start_time = time.perf_counter()
 
             # Use a lambda that returns the pre-generated embedding
-            results = manager.search_by_similarity(
+            _ = manager.search_by_similarity(
                 query_text=query,
                 limit=20,
                 threshold=0.0,
@@ -161,20 +161,20 @@ class TestVectorSearchLatency:
         median_time = statistics.median(search_times)
         max_time = max(search_times)
         min_time = min(search_times)
-        p95_time = statistics.quantiles(search_times, n=20)[18]  # 95th percentile
+        p95_time = statistics.quantiles(search_times, n=20)[18]  # 95th percentile  # noqa: E501
 
         print(f"\n{'='*60}")
-        print(f"Vector Search Performance Test Results (TC-P002, TC-S003)")
+        print("Vector Search Performance Test Results (TC-P002, TC-S003)")
         print(f"{'='*60}")
-        print(f"Dataset size: {len(test_queries)} queries against {90}+ entities")
-        print(f"Search limit: 20 results")
-        print(f"\nLatency Statistics:")
+        print(f"Dataset size: {len(test_queries)} queries against {90}+ entities")  # noqa: E501
+        print("Search limit: 20 results")
+        print("\nLatency Statistics:")
         print(f"  Average:    {avg_time:6.2f} ms")
         print(f"  Median:     {median_time:6.2f} ms")
         print(f"  Min:        {min_time:6.2f} ms")
         print(f"  Max:        {max_time:6.2f} ms")
         print(f"  P95:        {p95_time:6.2f} ms")
-        print(f"\nRequirement: <50ms for top-20 queries")
+        print("\nRequirement: <50ms for top-20 queries")
         print(f"Status: {'PASS' if avg_time < 50.0 else 'FAIL'}")
         print(f"{'='*60}\n")
 
@@ -195,7 +195,7 @@ class TestVectorSearchLatency:
 
         manager, db_path = large_dataset_manager
 
-        query_embedding = generate_embedding("test query")
+        query_embedding: bytes = cast(bytes, generate_embedding("test query"))
 
         def embedding_gen(_: str) -> bytes:
             return query_embedding
@@ -210,7 +210,7 @@ class TestVectorSearchLatency:
             for _ in range(5):  # Multiple measurements for stability
                 start_time = time.perf_counter()
 
-                manager.search_by_similarity(
+                _ = manager.search_by_similarity(
                     query_text="test",
                     limit=limit,
                     threshold=0.0,
@@ -222,7 +222,7 @@ class TestVectorSearchLatency:
 
             times[limit] = statistics.mean(measurements)
 
-        print(f"\nSearch Scaling Test:")
+        print("\nSearch Scaling Test:")
         for limit, avg_time in times.items():
             print(f"  Limit {limit:3d}: {avg_time:6.2f} ms")
 
@@ -231,12 +231,12 @@ class TestVectorSearchLatency:
         time_ratio = times[100] / times[10]
         limit_ratio = 100 / 10
 
-        print(f"\nScaling factor: {time_ratio:.2f}x time for {limit_ratio:.0f}x limit")
+        print(f"\nScaling factor: {time_ratio:.2f}x time for {limit_ratio:.0f}x limit")  # noqa: E501
         print(f"Efficiency: {'GOOD' if time_ratio < limit_ratio else 'POOR'}")
 
         # Time should not scale worse than linearly
         assert time_ratio < limit_ratio * 1.5, \
-            f"Search scaling is suboptimal: {time_ratio:.2f}x time for {limit_ratio:.0f}x limit"
+            f"Search scaling is suboptimal: {time_ratio:.2f}x time for {limit_ratio:.0f}x limit"  # noqa: E501
 
     def test_threshold_filtering_performance(self, large_dataset_manager):
         """
@@ -248,7 +248,7 @@ class TestVectorSearchLatency:
 
         manager, db_path = large_dataset_manager
 
-        query_embedding = generate_embedding("test query")
+        query_embedding: bytes = cast(bytes, generate_embedding("test query"))
 
         def embedding_gen(_: str) -> bytes:
             return query_embedding
@@ -257,7 +257,7 @@ class TestVectorSearchLatency:
         no_threshold_times = []
         for _ in range(10):
             start = time.perf_counter()
-            manager.search_by_similarity(
+            _ = manager.search_by_similarity(
                 query_text="test",
                 limit=20,
                 threshold=0.0,
@@ -269,7 +269,7 @@ class TestVectorSearchLatency:
         with_threshold_times = []
         for _ in range(10):
             start = time.perf_counter()
-            manager.search_by_similarity(
+            _ = manager.search_by_similarity(
                 query_text="test",
                 limit=20,
                 threshold=0.8,
@@ -280,15 +280,15 @@ class TestVectorSearchLatency:
         avg_no_threshold = statistics.mean(no_threshold_times)
         avg_with_threshold = statistics.mean(with_threshold_times)
 
-        print(f"\nThreshold Filtering Performance:")
+        print("\nThreshold Filtering Performance:")
         print(f"  No threshold (0.0):   {avg_no_threshold:6.2f} ms")
         print(f"  With threshold (0.8): {avg_with_threshold:6.2f} ms")
-        print(f"  Overhead:             {avg_with_threshold - avg_no_threshold:6.2f} ms")
+        print(f"  Overhead:             {avg_with_threshold - avg_no_threshold:6.2f} ms")  # noqa: E501
 
         # Threshold filtering should not add significant overhead
-        overhead_pct = ((avg_with_threshold - avg_no_threshold) / avg_no_threshold) * 100
+        overhead_pct = ((avg_with_threshold - avg_no_threshold) / avg_no_threshold) * 100  # noqa: E501
 
         print(f"  Overhead %:           {overhead_pct:6.2f}%")
 
         assert overhead_pct < 20.0, \
-            f"Threshold filtering adds {overhead_pct:.1f}% overhead (should be <20%)"
+            f"Threshold filtering adds {overhead_pct:.1f}% overhead (should be <20%)"  # noqa: E501

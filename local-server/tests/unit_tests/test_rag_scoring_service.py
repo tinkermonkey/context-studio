@@ -9,9 +9,9 @@ import sys
 import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-import pytest
-from rag.test_scoring import RAGTestScoringService, AnnotationSpan, ExtractionSpan, ScoringResult
-from rag.models import ExtractedEntity
+import pytest  # noqa: E402
+from rag.test_scoring import RAGTestScoringService, AnnotationSpan  # noqa: E402, E501
+from rag.models import ExtractedEntity  # noqa: E402
 
 
 class TestRAGScoringService:

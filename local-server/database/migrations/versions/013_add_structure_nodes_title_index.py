@@ -7,6 +7,7 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+
 class Migration013(Migration):
     """Add composite index for structure_nodes (node_type, title) to optimize pagination queries."""
     version = 13

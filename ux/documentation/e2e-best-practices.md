@@ -13,24 +13,31 @@ The Phase 3 e2e tests (Reference Search and RAG Experiments) serve as examples o
 ### 1. ✅ **Never Use Fixed Timeouts**
 
 **❌ Bad:**
+
 ```typescript
 await page.waitForTimeout(3000); // Hope 3 seconds is enough
-const hasResults = await page.locator('[data-testid="results"]').isVisible().catch(() => false);
+const hasResults = await page
+  .locator('[data-testid="results"]')
+  .isVisible()
+  .catch(() => false);
 ```
 
 **✅ Good:**
+
 ```typescript
 // Wait for a specific condition with explicit timeout
-await expect(page.locator('[data-testid="results"]')).toBeVisible({ timeout: 10000 });
+await expect(page.locator('[data-testid="results"]')).toBeVisible({
+  timeout: 10000,
+});
 
 // Or use the waitForAnyCondition helper
 const resultIndex = await waitForAnyCondition(
   page,
   [
     async () => await page.locator('[data-testid="results"]').isVisible(),
-    async () => await page.getByText('No results found').isVisible(),
+    async () => await page.getByText("No results found").isVisible(),
   ],
-  10000
+  10000,
 );
 ```
 
@@ -41,10 +48,11 @@ const resultIndex = await waitForAnyCondition(
 ### 2. ✅ **Mock External Dependencies**
 
 **❌ Bad:**
+
 ```typescript
 // Test relies on external APIs being available
-test('should search external API', async ({ page }) => {
-  await page.fill('[data-testid="search"]', 'computer');
+test("should search external API", async ({ page }) => {
+  await page.fill('[data-testid="search"]', "computer");
   await page.click('[data-testid="search-button"]');
   // Fails if DBpedia is down or slow
   await expect(page.locator('[data-testid="results"]')).toBeVisible();
@@ -52,14 +60,15 @@ test('should search external API', async ({ page }) => {
 ```
 
 **✅ Good:**
+
 ```typescript
 test.beforeEach(async ({ page }) => {
   // Mock external APIs for reliability
   await mockReferenceAPIs(page);
 });
 
-test('should search external API', async ({ page }) => {
-  await page.fill('[data-testid="search"]', 'computer');
+test("should search external API", async ({ page }) => {
+  await page.fill('[data-testid="search"]', "computer");
   await page.click('[data-testid="search-button"]');
   // Always succeeds, fast and reliable
   await expect(page.locator('[data-testid="results"]')).toBeVisible();
@@ -73,25 +82,30 @@ test('should search external API', async ({ page }) => {
 ### 3. ✅ **Verify Backend Readiness**
 
 **❌ Bad:**
+
 ```typescript
-test('should create record', async ({ page }) => {
+test("should create record", async ({ page }) => {
   // Assumes endpoint exists
-  await apiRequest(page, '/api/new-feature/records', { method: 'POST', body: {} });
+  await apiRequest(page, "/api/new-feature/records", {
+    method: "POST",
+    body: {},
+  });
 });
 ```
 
 **✅ Good:**
+
 ```typescript
 test.beforeAll(async ({ browser }) => {
   const context = await browser.newContext();
   const page = await context.newPage();
 
-  const hasEndpoint = await endpointExists(page, '/api/new-feature/records');
+  const hasEndpoint = await endpointExists(page, "/api/new-feature/records");
   await context.close();
 
   if (!hasEndpoint) {
     throw new Error(
-      'API endpoint not available. Please ensure the backend is running with this feature enabled.'
+      "API endpoint not available. Please ensure the backend is running with this feature enabled.",
     );
   }
 });
@@ -104,6 +118,7 @@ test.beforeAll(async ({ browser }) => {
 ### 4. ✅ **Use Explicit Waits with Clear Timeouts**
 
 **❌ Bad:**
+
 ```typescript
 await page.click('[data-testid="button"]');
 // Implicitly waits, unclear what we're waiting for
@@ -111,10 +126,13 @@ const isVisible = await page.locator('[data-testid="result"]').isVisible();
 ```
 
 **✅ Good:**
+
 ```typescript
 await page.click('[data-testid="button"]');
 // Explicitly wait for the expected outcome with timeout
-await expect(page.locator('[data-testid="result"]')).toBeVisible({ timeout: 5000 });
+await expect(page.locator('[data-testid="result"]')).toBeVisible({
+  timeout: 5000,
+});
 ```
 
 **Why:** Makes test intent clear and provides specific timeout control.
@@ -124,15 +142,17 @@ await expect(page.locator('[data-testid="result"]')).toBeVisible({ timeout: 5000
 ### 5. ✅ **Wait for Elements Before Interacting**
 
 **❌ Bad:**
+
 ```typescript
-await page.goto('/page');
+await page.goto("/page");
 await page.click('[data-testid="button"]'); // May click before element is ready
 ```
 
 **✅ Good:**
+
 ```typescript
-await page.goto('/page');
-await page.waitForLoadState('networkidle');
+await page.goto("/page");
+await page.waitForLoadState("networkidle");
 
 const button = page.locator('[data-testid="button"]');
 await expect(button).toBeVisible({ timeout: 10000 });
@@ -147,12 +167,17 @@ await button.click();
 ### 6. ✅ **Better Error Messages**
 
 **❌ Bad:**
+
 ```typescript
-const hasResults = await page.locator('[data-testid="results"]').isVisible().catch(() => false);
+const hasResults = await page
+  .locator('[data-testid="results"]')
+  .isVisible()
+  .catch(() => false);
 expect(hasResults).toBeTruthy(); // Error: "expected false to be truthy"
 ```
 
 **✅ Good:**
+
 ```typescript
 await waitForElement(page, '[data-testid="results"]', { timeout: 10000 });
 // Error: "Element '[data-testid="results"]' not found after 10000ms. Current URL: http://localhost:3888/app/search"
@@ -165,21 +190,23 @@ await waitForElement(page, '[data-testid="results"]', { timeout: 10000 });
 ### 7. ✅ **Use Semantic Selectors**
 
 **❌ Bad:**
+
 ```typescript
-await page.click('div.container > button.btn-primary:nth-child(2)'); // Fragile
+await page.click("div.container > button.btn-primary:nth-child(2)"); // Fragile
 ```
 
 **✅ Good:**
+
 ```typescript
 // Priority order:
 // 1. data-testid attributes
 await page.click('[data-testid="submit-button"]');
 
 // 2. ARIA roles and labels
-await page.getByRole('button', { name: 'Submit' }).click();
+await page.getByRole("button", { name: "Submit" }).click();
 
 // 3. Text content (when appropriate)
-await page.getByText('Submit').click();
+await page.getByText("Submit").click();
 ```
 
 **Why:** Semantic selectors are more resilient to UI changes.
@@ -189,8 +216,9 @@ await page.getByText('Submit').click();
 ### 8. ✅ **Test One Thing at a Time**
 
 **❌ Bad:**
+
 ```typescript
-test('should do everything', async ({ page }) => {
+test("should do everything", async ({ page }) => {
   // Creates, edits, deletes, and tests navigation all in one test
   await createRecord();
   await editRecord();
@@ -200,14 +228,15 @@ test('should do everything', async ({ page }) => {
 ```
 
 **✅ Good:**
+
 ```typescript
-test('should create record', async ({ page }) => {
+test("should create record", async ({ page }) => {
   // Focused on one responsibility
   await createRecord();
   await verifyRecordExists();
 });
 
-test('should edit record', async ({ page }) => {
+test("should edit record", async ({ page }) => {
   await createRecordViaAPI();
   await editRecord();
   await verifyUpdates();
@@ -221,11 +250,12 @@ test('should edit record', async ({ page }) => {
 ### 9. ✅ **Use API for Test Data Setup**
 
 **❌ Bad:**
+
 ```typescript
-test('should delete record', async ({ page }) => {
+test("should delete record", async ({ page }) => {
   // Creates record through UI (slow)
-  await page.goto('/records/new');
-  await page.fill('[data-testid="name"]', 'Test');
+  await page.goto("/records/new");
+  await page.fill('[data-testid="name"]', "Test");
   await page.click('[data-testid="submit"]');
 
   // Now test deletion
@@ -234,12 +264,13 @@ test('should delete record', async ({ page }) => {
 ```
 
 **✅ Good:**
+
 ```typescript
-test('should delete record', async ({ page }) => {
+test("should delete record", async ({ page }) => {
   // Create prerequisite data via API (fast)
-  const record = await apiRequest(page, '/api/records', {
-    method: 'POST',
-    body: { name: 'Test' }
+  const record = await apiRequest(page, "/api/records", {
+    method: "POST",
+    body: { name: "Test" },
   });
 
   // Test the actual feature
@@ -255,6 +286,7 @@ test('should delete record', async ({ page }) => {
 ### 10. ✅ **Handle Multiple Possible Outcomes**
 
 **❌ Bad:**
+
 ```typescript
 // Assumes search always returns results
 await page.click('[data-testid="search"]');
@@ -262,6 +294,7 @@ await expect(page.locator('[data-testid="results"]')).toBeVisible();
 ```
 
 **✅ Good:**
+
 ```typescript
 await page.click('[data-testid="search"]');
 
@@ -270,10 +303,10 @@ const outcome = await waitForAnyCondition(
   page,
   [
     async () => await page.locator('[data-testid="results"]').isVisible(),
-    async () => await page.getByText('No results found').isVisible(),
-    async () => await page.getByText('Search failed').isVisible(),
+    async () => await page.getByText("No results found").isVisible(),
+    async () => await page.getByText("Search failed").isVisible(),
   ],
-  15000
+  15000,
 );
 
 // Assert that *something* happened
@@ -297,7 +330,7 @@ const resultIndex = await waitForAnyCondition(
     async () => await page.locator('[data-testid="success"]').isVisible(),
     async () => await page.locator('[data-testid="error"]').isVisible(),
   ],
-  10000
+  10000,
 );
 
 if (resultIndex === 0) {
@@ -312,9 +345,9 @@ if (resultIndex === 0) {
 Checks if a backend endpoint is available before running tests.
 
 ```typescript
-const hasEndpoint = await endpointExists(page, '/api/new-feature');
+const hasEndpoint = await endpointExists(page, "/api/new-feature");
 if (!hasEndpoint) {
-  throw new Error('Feature not available');
+  throw new Error("Feature not available");
 }
 ```
 
@@ -341,35 +374,41 @@ await waitForElement(page, '[data-testid="results"]', { timeout: 10000 });
 ## Test Structure Template
 
 ```typescript
-import { test, expect } from '@playwright/test';
-import { apiRequest, waitForElement, endpointExists } from '../fixtures/test-helpers';
+import { test, expect } from "@playwright/test";
+import {
+  apiRequest,
+  waitForElement,
+  endpointExists,
+} from "../fixtures/test-helpers";
 
-test.describe('Feature Name', () => {
+test.describe("Feature Name", () => {
   // Verify backend is ready
   test.beforeAll(async ({ browser }) => {
     const context = await browser.newContext();
     const page = await context.newPage();
 
-    const hasEndpoint = await endpointExists(page, '/api/feature');
+    const hasEndpoint = await endpointExists(page, "/api/feature");
     await context.close();
 
     if (!hasEndpoint) {
-      throw new Error('Feature API not available');
+      throw new Error("Feature API not available");
     }
   });
 
   // Setup for each test
   test.beforeEach(async ({ page }) => {
-    await page.goto('/app/feature');
-    await page.waitForLoadState('networkidle');
-    await expect(page.getByText('Feature Title')).toBeVisible({ timeout: 10000 });
+    await page.goto("/app/feature");
+    await page.waitForLoadState("networkidle");
+    await expect(page.getByText("Feature Title")).toBeVisible({
+      timeout: 10000,
+    });
   });
 
-  test('should perform action', async ({ page }) => {
+  test("should perform action", async ({ page }) => {
     // Arrange: Set up test data via API
-    const testData = await apiRequest(page, '/api/feature', {
-      method: 'POST',
-      body: { name: 'Test' }
+    const testData = await apiRequest(page, "/api/feature", {
+      method: "POST",
+      body: { name: "Test" },
     });
 
     // Act: Perform the action being tested
@@ -378,11 +417,13 @@ test.describe('Feature Name', () => {
     await button.click();
 
     // Assert: Verify the outcome
-    await expect(page.locator('[data-testid="result"]')).toBeVisible({ timeout: 5000 });
+    await expect(page.locator('[data-testid="result"]')).toBeVisible({
+      timeout: 5000,
+    });
 
     // Verify backend state
     const response = await apiRequest(page, `/api/feature/${testData.id}`);
-    expect(response.status).toBe('completed');
+    expect(response.status).toBe("completed");
   });
 });
 ```

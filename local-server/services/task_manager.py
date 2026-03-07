@@ -14,7 +14,7 @@ import uuid
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from enum import Enum
-from typing import Any, Callable, Dict, List, Optional, Awaitable, Protocol
+from typing import Any, Dict, List, Optional, Awaitable, Protocol
 from utils.logger import get_logger
 
 
@@ -140,9 +140,14 @@ class TaskManager:
         logger.info(f"TaskManager initialized with max_queue_size={max_queue_size}, max_dlq_size={max_dlq_size}, max_task_history={max_task_history}")
 
     async def start(self):
-        """Start the task manager worker."""
+        """
+        Start the task manager worker.
+
+        This method is idempotent and safe to call multiple times.
+        Subsequent calls after the first will be no-ops.
+        """
         if self._running:
-            logger.warning("TaskManager is already running")
+            logger.debug("TaskManager is already running; ignoring duplicate start request")
             return
 
         self._running = True
@@ -262,11 +267,11 @@ class TaskManager:
         """
         task = self.tasks.get(task_id)
         if task is None:
-            logger.warning(f"Cannot cancel task {task_id}: not found")
+            logger.debug(f"Cannot cancel task {task_id}: not found (may have been cleaned up)")
             return False
 
         if task.status not in [TaskStatus.PENDING, TaskStatus.RUNNING]:
-            logger.warning(f"Cannot cancel task {task_id}: already in state {task.status.value}")
+            logger.debug(f"Cannot cancel task {task_id}: already in state {task.status.value}")
             return False
 
         await self._cancel_task_internal(task)
@@ -559,7 +564,10 @@ def initialize_task_manager(max_queue_size: int = 100, max_dlq_size: int = 1000,
     """
     global _task_manager
     if _task_manager is not None:
-        logger.warning("TaskManager already initialized")
+        if _task_manager._running:
+            logger.warning("TaskManager is already running; returning existing instance")
+        else:
+            logger.debug("Reusing existing TaskManager instance")
         return _task_manager
 
     _task_manager = TaskManager(max_queue_size=max_queue_size, max_dlq_size=max_dlq_size, max_task_history=max_task_history)

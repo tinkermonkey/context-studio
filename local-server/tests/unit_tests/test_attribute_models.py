@@ -10,9 +10,9 @@ from uuid import UUID, uuid4
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../../")))
 
-from pydantic import ValidationError
-import pytest
-from api.models.structure_nodes import (
+from pydantic import ValidationError  # noqa: E402
+import pytest  # noqa: E402
+from api.models.structure_nodes import (  # noqa: E402
     AttributeValueType,
     StructureNodeAttribute,
     ResolvedAttribute,
@@ -558,26 +558,6 @@ class TestAttributeIntegration:
         """Test resolving attributes with inheritance from parent."""
         parent_id = uuid4()
         child_id = uuid4()
-
-        # Parent has attributes
-        parent_attrs = [
-            ResolvedAttribute(
-                key="category",
-                title="Category",
-                value_type=AttributeValueType.STRING,
-                value="parent_category",
-                inherited=False,
-                source_node_id=parent_id,
-            ),
-            ResolvedAttribute(
-                key="priority",
-                title="Priority",
-                value_type=AttributeValueType.NUMBER,
-                value=1,
-                inherited=False,
-                source_node_id=parent_id,
-            ),
-        ]
 
         # Child overrides one, inherits another
         child_attrs = [

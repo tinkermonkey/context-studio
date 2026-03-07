@@ -1,5 +1,5 @@
 import React from "react";
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { vi, describe, it, expect, beforeEach, afterEach } from "vitest";
 import WordSenseSelector from "@/components/graphs/nlp_concept/WordSenseSelector";
@@ -16,11 +16,14 @@ vi.mock("@/utils/toast", () => ({
 
 // Mock the NlpConceptChart component
 vi.mock("@/components/graphs/nlp_concept/NlpConceptChart", () => ({
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   default: function MockNlpConceptChart({ data, onNodeClick }: any) {
     return (
       <div data-testid="nlp-concept-chart">
         <div data-testid="chart-text">{data.text}</div>
         <div data-testid="chart-lemma">{data.lemma}</div>
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
         {data.wordnet.synsets.map((synset: any, idx: number) => (
           <button
             key={idx}
@@ -36,12 +39,12 @@ vi.mock("@/components/graphs/nlp_concept/NlpConceptChart", () => ({
 }));
 
 // Mock fetch globally
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 global.fetch = vi.fn() as any;
 
 describe("WordSenseSelector", () => {
   let queryClient: QueryClient;
   let mockMutate: ReturnType<typeof vi.fn>;
-  let mockUpdateWordSenses: ReturnType<typeof vi.fn>;
 
   beforeEach(() => {
     queryClient = new QueryClient({
@@ -52,13 +55,14 @@ describe("WordSenseSelector", () => {
     });
 
     mockMutate = vi.fn();
-    mockUpdateWordSenses = vi.fn(() => ({
+
+    vi.spyOn(useWordSensesModule, "useUpdateWordSenses").mockReturnValue({
       mutate: mockMutate,
       isPending: false,
-    }));
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } as any);
 
-    vi.spyOn(useWordSensesModule, "useUpdateWordSenses").mockImplementation(mockUpdateWordSenses as any);
-
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (global.fetch as any).mockClear();
   });
 
@@ -80,7 +84,7 @@ describe("WordSenseSelector", () => {
           nodeId={props.nodeId || "test-node-123"}
           onSaveComplete={props.onSaveComplete}
         />
-      </QueryClientProvider>
+      </QueryClientProvider>,
     );
   };
 
@@ -107,7 +111,9 @@ describe("WordSenseSelector", () => {
     });
 
     it("renders words in responsive grid layout", () => {
-      const { container } = renderComponent({ title: "machine learning algorithm" });
+      const { container } = renderComponent({
+        title: "machine learning algorithm",
+      });
 
       const gridContainer = container.querySelector(".grid");
       expect(gridContainer).toHaveClass("grid-cols-1");
@@ -211,12 +217,16 @@ describe("WordSenseSelector", () => {
       // Click again to collapse
       fireEvent.click(wordButton);
       await waitFor(() => {
-        expect(screen.queryByTestId("nlp-concept-chart")).not.toBeInTheDocument();
+        expect(
+          screen.queryByTestId("nlp-concept-chart"),
+        ).not.toBeInTheDocument();
       });
     });
 
     it("handles analysis errors gracefully", async () => {
-      (global.fetch as jest.Mock).mockRejectedValueOnce(new Error("Network error"));
+      (global.fetch as jest.Mock).mockRejectedValueOnce(
+        new Error("Network error"),
+      );
 
       renderComponent({ title: "machine" });
 
@@ -231,6 +241,7 @@ describe("WordSenseSelector", () => {
 
   describe("Sense selection", () => {
     it("allows selecting a sense for a word", async () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (global.fetch as any).mockResolvedValueOnce({
         ok: true,
         json: async () => ({
@@ -271,6 +282,7 @@ describe("WordSenseSelector", () => {
     });
 
     it("allows toggling sense selection", async () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (global.fetch as any).mockResolvedValueOnce({
         ok: true,
         json: async () => ({
@@ -398,6 +410,7 @@ describe("WordSenseSelector", () => {
     });
 
     it("enables save button when mutation is available", async () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (global.fetch as any).mockResolvedValueOnce({
         ok: true,
         json: async () => ({
@@ -432,6 +445,7 @@ describe("WordSenseSelector", () => {
     });
 
     it("displays save button with correct text", async () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (global.fetch as any).mockResolvedValueOnce({
         ok: true,
         json: async () => ({
@@ -467,8 +481,12 @@ describe("WordSenseSelector", () => {
     it("does not call mutation when mutation is undefined", async () => {
       // Create a new mock that returns undefined
       const undefinedMock = vi.fn(() => undefined);
-      vi.spyOn(useWordSensesModule, "useUpdateWordSenses").mockImplementation(undefinedMock as any);
+      vi.spyOn(useWordSensesModule, "useUpdateWordSenses").mockImplementation(
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        undefinedMock as any,
+      );
 
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (global.fetch as any).mockResolvedValueOnce({
         ok: true,
         json: async () => ({

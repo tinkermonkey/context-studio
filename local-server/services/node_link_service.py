@@ -62,10 +62,10 @@ class NodeLinkService:
             raise ValueError("Source and target structure_nodes cannot be the same")
 
         # Get source and target structure_nodes
-        source = (
+        source: Optional[StructureNode] = (
             self.db.query(StructureNode).filter(StructureNode.id == source_id).first()
         )
-        target = (
+        target: Optional[StructureNode] = (
             self.db.query(StructureNode).filter(StructureNode.id == target_id).first()
         )
 
@@ -82,7 +82,7 @@ class NodeLinkService:
             )
 
         # Check for duplicate links
-        existing = (
+        existing: Optional[StructureNodeLink] = (
             self.db.query(StructureNodeLink)
             .filter(
                 StructureNodeLink.source_node_id == source_id,
@@ -144,7 +144,7 @@ class NodeLinkService:
         logger.info(f"Updating structure_node link: {link_id}")
 
         # Get existing link
-        link = (
+        link: Optional[StructureNodeLink] = (
             self.db.query(StructureNodeLink)
             .filter(StructureNodeLink.id == link_id)
             .first()
@@ -161,12 +161,12 @@ class NodeLinkService:
                 raise ValueError("Source and target structure_nodes cannot be the same")
 
             # Get structure_nodes to validate
-            source = (
+            source: Optional[StructureNode] = (
                 self.db.query(StructureNode)
                 .filter(StructureNode.id == source_id)
                 .first()
             )
-            target = (
+            target: Optional[StructureNode] = (
                 self.db.query(StructureNode)
                 .filter(StructureNode.id == target_id)
                 .first()
@@ -186,7 +186,7 @@ class NodeLinkService:
 
             # Check for duplicate links (excluding current link)
             predicate = link_data.get("predicate", link.predicate)
-            existing = (
+            existing: Optional[StructureNodeLink] = (
                 self.db.query(StructureNodeLink)
                 .filter(
                     StructureNodeLink.source_node_id == source_id,

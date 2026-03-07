@@ -5,13 +5,7 @@
  */
 
 import React from "react";
-import {
-  TextInput,
-  Checkbox,
-  HelperText,
-  Label,
-  FileInput,
-} from "flowbite-react";
+import { TextInput, Checkbox, HelperText, Label } from "flowbite-react";
 import { AlertCircle } from "lucide-react";
 import type { AttributeValueType } from "@/api/types/structureNodes";
 
@@ -55,7 +49,8 @@ export const AttributeValueInput: React.FC<AttributeValueInputProps> = ({
             type="number"
             value={stringValue}
             onChange={(e) => {
-              const numValue = e.target.value === "" ? null : Number(e.target.value);
+              const numValue =
+                e.target.value === "" ? null : Number(e.target.value);
               onChange(numValue);
             }}
             placeholder={placeholder || "Enter numeric value"}

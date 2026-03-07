@@ -62,6 +62,8 @@ async def test_embedding_regeneration(uri: str, force: bool = False):
                         print(f"   Data: {json.dumps(data, indent=2)}")
 
                 except json.JSONDecodeError:
+                    if isinstance(message, bytes):
+                        message = message.decode('utf-8', errors='replace')
                     print(f"⚠️  Invalid JSON received: {message}")
 
     except ConnectionClosed:

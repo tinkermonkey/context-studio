@@ -7,11 +7,10 @@ inheritance resolution and validation.
 
 import sys
 import os
-import uuid
 from uuid import uuid4
 
 sys.path.insert(
-    0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))  # noqa: E501
 )
 
 
@@ -33,7 +32,7 @@ class TestAttributesAPIBasicOperations:
         layer = layer_response.json()
 
         # Get attributes
-        attr_response = client.get(f"/api/structure_nodes/{layer['id']}/attributes")
+        attr_response = client.get(f"/api/structure_nodes/{layer['id']}/attributes")  # noqa: E501
         assert attr_response.status_code == 200
         attributes = attr_response.json()
         assert attributes == []
@@ -70,7 +69,7 @@ class TestAttributesAPIBasicOperations:
         assert updated_node["version"] == 2  # Version incremented
 
         # Verify attributes were set
-        get_response = client.get(f"/api/structure_nodes/{layer['id']}/attributes")
+        get_response = client.get(f"/api/structure_nodes/{layer['id']}/attributes")  # noqa: E501
         assert get_response.status_code == 200
         result_attrs = get_response.json()
         assert len(result_attrs) == 1
@@ -120,7 +119,7 @@ class TestAttributesAPIBasicOperations:
         assert set_response.status_code == 200
 
         # Verify all attributes were set
-        get_response = client.get(f"/api/structure_nodes/{layer['id']}/attributes")
+        get_response = client.get(f"/api/structure_nodes/{layer['id']}/attributes")  # noqa: E501
         assert get_response.status_code == 200
         result_attrs = get_response.json()
         assert len(result_attrs) == 3
@@ -172,7 +171,7 @@ class TestAttributesAPIBasicOperations:
         assert updated_node["version"] == 3  # Version incremented again
 
         # Verify attribute was removed
-        get_response = client.get(f"/api/structure_nodes/{layer['id']}/attributes")
+        get_response = client.get(f"/api/structure_nodes/{layer['id']}/attributes")  # noqa: E501
         assert get_response.status_code == 200
         result_attrs = get_response.json()
         assert len(result_attrs) == 1
@@ -222,7 +221,7 @@ class TestAttributesAPIBasicOperations:
         )
 
         # Verify old attribute is gone
-        get_response = client.get(f"/api/structure_nodes/{layer['id']}/attributes")
+        get_response = client.get(f"/api/structure_nodes/{layer['id']}/attributes")  # noqa: E501
         assert get_response.status_code == 200
         result_attrs = get_response.json()
         assert len(result_attrs) == 1
@@ -266,7 +265,7 @@ class TestAttributesInheritance:
             "parent_node_id": layer["id"],
             "definition": "Test domain",
         }
-        domain_response = client.post("/api/structure_nodes/", json=domain_data)
+        domain_response = client.post("/api/structure_nodes/", json=domain_data)  # noqa: E501
         domain = domain_response.json()
 
         # Create term under domain
@@ -281,7 +280,7 @@ class TestAttributesInheritance:
         term = term_response.json()
 
         # Get term attributes - should inherit from layer
-        attr_response = client.get(f"/api/structure_nodes/{term['id']}/attributes")
+        attr_response = client.get(f"/api/structure_nodes/{term['id']}/attributes")  # noqa: E501
         assert attr_response.status_code == 200
         result_attrs = attr_response.json()
 
@@ -326,7 +325,7 @@ class TestAttributesInheritance:
             "parent_node_id": layer["id"],
             "definition": "Test domain",
         }
-        domain_response = client.post("/api/structure_nodes/", json=domain_data)
+        domain_response = client.post("/api/structure_nodes/", json=domain_data)  # noqa: E501
         domain = domain_response.json()
 
         # Create term under domain with overriding attribute
@@ -355,7 +354,7 @@ class TestAttributesInheritance:
         )
 
         # Get term attributes
-        attr_response = client.get(f"/api/structure_nodes/{term['id']}/attributes")
+        attr_response = client.get(f"/api/structure_nodes/{term['id']}/attributes")  # noqa: E501
         assert attr_response.status_code == 200
         result_attrs = attr_response.json()
 
@@ -401,7 +400,7 @@ class TestAttributesInheritance:
             "parent_node_id": layer["id"],
             "definition": "Test domain",
         }
-        domain_response = client.post("/api/structure_nodes/", json=domain_data)
+        domain_response = client.post("/api/structure_nodes/", json=domain_data)  # noqa: E501
         domain = domain_response.json()
 
         # Set domain attribute
@@ -430,7 +429,7 @@ class TestAttributesInheritance:
         term = term_response.json()
 
         # Get term attributes - should have both layer and domain attributes
-        attr_response = client.get(f"/api/structure_nodes/{term['id']}/attributes")
+        attr_response = client.get(f"/api/structure_nodes/{term['id']}/attributes")  # noqa: E501
         assert attr_response.status_code == 200
         result_attrs = attr_response.json()
 
@@ -696,7 +695,7 @@ class TestAttributeValidation:
         assert response.status_code == 200
 
         # Verify attribute was set with null value
-        get_response = client.get(f"/api/structure_nodes/{layer['id']}/attributes")
+        get_response = client.get(f"/api/structure_nodes/{layer['id']}/attributes")  # noqa: E501
         result_attrs = get_response.json()
         assert len(result_attrs) == 1
         assert result_attrs[0]["value"] is None
@@ -729,13 +728,13 @@ class TestAttributeErrorHandling:
         assert response.status_code == 404
 
     def test_remove_attributes_node_not_found(self, client):
-        """Test DELETE attributes endpoint returns 404 for non-existent node."""
+        """Test DELETE attributes endpoint returns 404 for non-existent node."""  # noqa: E501
         fake_id = str(uuid4())
-        response = client.delete(f"/api/structure_nodes/{fake_id}/attributes/test_key")
+        response = client.delete(f"/api/structure_nodes/{fake_id}/attributes/test_key")  # noqa: E501
         assert response.status_code == 404
 
     def test_remove_nonexistent_attribute_key(self, client):
-        """Test removing a non-existent attribute key (should succeed with no effect)."""
+        """Test removing a non-existent attribute key (should succeed with no effect)."""  # noqa: E501
         # Create a layer
         unique_title = f"Test Layer {uuid4()}"
         layer_data = {
@@ -768,7 +767,7 @@ class TestAttributeErrorHandling:
         assert response.status_code == 200
 
         # Verify original attribute still exists
-        get_response = client.get(f"/api/structure_nodes/{layer['id']}/attributes")
+        get_response = client.get(f"/api/structure_nodes/{layer['id']}/attributes")  # noqa: E501
         result_attrs = get_response.json()
         assert len(result_attrs) == 1
         assert result_attrs[0]["key"] == "category"
@@ -812,12 +811,12 @@ class TestAttributeEdgeCases:
         assert response.status_code == 200
 
         # Verify all attributes were removed
-        get_response = client.get(f"/api/structure_nodes/{layer['id']}/attributes")
+        get_response = client.get(f"/api/structure_nodes/{layer['id']}/attributes")  # noqa: E501
         result_attrs = get_response.json()
         assert result_attrs == []
 
     def test_deeply_nested_hierarchy(self, client):
-        """Test attribute inheritance through deeply nested hierarchy (5+ levels)."""
+        """Test attribute inheritance through deeply nested hierarchy (5+ levels)."""  # noqa: E501
         # Create layer with attribute
         unique_layer_title = f"Layer {uuid4()}"
         layer_data = {
@@ -850,7 +849,7 @@ class TestAttributeEdgeCases:
             "parent_node_id": layer["id"],
             "definition": "Test domain",
         }
-        domain_response = client.post("/api/structure_nodes/", json=domain_data)
+        domain_response = client.post("/api/structure_nodes/", json=domain_data)  # noqa: E501
         domain = domain_response.json()
 
         # Create nested terms (5+ levels)
@@ -863,12 +862,12 @@ class TestAttributeEdgeCases:
                 "parent_node_id": current_parent,
                 "definition": f"Test term level {i}",
             }
-            term_response = client.post("/api/structure_nodes/", json=term_data)
+            term_response = client.post("/api/structure_nodes/", json=term_data)  # noqa: E501
             current_term = term_response.json()
             current_parent = current_term["id"]
 
         # Get attributes of deeply nested term - should inherit from layer
-        attr_response = client.get(f"/api/structure_nodes/{current_parent}/attributes")
+        attr_response = client.get(f"/api/structure_nodes/{current_parent}/attributes")  # noqa: E501
         assert attr_response.status_code == 200
         result_attrs = attr_response.json()
 
@@ -912,7 +911,7 @@ class TestAttributeEdgeCases:
             "parent_node_id": layer["id"],
             "definition": "Test domain",
         }
-        domain_response = client.post("/api/structure_nodes/", json=domain_data)
+        domain_response = client.post("/api/structure_nodes/", json=domain_data)  # noqa: E501
         domain = domain_response.json()
 
         domain_attrs = [
@@ -940,7 +939,7 @@ class TestAttributeEdgeCases:
         term = term_response.json()
 
         # Term should get domain's value (nearest ancestor)
-        attr_response = client.get(f"/api/structure_nodes/{term['id']}/attributes")
+        attr_response = client.get(f"/api/structure_nodes/{term['id']}/attributes")  # noqa: E501
         result_attrs = attr_response.json()
 
         assert len(result_attrs) == 1
@@ -1002,12 +1001,12 @@ class TestAttributeEdgeCases:
         assert set_response.status_code == 200
 
         # Verify all attributes
-        get_response = client.get(f"/api/structure_nodes/{layer['id']}/attributes")
+        get_response = client.get(f"/api/structure_nodes/{layer['id']}/attributes")  # noqa: E501
         result_attrs = get_response.json()
 
         assert len(result_attrs) == 5
         keys = {attr["key"] for attr in result_attrs}
-        assert keys == {"str_attr", "num_attr", "bool_attr", "date_attr", "url_attr"}
+        assert keys == {"str_attr", "num_attr", "bool_attr", "date_attr", "url_attr"}  # noqa: E501
 
 
 class TestOptimisticLocking:
@@ -1057,7 +1056,6 @@ class TestOptimisticLocking:
 
         layer_response = client.post("/api/structure_nodes/", json=layer_data)
         layer = layer_response.json()
-        initial_version = layer["version"]
 
         # First update without version check
         attributes_v1 = [
@@ -1099,7 +1097,7 @@ class TestOptimisticLocking:
         assert node_after_v2["version"] == v1_version + 1
 
     def test_set_attributes_with_stale_version_fails_with_409(self, client):
-        """Test setting attributes with stale expected_version fails with 409 Conflict."""
+        """Test setting attributes with stale expected_version fails with 409 Conflict."""  # noqa: E501
         # Create a layer
         unique_title = f"Test Layer {uuid4()}"
         layer_data = {
@@ -1153,7 +1151,7 @@ class TestOptimisticLocking:
         assert "version" in error_msg
 
     def test_concurrent_attribute_updates_with_locking(self, client):
-        """Test that second concurrent update fails when first succeeds with locking."""
+        """Test that second concurrent update fails when first succeeds with locking."""  # noqa: E501
         # Create a layer
         unique_title = f"Test Layer {uuid4()}"
         layer_data = {
@@ -1202,20 +1200,20 @@ class TestOptimisticLocking:
             f"/api/structure_nodes/{layer['id']}/attributes",
             json={
                 "attributes": attrs_user_b,
-                "expected_version": initial_version  # Stale - User A already updated
+                "expected_version": initial_version  # Stale - User A already updated  # noqa: E501
             }
         )
         assert response_b.status_code == 409
 
         # Verify User A's attributes are still there
-        get_response = client.get(f"/api/structure_nodes/{layer['id']}/attributes")
+        get_response = client.get(f"/api/structure_nodes/{layer['id']}/attributes")  # noqa: E501
         result_attrs = get_response.json()
         assert len(result_attrs) == 1
         assert result_attrs[0]["key"] == "category"
         assert result_attrs[0]["value"] == "legal"
 
     def test_optimistic_locking_error_includes_version_info(self, client):
-        """Test that 409 error response includes current and expected versions."""
+        """Test that 409 error response includes current and expected versions."""  # noqa: E501
         # Create a layer
         unique_title = f"Test Layer {uuid4()}"
         layer_data = {
@@ -1259,4 +1257,4 @@ class TestOptimisticLocking:
         error_msg = error_data["detail"][0]["msg"]
         # Error message should contain version information
         assert "version" in error_msg.lower()
-        assert str(initial_version) in error_msg or "expected" in error_msg.lower()
+        assert str(initial_version) in error_msg or "expected" in error_msg.lower()  # noqa: E501

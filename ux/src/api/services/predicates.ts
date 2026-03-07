@@ -8,7 +8,8 @@ export type PredicateCreate = components["schemas"]["PredicateCreate"];
 export type PredicateUpdate = components["schemas"]["PredicateUpdate"];
 export type PaginatedPredicatesResponse =
   components["schemas"]["PaginatedPredicatesResponse"];
-export type ExternalPredicateOut = components["schemas"]["ExternalPredicateOut"];
+export type ExternalPredicateOut =
+  components["schemas"]["ExternalPredicateOut"];
 export type PaginatedExternalPredicatesResponse =
   components["schemas"]["PaginatedExternalPredicatesResponse"];
 export type PredicateDiscoveryResponse =
@@ -33,7 +34,8 @@ export interface ListExternalPredicatesParams extends Record<string, unknown> {
   limit?: number;
 }
 
-export interface SearchExternalPredicatesParams extends Record<string, unknown> {
+export interface SearchExternalPredicatesParams
+  extends Record<string, unknown> {
   query: string;
   source?: string;
   limit?: number;
@@ -204,7 +206,7 @@ export class PredicateService extends BaseService {
         this.postResource<PredicateDiscoveryResponse>(
           `${ENDPOINTS.PREDICATES}/discover`,
           null,
-          params,
+          { params },
         ),
       "discover predicates",
     );
@@ -256,11 +258,13 @@ export class PredicateService extends BaseService {
    */
   async searchExternalPredicates(
     params: SearchExternalPredicatesParams,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
   ): Promise<any> {
     return this.withErrorContext(() => {
       this.validateRequired(params, "Search parameters");
       this.validateRequired(params.query, "Search query");
 
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       return this.getResource<any>(
         `${ENDPOINTS.PREDICATES}/external/search`,
         params,
@@ -290,7 +294,7 @@ export class PredicateService extends BaseService {
       return this.postResource<FindSimilarResponse>(
         `${ENDPOINTS.PREDICATES}/${id}/find-similar`,
         null,
-        params,
+        { params },
       );
     }, "find similar predicates");
   }
@@ -335,7 +339,7 @@ export class PredicateService extends BaseService {
         this.postResource<ClusterPredicatesResponse>(
           `${ENDPOINTS.PREDICATES}/cluster-predicates`,
           null,
-          params,
+          { params },
         ),
       "cluster predicates",
     );

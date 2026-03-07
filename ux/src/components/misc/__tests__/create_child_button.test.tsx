@@ -1,14 +1,17 @@
 import React from "react";
+import { fireEvent } from "@testing-library/react";
+
 import { vi } from "vitest";
 import {
   renderWithProviders as render,
   screen,
-  fireEvent,
 } from "@/test/utils/renderWithProviders";
 import { CreateChildButton } from "../create_child_button";
+import { NodeType } from "@/api/types/structureNodes";
 
 // Mock the form components
 vi.mock("@/components/forms/domain_form", () => ({
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   DomainForm: ({ onSuccess }: { onSuccess: (domain: any) => void }) => (
     <div data-testid="domain-form">
       <button onClick={() => onSuccess({ id: "1", title: "Test Domain" })}>
@@ -19,6 +22,7 @@ vi.mock("@/components/forms/domain_form", () => ({
 }));
 
 vi.mock("@/components/forms/term_form", () => ({
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   TermForm: ({ onSuccess }: { onSuccess: (term: any) => void }) => (
     <div data-testid="term-form">
       <button onClick={() => onSuccess({ id: "1", title: "Test Term" })}>
@@ -35,15 +39,21 @@ describe("CreateChildButton", () => {
     id: "layer-1",
     title: "Test Layer",
     definition: "Test definition",
+    node_type: NodeType.LAYER,
     created_at: "2023-01-01T00:00:00Z",
+    version: 1,
+    last_modified: "2023-01-01T00:00:00Z",
   };
 
   const mockDomain = {
     id: "domain-1",
     title: "Test Domain",
     definition: "Test definition",
-    layer_id: "layer-1",
+    parent_node_id: "layer-1",
+    node_type: NodeType.DOMAIN,
     created_at: "2023-01-01T00:00:00Z",
+    version: 1,
+    last_modified: "2023-01-01T00:00:00Z",
   };
 
   it("renders create domain button for layer parent", () => {

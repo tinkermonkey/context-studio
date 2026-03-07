@@ -4,7 +4,7 @@
  * Tests for all hooks related to predicate mapping functionality
  */
 
-import { renderHook, waitFor } from "@testing-library/react";
+import { renderHook } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import * as React from "react";
 import {
@@ -45,7 +45,8 @@ describe("useExternalPredicates", () => {
             skip: 0,
             limit: 20,
           },
-          { enabled: false },
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          { enabled: false } as any,
         ),
       { wrapper: createWrapper() },
     );
@@ -64,7 +65,8 @@ describe("useExternalPredicates", () => {
             limit: 20,
             source: "conceptnet",
           },
-          { enabled: false },
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          { enabled: false } as any,
         ),
       { wrapper: createWrapper() },
     );
@@ -82,7 +84,8 @@ describe("useDiscoveryStatus", () => {
       () =>
         useDiscoveryStatus(mockTaskId, {
           enabled: false, // Disabled to prevent API calls with non-existent task
-        }),
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        } as any),
       { wrapper: createWrapper() },
     );
 
@@ -106,7 +109,8 @@ describe("useSimilarPredicates", () => {
           },
           {
             enabled: false, // Disabled to prevent API calls with non-existent predicate
-          },
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          } as any,
         ),
       { wrapper: createWrapper() },
     );
@@ -130,7 +134,8 @@ describe("useSimilarPredicates", () => {
           },
           {
             enabled: false,
-          },
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          } as any,
         ),
       { wrapper: createWrapper() },
     );
@@ -208,6 +213,7 @@ describe("Hook Integration", () => {
     const wrapper = createWrapper();
 
     // 1. Set up external predicates query
+
     const { result: externalResult } = renderHook(
       () =>
         useExternalPredicates(
@@ -215,7 +221,8 @@ describe("Hook Integration", () => {
             skip: 0,
             limit: 10,
           },
-          { enabled: false },
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          { enabled: false } as any,
         ),
       { wrapper },
     );
@@ -231,10 +238,9 @@ describe("Hook Integration", () => {
     expect(discoveryResult.current.mutate).toBeDefined();
 
     // 3. Set up clustering mutation
-    const { result: clusterResult } = renderHook(
-      () => useClusterPredicates(),
-      { wrapper },
-    );
+    const { result: clusterResult } = renderHook(() => useClusterPredicates(), {
+      wrapper,
+    });
 
     expect(clusterResult.current.mutate).toBeDefined();
   });

@@ -4,7 +4,7 @@
  * Reusable card component for displaying system health status and metrics
  */
 
-import { Card, Badge, Progress } from "flowbite-react";
+import { Badge, Card, Progress } from "flowbite-react";
 import { CheckCircle, AlertTriangle, XCircle, Activity } from "lucide-react";
 
 export interface HealthMetric {
@@ -16,7 +16,7 @@ export interface HealthMetric {
 
 export interface SystemHealthCardProps {
   title: string;
-  status: "healthy" | "warning" | "error" | "degraded" | "excellent" | "good" | "critical";
+  status: string;
   healthScore?: number;
   metrics?: HealthMetric[];
   issues?: string[];
@@ -32,7 +32,7 @@ export function SystemHealthCard({
   className = "",
 }: SystemHealthCardProps) {
   const getStatusColor = (
-    status: string
+    status: string,
   ): "success" | "warning" | "failure" | "info" => {
     switch (status) {
       case "healthy":

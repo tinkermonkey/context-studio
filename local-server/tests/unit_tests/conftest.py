@@ -12,6 +12,7 @@ sys.path.append(
     os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 )
 
+
 @pytest.fixture(autouse=True)
 def clean_nlp_pipeline():
     """
@@ -19,9 +20,6 @@ def clean_nlp_pipeline():
     This prevents component initialization errors when tests are run together.
     """
     from nlp import pipeline
-
-    # Store original instance
-    original_instance = pipeline._pipeline_instance
 
     yield
 

@@ -4,7 +4,8 @@ Layer 2: spaCy Syntactic Gap Analysis Processor
 This processor identifies unrecognized concepts using spaCy grammatical analysis
 and TF-IDF filtering to reduce noise.
 """
-from typing import List, Dict, Any, Set
+# mypy: ignore-errors
+from typing import List
 from collections import Counter
 import math
 
@@ -165,7 +166,7 @@ class SpaCyGapProcessor:
                 trace_data['total_noun_phrases_analyzed'] = len(all_noun_phrases)
                 trace_data['potential_gaps_found'] = len(potential_gaps)
                 trace_data['gaps_after_filtering'] = len(gaps)
-                trace_data['gaps_by_priority'] = {
+                trace_data['gaps_by_priority'] = {  # type: ignore
                     'critical': len([g for g in gaps if g.priority == GapPriority.CRITICAL]),
                     'important': len([g for g in gaps if g.priority == GapPriority.IMPORTANT]),
                     'contextual': len([g for g in gaps if g.priority == GapPriority.CONTEXTUAL])

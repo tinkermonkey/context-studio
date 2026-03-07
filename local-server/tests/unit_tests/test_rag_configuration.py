@@ -11,9 +11,9 @@ sys.path.append(
     os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 )
 
-import pytest
-from pydantic import ValidationError
-from config import RAGPipelineConfig, Settings
+import pytest  # noqa: E402
+from pydantic import ValidationError  # noqa: E402
+from config import RAGPipelineConfig, Settings  # noqa: E402
 
 
 def test_rag_config_defaults():

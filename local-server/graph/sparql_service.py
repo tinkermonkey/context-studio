@@ -8,7 +8,7 @@ using RDFLib to create an in-memory RDF representation of the SQLite database.
 from rdflib import Graph, Namespace, URIRef, Literal, RDF, RDFS
 from rdflib.namespace import FOAF, DCTERMS, SKOS
 from sqlalchemy.orm import Session
-from typing import Dict, List, Any, Optional
+from typing import Dict, List, Any, Optional, cast
 from datetime import datetime
 
 from database.models import StructureNode, StructureNodeLink
@@ -88,7 +88,7 @@ class SPARQLService:
 
             # Hierarchical relationships using parent_node_id
             if structure_node.parent_node_id:
-                parent_node = (
+                parent_node: Optional[StructureNode] = (
                     self.db_session.query(StructureNode)
                     .filter(StructureNode.id == structure_node.parent_node_id)
                     .first()
@@ -134,8 +134,16 @@ class SPARQLService:
 
         for link in links:
             # Get source and target structure_nodes to determine their types
-            source_node = self.db_session.query(StructureNode).filter(StructureNode.id == link.source_node_id).first()
-            target_node = self.db_session.query(StructureNode).filter(StructureNode.id == link.target_node_id).first()
+            source_node: Optional[StructureNode] = (
+                self.db_session.query(StructureNode)
+                .filter(StructureNode.id == link.source_node_id)
+                .first()
+            )
+            target_node: Optional[StructureNode] = (
+                self.db_session.query(StructureNode)
+                .filter(StructureNode.id == link.target_node_id)
+                .first()
+            )
 
             if source_node and target_node:
                 source_uri = self.ENTITY[f"{source_node.node_type.value}/{source_node.id}"]
@@ -166,9 +174,9 @@ class SPARQLService:
         if structure_node.structural_predicate_id:
             # Get the actual predicate title if available
             # For now, use a structured predicate URI
-            return self.CS[f"predicate_{structure_node.structural_predicate_id}"]
+            return cast(URIRef, self.CS[f"predicate_{structure_node.structural_predicate_id}"])
 
-        return self.CS["is_a"]  # Default predicate
+        return cast(URIRef, self.CS["is_a"])  # Default predicate
 
     def _get_layer_ancestor(self, structure_node: StructureNode) -> Optional[StructureNode]:
         """
@@ -180,7 +188,7 @@ class SPARQLService:
         Returns:
             The layer ancestor structure_node, or None if not found
         """
-        current = structure_node
+        current: Optional[StructureNode] = structure_node
         while current:
             if current.node_type == NodeType.LAYER:
                 return current
@@ -211,11 +219,11 @@ class SPARQLService:
                 initNs = {
                     "cs": self.CS,
                     "entity": self.ENTITY,
-                    "rdf": RDF,
-                    "rdfs": RDFS,
-                    "skos": SKOS,
-                    "dcterms": DCTERMS,
-                    "foaf": FOAF,
+                    "rdf": Namespace(str(RDF)),
+                    "rdfs": Namespace(str(RDFS)),
+                    "skos": Namespace(str(SKOS)),
+                    "dcterms": Namespace(str(DCTERMS)),
+                    "foaf": Namespace(str(FOAF)),
                 }
 
             # Execute the query
@@ -225,14 +233,15 @@ class SPARQLService:
             result_list = []
             for row in results:
                 result_dict = {}
-                for var_name in results.vars:
-                    value = row[var_name]
-                    if value is not None:
-                        # Convert RDFLib terms to appropriate Python types
-                        if hasattr(value, "toPython"):
-                            result_dict[str(var_name)] = value.toPython()
-                        else:
-                            result_dict[str(var_name)] = str(value)
+                if results.vars is not None:
+                    for var_name in results.vars:
+                        value = row[var_name]  # type: ignore
+                        if value is not None:
+                            # Convert RDFLib terms to appropriate Python types
+                            if hasattr(value, "toPython"):
+                                result_dict[str(var_name)] = value.toPython()
+                            else:
+                                result_dict[str(var_name)] = str(value)
                 result_list.append(result_dict)
 
             return result_list
@@ -295,7 +304,7 @@ class SPARQLService:
         PREFIX cs: <http://context-studio.local/vocab/>
         PREFIX entity: <http://context-studio.local/entity/>
         PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-        
+
         SELECT ?term ?title ?definition ?parent ?layer WHERE {{
             ?term a cs:Term ;
                   rdfs:label ?title ;
@@ -332,10 +341,10 @@ class SPARQLService:
         PREFIX entity: <http://context-studio.local/entity/>
         PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
         PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
-        
+
         SELECT ?relatedTerm ?relation ?title ?definition WHERE {{
             VALUES ?startTerm {{ <{term_uri}> }}
-            
+
             {{
                 ?startTerm ?relation ?relatedTerm .
                 FILTER(?relation != rdf:type && ?relation != rdfs:label && ?relation != rdfs:comment)
@@ -343,7 +352,7 @@ class SPARQLService:
                 ?relatedTerm ?relation ?startTerm .
                 FILTER(?relation != rdf:type && ?relation != rdfs:label && ?relation != rdfs:comment)
             }}
-            
+
             ?relatedTerm a cs:Term ;
                         rdfs:label ?title .
             OPTIONAL {{ ?relatedTerm rdfs:comment ?definition }}
@@ -371,7 +380,7 @@ class SPARQLService:
         PREFIX cs: <http://context-studio.local/vocab/>
         PREFIX entity: <http://context-studio.local/entity/>
         PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-        
+
         SELECT ?domain ?domainTitle ?layer ?layerTitle WHERE {{
             ?domain a cs:Domain ;
                    rdfs:label ?domainTitle ;
@@ -396,7 +405,7 @@ class SPARQLService:
         PREFIX cs: <http://context-studio.local/vocab/>
         PREFIX entity: <http://context-studio.local/entity/>
         PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-        
+
         SELECT ?structure_node ?title ?type ?embedding WHERE {
             ?structure_node rdfs:label ?title ;
                   a ?type ;
@@ -430,14 +439,14 @@ class SPARQLService:
         PREFIX cs: <http://context-studio.local/vocab/>
         PREFIX entity: <http://context-studio.local/entity/>
         PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-        
+
         SELECT ?relation ?target ?targetTitle ?targetType WHERE {{
             VALUES ?structure_node {{ {node_values} }}
-            
+
             ?structure_node ?relation ?target .
             ?target rdfs:label ?targetTitle ;
                    a ?targetType .
-            
+
             FILTER(?relation != rdf:type && ?relation != rdfs:label && ?relation != rdfs:comment)
             FILTER(?targetType = cs:Layer || ?targetType = cs:Domain || ?targetType = cs:Term)
         }}

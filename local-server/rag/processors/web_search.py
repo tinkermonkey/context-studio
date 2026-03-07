@@ -64,7 +64,7 @@ class TokenBucket:
             elapsed = now - self.last_update
 
             # Add tokens based on elapsed time
-            self.tokens = min(self.capacity, self.tokens + elapsed * self.rate)
+            self.tokens = min(self.capacity, self.tokens + elapsed * self.rate)  # type: ignore
             self.last_update = now
 
             if self.tokens >= tokens:
@@ -307,7 +307,7 @@ class RateLimitedWebSearchClient:
 
             response = requests.get(
                 base_url,
-                params=params,
+                params=params,  # type: ignore
                 timeout=self.timeout_seconds,
                 headers={'User-Agent': 'ContextStudio/1.0 (Educational RAG System)'}
             )

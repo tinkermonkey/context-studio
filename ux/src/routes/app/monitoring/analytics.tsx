@@ -2,7 +2,15 @@ import { useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { CsMain, CsMainTitle } from "@/components/layout/cs_main";
 import { CsSidebar } from "@/components/layout/cs_sidebar";
-import { Card, Button, Select, Spinner, Alert, Tabs, Badge } from "flowbite-react";
+import {
+  Alert,
+  Badge,
+  Button,
+  Card,
+  Select,
+  Spinner,
+  Tabs,
+} from "flowbite-react";
 import {
   Download,
   TrendingUp,
@@ -37,20 +45,52 @@ export const Route = createFileRoute("/app/monitoring/analytics")({
 function RouteComponent() {
   const [timePeriod, setTimePeriod] = useState(30);
   const [exporting, setExporting] = useState(false);
-  const { showToast } = useButterToast();
+  const toast = useButterToast();
 
   // Fetch data
-  const { data: summary, isLoading: summaryLoading, error: summaryError } = useChangeSummary(timePeriod);
-  const { data: userActivity, isLoading: userActivityLoading, error: userActivityError } = useUserActivity({ days: timePeriod });
-  const { data: hotspots, isLoading: hotspotsLoading, error: hotspotsError } = useEntityHotspots(20);
-  const { data: collaboration, isLoading: collaborationLoading, error: collaborationError } = useCollaborationMetrics(timePeriod);
-  const { data: trends, isLoading: trendsLoading, error: trendsError } = useTrends(timePeriod);
+  const {
+    data: summary,
+    isLoading: summaryLoading,
+    error: summaryError,
+  } = useChangeSummary(timePeriod);
+  const {
+    data: userActivity,
+    isLoading: userActivityLoading,
+    error: userActivityError,
+  } = useUserActivity({ days: timePeriod });
+  const {
+    data: hotspots,
+    isLoading: hotspotsLoading,
+    error: hotspotsError,
+  } = useEntityHotspots(20);
+  const {
+    data: collaboration,
+    isLoading: collaborationLoading,
+    error: collaborationError,
+  } = useCollaborationMetrics(timePeriod);
+  const {
+    data: trends,
+    isLoading: trendsLoading,
+    error: trendsError,
+  } = useTrends(timePeriod);
   const { data: health } = useAnalyticsHealth();
 
-  const isLoading = summaryLoading || userActivityLoading || hotspotsLoading || collaborationLoading || trendsLoading;
-  const hasError = summaryError || userActivityError || hotspotsError || collaborationError || trendsError;
+  const isLoading =
+    summaryLoading ||
+    userActivityLoading ||
+    hotspotsLoading ||
+    collaborationLoading ||
+    trendsLoading;
+  const hasError =
+    summaryError ||
+    userActivityError ||
+    hotspotsError ||
+    collaborationError ||
+    trendsError;
 
-  const handleExportCSV = async (reportType: "user-activity" | "hotspots" | "trends") => {
+  const handleExportCSV = async (
+    reportType: "user-activity" | "hotspots" | "trends",
+  ) => {
     try {
       setExporting(true);
       const blob = await exportAnalyticsCSV(reportType, timePeriod);
@@ -62,10 +102,11 @@ function RouteComponent() {
       a.click();
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
-      showToast(`Successfully exported ${reportType} to CSV`, "success");
+      toast.success(`Successfully exported ${reportType} to CSV`);
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : "Unknown error occurred";
-      showToast(`Export failed: ${errorMessage}`, "error");
+      const errorMessage =
+        error instanceof Error ? error.message : "Unknown error occurred";
+      toast.error(`Export failed: ${errorMessage}`);
     } finally {
       setExporting(false);
     }
@@ -162,8 +203,12 @@ function RouteComponent() {
         {hasError && (
           <Alert color="failure" icon={AlertCircle} className="mb-4">
             <span className="font-medium">Error loading analytics data</span>
-            <p className="text-sm mt-1">
-              {summaryError?.message || userActivityError?.message || hotspotsError?.message || collaborationError?.message || trendsError?.message}
+            <p className="mt-1 text-sm">
+              {summaryError?.message ||
+                userActivityError?.message ||
+                hotspotsError?.message ||
+                collaborationError?.message ||
+                trendsError?.message}
             </p>
           </Alert>
         )}
@@ -173,7 +218,11 @@ function RouteComponent() {
             <SystemHealthCard
               title="Analytics System"
               status={health.status}
-              healthScore={health.query_performance_ms ? Math.max(0, 100 - health.query_performance_ms / 50) : undefined}
+              healthScore={
+                health.query_performance_ms
+                  ? Math.max(0, 100 - health.query_performance_ms / 50)
+                  : undefined
+              }
               metrics={[
                 {
                   label: "DuckDB Available",
@@ -190,7 +239,9 @@ function RouteComponent() {
                   unit: "ms",
                 },
               ]}
-              issues={!health.duckdb_available ? ["DuckDB is not available"] : []}
+              issues={
+                !health.duckdb_available ? ["DuckDB is not available"] : []
+              }
             />
           </div>
         )}
@@ -241,7 +292,9 @@ function RouteComponent() {
                   />
                 ) : (
                   <Card>
-                    <p className="text-center text-gray-500">No user activity data available</p>
+                    <p className="text-center text-gray-500">
+                      No user activity data available
+                    </p>
                   </Card>
                 )}
               </div>
@@ -277,10 +330,15 @@ function RouteComponent() {
                         title="Entity Types Distribution"
                         description="Distribution of modifications by entity type"
                         data={Object.entries(
-                          hotspots.reduce((acc, h) => {
-                            acc[h.entity_type] = (acc[h.entity_type] || 0) + h.total_modifications;
-                            return acc;
-                          }, {} as Record<string, number>)
+                          hotspots.reduce(
+                            (acc, h) => {
+                              acc[h.entity_type] =
+                                (acc[h.entity_type] || 0) +
+                                h.total_modifications;
+                              return acc;
+                            },
+                            {} as Record<string, number>,
+                          ),
                         ).map(([type, count]) => ({
                           label: type,
                           value: count,
@@ -289,7 +347,9 @@ function RouteComponent() {
                     </>
                   ) : (
                     <Card>
-                      <p className="text-center text-gray-500">No entity hotspot data available</p>
+                      <p className="text-center text-gray-500">
+                        No entity hotspot data available
+                      </p>
                     </Card>
                   )}
                 </div>
@@ -309,15 +369,20 @@ function RouteComponent() {
                   </Button>
                 </div>
 
-                {trends && trends.daily_trends && trends.daily_trends.length > 0 ? (
+                {trends &&
+                trends.daily_trends &&
+                trends.daily_trends.length > 0 ? (
                   <div className="grid grid-cols-1 gap-6">
                     <AnalyticsChart
                       title="Daily Change Trends"
                       description={`Change activity over ${trends.analysis_period_days} days`}
-                      data={trends.daily_trends.slice(0, 30).map((trend: any) => ({
-                        label: trend.date || trend.day || "Unknown",
-                        value: trend.total_changes || trend.changes || 0,
-                      }))}
+                      data={trends.daily_trends.slice(0, 30).map(
+                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                        (trend: any) => ({
+                          label: trend.date || trend.day || "Unknown",
+                          value: trend.total_changes || trend.changes || 0,
+                        }),
+                      )}
                       type="bar"
                     />
 
@@ -325,17 +390,22 @@ function RouteComponent() {
                       <AnalyticsChart
                         title="Peak Activity Hours"
                         description="Activity distribution by hour of day"
-                        data={trends.peak_hours.slice(0, 24).map((peak: any) => ({
-                          label: `${peak.hour || 0}:00`,
-                          value: peak.activity || peak.count || 0,
-                        }))}
+                        data={trends.peak_hours.slice(0, 24).map(
+                          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                          (peak: any) => ({
+                            label: `${peak.hour || 0}:00`,
+                            value: peak.activity || peak.count || 0,
+                          }),
+                        )}
                         type="bar"
                       />
                     )}
                   </div>
                 ) : (
                   <Card>
-                    <p className="text-center text-gray-500">No trend data available</p>
+                    <p className="text-center text-gray-500">
+                      No trend data available
+                    </p>
                   </Card>
                 )}
               </div>

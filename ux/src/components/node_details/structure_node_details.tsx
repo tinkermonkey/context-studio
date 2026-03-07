@@ -10,16 +10,16 @@ import {
   Textarea,
 } from "flowbite-react";
 import {
-  Calendar,
-  Hash,
-  Edit3,
-  Database,
-  Layers,
   Brain,
+  Calendar,
   Check,
-  X,
-  Plus,
+  Database,
+  Edit3,
+  Hash,
+  Layers,
   Move,
+  Plus,
+  X,
 } from "lucide-react";
 import { NodeType } from "@/api/types/structureNodes";
 import { useTermHierarchy } from "@/api/hooks/graph/useGraph";
@@ -104,7 +104,9 @@ export const StructureNodeDetails: React.FC<StructureNodeDetailsProps> = ({
       }>) || [];
 
     // Sort ancestors by distance (furthest first)
-    const sortedAncestors = [...ancestors].sort((a, b) => b.distance - a.distance);
+    const sortedAncestors = [...ancestors].sort(
+      (a, b) => b.distance - a.distance,
+    );
 
     // Convert to NodeOut format
     const ancestorNodes: NodeOut[] = sortedAncestors.map((ancestor) => ({
@@ -167,7 +169,6 @@ export const StructureNodeDetails: React.FC<StructureNodeDetailsProps> = ({
                 </BreadcrumbItem>
               ) : (
                 (() => {
-
                   // If lineage is short (3 or fewer items), show all
                   if (lineage.length <= 4) {
                     return lineage.map((ancestorNode, index) => {
@@ -226,15 +227,21 @@ export const StructureNodeDetails: React.FC<StructureNodeDetailsProps> = ({
           {/* Header */}
           <div className="mb-6 flex items-center justify-between">
             <div>
-              <CsMainTitle icon={NodeIcon} data-testid="node-detail-title">{node.title}</CsMainTitle>
+              <CsMainTitle icon={NodeIcon} data-testid="node-detail-title">
+                {node.title}
+              </CsMainTitle>
               <div className="flex items-center gap-4 text-sm text-gray-600 dark:text-gray-400">
                 <div className="flex items-center gap-1">
                   <Hash className="h-4 w-4" />
-                  <span className="font-mono" data-testid="node-detail-id">{node.id}</span>
+                  <span className="font-mono" data-testid="node-detail-id">
+                    {node.id}
+                  </span>
                 </div>
                 <div className="flex items-center gap-1">
                   <Calendar className="h-4 w-4" />
-                  <span data-testid="node-detail-type">{node.node_type} - Version {node.version}</span>
+                  <span data-testid="node-detail-type">
+                    {node.node_type} - Version {node.version}
+                  </span>
                 </div>
               </div>
             </div>
@@ -243,17 +250,29 @@ export const StructureNodeDetails: React.FC<StructureNodeDetailsProps> = ({
                 <Brain className="mr-2 h-4 w-4" />
                 Analyze
               </Button>
-              <Button color="gray" size="sm" onClick={() => setIsAddChildOpen(true)}>
+              <Button
+                color="gray"
+                size="sm"
+                onClick={() => setIsAddChildOpen(true)}
+              >
                 <Plus className="mr-2 h-4 w-4" />
                 Add Child
               </Button>
               {node.node_type !== NodeType.LAYER && (
-                <Button color="gray" size="sm" onClick={() => setIsMoveOpen(true)}>
+                <Button
+                  color="gray"
+                  size="sm"
+                  onClick={() => setIsMoveOpen(true)}
+                >
                   <Move className="mr-2 h-4 w-4" />
                   Move
                 </Button>
               )}
-              <Button color="gray" size="sm" onClick={() => setIsEditOpen(true)}>
+              <Button
+                color="gray"
+                size="sm"
+                onClick={() => setIsEditOpen(true)}
+              >
                 <Edit3 className="mr-2 h-4 w-4" />
                 Edit
               </Button>
@@ -285,14 +304,10 @@ export const StructureNodeDetails: React.FC<StructureNodeDetailsProps> = ({
             }
             currentDefinition={node.definition}
             layerId={
-              node.node_type === NodeType.LAYER
-                ? node.id
-                : parentLayer?.id
+              node.node_type === NodeType.LAYER ? node.id : parentLayer?.id
             }
             domainId={
-              node.node_type === NodeType.DOMAIN
-                ? node.id
-                : parentDomain?.id
+              node.node_type === NodeType.DOMAIN ? node.id : parentDomain?.id
             }
             termId={node.node_type === NodeType.TERM ? node.id : undefined}
             nodeId={node.id}
@@ -366,7 +381,7 @@ const EditableDefinition: React.FC<{ node: StructureNode }> = ({ node }) => {
     const textarea = textareaRef.current;
     if (textarea) {
       // Reset height to auto to get the correct scrollHeight
-      textarea.style.height = 'auto';
+      textarea.style.height = "auto";
       // Set height to scrollHeight to fit content
       textarea.style.height = `${textarea.scrollHeight}px`;
     }
@@ -431,8 +446,8 @@ const EditableDefinition: React.FC<{ node: StructureNode }> = ({ node }) => {
           }}
           onKeyDown={handleKeyDown}
           rows={1}
-          className="leading-relaxed text-gray-700 dark:text-gray-300 text-base font-normal p-2 resize-none overflow-hidden"
-          style={{ fontFamily: 'inherit' }}
+          className="resize-none overflow-hidden p-2 text-base leading-relaxed font-normal text-gray-700 dark:text-gray-300"
+          style={{ fontFamily: "inherit" }}
           disabled={updateMutation.isPending}
         />
         <div className="mt-2 flex gap-2">
@@ -465,15 +480,17 @@ const EditableDefinition: React.FC<{ node: StructureNode }> = ({ node }) => {
       onDoubleClick={handleDoubleClick}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
-      className="cursor-text leading-relaxed text-gray-700 dark:text-gray-300 text-base font-normal min-h-[4rem] p-2 -m-2 rounded hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+      className="-m-2 min-h-[4rem] cursor-text rounded p-2 text-base leading-relaxed font-normal text-gray-700 transition-colors hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-800"
       title="Double-click to edit"
     >
       {node.definition || (
-        <span className="italic text-gray-400 dark:text-gray-500">
+        <span className="text-gray-400 italic dark:text-gray-500">
           No definition provided. Double-click to add one.
         </span>
       )}
-      <div className={`text-xs text-gray-400 dark:text-gray-500 mt-2 italic transition-opacity duration-200 ${isHovered ? 'opacity-100' : 'opacity-0'}`}>
+      <div
+        className={`mt-2 text-xs text-gray-400 italic transition-opacity duration-200 dark:text-gray-500 ${isHovered ? "opacity-100" : "opacity-0"}`}
+      >
         Double-click to edit
       </div>
     </div>

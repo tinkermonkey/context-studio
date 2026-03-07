@@ -5,11 +5,12 @@
  */
 
 import { BaseService } from "./base";
-import { ENDPOINTS } from "../config";
-import type { components, operations } from "@/api/client/types";
+import type { components } from "@/api/client/types";
 
-export type ModelCapabilitiesResponse = components["schemas"]["ModelCapabilitiesResponse"];
-export type SupportedModelsResponse = components["schemas"]["SupportedModelsResponse"];
+export type ModelCapabilitiesResponse =
+  components["schemas"]["ModelCapabilitiesResponse"];
+export type SupportedModelsResponse =
+  components["schemas"]["SupportedModelsResponse"];
 
 export interface ModelCapabilities {
   supports_temperature: boolean;
@@ -33,10 +34,16 @@ export class ModelCapabilitiesService extends BaseService {
    * @param provider Optional provider filter (openai, anthropic, etc.)
    * @returns List of all supported models with capabilities
    */
-  async listSupportedModels(provider?: string): Promise<SupportedModelsResponse> {
+  async listSupportedModels(
+    provider?: string,
+  ): Promise<SupportedModelsResponse> {
     return this.withErrorContext(async () => {
-      const params = provider ? `?provider=${encodeURIComponent(provider)}` : "";
-      return this.getResource<SupportedModelsResponse>(`/api/model-capabilities${params}`);
+      const params = provider
+        ? `?provider=${encodeURIComponent(provider)}`
+        : "";
+      return this.getResource<SupportedModelsResponse>(
+        `/api/model-capabilities${params}`,
+      );
     }, "listing supported models");
   }
 
@@ -45,12 +52,14 @@ export class ModelCapabilitiesService extends BaseService {
    * @param modelName The name of the model to get capabilities for
    * @returns Model capabilities and constraints
    */
-  async getModelCapabilities(modelName: string): Promise<ModelCapabilitiesResponse> {
+  async getModelCapabilities(
+    modelName: string,
+  ): Promise<ModelCapabilitiesResponse> {
     this.validateRequired(modelName, "modelName");
 
     return this.withErrorContext(async () => {
       return this.getResource<ModelCapabilitiesResponse>(
-        `/api/model-capabilities/${encodeURIComponent(modelName)}`
+        `/api/model-capabilities/${encodeURIComponent(modelName)}`,
       );
     }, `getting capabilities for model ${modelName}`);
   }
@@ -60,12 +69,14 @@ export class ModelCapabilitiesService extends BaseService {
    * @param providerName The provider name (openai, anthropic, etc.)
    * @returns List of models for the specified provider
    */
-  async listModelsByProvider(providerName: string): Promise<SupportedModelsResponse> {
+  async listModelsByProvider(
+    providerName: string,
+  ): Promise<SupportedModelsResponse> {
     this.validateRequired(providerName, "providerName");
 
     return this.withErrorContext(async () => {
       return this.getResource<SupportedModelsResponse>(
-        `/api/model-capabilities/providers/${encodeURIComponent(providerName)}`
+        `/api/model-capabilities/providers/${encodeURIComponent(providerName)}`,
       );
     }, `listing models for provider ${providerName}`);
   }
@@ -75,10 +86,13 @@ export class ModelCapabilitiesService extends BaseService {
    * @param modelName The name of the model
    * @returns Typed model capabilities
    */
-  async getTypedModelCapabilities(modelName: string): Promise<ModelCapabilities> {
+  async getTypedModelCapabilities(
+    modelName: string,
+  ): Promise<ModelCapabilities> {
     const response = await this.getModelCapabilities(modelName);
 
     // Parse the capabilities object which comes as a generic object
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const capabilities = response.capabilities as any;
 
     return {
@@ -86,10 +100,14 @@ export class ModelCapabilitiesService extends BaseService {
       supports_top_p: capabilities.supports_top_p ?? true,
       supports_top_k: capabilities.supports_top_k ?? false,
       supports_max_tokens: capabilities.supports_max_tokens ?? true,
-      supports_frequency_penalty: capabilities.supports_frequency_penalty ?? false,
-      supports_presence_penalty: capabilities.supports_presence_penalty ?? false,
-      supports_structured_output: capabilities.supports_structured_output ?? false,
-      supports_function_calling: capabilities.supports_function_calling ?? false,
+      supports_frequency_penalty:
+        capabilities.supports_frequency_penalty ?? false,
+      supports_presence_penalty:
+        capabilities.supports_presence_penalty ?? false,
+      supports_structured_output:
+        capabilities.supports_structured_output ?? false,
+      supports_function_calling:
+        capabilities.supports_function_calling ?? false,
       supports_streaming: capabilities.supports_streaming ?? true,
       max_tokens_limit: capabilities.max_tokens_limit,
       context_window: capabilities.context_window,
@@ -106,7 +124,7 @@ export class ModelCapabilitiesService extends BaseService {
    */
   async supportsParameter(
     modelName: string,
-    parameter: keyof ModelCapabilities
+    parameter: keyof ModelCapabilities,
   ): Promise<boolean> {
     const capabilities = await this.getTypedModelCapabilities(modelName);
     return Boolean(capabilities[parameter]);
@@ -116,17 +134,23 @@ export class ModelCapabilitiesService extends BaseService {
    * Get models grouped by provider
    * @returns Models grouped by provider
    */
-  async getModelsByProvider(): Promise<Record<string, ModelCapabilitiesResponse[]>> {
+  async getModelsByProvider(): Promise<
+    Record<string, ModelCapabilitiesResponse[]>
+  > {
     const allModels = await this.listSupportedModels();
 
-    return allModels.models.reduce((acc, model) => {
-      const provider = (model.capabilities as any)?.provider ?? "unknown";
-      if (!acc[provider]) {
-        acc[provider] = [];
-      }
-      acc[provider].push(model);
-      return acc;
-    }, {} as Record<string, ModelCapabilitiesResponse[]>);
+    return allModels.models.reduce(
+      (acc, model) => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const provider = (model.capabilities as any)?.provider ?? "unknown";
+        if (!acc[provider]) {
+          acc[provider] = [];
+        }
+        acc[provider].push(model);
+        return acc;
+      },
+      {} as Record<string, ModelCapabilitiesResponse[]>,
+    );
   }
 
   /**
@@ -144,7 +168,7 @@ export class ModelCapabilitiesService extends BaseService {
       max_tokens?: number;
       frequency_penalty?: number;
       presence_penalty?: number;
-    }
+    },
   ): Promise<string[]> {
     const capabilities = await this.getTypedModelCapabilities(modelName);
     const warnings: string[] = [];
@@ -153,16 +177,28 @@ export class ModelCapabilitiesService extends BaseService {
       warnings.push(`${modelName} doesn't support top_k parameter`);
     }
 
-    if (config.frequency_penalty !== undefined && !capabilities.supports_frequency_penalty) {
+    if (
+      config.frequency_penalty !== undefined &&
+      !capabilities.supports_frequency_penalty
+    ) {
       warnings.push(`${modelName} doesn't support frequency_penalty parameter`);
     }
 
-    if (config.presence_penalty !== undefined && !capabilities.supports_presence_penalty) {
+    if (
+      config.presence_penalty !== undefined &&
+      !capabilities.supports_presence_penalty
+    ) {
       warnings.push(`${modelName} doesn't support presence_penalty parameter`);
     }
 
-    if (config.max_tokens && capabilities.max_tokens_limit && config.max_tokens > capabilities.max_tokens_limit) {
-      warnings.push(`Max tokens will be capped at ${capabilities.max_tokens_limit} for ${modelName}`);
+    if (
+      config.max_tokens &&
+      capabilities.max_tokens_limit &&
+      config.max_tokens > capabilities.max_tokens_limit
+    ) {
+      warnings.push(
+        `Max tokens will be capped at ${capabilities.max_tokens_limit} for ${modelName}`,
+      );
     }
 
     return warnings;

@@ -6,12 +6,24 @@
  */
 
 import React, { useState } from "react";
-import { Button, Badge, Alert, Spinner, Modal, ModalHeader, ModalBody } from "flowbite-react";
-import { ExternalLink, Trash2, AlertCircle } from "lucide-react";
+import {
+  Alert,
+  Badge,
+  Button,
+  Modal,
+  ModalBody,
+  ModalHeader,
+  Spinner,
+} from "flowbite-react";
+import { AlertCircle, ExternalLink, Trash2 } from "lucide-react";
 
 import { ReferenceLink } from "@/api/types/structureNodes";
 import { useRemoveReferenceLink } from "@/api/hooks/structure_nodes/useReferenceLinks";
-import { getSourceBadgeColor, getSourceLabel, getSourceUrl } from "@/utils/sourceUtils";
+import {
+  getSourceBadgeColor,
+  getSourceLabel,
+  getSourceUrl,
+} from "@/utils/sourceUtils";
 import { toast } from "@/utils/toast";
 
 interface ReferenceNodeDisplayProps {
@@ -27,7 +39,9 @@ export const ReferenceNodeDisplay: React.FC<ReferenceNodeDisplayProps> = ({
   nodeId,
   referenceLinks,
 }) => {
-  const [confirmRemove, setConfirmRemove] = useState<ReferenceLink | null>(null);
+  const [confirmRemove, setConfirmRemove] = useState<ReferenceLink | null>(
+    null,
+  );
 
   const removeReferenceLink = useRemoveReferenceLink(nodeId, {
     onSuccess: () => {
@@ -36,7 +50,9 @@ export const ReferenceNodeDisplay: React.FC<ReferenceNodeDisplayProps> = ({
     },
     onError: (error) => {
       toast.error(
-        error instanceof Error ? error.message : "Failed to remove reference link"
+        error instanceof Error
+          ? error.message
+          : "Failed to remove reference link",
       );
     },
   });
@@ -51,7 +67,13 @@ export const ReferenceNodeDisplay: React.FC<ReferenceNodeDisplayProps> = ({
     }
   };
 
-  const handleViewExternal = (url: string, source: string, externalId: string) => {
+  const handleViewExternal = (
+    url: string,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    source: string,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    externalId: string,
+  ) => {
     if (typeof window !== "undefined" && window.open) {
       window.open(url, "_blank", "noopener,noreferrer");
     } else {
@@ -83,14 +105,18 @@ export const ReferenceNodeDisplay: React.FC<ReferenceNodeDisplayProps> = ({
 
         return (
           <div key={source} className="border-t pt-4">
-            <h4 className="mb-3 flex items-center gap-2 text-md font-medium">
+            <h4 className="text-md mb-3 flex items-center gap-2 font-medium">
               <Badge color={getSourceBadgeColor(source)}>{sourceLabel}</Badge>
-              <span className="text-gray-500 text-sm">
+              <span className="text-sm text-gray-500">
                 ({links.length} link{links.length !== 1 ? "s" : ""})
               </span>
             </h4>
 
-            <div className="space-y-2" role="list" aria-label={`${sourceLabel} reference links`}>
+            <div
+              className="space-y-2"
+              role="list"
+              aria-label={`${sourceLabel} reference links`}
+            >
               {links.map((link, index) => {
                 const linkKey = `${link.source}-${link.external_id}-${index}`;
                 const sourceUrl = getSourceUrl(link.source, link.external_id);
@@ -98,19 +124,25 @@ export const ReferenceNodeDisplay: React.FC<ReferenceNodeDisplayProps> = ({
                 return (
                   <div
                     key={linkKey}
-                    className="flex items-center justify-between border rounded-lg p-3 bg-gray-50"
+                    className="flex items-center justify-between rounded-lg border bg-gray-50 p-3"
                     role="listitem"
                   >
                     <div className="flex-1">
                       <div className="flex items-center gap-2">
-                        <code className="text-sm font-mono text-gray-700">
+                        <code className="font-mono text-sm text-gray-700">
                           {link.external_id}
                         </code>
                         {sourceUrl && (
                           <Button
                             size="xs"
                             color="gray"
-                            onClick={() => handleViewExternal(sourceUrl, link.source, link.external_id)}
+                            onClick={() =>
+                              handleViewExternal(
+                                sourceUrl,
+                                link.source,
+                                link.external_id,
+                              )
+                            }
                             className="flex items-center gap-1"
                             aria-label={`View ${link.external_id} on ${sourceLabel}`}
                           >
@@ -153,19 +185,19 @@ export const ReferenceNodeDisplay: React.FC<ReferenceNodeDisplayProps> = ({
             </Alert>
 
             {confirmRemove && (
-              <div className="border rounded-lg p-3 bg-gray-50">
-                <div className="flex items-center gap-2 mb-2">
+              <div className="rounded-lg border bg-gray-50 p-3">
+                <div className="mb-2 flex items-center gap-2">
                   <Badge color={getSourceBadgeColor(confirmRemove.source)}>
                     {getSourceLabel(confirmRemove.source)}
                   </Badge>
                 </div>
-                <code className="text-sm font-mono text-gray-700">
+                <code className="font-mono text-sm text-gray-700">
                   {confirmRemove.external_id}
                 </code>
               </div>
             )}
 
-            <div className="flex gap-2 justify-end">
+            <div className="flex justify-end gap-2">
               <Button
                 color="gray"
                 onClick={() => setConfirmRemove(null)}

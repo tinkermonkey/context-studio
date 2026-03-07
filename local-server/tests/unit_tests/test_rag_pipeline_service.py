@@ -5,16 +5,11 @@ import sys
 import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-import pytest
-import asyncio
-from unittest.mock import Mock, AsyncMock, patch, MagicMock
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
+import pytest  # noqa: E402
+from unittest.mock import Mock, patch  # noqa: E402
 
-from rag.rag_pipeline_service import RAGPipelineService
-from rag.models import RAGExtractionRequest
-from rag.processors.models import (
-    ProcessorInput,
+from rag.rag_pipeline_service import RAGPipelineService  # noqa: E402
+from rag.processors.models import (  # noqa: E402
     KGContextOutput,
     LLMExtractionOutput,
     SpaCyGapOutput,
@@ -300,7 +295,7 @@ class TestRAGPipelineService:
 
             def timeout_func(*args, **kwargs):
                 import time
-                time.sleep(2.0)  # Longer than 1s timeout
+                time.sleep(2.0)  # Longer than the configured timeout
                 return LLMExtractionOutput(
                     entities=[],
                     kg_context_size=0,
@@ -311,7 +306,8 @@ class TestRAGPipelineService:
             mock_llm_proc.process.side_effect = timeout_func
 
             # Create service with shorter Layer 1 timeout for testing
-            service = RAGPipelineService(kg_session, ops_session, timeout_layer_1=1.0)
+            # Use 2.5s timeout since the mock processor sleeps for 2s
+            service = RAGPipelineService(kg_session, ops_session, timeout_layer_1=2.5)
 
             # Setup other layers to succeed
             mock_spacy_proc = MockSpaCyProcessor.return_value
@@ -528,7 +524,6 @@ class TestRAGPipelineService:
             # Verify save_trace was called for each layer
             assert mock_obs_store.save_trace.call_count == 4  # One per layer
             assert response.trace_available is True
-
 
 
 if __name__ == "__main__":

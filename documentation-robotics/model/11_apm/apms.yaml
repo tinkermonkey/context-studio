@@ -1,5 +1,0 @@
-configuration:
-  id: apm.configuration
-  name: APM Configuration
-  type: apm
-  documentation: APM configuration for Context Studio

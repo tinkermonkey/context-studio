@@ -92,12 +92,14 @@ export function cleanupMeasurementHtml(): void {
 
 // Check if measurement elements are ready
 export function isMeasurementReady(): boolean {
-  return measurementReady && measurementSvg !== null && measurementHtml !== null;
+  return (
+    measurementReady && measurementSvg !== null && measurementHtml !== null
+  );
 }
 
 // Extract font properties from chart styles with better parsing
 export function extractFontPropertiesFromStyles(
-  styleObject: any,
+  styleObject: any, // eslint-disable-line @typescript-eslint/no-explicit-any
 ): TextMeasurementOptions {
   // Parse the font shorthand property if it exists
   // Font shorthand format: [font-style] [font-variant] [font-weight] [font-size/line-height] [font-family]
@@ -214,7 +216,9 @@ export function measureSvgTextWidth(
 
   // Validate measurement - warn if we got zero for non-empty text
   if (width === 0 && text.length > 0) {
-    console.warn(`[TreeMenu] Measurement returned zero width for text: "${text.substring(0, 50)}..."`);
+    console.warn(
+      `[TreeMenu] Measurement returned zero width for text: "${text.substring(0, 50)}..."`,
+    );
     // Return a fallback based on character count
     return text.length * 8; // Approximate 8px per character
   }
@@ -230,7 +234,9 @@ export function measureHtmlTextHeight(
 ): number {
   if (!text) return 0;
   if (width <= 0) {
-    console.warn(`[TreeMenu] Invalid width (${width}) for text height measurement`);
+    console.warn(
+      `[TreeMenu] Invalid width (${width}) for text height measurement`,
+    );
     return 0;
   }
 
@@ -243,7 +249,9 @@ export function measureHtmlTextHeight(
 
   // Ensure the element is actually attached to the DOM
   if (!measurementHtml.parentNode) {
-    console.warn("[TreeMenu] Measurement element not attached to DOM, reinitializing");
+    console.warn(
+      "[TreeMenu] Measurement element not attached to DOM, reinitializing",
+    );
     document.body.appendChild(measurementHtml);
   }
 
@@ -281,12 +289,13 @@ export function measureHtmlTextHeight(
   measurementHtml.style.maxWidth = `${width}px`; // Enforce max width
 
   // Get the bounding box height
-  const bbox = measurementHtml.getBoundingClientRect();
-  const height = Math.ceil(bbox.height);
+  const height = Math.ceil(measurementHtml.scrollHeight);
 
   // Validate measurement - warn if we got zero for non-empty text
   if (height === 0 && text.length > 0) {
-    console.warn(`[TreeMenu] Measurement returned zero height for text: "${text.substring(0, 50)}..." (width: ${width}px)`);
+    console.warn(
+      `[TreeMenu] Measurement returned zero height for text: "${text.substring(0, 50)}..." (width: ${width}px)`,
+    );
     // Return a fallback minimum height
     return 20; // Approximate minimum single-line height
   }
@@ -343,6 +352,7 @@ export class TextHeightCache {
   private cache = new Map<string, number>();
   private textOptions;
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   constructor(styleSource: any) {
     this.textOptions = extractFontPropertiesFromStyles(styleSource);
   }

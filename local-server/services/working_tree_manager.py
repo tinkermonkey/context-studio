@@ -5,11 +5,12 @@ This service implements working tree state management, tracking current and cano
 versions of entities, and providing staging/unstaging operations for the change management system.
 """
 
-from typing import List, Optional, Dict, Any
+from typing import List, Optional, Dict, Any, cast
 from datetime import datetime, timezone
 from dataclasses import dataclass
 from sqlalchemy.orm import Session
-from sqlalchemy import text
+from sqlalchemy import text, Row
+from sqlalchemy.engine.cursor import CursorResult
 
 from services.version_manager import VersionManager, EntityVersion, ChangeState
 from utils.logger import get_logger
@@ -96,11 +97,9 @@ class WorkingTreeManager:
 
         # Verify the version exists
         version_exists = self.db.execute(
-            text(
-                """
+            text("""
             SELECT 1 FROM entity_versions WHERE id = :version_id
-        """
-            ),
+        """),
             {"version_id": initial_version_id},
         ).fetchone()
 
@@ -113,15 +112,13 @@ class WorkingTreeManager:
             # Insert working tree entry
             # Newly initialized entities start unstaged - they need explicit staging
             self.db.execute(
-                text(
-                    """
+                text("""
                 INSERT INTO working_tree (
                     entity_type, entity_id, current_version_id, canonical_version_id, staged, modified_at
                 ) VALUES (
                     :entity_type, :entity_id, :current_version_id, :canonical_version_id, :staged, :modified_at
                 )
-            """
-                ),
+            """),
                 {
                     "entity_type": entity_type,
                     "entity_id": entity_id,
@@ -183,11 +180,9 @@ class WorkingTreeManager:
 
         # Verify the new version exists
         version_exists = self.db.execute(
-            text(
-                """
+            text("""
             SELECT 1 FROM entity_versions WHERE id = :version_id
-        """
-            ),
+        """),
             {"version_id": new_version_id},
         ).fetchone()
 
@@ -198,23 +193,24 @@ class WorkingTreeManager:
 
         try:
             # Update working tree entry
-            result = self.db.execute(
-                text(
-                    """
-                UPDATE working_tree 
-                SET current_version_id = :new_version_id, 
+            result = cast(
+                CursorResult,
+                self.db.execute(
+                    text("""
+                UPDATE working_tree
+                SET current_version_id = :new_version_id,
                     modified_at = :modified_at,
                     staged = :staged
                 WHERE entity_type = :entity_type AND entity_id = :entity_id
-            """
+            """),
+                    {
+                        "new_version_id": new_version_id,
+                        "modified_at": modified_at.isoformat(),
+                        "staged": False,  # Reset staged status on version update
+                        "entity_type": entity_type,
+                        "entity_id": entity_id,
+                    },
                 ),
-                {
-                    "new_version_id": new_version_id,
-                    "modified_at": modified_at.isoformat(),
-                    "staged": False,  # Reset staged status on version update
-                    "entity_type": entity_type,
-                    "entity_id": entity_id,
-                },
             )
 
             if result.rowcount == 0:
@@ -280,19 +276,20 @@ class WorkingTreeManager:
 
         try:
             # Update staged status even if no changes (for idempotent staging)
-            result = self.db.execute(
-                text(
-                    """
+            result = cast(
+                CursorResult,
+                self.db.execute(
+                    text("""
                 UPDATE working_tree
                 SET staged = TRUE, modified_at = :modified_at
                 WHERE entity_type = :entity_type AND entity_id = :entity_id
-            """
+            """),
+                    {
+                        "modified_at": datetime.now(timezone.utc).isoformat(),
+                        "entity_type": entity_type,
+                        "entity_id": entity_id,
+                    },
                 ),
-                {
-                    "modified_at": datetime.now(timezone.utc).isoformat(),
-                    "entity_type": entity_type,
-                    "entity_id": entity_id,
-                },
             )
 
             if result.rowcount == 0:
@@ -340,19 +337,20 @@ class WorkingTreeManager:
 
         try:
             # Update staged status
-            result = self.db.execute(
-                text(
-                    """
-                UPDATE working_tree 
+            result = cast(
+                CursorResult,
+                self.db.execute(
+                    text("""
+                UPDATE working_tree
                 SET staged = FALSE, modified_at = :modified_at
                 WHERE entity_type = :entity_type AND entity_id = :entity_id
-            """
+            """),
+                    {
+                        "modified_at": datetime.now(timezone.utc).isoformat(),
+                        "entity_type": entity_type,
+                        "entity_id": entity_id,
+                    },
                 ),
-                {
-                    "modified_at": datetime.now(timezone.utc).isoformat(),
-                    "entity_type": entity_type,
-                    "entity_id": entity_id,
-                },
             )
 
             if result.rowcount == 0:
@@ -397,15 +395,13 @@ class WorkingTreeManager:
             for entry in staged_entries:
                 # Update canonical version and unstage
                 self.db.execute(
-                    text(
-                        """
+                    text("""
                     UPDATE working_tree 
                     SET canonical_version_id = current_version_id, 
                         staged = FALSE,
                         modified_at = :modified_at
                     WHERE entity_type = :entity_type AND entity_id = :entity_id
-                """
-                    ),
+                """),
                     {
                         "modified_at": datetime.now(timezone.utc).isoformat(),
                         "entity_type": entry.entity_type,
@@ -452,13 +448,11 @@ class WorkingTreeManager:
         """
         try:
             result = self.db.execute(
-                text(
-                    """
+                text("""
                 SELECT entity_type, entity_id, current_version_id, canonical_version_id, staged, modified_at
                 FROM working_tree 
                 WHERE entity_type = :entity_type AND entity_id = :entity_id
-            """
-                ),
+            """),
                 {"entity_type": entity_type, "entity_id": entity_id},
             ).fetchone()
 
@@ -483,16 +477,12 @@ class WorkingTreeManager:
             List of WorkingTreeEntry instances with changes
         """
         try:
-            results = self.db.execute(
-                text(
-                    """
+            results = self.db.execute(text("""
                 SELECT entity_type, entity_id, current_version_id, canonical_version_id, staged, modified_at
                 FROM working_tree 
                 WHERE current_version_id != canonical_version_id
                 ORDER BY modified_at DESC
-            """
-                )
-            ).fetchall()
+            """)).fetchall()
 
             entries = []
             for row in results:
@@ -515,16 +505,12 @@ class WorkingTreeManager:
             List of WorkingTreeEntry instances that are staged
         """
         try:
-            results = self.db.execute(
-                text(
-                    """
+            results = self.db.execute(text("""
                 SELECT entity_type, entity_id, current_version_id, canonical_version_id, staged, modified_at
                 FROM working_tree 
                 WHERE staged = TRUE
                 ORDER BY modified_at DESC
-            """
-                )
-            ).fetchall()
+            """)).fetchall()
 
             entries = []
             for row in results:
@@ -559,7 +545,7 @@ class WorkingTreeManager:
                 change = {
                     "version_id": entry.current_version_id,
                     "change_type": change_type,
-                    "entity_type": entry.entity_type
+                    "entity_type": entry.entity_type,
                 }
                 changes.append(change)
 
@@ -586,9 +572,7 @@ class WorkingTreeManager:
 
         except Exception as e:
             logger.error(f"Failed to capture version snapshot: {e}")
-            raise RuntimeError(
-                f"Error during version snapshot capture: {e}"
-            ) from e
+            raise RuntimeError(f"Error during version snapshot capture: {e}") from e
 
     def get_working_tree_status(self) -> WorkingTreeStatus:
         """
@@ -599,15 +583,11 @@ class WorkingTreeManager:
         """
         try:
             # Get all working tree entries
-            results = self.db.execute(
-                text(
-                    """
+            results = self.db.execute(text("""
                 SELECT entity_type, entity_id, current_version_id, canonical_version_id, staged, modified_at
                 FROM working_tree 
                 ORDER BY modified_at DESC
-            """
-                )
-            ).fetchall()
+            """)).fetchall()
 
             entries = []
             modified_count = 0
@@ -645,18 +625,16 @@ class WorkingTreeManager:
 
     def _get_version_number_by_id(self, version_id: str) -> int:
         """Get version number by version ID."""
-        result = self.db.execute(
-            text(
-                """
+        result: Optional[int] = self.db.execute(
+            text("""
             SELECT version_number FROM entity_versions WHERE id = :version_id
-        """
-            ),
+        """),
             {"version_id": version_id},
         ).scalar()
 
         return result or 0
 
-    def _row_to_working_tree_entry(self, row) -> WorkingTreeEntry:
+    def _row_to_working_tree_entry(self, row: Row[Any]) -> WorkingTreeEntry:
         """Convert database row to WorkingTreeEntry instance."""
         return WorkingTreeEntry(
             entity_type=row[0],

@@ -3,6 +3,13 @@
 .vscode/
 .mcp.json
 PRPs/
-.serena/
-.venv/
-.dr/
+**/.venv/
+**/test_env/
+**/.dr/
+
+# Build and runtime artifacts
+*.log
+
+# Database files and SQLite runtime artifacts
+/cache.db*
+/datafiles/

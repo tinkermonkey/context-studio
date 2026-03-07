@@ -7,12 +7,12 @@ sys.path.append(
     os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 )
 
-import pytest
-import tempfile
-import shutil
-from pathlib import Path
-from sqlalchemy import create_engine, text, inspect
-from database.migrations.migration_manager import MigrationManager
+import pytest  # noqa: E402
+import tempfile  # noqa: E402
+import shutil  # noqa: E402
+from pathlib import Path  # noqa: E402
+from sqlalchemy import create_engine, text, inspect  # noqa: E402
+from database.migrations.migration_manager import MigrationManager  # noqa: E402, E501
 
 
 @pytest.fixture
@@ -100,7 +100,7 @@ def test_migration_006_creates_predicate_triggers(temp_db):
         triggers = conn.execute(
             text(
                 """
-            SELECT name FROM sqlite_master 
+            SELECT name FROM sqlite_master
             WHERE type='trigger' AND name LIKE '%predicate%'
         """
             )
@@ -132,7 +132,7 @@ def test_migration_006_updates_structure_node_triggers(temp_db):
         triggers = conn.execute(
             text(
                 """
-            SELECT name, sql FROM sqlite_master 
+            SELECT name, sql FROM sqlite_master
             WHERE type='trigger' AND name LIKE '%structure_node%'
         """
             )
@@ -188,9 +188,9 @@ def test_migration_006_migrates_existing_events(temp_db):
                         conn.execute(
                             text(
                                 f"""
-                            INSERT INTO {table_name} 
+                            INSERT INTO {table_name}
                             (event_type, node_type, node_id, old_data, new_data, processed, timestamp)
-                            VALUES 
+                            VALUES
                             ('create', 'layer', 'test-layer-1', NULL, '{{"title": "Test Layer"}}', 0, datetime('now')),
                             ('update', 'domain', 'test-domain-1', '{{"title": "Old"}}', '{{"title": "New"}}', 0, datetime('now')),
                             ('delete', 'term', 'test-term-1', '{{"title": "Deleted"}}', NULL, 1, datetime('now'))
@@ -268,9 +268,9 @@ def test_migration_006_rollback_preserves_data(temp_db):
         conn.execute(
             text(
                 """
-            INSERT INTO change_events 
+            INSERT INTO change_events
             (event_type, record_type, record_id, old_data, new_data, processed, timestamp)
-            VALUES 
+            VALUES
             ('create', 'structure_node', 'rollback-test-1', NULL, '{"title": "Test Node"}', 0, datetime('now')),
             ('update', 'predicate', 'rollback-test-2', '{"old": "data"}', '{"new": "data"}', 1, datetime('now'))
         """
@@ -408,7 +408,7 @@ def test_migration_validation_comprehensive(temp_db):
         indexes = conn.execute(
             text(
                 """
-            SELECT name FROM sqlite_master 
+            SELECT name FROM sqlite_master
             WHERE type='index' AND tbl_name='change_events'
         """
             )

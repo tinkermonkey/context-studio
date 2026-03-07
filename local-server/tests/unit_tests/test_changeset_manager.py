@@ -11,14 +11,14 @@ sys.path.append(
     os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 )
 
-import pytest
-import uuid
-from unittest.mock import Mock, patch
+import pytest  # noqa: E402
+import uuid  # noqa: E402
+from unittest.mock import Mock, patch  # noqa: E402
 
-from services.changeset_manager import ChangesetManager
-from services.collaboration_models import ChangesetState
-from services.working_tree_manager import WorkingTreeManager
-from services.s3_sync_manager import S3SyncManager
+from services.changeset_manager import ChangesetManager  # noqa: E402
+from services.collaboration_models import ChangesetState  # noqa: E402
+from services.working_tree_manager import WorkingTreeManager  # noqa: E402
+from services.s3_sync_manager import S3SyncManager  # noqa: E402
 
 
 class TestChangesetManager:
@@ -81,10 +81,10 @@ class TestChangesetManager:
 
         with patch('uuid.uuid4') as mock_uuid:
             mock_uuid.return_value = uuid.UUID('12345678-1234-5678-9abc-123456789abc')
-            
+
             changeset = changeset_manager.create_changeset(
                 title="Test Changeset",
-                description="Test description", 
+                description="Test description",
                 author_id="user123"
             )
 
@@ -218,12 +218,12 @@ class TestChangesetManager:
         # Mock changeset exists and is in valid state
         mock_changeset = Mock()
         mock_changeset.state = ChangesetState.DRAFT
-        
+
         with patch.object(changeset_manager, 'get_changeset', return_value=mock_changeset):
             mock_db_session.execute.return_value.rowcount = 1
-            
+
             success = changeset_manager.delete_changeset("changeset123")
-            
+
             assert success is True
 
     def test_delete_changeset_invalid_state(self, changeset_manager):
@@ -231,7 +231,7 @@ class TestChangesetManager:
         # Mock changeset in merged state
         mock_changeset = Mock()
         mock_changeset.state = ChangesetState.MERGED
-        
+
         with patch.object(changeset_manager, 'get_changeset', return_value=mock_changeset):
             with pytest.raises(ValueError, match="Cannot delete changeset in merged state"):
                 changeset_manager.delete_changeset("changeset123")
@@ -247,7 +247,7 @@ class TestChangesetManager:
         mock_db_session.execute.return_value.rowcount = 1
 
         success = changeset_manager.update_changeset_state(
-            "changeset123", 
+            "changeset123",
             ChangesetState.PROPOSED
         )
 
@@ -259,7 +259,7 @@ class TestChangesetManager:
         mock_changeset = Mock()
         mock_changeset.id = "changeset123"
         mock_changeset.to_dict.return_value = {"id": "changeset123", "title": "test"}
-        
+
         with patch.object(changeset_manager, 'get_changeset', return_value=mock_changeset):
             success = changeset_manager.push_changeset_to_s3("changeset123")
 
@@ -278,10 +278,10 @@ class TestChangesetManager:
         mock_changeset = Mock()
         mock_changeset.id = "changeset123"
         mock_changeset.to_dict.return_value = {"id": "changeset123", "title": "test"}
-        
+
         # Mock S3 failure
         mock_s3_sync_manager.write_metadata_to_s3.side_effect = Exception("S3 error")
-        
+
         with patch.object(changeset_manager, 'get_changeset', return_value=mock_changeset):
             success = changeset_manager.push_changeset_to_s3("changeset123")
 
@@ -303,9 +303,9 @@ class TestChangesetManager:
         """Test branch name generation."""
         with patch('uuid.uuid4') as mock_uuid:
             mock_uuid.return_value = uuid.UUID('12345678-1234-5678-9abc-123456789abc')
-            
+
             branch_name = changeset_manager._generate_branch_name()
-            
+
             assert branch_name == "changeset-12345678"
 
     def test_database_transaction_rollback_on_error(self, changeset_manager, mock_db_session, mock_working_tree_manager):

@@ -10,12 +10,13 @@ SQLAlchemy's metadata.create_all() handles schema updates automatically.
 Note: For change tracking, use the ChangeEvent model in database.models instead.
 """
 
+from typing import Any
 from sqlalchemy import Column, String, Text, Integer, DateTime, Boolean, Index, ForeignKey
 from sqlalchemy.orm import declarative_base, relationship
 import datetime
 
 # Separate base for operations database
-OperationsBase = declarative_base()
+OperationsBase: Any = declarative_base()
 
 
 class PipelineFlavor(OperationsBase):

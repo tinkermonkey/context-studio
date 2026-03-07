@@ -8,17 +8,17 @@ import sys
 import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-import pytest
-import json
-from unittest.mock import Mock, MagicMock
-from sqlalchemy.orm import Session
+import pytest  # noqa: E402
+import json  # noqa: E402
+from unittest.mock import Mock  # noqa: E402
+from sqlalchemy.orm import Session  # noqa: E402
 
-from services.word_sense_service import WordSenseService
-from services.exceptions import ValidationError
-from api.models.structure_nodes import WordSense
-from database.models import StructureNode
-from database.enums import NodeType
-from nlp.models import NLPAnalysisResponse, TokenData, WordNetData
+from services.word_sense_service import WordSenseService  # noqa: E402
+from services.exceptions import ValidationError  # noqa: E402
+from api.models.structure_nodes import WordSense  # noqa: E402
+from database.models import StructureNode  # noqa: E402
+from database.enums import NodeType  # noqa: E402
+from nlp.models import NLPAnalysisResponse, TokenData, WordNetData  # noqa: E402, E501
 
 
 class TestWordSenseService:

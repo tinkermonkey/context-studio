@@ -10,7 +10,7 @@ type AddExistingDatasetRequest =
   components["schemas"]["AddExistingDatasetRequest"];
 
 interface AddExistingDatasetFormProps {
-  onSuccess?: (dataset: any) => void;
+  onSuccess?: (dataset: any) => void; // eslint-disable-line @typescript-eslint/no-explicit-any
 }
 
 const AddExistingDatasetForm: React.FC<AddExistingDatasetFormProps> = ({
@@ -50,7 +50,9 @@ const AddExistingDatasetForm: React.FC<AddExistingDatasetFormProps> = ({
         );
         if (onSuccess) onSuccess(result);
         form.reset();
-      } catch (error: any) {
+      } catch (
+        error: any // eslint-disable-line @typescript-eslint/no-explicit-any
+      ) {
         let message = "An error occurred";
         console.error("Full error object:", error);
         console.error("Error detail:", error?.detail);
@@ -59,7 +61,10 @@ const AddExistingDatasetForm: React.FC<AddExistingDatasetFormProps> = ({
           if (Array.isArray(error.response.data.detail)) {
             // Validation errors from FastAPI
             const validationErrors = error.response.data.detail
-              .map((err: any) => `${err.loc?.join(" > ")}: ${err.msg}`)
+              .map(
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                (err: any) => `${err.loc?.join(" > ")}: ${err.msg}`,
+              )
               .join(", ");
             message = `Validation error: ${validationErrors}`;
           } else if (typeof error.response.data.detail === "string") {

@@ -7,9 +7,9 @@ import os
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-import pytest
-from unittest.mock import Mock, patch
-from nlp.pipeline import NLPPipeline
+import pytest  # noqa: E402
+from unittest.mock import Mock, patch  # noqa: E402
+from nlp.pipeline import NLPPipeline  # noqa: E402
 
 
 class TestPipelineProxyIntegration:
@@ -100,7 +100,7 @@ class TestPipelineProxyIntegration:
         mock_nlp.pipe_names = []  # Make pipe_names iterable
         mock_spacy_load.return_value = mock_nlp
 
-        _pipeline = NLPPipeline()
+        _pipeline = NLPPipeline()  # noqa: F841
 
         # Verify proxy was started
         mock_proxy_manager.start_proxy.assert_called_once()
@@ -193,7 +193,7 @@ class TestPipelineProxyIntegration:
         mock_nlp.pipe_names = []  # Make pipe_names iterable
         mock_spacy_load.return_value = mock_nlp
 
-        _pipeline = NLPPipeline()
+        _pipeline = NLPPipeline()  # noqa: F841
 
         # Verify concepcy was added with proxy config
         expected_config = {
@@ -268,7 +268,7 @@ class TestPipelineProxyIntegration:
         mock_nlp.pipe_names = []  # Make pipe_names iterable
         mock_spacy_load.return_value = mock_nlp
 
-        _pipeline = NLPPipeline()
+        _pipeline = NLPPipeline()  # noqa: F841
 
         # Verify DBpedia Spotlight was added with proxy config
         mock_nlp.add_pipe.assert_any_call(
@@ -339,7 +339,7 @@ class TestPipelineProxyIntegration:
         mock_nlp.pipe_names = []  # Make pipe_names iterable
         mock_spacy_load.return_value = mock_nlp
 
-        _pipeline = NLPPipeline()
+        _pipeline = NLPPipeline()  # noqa: F841
 
         # Verify DBpedia Spotlight was added with upstream URL (no proxy)
         expected_config = {

@@ -2,14 +2,11 @@ import React from "react";
 import { useForm } from "@tanstack/react-form";
 import { TextInput, Button, Alert, Label } from "flowbite-react";
 import { Info } from "lucide-react";
-import type {
-  CreateDatasetRequest,
-  DatasetResponse,
-} from "@/api/services/datasets";
+import type { CreateDatasetRequest } from "@/api/services/datasets";
 import { useCreateDataset } from "@/api/hooks/datasets/useDatasetMutations";
 
 interface DatasetFormProps {
-  onSuccess?: (dataset: any) => void;
+  onSuccess?: (dataset: any) => void; // eslint-disable-line @typescript-eslint/no-explicit-any
 }
 
 const DatasetForm: React.FC<DatasetFormProps> = ({ onSuccess }) => {
@@ -29,7 +26,9 @@ const DatasetForm: React.FC<DatasetFormProps> = ({ onSuccess }) => {
         );
         if (onSuccess) onSuccess(result);
         form.reset();
-      } catch (error: any) {
+      } catch (
+        error: any // eslint-disable-line @typescript-eslint/no-explicit-any
+      ) {
         let message = "An error occurred";
         console.error("Full error object:", error);
         console.error("Error detail:", error?.detail);
@@ -38,7 +37,10 @@ const DatasetForm: React.FC<DatasetFormProps> = ({ onSuccess }) => {
           if (Array.isArray(error.response.data.detail)) {
             // Validation errors from FastAPI
             const validationErrors = error.response.data.detail
-              .map((err: any) => `${err.loc?.join(" > ")}: ${err.msg}`)
+              .map(
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                (err: any) => `${err.loc?.join(" > ")}: ${err.msg}`,
+              )
               .join(", ");
             message = `Validation error: ${validationErrors}`;
           } else if (typeof error.response.data.detail === "string") {
@@ -107,7 +109,7 @@ const DatasetForm: React.FC<DatasetFormProps> = ({ onSuccess }) => {
             onChange: ({ value }) => {
               if (!value) return "Filename is required";
               if (!value.endsWith(".db")) return "Filename must end with .db";
-              if (!/^[a-zA-Z0-9_\-\.]+$/.test(value))
+              if (!/^[a-zA-Z0-9_.-]+$/.test(value))
                 return "Filename contains invalid characters";
               return undefined;
             },

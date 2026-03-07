@@ -5,8 +5,8 @@ import { describe, it, expect, vi } from "vitest";
 
 // Hoistable mocks so router and hooks don't perform network or rely on app RouterProvider
 vi.mock("@tanstack/react-router", () => {
-  const React = require("react");
   return {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     Link: (props: any) => React.createElement("a", props, props.children),
     useNavigate: () => vi.fn(),
   };
@@ -22,7 +22,8 @@ vi.mock("@/api/hooks/layers/useLayers", () => ({
   }),
 }));
 vi.mock("@/api/hooks/terms/useTerms", () => ({
-  useTerms: (_params: any) => ({ data: [], isLoading: false }),
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars
+  useTerms: (_: any) => ({ data: [], isLoading: false }),
 }));
 vi.mock("@/api/hooks/structure_nodes/useNodeAttributes", () => ({
   useNodeAttributes: () => ({
@@ -79,9 +80,11 @@ describe("StructureNodeDetails edit flow (Domain)", () => {
     // Mock structureNodeService methods that are actually called
     const getSpy = vi
       .spyOn(structureNodeService, "get")
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       .mockResolvedValue(domain as any);
     const updateSpy = vi
       .spyOn(structureNodeService, "update")
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       .mockResolvedValue(updatedDomain as any);
 
     // With Link, useLayer, and useTerms mocked above, we can render without RouterProvider

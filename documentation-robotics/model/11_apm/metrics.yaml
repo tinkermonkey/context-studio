@@ -1,5 +1,0 @@
-ApiLatency:
-  id: apm.metric.ApiLatency
-  name: ApiLatency
-  type: metric
-  documentation: Measures the latency of API operations.

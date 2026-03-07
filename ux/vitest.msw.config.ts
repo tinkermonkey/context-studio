@@ -11,7 +11,10 @@ export default defineConfig({
     },
     exclude: ["node_modules", "dist"],
     // Only run MSW integration tests
-    include: ["test/integration/example.test.tsx", "test/integration/msw_*.test.*"],
+    include: [
+      "test/integration/example.test.tsx",
+      "test/integration/msw_*.test.*",
+    ],
   },
   resolve: {
     alias: {

@@ -151,7 +151,7 @@ function processNode(
   // Calculate the full width and height
   if (showDefinitions && titleRightEdge !== undefined) {
     // When showing definitions, width spans from node.x to the end of the definition
-    node.width = (titleRightEdge + totalGap + node.definitionWidth) - node.x;
+    node.width = titleRightEdge + totalGap + node.definitionWidth - node.x;
   } else {
     // When not showing definitions, width is just the title width plus expand controls
     node.width = node.titleWidth + (config.expandControls?.width || 0);

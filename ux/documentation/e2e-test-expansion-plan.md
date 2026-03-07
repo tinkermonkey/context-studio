@@ -14,6 +14,7 @@ This document outlines the plan to expand end-to-end test coverage for Context S
 ### ✅ Infrastructure Status: EXCELLENT
 
 **Strengths:**
+
 - Playwright configured with global setup/teardown for server lifecycle management
 - Isolated test databases created fresh for each test run
 - Backend (FastAPI on port 8888) and frontend (Vite on port 3888) automatically managed
@@ -23,6 +24,7 @@ This document outlines the plan to expand end-to-end test coverage for Context S
 - Proper use of `data-testid` attributes for reliable selectors
 
 **Test Pattern (from `layers.spec.ts`):**
+
 ```typescript
 // 1. Display Tests - Verify UI renders correctly
 // 2. Create Tests - Test record creation with validation
@@ -39,6 +41,7 @@ This document outlines the plan to expand end-to-end test coverage for Context S
 ## Test Coverage Gaps
 
 ### Currently Covered ✅
+
 - **Layer Management** (`e2e/tests/layers.spec.ts`)
   - Complete CRUD operations
   - Bulk delete
@@ -50,17 +53,20 @@ This document outlines the plan to expand end-to-end test coverage for Context S
 ### Not Yet Covered ❌
 
 #### High Priority - Core Knowledge Graph
+
 1. **Domain Management** - Domains belong to layers
 2. **Term Management** - Terms belong to domains and layers (hierarchical)
 3. **Structure Node Detail View** - Detailed view with relationships
 4. **Node Relationships** - Links between nodes with predicates
 
 #### Medium Priority - Data Integration
+
 5. **Predicate Management** - Semantic relationship definitions
 6. **Reference Data Search** - External data source integration
 7. **RAG Experiments** - Test paragraph annotation and pipeline testing
 
 #### Low Priority - Admin Features
+
 8. **Pipeline Configuration** - LLM pipeline flavor management
 
 ---
@@ -70,9 +76,11 @@ This document outlines the plan to expand end-to-end test coverage for Context S
 ### Phase 1: Core Knowledge Graph (Week 1-2)
 
 #### 1.1 Domain Management Tests
+
 **File:** `e2e/tests/domains.spec.ts`
 
 **Test Cases:**
+
 - [ ] Display domains table with layer associations
 - [ ] Create domain with layer selection
 - [ ] Edit domain properties and layer association
@@ -86,6 +94,7 @@ This document outlines the plan to expand end-to-end test coverage for Context S
 - [ ] Verify backend persistence for all operations
 
 **Key UI Elements to Test:**
+
 - `[data-testid="domain-table"]`
 - `[data-testid="domain-add-button"]`
 - `[data-testid="domain-title-input"]`
@@ -94,17 +103,23 @@ This document outlines the plan to expand end-to-end test coverage for Context S
 - Layer filter sidebar with collapsible layer list
 
 **Backend Validation:**
+
 ```typescript
 // Verify domain created with correct layer association
-const response = await apiRequest(page, '/api/structure_nodes?node_type=domain');
-const domain = response.data.find(d => d.title === domainTitle);
+const response = await apiRequest(
+  page,
+  "/api/structure_nodes?node_type=domain",
+);
+const domain = response.data.find((d) => d.title === domainTitle);
 expect(domain.parent_id).toBe(layerId);
 ```
 
 #### 1.2 Term Management Tests
+
 **File:** `e2e/tests/terms.spec.ts`
 
 **Test Cases:**
+
 - [ ] Display terms table with domain/layer associations
 - [ ] Create term with domain and layer selection
 - [ ] Edit term properties and associations
@@ -120,6 +135,7 @@ expect(domain.parent_id).toBe(layerId);
 - [ ] Verify hierarchical relationships (layer → domain → term)
 
 **Key UI Elements to Test:**
+
 - `[data-testid="term-table"]`
 - `[data-testid="term-add-button"]`
 - `[data-testid="term-title-input"]`
@@ -127,6 +143,7 @@ expect(domain.parent_id).toBe(layerId);
 - Hierarchical sidebar with collapsible layers and domains
 
 **Complex Scenario:**
+
 ```typescript
 // Create layer → domain → term hierarchy
 // Filter by layer, verify only terms in that layer's domains appear
@@ -135,9 +152,11 @@ expect(domain.parent_id).toBe(layerId);
 ```
 
 #### 1.3 Structure Node Detail View Tests
+
 **File:** `e2e/tests/node-details.spec.ts`
 
 **Test Cases:**
+
 - [ ] Load and display layer detail page
 - [ ] Load and display domain detail page
 - [ ] Load and display term detail page
@@ -153,6 +172,7 @@ expect(domain.parent_id).toBe(layerId);
 - [ ] Back navigation to table view
 
 **Key UI Elements to Test:**
+
 - `[data-testid="node-detail-title"]`
 - `[data-testid="node-detail-definition"]`
 - `[data-testid="node-detail-type"]`
@@ -164,9 +184,11 @@ expect(domain.parent_id).toBe(layerId);
 ### Phase 2: Knowledge Graph Relationships (Week 3)
 
 #### 2.1 Node Relationship Tests
+
 **File:** `e2e/tests/node-relationships.spec.ts`
 
 **Test Cases:**
+
 - [ ] View existing relationships on detail page
 - [ ] Create relationship between two terms (term → term)
 - [ ] Select predicate for relationship
@@ -178,6 +200,7 @@ expect(domain.parent_id).toBe(layerId);
 - [ ] Handle relationship creation errors
 
 **Key UI Elements to Test:**
+
 - `[data-testid="add-relationship-button"]`
 - `[data-testid="relationship-source-selector"]`
 - `[data-testid="relationship-target-selector"]`
@@ -185,6 +208,7 @@ expect(domain.parent_id).toBe(layerId);
 - `[data-testid="relationship-list"]`
 
 **Complex Scenario:**
+
 ```typescript
 // Create: Layer A → Domain B → Term C → (related-to) → Term D
 // Navigate: Term C detail → click relationship → lands on Term D detail
@@ -194,9 +218,11 @@ expect(domain.parent_id).toBe(layerId);
 ```
 
 #### 2.2 Predicate Management Tests
+
 **File:** `e2e/tests/predicates.spec.ts`
 
 **Test Cases:**
+
 - [ ] Display predicates table
 - [ ] Create predicate
 - [ ] Edit predicate
@@ -207,6 +233,7 @@ expect(domain.parent_id).toBe(layerId);
 - [ ] Verify predicates available in relationship selector
 
 **Key UI Elements to Test:**
+
 - `[data-testid="predicate-table"]`
 - `[data-testid="predicate-add-button"]`
 - `[data-testid="predicate-label-input"]`
@@ -217,9 +244,11 @@ expect(domain.parent_id).toBe(layerId);
 ### Phase 3: Data Integration Features (Week 4)
 
 #### 3.1 Reference Data Search Tests
+
 **File:** `e2e/tests/reference-search.spec.ts`
 
 **Test Cases:**
+
 - [ ] Load reference search page
 - [ ] Search ConceptNet for terms
 - [ ] Search DBpedia for terms
@@ -232,6 +261,7 @@ expect(domain.parent_id).toBe(layerId);
 - [ ] Handle search errors gracefully
 
 **Key UI Elements to Test:**
+
 - `[data-testid="reference-search-input"]`
 - `[data-testid="reference-source-filter"]`
 - `[data-testid="reference-results-list"]`
@@ -240,9 +270,11 @@ expect(domain.parent_id).toBe(layerId);
 **Note:** May require mocked reference API responses if external APIs are slow or rate-limited.
 
 #### 3.2 RAG Experiments Tests
+
 **File:** `e2e/tests/rag-experiments.spec.ts`
 
 **Test Cases:**
+
 - [ ] Load RAG experiments page
 - [ ] Create test paragraph
 - [ ] Edit test paragraph
@@ -255,6 +287,7 @@ expect(domain.parent_id).toBe(layerId);
 - [ ] Navigate between test list and results
 
 **Key UI Elements to Test:**
+
 - `[data-testid="test-paragraph-editor"]`
 - `[data-testid="annotation-selector"]`
 - `[data-testid="pipeline-test-runner"]`
@@ -267,9 +300,11 @@ expect(domain.parent_id).toBe(layerId);
 ### Phase 4: Configuration Management (Week 5)
 
 #### 4.1 Pipeline Configuration Tests
+
 **File:** `e2e/tests/pipeline-config.spec.ts`
 
 **Test Cases:**
+
 - [ ] List pipeline flavors by type
 - [ ] Create new pipeline flavor
 - [ ] Edit pipeline flavor configuration
@@ -285,34 +320,36 @@ expect(domain.parent_id).toBe(layerId);
 ## Test Data Management Strategy
 
 ### Approach: Create via API, Verify via UI
+
 To keep tests fast and focused, use the `apiRequest()` helper to create prerequisite data:
 
 ```typescript
 // Example: Testing term creation requires a domain and layer
-test('should create a term', async ({ page }) => {
+test("should create a term", async ({ page }) => {
   // Create prerequisites via API
-  const layer = await apiRequest(page, '/api/structure_nodes', {
-    method: 'POST',
-    body: { title: 'Test Layer', node_type: 'layer' }
+  const layer = await apiRequest(page, "/api/structure_nodes", {
+    method: "POST",
+    body: { title: "Test Layer", node_type: "layer" },
   });
 
-  const domain = await apiRequest(page, '/api/structure_nodes', {
-    method: 'POST',
+  const domain = await apiRequest(page, "/api/structure_nodes", {
+    method: "POST",
     body: {
-      title: 'Test Domain',
-      node_type: 'domain',
-      parent_id: layer.id
-    }
+      title: "Test Domain",
+      node_type: "domain",
+      parent_id: layer.id,
+    },
   });
 
   // Now test term creation through UI
-  await page.goto('/app/terms');
+  await page.goto("/app/terms");
   await page.click('[data-testid="term-add-button"]');
   // ... rest of UI interaction
 });
 ```
 
 ### Test Isolation
+
 - Each test should create its own data
 - Don't rely on data from previous tests
 - Use unique timestamps in titles to avoid conflicts: `Test Layer ${Date.now()}`
@@ -326,6 +363,7 @@ test('should create a term', async ({ page }) => {
 The following components need `data-testid` attributes added for reliable test selectors:
 
 #### Domains
+
 - [ ] Domain table: `[data-testid="domain-table"]`
 - [ ] Domain row: `[data-testid="domain-row-{id}"]`
 - [ ] Add button: `[data-testid="domain-add-button"]`
@@ -339,6 +377,7 @@ The following components need `data-testid` attributes added for reliable test s
 - [ ] Search input: `[data-testid="domain-search-input"]`
 
 #### Terms
+
 - [ ] Term table: `[data-testid="term-table"]`
 - [ ] Term row: `[data-testid="term-row-{id}"]`
 - [ ] Add button: `[data-testid="term-add-button"]`
@@ -352,6 +391,7 @@ The following components need `data-testid` attributes added for reliable test s
 - [ ] Search input: `[data-testid="term-search-input"]`
 
 #### Predicates
+
 - [ ] Predicate table: `[data-testid="predicate-table"]`
 - [ ] Predicate row: `[data-testid="predicate-row-{id}"]`
 - [ ] Add button: `[data-testid="predicate-add-button"]`
@@ -359,6 +399,7 @@ The following components need `data-testid` attributes added for reliable test s
 - [ ] DBpedia mapping: `[data-testid="predicate-dbpedia-mapping"]`
 
 #### Node Details
+
 - [ ] Detail title: `[data-testid="node-detail-title"]`
 - [ ] Detail definition: `[data-testid="node-detail-definition"]`
 - [ ] Node type: `[data-testid="node-detail-type"]`
@@ -367,6 +408,7 @@ The following components need `data-testid` attributes added for reliable test s
 - [ ] Add relationship: `[data-testid="add-relationship-button"]`
 
 #### Relationships
+
 - [ ] Relationship list: `[data-testid="relationship-list"]`
 - [ ] Source selector: `[data-testid="relationship-source-selector"]`
 - [ ] Target selector: `[data-testid="relationship-target-selector"]`
@@ -410,6 +452,7 @@ npm run test:e2e:debug
 ## Success Criteria
 
 ### Phase 1 Complete When:
+
 - [ ] Domains: 10+ tests covering all CRUD operations
 - [ ] Terms: 12+ tests covering CRUD with hierarchical filtering
 - [ ] Node Details: 8+ tests covering all detail view features
@@ -417,18 +460,22 @@ npm run test:e2e:debug
 - [ ] Backend state verified for all operations
 
 ### Phase 2 Complete When:
+
 - [ ] Relationships: 8+ tests covering relationship CRUD
 - [ ] Predicates: 8+ tests covering predicate management
 - [ ] All tests pass reliably
 
 ### Phase 3 Complete When:
+
 - [ ] Reference Search: 6+ tests covering search and linking
 - [ ] RAG Experiments: 8+ tests covering annotation and testing
 
 ### Phase 4 Complete When:
+
 - [ ] Pipeline Config: 6+ tests covering pipeline management
 
 ### Overall Success:
+
 - **Target:** 60+ total e2e tests
 - **Coverage:** All critical user workflows tested
 - **Reliability:** All tests pass consistently in CI
@@ -450,23 +497,27 @@ npm run test:e2e:debug
 ## Notes and Considerations
 
 ### Performance
+
 - Tests run sequentially (1 worker) to avoid backend conflicts
 - Current 13 tests complete in ~30 seconds
 - Estimated 60 tests should complete in ~2-3 minutes
 - Use `test.only()` during development to focus on specific tests
 
 ### CI/CD Integration
+
 - Tests already configured for CI with retries
 - Consider running e2e tests on PR creation
 - May want to split tests into smoke (fast) and full (comprehensive) suites
 
 ### Maintenance
+
 - Keep tests focused on user workflows, not implementation details
 - Update tests when UI changes
 - Add new tests for new features
 - Review and refactor tests periodically to remove duplication
 
 ### Known Limitations
+
 - LLM-dependent features may need mocked responses
 - External API calls (reference data) may need mocking or caching
 - Graph visualizations may be difficult to test thoroughly

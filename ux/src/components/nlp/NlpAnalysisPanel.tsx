@@ -1,7 +1,6 @@
 import * as React from "react";
-import { useState, useEffect, useCallback, useRef, useMemo } from "react";
+import { useState, useCallback, useMemo, useEffect } from "react";
 import {
-  Button,
   Spinner,
   Accordion,
   AccordionPanel,
@@ -16,11 +15,7 @@ import { NlpGenerationResult } from "@/components/nlp/NlpGenerationResult";
 import { useNlpAnalysisStore } from "@/stores/nlpAnalysisStore";
 import { useWordSenses } from "@/api/hooks/structure_nodes/useWordSenses";
 import { WordSenseSelector } from "@/components/graphs/nlp_concept/WordSenseSelector";
-import type {
-  NodeContext,
-  SelectedNodeContextEntry,
-} from "@/components/nlp/types";
-import type { WordSense } from "@/api/types/structureNodes";
+import type { NodeContext } from "@/components/nlp/types";
 
 interface NlpAnalysisPanelProps {
   text: string;
@@ -59,11 +54,13 @@ export const NlpAnalysisPanel: React.FC<NlpAnalysisPanelProps> = ({
 }) => {
   // Subscribe to the NLP analysis store
   const { shouldAnalyze, currentText, reset } = useNlpAnalysisStore();
-  const [hasAnalyzed, setHasAnalyzed] = useState(false);
 
   // Determine if title is multi-word (more than one word after splitting on whitespace)
   const isMultiWord = useMemo(() => {
-    const words = text.trim().split(/\s+/).filter((w) => w.length > 0);
+    const words = text
+      .trim()
+      .split(/\s+/)
+      .filter((w) => w.length > 0);
     return words.length > 1;
   }, [text]);
 
@@ -74,6 +71,7 @@ export const NlpAnalysisPanel: React.FC<NlpAnalysisPanelProps> = ({
     refetch: refetchWordSenses,
   } = useWordSenses(nodeId || "", {
     enabled: !!nodeId && isMultiWord,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } as any);
 
   // Custom hook for API call
@@ -93,12 +91,12 @@ export const NlpAnalysisPanel: React.FC<NlpAnalysisPanelProps> = ({
     queryKey,
     staleTime: 1000 * 60 * 5, // Cache for 5 minutes
     gcTime: 1000 * 60 * 30, // Keep in cache for 30 minutes
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } as any);
 
   // Watch for analyze trigger from store
   useEffect(() => {
     if (shouldAnalyze && currentText.toLowerCase() === lowercasedText) {
-      setHasAnalyzed(true);
       refetch();
       reset(); // Reset the trigger
       apiLogger.info("NLP analysis triggered from store", { text });
@@ -147,7 +145,7 @@ export const NlpAnalysisPanel: React.FC<NlpAnalysisPanelProps> = ({
       }
 
       const token = analysisResult.tokens.find(
-        (t: any) => t.text === text && (t.start ?? 0) === start,
+        (t: any) => t.text === text && (t.start ?? 0) === start, // eslint-disable-line @typescript-eslint/no-explicit-any
       );
 
       if (!token) {
@@ -174,6 +172,7 @@ export const NlpAnalysisPanel: React.FC<NlpAnalysisPanelProps> = ({
         const synsets = token.wordnet?.synsets || [];
 
         if (senseIndex >= 0 && senseIndex < synsets.length) {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           const synset = synsets[senseIndex] as any;
           return {
             type: "sense" as const,
@@ -211,7 +210,9 @@ export const NlpAnalysisPanel: React.FC<NlpAnalysisPanelProps> = ({
           const relatedTerms = token.concepcy?.related_terms || [];
           // Filter relations by type and find the one at the given index
           // Note: related_terms is typed as string[] but actually contains relation objects
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           const relationsOfType = (relatedTerms as any[]).filter(
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             (rel: any) =>
               rel.relation === relationType &&
               rel.subject?.label === (token.lemma || token.text),
@@ -245,21 +246,6 @@ export const NlpAnalysisPanel: React.FC<NlpAnalysisPanelProps> = ({
     },
     [analysisResult],
   );
-
-  /**
-   * Gets the current selected node contexts as an array of objects.
-   * Useful for parent components that need to access the selected data.
-   *
-   * @returns Array of {nodeId, context} objects for all currently selected nodes
-   */
-  const getSelectedContexts = useCallback((): SelectedNodeContextEntry[] => {
-    return Array.from(selectedNodeContext.entries()).map(
-      ([nodeId, context]) => ({
-        nodeId,
-        context,
-      }),
-    );
-  }, [selectedNodeContext]);
 
   // Handle node click events - toggle selection and update context
   const handleNodeClick = useCallback(
@@ -351,47 +337,51 @@ export const NlpAnalysisPanel: React.FC<NlpAnalysisPanelProps> = ({
               <div className="flex flex-col items-stretch gap-4 md:flex-row">
                 <div className="flex w-full min-w-0 md:w-2/3">
                   <Accordion alwaysOpen className="w-full">
-                    {(analysisResult.tokens || []).map((token: any) => {
-                      // Create a unique prefix for this token's chart nodes
-                      const tokenPrefix = `token-${token.text}-${token.start ?? 0}`;
+                    {}
+                    {(analysisResult.tokens || []).map(
+                      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                      (token: any) => {
+                        // Create a unique prefix for this token's chart nodes
+                        const tokenPrefix = `token-${token.text}-${token.start ?? 0}`;
 
-                      // Memoize the selection handler to prevent unnecessary re-renders
-                      const onNodeClick = (nodeId: string) => {
-                        // Create a full node ID with token prefix for global tracking
-                        const fullNodeId = `${tokenPrefix}-${nodeId}`;
-                        handleNodeClick(fullNodeId);
-                      };
+                        // Memoize the selection handler to prevent unnecessary re-renders
+                        const onNodeClick = (nodeId: string) => {
+                          // Create a full node ID with token prefix for global tracking
+                          const fullNodeId = `${tokenPrefix}-${nodeId}`;
+                          handleNodeClick(fullNodeId);
+                        };
 
-                      return (
-                        <AccordionPanel
-                          key={`${token.text}-${token.start ?? 0}`}
-                        >
-                          <AccordionTitle>
-                            Token &quot;
-                            <span className="font-bold italic">{`${token.text}`}</span>
-                            &quot;
-                          </AccordionTitle>
-                          <AccordionContent className="p-0">
-                            <React.Suspense
-                              fallback={
-                                <div className="flex items-center gap-2">
-                                  <Spinner size="sm" />{" "}
-                                  <span className="text-sm text-gray-500">
-                                    Loading details...
-                                  </span>
-                                </div>
-                              }
-                            >
-                              <NlpTokenAnalysisPanel
-                                token={token}
-                                selectedNodeIds={selectedNodeIds}
-                                onNodeClick={onNodeClick}
-                              />
-                            </React.Suspense>
-                          </AccordionContent>
-                        </AccordionPanel>
-                      );
-                    })}
+                        return (
+                          <AccordionPanel
+                            key={`${token.text}-${token.start ?? 0}`}
+                          >
+                            <AccordionTitle>
+                              Token &quot;
+                              <span className="font-bold italic">{`${token.text}`}</span>
+                              &quot;
+                            </AccordionTitle>
+                            <AccordionContent className="p-0">
+                              <React.Suspense
+                                fallback={
+                                  <div className="flex items-center gap-2">
+                                    <Spinner size="sm" />{" "}
+                                    <span className="text-sm text-gray-500">
+                                      Loading details...
+                                    </span>
+                                  </div>
+                                }
+                              >
+                                <NlpTokenAnalysisPanel
+                                  token={token}
+                                  selectedNodeIds={selectedNodeIds}
+                                  onNodeClick={onNodeClick}
+                                />
+                              </React.Suspense>
+                            </AccordionContent>
+                          </AccordionPanel>
+                        );
+                      },
+                    )}
                   </Accordion>
                 </div>
                 <div className="flex w-full min-w-0 md:w-1/3">

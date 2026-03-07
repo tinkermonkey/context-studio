@@ -5,7 +5,7 @@
  * Consolidates the functionality of LayerService, DomainService, and TermService
  */
 
-import { BaseService, ListParams, FindParams, PaginatedResponse } from "./base";
+import { BaseService, PaginatedResponse } from "./base";
 import { ENDPOINTS } from "../config";
 import {
   StructureNode,

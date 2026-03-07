@@ -1,3 +1,4 @@
+# mypy: ignore-errors
 """
 Unit tests for Migration 018 - Add attributes column.
 
@@ -12,14 +13,14 @@ sys.path.append(
     os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 )
 
-import pytest
-import tempfile
-import json
-from typing import Dict, List
-from sqlalchemy import create_engine, text
+import pytest  # noqa: E402
+import tempfile  # noqa: E402
+import json  # noqa: E402
+from typing import Dict, List  # noqa: E402
+from sqlalchemy import create_engine, text  # noqa: E402
 
-from database.migrations.migration_manager import MigrationManager
-from database.utils import init_db
+from database.migrations.migration_manager import MigrationManager  # noqa: E402, E501
+from database.utils import init_db  # noqa: E402
 
 
 class MigrationTestHarness:

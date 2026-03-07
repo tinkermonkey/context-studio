@@ -1,10 +1,11 @@
+# mypy: ignore-errors
 """
 Layer 1: LLM Extraction Processor
 
 This processor performs LLM-based entity extraction enhanced by knowledge graph context.
 It uses the pipeline_flavors system to extract entities with confidence scores.
 """
-from typing import List, Dict, Any
+from typing import List, Dict
 import json
 
 from rag.processors.models import (

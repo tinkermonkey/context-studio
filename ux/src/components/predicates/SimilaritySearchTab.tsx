@@ -7,7 +7,19 @@
  */
 
 import React, { useState, useEffect } from "react";
-import { Table, TableHead, TableHeadCell, TableBody, TableRow, TableCell, Button, Spinner, Badge, Label, Select } from "flowbite-react";
+import {
+  Badge,
+  Button,
+  Label,
+  Select,
+  Spinner,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeadCell,
+  TableRow,
+} from "flowbite-react";
 import { Search, X } from "lucide-react";
 import { useSimilarPredicates } from "@/api/hooks/predicates";
 import { useButterToast } from "@/hooks/useButterToast";
@@ -22,7 +34,9 @@ export interface SimilaritySearchTabProps {
 export const SimilaritySearchTab: React.FC<SimilaritySearchTabProps> = ({
   onClusterSelect,
 }) => {
-  const [selectedPredicate, setSelectedPredicate] = useState<PredicateOut | undefined>();
+  const [selectedPredicate, setSelectedPredicate] = useState<
+    PredicateOut | undefined
+  >();
   const [debouncedPredicateId, setDebouncedPredicateId] = useState<string>("");
   const [sourceFilter, setSourceFilter] = useState<string>("");
   const [thresholdFilter, setThresholdFilter] = useState<number>(0.7);
@@ -41,16 +55,14 @@ export const SimilaritySearchTab: React.FC<SimilaritySearchTabProps> = ({
   }, [selectedPredicate?.id]);
 
   // Query similar predicates using the debounced predicate ID
-  const {
-    data,
-    isLoading,
-    error,
-    isFetching,
-  } = useSimilarPredicates(debouncedPredicateId, {
-    limit: topK,
-    source: sourceFilter || undefined,
-    threshold: thresholdFilter,
-  });
+  const { data, isLoading, error, isFetching } = useSimilarPredicates(
+    debouncedPredicateId,
+    {
+      limit: topK,
+      source: sourceFilter || undefined,
+      threshold: thresholdFilter,
+    },
+  );
 
   // Handle error display
   React.useEffect(() => {
@@ -69,9 +81,7 @@ export const SimilaritySearchTab: React.FC<SimilaritySearchTabProps> = ({
   // Get unique sources from results
   const availableSources = React.useMemo(() => {
     if (!data?.results) return [];
-    const sources = new Set(
-      data.results.map((item) => item.source),
-    );
+    const sources = new Set(data.results.map((item) => item.source));
     return Array.from(sources).sort();
   }, [data?.results]);
 
@@ -125,7 +135,8 @@ export const SimilaritySearchTab: React.FC<SimilaritySearchTabProps> = ({
           />
           {selectedPredicate && (
             <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
-              Selected: <span className="font-medium">{selectedPredicate.title}</span>
+              Selected:{" "}
+              <span className="font-medium">{selectedPredicate.title}</span>
             </p>
           )}
         </div>
@@ -197,7 +208,9 @@ export const SimilaritySearchTab: React.FC<SimilaritySearchTabProps> = ({
         <>
           <div className="rounded-lg bg-blue-50 p-4 dark:bg-blue-900/20">
             <p className="text-sm text-blue-800 dark:text-blue-200">
-              <span className="font-semibold">Searching for predicates similar to:</span>{" "}
+              <span className="font-semibold">
+                Searching for predicates similar to:
+              </span>{" "}
               {data.predicate_title}
             </p>
           </div>
@@ -211,7 +224,9 @@ export const SimilaritySearchTab: React.FC<SimilaritySearchTabProps> = ({
                 color="light"
                 className="ml-4"
                 onClick={() =>
-                  onClusterSelect(filteredResults.map((item) => item.predicate_id))
+                  onClusterSelect(
+                    filteredResults.map((item) => item.predicate_id),
+                  )
                 }
               >
                 Create Cluster from Results
@@ -222,7 +237,8 @@ export const SimilaritySearchTab: React.FC<SimilaritySearchTabProps> = ({
           <div className="overflow-x-auto">
             {filteredResults.length === 0 ? (
               <div className="py-8 text-center text-gray-500">
-                No similar predicates found with similarity ≥ {thresholdFilter.toFixed(2)}
+                No similar predicates found with similarity ≥{" "}
+                {thresholdFilter.toFixed(2)}
               </div>
             ) : (
               <Table hoverable>
@@ -236,23 +252,32 @@ export const SimilaritySearchTab: React.FC<SimilaritySearchTabProps> = ({
                     <TableHeadCell>Definition</TableHeadCell>
                   </TableRow>
                 </TableHead>
-                <TableBody className="divide-y">{filteredResults.map((item, index) => (
+                <TableBody className="divide-y">
+                  {filteredResults.map((item, index) => (
                     <TableRow
                       key={`${item.predicate_id}-${index}`}
                       className="bg-white dark:border-gray-700 dark:bg-gray-800"
                     >
                       <TableCell>
-                        <Badge color={getQualityColor(item.similarity_score)} size="sm">
+                        <Badge
+                          color={getQualityColor(item.similarity_score)}
+                          size="sm"
+                        >
                           {(item.similarity_score * 100).toFixed(1)}%
                         </Badge>
                       </TableCell>
                       <TableCell>
-                        <Badge color={getQualityColor(item.similarity_score)} size="sm">
+                        <Badge
+                          color={getQualityColor(item.similarity_score)}
+                          size="sm"
+                        >
                           {getQualityLabel(item.similarity_score)}
                         </Badge>
                       </TableCell>
                       <TableCell>
-                        <Badge color={getSourceBadgeColor(item.source)}>{item.source}</Badge>
+                        <Badge color={getSourceBadgeColor(item.source)}>
+                          {item.source}
+                        </Badge>
                       </TableCell>
                       <TableCell className="font-mono text-sm">
                         {item.source_id}

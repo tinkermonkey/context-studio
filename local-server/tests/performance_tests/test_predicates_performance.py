@@ -5,15 +5,14 @@ import os
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-import pytest
-import time
-import json
-import uuid
-from statistics import mean, median
-from unittest.mock import Mock, patch
-from sqlalchemy import create_engine, text
-from sqlalchemy.orm import sessionmaker
-from database.models import Base, Predicate
+import pytest  # noqa: E402
+import time  # noqa: E402
+import json  # noqa: E402
+from statistics import mean, median  # noqa: E402
+from unittest.mock import Mock, patch  # noqa: E402
+from sqlalchemy import create_engine, text  # noqa: E402
+from sqlalchemy.orm import sessionmaker  # noqa: E402
+from database.models import Base, Predicate  # noqa: E402
 
 
 class TestPredicatePerformance:
@@ -37,7 +36,7 @@ class TestPredicatePerformance:
                 identifier=f"predicate_{i:04d}",
                 title=f"Predicate {i:04d}",
                 definition=f"Test predicate number {i}",
-                mapping=json.dumps({"test": {"index": i, "type": "performance_test"}}),
+                mapping=json.dumps({"test": {"index": i, "type": "performance_test"}}),  # noqa: E501
             )
             predicates.append(predicate)
 
@@ -99,13 +98,13 @@ class TestPredicatePerformance:
 
         # Get all predicate IDs
         predicates = db_session.query(Predicate).all()
-        test_ids = [pred.id for pred in predicates[::100]]  # Every 100th predicate
+        test_ids = [pred.id for pred in predicates[::100]]  # Every 100th predicate  # noqa: E501
 
         # Test lookups by ID
         lookup_times = []
         for pred_id in test_ids:
             _, exec_time = self.measure_time(
-                lambda: db_session.query(Predicate).filter_by(id=pred_id).first()
+                lambda: db_session.query(Predicate).filter_by(id=pred_id).first()  # noqa: E501
             )
             lookup_times.append(exec_time)
 
@@ -148,7 +147,7 @@ class TestPredicatePerformance:
             # Performance assertions
             assert (
                 time_per_predicate < 0.01
-            ), f"Time per predicate {time_per_predicate:.4f}s exceeds 10ms for batch size {batch_size}"
+            ), f"Time per predicate {time_per_predicate:.4f}s exceeds 10ms for batch size {batch_size}"  # noqa: E501
 
             print(f"Bulk creation (batch size {batch_size}):")
             print(f"  Total time: {exec_time:.4f}s")
@@ -197,7 +196,7 @@ class TestPredicatePerformance:
 
         for pattern, description in search_patterns:
             _, exec_time = self.measure_time(
-                lambda p: db_session.query(Predicate).filter(text(p)).all(), pattern
+                lambda p: db_session.query(Predicate).filter(text(p)).all(), pattern  # noqa: E501
             )
 
             # Performance assertion
@@ -207,10 +206,8 @@ class TestPredicatePerformance:
 
             print(f"{description} search: {exec_time:.4f}s")
 
-
-
     @patch("config.get_settings")
-    def test_conceptnet_import_performance(self, mock_get_settings, db_session):
+    def test_conceptnet_import_performance(self, mock_get_settings, db_session):  # noqa: E501
         """Test performance of ConceptNet predicate import."""
         # Mock config with large number of relations
         mock_settings = Mock()
@@ -265,7 +262,7 @@ class TestPredicatePerformance:
                 identifier = relation.lower()
 
                 # Check if already exists
-                existing = db.query(Predicate).filter_by(identifier=identifier).first()
+                existing = db.query(Predicate).filter_by(identifier=identifier).first()  # noqa: E501
                 if existing:
                     continue
 
@@ -297,10 +294,10 @@ class TestPredicatePerformance:
         )
 
         # Performance assertions
-        relations_count = len(mock_settings.concepcy_config["relations_of_interest"])
-        time_per_relation = exec_time / relations_count if relations_count > 0 else 0
+        relations_count = len(mock_settings.concepcy_config["relations_of_interest"])  # noqa: E501
+        time_per_relation = exec_time / relations_count if relations_count > 0 else 0  # noqa: E501
 
-        assert exec_time < 5.0, f"Import time {exec_time:.4f}s exceeds 5 seconds"
+        assert exec_time < 5.0, f"Import time {exec_time:.4f}s exceeds 5 seconds"  # noqa: E501
         assert (
             time_per_relation < 0.2
         ), f"Time per relation {time_per_relation:.4f}s exceeds 200ms"
@@ -310,9 +307,8 @@ class TestPredicatePerformance:
         print(f"  Relations imported: {len(imported_predicates)}")
         print(f"  Time per relation: {time_per_relation:.4f}s")
 
-
     def test_large_predicate_pagination_and_sorting(self, db_session):
-        """Test pagination and sorting performance with large predicate sets."""
+        """Test pagination and sorting performance with large predicate sets."""  # noqa: E501
         # Create large number of predicates
         self.create_test_predicates(db_session, count=2000)
 
@@ -379,7 +375,7 @@ class TestPredicatePerformance:
         ), f"Average operation time {avg_operation_time:.4f}s exceeds 100ms"
 
         print("Mixed predicate read operations:")
-        print(f"  Total time ({len(operations)} operations): {total_time:.4f}s")
+        print(f"  Total time ({len(operations)} operations): {total_time:.4f}s")  # noqa: E501
         print(f"  Average operation time: {avg_operation_time:.4f}s")
 
 
@@ -435,21 +431,21 @@ class TestPredicateMemoryUsage:
         batch_size = 100
 
         while True:
-            batch = db_session.query(Predicate).offset(offset).limit(batch_size).all()
+            batch = db_session.query(Predicate).offset(offset).limit(batch_size).all()  # noqa: E501
             if not batch:
                 break
             predicate_count += len(batch)
             offset += batch_size
 
         assert predicate_count == 5000
-        print(f"Successfully processed {predicate_count} predicates in batches")
+        print(f"Successfully processed {predicate_count} predicates in batches")  # noqa: E501
 
     def test_predicate_bulk_loading_efficiency(self, db_session):
         """Test efficient bulk loading of large predicate datasets."""
         # Create test predicates
         for i in range(1000):
             predicate = Predicate(
-                identifier=f"efficient_{i:04d}", title=f"Efficient Predicate {i:04d}"
+                identifier=f"efficient_{i:04d}", title=f"Efficient Predicate {i:04d}"  # noqa: E501
             )
             db_session.add(predicate)
 
@@ -471,6 +467,6 @@ class TestPredicateMemoryUsage:
 
         # Verify correct number loaded
         assert len(loaded_predicates) == len(identifiers_to_load)
-        assert load_time < 0.1, f"Bulk loading time {load_time:.4f}s exceeds 100ms"
+        assert load_time < 0.1, f"Bulk loading time {load_time:.4f}s exceeds 100ms"  # noqa: E501
 
-        print(f"Bulk loading {len(loaded_predicates)} predicates: {load_time:.4f}s")
+        print(f"Bulk loading {len(loaded_predicates)} predicates: {load_time:.4f}s")  # noqa: E501

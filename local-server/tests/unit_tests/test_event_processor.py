@@ -4,13 +4,13 @@ import os
 sys.path.insert(
     0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 )
-import time
-import uuid
-import pytest
-from utils.event_processor import EventProcessor
-from database.utils import get_current_engine
-from sqlalchemy import text
-from datetime import datetime, timezone, timedelta
+import time  # noqa: E402
+import uuid  # noqa: E402
+import pytest  # noqa: E402
+from utils.event_processor import EventProcessor  # noqa: E402
+from database.utils import get_current_engine  # noqa: E402
+from sqlalchemy import text  # noqa: E402
+from datetime import datetime, timezone, timedelta  # noqa: E402
 
 # Mark all tests in this file for separate execution
 pytestmark = pytest.mark.event_processor
@@ -46,8 +46,8 @@ def insert_event_via_sqlalchemy(
         conn.execute(
             text(
                 """
-            INSERT INTO change_events 
-            (event_type, record_type, record_id, old_data, new_data, timestamp, processed) 
+            INSERT INTO change_events
+            (event_type, record_type, record_id, old_data, new_data, timestamp, processed)
             VALUES (:event_type, :record_type, :record_id, :old_data, :new_data, :ts, :processed)
         """
             ),
@@ -176,7 +176,7 @@ def test_event_processor_processes_events(shared_app, test_session_isolation, re
     for record_type in ["structure_node", "structure_node_link", "predicate"]:
         insert_event_via_sqlalchemy("create", record_type, test_session_id=test_session_id)
 
-    print(f"[TEST] Starting test_event_processor_processes_events")
+    print("[TEST] Starting test_event_processor_processes_events")
 
     # Get the database URL from the current engine
     from database.utils import get_current_engine
@@ -285,8 +285,6 @@ def test_event_processor_handles_all_record_types(shared_app, test_session_isola
     # All events should be marked processed
     unprocessed_count = get_event_count_via_sqlalchemy(processed=0)
     assert unprocessed_count == 0
-
-
 
 
 def test_event_processor_cleanup_old_events(shared_app, test_session_isolation, request, capsys):

@@ -6,8 +6,8 @@
  */
 
 import React from "react";
-import { Button, Badge, Alert, Spinner } from "flowbite-react";
-import { X, Save, Trash2 } from "lucide-react";
+import { Alert, Badge, Button, Spinner } from "flowbite-react";
+import { Save, Trash2, X } from "lucide-react";
 
 import { UnifiedNode } from "@/api/types/unified";
 import { ReferenceLink } from "@/api/types/structureNodes";
@@ -31,7 +31,7 @@ export const ReferenceNodeSelectionList: React.FC<
       toast.success(
         `Successfully added ${selectedNodes.length} reference link${
           selectedNodes.length !== 1 ? "s" : ""
-        }`
+        }`,
       );
       onSaveSuccess();
     },
@@ -39,7 +39,7 @@ export const ReferenceNodeSelectionList: React.FC<
       toast.error(
         error instanceof Error
           ? error.message
-          : "Failed to save reference links"
+          : "Failed to save reference links",
       );
     },
   });
@@ -59,7 +59,7 @@ export const ReferenceNodeSelectionList: React.FC<
   }
 
   return (
-    <div className="border-t pt-4 space-y-3">
+    <div className="space-y-3 border-t pt-4">
       <div className="flex items-center justify-between">
         <h3 className="text-lg font-medium">
           Selected References ({selectedNodes.length})
@@ -106,17 +106,19 @@ export const ReferenceNodeSelectionList: React.FC<
       <div className="space-y-2">
         {selectedNodes.map((node) => {
           const nodeKey = `${node.source}-${node.id}`;
-          const relevancePercent = Math.round((node.relevance_score || 0) * 100);
+          const relevancePercent = Math.round(
+            (node.relevance_score || 0) * 100,
+          );
 
           return (
             <div
               key={nodeKey}
-              className="flex items-start gap-3 border rounded-lg p-3 bg-gray-50"
+              className="flex items-start gap-3 rounded-lg border bg-gray-50 p-3"
             >
               <div className="flex-1">
                 <h4 className="font-medium text-gray-900">{node.title}</h4>
                 {node.definition && (
-                  <p className="mt-1 text-sm text-gray-600 line-clamp-2">
+                  <p className="mt-1 line-clamp-2 text-sm text-gray-600">
                     {node.definition}
                   </p>
                 )}

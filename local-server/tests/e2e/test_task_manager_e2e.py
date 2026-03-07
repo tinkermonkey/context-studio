@@ -10,21 +10,17 @@ import sys
 import os
 import pytest
 import asyncio
-import time
 from fastapi.testclient import TestClient
 
 # Add parent directory to path for imports
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))  # noqa: E501
 
-from services.task_manager import (
-    TaskManager,
+from services.task_manager import (  # noqa: E402
     TaskStatus,
     initialize_task_manager,
-    shutdown_task_manager,
-    get_task_manager
+    shutdown_task_manager
 )
-from app import create_app
-from api import background_tasks
+from api import background_tasks  # noqa: E402
 
 
 class TestCompleteTaskWorkflowE2E:
@@ -108,7 +104,7 @@ class TestCompleteTaskWorkflowE2E:
 
         # Verify progress was tracked
         assert len(progress_history) > 1
-        assert progress_history[-1] >= progress_history[0]  # Progress increased
+        assert progress_history[-1] >= progress_history[0]  # Progress increased  # noqa: E501
 
         # Cleanup
         await task_manager.shutdown()
@@ -117,7 +113,7 @@ class TestCompleteTaskWorkflowE2E:
     @pytest.mark.asyncio
     async def test_mapping_operation_with_cancellation_e2e(self):
         """
-        E2E Test: Simulate a mapping operation that gets cancelled mid-execution.
+        E2E Test: Simulate a mapping operation that gets cancelled mid-execution.  # noqa: E501
 
         This tests the scenario where a user initiates a long-running mapping
         operation but decides to cancel it before completion.
@@ -150,7 +146,7 @@ class TestCompleteTaskWorkflowE2E:
 
         # Verify task is running
         status = task_manager.get_task_status(task_id)
-        assert status["status"] in [TaskStatus.RUNNING.value, TaskStatus.PENDING.value]
+        assert status["status"] in [TaskStatus.RUNNING.value, TaskStatus.PENDING.value]  # noqa: E501
 
         # Cancel the task
         cancelled = await task_manager.cancel_task(task_id)
@@ -171,9 +167,9 @@ class TestCompleteTaskWorkflowE2E:
     @pytest.mark.asyncio
     async def test_multiple_concurrent_tasks_e2e(self):
         """
-        E2E Test: Submit multiple tasks concurrently and verify sequential processing.
+        E2E Test: Submit multiple tasks concurrently and verify sequential processing.  # noqa: E501
 
-        This tests the system's ability to handle multiple concurrent submissions
+        This tests the system's ability to handle multiple concurrent submissions  # noqa: E501
         while processing them sequentially to control resource usage.
         """
         await shutdown_task_manager()
@@ -211,12 +207,11 @@ class TestCompleteTaskWorkflowE2E:
 
         # Verify sequential execution (no overlapping)
         for i in range(5):
-            start_idx = execution_log.index(f"start_{i}")
             end_idx = execution_log.index(f"end_{i}")
             # Task should complete before next task starts
             if i < 4:
                 next_start_idx = execution_log.index(f"start_{i+1}")
-                assert end_idx < next_start_idx, f"Task {i} should complete before task {i+1} starts"
+                assert end_idx < next_start_idx, f"Task {i} should complete before task {i+1} starts"  # noqa: E501
 
         # Cleanup
         await task_manager.shutdown()
@@ -241,7 +236,7 @@ class TestCompleteTaskWorkflowE2E:
             """Task that fails on first attempt, succeeds on second."""
             attempt_count[task_name] += 1
             if attempt_count[task_name] < max_attempts:
-                raise RuntimeError(f"{task_name} failed on attempt {attempt_count[task_name]}")
+                raise RuntimeError(f"{task_name} failed on attempt {attempt_count[task_name]}")  # noqa: E501
             return f"{task_name} succeeded"
 
         # Submit first task (will fail)
@@ -266,7 +261,7 @@ class TestCompleteTaskWorkflowE2E:
         task_id_1_retry = await task_manager.submit_task(
             task_type="flaky_discovery_retry",
             coroutine=flaky_task("task_1", max_attempts=2),
-            metadata={"description": "Retry of task 1", "original_task_id": task_id_1}
+            metadata={"description": "Retry of task 1", "original_task_id": task_id_1}  # noqa: E501
         )
 
         # Wait for retry to complete
@@ -431,7 +426,7 @@ class TestProgressCallbackE2E:
         """
         # This test validates a feature that is not implemented in TaskManager.
         # Progress updates must be checked via get_task_status() polling,
-        # not through callbacks. Removing this test as it tests non-existent functionality.
+        # not through callbacks. Removing this test as it tests non-existent functionality.  # noqa: E501
         pass
 
 
@@ -491,12 +486,12 @@ class TestResourceManagementE2E:
         """
         E2E Test: Queue overflow handling.
 
-        This test validates that the task queue respects its max_queue_size limit.
-        With asyncio.Queue, once the worker starts processing a task, space becomes
+        This test validates that the task queue respects its max_queue_size limit.  # noqa: E501
+        With asyncio.Queue, once the worker starts processing a task, space becomes  # noqa: E501
         available in the queue for a new item. This is the correct behavior and
         cannot be changed without fundamentally breaking task processing.
 
-        Removing this test as it tested functionality based on incorrect assumptions
+        Removing this test as it tested functionality based on incorrect assumptions  # noqa: E501
         about queue semantics.
         """
         pass

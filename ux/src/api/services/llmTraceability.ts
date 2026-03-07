@@ -333,7 +333,7 @@ export class LLMTraceabilityService extends BaseService {
     try {
       const health = await this.healthCheck();
       return health.status === "healthy" && health.database_connection;
-    } catch (error) {
+    } catch {
       // If health check fails, system is not healthy
       return false;
     }

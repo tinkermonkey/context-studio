@@ -4,22 +4,23 @@ Unit tests for RAG Test Scoring Service
 Tests span-based matching, overlap calculation, and metric computation.
 """
 
+from typing import Optional
 import sys
 import os
 
 # Add parent directory to path for imports
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
-import pytest
-from typing import List
+import pytest  # noqa: E402
 
 # Direct imports to avoid full app initialization
-from rag.test_scoring import RAGTestScoringService, AnnotationSpan, ExtractionSpan
+from rag.test_scoring import RAGTestScoringService, AnnotationSpan  # noqa: E402, E501
 
 # Avoid importing rag.models which has dependencies
 # Instead, we'll create a simple mock for ExtractedEntity
-from dataclasses import dataclass
-from typing import Dict, Any
+from dataclasses import dataclass  # noqa: E402
+from typing import Dict, Any  # noqa: E402
+
 
 @dataclass
 class ExtractedEntity:
@@ -151,7 +152,7 @@ class TestScoringScenarios:
         text: str,
         start_char: int,
         end_char: int,
-        matched_kg_node: str = None
+        matched_kg_node: Optional[str] = None
     ) -> ExtractedEntity:
         """Helper to create ExtractedEntity for testing."""
         return ExtractedEntity(

@@ -5,7 +5,7 @@ These tests verify the core functionality without requiring full application ini
 """
 
 import pytest
-from unittest.mock import Mock, MagicMock, patch
+from unittest.mock import Mock
 import sys
 import os
 
@@ -183,7 +183,6 @@ class TestRAGTestManagementService:
     def test_create_test_paragraph(self):
         """Test creating a test paragraph."""
         from rag.test_service import RAGTestManagementService
-        from operations.models import TestParagraph
 
         mock_kg_session = Mock()
         mock_ops_session = Mock()

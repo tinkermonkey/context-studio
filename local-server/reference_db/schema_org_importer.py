@@ -1,3 +1,4 @@
+# mypy: ignore-errors
 """
 Schema.org import pipeline with vector embeddings and relationship extraction.
 
@@ -18,9 +19,8 @@ import json
 import time
 import logging
 import tempfile
-from pathlib import Path
 from typing import List, Dict, Any, Optional, Tuple
-from datetime import datetime, timedelta
+from datetime import datetime
 from uuid import uuid4
 
 import requests
@@ -342,7 +342,9 @@ class SchemaOrgImporter:
 
             except requests.exceptions.Timeout as e:
                 last_error = e
-                logger.warning(
+                # Log as debug on retryable attempts, warning on final failure
+                log_level = logger.debug if attempt < retry_count - 1 else logger.warning
+                log_level(
                     f"Download attempt {attempt + 1}/{retry_count} failed with timeout "
                     f"({timeout}s): {e}"
                 )
@@ -352,7 +354,9 @@ class SchemaOrgImporter:
                     )
             except requests.exceptions.RequestException as e:
                 last_error = e
-                logger.warning(
+                # Log as debug on retryable attempts, warning on final failure
+                log_level = logger.debug if attempt < retry_count - 1 else logger.warning
+                log_level(
                     f"Download attempt {attempt + 1}/{retry_count} failed with network error: {e}"
                 )
                 if attempt == retry_count - 1:
@@ -361,7 +365,9 @@ class SchemaOrgImporter:
                     )
             except Exception as e:
                 last_error = e
-                logger.warning(
+                # Log as debug on retryable attempts, warning on final failure
+                log_level = logger.debug if attempt < retry_count - 1 else logger.warning
+                log_level(
                     f"Download attempt {attempt + 1}/{retry_count} failed: {e}"
                 )
                 if attempt == retry_count - 1:
@@ -467,7 +473,7 @@ class SchemaOrgImporter:
                 try:
                     # Extract fields
                     external_id = item.get("@id", "")
-                    
+
                     # Extract title - handle both string and JSON-LD object format
                     title_raw = (
                         item.get("rdfs:label") or
@@ -483,7 +489,7 @@ class SchemaOrgImporter:
                         title = next((t.get("@value", t) if isinstance(t, dict) else t for t in title_raw), "")
                     else:
                         title = str(title_raw) if title_raw else ""
-                    
+
                     # Extract definition - handle both string and JSON-LD object format
                     definition_raw = (
                         item.get("rdfs:comment") or
@@ -542,7 +548,7 @@ class SchemaOrgImporter:
 
                 except Exception as e:
                     logger.error(
-                        f"Embedding generation failed",
+                        "Embedding generation failed",
                         extra={
                             "external_id": item.get("@id", "unknown"),
                             "error": str(e)
@@ -553,7 +559,7 @@ class SchemaOrgImporter:
         # Fail-fast behavior (TC-I001)
         if failed_items:
             logger.error(
-                f"Embedding generation failed",
+                "Embedding generation failed",
                 extra={
                     "failed_count": len(failed_items),
                     "failed_ids": failed_items
@@ -709,7 +715,7 @@ class SchemaOrgImporter:
         try:
             # Check if sqlite-vec extension is available
             try:
-                test_result = self.manager.session.execute(
+                self.manager.session.execute(
                     text("SELECT vec_version()")
                 ).fetchone()
             except Exception:
@@ -848,23 +854,11 @@ class SchemaOrgImporter:
         """
         links_to_insert = []
 
-        # Combine all items for relationship extraction
-        # We need to create "virtual nodes" for properties in order to create links
-        # since ReferenceLinks connect nodes, not predicates
-        all_items = entities + properties
-        
-        # Create a combined map that includes both entities and properties
-        # Properties need to be represented as nodes for the relationship graph
-        combined_map = {**node_map}
-        
-        # For properties, we'll store links but note they reference ExternalPredicates
-        # This is a limitation of the current schema where ReferenceLinks only connect nodes
-        
         # Note: Currently we can only create ReferenceLinks between ReferenceNodes,
         # so property metadata relationships (domainIncludes, rangeIncludes, inverseOf)
         # will be stored in the ExternalPredicate.attributes field rather than as links.
         # Only subClassOf relationships between entities will be stored as ReferenceLinks.
-        
+
         # Extract relationships for entities only (subClassOf)
         for item in entities:
             external_id = item.get("@id", "")

@@ -1,4 +1,3 @@
-from logging import config
 import spacy
 
 text_en = "Victor Hugo and Honoré de Balzac are French writers who lived in Paris."

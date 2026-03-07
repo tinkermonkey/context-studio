@@ -13,6 +13,7 @@ import { apiLogger } from "./logger";
 export interface VersionedResource {
   id: string;
   version: number;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   [key: string]: any;
 }
 
@@ -42,7 +43,7 @@ export interface ConflictResolutionOptions {
   /**
    * Callback to execute after refetch completes
    */
-  onRefetchComplete?: (data: any) => void;
+  onRefetchComplete?: (data: any) => void; // eslint-disable-line @typescript-eslint/no-explicit-any
 }
 
 /**
@@ -72,8 +73,9 @@ export const isVersionConflict = (error: unknown): boolean => {
  */
 export const handleVersionConflict = async (
   error: unknown,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   refetch: () => Promise<any>,
-  options: ConflictResolutionOptions = {}
+  options: ConflictResolutionOptions = {},
 ): Promise<void> => {
   const {
     autoRefetch = API_CONFIG.refetchOnConflict,
@@ -97,17 +99,16 @@ export const handleVersionConflict = async (
       customMessage ||
       "The data has been modified by another user. Refreshing to get latest version.";
 
-    toast.warning(message, {
-      duration: 5000,
-      position: "top-center",
-    });
+    toast.warning(message);
   }
 
   // Automatically refetch if enabled
   if (autoRefetch) {
     try {
       // Add a small delay before refetching to avoid race conditions
-      await new Promise((resolve) => setTimeout(resolve, API_CONFIG.conflictRetryDelay));
+      await new Promise((resolve) =>
+        setTimeout(resolve, API_CONFIG.conflictRetryDelay),
+      );
 
       const freshData = await refetch();
 
@@ -116,17 +117,13 @@ export const handleVersionConflict = async (
       }
 
       if (showToast) {
-        toast.success("Data refreshed successfully", {
-          duration: 3000,
-        });
+        toast.success("Data refreshed successfully");
       }
     } catch (refetchError) {
       apiLogger.error("Failed to refetch after conflict", { refetchError });
 
       if (showToast) {
-        toast.error("Failed to refresh data. Please try again manually.", {
-          duration: 5000,
-        });
+        toast.error("Failed to refresh data. Please try again manually.");
       }
     }
   }
@@ -137,7 +134,7 @@ export const handleVersionConflict = async (
  */
 export const validateVersion = (
   localResource: VersionedResource,
-  serverResource: VersionedResource
+  serverResource: VersionedResource,
 ): boolean => {
   if (localResource.id !== serverResource.id) {
     throw new Error("Resource ID mismatch");
@@ -152,7 +149,7 @@ export const validateVersion = (
 export const withConflictDetection = <T extends VersionedResource, R>(
   mutationFn: (resource: T) => Promise<R>,
   refetchFn: () => Promise<T>,
-  options: ConflictResolutionOptions = {}
+  options: ConflictResolutionOptions = {},
 ) => {
   return async (resource: T): Promise<R> => {
     try {
@@ -176,7 +173,7 @@ export const withConflictDetection = <T extends VersionedResource, R>(
  */
 export const detectChanges = <T extends VersionedResource>(
   local: T,
-  remote: T
+  remote: T,
 ): {
   hasChanges: boolean;
   versionMismatch: boolean;

@@ -7,6 +7,7 @@ export interface NodeContext {
   text?: string;
   lemma?: string;
   pos?: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   token?: any;
   synset?: {
     name: string;
@@ -17,6 +18,7 @@ export interface NodeContext {
     domain: string;
   };
   relationType?: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   relation?: any;
   targetTerm?: {
     label: string;

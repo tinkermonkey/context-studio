@@ -7,17 +7,17 @@
 
 import React, { useState } from "react";
 import {
-  Card,
+  Badge,
   Button,
+  Card,
+  Select,
+  Spinner,
   Table,
+  TableBody,
+  TableCell,
   TableHead,
   TableHeadCell,
-  TableBody,
   TableRow,
-  TableCell,
-  Badge,
-  Spinner,
-  Select,
   TextInput,
   ToggleSwitch,
 } from "flowbite-react";
@@ -35,7 +35,8 @@ export const RelevanceSelectionUI: React.FC<RelevanceSelectionUIProps> = ({
   onMarkRelevant,
 }) => {
   const [searchQuery, setSearchQuery] = useState<string>("");
-  const [relevanceFilter, setRelevanceFilter] = useState<RelevanceFilter>("all");
+  const [relevanceFilter, setRelevanceFilter] =
+    useState<RelevanceFilter>("all");
   const [showOnlyUnrated, setShowOnlyUnrated] = useState<boolean>(false);
   const toast = useButterToast();
 
@@ -105,7 +106,9 @@ export const RelevanceSelectionUI: React.FC<RelevanceSelectionUIProps> = ({
       return { relevant: 0, irrelevant: 0, unrated: 0, total: 0 };
     }
 
-    const relevant = predicates.data.filter((p) => relevanceMap[p.id] === true).length;
+    const relevant = predicates.data.filter(
+      (p) => relevanceMap[p.id] === true,
+    ).length;
     const irrelevant = predicates.data.filter(
       (p) => relevanceMap[p.id] === false,
     ).length;
@@ -157,7 +160,9 @@ export const RelevanceSelectionUI: React.FC<RelevanceSelectionUIProps> = ({
             <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
               {stats.total}
             </div>
-            <div className="text-sm text-gray-600 dark:text-gray-400">Total</div>
+            <div className="text-sm text-gray-600 dark:text-gray-400">
+              Total
+            </div>
           </div>
           <div>
             <div className="text-2xl font-bold text-green-600 dark:text-green-400">
@@ -200,7 +205,9 @@ export const RelevanceSelectionUI: React.FC<RelevanceSelectionUIProps> = ({
         <div>
           <Select
             value={relevanceFilter}
-            onChange={(e) => setRelevanceFilter(e.target.value as RelevanceFilter)}
+            onChange={(e) =>
+              setRelevanceFilter(e.target.value as RelevanceFilter)
+            }
           >
             <option value="all">All Predicates</option>
             <option value="relevant">Relevant Only</option>
@@ -249,20 +256,25 @@ export const RelevanceSelectionUI: React.FC<RelevanceSelectionUIProps> = ({
                 <TableHeadCell className="text-center">Actions</TableHeadCell>
               </TableRow>
             </TableHead>
-            <TableBody className="divide-y">{filteredPredicates.map((predicate) => (
+            <TableBody className="divide-y">
+              {filteredPredicates.map((predicate) => (
                 <TableRow
                   key={predicate.id}
                   className="bg-white dark:border-gray-700 dark:bg-gray-800"
                 >
                   <TableCell>{getRelevanceBadge(predicate.id)}</TableCell>
                   <TableCell className="font-mono text-sm">
-                    {predicate.identifier || <span className="text-gray-400">—</span>}
+                    {predicate.identifier || (
+                      <span className="text-gray-400">—</span>
+                    )}
                   </TableCell>
                   <TableCell className="font-medium text-gray-900 dark:text-white">
                     {predicate.title}
                   </TableCell>
                   <TableCell className="max-w-md truncate">
-                    {predicate.definition || <span className="text-gray-400">—</span>}
+                    {predicate.definition || (
+                      <span className="text-gray-400">—</span>
+                    )}
                   </TableCell>
                   <TableCell>
                     <div className="flex justify-center gap-2">

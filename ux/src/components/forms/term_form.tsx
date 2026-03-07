@@ -2,15 +2,10 @@ import React from "react";
 import { useForm } from "@tanstack/react-form";
 import { TextInput, Textarea, Button, Alert, Label } from "flowbite-react";
 import { Info, Database, Hash } from "lucide-react";
-import type {
-  StructureNode,
-  StructureNodeCreate,
-  StructureNodeUpdate,
-} from "@/api/types/structureNodes";
+import type { StructureNode } from "@/api/types/structureNodes";
 import { useCreateTerm } from "@/api/hooks/structure_nodes/useStructureNodeMutations";
 import { useUpdateStructureNode } from "@/api/hooks/structure_nodes/useStructureNodeMutations";
 import { DomainSelector } from "@/components/node_selectors/domain_selector";
-import { TermSelector } from "@/components/node_selectors/term_selector";
 
 interface TermFormProps {
   onSuccess?: (term: StructureNode) => void;
@@ -67,8 +62,9 @@ const TermForm: React.FC<TermFormProps> = ({
         }
         if (onSuccess) onSuccess(result);
         form.reset();
+
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
       } catch (error: any) {
-        let message = "An error occurred";
         // Log the full error for debugging
         console.error("Full error object:", error);
         console.error("Error detail:", error?.detail);
@@ -80,7 +76,9 @@ const TermForm: React.FC<TermFormProps> = ({
           error?.body?.detail ||
           error?.detail;
 
+        let message: string;
         if (Array.isArray(detail)) {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           message = detail.map((d: any) => d.msg).join("; ");
         } else if (error?.message) {
           message = error.message;

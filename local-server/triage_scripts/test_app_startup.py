@@ -14,7 +14,7 @@ async def test_app_startup():
     """Test FastAPI application startup."""
     try:
         print("Creating FastAPI application...")
-        app = create_app()
+        create_app()
         
         print("Application created successfully!")
         

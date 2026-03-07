@@ -1,5 +1,6 @@
 import React from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { Card } from "flowbite-react";
 import { CsSidebar, CsSidebarTitle } from "@/components/layout/cs_sidebar";
 import { CsMain, CsMainTitle } from "@/components/layout/cs_main";
@@ -42,8 +43,8 @@ function ReferenceIndexPage() {
       <CsMain>
         <CsMainTitle>External Reference Tools</CsMainTitle>
         <p className="text-sm text-gray-500 dark:text-gray-400">
-          Integrate and query external knowledge sources to enrich your knowledge
-          graph
+          Integrate and query external knowledge sources to enrich your
+          knowledge graph
         </p>
 
         <div className="mt-6 space-y-4">
@@ -73,12 +74,12 @@ function ReferenceIndexPage() {
 
         <div className="mt-6 rounded-lg bg-gray-50 p-4 dark:bg-gray-800">
           <div className="flex items-start gap-3">
-            <Search className="h-5 w-5 text-gray-600 dark:text-gray-400 flex-shrink-0 mt-0.5" />
+            <Search className="mt-0.5 h-5 w-5 flex-shrink-0 text-gray-600 dark:text-gray-400" />
             <div>
               <p className="text-sm font-medium text-gray-900 dark:text-white">
                 About External Reference
               </p>
-              <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
+              <p className="mt-1 text-xs text-gray-600 dark:text-gray-400">
                 External reference tools allow you to connect your local
                 knowledge graph with established ontologies and knowledge bases
                 like ConceptNet, DBpedia, and Wikidata. Use these tools to

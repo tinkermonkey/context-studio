@@ -7,12 +7,7 @@
 import { BaseService } from "./base";
 import { ENDPOINTS } from "../config";
 import type { components } from "@/api/client/types";
-import {
-  pipelineExecutionService,
-  type LegacyTermDefinitionRequest,
-  type LegacyDomainDefinitionRequest,
-  type LegacyLayerDefinitionRequest,
-} from "./pipelineExecution";
+import { pipelineExecutionService } from "./pipelineExecution";
 
 // Type aliases for better readability - using the latest OpenAPI schema
 export type DefinitionSuggestionRequest =
@@ -57,6 +52,7 @@ export interface LLMErrorResponse {
 
 export interface LLMHealthResponse {
   status: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   model_info: Record<string, any>;
   timestamp: string;
 }
@@ -70,6 +66,7 @@ export class LLMService extends BaseService {
   ): Promise<DefinitionSuggestionResponse> {
     return pipelineExecutionService.executePipeline(request);
   }
+
   /**
    * Generate a term definition suggestion based on provided context using LLM
    * @param request The term definition suggestion request containing term and context
@@ -80,19 +77,22 @@ export class LLMService extends BaseService {
   ): Promise<DefinitionSuggestionResponse> {
     return this.withErrorContext(async () => {
       // For backwards compatibility, support legacy request format
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       if ((request as any).term !== undefined) {
         // Legacy request format - validate and convert to new format
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const legacyRequest = request as any;
         const newRequest: DefinitionSuggestionRequest = {
-          pipeline_type: 'suggest_term_definition',
-          flavor_id: legacyRequest.flavor || 'default',
+          pipeline_type: "suggest_term_definition",
+          flavor_id: legacyRequest.flavor || "default",
           context_data: {
             term: this.sanitizeString(legacyRequest.term, "term"),
             domain_title: legacyRequest.domain_title,
             domain_definition: legacyRequest.domain_definition,
             parent_term_title: legacyRequest.parent_term_title,
             parent_term_definition: legacyRequest.parent_term_definition,
-            parent_relationship_predicate: legacyRequest.parent_relationship_predicate,
+            parent_relationship_predicate:
+              legacyRequest.parent_relationship_predicate,
             component_terms: legacyRequest.component_terms,
             dbpedia_context: legacyRequest.dbpedia_context,
             wikidata_context: legacyRequest.wikidata_context,
@@ -120,14 +120,19 @@ export class LLMService extends BaseService {
   ): Promise<DomainDefinitionResponse> {
     return this.withErrorContext(async () => {
       // For backwards compatibility, support legacy request format
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       if ((request as any).domain_title) {
         // Legacy request format - convert to new format
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const legacyRequest = request as any;
         const newRequest: DomainDefinitionRequest = {
-          pipeline_type: 'suggest_domain_definition',
-          flavor_id: legacyRequest.flavor || 'default',
+          pipeline_type: "suggest_domain_definition",
+          flavor_id: legacyRequest.flavor || "default",
           context_data: {
-            domain_title: this.sanitizeString(legacyRequest.domain_title, "domain_title"),
+            domain_title: this.sanitizeString(
+              legacyRequest.domain_title,
+              "domain_title",
+            ),
             context: legacyRequest.context,
           },
         };
@@ -152,14 +157,19 @@ export class LLMService extends BaseService {
   ): Promise<LayerDefinitionResponse> {
     return this.withErrorContext(async () => {
       // For backwards compatibility, support legacy request format
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       if ((request as any).layer_title) {
         // Legacy request format - convert to new format
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const legacyRequest = request as any;
         const newRequest: LayerDefinitionRequest = {
-          pipeline_type: 'suggest_layer_definition',
-          flavor_id: legacyRequest.flavor || 'default',
+          pipeline_type: "suggest_layer_definition",
+          flavor_id: legacyRequest.flavor || "default",
           context_data: {
-            layer_title: this.sanitizeString(legacyRequest.layer_title, "layer_title"),
+            layer_title: this.sanitizeString(
+              legacyRequest.layer_title,
+              "layer_title",
+            ),
             context: legacyRequest.context,
           },
         };
@@ -208,7 +218,7 @@ export class LLMService extends BaseService {
   async generateSimpleTermDefinition(
     term: string,
   ): Promise<DefinitionSuggestionResponse> {
-    return this.suggestTermDefinition({ term } as any);
+    return this.suggestTermDefinition({ term } as any); // eslint-disable-line @typescript-eslint/no-explicit-any
   }
 
   /**
@@ -227,7 +237,7 @@ export class LLMService extends BaseService {
       term,
       domain_title: domainTitle,
       domain_definition: domainDefinition,
-    } as any);
+    } as any); // eslint-disable-line @typescript-eslint/no-explicit-any
   }
 
   /**
@@ -249,7 +259,7 @@ export class LLMService extends BaseService {
       parent_term_title: parentTermTitle,
       parent_term_definition: parentTermDefinition,
       parent_relationship_predicate: relationshipPredicate,
-    } as any);
+    } as any); // eslint-disable-line @typescript-eslint/no-explicit-any
   }
 
   /**
@@ -265,7 +275,7 @@ export class LLMService extends BaseService {
     return this.suggestTermDefinition({
       term,
       component_terms: componentTerms,
-    } as any);
+    } as any); // eslint-disable-line @typescript-eslint/no-explicit-any
   }
 
   /**
@@ -276,6 +286,7 @@ export class LLMService extends BaseService {
   async generateSimpleDomainDefinition(
     domainTitle: string,
   ): Promise<DomainDefinitionResponse> {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return this.suggestDomainDefinition({ domain_title: domainTitle } as any);
   }
 
@@ -287,6 +298,7 @@ export class LLMService extends BaseService {
   async generateSimpleLayerDefinition(
     layerTitle: string,
   ): Promise<LayerDefinitionResponse> {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return this.suggestLayerDefinition({ layer_title: layerTitle } as any);
   }
 
@@ -366,14 +378,16 @@ export class LLMService extends BaseService {
    */
   async generateTermDefinitionWithReferences(
     term: string,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     dbpediaContext?: Record<string, any>,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     wikidataContext?: Record<string, any>,
   ): Promise<DefinitionSuggestionResponse> {
     return this.suggestTermDefinition({
       term,
       dbpedia_context: dbpediaContext,
       wikidata_context: wikidataContext,
-    } as any);
+    } as any); // eslint-disable-line @typescript-eslint/no-explicit-any
   }
 
   /**
@@ -393,7 +407,9 @@ export class LLMService extends BaseService {
    */
   async generateDefinitionWithReferences(
     term: string,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     dbpediaContext?: Record<string, any>,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     wikidataContext?: Record<string, any>,
   ): Promise<DefinitionSuggestionResponse> {
     console.warn(

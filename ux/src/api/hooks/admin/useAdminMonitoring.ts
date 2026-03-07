@@ -4,7 +4,13 @@
  * React Query hooks for admin/monitoring endpoints (database, services, event processor)
  */
 
-import { useQuery, useMutation, UseQueryOptions, UseMutationOptions, useQueryClient } from "@tanstack/react-query";
+import {
+  useQuery,
+  useMutation,
+  UseQueryOptions,
+  UseMutationOptions,
+  useQueryClient,
+} from "@tanstack/react-query";
 import { apiClient } from "@/api/client/axios";
 
 // Database Monitoring Types
@@ -170,7 +176,8 @@ export const adminKeys = {
     performance: () => [...adminKeys.database.all, "performance"] as const,
     engines: () => [...adminKeys.database.all, "engines"] as const,
     metrics: () => [...adminKeys.database.all, "metrics"] as const,
-    recommendations: () => [...adminKeys.database.all, "recommendations"] as const,
+    recommendations: () =>
+      [...adminKeys.database.all, "recommendations"] as const,
     environment: () => [...adminKeys.database.all, "environment"] as const,
     dashboard: () => [...adminKeys.database.all, "dashboard"] as const,
   },
@@ -198,7 +205,9 @@ export function useDatabaseHealth(options?: UseQueryOptions<DatabaseHealth>) {
   });
 }
 
-export function useDatabasePerformance(options?: UseQueryOptions<DatabasePerformance>) {
+export function useDatabasePerformance(
+  options?: UseQueryOptions<DatabasePerformance>,
+) {
   return useQuery<DatabasePerformance>({
     queryKey: adminKeys.database.performance(),
     queryFn: async () => {
@@ -209,7 +218,9 @@ export function useDatabasePerformance(options?: UseQueryOptions<DatabasePerform
   });
 }
 
-export function useDatabaseEngines(options?: UseQueryOptions<DatabaseEnginesStatus>) {
+export function useDatabaseEngines(
+  options?: UseQueryOptions<DatabaseEnginesStatus>,
+) {
   return useQuery<DatabaseEnginesStatus>({
     queryKey: adminKeys.database.engines(),
     queryFn: async () => {
@@ -220,7 +231,9 @@ export function useDatabaseEngines(options?: UseQueryOptions<DatabaseEnginesStat
   });
 }
 
-export function useConnectionMetrics(options?: UseQueryOptions<ConnectionMetrics>) {
+export function useConnectionMetrics(
+  options?: UseQueryOptions<ConnectionMetrics>,
+) {
   return useQuery<ConnectionMetrics>({
     queryKey: adminKeys.database.metrics(),
     queryFn: async () => {
@@ -252,7 +265,9 @@ export interface DatabaseEnvironment {
   available_extensions: string[];
 }
 
-export function useDatabaseRecommendations(options?: UseQueryOptions<DatabaseRecommendations>) {
+export function useDatabaseRecommendations(
+  options?: UseQueryOptions<DatabaseRecommendations>,
+) {
   return useQuery<DatabaseRecommendations>({
     queryKey: adminKeys.database.recommendations(),
     queryFn: async () => {
@@ -263,7 +278,9 @@ export function useDatabaseRecommendations(options?: UseQueryOptions<DatabaseRec
   });
 }
 
-export function useDatabaseEnvironment(options?: UseQueryOptions<DatabaseEnvironment>) {
+export function useDatabaseEnvironment(
+  options?: UseQueryOptions<DatabaseEnvironment>,
+) {
   return useQuery<DatabaseEnvironment>({
     queryKey: adminKeys.database.environment(),
     queryFn: async () => {
@@ -274,7 +291,9 @@ export function useDatabaseEnvironment(options?: UseQueryOptions<DatabaseEnviron
   });
 }
 
-export function useDatabaseDashboard(options?: UseQueryOptions<DatabaseDashboard>) {
+export function useDatabaseDashboard(
+  options?: UseQueryOptions<DatabaseDashboard>,
+) {
   return useQuery<DatabaseDashboard>({
     queryKey: adminKeys.database.dashboard(),
     queryFn: async () => {
@@ -288,7 +307,7 @@ export function useDatabaseDashboard(options?: UseQueryOptions<DatabaseDashboard
 // Database Mutation Hooks
 
 export function useOptimizeDatabase(
-  options?: UseMutationOptions<MutationResponse, Error, string>
+  options?: UseMutationOptions<MutationResponse, Error, string>,
 ) {
   const queryClient = useQueryClient();
 
@@ -307,7 +326,7 @@ export function useOptimizeDatabase(
 }
 
 export function useResetDatabaseMetrics(
-  options?: UseMutationOptions<MutationResponse, Error, void>
+  options?: UseMutationOptions<MutationResponse, Error, void>,
 ) {
   const queryClient = useQueryClient();
 
@@ -324,15 +343,27 @@ export function useResetDatabaseMetrics(
 }
 
 export function useCreateDatabaseEngine(
-  options?: UseMutationOptions<MutationResponse, Error, { engine_id: string; database_url?: string }>
+  options?: UseMutationOptions<
+    MutationResponse,
+    Error,
+    { engine_id: string; database_url?: string }
+  >,
 ) {
   const queryClient = useQueryClient();
 
-  return useMutation<MutationResponse, Error, { engine_id: string; database_url?: string }>({
+  return useMutation<
+    MutationResponse,
+    Error,
+    { engine_id: string; database_url?: string }
+  >({
     mutationFn: async ({ engine_id, database_url }) => {
-      const response = await apiClient.post(`/admin/database/create-engine`, null, {
-        params: { engine_id, database_url },
-      });
+      const response = await apiClient.post(
+        `/admin/database/create-engine`,
+        null,
+        {
+          params: { engine_id, database_url },
+        },
+      );
       return response.data;
     },
     onSuccess: () => {
@@ -343,7 +374,7 @@ export function useCreateDatabaseEngine(
 }
 
 export function useCleanupDatabaseResources(
-  options?: UseMutationOptions<MutationResponse, Error, void>
+  options?: UseMutationOptions<MutationResponse, Error, void>,
 ) {
   const queryClient = useQueryClient();
 
@@ -361,7 +392,9 @@ export function useCleanupDatabaseResources(
 
 // Service Factory Monitoring Hooks
 
-export function useServiceFactoryStats(options?: UseQueryOptions<ServiceFactoryStats>) {
+export function useServiceFactoryStats(
+  options?: UseQueryOptions<ServiceFactoryStats>,
+) {
   return useQuery<ServiceFactoryStats>({
     queryKey: adminKeys.services.stats(),
     queryFn: async () => {
@@ -373,7 +406,7 @@ export function useServiceFactoryStats(options?: UseQueryOptions<ServiceFactoryS
 }
 
 export function useServiceFactoryPerformance(
-  options?: UseQueryOptions<ServiceFactoryPerformance>
+  options?: UseQueryOptions<ServiceFactoryPerformance>,
 ) {
   return useQuery<ServiceFactoryPerformance>({
     queryKey: adminKeys.services.performance(),
@@ -385,7 +418,9 @@ export function useServiceFactoryPerformance(
   });
 }
 
-export function useServiceFactoryHealth(options?: UseQueryOptions<ServiceFactoryHealth>) {
+export function useServiceFactoryHealth(
+  options?: UseQueryOptions<ServiceFactoryHealth>,
+) {
   return useQuery<ServiceFactoryHealth>({
     queryKey: adminKeys.services.health(),
     queryFn: async () => {
@@ -397,7 +432,7 @@ export function useServiceFactoryHealth(options?: UseQueryOptions<ServiceFactory
 }
 
 export function useServiceFactoryDashboard(
-  options?: UseQueryOptions<ServiceFactoryDashboard>
+  options?: UseQueryOptions<ServiceFactoryDashboard>,
 ) {
   return useQuery<ServiceFactoryDashboard>({
     queryKey: adminKeys.services.dashboard(),
@@ -422,12 +457,14 @@ export interface ServiceTypeMetrics {
 
 export function useServiceTypeMetrics(
   serviceType: string,
-  options?: UseQueryOptions<ServiceTypeMetrics>
+  options?: UseQueryOptions<ServiceTypeMetrics>,
 ) {
   return useQuery<ServiceTypeMetrics>({
     queryKey: adminKeys.services.metrics(serviceType),
     queryFn: async () => {
-      const response = await apiClient.get(`/admin/services/metrics/${serviceType}`);
+      const response = await apiClient.get(
+        `/admin/services/metrics/${serviceType}`,
+      );
       return response.data;
     },
     enabled: !!serviceType,
@@ -444,7 +481,9 @@ export interface MutationResponse {
 
 // Service Factory Mutation Hooks
 
-export function useClearServiceCache(options?: UseMutationOptions<MutationResponse, Error, void>) {
+export function useClearServiceCache(
+  options?: UseMutationOptions<MutationResponse, Error, void>,
+) {
   const queryClient = useQueryClient();
 
   return useMutation<MutationResponse, Error, void>({
@@ -459,7 +498,9 @@ export function useClearServiceCache(options?: UseMutationOptions<MutationRespon
   });
 }
 
-export function useCleanupServiceCache(options?: UseMutationOptions<MutationResponse, Error, void>) {
+export function useCleanupServiceCache(
+  options?: UseMutationOptions<MutationResponse, Error, void>,
+) {
   const queryClient = useQueryClient();
 
   return useMutation<MutationResponse, Error, void>({

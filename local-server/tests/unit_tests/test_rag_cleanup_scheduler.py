@@ -7,10 +7,10 @@ import sys
 import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-import pytest
-import asyncio
-from unittest.mock import Mock, patch, MagicMock
-from rag.cleanup_scheduler import RAGCleanupScheduler
+import pytest  # noqa: E402
+import asyncio  # noqa: E402
+from unittest.mock import Mock, patch  # noqa: E402
+from rag.cleanup_scheduler import RAGCleanupScheduler  # noqa: E402
 
 
 @pytest.fixture
@@ -238,10 +238,8 @@ class TestRAGCleanupScheduler:
     @pytest.mark.asyncio
     async def test_stop_timeout_handling(self, mock_db_session):
         """Test stop handles timeout when task doesn't complete."""
-        with patch('rag.cleanup_scheduler.RAGObservabilityStore') as MockStore, \
-             patch('rag.cleanup_scheduler.logger') as mock_logger:
-
-            mock_store = MockStore.return_value
+        with patch('rag.cleanup_scheduler.RAGObservabilityStore'), \
+             patch('rag.cleanup_scheduler.logger'):
 
             # Make cleanup_old_data take a long time
             async def slow_cleanup():

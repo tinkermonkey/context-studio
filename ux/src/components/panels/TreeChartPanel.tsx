@@ -174,14 +174,15 @@ export function TreeChartPanel({
 
         // Process ancestors from hierarchy to ensure they're in the tree
         if (termHierarchy) {
-          const ancestors = (termHierarchy.ancestors as Array<{
-            id: string;
-            type: string;
-            title: string;
-            definition?: string;
-            parent_node_id?: string;
-            distance: number;
-          }>) || [];
+          const ancestors =
+            (termHierarchy.ancestors as Array<{
+              id: string;
+              type: string;
+              title: string;
+              definition?: string;
+              parent_node_id?: string;
+              distance: number;
+            }>) || [];
 
           // Add missing ancestor terms
           const ancestorTerms = ancestors.filter((a) => a.type === "term");

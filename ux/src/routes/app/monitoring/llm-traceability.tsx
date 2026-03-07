@@ -21,7 +21,8 @@ function RouteComponent() {
           </h2>
           <div className="mb-6 space-y-2 text-gray-600 dark:text-gray-400">
             <p className="font-medium">
-              LLM execution history and traceability dashboard for debugging and auditing AI operations.
+              LLM execution history and traceability dashboard for debugging and
+              auditing AI operations.
             </p>
             <p>Planned features include:</p>
             <ul className="ml-6 list-disc space-y-1">

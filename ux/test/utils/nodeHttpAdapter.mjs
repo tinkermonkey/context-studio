@@ -42,7 +42,7 @@ export default function nodeHttpAdapter(config) {
           if (contentType.includes("application/json")) {
             try {
               data = JSON.parse(data);
-            } catch (e) {
+            } catch (_e) {
               /* keep raw */
             }
           }

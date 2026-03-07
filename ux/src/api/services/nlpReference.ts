@@ -10,32 +10,12 @@ import type { components } from "@/api/client/types";
 
 // Type aliases for better readability
 export type ResponseFormat = components["schemas"]["ResponseFormat"];
-export type DBpediaResourceResponse =
-  components["schemas"]["DBpediaResourceResponse"];
-export type DBpediaSearchResponse =
-  components["schemas"]["DBpediaSearchResponse"];
+export type MultiSourceSearchResponse =
+  components["schemas"]["MultiSourceSearchResponse"];
 export type DBpediaSparqlRequest =
   components["schemas"]["DBpediaSparqlRequest"];
-export type DBpediaSparqlResponse =
-  components["schemas"]["DBpediaSparqlResponse"];
-export type ConceptNetQueryResponse =
-  components["schemas"]["ConceptNetQueryResponse"];
-export type ConceptNetConceptResponse =
-  components["schemas"]["ConceptNetConceptResponse"];
-export type ConceptNetRelatedResponse =
-  components["schemas"]["ConceptNetRelatedResponse"];
 export type WikidataSparqlRequest =
   components["schemas"]["WikidataSparqlRequest"];
-export type WikidataSparqlResponse =
-  components["schemas"]["WikidataSparqlResponse"];
-export type WikidataEntityResponse =
-  components["schemas"]["WikidataEntityResponse"];
-export type SchemaOrgEntityResponse =
-  components["schemas"]["SchemaOrgEntityResponse"];
-export type SchemaOrgPropertyResponse =
-  components["schemas"]["SchemaOrgPropertyResponse"];
-export type SchemaOrgSearchResponse =
-  components["schemas"]["SchemaOrgSearchResponse"];
 
 // DBpedia parameters
 export interface DBpediaResourceParams extends Record<string, unknown> {
@@ -98,13 +78,13 @@ export class NLPReferenceService extends BaseService {
    */
   async getDBpediaResource(
     params: DBpediaResourceParams,
-  ): Promise<DBpediaResourceResponse> {
+  ): Promise<MultiSourceSearchResponse> {
     return this.withErrorContext(() => {
       this.validateRequired(params, "DBpedia parameters");
       this.validateRequired(params.resource_url, "Resource URL");
       this.sanitizeString(params.resource_url, "Resource URL", 2000);
 
-      return this.getResource<DBpediaResourceResponse>(
+      return this.getResource<MultiSourceSearchResponse>(
         `${ENDPOINTS.NLP_REFERENCE}/dbpedia/resource`,
         params,
       );
@@ -116,13 +96,13 @@ export class NLPReferenceService extends BaseService {
    */
   async searchDBpedia(
     params: DBpediaSearchParams,
-  ): Promise<DBpediaSearchResponse> {
+  ): Promise<MultiSourceSearchResponse> {
     return this.withErrorContext(() => {
       this.validateRequired(params, "DBpedia search parameters");
       this.validateRequired(params.query, "Search query");
       this.sanitizeString(params.query, "Search query", 1000);
 
-      return this.getResource<DBpediaSearchResponse>(
+      return this.getResource<MultiSourceSearchResponse>(
         `${ENDPOINTS.NLP_REFERENCE}/dbpedia/search`,
         params,
       );
@@ -134,13 +114,13 @@ export class NLPReferenceService extends BaseService {
    */
   async queryDBpediaSparql(
     data: DBpediaSparqlRequest,
-  ): Promise<DBpediaSparqlResponse> {
+  ): Promise<MultiSourceSearchResponse> {
     return this.withErrorContext(() => {
       this.validateRequired(data, "SPARQL request data");
       this.validateRequired(data.query, "SPARQL query");
       this.sanitizeString(data.query, "SPARQL query", 10000);
 
-      return this.postResource<DBpediaSparqlResponse>(
+      return this.postResource<MultiSourceSearchResponse>(
         `${ENDPOINTS.NLP_REFERENCE}/dbpedia/sparql`,
         data,
       );
@@ -153,10 +133,10 @@ export class NLPReferenceService extends BaseService {
    */
   async queryConceptNet(
     params?: ConceptNetQueryParams,
-  ): Promise<ConceptNetQueryResponse> {
+  ): Promise<MultiSourceSearchResponse> {
     return this.withErrorContext(
       () =>
-        this.getResource<ConceptNetQueryResponse>(
+        this.getResource<MultiSourceSearchResponse>(
           `${ENDPOINTS.NLP_REFERENCE}/conceptnet/query`,
           params,
         ),
@@ -169,12 +149,12 @@ export class NLPReferenceService extends BaseService {
    */
   async getConceptNetConcept(
     conceptPath: string,
-  ): Promise<ConceptNetConceptResponse> {
+  ): Promise<MultiSourceSearchResponse> {
     return this.withErrorContext(() => {
       this.validateRequired(conceptPath, "Concept path");
       this.sanitizeString(conceptPath, "Concept path", 500);
 
-      return this.getResource<ConceptNetConceptResponse>(
+      return this.getResource<MultiSourceSearchResponse>(
         `${ENDPOINTS.NLP_REFERENCE}/conceptnet/concept/${conceptPath}`,
       );
     }, "get ConceptNet concept");
@@ -186,12 +166,12 @@ export class NLPReferenceService extends BaseService {
   async getConceptNetRelated(
     conceptPath: string,
     params?: ConceptNetRelatedParams,
-  ): Promise<ConceptNetRelatedResponse> {
+  ): Promise<MultiSourceSearchResponse> {
     return this.withErrorContext(() => {
       this.validateRequired(conceptPath, "Concept path");
       this.sanitizeString(conceptPath, "Concept path", 500);
 
-      return this.getResource<ConceptNetRelatedResponse>(
+      return this.getResource<MultiSourceSearchResponse>(
         `${ENDPOINTS.NLP_REFERENCE}/conceptnet/related/${conceptPath}`,
         params,
       );
@@ -204,13 +184,13 @@ export class NLPReferenceService extends BaseService {
    */
   async queryWikidataSparql(
     data: WikidataSparqlRequest,
-  ): Promise<WikidataSparqlResponse> {
+  ): Promise<MultiSourceSearchResponse> {
     return this.withErrorContext(() => {
       this.validateRequired(data, "Wikidata SPARQL request data");
       this.validateRequired(data.query, "SPARQL query");
       this.sanitizeString(data.query, "SPARQL query", 10000);
 
-      return this.postResource<WikidataSparqlResponse>(
+      return this.postResource<MultiSourceSearchResponse>(
         `${ENDPOINTS.NLP_REFERENCE}/wikidata/sparql`,
         data,
       );
@@ -222,13 +202,13 @@ export class NLPReferenceService extends BaseService {
    */
   async getWikidataEntity(
     params: WikidataEntityParams,
-  ): Promise<WikidataEntityResponse> {
+  ): Promise<MultiSourceSearchResponse> {
     return this.withErrorContext(() => {
       this.validateRequired(params, "Wikidata entity parameters");
       this.validateRequired(params.entity_url, "Entity URL");
       this.sanitizeString(params.entity_url, "Entity URL", 2000);
 
-      return this.getResource<WikidataEntityResponse>(
+      return this.getResource<MultiSourceSearchResponse>(
         `${ENDPOINTS.NLP_REFERENCE}/wikidata/entity`,
         params,
       );
@@ -242,12 +222,12 @@ export class NLPReferenceService extends BaseService {
   async getSchemaOrgEntity(
     identifier: string,
     params?: SchemaOrgEntityParams,
-  ): Promise<SchemaOrgEntityResponse> {
+  ): Promise<MultiSourceSearchResponse> {
     return this.withErrorContext(() => {
       this.validateRequired(identifier, "Entity identifier");
       this.sanitizeString(identifier, "Entity identifier", 255);
 
-      return this.getResource<SchemaOrgEntityResponse>(
+      return this.getResource<MultiSourceSearchResponse>(
         `${ENDPOINTS.NLP_REFERENCE}/schema-org/entity/${identifier}`,
         params,
       );
@@ -260,12 +240,12 @@ export class NLPReferenceService extends BaseService {
   async getSchemaOrgProperty(
     identifier: string,
     params?: SchemaOrgPropertyParams,
-  ): Promise<SchemaOrgPropertyResponse> {
+  ): Promise<MultiSourceSearchResponse> {
     return this.withErrorContext(() => {
       this.validateRequired(identifier, "Property identifier");
       this.sanitizeString(identifier, "Property identifier", 255);
 
-      return this.getResource<SchemaOrgPropertyResponse>(
+      return this.getResource<MultiSourceSearchResponse>(
         `${ENDPOINTS.NLP_REFERENCE}/schema-org/property/${identifier}`,
         params,
       );
@@ -277,13 +257,13 @@ export class NLPReferenceService extends BaseService {
    */
   async searchSchemaOrg(
     params: SchemaOrgReferenceSearchParams,
-  ): Promise<SchemaOrgSearchResponse> {
+  ): Promise<MultiSourceSearchResponse> {
     return this.withErrorContext(() => {
       this.validateRequired(params, "Schema.org search parameters");
       this.validateRequired(params.query, "Search query");
       this.sanitizeString(params.query, "Search query", 1000);
 
-      return this.getResource<SchemaOrgSearchResponse>(
+      return this.getResource<MultiSourceSearchResponse>(
         `${ENDPOINTS.NLP_REFERENCE}/schema-org/search`,
         params,
       );

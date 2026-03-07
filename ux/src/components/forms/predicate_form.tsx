@@ -24,7 +24,6 @@ interface PredicateFormProps {
 const PredicateForm: React.FC<PredicateFormProps> = ({
   onSuccess,
   predicate,
-  mode = "create",
 }) => {
   const createPredicateMutation = useCreatePredicate();
   const updatePredicateMutation = useUpdatePredicate();
@@ -75,8 +74,10 @@ const PredicateForm: React.FC<PredicateFormProps> = ({
         }
         if (onSuccess) onSuccess(result);
         form.reset();
-      } catch (error: any) {
-        let message = "An error occurred";
+      } catch (
+        error: any // eslint-disable-line @typescript-eslint/no-explicit-any
+      ) {
+        let message: string;
         // Log the full error for debugging
         console.error("Full error object:", error);
         console.error("Error detail:", error?.detail);
@@ -89,7 +90,12 @@ const PredicateForm: React.FC<PredicateFormProps> = ({
           error?.detail;
 
         if (Array.isArray(detail)) {
-          message = detail.map((d: any) => d.msg).join("; ");
+          message = detail
+            .map(
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              (d: any) => d.msg,
+            )
+            .join("; ");
         } else if (error?.message) {
           message = error.message;
         } else if (typeof error === "string") {

@@ -7,12 +7,6 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { ragExperimentsService } from "@/api/services/ragExperiments";
 import { QUERY_KEYS } from "@/api/config";
-import type {
-  CreateTestParagraphRequest,
-  UpdateTestParagraphRequest,
-  CreateAnnotationRequest,
-  RunPipelineTestRequest,
-} from "@/api/services/ragExperiments";
 
 /**
  * Create a new test paragraph
@@ -47,12 +41,16 @@ export function useUpdateTestParagraph() {
       ragExperimentsService.updateTestParagraph(
         params.paragraphId,
         params.text,
-        params.notes
+        params.notes,
       ),
     onSuccess: (data, variables) => {
       // Invalidate specific paragraph and list
       queryClient.invalidateQueries({
-        queryKey: [QUERY_KEYS.RAG_EXPERIMENTS, "paragraph", variables.paragraphId],
+        queryKey: [
+          QUERY_KEYS.RAG_EXPERIMENTS,
+          "paragraph",
+          variables.paragraphId,
+        ],
       });
       queryClient.invalidateQueries({
         queryKey: [QUERY_KEYS.RAG_EXPERIMENTS, "paragraphs"],
@@ -99,12 +97,16 @@ export function useCreateAnnotation() {
         params.paragraphId,
         params.startChar,
         params.endChar,
-        params.structureNodeId
+        params.structureNodeId,
       ),
     onSuccess: (data, variables) => {
       // Invalidate the specific paragraph to refetch with new annotation
       queryClient.invalidateQueries({
-        queryKey: [QUERY_KEYS.RAG_EXPERIMENTS, "paragraph", variables.paragraphId],
+        queryKey: [
+          QUERY_KEYS.RAG_EXPERIMENTS,
+          "paragraph",
+          variables.paragraphId,
+        ],
       });
       // Also invalidate the list in case it shows annotation counts
       queryClient.invalidateQueries({
@@ -126,7 +128,11 @@ export function useDeleteAnnotation() {
     onSuccess: (data, variables) => {
       // Invalidate the paragraph to refetch without the annotation
       queryClient.invalidateQueries({
-        queryKey: [QUERY_KEYS.RAG_EXPERIMENTS, "paragraph", variables.paragraphId],
+        queryKey: [
+          QUERY_KEYS.RAG_EXPERIMENTS,
+          "paragraph",
+          variables.paragraphId,
+        ],
       });
       queryClient.invalidateQueries({
         queryKey: [QUERY_KEYS.RAG_EXPERIMENTS, "paragraphs"],
@@ -152,7 +158,7 @@ export function useRunPipelineTest() {
         params.paragraphIds,
         params.pipelineNames,
         params.enableTrace ?? false,
-        params.enableLlmLayer
+        params.enableLlmLayer,
       ),
     onSuccess: (data, variables) => {
       // Invalidate comparison results for all tested paragraphs

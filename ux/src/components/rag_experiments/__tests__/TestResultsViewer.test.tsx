@@ -3,7 +3,7 @@
  */
 
 import React from "react";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { TestResultsViewer } from "../TestResultsViewer";
 import { vi, describe, it, expect, beforeEach } from "vitest";
@@ -73,6 +73,7 @@ describe("TestResultsViewer", () => {
       data: mockComparisonData,
       isLoading: false,
       error: null,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } as any);
   });
 
@@ -129,6 +130,7 @@ describe("TestResultsViewer", () => {
       data: null,
       isLoading: true,
       error: null,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } as any);
 
     render(<TestResultsViewer paragraphId="test-para" />, {
@@ -143,15 +145,14 @@ describe("TestResultsViewer", () => {
       data: { runs: [], summary: null },
       isLoading: false,
       error: null,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } as any);
 
     render(<TestResultsViewer paragraphId="test-para" />, {
       wrapper: createWrapper(),
     });
 
-    expect(
-      screen.getByText(/No test results available/i)
-    ).toBeInTheDocument();
+    expect(screen.getByText(/No test results available/i)).toBeInTheDocument();
   });
 
   it("shows error state", () => {
@@ -159,6 +160,7 @@ describe("TestResultsViewer", () => {
       data: null,
       isLoading: false,
       error: new Error("Test error"),
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } as any);
 
     render(<TestResultsViewer paragraphId="test-para" />, {
@@ -174,6 +176,7 @@ describe("TestResultsViewer", () => {
       data: { runs: [], summary: null },
       isLoading: false,
       error: null,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } as any);
 
     render(<TestResultsViewer paragraphId="test-para" />, {
@@ -181,9 +184,7 @@ describe("TestResultsViewer", () => {
     });
 
     // Export buttons should not be visible when no results
-    expect(
-      screen.queryByText(/Export CSV/i)
-    ).not.toBeInTheDocument();
+    expect(screen.queryByText(/Export CSV/i)).not.toBeInTheDocument();
   });
 
   it("displays pagination controls for large result sets", () => {
@@ -210,6 +211,7 @@ describe("TestResultsViewer", () => {
       data: largeDataset,
       isLoading: false,
       error: null,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } as any);
 
     render(<TestResultsViewer paragraphId="test-para" />, {
@@ -271,6 +273,7 @@ describe("TestResultsViewer", () => {
       data: dataWithNulls,
       isLoading: false,
       error: null,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } as any);
 
     render(<TestResultsViewer paragraphId="test-para" />, {
@@ -304,6 +307,7 @@ describe("TestResultsViewer", () => {
       data: multipleRuns,
       isLoading: false,
       error: null,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } as any);
 
     render(<TestResultsViewer paragraphId="test-para" />, {
@@ -321,6 +325,7 @@ describe("TestResultsViewer", () => {
       data: mockComparisonData,
       isLoading: false,
       error: null,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } as any);
 
     render(<TestResultsViewer paragraphId="test-para" />, {

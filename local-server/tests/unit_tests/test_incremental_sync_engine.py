@@ -8,15 +8,15 @@ import sys
 import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-import pytest
-from unittest.mock import Mock, patch
-from datetime import datetime, timezone
-from sqlalchemy.orm import Session
-import pandas as pd
+import pytest  # noqa: E402
+from unittest.mock import Mock, patch  # noqa: E402
+from datetime import datetime, timezone  # noqa: E402
+from sqlalchemy.orm import Session  # noqa: E402
+import pandas as pd  # type: ignore[import-untyped]  # noqa: E402
 
-from services.incremental_sync_engine import IncrementalSyncEngine
-from services.duckdb_service import DuckDBService
-from services.version_manager import VersionManager
+from services.incremental_sync_engine import IncrementalSyncEngine  # noqa: E402, E501
+from services.duckdb_service import DuckDBService  # noqa: E402
+from services.version_manager import VersionManager  # noqa: E402
 
 
 class TestIncrementalSyncEngine:

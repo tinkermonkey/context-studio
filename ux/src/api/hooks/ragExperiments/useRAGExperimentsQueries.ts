@@ -7,7 +7,10 @@
 import { useQuery } from "@tanstack/react-query";
 import { ragExperimentsService } from "@/api/services/ragExperiments";
 import { QUERY_KEYS, API_CONFIG } from "@/api/config";
-import type { ListParagraphsParams, GetComparisonParams } from "@/api/services/ragExperiments";
+import type {
+  ListParagraphsParams,
+  GetComparisonParams,
+} from "@/api/services/ragExperiments";
 
 /**
  * List test paragraphs with pagination

@@ -134,6 +134,7 @@ export const useExternalPredicates = (
  */
 export const useSearchExternalPredicates = (
   params?: SearchExternalPredicatesParams,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   options?: UseQueryOptions<any, Error>,
 ) => {
   return useQuery({
@@ -160,8 +161,9 @@ export const useDiscoveryStatus = (
     queryKey: createQueryKey(QUERY_KEYS.PREDICATES, "discover", { taskId }),
     queryFn: () => predicateService.getDiscoveryStatus(taskId!),
     enabled: !!taskId,
-    refetchInterval: (data) => {
+    refetchInterval: (query) => {
       // Poll every 2 seconds if task is pending or running
+      const data = query.state.data;
       if (data && (data.status === "pending" || data.status === "running")) {
         return 2000;
       }
@@ -180,11 +182,10 @@ export const useSimilarPredicates = (
   options?: UseQueryOptions<FindSimilarResponse, Error>,
 ) => {
   return useQuery({
-    queryKey: createQueryKey(
-      QUERY_KEYS.PREDICATES,
-      "find-similar",
-      { id, ...params } as Record<string, unknown>,
-    ),
+    queryKey: createQueryKey(QUERY_KEYS.PREDICATES, "find-similar", {
+      id,
+      ...params,
+    } as Record<string, unknown>),
     queryFn: () => predicateService.findSimilarPredicates(id!, params),
     enabled: !!id,
     staleTime: 60 * 60 * 1000, // 1 hour (results are cached on backend)

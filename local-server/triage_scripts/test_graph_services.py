@@ -196,7 +196,7 @@ def test_term_hierarchy(network_service):
         logger.info("Testing get_term_hierarchy method...")
         
         # First, get some sample terms to test with
-        sample_nodes = list(network_service.graph.structure_nodes())
+        sample_nodes = list(network_service.graph.nodes())
         term_nodes = [structure_node for structure_node in sample_nodes if structure_node.startswith("term:")]
         
         if not term_nodes:

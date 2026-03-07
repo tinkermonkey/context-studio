@@ -1,19 +1,18 @@
 """
 Clustering performance tests for predicate similarity.
 
-These tests validate the clustering algorithm performance with realistic predicate sets.
+These tests validate the clustering algorithm performance with realistic predicate sets.  # noqa: E501
 
-Note: High-latency performance tests (PT-VS-001, PT-VS-003, PT-VS-004, PT-VS-007) have been
-removed as they are not suitable for CI/CD. These tests require generating embeddings for
-10K+ predicates, which takes 100+ seconds and masks actual search performance. Performance
-validation should be done with pre-populated databases in dedicated benchmarking environments.
+Note: High-latency performance tests (PT-VS-001, PT-VS-003, PT-VS-004, PT-VS-007) have been  # noqa: E501
+removed as they are not suitable for CI/CD. These tests require generating embeddings for  # noqa: E501
+10K+ predicates, which takes 100+ seconds and masks actual search performance. Performance  # noqa: E501
+validation should be done with pre-populated databases in dedicated benchmarking environments.  # noqa: E501
 """
 
 import pytest
 import tempfile
 import os
 import time
-from datetime import date
 
 from reference_db.config import ReferenceConfig
 from reference_db.manager import ReferenceManager
@@ -22,13 +21,13 @@ from embeddings.generate_embeddings import generate_embedding
 
 
 # Skip if embeddings not available
-pytest.importorskip("embeddings.generate_embeddings", reason="embeddings module not available")
+pytest.importorskip("embeddings.generate_embeddings", reason="embeddings module not available")  # noqa: E501
 
 
 @pytest.fixture(scope="module")
 def large_external_predicates_dataset():
     """
-    Create a test dataset with 10K+ external predicates for performance testing.
+    Create a test dataset with 10K+ external predicates for performance testing.  # noqa: E501
 
     This simulates a production scenario with multiple knowledge sources.
     """
@@ -50,7 +49,7 @@ def large_external_predicates_dataset():
     for source, count in sources.items():
         for i in range(count):
             title = f"{source}_predicate_{i}"
-            definition = f"A predicate from {source} with index {i}. Used for relationship modeling."
+            definition = f"A predicate from {source} with index {i}. Used for relationship modeling."  # noqa: E501
 
             # Generate real embeddings
             title_emb = generate_embedding(title)
@@ -105,15 +104,15 @@ class TestClusteringPerformance:
 
         elapsed = (time.perf_counter() - start_time) * 1000
 
-        print(f"\nClustering Performance (10 predicates):")
+        print("\nClustering Performance (10 predicates):")
         print(f"  Time: {elapsed:.2f}ms")
         print(f"  Clusters: {len(clusters)}")
 
         # Clustering should complete in reasonable time
         assert elapsed < 5000, \
-            f"Clustering 10 predicates took {elapsed:.2f}ms (should be <5000ms)"
+            f"Clustering 10 predicates took {elapsed:.2f}ms (should be <5000ms)"  # noqa: E501
 
-    def test_clustering_100_predicates(self, large_external_predicates_dataset):
+    def test_clustering_100_predicates(self, large_external_predicates_dataset):  # noqa: E501
         """
         Test clustering performance with 100 predicates.
 
@@ -143,11 +142,11 @@ class TestClusteringPerformance:
 
         elapsed = (time.perf_counter() - start_time) * 1000
 
-        print(f"\nClustering Performance (100 predicates):")
+        print("\nClustering Performance (100 predicates):")
         print(f"  Time: {elapsed:.2f}ms")
         print(f"  Clusters: {len(clusters)}")
 
         # Clustering should complete in reasonable time
         # Allow more time for 100 predicates (10x the data)
         assert elapsed < 30000, \
-            f"Clustering 100 predicates took {elapsed:.2f}ms (should be <30000ms)"
+            f"Clustering 100 predicates took {elapsed:.2f}ms (should be <30000ms)"  # noqa: E501

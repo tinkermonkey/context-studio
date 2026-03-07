@@ -18,8 +18,6 @@ export interface PredicateSelectorProps {
 export const PredicateSelector: React.FC<PredicateSelectorProps> = ({
   onSelect,
   value,
-  placeholder = "Select predicate...",
-  disabled = false,
 }) => {
   const { data: predicates, isLoading, error } = usePredicates();
 

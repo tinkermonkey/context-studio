@@ -11,15 +11,15 @@ sys.path.append(
     os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 )
 
-import pytest
-from datetime import datetime, timezone
-from unittest.mock import Mock, patch
+import pytest  # noqa: E402
+from datetime import datetime, timezone  # noqa: E402
+from unittest.mock import Mock, patch  # noqa: E402
 
-from services.crdt_merge_engine import CRDTMergeEngine, MergeStrategy, MergeResult, ChangesetMergeResult
-from services.collaboration_models import Changeset, ChangesetState
-from services.changeset_manager import ChangesetManager
-from services.working_tree_manager import WorkingTreeManager
-from services.version_manager import VersionManager
+from services.crdt_merge_engine import CRDTMergeEngine, MergeStrategy, MergeResult, ChangesetMergeResult  # noqa: E402, E501
+from services.collaboration_models import Changeset, ChangesetState  # noqa: E402, E501
+from services.changeset_manager import ChangesetManager  # noqa: E402
+from services.working_tree_manager import WorkingTreeManager  # noqa: E402
+from services.version_manager import VersionManager  # noqa: E402
 
 
 class TestCRDTMergeEngine:

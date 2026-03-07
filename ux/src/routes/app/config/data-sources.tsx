@@ -1,23 +1,29 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { Card, Alert, Badge, Button, TextInput, Label, Checkbox, Tabs } from "flowbite-react";
+import {
+  Alert,
+  Badge,
+  Button,
+  Card,
+  Checkbox,
+  Label,
+  Tabs,
+  TextInput,
+} from "flowbite-react";
 import { CsMainTitle } from "@/components/layout/cs_main";
 import { ConfigBreadcrumbs } from "@/components/configuration/ConfigBreadcrumbs";
 import {
-  Database,
   AlertTriangle,
   CheckCircle,
-  XCircle,
-  Settings,
+  Database,
   ExternalLink,
-  RefreshCw,
-  Server,
-  Globe
+  Globe,
+  XCircle,
 } from "lucide-react";
 import {
   useConfiguration,
   useReferenceSourcesConfig,
   useReferenceSourcesStatus,
-  useUpdateReferenceSourceConfig
+  useUpdateReferenceSourceConfig,
 } from "@/api/hooks";
 import { useButterToast } from "@/hooks/useButterToast";
 
@@ -25,39 +31,49 @@ export const Route = createFileRoute("/app/config/data-sources")({
   component: RouteComponent,
 });
 
-const REFERENCE_SOURCE_LABELS: Record<string, { name: string; description: string; icon: React.ComponentType<{ className?: string }> }> = {
+const REFERENCE_SOURCE_LABELS: Record<
+  string,
+  {
+    name: string;
+    description: string;
+    icon: React.ComponentType<{ className?: string }>;
+  }
+> = {
   conceptnet: {
     name: "ConceptNet",
     description: "Semantic network of common sense knowledge",
-    icon: Globe
+    icon: Globe,
   },
   dbpedia: {
     name: "DBpedia",
     description: "Structured content from Wikipedia",
-    icon: Database
+    icon: Database,
   },
   dbpedia_spotlight: {
     name: "DBpedia Spotlight",
     description: "Entity recognition and linking service",
-    icon: ExternalLink
+    icon: ExternalLink,
   },
   wikidata: {
     name: "Wikidata",
     description: "Collaborative knowledge base",
-    icon: Database
+    icon: Database,
   },
   schema_org: {
     name: "Schema.org",
     description: "Structured data vocabulary",
-    icon: Settings
-  }
+    icon: Globe,
+  },
 };
 
 function RouteComponent() {
   const toast = useButterToast();
-  const { data: configuration, isLoading: isLoadingConfig } = useConfiguration();
-  const { data: referenceSourcesConfig, isLoading: isLoadingRefConfig } = useReferenceSourcesConfig();
-  const { data: referenceSourcesStatus, isLoading: isLoadingStatus } = useReferenceSourcesStatus();
+  const { data: configuration, isLoading: isLoadingConfig } =
+    useConfiguration();
+  const { data: referenceSourcesConfig, isLoading: isLoadingRefConfig } =
+    useReferenceSourcesConfig();
+  const { data: referenceSourcesStatus, isLoading: isLoadingStatus } =
+    useReferenceSourcesStatus();
   const updateReferenceSourceMutation = useUpdateReferenceSourceConfig();
 
   const getSourceDisplayName = (sourceName: string): string => {
@@ -70,16 +86,20 @@ function RouteComponent() {
       {
         sourceName,
         path: "enabled",
-        value: enabled
+        value: enabled,
       },
       {
         onSuccess: () => {
-          toast.success(`${displayName} ${enabled ? 'enabled' : 'disabled'} successfully`);
+          toast.success(
+            `${displayName} ${enabled ? "enabled" : "disabled"} successfully`,
+          );
         },
         onError: (error) => {
-          toast.error(`Failed to ${enabled ? 'enable' : 'disable'} ${displayName}: ${error instanceof Error ? error.message : 'Unknown error'}`);
-        }
-      }
+          toast.error(
+            `Failed to ${enabled ? "enable" : "disable"} ${displayName}: ${error instanceof Error ? error.message : "Unknown error"}`,
+          );
+        },
+      },
     );
   };
 
@@ -89,16 +109,20 @@ function RouteComponent() {
       {
         sourceName,
         path: "timeout",
-        value: timeout
+        value: timeout,
       },
       {
         onSuccess: () => {
-          toast.success(`${displayName} timeout updated to ${timeout}s successfully`);
+          toast.success(
+            `${displayName} timeout updated to ${timeout}s successfully`,
+          );
         },
         onError: (error) => {
-          toast.error(`Failed to update ${displayName} timeout: ${error instanceof Error ? error.message : 'Unknown error'}`);
-        }
-      }
+          toast.error(
+            `Failed to update ${displayName} timeout: ${error instanceof Error ? error.message : "Unknown error"}`,
+          );
+        },
+      },
     );
   };
 
@@ -108,16 +132,20 @@ function RouteComponent() {
       {
         sourceName,
         path: "use_proxy",
-        value: useProxy
+        value: useProxy,
       },
       {
         onSuccess: () => {
-          toast.success(`${displayName} proxy ${useProxy ? 'enabled' : 'disabled'} successfully`);
+          toast.success(
+            `${displayName} proxy ${useProxy ? "enabled" : "disabled"} successfully`,
+          );
         },
         onError: (error) => {
-          toast.error(`Failed to update ${displayName} proxy settings: ${error instanceof Error ? error.message : 'Unknown error'}`);
-        }
-      }
+          toast.error(
+            `Failed to update ${displayName} proxy settings: ${error instanceof Error ? error.message : "Unknown error"}`,
+          );
+        },
+      },
     );
   };
 
@@ -126,7 +154,7 @@ function RouteComponent() {
       <div className="p-6">
         <ConfigBreadcrumbs items={[{ label: "Data Sources" }]} />
         <CsMainTitle>Data Sources Configuration</CsMainTitle>
-        <div className="text-center py-8">Loading configuration...</div>
+        <div className="py-8 text-center">Loading configuration...</div>
       </div>
     );
   }
@@ -138,7 +166,8 @@ function RouteComponent() {
 
       <div className="mb-6">
         <p className="text-gray-600">
-          Configure reference APIs and database settings for knowledge graph enrichment.
+          Configure reference APIs and database settings for knowledge graph
+          enrichment.
         </p>
       </div>
 
@@ -146,8 +175,8 @@ function RouteComponent() {
         {/* Reference APIs Tab */}
         <Tabs.Item title="Reference APIs" icon={Globe}>
           <ReferenceAPIsSection
-            config={referenceSourcesConfig?.data}
-            status={referenceSourcesStatus?.data}
+            config={referenceSourcesConfig}
+            status={referenceSourcesStatus}
             onToggleSource={handleToggleSource}
             onUpdateTimeout={handleUpdateTimeout}
             onToggleProxy={handleToggleProxy}
@@ -171,35 +200,49 @@ function ReferenceAPIsSection({
   onToggleSource,
   onUpdateTimeout,
   onToggleProxy,
-  isUpdating
+  isUpdating,
 }: {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   config: any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   status: any;
   onToggleSource: (sourceName: string, enabled: boolean) => void;
   onUpdateTimeout: (sourceName: string, timeout: number) => void;
   onToggleProxy: (sourceName: string, useProxy: boolean) => void;
   isUpdating: boolean;
 }) {
-  if (!config || !status) {
+  if (!config) {
     return <div>No configuration data available</div>;
   }
 
   // Get all reference sources except global settings
   const sources = Object.keys(config)
-    .filter(key => !['default_language', 'search_timeout'].includes(key))
-    .filter(key => typeof config[key] === 'object');
+    .filter((key) => !["default_language", "search_timeout"].includes(key))
+    .filter((key) => typeof config[key] === "object");
+
+  // Create a map of source status by name for quick lookup
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const statusByName: Record<string, any> = {};
+  if (status?.sources) {
+    status.sources.forEach(
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (sourceStatus: any) => {
+        statusByName[sourceStatus.name] = sourceStatus;
+      },
+    );
+  }
 
   return (
     <div className="space-y-6">
       {/* Global Settings */}
       <Card>
-        <h3 className="text-lg font-semibold mb-4">Global Settings</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <h3 className="mb-4 text-lg font-semibold">Global Settings</h3>
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
           <div>
             <Label htmlFor="default_language">Default Language</Label>
             <TextInput
               id="default_language"
-              value={config.default_language || 'en'}
+              value={config.default_language || "en"}
               disabled
             />
           </div>
@@ -216,10 +259,10 @@ function ReferenceAPIsSection({
       </Card>
 
       {/* Reference Sources */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         {sources.map((sourceName) => {
           const sourceConfig = config[sourceName];
-          const sourceStatus = status[sourceName];
+          const sourceStatus = statusByName[sourceName];
           const sourceInfo = REFERENCE_SOURCE_LABELS[sourceName];
 
           if (!sourceInfo) return null;
@@ -255,18 +298,20 @@ function ReferenceSourceCard({
   sourceName,
   sourceInfo,
   config,
-  status,
   isEnabled,
   hasProxy,
   onToggleSource,
   onUpdateTimeout,
   onToggleProxy,
   isUpdating,
-  Icon
+  Icon,
 }: {
   sourceName: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   sourceInfo: any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   config: any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   status: any;
   isEnabled: boolean;
   hasProxy: boolean;
@@ -277,10 +322,14 @@ function ReferenceSourceCard({
   Icon: React.ComponentType<{ className?: string }>;
 }) {
   return (
-    <Card className={`transition-all ${isEnabled ? 'border-green-200 bg-green-50' : 'border-gray-200'}`}>
-      <div className="flex items-start justify-between mb-4">
+    <Card
+      className={`transition-all ${isEnabled ? "border-green-200 bg-green-50" : "border-gray-200"}`}
+    >
+      <div className="mb-4 flex items-start justify-between">
         <div className="flex items-center gap-3">
-          <Icon className={`h-6 w-6 ${isEnabled ? 'text-green-600' : 'text-gray-400'}`} />
+          <Icon
+            className={`h-6 w-6 ${isEnabled ? "text-green-600" : "text-gray-400"}`}
+          />
           <div>
             <h4 className="font-semibold">{sourceInfo.name}</h4>
             <p className="text-sm text-gray-600">{sourceInfo.description}</p>
@@ -302,7 +351,9 @@ function ReferenceSourceCard({
       <div className="space-y-4">
         {/* Enable/Disable Toggle */}
         <div className="flex items-center justify-between">
-          <Label htmlFor={`${sourceName}_enabled`}>Enable {sourceInfo.name}</Label>
+          <Label htmlFor={`${sourceName}_enabled`}>
+            Enable {sourceInfo.name}
+          </Label>
           <Checkbox
             id={`${sourceName}_enabled`}
             checked={isEnabled}
@@ -319,7 +370,7 @@ function ReferenceSourceCard({
               <div className="flex items-center gap-2">
                 <TextInput
                   id={`${sourceName}_url`}
-                  value={config.upstream_url || ''}
+                  value={config.upstream_url || ""}
                   disabled
                   className="flex-1"
                 />
@@ -336,7 +387,9 @@ function ReferenceSourceCard({
                 id={`${sourceName}_timeout`}
                 type="number"
                 value={config.timeout || 30}
-                onChange={(e) => onUpdateTimeout(sourceName, parseInt(e.target.value))}
+                onChange={(e) =>
+                  onUpdateTimeout(sourceName, parseInt(e.target.value))
+                }
                 disabled={isUpdating}
               />
             </div>
@@ -354,12 +407,19 @@ function ReferenceSourceCard({
 
             {/* Rate Limiting Info */}
             {config.rate_limit && (
-              <div className="pt-3 border-t border-gray-200">
-                <h5 className="text-sm font-medium text-gray-700 mb-2">Rate Limiting</h5>
-                <div className="text-sm text-gray-600 space-y-1">
-                  <div>Requests per hour: {config.rate_limit.requests_per_hour}</div>
+              <div className="border-t border-gray-200 pt-3">
+                <h5 className="mb-2 text-sm font-medium text-gray-700">
+                  Rate Limiting
+                </h5>
+                <div className="space-y-1 text-sm text-gray-600">
+                  <div>
+                    Requests per hour: {config.rate_limit.requests_per_hour}
+                  </div>
                   <div>Max delay: {config.rate_limit.max_delay}s</div>
-                  <div>Progressive delay: {config.rate_limit.progressive_delay ? 'Yes' : 'No'}</div>
+                  <div>
+                    Progressive delay:{" "}
+                    {config.rate_limit.progressive_delay ? "Yes" : "No"}
+                  </div>
                 </div>
               </div>
             )}
@@ -371,6 +431,7 @@ function ReferenceSourceCard({
 }
 
 // Database Settings Section Component
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function DatabaseSettingsSection({ config }: { config: any }) {
   if (!config) {
     return <div>No database configuration available</div>;
@@ -386,13 +447,13 @@ function DatabaseSettingsSection({ config }: { config: any }) {
       </Alert>
 
       <Card>
-        <h3 className="text-lg font-semibold mb-4">Database File Paths</h3>
+        <h3 className="mb-4 text-lg font-semibold">Database File Paths</h3>
         <div className="space-y-4">
           <div>
             <Label htmlFor="default_dataset">Default Dataset File</Label>
             <TextInput
               id="default_dataset"
-              value={config.default_dataset_filename || ''}
+              value={config.default_dataset_filename || ""}
               disabled
             />
           </div>
@@ -401,16 +462,18 @@ function DatabaseSettingsSection({ config }: { config: any }) {
             <Label htmlFor="schema_org_path">Schema.org Database Path</Label>
             <TextInput
               id="schema_org_path"
-              value={config.schema_org_path || ''}
+              value={config.schema_org_path || ""}
               disabled
             />
           </div>
 
           <div>
-            <Label htmlFor="reference_cache_path">Reference Cache Database Path</Label>
+            <Label htmlFor="reference_cache_path">
+              Reference Cache Database Path
+            </Label>
             <TextInput
               id="reference_cache_path"
-              value={config.reference_cache_path || ''}
+              value={config.reference_cache_path || ""}
               disabled
             />
           </div>
@@ -419,7 +482,7 @@ function DatabaseSettingsSection({ config }: { config: any }) {
             <Label htmlFor="operations_path">Operations database Path</Label>
             <TextInput
               id="operations_path"
-              value={config.operations_path || ''}
+              value={config.operations_path || ""}
               disabled
             />
           </div>
@@ -427,10 +490,12 @@ function DatabaseSettingsSection({ config }: { config: any }) {
       </Card>
 
       <Card>
-        <h3 className="text-lg font-semibold mb-4">Connection Settings</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <h3 className="mb-4 text-lg font-semibold">Connection Settings</h3>
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
           <div>
-            <Label htmlFor="pool_timeout">Connection Pool Timeout (seconds)</Label>
+            <Label htmlFor="pool_timeout">
+              Connection Pool Timeout (seconds)
+            </Label>
             <TextInput
               id="pool_timeout"
               type="number"
