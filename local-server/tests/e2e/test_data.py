@@ -8,9 +8,11 @@ All data is designed with the SentenceTransformer embedding model in mind
 and produces stable, reproducible results across test runs.
 """
 
+from typing import Any, Dict
+
 # Stable taxonomy used consistently across all four baseline tests
 # These concepts produce predictable semantic embeddings
-STABLE_TAXONOMY = {
+STABLE_TAXONOMY: Dict[str, Any] = {
     "layer": {
         "title": "Computer Science",
         "definition": "The study of computation and information",
