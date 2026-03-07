@@ -2,11 +2,15 @@
 Helper functions for E2E tests.
 
 This module provides utility functions for common E2E test patterns,
-including polling for asynchronous operations and event processing.
+including polling for asynchronous operations, event processing, and
+test data setup helpers.
 """
 
+import functools
 import time
-from typing import Callable, TypeVar, Optional, Any
+from typing import Callable, TypeVar, Optional, Any, Dict, List
+
+import pytest
 
 T = TypeVar("T")
 
@@ -131,3 +135,139 @@ def wait_for_async_processing(
         delay: Time to wait in seconds (default: 0.5)
     """
     time.sleep(delay)
+
+
+def retry_on_external_failure(max_retries: int = 2, delay: float = 5):
+    """
+    Retry decorator for tests that depend on external APIs.
+
+    Automatically retries a test function if it fails due to external API
+    unavailability (ConnectionError, TimeoutError). Logs retry attempts
+    and skips the test if all retries are exhausted.
+
+    Args:
+        max_retries: Maximum number of retry attempts (default: 2)
+        delay: Seconds to wait between retry attempts (default: 5)
+
+    Usage:
+        @pytest.mark.llm
+        @retry_on_external_failure(max_retries=3, delay=10)
+        def test_with_llm_api(e2e_client):
+            ...
+    """
+    def decorator(test_func):
+        @functools.wraps(test_func)
+        def wrapper(*args, **kwargs):
+            last_error = None
+            for attempt in range(max_retries + 1):
+                try:
+                    return test_func(*args, **kwargs)
+                except (ConnectionError, TimeoutError) as e:
+                    last_error = e
+                    if attempt < max_retries:
+                        time.sleep(delay)
+            pytest.skip(
+                f"External service unavailable after {max_retries} retries: {last_error}"
+            )
+        return wrapper
+    return decorator
+
+
+def create_test_hierarchy(
+    client,
+    layer_title: str,
+    layer_definition: str,
+    scheme_title: str,
+    scheme_definition: str,
+    classes: List[Dict[str, str]],
+) -> Dict[str, Any]:
+    """
+    Create a test hierarchy (layer → domain → terms) via POST requests.
+
+    This helper eliminates boilerplate across all E2E tests by handling the
+    sequential creation of a layer (taxonomy), domain (concept scheme), and
+    terms (classes), returning a structured dict of IDs for further use.
+
+    The helper validates all responses and raises AssertionError on failure,
+    making it suitable for use within test functions.
+
+    Args:
+        client: FastAPI TestClient instance
+        layer_title: Title for the layer (e.g., "Computer Science")
+        layer_definition: Definition for the layer
+        scheme_title: Title for the domain/scheme (e.g., "Data Management")
+        scheme_definition: Definition for the domain/scheme
+        classes: List of dicts with 'title' and 'definition' keys for terms
+
+    Returns:
+        Dict with structure:
+        {
+            "layer_id": str,
+            "domain_id": str,
+            "term_ids": {title: id, ...}
+        }
+
+    Raises:
+        AssertionError: If any POST request returns a non-201 status code
+
+    Example:
+        hierarchy = create_test_hierarchy(
+            client,
+            "Computer Science",
+            "The study of computation and information",
+            "Data Management",
+            "Technologies and methods for storing and retrieving data",
+            [
+                {"title": "Database", "definition": "An organized collection..."},
+                {"title": "SQL", "definition": "Structured Query Language..."},
+            ]
+        )
+        assert "Database" in hierarchy["term_ids"]
+    """
+    # Step 1: Create layer
+    layer_response = client.post(
+        "/api/structure_nodes/",
+        json={
+            "node_type": "layer",
+            "title": layer_title,
+            "definition": layer_definition,
+        },
+    )
+    assert layer_response.status_code == 201, f"Failed to create layer: {layer_response.text}"
+    layer_id = layer_response.json()["id"]
+
+    # Step 2: Create domain under layer
+    domain_response = client.post(
+        "/api/structure_nodes/",
+        json={
+            "node_type": "domain",
+            "parent_node_id": layer_id,
+            "title": scheme_title,
+            "definition": scheme_definition,
+        },
+    )
+    assert domain_response.status_code == 201, f"Failed to create domain: {domain_response.text}"
+    domain_id = domain_response.json()["id"]
+
+    # Step 3: Create all terms under domain
+    term_ids = {}
+    for cls in classes:
+        term_response = client.post(
+            "/api/structure_nodes/",
+            json={
+                "node_type": "term",
+                "parent_node_id": domain_id,
+                "title": cls["title"],
+                "definition": cls["definition"],
+            },
+        )
+        assert term_response.status_code == 201, (
+            f"Failed to create term '{cls['title']}': {term_response.text}"
+        )
+        term_ids[cls["title"]] = term_response.json()["id"]
+
+    return {
+        "layer_id": layer_id,
+        "domain_id": domain_id,
+        "term_ids": term_ids,
+    }
