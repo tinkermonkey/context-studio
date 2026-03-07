@@ -68,28 +68,3 @@ STABLE_RELATIONSHIPS = [
     ("Index", "Database", "part_of"),
 ]
 
-# Test data for embedding generation (semantically varied classes)
-EMBEDDING_TEST_CONCEPTS = {
-    "embedding_base_class": {
-        "title": "Data Storage",
-        "definition": "Systems for persisting and retrieving data",
-    },
-    "embedding_similar_class": {
-        "title": "Database System",
-        "definition": "An organized collection for data management",
-    },
-    "embedding_different_class": {
-        "title": "Firewall",
-        "definition": "A network security system that monitors traffic",
-    },
-}
-
-# Backward compatibility: STABLE_CONCEPTS for existing tests
-# Maps the old-style concept keys to the current STABLE_TAXONOMY structure
-STABLE_CONCEPTS = {
-    "taxonomy_1": STABLE_TAXONOMY["layer"],
-    "scheme_1": STABLE_TAXONOMY["scheme"],
-    "class_1": STABLE_TAXONOMY["classes"][0],
-    "class_2": STABLE_TAXONOMY["classes"][1],
-    "class_3": STABLE_TAXONOMY["classes"][2],
-}
