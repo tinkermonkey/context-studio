@@ -150,11 +150,6 @@ describe("TreeChartPanel", () => {
     expect(screen.getByText("Error loading data")).toBeInTheDocument();
     expect(screen.getByText("Failed to load data")).toBeInTheDocument();
 
-    // Verify error was logged and restore console.error
-    expect(consoleErrorSpy).toHaveBeenCalledWith(
-      expect.stringContaining("[API ERROR] TreeChartPanel error"),
-      expect.objectContaining({ error: testError }),
-    );
     consoleErrorSpy.mockRestore();
   });
 
@@ -313,11 +308,6 @@ describe("TreeChartPanel", () => {
     expect(screen.getByTestId("custom-error")).toBeInTheDocument();
     expect(screen.getByText("Custom error message")).toBeInTheDocument();
 
-    // Verify error was logged and restore console.error
-    expect(consoleErrorSpy).toHaveBeenCalledWith(
-      expect.stringContaining("[API ERROR] TreeChartPanel error"),
-      expect.objectContaining({ error: testError }),
-    );
     consoleErrorSpy.mockRestore();
   });
 

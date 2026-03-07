@@ -32,8 +32,7 @@ def test_sql_builder_case_when_custom_columns():
     for use in different database contexts.
     """
     result = build_max_similarity_case_when(
-        title_column="rn.title_embedding",
-        definition_column="rn.definition_embedding"
+        title_column="rn.title_embedding", definition_column="rn.definition_embedding"
     )
     assert "rn.title_embedding" in result
     assert "rn.definition_embedding" in result
@@ -48,8 +47,7 @@ def test_sql_builder_case_when_with_qualified_columns():
     pattern with table-qualified columns (e.g., sn.title_embedding).
     """
     result = build_max_similarity_case_when(
-        title_column="sn.title_embedding",
-        definition_column="sn.definition_embedding"
+        title_column="sn.title_embedding", definition_column="sn.definition_embedding"
     )
     assert "sn.title_embedding" in result
     assert "sn.definition_embedding" in result
@@ -70,7 +68,10 @@ def test_sql_builder_case_when_structure():
     result = build_max_similarity_case_when()
 
     # Verify CASE WHEN structure
-    assert "WHEN title_embedding IS NOT NULL AND definition_embedding IS NOT NULL" in result
+    assert (
+        "WHEN title_embedding IS NOT NULL AND definition_embedding IS NOT NULL"
+        in result
+    )
     assert "WHEN title_embedding IS NOT NULL THEN" in result
     assert "WHEN definition_embedding IS NOT NULL" in result
     assert "ELSE 0.0" in result
@@ -159,8 +160,7 @@ def test_sql_builder_valid_unqualified_columns():
     are correctly validated and accepted.
     """
     result = build_max_similarity_case_when(
-        title_column="title_embedding",
-        definition_column="definition_embedding"
+        title_column="title_embedding", definition_column="definition_embedding"
     )
     assert "title_embedding" in result
     assert "definition_embedding" in result
@@ -173,8 +173,7 @@ def test_sql_builder_valid_qualified_columns_single_alias():
     are correctly validated and accepted.
     """
     result = build_max_similarity_case_when(
-        title_column="sn.title_embedding",
-        definition_column="sn.definition_embedding"
+        title_column="sn.title_embedding", definition_column="sn.definition_embedding"
     )
     assert "sn.title_embedding" in result
     assert "sn.definition_embedding" in result
@@ -188,7 +187,7 @@ def test_sql_builder_valid_columns_with_underscores():
     """
     result = build_max_similarity_case_when(
         title_column="my_custom_title_embedding",
-        definition_column="my_custom_definition_embedding"
+        definition_column="my_custom_definition_embedding",
     )
     assert "my_custom_title_embedding" in result
     assert "my_custom_definition_embedding" in result
@@ -201,8 +200,7 @@ def test_sql_builder_valid_columns_starting_with_underscore():
     are correctly validated and accepted.
     """
     result = build_max_similarity_case_when(
-        title_column="_title_embedding",
-        definition_column="_definition_embedding"
+        title_column="_title_embedding", definition_column="_definition_embedding"
     )
     assert "_title_embedding" in result
     assert "_definition_embedding" in result
