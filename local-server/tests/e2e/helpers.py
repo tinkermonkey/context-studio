@@ -7,9 +7,7 @@ test data setup helpers.
 """
 
 import time
-from typing import Callable, TypeVar, Optional, Any, Dict, List
-
-T = TypeVar("T")
+from typing import Callable, Any, Dict, List
 
 
 def poll_until(
