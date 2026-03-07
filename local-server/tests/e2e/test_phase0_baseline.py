@@ -753,23 +753,23 @@ class TestPhase0BaselineTests:
 
         # Find the update event (it should be the newest one for this record)
         assert len(term1_after_events) > 0, (
-            f"No events found for term1 after update"
+            "No events found for term1 after update"
         )
         update_event = term1_after_events[0]
         assert update_event["event_type"] == "update", (
             f"Expected update event_type, got {update_event['event_type']}"
         )
         assert update_event["old_data"] is not None, (
-            f"Update event should have old_data populated"
+            "Update event should have old_data populated"
         )
         assert update_event["new_data"] is not None, (
-            f"Update event should have new_data populated"
+            "Update event should have new_data populated"
         )
         assert isinstance(update_event["old_data"], dict), (
-            f"old_data should be a dict"
+            "old_data should be a dict"
         )
         assert isinstance(update_event["new_data"], dict), (
-            f"new_data should be a dict"
+            "new_data should be a dict"
         )
 
         # Verify the old and new data contain title information
@@ -780,10 +780,10 @@ class TestPhase0BaselineTests:
             "new_data should contain title"
         )
         assert update_event["old_data"]["title"] == original_title, (
-            f"old_data should have original title"
+            "old_data should have original title"
         )
         assert update_event["new_data"]["title"] == "Updated Change Event Test Term 1", (
-            f"new_data should have updated title"
+            "new_data should have updated title"
         )
 
         # Step 13: Cleanup
