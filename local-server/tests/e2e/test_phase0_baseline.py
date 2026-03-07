@@ -243,86 +243,59 @@ class TestPhase0BaselineTests:
         E2E Test: Embedding generation and semantic search ranking.
 
         This test validates that:
-        1. Embeddings are generated for created nodes
-        2. Semantic search correctly ranks results by similarity
-        3. Similar concepts rank higher than dissimilar ones
+        1. Creating nodes generates non-null title_embedding and definition_embedding
+        2. Embeddings are real float arrays of nonzero length (not empty or zero-filled)
+        3. Semantic search ranks semantically similar terms higher than unrelated terms
+        4. Updating a node's title causes the stored title_embedding to differ
 
-        The test creates multiple classes with varying semantic similarity
-        and verifies that search results are properly ranked.
+        The test uses three semantically varied terms to verify search ranking behavior.
         """
-        # Step 1: Create a taxonomy and scheme for embedding tests
-        taxonomy_data = {
-            "node_type": "layer",
-            "parent_node_id": None,
-            "title": "Embedding Test Taxonomy",
-            "definition": "Taxonomy for embedding generation testing",
-        }
-        taxonomy_response = e2e_client.post(
-            "/api/structure_nodes/", json=taxonomy_data
+        # Step 1: Create a taxonomy and domain for embedding tests
+        hierarchy = create_test_hierarchy(
+            e2e_client,
+            layer_title="Embedding Test Taxonomy",
+            layer_definition="Taxonomy for embedding generation testing",
+            scheme_title="Embedding Test Scheme",
+            scheme_definition="Scheme for embedding testing",
+            classes=[
+                {
+                    "title": "Database",
+                    "definition": "An organized collection of structured information",
+                },
+                {
+                    "title": "Data Store",
+                    "definition": "A system for storing and retrieving data efficiently",
+                },
+                {
+                    "title": "Firewall",
+                    "definition": "A network security system that monitors traffic",
+                },
+            ],
         )
-        assert taxonomy_response.status_code == 201
-        taxonomy_id = taxonomy_response.json()["id"]
 
-        scheme_data = {
-            "node_type": "domain",
-            "parent_node_id": taxonomy_id,
-            "title": "Embedding Test Scheme",
-            "definition": "Scheme for embedding testing",
-        }
-        scheme_response = e2e_client.post(
-            "/api/structure_nodes/", json=scheme_data
-        )
-        assert scheme_response.status_code == 201
-        scheme_id = scheme_response.json()["id"]
+        layer_id = hierarchy["layer_id"]
+        domain_id = hierarchy["domain_id"]
+        term_ids = hierarchy["term_ids"]
 
-        # Step 2: Create base class for embedding
-        base_class_data = {
-            "node_type": "term",
-            "parent_node_id": scheme_id,
-            "title": "Computer Science",
-            "definition": "The study of computation, information, and automation",  # noqa: E501
-        }
-        base_response = e2e_client.post(
-            "/api/structure_nodes/", json=base_class_data
-        )
-        assert base_response.status_code == 201
-        base_class_id = base_response.json()["id"]
-
-        # Step 3: Create semantically similar class
-        similar_class_data = {
-            "node_type": "term",
-            "parent_node_id": scheme_id,
-            "title": "Programming Languages",
-            "definition": "Languages used to write computer programs and software",  # noqa: E501
-        }
-        similar_response = e2e_client.post(
-            "/api/structure_nodes/", json=similar_class_data
-        )
-        assert similar_response.status_code == 201
-        similar_class_id = similar_response.json()["id"]
-
-        # Step 4: Create semantically different class
-        different_class_data = {
-            "node_type": "term",
-            "parent_node_id": scheme_id,
-            "title": "Medieval History",
-            "definition": "The study of the Middle Ages and historical civilizations",  # noqa: E501
-        }
-        different_response = e2e_client.post(
-            "/api/structure_nodes/", json=different_class_data
-        )
-        assert different_response.status_code == 201
-        different_class_id = different_response.json()["id"]
-
-        # Step 5: Verify embeddings were generated
-        # Poll until embeddings are available
+        # Step 2: Verify embeddings were generated for all terms
+        # Poll until embeddings are available with proper validation
         def embeddings_generated():
-            response = e2e_client.get(f"/api/structure_nodes/{base_class_id}")
+            response = e2e_client.get(f"/api/structure_nodes/{term_ids['Database']}")
             if response.status_code != 200:
                 return False
             node = response.json()
-            # Check if embeddings exist (they may be None or lists)
-            return node.get("title_embedding") is not None or node.get("definition_embedding") is not None  # noqa: E501
+            # Check that embeddings exist and are valid
+            title_emb = node.get("title_embedding")
+            def_emb = node.get("definition_embedding")
+            if title_emb is None or def_emb is None:
+                return False
+            # Verify embeddings are non-empty lists with actual float values
+            return (
+                isinstance(title_emb, list)
+                and len(title_emb) > 0
+                and isinstance(def_emb, list)
+                and len(def_emb) > 0
+            )
 
         poll_until(
             embeddings_generated,
@@ -330,22 +303,150 @@ class TestPhase0BaselineTests:
             error_message="Embeddings not generated within timeout",
         )
 
-        # Step 6: Perform semantic search on base class definition
+        # Step 3: Assert embeddings are present and valid for all terms
+        for term_title, term_id in term_ids.items():
+            response = e2e_client.get(f"/api/structure_nodes/{term_id}")
+            assert response.status_code == 200, (
+                f"Failed to retrieve term {term_title}: {response.text}"
+            )
+            node = response.json()
+
+            # Assert title_embedding exists and is valid
+            assert node.get("title_embedding") is not None, (
+                f"Term '{term_title}' missing title_embedding"
+            )
+            title_emb = node.get("title_embedding")
+            assert isinstance(title_emb, list), (
+                f"Term '{term_title}' title_embedding must be a list, got {type(title_emb)}"  # noqa: E501
+            )
+            assert len(title_emb) > 0, (
+                f"Term '{term_title}' title_embedding is empty"
+            )
+            # Verify it contains actual float values (not zeros)
+            assert any(v != 0.0 for v in title_emb), (
+                f"Term '{term_title}' title_embedding is all zeros"
+            )
+
+            # Assert definition_embedding exists and is valid
+            assert node.get("definition_embedding") is not None, (
+                f"Term '{term_title}' missing definition_embedding"
+            )
+            def_emb = node.get("definition_embedding")
+            assert isinstance(def_emb, list), (
+                f"Term '{term_title}' definition_embedding must be a list, got {type(def_emb)}"  # noqa: E501
+            )
+            assert len(def_emb) > 0, (
+                f"Term '{term_title}' definition_embedding is empty"
+            )
+            # Verify it contains actual float values (not zeros)
+            assert any(v != 0.0 for v in def_emb), (
+                f"Term '{term_title}' definition_embedding is all zeros"
+            )
+
+        # Step 4: Verify semantic search ranking
+        # Search query should rank "Database" and "Data Store" above "Firewall"
         search_data = {
-            "query": "computation and programming",
+            "query": "organized collection of data",
+            "node_type": "term",
             "limit": 10,
         }
         search_response = e2e_client.post(
             "/api/structure_nodes/find", json=search_data
         )
-        assert search_response.status_code == 200
+        assert search_response.status_code == 200, (
+            f"Search failed: {search_response.text}"
+        )
         search_results = search_response.json()
-        # API returns List[NodeSearchResult] directly
-        assert isinstance(search_results, list)
+        assert isinstance(search_results, list), (
+            f"Search results should be a list, got {type(search_results)}"
+        )
 
-        # Step 7: Cleanup
-        for node_id in [base_class_id, similar_class_id, different_class_id, scheme_id, taxonomy_id]:  # noqa: E501
-            e2e_client.delete(f"/api/structure_nodes/{node_id}")
+        # Extract search result titles and verify ranking
+        search_titles = [result.get("title") for result in search_results]
+        assert "Database" in search_titles, (
+            f"'Database' should appear in search results. Got: {search_titles}"
+        )
+
+        # Find positions in search results
+        database_pos = search_titles.index("Database")
+        firewall_pos = (
+            search_titles.index("Firewall")
+            if "Firewall" in search_titles
+            else float("inf")
+        )
+
+        # Assert "Database" ranks higher than "Firewall"
+        assert database_pos < firewall_pos, (
+            f"'Database' (position {database_pos}) should rank higher than "
+            f"'Firewall' (position {firewall_pos})"
+        )
+
+        # Verify "Data Store" appears in top results (high semantic similarity)
+        if "Data Store" in search_titles:
+            data_store_pos = search_titles.index("Data Store")
+            assert data_store_pos < 5, (
+                f"'Data Store' should appear in top results, found at position {data_store_pos}"  # noqa: E501
+            )
+
+        # Step 5: Verify embedding regeneration on title update
+        # Get the original title_embedding
+        original_response = e2e_client.get(
+            f"/api/structure_nodes/{term_ids['Database']}"
+        )
+        assert original_response.status_code == 200
+        original_node = original_response.json()
+        original_title_embedding = original_node.get("title_embedding")
+        assert original_title_embedding is not None, (
+            "Original title_embedding should not be None"
+        )
+
+        # Update the title
+        update_data = {"title": "Relational Database System"}
+        update_response = e2e_client.put(
+            f"/api/structure_nodes/{term_ids['Database']}", json=update_data
+        )
+        assert update_response.status_code == 200, (
+            f"Failed to update node: {update_response.text}"
+        )
+
+        # Poll until the embedding is regenerated (should differ from original)
+        def embedding_updated():
+            response = e2e_client.get(
+                f"/api/structure_nodes/{term_ids['Database']}"
+            )
+            if response.status_code != 200:
+                return False
+            node = response.json()
+            new_title_embedding = node.get("title_embedding")
+            # Check if embedding has changed
+            return (
+                new_title_embedding is not None
+                and new_title_embedding != original_title_embedding
+            )
+
+        poll_until(
+            embedding_updated,
+            timeout=10.0,
+            error_message="Title embedding not regenerated after update",
+        )
+
+        # Verify the final state
+        final_response = e2e_client.get(
+            f"/api/structure_nodes/{term_ids['Database']}"
+        )
+        assert final_response.status_code == 200
+        final_node = final_response.json()
+        new_title_embedding = final_node.get("title_embedding")
+        assert new_title_embedding != original_title_embedding, (
+            "Title embedding should differ after updating the title"
+        )
+
+        # Step 6: Cleanup
+        # Delete in reverse dependency order
+        for term_id in term_ids.values():
+            e2e_client.delete(f"/api/structure_nodes/{term_id}")
+        e2e_client.delete(f"/api/structure_nodes/{domain_id}")
+        e2e_client.delete(f"/api/structure_nodes/{layer_id}")
 
     def test_baseline_change_event_tracking(self, e2e_client):
         """
