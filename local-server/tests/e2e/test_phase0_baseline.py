@@ -283,25 +283,27 @@ class TestPhase0BaselineTests:
         def embeddings_generated():
             response = e2e_client.get(f"/api/structure_nodes/{term_ids['Database']}")
             if response.status_code != 200:
-                return False
+                return (False, "Failed to retrieve node")
             node = response.json()
             # Check that embeddings exist and are valid
             title_emb = node.get("title_embedding")
             def_emb = node.get("definition_embedding")
             if title_emb is None or def_emb is None:
-                return False
+                return (False, "Embeddings not yet generated")
             # Verify embeddings are non-empty lists with actual float values
-            return (
+            if (
                 isinstance(title_emb, list)
                 and len(title_emb) > 0
                 and isinstance(def_emb, list)
                 and len(def_emb) > 0
-            )
+            ):
+                return (True, node)
+            return (False, "Embeddings exist but are empty or invalid")
 
         poll_until(
             embeddings_generated,
-            timeout=15.0,
-            error_message="Embeddings not generated within timeout",
+            timeout_seconds=15.0,
+            description="embeddings to be generated",
         )
 
         # Step 3: Assert embeddings are present and valid for all terms
@@ -418,19 +420,21 @@ class TestPhase0BaselineTests:
                 f"/api/structure_nodes/{term_ids['Database']}"
             )
             if response.status_code != 200:
-                return False
+                return (False, "Failed to retrieve node")
             node = response.json()
             new_title_embedding = node.get("title_embedding")
             # Check if embedding has changed
-            return (
+            if (
                 new_title_embedding is not None
                 and new_title_embedding != original_title_embedding
-            )
+            ):
+                return (True, new_title_embedding)
+            return (False, "Embedding has not been regenerated yet")
 
         poll_until(
             embedding_updated,
-            timeout=10.0,
-            error_message="Title embedding not regenerated after update",
+            timeout_seconds=10.0,
+            description="title embedding to be regenerated after update",
         )
 
         # Verify the final state

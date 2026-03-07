@@ -13,62 +13,43 @@ T = TypeVar("T")
 
 
 def poll_until(
-    condition: Callable[[], T],
-    timeout: float = 5.0,
-    timeout_seconds: Optional[float] = None,
-    interval: float = 0.1,
+    predicate: Callable[[], tuple[bool, Any]],
+    timeout_seconds: float = 30,
+    interval: float = 0.5,
     description: str = "condition",
-    error_message: Optional[str] = None,
-) -> T:
+) -> Any:
     """
-    Poll until a condition is met, with a timeout.
+    Poll a predicate function until it returns True or timeout.
 
-    This helper function repeatedly calls a condition function until it returns
-    a truthy value or the timeout is exceeded. Useful for waiting for asynchronous  # noqa: E501
-    operations or event processing to complete in E2E tests.
+    External services introduce latency. This helper replaces time.sleep with a polling
+    pattern that repeatedly calls a predicate function until it returns (True, result)
+    or the timeout is exceeded.
 
     Args:
-        condition: A callable that returns a truthy value when the condition is met  # noqa: E501
-        timeout: Maximum time to wait in seconds (default: 5.0)
-        timeout_seconds: Alias for timeout (for backward compatibility)
-        interval: Time to wait between poll attempts in seconds (default: 0.1)
-        description: Human-readable description for error messages
-        error_message: Custom error message (overrides default)
+        predicate: Callable that returns (success: bool, result: Any) tuple. Returns
+                   (True, result_value) when the condition is met, (False, result)
+                   otherwise.
+        timeout_seconds: Maximum wait time in seconds (default: 30)
+        interval: Seconds between polls (default: 0.5)
+        description: What we're waiting for (used in error messages)
 
     Returns:
-        The truthy value returned by the condition function
+        The result from the predicate call when success is True
 
     Raises:
-        TimeoutError: If the condition is not met within the timeout period
+        TimeoutError: If predicate never returns True within timeout_seconds
     """
-    # Handle both timeout and timeout_seconds parameters
-    effective_timeout = timeout_seconds if timeout_seconds is not None else timeout  # noqa: E501
-
-    start_time = time.time()
-    last_result: Any = None
-
-    while True:
-        try:
-            result = condition()
-            if result:
-                return result
-            last_result = result
-        except Exception as e:
-            # Log the exception but continue polling
-            last_result = e
-
-        # Check if timeout exceeded
-        elapsed = time.time() - start_time
-        if elapsed >= effective_timeout:
-            if error_message:
-                raise TimeoutError(error_message)
-            raise TimeoutError(
-                f"Timeout waiting for {description} after {effective_timeout:.1f}s. "  # noqa: E501
-                f"Last result: {last_result}"
-            )
-
-        # Wait before next attempt
+    deadline = time.time() + timeout_seconds
+    last_result = None
+    while time.time() < deadline:
+        success, last_result = predicate()
+        if success:
+            return last_result
         time.sleep(interval)
+    raise TimeoutError(
+        f"Timed out after {timeout_seconds}s waiting for {description}. "
+        f"Last result: {last_result}"
+    )
 
 
 def create_test_hierarchy(
