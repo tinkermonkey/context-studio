@@ -143,6 +143,9 @@ class TestPhase0BaselineTests:
         assert list_links_response.status_code == 200
         links_data = list_links_response.json()
         # links_data is a paginated response with {"data": [...], "total": N, ...}
+        assert isinstance(links_data, dict), "Response should be a dict"
+        assert "data" in links_data, "Response should have 'data' key"
+        assert isinstance(links_data["data"], list), "Response 'data' should be a list"
         assert len(links_data["data"]) >= 1, "Should have at least one link from Relational Database"  # noqa: E501
 
         # Step 7: Verify semantic search returns "Database" in top results
@@ -171,15 +174,13 @@ class TestPhase0BaselineTests:
         assert "Database" in search_titles, (
             f"'Database' should be in search results. Got: {search_titles}"
         )
-        # Verify search correctness: "Database" should rank higher than unrelated terms
+        # Verify search correctness: "Database" should rank in top 3 results
+        # This validates search quality for the Phase 0 regression gate
         database_pos = search_titles.index("Database")
-        for i, title in enumerate(search_titles):
-            if title == "SQL" or title == "Index":
-                # Related terms should rank near "Database"
-                assert abs(i - database_pos) < 5, (
-                    f"Related term '{title}' should rank close to 'Database' "
-                    f"(Database at {database_pos}, {title} at {i})"
-                )
+        assert database_pos < 3, (
+            f"'Database' should rank in top 3 results for semantic search "
+            f"(got position {database_pos})"
+        )
 
         # Step 8: Verify delete operations in reverse dependency order
         # Delete all links first
@@ -848,6 +849,7 @@ class TestPhase0BaselineTests:
         # Verify hierarchy was created successfully
         assert layer_id is not None
         assert domain_id is not None
+        assert len(hierarchy["term_ids"]) == 2
 
         # Step 2: Create a predicate with all optional fields
         predicate_data = {
