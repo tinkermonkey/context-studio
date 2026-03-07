@@ -181,7 +181,7 @@ def clean_tables(e2e_app):
         # Re-enable foreign key checks
         cleanup_session.execute(text("PRAGMA foreign_keys = ON"))
         cleanup_session.commit()
-    except Exception as e:
+    except Exception:
         cleanup_session.rollback()
         # Log the error so it's visible in test output, not hidden like print() is
         logger.exception(
