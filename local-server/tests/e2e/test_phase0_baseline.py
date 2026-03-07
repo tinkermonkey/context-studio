@@ -19,8 +19,12 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(
 
 import pytest  # noqa: E402
 
-from tests.e2e.helpers import poll_until  # noqa: E402
-from tests.e2e.test_data import STABLE_CONCEPTS  # noqa: E402
+from tests.e2e.helpers import poll_until, create_test_hierarchy  # noqa: E402
+from tests.e2e.test_data import (  # noqa: E402
+    STABLE_TAXONOMY,
+    STABLE_PREDICATES,
+    STABLE_RELATIONSHIPS,
+)
 
 
 @pytest.mark.e2e
@@ -43,32 +47,13 @@ class TestPhase0BaselineTests:
         The test uses stable test data to ensure reproducible results.
         """
         # Step 1: Create full taxonomy hierarchy using stable test data
-        from tests.e2e.helpers import create_test_hierarchy
-
         hierarchy = create_test_hierarchy(
             e2e_client,
-            layer_title="Computer Science",
-            layer_definition="The study of computation and information",
-            scheme_title="Data Management",
-            scheme_definition="Technologies and methods for storing and retrieving data",  # noqa: E501
-            classes=[
-                {
-                    "title": "Database",
-                    "definition": "An organized collection of structured information",
-                },
-                {
-                    "title": "Relational Database",
-                    "definition": "A database based on the relational model of data",
-                },
-                {
-                    "title": "SQL",
-                    "definition": "Structured Query Language for managing relational databases",  # noqa: E501
-                },
-                {
-                    "title": "Index",
-                    "definition": "A data structure that improves the speed of data retrieval",  # noqa: E501
-                },
-            ],
+            layer_title=STABLE_TAXONOMY["layer"]["title"],
+            layer_definition=STABLE_TAXONOMY["layer"]["definition"],
+            scheme_title=STABLE_TAXONOMY["scheme"]["title"],
+            scheme_definition=STABLE_TAXONOMY["scheme"]["definition"],
+            classes=STABLE_TAXONOMY["classes"],
         )
 
         layer_id = hierarchy["layer_id"]
@@ -112,8 +97,6 @@ class TestPhase0BaselineTests:
         assert "Index" in term_titles
 
         # Step 4: Create predicates for relationships
-        from tests.e2e.test_data import STABLE_PREDICATES
-
         predicates = {}
         for predicate_def in STABLE_PREDICATES:
             predicate_data = {
@@ -131,54 +114,26 @@ class TestPhase0BaselineTests:
 
         # Step 5: Create relationships (links) using predicates
         link_ids = []
-
-        # Link 1: Relational Database is_a Database
-        link1_data = {
-            "source_node_id": term_ids["Relational Database"],
-            "target_node_id": term_ids["Database"],
-            "predicate": "Is A",
-            "predicate_id": predicates["is_a"],
-        }
-        link1_response = e2e_client.post(
-            "/api/structure_nodes/links", json=link1_data
-        )
-        assert link1_response.status_code == 201, (
-            f"Failed to create link1: {link1_response.text}"
-        )
-        link1 = link1_response.json()
-        link_ids.append(link1["id"])
-
-        # Link 2: SQL used_by Relational Database
-        link2_data = {
-            "source_node_id": term_ids["SQL"],
-            "target_node_id": term_ids["Relational Database"],
-            "predicate": "Used By",
-            "predicate_id": predicates["used_by"],
-        }
-        link2_response = e2e_client.post(
-            "/api/structure_nodes/links", json=link2_data
-        )
-        assert link2_response.status_code == 201, (
-            f"Failed to create link2: {link2_response.text}"
-        )
-        link2 = link2_response.json()
-        link_ids.append(link2["id"])
-
-        # Link 3: Index part_of Database
-        link3_data = {
-            "source_node_id": term_ids["Index"],
-            "target_node_id": term_ids["Database"],
-            "predicate": "Part Of",
-            "predicate_id": predicates["part_of"],
-        }
-        link3_response = e2e_client.post(
-            "/api/structure_nodes/links", json=link3_data
-        )
-        assert link3_response.status_code == 201, (
-            f"Failed to create link3: {link3_response.text}"
-        )
-        link3 = link3_response.json()
-        link_ids.append(link3["id"])
+        for source_title, target_title, predicate_identifier in STABLE_RELATIONSHIPS:
+            # Get the predicate title from STABLE_PREDICATES
+            predicate_def = next(
+                p for p in STABLE_PREDICATES
+                if p["identifier"] == predicate_identifier
+            )
+            link_data = {
+                "source_node_id": term_ids[source_title],
+                "target_node_id": term_ids[target_title],
+                "predicate": predicate_def["title"],
+                "predicate_id": predicates[predicate_identifier],
+            }
+            link_response = e2e_client.post(
+                "/api/structure_nodes/links", json=link_data
+            )
+            assert link_response.status_code == 201, (
+                f"Failed to create link from {source_title} to {target_title}: {link_response.text}"  # noqa: E501
+            )
+            link = link_response.json()
+            link_ids.append(link["id"])
 
         # Step 6: Verify list-links endpoint
         list_links_response = e2e_client.get(
@@ -191,6 +146,7 @@ class TestPhase0BaselineTests:
         # Step 7: Verify semantic search returns "Database" in top results
         search_data = {
             "query": "organized collection of data",
+            "node_type": "term",
             "limit": 10,
         }
         search_response = e2e_client.post(
@@ -205,12 +161,14 @@ class TestPhase0BaselineTests:
         )
 
         # "Database" should appear in the top results (before unrelated terms like "Firewall")
-        if len(search_results) > 0:
-            search_titles = [result.get("title") for result in search_results]
-            # At least "Database" should be in results
-            assert "Database" in search_titles, (
-                f"'Database' should be in search results. Got: {search_titles}"
-            )
+        assert len(search_results) > 0, (
+            "Search should return at least one result"
+        )
+        search_titles = [result.get("title") for result in search_results]
+        # "Database" should be in results since its definition matches the search query
+        assert "Database" in search_titles, (
+            f"'Database' should be in search results. Got: {search_titles}"
+        )
 
         # Step 8: Verify delete operations in reverse dependency order
         # Delete all links first
