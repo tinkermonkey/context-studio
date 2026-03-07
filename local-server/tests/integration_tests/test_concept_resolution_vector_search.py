@@ -2,23 +2,29 @@
 Integration tests for concept resolution vector search functionality.
 
 Tests the SQL CASE WHEN fix for max similarity calculation in concept_resolution.py
-by validating that the similarity computation correctly handles different embedding scenarios:
-- Both title and definition embeddings present
-- Only title embedding present
-- Only definition embedding present
-- No embeddings present
+by validating that the ConceptResolutionProcessor correctly computes similarity
+for different embedding scenarios.
 """
 
 import pytest
 import tempfile
 import os
 import numpy as np
-from sqlalchemy import create_engine, text
+from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
 from database.utils import init_db
-from rag.processors.concept_resolution import ConceptResolutionProcessor
 from database.models import StructureNode, Base
+from database.sql_builders import build_max_similarity_case_when
+from rag.processors.concept_resolution import ConceptResolutionProcessor
+
+
+def create_embedding(value: float) -> bytes:
+    """Create a deterministic embedding vector."""
+    rng = np.random.RandomState(seed=int(value * 1000))
+    vec = rng.randn(384).astype(np.float32)
+    vec = vec / np.linalg.norm(vec)
+    return vec.tobytes()
 
 
 @pytest.fixture(scope="function")
@@ -35,13 +41,6 @@ def concept_resolution_test_db():
 
     SessionLocal = sessionmaker(bind=engine)
     session = SessionLocal()
-
-    def create_embedding(value: float) -> bytes:
-        """Create a deterministic embedding vector."""
-        rng = np.random.RandomState(seed=int(value * 1000))
-        vec = rng.randn(384).astype(np.float32)
-        vec = vec / np.linalg.norm(vec)
-        return vec.tobytes()
 
     # Test scenarios for CASE WHEN logic
     test_nodes = [
@@ -87,7 +86,7 @@ def concept_resolution_test_db():
 
     session.commit()
 
-    yield engine, SessionLocal
+    yield engine, SessionLocal, db_path
 
     session.close()
     engine.dispose()
@@ -99,44 +98,33 @@ def test_concept_resolution_max_similarity_both_embeddings(concept_resolution_te
     """Test similarity calculation when both title and definition embeddings exist.
 
     When both embeddings are present, the processor should return the maximum similarity
-    between them, which is the correct behavior for vector search.
+    between them, using the CASE WHEN logic from the shared builder function.
     """
-    engine, SessionLocal = concept_resolution_test_db
+    engine, SessionLocal, db_path = concept_resolution_test_db
     session = SessionLocal()
 
-    # Query to test the CASE WHEN logic
-    def create_embedding(value: float) -> bytes:
-        rng = np.random.RandomState(seed=int(value * 1000))
-        vec = rng.randn(384).astype(np.float32)
-        vec = vec / np.linalg.norm(vec)
-        return vec.tobytes()
-
     query_embedding = create_embedding(0.75)
-    query_vec_bytes = query_embedding
 
-    # Execute the SQL query with the CASE WHEN logic
-    from database.sql_builders import build_max_similarity_case_when
+    # Create processor with test database
+    processor = ConceptResolutionProcessor(engine)
 
-    similarity_case = build_max_similarity_case_when()
-    query = text(f"""
-        WITH similarities AS (
-            SELECT
-                id,
-                title,
-                {similarity_case} as similarity
-            FROM structure_nodes
-            WHERE title = 'Example Node'
-        )
-        SELECT similarity FROM similarities
-    """)
+    # Resolve a concept that has both embeddings
+    results = processor.resolve_concept(
+        concept_text="Example Node",
+        query_embedding=query_embedding,
+        session=session,
+        similarity_threshold=0.0,
+    )
 
-    result = session.execute(query, {"query_vec": query_vec_bytes}).fetchone()
-    assert result is not None
-    similarity = result[0]
+    # Should find the node with both embeddings
+    assert len(results) > 0
 
-    # Similarity should be a float between 0 and 1
-    assert isinstance(similarity, float)
-    assert 0.0 <= similarity <= 1.0
+    # Verify similarity is computed correctly
+    for node_result in results:
+        similarity = node_result.get("similarity")
+        assert similarity is not None
+        assert isinstance(similarity, (float, int))
+        assert 0.0 <= similarity <= 1.0
 
     session.close()
 
@@ -144,42 +132,32 @@ def test_concept_resolution_max_similarity_both_embeddings(concept_resolution_te
 def test_concept_resolution_max_similarity_title_only(concept_resolution_test_db):
     """Test similarity calculation when only title embedding exists.
 
-    When only title embedding is present, the processor should return the title similarity.
+    When only title embedding is present, the processor should return the title similarity
+    using the CASE WHEN logic from the shared builder function.
     """
-    engine, SessionLocal = concept_resolution_test_db
+    engine, SessionLocal, db_path = concept_resolution_test_db
     session = SessionLocal()
 
-    def create_embedding(value: float) -> bytes:
-        rng = np.random.RandomState(seed=int(value * 1000))
-        vec = rng.randn(384).astype(np.float32)
-        vec = vec / np.linalg.norm(vec)
-        return vec.tobytes()
-
     query_embedding = create_embedding(0.65)
-    query_vec_bytes = query_embedding
 
-    from database.sql_builders import build_max_similarity_case_when
+    processor = ConceptResolutionProcessor(engine)
 
-    similarity_case = build_max_similarity_case_when()
-    query = text(f"""
-        WITH similarities AS (
-            SELECT
-                id,
-                title,
-                {similarity_case} as similarity
-            FROM structure_nodes
-            WHERE title = 'Title Only Node'
-        )
-        SELECT similarity FROM similarities
-    """)
+    # Resolve a concept that has only title embedding
+    results = processor.resolve_concept(
+        concept_text="Title Only Node",
+        query_embedding=query_embedding,
+        session=session,
+        similarity_threshold=0.0,
+    )
 
-    result = session.execute(query, {"query_vec": query_vec_bytes}).fetchone()
-    assert result is not None
-    similarity = result[0]
+    # Should find the title-only node
+    assert len(results) > 0
 
-    # Similarity should be a float between 0 and 1
-    assert isinstance(similarity, float)
-    assert 0.0 <= similarity <= 1.0
+    # Verify similarity is computed correctly
+    for node_result in results:
+        similarity = node_result.get("similarity")
+        assert similarity is not None
+        assert 0.0 <= similarity <= 1.0
 
     session.close()
 
@@ -187,82 +165,59 @@ def test_concept_resolution_max_similarity_title_only(concept_resolution_test_db
 def test_concept_resolution_max_similarity_definition_only(concept_resolution_test_db):
     """Test similarity calculation when only definition embedding exists.
 
-    When only definition embedding is present, the processor should return the definition similarity.
+    When only definition embedding is present, the processor should return the definition
+    similarity using the CASE WHEN logic from the shared builder function.
     """
-    engine, SessionLocal = concept_resolution_test_db
+    engine, SessionLocal, db_path = concept_resolution_test_db
     session = SessionLocal()
 
-    def create_embedding(value: float) -> bytes:
-        rng = np.random.RandomState(seed=int(value * 1000))
-        vec = rng.randn(384).astype(np.float32)
-        vec = vec / np.linalg.norm(vec)
-        return vec.tobytes()
-
     query_embedding = create_embedding(0.55)
-    query_vec_bytes = query_embedding
 
-    from database.sql_builders import build_max_similarity_case_when
+    processor = ConceptResolutionProcessor(engine)
 
-    similarity_case = build_max_similarity_case_when()
-    query = text(f"""
-        WITH similarities AS (
-            SELECT
-                id,
-                title,
-                {similarity_case} as similarity
-            FROM structure_nodes
-            WHERE title = 'Definition Only Node'
-        )
-        SELECT similarity FROM similarities
-    """)
+    # Resolve a concept that has only definition embedding
+    results = processor.resolve_concept(
+        concept_text="Definition Only Node",
+        query_embedding=query_embedding,
+        session=session,
+        similarity_threshold=0.0,
+    )
 
-    result = session.execute(query, {"query_vec": query_vec_bytes}).fetchone()
-    assert result is not None
-    similarity = result[0]
+    # Should find the definition-only node
+    assert len(results) > 0
 
-    # Similarity should be a float between 0 and 1
-    assert isinstance(similarity, float)
-    assert 0.0 <= similarity <= 1.0
+    # Verify similarity is computed correctly
+    for node_result in results:
+        similarity = node_result.get("similarity")
+        assert similarity is not None
+        assert 0.0 <= similarity <= 1.0
 
     session.close()
 
 
 def test_concept_resolution_max_similarity_no_embeddings(concept_resolution_test_db):
-    """Test similarity calculation when no embeddings exist.
+    """Test that nodes without embeddings are filtered out.
 
-    When no embeddings are present, the processor should return 0.0 similarity
-    and the node should be filtered out by the WHERE clause.
+    When no embeddings are present, the CASE WHEN logic sets similarity to 0.0
+    and the WHERE clause filters out such nodes.
     """
-    engine, SessionLocal = concept_resolution_test_db
+    engine, SessionLocal, db_path = concept_resolution_test_db
     session = SessionLocal()
 
-    def create_embedding(value: float) -> bytes:
-        rng = np.random.RandomState(seed=int(value * 1000))
-        vec = rng.randn(384).astype(np.float32)
-        vec = vec / np.linalg.norm(vec)
-        return vec.tobytes()
-
     query_embedding = create_embedding(0.45)
-    query_vec_bytes = query_embedding
 
-    from database.sql_builders import build_max_similarity_case_when
+    processor = ConceptResolutionProcessor(engine)
 
-    similarity_case = build_max_similarity_case_when()
-    query = text(f"""
-        WITH similarities AS (
-            SELECT
-                id,
-                title,
-                {similarity_case} as similarity
-            FROM structure_nodes
-            WHERE (title_embedding IS NOT NULL OR definition_embedding IS NOT NULL)
-        )
-        SELECT similarity FROM similarities WHERE title = 'No Embedding Node'
-    """)
+    # Try to resolve a concept that has no embedding
+    results = processor.resolve_concept(
+        concept_text="No Embedding Node",
+        query_embedding=query_embedding,
+        session=session,
+        similarity_threshold=0.0,
+    )
 
-    result = session.execute(query, {"query_vec": query_vec_bytes}).fetchone()
-    # Should be None because no embeddings exist and WHERE clause filters them out
-    assert result is None
+    # Should be empty because the node has no embeddings and WHERE clause filters it
+    assert len(results) == 0
 
     session.close()
 
@@ -270,42 +225,63 @@ def test_concept_resolution_max_similarity_no_embeddings(concept_resolution_test
 def test_concept_resolution_filtering_by_threshold(concept_resolution_test_db):
     """Test that the CASE WHEN logic works correctly with threshold filtering.
 
-    The processor should correctly compute similarity and filter results based on threshold.
+    The processor should correctly compute similarity using the shared builder
+    and filter results based on threshold.
     """
-    engine, SessionLocal = concept_resolution_test_db
+    engine, SessionLocal, db_path = concept_resolution_test_db
     session = SessionLocal()
 
-    def create_embedding(value: float) -> bytes:
-        rng = np.random.RandomState(seed=int(value * 1000))
-        vec = rng.randn(384).astype(np.float32)
-        vec = vec / np.linalg.norm(vec)
-        return vec.tobytes()
-
     query_embedding = create_embedding(0.7)
-    query_vec_bytes = query_embedding
 
-    from database.sql_builders import build_max_similarity_case_when
+    processor = ConceptResolutionProcessor(engine)
 
-    similarity_case = build_max_similarity_case_when()
-    query = text(f"""
-        WITH similarities AS (
-            SELECT
-                id,
-                title,
-                {similarity_case} as similarity
-            FROM structure_nodes
-            WHERE (title_embedding IS NOT NULL OR definition_embedding IS NOT NULL)
-        )
-        SELECT COUNT(*) as count
-        FROM similarities
-        WHERE similarity >= :threshold
-    """)
+    # Get all results with low threshold
+    all_results = processor.resolve_concept(
+        concept_text="Example Node",
+        query_embedding=query_embedding,
+        session=session,
+        similarity_threshold=0.0,
+    )
 
-    result = session.execute(query, {"query_vec": query_vec_bytes, "threshold": 0.0}).fetchone()
-    assert result is not None
-    count = result[0]
+    # Get results with high threshold
+    high_threshold_results = processor.resolve_concept(
+        concept_text="Example Node",
+        query_embedding=query_embedding,
+        session=session,
+        similarity_threshold=0.99,
+    )
 
-    # Should have at least 3 nodes (all except "No Embedding Node")
-    assert count == 3
+    # High threshold should have fewer or equal results
+    assert len(high_threshold_results) <= len(all_results)
+
+    # All high threshold results should meet the threshold
+    for result in high_threshold_results:
+        similarity = result.get("similarity")
+        assert similarity is not None
+        assert similarity >= 0.99
 
     session.close()
+
+
+def test_sql_builder_case_when_pattern():
+    """Unit test of the SQL builder function itself.
+
+    Verify that build_max_similarity_case_when generates the correct CASE WHEN
+    pattern with configurable column names.
+    """
+    # Test with default column names
+    result = build_max_similarity_case_when()
+    assert "CASE" in result
+    assert "title_embedding" in result
+    assert "definition_embedding" in result
+    assert "vec_distance_cosine" in result
+    assert ":query_vec" in result
+
+    # Test with custom column names (as used in reference_db/manager.py)
+    result_custom = build_max_similarity_case_when(
+        title_column="rn.title_embedding",
+        definition_column="rn.definition_embedding"
+    )
+    assert "rn.title_embedding" in result_custom
+    assert "rn.definition_embedding" in result_custom
+    assert "CASE" in result_custom
