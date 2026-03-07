@@ -764,10 +764,12 @@ class ReferenceManager:
                     CASE
                         -- Both embeddings present: compute max similarity
                         WHEN rn.title_embedding IS NOT NULL AND rn.definition_embedding IS NOT NULL THEN
-                            MAX(
-                                (1.0 - vec_distance_cosine(rn.title_embedding, :query_vec)),
-                                (1.0 - vec_distance_cosine(rn.definition_embedding, :query_vec))
-                            )
+                            CASE
+                                WHEN (1.0 - vec_distance_cosine(rn.title_embedding, :query_vec)) >=
+                                     (1.0 - vec_distance_cosine(rn.definition_embedding, :query_vec))
+                                THEN (1.0 - vec_distance_cosine(rn.title_embedding, :query_vec))
+                                ELSE (1.0 - vec_distance_cosine(rn.definition_embedding, :query_vec))
+                            END
                         -- Only title embedding: use title similarity
                         WHEN rn.title_embedding IS NOT NULL THEN
                             (1.0 - vec_distance_cosine(rn.title_embedding, :query_vec))
@@ -1154,10 +1156,12 @@ class ReferenceManager:
                     CASE
                         -- Both embeddings present: compute max similarity
                         WHEN ep.title_embedding IS NOT NULL AND ep.definition_embedding IS NOT NULL THEN
-                            MAX(
-                                (1.0 - vec_distance_cosine(ep.title_embedding, :query_vec)),
-                                (1.0 - vec_distance_cosine(ep.definition_embedding, :query_vec))
-                            )
+                            CASE
+                                WHEN (1.0 - vec_distance_cosine(ep.title_embedding, :query_vec)) >=
+                                     (1.0 - vec_distance_cosine(ep.definition_embedding, :query_vec))
+                                THEN (1.0 - vec_distance_cosine(ep.title_embedding, :query_vec))
+                                ELSE (1.0 - vec_distance_cosine(ep.definition_embedding, :query_vec))
+                            END
                         -- Only title embedding: use title similarity
                         WHEN ep.title_embedding IS NOT NULL THEN
                             (1.0 - vec_distance_cosine(ep.title_embedding, :query_vec))

@@ -223,10 +223,12 @@ class KGContextProcessor:
                             definition,
                             CASE
                                 WHEN title_embedding IS NOT NULL AND definition_embedding IS NOT NULL THEN
-                                    MAX(
-                                        (1.0 - vec_distance_cosine(title_embedding, :query_vec)),
-                                        (1.0 - vec_distance_cosine(definition_embedding, :query_vec))
-                                    )
+                                    CASE
+                                        WHEN (1.0 - vec_distance_cosine(title_embedding, :query_vec)) >=
+                                             (1.0 - vec_distance_cosine(definition_embedding, :query_vec))
+                                        THEN (1.0 - vec_distance_cosine(title_embedding, :query_vec))
+                                        ELSE (1.0 - vec_distance_cosine(definition_embedding, :query_vec))
+                                    END
                                 WHEN title_embedding IS NOT NULL THEN
                                     (1.0 - vec_distance_cosine(title_embedding, :query_vec))
                                 WHEN definition_embedding IS NOT NULL THEN

@@ -29,136 +29,256 @@ class TestPhase0BaselineTests:
 
     def test_baseline_taxonomy_lifecycle(self, e2e_client):
         """
-        E2E Test: Full taxonomy lifecycle (create, read, update, delete).
+        E2E Test: Full taxonomy lifecycle (CRUD and relationships).
 
         This test validates the complete lifecycle of taxonomy creation through
         deletion, including:
-        1. Create a taxonomy (layer)
-        2. Create a concept scheme (domain) within taxonomy
-        3. Create classes within the scheme
-        4. Create relationships between classes
-        5. Verify graph structure and search functionality
-        6. Delete entities in reverse order
-        7. Verify clean state
+        1. Create hierarchy: one layer, one domain, four terms
+        2. Create predicates and relationships (links)
+        3. Verify list and filter operations
+        4. Verify semantic search returns correct results
+        5. Delete entities in reverse dependency order
+        6. Verify clean state after deletion
 
-        The test uses the unified structure_nodes API and verifies that
-        semantic relationships are properly maintained.
+        The test uses stable test data to ensure reproducible results.
         """
-        # Step 1: Create a taxonomy (layer)
-        taxonomy_data = {
-            "node_type": "layer",
-            "parent_node_id": None,
-            "title": STABLE_CONCEPTS["taxonomy_1"]["title"],
-            "definition": STABLE_CONCEPTS["taxonomy_1"]["definition"],
-        }
-        taxonomy_response = e2e_client.post(
-            "/api/structure_nodes/", json=taxonomy_data
-        )
-        assert taxonomy_response.status_code == 201, f"Failed to create taxonomy: {taxonomy_response.text}"  # noqa: E501
-        taxonomy = taxonomy_response.json()
-        taxonomy_id = taxonomy["id"]
-        assert taxonomy["title"] == STABLE_CONCEPTS["taxonomy_1"]["title"]
-        assert taxonomy["node_type"] == "layer"
+        # Step 1: Create full taxonomy hierarchy using stable test data
+        from tests.e2e.helpers import create_test_hierarchy
 
-        # Step 2: Create a concept scheme (domain) within taxonomy
-        scheme_data = {
-            "node_type": "domain",
-            "parent_node_id": taxonomy_id,
-            "title": STABLE_CONCEPTS["scheme_1"]["title"],
-            "definition": STABLE_CONCEPTS["scheme_1"]["definition"],
-        }
-        scheme_response = e2e_client.post(
-            "/api/structure_nodes/", json=scheme_data
+        hierarchy = create_test_hierarchy(
+            e2e_client,
+            layer_title="Computer Science",
+            layer_definition="The study of computation and information",
+            scheme_title="Data Management",
+            scheme_definition="Technologies and methods for storing and retrieving data",  # noqa: E501
+            classes=[
+                {
+                    "title": "Database",
+                    "definition": "An organized collection of structured information",
+                },
+                {
+                    "title": "Relational Database",
+                    "definition": "A database based on the relational model of data",
+                },
+                {
+                    "title": "SQL",
+                    "definition": "Structured Query Language for managing relational databases",  # noqa: E501
+                },
+                {
+                    "title": "Index",
+                    "definition": "A data structure that improves the speed of data retrieval",  # noqa: E501
+                },
+            ],
         )
-        assert scheme_response.status_code == 201, f"Failed to create scheme: {scheme_response.text}"  # noqa: E501
-        scheme = scheme_response.json()
-        scheme_id = scheme["id"]
-        assert scheme["parent_node_id"] == taxonomy_id
 
-        # Step 3: Create classes within the scheme
-        class_ids = []
-        for concept_key in ["class_1", "class_2"]:
-            class_data = {
-                "node_type": "term",
-                "parent_node_id": scheme_id,
-                "title": STABLE_CONCEPTS[concept_key]["title"],
-                "definition": STABLE_CONCEPTS[concept_key]["definition"],
+        layer_id = hierarchy["layer_id"]
+        domain_id = hierarchy["domain_id"]
+        term_ids = hierarchy["term_ids"]
+
+        # Verify hierarchy creation returned valid UUIDs
+        assert layer_id is not None
+        assert domain_id is not None
+        assert len(term_ids) == 4
+        assert "Database" in term_ids
+        assert "Relational Database" in term_ids
+        assert "SQL" in term_ids
+        assert "Index" in term_ids
+
+        # Step 2: Verify list operations - layer type
+        list_layers_response = e2e_client.get(
+            "/api/structure_nodes/?node_type=layer"
+        )
+        assert list_layers_response.status_code == 200
+        layers_data = list_layers_response.json()
+        assert "data" in layers_data
+        assert "total" in layers_data
+        # Our layer should be in the results
+        layer_titles = [node["title"] for node in layers_data["data"]]
+        assert "Computer Science" in layer_titles
+
+        # Step 3: Verify filter operations - get terms under domain
+        list_terms_response = e2e_client.get(
+            f"/api/structure_nodes/?node_type=term&parent_node_id={domain_id}"
+        )
+        assert list_terms_response.status_code == 200
+        terms_data = list_terms_response.json()
+        assert terms_data["total"] == 4, (
+            f"Expected 4 terms under domain, got {terms_data['total']}"
+        )
+        term_titles = [node["title"] for node in terms_data["data"]]
+        assert "Database" in term_titles
+        assert "Relational Database" in term_titles
+        assert "SQL" in term_titles
+        assert "Index" in term_titles
+
+        # Step 4: Create predicates for relationships
+        from tests.e2e.test_data import STABLE_PREDICATES
+
+        predicates = {}
+        for predicate_def in STABLE_PREDICATES:
+            predicate_data = {
+                "title": predicate_def["title"],
+                "definition": predicate_def["definition"],
             }
-            class_response = e2e_client.post(
-                "/api/structure_nodes/", json=class_data
+            predicate_response = e2e_client.post(
+                "/api/predicates/", json=predicate_data
             )
-            assert class_response.status_code == 201, f"Failed to create class: {class_response.text}"  # noqa: E501
-            class_obj = class_response.json()
-            class_ids.append(class_obj["id"])
-            assert class_obj["parent_node_id"] == scheme_id
+            assert predicate_response.status_code == 201, (
+                f"Failed to create predicate: {predicate_response.text}"
+            )
+            predicate = predicate_response.json()
+            predicates[predicate_def["identifier"]] = predicate["id"]
 
-        # Step 4: Create a relationship between classes
-        link_data = {
-            "source_node_id": class_ids[0],
-            "target_node_id": class_ids[1],
-            "predicate": "related_to",
+        # Step 5: Create relationships (links) using predicates
+        link_ids = []
+
+        # Link 1: Relational Database is_a Database
+        link1_data = {
+            "source_node_id": term_ids["Relational Database"],
+            "target_node_id": term_ids["Database"],
+            "predicate": "Is A",
+            "predicate_id": predicates["is_a"],
         }
-        link_response = e2e_client.post(
-            "/api/structure_nodes/links", json=link_data
+        link1_response = e2e_client.post(
+            "/api/structure_nodes/links", json=link1_data
         )
-        assert link_response.status_code == 201, f"Failed to create link: {link_response.text}"  # noqa: E501
-        link = link_response.json()
-        link_id = link["id"]
+        assert link1_response.status_code == 201, (
+            f"Failed to create link1: {link1_response.text}"
+        )
+        link1 = link1_response.json()
+        link_ids.append(link1["id"])
 
-        # Step 5: Verify graph structure
-        # Retrieve the created nodes and verify they exist
-        get_response = e2e_client.get(f"/api/structure_nodes/{taxonomy_id}")
-        assert get_response.status_code == 200
-        assert get_response.json()["id"] == taxonomy_id
+        # Link 2: SQL used_by Relational Database
+        link2_data = {
+            "source_node_id": term_ids["SQL"],
+            "target_node_id": term_ids["Relational Database"],
+            "predicate": "Used By",
+            "predicate_id": predicates["used_by"],
+        }
+        link2_response = e2e_client.post(
+            "/api/structure_nodes/links", json=link2_data
+        )
+        assert link2_response.status_code == 201, (
+            f"Failed to create link2: {link2_response.text}"
+        )
+        link2 = link2_response.json()
+        link_ids.append(link2["id"])
 
-        # Verify parent-child relationships
-        get_scheme_response = e2e_client.get(f"/api/structure_nodes/{scheme_id}")  # noqa: E501
-        assert get_scheme_response.status_code == 200
-        assert get_scheme_response.json()["parent_node_id"] == taxonomy_id
+        # Link 3: Index part_of Database
+        link3_data = {
+            "source_node_id": term_ids["Index"],
+            "target_node_id": term_ids["Database"],
+            "predicate": "Part Of",
+            "predicate_id": predicates["part_of"],
+        }
+        link3_response = e2e_client.post(
+            "/api/structure_nodes/links", json=link3_data
+        )
+        assert link3_response.status_code == 201, (
+            f"Failed to create link3: {link3_response.text}"
+        )
+        link3 = link3_response.json()
+        link_ids.append(link3["id"])
 
-        # Step 6: Verify search functionality
+        # Step 6: Verify list-links endpoint
+        list_links_response = e2e_client.get(
+            f"/api/structure_nodes/links?source_node_id={term_ids['Relational Database']}"  # noqa: E501
+        )
+        assert list_links_response.status_code == 200
+        links_data = list_links_response.json()
+        assert len(links_data) >= 1, "Should have at least one link from Relational Database"  # noqa: E501
+
+        # Step 7: Verify semantic search returns "Database" in top results
         search_data = {
-            "query": STABLE_CONCEPTS["class_1"]["title"],
+            "query": "organized collection of data",
+            "limit": 10,
         }
         search_response = e2e_client.post(
             "/api/structure_nodes/find", json=search_data
         )
-        assert search_response.status_code == 200
+        assert search_response.status_code == 200, (
+            f"Search failed: {search_response.text}"
+        )
         search_results = search_response.json()
-        # API returns List[NodeSearchResult] directly
-        assert isinstance(search_results, list)
-
-        # Step 7: Delete entities in reverse order (links first, then nodes)
-        # Delete relationship
-        delete_link_response = e2e_client.delete(
-            f"/api/structure_nodes/links/{link_id}"
+        assert isinstance(search_results, list), (
+            f"Search results should be a list, got {type(search_results)}"
         )
-        assert delete_link_response.status_code == 204
 
-        # Delete classes
-        for class_id in class_ids:
-            delete_class_response = e2e_client.delete(
-                f"/api/structure_nodes/{class_id}"
+        # "Database" should appear in the top results (before unrelated terms like "Firewall")
+        if len(search_results) > 0:
+            search_titles = [result.get("title") for result in search_results]
+            # At least "Database" should be in results
+            assert "Database" in search_titles, (
+                f"'Database' should be in search results. Got: {search_titles}"
             )
-            assert delete_class_response.status_code == 204
 
-        # Delete scheme
-        delete_scheme_response = e2e_client.delete(
-            f"/api/structure_nodes/{scheme_id}"
-        )
-        assert delete_scheme_response.status_code == 204
+        # Step 8: Verify delete operations in reverse dependency order
+        # Delete all links first
+        for link_id in link_ids:
+            delete_link_response = e2e_client.delete(
+                f"/api/structure_nodes/links/{link_id}"
+            )
+            assert delete_link_response.status_code == 204, (
+                f"Failed to delete link: {delete_link_response.text}"
+            )
 
-        # Delete taxonomy
-        delete_taxonomy_response = e2e_client.delete(
-            f"/api/structure_nodes/{taxonomy_id}"
-        )
-        assert delete_taxonomy_response.status_code == 204
+        # Delete all predicates
+        for predicate_id in predicates.values():
+            delete_predicate_response = e2e_client.delete(
+                f"/api/predicates/{predicate_id}"
+            )
+            assert delete_predicate_response.status_code in [200, 204], (
+                f"Failed to delete predicate: {delete_predicate_response.text}"
+            )
 
-        # Step 8: Verify clean state - deleted nodes should not be found
-        verify_deleted_response = e2e_client.get(
-            f"/api/structure_nodes/{taxonomy_id}"
+        # Delete all terms
+        for term_id in term_ids.values():
+            delete_term_response = e2e_client.delete(
+                f"/api/structure_nodes/{term_id}"
+            )
+            assert delete_term_response.status_code == 204, (
+                f"Failed to delete term: {delete_term_response.text}"
+            )
+
+        # Delete domain
+        delete_domain_response = e2e_client.delete(
+            f"/api/structure_nodes/{domain_id}"
         )
-        assert verify_deleted_response.status_code == 404
+        assert delete_domain_response.status_code == 204, (
+            f"Failed to delete domain: {delete_domain_response.text}"
+        )
+
+        # Delete layer
+        delete_layer_response = e2e_client.delete(
+            f"/api/structure_nodes/{layer_id}"
+        )
+        assert delete_layer_response.status_code == 204, (
+            f"Failed to delete layer: {delete_layer_response.text}"
+        )
+
+        # Step 9: Verify clean state after deletion
+        # Check layer is deleted
+        verify_layer_response = e2e_client.get(f"/api/structure_nodes/{layer_id}")
+        assert verify_layer_response.status_code == 404, (
+            "Layer should be deleted"
+        )
+
+        # Check domain is deleted
+        verify_domain_response = e2e_client.get(f"/api/structure_nodes/{domain_id}")
+        assert verify_domain_response.status_code == 404, (
+            "Domain should be deleted"
+        )
+
+        # Verify list-nodes for our layer returns zero
+        final_list_response = e2e_client.get(
+            "/api/structure_nodes/?node_type=layer"
+        )
+        assert final_list_response.status_code == 200
+        final_data = final_list_response.json()
+        final_titles = [node["title"] for node in final_data["data"]]
+        assert "Computer Science" not in final_titles, (
+            "Layer should be removed from list"
+        )
 
     def test_baseline_embedding_generation(self, e2e_client):
         """

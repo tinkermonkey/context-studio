@@ -226,19 +226,21 @@ def search_nodes(
                     title_embedding,
                     definition_embedding,
                     CASE
-                        WHEN title_embedding IS NOT NULL AND definition_embedding IS NOT NULL THEN  # noqa: E501
-                            MAX(
-                                (1.0 - vec_distance_cosine(title_embedding, :query_vec)),  # noqa: E501
-                                (1.0 - vec_distance_cosine(definition_embedding, :query_vec))  # noqa: E501
-                            )
+                        WHEN title_embedding IS NOT NULL AND definition_embedding IS NOT NULL THEN
+                            CASE
+                                WHEN (1.0 - vec_distance_cosine(title_embedding, :query_vec)) >=
+                                     (1.0 - vec_distance_cosine(definition_embedding, :query_vec))
+                                THEN (1.0 - vec_distance_cosine(title_embedding, :query_vec))
+                                ELSE (1.0 - vec_distance_cosine(definition_embedding, :query_vec))
+                            END
                         WHEN title_embedding IS NOT NULL THEN
-                            (1.0 - vec_distance_cosine(title_embedding, :query_vec))  # noqa: E501
+                            (1.0 - vec_distance_cosine(title_embedding, :query_vec))
                         WHEN definition_embedding IS NOT NULL THEN
-                            (1.0 - vec_distance_cosine(definition_embedding, :query_vec))  # noqa: E501
+                            (1.0 - vec_distance_cosine(definition_embedding, :query_vec))
                         ELSE 0.0
                     END as similarity
                 FROM structure_nodes
-                WHERE (title_embedding IS NOT NULL OR definition_embedding IS NOT NULL)  # noqa: E501
+                WHERE (title_embedding IS NOT NULL OR definition_embedding IS NOT NULL)
                 {type_filter}
             )
             SELECT
