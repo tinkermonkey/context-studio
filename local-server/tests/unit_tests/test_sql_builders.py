@@ -1,11 +1,11 @@
 """
-Integration tests for concept resolution vector search functionality.
+Unit tests for SQL builder functions.
 
-Tests the SQL CASE WHEN fix for max similarity calculation in concept_resolution.py
-by validating the build_max_similarity_case_when SQL builder function.
+Tests the build_max_similarity_case_when SQL builder function which is used
+across multiple modules to generate the CASE WHEN pattern for max similarity
+calculation across different embedding scenarios.
 """
 
-import pytest
 from database.sql_builders import build_max_similarity_case_when
 
 
@@ -13,7 +13,7 @@ def test_sql_builder_case_when_default_columns():
     """Unit test of the SQL builder function with default column names.
 
     Verify that build_max_similarity_case_when generates the correct CASE WHEN
-    pattern for concept_resolution.py usage.
+    pattern with default column names.
     """
     result = build_max_similarity_case_when()
     assert "CASE" in result
@@ -39,6 +39,23 @@ def test_sql_builder_case_when_custom_columns():
     assert "vec_distance_cosine" in result
 
 
+def test_sql_builder_case_when_with_qualified_columns():
+    """Unit test of the SQL builder function with table-qualified column names.
+
+    Verify that build_max_similarity_case_when generates the correct CASE WHEN
+    pattern with table-qualified columns (e.g., sn.title_embedding).
+    """
+    result = build_max_similarity_case_when(
+        title_column="sn.title_embedding",
+        definition_column="sn.definition_embedding"
+    )
+    assert "sn.title_embedding" in result
+    assert "sn.definition_embedding" in result
+    assert "CASE" in result
+    assert "vec_distance_cosine" in result
+    assert ":query_vec" in result
+
+
 def test_sql_builder_case_when_structure():
     """Unit test to verify CASE WHEN structure generates correctly.
 
@@ -55,3 +72,15 @@ def test_sql_builder_case_when_structure():
     assert "WHEN title_embedding IS NOT NULL THEN" in result
     assert "WHEN definition_embedding IS NOT NULL" in result
     assert "ELSE 0.0" in result
+
+
+def test_sql_builder_parameter_injection():
+    """Unit test to verify parameter binding is correct.
+
+    Verify that the builder generates proper parameterized SQL
+    using :query_vec for the query embedding binding.
+    """
+    result = build_max_similarity_case_when()
+    assert ":query_vec" in result
+    # Should appear multiple times (once for each embedding case)
+    assert result.count(":query_vec") >= 2
