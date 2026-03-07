@@ -58,15 +58,38 @@ WORKDIR /workspace/context-studio
 # Copy only dependency file for installation
 COPY local-server/requirements.txt /tmp/backend-requirements.txt
 
-# Install Python dependencies (includes sqlite-vec==0.1.6 from requirements.txt)
+# Upgrade pip for better timeout handling and dependency resolution
+RUN pip install --no-cache-dir --timeout=300 pip --upgrade
+
+# Pre-install langchain ecosystem with pinned compatible versions to prevent
+# pip backtracking (langchain>=0.3.0 causes combinatorial version resolution)
+RUN pip install --no-cache-dir --timeout=600 --retries=5 \
+    langchain==0.3.25 \
+    langchain-core==0.3.83 \
+    langchain-openai==0.3.12 \
+    langchain-community==0.3.16
+
+# Install large Python packages first in a separate layer for better caching and
+# to avoid timeout issues with pip downloading large packages (torch is ~900MB)
+RUN pip install --no-cache-dir --timeout=600 --retries=5 \
+    torch==2.7.1 \
+    transformers==4.53.1 \
+    sentence-transformers==5.0.0 \
+    spacy==3.8.11 \
+    scipy==1.16.0 \
+    scikit-learn==1.7.0
+
+# Install remaining Python dependencies (includes sqlite-vec==0.1.6)
 # The sqlite-vec pip package provides a pre-built vec0.so for the current architecture
-RUN pip install --no-cache-dir -r /tmp/backend-requirements.txt && \
+RUN pip install --no-cache-dir --timeout=600 --retries=5 \
+    -r /tmp/backend-requirements.txt && \
     rm /tmp/backend-requirements.txt && \
     python3 -c "import sqlite3, sqlite_vec; conn = sqlite3.connect(':memory:'); conn.enable_load_extension(True); sqlite_vec.load(conn); print('sqlite-vec', conn.execute('SELECT vec_version()').fetchone()[0], 'verified')"
 
 # Install Python development tools and type stubs for mypy
 COPY local-server/requirements-dev.txt /tmp/requirements-dev.txt
-RUN pip install --no-cache-dir -r /tmp/requirements-dev.txt && \
+RUN pip install --no-cache-dir --timeout=600 --retries=5 \
+    -r /tmp/requirements-dev.txt && \
     rm /tmp/requirements-dev.txt
 
 # Copy mypy configuration (handles packages without type stubs)
