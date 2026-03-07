@@ -274,8 +274,8 @@ class TestPhase0BaselineTests:
             ],
         )
 
-        layer_id = hierarchy["layer_id"]
-        domain_id = hierarchy["domain_id"]
+        hierarchy["layer_id"]
+        hierarchy["domain_id"]
         term_ids = hierarchy["term_ids"]
 
         # Step 2: Verify embeddings were generated for all terms
@@ -827,8 +827,8 @@ class TestPhase0BaselineTests:
             ],
         )
 
-        layer_id = hierarchy["layer_id"]
-        domain_id = hierarchy["domain_id"]
+        hierarchy["layer_id"]
+        hierarchy["domain_id"]
         term_1_id = hierarchy["term_ids"]["Predicate Test Term 1"]
         term_2_id = hierarchy["term_ids"]["Predicate Test Term 2"]
 
