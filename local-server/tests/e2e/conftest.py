@@ -157,8 +157,8 @@ def clean_tables(e2e_app):
     Autouse function-scoped fixture that truncates all tables after each test.
 
     This ensures that a mid-test failure does not corrupt subsequent tests
-    within the same module. Tables are truncated in reverse dependency order
-    to respect foreign key constraints.
+    within the same module. Foreign key checks are disabled during cleanup
+    to allow unrestricted deletion, then re-enabled afterward.
 
     The fixture yields before the test runs and cleans up after it completes,
     regardless of test outcome (pass/fail).

@@ -460,7 +460,7 @@ class TestPhase0BaselineTests:
         E2E Test: Change event recording and chronological ordering.
 
         This test validates that:
-        1. Every create operation generates exactly one create event
+        1. Create operations generate change events (may include automatic child events)
         2. Every update operation generates exactly one update event
         3. Events have correct record_type, event_type, and data snapshots
         4. Events are returned in chronological order (newest first)
@@ -469,7 +469,8 @@ class TestPhase0BaselineTests:
         7. All event timestamps are valid ISO8601 strings
 
         The test creates 8 entities (1 layer, 1 domain, 3 terms, 1 predicate, 2 links),
-        then verifies event structure and ordering using delta-based counting.
+        generating 15 total events, then verifies event structure and ordering using
+        delta-based counting.
         """
         # Step 1: Capture initial change event count (for delta-based isolation)
         initial_events_response = e2e_client.get(

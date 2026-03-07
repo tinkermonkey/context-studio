@@ -10,7 +10,7 @@ and produces stable, reproducible results across test runs.
 
 from typing import Any, Dict
 
-# Stable taxonomy used consistently across all four baseline tests
+# Stable taxonomy used in baseline tests
 # These concepts produce predictable semantic embeddings
 STABLE_TAXONOMY: Dict[str, Any] = {
     "layer": {
