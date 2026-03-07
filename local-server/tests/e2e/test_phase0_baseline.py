@@ -797,125 +797,233 @@ class TestPhase0BaselineTests:
 
     def test_baseline_predicate_management(self, e2e_client):
         """
-        E2E Test: Predicate definition and relationship management.
+        E2E Test: Predicate definition, uniqueness, and relationship management.
 
         This test validates that:
-        1. Property definitions can be created
-        2. Relationships can be created using predicates
-        3. Predicate references are maintained
-        4. Duplicate predicates are rejected
-        5. Predicate deletion cascades appropriately
+        1. Predicates are created with correct `identifier`, `title`, `definition` fields
+        2. Optional `mapping` field is persisted in the response
+        3. Predicates are retrievable by ID
+        4. Uniqueness is enforced on both `identifier` and `title`
+        5. Links can reference predicates via `predicate_id`
+        6. Current cascade/orphan behavior after predicate deletion is documented
+        7. Deleted predicates return 404 on GET
 
-        The test creates predicates, uses them in relationships, and verifies
-        proper enforcement of constraints.
+        The test creates predicates, uses them in relationships, verifies constraints,
+        and documents the baseline behavior when predicates are deleted while links
+        still reference them (Phase 2 will formalize cascade rules).
         """
-        # Step 1: Create a taxonomy and scheme for predicate testing
-        taxonomy_data = {
-            "node_type": "layer",
-            "parent_node_id": None,
-            "title": "Predicate Test Taxonomy",
-            "definition": "Taxonomy for predicate management testing",
-        }
-        taxonomy_response = e2e_client.post(
-            "/api/structure_nodes/", json=taxonomy_data
+        # Step 1: Create a test hierarchy (layer → domain → terms)
+        hierarchy = create_test_hierarchy(
+            e2e_client,
+            layer_title="Predicate Management Test",
+            layer_definition="Layer for predicate management testing",
+            scheme_title="Predicate Test Scheme",
+            scheme_definition="Scheme for predicate testing",
+            classes=[
+                {
+                    "title": "Predicate Test Term 1",
+                    "definition": "First term for predicate testing",
+                },
+                {
+                    "title": "Predicate Test Term 2",
+                    "definition": "Second term for predicate testing",
+                },
+            ],
         )
-        assert taxonomy_response.status_code == 201
-        taxonomy_id = taxonomy_response.json()["id"]
 
-        scheme_data = {
-            "node_type": "domain",
-            "parent_node_id": taxonomy_id,
-            "title": "Predicate Test Scheme",
-            "definition": "Scheme for predicate testing",
-        }
-        scheme_response = e2e_client.post(
-            "/api/structure_nodes/", json=scheme_data
-        )
-        assert scheme_response.status_code == 201
-        scheme_id = scheme_response.json()["id"]
+        layer_id = hierarchy["layer_id"]
+        domain_id = hierarchy["domain_id"]
+        term_1_id = hierarchy["term_ids"]["Predicate Test Term 1"]
+        term_2_id = hierarchy["term_ids"]["Predicate Test Term 2"]
 
-        # Step 2: Create two classes for relationships
-        class_data_1 = {
-            "node_type": "term",
-            "parent_node_id": scheme_id,
-            "title": "Predicate Test Class 1",
-            "definition": "First class for predicate testing",
-        }
-        class_response_1 = e2e_client.post(
-            "/api/structure_nodes/", json=class_data_1
-        )
-        assert class_response_1.status_code == 201
-        class_id_1 = class_response_1.json()["id"]
-
-        class_data_2 = {
-            "node_type": "term",
-            "parent_node_id": scheme_id,
-            "title": "Predicate Test Class 2",
-            "definition": "Second class for predicate testing",
-        }
-        class_response_2 = e2e_client.post(
-            "/api/structure_nodes/", json=class_data_2
-        )
-        assert class_response_2.status_code == 201
-        class_id_2 = class_response_2.json()["id"]
-
-        # Step 3: Create a predicate
+        # Step 2: Create a predicate with all optional fields
         predicate_data = {
-            "title": "test_predicate_001",
-            "definition": "A test predicate for baseline testing",
+            "title": "Is Part Of",
+            "identifier": "is_part_of",
+            "definition": "Indicates a part-whole relationship",
+            "mapping": {
+                "source": "conceptnet",
+                "uri": "/r/PartOf"
+            },
         }
         predicate_response = e2e_client.post(
             "/api/predicates/", json=predicate_data
         )
-        assert predicate_response.status_code == 201
+        assert predicate_response.status_code == 201, (
+            f"Failed to create predicate: {predicate_response.text}"
+        )
         predicate = predicate_response.json()
         predicate_id = predicate["id"]
 
-        # Step 4: Create a relationship using the predicate
+        # Verify predicate creation response fields
+        assert predicate["id"] is not None, "Predicate ID must not be None"
+        assert predicate["identifier"] == "is_part_of", (
+            f"Expected identifier 'is_part_of', got {predicate['identifier']}"
+        )
+        assert predicate["title"] == "Is Part Of", (
+            f"Expected title 'Is Part Of', got {predicate['title']}"
+        )
+        assert predicate["definition"] == "Indicates a part-whole relationship", (
+            f"Expected definition, got {predicate['definition']}"
+        )
+        # Verify mapping is persisted
+        assert predicate["mapping"] is not None, "Mapping field must not be None"
+        assert predicate["mapping"]["source"] == "conceptnet", (
+            f"Expected mapping.source 'conceptnet', got {predicate['mapping'].get('source')}"
+        )
+        assert predicate["mapping"]["uri"] == "/r/PartOf", (
+            f"Expected mapping.uri '/r/PartOf', got {predicate['mapping'].get('uri')}"
+        )
+        # Verify timestamps are present
+        assert "date_created" in predicate, "date_created field must be present"
+        assert "date_modified" in predicate, "date_modified field must be present"
+
+        # Step 3: Verify predicate is retrievable by ID
+        get_predicate_response = e2e_client.get(f"/api/predicates/{predicate_id}")
+        assert get_predicate_response.status_code == 200, (
+            f"Failed to retrieve predicate: {get_predicate_response.text}"
+        )
+        predicate_retrieved = get_predicate_response.json()
+        assert predicate_retrieved["id"] == predicate_id
+        assert predicate_retrieved["title"] == "Is Part Of"
+        assert predicate_retrieved["identifier"] == "is_part_of"
+        assert predicate_retrieved["mapping"]["source"] == "conceptnet"
+
+        # Step 4: Test duplicate identifier rejection
+        duplicate_identifier_data = {
+            "title": "Different Title",
+            "identifier": "is_part_of",  # Same identifier
+            "definition": "Different definition",
+        }
+        duplicate_identifier_response = e2e_client.post(
+            "/api/predicates/", json=duplicate_identifier_data
+        )
+        assert duplicate_identifier_response.status_code in [400, 409], (
+            f"Duplicate identifier should be rejected with 400 or 409, "
+            f"got {duplicate_identifier_response.status_code}"
+        )
+
+        # Step 5: Test duplicate title rejection
+        duplicate_title_data = {
+            "title": "Is Part Of",  # Same title
+            "identifier": "is_part_of_duplicate",
+            "definition": "Different definition",
+        }
+        duplicate_title_response = e2e_client.post(
+            "/api/predicates/", json=duplicate_title_data
+        )
+        assert duplicate_title_response.status_code in [400, 409], (
+            f"Duplicate title should be rejected with 400 or 409, "
+            f"got {duplicate_title_response.status_code}"
+        )
+
+        # Step 6: Create another predicate for additional testing
+        second_predicate_data = {
+            "title": "Used By",
+            "identifier": "used_by",
+            "definition": "Indicates usage relationship",
+        }
+        second_predicate_response = e2e_client.post(
+            "/api/predicates/", json=second_predicate_data
+        )
+        assert second_predicate_response.status_code == 201
+        second_predicate_id = second_predicate_response.json()["id"]
+
+        # Step 7: Create a link referencing the first predicate
         link_data = {
-            "source_node_id": class_id_1,
-            "target_node_id": class_id_2,
-            "predicate": "test_predicate_001",
+            "source_node_id": term_1_id,
+            "target_node_id": term_2_id,
+            "predicate": "Is Part Of",
             "predicate_id": predicate_id,
         }
         link_response = e2e_client.post(
             "/api/structure_nodes/links", json=link_data
         )
-        assert link_response.status_code == 201
+        assert link_response.status_code == 201, (
+            f"Failed to create link: {link_response.text}"
+        )
         link = link_response.json()
         link_id = link["id"]
 
-        # Step 5: Verify predicate reference
-        get_predicate_response = e2e_client.get(f"/api/predicates/{predicate_id}")  # noqa: E501
-        assert get_predicate_response.status_code == 200
-        predicate_retrieved = get_predicate_response.json()
-        assert predicate_retrieved["title"] == "test_predicate_001"
-
-        # Step 6: Test duplicate predicate rejection
-        duplicate_predicate_data = {
-            "title": "test_predicate_001",  # Same title
-            "definition": "Duplicate predicate",
-        }
-        duplicate_response = e2e_client.post(
-            "/api/predicates/", json=duplicate_predicate_data
+        # Step 8: Verify link references the predicate correctly
+        list_links_response = e2e_client.get(
+            f"/api/structure_nodes/links?source_node_id={term_1_id}"
         )
-        # Duplicate creation must fail with 400 or 409, not succeed with 201
-        assert duplicate_response.status_code in [400, 409], f"Duplicate predicate should be rejected, got {duplicate_response.status_code}"  # noqa: E501
+        assert list_links_response.status_code == 200
+        response_data = list_links_response.json()
+        # Handle both paginated response (with 'data' field) and direct list
+        links = response_data["data"] if isinstance(response_data, dict) and "data" in response_data else response_data
+        assert len(links) >= 1, "Should have at least one link"
+        found_link = False
+        for link_item in links:
+            if link_item["id"] == link_id:
+                found_link = True
+                assert link_item["predicate_id"] == predicate_id, (
+                    f"Link predicate_id should be {predicate_id}, "
+                    f"got {link_item.get('predicate_id')}"
+                )
+                break
+        assert found_link, f"Link {link_id} not found in list"
 
-        # Step 7: Delete link and verify
-        delete_link_response = e2e_client.delete(
-            f"/api/structure_nodes/links/{link_id}"
+        # Step 9: Test predicate deletion when unused (second predicate)
+        delete_second_predicate_response = e2e_client.delete(
+            f"/api/predicates/{second_predicate_id}"
         )
-        assert delete_link_response.status_code == 204
+        assert delete_second_predicate_response.status_code == 200, (
+            f"Failed to delete unused predicate: {delete_second_predicate_response.text}"
+        )
 
-        # Step 8: Cleanup entities
-        e2e_client.delete(f"/api/structure_nodes/{class_id_1}")
-        e2e_client.delete(f"/api/structure_nodes/{class_id_2}")
-        e2e_client.delete(f"/api/structure_nodes/{scheme_id}")
-        e2e_client.delete(f"/api/structure_nodes/{taxonomy_id}")
+        # Verify deleted predicate returns 404
+        verify_deleted_response = e2e_client.get(
+            f"/api/predicates/{second_predicate_id}"
+        )
+        assert verify_deleted_response.status_code == 404, (
+            f"Deleted predicate should return 404, got {verify_deleted_response.status_code}"
+        )
 
-        # Delete predicate
+        # Step 10: Test predicate deletion while a link still references it
+        # According to the issue, we document the baseline behavior (Phase 2 will formalize)
         delete_predicate_response = e2e_client.delete(
             f"/api/predicates/{predicate_id}"
         )
-        assert delete_predicate_response.status_code in [204, 200]
+        # Based on the API code, deletion should fail if predicate is in use
+        assert delete_predicate_response.status_code == 400, (
+            f"Expected 400 when deleting predicate in use, "
+            f"got {delete_predicate_response.status_code}. "
+            f"Response: {delete_predicate_response.text}"
+        )
+
+        # Verify predicate still exists (deletion was prevented)
+        verify_predicate_response = e2e_client.get(f"/api/predicates/{predicate_id}")
+        assert verify_predicate_response.status_code == 200, (
+            "Predicate deletion should have been prevented; predicate should still exist"
+        )
+
+        # Step 11: Now delete the link, then delete the predicate
+        delete_link_response = e2e_client.delete(
+            f"/api/structure_nodes/links/{link_id}"
+        )
+        assert delete_link_response.status_code == 204, (
+            f"Failed to delete link: {delete_link_response.text}"
+        )
+
+        # Now delete the predicate (should succeed since it's no longer referenced)
+        delete_predicate_response = e2e_client.delete(
+            f"/api/predicates/{predicate_id}"
+        )
+        assert delete_predicate_response.status_code == 200, (
+            f"Failed to delete predicate after removing link: {delete_predicate_response.text}"
+        )
+
+        # Verify deleted predicate returns 404
+        verify_final_response = e2e_client.get(f"/api/predicates/{predicate_id}")
+        assert verify_final_response.status_code == 404, (
+            f"Deleted predicate should return 404, got {verify_final_response.status_code}"
+        )
+
+        # Step 12: Cleanup remaining entities
+        # Clean up in reverse dependency order
+        e2e_client.delete(f"/api/structure_nodes/{term_1_id}")
+        e2e_client.delete(f"/api/structure_nodes/{term_2_id}")
+        e2e_client.delete(f"/api/structure_nodes/{domain_id}")
+        e2e_client.delete(f"/api/structure_nodes/{layer_id}")
