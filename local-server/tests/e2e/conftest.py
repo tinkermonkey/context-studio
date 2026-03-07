@@ -9,6 +9,7 @@ Key fixtures:
 - clean_tables: Function-scoped autouse fixture that truncates all tables after each test
 """
 
+import logging
 import os
 import sys
 
@@ -28,6 +29,8 @@ from database.utils import (
 )
 from services.service_factory import ServiceFactory, set_service_factory
 from utils.event_processor import get_global_event_processor, set_global_event_processor
+
+logger = logging.getLogger(__name__)
 
 
 def create_e2e_database_with_migrations(tmp_path_factory):
@@ -93,27 +96,43 @@ def e2e_app(tmp_path_factory):
 
         yield app, engine, session_local
     finally:
-        # Cleanup
+        # Cleanup — log all exceptions to prevent silent failures that corrupt subsequent tests
+        cleanup_errors = []
+
+        # Clear service factory cache
         try:
             factory.clear_cache()
-        except Exception:
-            pass
+        except Exception as e:
+            error_msg = f"Failed to clear service factory cache: {e}"
+            logger.exception(error_msg)
+            cleanup_errors.append(error_msg)
 
         # Stop any running EventProcessor
-        global_processor = get_global_event_processor()
-        if global_processor:
-            try:
+        try:
+            global_processor = get_global_event_processor()
+            if global_processor:
                 global_processor.stop()
                 set_global_event_processor(None)
-            except Exception:
-                pass
+        except Exception as e:
+            error_msg = f"Failed to stop EventProcessor: {e}"
+            logger.exception(error_msg)
+            cleanup_errors.append(error_msg)
 
         # Delete the temporary database file
-        if os.path.exists(db_path):
-            try:
+        try:
+            if os.path.exists(db_path):
                 os.unlink(db_path)
-            except OSError:
-                pass
+        except OSError as e:
+            error_msg = f"Failed to delete temporary database file {db_path}: {e}"
+            logger.exception(error_msg)
+            cleanup_errors.append(error_msg)
+
+        # If any cleanup errors occurred, log a summary
+        if cleanup_errors:
+            logger.warning(
+                f"e2e_app fixture teardown had {len(cleanup_errors)} error(s): "
+                + " | ".join(cleanup_errors)
+            )
 
 
 @pytest.fixture(scope="module")
@@ -164,7 +183,10 @@ def clean_tables(e2e_app):
         cleanup_session.commit()
     except Exception as e:
         cleanup_session.rollback()
-        # Don't raise here — we want tests to continue even if cleanup partially fails
-        print(f"Warning: Error during E2E test cleanup: {e}")
+        # Log the error so it's visible in test output, not hidden like print() is
+        logger.exception(
+            "Cleanup failed during E2E test teardown. Subsequent tests may run "
+            "against dirty data. Please review the test module state."
+        )
     finally:
         cleanup_session.close()
