@@ -19,9 +19,11 @@ def _validate_column_name(column_name: str) -> None:
     if not column_name:
         raise ValueError("Column name cannot be empty")
 
-    # Pattern allows: letter or underscore start, followed by letters, numbers, underscores, dots
+    # Pattern ensures each dot-separated segment is itself a valid identifier.
+    # This prevents trailing dots (column.), consecutive dots (a..b), etc.
     # Examples: 'title_embedding', 'sn.title_embedding', 'rn.definition_embedding'
-    pattern = r'^[a-zA-Z_][a-zA-Z0-9_.]*$'
+    # Invalid: 'column.', 'a..b', 'table.', '.column'
+    pattern = r'^[a-zA-Z_][a-zA-Z0-9_]*(\.[a-zA-Z_][a-zA-Z0-9_]*)*$'
     if not re.match(pattern, column_name):
         raise ValueError(
             f"Invalid column name '{column_name}'. Column names must start with a letter or underscore "

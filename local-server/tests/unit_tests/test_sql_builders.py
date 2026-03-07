@@ -6,6 +6,8 @@ across multiple modules to generate the CASE WHEN pattern for max similarity
 calculation across different embedding scenarios.
 """
 
+import pytest
+
 from database.sql_builders import build_max_similarity_case_when
 
 
@@ -92,7 +94,6 @@ def test_sql_builder_invalid_column_empty():
     Verify that build_max_similarity_case_when rejects empty column names
     to prevent SQL injection or undefined column references.
     """
-    import pytest
     with pytest.raises(ValueError, match="Column name cannot be empty"):
         build_max_similarity_case_when(title_column="")
 
@@ -103,7 +104,6 @@ def test_sql_builder_invalid_column_leading_number():
     Verify that build_max_similarity_case_when rejects column names that
     start with numbers, which are not valid SQL identifiers.
     """
-    import pytest
     with pytest.raises(ValueError, match="Invalid column name"):
         build_max_similarity_case_when(title_column="123column")
 
@@ -115,7 +115,6 @@ def test_sql_builder_invalid_column_special_characters():
     special characters like semicolons, quotes, or parentheses that could
     enable SQL injection.
     """
-    import pytest
     with pytest.raises(ValueError, match="Invalid column name"):
         build_max_similarity_case_when(title_column="column; DROP TABLE")
 
@@ -132,9 +131,25 @@ def test_sql_builder_invalid_column_spaces():
     Verify that build_max_similarity_case_when rejects column names containing
     spaces, which must be quoted as identifiers in SQL.
     """
-    import pytest
     with pytest.raises(ValueError, match="Invalid column name"):
         build_max_similarity_case_when(title_column="my column")
+
+
+def test_sql_builder_invalid_column_trailing_dot():
+    """Unit test to verify column names with trailing or double dots are rejected.
+
+    Verify that build_max_similarity_case_when rejects malformed qualified names
+    like 'column.' (trailing dot) or 'a..b' (double dots) which are not valid
+    SQL identifiers.
+    """
+    with pytest.raises(ValueError, match="Invalid column name"):
+        build_max_similarity_case_when(title_column="column.")
+
+    with pytest.raises(ValueError, match="Invalid column name"):
+        build_max_similarity_case_when(title_column="a..b")
+
+    with pytest.raises(ValueError, match="Invalid column name"):
+        build_max_similarity_case_when(title_column=".column")
 
 
 def test_sql_builder_valid_unqualified_columns():
