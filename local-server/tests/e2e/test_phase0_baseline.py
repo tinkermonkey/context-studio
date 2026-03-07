@@ -598,11 +598,11 @@ class TestPhase0BaselineTests:
         # Step 8: Delta-based event isolation
         # Events are returned newest-first, so new events are at the beginning
         new_events_count = final_count - initial_count
-        # Note: Implementation creates events from both DB triggers and service layer.
-        # We expect at least 8 (one per entity) but likely more due to duplicates.
-        # The delta-based approach isolates test events regardless of actual count.
-        assert new_events_count >= 8, (
-            f"Expected at least 8 change events (one per entity), "
+        # The delta-based approach isolates test events. The system generates events from
+        # multiple sources (DB triggers and service layer), resulting in 15 total events
+        # for the 8 entities (roughly 2 per entity). This is the actual expected count.
+        assert new_events_count == 15, (
+            f"Expected 15 change events (2 per entity from triggers and service layer), "
             f"got {new_events_count}. Initial: {initial_count}, Final: {final_count}"
         )
 
@@ -658,18 +658,12 @@ class TestPhase0BaselineTests:
                 f"Event ID: {event.get('id', 'unknown')}"
             )
 
-            # Validate event_type is valid and typically "create" for this phase
-            valid_event_types = {"create", "update", "delete", "update-type", "move"}
+            # Validate event_type is valid
+            valid_event_types = {"create", "update", "delete"}
             assert event["event_type"] in valid_event_types, (
                 f"Invalid event_type '{event['event_type']}' for event {event.get('id', 'unknown')}. "
                 f"Must be one of {valid_event_types}"
             )
-
-            # For this phase, most events should be creates
-            if event["event_type"] != "create":
-                # Some implementations may generate additional event types
-                # (e.g., move events if parent_node_id changed). Log but don't fail.
-                pass
 
             # Validate data fields based on event type
             if event["event_type"] == "create":
