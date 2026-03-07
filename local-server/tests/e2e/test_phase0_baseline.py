@@ -215,7 +215,7 @@ class TestPhase0BaselineTests:
             f"Failed to delete layer: {delete_layer_response.text}"
         )
 
-        # Step 9: Verify clean state after deletion
+        # Verify clean state after deletion
         # Check layer is deleted
         verify_layer_response = e2e_client.get(f"/api/structure_nodes/{layer_id}")
         assert verify_layer_response.status_code == 404, (
@@ -447,13 +447,6 @@ class TestPhase0BaselineTests:
         assert new_title_embedding != original_title_embedding, (
             "Title embedding should differ after updating the title"
         )
-
-        # Step 6: Cleanup
-        # Delete in reverse dependency order
-        for term_id in term_ids.values():
-            e2e_client.delete(f"/api/structure_nodes/{term_id}")
-        e2e_client.delete(f"/api/structure_nodes/{domain_id}")
-        e2e_client.delete(f"/api/structure_nodes/{layer_id}")
 
     def test_baseline_change_event_tracking(self, e2e_client):
         """
@@ -798,15 +791,6 @@ class TestPhase0BaselineTests:
             "new_data should have updated title"
         )
 
-        # Step 13: Cleanup
-        for link_id in link_ids:
-            e2e_client.delete(f"/api/structure_nodes/links/{link_id}")
-        e2e_client.delete(f"/api/predicates/{predicate_id}")
-        for term_id in term_ids.values():
-            e2e_client.delete(f"/api/structure_nodes/{term_id}")
-        e2e_client.delete(f"/api/structure_nodes/{domain_id}")
-        e2e_client.delete(f"/api/structure_nodes/{layer_id}")
-
     def test_baseline_predicate_management(self, e2e_client):
         """
         E2E Test: Predicate definition, uniqueness, and relationship management.
@@ -1032,10 +1016,3 @@ class TestPhase0BaselineTests:
         assert verify_final_response.status_code == 404, (
             f"Deleted predicate should return 404, got {verify_final_response.status_code}"
         )
-
-        # Step 12: Cleanup remaining entities
-        # Clean up in reverse dependency order
-        e2e_client.delete(f"/api/structure_nodes/{term_1_id}")
-        e2e_client.delete(f"/api/structure_nodes/{term_2_id}")
-        e2e_client.delete(f"/api/structure_nodes/{domain_id}")
-        e2e_client.delete(f"/api/structure_nodes/{layer_id}")
