@@ -142,7 +142,8 @@ class TestPhase0BaselineTests:
         )
         assert list_links_response.status_code == 200
         links_data = list_links_response.json()
-        assert len(links_data) >= 1, "Should have at least one link from Relational Database"  # noqa: E501
+        # links_data is a paginated response with {"data": [...], "total": N, ...}
+        assert len(links_data["data"]) >= 1, "Should have at least one link from Relational Database"  # noqa: E501
 
         # Step 7: Verify semantic search returns "Database" in top results
         search_data = {
@@ -170,6 +171,15 @@ class TestPhase0BaselineTests:
         assert "Database" in search_titles, (
             f"'Database' should be in search results. Got: {search_titles}"
         )
+        # Verify search correctness: "Database" should rank higher than unrelated terms
+        database_pos = search_titles.index("Database")
+        for i, title in enumerate(search_titles):
+            if title == "SQL" or title == "Index":
+                # Related terms should rank near "Database"
+                assert abs(i - database_pos) < 5, (
+                    f"Related term '{title}' should rank close to 'Database' "
+                    f"(Database at {database_pos}, {title} at {i})"
+                )
 
         # Step 8: Verify delete operations in reverse dependency order
         # Delete all links first
@@ -274,9 +284,13 @@ class TestPhase0BaselineTests:
             ],
         )
 
-        hierarchy["layer_id"]
-        hierarchy["domain_id"]
+        layer_id = hierarchy["layer_id"]
+        domain_id = hierarchy["domain_id"]
         term_ids = hierarchy["term_ids"]
+        # Verify hierarchy was created successfully
+        assert layer_id is not None
+        assert domain_id is not None
+        assert len(term_ids) == 3
 
         # Step 2: Verify embeddings were generated for all terms
         # Poll until embeddings are available with proper validation
@@ -827,10 +841,13 @@ class TestPhase0BaselineTests:
             ],
         )
 
-        hierarchy["layer_id"]
-        hierarchy["domain_id"]
+        layer_id = hierarchy["layer_id"]
+        domain_id = hierarchy["domain_id"]
         term_1_id = hierarchy["term_ids"]["Predicate Test Term 1"]
         term_2_id = hierarchy["term_ids"]["Predicate Test Term 2"]
+        # Verify hierarchy was created successfully
+        assert layer_id is not None
+        assert domain_id is not None
 
         # Step 2: Create a predicate with all optional fields
         predicate_data = {
@@ -947,8 +964,17 @@ class TestPhase0BaselineTests:
         )
         assert list_links_response.status_code == 200
         response_data = list_links_response.json()
-        # Handle both paginated response (with 'data' field) and direct list
-        links = response_data["data"] if isinstance(response_data, dict) and "data" in response_data else response_data
+        # Response should be a paginated response with 'data', 'total', 'skip', 'limit'
+        assert isinstance(response_data, dict), (
+            f"Expected paginated response dict, got {type(response_data)}"
+        )
+        assert "data" in response_data, (
+            f"Expected 'data' key in response, got keys: {response_data.keys()}"
+        )
+        links = response_data["data"]
+        assert isinstance(links, list), (
+            f"Expected 'data' to be a list, got {type(links)}"
+        )
         assert len(links) >= 1, "Should have at least one link"
         found_link = False
         for link_item in links:
