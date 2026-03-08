@@ -10,26 +10,44 @@ import functools
 import time
 from typing import Callable, Any, Dict, List
 
+import pytest
 
-def retry_on_external_failure(max_retries: int = 2):
+
+# Transient exceptions that warrant retry: network failures, temporary service unavailability
+TRANSIENT_EXCEPTIONS = (
+    ConnectionError,
+    TimeoutError,
+    OSError,  # Covers network-related OSErrors
+)
+
+
+def retry_on_external_failure(max_retries: int = 2, delay: float = 5):
     """
     Decorator for retrying tests marked with @pytest.mark.reference on external failures.
 
     Tests that depend on external reference data sources may fail transiently due to
     network issues, temporary service unavailability, or rate limiting. This decorator
-    automatically retries the test if it fails with an exception, allowing transient
-    failures to be distinguished from real test failures.
+    automatically retries the test if it fails with a transient exception, allowing transient
+    failures to be distinguished from real test failures. Genuine test failures (AssertionError)
+    and programming bugs are never retried.
 
     Args:
         max_retries: Maximum number of retries after initial failure (default: 2).
                      Total attempts = 1 + max_retries.
+        delay: Seconds to wait between retries (default: 5). Allows external services
+               to recover before retrying.
 
     Example:
         @pytest.mark.reference
-        @retry_on_external_failure(max_retries=2)
+        @retry_on_external_failure(max_retries=2, delay=5)
         def test_reference_data_lookup():
-            # Test code that may fail transiently
+            # Test code that may fail transiently due to external service issues
             pass
+
+    Raises:
+        pytest.skip: If all retries are exhausted, the test is skipped to distinguish
+                     unavailable services from real test failures.
+        AssertionError: Genuine test failures are re-raised immediately without retry.
     """
     def decorator(func: Callable) -> Callable:
         @functools.wraps(func)
@@ -38,13 +56,22 @@ def retry_on_external_failure(max_retries: int = 2):
             for attempt in range(1 + max_retries):
                 try:
                     return func(*args, **kwargs)
-                except Exception as e:
+                except AssertionError:
+                    # Genuine test failures: re-raise immediately without retry
+                    raise
+                except TRANSIENT_EXCEPTIONS as e:
+                    # Transient external failure: may retry
                     last_exception = e
-                    # Retry unless this is the last attempt
                     if attempt < max_retries:
+                        time.sleep(delay)
                         continue
-            # All retries exhausted, raise the last exception
-            raise last_exception
+                    # All retries exhausted: skip test to distinguish from real failure
+                    pytest.skip(
+                        f"Skipped after {1 + max_retries} attempts due to "
+                        f"unavailable external service: {type(e).__name__}: {e}"
+                    )
+            # Should not reach here, but fail safely if no exception was raised
+            assert False, "Unexpected state in retry_on_external_failure"
         return wrapper
     return decorator
 
@@ -60,13 +87,15 @@ def poll_until(
 
     External services introduce latency. This helper replaces time.sleep with a polling
     pattern that repeatedly calls a predicate function until it returns (True, result)
-    or the timeout is exceeded. Transient exceptions (connection timeouts, temporary
-    server errors) are caught and retried rather than crashing the poll loop.
+    or the timeout is exceeded. Only transient exceptions (connection, timeouts) are
+    caught and retried; programming errors (TypeError, KeyError, AttributeError) are
+    raised immediately to surface bugs quickly rather than hanging until timeout.
 
     Args:
         predicate: Callable that returns (success: bool, result: Any) tuple. Returns
                    (True, result_value) when the condition is met, (False, result)
-                   otherwise. May raise transient exceptions (Exception).
+                   otherwise. May raise transient exceptions but should not raise
+                   programming errors (these indicate test bugs).
         timeout_seconds: Maximum wait time in seconds (default: 30)
         interval: Seconds between polls (default: 0.5)
         description: What we're waiting for (used in error messages)
@@ -75,7 +104,12 @@ def poll_until(
         The result from the predicate call when success is True
 
     Raises:
-        TimeoutError: If predicate never returns True within timeout_seconds
+        TimeoutError: If predicate never returns True within timeout_seconds and
+                      no programming errors occurred.
+        TypeError, KeyError, AttributeError: Programming errors in the predicate
+                      are raised immediately without retry.
+        ConnectionError, TimeoutError (from predicate): Transient external failures
+                      are retried until timeout.
     """
     deadline = time.time() + timeout_seconds
     last_result = None
@@ -85,12 +119,16 @@ def poll_until(
             success, last_result = predicate()
             if success:
                 return last_result
-        except Exception as e:
-            # Capture transient exceptions but continue retrying
+        except TRANSIENT_EXCEPTIONS as e:
+            # Transient external failure: capture but continue polling
             last_exception = e
+        except (TypeError, KeyError, AttributeError, ValueError, IndexError) as e:
+            # Programming error: re-raise immediately to surface the bug quickly
+            # rather than hanging until timeout
+            raise
         time.sleep(interval)
 
-    # Include exception info if we have it
+    # Timeout reached: include exception info if we have it
     error_msg = f"Timed out after {timeout_seconds}s waiting for {description}. Last result: {last_result}"
     if last_exception:
         error_msg += f". Last exception: {type(last_exception).__name__}: {last_exception}"
