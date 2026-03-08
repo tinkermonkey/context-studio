@@ -238,21 +238,68 @@ class Migration019(Migration):
 
     def _recreate_triggers_up(self, connection: Connection) -> None:
         """Recreate all triggers with updated table and column names for ontology_entities and relationships."""
+        # Drop old triggers on property_definitions (left from predicates rename) to avoid duplicates
+        logger.info("Dropping old triggers on property_definitions...")
+        connection.execute(text("DROP TRIGGER IF EXISTS trg_predicate_insert"))
+        connection.execute(text("DROP TRIGGER IF EXISTS trg_predicate_update"))
+        connection.execute(text("DROP TRIGGER IF EXISTS trg_predicate_delete"))
+        connection.execute(text("DROP TRIGGER IF EXISTS update_predicates_date_modified"))
+
         # Trigger for ontology_entities insert (was structure_node insert)
         connection.execute(text("""
             CREATE TRIGGER IF NOT EXISTS trg_ontology_entity_insert AFTER INSERT ON ontology_entities
             BEGIN
-              INSERT INTO change_events (id, record_type, record_id, change_type, created_at, processed)
-              VALUES (lower(hex(randomblob(16))), 'ontology_entity', NEW.id, 'insert', CURRENT_TIMESTAMP, 0);
+              INSERT INTO change_events (event_type, record_type, record_id, old_data, new_data, timestamp, processed)
+              VALUES ('create', 'ontology_entity', NEW.id, NULL,
+                      json_object('id', NEW.id, 'node_type', NEW.node_type, 'parent_entity_id', NEW.parent_entity_id,
+                                 'title', NEW.title, 'definition', NEW.definition, 'structural_predicate_id', NEW.structural_predicate_id,
+                                 'created_at', NEW.created_at, 'version', NEW.version, 'last_modified', NEW.last_modified),
+                      CURRENT_TIMESTAMP, 0);
             END
         """))
 
-        # Trigger for ontology_entities update (was structure_node update)
+        # Trigger for ontology_entities update (was structure_node update with sophisticated logic)
         connection.execute(text("""
             CREATE TRIGGER IF NOT EXISTS trg_ontology_entity_update AFTER UPDATE ON ontology_entities
             BEGIN
-              INSERT INTO change_events (id, record_type, record_id, change_type, created_at, processed)
-              VALUES (lower(hex(randomblob(16))), 'ontology_entity', NEW.id, 'update', CURRENT_TIMESTAMP, 0);
+              -- Generate update-type event if node_type changed
+              INSERT INTO change_events (event_type, record_type, record_id, old_data, new_data, timestamp, processed)
+              SELECT 'update-type', 'ontology_entity', NEW.id,
+                     json_object('id', OLD.id, 'node_type', OLD.node_type, 'parent_entity_id', OLD.parent_entity_id,
+                                'title', OLD.title, 'definition', OLD.definition, 'structural_predicate_id', OLD.structural_predicate_id,
+                                'created_at', OLD.created_at, 'version', OLD.version, 'last_modified', OLD.last_modified),
+                     json_object('id', NEW.id, 'node_type', NEW.node_type, 'parent_entity_id', NEW.parent_entity_id,
+                                'title', NEW.title, 'definition', NEW.definition, 'structural_predicate_id', NEW.structural_predicate_id,
+                                'created_at', NEW.created_at, 'version', NEW.version, 'last_modified', NEW.last_modified),
+                     CURRENT_TIMESTAMP, 0
+              WHERE OLD.node_type != NEW.node_type;
+
+              -- Generate move event if parent_entity_id changed
+              INSERT INTO change_events (event_type, record_type, record_id, old_data, new_data, timestamp, processed)
+              SELECT 'move', 'ontology_entity', NEW.id,
+                     json_object('id', OLD.id, 'node_type', OLD.node_type, 'parent_entity_id', OLD.parent_entity_id,
+                                'title', OLD.title, 'definition', OLD.definition, 'structural_predicate_id', OLD.structural_predicate_id,
+                                'created_at', OLD.created_at, 'version', OLD.version, 'last_modified', OLD.last_modified),
+                     json_object('id', NEW.id, 'node_type', NEW.node_type, 'parent_entity_id', NEW.parent_entity_id,
+                                'title', NEW.title, 'definition', NEW.definition, 'structural_predicate_id', NEW.structural_predicate_id,
+                                'created_at', NEW.created_at, 'version', NEW.version, 'last_modified', NEW.last_modified),
+                     CURRENT_TIMESTAMP, 0
+              WHERE (OLD.parent_entity_id IS NULL AND NEW.parent_entity_id IS NOT NULL)
+                 OR (OLD.parent_entity_id IS NOT NULL AND NEW.parent_entity_id IS NULL)
+                 OR (OLD.parent_entity_id != NEW.parent_entity_id);
+
+              -- Generate generic update event for other field changes
+              INSERT INTO change_events (event_type, record_type, record_id, old_data, new_data, timestamp, processed)
+              SELECT 'update', 'ontology_entity', NEW.id,
+                     json_object('id', OLD.id, 'node_type', OLD.node_type, 'parent_entity_id', OLD.parent_entity_id,
+                                'title', OLD.title, 'definition', OLD.definition, 'structural_predicate_id', OLD.structural_predicate_id,
+                                'created_at', OLD.created_at, 'version', OLD.version, 'last_modified', OLD.last_modified),
+                     json_object('id', NEW.id, 'node_type', NEW.node_type, 'parent_entity_id', NEW.parent_entity_id,
+                                'title', NEW.title, 'definition', NEW.definition, 'structural_predicate_id', NEW.structural_predicate_id,
+                                'created_at', NEW.created_at, 'version', NEW.version, 'last_modified', NEW.last_modified),
+                     CURRENT_TIMESTAMP, 0
+              WHERE OLD.node_type = NEW.node_type
+                AND (OLD.parent_entity_id IS NEW.parent_entity_id OR (OLD.parent_entity_id = NEW.parent_entity_id));
             END
         """))
 
@@ -260,8 +307,12 @@ class Migration019(Migration):
         connection.execute(text("""
             CREATE TRIGGER IF NOT EXISTS trg_ontology_entity_delete AFTER DELETE ON ontology_entities
             BEGIN
-              INSERT INTO change_events (id, record_type, record_id, change_type, created_at, processed)
-              VALUES (lower(hex(randomblob(16))), 'ontology_entity', OLD.id, 'delete', CURRENT_TIMESTAMP, 0);
+              INSERT INTO change_events (event_type, record_type, record_id, old_data, new_data, timestamp, processed)
+              VALUES ('delete', 'ontology_entity', OLD.id,
+                      json_object('id', OLD.id, 'node_type', OLD.node_type, 'parent_entity_id', OLD.parent_entity_id,
+                                 'title', OLD.title, 'definition', OLD.definition, 'structural_predicate_id', OLD.structural_predicate_id,
+                                 'created_at', OLD.created_at, 'version', OLD.version, 'last_modified', OLD.last_modified),
+                      NULL, CURRENT_TIMESTAMP, 0);
             END
         """))
 
@@ -269,8 +320,11 @@ class Migration019(Migration):
         connection.execute(text("""
             CREATE TRIGGER IF NOT EXISTS trg_relationship_insert AFTER INSERT ON relationships
             BEGIN
-              INSERT INTO change_events (id, record_type, record_id, change_type, created_at, processed)
-              VALUES (lower(hex(randomblob(16))), 'relationship', NEW.id, 'insert', CURRENT_TIMESTAMP, 0);
+              INSERT INTO change_events (event_type, record_type, record_id, old_data, new_data, timestamp, processed)
+              VALUES ('create', 'relationship', NEW.id, NULL,
+                      json_object('id', NEW.id, 'source_entity_id', NEW.source_entity_id, 'target_entity_id', NEW.target_entity_id,
+                                 'predicate', NEW.predicate, 'predicate_id', NEW.predicate_id, 'created_at', NEW.created_at),
+                      CURRENT_TIMESTAMP, 0);
             END
         """))
 
@@ -278,8 +332,13 @@ class Migration019(Migration):
         connection.execute(text("""
             CREATE TRIGGER IF NOT EXISTS trg_relationship_update AFTER UPDATE ON relationships
             BEGIN
-              INSERT INTO change_events (id, record_type, record_id, change_type, created_at, processed)
-              VALUES (lower(hex(randomblob(16))), 'relationship', NEW.id, 'update', CURRENT_TIMESTAMP, 0);
+              INSERT INTO change_events (event_type, record_type, record_id, old_data, new_data, timestamp, processed)
+              VALUES ('update', 'relationship', NEW.id,
+                      json_object('id', OLD.id, 'source_entity_id', OLD.source_entity_id, 'target_entity_id', OLD.target_entity_id,
+                                 'predicate', OLD.predicate, 'predicate_id', OLD.predicate_id, 'created_at', OLD.created_at),
+                      json_object('id', NEW.id, 'source_entity_id', NEW.source_entity_id, 'target_entity_id', NEW.target_entity_id,
+                                 'predicate', NEW.predicate, 'predicate_id', NEW.predicate_id, 'created_at', NEW.created_at),
+                      CURRENT_TIMESTAMP, 0);
             END
         """))
 
@@ -287,8 +346,11 @@ class Migration019(Migration):
         connection.execute(text("""
             CREATE TRIGGER IF NOT EXISTS trg_relationship_delete AFTER DELETE ON relationships
             BEGIN
-              INSERT INTO change_events (id, record_type, record_id, change_type, created_at, processed)
-              VALUES (lower(hex(randomblob(16))), 'relationship', OLD.id, 'delete', CURRENT_TIMESTAMP, 0);
+              INSERT INTO change_events (event_type, record_type, record_id, old_data, new_data, timestamp, processed)
+              VALUES ('delete', 'relationship', OLD.id,
+                      json_object('id', OLD.id, 'source_entity_id', OLD.source_entity_id, 'target_entity_id', OLD.target_entity_id,
+                                 'predicate', OLD.predicate, 'predicate_id', OLD.predicate_id, 'created_at', OLD.created_at),
+                      NULL, CURRENT_TIMESTAMP, 0);
             END
         """))
 
@@ -296,8 +358,12 @@ class Migration019(Migration):
         connection.execute(text("""
             CREATE TRIGGER IF NOT EXISTS trg_property_definition_insert AFTER INSERT ON property_definitions
             BEGIN
-              INSERT INTO change_events (id, record_type, record_id, change_type, created_at, processed)
-              VALUES (lower(hex(randomblob(16))), 'property_definition', NEW.id, 'insert', CURRENT_TIMESTAMP, 0);
+              INSERT INTO change_events (event_type, record_type, record_id, old_data, new_data, timestamp, processed)
+              VALUES ('create', 'property_definition', NEW.id, NULL,
+                      json_object('id', NEW.id, 'identifier', NEW.identifier, 'title', NEW.title,
+                                 'definition', NEW.definition, 'mapping', NEW.mapping,
+                                 'date_created', NEW.date_created, 'date_modified', NEW.date_modified),
+                      CURRENT_TIMESTAMP, 0);
             END
         """))
 
@@ -305,8 +371,15 @@ class Migration019(Migration):
         connection.execute(text("""
             CREATE TRIGGER IF NOT EXISTS trg_property_definition_update AFTER UPDATE ON property_definitions
             BEGIN
-              INSERT INTO change_events (id, record_type, record_id, change_type, created_at, processed)
-              VALUES (lower(hex(randomblob(16))), 'property_definition', NEW.id, 'update', CURRENT_TIMESTAMP, 0);
+              INSERT INTO change_events (event_type, record_type, record_id, old_data, new_data, timestamp, processed)
+              VALUES ('update', 'property_definition', NEW.id,
+                      json_object('id', OLD.id, 'identifier', OLD.identifier, 'title', OLD.title,
+                                 'definition', OLD.definition, 'mapping', OLD.mapping,
+                                 'date_created', OLD.date_created, 'date_modified', OLD.date_modified),
+                      json_object('id', NEW.id, 'identifier', NEW.identifier, 'title', NEW.title,
+                                 'definition', NEW.definition, 'mapping', NEW.mapping,
+                                 'date_created', NEW.date_created, 'date_modified', NEW.date_modified),
+                      CURRENT_TIMESTAMP, 0);
             END
         """))
 
@@ -314,8 +387,12 @@ class Migration019(Migration):
         connection.execute(text("""
             CREATE TRIGGER IF NOT EXISTS trg_property_definition_delete AFTER DELETE ON property_definitions
             BEGIN
-              INSERT INTO change_events (id, record_type, record_id, change_type, created_at, processed)
-              VALUES (lower(hex(randomblob(16))), 'property_definition', OLD.id, 'delete', CURRENT_TIMESTAMP, 0);
+              INSERT INTO change_events (event_type, record_type, record_id, old_data, new_data, timestamp, processed)
+              VALUES ('delete', 'property_definition', OLD.id,
+                      json_object('id', OLD.id, 'identifier', OLD.identifier, 'title', OLD.title,
+                                 'definition', OLD.definition, 'mapping', OLD.mapping,
+                                 'date_created', OLD.date_created, 'date_modified', OLD.date_modified),
+                      NULL, CURRENT_TIMESTAMP, 0);
             END
         """))
 
@@ -393,7 +470,7 @@ class Migration019(Migration):
 
             logger.info("Successfully rolled back ontology_entities to structure_nodes")
 
-            # Step 4: Rename relationships back to structure_node_links
+            # Step 3: Rename relationships back to structure_node_links
             # Using table rebuild pattern to handle column renames
             logger.info("Rolling back relationships to structure_node_links with column renames...")
             connection.execute(text("""
@@ -498,21 +575,70 @@ class Migration019(Migration):
 
     def _recreate_triggers_down(self, connection: Connection) -> None:
         """Recreate all triggers with original table and column names for structure_nodes and structure_node_links."""
+        # Drop new triggers on ontology_entities and relationships (left from table renames) to avoid duplicates
+        logger.info("Dropping new triggers on ontology_entities and relationships...")
+        connection.execute(text("DROP TRIGGER IF EXISTS trg_ontology_entity_insert"))
+        connection.execute(text("DROP TRIGGER IF EXISTS trg_ontology_entity_update"))
+        connection.execute(text("DROP TRIGGER IF EXISTS trg_ontology_entity_delete"))
+        connection.execute(text("DROP TRIGGER IF EXISTS trg_relationship_insert"))
+        connection.execute(text("DROP TRIGGER IF EXISTS trg_relationship_update"))
+        connection.execute(text("DROP TRIGGER IF EXISTS trg_relationship_delete"))
+
         # Trigger for structure_nodes insert
         connection.execute(text("""
             CREATE TRIGGER IF NOT EXISTS trg_structure_node_insert AFTER INSERT ON structure_nodes
             BEGIN
-              INSERT INTO change_events (id, record_type, record_id, change_type, created_at, processed)
-              VALUES (lower(hex(randomblob(16))), 'structure_node', NEW.id, 'insert', CURRENT_TIMESTAMP, 0);
+              INSERT INTO change_events (event_type, record_type, record_id, old_data, new_data, timestamp, processed)
+              VALUES ('create', 'structure_node', NEW.id, NULL,
+                      json_object('id', NEW.id, 'node_type', NEW.node_type, 'parent_node_id', NEW.parent_node_id,
+                                 'title', NEW.title, 'definition', NEW.definition, 'structural_predicate_id', NEW.structural_predicate_id,
+                                 'created_at', NEW.created_at, 'version', NEW.version, 'last_modified', NEW.last_modified),
+                      CURRENT_TIMESTAMP, 0);
             END
         """))
 
-        # Trigger for structure_nodes update
+        # Trigger for structure_nodes update with sophisticated logic
         connection.execute(text("""
             CREATE TRIGGER IF NOT EXISTS trg_structure_node_update AFTER UPDATE ON structure_nodes
             BEGIN
-              INSERT INTO change_events (id, record_type, record_id, change_type, created_at, processed)
-              VALUES (lower(hex(randomblob(16))), 'structure_node', NEW.id, 'update', CURRENT_TIMESTAMP, 0);
+              -- Generate update-type event if node_type changed
+              INSERT INTO change_events (event_type, record_type, record_id, old_data, new_data, timestamp, processed)
+              SELECT 'update-type', 'structure_node', NEW.id,
+                     json_object('id', OLD.id, 'node_type', OLD.node_type, 'parent_node_id', OLD.parent_node_id,
+                                'title', OLD.title, 'definition', OLD.definition, 'structural_predicate_id', OLD.structural_predicate_id,
+                                'created_at', OLD.created_at, 'version', OLD.version, 'last_modified', OLD.last_modified),
+                     json_object('id', NEW.id, 'node_type', NEW.node_type, 'parent_node_id', NEW.parent_node_id,
+                                'title', NEW.title, 'definition', NEW.definition, 'structural_predicate_id', NEW.structural_predicate_id,
+                                'created_at', NEW.created_at, 'version', NEW.version, 'last_modified', NEW.last_modified),
+                     CURRENT_TIMESTAMP, 0
+              WHERE OLD.node_type != NEW.node_type;
+
+              -- Generate move event if parent_node_id changed
+              INSERT INTO change_events (event_type, record_type, record_id, old_data, new_data, timestamp, processed)
+              SELECT 'move', 'structure_node', NEW.id,
+                     json_object('id', OLD.id, 'node_type', OLD.node_type, 'parent_node_id', OLD.parent_node_id,
+                                'title', OLD.title, 'definition', OLD.definition, 'structural_predicate_id', OLD.structural_predicate_id,
+                                'created_at', OLD.created_at, 'version', OLD.version, 'last_modified', OLD.last_modified),
+                     json_object('id', NEW.id, 'node_type', NEW.node_type, 'parent_node_id', NEW.parent_node_id,
+                                'title', NEW.title, 'definition', NEW.definition, 'structural_predicate_id', NEW.structural_predicate_id,
+                                'created_at', NEW.created_at, 'version', NEW.version, 'last_modified', NEW.last_modified),
+                     CURRENT_TIMESTAMP, 0
+              WHERE (OLD.parent_node_id IS NULL AND NEW.parent_node_id IS NOT NULL)
+                 OR (OLD.parent_node_id IS NOT NULL AND NEW.parent_node_id IS NULL)
+                 OR (OLD.parent_node_id != NEW.parent_node_id);
+
+              -- Generate generic update event for other field changes
+              INSERT INTO change_events (event_type, record_type, record_id, old_data, new_data, timestamp, processed)
+              SELECT 'update', 'structure_node', NEW.id,
+                     json_object('id', OLD.id, 'node_type', OLD.node_type, 'parent_node_id', OLD.parent_node_id,
+                                'title', OLD.title, 'definition', OLD.definition, 'structural_predicate_id', OLD.structural_predicate_id,
+                                'created_at', OLD.created_at, 'version', OLD.version, 'last_modified', OLD.last_modified),
+                     json_object('id', NEW.id, 'node_type', NEW.node_type, 'parent_node_id', NEW.parent_node_id,
+                                'title', NEW.title, 'definition', NEW.definition, 'structural_predicate_id', NEW.structural_predicate_id,
+                                'created_at', NEW.created_at, 'version', NEW.version, 'last_modified', NEW.last_modified),
+                     CURRENT_TIMESTAMP, 0
+              WHERE OLD.node_type = NEW.node_type
+                AND (OLD.parent_node_id IS NEW.parent_node_id OR (OLD.parent_node_id = NEW.parent_node_id));
             END
         """))
 
@@ -520,8 +646,12 @@ class Migration019(Migration):
         connection.execute(text("""
             CREATE TRIGGER IF NOT EXISTS trg_structure_node_delete AFTER DELETE ON structure_nodes
             BEGIN
-              INSERT INTO change_events (id, record_type, record_id, change_type, created_at, processed)
-              VALUES (lower(hex(randomblob(16))), 'structure_node', OLD.id, 'delete', CURRENT_TIMESTAMP, 0);
+              INSERT INTO change_events (event_type, record_type, record_id, old_data, new_data, timestamp, processed)
+              VALUES ('delete', 'structure_node', OLD.id,
+                      json_object('id', OLD.id, 'node_type', OLD.node_type, 'parent_node_id', OLD.parent_node_id,
+                                 'title', OLD.title, 'definition', OLD.definition, 'structural_predicate_id', OLD.structural_predicate_id,
+                                 'created_at', OLD.created_at, 'version', OLD.version, 'last_modified', OLD.last_modified),
+                      NULL, CURRENT_TIMESTAMP, 0);
             END
         """))
 
@@ -529,8 +659,11 @@ class Migration019(Migration):
         connection.execute(text("""
             CREATE TRIGGER IF NOT EXISTS trg_structure_node_link_insert AFTER INSERT ON structure_node_links
             BEGIN
-              INSERT INTO change_events (id, record_type, record_id, change_type, created_at, processed)
-              VALUES (lower(hex(randomblob(16))), 'structure_node_link', NEW.id, 'insert', CURRENT_TIMESTAMP, 0);
+              INSERT INTO change_events (event_type, record_type, record_id, old_data, new_data, timestamp, processed)
+              VALUES ('create', 'structure_node_link', NEW.id, NULL,
+                      json_object('id', NEW.id, 'source_node_id', NEW.source_node_id, 'target_node_id', NEW.target_node_id,
+                                 'predicate', NEW.predicate, 'predicate_id', NEW.predicate_id, 'created_at', NEW.created_at),
+                      CURRENT_TIMESTAMP, 0);
             END
         """))
 
@@ -538,8 +671,13 @@ class Migration019(Migration):
         connection.execute(text("""
             CREATE TRIGGER IF NOT EXISTS trg_structure_node_link_update AFTER UPDATE ON structure_node_links
             BEGIN
-              INSERT INTO change_events (id, record_type, record_id, change_type, created_at, processed)
-              VALUES (lower(hex(randomblob(16))), 'structure_node_link', NEW.id, 'update', CURRENT_TIMESTAMP, 0);
+              INSERT INTO change_events (event_type, record_type, record_id, old_data, new_data, timestamp, processed)
+              VALUES ('update', 'structure_node_link', NEW.id,
+                      json_object('id', OLD.id, 'source_node_id', OLD.source_node_id, 'target_node_id', OLD.target_node_id,
+                                 'predicate', OLD.predicate, 'predicate_id', OLD.predicate_id, 'created_at', OLD.created_at),
+                      json_object('id', NEW.id, 'source_node_id', NEW.source_node_id, 'target_node_id', NEW.target_node_id,
+                                 'predicate', NEW.predicate, 'predicate_id', NEW.predicate_id, 'created_at', NEW.created_at),
+                      CURRENT_TIMESTAMP, 0);
             END
         """))
 
@@ -547,8 +685,11 @@ class Migration019(Migration):
         connection.execute(text("""
             CREATE TRIGGER IF NOT EXISTS trg_structure_node_link_delete AFTER DELETE ON structure_node_links
             BEGIN
-              INSERT INTO change_events (id, record_type, record_id, change_type, created_at, processed)
-              VALUES (lower(hex(randomblob(16))), 'structure_node_link', OLD.id, 'delete', CURRENT_TIMESTAMP, 0);
+              INSERT INTO change_events (event_type, record_type, record_id, old_data, new_data, timestamp, processed)
+              VALUES ('delete', 'structure_node_link', OLD.id,
+                      json_object('id', OLD.id, 'source_node_id', OLD.source_node_id, 'target_node_id', OLD.target_node_id,
+                                 'predicate', OLD.predicate, 'predicate_id', OLD.predicate_id, 'created_at', OLD.created_at),
+                      NULL, CURRENT_TIMESTAMP, 0);
             END
         """))
 
@@ -556,8 +697,12 @@ class Migration019(Migration):
         connection.execute(text("""
             CREATE TRIGGER IF NOT EXISTS trg_predicate_insert AFTER INSERT ON predicates
             BEGIN
-              INSERT INTO change_events (id, record_type, record_id, change_type, created_at, processed)
-              VALUES (lower(hex(randomblob(16))), 'predicate', NEW.id, 'insert', CURRENT_TIMESTAMP, 0);
+              INSERT INTO change_events (event_type, record_type, record_id, old_data, new_data, timestamp, processed)
+              VALUES ('create', 'predicate', NEW.id, NULL,
+                      json_object('id', NEW.id, 'identifier', NEW.identifier, 'title', NEW.title,
+                                 'definition', NEW.definition, 'mapping', NEW.mapping,
+                                 'date_created', NEW.date_created, 'date_modified', NEW.date_modified),
+                      CURRENT_TIMESTAMP, 0);
             END
         """))
 
@@ -565,8 +710,15 @@ class Migration019(Migration):
         connection.execute(text("""
             CREATE TRIGGER IF NOT EXISTS trg_predicate_update AFTER UPDATE ON predicates
             BEGIN
-              INSERT INTO change_events (id, record_type, record_id, change_type, created_at, processed)
-              VALUES (lower(hex(randomblob(16))), 'predicate', NEW.id, 'update', CURRENT_TIMESTAMP, 0);
+              INSERT INTO change_events (event_type, record_type, record_id, old_data, new_data, timestamp, processed)
+              VALUES ('update', 'predicate', NEW.id,
+                      json_object('id', OLD.id, 'identifier', OLD.identifier, 'title', OLD.title,
+                                 'definition', OLD.definition, 'mapping', OLD.mapping,
+                                 'date_created', OLD.date_created, 'date_modified', OLD.date_modified),
+                      json_object('id', NEW.id, 'identifier', NEW.identifier, 'title', NEW.title,
+                                 'definition', NEW.definition, 'mapping', NEW.mapping,
+                                 'date_created', NEW.date_created, 'date_modified', NEW.date_modified),
+                      CURRENT_TIMESTAMP, 0);
             END
         """))
 
@@ -574,8 +726,12 @@ class Migration019(Migration):
         connection.execute(text("""
             CREATE TRIGGER IF NOT EXISTS trg_predicate_delete AFTER DELETE ON predicates
             BEGIN
-              INSERT INTO change_events (id, record_type, record_id, change_type, created_at, processed)
-              VALUES (lower(hex(randomblob(16))), 'predicate', OLD.id, 'delete', CURRENT_TIMESTAMP, 0);
+              INSERT INTO change_events (event_type, record_type, record_id, old_data, new_data, timestamp, processed)
+              VALUES ('delete', 'predicate', OLD.id,
+                      json_object('id', OLD.id, 'identifier', OLD.identifier, 'title', OLD.title,
+                                 'definition', OLD.definition, 'mapping', OLD.mapping,
+                                 'date_created', OLD.date_created, 'date_modified', OLD.date_modified),
+                      NULL, CURRENT_TIMESTAMP, 0);
             END
         """))
 
