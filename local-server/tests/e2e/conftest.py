@@ -12,6 +12,7 @@ Key fixtures:
 import logging
 import os
 import sys
+import warnings
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
@@ -114,6 +115,14 @@ def e2e_app(tmp_path_factory):
         # Cleanup — log all exceptions to prevent silent failures that corrupt subsequent tests
         cleanup_errors = []
 
+        # Dispose of SQLAlchemy engine to close connection pool
+        try:
+            engine.dispose()
+        except Exception as e:
+            error_msg = f"Failed to dispose SQLAlchemy engine: {e}"
+            logger.exception(error_msg)
+            cleanup_errors.append(error_msg)
+
         # Clear service factory cache
         try:
             factory.clear_cache()
@@ -195,12 +204,15 @@ def clean_tables(e2e_app):
         # Re-enable foreign key checks
         cleanup_session.execute(text("PRAGMA foreign_keys = ON"))
         cleanup_session.commit()
-    except Exception:
+    except Exception as e:
         cleanup_session.rollback()
         # Log the error so it's visible in test output, not hidden like print() is
-        logger.exception(
+        error_msg = (
             "Cleanup failed during E2E test teardown. Subsequent tests may run "
             "against dirty data. Please review the test module state."
         )
+        logger.exception(error_msg)
+        # Emit pytest warning so cleanup failure appears in pytest's warnings summary
+        warnings.warn(f"{error_msg}\nException: {e}", stacklevel=2)
     finally:
         cleanup_session.close()
