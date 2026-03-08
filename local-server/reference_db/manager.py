@@ -259,16 +259,6 @@ class ReferenceManager:
             # Re-raise other operational errors (e.g., database locked, corrupted)
             raise
 
-        except Exception:
-            # Re-raise any unexpected exceptions to surface real problems
-            raise
-            # Re-raise other operational errors (e.g., database locked, corrupted)
-            raise
-
-        except Exception:
-            # Re-raise any unexpected exceptions to surface real problems
-            raise
-
     def _rebuild_database(self):
         """
         Rebuild the database from scratch.
