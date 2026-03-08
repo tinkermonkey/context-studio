@@ -396,12 +396,12 @@ class Migration019(Migration):
             END
         """))
 
-        # Update trigger for property_definitions last_modified (was update_predicates_date_modified)
+        # Update trigger for property_definitions date_modified (was update_predicates_date_modified)
         connection.execute(text("""
             CREATE TRIGGER IF NOT EXISTS update_property_definitions_date_modified
             AFTER UPDATE ON property_definitions
             BEGIN
-              UPDATE property_definitions SET last_modified = CURRENT_TIMESTAMP
+              UPDATE property_definitions SET date_modified = CURRENT_TIMESTAMP
               WHERE id = NEW.id;
             END
         """))
@@ -584,6 +584,13 @@ class Migration019(Migration):
         connection.execute(text("DROP TRIGGER IF EXISTS trg_relationship_update"))
         connection.execute(text("DROP TRIGGER IF EXISTS trg_relationship_delete"))
 
+        # Drop property_definition triggers (left from table rename; they persist on predicates table)
+        logger.info("Dropping property_definition triggers left on predicates table...")
+        connection.execute(text("DROP TRIGGER IF EXISTS trg_property_definition_insert"))
+        connection.execute(text("DROP TRIGGER IF EXISTS trg_property_definition_update"))
+        connection.execute(text("DROP TRIGGER IF EXISTS trg_property_definition_delete"))
+        connection.execute(text("DROP TRIGGER IF EXISTS update_property_definitions_date_modified"))
+
         # Trigger for structure_nodes insert
         connection.execute(text("""
             CREATE TRIGGER IF NOT EXISTS trg_structure_node_insert AFTER INSERT ON structure_nodes
@@ -735,12 +742,12 @@ class Migration019(Migration):
             END
         """))
 
-        # Update trigger for predicates last_modified
+        # Update trigger for predicates date_modified
         connection.execute(text("""
             CREATE TRIGGER IF NOT EXISTS update_predicates_date_modified
             AFTER UPDATE ON predicates
             BEGIN
-              UPDATE predicates SET last_modified = CURRENT_TIMESTAMP
+              UPDATE predicates SET date_modified = CURRENT_TIMESTAMP
               WHERE id = NEW.id;
             END
         """))
