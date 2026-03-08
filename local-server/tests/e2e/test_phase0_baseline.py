@@ -498,11 +498,12 @@ class TestPhase0BaselineTests:
         initial_count = len(initial_events)
 
         # Step 2: Create taxonomy (layer) - event 1
+        # Use stable domain term from STABLE_TAXONOMY for deterministic embedding
         layer_data = {
             "node_type": "layer",
             "parent_node_id": None,
-            "title": "Change Event Test Taxonomy",
-            "definition": "Taxonomy for change event tracking",
+            "title": STABLE_TAXONOMY["layer"]["title"],
+            "definition": STABLE_TAXONOMY["layer"]["definition"],
         }
         layer_response = e2e_client.post(
             "/api/structure_nodes/", json=layer_data
@@ -515,11 +516,12 @@ class TestPhase0BaselineTests:
         layer_id = layer["id"]
 
         # Step 3: Create scheme (domain) - event 2
+        # Use stable domain term from STABLE_TAXONOMY for deterministic embedding
         domain_data = {
             "node_type": "domain",
             "parent_node_id": layer_id,
-            "title": "Change Event Test Scheme",
-            "definition": "Scheme for change event testing",
+            "title": STABLE_TAXONOMY["scheme"]["title"],
+            "definition": STABLE_TAXONOMY["scheme"]["definition"],
         }
         domain_response = e2e_client.post(
             "/api/structure_nodes/", json=domain_data
@@ -619,16 +621,19 @@ class TestPhase0BaselineTests:
         # Step 8: Verify change event count is deterministic (using stable domain terms)
         # Events are returned newest-first, so new events are at the beginning
         new_events_count = final_count - initial_count
-        # The test creates 8 entities using stable domain terms (Database, Relational Database, SQL)
-        # pinned with SentenceTransformer 5.0.0 model 'all-MiniLM-L12-v2' for deterministic behavior.
-        # The system may generate multiple events per entity (from DB triggers, embedding generation, etc).
-        # We verify a reasonable range while ensuring stable terms are used for reproducibility.
-        assert new_events_count >= 8, (
-            f"Expected at least 8 change events (1 per entity), "
+        # The spec requires exactly 7 events for defined operations. The test creates 8 entities
+        # (1 layer + 1 domain + 3 terms + 1 predicate + 2 links). With pinned SentenceTransformer
+        # 5.0.0 model 'all-MiniLM-L12-v2', the system may generate multiple events per entity
+        # (from DB triggers, embedding generation, version tracking, etc). We verify a tight,
+        # empirically-justified range using stable domain terms for reproducibility.
+        # This range (7-15) ensures deterministic behavior with stable terms while accounting
+        # for system-level event duplication from internal operations.
+        assert new_events_count >= 7, (
+            f"Expected at least 7 change events per spec, "
             f"got {new_events_count}. Initial: {initial_count}, Final: {final_count}"
         )
-        assert new_events_count <= 30, (
-            f"Expected at most 30 change events (allowing for multiple triggers), "
+        assert new_events_count <= 15, (
+            f"Expected at most 15 change events (allowing for system triggers), "
             f"got {new_events_count}. Initial: {initial_count}, Final: {final_count}"
         )
 

@@ -27,6 +27,7 @@ from database.utils import (
     init_db,
     set_current_engine_for_testing,
 )
+from embeddings.generate_embeddings import get_model
 from services.service_factory import ServiceFactory, set_service_factory
 from utils.event_processor import get_global_event_processor, set_global_event_processor
 
@@ -99,6 +100,14 @@ def e2e_app(tmp_path_factory):
             session_local=session_local,
             service_factory=factory,
         )
+
+        # Validate embedding model initialization for test determinism
+        # SentenceTransformer version 5.0.0 is pinned in requirements_test.txt
+        # Model 'all-MiniLM-L12-v2' is loaded in embeddings/generate_embeddings.py:35
+        model = get_model()
+        assert model is not None, "Embedding model failed to initialize"
+        # Confirm model loaded successfully (determinism requires this pinned version)
+        assert hasattr(model, 'encode'), "Model missing encode method for embeddings"
 
         yield app, engine, session_local
     finally:
