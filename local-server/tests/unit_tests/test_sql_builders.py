@@ -268,7 +268,7 @@ def test_sql_builder_execution_both_embeddings(sqlite_with_vec):
 
         # Create query embedding
         query_emb = create_test_embedding(seed=44)
-        query_vec_json = json.dumps(query_emb)
+        query_vec_json = json.dumps(np.frombuffer(query_emb, dtype=np.float32).tolist())
 
         # Build and execute the CASE WHEN query
         similarity_case = build_max_similarity_case_when("title_embedding", "definition_embedding")
