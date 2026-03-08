@@ -30,272 +30,561 @@ class Migration019(Migration):
         """Apply the migration: rename all tables, columns, and enum values."""
         logger.info("Starting terminology rename migration (019)...")
 
-        # Step 1: Rename structure_nodes table to ontology_entities
-        # Using table rebuild pattern to handle column rename (parent_node_id → parent_entity_id)
-        logger.info("Renaming structure_nodes table to ontology_entities with column rename...")
-        connection.execute(text("""
-            CREATE TABLE ontology_entities (
-                id TEXT PRIMARY KEY,
-                node_type TEXT NOT NULL,
-                parent_entity_id TEXT,
-                title TEXT NOT NULL,
-                definition TEXT,
-                structural_predicate_id TEXT,
-                title_embedding BLOB,
-                definition_embedding BLOB,
-                reference_links TEXT,
-                word_senses TEXT,
-                attributes TEXT,
-                created_at DATETIME,
-                version INTEGER DEFAULT 1,
-                last_modified DATETIME,
-                FOREIGN KEY (parent_entity_id) REFERENCES ontology_entities(id) ON DELETE CASCADE,
-                FOREIGN KEY (structural_predicate_id) REFERENCES property_definitions(id)
+        # Disable foreign key checks during table rebuild operations
+        connection.execute(text("PRAGMA foreign_keys=OFF"))
+
+        try:
+            # Step 1: Rename predicates table to property_definitions FIRST
+            # This must happen before creating ontology_entities which references property_definitions
+            logger.info("Renaming predicates to property_definitions...")
+            connection.execute(text("ALTER TABLE predicates RENAME TO property_definitions"))
+            logger.info("Successfully renamed predicates to property_definitions")
+
+            # Step 2: Update node_type enum values in structure_nodes BEFORE rebuilding
+            # We must rebuild the table to remove the CHECK constraint that prevents new values
+            logger.info("Removing CHECK constraint from structure_nodes and updating enum values...")
+            connection.execute(text("""
+                CREATE TABLE structure_nodes_temp (
+                    id TEXT PRIMARY KEY,
+                    node_type TEXT NOT NULL,
+                    parent_node_id TEXT,
+                    title TEXT NOT NULL,
+                    definition TEXT,
+                    structural_predicate_id TEXT,
+                    title_embedding BLOB,
+                    definition_embedding BLOB,
+                    reference_links TEXT,
+                    word_senses TEXT,
+                    attributes TEXT,
+                    created_at DATETIME,
+                    version INTEGER DEFAULT 1,
+                    last_modified DATETIME,
+                    FOREIGN KEY (parent_node_id) REFERENCES structure_nodes_temp(id) ON DELETE CASCADE,
+                    FOREIGN KEY (structural_predicate_id) REFERENCES property_definitions(id)
+                )
+            """))
+
+            # Copy data with enum value mapping in the SELECT statement
+            connection.execute(text("""
+                INSERT INTO structure_nodes_temp (
+                    id, node_type, parent_node_id, title, definition,
+                    structural_predicate_id, title_embedding, definition_embedding,
+                    reference_links, word_senses, attributes, created_at, version, last_modified
+                )
+                SELECT
+                    id,
+                    CASE node_type
+                        WHEN 'layer' THEN 'taxonomy'
+                        WHEN 'domain' THEN 'concept_scheme'
+                        WHEN 'term' THEN 'class'
+                        ELSE node_type
+                    END,
+                    parent_node_id, title, definition,
+                    structural_predicate_id, title_embedding, definition_embedding,
+                    reference_links, word_senses, attributes, created_at, version, last_modified
+                FROM structure_nodes
+            """))
+
+            # Drop original table and rename temp
+            connection.execute(text("DROP TABLE structure_nodes"))
+            connection.execute(text("ALTER TABLE structure_nodes_temp RENAME TO structure_nodes"))
+            logger.info("Successfully removed CHECK constraint and updated node_type enum values")
+
+            # Step 3: Rename structure_nodes table to ontology_entities
+            # Using table rebuild pattern to handle column rename (parent_node_id → parent_entity_id)
+            logger.info("Renaming structure_nodes table to ontology_entities with column rename...")
+            connection.execute(text("""
+                CREATE TABLE ontology_entities (
+                    id TEXT PRIMARY KEY,
+                    node_type TEXT NOT NULL,
+                    parent_entity_id TEXT,
+                    title TEXT NOT NULL,
+                    definition TEXT,
+                    structural_predicate_id TEXT,
+                    title_embedding BLOB,
+                    definition_embedding BLOB,
+                    reference_links TEXT,
+                    word_senses TEXT,
+                    attributes TEXT,
+                    created_at DATETIME,
+                    version INTEGER DEFAULT 1,
+                    last_modified DATETIME,
+                    FOREIGN KEY (parent_entity_id) REFERENCES ontology_entities(id) ON DELETE CASCADE,
+                    FOREIGN KEY (structural_predicate_id) REFERENCES property_definitions(id)
+                )
+            """))
+
+            # Copy data from structure_nodes, mapping old column names to new
+            connection.execute(text("""
+                INSERT INTO ontology_entities (
+                    id, node_type, parent_entity_id, title, definition,
+                    structural_predicate_id, title_embedding, definition_embedding,
+                    reference_links, word_senses, attributes, created_at, version, last_modified
+                )
+                SELECT
+                    id, node_type, parent_node_id, title, definition,
+                    structural_predicate_id, title_embedding, definition_embedding,
+                    reference_links, word_senses, attributes, created_at, version, last_modified
+                FROM structure_nodes
+            """))
+
+            # Drop old table
+            connection.execute(text("DROP TABLE structure_nodes"))
+
+            logger.info("Successfully renamed structure_nodes to ontology_entities")
+
+            # Step 4: Rename structure_node_links table to relationships
+            # Using table rebuild pattern to handle column renames
+            logger.info("Renaming structure_node_links to relationships with column renames...")
+            connection.execute(text("""
+                CREATE TABLE relationships (
+                    id TEXT PRIMARY KEY,
+                    source_entity_id TEXT NOT NULL,
+                    target_entity_id TEXT NOT NULL,
+                    predicate TEXT NOT NULL,
+                    predicate_id TEXT,
+                    created_at DATETIME,
+                    FOREIGN KEY (source_entity_id) REFERENCES ontology_entities(id) ON DELETE CASCADE,
+                    FOREIGN KEY (target_entity_id) REFERENCES ontology_entities(id) ON DELETE CASCADE,
+                    FOREIGN KEY (predicate_id) REFERENCES property_definitions(id),
+                    UNIQUE (source_entity_id, target_entity_id, predicate)
+                )
+            """))
+
+            # Copy data from old table, mapping old column names to new
+            connection.execute(text("""
+                INSERT INTO relationships (
+                    id, source_entity_id, target_entity_id, predicate, predicate_id, created_at
+                )
+                SELECT
+                    id, source_node_id, target_node_id, predicate, predicate_id, created_at
+                FROM structure_node_links
+            """))
+
+            # Drop old table
+            connection.execute(text("DROP TABLE structure_node_links"))
+
+            logger.info("Successfully renamed structure_node_links to relationships")
+
+            # Step 5: Recreate indexes on renamed tables
+            logger.info("Recreating indexes on renamed tables...")
+            # ontology_entities indexes (from structure_nodes)
+            connection.execute(text("""
+                CREATE INDEX IF NOT EXISTS idx_ontology_entities_node_type
+                ON ontology_entities(node_type)
+            """))
+            connection.execute(text("""
+                CREATE INDEX IF NOT EXISTS idx_ontology_entities_parent_entity_id
+                ON ontology_entities(parent_entity_id)
+            """))
+            connection.execute(text("""
+                CREATE INDEX IF NOT EXISTS idx_ontology_entities_node_type_parent
+                ON ontology_entities(node_type, parent_entity_id)
+            """))
+            connection.execute(text("""
+                CREATE INDEX IF NOT EXISTS idx_ontology_entities_node_type_title
+                ON ontology_entities(node_type, title)
+            """))
+            # relationships indexes (from structure_node_links)
+            connection.execute(text("""
+                CREATE INDEX IF NOT EXISTS idx_relationships_source
+                ON relationships(source_entity_id)
+            """))
+            connection.execute(text("""
+                CREATE INDEX IF NOT EXISTS idx_relationships_target
+                ON relationships(target_entity_id)
+            """))
+            logger.info("Successfully recreated indexes")
+
+            # Step 6: Recreate triggers with updated table/column names
+            logger.info("Recreating triggers with updated table/column names...")
+            self._recreate_triggers_up(connection)
+            logger.info("Successfully recreated triggers")
+
+            # Step 7: Rename pipeline_flavors table to pipeline_configurations (if it exists)
+            logger.info("Checking for pipeline_flavors table...")
+            cursor = connection.connection.cursor()
+            cursor.execute(
+                "SELECT name FROM sqlite_master WHERE type='table' AND name='pipeline_flavors'"
             )
-        """))
+            if cursor.fetchone():
+                logger.info("Renaming pipeline_flavors to pipeline_configurations...")
+                connection.execute(text("ALTER TABLE pipeline_flavors RENAME TO pipeline_configurations"))
+                logger.info("Successfully renamed pipeline_flavors to pipeline_configurations")
+            else:
+                logger.info("pipeline_flavors table does not exist, skipping rename")
 
-        # Copy data from old table, mapping old column names to new
+            # Step 8: Update change_events record_type values
+            logger.info("Updating change_events record_type values...")
+            connection.execute(text("""
+                UPDATE change_events SET record_type = 'ontology_entity'
+                WHERE record_type = 'structure_node'
+            """))
+            connection.execute(text("""
+                UPDATE change_events SET record_type = 'relationship'
+                WHERE record_type = 'structure_node_link'
+            """))
+            connection.execute(text("""
+                UPDATE change_events SET record_type = 'property_definition'
+                WHERE record_type = 'predicate'
+            """))
+            logger.info("Successfully updated change_events record_type values")
+
+            logger.info("Terminology rename migration (019) completed successfully")
+
+        finally:
+            # Re-enable foreign key checks
+            connection.execute(text("PRAGMA foreign_keys=ON"))
+
+    def _recreate_triggers_up(self, connection: Connection) -> None:
+        """Recreate all triggers with updated table and column names for ontology_entities and relationships."""
+        # Trigger for ontology_entities insert (was structure_node insert)
         connection.execute(text("""
-            INSERT INTO ontology_entities (
-                id, node_type, parent_entity_id, title, definition,
-                structural_predicate_id, title_embedding, definition_embedding,
-                reference_links, word_senses, attributes, created_at, version, last_modified
-            )
-            SELECT
-                id, node_type, parent_node_id, title, definition,
-                structural_predicate_id, title_embedding, definition_embedding,
-                reference_links, word_senses, attributes, created_at, version, last_modified
-            FROM structure_nodes
+            CREATE TRIGGER IF NOT EXISTS trg_ontology_entity_insert AFTER INSERT ON ontology_entities
+            BEGIN
+              INSERT INTO change_events (id, record_type, record_id, change_type, created_at, processed)
+              VALUES (lower(hex(randomblob(16))), 'ontology_entity', NEW.id, 'insert', CURRENT_TIMESTAMP, 0);
+            END
         """))
 
-        # Drop old table
-        connection.execute(text("DROP TABLE structure_nodes"))
-
-        logger.info("Successfully renamed structure_nodes to ontology_entities")
-
-        # Step 2: Rename structure_node_links table to relationships
-        # Using table rebuild pattern to handle column renames
-        logger.info("Renaming structure_node_links to relationships with column renames...")
+        # Trigger for ontology_entities update (was structure_node update)
         connection.execute(text("""
-            CREATE TABLE relationships (
-                id TEXT PRIMARY KEY,
-                source_entity_id TEXT NOT NULL,
-                target_entity_id TEXT NOT NULL,
-                predicate TEXT NOT NULL,
-                predicate_id TEXT,
-                created_at DATETIME,
-                FOREIGN KEY (source_entity_id) REFERENCES ontology_entities(id) ON DELETE CASCADE,
-                FOREIGN KEY (target_entity_id) REFERENCES ontology_entities(id) ON DELETE CASCADE,
-                FOREIGN KEY (predicate_id) REFERENCES property_definitions(id),
-                UNIQUE (source_entity_id, target_entity_id, predicate)
-            )
+            CREATE TRIGGER IF NOT EXISTS trg_ontology_entity_update AFTER UPDATE ON ontology_entities
+            BEGIN
+              INSERT INTO change_events (id, record_type, record_id, change_type, created_at, processed)
+              VALUES (lower(hex(randomblob(16))), 'ontology_entity', NEW.id, 'update', CURRENT_TIMESTAMP, 0);
+            END
         """))
 
-        # Copy data from old table, mapping old column names to new
+        # Trigger for ontology_entities delete (was structure_node delete)
         connection.execute(text("""
-            INSERT INTO relationships (
-                id, source_entity_id, target_entity_id, predicate, predicate_id, created_at
-            )
-            SELECT
-                id, source_node_id, target_node_id, predicate, predicate_id, created_at
-            FROM structure_node_links
+            CREATE TRIGGER IF NOT EXISTS trg_ontology_entity_delete AFTER DELETE ON ontology_entities
+            BEGIN
+              INSERT INTO change_events (id, record_type, record_id, change_type, created_at, processed)
+              VALUES (lower(hex(randomblob(16))), 'ontology_entity', OLD.id, 'delete', CURRENT_TIMESTAMP, 0);
+            END
         """))
 
-        # Drop old table
-        connection.execute(text("DROP TABLE structure_node_links"))
-
-        logger.info("Successfully renamed structure_node_links to relationships")
-
-        # Step 3: Rename predicates table to property_definitions
-        logger.info("Renaming predicates to property_definitions...")
-        connection.execute(text("ALTER TABLE predicates RENAME TO property_definitions"))
-        logger.info("Successfully renamed predicates to property_definitions")
-
-        # Step 4: Rename pipeline_flavors table to pipeline_configurations (if it exists)
-        logger.info("Checking for pipeline_flavors table...")
-        cursor = connection.connection.cursor()
-        cursor.execute(
-            "SELECT name FROM sqlite_master WHERE type='table' AND name='pipeline_flavors'"
-        )
-        if cursor.fetchone():
-            logger.info("Renaming pipeline_flavors to pipeline_configurations...")
-            connection.execute(text("ALTER TABLE pipeline_flavors RENAME TO pipeline_configurations"))
-            logger.info("Successfully renamed pipeline_flavors to pipeline_configurations")
-        else:
-            logger.info("pipeline_flavors table does not exist, skipping rename")
-
-        # Step 5: Update node_type enum values in ontology_entities
-        logger.info("Updating node_type enum values...")
+        # Trigger for relationships insert (was structure_node_link insert)
         connection.execute(text("""
-            UPDATE ontology_entities SET node_type = 'taxonomy' WHERE node_type = 'layer'
+            CREATE TRIGGER IF NOT EXISTS trg_relationship_insert AFTER INSERT ON relationships
+            BEGIN
+              INSERT INTO change_events (id, record_type, record_id, change_type, created_at, processed)
+              VALUES (lower(hex(randomblob(16))), 'relationship', NEW.id, 'insert', CURRENT_TIMESTAMP, 0);
+            END
         """))
-        connection.execute(text("""
-            UPDATE ontology_entities SET node_type = 'concept_scheme' WHERE node_type = 'domain'
-        """))
-        connection.execute(text("""
-            UPDATE ontology_entities SET node_type = 'class' WHERE node_type = 'term'
-        """))
-        logger.info("Successfully updated node_type enum values")
 
-        # Step 6: Recreate indexes on renamed tables
-        logger.info("Recreating indexes on renamed tables...")
+        # Trigger for relationships update (was structure_node_link update)
         connection.execute(text("""
-            CREATE INDEX IF NOT EXISTS idx_ontology_entities_title
-            ON ontology_entities(title)
+            CREATE TRIGGER IF NOT EXISTS trg_relationship_update AFTER UPDATE ON relationships
+            BEGIN
+              INSERT INTO change_events (id, record_type, record_id, change_type, created_at, processed)
+              VALUES (lower(hex(randomblob(16))), 'relationship', NEW.id, 'update', CURRENT_TIMESTAMP, 0);
+            END
         """))
-        logger.info("Successfully recreated indexes")
 
-        # Step 7: Update change_events record_type values
-        logger.info("Updating change_events record_type values...")
+        # Trigger for relationships delete (was structure_node_link delete)
         connection.execute(text("""
-            UPDATE change_events SET record_type = 'ontology_entity'
-            WHERE record_type = 'structure_node'
+            CREATE TRIGGER IF NOT EXISTS trg_relationship_delete AFTER DELETE ON relationships
+            BEGIN
+              INSERT INTO change_events (id, record_type, record_id, change_type, created_at, processed)
+              VALUES (lower(hex(randomblob(16))), 'relationship', OLD.id, 'delete', CURRENT_TIMESTAMP, 0);
+            END
         """))
-        connection.execute(text("""
-            UPDATE change_events SET record_type = 'relationship'
-            WHERE record_type = 'structure_node_link'
-        """))
-        connection.execute(text("""
-            UPDATE change_events SET record_type = 'property_definition'
-            WHERE record_type = 'predicate'
-        """))
-        logger.info("Successfully updated change_events record_type values")
 
-        logger.info("Terminology rename migration (019) completed successfully")
+        # Trigger for property_definitions insert (was predicate insert)
+        connection.execute(text("""
+            CREATE TRIGGER IF NOT EXISTS trg_property_definition_insert AFTER INSERT ON property_definitions
+            BEGIN
+              INSERT INTO change_events (id, record_type, record_id, change_type, created_at, processed)
+              VALUES (lower(hex(randomblob(16))), 'property_definition', NEW.id, 'insert', CURRENT_TIMESTAMP, 0);
+            END
+        """))
+
+        # Trigger for property_definitions update (was predicate update)
+        connection.execute(text("""
+            CREATE TRIGGER IF NOT EXISTS trg_property_definition_update AFTER UPDATE ON property_definitions
+            BEGIN
+              INSERT INTO change_events (id, record_type, record_id, change_type, created_at, processed)
+              VALUES (lower(hex(randomblob(16))), 'property_definition', NEW.id, 'update', CURRENT_TIMESTAMP, 0);
+            END
+        """))
+
+        # Trigger for property_definitions delete (was predicate delete)
+        connection.execute(text("""
+            CREATE TRIGGER IF NOT EXISTS trg_property_definition_delete AFTER DELETE ON property_definitions
+            BEGIN
+              INSERT INTO change_events (id, record_type, record_id, change_type, created_at, processed)
+              VALUES (lower(hex(randomblob(16))), 'property_definition', OLD.id, 'delete', CURRENT_TIMESTAMP, 0);
+            END
+        """))
+
+        # Update trigger for property_definitions last_modified (was update_predicates_date_modified)
+        connection.execute(text("""
+            CREATE TRIGGER IF NOT EXISTS update_property_definitions_date_modified
+            AFTER UPDATE ON property_definitions
+            BEGIN
+              UPDATE property_definitions SET last_modified = CURRENT_TIMESTAMP
+              WHERE id = NEW.id;
+            END
+        """))
 
     def down(self, connection: Connection) -> None:
         """Rollback the migration: rename all tables, columns, and enum values back to legacy names."""
         logger.info("Rolling back terminology rename migration (019)...")
 
-        # Step 1: Rename ontology_entities back to structure_nodes
-        # Using table rebuild pattern to handle column rename (parent_entity_id → parent_node_id)
-        logger.info("Rolling back ontology_entities to structure_nodes with column rename...")
-        connection.execute(text("""
-            CREATE TABLE structure_nodes (
-                id TEXT PRIMARY KEY,
-                node_type TEXT NOT NULL,
-                parent_node_id TEXT,
-                title TEXT NOT NULL,
-                definition TEXT,
-                structural_predicate_id TEXT,
-                title_embedding BLOB,
-                definition_embedding BLOB,
-                reference_links TEXT,
-                word_senses TEXT,
-                attributes TEXT,
-                created_at DATETIME,
-                version INTEGER DEFAULT 1,
-                last_modified DATETIME,
-                FOREIGN KEY (parent_node_id) REFERENCES structure_nodes(id) ON DELETE CASCADE,
-                FOREIGN KEY (structural_predicate_id) REFERENCES predicates(id)
+        # Disable foreign key checks during table rebuild operations
+        connection.execute(text("PRAGMA foreign_keys=OFF"))
+
+        try:
+            # Step 1: Rename property_definitions back to predicates FIRST
+            # This must happen before creating structure_nodes which references predicates
+            logger.info("Rolling back property_definitions to predicates...")
+            connection.execute(text("ALTER TABLE property_definitions RENAME TO predicates"))
+            logger.info("Successfully rolled back property_definitions to predicates")
+
+            # Step 2: Rename ontology_entities back to structure_nodes with column rename and enum reversion
+            # Using table rebuild pattern to handle column rename (parent_entity_id → parent_node_id)
+            logger.info("Rolling back ontology_entities to structure_nodes with column rename and enum reversion...")
+            connection.execute(text("""
+                CREATE TABLE structure_nodes (
+                    id TEXT PRIMARY KEY DEFAULT (lower(hex(randomblob(16)))),
+                    node_type TEXT NOT NULL,
+                    parent_node_id TEXT,
+                    title TEXT NOT NULL,
+                    definition TEXT,
+                    structural_predicate_id TEXT,
+                    title_embedding BLOB,
+                    definition_embedding BLOB,
+                    reference_links TEXT,
+                    word_senses TEXT,
+                    attributes TEXT,
+                    created_at TIMESTAMP,
+                    version INTEGER DEFAULT 1,
+                    last_modified TIMESTAMP,
+                    FOREIGN KEY (parent_node_id) REFERENCES structure_nodes(id) ON DELETE CASCADE,
+                    FOREIGN KEY (structural_predicate_id) REFERENCES predicates(id)
+                )
+            """))
+
+            # Copy data from renamed table, mapping new column names back to old and reverting enum values
+            connection.execute(text("""
+                INSERT INTO structure_nodes (
+                    id, node_type, parent_node_id, title, definition,
+                    structural_predicate_id, title_embedding, definition_embedding,
+                    reference_links, word_senses, attributes, created_at, version, last_modified
+                )
+                SELECT
+                    id,
+                    CASE node_type
+                        WHEN 'taxonomy' THEN 'layer'
+                        WHEN 'concept_scheme' THEN 'domain'
+                        WHEN 'class' THEN 'term'
+                        ELSE node_type
+                    END,
+                    parent_entity_id, title, definition,
+                    structural_predicate_id, title_embedding, definition_embedding,
+                    reference_links, word_senses, attributes, created_at, version, last_modified
+                FROM ontology_entities
+            """))
+
+            # Drop new table
+            connection.execute(text("DROP TABLE ontology_entities"))
+
+            logger.info("Successfully rolled back ontology_entities to structure_nodes")
+
+            # Step 4: Rename relationships back to structure_node_links
+            # Using table rebuild pattern to handle column renames
+            logger.info("Rolling back relationships to structure_node_links with column renames...")
+            connection.execute(text("""
+                CREATE TABLE structure_node_links (
+                    id TEXT PRIMARY KEY DEFAULT (lower(hex(randomblob(16)))),
+                    source_node_id TEXT NOT NULL,
+                    target_node_id TEXT NOT NULL,
+                    predicate TEXT NOT NULL,
+                    predicate_id TEXT,
+                    created_at TIMESTAMP,
+                    FOREIGN KEY (source_node_id) REFERENCES structure_nodes(id) ON DELETE CASCADE,
+                    FOREIGN KEY (target_node_id) REFERENCES structure_nodes(id) ON DELETE CASCADE,
+                    FOREIGN KEY (predicate_id) REFERENCES predicates(id),
+                    UNIQUE (source_node_id, target_node_id, predicate)
+                )
+            """))
+
+            # Copy data from renamed table, mapping new column names back to old
+            connection.execute(text("""
+                INSERT INTO structure_node_links (
+                    id, source_node_id, target_node_id, predicate, predicate_id, created_at
+                )
+                SELECT
+                    id, source_entity_id, target_entity_id, predicate, predicate_id, created_at
+                FROM relationships
+            """))
+
+            # Drop new table
+            connection.execute(text("DROP TABLE relationships"))
+
+            logger.info("Successfully rolled back relationships to structure_node_links")
+
+            # Step 5: Recreate indexes on rolled-back tables
+            logger.info("Recreating indexes on rolled-back tables...")
+            # structure_nodes indexes
+            connection.execute(text("""
+                CREATE INDEX IF NOT EXISTS idx_nodes_node_type
+                ON structure_nodes(node_type)
+            """))
+            connection.execute(text("""
+                CREATE INDEX IF NOT EXISTS idx_nodes_parent_node_id
+                ON structure_nodes(parent_node_id)
+            """))
+            connection.execute(text("""
+                CREATE INDEX IF NOT EXISTS idx_nodes_type_parent
+                ON structure_nodes(node_type, parent_node_id)
+            """))
+            connection.execute(text("""
+                CREATE INDEX IF NOT EXISTS idx_nodes_type_title
+                ON structure_nodes(node_type, title)
+            """))
+            # structure_node_links indexes
+            connection.execute(text("""
+                CREATE INDEX IF NOT EXISTS idx_node_links_source
+                ON structure_node_links(source_node_id)
+            """))
+            connection.execute(text("""
+                CREATE INDEX IF NOT EXISTS idx_node_links_target
+                ON structure_node_links(target_node_id)
+            """))
+            logger.info("Successfully recreated indexes")
+
+            # Step 6: Recreate triggers with original table/column names
+            logger.info("Recreating triggers with original table/column names...")
+            self._recreate_triggers_down(connection)
+            logger.info("Successfully recreated triggers")
+
+            # Step 7: Rename pipeline_configurations back to pipeline_flavors (if it exists)
+            logger.info("Checking for pipeline_configurations table...")
+            cursor = connection.connection.cursor()
+            cursor.execute(
+                "SELECT name FROM sqlite_master WHERE type='table' AND name='pipeline_configurations'"
             )
-        """))
+            if cursor.fetchone():
+                logger.info("Rolling back pipeline_configurations to pipeline_flavors...")
+                connection.execute(text("ALTER TABLE pipeline_configurations RENAME TO pipeline_flavors"))
+                logger.info("Successfully rolled back pipeline_configurations to pipeline_flavors")
+            else:
+                logger.info("pipeline_configurations table does not exist, skipping rollback")
 
-        # Copy data from renamed table, mapping new column names back to old
+            # Step 8: Revert change_events record_type values
+            logger.info("Reverting change_events record_type values...")
+            connection.execute(text("""
+                UPDATE change_events SET record_type = 'structure_node'
+                WHERE record_type = 'ontology_entity'
+            """))
+            connection.execute(text("""
+                UPDATE change_events SET record_type = 'structure_node_link'
+                WHERE record_type = 'relationship'
+            """))
+            connection.execute(text("""
+                UPDATE change_events SET record_type = 'predicate'
+                WHERE record_type = 'property_definition'
+            """))
+            logger.info("Successfully reverted change_events record_type values")
+
+            logger.info("Terminology rename migration (019) rollback completed successfully")
+
+        finally:
+            # Re-enable foreign key checks
+            connection.execute(text("PRAGMA foreign_keys=ON"))
+
+    def _recreate_triggers_down(self, connection: Connection) -> None:
+        """Recreate all triggers with original table and column names for structure_nodes and structure_node_links."""
+        # Trigger for structure_nodes insert
         connection.execute(text("""
-            INSERT INTO structure_nodes (
-                id, node_type, parent_node_id, title, definition,
-                structural_predicate_id, title_embedding, definition_embedding,
-                reference_links, word_senses, attributes, created_at, version, last_modified
-            )
-            SELECT
-                id, node_type, parent_entity_id, title, definition,
-                structural_predicate_id, title_embedding, definition_embedding,
-                reference_links, word_senses, attributes, created_at, version, last_modified
-            FROM ontology_entities
+            CREATE TRIGGER IF NOT EXISTS trg_structure_node_insert AFTER INSERT ON structure_nodes
+            BEGIN
+              INSERT INTO change_events (id, record_type, record_id, change_type, created_at, processed)
+              VALUES (lower(hex(randomblob(16))), 'structure_node', NEW.id, 'insert', CURRENT_TIMESTAMP, 0);
+            END
         """))
 
-        # Drop new table
-        connection.execute(text("DROP TABLE ontology_entities"))
-
-        logger.info("Successfully rolled back ontology_entities to structure_nodes")
-
-        # Step 2: Rename relationships back to structure_node_links
-        # Using table rebuild pattern to handle column renames
-        logger.info("Rolling back relationships to structure_node_links with column renames...")
+        # Trigger for structure_nodes update
         connection.execute(text("""
-            CREATE TABLE structure_node_links (
-                id TEXT PRIMARY KEY,
-                source_node_id TEXT NOT NULL,
-                target_node_id TEXT NOT NULL,
-                predicate TEXT NOT NULL,
-                predicate_id TEXT,
-                created_at DATETIME,
-                FOREIGN KEY (source_node_id) REFERENCES structure_nodes(id) ON DELETE CASCADE,
-                FOREIGN KEY (target_node_id) REFERENCES structure_nodes(id) ON DELETE CASCADE,
-                FOREIGN KEY (predicate_id) REFERENCES predicates(id),
-                UNIQUE (source_node_id, target_node_id, predicate)
-            )
+            CREATE TRIGGER IF NOT EXISTS trg_structure_node_update AFTER UPDATE ON structure_nodes
+            BEGIN
+              INSERT INTO change_events (id, record_type, record_id, change_type, created_at, processed)
+              VALUES (lower(hex(randomblob(16))), 'structure_node', NEW.id, 'update', CURRENT_TIMESTAMP, 0);
+            END
         """))
 
-        # Copy data from renamed table, mapping new column names back to old
+        # Trigger for structure_nodes delete
         connection.execute(text("""
-            INSERT INTO structure_node_links (
-                id, source_node_id, target_node_id, predicate, predicate_id, created_at
-            )
-            SELECT
-                id, source_entity_id, target_entity_id, predicate, predicate_id, created_at
-            FROM relationships
+            CREATE TRIGGER IF NOT EXISTS trg_structure_node_delete AFTER DELETE ON structure_nodes
+            BEGIN
+              INSERT INTO change_events (id, record_type, record_id, change_type, created_at, processed)
+              VALUES (lower(hex(randomblob(16))), 'structure_node', OLD.id, 'delete', CURRENT_TIMESTAMP, 0);
+            END
         """))
 
-        # Drop new table
-        connection.execute(text("DROP TABLE relationships"))
-
-        logger.info("Successfully rolled back relationships to structure_node_links")
-
-        # Step 3: Rename property_definitions back to predicates
-        logger.info("Rolling back property_definitions to predicates...")
-        connection.execute(text("ALTER TABLE property_definitions RENAME TO predicates"))
-        logger.info("Successfully rolled back property_definitions to predicates")
-
-        # Step 4: Rename pipeline_configurations back to pipeline_flavors (if it exists)
-        logger.info("Checking for pipeline_configurations table...")
-        cursor = connection.connection.cursor()
-        cursor.execute(
-            "SELECT name FROM sqlite_master WHERE type='table' AND name='pipeline_configurations'"
-        )
-        if cursor.fetchone():
-            logger.info("Rolling back pipeline_configurations to pipeline_flavors...")
-            connection.execute(text("ALTER TABLE pipeline_configurations RENAME TO pipeline_flavors"))
-            logger.info("Successfully rolled back pipeline_configurations to pipeline_flavors")
-        else:
-            logger.info("pipeline_configurations table does not exist, skipping rollback")
-
-        # Step 5: Revert node_type enum values back to legacy names
-        logger.info("Reverting node_type enum values to legacy names...")
+        # Trigger for structure_node_links insert
         connection.execute(text("""
-            UPDATE structure_nodes SET node_type = 'layer' WHERE node_type = 'taxonomy'
+            CREATE TRIGGER IF NOT EXISTS trg_structure_node_link_insert AFTER INSERT ON structure_node_links
+            BEGIN
+              INSERT INTO change_events (id, record_type, record_id, change_type, created_at, processed)
+              VALUES (lower(hex(randomblob(16))), 'structure_node_link', NEW.id, 'insert', CURRENT_TIMESTAMP, 0);
+            END
         """))
-        connection.execute(text("""
-            UPDATE structure_nodes SET node_type = 'domain' WHERE node_type = 'concept_scheme'
-        """))
-        connection.execute(text("""
-            UPDATE structure_nodes SET node_type = 'term' WHERE node_type = 'class'
-        """))
-        logger.info("Successfully reverted node_type enum values")
 
-        # Step 6: Recreate indexes on renamed tables
-        logger.info("Recreating indexes on rolled-back tables...")
+        # Trigger for structure_node_links update
         connection.execute(text("""
-            CREATE INDEX IF NOT EXISTS idx_structure_nodes_title
-            ON structure_nodes(title)
+            CREATE TRIGGER IF NOT EXISTS trg_structure_node_link_update AFTER UPDATE ON structure_node_links
+            BEGIN
+              INSERT INTO change_events (id, record_type, record_id, change_type, created_at, processed)
+              VALUES (lower(hex(randomblob(16))), 'structure_node_link', NEW.id, 'update', CURRENT_TIMESTAMP, 0);
+            END
         """))
-        logger.info("Successfully recreated indexes")
 
-        # Step 7: Revert change_events record_type values
-        logger.info("Reverting change_events record_type values...")
+        # Trigger for structure_node_links delete
         connection.execute(text("""
-            UPDATE change_events SET record_type = 'structure_node'
-            WHERE record_type = 'ontology_entity'
+            CREATE TRIGGER IF NOT EXISTS trg_structure_node_link_delete AFTER DELETE ON structure_node_links
+            BEGIN
+              INSERT INTO change_events (id, record_type, record_id, change_type, created_at, processed)
+              VALUES (lower(hex(randomblob(16))), 'structure_node_link', OLD.id, 'delete', CURRENT_TIMESTAMP, 0);
+            END
         """))
-        connection.execute(text("""
-            UPDATE change_events SET record_type = 'structure_node_link'
-            WHERE record_type = 'relationship'
-        """))
-        connection.execute(text("""
-            UPDATE change_events SET record_type = 'predicate'
-            WHERE record_type = 'property_definition'
-        """))
-        logger.info("Successfully reverted change_events record_type values")
 
-        logger.info("Terminology rename migration (019) rollback completed successfully")
+        # Trigger for predicates insert
+        connection.execute(text("""
+            CREATE TRIGGER IF NOT EXISTS trg_predicate_insert AFTER INSERT ON predicates
+            BEGIN
+              INSERT INTO change_events (id, record_type, record_id, change_type, created_at, processed)
+              VALUES (lower(hex(randomblob(16))), 'predicate', NEW.id, 'insert', CURRENT_TIMESTAMP, 0);
+            END
+        """))
+
+        # Trigger for predicates update
+        connection.execute(text("""
+            CREATE TRIGGER IF NOT EXISTS trg_predicate_update AFTER UPDATE ON predicates
+            BEGIN
+              INSERT INTO change_events (id, record_type, record_id, change_type, created_at, processed)
+              VALUES (lower(hex(randomblob(16))), 'predicate', NEW.id, 'update', CURRENT_TIMESTAMP, 0);
+            END
+        """))
+
+        # Trigger for predicates delete
+        connection.execute(text("""
+            CREATE TRIGGER IF NOT EXISTS trg_predicate_delete AFTER DELETE ON predicates
+            BEGIN
+              INSERT INTO change_events (id, record_type, record_id, change_type, created_at, processed)
+              VALUES (lower(hex(randomblob(16))), 'predicate', OLD.id, 'delete', CURRENT_TIMESTAMP, 0);
+            END
+        """))
+
+        # Update trigger for predicates last_modified
+        connection.execute(text("""
+            CREATE TRIGGER IF NOT EXISTS update_predicates_date_modified
+            AFTER UPDATE ON predicates
+            BEGIN
+              UPDATE predicates SET last_modified = CURRENT_TIMESTAMP
+              WHERE id = NEW.id;
+            END
+        """))
