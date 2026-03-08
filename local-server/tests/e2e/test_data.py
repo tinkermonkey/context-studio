@@ -4,8 +4,10 @@ Stable test data for E2E baseline tests.
 This module defines stable test concepts and predicates for baseline tests
 to ensure consistent behavior and regression testing.
 
-All data is designed with the SentenceTransformer embedding model in mind
-and produces stable, reproducible results across test runs.
+All data is designed with the SentenceTransformer embedding model (version 5.0.0,
+model 'all-MiniLM-L12-v2') in mind and produces stable, reproducible results across
+test runs. The model version is pinned in requirements_test.txt and documented in
+conftest.py to ensure deterministic embedding generation for the Phase 0 baseline.
 """
 
 from typing import Any, Dict

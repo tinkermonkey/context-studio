@@ -72,7 +72,13 @@ def e2e_app(tmp_path_factory):
 
     Module-scoped so all tests in a file share the same app/database.
     This fixture creates a dedicated temporary database with migrations applied,
-    a real SentenceTransformer embedding service, and a fully initialized FastAPI app.
+    a real SentenceTransformer embedding service (pinned to version 5.0.0 with model
+    'all-MiniLM-L12-v2' for deterministic embedding generation), and a fully initialized
+    FastAPI app.
+
+    Model version pinning is required for test determinism. The sentence-transformers
+    package is pinned to 5.0.0 in requirements_test.txt to ensure reproducible semantic
+    embeddings across test runs.
 
     Yields:
         Tuple[FastAPI, Engine, SessionLocal]: The app instance, database engine, and session factory  # noqa: E501
