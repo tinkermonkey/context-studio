@@ -48,9 +48,9 @@ def build_max_similarity_case_when(
 
     Args:
         title_column: Column name for title embedding (default: "title_embedding").
-            Must match pattern: ^[a-zA-Z_][a-zA-Z0-9_.]*$ (e.g., 'title_embedding' or 'sn.title_embedding')
+            Must match pattern: ^[a-zA-Z_][a-zA-Z0-9_]*(\.[a-zA-Z_][a-zA-Z0-9_]*)*$ (e.g., 'title_embedding' or 'sn.title_embedding')
         definition_column: Column name for definition embedding (default: "definition_embedding").
-            Must match pattern: ^[a-zA-Z_][a-zA-Z0-9_.]*$ (e.g., 'definition_embedding' or 'sn.definition_embedding')
+            Must match pattern: ^[a-zA-Z_][a-zA-Z0-9_]*(\.[a-zA-Z_][a-zA-Z0-9_]*)*$ (e.g., 'definition_embedding' or 'sn.definition_embedding')
 
     Returns:
         SQL CASE WHEN fragment as a string
