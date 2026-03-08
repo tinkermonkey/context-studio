@@ -476,12 +476,11 @@ class TestPhase0BaselineTests:
         6. Update events have both old_data and new_data populated
         7. All event timestamps are valid ISO8601 strings
 
-        The test creates exactly 8 entities (1 layer, 1 domain, 3 terms, 1 predicate, 2 links)
+        The test creates 8 entities (1 layer, 1 domain, 3 terms, 1 predicate, 2 links)
         using stable domain terms (Database, Relational Database, SQL) from STABLE_TAXONOMY.
-        With SentenceTransformer 5.0.0 pinned, this ensures deterministic embedding generation
-        across test runs. The test verifies that change events are recorded with correct structure
-        and ordering, allowing for the system's multi-source event generation (DB triggers,
-        embedding updates, service layer) while ensuring reproducible behavior.
+        The spec requires exactly 7 change events for these operations. With SentenceTransformer
+        5.0.0 pinned, this ensures deterministic embedding generation across test runs.
+        The test verifies that change events are recorded with correct structure and ordering.
         """
         # Step 1: Capture initial change event count (for delta-based isolation)
         initial_events_response = e2e_client.get(
@@ -535,7 +534,6 @@ class TestPhase0BaselineTests:
 
         # Step 4: Create 3 terms using stable taxonomy concepts - events 3, 4, 5
         # Use stable concepts from STABLE_TAXONOMY for deterministic embedding behavior
-        # Spec requires exactly 8 entities/events: 1 layer + 1 domain + 3 terms + 1 predicate + 2 links
         term_ids = {}
         stable_terms = STABLE_TAXONOMY["classes"][:3]  # Database, Relational Database, SQL
         for i, term_def in enumerate(stable_terms):
@@ -555,7 +553,7 @@ class TestPhase0BaselineTests:
             term = term_response.json()
             term_ids[f"term_{i+1}"] = term["id"]
 
-        # Step 5: Create 1 predicate - event 6
+        # Step 5: Create 1 predicate
         predicate_data = {
             "title": "test_predicate_change_events",
             "definition": "A test predicate for change event tracking",
@@ -570,7 +568,7 @@ class TestPhase0BaselineTests:
         predicate = predicate_response.json()
         predicate_id = predicate["id"]
 
-        # Step 6: Create 2 links - events 7, 8
+        # Step 6: Create 2 links - events 6, 7
         link_ids = []
         link1_data = {
             "source_node_id": term_ids["term_1"],
@@ -618,22 +616,15 @@ class TestPhase0BaselineTests:
         )
         final_count = len(final_events)
 
-        # Step 8: Verify change event count is deterministic (using stable domain terms)
+        # Step 8: Verify change event count matches spec requirement (using stable domain terms)
         # Events are returned newest-first, so new events are at the beginning
         new_events_count = final_count - initial_count
-        # The spec requires exactly 7 events for defined operations. The test creates 8 entities
-        # (1 layer + 1 domain + 3 terms + 1 predicate + 2 links). With pinned SentenceTransformer
-        # 5.0.0 model 'all-MiniLM-L12-v2', the system may generate multiple events per entity
-        # (from DB triggers, embedding generation, version tracking, etc). We verify a tight,
-        # empirically-justified range using stable domain terms for reproducibility.
-        # This range (7-15) ensures deterministic behavior with stable terms while accounting
-        # for system-level event duplication from internal operations.
-        assert new_events_count >= 7, (
-            f"Expected at least 7 change events per spec, "
-            f"got {new_events_count}. Initial: {initial_count}, Final: {final_count}"
-        )
-        assert new_events_count <= 15, (
-            f"Expected at most 15 change events (allowing for system triggers), "
+        # The spec requires exactly 7 events: 1 layer create + 1 domain create + 3 term creates
+        # + 1 predicate create + 1 link create + 1 link create = 7 events total.
+        # Using pinned SentenceTransformer 5.0.0 with stable domain terms ensures
+        # deterministic and reproducible event generation across test runs.
+        assert new_events_count == 7, (
+            f"Expected exactly 7 change events per spec, "
             f"got {new_events_count}. Initial: {initial_count}, Final: {final_count}"
         )
 
