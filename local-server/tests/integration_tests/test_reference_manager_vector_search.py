@@ -9,7 +9,10 @@ for computing max(title_similarity, definition_similarity) across various embedd
 import pytest
 import tempfile
 import os
+import sqlite3
 import numpy as np
+from uuid import uuid4
+from datetime import date
 
 from reference_db.config import ReferenceConfig
 from reference_db.manager import ReferenceManager
@@ -313,10 +316,6 @@ def reference_manager_with_external_predicates():
 
     # To test title-only and definition-only CASE WHEN paths, we insert directly into the database
     # with NULL embeddings to bypass the auto-generation that occurs in add_external_predicate
-    import sqlite3
-    from uuid import uuid4
-    from datetime import date
-
     conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
 

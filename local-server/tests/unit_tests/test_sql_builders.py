@@ -41,26 +41,6 @@ def create_test_embedding(seed: int) -> bytes:
     return emb.tobytes()
 
 
-def compute_similarity(vec1_seed: int, vec2_seed: int) -> float:
-    """Helper to compute expected cosine similarity between two embeddings.
-
-    Computes 1.0 - vec_distance_cosine, which is the similarity metric used
-    in the build_max_similarity_case_when implementation.
-    """
-    rng1 = np.random.RandomState(seed=vec1_seed)
-    vec1 = rng1.randn(384).astype(np.float32)
-    vec1 = vec1 / np.linalg.norm(vec1)
-
-    rng2 = np.random.RandomState(seed=vec2_seed)
-    vec2 = rng2.randn(384).astype(np.float32)
-    vec2 = vec2 / np.linalg.norm(vec2)
-
-    # Cosine similarity is dot product of normalized vectors
-    cosine_sim = np.dot(vec1, vec2)
-    # vec_distance_cosine returns distance, so similarity = 1.0 - distance
-    # For normalized vectors, distance ≈ 1.0 - cosine_similarity
-    return cosine_sim
-
 
 def test_sql_builder_case_when_default_columns():
     """Unit test of the SQL builder function with default column names.
@@ -288,7 +268,7 @@ def test_sql_builder_execution_both_embeddings(sqlite_with_vec):
 
         # Create query embedding
         query_emb = create_test_embedding(seed=44)
-        query_vec_json = json.dumps(np.random.RandomState(seed=44).randn(384).tolist())
+        query_vec_json = json.dumps(query_emb)
 
         # Build and execute the CASE WHEN query
         similarity_case = build_max_similarity_case_when("title_embedding", "definition_embedding")
