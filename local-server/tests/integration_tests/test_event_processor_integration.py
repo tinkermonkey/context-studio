@@ -10,10 +10,14 @@ import tempfile  # noqa: E402
 import pytest  # noqa: E402
 from utils.event_processor import EventProcessor  # noqa: E402
 from datetime import datetime, timedelta  # noqa: E402
+from sqlalchemy import text  # noqa: E402
+from database.utils import get_database_manager  # noqa: E402
 
 
 @pytest.fixture
 def temp_db():
+    from database.utils import get_database_manager
+
     fd, path = tempfile.mkstemp(suffix=".db")
     os.close(fd)
     conn = sqlite3.connect(path)
@@ -33,38 +37,79 @@ def temp_db():
     """
     )
     conn.commit()
-    # Return SQLAlchemy URL format instead of file path
-    yield f"sqlite:///{path}"
-    os.remove(path)
+    conn.close()
+
+    # Return SQLAlchemy URL format and generate a unique engine_id for this test
+    db_url = f"sqlite:///{path}"
+    engine_id = f"test_db_{id(path)}"
+
+    # Clear any old engines from DatabaseManager for this engine_id
+    db_manager = get_database_manager()
+    if engine_id in db_manager._engines:
+        try:
+            db_manager._engines[engine_id].dispose()
+        except Exception:
+            pass
+        del db_manager._engines[engine_id]
+        if engine_id in db_manager._session_locals:
+            del db_manager._session_locals[engine_id]
+
+    yield {"url": db_url, "engine_id": engine_id}
+
+    # Cleanup
+    try:
+        if engine_id in db_manager._engines:
+            db_manager._engines[engine_id].dispose()
+            del db_manager._engines[engine_id]
+        if engine_id in db_manager._session_locals:
+            del db_manager._session_locals[engine_id]
+    except Exception:
+        pass
+
+    try:
+        os.remove(path)
+    except Exception:
+        pass
 
 
-def insert_event(db_url, record_type, event_type, processed=0, ts=None, record_id=None):  # noqa: E501
+def insert_event(db_url, engine_id, record_type, event_type, processed=0, ts=None, record_id=None):  # noqa: E501
     from datetime import timezone
-    import sqlite3
 
-    # Extract file path from SQLAlchemy URL
-    file_path = db_url.replace("sqlite:///", "")
-    conn = sqlite3.connect(file_path)
-    cur = conn.cursor()
     if ts is None:
         ts = datetime.now(timezone.utc).isoformat()
     if record_id is None:
         record_id = f"test-{record_type}-id"
-    cur.execute(
-        "INSERT INTO change_events (event_type, record_type, record_id, old_data, new_data, timestamp, processed) VALUES (?, ?, ?, ?, ?, ?, ?)",  # noqa: E501
-        (event_type, record_type, record_id, "{}", "{}", ts, processed),
-    )
-    conn.commit()
-    conn.close()
+
+    # Use DatabaseManager with SQLAlchemy for consistent connection handling
+    db_manager = get_database_manager()
+
+    with db_manager.get_session(engine_id, db_url) as db:
+        db.execute(
+            text(
+                "INSERT INTO change_events (event_type, record_type, record_id, old_data, new_data, timestamp, processed) VALUES (:event_type, :record_type, :record_id, :old_data, :new_data, :timestamp, :processed)"  # noqa: E501
+            ),
+            {
+                "event_type": event_type,
+                "record_type": record_type,
+                "record_id": record_id,
+                "old_data": "{}",
+                "new_data": "{}",
+                "timestamp": ts,
+                "processed": processed,
+            },
+        )
 
 
 def test_integration_event_processor_end_to_end(temp_db, capsys):
     # Insert a mix of events
-    insert_event(temp_db, "structure_node", "create")
-    insert_event(temp_db, "structure_node", "update")
-    insert_event(temp_db, "structure_node", "delete")
-    insert_event(temp_db, "structure_node_link", "create")
-    insert_event(temp_db, "unknown_record_type", "create")  # negative case
+    db_url = temp_db["url"]
+    engine_id = temp_db["engine_id"]
+
+    insert_event(db_url, engine_id, "structure_node", "create")
+    insert_event(db_url, engine_id, "structure_node", "update")
+    insert_event(db_url, engine_id, "structure_node", "delete")
+    insert_event(db_url, engine_id, "structure_node_link", "create")
+    insert_event(db_url, engine_id, "unknown_record_type", "create")  # negative case
 
     import logging
     import io
@@ -74,19 +119,21 @@ def test_integration_event_processor_end_to_end(temp_db, capsys):
     logger = logging.getLogger("utils.event_processor")
     logger.addHandler(handler)
     logger.setLevel(logging.INFO)
+
+    db_manager = get_database_manager()
+
     try:
-        processor = EventProcessor(temp_db, poll_interval=0.05, max_events=10)
+        processor = EventProcessor(db_url, poll_interval=0.05, max_events=10)
         processor.start()
 
         # Poll until all events are processed or timeout
-        file_path = temp_db.replace("sqlite:///", "")
         timeout = time.time() + 2.0  # 2 second timeout
         while time.time() < timeout:
-            conn = sqlite3.connect(file_path)
-            cur = conn.cursor()
-            cur.execute("SELECT COUNT(*) FROM change_events WHERE processed=0")
-            unprocessed = cur.fetchone()[0]
-            conn.close()
+            with db_manager.get_session(engine_id, db_url) as db:
+                result = db.execute(
+                    text("SELECT COUNT(*) FROM change_events WHERE processed=0")
+                ).fetchone()
+                unprocessed = result[0] if result else 0
 
             if unprocessed == 0:
                 break
@@ -96,12 +143,11 @@ def test_integration_event_processor_end_to_end(temp_db, capsys):
         logger.removeHandler(handler)
 
     # All events should be marked processed
-    file_path = temp_db.replace("sqlite:///", "")
-    conn = sqlite3.connect(file_path)
-    cur = conn.cursor()
-    cur.execute("SELECT COUNT(*) FROM change_events WHERE processed=0")
-    assert cur.fetchone()[0] == 0
-    conn.close()
+    with db_manager.get_session(engine_id, db_url) as db:
+        result = db.execute(
+            text("SELECT COUNT(*) FROM change_events WHERE processed=0")
+        ).fetchone()
+        assert (result[0] if result else 0) == 0
 
     # Check logs for correct handler calls and unknown entity warning
     log_contents = log_stream.getvalue()
@@ -116,47 +162,55 @@ def test_integration_event_processor_cleanup(temp_db, capsys):
     # Insert processed events, one old, one recent
     from datetime import timezone
 
-    old_ts = (datetime.now(timezone.utc) - timedelta(hours=49)).isoformat()
-    insert_event(temp_db, "structure_nodes", "delete", processed=1, ts=old_ts)
-    insert_event(temp_db, "structure_nodes", "update", processed=1)
+    db_url = temp_db["url"]
+    engine_id = temp_db["engine_id"]
 
-    processor = EventProcessor(temp_db, poll_interval=0.05, max_events=10)
+    old_ts = (datetime.now(timezone.utc) - timedelta(hours=49)).isoformat()
+    insert_event(db_url, engine_id, "structure_nodes", "delete", processed=1, ts=old_ts)
+    insert_event(db_url, engine_id, "structure_nodes", "update", processed=1)
+
+    db_manager = get_database_manager()
+
+    processor = EventProcessor(db_url, poll_interval=0.05, max_events=10)
     try:
         processor.cleanup_old_events()
     finally:
         processor.stop()
 
     # Only the recent event should remain
-    file_path = temp_db.replace("sqlite:///", "")
-    conn = sqlite3.connect(file_path)
-    cur = conn.cursor()
-    cur.execute("SELECT COUNT(*) FROM change_events WHERE processed=1")
-    assert cur.fetchone()[0] == 1
-    conn.close()
+    with db_manager.get_session(engine_id, db_url) as db:
+        result = db.execute(
+            text("SELECT COUNT(*) FROM change_events WHERE processed=1")
+        ).fetchone()
+        assert (result[0] if result else 0) == 1
 
 
 def test_integration_event_processor_large_batch(temp_db, capsys):
     # Insert many events
+    db_url = temp_db["url"]
+    engine_id = temp_db["engine_id"]
+
     record_types = ["structure_node", "structure_node_link", "predicate"]
     for i in range(50):
         record_type = record_types[i % len(record_types)]
         insert_event(
-            temp_db, record_type, "create", record_id=f"test-{record_type}-{i}"
+            db_url, engine_id, record_type, "create", record_id=f"test-{record_type}-{i}"
         )
 
-    processor = EventProcessor(temp_db, poll_interval=0.05, max_events=10)
+    db_manager = get_database_manager()
+
+    processor = EventProcessor(db_url, poll_interval=0.05, max_events=10)
     try:
         processor.start()
 
         # Poll until all events are processed or timeout
-        file_path = temp_db.replace("sqlite:///", "")
         timeout = time.time() + 5.0  # 5 second timeout
         while time.time() < timeout:
-            conn = sqlite3.connect(file_path)
-            cur = conn.cursor()
-            cur.execute("SELECT COUNT(*) FROM change_events WHERE processed=0")
-            unprocessed = cur.fetchone()[0]
-            conn.close()
+            with db_manager.get_session(engine_id, db_url) as db:
+                result = db.execute(
+                    text("SELECT COUNT(*) FROM change_events WHERE processed=0")
+                ).fetchone()
+                unprocessed = result[0] if result else 0
 
             if unprocessed == 0:
                 break
@@ -165,11 +219,12 @@ def test_integration_event_processor_large_batch(temp_db, capsys):
         processor.stop()
 
     # All events should be processed
-    file_path = temp_db.replace("sqlite:///", "")
-    conn = sqlite3.connect(file_path)
-    cur = conn.cursor()
-    cur.execute("SELECT COUNT(*) FROM change_events WHERE processed=0")
-    assert cur.fetchone()[0] == 0
-    cur.execute("SELECT COUNT(*) FROM change_events WHERE processed=1")
-    assert cur.fetchone()[0] == 50
-    conn.close()
+    with db_manager.get_session(engine_id, db_url) as db:
+        result = db.execute(
+            text("SELECT COUNT(*) FROM change_events WHERE processed=0")
+        ).fetchone()
+        assert (result[0] if result else 0) == 0
+        result = db.execute(
+            text("SELECT COUNT(*) FROM change_events WHERE processed=1")
+        ).fetchone()
+        assert (result[0] if result else 0) == 50
