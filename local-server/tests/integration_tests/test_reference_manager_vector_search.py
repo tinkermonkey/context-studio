@@ -289,14 +289,19 @@ def test_reference_nodes_limit_respected(reference_manager_with_embeddings):
 
 @pytest.fixture(scope="function")
 def reference_manager_with_external_predicates():
-    """Create a reference manager with external predicates containing various embedding scenarios."""
+    """Create a reference manager with external predicates containing various embedding scenarios.
+
+    Note: External predicates normally auto-generate embeddings when None is passed to add_external_predicate.
+    To test the CASE WHEN branches for partial embeddings (title-only, definition-only), we use direct
+    SQL insertion to create predicates with actual NULL embeddings in the database.
+    """
     with tempfile.NamedTemporaryFile(suffix=".db", delete=False) as tmp_file:
         db_path = tmp_file.name
 
     config = ReferenceConfig()
     manager = ReferenceManager(config, db_path=db_path)
 
-    # Add external predicates with different embedding combinations
+    # Add external predicate with both embeddings (using API)
     manager.add_external_predicate(
         title="Both Embeddings Predicate",
         definition="Predicate with both title and definition embeddings",
@@ -306,28 +311,53 @@ def reference_manager_with_external_predicates():
         definition_embedding=create_embedding(0.75),
     )
 
-    manager.add_external_predicate(
-        title="Title Only Predicate",
-        definition="Predicate with only title embedding",
-        source="test-source",
-        external_id="pred_title_001",
-        title_embedding=create_embedding(0.65),
-        definition_embedding=None,
-    )
+    # To test title-only and definition-only CASE WHEN paths, we insert directly into the database
+    # with NULL embeddings to bypass the auto-generation that occurs in add_external_predicate
+    import sqlite3
+    from uuid import uuid4
+    from datetime import date
 
-    manager.add_external_predicate(
-        title="Definition Only Predicate",
-        definition="Predicate with only definition embedding",
-        source="test-source",
-        external_id="pred_def_001",
-        title_embedding=None,
-        definition_embedding=create_embedding(0.55),
-    )
+    conn = sqlite3.connect(db_path)
+    cursor = conn.cursor()
 
-    # Note: External predicates auto-generate embeddings if not provided,
-    # so we can't actually test a predicate with no embeddings.
-    # Instead, we add a predicate from a different source to test source filtering.
+    title_only_id = str(uuid4())
+    cursor.execute("""
+        INSERT INTO external_predicates
+        (id, title, definition, source, external_id, title_embedding, definition_embedding, created_at, updated_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+    """, (
+        title_only_id,
+        "Title Only Predicate",
+        "Predicate with only title embedding",
+        "test-source",
+        "pred_title_001",
+        create_embedding(0.65),  # title embedding
+        None,  # definition embedding is NULL
+        date.today().isoformat(),
+        date.today().isoformat()
+    ))
 
+    definition_only_id = str(uuid4())
+    cursor.execute("""
+        INSERT INTO external_predicates
+        (id, title, definition, source, external_id, title_embedding, definition_embedding, created_at, updated_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+    """, (
+        definition_only_id,
+        "Definition Only Predicate",
+        "Predicate with only definition embedding",
+        "test-source",
+        "pred_def_001",
+        None,  # title embedding is NULL
+        create_embedding(0.55),  # definition embedding
+        date.today().isoformat(),
+        date.today().isoformat()
+    ))
+
+    conn.commit()
+    conn.close()
+
+    # Add a predicate from a different source to test source filtering
     manager.add_external_predicate(
         title="Different Source Predicate",
         definition="Predicate from a different source",
@@ -383,7 +413,9 @@ def test_external_predicates_max_similarity_title_only(
     """Test external predicate search when only title embedding exists.
 
     The CASE WHEN logic should return the title similarity when definition
-    embedding is missing, using the correct ep.* table alias.
+    embedding is NULL, using the correct ep.* table alias. This fixture uses direct
+    SQL insertion to ensure definition_embedding is actually NULL in the database,
+    not auto-generated.
     """
     manager = reference_manager_with_external_predicates
 
@@ -419,7 +451,9 @@ def test_external_predicates_max_similarity_definition_only(
     """Test external predicate search when only definition embedding exists.
 
     The CASE WHEN logic should return the definition similarity when title
-    embedding is missing, using the correct ep.* table alias.
+    embedding is NULL, using the correct ep.* table alias. This fixture uses direct
+    SQL insertion to ensure title_embedding is actually NULL in the database,
+    not auto-generated.
     """
     manager = reference_manager_with_external_predicates
 
