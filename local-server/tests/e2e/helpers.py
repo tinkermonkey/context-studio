@@ -52,7 +52,6 @@ def retry_on_external_failure(max_retries: int = 2, delay: float = 5):
     def decorator(func: Callable) -> Callable:
         @functools.wraps(func)
         def wrapper(*args, **kwargs):
-            last_exception = None
             for attempt in range(1 + max_retries):
                 try:
                     return func(*args, **kwargs)
@@ -61,7 +60,6 @@ def retry_on_external_failure(max_retries: int = 2, delay: float = 5):
                     raise
                 except TRANSIENT_EXCEPTIONS as e:
                     # Transient external failure: may retry
-                    last_exception = e
                     if attempt < max_retries:
                         time.sleep(delay)
                         continue
@@ -122,7 +120,7 @@ def poll_until(
         except TRANSIENT_EXCEPTIONS as e:
             # Transient external failure: capture but continue polling
             last_exception = e
-        except (TypeError, KeyError, AttributeError, ValueError, IndexError) as e:
+        except (TypeError, KeyError, AttributeError, ValueError, IndexError):
             # Programming error: re-raise immediately to surface the bug quickly
             # rather than hanging until timeout
             raise
