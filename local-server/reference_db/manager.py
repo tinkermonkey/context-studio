@@ -21,6 +21,7 @@ from sqlalchemy.exc import OperationalError
 from sqlalchemy.pool import NullPool
 
 from database.utils import init_db
+from database.sql_builders import build_max_similarity_case_when
 from reference_db.models import Base, ReferenceNode, ReferenceLink, ExternalPredicate
 from reference_db.config import ReferenceConfig, REFERENCE_SCHEMA_VERSION
 from embeddings.generate_embeddings import generate_embedding
@@ -256,16 +257,6 @@ class ReferenceManager:
                 logger.debug("Schema version table does not exist (new database)")
                 return "missing"
             # Re-raise other operational errors (e.g., database locked, corrupted)
-            raise
-
-        except Exception:
-            # Re-raise any unexpected exceptions to surface real problems
-            raise
-            # Re-raise other operational errors (e.g., database locked, corrupted)
-            raise
-
-        except Exception:
-            # Re-raise any unexpected exceptions to surface real problems
             raise
 
     def _rebuild_database(self):
@@ -750,7 +741,8 @@ class ReferenceManager:
             # Build the vector search query using parameterized SQL to prevent injection
             # We compute similarity as (1.0 - cosine_distance) for both title and definition
             # and take the maximum similarity value for ranking
-            sql_query = """
+            similarity_case = build_max_similarity_case_when("rn.title_embedding", "rn.definition_embedding")
+            sql_query = f"""
             WITH similarities AS (
                 SELECT
                     rn.id,
@@ -761,22 +753,7 @@ class ReferenceManager:
                     rn.attributes,
                     rn.created_at,
                     rn.updated_at,
-                    CASE
-                        -- Both embeddings present: compute max similarity
-                        WHEN rn.title_embedding IS NOT NULL AND rn.definition_embedding IS NOT NULL THEN
-                            MAX(
-                                (1.0 - vec_distance_cosine(rn.title_embedding, :query_vec)),
-                                (1.0 - vec_distance_cosine(rn.definition_embedding, :query_vec))
-                            )
-                        -- Only title embedding: use title similarity
-                        WHEN rn.title_embedding IS NOT NULL THEN
-                            (1.0 - vec_distance_cosine(rn.title_embedding, :query_vec))
-                        -- Only definition embedding: use definition similarity
-                        WHEN rn.definition_embedding IS NOT NULL THEN
-                            (1.0 - vec_distance_cosine(rn.definition_embedding, :query_vec))
-                        -- No embeddings: zero similarity (filtered out by HAVING clause)
-                        ELSE 0.0
-                    END AS max_similarity
+                    {similarity_case} AS max_similarity
                 FROM reference_nodes rn
                 WHERE rn.title_embedding IS NOT NULL OR rn.definition_embedding IS NOT NULL
             )
@@ -1140,7 +1117,8 @@ class ReferenceManager:
 
             # Build the vector search query using parameterized SQL to prevent injection
             query_start = time.perf_counter()
-            sql_query = """
+            similarity_case = build_max_similarity_case_when("ep.title_embedding", "ep.definition_embedding")
+            sql_query = f"""
             WITH similarities AS (
                 SELECT
                     ep.id,
@@ -1151,22 +1129,7 @@ class ReferenceManager:
                     ep.attributes,
                     ep.created_at,
                     ep.updated_at,
-                    CASE
-                        -- Both embeddings present: compute max similarity
-                        WHEN ep.title_embedding IS NOT NULL AND ep.definition_embedding IS NOT NULL THEN
-                            MAX(
-                                (1.0 - vec_distance_cosine(ep.title_embedding, :query_vec)),
-                                (1.0 - vec_distance_cosine(ep.definition_embedding, :query_vec))
-                            )
-                        -- Only title embedding: use title similarity
-                        WHEN ep.title_embedding IS NOT NULL THEN
-                            (1.0 - vec_distance_cosine(ep.title_embedding, :query_vec))
-                        -- Only definition embedding: use definition similarity
-                        WHEN ep.definition_embedding IS NOT NULL THEN
-                            (1.0 - vec_distance_cosine(ep.definition_embedding, :query_vec))
-                        -- No embeddings: zero similarity (filtered out by HAVING clause)
-                        ELSE 0.0
-                    END AS max_similarity
+                    {similarity_case} AS max_similarity
                 FROM external_predicates ep
                 WHERE ep.title_embedding IS NOT NULL OR ep.definition_embedding IS NOT NULL
             )

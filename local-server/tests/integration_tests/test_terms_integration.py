@@ -95,7 +95,7 @@ def test_create_term_duplicate_title_within_domain(client):
     domain_id = create_domain(client, layer_id)
     unique_suffix = str(uuid.uuid4())[:8]
     dup_title = f"DupTerm {unique_suffix}"
-    _t1 = create_term(client, domain_id, layer_id, title=dup_title)  # noqa: F841, E501
+    create_term(client, domain_id, layer_id, title=dup_title)
     resp = client.post(
         "/api/structure_nodes/",
         json={
@@ -123,7 +123,7 @@ def test_create_term_with_parent_and_circular_reference(client):
     child = create_term(client, domain_id, layer_id, parent_term_id=parent["id"])  # noqa: E501
 
     # Parent must exist and be in same domain
-    _resp = client.post(
+    client.post(
         "/api/structure_nodes/",
         json={
             "node_type": "term",
@@ -137,7 +137,7 @@ def test_create_term_with_parent_and_circular_reference(client):
     # This test may need adjustment based on actual API behavior
 
     # Circular reference test - may not be applicable in current API
-    _resp = client.put(  # noqa: F841
+    client.put(
         f"/api/structure_nodes/{parent['id']}", json={"parent_term_id": child["id"]}  # noqa: E501
     )
     # Note: This may succeed if parent_term_id is not validated
@@ -168,7 +168,7 @@ def test_update_term_duplicate_title(client):
     unique_suffix = str(uuid.uuid4())[:8]
     original_title = f"Original {unique_suffix}"
     duplicate_title = f"Duplicate {unique_suffix}"
-    _t1 = create_term(client, domain_id, layer_id, title=original_title)  # noqa: F841, E501
+    create_term(client, domain_id, layer_id, title=original_title)
     t2 = create_term(client, domain_id, layer_id, title=duplicate_title)
 
     # Try to update t2 to have the same title as t1
@@ -218,8 +218,8 @@ def test_list_terms(client):
     domain_id = create_domain(client, layer_id)
     # Use unique titles to avoid conflicts across test runs
     unique_suffix = str(uuid.uuid4())[:8]
-    _term1 = create_term(client, domain_id, layer_id, title=f"Term A {unique_suffix}")  # noqa: E501, F841
-    _term2 = create_term(client, domain_id, layer_id, title=f"Term B {unique_suffix}")  # noqa: E501, F841
+    create_term(client, domain_id, layer_id, title=f"Term A {unique_suffix}")
+    create_term(client, domain_id, layer_id, title=f"Term B {unique_suffix}")
 
     resp = client.get(
         f"/api/structure_nodes/?parent_node_id={domain_id}&node_type=term"

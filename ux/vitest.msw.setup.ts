@@ -99,12 +99,10 @@ Object.defineProperty(window, "matchMedia", {
     // No-op
   }
 
-   
   disconnect() {
     // No-op
   }
 
-   
   takeRecords() {
     return [];
   }
@@ -128,7 +126,6 @@ Object.defineProperty(window, "matchMedia", {
     // No-op
   }
 
-   
   disconnect() {
     // No-op
   }

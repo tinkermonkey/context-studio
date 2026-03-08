@@ -78,3 +78,9 @@ temp
 *.db
 *.sqlite
 *.sqlite3
+
+# Documentation (not needed for dependency install)
+documentation
+
+# NLP sandbox and test data
+local-server/nlp_sandbox

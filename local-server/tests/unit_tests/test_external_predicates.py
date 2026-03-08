@@ -93,7 +93,7 @@ class TestExternalPredicateManager:
     def check_sqlite_vec(self):
         """Check if sqlite-vec is available, skip tests if not."""
         try:
-            import sqlite_vec  # noqa: F401 # type: ignore[import-untyped]
+            import sqlite_vec as _  # noqa: F401 # type: ignore[import-untyped]
         except ImportError:
             pytest.skip("sqlite-vec not available (expected in Docker environment)")
 

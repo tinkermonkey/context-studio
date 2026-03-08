@@ -1,88 +1,72 @@
 """
 Stable test data for E2E baseline tests.
 
-This module defines stable test concepts that are used across E2E tests
-to ensure consistent behavior and comparison baselines.
+This module defines stable test concepts and predicates for baseline tests
+to ensure consistent behavior and regression testing.
+
+All data is designed with the SentenceTransformer embedding model (version 5.0.0,
+model 'all-MiniLM-L12-v2') in mind and produces stable, reproducible results across
+test runs. The model version is pinned in requirements_test.txt and documented in
+conftest.py to ensure deterministic embedding generation for the Phase 0 baseline.
 """
 
-# Stable concepts used in E2E tests
-STABLE_CONCEPTS = {
-    "taxonomy_1": {
-        "title": "E2E Test Taxonomy",
-        "definition": "A taxonomy for testing end-to-end workflows",
-        "type": "TAXONOMY",  # Node type mapping: TAXONOMY
+from typing import Any, Dict
+
+# Stable taxonomy used in baseline tests
+# These concepts produce predictable semantic embeddings
+STABLE_TAXONOMY: Dict[str, Any] = {
+    "layer": {
+        "title": "Computer Science",
+        "definition": "The study of computation and information",
     },
-    "scheme_1": {
-        "title": "E2E Concept Scheme",
-        "definition": "A concept scheme within the test taxonomy",
-        "type": "CONCEPT_SCHEME",  # Node type mapping: CONCEPT_SCHEME
+    "scheme": {
+        "title": "Data Management",
+        "definition": "Technologies and methods for storing and retrieving data",
     },
-    "class_1": {
-        "title": "E2E Test Class One",
-        "definition": "First test class for taxonomy lifecycle testing",
-        "type": "CLASS",  # Node type mapping: CLASS
-    },
-    "class_2": {
-        "title": "E2E Test Class Two",
-        "definition": "Second test class for hierarchy relationships",
-        "type": "CLASS",
-    },
-    "class_3": {
-        "title": "E2E Test Class Three",
-        "definition": "Third test class for semantic search comparison",
-        "type": "CLASS",
-    },
-    "property_1": {
-        "title": "TestProperty",
-        "definition": "A test property for testing property definitions",
-        "datatype": "string",
-        "cardinality": "single",
-    },
-    "predicate_1": {
-        "title": "test_has_property",
-        "definition": "A test predicate for linking classes to properties",
-    },
+    "classes": [
+        {
+            "title": "Database",
+            "definition": "An organized collection of structured information",
+        },
+        {
+            "title": "Relational Database",
+            "definition": "A database based on the relational model of data",
+        },
+        {
+            "title": "SQL",
+            "definition": "Structured Query Language for managing relational databases",
+        },
+        {
+            "title": "Index",
+            "definition": "A data structure that improves the speed of data retrieval",
+        },
+    ],
 }
 
-# Test data for change event tracking
-CHANGE_EVENT_CONCEPTS = {
-    "change_test_taxonomy": {
-        "title": "Change Event Test Taxonomy",
-        "definition": "Taxonomy for change event tracking validation",
-        "type": "TAXONOMY",
+# Stable predicates for relationship definition
+STABLE_PREDICATES = [
+    {
+        "title": "Is A",
+        "identifier": "is_a",
+        "definition": "Subtype relationship",
     },
-    "change_test_scheme": {
-        "title": "Change Event Test Scheme",
-        "definition": "Concept scheme for change event tracking",
-        "type": "CONCEPT_SCHEME",
+    {
+        "title": "Used By",
+        "identifier": "used_by",
+        "definition": "Indicates usage by another concept",
     },
-    "change_test_class_1": {
-        "title": "Change Event Test Class 1",
-        "definition": "Class for testing change events",
-        "type": "CLASS",
+    {
+        "title": "Part Of",
+        "identifier": "part_of",
+        "definition": "Indicates a part-whole relationship",
     },
-    "change_test_class_2": {
-        "title": "Change Event Test Class 2",
-        "definition": "Another class for relationship change events",
-        "type": "CLASS",
-    },
-}
+]
 
-# Test data for embedding generation
-EMBEDDING_TEST_CONCEPTS = {
-    "embedding_base_class": {
-        "title": "Base Embedding Test Class",
-        "definition": "Original class for embedding generation testing",
-        "type": "CLASS",
-    },
-    "embedding_similar_class": {
-        "title": "Similar Embedding Test Class",
-        "definition": "Semantically similar class for testing semantic search ranking",  # noqa: E501
-        "type": "CLASS",
-    },
-    "embedding_different_class": {
-        "title": "Different Embedding Test Class",
-        "definition": "Semantically different class for testing ranking accuracy",  # noqa: E501
-        "type": "CLASS",
-    },
-}
+# Stable relationships between concepts
+# Format: (source_title, target_title, predicate_identifier)
+STABLE_RELATIONSHIPS = [
+    ("Relational Database", "Database", "is_a"),
+    ("SQL", "Relational Database", "used_by"),
+    ("Index", "Database", "part_of"),
+]
+

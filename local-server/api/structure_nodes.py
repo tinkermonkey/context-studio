@@ -26,6 +26,7 @@ from fastapi import APIRouter, HTTPException, Query, Depends, Path
 from typing import List, Optional
 from uuid import UUID
 
+from database.sql_builders import build_max_similarity_case_when
 from services.node_service import NodeService
 from services.node_link_service import NodeLinkService
 from services.reference_link_service import ReferenceLinkService
@@ -212,6 +213,7 @@ def search_nodes(
             type_filter = "AND node_type = :node_type"
             params['node_type'] = db_node_type
 
+        similarity_case = build_max_similarity_case_when()
         query = text(f"""
             WITH similarities AS (
                 SELECT
@@ -225,20 +227,9 @@ def search_nodes(
                     last_modified,
                     title_embedding,
                     definition_embedding,
-                    CASE
-                        WHEN title_embedding IS NOT NULL AND definition_embedding IS NOT NULL THEN  # noqa: E501
-                            MAX(
-                                (1.0 - vec_distance_cosine(title_embedding, :query_vec)),  # noqa: E501
-                                (1.0 - vec_distance_cosine(definition_embedding, :query_vec))  # noqa: E501
-                            )
-                        WHEN title_embedding IS NOT NULL THEN
-                            (1.0 - vec_distance_cosine(title_embedding, :query_vec))  # noqa: E501
-                        WHEN definition_embedding IS NOT NULL THEN
-                            (1.0 - vec_distance_cosine(definition_embedding, :query_vec))  # noqa: E501
-                        ELSE 0.0
-                    END as similarity
+                    {similarity_case} as similarity
                 FROM structure_nodes
-                WHERE (title_embedding IS NOT NULL OR definition_embedding IS NOT NULL)  # noqa: E501
+                WHERE (title_embedding IS NOT NULL OR definition_embedding IS NOT NULL)
                 {type_filter}
             )
             SELECT

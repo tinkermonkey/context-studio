@@ -12,8 +12,5 @@
       "@/*": ["*"]
     }
   },
-  "exclude": [
-    "src/routeTree.gen.ts",
-    ".flowbite-react"
-  ]
+  "exclude": ["src/routeTree.gen.ts", ".flowbite-react"]
 }

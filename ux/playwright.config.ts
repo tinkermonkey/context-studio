@@ -25,7 +25,6 @@ export default defineConfig({
   reporter: [
     ["html", { outputFolder: "playwright-report", open: "never" }],
     ["list"],
-    ...(process.env.CI ? [["github"] as const] : []),
   ],
 
   // Test behavior defaults

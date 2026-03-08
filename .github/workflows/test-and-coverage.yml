@@ -2,6 +2,8 @@ name: Test and Coverage
 
 on:
   push:
+    branches:
+      - main
   pull_request:
 
 jobs:
@@ -17,14 +19,16 @@ jobs:
           node-version: 20
 
       - name: Install dependencies
+        working-directory: ./ux
         run: npm ci
 
       - name: Run tests and collect coverage (c8)
+        working-directory: ./ux
         run: npm run test:coverage:c8
 
       - name: Upload coverage lcov
         uses: actions/upload-artifact@v4
         with:
           name: coverage-lcov
-          path: coverage/lcov.info
+          path: ux/coverage/lcov.info
           retention-days: 7

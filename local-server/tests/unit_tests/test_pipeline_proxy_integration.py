@@ -100,7 +100,7 @@ class TestPipelineProxyIntegration:
         mock_nlp.pipe_names = []  # Make pipe_names iterable
         mock_spacy_load.return_value = mock_nlp
 
-        _pipeline = NLPPipeline()  # noqa: F841
+        NLPPipeline()
 
         # Verify proxy was started
         mock_proxy_manager.start_proxy.assert_called_once()
@@ -193,7 +193,7 @@ class TestPipelineProxyIntegration:
         mock_nlp.pipe_names = []  # Make pipe_names iterable
         mock_spacy_load.return_value = mock_nlp
 
-        _pipeline = NLPPipeline()  # noqa: F841
+        NLPPipeline()
 
         # Verify concepcy was added with proxy config
         expected_config = {
@@ -268,7 +268,7 @@ class TestPipelineProxyIntegration:
         mock_nlp.pipe_names = []  # Make pipe_names iterable
         mock_spacy_load.return_value = mock_nlp
 
-        _pipeline = NLPPipeline()  # noqa: F841
+        NLPPipeline()
 
         # Verify DBpedia Spotlight was added with proxy config
         mock_nlp.add_pipe.assert_any_call(
@@ -339,7 +339,7 @@ class TestPipelineProxyIntegration:
         mock_nlp.pipe_names = []  # Make pipe_names iterable
         mock_spacy_load.return_value = mock_nlp
 
-        _pipeline = NLPPipeline()  # noqa: F841
+        NLPPipeline()
 
         # Verify DBpedia Spotlight was added with upstream URL (no proxy)
         expected_config = {
