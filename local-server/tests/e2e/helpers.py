@@ -6,8 +6,47 @@ including polling for asynchronous operations, event processing, and
 test data setup helpers.
 """
 
+import functools
 import time
 from typing import Callable, Any, Dict, List
+
+
+def retry_on_external_failure(max_retries: int = 2):
+    """
+    Decorator for retrying tests marked with @pytest.mark.reference on external failures.
+
+    Tests that depend on external reference data sources may fail transiently due to
+    network issues, temporary service unavailability, or rate limiting. This decorator
+    automatically retries the test if it fails with an exception, allowing transient
+    failures to be distinguished from real test failures.
+
+    Args:
+        max_retries: Maximum number of retries after initial failure (default: 2).
+                     Total attempts = 1 + max_retries.
+
+    Example:
+        @pytest.mark.reference
+        @retry_on_external_failure(max_retries=2)
+        def test_reference_data_lookup():
+            # Test code that may fail transiently
+            pass
+    """
+    def decorator(func: Callable) -> Callable:
+        @functools.wraps(func)
+        def wrapper(*args, **kwargs):
+            last_exception = None
+            for attempt in range(1 + max_retries):
+                try:
+                    return func(*args, **kwargs)
+                except Exception as e:
+                    last_exception = e
+                    # Retry unless this is the last attempt
+                    if attempt < max_retries:
+                        continue
+            # All retries exhausted, raise the last exception
+            raise last_exception
+        return wrapper
+    return decorator
 
 
 def poll_until(
@@ -21,12 +60,13 @@ def poll_until(
 
     External services introduce latency. This helper replaces time.sleep with a polling
     pattern that repeatedly calls a predicate function until it returns (True, result)
-    or the timeout is exceeded.
+    or the timeout is exceeded. Transient exceptions (connection timeouts, temporary
+    server errors) are caught and retried rather than crashing the poll loop.
 
     Args:
         predicate: Callable that returns (success: bool, result: Any) tuple. Returns
                    (True, result_value) when the condition is met, (False, result)
-                   otherwise.
+                   otherwise. May raise transient exceptions (Exception).
         timeout_seconds: Maximum wait time in seconds (default: 30)
         interval: Seconds between polls (default: 0.5)
         description: What we're waiting for (used in error messages)
@@ -39,15 +79,22 @@ def poll_until(
     """
     deadline = time.time() + timeout_seconds
     last_result = None
+    last_exception = None
     while time.time() < deadline:
-        success, last_result = predicate()
-        if success:
-            return last_result
+        try:
+            success, last_result = predicate()
+            if success:
+                return last_result
+        except Exception as e:
+            # Capture transient exceptions but continue retrying
+            last_exception = e
         time.sleep(interval)
-    raise TimeoutError(
-        f"Timed out after {timeout_seconds}s waiting for {description}. "
-        f"Last result: {last_result}"
-    )
+
+    # Include exception info if we have it
+    error_msg = f"Timed out after {timeout_seconds}s waiting for {description}. Last result: {last_result}"
+    if last_exception:
+        error_msg += f". Last exception: {type(last_exception).__name__}: {last_exception}"
+    raise TimeoutError(error_msg)
 
 
 def create_test_hierarchy(
