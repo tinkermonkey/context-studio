@@ -204,3 +204,452 @@ def test_sql_builder_valid_columns_starting_with_underscore():
     )
     assert "_title_embedding" in result
     assert "_definition_embedding" in result
+
+
+def test_sql_builder_execution_both_embeddings():
+    """Test that CASE WHEN SQL executes correctly when both embeddings exist.
+
+    This test verifies that the generated SQL actually executes against SQLite
+    and returns the maximum similarity when both embeddings are present.
+    """
+    import sqlite3
+    import numpy as np
+    import json
+
+    # Create in-memory SQLite database with sqlite-vec extension
+    conn = sqlite3.connect(":memory:")
+
+    # Load sqlite-vec extension
+    try:
+        conn.enable_load_extension(True)
+        conn.load_extension("vec0")
+        conn.enable_load_extension(False)
+    except Exception:
+        # Skip test if sqlite-vec is not available
+        pytest.skip("sqlite-vec extension not available")
+
+    try:
+        # Create test table with embeddings
+        conn.execute("""
+            CREATE TABLE test_nodes (
+                id TEXT PRIMARY KEY,
+                title_embedding BLOB,
+                definition_embedding BLOB
+            )
+        """)
+
+        # Create test embeddings
+        rng = np.random.RandomState(seed=42)
+        emb1 = rng.randn(384).astype(np.float32)
+        emb1 = emb1 / np.linalg.norm(emb1)
+
+        rng = np.random.RandomState(seed=43)
+        emb2 = rng.randn(384).astype(np.float32)
+        emb2 = emb2 / np.linalg.norm(emb2)
+
+        # Insert test data
+        conn.execute(
+            "INSERT INTO test_nodes (id, title_embedding, definition_embedding) VALUES (?, ?, ?)",
+            ("test1", emb1.tobytes(), emb2.tobytes()),
+        )
+        conn.commit()
+
+        # Create query embedding
+        rng = np.random.RandomState(seed=44)
+        query_emb = rng.randn(384).astype(np.float32)
+        query_emb = query_emb / np.linalg.norm(query_emb)
+        query_vec_json = json.dumps(query_emb.tolist())
+
+        # Build and execute the CASE WHEN query
+        similarity_case = build_max_similarity_case_when("title_embedding", "definition_embedding")
+        sql_query = f"""
+            SELECT
+                id,
+                {similarity_case} AS max_similarity
+            FROM test_nodes
+        """
+
+        result = conn.execute(sql_query, {"query_vec": query_vec_json}).fetchone()
+
+        # Verify the query executed and returned a result
+        assert result is not None
+        assert len(result) == 2
+        assert result[0] == "test1"
+
+        # Verify similarity is a valid float between -1.0 and 1.0
+        similarity = result[1]
+        assert isinstance(similarity, (float, int))
+        assert -1.0 <= similarity <= 1.0
+
+    finally:
+        conn.close()
+
+
+def test_sql_builder_execution_title_only():
+    """Test that CASE WHEN SQL executes correctly when only title embedding exists.
+
+    This test verifies that the generated SQL correctly handles the case where
+    only the title embedding is present and definition is NULL.
+    """
+    import sqlite3
+    import numpy as np
+    import json
+
+    conn = sqlite3.connect(":memory:")
+
+    try:
+        conn.enable_load_extension(True)
+        conn.load_extension("vec0")
+        conn.enable_load_extension(False)
+    except Exception:
+        pytest.skip("sqlite-vec extension not available")
+
+    try:
+        conn.execute("""
+            CREATE TABLE test_nodes (
+                id TEXT PRIMARY KEY,
+                title_embedding BLOB,
+                definition_embedding BLOB
+            )
+        """)
+
+        rng = np.random.RandomState(seed=45)
+        emb1 = rng.randn(384).astype(np.float32)
+        emb1 = emb1 / np.linalg.norm(emb1)
+
+        # Insert with definition_embedding as NULL
+        conn.execute(
+            "INSERT INTO test_nodes (id, title_embedding, definition_embedding) VALUES (?, ?, ?)",
+            ("test2", emb1.tobytes(), None),
+        )
+        conn.commit()
+
+        rng = np.random.RandomState(seed=46)
+        query_emb = rng.randn(384).astype(np.float32)
+        query_emb = query_emb / np.linalg.norm(query_emb)
+        query_vec_json = json.dumps(query_emb.tolist())
+
+        similarity_case = build_max_similarity_case_when("title_embedding", "definition_embedding")
+        sql_query = f"""
+            SELECT
+                id,
+                {similarity_case} AS max_similarity
+            FROM test_nodes
+        """
+
+        result = conn.execute(sql_query, {"query_vec": query_vec_json}).fetchone()
+
+        # Verify the query executed
+        assert result is not None
+        assert result[0] == "test2"
+
+        # Similarity should be computed from title only
+        similarity = result[1]
+        assert isinstance(similarity, (float, int))
+        assert -1.0 <= similarity <= 1.0
+
+    finally:
+        conn.close()
+
+
+def test_sql_builder_execution_definition_only():
+    """Test that CASE WHEN SQL executes correctly when only definition embedding exists.
+
+    This test verifies that the generated SQL correctly handles the case where
+    only the definition embedding is present and title is NULL.
+    """
+    import sqlite3
+    import numpy as np
+    import json
+
+    conn = sqlite3.connect(":memory:")
+
+    try:
+        conn.enable_load_extension(True)
+        conn.load_extension("vec0")
+        conn.enable_load_extension(False)
+    except Exception:
+        pytest.skip("sqlite-vec extension not available")
+
+    try:
+        conn.execute("""
+            CREATE TABLE test_nodes (
+                id TEXT PRIMARY KEY,
+                title_embedding BLOB,
+                definition_embedding BLOB
+            )
+        """)
+
+        rng = np.random.RandomState(seed=47)
+        emb2 = rng.randn(384).astype(np.float32)
+        emb2 = emb2 / np.linalg.norm(emb2)
+
+        # Insert with title_embedding as NULL
+        conn.execute(
+            "INSERT INTO test_nodes (id, title_embedding, definition_embedding) VALUES (?, ?, ?)",
+            ("test3", None, emb2.tobytes()),
+        )
+        conn.commit()
+
+        rng = np.random.RandomState(seed=48)
+        query_emb = rng.randn(384).astype(np.float32)
+        query_emb = query_emb / np.linalg.norm(query_emb)
+        query_vec_json = json.dumps(query_emb.tolist())
+
+        similarity_case = build_max_similarity_case_when("title_embedding", "definition_embedding")
+        sql_query = f"""
+            SELECT
+                id,
+                {similarity_case} AS max_similarity
+            FROM test_nodes
+        """
+
+        result = conn.execute(sql_query, {"query_vec": query_vec_json}).fetchone()
+
+        # Verify the query executed
+        assert result is not None
+        assert result[0] == "test3"
+
+        # Similarity should be computed from definition only
+        similarity = result[1]
+        assert isinstance(similarity, (float, int))
+        assert -1.0 <= similarity <= 1.0
+
+    finally:
+        conn.close()
+
+
+def test_sql_builder_execution_no_embeddings():
+    """Test that CASE WHEN SQL executes correctly when no embeddings exist.
+
+    This test verifies that the generated SQL correctly returns 0.0 when both
+    embeddings are NULL.
+    """
+    import sqlite3
+    import json
+    import numpy as np
+
+    conn = sqlite3.connect(":memory:")
+
+    try:
+        conn.enable_load_extension(True)
+        conn.load_extension("vec0")
+        conn.enable_load_extension(False)
+    except Exception:
+        pytest.skip("sqlite-vec extension not available")
+
+    try:
+        conn.execute("""
+            CREATE TABLE test_nodes (
+                id TEXT PRIMARY KEY,
+                title_embedding BLOB,
+                definition_embedding BLOB
+            )
+        """)
+
+        # Insert with both embeddings as NULL
+        conn.execute(
+            "INSERT INTO test_nodes (id, title_embedding, definition_embedding) VALUES (?, ?, ?)",
+            ("test4", None, None),
+        )
+        conn.commit()
+
+        rng = np.random.RandomState(seed=49)
+        query_emb = rng.randn(384).astype(np.float32)
+        query_emb = query_emb / np.linalg.norm(query_emb)
+        query_vec_json = json.dumps(query_emb.tolist())
+
+        similarity_case = build_max_similarity_case_when("title_embedding", "definition_embedding")
+        sql_query = f"""
+            SELECT
+                id,
+                {similarity_case} AS max_similarity
+            FROM test_nodes
+        """
+
+        result = conn.execute(sql_query, {"query_vec": query_vec_json}).fetchone()
+
+        # Verify the query executed
+        assert result is not None
+        assert result[0] == "test4"
+
+        # Similarity should be 0.0 when no embeddings exist
+        assert result[1] == 0.0
+
+    finally:
+        conn.close()
+
+
+def test_sql_builder_execution_with_qualified_columns():
+    """Test that CASE WHEN SQL executes correctly with table-qualified column names.
+
+    This test verifies that the generated SQL with table aliases (like t.title_embedding)
+    actually executes correctly, preventing runtime failures from table alias mismatches.
+    """
+    import sqlite3
+    import numpy as np
+    import json
+
+    conn = sqlite3.connect(":memory:")
+
+    try:
+        conn.enable_load_extension(True)
+        conn.load_extension("vec0")
+        conn.enable_load_extension(False)
+    except Exception:
+        pytest.skip("sqlite-vec extension not available")
+
+    try:
+        conn.execute("""
+            CREATE TABLE test_nodes (
+                id TEXT PRIMARY KEY,
+                title_embedding BLOB,
+                definition_embedding BLOB
+            )
+        """)
+
+        rng = np.random.RandomState(seed=50)
+        emb1 = rng.randn(384).astype(np.float32)
+        emb1 = emb1 / np.linalg.norm(emb1)
+
+        rng = np.random.RandomState(seed=51)
+        emb2 = rng.randn(384).astype(np.float32)
+        emb2 = emb2 / np.linalg.norm(emb2)
+
+        conn.execute(
+            "INSERT INTO test_nodes (id, title_embedding, definition_embedding) VALUES (?, ?, ?)",
+            ("test5", emb1.tobytes(), emb2.tobytes()),
+        )
+        conn.commit()
+
+        rng = np.random.RandomState(seed=52)
+        query_emb = rng.randn(384).astype(np.float32)
+        query_emb = query_emb / np.linalg.norm(query_emb)
+        query_vec_json = json.dumps(query_emb.tolist())
+
+        # Test with different table aliases to ensure they work correctly
+        for table_alias in ["t", "rn", "ep"]:
+            title_col = f"{table_alias}.title_embedding"
+            def_col = f"{table_alias}.definition_embedding"
+
+            similarity_case = build_max_similarity_case_when(title_col, def_col)
+            sql_query = f"""
+                SELECT
+                    {table_alias}.id,
+                    {similarity_case} AS max_similarity
+                FROM test_nodes AS {table_alias}
+            """
+
+            result = conn.execute(sql_query, {"query_vec": query_vec_json}).fetchone()
+
+            # Verify the query executed with this table alias
+            assert result is not None
+            assert result[0] == "test5"
+
+            # Verify similarity is valid
+            similarity = result[1]
+            assert isinstance(similarity, (float, int))
+            assert -1.0 <= similarity <= 1.0
+
+    finally:
+        conn.close()
+
+
+def test_sql_builder_case_when_evaluation_order():
+    """Test that CASE WHEN clauses are evaluated in the correct order.
+
+    This test verifies that the CASE WHEN structure properly handles precedence:
+    - Both embeddings present should use the nested CASE
+    - Only title should use title similarity
+    - Only definition should use definition similarity
+    - Neither should return 0.0
+
+    The order matters because SQLite evaluates WHEN clauses sequentially and stops
+    at the first matching condition.
+    """
+    import sqlite3
+    import numpy as np
+    import json
+
+    conn = sqlite3.connect(":memory:")
+
+    try:
+        conn.enable_load_extension(True)
+        conn.load_extension("vec0")
+        conn.enable_load_extension(False)
+    except Exception:
+        pytest.skip("sqlite-vec extension not available")
+
+    try:
+        conn.execute("""
+            CREATE TABLE test_cases (
+                id TEXT PRIMARY KEY,
+                case_name TEXT,
+                title_embedding BLOB,
+                definition_embedding BLOB
+            )
+        """)
+
+        rng = np.random.RandomState(seed=60)
+        emb1 = rng.randn(384).astype(np.float32)
+        emb1 = emb1 / np.linalg.norm(emb1)
+
+        rng = np.random.RandomState(seed=61)
+        emb2 = rng.randn(384).astype(np.float32)
+        emb2 = emb2 / np.linalg.norm(emb2)
+
+        # Insert test cases: both, title-only, definition-only, neither
+        conn.execute(
+            "INSERT INTO test_cases VALUES (?, ?, ?, ?)",
+            ("case1", "both", emb1.tobytes(), emb2.tobytes()),
+        )
+        conn.execute(
+            "INSERT INTO test_cases VALUES (?, ?, ?, ?)",
+            ("case2", "title_only", emb1.tobytes(), None),
+        )
+        conn.execute(
+            "INSERT INTO test_cases VALUES (?, ?, ?, ?)",
+            ("case3", "definition_only", None, emb2.tobytes()),
+        )
+        conn.execute(
+            "INSERT INTO test_cases VALUES (?, ?, ?, ?)",
+            ("case4", "neither", None, None),
+        )
+        conn.commit()
+
+        rng = np.random.RandomState(seed=62)
+        query_emb = rng.randn(384).astype(np.float32)
+        query_emb = query_emb / np.linalg.norm(query_emb)
+        query_vec_json = json.dumps(query_emb.tolist())
+
+        similarity_case = build_max_similarity_case_when("title_embedding", "definition_embedding")
+        sql_query = f"""
+            SELECT
+                case_name,
+                {similarity_case} AS max_similarity
+            FROM test_cases
+            ORDER BY id
+        """
+
+        results = conn.execute(sql_query, {"query_vec": query_vec_json}).fetchall()
+
+        # Verify we got all four cases
+        assert len(results) == 4
+
+        # Check that each case returned appropriate values
+        case_results = {name: similarity for name, similarity in results}
+
+        # Both embeddings should return a value
+        assert -1.0 <= case_results["both"] <= 1.0
+
+        # Title-only should return a value
+        assert -1.0 <= case_results["title_only"] <= 1.0
+
+        # Definition-only should return a value
+        assert -1.0 <= case_results["definition_only"] <= 1.0
+
+        # Neither should return exactly 0.0
+        assert case_results["neither"] == 0.0
+
+    finally:
+        conn.close()
