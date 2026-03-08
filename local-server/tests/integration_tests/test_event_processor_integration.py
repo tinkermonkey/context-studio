@@ -12,6 +12,9 @@ from utils.event_processor import EventProcessor  # noqa: E402
 from datetime import datetime, timedelta  # noqa: E402
 from sqlalchemy import text  # noqa: E402
 from database.utils import get_database_manager  # noqa: E402
+from utils.logger import get_logger  # noqa: E402
+
+logger = get_logger(__name__)
 
 
 @pytest.fixture
@@ -48,8 +51,8 @@ def temp_db():
     if engine_id in db_manager._engines:
         try:
             db_manager._engines[engine_id].dispose()
-        except Exception:
-            pass
+        except Exception as e:
+            logger.exception(f"Error disposing engine {engine_id} during fixture setup: {e}")
         del db_manager._engines[engine_id]
         if engine_id in db_manager._session_locals:
             del db_manager._session_locals[engine_id]
@@ -63,13 +66,13 @@ def temp_db():
             del db_manager._engines[engine_id]
         if engine_id in db_manager._session_locals:
             del db_manager._session_locals[engine_id]
-    except Exception:
-        pass
+    except Exception as e:
+        logger.exception(f"Error during engine cleanup for {engine_id}: {e}")
 
     try:
         os.remove(path)
-    except Exception:
-        pass
+    except Exception as e:
+        logger.exception(f"Error removing temporary database file {path}: {e}")
 
 
 def insert_event(db_url, engine_id, record_type, event_type, processed=0, ts=None, record_id=None):  # noqa: E501
