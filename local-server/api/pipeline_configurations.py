@@ -13,7 +13,7 @@ Endpoints:
 """
 
 from typing import Optional
-from fastapi import APIRouter, HTTPException, Depends, Query, Path, status, Response
+from fastapi import APIRouter, HTTPException, Depends, Query, Path, status
 
 from api.dependencies.llm_services import get_pipeline_flavor_service
 from llm.flavor_service import PipelineFlavorService

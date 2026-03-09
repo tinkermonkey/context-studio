@@ -7,7 +7,6 @@ while maintaining the same database structure.
 
 from pydantic import BaseModel, Field, ConfigDict
 from typing import List, Optional
-import json
 
 
 class PropertyDefinitionBase(BaseModel):

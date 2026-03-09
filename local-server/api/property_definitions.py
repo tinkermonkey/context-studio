@@ -15,7 +15,7 @@ Endpoints:
 
 import datetime
 import json
-from fastapi import APIRouter, HTTPException, Query, Depends, Path, Response
+from fastapi import APIRouter, HTTPException, Query, Depends, Path
 from typing import List, Optional
 from uuid import UUID, uuid4
 from sqlalchemy.orm import Session
@@ -27,7 +27,7 @@ from database.predicate_utils import (
     generate_identifier_from_title, validate_predicate_identifier
 )
 from api.models.property_definitions import (
-    PropertyDefinitionBase, PropertyDefinitionCreate, PropertyDefinitionUpdate,
+    PropertyDefinitionCreate, PropertyDefinitionUpdate,
     PropertyDefinitionOut, PaginatedPropertyDefinitionsResponse
 )
 from utils.logger import get_logger
@@ -60,7 +60,6 @@ def to_property_definition_out(predicate: models.Predicate) -> PropertyDefinitio
 @router.post("/", response_model=PropertyDefinitionOut, status_code=201)
 def create_property_definition(
     property_def: PropertyDefinitionCreate,
-    response: Response,
     db: Session = Depends(get_db)
 ):
     """
