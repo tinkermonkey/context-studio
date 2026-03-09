@@ -1024,11 +1024,11 @@ def move_nodes(
         )
 
         return MoveNodesResponse(
-            moved_nodes=[to_node_out(node) for node in result['moved_nodes']],
-            updated_children=[to_node_out(child) for child in result['updated_children']],  # noqa: E501
-            converted_nodes=[to_node_out(node) for node in result.get('converted_nodes', [])],  # noqa: E501
-            warnings=result['warnings'],
-            errors=result['errors']
+            moved_nodes=[to_node_out(node) for node in result.get('moved_nodes', result.get('moved_entities', []))],  # noqa: E501
+            updated_children=[to_node_out(child) for child in result.get('updated_children', [])],  # noqa: E501
+            converted_nodes=[to_node_out(node) for node in result.get('converted_nodes', result.get('converted_entities', []))],  # noqa: E501
+            warnings=result.get('warnings', []),
+            errors=result.get('errors', [])
         )
 
     except ValueError as e:

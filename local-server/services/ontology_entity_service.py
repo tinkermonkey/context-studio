@@ -761,7 +761,7 @@ class OntologyEntityService:
 
         # Layers should not have parents
         if entity_data.get("parent_entity_id"):
-            raise InvalidHierarchyError("Layers cannot have parent ontology_entities")
+            raise InvalidHierarchyError("Layers cannot have parent structure_nodes")
 
     def _validate_layer_update(
         self, ontology_entity: OntologyEntity, entity_data: Dict[str, Any]
@@ -784,7 +784,7 @@ class OntologyEntityService:
 
         # Layers should not have parents
         if "parent_entity_id" in entity_data and entity_data["parent_entity_id"] is not None:
-            raise InvalidHierarchyError("Layers cannot have parent ontology_entities")
+            raise InvalidHierarchyError("Layers cannot have parent structure_nodes")
 
     def _validate_domain_creation(self, entity_data: Dict[str, Any]):
         """Validate domain creation rules"""
@@ -947,7 +947,7 @@ class OntologyEntityService:
 
         # Check if parent_id is the same as entity_id
         if entity_id == parent_id:
-            raise CircularReferenceError("OntologyEntity cannot be its own parent")
+            raise CircularReferenceError("StructureNode cannot be its own parent")
 
         # Check if parent_id is a descendant of entity_id
         ancestors = self.get_entity_ancestors(parent_id)
@@ -1622,9 +1622,20 @@ class OntologyEntityService:
         """Deprecated: use remove_entity_attribute() instead"""
         return self.remove_entity_attribute(*args, **kwargs)
 
-    def move_nodes(self, *args, **kwargs):
+    def move_nodes(
+        self,
+        node_ids: List[str],
+        target_parent_id: Optional[str] = None,
+        move_children: bool = True,
+        handle_conflicts: str = "warn",
+    ) -> Dict[str, Any]:
         """Deprecated: use move_entities() instead"""
-        return self.move_entities(*args, **kwargs)
+        return self.move_entities(
+            entity_ids=node_ids,
+            target_parent_id=target_parent_id,
+            move_children=move_children,
+            handle_conflicts=handle_conflicts
+        )
 
     def _validate_node_creation(self, *args, **kwargs):
         """Deprecated: use _validate_entity_creation() instead"""
@@ -1637,3 +1648,11 @@ class OntologyEntityService:
     def _node_to_dict(self, *args, **kwargs):
         """Deprecated: use _entity_to_dict() instead"""
         return self._entity_to_dict(*args, **kwargs)
+
+    def _validate_node_move(self, *args, **kwargs):
+        """Deprecated: use _validate_entity_move() instead"""
+        return self._validate_entity_move(*args, **kwargs)
+
+    def _convert_node_type_and_children(self, *args, **kwargs):
+        """Deprecated: use _convert_entity_type_and_children() instead"""
+        return self._convert_entity_type_and_children(*args, **kwargs)
