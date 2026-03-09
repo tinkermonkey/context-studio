@@ -223,3 +223,8 @@ class ChangeEvent(Base):
 
 # Legacy alias for backwards compatibility during transition
 NodeEvent = ChangeEvent
+
+# Legacy aliases for backwards compatibility - OntologyEntity replaced Layer, Domain, and Term
+Layer = OntologyEntity
+Domain = OntologyEntity
+Term = OntologyEntity

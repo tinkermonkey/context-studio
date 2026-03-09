@@ -8,7 +8,7 @@ for enterprise-scale cost reduction and performance improvement.
 
 import time
 import pandas as pd
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, cast
 from datetime import datetime, timedelta
 
 from utils.logger import get_logger
@@ -319,7 +319,8 @@ class S3StorageManager:
 
                     # Check if object is old enough for archival
                     if obj["LastModified"] < cutoff_date:  # type: ignore
-                        storage_analysis["management_opportunities"].append(
+                        opportunities_list: list[Any] = cast(list[Any], storage_analysis["management_opportunities"])
+                        opportunities_list.append(
                             {  # type: ignore
                                 "key": obj["Key"],  # type: ignore
                                 "size": obj["Size"],  # type: ignore
@@ -343,9 +344,10 @@ class S3StorageManager:
                 "current_monthly_cost_estimate_usd": self._estimate_current_cost(int(storage_analysis["total_size_bytes"])),  # type: ignore
             }
 
+            total_size_bytes = int(storage_analysis["total_size_bytes"])  # type: ignore
             logger.info(
                 f"Storage analysis complete: {storage_analysis['total_objects']} objects, "  # type: ignore
-                f"{int(storage_analysis['total_size_bytes']) / (1024**3):.2f} GB total"
+                f"{total_size_bytes / (1024**3):.2f} GB total"
             )  # type: ignore
 
             return storage_analysis

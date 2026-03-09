@@ -5,3 +5,8 @@ Use services.relationship_service.RelationshipService instead.
 This stub re-exports RelationshipService as NodeLinkService for compatibility.
 """
 
+from .relationship_service import RelationshipService
+
+NodeLinkService = RelationshipService
+
+__all__ = ["NodeLinkService"]
