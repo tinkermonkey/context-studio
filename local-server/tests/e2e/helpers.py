@@ -8,7 +8,7 @@ test data setup helpers.
 
 import functools
 import time
-from typing import Callable, Any, Dict, List
+from typing import Callable, Any, Dict, List, Optional
 
 import pytest
 
@@ -235,9 +235,9 @@ def create_test_hierarchy(
 
 def create_test_hierarchy_new_api(
     client,
-    taxonomy_data: Dict[str, str] = None,
-    scheme_data: Dict[str, str] = None,
-    class_data_list: List[Dict[str, str]] = None,
+    taxonomy_data: Optional[Dict[str, str]] = None,
+    scheme_data: Optional[Dict[str, str]] = None,
+    class_data_list: Optional[List[Dict[str, str]]] = None,
 ) -> tuple:
     """
     Create a taxonomy → concept scheme → classes hierarchy using the new /api/ontology_entities/ routes.
