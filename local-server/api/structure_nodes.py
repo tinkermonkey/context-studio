@@ -22,7 +22,7 @@ Endpoints:
 - GET /api/structure_nodes/{node_id}/word_senses - Get word senses for a structure_node  # noqa: E501
 """
 
-from fastapi import APIRouter, HTTPException, Query, Depends, Path
+from fastapi import APIRouter, HTTPException, Query, Depends, Path, Response
 from typing import List, Optional
 from uuid import UUID
 

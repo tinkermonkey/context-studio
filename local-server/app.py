@@ -18,6 +18,7 @@ import config as config_module
 from api import graph, datasets, nlp_analysis, schema, predicates, llm, pipeline_flavors
 from api import reference, config, structure_nodes, version_management, sync, llm_traceability
 from api import changeset_management, proposal_management, identity_management
+from api import ontology_entities, property_definitions, pipeline_configurations
 from api import (
     conflict_resolution,
     analytics,
@@ -334,6 +335,12 @@ def create_app(dataset_id=None, engine=None, session_local=None, service_factory
     # Using unified structure_nodes API instead of separate layers/domains/terms
     app.include_router(structure_nodes.router, tags=["structure_nodes"])
     app.include_router(predicates.router, prefix="/api/predicates", tags=["predicates"])
+
+    # New ontology terminology routes (alongside existing deprecated routes)
+    app.include_router(ontology_entities.router, tags=["ontology_entities"])
+    app.include_router(property_definitions.router, tags=["property_definitions"])
+    app.include_router(pipeline_configurations.router, tags=["pipeline_configurations"])
+
     app.include_router(change_events.router, tags=["change_events"])
     app.include_router(version_management.router, tags=["version_management"])
     app.include_router(graph.router, prefix="/api", tags=["graph"])
