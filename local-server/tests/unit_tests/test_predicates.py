@@ -439,8 +439,8 @@ class TestPredicateRelationships:
         db_session.commit()
 
         # Test relationship
-        assert structure_node.structural_predicate_ref == predicate
-        assert predicate.structure_nodes == [structure_node]
+        assert structure_node.property_def == predicate
+        assert predicate.ontology_entities == [structure_node]
 
     def test_predicate_structure_node_link_relationship(self, db_session):
         """Test relationship between predicates and structure node links."""
@@ -461,8 +461,8 @@ class TestPredicateRelationships:
         db_session.commit()
 
         # Test relationship
-        assert node_link.predicate_ref == predicate
-        assert predicate.structure_node_links == [node_link]
+        assert node_link.property_def == predicate
+        assert predicate.relationships == [node_link]
 
     def test_predicate_cascade_behavior(self, db_session):
         """Test what happens when predicates are deleted."""
