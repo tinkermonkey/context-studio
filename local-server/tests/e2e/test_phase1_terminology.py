@@ -37,13 +37,13 @@ class TestNewAPIRoutesMatchOldBehavior:
         # Create hierarchy via new API
         taxonomy_id, scheme_id, class_ids = create_test_hierarchy_new_api(e2e_client)
 
-        # Create relationship via new property_definitions route
+        # Create relationship via new relationships route
         rel_data = {
             "source_entity_id": class_ids[0],
             "target_entity_id": class_ids[1],
             "predicate": "is_a",
         }
-        rel_resp = e2e_client.post("/api/property_definitions/", json=rel_data)
+        rel_resp = e2e_client.post("/api/ontology_entities/relationships", json=rel_data)
         assert (
             rel_resp.status_code == 201
         ), f"Failed to create relationship: {rel_resp.status_code} {rel_resp.text}"
@@ -80,7 +80,7 @@ class TestNewAPIRoutesMatchOldBehavior:
             assert cls_old.json()["id"] == class_id
 
         # Delete relationship
-        del_rel = e2e_client.delete(f"/api/property_definitions/{relationship_id}")
+        del_rel = e2e_client.delete(f"/api/ontology_entities/relationships/{relationship_id}")
         assert del_rel.status_code == 204
 
         # Delete classes (bottom-up)
@@ -134,13 +134,13 @@ class TestOldRoutesStillWork:
         domain_id = hierarchy["domain_id"]
         term_ids = list(hierarchy["term_ids"].values())
 
-        # Create relationship via old predicates route
+        # Create relationship via old links route
         rel_data = {
             "source_node_id": term_ids[0],
             "target_node_id": term_ids[1],
             "predicate": "is_a",
         }
-        rel_resp = e2e_client.post("/api/structure_node_links/", json=rel_data)
+        rel_resp = e2e_client.post("/api/structure_nodes/links", json=rel_data)
         assert rel_resp.status_code == 201
 
         # Verify Deprecation header on POST (create layer)
