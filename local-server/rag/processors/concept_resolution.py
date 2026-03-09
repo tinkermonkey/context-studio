@@ -417,7 +417,7 @@ class ConceptResolutionProcessor:
                         node_type,
                         definition,
                         {similarity_case} as similarity
-                    FROM structure_nodes
+                    FROM ontology_entities
                     WHERE (title_embedding IS NOT NULL OR definition_embedding IS NOT NULL)
                 )
                 SELECT id, title, node_type, definition, similarity

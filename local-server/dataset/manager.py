@@ -759,11 +759,11 @@ class DatasetManager:
                 has_layers_table = result.fetchone() is not None
 
                 if has_nodes_table:
-                    # Use unified structure_nodes table (post-Great Normalization)
+                    # Use unified ontology_entities table (post-Great Normalization)
                     layers_count = (
                         conn.execute(
                             text(
-                                "SELECT COUNT(*) FROM structure_nodes WHERE node_type = 'layer'"
+                                "SELECT COUNT(*) FROM ontology_entities WHERE node_type = 'taxonomy'"
                             )
                         ).scalar()
                         or 0
@@ -771,7 +771,7 @@ class DatasetManager:
                     domains_count = (
                         conn.execute(
                             text(
-                                "SELECT COUNT(*) FROM structure_nodes WHERE node_type = 'domain'"
+                                "SELECT COUNT(*) FROM ontology_entities WHERE node_type = 'concept_scheme'"
                             )
                         ).scalar()
                         or 0
@@ -779,14 +779,14 @@ class DatasetManager:
                     terms_count = (
                         conn.execute(
                             text(
-                                "SELECT COUNT(*) FROM structure_nodes WHERE node_type = 'term'"
+                                "SELECT COUNT(*) FROM ontology_entities WHERE node_type = 'class'"
                             )
                         ).scalar()
                         or 0
                     )
                     relationships_count = (
                         conn.execute(
-                            text("SELECT COUNT(*) FROM structure_node_links")
+                            text("SELECT COUNT(*) FROM relationships")
                         ).scalar()
                         or 0
                     )

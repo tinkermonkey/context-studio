@@ -169,14 +169,14 @@ class EmbeddingRegenerationService:
             # Regenerate all nodes
             query = text("""
                 SELECT id, node_type, title, definition
-                FROM structure_nodes
+                FROM ontology_entities
                 ORDER BY node_type, title
             """)
         else:
             # Only regenerate nodes missing embeddings
             query = text("""
                 SELECT id, node_type, title, definition
-                FROM structure_nodes
+                FROM ontology_entities
                 WHERE title_embedding IS NULL
                    OR definition_embedding IS NULL
                    OR (definition IS NOT NULL AND definition_embedding IS NULL)

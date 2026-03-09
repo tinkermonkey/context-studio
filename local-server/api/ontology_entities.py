@@ -340,14 +340,14 @@ def search_entities(
                     title,
                     node_type,
                     definition,
-                    parent_node_id,
+                    parent_entity_id,
                     structural_predicate_id,
                     created_at,
                     last_modified,
                     title_embedding,
                     definition_embedding,
                     {similarity_case} as similarity
-                FROM structure_nodes
+                FROM ontology_entities
                 WHERE (title_embedding IS NOT NULL OR definition_embedding IS NOT NULL)  # noqa: E501
                 {type_filter}
             )
@@ -356,7 +356,7 @@ def search_entities(
                 title,
                 node_type,
                 definition,
-                parent_node_id,
+                parent_entity_id,
                 structural_predicate_id,
                 created_at,
                 last_modified,
