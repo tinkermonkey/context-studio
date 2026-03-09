@@ -291,19 +291,19 @@ def create_test_hierarchy_new_api(
     )
     taxonomy_id = taxonomy_resp.json()["id"]
 
-    # Create concept scheme under taxonomy
-    scheme_data["parent_entity_id"] = taxonomy_id
-    scheme_resp = client.post("/api/ontology_entities/", json=scheme_data)
+    # Create concept scheme under taxonomy (merge parent_entity_id without mutating caller's dict)
+    scheme_payload = {**scheme_data, "parent_entity_id": taxonomy_id}
+    scheme_resp = client.post("/api/ontology_entities/", json=scheme_payload)
     assert scheme_resp.status_code == 201, (
         f"Failed to create concept scheme: {scheme_resp.status_code} {scheme_resp.text}"
     )
     scheme_id = scheme_resp.json()["id"]
 
-    # Create classes under concept scheme
+    # Create classes under concept scheme (merge parent_entity_id without mutating caller's dicts)
     class_ids = []
     for cls in class_data_list:
-        cls["parent_entity_id"] = scheme_id
-        cls_resp = client.post("/api/ontology_entities/", json=cls)
+        cls_payload = {**cls, "parent_entity_id": scheme_id}
+        cls_resp = client.post("/api/ontology_entities/", json=cls_payload)
         assert cls_resp.status_code == 201, (
             f"Failed to create class '{cls.get('title', 'Unknown')}': "
             f"{cls_resp.status_code} {cls_resp.text}"

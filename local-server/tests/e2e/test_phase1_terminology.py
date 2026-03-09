@@ -12,8 +12,7 @@ All tests are marked with @pytest.mark.e2e and require the E2E test harness (con
 import pytest
 from sqlalchemy import text
 
-from tests.e2e.helpers import create_test_hierarchy, create_test_hierarchy_new_api, poll_until
-from tests.e2e.test_data import STABLE_TAXONOMY_NEW_TERMINOLOGY
+from tests.e2e.helpers import create_test_hierarchy, create_test_hierarchy_new_api
 
 pytestmark = pytest.mark.e2e
 
@@ -199,6 +198,24 @@ class TestDatabaseMigrationDataIntegrity:
 
         # Unpack e2e_app tuple to get app, engine, and session_local
         app, engine, session_local = e2e_app
+
+        # Verify old table names no longer exist
+        with engine.connect() as conn:
+            # Verify structure_nodes table does not exist
+            try:
+                conn.execute(text("SELECT 1 FROM structure_nodes LIMIT 1"))
+                pytest.fail("structure_nodes table should not exist after migration 019")
+            except Exception:
+                # Expected: table should not exist
+                pass
+
+            # Verify structure_node_links table does not exist
+            try:
+                conn.execute(text("SELECT 1 FROM structure_node_links LIMIT 1"))
+                pytest.fail("structure_node_links table should not exist after migration 019")
+            except Exception:
+                # Expected: table should not exist
+                pass
 
         # Verify new table names exist
         with engine.connect() as conn:
