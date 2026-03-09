@@ -198,7 +198,7 @@ def clean_tables(e2e_app):
         cleanup_session.execute(text("PRAGMA foreign_keys = OFF"))
 
         # Delete all rows from tables (order is conventional; FKs are disabled)
-        for table in ["structure_node_links", "structure_nodes", "predicates", "change_events"]:
+        for table in ["relationships", "ontology_entities", "property_definitions", "change_events"]:
             cleanup_session.execute(text(f"DELETE FROM {table}"))
 
         # Re-enable foreign key checks
