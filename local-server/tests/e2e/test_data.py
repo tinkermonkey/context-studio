@@ -70,3 +70,40 @@ STABLE_RELATIONSHIPS = [
     ("Index", "Database", "part_of"),
 ]
 
+# Stable taxonomy using new terminology (taxonomy, concept_scheme, class)
+# Used in Phase 1 E2E tests to verify new API routes and field names
+STABLE_TAXONOMY_NEW_TERMINOLOGY: Dict[str, Any] = {
+    "taxonomy": {
+        "node_type": "taxonomy",
+        "title": "Computer Science",
+        "definition": "The study of computation and information",
+    },
+    "scheme": {
+        "node_type": "concept_scheme",
+        "title": "Data Management",
+        "definition": "Technologies and methods for storing and retrieving data",
+    },
+    "classes": [
+        {
+            "node_type": "class",
+            "title": "Database",
+            "definition": "An organized collection of structured information",
+        },
+        {
+            "node_type": "class",
+            "title": "Relational Database",
+            "definition": "A database based on the relational model of data",
+        },
+        {
+            "node_type": "class",
+            "title": "SQL",
+            "definition": "Structured Query Language for managing relational databases",
+        },
+        {
+            "node_type": "class",
+            "title": "Index",
+            "definition": "A data structure that improves the speed of data retrieval",
+        },
+    ],
+}
+

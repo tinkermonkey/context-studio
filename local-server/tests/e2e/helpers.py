@@ -231,3 +231,83 @@ def create_test_hierarchy(
         "domain_id": domain_id,
         "term_ids": term_ids,
     }
+
+
+def create_test_hierarchy_new_api(
+    client,
+    taxonomy_data: Dict[str, str] = None,
+    scheme_data: Dict[str, str] = None,
+    class_data_list: List[Dict[str, str]] = None,
+) -> tuple:
+    """
+    Create a taxonomy → concept scheme → classes hierarchy using the new /api/ontology_entities/ routes.
+
+    This helper creates entities using the new API terminology and field names, including
+    parent_entity_id instead of parent_node_id and node_type values of taxonomy, concept_scheme,
+    and class instead of layer, domain, and term.
+
+    Args:
+        client: FastAPI TestClient instance
+        taxonomy_data: Dict with keys: node_type='taxonomy', title, definition
+                      Defaults to a test taxonomy if not provided
+        scheme_data: Dict with keys: node_type='concept_scheme', title, definition
+                    Defaults to a test scheme if not provided
+        class_data_list: List of dicts with keys: node_type='class', title, definition
+                        Defaults to two test classes if not provided
+
+    Returns:
+        Tuple of (taxonomy_id, scheme_id, class_ids) where class_ids is a list of class IDs
+
+    Raises:
+        AssertionError: If any POST request returns a non-201 status code
+
+    Example:
+        taxonomy_id, scheme_id, class_ids = create_test_hierarchy_new_api(client)
+        assert isinstance(class_ids, list)
+        assert len(class_ids) == 2
+    """
+    if taxonomy_data is None:
+        taxonomy_data = {
+            "node_type": "taxonomy",
+            "title": "Test Taxonomy",
+            "definition": "A test taxonomy",
+        }
+    if scheme_data is None:
+        scheme_data = {
+            "node_type": "concept_scheme",
+            "title": "Test Scheme",
+            "definition": "A test scheme",
+        }
+    if class_data_list is None:
+        class_data_list = [
+            {"node_type": "class", "title": "Test Class 0", "definition": "Class 0"},
+            {"node_type": "class", "title": "Test Class 1", "definition": "Class 1"},
+        ]
+
+    # Create taxonomy
+    taxonomy_resp = client.post("/api/ontology_entities/", json=taxonomy_data)
+    assert taxonomy_resp.status_code == 201, (
+        f"Failed to create taxonomy: {taxonomy_resp.status_code} {taxonomy_resp.text}"
+    )
+    taxonomy_id = taxonomy_resp.json()["id"]
+
+    # Create concept scheme under taxonomy
+    scheme_data["parent_entity_id"] = taxonomy_id
+    scheme_resp = client.post("/api/ontology_entities/", json=scheme_data)
+    assert scheme_resp.status_code == 201, (
+        f"Failed to create concept scheme: {scheme_resp.status_code} {scheme_resp.text}"
+    )
+    scheme_id = scheme_resp.json()["id"]
+
+    # Create classes under concept scheme
+    class_ids = []
+    for cls in class_data_list:
+        cls["parent_entity_id"] = scheme_id
+        cls_resp = client.post("/api/ontology_entities/", json=cls)
+        assert cls_resp.status_code == 201, (
+            f"Failed to create class '{cls.get('title', 'Unknown')}': "
+            f"{cls_resp.status_code} {cls_resp.text}"
+        )
+        class_ids.append(cls_resp.json()["id"])
+
+    return taxonomy_id, scheme_id, class_ids
