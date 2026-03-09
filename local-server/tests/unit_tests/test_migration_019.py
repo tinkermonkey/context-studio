@@ -23,7 +23,6 @@ sys.path.append(
 
 import pytest  # noqa: E402
 import tempfile  # noqa: E402
-import json  # noqa: E402
 from typing import Dict, List, Tuple  # noqa: E402
 from sqlalchemy import create_engine, text  # noqa: E402
 
@@ -591,7 +590,7 @@ class TestMigration019Rollback:
         if pipeline_flavors_before:
             # This shouldn't happen since we just rolled back
             pass
-        pipeline_flavors_after = migration_harness.table_exists("pipeline_flavors")
+        migration_harness.table_exists("pipeline_flavors")
         pipeline_configs_after = migration_harness.table_exists("pipeline_configurations")
         # Either pipeline_flavors exists OR neither exists (since it wasn't there originally)
         assert (not pipeline_configs_after)

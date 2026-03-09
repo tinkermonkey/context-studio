@@ -1,6 +1,7 @@
 from sqlalchemy import Column, String, Text, Integer, DateTime, ForeignKey, UniqueConstraint  # noqa: E501
 from sqlalchemy.dialects.sqlite import BLOB
-from sqlalchemy.orm import declarative_base, relationship, Mapped
+from sqlalchemy.orm import declarative_base, relationship, Mapped, synonym
+from sqlalchemy.ext.hybrid import hybrid_property
 from typing import Any, cast
 import uuid
 import datetime
@@ -37,8 +38,8 @@ class PipelineFlavor(Base):
     __table_args__ = (UniqueConstraint("pipeline", "title", name="_pipeline_title_uc"),)  # noqa: E501
 
 
-class Predicate(Base):
-    __tablename__ = "predicates"
+class PropertyDefinition(Base):
+    __tablename__ = "property_definitions"
 
     id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
     identifier = Column(String, unique=True, nullable=False)
@@ -54,24 +55,28 @@ class Predicate(Base):
     )
 
     # Relationships for new unified schema
-    structure_nodes = relationship("StructureNode", back_populates="structural_predicate_ref")  # noqa: E501
-    structure_node_links = relationship("StructureNodeLink", back_populates="predicate_ref")  # noqa: E501
+    ontology_entities = relationship("OntologyEntity", back_populates="property_def")  # noqa: E501
+    relationships = relationship("Relationship", back_populates="property_def")  # noqa: E501
+
+
+# Legacy alias for backwards compatibility
+Predicate = PropertyDefinition
 
 
 # New Normalized Schema Models
 
 
-class StructureNode(Base):
-    """Unified structure_node table for layers, domains, and terms."""
+class OntologyEntity(Base):
+    """Unified ontology entity table for taxonomies, concept schemes, and classes."""
 
-    __tablename__ = "structure_nodes"
+    __tablename__ = "ontology_entities"
 
     id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
     node_type: Mapped[NodeType] = cast(Mapped[NodeType], Column(NodeTypeColumn(), nullable=False))  # noqa: E501
-    parent_node_id = Column(String, ForeignKey("structure_nodes.id", ondelete="CASCADE"), nullable=True)  # noqa: E501
+    parent_entity_id = Column(String, ForeignKey("ontology_entities.id", ondelete="CASCADE"), nullable=True)  # noqa: E501
     title = Column(String, nullable=False)
     definition = Column(Text, nullable=True)
-    structural_predicate_id = Column(String, ForeignKey("predicates.id"), nullable=True)  # noqa: E501
+    structural_predicate_id = Column(String, ForeignKey("property_definitions.id"), nullable=True)  # noqa: E501
     title_embedding = Column(BLOB, nullable=True, default=None)
     definition_embedding = Column(BLOB, nullable=True, default=None)
     reference_links = Column(Text, nullable=True)  # JSON array of reference links  # noqa: E501
@@ -87,30 +92,65 @@ class StructureNode(Base):
 
     # Self-referential relationship for hierarchy
     # Note: Using lazy="noload" prevents automatic loading of parent to avoid circular reference issues with JSON serialization  # noqa: E501
-    parent = relationship("StructureNode", remote_side=[id], lazy="noload")
+    parent = relationship("OntologyEntity", remote_side=[id], lazy="noload")
 
-    # Relationship to predicates
-    structural_predicate_ref = relationship("Predicate", back_populates="structure_nodes", lazy="select")  # noqa: E501
+    # Relationship to property definitions
+    property_def = relationship("PropertyDefinition", back_populates="ontology_entities", lazy="select")  # noqa: E501
+
+    # Legacy aliases for backwards compatibility with old column names
+    parent_node_id = synonym("parent_entity_id")
+
+    def __init__(self, **kwargs):
+        """Handle legacy parameter names for backwards compatibility."""
+        # Map old parameter names to new ones
+        if "parent_node_id" in kwargs and "parent_entity_id" not in kwargs:
+            kwargs["parent_entity_id"] = kwargs.pop("parent_node_id")
+        if "source_node_id" in kwargs and "source_entity_id" not in kwargs:
+            kwargs["source_entity_id"] = kwargs.pop("source_node_id")
+        if "target_node_id" in kwargs and "target_entity_id" not in kwargs:
+            kwargs["target_entity_id"] = kwargs.pop("target_node_id")
+        super().__init__(**kwargs)
 
 
-class StructureNodeLink(Base):
-    """Unified links table for all structure_node relationships."""
+# Legacy alias for backwards compatibility
+StructureNode = OntologyEntity
 
-    __tablename__ = "structure_node_links"
+
+class Relationship(Base):
+    """Unified relationships table for all ontology entity relationships."""
+
+    __tablename__ = "relationships"
 
     id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
-    source_node_id = Column(String, ForeignKey("structure_nodes.id", ondelete="CASCADE"), nullable=False)  # noqa: E501
-    target_node_id = Column(String, ForeignKey("structure_nodes.id", ondelete="CASCADE"), nullable=False)  # noqa: E501
+    source_entity_id = Column(String, ForeignKey("ontology_entities.id", ondelete="CASCADE"), nullable=False)  # noqa: E501
+    target_entity_id = Column(String, ForeignKey("ontology_entities.id", ondelete="CASCADE"), nullable=False)  # noqa: E501
     predicate = Column(String, nullable=False)
-    predicate_id = Column(String, ForeignKey("predicates.id"), nullable=True)
+    predicate_id = Column(String, ForeignKey("property_definitions.id"), nullable=True)
     created_at = Column(DateTime, default=lambda: datetime.datetime.now(datetime.UTC))  # noqa: E501
 
     # Relationships
-    source_node = relationship("StructureNode", foreign_keys=[source_node_id], lazy="select")  # noqa: E501
-    target_node = relationship("StructureNode", foreign_keys=[target_node_id], lazy="select")  # noqa: E501
-    predicate_ref = relationship("Predicate", back_populates="structure_node_links", lazy="select")  # noqa: E501
+    source_entity = relationship("OntologyEntity", foreign_keys=[source_entity_id], lazy="select")  # noqa: E501
+    target_entity = relationship("OntologyEntity", foreign_keys=[target_entity_id], lazy="select")  # noqa: E501
+    property_def = relationship("PropertyDefinition", back_populates="relationships", lazy="select")  # noqa: E501
 
-    __table_args__ = (UniqueConstraint("source_node_id", "target_node_id", "predicate", name="_node_link_uc"),)  # noqa: E501
+    __table_args__ = (UniqueConstraint("source_entity_id", "target_entity_id", "predicate", name="_relationship_uc"),)  # noqa: E501
+
+    # Legacy aliases for backwards compatibility with old column names
+    source_node_id = synonym("source_entity_id")
+    target_node_id = synonym("target_entity_id")
+
+    def __init__(self, **kwargs):
+        """Handle legacy parameter names for backwards compatibility."""
+        # Map old parameter names to new ones
+        if "source_node_id" in kwargs and "source_entity_id" not in kwargs:
+            kwargs["source_entity_id"] = kwargs.pop("source_node_id")
+        if "target_node_id" in kwargs and "target_entity_id" not in kwargs:
+            kwargs["target_entity_id"] = kwargs.pop("target_node_id")
+        super().__init__(**kwargs)
+
+
+# Legacy alias for backwards compatibility
+StructureNodeLink = Relationship
 
 
 class ChangeEvent(Base):

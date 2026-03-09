@@ -511,7 +511,8 @@ class DatasetManager:
             with engine.connect() as conn:
                 try:
                     # Check if this looks like our schema (either old or new format)
-                    result = conn.execute(text("SELECT name FROM sqlite_master WHERE type='table' AND (name='layers' OR name='structure_nodes')"))
+                    # Support both old table names (layers, structure_nodes) and new names (ontology_entities)
+                    result = conn.execute(text("SELECT name FROM sqlite_master WHERE type='table' AND (name='layers' OR name='structure_nodes' OR name='ontology_entities')"))
                     if not result.fetchone():
                         raise ValueError("File does not appear to be a valid Context Studio dataset")
 

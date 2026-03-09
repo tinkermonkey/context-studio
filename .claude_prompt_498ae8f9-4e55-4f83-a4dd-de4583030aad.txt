@@ -1,0 +1,42 @@
+Your goal is to fix ALL failing unit tests in this project. Every failure listed below must pass before you are done.
+
+Analysis has identified the likely root cause:
+The db_session fixture in conftest.py (lines 455-476) deletes all tables between tests without re-applying migrations. Since the shared_client and shared_app fixtures are session-scoped and share the same database, tests that run after table cleanup fail with 'no such table: structure_nodes'. The fix requires either: (1) Skip table cleanup for migrated tables, or (2) Re-apply migrations after cleanup, or (3) Change shared_client to function-scoped fixtures with database isolation. The most practical fix is to preserve the migration_versions table and skip deleting tables created by migrations.
+
+## Current failure state
+Total failures: 29 across 4 files
+
+## Error types (by frequency)
+  TestDatasetManager::test_add_existing_dataset: 1 occurrences
+    e.g. local-server/tests/unit_tests/test_dataset_management.py: ValueError: Failed to validate dataset file: Invalid dataset file: File does not appear to be a valid Context Studio dataset
+  test_create_get_update_delete_domain: 1 occurrences
+    e.g. local-server/tests/unit_tests/test_domains.py: assert 500 == 201
+  test_domain_duplicate_title: 1 occurrences
+    e.g. local-server/tests/unit_tests/test_domains.py: assert 500 == 201
+  test_domain_invalid_layer: 1 occurrences
+    e.g. local-server/tests/unit_tests/test_domains.py: assert 500 == 400
+  test_list_domains: 1 occurrences
+    e.g. local-server/tests/unit_tests/test_domains.py: assert 500 == 201
+  test_move_domains_basic: 1 occurrences
+    e.g. local-server/tests/unit_tests/test_domains.py: assert 500 == 201
+  test_move_domains_with_terms: 1 occurrences
+    e.g. local-server/tests/unit_tests/test_domains.py: assert 500 == 201
+  test_move_domains_conflict_warning: 1 occurrences
+    e.g. local-server/tests/unit_tests/test_domains.py: assert 500 == 201
+  test_move_domains_invalid_target: 1 occurrences
+    e.g. local-server/tests/unit_tests/test_domains.py: assert 500 == 201
+  test_create_get_update_delete_layer: 1 occurrences
+    e.g. local-server/tests/unit_tests/test_layers.py: sqlite3.OperationalError: no such table: structure_nodes
+  ... and 19 more error type(s)
+
+## Most affected files (top 4 of 4)
+  local-server/tests/unit_tests/test_terms.py: 13 failures (test_create_get_update_delete_term×1, test_term_duplicate_title_within_domain×1, test_term_invalid_domain_or_layer×1)
+  local-server/tests/unit_tests/test_domains.py: 8 failures (test_create_get_update_delete_domain×1, test_domain_duplicate_title×1, test_domain_invalid_layer×1)
+  local-server/tests/unit_tests/test_layers.py: 7 failures (test_create_get_update_delete_layer×1, test_layer_bad_input×1, test_layer_duplicate_title×1)
+  local-server/tests/unit_tests/test_dataset_management.py: 1 failures (TestDatasetManager::test_add_existing_dataset×1)
+
+## How to approach this
+1. Examine representative failing files to understand the root cause. The failure state above shows a sample — the full set of affected files may be larger.
+2. Use grep or glob to discover every file in the project that exhibits the same pattern, not just the ones listed above.
+3. Apply fixes comprehensively across all affected files. Prefer bulk approaches (scripted edits, sed, ast-based transforms) over editing files one at a time.
+4. After fixing, run the unit checks to measure progress. Repeat until all failures are resolved.
