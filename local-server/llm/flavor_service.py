@@ -32,7 +32,7 @@ class PipelineFlavorService:
             # Check for duplicate title within pipeline
             existing = db.execute(
                 text("""
-                SELECT id FROM pipeline_configurations
+                SELECT id FROM pipeline_flavors
                 WHERE pipeline = :pipeline AND title = :title
             """),
                 {"pipeline": request.pipeline.value, "title": request.title},
@@ -49,7 +49,7 @@ class PipelineFlavorService:
 
             db.execute(
                 text("""
-                INSERT INTO pipeline_configurations (
+                INSERT INTO pipeline_flavors (
                     id, pipeline, title, llm_provider, llm_model, llm_config,
                     system_prompt, user_prompt, version, enabled, created_at, updated_at
                 ) VALUES (
@@ -86,7 +86,7 @@ class PipelineFlavorService:
             # Get existing flavor
             existing = db.execute(
                 text("""
-                SELECT * FROM pipeline_configurations WHERE id = :id
+                SELECT * FROM pipeline_flavors WHERE id = :id
             """),
                 {"id": flavor_id},
             ).fetchone()
@@ -142,7 +142,7 @@ class PipelineFlavorService:
 
                 db.execute(
                     text(f"""
-                    UPDATE pipeline_configurations
+                    UPDATE pipeline_flavors
                     SET {', '.join(update_fields)}
                     WHERE id = :id
                 """),
@@ -159,7 +159,7 @@ class PipelineFlavorService:
             # Check if it's the Default flavor
             existing = db.execute(
                 text("""
-                SELECT title FROM pipeline_configurations WHERE id = :id
+                SELECT title FROM pipeline_flavors WHERE id = :id
             """),
                 {"id": flavor_id},
             ).fetchone()
@@ -172,7 +172,7 @@ class PipelineFlavorService:
 
             result = db.execute(
                 text("""
-                DELETE FROM pipeline_configurations WHERE id = :id
+                DELETE FROM pipeline_flavors WHERE id = :id
             """),
                 {"id": flavor_id},
             )
@@ -193,7 +193,7 @@ class PipelineFlavorService:
         with get_pipeline_session() as db:
             row = db.execute(
                 text("""
-                SELECT * FROM pipeline_configurations WHERE id = :id
+                SELECT * FROM pipeline_flavors WHERE id = :id
             """),
                 {"id": flavor_id},
             ).fetchone()
@@ -212,7 +212,7 @@ class PipelineFlavorService:
         with get_pipeline_session() as db:
             row = db.execute(
                 text("""
-                SELECT * FROM pipeline_configurations
+                SELECT * FROM pipeline_flavors
                 WHERE pipeline = :pipeline AND title = :title
             """),
                 {"pipeline": pipeline.value, "title": title},
@@ -295,7 +295,7 @@ class PipelineFlavorService:
             if enabled_only:
                 rows = db.execute(
                     text("""
-                    SELECT * FROM pipeline_configurations
+                    SELECT * FROM pipeline_flavors
                     WHERE pipeline = :pipeline AND enabled = TRUE
                     ORDER BY title
                 """),
@@ -304,7 +304,7 @@ class PipelineFlavorService:
             else:
                 rows = db.execute(
                     text("""
-                    SELECT * FROM pipeline_configurations
+                    SELECT * FROM pipeline_flavors
                     WHERE pipeline = :pipeline
                     ORDER BY title
                 """),
@@ -317,7 +317,7 @@ class PipelineFlavorService:
         """Get all user-created flavors across all pipelines"""
         with get_pipeline_session() as db:
             rows = db.execute(text("""
-                SELECT * FROM pipeline_configurations
+                SELECT * FROM pipeline_flavors
                 ORDER BY pipeline, title
             """)).fetchall()
 
