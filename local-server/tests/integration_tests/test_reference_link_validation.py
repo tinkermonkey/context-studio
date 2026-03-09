@@ -137,9 +137,7 @@ def test_validate_all_reference_links_with_limit(shared_client):
         create_domain(shared_client, layer_id, title=f"Domain_{i}_{uuid4()}")
 
     # Run bulk validation with limit
-    resp = shared_client.post(
-        "/api/structure_nodes/reference_links/validate?limit=3"
-    )
+    resp = shared_client.post("/api/structure_nodes/reference_links/validate?limit=3")
     assert resp.status_code == 200
 
     data = resp.json()
@@ -179,9 +177,7 @@ def test_validation_handles_reference_db_unavailable(shared_client):
     # Should not crash even if reference.db is unavailable
 
     # Also test bulk validation
-    resp = shared_client.post(
-        "/api/structure_nodes/reference_links/validate?limit=5"
-    )
+    resp = shared_client.post("/api/structure_nodes/reference_links/validate?limit=5")
     assert resp.status_code == 200
     data = resp.json()
     # If reference.db unavailable, should be marked in result
@@ -214,9 +210,7 @@ def test_validate_node_with_malformed_json(shared_client):
 def test_bulk_validation_with_zero_limit_rejected(shared_client):
     """Test that invalid limit parameters are rejected."""
     # Try with limit=0
-    resp = shared_client.post(
-        "/api/structure_nodes/reference_links/validate?limit=0"
-    )
+    resp = shared_client.post("/api/structure_nodes/reference_links/validate?limit=0")
     assert resp.status_code == 422  # FastAPI validation error
 
 
@@ -226,4 +220,6 @@ def test_bulk_validation_with_excessive_limit_rejected(shared_client):
     resp = shared_client.post(
         "/api/structure_nodes/reference_links/validate?limit=100000"
     )
-    assert resp.status_code == 422  # FastAPI validation error (exceeds max of 10000)  # noqa: E501
+    assert (
+        resp.status_code == 422
+    )  # FastAPI validation error (exceeds max of 10000)  # noqa: E501

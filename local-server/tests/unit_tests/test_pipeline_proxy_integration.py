@@ -27,7 +27,11 @@ class TestPipelineProxyIntegration:
     @patch("nlp.pipeline.get_model_downloader")
     @patch("nlp.pipeline.spacy.load")
     def test_pipeline_init_with_proxy_disabled(
-        self, mock_spacy_load, mock_get_model_downloader, mock_get_proxy_manager, mock_get_settings
+        self,
+        mock_spacy_load,
+        mock_get_model_downloader,
+        mock_get_proxy_manager,
+        mock_get_settings,
     ):
         """Test pipeline initialization when proxy is disabled"""
         # Mock settings
@@ -68,7 +72,11 @@ class TestPipelineProxyIntegration:
     @patch("nlp.pipeline.get_model_downloader")
     @patch("nlp.pipeline.spacy.load")
     def test_pipeline_init_with_proxy_enabled(
-        self, mock_spacy_load, mock_get_model_downloader, mock_get_proxy_manager, mock_get_settings
+        self,
+        mock_spacy_load,
+        mock_get_model_downloader,
+        mock_get_proxy_manager,
+        mock_get_settings,
     ):
         """Test pipeline initialization when proxy is enabled"""
         # Mock settings
@@ -352,7 +360,11 @@ class TestPipelineProxyIntegration:
     @patch("nlp.pipeline.get_model_downloader")
     @patch("nlp.pipeline.spacy.load")
     def test_reload_pipeline(
-        self, mock_spacy_load, mock_get_model_downloader, mock_get_proxy_manager, mock_get_settings
+        self,
+        mock_spacy_load,
+        mock_get_model_downloader,
+        mock_get_proxy_manager,
+        mock_get_settings,
     ):
         """Test pipeline reload functionality"""
         # Mock settings
@@ -395,7 +407,13 @@ class TestPipelineProxyIntegration:
     @patch("nlp.pipeline.get_proxy_manager")
     @patch("nlp.pipeline.get_model_downloader")
     @patch("nlp.pipeline.spacy.load")
-    def test_shutdown(self, mock_spacy_load, mock_get_model_downloader, mock_get_proxy_manager, mock_get_settings):
+    def test_shutdown(
+        self,
+        mock_spacy_load,
+        mock_get_model_downloader,
+        mock_get_proxy_manager,
+        mock_get_settings,
+    ):
         """Test pipeline shutdown functionality"""
         # Mock settings
         mock_settings = Mock()

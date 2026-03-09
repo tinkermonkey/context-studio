@@ -2,7 +2,9 @@ import sys
 import os
 
 # Ensure project root is importable
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../../")))  # noqa: E501
+sys.path.insert(
+    0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../../"))
+)  # noqa: E501
 
 from triage_scripts.triage_helper import (  # noqa: E402
     create_test_app_with_migrations,

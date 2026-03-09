@@ -86,7 +86,7 @@ class MigrationTestHarness:
         try:
             cursor.execute(
                 "SELECT name FROM sqlite_master WHERE type='table' AND name=?",
-                (table_name,)
+                (table_name,),
             )
             return cursor.fetchone() is not None
         finally:
@@ -219,12 +219,10 @@ class MigrationTestHarness:
 
                 # Record in schema history
                 conn.execute(
-                    text(
-                        """
+                    text("""
                     INSERT INTO schema_history (version, description, migration_file, checksum, execution_time_ms)
                     VALUES (:version, :description, :migration_file, :checksum, :execution_time_ms)
-                """
-                    ),
+                """),
                     {
                         "version": migration_019.version,
                         "description": migration_019.description,
@@ -259,7 +257,9 @@ class MigrationTestHarness:
         conn = self.get_connection()
         cursor = conn.cursor()
         try:
-            cursor.execute(f"SELECT node_type, COUNT(*) FROM {table_name} GROUP BY node_type")
+            cursor.execute(
+                f"SELECT node_type, COUNT(*) FROM {table_name} GROUP BY node_type"
+            )
             return {row[0]: row[1] for row in cursor.fetchall()}
         finally:
             cursor.close()
@@ -269,7 +269,9 @@ class MigrationTestHarness:
         conn = self.get_connection()
         cursor = conn.cursor()
         try:
-            cursor.execute("SELECT record_type, COUNT(*) FROM change_events GROUP BY record_type")
+            cursor.execute(
+                "SELECT record_type, COUNT(*) FROM change_events GROUP BY record_type"
+            )
             return {row[0]: row[1] for row in cursor.fetchall()}
         finally:
             cursor.close()
@@ -336,10 +338,14 @@ class TestMigration019TableRenames:
         assert not migration_harness.table_exists("predicates")
         assert migration_harness.table_exists("property_definitions")
 
-    def test_pipeline_flavors_renamed_to_pipeline_configurations(self, migration_harness):
+    def test_pipeline_flavors_renamed_to_pipeline_configurations(
+        self, migration_harness
+    ):
         """Test that pipeline_flavors table is renamed to pipeline_configurations (if it exists)."""
         # Note: pipeline_flavors may not exist in all test databases
-        pipeline_flavors_exists_before = migration_harness.table_exists("pipeline_flavors")
+        pipeline_flavors_exists_before = migration_harness.table_exists(
+            "pipeline_flavors"
+        )
 
         migration_harness.run_migration_019()
 
@@ -354,17 +360,23 @@ class TestMigration019ColumnRenames:
     def test_parent_node_id_renamed_to_parent_entity_id(self, migration_harness):
         """Test that parent_node_id column is renamed to parent_entity_id."""
         assert migration_harness.column_exists("structure_nodes", "parent_node_id")
-        assert not migration_harness.column_exists("structure_nodes", "parent_entity_id")
+        assert not migration_harness.column_exists(
+            "structure_nodes", "parent_entity_id"
+        )
 
         migration_harness.run_migration_019()
 
-        assert not migration_harness.column_exists("ontology_entities", "parent_node_id")
+        assert not migration_harness.column_exists(
+            "ontology_entities", "parent_node_id"
+        )
         assert migration_harness.column_exists("ontology_entities", "parent_entity_id")
 
     def test_source_node_id_renamed_to_source_entity_id(self, migration_harness):
         """Test that source_node_id column is renamed to source_entity_id."""
         assert migration_harness.column_exists("structure_node_links", "source_node_id")
-        assert not migration_harness.column_exists("structure_node_links", "source_entity_id")
+        assert not migration_harness.column_exists(
+            "structure_node_links", "source_entity_id"
+        )
 
         migration_harness.run_migration_019()
 
@@ -374,7 +386,9 @@ class TestMigration019ColumnRenames:
     def test_target_node_id_renamed_to_target_entity_id(self, migration_harness):
         """Test that target_node_id column is renamed to target_entity_id."""
         assert migration_harness.column_exists("structure_node_links", "target_node_id")
-        assert not migration_harness.column_exists("structure_node_links", "target_entity_id")
+        assert not migration_harness.column_exists(
+            "structure_node_links", "target_entity_id"
+        )
 
         migration_harness.run_migration_019()
 
@@ -586,14 +600,18 @@ class TestMigration019Rollback:
         assert not migration_harness.table_exists("property_definitions")
         # Note: pipeline_flavors may not exist in all test databases
         # If it existed before migration, it should be restored
-        pipeline_flavors_before = migration_harness.table_exists("pipeline_configurations")
+        pipeline_flavors_before = migration_harness.table_exists(
+            "pipeline_configurations"
+        )
         if pipeline_flavors_before:
             # This shouldn't happen since we just rolled back
             pass
         migration_harness.table_exists("pipeline_flavors")
-        pipeline_configs_after = migration_harness.table_exists("pipeline_configurations")
+        pipeline_configs_after = migration_harness.table_exists(
+            "pipeline_configurations"
+        )
         # Either pipeline_flavors exists OR neither exists (since it wasn't there originally)
-        assert (not pipeline_configs_after)
+        assert not pipeline_configs_after
 
     def test_rollback_renames_columns_back(self, migration_harness):
         """Test that rollback renames all columns back to legacy names."""
@@ -603,9 +621,13 @@ class TestMigration019Rollback:
         migration_harness.rollback_migration_019()
 
         assert migration_harness.column_exists("structure_nodes", "parent_node_id")
-        assert not migration_harness.column_exists("structure_nodes", "parent_entity_id")
+        assert not migration_harness.column_exists(
+            "structure_nodes", "parent_entity_id"
+        )
         assert migration_harness.column_exists("structure_node_links", "source_node_id")
-        assert not migration_harness.column_exists("structure_node_links", "source_entity_id")
+        assert not migration_harness.column_exists(
+            "structure_node_links", "source_entity_id"
+        )
 
     def test_rollback_reverts_enum_values(self, migration_harness):
         """Test that rollback reverts enum values back to legacy names."""

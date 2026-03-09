@@ -148,7 +148,9 @@ class TestSchemaOrgImporterDownload:
 
         # Test that Pydantic validation rejects non-HTTPS URLs for remote hosts
         with pytest.raises(ValidationError) as exc_info:
-            ReferenceConfig(schema_org_api_url="http://malicious.com/schema.jsonld")  # noqa: E501
+            ReferenceConfig(
+                schema_org_api_url="http://malicious.com/schema.jsonld"
+            )  # noqa: E501
 
         # Verify the error message mentions security/HTTPS
         error_str = str(exc_info.value)
@@ -513,7 +515,9 @@ class TestSchemaOrgImporterRelationships:
             properties = [
                 {
                     "@id": "https://schema.org/name",
-                    "schema:domainIncludes": {"@id": "https://schema.org/Thing"},  # noqa: E501
+                    "schema:domainIncludes": {
+                        "@id": "https://schema.org/Thing"
+                    },  # noqa: E501
                     "schema:rangeIncludes": {"@id": "https://schema.org/Text"},
                 }
             ]

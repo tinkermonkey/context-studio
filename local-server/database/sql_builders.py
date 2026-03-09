@@ -23,7 +23,7 @@ def _validate_column_name(column_name: str) -> None:
     # This prevents trailing dots (column.), consecutive dots (a..b), etc.
     # Examples: 'title_embedding', 'sn.title_embedding', 'rn.definition_embedding'
     # Invalid: 'column.', 'a..b', 'table.', '.column'
-    pattern = r'^[a-zA-Z_][a-zA-Z0-9_]*(\.[a-zA-Z_][a-zA-Z0-9_]*)*$'
+    pattern = r"^[a-zA-Z_][a-zA-Z0-9_]*(\.[a-zA-Z_][a-zA-Z0-9_]*)*$"
     if not re.match(pattern, column_name):
         raise ValueError(
             f"Invalid column name '{column_name}'. Column names must start with a letter or underscore "
@@ -33,7 +33,7 @@ def _validate_column_name(column_name: str) -> None:
 
 def build_max_similarity_case_when(
     title_column: str = "title_embedding",
-    definition_column: str = "definition_embedding"
+    definition_column: str = "definition_embedding",
 ) -> str:
     """
     Build a CASE WHEN SQL fragment that computes max similarity between title and definition embeddings.

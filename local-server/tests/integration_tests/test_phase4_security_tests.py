@@ -41,16 +41,16 @@ def security_test_database():
         external_id="TestEntity",
         title_embedding=create_embedding(0.5),
         definition_embedding=create_embedding(0.5),
-        embedding_dims=384
+        embedding_dims=384,
     )
 
     # Extract node data before closing session to avoid DetachedInstanceError
     node_data = {
-        'id': node.id,
-        'title': node.title,
-        'definition': node.definition,
-        'source': node.source,
-        'external_id': node.external_id
+        "id": node.id,
+        "title": node.title,
+        "definition": node.definition,
+        "source": node.source,
+        "external_id": node.external_id,
     }
 
     manager.close()
@@ -101,7 +101,7 @@ class TestTC_SEC001_SQLInjectionPrevention:
                         query_text=injection,
                         limit=10,
                         threshold=0.5,
-                        embedding_generator=mock_embedding
+                        embedding_generator=mock_embedding,
                     )
 
                     # Should complete without error (treating as normal query)
@@ -110,17 +110,21 @@ class TestTC_SEC001_SQLInjectionPrevention:
                 except Exception as e:
                     # If there's an error, it shouldn't be a SQL error
                     error_msg = str(e).lower()
-                    assert "sql" not in error_msg, \
-                        f"SQL error exposed for injection: {injection}"
-                    assert "syntax" not in error_msg, \
-                        f"Syntax error exposed for injection: {injection}"
+                    assert (
+                        "sql" not in error_msg
+                    ), f"SQL error exposed for injection: {injection}"
+                    assert (
+                        "syntax" not in error_msg
+                    ), f"Syntax error exposed for injection: {injection}"
 
         # Verify database integrity after injection attempts
         with ReferenceManager(config, db_path=db_path) as manager:
             # Should still be able to query
-            test_node = manager.get_reference_node(node['id'])
+            test_node = manager.get_reference_node(node["id"])
             assert test_node is not None, "Database corrupted by injection"
-            assert test_node.title == "TestEntity", "Data modified by injection"  # noqa: E501
+            assert (
+                test_node.title == "TestEntity"
+            ), "Data modified by injection"  # noqa: E501
 
     def test_predicate_filter_sql_injection(self, security_test_database):
         """Test SQL injection in predicate filter."""
@@ -138,9 +142,7 @@ class TestTC_SEC001_SQLInjectionPrevention:
                 try:
                     # Predicate filter should use parameterized query
                     links = manager.get_node_links(
-                        node_id=node['id'],
-                        direction="both",
-                        predicate=injection
+                        node_id=node["id"], direction="both", predicate=injection
                     )
 
                     # Should return empty results (no matching predicate)
@@ -173,7 +175,7 @@ class TestTC_SEC001_SQLInjectionPrevention:
                     source=injection,
                     limit=10,
                     threshold=0.5,
-                    embedding_generator=mock_embedding
+                    embedding_generator=mock_embedding,
                 )
 
                 # Should return empty results (no matching source)
@@ -200,7 +202,7 @@ class TestTC_SEC002_HTTPSEnforcement:
         http_urls = [
             "http://dbpedia.org/sparql",
             "http://api.conceptnet.io/",
-            "http://query.wikidata.org/sparql"
+            "http://query.wikidata.org/sparql",
         ]
 
         # Note: This test validates the principle
@@ -224,6 +226,7 @@ class TestTC_SEC003_WriteEndpointProtection:
         db_path, node = security_test_database
 
         from app import app
+
         client = TestClient(app)
 
         # Attempt to access write endpoints (should not exist)
@@ -245,8 +248,10 @@ class TestTC_SEC003_WriteEndpointProtection:
                 response = client.delete(endpoint)
 
             # Should return 404 (not found) or 405 (method not allowed)
-            assert response.status_code in [404, 405], \
-                f"Write endpoint {method} {endpoint} should not be accessible, got {response.status_code}"  # noqa: E501
+            assert response.status_code in [
+                404,
+                405,
+            ], f"Write endpoint {method} {endpoint} should not be accessible, got {response.status_code}"  # noqa: E501
 
 
 class TestTC_SEC004_ErrorMessageSanitization:
@@ -262,13 +267,14 @@ class TestTC_SEC004_ErrorMessageSanitization:
     def test_error_responses_no_stack_traces(self, caplog):
         """Verify API errors don't expose stack traces."""
         from app import app
+
         client = TestClient(app)
 
         # Trigger an error with invalid parameters
         with caplog.at_level(logging.ERROR):
             response = client.get(
                 "/api/reference/ref-db/search",
-                params={"query": "test", "limit": -1}  # Invalid limit
+                params={"query": "test", "limit": -1},  # Invalid limit
             )
 
         # Should return error without stack trace
@@ -277,8 +283,10 @@ class TestTC_SEC004_ErrorMessageSanitization:
 
         # Should not contain stack trace indicators
         assert "traceback" not in response_text
-        assert "file \"" not in response_text
-        assert "line " not in response_text.lower() or "line " not in response_text  # noqa: E501
+        assert 'file "' not in response_text
+        assert (
+            "line " not in response_text.lower() or "line " not in response_text
+        )  # noqa: E501
 
     def test_error_responses_no_sql_exposure(self, security_test_database):
         """Verify errors don't expose SQL queries."""
@@ -287,7 +295,9 @@ class TestTC_SEC004_ErrorMessageSanitization:
         config = ReferenceConfig()
 
         def mock_embedding_error(text: str) -> bytes:
-            raise Exception("SELECT * FROM sensitive_table WHERE secret='exposed'")  # noqa: E501
+            raise Exception(
+                "SELECT * FROM sensitive_table WHERE secret='exposed'"
+            )  # noqa: E501
 
         with ReferenceManager(config, db_path=db_path) as manager:
             try:
@@ -295,7 +305,7 @@ class TestTC_SEC004_ErrorMessageSanitization:
                     query_text="test",
                     limit=10,
                     threshold=0.5,
-                    embedding_generator=mock_embedding_error
+                    embedding_generator=mock_embedding_error,
                 )
                 assert False, "Should have raised an exception"
             except Exception:
@@ -308,11 +318,14 @@ class TestTC_SEC004_ErrorMessageSanitization:
     def test_error_responses_no_path_exposure(self, caplog):
         """Verify errors don't expose internal file paths."""
         from app import app
+
         client = TestClient(app)
 
         with caplog.at_level(logging.ERROR):
             # Request non-existent node
-            response = client.get("/api/reference/ref-db/nodes/nonexistent-id-12345")  # noqa: E501
+            response = client.get(
+                "/api/reference/ref-db/nodes/nonexistent-id-12345"
+            )  # noqa: E501
 
         # Should return error
         assert response.status_code in [404, 500]
@@ -327,22 +340,27 @@ class TestTC_SEC004_ErrorMessageSanitization:
     def test_error_logging_at_error_level(self, caplog):
         """Verify errors are logged at ERROR level."""
         from app import app
+
         client = TestClient(app)
 
         with caplog.at_level(logging.ERROR):
             # Trigger an error
             response = client.get(
                 "/api/reference/ref-db/search",
-                params={"query": "", "limit": 10}  # Empty query should error
+                params={"query": "", "limit": 10},  # Empty query should error
             )
 
         # If there was an error, it should be logged at ERROR level
         if response.status_code >= 400:
             # Check that error-level logs exist
-            error_logs = [record for record in caplog.records if record.levelno >= logging.ERROR]  # noqa: E501
+            error_logs = [
+                record for record in caplog.records if record.levelno >= logging.ERROR
+            ]  # noqa: E501
             # Note: May not always log depending on validation layer
             # This documents the expectation
-            assert error_logs or True  # Pass regardless - documents the expectation  # noqa: E501
+            assert (
+                error_logs or True
+            )  # Pass regardless - documents the expectation  # noqa: E501
 
 
 class TestTC_SEC005_InputValidation:
@@ -376,11 +394,13 @@ class TestTC_SEC005_InputValidation:
                         query_text="test",
                         limit=limit,
                         threshold=0.5,
-                        embedding_generator=mock_embedding
+                        embedding_generator=mock_embedding,
                     )
 
                     if limit <= 0 or limit > 10000:
-                        assert False, f"Should have rejected invalid limit: {limit}"  # noqa: E501
+                        assert (
+                            False
+                        ), f"Should have rejected invalid limit: {limit}"  # noqa: E501
 
                 except ValueError as e:
                     # Expected for invalid values
@@ -398,7 +418,7 @@ class TestTC_SEC005_InputValidation:
         config = ReferenceConfig()
 
         # Test invalid thresholds
-        invalid_thresholds = [-2.0, 2.0, float('inf'), float('nan')]
+        invalid_thresholds = [-2.0, 2.0, float("inf"), float("nan")]
 
         for threshold in invalid_thresholds:
             if threshold != threshold:  # Skip NaN for this test
@@ -410,11 +430,13 @@ class TestTC_SEC005_InputValidation:
                         query_text="test",
                         limit=10,
                         threshold=threshold,
-                        embedding_generator=mock_embedding
+                        embedding_generator=mock_embedding,
                     )
 
                     if threshold < -1.0 or threshold > 1.0:
-                        assert False, f"Should have rejected invalid threshold: {threshold}"  # noqa: E501
+                        assert (
+                            False
+                        ), f"Should have rejected invalid threshold: {threshold}"  # noqa: E501
 
                 except ValueError as e:
                     # Expected for invalid values

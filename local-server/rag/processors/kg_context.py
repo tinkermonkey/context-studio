@@ -5,6 +5,7 @@ Layer 0: Knowledge Graph Context Preparation Processor
 This processor extracts phrases from input text at sentence granularity and performs
 vector search against knowledge graph embeddings to retrieve relevant context.
 """
+
 from typing import List, Dict, Any
 from sqlalchemy.orm import Session
 from sqlalchemy import text
@@ -15,7 +16,7 @@ from rag.processors.models import (
     ProcessorInput,
     KGContextOutput,
     ExtractedPhrase,
-    KGNode
+    KGNode,
 )
 from database.models import StructureNode
 from embeddings.generate_embeddings import get_model
@@ -37,7 +38,9 @@ class KGContextProcessor:
     - Return top-k matching KG concepts
     """
 
-    def __init__(self, db_session: Session, top_k: int = 50, similarity_threshold: float = 0.4):
+    def __init__(
+        self, db_session: Session, top_k: int = 50, similarity_threshold: float = 0.4
+    ):
         """
         Initialize KG Context Processor.
 
@@ -51,7 +54,9 @@ class KGContextProcessor:
         self.similarity_threshold = similarity_threshold
         self.nlp_pipeline = get_pipeline()
         self.embedding_model = get_model()
-        logger.info(f"KGContextProcessor initialized with top_k={top_k}, similarity_threshold={similarity_threshold}")
+        logger.info(
+            f"KGContextProcessor initialized with top_k={top_k}, similarity_threshold={similarity_threshold}"
+        )
 
     def process(self, input_data: ProcessorInput) -> KGContextOutput:
         """
@@ -81,20 +86,24 @@ class KGContextProcessor:
             all_phrases.extend(phrases)
             sentence_phrase_map[sent_idx] = [p.text for p in phrases]
 
-        logger.debug(f"Extracted {len(all_phrases)} total phrases from {len(sentences)} sentences")
+        logger.debug(
+            f"Extracted {len(all_phrases)} total phrases from {len(sentences)} sentences"
+        )
 
         if input_data.enable_trace:
-            trace_data['extracted_phrases'] = [
+            trace_data["extracted_phrases"] = [
                 {
-                    'text': p.text,
-                    'sentence_index': p.sentence_index,
-                    'char_range': [p.start_char, p.end_char]
+                    "text": p.text,
+                    "sentence_index": p.sentence_index,
+                    "char_range": [p.start_char, p.end_char],
                 }
                 for p in all_phrases
             ]
 
         # Perform vector search for all phrases
-        kg_nodes, phrase_to_kg_map = self._search_kg_nodes(all_phrases, input_data.enable_trace, trace_data)
+        kg_nodes, phrase_to_kg_map = self._search_kg_nodes(
+            all_phrases, input_data.enable_trace, trace_data
+        )
 
         logger.info(f"Retrieved {len(kg_nodes)} unique KG nodes (top {self.top_k})")
 
@@ -103,10 +112,12 @@ class KGContextProcessor:
             kg_nodes=kg_nodes,
             total_sentences=len(sentences),
             phrase_to_kg_map=phrase_to_kg_map,
-            trace_data=trace_data
+            trace_data=trace_data,
         )
 
-    def _extract_phrases_from_sentence(self, sent, sent_idx: int) -> List[ExtractedPhrase]:
+    def _extract_phrases_from_sentence(
+        self, sent, sent_idx: int
+    ) -> List[ExtractedPhrase]:
         """
         Extract meaningful phrases from a sentence using spaCy noun chunks.
 
@@ -133,7 +144,7 @@ class KGContextProcessor:
                 text=chunk.text,
                 sentence_index=sent_idx,
                 start_char=chunk.start_char,
-                end_char=chunk.end_char
+                end_char=chunk.end_char,
             )
             phrases.append(phrase)
 
@@ -146,7 +157,7 @@ class KGContextProcessor:
                 text=ent.text,
                 sentence_index=sent_idx,
                 start_char=ent.start_char,
-                end_char=ent.end_char
+                end_char=ent.end_char,
             )
             phrases.append(phrase)
 
@@ -156,7 +167,7 @@ class KGContextProcessor:
         self,
         phrases: List[ExtractedPhrase],
         enable_trace: bool,
-        trace_data: Dict[str, Any]
+        trace_data: Dict[str, Any],
     ) -> tuple[List[KGNode], Dict[str, List[Dict[str, Any]]]]:
         """
         Perform vector search against KG embeddings for all phrases using SQLite-vec.
@@ -185,7 +196,9 @@ class KGContextProcessor:
                 embedding = self.embedding_model.encode([phrase_text])[0]
                 phrase_embeddings[phrase_text] = np.array(embedding, dtype=np.float32)
             except Exception as e:
-                logger.warning(f"Failed to generate embedding for phrase '{phrase_text}': {e}")
+                logger.warning(
+                    f"Failed to generate embedding for phrase '{phrase_text}': {e}"
+                )
 
         if not phrase_embeddings:
             logger.debug("No valid phrase embeddings generated")
@@ -194,17 +207,18 @@ class KGContextProcessor:
         # Track best matches across all phrases
         node_scores: Dict[str, float] = {}  # node_id -> max similarity score
         node_objects: Dict[str, StructureNode] = {}  # node_id -> StructureNode object
-        phrase_to_kg_map: Dict[str, List[Dict[str, Any]]] = {}  # phrase -> list of {node_id, title, similarity}
+        phrase_to_kg_map: Dict[str, List[Dict[str, Any]]] = (
+            {}
+        )  # phrase -> list of {node_id, title, similarity}
 
         if enable_trace:
-            trace_data['vector_searches'] = []
+            trace_data["vector_searches"] = []
 
         # Perform vector search for each phrase using SQLite-vec
         for phrase_text, phrase_emb in phrase_embeddings.items():
-            phrase_trace = {
-                'phrase': phrase_text,
-                'matches': []
-            } if enable_trace else None
+            phrase_trace = (
+                {"phrase": phrase_text, "matches": []} if enable_trace else None
+            )
 
             try:
                 # Convert embedding to bytes for SQLite
@@ -237,10 +251,11 @@ class KGContextProcessor:
                 result = self.db_session.execute(
                     query,
                     {
-                        'query_vec': query_vec_bytes,
-                        'threshold': self.similarity_threshold,
-                        'limit': self.top_k * 2  # Get more than top_k since we aggregate across phrases
-                    }
+                        "query_vec": query_vec_bytes,
+                        "threshold": self.similarity_threshold,
+                        "limit": self.top_k
+                        * 2,  # Get more than top_k since we aggregate across phrases
+                    },
                 )
 
                 # Store matches for this phrase
@@ -255,26 +270,35 @@ class KGContextProcessor:
                         node_scores[node_id] = similarity
 
                         # Only fetch full node object if this is a new best score
-                        if node_id not in node_objects or similarity > node_scores[node_id]:
-                            node_obj = self.db_session.query(StructureNode).filter(
-                                StructureNode.id == node_id
-                            ).first()
+                        if (
+                            node_id not in node_objects
+                            or similarity > node_scores[node_id]
+                        ):
+                            node_obj = (
+                                self.db_session.query(StructureNode)
+                                .filter(StructureNode.id == node_id)
+                                .first()
+                            )
                             if node_obj:
                                 node_objects[node_id] = node_obj
 
                     # Store match for phrase-to-KG mapping
-                    phrase_matches.append({
-                        'node_id': node_id,
-                        'node_title': row.title,
-                        'similarity': similarity
-                    })
+                    phrase_matches.append(
+                        {
+                            "node_id": node_id,
+                            "node_title": row.title,
+                            "similarity": similarity,
+                        }
+                    )
 
                     if enable_trace and phrase_trace:
-                        phrase_trace['matches'].append({
-                            'node_id': node_id,
-                            'node_title': row.title,
-                            'similarity': similarity
-                        })
+                        phrase_trace["matches"].append(
+                            {
+                                "node_id": node_id,
+                                "node_title": row.title,
+                                "similarity": similarity,
+                            }
+                        )
 
                 # Store phrase-to-KG mapping (always, not just for trace)
                 if phrase_matches:
@@ -285,16 +309,16 @@ class KGContextProcessor:
 
             if enable_trace and phrase_trace:
                 # Keep top 5 matches for trace
-                phrase_trace['matches'] = sorted(
-                    phrase_trace['matches'],
-                    key=lambda x: x['similarity'],
-                    reverse=True
+                phrase_trace["matches"] = sorted(
+                    phrase_trace["matches"], key=lambda x: x["similarity"], reverse=True
                 )[:5]
-                trace_data['vector_searches'].append(phrase_trace)
+                trace_data["vector_searches"].append(phrase_trace)
 
         # Sort nodes by score and take top-k
-        sorted_node_ids = sorted(node_scores.keys(), key=lambda nid: node_scores[nid], reverse=True)
-        top_node_ids = sorted_node_ids[:self.top_k]
+        sorted_node_ids = sorted(
+            node_scores.keys(), key=lambda nid: node_scores[nid], reverse=True
+        )
+        top_node_ids = sorted_node_ids[: self.top_k]
 
         # Convert to KGNode objects
         kg_nodes = []
@@ -306,18 +330,20 @@ class KGContextProcessor:
                     title=node.title,  # type: ignore
                     node_type=node.node_type.value,
                     similarity_score=node_scores[node_id],
-                    definition=node.definition  # type: ignore
+                    definition=node.definition,  # type: ignore
                 )
                 kg_nodes.append(kg_node)
 
-        logger.debug(f"Found {len(kg_nodes)} KG nodes above threshold {self.similarity_threshold}")
+        logger.debug(
+            f"Found {len(kg_nodes)} KG nodes above threshold {self.similarity_threshold}"
+        )
 
         if enable_trace:
-            trace_data['top_kg_nodes'] = [
+            trace_data["top_kg_nodes"] = [
                 {
-                    'node_id': n.node_id,
-                    'title': n.title,
-                    'similarity': n.similarity_score
+                    "node_id": n.node_id,
+                    "title": n.title,
+                    "similarity": n.similarity_score,
                 }
                 for n in kg_nodes
             ]

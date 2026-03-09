@@ -3,8 +3,10 @@ Unit tests for RAG Cleanup Scheduler.
 
 Tests scheduled cleanup functionality for RAG observability data.
 """
+
 import sys
 import os
+
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import pytest  # noqa: E402
@@ -29,8 +31,7 @@ class TestRAGCleanupScheduler:
     def test_initialization(self, mock_db_session):
         """Test scheduler initializes correctly."""
         scheduler = RAGCleanupScheduler(
-            ops_db_session=mock_db_session,
-            cleanup_interval_hours=12
+            ops_db_session=mock_db_session, cleanup_interval_hours=12
         )
 
         assert scheduler.ops_db_session == mock_db_session
@@ -48,8 +49,7 @@ class TestRAGCleanupScheduler:
     async def test_start_scheduler(self, mock_db_session):
         """Test starting the scheduler."""
         scheduler = RAGCleanupScheduler(
-            ops_db_session=mock_db_session,
-            cleanup_interval_hours=1
+            ops_db_session=mock_db_session, cleanup_interval_hours=1
         )
 
         scheduler.start()
@@ -65,8 +65,7 @@ class TestRAGCleanupScheduler:
     async def test_start_already_running(self, mock_db_session):
         """Test starting scheduler when already running does nothing."""
         scheduler = RAGCleanupScheduler(
-            ops_db_session=mock_db_session,
-            cleanup_interval_hours=1
+            ops_db_session=mock_db_session, cleanup_interval_hours=1
         )
 
         scheduler.start()
@@ -85,8 +84,7 @@ class TestRAGCleanupScheduler:
     async def test_stop_scheduler(self, mock_db_session):
         """Test stopping the scheduler."""
         scheduler = RAGCleanupScheduler(
-            ops_db_session=mock_db_session,
-            cleanup_interval_hours=1
+            ops_db_session=mock_db_session, cleanup_interval_hours=1
         )
 
         scheduler.start()
@@ -101,8 +99,7 @@ class TestRAGCleanupScheduler:
     async def test_stop_not_running(self, mock_db_session):
         """Test stopping scheduler when not running does nothing."""
         scheduler = RAGCleanupScheduler(
-            ops_db_session=mock_db_session,
-            cleanup_interval_hours=1
+            ops_db_session=mock_db_session, cleanup_interval_hours=1
         )
 
         # Stop without starting
@@ -113,16 +110,15 @@ class TestRAGCleanupScheduler:
     @pytest.mark.asyncio
     async def test_run_now(self, mock_db_session):
         """Test manual cleanup trigger."""
-        with patch('rag.cleanup_scheduler.RAGObservabilityStore') as MockStore:
+        with patch("rag.cleanup_scheduler.RAGObservabilityStore") as MockStore:
             mock_store = MockStore.return_value
             mock_store.cleanup_old_data.return_value = {
                 "metrics_deleted": 10,
-                "traces_deleted": 25
+                "traces_deleted": 25,
             }
 
             scheduler = RAGCleanupScheduler(
-                ops_db_session=mock_db_session,
-                cleanup_interval_hours=24
+                ops_db_session=mock_db_session, cleanup_interval_hours=24
             )
 
             result = await scheduler.run_now()
@@ -134,17 +130,17 @@ class TestRAGCleanupScheduler:
     @pytest.mark.asyncio
     async def test_cleanup_loop_executes(self, mock_db_session):
         """Test that cleanup loop executes cleanup operation."""
-        with patch('rag.cleanup_scheduler.RAGObservabilityStore') as MockStore:
+        with patch("rag.cleanup_scheduler.RAGObservabilityStore") as MockStore:
             mock_store = MockStore.return_value
             mock_store.cleanup_old_data.return_value = {
                 "metrics_deleted": 5,
-                "traces_deleted": 15
+                "traces_deleted": 15,
             }
 
             # Use very short interval for testing
             scheduler = RAGCleanupScheduler(
                 ops_db_session=mock_db_session,
-                cleanup_interval_hours=0.0001  # ~0.36 seconds
+                cleanup_interval_hours=0.0001,  # ~0.36 seconds
             )
 
             scheduler.start()
@@ -161,18 +157,17 @@ class TestRAGCleanupScheduler:
     @pytest.mark.asyncio
     async def test_cleanup_loop_handles_errors(self, mock_db_session):
         """Test that cleanup loop continues despite errors."""
-        with patch('rag.cleanup_scheduler.RAGObservabilityStore') as MockStore:
+        with patch("rag.cleanup_scheduler.RAGObservabilityStore") as MockStore:
             mock_store = MockStore.return_value
 
             # First call raises exception, second succeeds
             mock_store.cleanup_old_data.side_effect = [
                 Exception("Test error"),
-                {"metrics_deleted": 1, "traces_deleted": 1}
+                {"metrics_deleted": 1, "traces_deleted": 1},
             ]
 
             scheduler = RAGCleanupScheduler(
-                ops_db_session=mock_db_session,
-                cleanup_interval_hours=0.0001
+                ops_db_session=mock_db_session, cleanup_interval_hours=0.0001
             )
 
             scheduler.start()
@@ -189,18 +184,18 @@ class TestRAGCleanupScheduler:
     @pytest.mark.asyncio
     async def test_cleanup_operation_logging(self, mock_db_session):
         """Test that cleanup operations are logged."""
-        with patch('rag.cleanup_scheduler.RAGObservabilityStore') as MockStore, \
-             patch('rag.cleanup_scheduler.logger') as mock_logger:
+        with patch("rag.cleanup_scheduler.RAGObservabilityStore") as MockStore, patch(
+            "rag.cleanup_scheduler.logger"
+        ) as mock_logger:
 
             mock_store = MockStore.return_value
             mock_store.cleanup_old_data.return_value = {
                 "metrics_deleted": 3,
-                "traces_deleted": 7
+                "traces_deleted": 7,
             }
 
             scheduler = RAGCleanupScheduler(
-                ops_db_session=mock_db_session,
-                cleanup_interval_hours=24
+                ops_db_session=mock_db_session, cleanup_interval_hours=24
             )
 
             await scheduler.run_now()
@@ -215,16 +210,16 @@ class TestRAGCleanupScheduler:
     @pytest.mark.asyncio
     async def test_graceful_cancellation(self, mock_db_session):
         """Test that scheduler handles cancellation gracefully."""
-        with patch('rag.cleanup_scheduler.RAGObservabilityStore') as MockStore:
+        with patch("rag.cleanup_scheduler.RAGObservabilityStore") as MockStore:
             mock_store = MockStore.return_value
             mock_store.cleanup_old_data.return_value = {
                 "metrics_deleted": 0,
-                "traces_deleted": 0
+                "traces_deleted": 0,
             }
 
             scheduler = RAGCleanupScheduler(
                 ops_db_session=mock_db_session,
-                cleanup_interval_hours=24  # Long interval
+                cleanup_interval_hours=24,  # Long interval
             )
 
             scheduler.start()
@@ -238,8 +233,9 @@ class TestRAGCleanupScheduler:
     @pytest.mark.asyncio
     async def test_stop_timeout_handling(self, mock_db_session):
         """Test stop handles timeout when task doesn't complete."""
-        with patch('rag.cleanup_scheduler.RAGObservabilityStore'), \
-             patch('rag.cleanup_scheduler.logger'):
+        with patch("rag.cleanup_scheduler.RAGObservabilityStore"), patch(
+            "rag.cleanup_scheduler.logger"
+        ):
 
             # Make cleanup_old_data take a long time
             async def slow_cleanup():
@@ -247,8 +243,7 @@ class TestRAGCleanupScheduler:
                 return {"metrics_deleted": 0, "traces_deleted": 0}
 
             scheduler = RAGCleanupScheduler(
-                ops_db_session=mock_db_session,
-                cleanup_interval_hours=0.0001
+                ops_db_session=mock_db_session, cleanup_interval_hours=0.0001
             )
 
             scheduler.start()
@@ -264,16 +259,15 @@ class TestRAGCleanupScheduler:
     @pytest.mark.asyncio
     async def test_multiple_start_stop_cycles(self, mock_db_session):
         """Test multiple start/stop cycles work correctly."""
-        with patch('rag.cleanup_scheduler.RAGObservabilityStore') as MockStore:
+        with patch("rag.cleanup_scheduler.RAGObservabilityStore") as MockStore:
             mock_store = MockStore.return_value
             mock_store.cleanup_old_data.return_value = {
                 "metrics_deleted": 0,
-                "traces_deleted": 0
+                "traces_deleted": 0,
             }
 
             scheduler = RAGCleanupScheduler(
-                ops_db_session=mock_db_session,
-                cleanup_interval_hours=24
+                ops_db_session=mock_db_session, cleanup_interval_hours=24
             )
 
             # First cycle

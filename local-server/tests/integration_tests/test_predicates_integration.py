@@ -32,7 +32,9 @@ class TestPredicateAPIIntegration:
         data = response.json()
         assert data["title"] == "CustomRelatedTo"
         assert data["identifier"] == "custom_related_to"
-        assert data["definition"] == "Indicates a general relationship between concepts"  # noqa: E501
+        assert (
+            data["definition"] == "Indicates a general relationship between concepts"
+        )  # noqa: E501
         assert "id" in data
         assert "date_created" in data
         assert "date_modified" in data
@@ -40,7 +42,10 @@ class TestPredicateAPIIntegration:
     def test_create_predicate_with_custom_identifier(self, client, db_session):
         """Test predicate creation with custom identifier."""
 
-        predicate_data = {"title": "Custom Relation", "identifier": "custom_id"}  # noqa: E501
+        predicate_data = {
+            "title": "Custom Relation",
+            "identifier": "custom_id",
+        }  # noqa: E501
 
         response = client.post("/api/predicates/", json=predicate_data)
 
@@ -52,12 +57,18 @@ class TestPredicateAPIIntegration:
         """Test predicate creation with duplicate identifier fails."""
 
         # Create first predicate
-        predicate_data = {"title": "First Predicate", "identifier": "duplicate_id"}  # noqa: E501
+        predicate_data = {
+            "title": "First Predicate",
+            "identifier": "duplicate_id",
+        }  # noqa: E501
         response = client.post("/api/predicates/", json=predicate_data)
         assert response.status_code == 201
 
         # Try to create second predicate with same identifier
-        predicate_data = {"title": "Second Predicate", "identifier": "duplicate_id"}  # noqa: E501
+        predicate_data = {
+            "title": "Second Predicate",
+            "identifier": "duplicate_id",
+        }  # noqa: E501
         response = client.post("/api/predicates/", json=predicate_data)
         assert response.status_code == 409
 
@@ -119,19 +130,22 @@ class TestPredicateAPIIntegration:
         """Test getting non-existent predicate returns 404."""
 
         # Use a valid UUID format that doesn't exist in the database
-        response = client.get("/api/predicates/12345678-1234-5678-9012-123456789012")  # noqa: E501
+        response = client.get(
+            "/api/predicates/12345678-1234-5678-9012-123456789012"
+        )  # noqa: E501
         assert response.status_code == 404
 
     def test_get_predicate_by_identifier(self, client, db_session):
         """Test getting predicate by identifier."""
 
         # Use UUID + method name to ensure absolute uniqueness
-        test_id = (
-            f"test_pred_{uuid.uuid4().hex[:8]}_{self.__class__.__name__}_get_by_id"  # noqa: E501
-        )
+        test_id = f"test_pred_{uuid.uuid4().hex[:8]}_{self.__class__.__name__}_get_by_id"  # noqa: E501
 
         # Create predicate
-        predicate_data = {"title": f"Test Predicate {test_id}", "identifier": test_id}  # noqa: E501
+        predicate_data = {
+            "title": f"Test Predicate {test_id}",
+            "identifier": test_id,
+        }  # noqa: E501
         create_response = client.post("/api/predicates/", json=predicate_data)
         assert create_response.status_code == 201
 
@@ -178,7 +192,9 @@ class TestPredicateAPIIntegration:
         assert "limit" in data
 
         # Check that our predicates are included (may have others from previous tests)  # noqa: E501
-        our_predicates = [p for p in data["data"] if p["title"].startswith(test_prefix)]  # noqa: E501
+        our_predicates = [
+            p for p in data["data"] if p["title"].startswith(test_prefix)
+        ]  # noqa: E501
         assert len(our_predicates) == 3
         assert data["total"] >= 3  # At least our 3 predicates
 
@@ -204,8 +220,12 @@ class TestPredicateAPIIntegration:
         data = response.json()
 
         # Filter to only our test predicates
-        our_predicates = [p for p in data["data"] if p["title"].startswith(test_prefix)]  # noqa: E501
-        assert len(our_predicates) == 10  # Verify all 10 were created and can be found  # noqa: E501
+        our_predicates = [
+            p for p in data["data"] if p["title"].startswith(test_prefix)
+        ]  # noqa: E501
+        assert (
+            len(our_predicates) == 10
+        )  # Verify all 10 were created and can be found  # noqa: E501
 
         # Test basic pagination functionality by getting first few results
         response = client.get("/api/predicates/?skip=0&limit=5")
@@ -214,7 +234,9 @@ class TestPredicateAPIIntegration:
         assert len(page1_data["data"]) == 5  # Should get 5 results
         assert page1_data["skip"] == 0
         assert page1_data["limit"] == 5
-        assert page1_data["total"] >= 10  # Should have at least our 10 predicates  # noqa: E501
+        assert (
+            page1_data["total"] >= 10
+        )  # Should have at least our 10 predicates  # noqa: E501
 
         # Test getting next page
         response = client.get("/api/predicates/?skip=5&limit=5")
@@ -248,7 +270,9 @@ class TestPredicateAPIIntegration:
         data = response.json()
 
         # Filter to only our test predicates and check sorting
-        our_predicates = [p for p in data["data"] if p["title"].startswith(test_prefix)]  # noqa: E501
+        our_predicates = [
+            p for p in data["data"] if p["title"].startswith(test_prefix)
+        ]  # noqa: E501
         our_titles = [pred["title"] for pred in our_predicates]
         expected_titles = [
             f"{test_prefix}_Alpha",
@@ -263,7 +287,9 @@ class TestPredicateAPIIntegration:
         data = response.json()
 
         # Filter to only our test predicates and check identifier sorting
-        our_predicates = [p for p in data["data"] if p["title"].startswith(test_prefix)]  # noqa: E501
+        our_predicates = [
+            p for p in data["data"] if p["title"].startswith(test_prefix)
+        ]  # noqa: E501
         our_identifiers = [pred["identifier"] for pred in our_predicates]
         expected_identifiers = [
             f"{test_prefix.lower()}_alpha",
@@ -296,13 +322,17 @@ class TestPredicateAPIIntegration:
             "definition": "Updated definition",
             "mapping": {"source": "manual"},
         }
-        response = client.put(f"/api/predicates/{predicate_id}", json=update_data)  # noqa: E501
+        response = client.put(
+            f"/api/predicates/{predicate_id}", json=update_data
+        )  # noqa: E501
         assert response.status_code == 200
 
         data = response.json()
         assert data["title"] == "Updated Title"
         assert data["definition"] == "Updated definition"
-        assert data["identifier"] == "original_title"  # Identifier should not change  # noqa: E501
+        assert (
+            data["identifier"] == "original_title"
+        )  # Identifier should not change  # noqa: E501
 
     def test_update_predicate_partial(self, client, db_session):
         """Test partial predicate update."""
@@ -321,12 +351,16 @@ class TestPredicateAPIIntegration:
 
         # Update only title
         update_data = {"title": f"New Title {test_id}"}
-        response = client.put(f"/api/predicates/{predicate_id}", json=update_data)  # noqa: E501
+        response = client.put(
+            f"/api/predicates/{predicate_id}", json=update_data
+        )  # noqa: E501
         assert response.status_code == 200
 
         data = response.json()
         assert data["title"] == f"New Title {test_id}"
-        assert data["definition"] == "Original definition"  # Should remain unchanged  # noqa: E501
+        assert (
+            data["definition"] == "Original definition"
+        )  # Should remain unchanged  # noqa: E501
 
     def test_update_predicate_not_found(self, client, db_session):
         """Test updating non-existent predicate."""
@@ -349,7 +383,9 @@ class TestPredicateAPIIntegration:
 
         # Try to update second predicate with first predicate's title
         update_data = {"title": "Title 1"}
-        response = client.put(f"/api/predicates/{predicate2_id}", json=update_data)  # noqa: E501
+        response = client.put(
+            f"/api/predicates/{predicate2_id}", json=update_data
+        )  # noqa: E501
         assert response.status_code == 409
 
     def test_delete_predicate_success(self, client, db_session):
@@ -422,11 +458,17 @@ class TestPredicateAPIIntegration:
                 "url": "https://conceptnet.io/r/RelatedTo",
                 "confidence": 0.8,
             },
-            "wordnet": {"synset": "concept.n.01", "definition": "abstract idea"},  # noqa: E501
+            "wordnet": {
+                "synset": "concept.n.01",
+                "definition": "abstract idea",
+            },  # noqa: E501
             "custom": {"source": "manual", "tags": ["semantic", "general"]},
         }
 
-        predicate_data = {"title": "Complex Mapping", "mapping": complex_mapping}  # noqa: E501
+        predicate_data = {
+            "title": "Complex Mapping",
+            "mapping": complex_mapping,
+        }  # noqa: E501
 
         # Create predicate
         create_response = client.post("/api/predicates/", json=predicate_data)

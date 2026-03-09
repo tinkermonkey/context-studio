@@ -37,12 +37,16 @@ class Migration019(Migration):
             # Step 1: Rename predicates table to property_definitions FIRST
             # This must happen before creating ontology_entities which references property_definitions
             logger.info("Renaming predicates to property_definitions...")
-            connection.execute(text("ALTER TABLE predicates RENAME TO property_definitions"))
+            connection.execute(
+                text("ALTER TABLE predicates RENAME TO property_definitions")
+            )
             logger.info("Successfully renamed predicates to property_definitions")
 
             # Step 2: Update node_type enum values in structure_nodes BEFORE rebuilding
             # We must rebuild the table to remove the CHECK constraint that prevents new values
-            logger.info("Removing CHECK constraint from structure_nodes and updating enum values...")
+            logger.info(
+                "Removing CHECK constraint from structure_nodes and updating enum values..."
+            )
             connection.execute(text("""
                 CREATE TABLE structure_nodes_temp (
                     id TEXT PRIMARY KEY,
@@ -87,12 +91,18 @@ class Migration019(Migration):
 
             # Drop original table and rename temp
             connection.execute(text("DROP TABLE structure_nodes"))
-            connection.execute(text("ALTER TABLE structure_nodes_temp RENAME TO structure_nodes"))
-            logger.info("Successfully removed CHECK constraint and updated node_type enum values")
+            connection.execute(
+                text("ALTER TABLE structure_nodes_temp RENAME TO structure_nodes")
+            )
+            logger.info(
+                "Successfully removed CHECK constraint and updated node_type enum values"
+            )
 
             # Step 3: Rename structure_nodes table to ontology_entities
             # Using table rebuild pattern to handle column rename (parent_node_id → parent_entity_id)
-            logger.info("Renaming structure_nodes table to ontology_entities with column rename...")
+            logger.info(
+                "Renaming structure_nodes table to ontology_entities with column rename..."
+            )
             connection.execute(text("""
                 CREATE TABLE ontology_entities (
                     id TEXT PRIMARY KEY,
@@ -135,7 +145,9 @@ class Migration019(Migration):
 
             # Step 4: Rename structure_node_links table to relationships
             # Using table rebuild pattern to handle column renames
-            logger.info("Renaming structure_node_links to relationships with column renames...")
+            logger.info(
+                "Renaming structure_node_links to relationships with column renames..."
+            )
             connection.execute(text("""
                 CREATE TABLE relationships (
                     id TEXT PRIMARY KEY,
@@ -209,8 +221,14 @@ class Migration019(Migration):
             )
             if cursor.fetchone():
                 logger.info("Renaming pipeline_flavors to pipeline_configurations...")
-                connection.execute(text("ALTER TABLE pipeline_flavors RENAME TO pipeline_configurations"))
-                logger.info("Successfully renamed pipeline_flavors to pipeline_configurations")
+                connection.execute(
+                    text(
+                        "ALTER TABLE pipeline_flavors RENAME TO pipeline_configurations"
+                    )
+                )
+                logger.info(
+                    "Successfully renamed pipeline_flavors to pipeline_configurations"
+                )
             else:
                 logger.info("pipeline_flavors table does not exist, skipping rename")
 
@@ -243,7 +261,9 @@ class Migration019(Migration):
         connection.execute(text("DROP TRIGGER IF EXISTS trg_predicate_insert"))
         connection.execute(text("DROP TRIGGER IF EXISTS trg_predicate_update"))
         connection.execute(text("DROP TRIGGER IF EXISTS trg_predicate_delete"))
-        connection.execute(text("DROP TRIGGER IF EXISTS update_predicates_date_modified"))
+        connection.execute(
+            text("DROP TRIGGER IF EXISTS update_predicates_date_modified")
+        )
 
         # Trigger for ontology_entities insert (was structure_node insert)
         connection.execute(text("""
@@ -417,12 +437,16 @@ class Migration019(Migration):
             # Step 1: Rename property_definitions back to predicates FIRST
             # This must happen before creating structure_nodes which references predicates
             logger.info("Rolling back property_definitions to predicates...")
-            connection.execute(text("ALTER TABLE property_definitions RENAME TO predicates"))
+            connection.execute(
+                text("ALTER TABLE property_definitions RENAME TO predicates")
+            )
             logger.info("Successfully rolled back property_definitions to predicates")
 
             # Step 2: Rename ontology_entities back to structure_nodes with column rename and enum reversion
             # Using table rebuild pattern to handle column rename (parent_entity_id → parent_node_id)
-            logger.info("Rolling back ontology_entities to structure_nodes with column rename and enum reversion...")
+            logger.info(
+                "Rolling back ontology_entities to structure_nodes with column rename and enum reversion..."
+            )
             connection.execute(text("""
                 CREATE TABLE structure_nodes (
                     id TEXT PRIMARY KEY DEFAULT (lower(hex(randomblob(16)))),
@@ -472,7 +496,9 @@ class Migration019(Migration):
 
             # Step 3: Rename relationships back to structure_node_links
             # Using table rebuild pattern to handle column renames
-            logger.info("Rolling back relationships to structure_node_links with column renames...")
+            logger.info(
+                "Rolling back relationships to structure_node_links with column renames..."
+            )
             connection.execute(text("""
                 CREATE TABLE structure_node_links (
                     id TEXT PRIMARY KEY DEFAULT (lower(hex(randomblob(16)))),
@@ -501,7 +527,9 @@ class Migration019(Migration):
             # Drop new table
             connection.execute(text("DROP TABLE relationships"))
 
-            logger.info("Successfully rolled back relationships to structure_node_links")
+            logger.info(
+                "Successfully rolled back relationships to structure_node_links"
+            )
 
             # Step 5: Recreate indexes on rolled-back tables
             logger.info("Recreating indexes on rolled-back tables...")
@@ -545,11 +573,21 @@ class Migration019(Migration):
                 "SELECT name FROM sqlite_master WHERE type='table' AND name='pipeline_configurations'"
             )
             if cursor.fetchone():
-                logger.info("Rolling back pipeline_configurations to pipeline_flavors...")
-                connection.execute(text("ALTER TABLE pipeline_configurations RENAME TO pipeline_flavors"))
-                logger.info("Successfully rolled back pipeline_configurations to pipeline_flavors")
+                logger.info(
+                    "Rolling back pipeline_configurations to pipeline_flavors..."
+                )
+                connection.execute(
+                    text(
+                        "ALTER TABLE pipeline_configurations RENAME TO pipeline_flavors"
+                    )
+                )
+                logger.info(
+                    "Successfully rolled back pipeline_configurations to pipeline_flavors"
+                )
             else:
-                logger.info("pipeline_configurations table does not exist, skipping rollback")
+                logger.info(
+                    "pipeline_configurations table does not exist, skipping rollback"
+                )
 
             # Step 8: Revert change_events record_type values
             logger.info("Reverting change_events record_type values...")
@@ -567,7 +605,9 @@ class Migration019(Migration):
             """))
             logger.info("Successfully reverted change_events record_type values")
 
-            logger.info("Terminology rename migration (019) rollback completed successfully")
+            logger.info(
+                "Terminology rename migration (019) rollback completed successfully"
+            )
 
         finally:
             # Re-enable foreign key checks
@@ -586,10 +626,18 @@ class Migration019(Migration):
 
         # Drop property_definition triggers (left from table rename; they persist on predicates table)
         logger.info("Dropping property_definition triggers left on predicates table...")
-        connection.execute(text("DROP TRIGGER IF EXISTS trg_property_definition_insert"))
-        connection.execute(text("DROP TRIGGER IF EXISTS trg_property_definition_update"))
-        connection.execute(text("DROP TRIGGER IF EXISTS trg_property_definition_delete"))
-        connection.execute(text("DROP TRIGGER IF EXISTS update_property_definitions_date_modified"))
+        connection.execute(
+            text("DROP TRIGGER IF EXISTS trg_property_definition_insert")
+        )
+        connection.execute(
+            text("DROP TRIGGER IF EXISTS trg_property_definition_update")
+        )
+        connection.execute(
+            text("DROP TRIGGER IF EXISTS trg_property_definition_delete")
+        )
+        connection.execute(
+            text("DROP TRIGGER IF EXISTS update_property_definitions_date_modified")
+        )
 
         # Trigger for structure_nodes insert
         connection.execute(text("""

@@ -171,9 +171,13 @@ class TestServiceFactory:
     def test_performance_summary(self, service_factory, mock_db_session):
         """Test performance summary generation."""
         # Create some services to generate metrics
-        service_factory.create_node_service(mock_db_session)  # Creates 3 services (version_manager, working_tree_manager, node_service)
+        service_factory.create_node_service(
+            mock_db_session
+        )  # Creates 3 services (version_manager, working_tree_manager, node_service)
         service_factory.create_node_service(mock_db_session)  # Cache hits for all 3
-        service_factory.create_node_link_service(mock_db_session)  # Creates 1 service (node_link_service)
+        service_factory.create_node_link_service(
+            mock_db_session
+        )  # Creates 1 service (node_link_service)
 
         summary = service_factory.get_performance_summary()
 
@@ -242,21 +246,23 @@ class TestServiceFactory:
     ):
         """Test error handling when service creation fails."""
         # Mock the NodeService constructor to raise an exception during instantiation
-        service_factory._create_service.__globals__['NodeService']
+        service_factory._create_service.__globals__["NodeService"]
 
         class FailingNodeService:
             def __init__(self, *args, **kwargs):
                 raise Exception("Service creation failed")
 
         # Patch NodeService in the service factory's scope
-        with patch('services.service_factory.NodeService', FailingNodeService):
+        with patch("services.service_factory.NodeService", FailingNodeService):
             with pytest.raises(Exception, match="Service creation failed"):
                 service_factory.create_node_service(mock_db_session)
 
             # Cache will have dependencies that were created before failure
             # version_manager and working_tree_manager are created first, then node_service fails
             stats = service_factory.get_cache_stats()
-            assert len(stats["cache_entries"]) == 2  # version_manager and working_tree_manager
+            assert (
+                len(stats["cache_entries"]) == 2
+            )  # version_manager and working_tree_manager
 
     def test_thread_safety(self, service_factory, mock_db_session):
         """Test thread safety of service factory operations."""

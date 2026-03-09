@@ -20,7 +20,14 @@ from embeddings.generate_embeddings import generate_embedding
 from services.change_event_handler import ChangeEventHandler
 from services.version_manager import VersionManager, ChangeState
 from services.working_tree_manager import WorkingTreeManager
-from services.exceptions import ServiceError, NotFoundError, ValidationError, ConflictError, CircularReferenceError, InvalidHierarchyError
+from services.exceptions import (
+    ServiceError,
+    NotFoundError,
+    ValidationError,
+    ConflictError,
+    CircularReferenceError,
+    InvalidHierarchyError,
+)
 from utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -29,9 +36,13 @@ logger = get_logger(__name__)
 class OntologyEntityService:
     """Centralized business logic for ontology_entity operations"""
 
-    def __init__(self, db: Session, graph_service: Optional[GraphService] = None,
-                 version_manager: Optional[VersionManager] = None,
-                 working_tree_manager: Optional[WorkingTreeManager] = None):
+    def __init__(
+        self,
+        db: Session,
+        graph_service: Optional[GraphService] = None,
+        version_manager: Optional[VersionManager] = None,
+        working_tree_manager: Optional[WorkingTreeManager] = None,
+    ):
         """
         Initialize the OntologyEntityService.
 
@@ -61,7 +72,9 @@ class OntologyEntityService:
         Raises:
             ValueError: If validation fails
         """
-        logger.info(f"Creating ontology_entity with type: {entity_data.get('node_type')}")
+        logger.info(
+            f"Creating ontology_entity with type: {entity_data.get('node_type')}"
+        )
 
         # Validate required fields
         if "node_type" not in entity_data:
@@ -88,7 +101,7 @@ class OntologyEntityService:
             except Exception as e:
                 logger.error(
                     f"Failed to generate title embedding for '{entity_data['title']}': {e}",
-                    exc_info=True
+                    exc_info=True,
                 )
                 raise ValidationError(
                     f"Cannot create entity: embedding generation failed. "
@@ -101,8 +114,7 @@ class OntologyEntityService:
                 definition_embedding = generate_embedding(entity_data["definition"])
             except Exception as e:
                 logger.error(
-                    f"Failed to generate definition embedding: {e}",
-                    exc_info=True
+                    f"Failed to generate definition embedding: {e}", exc_info=True
                 )
                 raise ValidationError(
                     f"Cannot create entity: definition embedding generation failed. "
@@ -149,25 +161,29 @@ class OntologyEntityService:
                     # Create initial version
                     # Note: Use 'structure_node' for backward compatibility with version manager and working tree
                     version = self.version_manager.create_version(
-                        entity_type='structure_node',
+                        entity_type="structure_node",
                         entity_id=str(ontology_entity.id),
                         content=entity_dict,
-                        author_id='system',  # System represents automatic creation during entity initialization
-                        state=ChangeState.WORKING
+                        author_id="system",  # System represents automatic creation during entity initialization
+                        state=ChangeState.WORKING,
                     )
 
                     # Initialize entity in working tree
                     # Note: Use 'structure_node' for backward compatibility with version manager and working tree
                     self.working_tree_manager.initialize_entity_in_working_tree(
-                        entity_type='structure_node',
+                        entity_type="structure_node",
                         entity_id=str(ontology_entity.id),
-                        initial_version_id=version.id
+                        initial_version_id=version.id,
                     )
 
-                    logger.info(f"Initialized version management for ontology_entity: {ontology_entity.id}")
+                    logger.info(
+                        f"Initialized version management for ontology_entity: {ontology_entity.id}"
+                    )
 
                 except Exception as e:
-                    logger.error(f"Failed to initialize version management: {e}", exc_info=True)
+                    logger.error(
+                        f"Failed to initialize version management: {e}", exc_info=True
+                    )
                     self.db.rollback()
                     raise ValidationError(
                         f"Cannot create entity: version management initialization failed. "
@@ -193,7 +209,9 @@ class OntologyEntityService:
             logger.error(f"Failed to create ontology_entity: {e}")
             raise ValueError(f"Failed to create ontology_entity: {e}")
 
-    def update_entity(self, entity_id: str, entity_data: Dict[str, Any]) -> OntologyEntity:
+    def update_entity(
+        self, entity_id: str, entity_data: Dict[str, Any]
+    ) -> OntologyEntity:
         """
         Update an existing ontology_entity with type-specific validation.
 
@@ -221,7 +239,9 @@ class OntologyEntityService:
 
         # Validate structural predicate ID if being updated
         if "structural_predicate_id" in entity_data:
-            self._validate_structural_predicate_id(entity_data["structural_predicate_id"])
+            self._validate_structural_predicate_id(
+                entity_data["structural_predicate_id"]
+            )
 
         # Validate updates based on ontology_entity type
         self._validate_entity_update(ontology_entity, entity_data)
@@ -231,18 +251,22 @@ class OntologyEntityService:
             "parent_entity_id" in entity_data
             and entity_data["parent_entity_id"] != ontology_entity.parent_entity_id
         ):
-            self._validate_no_circular_reference(entity_id, entity_data["parent_entity_id"])
+            self._validate_no_circular_reference(
+                entity_id, entity_data["parent_entity_id"]
+            )
 
         # Update fields
         if "title" in entity_data:
             ontology_entity.title = entity_data["title"]
             # Regenerate title embedding
             try:
-                ontology_entity.title_embedding = generate_embedding(entity_data["title"])
+                ontology_entity.title_embedding = generate_embedding(
+                    entity_data["title"]
+                )
             except Exception as e:
                 logger.error(
                     f"Failed to generate title embedding for '{entity_data['title']}': {e}",
-                    exc_info=True
+                    exc_info=True,
                 )
                 raise ValidationError(
                     f"Cannot update entity: title embedding generation failed. "
@@ -262,8 +286,7 @@ class OntologyEntityService:
                     ontology_entity.definition_embedding = None  # type: ignore
             except Exception as e:
                 logger.error(
-                    f"Failed to generate definition embedding: {e}",
-                    exc_info=True
+                    f"Failed to generate definition embedding: {e}", exc_info=True
                 )
                 raise ValidationError(
                     f"Cannot update entity: definition embedding generation failed. "
@@ -371,7 +394,9 @@ class OntologyEntityService:
         Returns:
             OntologyEntity instance or None if not found
         """
-        return self.db.query(OntologyEntity).filter(OntologyEntity.id == entity_id).first()
+        return (
+            self.db.query(OntologyEntity).filter(OntologyEntity.id == entity_id).first()
+        )
 
     def list_entities(
         self,
@@ -402,7 +427,7 @@ class OntologyEntityService:
 
         query = self.db.query(OntologyEntity).options(
             defer(OntologyEntity.title_embedding),  # type: ignore
-            defer(OntologyEntity.definition_embedding)  # type: ignore
+            defer(OntologyEntity.definition_embedding),  # type: ignore
         )
 
         if node_type:
@@ -433,12 +458,16 @@ class OntologyEntityService:
             )
 
         result_length = len(result)
-        logger.debug(f"Query execution time: {execution_time*1000:.2f}ms for {result_length} entities (skip={skip})")
+        logger.debug(
+            f"Query execution time: {execution_time*1000:.2f}ms for {result_length} entities (skip={skip})"
+        )
 
         return result
 
     def count_entities(
-        self, node_type: Optional[NodeType] = None, parent_entity_id: Optional[str] = None
+        self,
+        node_type: Optional[NodeType] = None,
+        parent_entity_id: Optional[str] = None,
     ) -> int:
         """
         Count ontology_entities with optional filtering.
@@ -555,7 +584,9 @@ class OntologyEntityService:
 
         return ancestors
 
-    def _parse_attributes_json(self, attributes_json: Optional[str]) -> List[StructureNodeAttribute]:
+    def _parse_attributes_json(
+        self, attributes_json: Optional[str]
+    ) -> List[StructureNodeAttribute]:
         """
         Parse attributes JSON string into list of StructureNodeAttribute objects.
 
@@ -583,7 +614,12 @@ class OntologyEntityService:
             logger.error(f"Invalid attribute structure: {e}", exc_info=True)
             raise ValueError(f"Entity attributes are invalid: {str(e)}")
 
-    def set_entity_attributes(self, entity_id: UUID, attributes: List[StructureNodeAttribute], expected_version: Optional[int] = None) -> OntologyEntity:
+    def set_entity_attributes(
+        self,
+        entity_id: UUID,
+        attributes: List[StructureNodeAttribute],
+        expected_version: Optional[int] = None,
+    ) -> OntologyEntity:
         """
         Set local attributes on an entity, replacing existing attributes.
 
@@ -617,7 +653,9 @@ class OntologyEntityService:
             )
 
         # Serialize to JSON
-        attributes_json = json.dumps([attr.model_dump(mode='json') for attr in attributes])
+        attributes_json = json.dumps(
+            [attr.model_dump(mode="json") for attr in attributes]
+        )
         entity.attributes = attributes_json  # type: ignore
         entity.version = entity.version + 1  # type: ignore
         self.db.commit()
@@ -676,7 +714,7 @@ class OntologyEntityService:
                     value=attr.value,
                     value_type=attr.value_type,
                     inherited=(ancestor.id != entity.id),  # type: ignore
-                    source_node_id=UUID(ancestor.id)  # type: ignore
+                    source_node_id=UUID(ancestor.id),  # type: ignore
                 )
 
         # Add local attributes last (override inherited)
@@ -688,7 +726,7 @@ class OntologyEntityService:
                 value=attr.value,
                 value_type=attr.value_type,
                 inherited=False,
-                source_node_id=UUID(entity.id)  # type: ignore
+                source_node_id=UUID(entity.id),  # type: ignore
             )
 
         return list(attribute_map.values())
@@ -714,7 +752,9 @@ class OntologyEntityService:
         attributes = self._parse_attributes_json(entity.attributes)  # type: ignore
         attributes = [attr for attr in attributes if attr.key != key]
 
-        attributes_json = json.dumps([attr.model_dump(mode='json') for attr in attributes])
+        attributes_json = json.dumps(
+            [attr.model_dump(mode="json") for attr in attributes]
+        )
         entity.attributes = attributes_json  # type: ignore
         entity.version = entity.version + 1  # type: ignore
         self.db.commit()
@@ -723,7 +763,9 @@ class OntologyEntityService:
 
     # Private validation methods
 
-    def _validate_entity_creation(self, entity_data: Dict[str, Any], node_type: NodeType):
+    def _validate_entity_creation(
+        self, entity_data: Dict[str, Any], node_type: NodeType
+    ):
         """Validate ontology_entity creation based on type-specific rules"""
         if node_type == NodeType.LAYER:
             self._validate_layer_creation(entity_data)
@@ -782,7 +824,10 @@ class OntologyEntityService:
                 raise ValueError("Layer title must be unique")
 
         # Layers should not have parents
-        if "parent_entity_id" in entity_data and entity_data["parent_entity_id"] is not None:
+        if (
+            "parent_entity_id" in entity_data
+            and entity_data["parent_entity_id"] is not None
+        ):
             raise InvalidHierarchyError("Layers cannot have parent structure_nodes")
 
     def _validate_domain_creation(self, entity_data: Dict[str, Any]):
@@ -819,7 +864,9 @@ class OntologyEntityService:
         self, ontology_entity: OntologyEntity, entity_data: Dict[str, Any]
     ):
         """Validate domain update rules"""
-        parent_id = entity_data.get("parent_entity_id", ontology_entity.parent_entity_id)
+        parent_id = entity_data.get(
+            "parent_entity_id", ontology_entity.parent_entity_id
+        )
 
         # Parent validation if changing parent
         if "parent_entity_id" in entity_data:
@@ -836,7 +883,9 @@ class OntologyEntityService:
 
         # Validate structural predicate ID if being updated
         if "structural_predicate_id" in entity_data:
-            self._validate_structural_predicate_id(entity_data["structural_predicate_id"])
+            self._validate_structural_predicate_id(
+                entity_data["structural_predicate_id"]
+            )
 
         # Check title uniqueness within layer if title or parent is changing
         check_title_uniqueness = (
@@ -888,7 +937,9 @@ class OntologyEntityService:
         self, ontology_entity: OntologyEntity, entity_data: Dict[str, Any]
     ):
         """Validate term update rules"""
-        parent_id = entity_data.get("parent_entity_id", ontology_entity.parent_entity_id)
+        parent_id = entity_data.get(
+            "parent_entity_id", ontology_entity.parent_entity_id
+        )
 
         # Parent validation if changing parent
         if "parent_entity_id" in entity_data:
@@ -1209,7 +1260,9 @@ class OntologyEntityService:
                     warnings.extend(result["warnings"])
 
                 except ValueError as e:
-                    errors.append(f"Failed to move ontology_entity {entity_id}: {str(e)}")
+                    errors.append(
+                        f"Failed to move ontology_entity {entity_id}: {str(e)}"
+                    )
                     logger.warning(f"Failed to move ontology_entity {entity_id}: {e}")
 
             # Commit transaction
@@ -1263,7 +1316,9 @@ class OntologyEntityService:
         target_type = self._infer_entity_type_from_parent(target_parent)
 
         # Validate with target type
-        self._validate_entity_move(ontology_entity, target_parent, target_type=target_type)
+        self._validate_entity_move(
+            ontology_entity, target_parent, target_type=target_type
+        )
 
         # Check for title conflicts with target type
         conflict_warning = self._check_move_conflicts_with_type(
@@ -1273,7 +1328,9 @@ class OntologyEntityService:
             warnings.append(conflict_warning)
 
         # Convert entity type and all children recursively BEFORE updating parent
-        self._convert_entity_type_and_children(ontology_entity, target_type, converted_entities)
+        self._convert_entity_type_and_children(
+            ontology_entity, target_type, converted_entities
+        )
 
         # Update the ontology_entity's parent AFTER successful conversion
         old_parent_id = ontology_entity.parent_entity_id
@@ -1305,7 +1362,7 @@ class OntologyEntityService:
         self,
         ontology_entity: OntologyEntity,
         target_parent: Optional[OntologyEntity],
-        target_type: Optional[NodeType] = None
+        target_type: Optional[NodeType] = None,
     ):
         """
         Validate that an ontology_entity move is allowed based on type hierarchy rules.
@@ -1338,7 +1395,9 @@ class OntologyEntityService:
             if target_parent is None:
                 raise InvalidHierarchyError("Terms must have a parent")
             if target_parent.node_type not in [NodeType.DOMAIN, NodeType.TERM]:
-                raise InvalidHierarchyError("Terms can only be placed under domains or other terms")
+                raise InvalidHierarchyError(
+                    "Terms can only be placed under domains or other terms"
+                )
 
         # Prevent circular references
         if target_parent and self._would_create_cycle(
@@ -1347,8 +1406,7 @@ class OntologyEntityService:
             raise CircularReferenceError("Move would create circular reference")
 
     def _infer_entity_type_from_parent(
-        self,
-        target_parent: Optional[OntologyEntity]
+        self, target_parent: Optional[OntologyEntity]
     ) -> NodeType:
         """
         Infer the appropriate entity type based on the target parent.
@@ -1372,7 +1430,7 @@ class OntologyEntityService:
         self,
         entity: OntologyEntity,
         new_type: NodeType,
-        converted_entities: List[OntologyEntity]
+        converted_entities: List[OntologyEntity],
     ) -> None:
         """
         Recursively convert an entity and all its descendants to appropriate types.
@@ -1392,9 +1450,11 @@ class OntologyEntityService:
             self.db.add(entity)
 
         # Recursively convert all direct children
-        children = self.db.query(OntologyEntity).filter(
-            OntologyEntity.parent_entity_id == str(entity.id)
-        ).all()
+        children = (
+            self.db.query(OntologyEntity)
+            .filter(OntologyEntity.parent_entity_id == str(entity.id))
+            .all()
+        )
 
         for child in children:
             # Determine child's new type based on parent's new type
@@ -1405,7 +1465,9 @@ class OntologyEntityService:
             else:
                 continue
 
-            self._convert_entity_type_and_children(child, child_new_type, converted_entities)
+            self._convert_entity_type_and_children(
+                child, child_new_type, converted_entities
+            )
 
     def _check_move_conflicts_with_type(
         self,
@@ -1480,7 +1542,9 @@ class OntologyEntityService:
                 # Generate unique title with TARGET type
                 counter = 1
                 new_title = f"{ontology_entity.title} ({counter})"
-                while self._title_exists_at_target(new_title, target_parent_id, target_type, ontology_entity.id):
+                while self._title_exists_at_target(
+                    new_title, target_parent_id, target_type, ontology_entity.id
+                ):
                     counter += 1
                     new_title = f"{ontology_entity.title} ({counter})"
 
@@ -1492,29 +1556,48 @@ class OntologyEntityService:
         return None
 
     def _title_exists_at_target(
-        self, title: str, target_parent_id: Optional[str], target_type: NodeType, exclude_id: str
+        self,
+        title: str,
+        target_parent_id: Optional[str],
+        target_type: NodeType,
+        exclude_id: str,
     ) -> bool:
         """Helper to check if a title exists at the target location."""
         if target_type == NodeType.LAYER:
-            return self.db.query(OntologyEntity).filter(
-                OntologyEntity.title == title,
-                OntologyEntity.node_type == NodeType.LAYER,
-                OntologyEntity.id != exclude_id,
-            ).first() is not None
+            return (
+                self.db.query(OntologyEntity)
+                .filter(
+                    OntologyEntity.title == title,
+                    OntologyEntity.node_type == NodeType.LAYER,
+                    OntologyEntity.id != exclude_id,
+                )
+                .first()
+                is not None
+            )
         elif target_type == NodeType.DOMAIN:
-            return self.db.query(OntologyEntity).filter(
-                OntologyEntity.title == title,
-                OntologyEntity.node_type == NodeType.DOMAIN,
-                OntologyEntity.parent_entity_id == target_parent_id,
-                OntologyEntity.id != exclude_id,
-            ).first() is not None
+            return (
+                self.db.query(OntologyEntity)
+                .filter(
+                    OntologyEntity.title == title,
+                    OntologyEntity.node_type == NodeType.DOMAIN,
+                    OntologyEntity.parent_entity_id == target_parent_id,
+                    OntologyEntity.id != exclude_id,
+                )
+                .first()
+                is not None
+            )
         elif target_type == NodeType.TERM:
-            return self.db.query(OntologyEntity).filter(
-                OntologyEntity.title == title,
-                OntologyEntity.node_type == NodeType.TERM,
-                OntologyEntity.parent_entity_id == target_parent_id,
-                OntologyEntity.id != exclude_id,
-            ).first() is not None
+            return (
+                self.db.query(OntologyEntity)
+                .filter(
+                    OntologyEntity.title == title,
+                    OntologyEntity.node_type == NodeType.TERM,
+                    OntologyEntity.parent_entity_id == target_parent_id,
+                    OntologyEntity.id != exclude_id,
+                )
+                .first()
+                is not None
+            )
         return False
 
     def _would_create_cycle(self, entity_id: str, target_parent_id: str) -> bool:
@@ -1612,7 +1695,6 @@ class OntologyEntityService:
         """Deprecated: use set_entity_attributes() instead"""
         return self.set_entity_attributes(*args, **kwargs)
 
-
     def resolve_node_attributes(self, *args, **kwargs):
         """Deprecated: use resolve_entity_attributes() instead"""
         return self.resolve_entity_attributes(*args, **kwargs)
@@ -1633,7 +1715,7 @@ class OntologyEntityService:
             entity_ids=node_ids,
             target_parent_id=target_parent_id,
             move_children=move_children,
-            handle_conflicts=handle_conflicts
+            handle_conflicts=handle_conflicts,
         )
 
     def _validate_node_creation(self, *args, **kwargs):

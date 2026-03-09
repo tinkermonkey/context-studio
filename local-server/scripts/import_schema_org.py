@@ -26,8 +26,8 @@ from reference_db.schema_org_importer import SchemaOrgImporter
 # Configure logging
 logging.basicConfig(
     level=logging.INFO,
-    format='[%(asctime)s] %(levelname)s in %(name)s: %(message)s',
-    datefmt='%Y-%m-%d %H:%M:%S'
+    format="[%(asctime)s] %(levelname)s in %(name)s: %(message)s",
+    datefmt="%Y-%m-%d %H:%M:%S",
 )
 
 logger = logging.getLogger(__name__)
@@ -60,14 +60,24 @@ def main():
         logger.info("=" * 80)
         logger.info("Import Complete!")
         logger.info("=" * 80)
-        logger.info(f"Entities imported: {result['entities_imported']} (stored as ReferenceNodes)")
-        logger.info(f"Properties imported: {result['properties_imported']} (stored as ExternalPredicates)")
-        logger.info(f"Links imported: {result['links_imported']} (subClassOf relationships)")
+        logger.info(
+            f"Entities imported: {result['entities_imported']} (stored as ReferenceNodes)"
+        )
+        logger.info(
+            f"Properties imported: {result['properties_imported']} (stored as ExternalPredicates)"
+        )
+        logger.info(
+            f"Links imported: {result['links_imported']} (subClassOf relationships)"
+        )
         logger.info(f"Timestamp: {result['timestamp']}")
         logger.info("")
         logger.info("Next steps:")
-        logger.info("1. Test predicate discovery: curl -X POST 'http://localhost:8000/api/predicates/discover?sources=schema_org'")
-        logger.info("2. View predicates in UI: Navigate to External Predicates tab and filter by 'schema.org'")
+        logger.info(
+            "1. Test predicate discovery: curl -X POST 'http://localhost:8000/api/predicates/discover?sources=schema_org'"
+        )
+        logger.info(
+            "2. View predicates in UI: Navigate to External Predicates tab and filter by 'schema.org'"
+        )
 
         return 0
 

@@ -7,13 +7,17 @@ view creation, and comprehensive analytics reporting in Phase 4 implementation.
 
 import sys
 import os
+
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import pytest  # noqa: E402
 import pandas as pd  # type: ignore[import-untyped]  # noqa: E402
 from unittest.mock import Mock, patch  # noqa: E402
 
-from services.duckdb_service import DuckDBService, ChangeAnalyticsEngine  # noqa: E402, E501
+from services.duckdb_service import (
+    DuckDBService,
+    ChangeAnalyticsEngine,
+)  # noqa: E402, E501
 
 
 class TestDuckDBService:
@@ -26,12 +30,14 @@ class TestDuckDBService:
             "bucket": "test-bucket",
             "aws_access_key_id": "test-key",
             "aws_secret_access_key": "test-secret",
-            "aws_region": "us-east-1"
+            "aws_region": "us-east-1",
         }
 
-    @patch('services.duckdb_service.DUCKDB_AVAILABLE', True)
-    @patch('services.duckdb_service.duckdb')
-    def test_init_duckdb_service_with_duckdb_available(self, mock_duckdb, sample_s3_config):
+    @patch("services.duckdb_service.DUCKDB_AVAILABLE", True)
+    @patch("services.duckdb_service.duckdb")
+    def test_init_duckdb_service_with_duckdb_available(
+        self, mock_duckdb, sample_s3_config
+    ):
         """Test DuckDBService initialization when DuckDB is available."""
         # Setup
         mock_connection = Mock()
@@ -48,7 +54,7 @@ class TestDuckDBService:
         mock_duckdb.connect.assert_called_once_with("/test/path")
         mock_connection.execute.assert_called()  # Extension loading
 
-    @patch('services.duckdb_service.DUCKDB_AVAILABLE', False)
+    @patch("services.duckdb_service.DUCKDB_AVAILABLE", False)
     def test_init_duckdb_service_without_duckdb(self, sample_s3_config):
         """Test DuckDBService initialization when DuckDB is not available."""
         # Execute
@@ -59,7 +65,7 @@ class TestDuckDBService:
         assert service.s3_config == sample_s3_config
         assert service.connection is None
 
-    @patch('services.duckdb_service.DUCKDB_AVAILABLE', True)
+    @patch("services.duckdb_service.DUCKDB_AVAILABLE", True)
     def test_execute_query_success(self):
         """Test successful query execution."""
         # Setup
@@ -103,18 +109,20 @@ class TestChangeAnalyticsEngine:
         mock_duckdb_service.s3_config = sample_s3_config
         return ChangeAnalyticsEngine(duckdb_service=mock_duckdb_service)
 
-    @patch('services.duckdb_service.DUCKDB_AVAILABLE', True)
+    @patch("services.duckdb_service.DUCKDB_AVAILABLE", True)
     def test_get_change_summary_with_data(self, analytics_engine, mock_duckdb_service):
         """Test change summary retrieval with actual data."""
         # Setup
-        sample_data = pd.DataFrame({
-            "total_changes": [150],
-            "entities_modified": [45],
-            "active_users": [12],
-            "changesets": [25],
-            "period_start": ["2024-01-01T00:00:00Z"],
-            "period_end": ["2024-01-31T23:59:59Z"]
-        })
+        sample_data = pd.DataFrame(
+            {
+                "total_changes": [150],
+                "entities_modified": [45],
+                "active_users": [12],
+                "changesets": [25],
+                "period_start": ["2024-01-01T00:00:00Z"],
+                "period_end": ["2024-01-31T23:59:59Z"],
+            }
+        )
 
         mock_duckdb_service.execute_query.return_value = sample_data
         analytics_engine._view_exists = Mock(return_value=True)
@@ -130,7 +138,7 @@ class TestChangeAnalyticsEngine:
 
         mock_duckdb_service.execute_query.assert_called_once()
 
-    @patch('services.duckdb_service.DUCKDB_AVAILABLE', False)
+    @patch("services.duckdb_service.DUCKDB_AVAILABLE", False)
     def test_get_change_summary_fallback(self, analytics_engine):
         """Test change summary fallback when DuckDB is not available."""
         # Execute

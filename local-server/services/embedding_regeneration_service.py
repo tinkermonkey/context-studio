@@ -23,6 +23,7 @@ logger = get_logger(__name__)
 @dataclass
 class EmbeddingProgress:
     """Progress tracking for embedding regeneration."""
+
     total_nodes: int
     completed_nodes: int
     current_node_title: str
@@ -58,7 +59,7 @@ class EmbeddingProgress:
             "estimated_remaining_seconds": self.estimated_remaining_seconds,
             "processing_rate_per_second": self.processing_rate_per_second,
             "error_count": self.error_count,
-            "errors": self.errors[-5:] if self.errors else []  # Last 5 errors
+            "errors": self.errors[-5:] if self.errors else [],  # Last 5 errors
         }
 
 
@@ -70,9 +71,7 @@ class EmbeddingRegenerationService:
         self._current_session: Optional[Session] = None
 
     async def regenerate_all_embeddings(
-        self,
-        websocket: WebSocket,
-        force_regenerate: bool = False
+        self, websocket: WebSocket, force_regenerate: bool = False
     ) -> None:
         """
         Regenerate embeddings for all structure_nodes with WebSocket progress updates.
@@ -82,21 +81,29 @@ class EmbeddingRegenerationService:
             force_regenerate: If True, regenerate embeddings even if they already exist
         """
         if self.is_running:
-            await websocket.send_text(json.dumps({
-                "type": "error",
-                "message": "Embedding regeneration is already running"
-            }))
+            await websocket.send_text(
+                json.dumps(
+                    {
+                        "type": "error",
+                        "message": "Embedding regeneration is already running",
+                    }
+                )
+            )
             return
 
         self.is_running = True
         start_time = datetime.now()
 
         try:
-            await websocket.send_text(json.dumps({
-                "type": "started",
-                "message": "Starting embedding regeneration...",
-                "start_time": start_time.isoformat()
-            }))
+            await websocket.send_text(
+                json.dumps(
+                    {
+                        "type": "started",
+                        "message": "Starting embedding regeneration...",
+                        "start_time": start_time.isoformat(),
+                    }
+                )
+            )
 
             # Get database session
             db = next(get_db())
@@ -107,31 +114,47 @@ class EmbeddingRegenerationService:
             total_nodes = len(nodes)
 
             if total_nodes == 0:
-                await websocket.send_text(json.dumps({
-                    "type": "completed",
-                    "message": "No nodes need embedding regeneration",
-                    "total_processed": 0
-                }))
+                await websocket.send_text(
+                    json.dumps(
+                        {
+                            "type": "completed",
+                            "message": "No nodes need embedding regeneration",
+                            "total_processed": 0,
+                        }
+                    )
+                )
                 return
 
-            logger.info(f"Starting embedding regeneration for {total_nodes} structure_nodes")
+            logger.info(
+                f"Starting embedding regeneration for {total_nodes} structure_nodes"
+            )
 
             # Process nodes with progress updates
             await self._process_nodes_with_progress(db, nodes, websocket, start_time)
 
-            await websocket.send_text(json.dumps({
-                "type": "completed",
-                "message": f"Successfully regenerated embeddings for {total_nodes} structure_nodes",
-                "total_processed": total_nodes,
-                "duration_seconds": (datetime.now() - start_time).total_seconds()
-            }))
+            await websocket.send_text(
+                json.dumps(
+                    {
+                        "type": "completed",
+                        "message": f"Successfully regenerated embeddings for {total_nodes} structure_nodes",
+                        "total_processed": total_nodes,
+                        "duration_seconds": (
+                            datetime.now() - start_time
+                        ).total_seconds(),
+                    }
+                )
+            )
 
         except Exception as e:
             logger.error(f"Error during embedding regeneration: {e}")
-            await websocket.send_text(json.dumps({
-                "type": "error",
-                "message": f"Embedding regeneration failed: {str(e)}"
-            }))
+            await websocket.send_text(
+                json.dumps(
+                    {
+                        "type": "error",
+                        "message": f"Embedding regeneration failed: {str(e)}",
+                    }
+                )
+            )
         finally:
             self.is_running = False
             if self._current_session:
@@ -139,9 +162,7 @@ class EmbeddingRegenerationService:
                 self._current_session = None
 
     def _get_nodes_for_regeneration(
-        self,
-        db: Session,
-        force_regenerate: bool = False
+        self, db: Session, force_regenerate: bool = False
     ) -> List[Dict]:
         """Get structure_nodes that need embedding regeneration."""
         if force_regenerate:
@@ -164,21 +185,12 @@ class EmbeddingRegenerationService:
 
         result = db.execute(query)
         return [
-            {
-                "id": row[0],
-                "node_type": row[1],
-                "title": row[2],
-                "definition": row[3]
-            }
+            {"id": row[0], "node_type": row[1], "title": row[2], "definition": row[3]}
             for row in result.fetchall()
         ]
 
     async def _process_nodes_with_progress(
-        self,
-        db: Session,
-        nodes: List[Dict],
-        websocket: WebSocket,
-        start_time: datetime
+        self, db: Session, nodes: List[Dict], websocket: WebSocket, start_time: datetime
     ) -> None:
         """Process nodes with regular progress updates."""
         total_nodes = len(nodes)
@@ -213,14 +225,13 @@ class EmbeddingRegenerationService:
                 estimated_remaining_seconds=estimated_remaining_seconds,
                 processing_rate_per_second=processing_rate,
                 error_count=error_count,
-                errors=errors
+                errors=errors,
             )
 
             # Send progress update
-            await websocket.send_text(json.dumps({
-                "type": "progress",
-                "progress": progress.to_dict()
-            }))
+            await websocket.send_text(
+                json.dumps({"type": "progress", "progress": progress.to_dict()})
+            )
 
             # Process the node
             try:
@@ -260,11 +271,14 @@ class EmbeddingRegenerationService:
             WHERE id = :node_id
         """)
 
-        db.execute(update_query, {
-            "title_embedding": title_embedding,
-            "definition_embedding": definition_embedding,
-            "node_id": node_id
-        })
+        db.execute(
+            update_query,
+            {
+                "title_embedding": title_embedding,
+                "definition_embedding": definition_embedding,
+                "node_id": node_id,
+            },
+        )
         db.commit()
 
         logger.debug(f"Updated embeddings for {node['node_type']}: {title}")

@@ -66,8 +66,9 @@ def clean_performance_monitor():
     # Clear performance monitor state
     try:
         from services.performance_monitor import PerformanceMonitor
+
         # Reset any class-level state if it exists
-        if hasattr(PerformanceMonitor, '_instances'):
+        if hasattr(PerformanceMonitor, "_instances"):
             PerformanceMonitor._instances.clear()
     except ImportError:
         pass  # Module might not exist yet

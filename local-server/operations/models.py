@@ -11,7 +11,16 @@ Note: For change tracking, use the ChangeEvent model in database.models instead.
 """
 
 from typing import Any
-from sqlalchemy import Column, String, Text, Integer, DateTime, Boolean, Index, ForeignKey
+from sqlalchemy import (
+    Column,
+    String,
+    Text,
+    Integer,
+    DateTime,
+    Boolean,
+    Index,
+    ForeignKey,
+)
 from sqlalchemy.orm import declarative_base, relationship
 import datetime
 
@@ -46,9 +55,9 @@ class PipelineFlavorExecution(OperationsBase):
 
     __tablename__ = "pipeline_flavor_executions"
     __table_args__ = (
-        Index('idx_executions_flavor_id', 'pipeline_flavor_id'),
-        Index('idx_executions_pipeline_type', 'pipeline_type'),
-        Index('idx_executions_status', 'status'),
+        Index("idx_executions_flavor_id", "pipeline_flavor_id"),
+        Index("idx_executions_pipeline_type", "pipeline_type"),
+        Index("idx_executions_status", "status"),
     )
 
     id = Column(String, primary_key=True)
@@ -77,8 +86,8 @@ class PipelineFlavorSelection(OperationsBase):
 
     __tablename__ = "pipeline_flavor_selections"
     __table_args__ = (
-        Index('idx_selections_execution_id', 'pipeline_execution_id'),
-        Index('idx_selections_record', 'record_type', 'record_id'),
+        Index("idx_selections_execution_id", "pipeline_execution_id"),
+        Index("idx_selections_record", "record_type", "record_id"),
     )
 
     id = Column(String, primary_key=True)
@@ -90,7 +99,9 @@ class PipelineFlavorSelection(OperationsBase):
     date_created = Column(DateTime, nullable=False)
 
     def __repr__(self):
-        return f"<PipelineFlavorSelection(id='{self.id}', record_id='{self.record_id}')>"
+        return (
+            f"<PipelineFlavorSelection(id='{self.id}', record_id='{self.record_id}')>"
+        )
 
 
 class RAGProcessingMetrics(OperationsBase):
@@ -98,8 +109,8 @@ class RAGProcessingMetrics(OperationsBase):
 
     __tablename__ = "rag_processing_metrics"
     __table_args__ = (
-        Index('idx_rag_metrics_request_id', 'request_id'),
-        Index('idx_rag_metrics_timestamp', 'timestamp'),
+        Index("idx_rag_metrics_request_id", "request_id"),
+        Index("idx_rag_metrics_timestamp", "timestamp"),
     )
 
     id = Column(String, primary_key=True)
@@ -140,10 +151,10 @@ class RAGObservabilityTrace(OperationsBase):
 
     __tablename__ = "rag_observability_trace"
     __table_args__ = (
-        Index('idx_rag_trace_request_id', 'request_id'),
-        Index('idx_rag_trace_layer_name', 'layer_name'),
-        Index('idx_rag_trace_timestamp', 'timestamp'),
-        Index('idx_rag_trace_request_sentence', 'request_id', 'sentence_index'),
+        Index("idx_rag_trace_request_id", "request_id"),
+        Index("idx_rag_trace_layer_name", "layer_name"),
+        Index("idx_rag_trace_timestamp", "timestamp"),
+        Index("idx_rag_trace_request_sentence", "request_id", "sentence_index"),
     )
 
     id = Column(String, primary_key=True)
@@ -176,8 +187,12 @@ class TestParagraph(OperationsBase):
     created_at = Column(DateTime, nullable=False, default=datetime.datetime.utcnow)
 
     # Relationships with cascade delete
-    annotations = relationship("TestAnnotation", back_populates="paragraph", cascade="all, delete-orphan")
-    pipeline_runs = relationship("RAGPipelineRun", back_populates="paragraph", cascade="all, delete-orphan")
+    annotations = relationship(
+        "TestAnnotation", back_populates="paragraph", cascade="all, delete-orphan"
+    )
+    pipeline_runs = relationship(
+        "RAGPipelineRun", back_populates="paragraph", cascade="all, delete-orphan"
+    )
 
     def __repr__(self):
         return f"<TestParagraph(id='{self.id}')>"
@@ -188,15 +203,17 @@ class TestAnnotation(OperationsBase):
 
     __tablename__ = "test_annotations"
     __table_args__ = (
-        Index('idx_test_annotation_paragraph_id', 'paragraph_id'),
-        Index('idx_test_annotation_structure_node_id', 'structure_node_id'),
+        Index("idx_test_annotation_paragraph_id", "paragraph_id"),
+        Index("idx_test_annotation_structure_node_id", "structure_node_id"),
     )
 
     id = Column(String, primary_key=True)
-    paragraph_id = Column(String, ForeignKey('test_paragraphs.id'), nullable=False)
+    paragraph_id = Column(String, ForeignKey("test_paragraphs.id"), nullable=False)
     start_char = Column(Integer, nullable=False)
     end_char = Column(Integer, nullable=False)
-    structure_node_id = Column(String, nullable=False)  # Soft FK to structure_nodes in local.db
+    structure_node_id = Column(
+        String, nullable=False
+    )  # Soft FK to structure_nodes in local.db
     created_at = Column(DateTime, nullable=False, default=datetime.datetime.utcnow)
 
     # Relationship back to paragraph
@@ -211,14 +228,16 @@ class RAGPipelineRun(OperationsBase):
 
     __tablename__ = "rag_pipeline_runs"
     __table_args__ = (
-        Index('idx_rag_run_paragraph_id', 'paragraph_id'),
-        Index('idx_rag_run_pipeline_class', 'pipeline_class'),
-        Index('idx_rag_run_executed_at', 'executed_at'),
+        Index("idx_rag_run_paragraph_id", "paragraph_id"),
+        Index("idx_rag_run_pipeline_class", "pipeline_class"),
+        Index("idx_rag_run_executed_at", "executed_at"),
     )
 
     id = Column(String, primary_key=True)
-    paragraph_id = Column(String, ForeignKey('test_paragraphs.id'), nullable=False)
-    pipeline_class = Column(String, nullable=False)  # Pipeline class name (e.g., "StandardRAGPipeline")
+    paragraph_id = Column(String, ForeignKey("test_paragraphs.id"), nullable=False)
+    pipeline_class = Column(
+        String, nullable=False
+    )  # Pipeline class name (e.g., "StandardRAGPipeline")
     executed_at = Column(DateTime, nullable=False, default=datetime.datetime.utcnow)
     execution_time_ms = Column(Integer, nullable=False)
     entities_extracted = Column(Integer, nullable=False)

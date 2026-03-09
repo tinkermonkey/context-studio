@@ -63,7 +63,7 @@ class TestReferenceModels:
             title_embedding=None,
             definition_embedding=None,
             created_at=date.today().isoformat(),
-            updated_at=date.today().isoformat()
+            updated_at=date.today().isoformat(),
         )
 
         assert node.id is not None
@@ -93,7 +93,7 @@ class TestReferenceModels:
             title_embedding=None,
             definition_embedding=None,
             created_at=date.today().isoformat(),
-            updated_at=date.today().isoformat()
+            updated_at=date.today().isoformat(),
         )
 
         repr_str = repr(node)
@@ -118,7 +118,7 @@ class TestReferenceModels:
             object_node=str(uuid4()),
             attributes=None,
             created_at=date.today().isoformat(),
-            updated_at=date.today().isoformat()
+            updated_at=date.today().isoformat(),
         )
 
         assert link.id is not None
@@ -142,7 +142,7 @@ class TestReferenceModels:
             object_node="object-uuid",
             attributes=None,
             created_at=date.today().isoformat(),
-            updated_at=date.today().isoformat()
+            updated_at=date.today().isoformat(),
         )
 
         repr_str = repr(link)
@@ -183,7 +183,7 @@ class TestReferenceConfig:
         config = ReferenceConfig(
             similarity_threshold=VALID_SIMILARITY_THRESHOLD,
             batch_size=VALID_BATCH_SIZE,
-            retry_count=VALID_RETRY_COUNT
+            retry_count=VALID_RETRY_COUNT,
         )
 
         assert config.similarity_threshold == VALID_SIMILARITY_THRESHOLD
@@ -200,16 +200,12 @@ class TestReferenceConfig:
         - Security requirement TC-SEC002
         """
         # HTTPS should be accepted
-        config = ReferenceConfig(
-            schema_org_api_url="https://schema.org/api"
-        )
+        config = ReferenceConfig(schema_org_api_url="https://schema.org/api")
         assert config.schema_org_api_url == "https://schema.org/api"
 
         # HTTP for remote host should be rejected
         with pytest.raises(ValidationError) as exc_info:
-            ReferenceConfig(
-                schema_org_api_url="http://schema.org/api"
-            )
+            ReferenceConfig(schema_org_api_url="http://schema.org/api")
 
         error = str(exc_info.value)
         assert "HTTPS" in error or "security" in error.lower()
@@ -230,9 +226,7 @@ class TestReferenceConfig:
         assert config_localhost.schema_org_api_url == "http://localhost:8000/api"
 
         # HTTP for 127.0.0.1 should be accepted
-        config_ip = ReferenceConfig(
-            schema_org_api_url="http://127.0.0.1:8000/api"
-        )
+        config_ip = ReferenceConfig(schema_org_api_url="http://127.0.0.1:8000/api")
         assert config_ip.schema_org_api_url == "http://127.0.0.1:8000/api"
 
     def test_similarity_threshold_validation(self):
@@ -250,14 +244,18 @@ class TestReferenceConfig:
             ReferenceConfig(similarity_threshold=INVALID_SIMILARITY_THRESHOLD_HIGH)
 
         error = str(exc_info.value)
-        assert "must be between 0.0 and 1.0" in error and "similarity_threshold" in error
+        assert (
+            "must be between 0.0 and 1.0" in error and "similarity_threshold" in error
+        )
 
         # Test value below min
         with pytest.raises(ValidationError) as exc_info:
             ReferenceConfig(similarity_threshold=INVALID_SIMILARITY_THRESHOLD_LOW)
 
         error = str(exc_info.value)
-        assert "must be between 0.0 and 1.0" in error and "similarity_threshold" in error
+        assert (
+            "must be between 0.0 and 1.0" in error and "similarity_threshold" in error
+        )
 
     def test_batch_size_validation(self):
         """
@@ -324,11 +322,10 @@ class TestReferenceManagerCore:
         - Config values are accessible
         """
         config = ReferenceConfig(
-            similarity_threshold=VALID_SIMILARITY_THRESHOLD,
-            batch_size=VALID_BATCH_SIZE
+            similarity_threshold=VALID_SIMILARITY_THRESHOLD, batch_size=VALID_BATCH_SIZE
         )
 
-        with tempfile.NamedTemporaryFile(suffix='.db', delete=False) as tf:
+        with tempfile.NamedTemporaryFile(suffix=".db", delete=False) as tf:
             db_path = tf.name
 
         try:
@@ -353,7 +350,7 @@ class TestReferenceManagerCore:
         """
         config = ReferenceConfig()
 
-        with tempfile.NamedTemporaryFile(suffix='.db', delete=False) as tf:
+        with tempfile.NamedTemporaryFile(suffix=".db", delete=False) as tf:
             db_path = tf.name
 
         try:
@@ -379,7 +376,7 @@ class TestReferenceManagerCore:
         """
         config = ReferenceConfig()
 
-        with tempfile.NamedTemporaryFile(suffix='.db', delete=False) as tf:
+        with tempfile.NamedTemporaryFile(suffix=".db", delete=False) as tf:
             db_path = tf.name
 
         try:
@@ -404,7 +401,7 @@ class TestReferenceManagerCore:
         """
         config = ReferenceConfig()
 
-        with tempfile.NamedTemporaryFile(suffix='.db', delete=False) as tf:
+        with tempfile.NamedTemporaryFile(suffix=".db", delete=False) as tf:
             db_path = tf.name
 
         lock_path = f"{db_path}.rebuild.lock"
@@ -415,8 +412,9 @@ class TestReferenceManagerCore:
             manager.close()
 
             # Lock file should be removed after rebuild
-            assert not os.path.exists(lock_path), \
-                "Lock file should be removed after successful rebuild"
+            assert not os.path.exists(
+                lock_path
+            ), "Lock file should be removed after successful rebuild"
 
         finally:
             if os.path.exists(db_path):
@@ -435,7 +433,7 @@ class TestReferenceManagerCore:
         """
         config = ReferenceConfig()
 
-        with tempfile.NamedTemporaryFile(suffix='.db', delete=False) as tf:
+        with tempfile.NamedTemporaryFile(suffix=".db", delete=False) as tf:
             db_path = tf.name
 
         try:
@@ -448,8 +446,11 @@ class TestReferenceManagerCore:
             # For this test, we'll just verify the backup logic by checking
             # that a backup was created
             backup_pattern = f"{db_path}.backup."
-            [f for f in os.listdir(os.path.dirname(db_path))
-                          if f.startswith(os.path.basename(backup_pattern))]  # noqa: E127, E501
+            [
+                f
+                for f in os.listdir(os.path.dirname(db_path))
+                if f.startswith(os.path.basename(backup_pattern))
+            ]  # noqa: E127, E501
 
             # Note: In actual usage, backup is only created during rebuild
             # This test validates the concept; actual rebuild testing requires
@@ -487,7 +488,7 @@ class TestReferenceManagerVector:
         """
         config = ReferenceConfig()
 
-        with tempfile.NamedTemporaryFile(suffix='.db', delete=False) as tf:
+        with tempfile.NamedTemporaryFile(suffix=".db", delete=False) as tf:
             db_path = tf.name
 
         try:
@@ -512,13 +513,13 @@ class TestReferenceManagerVector:
         """
         config = ReferenceConfig()
 
-        with tempfile.NamedTemporaryFile(suffix='.db', delete=False) as tf:
+        with tempfile.NamedTemporaryFile(suffix=".db", delete=False) as tf:
             db_path = tf.name
 
         try:
             with ReferenceManager(config, db_path=db_path) as manager:
                 # Create fake embedding (128 dimensions * 4 bytes = 512 bytes)
-                fake_embedding = b'\x00' * (EMBEDDING_DIMS_SMALL * BYTES_PER_FLOAT32)
+                fake_embedding = b"\x00" * (EMBEDDING_DIMS_SMALL * BYTES_PER_FLOAT32)
 
                 node = manager.add_reference_node(
                     title="Person",
@@ -527,7 +528,7 @@ class TestReferenceManagerVector:
                     external_id="Person",
                     title_embedding=fake_embedding,
                     definition_embedding=fake_embedding,
-                    embedding_dims=EMBEDDING_DIMS_SMALL
+                    embedding_dims=EMBEDDING_DIMS_SMALL,
                 )
 
                 assert node.id is not None
@@ -540,7 +541,7 @@ class TestReferenceManagerVector:
                         title="Person (duplicate)",
                         definition="Duplicate entry",
                         source="schema.org",
-                        external_id="Person"
+                        external_id="Person",
                     )
 
         finally:
@@ -558,13 +559,13 @@ class TestReferenceManagerVector:
         """
         config = ReferenceConfig()
 
-        with tempfile.NamedTemporaryFile(suffix='.db', delete=False) as tf:
+        with tempfile.NamedTemporaryFile(suffix=".db", delete=False) as tf:
             db_path = tf.name
 
         try:
             with ReferenceManager(config, db_path=db_path) as manager:
                 # Create embedding with wrong dimensions
-                wrong_size_embedding = b'\x00' * 256  # 64 dimensions instead of 128
+                wrong_size_embedding = b"\x00" * 256  # 64 dimensions instead of 128
 
                 with pytest.raises(ValueError) as exc_info:
                     manager.add_reference_node(
@@ -573,7 +574,7 @@ class TestReferenceManagerVector:
                         source="schema.org",
                         external_id="Person",
                         title_embedding=wrong_size_embedding,
-                        embedding_dims=EMBEDDING_DIMS_SMALL  # Expects 128 dims
+                        embedding_dims=EMBEDDING_DIMS_SMALL,  # Expects 128 dims
                     )
 
                 error = str(exc_info.value)
@@ -595,7 +596,7 @@ class TestReferenceManagerVector:
         """
         config = ReferenceConfig()
 
-        with tempfile.NamedTemporaryFile(suffix='.db', delete=False) as tf:
+        with tempfile.NamedTemporaryFile(suffix=".db", delete=False) as tf:
             db_path = tf.name
 
         try:
@@ -605,14 +606,14 @@ class TestReferenceManagerVector:
                     title="Person",
                     definition="A human being",
                     source="schema.org",
-                    external_id="Person"
+                    external_id="Person",
                 )
 
                 thing_node = manager.add_reference_node(
                     title="Thing",
                     definition="The most generic type",
                     source="schema.org",
-                    external_id="Thing"
+                    external_id="Thing",
                 )
 
                 # Create link
@@ -620,7 +621,7 @@ class TestReferenceManagerVector:
                     subject_node=person_node.id,
                     predicate="subClassOf",
                     object_node=thing_node.id,
-                    attributes={"context": "schema.org"}
+                    attributes={"context": "schema.org"},
                 )
 
                 assert link.id is not None
@@ -643,7 +644,7 @@ class TestReferenceManagerVector:
         """
         config = ReferenceConfig()
 
-        with tempfile.NamedTemporaryFile(suffix='.db', delete=False) as tf:
+        with tempfile.NamedTemporaryFile(suffix=".db", delete=False) as tf:
             db_path = tf.name
 
         try:
@@ -651,6 +652,7 @@ class TestReferenceManagerVector:
             with ReferenceManager(config, db_path=db_path) as manager:
                 # Verify schema version was written
                 from sqlalchemy import text
+
                 result = manager.session.execute(
                     text("SELECT schema_version FROM schema_version")
                 ).first()

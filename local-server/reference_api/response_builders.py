@@ -18,15 +18,17 @@ class ResponseBuilder:
     def __init__(self):
         pass
 
-    def build_single_source_response(self,
-                                   source: SourceType,
-                                   query: str,
-                                   nodes: List[SearchNode],
-                                   links: List[SearchLink],
-                                   limit: int = 20,
-                                   offset: int = 0,
-                                   search_time_ms: Optional[float] = None,
-                                   error: Optional[str] = None) -> MultiSourceSearchResponse:
+    def build_single_source_response(
+        self,
+        source: SourceType,
+        query: str,
+        nodes: List[SearchNode],
+        links: List[SearchLink],
+        limit: int = 20,
+        offset: int = 0,
+        search_time_ms: Optional[float] = None,
+        error: Optional[str] = None,
+    ) -> MultiSourceSearchResponse:
         """
         Build a MultiSourceSearchResponse for a single source.
 
@@ -60,18 +62,20 @@ class ResponseBuilder:
             source_errors=source_errors,
             offset=offset,
             limit=limit,
-            search_time_ms=search_time_ms
+            search_time_ms=search_time_ms,
         )
 
-    def build_multi_source_response(self,
-                                  query: str,
-                                  all_nodes: List[SearchNode],
-                                  all_links: List[SearchLink],
-                                  sources_queried: List[str],
-                                  source_errors: Dict[str, str],
-                                  limit: int = 20,
-                                  offset: int = 0,
-                                  search_time_ms: float = 0.0) -> MultiSourceSearchResponse:
+    def build_multi_source_response(
+        self,
+        query: str,
+        all_nodes: List[SearchNode],
+        all_links: List[SearchLink],
+        sources_queried: List[str],
+        source_errors: Dict[str, str],
+        limit: int = 20,
+        offset: int = 0,
+        search_time_ms: float = 0.0,
+    ) -> MultiSourceSearchResponse:
         """
         Build a MultiSourceSearchResponse for multiple sources.
 
@@ -98,15 +102,17 @@ class ResponseBuilder:
             source_errors=source_errors,
             offset=offset,
             limit=limit,
-            search_time_ms=search_time_ms
+            search_time_ms=search_time_ms,
         )
 
-    def build_empty_response(self,
-                           query: str,
-                           source: Optional[SourceType] = None,
-                           error: Optional[str] = None,
-                           limit: int = 20,
-                           offset: int = 0) -> MultiSourceSearchResponse:
+    def build_empty_response(
+        self,
+        query: str,
+        source: Optional[SourceType] = None,
+        error: Optional[str] = None,
+        limit: int = 20,
+        offset: int = 0,
+    ) -> MultiSourceSearchResponse:
         """
         Build an empty MultiSourceSearchResponse for cases where no results are found or errors occur.
 
@@ -133,15 +139,17 @@ class ResponseBuilder:
             source_errors=source_errors,
             offset=offset,
             limit=limit,
-            search_time_ms=0.0
+            search_time_ms=0.0,
         )
 
-    def build_error_response(self,
-                           query: str,
-                           error: str,
-                           source: Optional[SourceType] = None,
-                           limit: int = 20,
-                           offset: int = 0) -> MultiSourceSearchResponse:
+    def build_error_response(
+        self,
+        query: str,
+        error: str,
+        source: Optional[SourceType] = None,
+        limit: int = 20,
+        offset: int = 0,
+    ) -> MultiSourceSearchResponse:
         """
         Build a MultiSourceSearchResponse for error cases.
 
@@ -168,10 +176,12 @@ class ResponseBuilder:
             source_errors=source_errors,
             offset=offset,
             limit=limit,
-            search_time_ms=0.0
+            search_time_ms=0.0,
         )
 
-    def merge_responses(self, responses: List[MultiSourceSearchResponse]) -> MultiSourceSearchResponse:
+    def merge_responses(
+        self, responses: List[MultiSourceSearchResponse]
+    ) -> MultiSourceSearchResponse:
         """
         Merge multiple MultiSourceSearchResponse objects into a single response.
         This is a simple merge without deduplication - use ResultAggregator for more sophisticated merging.
@@ -215,7 +225,7 @@ class ResponseBuilder:
             source_errors=all_source_errors,
             offset=base_response.offset,
             limit=base_response.limit,
-            search_time_ms=total_search_time
+            search_time_ms=total_search_time,
         )
 
     def create_timing_wrapper(func):
@@ -229,6 +239,7 @@ class ResponseBuilder:
         Returns:
             Wrapped function that includes timing information
         """
+
         async def wrapper(*args, **kwargs):
             start_time = time.time()
             try:
@@ -242,7 +253,9 @@ class ResponseBuilder:
                 return result
             except Exception as e:
                 search_time_ms = (time.time() - start_time) * 1000
-                logger.error(f"Function {func.__name__} failed after {search_time_ms:.2f}ms: {e}")
+                logger.error(
+                    f"Function {func.__name__} failed after {search_time_ms:.2f}ms: {e}"
+                )
                 raise
 
         return wrapper

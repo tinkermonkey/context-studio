@@ -106,4 +106,3 @@ STABLE_TAXONOMY_NEW_TERMINOLOGY: Dict[str, Any] = {
         },
     ],
 }
-

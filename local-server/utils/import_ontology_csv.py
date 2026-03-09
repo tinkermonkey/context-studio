@@ -23,7 +23,7 @@ logger = get_logger("import_ontology_csv")
 
 def read_csv_rows(file_path: str) -> list:
     """Read CSV file and return rows as list of dictionaries."""
-    with open(file_path, newline='', encoding='utf-8') as csvfile:
+    with open(file_path, newline="", encoding="utf-8") as csvfile:
         reader = csv.DictReader(csvfile)
         rows = [dict(row) for row in reader]
     return rows
@@ -72,7 +72,9 @@ def import_records(rows: list, session: Session, update_existing: bool = True):
             try:
                 depth = int(str(row.get("Depth", "")).strip())
             except (TypeError, ValueError):
-                logger.warning(f"Row {row_num}: Missing or invalid Depth value, skipping")  # noqa: E501
+                logger.warning(
+                    f"Row {row_num}: Missing or invalid Depth value, skipping"
+                )  # noqa: E501
                 skipped_count += 1
                 continue
 
@@ -97,14 +99,18 @@ def import_records(rows: list, session: Session, update_existing: bool = True):
                 if parent_depth in last_nodes_by_depth:
                     parent_node_id = last_nodes_by_depth[parent_depth].id
                 else:
-                    logger.warning(f"Row {row_num}: No parent found at depth {parent_depth} for {title}, skipping")  # noqa: E501
+                    logger.warning(
+                        f"Row {row_num}: No parent found at depth {parent_depth} for {title}, skipping"
+                    )  # noqa: E501
                     skipped_count += 1
                     continue
 
             # Check if node with this ID already exists
             existing_node = None
             if node_id:
-                existing_node = session.query(StructureNode).filter_by(id=node_id).first()  # noqa: E501
+                existing_node = (
+                    session.query(StructureNode).filter_by(id=node_id).first()
+                )  # noqa: E501
 
             if existing_node:
                 if update_existing:
@@ -115,15 +121,23 @@ def import_records(rows: list, session: Session, update_existing: bool = True):
                     existing_node.parent_node_id = parent_node_id
 
                     # Regenerate embeddings
-                    existing_node.title_embedding = generate_embeddings_safe(title)  # noqa: E501
-                    existing_node.definition_embedding = generate_embeddings_safe(definition)  # noqa: E501
+                    existing_node.title_embedding = generate_embeddings_safe(
+                        title
+                    )  # noqa: E501
+                    existing_node.definition_embedding = generate_embeddings_safe(
+                        definition
+                    )  # noqa: E501
 
                     session.commit()
-                    logger.info(f"Row {row_num}: Updated {node_type.value} '{title}' (ID: {node_id})")  # noqa: E501
+                    logger.info(
+                        f"Row {row_num}: Updated {node_type.value} '{title}' (ID: {node_id})"
+                    )  # noqa: E501
                     updated_count += 1
                     last_nodes_by_depth[depth] = existing_node
                 else:
-                    logger.info(f"Row {row_num}: Node with ID {node_id} exists, skipping")  # noqa: E501
+                    logger.info(
+                        f"Row {row_num}: Node with ID {node_id} exists, skipping"
+                    )  # noqa: E501
                     skipped_count += 1
                     last_nodes_by_depth[depth] = existing_node
             else:
@@ -135,22 +149,28 @@ def import_records(rows: list, session: Session, update_existing: bool = True):
                     title=title,
                     definition=definition,
                     title_embedding=generate_embeddings_safe(title),
-                    definition_embedding=generate_embeddings_safe(definition)
+                    definition_embedding=generate_embeddings_safe(definition),
                 )
 
                 session.add(node)
                 session.commit()
-                logger.info(f"Row {row_num}: Created {node_type.value} '{title}' (ID: {node.id})")  # noqa: E501
+                logger.info(
+                    f"Row {row_num}: Created {node_type.value} '{title}' (ID: {node.id})"
+                )  # noqa: E501
                 created_count += 1
                 last_nodes_by_depth[depth] = node
 
         except Exception as e:
             session.rollback()
-            logger.error(f"Row {row_num}: Error processing '{row.get('Title', 'unknown')}': {e}")  # noqa: E501
+            logger.error(
+                f"Row {row_num}: Error processing '{row.get('Title', 'unknown')}': {e}"
+            )  # noqa: E501
             skipped_count += 1
             continue
 
-    logger.info(f"Import complete: {created_count} created, {updated_count} updated, {skipped_count} skipped")  # noqa: E501
+    logger.info(
+        f"Import complete: {created_count} created, {updated_count} updated, {skipped_count} skipped"
+    )  # noqa: E501
 
 
 def main():
@@ -158,24 +178,18 @@ def main():
         description="Import ontology CSV into structure_nodes database schema."
     )
     parser.add_argument(
-        "-f", "--file",
-        required=True,
-        help="Path to the CSV file to import"
+        "-f", "--file", required=True, help="Path to the CSV file to import"
     )
     parser.add_argument(
-        "-d", "--debug",
-        action="store_true",
-        help="Enable debug logging"
+        "-d", "--debug", action="store_true", help="Enable debug logging"
     )
     parser.add_argument(
-        "--test",
-        action="store_true",
-        help="Import only the first 10 rows for testing"
+        "--test", action="store_true", help="Import only the first 10 rows for testing"
     )
     parser.add_argument(
         "--skip-existing",
         action="store_true",
-        help="Skip existing nodes instead of updating them"
+        help="Skip existing nodes instead of updating them",
     )
     args = parser.parse_args()
 
@@ -211,6 +225,7 @@ def main():
     except Exception as e:
         logger.error(f"Error processing file: {e}")
         import traceback
+
         traceback.print_exc()
         sys.exit(1)
     finally:

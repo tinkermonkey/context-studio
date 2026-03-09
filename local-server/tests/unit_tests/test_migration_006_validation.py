@@ -97,14 +97,10 @@ def test_migration_006_creates_predicate_triggers(temp_db):
     # Verify predicate triggers exist
     engine = create_engine(db_url)
     with engine.connect() as conn:
-        triggers = conn.execute(
-            text(
-                """
+        triggers = conn.execute(text("""
             SELECT name FROM sqlite_master
             WHERE type='trigger' AND name LIKE '%predicate%'
-        """
-            )
-        ).fetchall()
+        """)).fetchall()
 
         trigger_names = {trigger[0] for trigger in triggers}
         expected_triggers = {
@@ -129,14 +125,10 @@ def test_migration_006_updates_structure_node_triggers(temp_db):
     # Verify structure node triggers exist and reference change_events
     engine = create_engine(db_url)
     with engine.connect() as conn:
-        triggers = conn.execute(
-            text(
-                """
+        triggers = conn.execute(text("""
             SELECT name, sql FROM sqlite_master
             WHERE type='trigger' AND name LIKE '%structure_node%'
-        """
-            )
-        ).fetchall()
+        """)).fetchall()
 
         trigger_names = {trigger[0] for trigger in triggers}
         expected_triggers = {
@@ -168,13 +160,9 @@ def test_migration_006_migrates_existing_events(temp_db):
     # Insert some test data in old format (if structure_node_events table exists)
     with engine.connect() as conn:
         # Check if we have any event table from previous migrations
-        existing_tables = conn.execute(
-            text(
-                """
+        existing_tables = conn.execute(text("""
             SELECT name FROM sqlite_master WHERE type='table' AND name LIKE '%event%'
-        """
-            )
-        ).fetchall()
+        """)).fetchall()
 
         event_table_names = [table[0] for table in existing_tables]
 
@@ -185,30 +173,22 @@ def test_migration_006_migrates_existing_events(temp_db):
                 if table_name in event_table_names:
                     # Insert test data in old format
                     if table_name == "structure_node_events":
-                        conn.execute(
-                            text(
-                                f"""
+                        conn.execute(text(f"""
                             INSERT INTO {table_name}
                             (event_type, node_type, node_id, old_data, new_data, processed, timestamp)
                             VALUES
                             ('create', 'layer', 'test-layer-1', NULL, '{{"title": "Test Layer"}}', 0, datetime('now')),
                             ('update', 'domain', 'test-domain-1', '{{"title": "Old"}}', '{{"title": "New"}}', 0, datetime('now')),
                             ('delete', 'term', 'test-term-1', '{{"title": "Deleted"}}', NULL, 1, datetime('now'))
-                        """
-                            )
-                        )
+                        """))
                     elif table_name == "graph_events":
-                        conn.execute(
-                            text(
-                                f"""
+                        conn.execute(text(f"""
                             INSERT INTO {table_name}
                             (event_type, entity_type, old_data, new_data, processed, timestamp)
                             VALUES
                             ('create', 'layer', NULL, '{{"title": "Test Layer"}}', 0, datetime('now')),
                             ('update', 'domain', '{{"title": "Old"}}', '{{"title": "New"}}', 0, datetime('now'))
-                        """
-                            )
-                        )
+                        """))
 
                     conn.commit()
                     break
@@ -218,15 +198,11 @@ def test_migration_006_migrates_existing_events(temp_db):
 
     # Verify data was migrated to change_events with new schema
     with engine.connect() as conn:
-        migrated_events = conn.execute(
-            text(
-                """
+        migrated_events = conn.execute(text("""
             SELECT event_type, record_type, record_id, old_data, new_data, processed
             FROM change_events
             ORDER BY id
-        """
-            )
-        ).fetchall()
+        """)).fetchall()
 
         # Should have migrated events
         if len(migrated_events) > 0:
@@ -265,17 +241,13 @@ def test_migration_006_rollback_preserves_data(temp_db):
 
     # Insert test data in new format
     with engine.connect() as conn:
-        conn.execute(
-            text(
-                """
+        conn.execute(text("""
             INSERT INTO change_events
             (event_type, record_type, record_id, old_data, new_data, processed, timestamp)
             VALUES
             ('create', 'structure_node', 'rollback-test-1', NULL, '{"title": "Test Node"}', 0, datetime('now')),
             ('update', 'predicate', 'rollback-test-2', '{"old": "data"}', '{"new": "data"}', 1, datetime('now'))
-        """
-            )
-        )
+        """))
         conn.commit()
 
         # Count events before rollback
@@ -296,15 +268,11 @@ def test_migration_006_rollback_preserves_data(temp_db):
     if "structure_node_events" in tables:
         with engine.connect() as conn:
             # Should have migrated structure_node events back
-            structure_events = conn.execute(
-                text(
-                    """
+            structure_events = conn.execute(text("""
                 SELECT event_type, node_type, node_id, old_data, new_data, processed
                 FROM structure_node_events
                 WHERE node_id LIKE 'rollback-test%'
-            """
-                )
-            ).fetchall()
+            """)).fetchall()
 
             # Should have at least the structure_node event (predicate events won't migrate back)
             assert len(structure_events) >= 1
@@ -334,28 +302,20 @@ def test_migration_006_forward_and_backward_compatibility(temp_db):
 
     # Insert test data
     with engine.connect() as conn:
-        conn.execute(
-            text(
-                """
+        conn.execute(text("""
             INSERT INTO change_events
             (event_type, record_type, record_id, old_data, new_data, processed, timestamp)
             VALUES
             ('create', 'structure_node', 'cycle-test-node', NULL, '{"title": "Cycle Test"}', 0, datetime('now')),
             ('create', 'predicate', 'cycle-test-pred', NULL, '{"title": "Cycle Predicate"}', 0, datetime('now')),
             ('create', 'structure_node_link', 'cycle-test-link', NULL, '{"parent": "p1", "child": "c1"}', 0, datetime('now'))
-        """
-            )
-        )
+        """))
         conn.commit()
 
         # Verify all record types are present
-        record_types = conn.execute(
-            text(
-                """
+        record_types = conn.execute(text("""
             SELECT DISTINCT record_type FROM change_events
-        """
-            )
-        ).fetchall()
+        """)).fetchall()
 
         type_set = {rt[0] for rt in record_types}
         assert "structure_node" in type_set
@@ -405,14 +365,10 @@ def test_migration_validation_comprehensive(temp_db):
         assert "processed" in columns
 
         # 2. Verify indexes exist
-        indexes = conn.execute(
-            text(
-                """
+        indexes = conn.execute(text("""
             SELECT name FROM sqlite_master
             WHERE type='index' AND tbl_name='change_events'
-        """
-            )
-        ).fetchall()
+        """)).fetchall()
 
         index_names = {idx[0] for idx in indexes}
         assert any("processed" in name for name in index_names)
@@ -420,13 +376,9 @@ def test_migration_validation_comprehensive(temp_db):
         assert any("record_type" in name for name in index_names)
 
         # 3. Verify triggers exist for all required tables
-        all_triggers = conn.execute(
-            text(
-                """
+        all_triggers = conn.execute(text("""
             SELECT name FROM sqlite_master WHERE type='trigger'
-        """
-            )
-        ).fetchall()
+        """)).fetchall()
 
         trigger_names = {trig[0] for trig in all_triggers}
 
@@ -463,13 +415,9 @@ def test_migration_performance_validation(temp_db):
     # Insert a larger dataset in old format (if possible)
     with engine.connect() as conn:
         # Check what event tables exist
-        tables = conn.execute(
-            text(
-                """
+        tables = conn.execute(text("""
             SELECT name FROM sqlite_master WHERE type='table' AND name LIKE '%event%'
-        """
-            )
-        ).fetchall()
+        """)).fetchall()
 
         if tables:
             # Insert test data for performance testing

@@ -1,8 +1,10 @@
 # Existing imports and code...
 
+
 def decode_emb(emb):
     """Decode a vector embedding from bytes to a list of floats."""
     import numpy as np
+
     if emb is None:
         return None
     if isinstance(emb, bytes):
@@ -22,6 +24,7 @@ def cosine_similarity(vec1, vec2):
         if isinstance(v, bytes):
             return np.frombuffer(v, dtype=np.float32)
         return np.array(v, dtype=np.float32)
+
     v1 = decode(vec1)
     v2 = decode(vec2)
     if np.linalg.norm(v1) == 0 or np.linalg.norm(v2) == 0:

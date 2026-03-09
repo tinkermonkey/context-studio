@@ -13,12 +13,14 @@ import asyncio
 from fastapi.testclient import TestClient
 
 # Add parent directory to path for imports
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))  # noqa: E501
+sys.path.append(
+    os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+)  # noqa: E501
 
 from services.task_manager import (  # noqa: E402
     TaskStatus,
     initialize_task_manager,
-    shutdown_task_manager
+    shutdown_task_manager,
 )
 from api import background_tasks  # noqa: E402
 
@@ -66,7 +68,7 @@ class TestCompleteTaskWorkflowE2E:
             return {
                 "predicates_discovered": 42,
                 "entities_processed": 150,
-                "execution_time_ms": 500
+                "execution_time_ms": 500,
             }
 
         # Submit task
@@ -75,8 +77,8 @@ class TestCompleteTaskWorkflowE2E:
             coroutine=predicate_discovery_task(),
             metadata={
                 "description": "Discover predicates from dataset",
-                "dataset_id": "test-dataset-123"
-            }
+                "dataset_id": "test-dataset-123",
+            },
         )
 
         # Verify task was submitted
@@ -104,7 +106,9 @@ class TestCompleteTaskWorkflowE2E:
 
         # Verify progress was tracked
         assert len(progress_history) > 1
-        assert progress_history[-1] >= progress_history[0]  # Progress increased  # noqa: E501
+        assert (
+            progress_history[-1] >= progress_history[0]
+        )  # Progress increased  # noqa: E501
 
         # Cleanup
         await task_manager.shutdown()
@@ -137,8 +141,8 @@ class TestCompleteTaskWorkflowE2E:
             metadata={
                 "description": "Map predicates to DBpedia",
                 "source": "local",
-                "target": "dbpedia"
-            }
+                "target": "dbpedia",
+            },
         )
 
         # Wait for task to start
@@ -146,7 +150,10 @@ class TestCompleteTaskWorkflowE2E:
 
         # Verify task is running
         status = task_manager.get_task_status(task_id)
-        assert status["status"] in [TaskStatus.RUNNING.value, TaskStatus.PENDING.value]  # noqa: E501
+        assert status["status"] in [
+            TaskStatus.RUNNING.value,
+            TaskStatus.PENDING.value,
+        ]  # noqa: E501
 
         # Cancel the task
         cancelled = await task_manager.cancel_task(task_id)
@@ -192,7 +199,7 @@ class TestCompleteTaskWorkflowE2E:
             task_id = await task_manager.submit_task(
                 task_type=f"test_task_{i}",
                 coroutine=tracked_task(i),
-                metadata={"task_number": i}
+                metadata={"task_number": i},
             )
             task_ids.append(task_id)
 
@@ -211,7 +218,9 @@ class TestCompleteTaskWorkflowE2E:
             # Task should complete before next task starts
             if i < 4:
                 next_start_idx = execution_log.index(f"start_{i+1}")
-                assert end_idx < next_start_idx, f"Task {i} should complete before task {i+1} starts"  # noqa: E501
+                assert (
+                    end_idx < next_start_idx
+                ), f"Task {i} should complete before task {i+1} starts"  # noqa: E501
 
         # Cleanup
         await task_manager.shutdown()
@@ -236,14 +245,16 @@ class TestCompleteTaskWorkflowE2E:
             """Task that fails on first attempt, succeeds on second."""
             attempt_count[task_name] += 1
             if attempt_count[task_name] < max_attempts:
-                raise RuntimeError(f"{task_name} failed on attempt {attempt_count[task_name]}")  # noqa: E501
+                raise RuntimeError(
+                    f"{task_name} failed on attempt {attempt_count[task_name]}"
+                )  # noqa: E501
             return f"{task_name} succeeded"
 
         # Submit first task (will fail)
         task_id_1 = await task_manager.submit_task(
             task_type="flaky_discovery",
             coroutine=flaky_task("task_1"),
-            metadata={"description": "Flaky task 1"}
+            metadata={"description": "Flaky task 1"},
         )
 
         # Wait for task to fail
@@ -261,7 +272,10 @@ class TestCompleteTaskWorkflowE2E:
         task_id_1_retry = await task_manager.submit_task(
             task_type="flaky_discovery_retry",
             coroutine=flaky_task("task_1", max_attempts=2),
-            metadata={"description": "Retry of task 1", "original_task_id": task_id_1}  # noqa: E501
+            metadata={
+                "description": "Retry of task 1",
+                "original_task_id": task_id_1,
+            },  # noqa: E501
         )
 
         # Wait for retry to complete
@@ -304,6 +318,7 @@ class TestAPIIntegrationE2E:
 
         # Create FastAPI app
         from fastapi import FastAPI
+
         app = FastAPI()
         app.include_router(background_tasks.router)
         client = TestClient(app)
@@ -319,7 +334,7 @@ class TestAPIIntegrationE2E:
         task_id = await task_manager.submit_task(
             task_type="discovery",
             coroutine=long_discovery_task(),
-            metadata={"api_test": True}
+            metadata={"api_test": True},
         )
 
         # 1. Get task status via API
@@ -375,6 +390,7 @@ class TestAPIIntegrationE2E:
 
         # Create FastAPI app
         from fastapi import FastAPI
+
         app = FastAPI()
         app.include_router(background_tasks.router)
         client = TestClient(app)
@@ -385,8 +401,7 @@ class TestAPIIntegrationE2E:
             raise ValueError("Simulated failure for testing")
 
         task_id = await task_manager.submit_task(
-            task_type="failing_test",
-            coroutine=failing_task()
+            task_type="failing_test", coroutine=failing_task()
         )
 
         # Wait for task to fail
@@ -456,7 +471,7 @@ class TestTimeoutHandlingE2E:
             task_type="timeout_test",
             coroutine=slow_task(),
             timeout=0.5,  # 0.5 second timeout
-            metadata={"expected": "timeout"}
+            metadata={"expected": "timeout"},
         )
 
         # Wait for timeout to occur
@@ -515,8 +530,7 @@ class TestResourceManagementE2E:
         task_ids = []
         for i in range(15):
             task_id = await task_manager.submit_task(
-                task_type=f"failing_{i}",
-                coroutine=failing_task(i)
+                task_type=f"failing_{i}", coroutine=failing_task(i)
             )
             task_ids.append(task_id)
 

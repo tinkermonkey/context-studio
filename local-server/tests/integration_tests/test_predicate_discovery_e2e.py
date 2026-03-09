@@ -6,6 +6,7 @@ Tests complete user workflows from API request through discovery to results.
 
 import sys
 import os
+
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import pytest  # noqa: E402
@@ -40,7 +41,7 @@ class TestPredicateDiscoveryE2E:
         2. Polling the status via GET /api/predicates/discover/{task_id}
         3. Verifying predicates are stored via GET /api/predicates/external
         """
-        with patch('api.predicates._run_discovery_task') as mock_task:
+        with patch("api.predicates._run_discovery_task") as mock_task:
             # Configure mock to simulate successful discovery
             async def mock_discovery(task_id, sources):
                 from api.predicates import _discovery_tasks
@@ -53,17 +54,18 @@ class TestPredicateDiscoveryE2E:
                         "updated": 0,
                         "error_count": 0,
                         "errors": [],
-                        "errors_truncated": False
+                        "errors_truncated": False,
                     }
                 }
-                _discovery_tasks[task_id]["completed_at"] = datetime.datetime.now(datetime.UTC).isoformat()  # noqa: E501
+                _discovery_tasks[task_id]["completed_at"] = datetime.datetime.now(
+                    datetime.UTC
+                ).isoformat()  # noqa: E501
 
             mock_task.side_effect = mock_discovery
 
             # Step 1: Start discovery
             response = client.post(
-                "/api/predicates/discover",
-                params={"sources": ["conceptnet"]}
+                "/api/predicates/discover", params={"sources": ["conceptnet"]}
             )
 
             assert response.status_code == 200
@@ -95,7 +97,7 @@ class TestPredicateDiscoveryE2E:
         - Error messages are included in status
         - errors_truncated flag works correctly
         """
-        with patch('api.predicates._run_discovery_task') as mock_task:
+        with patch("api.predicates._run_discovery_task") as mock_task:
             # Configure mock to simulate partial failure
             async def mock_discovery(task_id, sources):
                 from api.predicates import _discovery_tasks
@@ -111,15 +113,19 @@ class TestPredicateDiscoveryE2E:
                         "updated": 0,
                         "error_count": 15,
                         "errors": errors[:10],  # Only first 10
-                        "errors_truncated": True
+                        "errors_truncated": True,
                     }
                 }
-                _discovery_tasks[task_id]["completed_at"] = datetime.datetime.now(datetime.UTC).isoformat()  # noqa: E501
+                _discovery_tasks[task_id]["completed_at"] = datetime.datetime.now(
+                    datetime.UTC
+                ).isoformat()  # noqa: E501
 
             mock_task.side_effect = mock_discovery
 
             # Start discovery
-            response = client.post("/api/predicates/discover", params={"sources": ["conceptnet"]})  # noqa: E501
+            response = client.post(
+                "/api/predicates/discover", params={"sources": ["conceptnet"]}
+            )  # noqa: E501
             task_id = response.json()["task_id"]
 
             # Poll status
@@ -144,7 +150,8 @@ class TestPredicateDiscoveryE2E:
         2. Verify all sources are processed
         3. Check performance targets are met
         """
-        with patch('api.predicates._run_discovery_task') as mock_task:
+        with patch("api.predicates._run_discovery_task") as mock_task:
+
             async def mock_discovery(task_id, sources):
                 from api.predicates import _discovery_tasks
                 import datetime
@@ -152,23 +159,34 @@ class TestPredicateDiscoveryE2E:
                 results = {}
                 if sources is None or "conceptnet" in sources:
                     results["conceptnet"] = {
-                        "created": 40, "updated": 0, "error_count": 0,
-                        "errors": [], "errors_truncated": False
+                        "created": 40,
+                        "updated": 0,
+                        "error_count": 0,
+                        "errors": [],
+                        "errors_truncated": False,
                     }
                 if sources is None or "dbpedia" in sources:
                     results["dbpedia"] = {
-                        "created": 760, "updated": 0, "error_count": 0,
-                        "errors": [], "errors_truncated": False
+                        "created": 760,
+                        "updated": 0,
+                        "error_count": 0,
+                        "errors": [],
+                        "errors_truncated": False,
                     }
                 if sources is None or "wikidata" in sources:
                     results["wikidata"] = {
-                        "created": 10000, "updated": 0, "error_count": 0,
-                        "errors": [], "errors_truncated": False
+                        "created": 10000,
+                        "updated": 0,
+                        "error_count": 0,
+                        "errors": [],
+                        "errors_truncated": False,
                     }
 
                 _discovery_tasks[task_id]["status"] = "completed"
                 _discovery_tasks[task_id]["results"] = results
-                _discovery_tasks[task_id]["completed_at"] = datetime.datetime.now(datetime.UTC).isoformat()  # noqa: E501
+                _discovery_tasks[task_id]["completed_at"] = datetime.datetime.now(
+                    datetime.UTC
+                ).isoformat()  # noqa: E501
 
             mock_task.side_effect = mock_discovery
 
@@ -196,7 +214,7 @@ class TestPredicateDiscoveryE2E:
         """Test that invalid source names are rejected."""
         response = client.post(
             "/api/predicates/discover",
-            params={"sources": ["invalid_source", "conceptnet"]}
+            params={"sources": ["invalid_source", "conceptnet"]},
         )
 
         assert response.status_code == 400
@@ -225,6 +243,7 @@ class TestPredicateDiscoveryE2E:
         with reference_manager_context(config) as manager:
             # Clear any existing test data
             from reference_db.models import ExternalPredicate
+
             manager.session.query(ExternalPredicate).delete()
             manager.session.commit()
 
@@ -234,7 +253,7 @@ class TestPredicateDiscoveryE2E:
                     title=f"Predicate {i}",
                     definition=f"Definition for predicate {i}",
                     source="conceptnet",
-                    external_id=f"/r/Relation{i}"
+                    external_id=f"/r/Relation{i}",
                 )
 
         # Test pagination
@@ -275,6 +294,7 @@ class TestPredicateDiscoveryE2E:
         with reference_manager_context(config) as manager:
             # Clear any existing test data
             from reference_db.models import ExternalPredicate
+
             manager.session.query(ExternalPredicate).delete()
             manager.session.commit()
 
@@ -283,17 +303,19 @@ class TestPredicateDiscoveryE2E:
                 title="ConceptNet Predicate 1",
                 definition="Definition from ConceptNet",
                 source="conceptnet",
-                external_id="/r/Rel1"
+                external_id="/r/Rel1",
             )
             manager.add_external_predicate(
                 title="DBpedia Predicate 1",
                 definition="Definition from DBpedia",
                 source="dbpedia",
-                external_id="dbo:property1"
+                external_id="dbo:property1",
             )
 
         # Test filtering by source
-        response = client.get("/api/predicates/external?source=conceptnet&limit=50")  # noqa: E501
+        response = client.get(
+            "/api/predicates/external?source=conceptnet&limit=50"
+        )  # noqa: E501
         assert response.status_code == 200
         data = response.json()
 
@@ -314,7 +336,7 @@ class TestPredicateDiscoveryE2E:
         1. First discovery creates predicates
         2. Second discovery updates them (not creates duplicates)
         """
-        with patch('api.predicates._run_discovery_task') as mock_task:
+        with patch("api.predicates._run_discovery_task") as mock_task:
             # First discovery - all creates
             async def mock_first_discovery(task_id, sources):
                 from api.predicates import _discovery_tasks
@@ -327,15 +349,19 @@ class TestPredicateDiscoveryE2E:
                         "updated": 0,
                         "error_count": 0,
                         "errors": [],
-                        "errors_truncated": False
+                        "errors_truncated": False,
                     }
                 }
-                _discovery_tasks[task_id]["completed_at"] = datetime.datetime.now(datetime.UTC).isoformat()  # noqa: E501
+                _discovery_tasks[task_id]["completed_at"] = datetime.datetime.now(
+                    datetime.UTC
+                ).isoformat()  # noqa: E501
 
             mock_task.side_effect = mock_first_discovery
 
             # First discovery
-            response = client.post("/api/predicates/discover", params={"sources": ["conceptnet"]})  # noqa: E501
+            response = client.post(
+                "/api/predicates/discover", params={"sources": ["conceptnet"]}
+            )  # noqa: E501
             task_id1 = response.json()["task_id"]
             time.sleep(0.1)
             response = client.get(f"/api/predicates/discover/{task_id1}")
@@ -356,14 +382,18 @@ class TestPredicateDiscoveryE2E:
                         "updated": 40,
                         "error_count": 0,
                         "errors": [],
-                        "errors_truncated": False
+                        "errors_truncated": False,
                     }
                 }
-                _discovery_tasks[task_id]["completed_at"] = datetime.datetime.now(datetime.UTC).isoformat()  # noqa: E501
+                _discovery_tasks[task_id]["completed_at"] = datetime.datetime.now(
+                    datetime.UTC
+                ).isoformat()  # noqa: E501
 
             mock_task.side_effect = mock_second_discovery
 
-            response = client.post("/api/predicates/discover", params={"sources": ["conceptnet"]})  # noqa: E501
+            response = client.post(
+                "/api/predicates/discover", params={"sources": ["conceptnet"]}
+            )  # noqa: E501
             task_id2 = response.json()["task_id"]
             time.sleep(0.1)
             response = client.get(f"/api/predicates/discover/{task_id2}")
@@ -381,7 +411,8 @@ class TestPredicateDiscoveryE2E:
         - Each task has unique ID
         - Tasks don't interfere with each other
         """
-        with patch('api.predicates._run_discovery_task') as mock_task:
+        with patch("api.predicates._run_discovery_task") as mock_task:
+
             async def mock_discovery(task_id, sources):
                 from api.predicates import _discovery_tasks
                 import datetime
@@ -389,18 +420,25 @@ class TestPredicateDiscoveryE2E:
                 _discovery_tasks[task_id]["status"] = "completed"
                 _discovery_tasks[task_id]["results"] = {
                     "conceptnet": {
-                        "created": 40, "updated": 0, "error_count": 0,
-                        "errors": [], "errors_truncated": False
+                        "created": 40,
+                        "updated": 0,
+                        "error_count": 0,
+                        "errors": [],
+                        "errors_truncated": False,
                     }
                 }
-                _discovery_tasks[task_id]["completed_at"] = datetime.datetime.now(datetime.UTC).isoformat()  # noqa: E501
+                _discovery_tasks[task_id]["completed_at"] = datetime.datetime.now(
+                    datetime.UTC
+                ).isoformat()  # noqa: E501
 
             mock_task.side_effect = mock_discovery
 
             # Start multiple discovery tasks
             task_ids = []
             for i in range(3):
-                response = client.post("/api/predicates/discover", params={"sources": ["conceptnet"]})  # noqa: E501
+                response = client.post(
+                    "/api/predicates/discover", params={"sources": ["conceptnet"]}
+                )  # noqa: E501
                 assert response.status_code == 200
                 task_ids.append(response.json()["task_id"])
 
@@ -415,5 +453,5 @@ class TestPredicateDiscoveryE2E:
                 assert response.json()["status"] == "completed"
 
 
-if __name__ == '__main__':
-    pytest.main([__file__, '-v'])
+if __name__ == "__main__":
+    pytest.main([__file__, "-v"])

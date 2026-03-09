@@ -13,40 +13,60 @@ def nlp():
     from unittest.mock import patch
 
     # Mock the proxy manager and config to avoid external dependencies
-    with patch('nlp.pipeline.get_proxy_manager') as mock_proxy_mgr, \
-         patch('nlp.pipeline.get_config_manager') as mock_config_mgr, \
-         patch('nlp.pipeline.get_settings') as mock_settings:
+    with patch("nlp.pipeline.get_proxy_manager") as mock_proxy_mgr, patch(
+        "nlp.pipeline.get_config_manager"
+    ) as mock_config_mgr, patch("nlp.pipeline.get_settings") as mock_settings:
 
         # Configure mocks to disable external services
         mock_proxy_mgr.return_value.is_proxy_enabled.return_value = False
 
         # Configure settings to disable external components
-        mock_settings_obj = type('MockSettings', (), {
-            'nlp': type('NLPSettings', (), {
-                'model_name': 'en_core_web_sm',  # Use smaller model for tests
-                'concepcy_relations': [],
-                'filter_missing_text': True,
-                'edge_weight_filter': 0.1,
-                'auto_download_models': False,  # Disable auto-download in tests
-                'download_timeout': 60
-            })(),
-            'reference_sources': type('RefSources', (), {
-                'conceptnet': type('ConceptNet', (), {
-                    'enabled': False,  # Disable to avoid component issues
-                    'use_proxy': False
-                })(),
-                'dbpedia_spotlight': type('DBpedia', (), {
-                    'enabled': False,  # Disable to avoid component issues
-                    'use_proxy': False,
-                    'upstream_url': 'https://api.dbpedia-spotlight.org/en/annotate'
-                })()
-            })(),
-            'proxy_server': type('ProxyServer', (), {
-                'enabled': False,
-                'host': 'localhost',
-                'port': 8080
-            })()
-        })
+        mock_settings_obj = type(
+            "MockSettings",
+            (),
+            {
+                "nlp": type(
+                    "NLPSettings",
+                    (),
+                    {
+                        "model_name": "en_core_web_sm",  # Use smaller model for tests
+                        "concepcy_relations": [],
+                        "filter_missing_text": True,
+                        "edge_weight_filter": 0.1,
+                        "auto_download_models": False,  # Disable auto-download in tests
+                        "download_timeout": 60,
+                    },
+                )(),
+                "reference_sources": type(
+                    "RefSources",
+                    (),
+                    {
+                        "conceptnet": type(
+                            "ConceptNet",
+                            (),
+                            {
+                                "enabled": False,  # Disable to avoid component issues
+                                "use_proxy": False,
+                            },
+                        )(),
+                        "dbpedia_spotlight": type(
+                            "DBpedia",
+                            (),
+                            {
+                                "enabled": False,  # Disable to avoid component issues
+                                "use_proxy": False,
+                                "upstream_url": "https://api.dbpedia-spotlight.org/en/annotate",
+                            },
+                        )(),
+                    },
+                )(),
+                "proxy_server": type(
+                    "ProxyServer",
+                    (),
+                    {"enabled": False, "host": "localhost", "port": 8080},
+                )(),
+            },
+        )
 
         mock_settings.return_value = mock_settings_obj
         mock_config_mgr.return_value.settings = mock_settings_obj

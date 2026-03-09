@@ -12,7 +12,6 @@ This module provides reusable test data including:
 REALISTIC_TEST_PARAGRAPHS = {
     "ai_machine_learning": {
         "short": "Machine learning algorithms learn patterns from data without explicit programming.",  # noqa: E501
-
         "medium": (
             "Machine learning is a subset of artificial intelligence that focuses on developing "  # noqa: E501
             "algorithms that can learn from and make predictions based on data. Neural networks, "  # noqa: E501
@@ -20,7 +19,6 @@ REALISTIC_TEST_PARAGRAPHS = {
             "recognition tasks. Deep learning uses multi-layered neural networks and has "  # noqa: E501
             "revolutionized fields such as computer vision and natural language processing."  # noqa: E501
         ),
-
         "long": (
             "Machine learning is a subset of artificial intelligence that focuses on developing "  # noqa: E501
             "algorithms that can learn from and make predictions based on data. Neural networks, "  # noqa: E501
@@ -35,7 +33,6 @@ REALISTIC_TEST_PARAGRAPHS = {
             "unlabeled data without explicit guidance, using techniques like clustering and "  # noqa: E501
             "dimensionality reduction."
         ),
-
         "expected_concepts": [
             "machine learning",
             "artificial intelligence",
@@ -45,13 +42,11 @@ REALISTIC_TEST_PARAGRAPHS = {
             "unsupervised learning",
             "pattern recognition",
             "computer vision",
-            "natural language processing"
-        ]
+            "natural language processing",
+        ],
     },
-
     "biology": {
         "short": "DNA contains the genetic instructions for all living organisms.",  # noqa: E501
-
         "medium": (
             "DNA replication is a semi-conservative process that ensures genetic information "  # noqa: E501
             "is accurately copied before cell division. The enzyme helicase unwinds the double "  # noqa: E501
@@ -59,7 +54,6 @@ REALISTIC_TEST_PARAGRAPHS = {
             "gaps in the sugar-phosphate backbone. This precise mechanism maintains genomic "  # noqa: E501
             "integrity across generations."
         ),
-
         "long": (
             "DNA replication is a semi-conservative process that ensures genetic information "  # noqa: E501
             "is accurately copied before cell division. The enzyme helicase unwinds the double "  # noqa: E501
@@ -71,7 +65,6 @@ REALISTIC_TEST_PARAGRAPHS = {
             "light-independent reactions. The immune system provides defense against pathogens "  # noqa: E501
             "through innate and adaptive responses involving T cells and B cells."  # noqa: E501
         ),
-
         "expected_concepts": [
             "DNA replication",
             "cell division",
@@ -81,13 +74,11 @@ REALISTIC_TEST_PARAGRAPHS = {
             "cellular respiration",
             "ATP",
             "photosynthesis",
-            "immune system"
-        ]
+            "immune system",
+        ],
     },
-
     "technology": {
         "short": "Cloud computing delivers on-demand computing resources over the internet.",  # noqa: E501
-
         "medium": (
             "Cloud computing delivers computing services over the internet, enabling organizations "  # noqa: E501
             "to access scalable resources without maintaining physical infrastructure. The three "  # noqa: E501
@@ -95,7 +86,6 @@ REALISTIC_TEST_PARAGRAPHS = {
             "(PaaS), and Software as a Service (SaaS). Major cloud providers like AWS, Azure, "  # noqa: E501
             "and Google Cloud offer comprehensive ecosystems of tools and services."  # noqa: E501
         ),
-
         "long": (
             "Cloud computing delivers computing services over the internet, enabling organizations "  # noqa: E501
             "to access scalable resources without maintaining physical infrastructure. Blockchain "  # noqa: E501
@@ -107,7 +97,6 @@ REALISTIC_TEST_PARAGRAPHS = {
             "to where it is generated rather than sending it to centralized cloud servers, "  # noqa: E501
             "reducing latency and enabling real-time processing."
         ),
-
         "expected_concepts": [
             "cloud computing",
             "IaaS",
@@ -117,13 +106,11 @@ REALISTIC_TEST_PARAGRAPHS = {
             "Internet of Things",
             "IoT",
             "quantum computing",
-            "edge computing"
-        ]
+            "edge computing",
+        ],
     },
-
     "finance": {
         "short": "Compound interest earns returns on both principal and accumulated interest.",  # noqa: E501
-
         "medium": (
             "Portfolio diversification reduces risk by spreading investments across different "  # noqa: E501
             "asset classes, industries, and geographic regions. Modern portfolio theory suggests "  # noqa: E501
@@ -131,20 +118,17 @@ REALISTIC_TEST_PARAGRAPHS = {
             "asset allocation. Index funds offer low-cost exposure to broad market segments and "  # noqa: E501
             "have historically outperformed actively managed funds over long time periods."  # noqa: E501
         ),
-
         "expected_concepts": [
             "portfolio diversification",
             "asset allocation",
             "modern portfolio theory",
             "index funds",
             "risk management",
-            "compound interest"
-        ]
+            "compound interest",
+        ],
     },
-
     "healthcare": {
         "short": "Preventive medicine focuses on disease prevention rather than treatment.",  # noqa: E501
-
         "medium": (
             "Electronic health records have transformed healthcare delivery by enabling seamless "  # noqa: E501
             "information sharing among providers, reducing medical errors, and improving patient "  # noqa: E501
@@ -153,65 +137,140 @@ REALISTIC_TEST_PARAGRAPHS = {
             "communication platforms. Precision medicine uses genetic information and biomarkers "  # noqa: E501
             "to tailor treatments to individual patients."
         ),
-
         "expected_concepts": [
             "electronic health records",
             "telemedicine",
             "precision medicine",
             "preventive medicine",
             "biomarkers",
-            "patient outcomes"
-        ]
-    }
+            "patient outcomes",
+        ],
+    },
 }
 
 
 # Test knowledge graph terms for seeding test databases
 TEST_KG_TERMS = [
     # AI/ML Domain
-    ("Machine Learning", "Algorithms that learn from data without explicit programming", "ai_ml"),  # noqa: E501
-    ("Artificial Intelligence", "Simulation of human intelligence by machines", "ai_ml"),  # noqa: E501
-    ("Neural Networks", "Computing systems inspired by biological neural networks", "ai_ml"),  # noqa: E501
-    ("Deep Learning", "Multi-layered neural networks for complex pattern recognition", "ai_ml"),  # noqa: E501
-    ("Natural Language Processing", "AI for understanding and generating human language", "ai_ml"),  # noqa: E501
-    ("Computer Vision", "AI for analyzing and understanding visual information", "ai_ml"),  # noqa: E501
+    (
+        "Machine Learning",
+        "Algorithms that learn from data without explicit programming",
+        "ai_ml",
+    ),  # noqa: E501
+    (
+        "Artificial Intelligence",
+        "Simulation of human intelligence by machines",
+        "ai_ml",
+    ),  # noqa: E501
+    (
+        "Neural Networks",
+        "Computing systems inspired by biological neural networks",
+        "ai_ml",
+    ),  # noqa: E501
+    (
+        "Deep Learning",
+        "Multi-layered neural networks for complex pattern recognition",
+        "ai_ml",
+    ),  # noqa: E501
+    (
+        "Natural Language Processing",
+        "AI for understanding and generating human language",
+        "ai_ml",
+    ),  # noqa: E501
+    (
+        "Computer Vision",
+        "AI for analyzing and understanding visual information",
+        "ai_ml",
+    ),  # noqa: E501
     ("Supervised Learning", "Learning from labeled training data", "ai_ml"),
     ("Unsupervised Learning", "Finding patterns in unlabeled data", "ai_ml"),
-    ("Reinforcement Learning", "Learning through trial and error with rewards", "ai_ml"),  # noqa: E501
-
+    (
+        "Reinforcement Learning",
+        "Learning through trial and error with rewards",
+        "ai_ml",
+    ),  # noqa: E501
     # Biology Domain
     ("DNA Replication", "Process of copying genetic information", "biology"),
     ("Cell Division", "Process by which cells reproduce", "biology"),
     ("Cellular Respiration", "Converting glucose to ATP energy", "biology"),
-    ("Photosynthesis", "Converting light energy to chemical energy", "biology"),  # noqa: E501
+    (
+        "Photosynthesis",
+        "Converting light energy to chemical energy",
+        "biology",
+    ),  # noqa: E501
     ("Protein Synthesis", "Creating proteins from genetic code", "biology"),
     ("Immune System", "Defense mechanism against pathogens", "biology"),
     ("Enzyme", "Biological catalyst that speeds up reactions", "biology"),
-    ("ATP", "Adenosine triphosphate, primary energy currency of cells", "biology"),  # noqa: E501
-
+    (
+        "ATP",
+        "Adenosine triphosphate, primary energy currency of cells",
+        "biology",
+    ),  # noqa: E501
     # Technology Domain
-    ("Cloud Computing", "Computing services delivered over the internet", "technology"),  # noqa: E501
+    (
+        "Cloud Computing",
+        "Computing services delivered over the internet",
+        "technology",
+    ),  # noqa: E501
     ("Blockchain", "Distributed ledger technology", "technology"),
-    ("Internet of Things", "Network of connected physical devices", "technology"),  # noqa: E501
-    ("Quantum Computing", "Computing using quantum mechanical phenomena", "technology"),  # noqa: E501
+    (
+        "Internet of Things",
+        "Network of connected physical devices",
+        "technology",
+    ),  # noqa: E501
+    (
+        "Quantum Computing",
+        "Computing using quantum mechanical phenomena",
+        "technology",
+    ),  # noqa: E501
     ("Edge Computing", "Processing data closer to its source", "technology"),
     ("IaaS", "Infrastructure as a Service cloud model", "technology"),
     ("PaaS", "Platform as a Service cloud model", "technology"),
     ("SaaS", "Software as a Service cloud model", "technology"),
-
     # Finance Domain
-    ("Portfolio Diversification", "Spreading investments to reduce risk", "finance"),  # noqa: E501
-    ("Asset Allocation", "Distributing investments among different asset classes", "finance"),  # noqa: E501
-    ("Compound Interest", "Interest calculated on principal and accumulated interest", "finance"),  # noqa: E501
+    (
+        "Portfolio Diversification",
+        "Spreading investments to reduce risk",
+        "finance",
+    ),  # noqa: E501
+    (
+        "Asset Allocation",
+        "Distributing investments among different asset classes",
+        "finance",
+    ),  # noqa: E501
+    (
+        "Compound Interest",
+        "Interest calculated on principal and accumulated interest",
+        "finance",
+    ),  # noqa: E501
     ("Index Fund", "Investment fund tracking a market index", "finance"),
-    ("Modern Portfolio Theory", "Framework for optimizing investment returns", "finance"),  # noqa: E501
-
+    (
+        "Modern Portfolio Theory",
+        "Framework for optimizing investment returns",
+        "finance",
+    ),  # noqa: E501
     # Healthcare Domain
-    ("Electronic Health Records", "Digital patient health information", "healthcare"),  # noqa: E501
-    ("Telemedicine", "Remote healthcare delivery via technology", "healthcare"),  # noqa: E501
-    ("Precision Medicine", "Tailoring treatment to individual patients", "healthcare"),  # noqa: E501
+    (
+        "Electronic Health Records",
+        "Digital patient health information",
+        "healthcare",
+    ),  # noqa: E501
+    (
+        "Telemedicine",
+        "Remote healthcare delivery via technology",
+        "healthcare",
+    ),  # noqa: E501
+    (
+        "Precision Medicine",
+        "Tailoring treatment to individual patients",
+        "healthcare",
+    ),  # noqa: E501
     ("Preventive Medicine", "Focus on disease prevention", "healthcare"),
-    ("Biomarker", "Measurable indicator of biological state or condition", "healthcare"),  # noqa: E501
+    (
+        "Biomarker",
+        "Measurable indicator of biological state or condition",
+        "healthcare",
+    ),  # noqa: E501
 ]
 
 
@@ -229,7 +288,7 @@ EDGE_CASE_INPUTS = {
     "whitespace_only": "   \n\t  ",
     "single_word": "Technology",
     "special_characters": "Test with special chars: @#$%^&*()",
-    "unicode": "Test with unicode: \u2022 \u2026 \u00A9 中文",
+    "unicode": "Test with unicode: \u2022 \u2026 \u00a9 中文",
     "emoji": "Test with emoji 🔥 💡 🚀",
     "very_long_word": "pneumonoultramicroscopicsilicovolcanoconiosis",
     "numbers_only": "12345 67890",
@@ -251,8 +310,9 @@ def get_mock_kg_context_output(num_phrases=2, num_nodes=3):
                 text=f"phrase_{i}",
                 sentence_index=0,
                 start_char=i * 10,
-                end_char=(i * 10) + 8
-            ) for i in range(num_phrases)
+                end_char=(i * 10) + 8,
+            )
+            for i in range(num_phrases)
         ],
         kg_nodes=[
             KGNode(
@@ -260,11 +320,12 @@ def get_mock_kg_context_output(num_phrases=2, num_nodes=3):
                 title=f"Concept {i}",
                 node_type="term",
                 similarity_score=0.9 - (i * 0.1),
-                definition=f"Definition for concept {i}"
-            ) for i in range(num_nodes)
+                definition=f"Definition for concept {i}",
+            )
+            for i in range(num_nodes)
         ],
         total_sentences=1,
-        trace_data={}
+        trace_data={},
     )
 
 
@@ -281,12 +342,13 @@ def get_mock_llm_extraction_output(num_entities=2):
                 sentence_indices=[0],
                 matched_kg_node=f"node_{i}" if i < 2 else None,
                 start_char=i * 15,
-                end_char=(i * 15) + 8
-            ) for i in range(num_entities)
+                end_char=(i * 15) + 8,
+            )
+            for i in range(num_entities)
         ],
         kg_context_size=3,
         token_usage={"prompt_tokens": 100, "completion_tokens": 50},
-        trace_data={}
+        trace_data={},
     )
 
 
@@ -299,18 +361,21 @@ def get_mock_spacy_gap_output(num_gaps=1):
             GapConcept(
                 text=f"gap_{i}",
                 sentence_index=0,
-                priority=GapPriority.IMPORTANT if i % 2 == 0 else GapPriority.CONTEXTUAL,  # noqa: E501
+                priority=(
+                    GapPriority.IMPORTANT if i % 2 == 0 else GapPriority.CONTEXTUAL
+                ),  # noqa: E501
                 dep_role="nsubj" if i % 2 == 0 else "amod",
                 head_word="verb",
                 connected_verb="verb",
                 start_char=i * 20,
                 end_char=(i * 20) + 5,
-                tf_idf_score=0.3 + (i * 0.1)
-            ) for i in range(num_gaps)
+                tf_idf_score=0.3 + (i * 0.1),
+            )
+            for i in range(num_gaps)
         ],
         total_noun_phrases=num_gaps + 5,
         filtered_count=2,
-        trace_data={}
+        trace_data={},
     )
 
 
@@ -322,7 +387,7 @@ def get_mock_concept_resolution_output(num_resolved=1):
         GapConcept,
         GapPriority,
         ResolutionMethod,
-        KGNode
+        KGNode,
     )
 
     gaps = [
@@ -335,31 +400,41 @@ def get_mock_concept_resolution_output(num_resolved=1):
             connected_verb="verb",
             start_char=i * 20,
             end_char=(i * 20) + 5,
-            tf_idf_score=0.3
-        ) for i in range(num_resolved)
+            tf_idf_score=0.3,
+        )
+        for i in range(num_resolved)
     ]
 
     return ConceptResolutionOutput(
         resolved_concepts=[
             ResolvedConcept(
                 original_gap=gap,
-                resolution_method=ResolutionMethod.FULL_KG if i % 2 == 0 else ResolutionMethod.WEB_SEARCH,  # noqa: E501
-                matched_kg_node=KGNode(
-                    node_id=f"resolved_{i}",
-                    title=f"Resolved {i}",
-                    node_type="term",
-                    similarity_score=0.85,
-                    definition=f"Definition {i}"
-                ) if i % 2 == 0 else None,
+                resolution_method=(
+                    ResolutionMethod.FULL_KG
+                    if i % 2 == 0
+                    else ResolutionMethod.WEB_SEARCH
+                ),  # noqa: E501
+                matched_kg_node=(
+                    KGNode(
+                        node_id=f"resolved_{i}",
+                        title=f"Resolved {i}",
+                        node_type="term",
+                        similarity_score=0.85,
+                        definition=f"Definition {i}",
+                    )
+                    if i % 2 == 0
+                    else None
+                ),
                 web_definition=f"Web definition {i}" if i % 2 == 1 else None,
-                confidence=0.75
-            ) for i, gap in enumerate(gaps)
+                confidence=0.75,
+            )
+            for i, gap in enumerate(gaps)
         ],
         unresolved_gaps=[],
         web_searches_performed=num_resolved // 2,
         cached_kg_hits=0,
         full_kg_hits=num_resolved // 2,
-        trace_data={}
+        trace_data={},
     )
 
 
@@ -371,7 +446,7 @@ PERFORMANCE_BENCHMARKS = {
     "layer_2_target_ms": 500,
     "layer_2_relaxed_ms": 2000,  # For test environments
     "layer_3_target_ms": 30000,
-    "total_target_min_ms": 5000,   # 5s minimum for typical inputs
+    "total_target_min_ms": 5000,  # 5s minimum for typical inputs
     "total_target_max_ms": 15000,  # 15s maximum for typical inputs
     "total_budget_max_ms": 120000,  # 120s absolute maximum
 }

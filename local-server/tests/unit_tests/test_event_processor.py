@@ -35,7 +35,9 @@ def insert_event_via_sqlalchemy(
     test_marker = f"test-session-{test_session_id}" if test_session_id else "test-data"
     new_data = f'{{"title": "Test {record_type}", "test_marker": "{test_marker}"}}'
     old_data = (
-        f'{{"title": "Old Test {record_type}", "test_marker": "{test_marker}"}}' if event_type == "update" else None
+        f'{{"title": "Old Test {record_type}", "test_marker": "{test_marker}"}}'
+        if event_type == "update"
+        else None
     )
 
     engine = get_current_engine()
@@ -44,13 +46,11 @@ def insert_event_via_sqlalchemy(
         return
     with engine.connect() as conn:
         conn.execute(
-            text(
-                """
+            text("""
             INSERT INTO change_events
             (event_type, record_type, record_id, old_data, new_data, timestamp, processed)
             VALUES (:event_type, :record_type, :record_id, :old_data, :new_data, :ts, :processed)
-        """
-            ),
+        """),
             {
                 "event_type": event_type,
                 "record_type": record_type,
@@ -90,46 +90,36 @@ def cleanup_events(test_session_id=None):
         return
     with engine.connect() as conn:
         # Check if table exists first
-        table_check = conn.execute(
-            text(
-                """
+        table_check = conn.execute(text("""
             SELECT name FROM sqlite_master
             WHERE type='table' AND name='change_events'
-        """
-            )
-        ).fetchone()
+        """)).fetchone()
 
         if table_check:
             if test_session_id:
                 # Clean up events for specific test session
                 conn.execute(
-                    text(
-                        """
+                    text("""
                     DELETE FROM change_events
                     WHERE (record_id LIKE :session_pattern
                            OR new_data LIKE :json_pattern
                            OR old_data LIKE :json_pattern)
-                """
-                    ),
+                """),
                     {
                         "session_pattern": f"{test_session_id}-%",
-                        "json_pattern": f"%test-session-{test_session_id}%"
-                    }
+                        "json_pattern": f"%test-session-{test_session_id}%",
+                    },
                 )
             else:
                 # Clean up all test events (fallback)
-                conn.execute(
-                    text(
-                        """
+                conn.execute(text("""
                     DELETE FROM change_events
                     WHERE (record_id LIKE 'test-%'
                            OR new_data LIKE '%test-%'
                            OR old_data LIKE '%test-%'
                            OR new_data LIKE '%test-session-%'
                            OR old_data LIKE '%test-session-%')
-                """
-                    )
-                )
+                """))
             conn.commit()
 
 
@@ -140,6 +130,7 @@ def test_session_isolation(shared_app, request):
 
     # Ensure current engine is set for database operations
     from database.utils import set_current_engine_for_testing
+
     set_current_engine_for_testing(engine, session_local)
 
     # Generate unique test session ID
@@ -152,12 +143,16 @@ def test_session_isolation(shared_app, request):
     cleanup_events()
 
     # CRITICAL: Stop any existing event processor from the shared app to prevent conflicts
-    if hasattr(app.state, 'event_processor') and app.state.event_processor:
+    if hasattr(app.state, "event_processor") and app.state.event_processor:
         try:
             app.state.event_processor.stop()
-            print(f"[ISOLATION] Stopped shared app event processor for test {request.node.name}")
+            print(
+                f"[ISOLATION] Stopped shared app event processor for test {request.node.name}"
+            )
         except Exception as e:
-            print(f"[ISOLATION] Warning: Could not stop shared app event processor: {e}")
+            print(
+                f"[ISOLATION] Warning: Could not stop shared app event processor: {e}"
+            )
 
     yield test_session_id
 
@@ -174,7 +169,9 @@ def test_event_processor_processes_events(shared_app, test_session_isolation, re
 
     # Insert unprocessed events for each record type with unique test session ID
     for record_type in ["structure_node", "structure_node_link", "predicate"]:
-        insert_event_via_sqlalchemy("create", record_type, test_session_id=test_session_id)
+        insert_event_via_sqlalchemy(
+            "create", record_type, test_session_id=test_session_id
+        )
 
     print("[TEST] Starting test_event_processor_processes_events")
 
@@ -188,7 +185,7 @@ def test_event_processor_processes_events(shared_app, test_session_isolation, re
     processor = EventProcessor(
         database_url=database_url,
         poll_interval=0.01,
-        max_events=10  # Faster polling for tests
+        max_events=10,  # Faster polling for tests
     )
     try:
         processor.start()
@@ -208,7 +205,9 @@ def test_event_processor_processes_events(shared_app, test_session_isolation, re
             waited += check_interval
 
         if waited >= max_wait_time:
-            print(f"[TEST] Timeout after {max_wait_time}s, some events may be unprocessed")
+            print(
+                f"[TEST] Timeout after {max_wait_time}s, some events may be unprocessed"
+            )
 
     finally:
         try:
@@ -225,14 +224,18 @@ def test_event_processor_processes_events(shared_app, test_session_isolation, re
     assert unprocessed_count == 0
 
 
-def test_event_processor_handles_all_record_types(shared_app, test_session_isolation, request):
+def test_event_processor_handles_all_record_types(
+    shared_app, test_session_isolation, request
+):
     """Test that EventProcessor handles structure_node, structure_node_link, and predicate events."""
     test_session_id = request.node.test_session_id
     print("[TEST] Starting test_event_processor_handles_all_record_types")
 
     # Insert events for all record types with unique test session ID
     for record_type in ["structure_node", "structure_node_link", "predicate"]:
-        insert_event_via_sqlalchemy("create", record_type, test_session_id=test_session_id)
+        insert_event_via_sqlalchemy(
+            "create", record_type, test_session_id=test_session_id
+        )
 
     # Get the database URL from the current engine
     from database.utils import get_current_engine
@@ -241,7 +244,9 @@ def test_event_processor_handles_all_record_types(shared_app, test_session_isola
     database_url = str(engine.url)
 
     processor = EventProcessor(
-        database_url=database_url, poll_interval=0.01, max_events=10  # Faster polling for tests
+        database_url=database_url,
+        poll_interval=0.01,
+        max_events=10,  # Faster polling for tests
     )
 
     # Capture logs to verify handlers are called
@@ -287,7 +292,9 @@ def test_event_processor_handles_all_record_types(shared_app, test_session_isola
     assert unprocessed_count == 0
 
 
-def test_event_processor_cleanup_old_events(shared_app, test_session_isolation, request, capsys):
+def test_event_processor_cleanup_old_events(
+    shared_app, test_session_isolation, request, capsys
+):
     """Test cleanup of old processed events."""
     test_session_id = request.node.test_session_id
 
@@ -296,9 +303,17 @@ def test_event_processor_cleanup_old_events(shared_app, test_session_isolation, 
 
     # Insert processed event older than 48h (timezone-aware)
     old_ts = (datetime.now(timezone.utc) - timedelta(hours=49)).isoformat()
-    insert_event_via_sqlalchemy("delete", "structure_node", processed=1, ts=old_ts, test_session_id=test_session_id)
+    insert_event_via_sqlalchemy(
+        "delete",
+        "structure_node",
+        processed=1,
+        ts=old_ts,
+        test_session_id=test_session_id,
+    )
     # Insert recent processed event
-    insert_event_via_sqlalchemy("delete", "structure_node", processed=1, test_session_id=test_session_id)
+    insert_event_via_sqlalchemy(
+        "delete", "structure_node", processed=1, test_session_id=test_session_id
+    )
 
     print("[TEST] Starting test_event_processor_cleanup_old_events")
 
@@ -338,9 +353,24 @@ def test_predicate_event_processing(shared_app, test_session_isolation, request)
     print("[TEST] Starting test_predicate_event_processing")
 
     # Insert predicate events with unique test session IDs
-    insert_event_via_sqlalchemy("create", "predicate", record_id=f"test-predicate-123-{str(uuid.uuid4())[:8]}", test_session_id=test_session_id)
-    insert_event_via_sqlalchemy("update", "predicate", record_id=f"test-predicate-456-{str(uuid.uuid4())[:8]}", test_session_id=test_session_id)
-    insert_event_via_sqlalchemy("delete", "predicate", record_id=f"test-predicate-789-{str(uuid.uuid4())[:8]}", test_session_id=test_session_id)
+    insert_event_via_sqlalchemy(
+        "create",
+        "predicate",
+        record_id=f"test-predicate-123-{str(uuid.uuid4())[:8]}",
+        test_session_id=test_session_id,
+    )
+    insert_event_via_sqlalchemy(
+        "update",
+        "predicate",
+        record_id=f"test-predicate-456-{str(uuid.uuid4())[:8]}",
+        test_session_id=test_session_id,
+    )
+    insert_event_via_sqlalchemy(
+        "delete",
+        "predicate",
+        record_id=f"test-predicate-789-{str(uuid.uuid4())[:8]}",
+        test_session_id=test_session_id,
+    )
 
     # Get the database URL from the current engine
     from database.utils import get_current_engine
@@ -349,7 +379,9 @@ def test_predicate_event_processing(shared_app, test_session_isolation, request)
     database_url = str(engine.url)
 
     processor = EventProcessor(
-        database_url=database_url, poll_interval=0.01, max_events=10  # Faster polling for tests
+        database_url=database_url,
+        poll_interval=0.01,
+        max_events=10,  # Faster polling for tests
     )
 
     # Capture logs to verify predicate handler is called
@@ -395,7 +427,9 @@ def test_predicate_event_processing(shared_app, test_session_isolation, request)
     assert unprocessed_count == 0
 
 
-def test_event_processor_thread_start_stop_idempotent(shared_app, test_session_isolation):
+def test_event_processor_thread_start_stop_idempotent(
+    shared_app, test_session_isolation
+):
     print("[TEST] Starting test_event_processor_thread_start_stop_idempotent")
 
     # Get the database URL from the current engine
@@ -405,7 +439,9 @@ def test_event_processor_thread_start_stop_idempotent(shared_app, test_session_i
     database_url = str(engine.url)
 
     processor = EventProcessor(
-        database_url=database_url, poll_interval=0.01, max_events=10  # Faster polling for tests
+        database_url=database_url,
+        poll_interval=0.01,
+        max_events=10,  # Faster polling for tests
     )
     try:
         processor.start()

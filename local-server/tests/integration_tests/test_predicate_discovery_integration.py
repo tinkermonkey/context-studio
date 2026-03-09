@@ -12,13 +12,17 @@ Tests include:
 
 import sys
 import os
+
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import pytest  # noqa: E402
 import time  # noqa: E402
 from unittest.mock import patch, AsyncMock, Mock  # noqa: E402
 
-from reference_db.predicate_discovery import PredicateDiscoveryService, CONCEPTNET_RELATIONS  # noqa: E402, E501
+from reference_db.predicate_discovery import (
+    PredicateDiscoveryService,
+    CONCEPTNET_RELATIONS,
+)  # noqa: E402, E501
 from reference_db.config import ReferenceConfig  # noqa: E402
 from config import SourceConfig  # noqa: E402
 
@@ -34,27 +38,27 @@ def temp_db(tmp_path):
 def source_configs():
     """Create test source configurations."""
     return {
-        'conceptnet': SourceConfig(
+        "conceptnet": SourceConfig(
             enabled=True,
             upstream_url="https://api.conceptnet.io",
             use_proxy=False,
             timeout=30,
-            max_retries=3
+            max_retries=3,
         ),
-        'dbpedia': SourceConfig(
+        "dbpedia": SourceConfig(
             enabled=True,
             upstream_url="http://dbpedia.org",
             use_proxy=False,
             timeout=30,
-            max_retries=3
+            max_retries=3,
         ),
-        'wikidata': SourceConfig(
+        "wikidata": SourceConfig(
             enabled=True,
             upstream_url="https://query.wikidata.org",
             use_proxy=False,
             timeout=30,
-            max_retries=3
-        )
+            max_retries=3,
+        ),
     }
 
 
@@ -62,9 +66,13 @@ class TestPredicateDiscoveryIntegration:
     """Integration tests for predicate discovery."""
 
     @pytest.mark.asyncio
-    async def test_conceptnet_discovery_full_workflow(self, temp_db, source_configs):  # noqa: E501
+    async def test_conceptnet_discovery_full_workflow(
+        self, temp_db, source_configs
+    ):  # noqa: E501
         """Test full ConceptNet discovery workflow with mocked API."""
-        with patch('reference_db.predicate_discovery.ConceptNetSource') as MockSource:  # noqa: E501
+        with patch(
+            "reference_db.predicate_discovery.ConceptNetSource"
+        ) as MockSource:  # noqa: E501
             # Mock source responses
             mock_source = AsyncMock()
             mock_source.__aenter__.return_value = mock_source
@@ -80,9 +88,9 @@ class TestPredicateDiscoveryIntegration:
                 response = Mock()
                 response.success = True
                 response.data = {
-                    '@id': relation_path,
-                    'label': relation_path.split('/')[-1],
-                    'comment': f"Test description for {relation_path}"
+                    "@id": relation_path,
+                    "label": relation_path.split("/")[-1],
+                    "comment": f"Test description for {relation_path}",
                 }
                 return response
 
@@ -90,30 +98,44 @@ class TestPredicateDiscoveryIntegration:
 
             # Run discovery
             config = ReferenceConfig()
-            with PredicateDiscoveryService(config, source_configs, temp_db) as service:  # noqa: E501
+            with PredicateDiscoveryService(
+                config, source_configs, temp_db
+            ) as service:  # noqa: E501
                 start_time = time.time()
-                created, updated, errors = await service.discover_conceptnet_predicates()  # noqa: E501
+                created, updated, errors = (
+                    await service.discover_conceptnet_predicates()
+                )  # noqa: E501
                 elapsed = time.time() - start_time
 
                 # Verify results
-                assert created == len(CONCEPTNET_RELATIONS), f"Expected {len(CONCEPTNET_RELATIONS)} predicates created"  # noqa: E501
-                assert updated == 0, "No predicates should be updated on first run"  # noqa: E501
+                assert created == len(
+                    CONCEPTNET_RELATIONS
+                ), f"Expected {len(CONCEPTNET_RELATIONS)} predicates created"  # noqa: E501
+                assert (
+                    updated == 0
+                ), "No predicates should be updated on first run"  # noqa: E501
                 assert len(errors) == 0, f"Expected no errors, got: {errors}"
 
                 # Verify performance (should be <2s as per requirements)
-                assert elapsed < 2.0, f"ConceptNet discovery took {elapsed:.2f}s, expected <2s"  # noqa: E501
+                assert (
+                    elapsed < 2.0
+                ), f"ConceptNet discovery took {elapsed:.2f}s, expected <2s"  # noqa: E501
 
                 # Verify all relations were fetched
                 assert call_count == len(CONCEPTNET_RELATIONS)
 
                 # Verify predicates were stored
-                predicates = service.manager.list_external_predicates(source='conceptnet')  # noqa: E501
+                predicates = service.manager.list_external_predicates(
+                    source="conceptnet"
+                )  # noqa: E501
                 assert len(predicates) == len(CONCEPTNET_RELATIONS)
 
     @pytest.mark.asyncio
     async def test_incremental_updates(self, temp_db, source_configs):
         """Test that re-running discovery updates existing predicates."""
-        with patch('reference_db.predicate_discovery.ConceptNetSource') as MockSource:  # noqa: E501
+        with patch(
+            "reference_db.predicate_discovery.ConceptNetSource"
+        ) as MockSource:  # noqa: E501
             # Mock source
             mock_source = AsyncMock()
             mock_source.__aenter__.return_value = mock_source
@@ -125,9 +147,9 @@ class TestPredicateDiscoveryIntegration:
                 response = Mock()
                 response.success = True
                 response.data = {
-                    '@id': relation_path,
-                    'label': relation_path.split('/')[-1],
-                    'comment': f"Description for {relation_path}"
+                    "@id": relation_path,
+                    "label": relation_path.split("/")[-1],
+                    "comment": f"Description for {relation_path}",
                 }
                 return response
 
@@ -135,12 +157,20 @@ class TestPredicateDiscoveryIntegration:
 
             config = ReferenceConfig()
             # First run
-            with PredicateDiscoveryService(config, source_configs, temp_db) as service:  # noqa: E501
-                created1, updated1, errors1 = await service.discover_conceptnet_predicates()  # noqa: E501
+            with PredicateDiscoveryService(
+                config, source_configs, temp_db
+            ) as service:  # noqa: E501
+                created1, updated1, errors1 = (
+                    await service.discover_conceptnet_predicates()
+                )  # noqa: E501
 
             # Second run (should update existing predicates)
-            with PredicateDiscoveryService(config, source_configs, temp_db) as service:  # noqa: E501
-                created2, updated2, errors2 = await service.discover_conceptnet_predicates()  # noqa: E501
+            with PredicateDiscoveryService(
+                config, source_configs, temp_db
+            ) as service:  # noqa: E501
+                created2, updated2, errors2 = (
+                    await service.discover_conceptnet_predicates()
+                )  # noqa: E501
 
                 # Verify incremental update behavior
                 assert created1 == len(CONCEPTNET_RELATIONS)
@@ -156,7 +186,9 @@ class TestPredicateDiscoveryIntegration:
         Verifies that malicious input in SPARQL queries is properly sanitized
         and doesn't allow code injection.
         """
-        with patch('reference_db.predicate_discovery.DBpediaSource') as MockSource:  # noqa: E501
+        with patch(
+            "reference_db.predicate_discovery.DBpediaSource"
+        ) as MockSource:  # noqa: E501
             # Mock source
             mock_source = AsyncMock()
             mock_source.__aenter__.return_value = mock_source
@@ -175,24 +207,27 @@ class TestPredicateDiscoveryIntegration:
                     "UNION SELECT",
                     "INSERT INTO",
                     "DELETE FROM",
-                    "UPDATE SET"
+                    "UPDATE SET",
                 ]
 
                 for pattern in injection_patterns:
-                    assert pattern.lower() not in query.lower(), \
-                        f"Query contains potential injection: {pattern}"
+                    assert (
+                        pattern.lower() not in query.lower()
+                    ), f"Query contains potential injection: {pattern}"
 
                 # Return empty results
                 response = Mock()
                 response.success = True
-                response.results = {'results': {'bindings': []}}
+                response.results = {"results": {"bindings": []}}
                 return response
 
             mock_source.sparql_query = mock_sparql_query
 
             # Run discovery (internally uses parameterized queries)
             config = ReferenceConfig()
-            with PredicateDiscoveryService(config, source_configs, temp_db) as service:  # noqa: E501
+            with PredicateDiscoveryService(
+                config, source_configs, temp_db
+            ) as service:  # noqa: E501
                 await service.discover_dbpedia_predicates(limit=10)
 
                 # Verify queries were executed and validated
@@ -206,7 +241,9 @@ class TestPredicateDiscoveryIntegration:
     @pytest.mark.asyncio
     async def test_error_handling_and_retry(self, temp_db, source_configs):
         """Test error handling with retry logic."""
-        with patch('reference_db.predicate_discovery.ConceptNetSource') as MockSource:  # noqa: E501
+        with patch(
+            "reference_db.predicate_discovery.ConceptNetSource"
+        ) as MockSource:  # noqa: E501
             # Mock source
             mock_source = AsyncMock()
             mock_source.__aenter__.return_value = mock_source
@@ -228,17 +265,21 @@ class TestPredicateDiscoveryIntegration:
                 response = Mock()
                 response.success = True
                 response.data = {
-                    '@id': relation_path,
-                    'label': relation_path.split('/')[-1],
-                    'comment': f"Description for {relation_path}"
+                    "@id": relation_path,
+                    "label": relation_path.split("/")[-1],
+                    "comment": f"Description for {relation_path}",
                 }
                 return response
 
             mock_source.get_concept = mock_get_concept
 
             config = ReferenceConfig()
-            with PredicateDiscoveryService(config, source_configs, temp_db) as service:  # noqa: E501
-                created, updated, errors = await service.discover_conceptnet_predicates()  # noqa: E501
+            with PredicateDiscoveryService(
+                config, source_configs, temp_db
+            ) as service:  # noqa: E501
+                created, updated, errors = (
+                    await service.discover_conceptnet_predicates()
+                )  # noqa: E501
 
                 # Verify partial success
                 assert created == len(CONCEPTNET_RELATIONS) - 3
@@ -248,7 +289,9 @@ class TestPredicateDiscoveryIntegration:
     @pytest.mark.asyncio
     async def test_duplicate_predicate_handling(self, temp_db, source_configs):
         """Test that duplicate predicates based on (source, external_id) are updated."""  # noqa: E501
-        with patch('reference_db.predicate_discovery.ConceptNetSource') as MockSource:  # noqa: E501
+        with patch(
+            "reference_db.predicate_discovery.ConceptNetSource"
+        ) as MockSource:  # noqa: E501
             # Mock source
             mock_source = AsyncMock()
             mock_source.__aenter__.return_value = mock_source
@@ -259,9 +302,9 @@ class TestPredicateDiscoveryIntegration:
                 response = Mock()
                 response.success = True
                 response.data = {
-                    '@id': relation_path,
-                    'label': relation_path.split('/')[-1],
-                    'comment': "Original description"
+                    "@id": relation_path,
+                    "label": relation_path.split("/")[-1],
+                    "comment": "Original description",
                 }
                 return response
 
@@ -269,25 +312,33 @@ class TestPredicateDiscoveryIntegration:
 
             config = ReferenceConfig()
             # First discovery
-            with PredicateDiscoveryService(config, source_configs, temp_db) as service:  # noqa: E501
-                created1, updated1, _ = await service.discover_conceptnet_predicates()  # noqa: E501
+            with PredicateDiscoveryService(
+                config, source_configs, temp_db
+            ) as service:  # noqa: E501
+                created1, updated1, _ = (
+                    await service.discover_conceptnet_predicates()
+                )  # noqa: E501
 
             # Update mock to return different descriptions
             async def mock_get_concept_v2(relation_path):
                 response = Mock()
                 response.success = True
                 response.data = {
-                    '@id': relation_path,
-                    'label': relation_path.split('/')[-1],
-                    'comment': "Updated description"
+                    "@id": relation_path,
+                    "label": relation_path.split("/")[-1],
+                    "comment": "Updated description",
                 }
                 return response
 
             mock_source.get_concept = mock_get_concept_v2
 
             # Second discovery
-            with PredicateDiscoveryService(config, source_configs, temp_db) as service:  # noqa: E501
-                created2, updated2, _ = await service.discover_conceptnet_predicates()  # noqa: E501
+            with PredicateDiscoveryService(
+                config, source_configs, temp_db
+            ) as service:  # noqa: E501
+                created2, updated2, _ = (
+                    await service.discover_conceptnet_predicates()
+                )  # noqa: E501
 
                 # Verify update behavior
                 assert created1 > 0
@@ -296,14 +347,20 @@ class TestPredicateDiscoveryIntegration:
                 assert updated2 == created1
 
                 # Verify updated definitions
-                predicates = service.manager.list_external_predicates(source='conceptnet')  # noqa: E501
+                predicates = service.manager.list_external_predicates(
+                    source="conceptnet"
+                )  # noqa: E501
                 for predicate in predicates[:3]:  # Check first 3
                     assert "Updated description" in predicate.definition
 
     @pytest.mark.asyncio
-    async def test_embedding_generation_during_discovery(self, temp_db, source_configs):  # noqa: E501
+    async def test_embedding_generation_during_discovery(
+        self, temp_db, source_configs
+    ):  # noqa: E501
         """Test that embeddings are generated for all discovered predicates."""
-        with patch('reference_db.predicate_discovery.ConceptNetSource') as MockSource:  # noqa: E501
+        with patch(
+            "reference_db.predicate_discovery.ConceptNetSource"
+        ) as MockSource:  # noqa: E501
             # Mock source
             mock_source = AsyncMock()
             mock_source.__aenter__.return_value = mock_source
@@ -314,20 +371,24 @@ class TestPredicateDiscoveryIntegration:
                 response = Mock()
                 response.success = True
                 response.data = {
-                    '@id': relation_path,
-                    'label': relation_path.split('/')[-1],
-                    'comment': f"Description for {relation_path}"
+                    "@id": relation_path,
+                    "label": relation_path.split("/")[-1],
+                    "comment": f"Description for {relation_path}",
                 }
                 return response
 
             mock_source.get_concept = mock_get_concept
 
             config = ReferenceConfig()
-            with PredicateDiscoveryService(config, source_configs, temp_db) as service:  # noqa: E501
+            with PredicateDiscoveryService(
+                config, source_configs, temp_db
+            ) as service:  # noqa: E501
                 await service.discover_conceptnet_predicates()
 
                 # Verify all predicates have embeddings
-                predicates = service.manager.list_external_predicates(source='conceptnet')  # noqa: E501
+                predicates = service.manager.list_external_predicates(
+                    source="conceptnet"
+                )  # noqa: E501
                 for predicate in predicates:
                     assert predicate.title_embedding is not None
                     assert predicate.definition_embedding is not None
@@ -336,5 +397,5 @@ class TestPredicateDiscoveryIntegration:
                     assert len(predicate.definition_embedding) == 1536
 
 
-if __name__ == '__main__':
-    pytest.main([__file__, '-v'])
+if __name__ == "__main__":
+    pytest.main([__file__, "-v"])

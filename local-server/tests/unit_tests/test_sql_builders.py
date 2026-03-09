@@ -41,7 +41,6 @@ def create_test_embedding(seed: int) -> bytes:
     return emb.tobytes()
 
 
-
 def test_sql_builder_case_when_default_columns():
     """Unit test of the SQL builder function with default column names.
 
@@ -271,7 +270,9 @@ def test_sql_builder_execution_both_embeddings(sqlite_with_vec):
         query_vec_json = json.dumps(np.frombuffer(query_emb, dtype=np.float32).tolist())
 
         # Build and execute the CASE WHEN query
-        similarity_case = build_max_similarity_case_when("title_embedding", "definition_embedding")
+        similarity_case = build_max_similarity_case_when(
+            "title_embedding", "definition_embedding"
+        )
         sql_query = f"""
             SELECT
                 id,
@@ -323,7 +324,9 @@ def test_sql_builder_execution_title_only(sqlite_with_vec):
 
         query_vec_json = json.dumps(np.random.RandomState(seed=46).randn(384).tolist())
 
-        similarity_case = build_max_similarity_case_when("title_embedding", "definition_embedding")
+        similarity_case = build_max_similarity_case_when(
+            "title_embedding", "definition_embedding"
+        )
         sql_query = f"""
             SELECT
                 id,
@@ -374,7 +377,9 @@ def test_sql_builder_execution_definition_only(sqlite_with_vec):
 
         query_vec_json = json.dumps(np.random.RandomState(seed=48).randn(384).tolist())
 
-        similarity_case = build_max_similarity_case_when("title_embedding", "definition_embedding")
+        similarity_case = build_max_similarity_case_when(
+            "title_embedding", "definition_embedding"
+        )
         sql_query = f"""
             SELECT
                 id,
@@ -423,7 +428,9 @@ def test_sql_builder_execution_no_embeddings(sqlite_with_vec):
 
         query_vec_json = json.dumps(np.random.RandomState(seed=49).randn(384).tolist())
 
-        similarity_case = build_max_similarity_case_when("title_embedding", "definition_embedding")
+        similarity_case = build_max_similarity_case_when(
+            "title_embedding", "definition_embedding"
+        )
         sql_query = f"""
             SELECT
                 id,
@@ -552,7 +559,9 @@ def test_sql_builder_case_when_evaluation_order(sqlite_with_vec):
 
         query_vec_json = json.dumps(np.random.RandomState(seed=62).randn(384).tolist())
 
-        similarity_case = build_max_similarity_case_when("title_embedding", "definition_embedding")
+        similarity_case = build_max_similarity_case_when(
+            "title_embedding", "definition_embedding"
+        )
         sql_query = f"""
             SELECT
                 case_name,
@@ -587,10 +596,12 @@ def test_sql_builder_case_when_evaluation_order(sqlite_with_vec):
         # Verify MAX semantics for the "both" case by computing expected values
         # The expected MAX should be max(title_sim, definition_sim)
         # We can verify this by checking the "both" value is >= each individual value
-        assert both_sim >= title_only_sim - 0.001, \
-            f"Both ({both_sim}) should be >= title_only ({title_only_sim}) in MAX comparison"
-        assert both_sim >= def_only_sim - 0.001, \
-            f"Both ({both_sim}) should be >= definition_only ({def_only_sim}) in MAX comparison"
+        assert (
+            both_sim >= title_only_sim - 0.001
+        ), f"Both ({both_sim}) should be >= title_only ({title_only_sim}) in MAX comparison"
+        assert (
+            both_sim >= def_only_sim - 0.001
+        ), f"Both ({both_sim}) should be >= definition_only ({def_only_sim}) in MAX comparison"
 
     finally:
         conn.close()

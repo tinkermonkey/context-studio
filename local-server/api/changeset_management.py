@@ -36,6 +36,7 @@ router = APIRouter(prefix="/api/changesets", tags=["changeset_management"])
 # Request/Response Models
 class CreateChangesetRequest(BaseModel):
     """Request model for creating a changeset."""
+
     title: str
     description: str
     author_id: str
@@ -44,12 +45,14 @@ class CreateChangesetRequest(BaseModel):
 
 class UpdateChangesetRequest(BaseModel):
     """Request model for updating a changeset."""
+
     title: Optional[str] = None
     description: Optional[str] = None
 
 
 class ChangesetResponse(BaseModel):
     """Response model for changeset data."""
+
     id: str
     title: str
     description: str
@@ -64,12 +67,14 @@ class ChangesetResponse(BaseModel):
 
 class ChangesetListResponse(BaseModel):
     """Response model for changeset list."""
+
     changesets: List[ChangesetResponse]
     total_count: int
 
 
 class ChangesetVersionsResponse(BaseModel):
     """Response model for changeset version details."""
+
     changeset_id: str
     version_ids: List[str]
     version_count: int
@@ -77,8 +82,7 @@ class ChangesetVersionsResponse(BaseModel):
 
 # Dependency injection
 def get_changeset_manager(
-    db: Session = Depends(get_db),
-    service_factory: ServiceFactory = Depends()
+    db: Session = Depends(get_db), service_factory: ServiceFactory = Depends()
 ) -> ChangesetManager:
     """Get ChangesetManager instance via service factory."""
     return service_factory.create_changeset_manager(db)
@@ -88,7 +92,7 @@ def get_changeset_manager(
 @router.post("", response_model=ChangesetResponse)
 def create_changeset(
     request: CreateChangesetRequest,
-    changeset_manager: ChangesetManager = Depends(get_changeset_manager)
+    changeset_manager: ChangesetManager = Depends(get_changeset_manager),
 ):
     """
     Create a new changeset from staged or working changes.
@@ -110,7 +114,7 @@ def create_changeset(
             title=request.title,
             description=request.description,
             author_id=request.author_id,
-            include_staged=request.include_staged
+            include_staged=request.include_staged,
         )
 
         return ChangesetResponse(
@@ -123,7 +127,7 @@ def create_changeset(
             author_id=changeset.author_id,
             created_at=changeset.created_at,
             merged_at=changeset.merged_at,
-            metadata=changeset.metadata
+            metadata=changeset.metadata,
         )
 
     except ValueError as e:
@@ -131,15 +135,19 @@ def create_changeset(
         raise HTTPException(status_code=400, detail=str(e))
     except RuntimeError as e:
         logger.error(f"Failed to create changeset: {e}")
-        raise HTTPException(status_code=500, detail="Failed to create changeset")  # noqa: E501
+        raise HTTPException(
+            status_code=500, detail="Failed to create changeset"
+        )  # noqa: E501
 
 
 @router.get("", response_model=ChangesetListResponse)
 def list_changesets(
     author_id: Optional[str] = Query(None, description="Filter by author ID"),
-    state: Optional[str] = Query(None, description="Filter by changeset state"),  # noqa: E501
+    state: Optional[str] = Query(
+        None, description="Filter by changeset state"
+    ),  # noqa: E501
     limit: int = Query(100, description="Maximum number of results", le=1000),
-    changeset_manager: ChangesetManager = Depends(get_changeset_manager)
+    changeset_manager: ChangesetManager = Depends(get_changeset_manager),
 ):
     """
     List changesets with optional filtering.
@@ -156,7 +164,9 @@ def list_changesets(
     Raises:
         HTTPException: If invalid state provided or query fails
     """
-    logger.debug(f"Listing changesets (author={author_id}, state={state}, limit={limit})")  # noqa: E501
+    logger.debug(
+        f"Listing changesets (author={author_id}, state={state}, limit={limit})"
+    )  # noqa: E501
 
     try:
         # Validate state if provided
@@ -168,46 +178,47 @@ def list_changesets(
                 valid_states = [s.value for s in ChangesetState]
                 raise HTTPException(
                     status_code=400,
-                    detail=f"Invalid state '{state}'. Valid states: {valid_states}"  # noqa: E501
+                    detail=f"Invalid state '{state}'. Valid states: {valid_states}",  # noqa: E501
                 )
 
         changesets = changeset_manager.list_changesets(
-            author_id=author_id,
-            state=changeset_state,
-            limit=limit
+            author_id=author_id, state=changeset_state, limit=limit
         )
 
         changeset_responses = []
         for changeset in changesets:
-            changeset_responses.append(ChangesetResponse(
-                id=changeset.id,
-                title=changeset.title,
-                description=changeset.description,
-                state=changeset.state.value,
-                branch_name=changeset.branch_name,
-                parent_changeset_id=changeset.parent_changeset_id,
-                author_id=changeset.author_id,
-                created_at=changeset.created_at,
-                merged_at=changeset.merged_at,
-                metadata=changeset.metadata
-            ))
+            changeset_responses.append(
+                ChangesetResponse(
+                    id=changeset.id,
+                    title=changeset.title,
+                    description=changeset.description,
+                    state=changeset.state.value,
+                    branch_name=changeset.branch_name,
+                    parent_changeset_id=changeset.parent_changeset_id,
+                    author_id=changeset.author_id,
+                    created_at=changeset.created_at,
+                    merged_at=changeset.merged_at,
+                    metadata=changeset.metadata,
+                )
+            )
 
         return ChangesetListResponse(
-            changesets=changeset_responses,
-            total_count=len(changeset_responses)
+            changesets=changeset_responses, total_count=len(changeset_responses)
         )
 
     except HTTPException:
         raise
     except RuntimeError as e:
         logger.error(f"Failed to list changesets: {e}")
-        raise HTTPException(status_code=500, detail="Failed to list changesets")  # noqa: E501
+        raise HTTPException(
+            status_code=500, detail="Failed to list changesets"
+        )  # noqa: E501
 
 
 @router.get("/{changeset_id}", response_model=ChangesetResponse)
 def get_changeset(
     changeset_id: str = Path(..., description="Changeset ID"),
-    changeset_manager: ChangesetManager = Depends(get_changeset_manager)
+    changeset_manager: ChangesetManager = Depends(get_changeset_manager),
 ):
     """
     Get changeset details by ID.
@@ -237,12 +248,14 @@ def get_changeset(
             author_id=changeset.author_id,
             created_at=changeset.created_at,
             merged_at=changeset.merged_at,
-            metadata=changeset.metadata
+            metadata=changeset.metadata,
         )
 
     except NotFoundError as e:
         logger.debug(f"Changeset not found: {e}")
-        raise HTTPException(status_code=404, detail=f"Changeset {changeset_id} not found")  # noqa: E501
+        raise HTTPException(
+            status_code=404, detail=f"Changeset {changeset_id} not found"
+        )  # noqa: E501
     except RuntimeError as e:
         logger.error(f"Failed to get changeset {changeset_id}: {e}")
         raise HTTPException(status_code=500, detail="Failed to get changeset")
@@ -252,7 +265,7 @@ def get_changeset(
 def update_changeset(
     changeset_id: str = Path(..., description="Changeset ID"),
     request: UpdateChangesetRequest = ...,
-    changeset_manager: ChangesetManager = Depends(get_changeset_manager)
+    changeset_manager: ChangesetManager = Depends(get_changeset_manager),
 ):
     """
     Update changeset metadata.
@@ -275,14 +288,14 @@ def update_changeset(
         if not request.title and not request.description:
             raise HTTPException(
                 status_code=400,
-                detail="At least one field (title or description) must be provided for update"  # noqa: E501
+                detail="At least one field (title or description) must be provided for update",  # noqa: E501
             )
 
         # Update changeset (will raise NotFoundError if not found)
         changeset_manager.update_changeset(
             changeset_id=changeset_id,
             title=request.title,
-            description=request.description
+            description=request.description,
         )
 
         # Get updated changeset
@@ -298,26 +311,30 @@ def update_changeset(
             author_id=updated_changeset.author_id,
             created_at=updated_changeset.created_at,
             merged_at=updated_changeset.merged_at,
-            metadata=updated_changeset.metadata
+            metadata=updated_changeset.metadata,
         )
 
     except HTTPException:
         raise
     except NotFoundError as e:
         logger.debug(f"Changeset not found: {e}")
-        raise HTTPException(status_code=404, detail=f"Changeset {changeset_id} not found")  # noqa: E501
+        raise HTTPException(
+            status_code=404, detail=f"Changeset {changeset_id} not found"
+        )  # noqa: E501
     except ValueError as e:
         logger.warning(f"Invalid update request: {e}")
         raise HTTPException(status_code=400, detail=str(e))
     except RuntimeError as e:
         logger.error(f"Failed to update changeset {changeset_id}: {e}")
-        raise HTTPException(status_code=500, detail="Failed to update changeset")  # noqa: E501
+        raise HTTPException(
+            status_code=500, detail="Failed to update changeset"
+        )  # noqa: E501
 
 
 @router.delete("/{changeset_id}")
 def delete_changeset(
     changeset_id: str = Path(..., description="Changeset ID"),
-    changeset_manager: ChangesetManager = Depends(get_changeset_manager)
+    changeset_manager: ChangesetManager = Depends(get_changeset_manager),
 ):
     """
     Delete a changeset.
@@ -337,7 +354,9 @@ def delete_changeset(
     try:
         success = changeset_manager.delete_changeset(changeset_id)
         if not success:
-            raise HTTPException(status_code=404, detail=f"Changeset {changeset_id} not found")  # noqa: E501
+            raise HTTPException(
+                status_code=404, detail=f"Changeset {changeset_id} not found"
+            )  # noqa: E501
 
         return {"message": f"Changeset {changeset_id} deleted successfully"}
 
@@ -346,13 +365,15 @@ def delete_changeset(
         raise HTTPException(status_code=400, detail=str(e))
     except RuntimeError as e:
         logger.error(f"Failed to delete changeset {changeset_id}: {e}")
-        raise HTTPException(status_code=500, detail="Failed to delete changeset")  # noqa: E501
+        raise HTTPException(
+            status_code=500, detail="Failed to delete changeset"
+        )  # noqa: E501
 
 
 @router.post("/{changeset_id}/push")
 def push_changeset_to_s3(
     changeset_id: str = Path(..., description="Changeset ID"),
-    changeset_manager: ChangesetManager = Depends(get_changeset_manager)
+    changeset_manager: ChangesetManager = Depends(get_changeset_manager),
 ):
     """
     Push changeset to S3 for collaboration.
@@ -372,20 +393,28 @@ def push_changeset_to_s3(
     try:
         changeset_manager.push_changeset_to_s3(changeset_id)
 
-        return {"message": f"Changeset {changeset_id} pushed to S3 successfully"}  # noqa: E501
+        return {
+            "message": f"Changeset {changeset_id} pushed to S3 successfully"
+        }  # noqa: E501
 
     except NotFoundError as e:
         logger.debug(f"Changeset not found: {e}")
-        raise HTTPException(status_code=404, detail=f"Changeset {changeset_id} not found")  # noqa: E501
+        raise HTTPException(
+            status_code=404, detail=f"Changeset {changeset_id} not found"
+        )  # noqa: E501
     except RuntimeError as e:
         logger.error(f"Failed to push changeset {changeset_id} to S3: {e}")
-        raise HTTPException(status_code=500, detail="Failed to push changeset to S3")  # noqa: E501
+        raise HTTPException(
+            status_code=500, detail="Failed to push changeset to S3"
+        )  # noqa: E501
 
 
-@router.get("/{changeset_id}/versions", response_model=ChangesetVersionsResponse)  # noqa: E501
+@router.get(
+    "/{changeset_id}/versions", response_model=ChangesetVersionsResponse
+)  # noqa: E501
 def get_changeset_versions(
     changeset_id: str = Path(..., description="Changeset ID"),
-    changeset_manager: ChangesetManager = Depends(get_changeset_manager)
+    changeset_manager: ChangesetManager = Depends(get_changeset_manager),
 ):
     """
     Get version details for a changeset.
@@ -411,14 +440,20 @@ def get_changeset_versions(
         return ChangesetVersionsResponse(
             changeset_id=changeset_id,
             version_ids=version_ids,
-            version_count=len(version_ids)
+            version_count=len(version_ids),
         )
 
     except HTTPException:
         raise
     except NotFoundError as e:
         logger.debug(f"Changeset not found: {e}")
-        raise HTTPException(status_code=404, detail=f"Changeset {changeset_id} not found")  # noqa: E501
+        raise HTTPException(
+            status_code=404, detail=f"Changeset {changeset_id} not found"
+        )  # noqa: E501
     except RuntimeError as e:
-        logger.error(f"Failed to get versions for changeset {changeset_id}: {e}")  # noqa: E501
-        raise HTTPException(status_code=500, detail="Failed to get changeset versions")  # noqa: E501
+        logger.error(
+            f"Failed to get versions for changeset {changeset_id}: {e}"
+        )  # noqa: E501
+        raise HTTPException(
+            status_code=500, detail="Failed to get changeset versions"
+        )  # noqa: E501

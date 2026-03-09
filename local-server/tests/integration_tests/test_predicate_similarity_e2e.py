@@ -21,7 +21,10 @@ from sqlalchemy.orm import sessionmaker
 
 # Setup test environment
 import sys
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))  # noqa: E501
+
+sys.path.insert(
+    0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+)  # noqa: E501
 
 from app import app  # noqa: E402
 from database.models import Base, Predicate  # noqa: E402
@@ -30,9 +33,10 @@ from reference_db.config import ReferenceConfig  # noqa: E402
 from reference_db.manager import ReferenceManager  # noqa: E402
 from embeddings.generate_embeddings import generate_embedding  # noqa: E402
 
-
 # Skip if embeddings not available
-pytest.importorskip("embeddings.generate_embeddings", reason="embeddings module not available")  # noqa: E501
+pytest.importorskip(
+    "embeddings.generate_embeddings", reason="embeddings module not available"
+)  # noqa: E501
 
 
 @pytest.fixture(scope="module")
@@ -166,7 +170,6 @@ def realistic_reference_db():
         ("startTime", "The start time of an event", "schema.org"),
         ("endTime", "The end time of an event", "schema.org"),
         ("containedIn", "Indicates spatial containment", "schema.org"),
-
         # ConceptNet relations
         ("RelatedTo", "General semantic relationship", "conceptnet"),
         ("IsA", "Indicates class membership", "conceptnet"),
@@ -175,21 +178,43 @@ def realistic_reference_db():
         ("Causes", "Indicates causal relationship", "conceptnet"),
         ("LocatedNear", "Indicates spatial proximity", "conceptnet"),
         ("UsedFor", "Indicates purpose or function", "conceptnet"),
-
         # DBpedia properties
         ("dbo:location", "Location of an entity", "dbpedia"),
         ("dbo:timeZone", "Time zone of a location", "dbpedia"),
         ("dbo:isPartOf", "Part-whole relationship", "dbpedia"),
         ("dbo:subdivision", "Administrative subdivision", "dbpedia"),
         ("dbo:nearestCity", "Nearest city to a location", "dbpedia"),
-
         # WikiData properties
-        ("P131", "Located in the administrative territorial entity", "wikidata"),  # noqa: E501
-        ("P361", "Part of - object of which the subject is a part", "wikidata"),  # noqa: E501
-        ("P279", "Subclass of - all instances of this are instances of that", "wikidata"),  # noqa: E501
-        ("P31", "Instance of - that class of which this is a particular", "wikidata"),  # noqa: E501
-        ("P276", "Location - location of the item, structure or event", "wikidata"),  # noqa: E501
-        ("P1365", "Replaces - person, state or item replaced by the subject", "wikidata"),  # noqa: E501
+        (
+            "P131",
+            "Located in the administrative territorial entity",
+            "wikidata",
+        ),  # noqa: E501
+        (
+            "P361",
+            "Part of - object of which the subject is a part",
+            "wikidata",
+        ),  # noqa: E501
+        (
+            "P279",
+            "Subclass of - all instances of this are instances of that",
+            "wikidata",
+        ),  # noqa: E501
+        (
+            "P31",
+            "Instance of - that class of which this is a particular",
+            "wikidata",
+        ),  # noqa: E501
+        (
+            "P276",
+            "Location - location of the item, structure or event",
+            "wikidata",
+        ),  # noqa: E501
+        (
+            "P1365",
+            "Replaces - person, state or item replaced by the subject",
+            "wikidata",
+        ),  # noqa: E501
     ]
 
     for title, definition, source in external_predicates:
@@ -203,7 +228,7 @@ def realistic_reference_db():
             external_id=f"{source}:{title}",
             title_embedding=title_emb,
             definition_embedding=def_emb,
-            embedding_dims=384
+            embedding_dims=384,
         )
 
     yield manager, db_path
@@ -232,7 +257,9 @@ def e2e_client(realistic_test_db, realistic_reference_db, monkeypatch):
     def mock_get_default_db_path(self):
         return ref_db_path
 
-    monkeypatch.setattr(ReferenceManager, "_get_default_db_path", mock_get_default_db_path)  # noqa: E501
+    monkeypatch.setattr(
+        ReferenceManager, "_get_default_db_path", mock_get_default_db_path
+    )  # noqa: E501
 
     with TestClient(app) as client:
         yield client, predicates
@@ -256,26 +283,28 @@ class TestSimilaritySearchWorkflows:
         client, predicates = e2e_client
 
         # Find the located_in predicate
-        spatial_pred = next(p for p in predicates if p["identifier"] == "located_in")  # noqa: E501
+        spatial_pred = next(
+            p for p in predicates if p["identifier"] == "located_in"
+        )  # noqa: E501
 
         # Find similar predicates
         response = client.post(
             f"/api/predicates/{spatial_pred['id']}/find-similar",
-            params={
-                "limit": 20,
-                "threshold": 0.5,
-                "use_cache": False
-            }
+            params={"limit": 20, "threshold": 0.5, "use_cache": False},
         )
 
         assert response.status_code == 200
         data = response.json()
 
         # Verify we got results
-        assert data["total_results"] > 0, "Should find similar spatial predicates"  # noqa: E501
+        assert (
+            data["total_results"] > 0
+        ), "Should find similar spatial predicates"  # noqa: E501
 
         # Verify search completed in reasonable time
-        assert data["search_time_ms"] < 5000, f"Search took too long: {data['search_time_ms']}ms"  # noqa: E501
+        assert (
+            data["search_time_ms"] < 5000
+        ), f"Search took too long: {data['search_time_ms']}ms"  # noqa: E501
 
         # Verify results include spatial predicates from multiple sources
         results = data["results"]
@@ -286,10 +315,19 @@ class TestSimilaritySearchWorkflows:
 
         # Check for relevant spatial predicates
         titles_lower = [r["title"].lower() for r in results]
-        spatial_keywords = ["location", "located", "contain", "near", "spatial"]  # noqa: E501
+        spatial_keywords = [
+            "location",
+            "located",
+            "contain",
+            "near",
+            "spatial",
+        ]  # noqa: E501
 
-        matches = sum(1 for title in titles_lower
-                     if any(keyword in title for keyword in spatial_keywords))  # noqa: E128, E501
+        matches = sum(
+            1
+            for title in titles_lower
+            if any(keyword in title for keyword in spatial_keywords)
+        )  # noqa: E128, E501
 
         assert matches > 0, "Should find predicates with spatial keywords"
 
@@ -299,11 +337,15 @@ class TestSimilaritySearchWorkflows:
         low_confidence = [r for r in results if r["confidence"] == "low"]
 
         # At least some results should have confidence scores
-        assert len(results) == len(high_confidence) + len(medium_confidence) + len(low_confidence)  # noqa: E501
+        assert len(results) == len(high_confidence) + len(medium_confidence) + len(
+            low_confidence
+        )  # noqa: E501
 
         # Verify scores are properly ordered
         scores = [r["similarity_score"] for r in results]
-        assert scores == sorted(scores, reverse=True), "Results should be ordered by score descending"  # noqa: E501
+        assert scores == sorted(
+            scores, reverse=True
+        ), "Results should be ordered by score descending"  # noqa: E501
 
     def test_hierarchical_predicate_discovery_workflow(self, e2e_client):
         """
@@ -317,16 +359,14 @@ class TestSimilaritySearchWorkflows:
         client, predicates = e2e_client
 
         # Find the subclass_of predicate
-        hier_pred = next(p for p in predicates if p["identifier"] == "subclass_of")  # noqa: E501
+        hier_pred = next(
+            p for p in predicates if p["identifier"] == "subclass_of"
+        )  # noqa: E501
 
         # Find similar predicates
         response = client.post(
             f"/api/predicates/{hier_pred['id']}/find-similar",
-            params={
-                "limit": 15,
-                "threshold": 0.6,
-                "use_cache": False
-            }
+            params={"limit": 15, "threshold": 0.6, "use_cache": False},
         )
 
         assert response.status_code == 200
@@ -339,15 +379,29 @@ class TestSimilaritySearchWorkflows:
         titles_lower = [r["title"].lower() for r in results]
         definitions_lower = [r["definition"].lower() for r in results]
 
-        hierarchical_keywords = ["subclass", "class", "instance", "hierarchy", "taxonomy"]  # noqa: E501
+        hierarchical_keywords = [
+            "subclass",
+            "class",
+            "instance",
+            "hierarchy",
+            "taxonomy",
+        ]  # noqa: E501
 
-        title_matches = sum(1 for title in titles_lower
-                           if any(keyword in title for keyword in hierarchical_keywords))  # noqa: E501, E128
+        title_matches = sum(
+            1
+            for title in titles_lower
+            if any(keyword in title for keyword in hierarchical_keywords)
+        )  # noqa: E501, E128
 
-        def_matches = sum(1 for definition in definitions_lower
-                         if any(keyword in definition for keyword in hierarchical_keywords))  # noqa: E501, E128
+        def_matches = sum(
+            1
+            for definition in definitions_lower
+            if any(keyword in definition for keyword in hierarchical_keywords)
+        )  # noqa: E501, E128
 
-        assert title_matches + def_matches > 0, "Should find hierarchical predicates"  # noqa: E501
+        assert (
+            title_matches + def_matches > 0
+        ), "Should find hierarchical predicates"  # noqa: E501
 
     def test_source_filtered_search_workflow(self, e2e_client):
         """
@@ -360,7 +414,9 @@ class TestSimilaritySearchWorkflows:
         """
         client, predicates = e2e_client
 
-        spatial_pred = next(p for p in predicates if p["identifier"] == "located_in")  # noqa: E501
+        spatial_pred = next(
+            p for p in predicates if p["identifier"] == "located_in"
+        )  # noqa: E501
 
         # Test each source
         for source in ["schema.org", "conceptnet", "dbpedia", "wikidata"]:
@@ -370,8 +426,8 @@ class TestSimilaritySearchWorkflows:
                     "source": source,
                     "limit": 10,
                     "threshold": 0.5,
-                    "use_cache": False
-                }
+                    "use_cache": False,
+                },
             )
 
             if response.status_code == 200:
@@ -379,8 +435,9 @@ class TestSimilaritySearchWorkflows:
 
                 # All results should be from the specified source
                 for result in data["results"]:
-                    assert result["source"] == source, \
-                        f"Expected source {source}, got {result['source']}"
+                    assert (
+                        result["source"] == source
+                    ), f"Expected source {source}, got {result['source']}"
 
 
 class TestClusteringWorkflows:
@@ -403,8 +460,8 @@ class TestClusteringWorkflows:
                 "min_similarity": 0.7,
                 "min_cluster_size": 2,
                 "eps": 0.4,
-                "max_predicates": 1000
-            }
+                "max_predicates": 1000,
+            },
         )
 
         assert response.status_code == 200
@@ -417,8 +474,9 @@ class TestClusteringWorkflows:
         assert "cluster_time_ms" in data
 
         # Performance check
-        assert data["cluster_time_ms"] < 30000, \
-            f"Clustering took too long: {data['cluster_time_ms']}ms"
+        assert (
+            data["cluster_time_ms"] < 30000
+        ), f"Clustering took too long: {data['cluster_time_ms']}ms"
 
         # If clusters were found, verify their structure
         if data["total_clusters"] > 0:
@@ -454,9 +512,12 @@ class TestClusteringWorkflows:
 
         # Get spatial predicates
         spatial_predicates = [
-            p for p in predicates
-            if any(keyword in p["identifier"]
-                  for keyword in ["located", "adjacent", "near"])  # noqa: E128
+            p
+            for p in predicates
+            if any(
+                keyword in p["identifier"]
+                for keyword in ["located", "adjacent", "near"]
+            )  # noqa: E128
         ]
 
         if len(spatial_predicates) >= 2:
@@ -467,8 +528,8 @@ class TestClusteringWorkflows:
                 params={
                     "predicate_ids": spatial_ids,
                     "min_cluster_size": 2,
-                    "eps": 0.5
-                }
+                    "eps": 0.5,
+                },
             )
 
             assert response.status_code == 200
@@ -498,20 +559,17 @@ class TestCacheAndPerformanceWorkflows:
         client, predicates = e2e_client
 
         # Invalidate cache first
-        cache_response = client.post("/api/predicates/invalidate-similarity-cache")  # noqa: E501
+        cache_response = client.post(
+            "/api/predicates/invalidate-similarity-cache"
+        )  # noqa: E501
         assert cache_response.status_code == 200
 
         test_pred = predicates[0]
-        search_params = {
-            "limit": 20,
-            "threshold": 0.7,
-            "use_cache": True
-        }
+        search_params = {"limit": 20, "threshold": 0.7, "use_cache": True}
 
         # First search (uncached)
         response1 = client.post(
-            f"/api/predicates/{test_pred['id']}/find-similar",
-            params=search_params
+            f"/api/predicates/{test_pred['id']}/find-similar", params=search_params
         )
 
         assert response1.status_code == 200
@@ -520,8 +578,7 @@ class TestCacheAndPerformanceWorkflows:
 
         # Second search (should be cached)
         response2 = client.post(
-            f"/api/predicates/{test_pred['id']}/find-similar",
-            params=search_params
+            f"/api/predicates/{test_pred['id']}/find-similar", params=search_params
         )
 
         assert response2.status_code == 200
@@ -549,21 +606,18 @@ class TestCacheAndPerformanceWorkflows:
         client, predicates = e2e_client
 
         test_pred = predicates[0]
-        search_params = {
-            "limit": 10,
-            "threshold": 0.7,
-            "use_cache": True
-        }
+        search_params = {"limit": 10, "threshold": 0.7, "use_cache": True}
 
         # Initial search
         response1 = client.post(
-            f"/api/predicates/{test_pred['id']}/find-similar",
-            params=search_params
+            f"/api/predicates/{test_pred['id']}/find-similar", params=search_params
         )
         assert response1.status_code == 200
 
         # Invalidate cache
-        cache_response = client.post("/api/predicates/invalidate-similarity-cache")  # noqa: E501
+        cache_response = client.post(
+            "/api/predicates/invalidate-similarity-cache"
+        )  # noqa: E501
         assert cache_response.status_code == 200
 
         cache_data = cache_response.json()
@@ -572,8 +626,7 @@ class TestCacheAndPerformanceWorkflows:
 
         # Search again after invalidation
         response2 = client.post(
-            f"/api/predicates/{test_pred['id']}/find-similar",
-            params=search_params
+            f"/api/predicates/{test_pred['id']}/find-similar", params=search_params
         )
         assert response2.status_code == 200
 
@@ -595,7 +648,7 @@ class TestErrorHandlingWorkflows:
         # Invalid predicate ID format
         response = client.post(
             "/api/predicates/not-a-uuid/find-similar",
-            params={"limit": 10, "threshold": 0.7}
+            params={"limit": 10, "threshold": 0.7},
         )
         assert response.status_code == 400
         assert "UUID" in response.json()["detail"]
@@ -603,28 +656,28 @@ class TestErrorHandlingWorkflows:
         # Nonexistent predicate
         response = client.post(
             "/api/predicates/00000000-0000-0000-0000-000000000000/find-similar",  # noqa: E501
-            params={"limit": 10, "threshold": 0.7}
+            params={"limit": 10, "threshold": 0.7},
         )
         assert response.status_code == 404
 
         # Invalid parameters (limit too high)
         response = client.post(
             f"/api/predicates/{predicates[0]['id']}/find-similar",
-            params={"limit": 200, "threshold": 0.7}
+            params={"limit": 200, "threshold": 0.7},
         )
         assert response.status_code == 422
 
         # Invalid threshold
         response = client.post(
             f"/api/predicates/{predicates[0]['id']}/find-similar",
-            params={"limit": 10, "threshold": 2.0}
+            params={"limit": 10, "threshold": 2.0},
         )
         assert response.status_code == 422
 
         # After all these errors, verify system still works
         response = client.post(
             f"/api/predicates/{predicates[0]['id']}/find-similar",
-            params={"limit": 10, "threshold": 0.7}
+            params={"limit": 10, "threshold": 0.7},
         )
         assert response.status_code == 200
 
@@ -642,10 +695,7 @@ class TestErrorHandlingWorkflows:
         # Single predicate (insufficient)
         response = client.post(
             "/api/predicates/cluster-predicates",
-            params={
-                "predicate_ids": [predicates[0]["id"]],
-                "min_cluster_size": 2
-            }
+            params={"predicate_ids": [predicates[0]["id"]], "min_cluster_size": 2},
         )
         assert response.status_code == 400
         assert "Not enough predicates" in response.json()["detail"]
@@ -653,10 +703,7 @@ class TestErrorHandlingWorkflows:
         # Invalid predicate ID
         response = client.post(
             "/api/predicates/cluster-predicates",
-            params={
-                "predicate_ids": ["not-a-uuid"],
-                "min_cluster_size": 2
-            }
+            params={"predicate_ids": ["not-a-uuid"], "min_cluster_size": 2},
         )
         assert response.status_code == 400
 
@@ -665,8 +712,8 @@ class TestErrorHandlingWorkflows:
             "/api/predicates/cluster-predicates",
             params={
                 "predicate_ids": ["00000000-0000-0000-0000-000000000000"],
-                "min_cluster_size": 2
-            }
+                "min_cluster_size": 2,
+            },
         )
         assert response.status_code == 404
 
@@ -692,7 +739,7 @@ class TestCompleteWorkflows:
         for pred in predicates[:3]:
             response = client.post(
                 f"/api/predicates/{pred['id']}/find-similar",
-                params={"limit": 10, "threshold": 0.6, "use_cache": True}
+                params={"limit": 10, "threshold": 0.6, "use_cache": True},
             )
             assert response.status_code == 200
             search_results.append(response.json())
@@ -703,10 +750,7 @@ class TestCompleteWorkflows:
         # Step 2: Cluster predicates
         cluster_response = client.post(
             "/api/predicates/cluster-predicates",
-            params={
-                "min_cluster_size": 2,
-                "eps": 0.4
-            }
+            params={"min_cluster_size": 2, "eps": 0.4},
         )
         assert cluster_response.status_code == 200
         cluster_data = cluster_response.json()
@@ -721,13 +765,15 @@ class TestCompleteWorkflows:
         print(f"  Predicates clustered: {total_clustered}")
 
         # Step 4: Invalidate cache
-        cache_response = client.post("/api/predicates/invalidate-similarity-cache")  # noqa: E501
+        cache_response = client.post(
+            "/api/predicates/invalidate-similarity-cache"
+        )  # noqa: E501
         assert cache_response.status_code == 200
 
         # Step 5: Verify we can still search after cache invalidation
         response = client.post(
             f"/api/predicates/{predicates[0]['id']}/find-similar",
-            params={"limit": 10, "threshold": 0.7}
+            params={"limit": 10, "threshold": 0.7},
         )
         assert response.status_code == 200
 
@@ -749,7 +795,7 @@ class TestCompleteWorkflows:
             pred = predicates[i % len(predicates)]
             response = client.post(
                 f"/api/predicates/{pred['id']}/find-similar",
-                params={"limit": 10, "threshold": 0.7, "use_cache": False}
+                params={"limit": 10, "threshold": 0.7, "use_cache": False},
             )
             assert response.status_code == 200
             results.append(response.json())

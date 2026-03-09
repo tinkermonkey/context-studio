@@ -7,7 +7,10 @@ filtering logic with database interactions.
 
 import sys
 import os
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))  # noqa: E501
+
+sys.path.insert(
+    0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+)  # noqa: E501
 
 import json  # noqa: E402
 from unittest.mock import Mock  # noqa: E402
@@ -15,7 +18,10 @@ from sqlalchemy import create_engine  # noqa: E402
 from sqlalchemy.orm import sessionmaker  # noqa: E402
 
 from database.models import Base, Predicate  # noqa: E402
-from reference_db.models import Base as ReferenceBase, ExternalPredicate as ReferencePredicate  # noqa: E402, E501
+from reference_db.models import (
+    Base as ReferenceBase,
+    ExternalPredicate as ReferencePredicate,
+)  # noqa: E402, E501
 from services.reference_filter_service import ReferenceFilterService  # noqa: E402, E501
 
 
@@ -36,6 +42,7 @@ def test_integration_filter_with_databases():
 
     # Create external predicate
     from datetime import datetime
+
     ext_pred = ReferencePredicate(
         id="ext-pred-1",
         source="schema.org",
@@ -43,7 +50,7 @@ def test_integration_filter_with_databases():
         title="Related To",
         definition="Schema.org related relationship",
         created_at=datetime.now().isoformat(),
-        updated_at=datetime.now().isoformat()
+        updated_at=datetime.now().isoformat(),
     )
     ref_db.add(ext_pred)
     ref_db.commit()
@@ -60,11 +67,13 @@ def test_integration_filter_with_databases():
         title="Related To",
         definition="A general relationship",
         is_relevant=True,
-        mapping=json.dumps({
-            "external_predicates": [
-                {"source": "schema.org", "external_id": "relatedTo"}
-            ]
-        })
+        mapping=json.dumps(
+            {
+                "external_predicates": [
+                    {"source": "schema.org", "external_id": "relatedTo"}
+                ]
+            }
+        ),
     )
     local_db.add(predicate)
     local_db.commit()
@@ -87,10 +96,10 @@ def test_integration_filter_with_databases():
     print(f"  Predicates used: {stats['predicates_used']}")
 
     # Assertions
-    assert stats['total_before'] == 2
-    assert stats['total_after'] == 1  # Only link1 should be included
-    assert stats['filter_mode'] == 'whitelist'
-    assert stats['filtering_active'] is True
+    assert stats["total_before"] == 2
+    assert stats["total_after"] == 1  # Only link1 should be included
+    assert stats["filter_mode"] == "whitelist"
+    assert stats["filtering_active"] is True
 
     # Cleanup
     local_db.close()
@@ -126,26 +135,34 @@ def test_filter_statistics():
             identifier="relevant-pred",
             title="Relevant Predicate",
             is_relevant=True,
-            mapping=json.dumps({"external_predicates": [
-                {"source": "schema.org", "external_id": "rel1"}
-            ]})
+            mapping=json.dumps(
+                {
+                    "external_predicates": [
+                        {"source": "schema.org", "external_id": "rel1"}
+                    ]
+                }
+            ),
         ),
         Predicate(
             id="pred-2",
             identifier="irrelevant-pred",
             title="Irrelevant Predicate",
             is_relevant=False,
-            mapping=json.dumps({"external_predicates": [
-                {"source": "dbpedia", "external_id": "irrel1"}
-            ]})
+            mapping=json.dumps(
+                {
+                    "external_predicates": [
+                        {"source": "dbpedia", "external_id": "irrel1"}
+                    ]
+                }
+            ),
         ),
         Predicate(
             id="pred-3",
             identifier="unmapped-pred",
             title="Unmapped Predicate",
             is_relevant=None,
-            mapping=None
-        )
+            mapping=None,
+        ),
     ]
 
     for pred in predicates:
@@ -160,12 +177,12 @@ def test_filter_statistics():
     print(f"  Irrelevant count: {stats['irrelevant_count']}")
     print(f"  Unmapped count: {stats['unmapped_count']}")
 
-    assert stats['total_predicates'] == 3
-    assert stats['relevant_count'] == 1
-    assert stats['irrelevant_count'] == 1
-    assert stats['unmapped_count'] == 1
-    assert "schema.org:rel1" in stats['relevant_external_predicates']
-    assert "dbpedia:irrel1" in stats['irrelevant_external_predicates']
+    assert stats["total_predicates"] == 3
+    assert stats["relevant_count"] == 1
+    assert stats["irrelevant_count"] == 1
+    assert stats["unmapped_count"] == 1
+    assert "schema.org:rel1" in stats["relevant_external_predicates"]
+    assert "dbpedia:irrel1" in stats["irrelevant_external_predicates"]
 
     # Cleanup
     local_db.close()
@@ -200,9 +217,9 @@ def test_cache_invalidation():
         identifier="cached-pred",
         title="Cached Predicate",
         is_relevant=True,
-        mapping=json.dumps({"external_predicates": [
-            {"source": "schema.org", "external_id": "cached"}
-        ]})
+        mapping=json.dumps(
+            {"external_predicates": [{"source": "schema.org", "external_id": "cached"}]}
+        ),
     )
     local_db.add(predicate)
     local_db.commit()
@@ -243,7 +260,9 @@ def test_error_handling():
 
     # Create mock reference manager that raises an error
     mock_manager = Mock()
-    mock_manager.list_external_predicates.side_effect = Exception("Database connection failed")  # noqa: E501
+    mock_manager.list_external_predicates.side_effect = Exception(
+        "Database connection failed"
+    )  # noqa: E501
 
     service = ReferenceFilterService(local_db, mock_manager)
 
@@ -292,19 +311,19 @@ def test_null_relevance_handling():
             identifier="null-pred",
             title="Null Predicate",
             is_relevant=None,  # Null should be ignored
-            mapping=json.dumps({"external_predicates": [
-                {"source": "test", "external_id": "null1"}
-            ]})
+            mapping=json.dumps(
+                {"external_predicates": [{"source": "test", "external_id": "null1"}]}
+            ),
         ),
         Predicate(
             id="pred-2",
             identifier="relevant-pred",
             title="Relevant Predicate",
             is_relevant=True,
-            mapping=json.dumps({"external_predicates": [
-                {"source": "test", "external_id": "rel1"}
-            ]})
-        )
+            mapping=json.dumps(
+                {"external_predicates": [{"source": "test", "external_id": "rel1"}]}
+            ),
+        ),
     ]
 
     for pred in predicates:
@@ -347,5 +366,6 @@ if __name__ == "__main__":
     except Exception as e:
         print(f"\n❌ Unexpected error: {e}")
         import traceback
+
         traceback.print_exc()
         sys.exit(1)

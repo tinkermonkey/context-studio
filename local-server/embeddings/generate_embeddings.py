@@ -11,6 +11,7 @@ _model_lock = threading.Lock()
 DEFAULT_EMBEDDING_RETRIES = 3
 DEFAULT_EMBEDDING_RETRY_DELAY = 1  # seconds
 
+
 def get_model():
     """
     Get or create the singleton SentenceTransformer model.
@@ -30,11 +31,12 @@ def get_model():
             # Double-check after lock
             if _model is None:
                 # Explicitly set device to CPU and avoid meta tensor issues
-                device = 'cpu'
+                device = "cpu"
                 # Load model with explicit device specification to avoid meta tensor issues
-                _model = SentenceTransformer('all-MiniLM-L12-v2', device=device)
+                _model = SentenceTransformer("all-MiniLM-L12-v2", device=device)
 
     return _model
+
 
 def generate_embedding(text: str, retries: int = DEFAULT_EMBEDDING_RETRIES):
     """
@@ -64,12 +66,13 @@ def generate_embedding(text: str, retries: int = DEFAULT_EMBEDDING_RETRIES):
             last_error = e
             if attempt < retries - 1:
                 # Exponential backoff: 1s, 2s, 4s, ...
-                delay = DEFAULT_EMBEDDING_RETRY_DELAY * (2 ** attempt)
+                delay = DEFAULT_EMBEDDING_RETRY_DELAY * (2**attempt)
                 time.sleep(delay)
             continue
 
     # All retries exhausted
     raise last_error if last_error else Exception("Failed to generate embedding")
+
 
 def cleanup_model():
     """Clean up the singleton model instance."""

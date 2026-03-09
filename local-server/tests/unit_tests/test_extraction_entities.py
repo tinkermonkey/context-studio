@@ -7,11 +7,18 @@ extracted entities, layer results, and extraction results.
 
 import sys
 import os
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+
+sys.path.insert(
+    0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+)
 
 import pytest
 
-from domain.extraction.entities import ExtractedEntity, ExtractionLayerResult, ExtractionResult
+from domain.extraction.entities import (
+    ExtractedEntity,
+    ExtractionLayerResult,
+    ExtractionResult,
+)
 from domain.extraction.enums import EntityType, LayerName
 
 
@@ -54,7 +61,7 @@ class TestExtractedEntity:
             confidence=0.95,
             start_pos=0,
             end_pos=8,
-            suggested_class_id="person-123"
+            suggested_class_id="person-123",
         )
         assert entity.text == "John Doe"
         assert entity.entity_type == EntityType.PERSON
@@ -68,7 +75,7 @@ class TestExtractedEntity:
             entity_type=EntityType.CONCEPT,
             confidence=0.0,
             start_pos=0,
-            end_pos=4
+            end_pos=4,
         )
         assert entity.confidence == 0.0
 
@@ -78,38 +85,44 @@ class TestExtractedEntity:
             entity_type=EntityType.CONCEPT,
             confidence=1.0,
             start_pos=0,
-            end_pos=4
+            end_pos=4,
         )
         assert entity.confidence == 1.0
 
         # Invalid: > 1.0
-        with pytest.raises(ValueError, match="confidence must be a number between 0.0 and 1.0"):
+        with pytest.raises(
+            ValueError, match="confidence must be a number between 0.0 and 1.0"
+        ):
             ExtractedEntity(
                 text="Test",
                 entity_type=EntityType.CONCEPT,
                 confidence=1.5,
                 start_pos=0,
-                end_pos=4
+                end_pos=4,
             )
 
         # Invalid: < 0.0
-        with pytest.raises(ValueError, match="confidence must be a number between 0.0 and 1.0"):
+        with pytest.raises(
+            ValueError, match="confidence must be a number between 0.0 and 1.0"
+        ):
             ExtractedEntity(
                 text="Test",
                 entity_type=EntityType.CONCEPT,
                 confidence=-0.1,
                 start_pos=0,
-                end_pos=4
+                end_pos=4,
             )
 
         # Invalid: bool (even though bool is subclass of int)
-        with pytest.raises(ValueError, match="confidence must be a number between 0.0 and 1.0"):
+        with pytest.raises(
+            ValueError, match="confidence must be a number between 0.0 and 1.0"
+        ):
             ExtractedEntity(
                 text="Test",
                 entity_type=EntityType.CONCEPT,
                 confidence=True,
                 start_pos=0,
-                end_pos=4
+                end_pos=4,
             )
 
     def test_extracted_entity_position_validation(self):
@@ -121,7 +134,7 @@ class TestExtractedEntity:
                 entity_type=EntityType.CONCEPT,
                 confidence=0.9,
                 start_pos=5,
-                end_pos=3
+                end_pos=3,
             )
 
         # Invalid: end_pos == start_pos
@@ -131,17 +144,19 @@ class TestExtractedEntity:
                 entity_type=EntityType.CONCEPT,
                 confidence=0.9,
                 start_pos=5,
-                end_pos=5
+                end_pos=5,
             )
 
         # Invalid: negative start_pos
-        with pytest.raises(ValueError, match="start_pos must be a non-negative integer"):
+        with pytest.raises(
+            ValueError, match="start_pos must be a non-negative integer"
+        ):
             ExtractedEntity(
                 text="Test",
                 entity_type=EntityType.CONCEPT,
                 confidence=0.9,
                 start_pos=-1,
-                end_pos=4
+                end_pos=4,
             )
 
     def test_extracted_entity_invalid_text(self):
@@ -152,7 +167,7 @@ class TestExtractedEntity:
                 entity_type=EntityType.PERSON,
                 confidence=0.9,
                 start_pos=0,
-                end_pos=4
+                end_pos=4,
             )
 
     def test_extracted_entity_invalid_entity_type(self):
@@ -163,19 +178,21 @@ class TestExtractedEntity:
                 entity_type="person",  # String instead of enum
                 confidence=0.9,
                 start_pos=0,
-                end_pos=4
+                end_pos=4,
             )
 
     def test_extracted_entity_invalid_suggested_class_id(self):
         """Test that non-string suggested_class_id raises TypeError."""
-        with pytest.raises(TypeError, match="suggested_class_id must be None or a string"):
+        with pytest.raises(
+            TypeError, match="suggested_class_id must be None or a string"
+        ):
             ExtractedEntity(
                 text="Test",
                 entity_type=EntityType.PERSON,
                 confidence=0.9,
                 start_pos=0,
                 end_pos=4,
-                suggested_class_id=123
+                suggested_class_id=123,
             )
 
 
@@ -189,12 +206,12 @@ class TestExtractionLayerResult:
             entity_type=EntityType.PERSON,
             confidence=0.95,
             start_pos=0,
-            end_pos=8
+            end_pos=8,
         )
         result = ExtractionLayerResult(
             layer_name=LayerName.NLP,
             entities=(entity,),
-            relationships=({"rel_1": {"type": "knows", "target": "Jane"}},)
+            relationships=({"rel_1": {"type": "knows", "target": "Jane"}},),
         )
         assert result.layer_name == LayerName.NLP
         assert len(result.entities) == 1
@@ -203,9 +220,7 @@ class TestExtractionLayerResult:
     def test_extraction_layer_result_empty_entities(self):
         """Test extraction layer result with no entities."""
         result = ExtractionLayerResult(
-            layer_name=LayerName.KG,
-            entities=(),
-            relationships=()
+            layer_name=LayerName.KG, entities=(), relationships=()
         )
         assert result.entities == ()
         assert len(result.relationships) == 0
@@ -217,12 +232,10 @@ class TestExtractionLayerResult:
             entity_type=EntityType.CONCEPT,
             confidence=0.9,
             start_pos=0,
-            end_pos=4
+            end_pos=4,
         )
         result = ExtractionLayerResult(
-            layer_name=LayerName.LLM,
-            entities=(entity,),
-            relationships=()
+            layer_name=LayerName.LLM, entities=(entity,), relationships=()
         )
         with pytest.raises((TypeError, AttributeError)):
             result.entities[0] = None
@@ -232,7 +245,7 @@ class TestExtractionLayerResult:
         result = ExtractionLayerResult(
             layer_name=LayerName.WEB,
             entities=(),
-            relationships=({"rel_1": {"type": "similar"}},)
+            relationships=({"rel_1": {"type": "similar"}},),
         )
         with pytest.raises((TypeError, AttributeError)):
             result.relationships[0] = {"rel_2": {"type": "related"}}
@@ -243,7 +256,7 @@ class TestExtractionLayerResult:
             ExtractionLayerResult(
                 layer_name="nlp",  # String instead of enum
                 entities=(),
-                relationships=()
+                relationships=(),
             )
 
     def test_extraction_layer_result_invalid_entities(self):
@@ -252,16 +265,18 @@ class TestExtractionLayerResult:
             ExtractionLayerResult(
                 layer_name=LayerName.NLP,
                 entities=[],  # List instead of tuple
-                relationships=()
+                relationships=(),
             )
 
     def test_extraction_layer_result_invalid_entity_element(self):
         """Test that non-ExtractedEntity elements raise TypeError."""
-        with pytest.raises(TypeError, match="All entities must be ExtractedEntity instances"):
+        with pytest.raises(
+            TypeError, match="All entities must be ExtractedEntity instances"
+        ):
             ExtractionLayerResult(
                 layer_name=LayerName.NLP,
                 entities=({"text": "invalid"},),  # Dict instead of ExtractedEntity
-                relationships=()
+                relationships=(),
             )
 
     def test_extraction_layer_result_invalid_relationships(self):
@@ -270,7 +285,7 @@ class TestExtractionLayerResult:
             ExtractionLayerResult(
                 layer_name=LayerName.NLP,
                 entities=(),
-                relationships={"rel": {}}  # Dict instead of tuple
+                relationships={"rel": {}},  # Dict instead of tuple
             )
 
 
@@ -284,17 +299,13 @@ class TestExtractionResult:
             entity_type=EntityType.PERSON,
             confidence=0.9,
             start_pos=0,
-            end_pos=4
+            end_pos=4,
         )
         layer = ExtractionLayerResult(
-            layer_name=LayerName.NLP,
-            entities=(entity,),
-            relationships=()
+            layer_name=LayerName.NLP, entities=(entity,), relationships=()
         )
         result = ExtractionResult(
-            source_text="John works at Acme.",
-            layers=(layer,),
-            execution_id="exec-123"
+            source_text="John works at Acme.", layers=(layer,), execution_id="exec-123"
         )
         assert result.source_text == "John works at Acme."
         assert len(result.layers) == 1
@@ -302,24 +313,16 @@ class TestExtractionResult:
 
     def test_extraction_result_empty_layers(self):
         """Test extraction result with no layers."""
-        result = ExtractionResult(
-            source_text="Some text",
-            layers=(),
-            execution_id=None
-        )
+        result = ExtractionResult(source_text="Some text", layers=(), execution_id=None)
         assert result.layers == ()
 
     def test_extraction_result_layers_immutable(self):
         """Test that layers tuple is immutable."""
         layer = ExtractionLayerResult(
-            layer_name=LayerName.KG,
-            entities=(),
-            relationships=()
+            layer_name=LayerName.KG, entities=(), relationships=()
         )
         result = ExtractionResult(
-            source_text="Text",
-            layers=(layer,),
-            execution_id=None
+            source_text="Text", layers=(layer,), execution_id=None
         )
         with pytest.raises((TypeError, AttributeError)):
             result.layers[0] = None
@@ -327,11 +330,7 @@ class TestExtractionResult:
     def test_extraction_result_invalid_source_text(self):
         """Test that empty source_text raises ValueError."""
         with pytest.raises(ValueError, match="source_text must be a non-empty string"):
-            ExtractionResult(
-                source_text="",
-                layers=(),
-                execution_id=None
-            )
+            ExtractionResult(source_text="", layers=(), execution_id=None)
 
     def test_extraction_result_invalid_layers(self):
         """Test that non-tuple layers raises TypeError."""
@@ -339,23 +338,23 @@ class TestExtractionResult:
             ExtractionResult(
                 source_text="Text",
                 layers=[],  # List instead of tuple
-                execution_id=None
+                execution_id=None,
             )
 
     def test_extraction_result_invalid_layer_element(self):
         """Test that non-ExtractionLayerResult elements raise TypeError."""
-        with pytest.raises(TypeError, match="All layers must be ExtractionLayerResult instances"):
+        with pytest.raises(
+            TypeError, match="All layers must be ExtractionLayerResult instances"
+        ):
             ExtractionResult(
                 source_text="Text",
-                layers=({"layer_name": "nlp"},),  # Dict instead of ExtractionLayerResult
-                execution_id=None
+                layers=(
+                    {"layer_name": "nlp"},
+                ),  # Dict instead of ExtractionLayerResult
+                execution_id=None,
             )
 
     def test_extraction_result_invalid_execution_id(self):
         """Test that non-string execution_id raises TypeError."""
         with pytest.raises(TypeError, match="execution_id must be None or a string"):
-            ExtractionResult(
-                source_text="Text",
-                layers=(),
-                execution_id=123
-            )
+            ExtractionResult(source_text="Text", layers=(), execution_id=123)

@@ -67,10 +67,7 @@ class ReferenceFilterService:
 
         mappings = {}
         for pred in predicates:
-            pred_info = {
-                "is_relevant": pred.is_relevant,
-                "external_predicates": []
-            }
+            pred_info = {"is_relevant": pred.is_relevant, "external_predicates": []}
 
             # Parse mapping JSON if present
             mapping_str = None
@@ -86,22 +83,32 @@ class ReferenceFilterService:
                 try:
                     mapping_data = json.loads(mapping_str)
                     # Extract reference_predicates from the mapping structure (ADR-002 schema)
-                    if isinstance(mapping_data, dict) and "reference_predicates" in mapping_data:
+                    if (
+                        isinstance(mapping_data, dict)
+                        and "reference_predicates" in mapping_data
+                    ):
                         # New schema format: extract reference_predicates as external_predicates
                         # Map from the new schema format to the format expected by filter logic
                         ref_preds = mapping_data.get("reference_predicates", [])
                         # Convert to "source:source_id" format for compatibility
                         for ref_pred in ref_preds:
-                            pred_info["external_predicates"].append({
-                                "source": ref_pred.get("source"),
-                                "external_id": ref_pred.get("source_id")
-                            })
+                            pred_info["external_predicates"].append(
+                                {
+                                    "source": ref_pred.get("source"),
+                                    "external_id": ref_pred.get("source_id"),
+                                }
+                            )
                     elif isinstance(mapping_data, list):
                         # Legacy format: list of {"source": ..., "external_id": ...}
                         pred_info["external_predicates"] = mapping_data
-                    elif isinstance(mapping_data, dict) and "external_predicates" in mapping_data:
+                    elif (
+                        isinstance(mapping_data, dict)
+                        and "external_predicates" in mapping_data
+                    ):
                         # Legacy dict format: {"external_predicates": [...]}
-                        pred_info["external_predicates"] = mapping_data["external_predicates"]
+                        pred_info["external_predicates"] = mapping_data[
+                            "external_predicates"
+                        ]
                     else:
                         # Mapping doesn't match any expected format - log detailed warning
                         mapping_type = type(mapping_data).__name__
@@ -224,7 +231,9 @@ class ReferenceFilterService:
             # This means: exclude irrelevant predicates, include everything else
             return "blacklist"
 
-    def _batch_fetch_predicates_for_links(self, links: List[ReferenceLink]) -> Dict[str, List[str]]:
+    def _batch_fetch_predicates_for_links(
+        self, links: List[ReferenceLink]
+    ) -> Dict[str, List[str]]:
         """
         Batch fetch external predicates needed for the given links.
 
@@ -258,7 +267,9 @@ class ReferenceFilterService:
                     predicate_map[ext_pred.external_id].append(pred_key)
 
         except Exception as e:
-            logger.error(f"Database error fetching external predicates: {e}", exc_info=True)
+            logger.error(
+                f"Database error fetching external predicates: {e}", exc_info=True
+            )
             # Return empty map on error - will result in graceful degradation
             return {}
 
@@ -268,7 +279,7 @@ class ReferenceFilterService:
         self,
         links: List[ReferenceLink],
         include_relevant: bool = True,
-        exclude_irrelevant: bool = True
+        exclude_irrelevant: bool = True,
     ) -> Tuple[List[ReferenceLink], Dict[str, Any]]:
         """
         Filter reference links based on predicate relevance mappings.
@@ -308,7 +319,7 @@ class ReferenceFilterService:
                 "filtered_count": 0,
                 "predicates_used": [],
                 "filtering_active": False,
-                "error": str(e)
+                "error": str(e),
             }
 
         # If no predicates marked relevant or irrelevant, return all links
@@ -318,12 +329,12 @@ class ReferenceFilterService:
                 "total_after": total_before,
                 "filtered_count": 0,
                 "predicates_used": [],
-                "filtering_active": False
+                "filtering_active": False,
             }
 
         # Determine filtering strategy
         filter_mode = self._determine_filter_mode(relevant, irrelevant)
-        whitelist_mode = (filter_mode == "whitelist")
+        whitelist_mode = filter_mode == "whitelist"
 
         # Batch fetch predicates for all links (performance optimization)
         predicate_map = self._batch_fetch_predicates_for_links(links)
@@ -371,7 +382,7 @@ class ReferenceFilterService:
             "filtered_count": filtered_count,
             "predicates_used": sorted(list(predicates_used)),
             "filtering_active": True,
-            "filter_mode": filter_mode
+            "filter_mode": filter_mode,
         }
 
         logger.info(
@@ -402,9 +413,15 @@ class ReferenceFilterService:
             irrelevant = self.get_irrelevant_predicates()
 
             # Count predicates by relevance status
-            relevant_count = sum(1 for info in mappings.values() if info["is_relevant"] is True)
-            irrelevant_count = sum(1 for info in mappings.values() if info["is_relevant"] is False)
-            unmapped_count = sum(1 for info in mappings.values() if info["is_relevant"] is None)
+            relevant_count = sum(
+                1 for info in mappings.values() if info["is_relevant"] is True
+            )
+            irrelevant_count = sum(
+                1 for info in mappings.values() if info["is_relevant"] is False
+            )
+            unmapped_count = sum(
+                1 for info in mappings.values() if info["is_relevant"] is None
+            )
 
             return {
                 "total_predicates": len(mappings),
@@ -412,7 +429,7 @@ class ReferenceFilterService:
                 "irrelevant_count": irrelevant_count,
                 "unmapped_count": unmapped_count,
                 "relevant_external_predicates": sorted(list(relevant)),
-                "irrelevant_external_predicates": sorted(list(irrelevant))
+                "irrelevant_external_predicates": sorted(list(irrelevant)),
             }
         except Exception as e:
             logger.error(f"Error getting filter statistics: {e}", exc_info=True)
@@ -423,5 +440,5 @@ class ReferenceFilterService:
                 "unmapped_count": 0,
                 "relevant_external_predicates": [],
                 "irrelevant_external_predicates": [],
-                "error": str(e)
+                "error": str(e),
             }

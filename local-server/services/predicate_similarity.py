@@ -52,6 +52,7 @@ class SimilarityResult:
         similarity_score: Cosine similarity score (0.0 to 1.0)
         confidence: Confidence level ("high", "medium", "low", "reject")
     """
+
     predicate_id: str
     source: str
     source_id: str
@@ -73,6 +74,7 @@ class ClusterResult:
         avg_similarity: Average pairwise similarity within cluster
         size: Number of predicates in cluster
     """
+
     cluster_id: int
     predicate_ids: List[str]
     centroid_title: str
@@ -90,6 +92,7 @@ class BatchError:
         error_message: Description of the error
         error_type: Type of exception that occurred
     """
+
     predicate_title: str
     error_message: str
     error_type: str
@@ -122,7 +125,7 @@ class PredicateSimilarityService:
         reference_manager: ReferenceManager,
         embedding_dimensions: int = 384,
         cache_maxsize: int = 1000,
-        cache_ttl: int = 3600
+        cache_ttl: int = 3600,
     ):
         """
         Initialize the predicate similarity service.
@@ -165,7 +168,9 @@ class PredicateSimilarityService:
         logger.info(f"Starting index warm-up with {sample_size} sample queries...")
 
         # Get a sample of external predicates
-        external_predicates = self.reference_manager.list_external_predicates(limit=sample_size)
+        external_predicates = self.reference_manager.list_external_predicates(
+            limit=sample_size
+        )
 
         if not external_predicates:
             logger.warning("No external predicates found for warm-up")
@@ -179,7 +184,7 @@ class PredicateSimilarityService:
                 self.reference_manager.search_external_predicates_by_similarity(
                     query_text=predicate.title,
                     limit=5,
-                    threshold=0.0  # Accept all results for warm-up
+                    threshold=0.0,  # Accept all results for warm-up
                 )
             except Exception as e:
                 logger.warning(f"Warm-up query failed for '{predicate.title}': {e}")
@@ -195,7 +200,7 @@ class PredicateSimilarityService:
         query_text: str,
         source: Optional[str] = None,
         limit: int = 100,
-        threshold: float = 0.7
+        threshold: float = 0.7,
     ) -> str:
         """
         Generate cache key for similarity search using SHA-256 hash.
@@ -216,12 +221,12 @@ class PredicateSimilarityService:
             "query": query_text,
             "source": source,
             "limit": limit,
-            "threshold": threshold
+            "threshold": threshold,
         }
         # Use sorted keys for consistent JSON serialization
         cache_str = json.dumps(cache_data, sort_keys=True)
         # Generate SHA-256 hash for robust key generation
-        return hashlib.sha256(cache_str.encode('utf-8')).hexdigest()
+        return hashlib.sha256(cache_str.encode("utf-8")).hexdigest()
 
     def invalidate_cache(self):
         """
@@ -265,7 +270,7 @@ class PredicateSimilarityService:
         source: Optional[str] = None,
         limit: int = 100,
         threshold: float = 0.7,
-        use_cache: bool = True
+        use_cache: bool = True,
     ) -> List[SimilarityResult]:
         """
         Find similar predicates using vector similarity search.
@@ -313,10 +318,7 @@ class PredicateSimilarityService:
         # Perform vector similarity search
         try:
             results = self.reference_manager.search_external_predicates_by_similarity(
-                query_text=query_text,
-                source=source,
-                limit=limit,
-                threshold=threshold
+                query_text=query_text, source=source, limit=limit, threshold=threshold
             )
 
             # Convert to SimilarityResult objects
@@ -328,15 +330,17 @@ class PredicateSimilarityService:
                 if confidence == "reject":
                     continue
 
-                similarity_results.append(SimilarityResult(
-                    predicate_id=external_pred.id,
-                    source=external_pred.source,
-                    source_id=external_pred.external_id,
-                    title=external_pred.title,
-                    definition=external_pred.definition,
-                    similarity_score=score,
-                    confidence=confidence
-                ))
+                similarity_results.append(
+                    SimilarityResult(
+                        predicate_id=external_pred.id,
+                        source=external_pred.source,
+                        source_id=external_pred.external_id,
+                        title=external_pred.title,
+                        definition=external_pred.definition,
+                        similarity_score=score,
+                        confidence=confidence,
+                    )
+                )
 
             # Cache the results
             if use_cache:
@@ -359,11 +363,11 @@ class PredicateSimilarityService:
                 "predicate_title": predicate_title[:100],
                 "source": source,
                 "limit": limit,
-                "threshold": threshold
+                "threshold": threshold,
             }
             logger.error(
                 f"Similarity search failed: {e}. Context: {error_context}",
-                exc_info=True
+                exc_info=True,
             )
             raise
 
@@ -372,7 +376,7 @@ class PredicateSimilarityService:
         predicates: List[Tuple[str, Optional[str]]],
         source: Optional[str] = None,
         limit: int = 100,
-        threshold: float = 0.7
+        threshold: float = 0.7,
     ) -> Tuple[Dict[str, List[SimilarityResult]], List[BatchError]]:
         """
         Find similar predicates for a batch of queries.
@@ -404,7 +408,7 @@ class PredicateSimilarityService:
                     predicate_definition=definition,
                     source=source,
                     limit=limit,
-                    threshold=threshold
+                    threshold=threshold,
                 )
             except Exception as e:
                 error_type = type(e).__name__
@@ -412,11 +416,13 @@ class PredicateSimilarityService:
                 logger.error(
                     f"Batch query failed for '{title}': {error_type}: {error_msg}"
                 )
-                errors.append(BatchError(
-                    predicate_title=title,
-                    error_message=error_msg,
-                    error_type=error_type
-                ))
+                errors.append(
+                    BatchError(
+                        predicate_title=title,
+                        error_message=error_msg,
+                        error_type=error_type,
+                    )
+                )
                 # Still add empty list to results for consistency
                 results[title] = []
 
@@ -436,7 +442,7 @@ class PredicateSimilarityService:
         min_similarity: float = 0.7,
         min_cluster_size: int = 2,
         eps: float = 0.3,  # DBSCAN epsilon (distance threshold)
-        max_predicates: int = 1000
+        max_predicates: int = 1000,
     ) -> List[ClusterResult]:
         """
         Cluster similar predicates using DBSCAN algorithm.
@@ -518,11 +524,9 @@ class PredicateSimilarityService:
         # Perform DBSCAN clustering
         # eps is the maximum distance for points to be in the same cluster
         # min_samples is the minimum cluster size
-        clustering = DBSCAN(
-            eps=eps,
-            min_samples=min_cluster_size,
-            metric='cosine'
-        ).fit(embedding_matrix)
+        clustering = DBSCAN(eps=eps, min_samples=min_cluster_size, metric="cosine").fit(
+            embedding_matrix
+        )
 
         # Group predicates by cluster
         clusters = defaultdict(list)
@@ -547,11 +551,10 @@ class PredicateSimilarityService:
                 for j in range(i + 1, len(cluster_embeddings)):
                     # Cosine similarity = 1 - cosine distance
                     cos_dist = 1 - np.dot(
-                        cluster_embeddings[i],
-                        cluster_embeddings[j]
+                        cluster_embeddings[i], cluster_embeddings[j]
                     ) / (
-                        np.linalg.norm(cluster_embeddings[i]) *
-                        np.linalg.norm(cluster_embeddings[j])
+                        np.linalg.norm(cluster_embeddings[i])
+                        * np.linalg.norm(cluster_embeddings[j])
                     )
                     similarities.append(1 - cos_dist)  # Convert to similarity
 
@@ -567,11 +570,10 @@ class PredicateSimilarityService:
                 for j, other_idx in enumerate(indices):
                     if i != j:
                         cos_sim = np.dot(
-                            embedding_matrix[idx],
-                            embedding_matrix[other_idx]
+                            embedding_matrix[idx], embedding_matrix[other_idx]
                         ) / (
-                            np.linalg.norm(embedding_matrix[idx]) *
-                            np.linalg.norm(embedding_matrix[other_idx])
+                            np.linalg.norm(embedding_matrix[idx])
+                            * np.linalg.norm(embedding_matrix[other_idx])
                         )
                         pred_sims.append(cos_sim)
 
@@ -582,13 +584,15 @@ class PredicateSimilarityService:
 
             centroid_title = titles[centroid_idx]
 
-            cluster_results.append(ClusterResult(
-                cluster_id=int(cluster_id),
-                predicate_ids=pred_ids,
-                centroid_title=centroid_title,
-                avg_similarity=float(avg_similarity),
-                size=len(pred_ids)
-            ))
+            cluster_results.append(
+                ClusterResult(
+                    cluster_id=int(cluster_id),
+                    predicate_ids=pred_ids,
+                    centroid_title=centroid_title,
+                    avg_similarity=float(avg_similarity),
+                    size=len(pred_ids),
+                )
+            )
 
         elapsed = time.perf_counter() - start_time
         logger.info(
@@ -613,5 +617,5 @@ class PredicateSimilarityService:
             "size": len(self._similarity_cache),
             "maxsize": self._similarity_cache.maxsize,
             "ttl": self._similarity_cache.ttl,
-            "currsize": self._similarity_cache.currsize
+            "currsize": self._similarity_cache.currsize,
         }

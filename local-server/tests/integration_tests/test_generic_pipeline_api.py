@@ -4,6 +4,7 @@ Integration tests for the generic pipeline execution API endpoints.
 
 import sys
 import os
+
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from unittest.mock import Mock, patch, AsyncMock  # noqa: E402
@@ -20,7 +21,7 @@ class TestGenericPipelineAPIIntegration:
     def setup_method(self):
         """Set up test fixtures with temporary pipeline database."""
         # Create temporary pipeline database for testing
-        self.temp_db = tempfile.NamedTemporaryFile(suffix='.db', delete=False)
+        self.temp_db = tempfile.NamedTemporaryFile(suffix=".db", delete=False)
         self.temp_db.close()
 
         # Initialize pipeline database manager with temp file
@@ -37,12 +38,14 @@ class TestGenericPipelineAPIIntegration:
         except Exception:
             pass
 
-    @patch('llm.execution_tracker.get_pipeline_session')
+    @patch("llm.execution_tracker.get_pipeline_session")
     def test_execute_pipeline_endpoint_success(self, mock_get_session):
         """Test successful execution of generic pipeline endpoint."""
 
         # Use real database session from our test pipeline manager
-        mock_get_session.side_effect = lambda: self.pipeline_manager.get_session()  # noqa: E501
+        mock_get_session.side_effect = (
+            lambda: self.pipeline_manager.get_session()
+        )  # noqa: E501
 
         # Mock the LLM service using FastAPI dependency override
         mock_service = AsyncMock()
@@ -56,14 +59,17 @@ class TestGenericPipelineAPIIntegration:
         mock_response.token_usage = {
             "input_tokens": 15,
             "output_tokens": 25,
-            "total_tokens": 40
+            "total_tokens": 40,
         }
         mock_response.structured_output = None
         mock_service.execute_pipeline_flavor.return_value = mock_response
 
         # Override the dependency
         from api.dependencies.llm_services import get_default_llm_service
-        self.app.dependency_overrides[get_default_llm_service] = lambda: mock_service  # noqa: E501
+
+        self.app.dependency_overrides[get_default_llm_service] = (
+            lambda: mock_service
+        )  # noqa: E501
 
         # Test request payload
         request_payload = {
@@ -80,15 +86,12 @@ class TestGenericPipelineAPIIntegration:
                 "current_definition": None,
                 "conceptnet_relations": "",
                 "wikidata_context": "Not specified",
-                "dbpedia_context": "Not specified"
-            }
+                "dbpedia_context": "Not specified",
+            },
         }
 
         # Make the API request
-        response = self.client.post(
-            "/api/llm/execute_pipeline",
-            json=request_payload
-        )
+        response = self.client.post("/api/llm/execute_pipeline", json=request_payload)
 
         # Verify response
         assert response.status_code == 200
@@ -109,6 +112,7 @@ class TestGenericPipelineAPIIntegration:
 
         # Clean up dependency override
         from api.dependencies.llm_services import get_default_llm_service
+
         del self.app.dependency_overrides[get_default_llm_service]
 
     def test_execute_pipeline_endpoint_validation_error(self):
@@ -117,25 +121,28 @@ class TestGenericPipelineAPIIntegration:
         # Mock the LLM service using FastAPI dependency override
         mock_service = AsyncMock()
         from api.dependencies.llm_services import get_default_llm_service
-        self.app.dependency_overrides[get_default_llm_service] = lambda: mock_service  # noqa: E501
+
+        self.app.dependency_overrides[get_default_llm_service] = (
+            lambda: mock_service
+        )  # noqa: E501
 
         # Test request payload with missing context_data
         request_payload = {
             "flavor_id": "default",
             "pipeline_type": "suggest_term_definition",
-            "context_data": {}
+            "context_data": {},
         }
 
         # Make the API request
-        response = self.client.post(
-            "/api/llm/execute_pipeline",
-            json=request_payload
-        )
+        response = self.client.post("/api/llm/execute_pipeline", json=request_payload)
 
         # Verify error response (422 for validation errors)
         assert response.status_code == 422
         response_data = response.json()
-        assert any("context_data cannot be empty" in error.get("msg", "") for error in response_data["detail"])  # noqa: E501
+        assert any(
+            "context_data cannot be empty" in error.get("msg", "")
+            for error in response_data["detail"]
+        )  # noqa: E501
 
         # Clean up dependency override
         del self.app.dependency_overrides[get_default_llm_service]
@@ -146,21 +153,21 @@ class TestGenericPipelineAPIIntegration:
         # Mock the LLM service using FastAPI dependency override
         mock_service = AsyncMock()
         from api.dependencies.llm_services import get_default_llm_service
-        self.app.dependency_overrides[get_default_llm_service] = lambda: mock_service  # noqa: E501
+
+        self.app.dependency_overrides[get_default_llm_service] = (
+            lambda: mock_service
+        )  # noqa: E501
 
         # Create very large context data
         large_data = "x" * 60000
         request_payload = {
             "flavor_id": "default",
             "pipeline_type": "suggest_term_definition",
-            "context_data": {"large_field": large_data}
+            "context_data": {"large_field": large_data},
         }
 
         # Make the API request
-        response = self.client.post(
-            "/api/llm/execute_pipeline",
-            json=request_payload
-        )
+        response = self.client.post("/api/llm/execute_pipeline", json=request_payload)
 
         # Verify error response
         assert response.status_code == 400
@@ -170,12 +177,16 @@ class TestGenericPipelineAPIIntegration:
         # Clean up dependency override
         del self.app.dependency_overrides[get_default_llm_service]
 
-    @patch('llm.execution_tracker.get_pipeline_session')
-    def test_execute_pipeline_streaming_endpoint_success(self, mock_get_session):  # noqa: E501
+    @patch("llm.execution_tracker.get_pipeline_session")
+    def test_execute_pipeline_streaming_endpoint_success(
+        self, mock_get_session
+    ):  # noqa: E501
         """Test successful execution of generic streaming pipeline endpoint."""
 
         # Use real database session from our test pipeline manager
-        mock_get_session.side_effect = lambda: self.pipeline_manager.get_session()  # noqa: E501
+        mock_get_session.side_effect = (
+            lambda: self.pipeline_manager.get_session()
+        )  # noqa: E501
 
         # Mock the LLM service using FastAPI dependency override
         mock_service = AsyncMock()
@@ -183,31 +194,30 @@ class TestGenericPipelineAPIIntegration:
         # Mock streaming responses
         async def mock_streaming():
             from llm.models import StreamingLLMResponse
+
             yield StreamingLLMResponse(
                 flavor_id="test-flavor-456",
                 execution_id="test-execution-123",
-                done=False
+                done=False,
             )
             yield StreamingLLMResponse(
-                token="Hello",
-                flavor_id="test-flavor-456",
-                done=False
+                token="Hello", flavor_id="test-flavor-456", done=False
             )
             yield StreamingLLMResponse(
-                token=" world",
-                flavor_id="test-flavor-456",
-                done=False
+                token=" world", flavor_id="test-flavor-456", done=False
             )
-            yield StreamingLLMResponse(
-                flavor_id="test-flavor-456",
-                done=True
-            )
+            yield StreamingLLMResponse(flavor_id="test-flavor-456", done=True)
 
-        mock_service.execute_pipeline_flavor_streaming.return_value = mock_streaming()  # noqa: E501
+        mock_service.execute_pipeline_flavor_streaming.return_value = (
+            mock_streaming()
+        )  # noqa: E501
 
         # Override the dependency
         from api.dependencies.llm_services import get_default_llm_service
-        self.app.dependency_overrides[get_default_llm_service] = lambda: mock_service  # noqa: E501
+
+        self.app.dependency_overrides[get_default_llm_service] = (
+            lambda: mock_service
+        )  # noqa: E501
 
         # Test request payload
         request_payload = {
@@ -215,14 +225,13 @@ class TestGenericPipelineAPIIntegration:
             "pipeline_type": "suggest_term_definition",
             "context_data": {
                 "term": "streaming test term",
-                "domain_title": "Test Domain"
-            }
+                "domain_title": "Test Domain",
+            },
         }
 
         # Make the API request
         response = self.client.post(
-            "/api/llm/execute_pipeline/stream",
-            json=request_payload
+            "/api/llm/execute_pipeline/stream", json=request_payload
         )
 
         # Verify response
@@ -235,13 +244,16 @@ class TestGenericPipelineAPIIntegration:
 
         # Verify the service was called correctly
         mock_service.execute_pipeline_flavor_streaming.assert_called_once()
-        call_args = mock_service.execute_pipeline_flavor_streaming.call_args[0][0]  # noqa: E501
+        call_args = mock_service.execute_pipeline_flavor_streaming.call_args[0][
+            0
+        ]  # noqa: E501
         assert call_args.flavor_id == "default"
         assert call_args.pipeline_type == PipelineType.SUGGEST_TERM_DEFINITION
         assert call_args.context_data["term"] == "streaming test term"
 
         # Clean up dependency override
         from api.dependencies.llm_services import get_default_llm_service
+
         del self.app.dependency_overrides[get_default_llm_service]
 
     def test_execute_pipeline_streaming_validation_error(self):
@@ -250,25 +262,30 @@ class TestGenericPipelineAPIIntegration:
         # Mock the LLM service using FastAPI dependency override
         mock_service = AsyncMock()
         from api.dependencies.llm_services import get_default_llm_service
-        self.app.dependency_overrides[get_default_llm_service] = lambda: mock_service  # noqa: E501
+
+        self.app.dependency_overrides[get_default_llm_service] = (
+            lambda: mock_service
+        )  # noqa: E501
 
         # Test request payload with empty context_data
         request_payload = {
             "flavor_id": "default",
             "pipeline_type": "suggest_term_definition",
-            "context_data": {}
+            "context_data": {},
         }
 
         # Make the API request
         response = self.client.post(
-            "/api/llm/execute_pipeline/stream",
-            json=request_payload
+            "/api/llm/execute_pipeline/stream", json=request_payload
         )
 
         # Verify error response (422 for validation errors)
         assert response.status_code == 422
         response_data = response.json()
-        assert any("context_data cannot be empty" in error.get("msg", "") for error in response_data["detail"])  # noqa: E501
+        assert any(
+            "context_data cannot be empty" in error.get("msg", "")
+            for error in response_data["detail"]
+        )  # noqa: E501
 
         # Clean up dependency override
         del self.app.dependency_overrides[get_default_llm_service]
@@ -279,7 +296,10 @@ class TestGenericPipelineAPIIntegration:
         # Mock the LLM service using FastAPI dependency override
         mock_service = AsyncMock()
         from api.dependencies.llm_services import get_default_llm_service
-        self.app.dependency_overrides[get_default_llm_service] = lambda: mock_service  # noqa: E501
+
+        self.app.dependency_overrides[get_default_llm_service] = (
+            lambda: mock_service
+        )  # noqa: E501
 
         # Test data for different pipeline types
         test_cases = [
@@ -293,8 +313,8 @@ class TestGenericPipelineAPIIntegration:
                     "parent_layer_title": "Parent Layer",
                     "parent_layer_definition": "Parent layer definition",
                     "current_definition": "Current definition",
-                    "reference_context": "Test reference context"
-                }
+                    "reference_context": "Test reference context",
+                },
             },
             {
                 "pipeline_type": "suggest_domain_definition",
@@ -307,18 +327,20 @@ class TestGenericPipelineAPIIntegration:
                     "layer_definition": "Parent layer definition",
                     "related_domains": "Related Domain1, Related Domain2",
                     "current_definition": "Current definition",
-                    "reference_context": "Test reference context"
-                }
-            }
+                    "reference_context": "Test reference context",
+                },
+            },
         ]
 
         for test_case in test_cases:
             # Mock response for each pipeline type
             mock_response = Mock()
-            mock_response.response_content = f"Response for {test_case['pipeline_type']}"  # noqa: E501
+            mock_response.response_content = (
+                f"Response for {test_case['pipeline_type']}"  # noqa: E501
+            )
             mock_response.execution_id = f"exec-{test_case['pipeline_type']}"
             mock_response.flavor_id = "test-flavor"
-            mock_response.pipeline_type = test_case['pipeline_type']
+            mock_response.pipeline_type = test_case["pipeline_type"]
             mock_response.token_usage = None
             mock_response.structured_output = None
             mock_service.execute_pipeline_flavor.return_value = mock_response
@@ -326,30 +348,36 @@ class TestGenericPipelineAPIIntegration:
             # Test request
             request_payload = {
                 "flavor_id": "default",
-                "pipeline_type": test_case['pipeline_type'],
-                "context_data": test_case['context_data']
+                "pipeline_type": test_case["pipeline_type"],
+                "context_data": test_case["context_data"],
             }
 
             response = self.client.post(
-                "/api/llm/execute_pipeline",
-                json=request_payload
+                "/api/llm/execute_pipeline", json=request_payload
             )
 
             # Verify response
             assert response.status_code == 200
             response_data = response.json()
-            assert response_data["pipeline_type"] == test_case['pipeline_type']
-            assert response_data["response_content"] == f"Response for {test_case['pipeline_type']}"  # noqa: E501
+            assert response_data["pipeline_type"] == test_case["pipeline_type"]
+            assert (
+                response_data["response_content"]
+                == f"Response for {test_case['pipeline_type']}"
+            )  # noqa: E501
 
         # Cleanup dependency override
         del self.app.dependency_overrides[get_default_llm_service]
 
-    @patch('llm.execution_tracker.get_pipeline_session')
-    def test_backward_compatibility_with_generic_implementation(self, mock_get_session):  # noqa: E501
+    @patch("llm.execution_tracker.get_pipeline_session")
+    def test_backward_compatibility_with_generic_implementation(
+        self, mock_get_session
+    ):  # noqa: E501
         """Test that the generic implementation can handle legacy suggest_term_definition requests."""  # noqa: E501
 
         # Use real database session from our test pipeline manager
-        mock_get_session.side_effect = lambda: self.pipeline_manager.get_session()  # noqa: E501
+        mock_get_session.side_effect = (
+            lambda: self.pipeline_manager.get_session()
+        )  # noqa: E501
 
         # Mock the LLM service using FastAPI dependency override
         mock_service = AsyncMock()
@@ -363,14 +391,17 @@ class TestGenericPipelineAPIIntegration:
         mock_response.token_usage = {
             "input_tokens": 20,
             "output_tokens": 30,
-            "total_tokens": 50
+            "total_tokens": 50,
         }
         mock_response.structured_output = None
         mock_service.execute_pipeline_flavor.return_value = mock_response
 
         # Override the dependency
         from api.dependencies.llm_services import get_default_llm_service
-        self.app.dependency_overrides[get_default_llm_service] = lambda: mock_service  # noqa: E501
+
+        self.app.dependency_overrides[get_default_llm_service] = (
+            lambda: mock_service
+        )  # noqa: E501
 
         # Test using the generic endpoint with legacy-style data
         request_payload = {
@@ -387,14 +418,11 @@ class TestGenericPipelineAPIIntegration:
                 "current_definition": None,
                 "conceptnet_relations": "",
                 "wikidata_context": "Not specified",
-                "dbpedia_context": "Not specified"
-            }
+                "dbpedia_context": "Not specified",
+            },
         }
 
-        response = self.client.post(
-            "/api/llm/execute_pipeline",
-            json=request_payload
-        )
+        response = self.client.post("/api/llm/execute_pipeline", json=request_payload)
 
         # Verify response uses the new generic format
         assert response.status_code == 200
@@ -420,11 +448,17 @@ class TestGenericPipelineAPIIntegration:
 
         # Mock the LLM service to raise an error using FastAPI dependency override  # noqa: E501
         from llm.exceptions import LLMProcessingError
+
         mock_service = AsyncMock()
-        mock_service.execute_pipeline_flavor.side_effect = LLMProcessingError("Test processing error")  # noqa: E501
+        mock_service.execute_pipeline_flavor.side_effect = LLMProcessingError(
+            "Test processing error"
+        )  # noqa: E501
 
         from api.dependencies.llm_services import get_default_llm_service
-        self.app.dependency_overrides[get_default_llm_service] = lambda: mock_service  # noqa: E501
+
+        self.app.dependency_overrides[get_default_llm_service] = (
+            lambda: mock_service
+        )  # noqa: E501
 
         # Test generic endpoint error
         generic_payload = {
@@ -441,13 +475,12 @@ class TestGenericPipelineAPIIntegration:
                 "current_definition": "Current definition",
                 "conceptnet_relations": "Test relations",
                 "wikidata_context": "Test wikidata context",
-                "dbpedia_context": "Test dbpedia context"
-            }
+                "dbpedia_context": "Test dbpedia context",
+            },
         }
 
         generic_response = self.client.post(
-            "/api/llm/execute_pipeline",
-            json=generic_payload
+            "/api/llm/execute_pipeline", json=generic_payload
         )
 
         # Test generic endpoint error handling
@@ -474,16 +507,28 @@ class TestGenericPipelineAPIIntegration:
 
         # Verify the execute_pipeline endpoint has proper documentation
         execute_pipeline = paths["/api/llm/execute_pipeline"]["post"]
-        assert "Execute a generic pipeline with arbitrary context data" in execute_pipeline["description"]  # noqa: E501
+        assert (
+            "Execute a generic pipeline with arbitrary context data"
+            in execute_pipeline["description"]
+        )  # noqa: E501
 
         # Verify request schema includes GenericPipelineExecutionRequest
-        request_schema = execute_pipeline["requestBody"]["content"]["application/json"]["schema"]  # noqa: E501
+        request_schema = execute_pipeline["requestBody"]["content"]["application/json"][
+            "schema"
+        ]  # noqa: E501
         assert "$ref" in request_schema
 
         # Verify response schema includes GenericPipelineExecutionResponse
-        response_schema = execute_pipeline["responses"]["200"]["content"]["application/json"]["schema"]  # noqa: E501
+        response_schema = execute_pipeline["responses"]["200"]["content"][
+            "application/json"
+        ][
+            "schema"
+        ]  # noqa: E501
         assert "$ref" in response_schema
 
         # Verify streaming endpoint documentation
         execute_stream = paths["/api/llm/execute_pipeline/stream"]["post"]
-        assert "Execute a generic pipeline with streaming response" in execute_stream["description"]  # noqa: E501
+        assert (
+            "Execute a generic pipeline with streaming response"
+            in execute_stream["description"]
+        )  # noqa: E501

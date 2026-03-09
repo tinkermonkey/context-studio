@@ -2,7 +2,10 @@
 
 import sys
 import os
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))  # noqa: E501
+
+sys.path.append(
+    os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+)  # noqa: E501
 
 import pytest  # noqa: E402
 import asyncio  # noqa: E402
@@ -11,8 +14,18 @@ from datetime import datetime, UTC  # noqa: E402
 
 from reference_api.service import ReferenceService  # noqa: E402
 from reference_api.models import (  # noqa: E402
-    SourceType, MultiSourceSearchResponse,
-    DBpediaSearchRequest, ConceptNetQueryRequest, WikidataSparqlRequest, SchemaOrgSearchRequest, DBpediaSearchResponse, DBpediaSearchResult, ConceptNetQueryResponse, WikidataSparqlResponse, SchemaOrgSearchResponse, SchemaOrgSearchResult  # noqa: E501
+    SourceType,
+    MultiSourceSearchResponse,
+    DBpediaSearchRequest,
+    ConceptNetQueryRequest,
+    WikidataSparqlRequest,
+    SchemaOrgSearchRequest,
+    DBpediaSearchResponse,
+    DBpediaSearchResult,
+    ConceptNetQueryResponse,
+    WikidataSparqlResponse,
+    SchemaOrgSearchResponse,
+    SchemaOrgSearchResult,  # noqa: E501
 )
 from config import ConfigurationManager  # noqa: E402
 
@@ -70,9 +83,9 @@ class TestReferenceServiceRefactored:
                     label="Python (programming language)",
                     description="High-level programming language",
                     score=0.95,
-                    types=["ProgrammingLanguage"]
+                    types=["ProgrammingLanguage"],
                 )
-            ]
+            ],
         )
         source.search.return_value = search_response
 
@@ -95,11 +108,14 @@ class TestReferenceServiceRefactored:
                     "@id": "/e/test1",
                     "start": {"@id": "/c/en/python", "label": "python"},
                     "rel": {"@id": "/r/IsA", "label": "IsA"},
-                    "end": {"@id": "/c/en/programming_language", "label": "programming language"},  # noqa: E501
+                    "end": {
+                        "@id": "/c/en/programming_language",
+                        "label": "programming language",
+                    },  # noqa: E501
                     "weight": 0.8,
-                    "sources": []
+                    "sources": [],
                 }
-            ]
+            ],
         )
         source.query.return_value = query_response
 
@@ -121,13 +137,17 @@ class TestReferenceServiceRefactored:
                 "results": {
                     "bindings": [
                         {
-                            "item": {"value": "http://www.wikidata.org/entity/Q28865"},  # noqa: E501
+                            "item": {
+                                "value": "http://www.wikidata.org/entity/Q28865"
+                            },  # noqa: E501
                             "itemLabel": {"value": "Python"},
-                            "itemDescription": {"value": "programming language"}  # noqa: E501
+                            "itemDescription": {
+                                "value": "programming language"
+                            },  # noqa: E501
                         }
                     ]
                 }
-            }
+            },
         )
         source.sparql_query.return_value = sparql_response
 
@@ -153,18 +173,22 @@ class TestReferenceServiceRefactored:
                     identifier="ComputerLanguage",
                     title="ComputerLanguage",
                     definition="Computer programming language",
-                    relevance_score=0.9
+                    relevance_score=0.9,
                 )
-            ]
+            ],
         )
         source.search.return_value = search_response
 
         return source
 
     @pytest.mark.asyncio
-    async def test_dbpedia_search_returns_normalized_response(self, service, mock_dbpedia_source):  # noqa: E501
+    async def test_dbpedia_search_returns_normalized_response(
+        self, service, mock_dbpedia_source
+    ):  # noqa: E501
         """Test that DBpedia search returns normalized MultiSourceSearchResponse."""  # noqa: E501
-        with patch.object(service, '_get_source', return_value=mock_dbpedia_source):  # noqa: E501
+        with patch.object(
+            service, "_get_source", return_value=mock_dbpedia_source
+        ):  # noqa: E501
             request = DBpediaSearchRequest(query="python", limit=10)
             response = await service.dbpedia_search(request)
 
@@ -184,20 +208,26 @@ class TestReferenceServiceRefactored:
             assert node.relevance_score == 1.0  # Max score normalized
 
     @pytest.mark.asyncio
-    async def test_conceptnet_query_returns_normalized_response(self, service, mock_conceptnet_source):  # noqa: E501
+    async def test_conceptnet_query_returns_normalized_response(
+        self, service, mock_conceptnet_source
+    ):  # noqa: E501
         """Test that ConceptNet query returns normalized MultiSourceSearchResponse."""  # noqa: E501
-        with patch.object(service, '_get_source', return_value=mock_conceptnet_source):  # noqa: E501
+        with patch.object(
+            service, "_get_source", return_value=mock_conceptnet_source
+        ):  # noqa: E501
             request = ConceptNetQueryRequest(node="/c/en/python", limit=20)
             response = await service.conceptnet_query(request)
 
             # Verify response type and structure
             assert isinstance(response, MultiSourceSearchResponse)
             assert len(response.results) == 2  # start and end nodes
-            assert len(response.links) == 1    # IsA relation
+            assert len(response.links) == 1  # IsA relation
             assert response.sources_queried == ["conceptnet"]
 
             # Verify nodes
-            python_node = next(n for n in response.results if "python" in n.title)  # noqa: E501
+            python_node = next(
+                n for n in response.results if "python" in n.title
+            )  # noqa: E501
             assert python_node.id == "conceptnet:/c/en/python"
             assert python_node.source == SourceType.CONCEPTNET
 
@@ -207,10 +237,16 @@ class TestReferenceServiceRefactored:
             assert isa_link.source == SourceType.CONCEPTNET
 
     @pytest.mark.asyncio
-    async def test_wikidata_sparql_returns_normalized_response(self, service, mock_wikidata_source):  # noqa: E501
+    async def test_wikidata_sparql_returns_normalized_response(
+        self, service, mock_wikidata_source
+    ):  # noqa: E501
         """Test that Wikidata SPARQL returns normalized MultiSourceSearchResponse."""  # noqa: E501
-        with patch.object(service, '_get_source', return_value=mock_wikidata_source):  # noqa: E501
-            request = WikidataSparqlRequest(query="SELECT ?item WHERE { ?item rdfs:label \"Python\"@en }")  # noqa: E501
+        with patch.object(
+            service, "_get_source", return_value=mock_wikidata_source
+        ):  # noqa: E501
+            request = WikidataSparqlRequest(
+                query='SELECT ?item WHERE { ?item rdfs:label "Python"@en }'
+            )  # noqa: E501
             response = await service.wikidata_sparql(request)
 
             # Verify response type and structure
@@ -226,10 +262,16 @@ class TestReferenceServiceRefactored:
             assert node.definition == "programming language"
 
     @pytest.mark.asyncio
-    async def test_schema_org_search_returns_normalized_response(self, service, mock_schema_org_source):  # noqa: E501
+    async def test_schema_org_search_returns_normalized_response(
+        self, service, mock_schema_org_source
+    ):  # noqa: E501
         """Test that Schema.org search returns normalized MultiSourceSearchResponse."""  # noqa: E501
-        with patch.object(service, '_get_source', return_value=mock_schema_org_source):  # noqa: E501
-            request = SchemaOrgSearchRequest(query="ComputerLanguage", limit=10)  # noqa: E501
+        with patch.object(
+            service, "_get_source", return_value=mock_schema_org_source
+        ):  # noqa: E501
+            request = SchemaOrgSearchRequest(
+                query="ComputerLanguage", limit=10
+            )  # noqa: E501
             response = await service.schema_org_search(request)
 
             # Verify response type and structure
@@ -266,15 +308,17 @@ class TestReferenceServiceRefactored:
                     label="Python",
                     description="Programming language",
                     score=0.95,
-                    types=["ProgrammingLanguage"]
+                    types=["ProgrammingLanguage"],
                 )
-            ]
+            ],
         )
         mock_sources[SourceType.DBPEDIA] = dbpedia_source
 
         # ConceptNet mock
         conceptnet_source = AsyncMock()
-        conceptnet_source.__aenter__ = AsyncMock(return_value=conceptnet_source)  # noqa: E501
+        conceptnet_source.__aenter__ = AsyncMock(
+            return_value=conceptnet_source
+        )  # noqa: E501
         conceptnet_source.__aexit__ = AsyncMock(return_value=None)
         conceptnet_source.query.return_value = ConceptNetQueryResponse(
             success=True,
@@ -287,9 +331,9 @@ class TestReferenceServiceRefactored:
                     "rel": {"@id": "/r/IsA", "label": "IsA"},
                     "end": {"@id": "/c/en/language", "label": "language"},
                     "weight": 0.8,
-                    "sources": []
+                    "sources": [],
                 }
-            ]
+            ],
         )
         mock_sources[SourceType.CONCEPTNET] = conceptnet_source
 
@@ -305,19 +349,25 @@ class TestReferenceServiceRefactored:
                 "results": {
                     "bindings": [
                         {
-                            "item": {"value": "http://www.wikidata.org/entity/Q28865"},  # noqa: E501
+                            "item": {
+                                "value": "http://www.wikidata.org/entity/Q28865"
+                            },  # noqa: E501
                             "itemLabel": {"value": "Python"},
-                            "itemDescription": {"value": "programming language"}  # noqa: E501
+                            "itemDescription": {
+                                "value": "programming language"
+                            },  # noqa: E501
                         }
                     ]
                 }
-            }
+            },
         )
         mock_sources[SourceType.WIKIDATA] = wikidata_source
 
         # Schema.org mock
         schema_org_source = AsyncMock()
-        schema_org_source.__aenter__ = AsyncMock(return_value=schema_org_source)  # noqa: E501
+        schema_org_source.__aenter__ = AsyncMock(
+            return_value=schema_org_source
+        )  # noqa: E501
         schema_org_source.__aexit__ = AsyncMock(return_value=None)
         schema_org_source.search.return_value = SchemaOrgSearchResponse(
             success=True,
@@ -325,14 +375,14 @@ class TestReferenceServiceRefactored:
             retrieved_at=datetime.now(UTC),
             query="python",
             total_results=0,
-            results=[]
+            results=[],
         )
         mock_sources[SourceType.SCHEMA_ORG] = schema_org_source
 
         def mock_get_source(source_type):
             return mock_sources[source_type]
 
-        with patch.object(service, '_get_source', side_effect=mock_get_source):
+        with patch.object(service, "_get_source", side_effect=mock_get_source):
             from reference_api.models import MultiSourceSearchRequest
 
             request = MultiSourceSearchRequest(query="python", limit=10)
@@ -341,7 +391,9 @@ class TestReferenceServiceRefactored:
             # Verify aggregated response
             assert isinstance(response, MultiSourceSearchResponse)
             assert response.query == "python"
-            assert len(response.results) >= 3  # At least one from each successful source  # noqa: E501
+            assert (
+                len(response.results) >= 3
+            )  # At least one from each successful source  # noqa: E501
             assert len(response.sources_queried) == 4  # All sources queried
 
             # Verify we have nodes from different sources
@@ -351,8 +403,12 @@ class TestReferenceServiceRefactored:
             assert SourceType.WIKIDATA in sources_with_results
 
             # Verify cross-reference links were discovered
-            cross_ref_links = [link for link in response.links if link.predicate == "sameAs"]  # noqa: E501
-            assert len(cross_ref_links) > 0, "Expected cross-reference links between similar nodes"  # noqa: E501
+            cross_ref_links = [
+                link for link in response.links if link.predicate == "sameAs"
+            ]  # noqa: E501
+            assert (
+                len(cross_ref_links) > 0
+            ), "Expected cross-reference links between similar nodes"  # noqa: E501
 
     @pytest.mark.asyncio
     async def test_error_handling_integration(self, service):
@@ -363,7 +419,7 @@ class TestReferenceServiceRefactored:
         failing_source.__aexit__ = AsyncMock(return_value=None)
         failing_source.search.side_effect = Exception("Connection timeout")
 
-        with patch.object(service, '_get_source', return_value=failing_source):
+        with patch.object(service, "_get_source", return_value=failing_source):
             request = DBpediaSearchRequest(query="test", limit=5)
             response = await service.dbpedia_search(request)
 
@@ -382,7 +438,11 @@ class TestReferenceServiceRefactored:
         # Create sources with artificial delays
         slow_sources = {}
 
-        for source_type in [SourceType.DBPEDIA, SourceType.CONCEPTNET, SourceType.WIKIDATA]:  # noqa: E501
+        for source_type in [
+            SourceType.DBPEDIA,
+            SourceType.CONCEPTNET,
+            SourceType.WIKIDATA,
+        ]:  # noqa: E501
             source = AsyncMock()
             source.__aenter__ = AsyncMock(return_value=source)
             source.__aexit__ = AsyncMock(return_value=None)
@@ -390,18 +450,22 @@ class TestReferenceServiceRefactored:
             # Add delay to simulate network latency
             async def slow_response(*args, **kwargs):
                 await asyncio.sleep(0.1)  # 100ms delay
-                return getattr(source_type, 'mock_response', MultiSourceSearchResponse(  # noqa: E501
-                    query="test",
-                    results=[],
-                    links=[],
-                    total_results=0,
-                    total_links=0,
-                    sources_queried=[source_type.value],
-                    source_errors={},
-                    offset=0,
-                    limit=10,
-                    search_time_ms=100.0
-                ))
+                return getattr(
+                    source_type,
+                    "mock_response",
+                    MultiSourceSearchResponse(  # noqa: E501
+                        query="test",
+                        results=[],
+                        links=[],
+                        total_results=0,
+                        total_links=0,
+                        sources_queried=[source_type.value],
+                        source_errors={},
+                        offset=0,
+                        limit=10,
+                        search_time_ms=100.0,
+                    ),
+                )
 
             # Mock appropriate methods based on source type
             if source_type == SourceType.DBPEDIA:
@@ -416,28 +480,38 @@ class TestReferenceServiceRefactored:
         def mock_get_source(source_type):
             return slow_sources.get(source_type, AsyncMock())
 
-        with patch.object(service, '_get_source', side_effect=mock_get_source):
+        with patch.object(service, "_get_source", side_effect=mock_get_source):
             from reference_api.models import MultiSourceSearchRequest
 
             start_time = time.time()
             request = MultiSourceSearchRequest(
                 query="test",
-                sources=[SourceType.DBPEDIA, SourceType.CONCEPTNET, SourceType.WIKIDATA],  # noqa: E501
-                limit=5
+                sources=[
+                    SourceType.DBPEDIA,
+                    SourceType.CONCEPTNET,
+                    SourceType.WIKIDATA,
+                ],  # noqa: E501
+                limit=5,
             )
             response = await service.search(request)
             execution_time = time.time() - start_time
 
             # Should complete in roughly 100ms (parallel) rather than 300ms (sequential)  # noqa: E501
-            assert execution_time < 0.2, f"Expected parallel execution, but took {execution_time:.3f}s"  # noqa: E501
+            assert (
+                execution_time < 0.2
+            ), f"Expected parallel execution, but took {execution_time:.3f}s"  # noqa: E501
             assert isinstance(response, MultiSourceSearchResponse)
 
     @pytest.mark.asyncio
-    async def test_backwards_compatibility_legacy_methods(self, service, mock_dbpedia_source):  # noqa: E501
+    async def test_backwards_compatibility_legacy_methods(
+        self, service, mock_dbpedia_source
+    ):  # noqa: E501
         """Test that legacy wrapper methods still work for backwards compatibility."""  # noqa: E501
-        with patch.object(service, '_get_source', return_value=mock_dbpedia_source):  # noqa: E501
+        with patch.object(
+            service, "_get_source", return_value=mock_dbpedia_source
+        ):  # noqa: E501
             # Test legacy DBpedia search method exists and works
-            assert hasattr(service, 'dbpedia_search_legacy')
+            assert hasattr(service, "dbpedia_search_legacy")
 
             request = DBpediaSearchRequest(query="python", limit=10)
             legacy_response = await service.dbpedia_search_legacy(request)
@@ -466,9 +540,9 @@ class TestReferenceServiceRefactored:
                     label="Python",  # Same title
                     description="Programming language",
                     score=0.95,
-                    types=["ProgrammingLanguage"]
+                    types=["ProgrammingLanguage"],
                 )
-            ]
+            ],
         )
 
         wikidata_source = AsyncMock()
@@ -482,51 +556,61 @@ class TestReferenceServiceRefactored:
                 "results": {
                     "bindings": [
                         {
-                            "item": {"value": "http://www.wikidata.org/entity/Q28865"},  # noqa: E501
+                            "item": {
+                                "value": "http://www.wikidata.org/entity/Q28865"
+                            },  # noqa: E501
                             "itemLabel": {"value": "Python"},  # Same title
-                            "itemDescription": {"value": "programming language"}  # noqa: E501
+                            "itemDescription": {
+                                "value": "programming language"
+                            },  # noqa: E501
                         }
                     ]
                 }
-            }
+            },
         )
 
         mock_sources = {
             SourceType.DBPEDIA: dbpedia_source,
-            SourceType.WIKIDATA: wikidata_source
+            SourceType.WIKIDATA: wikidata_source,
         }
 
         def mock_get_source(source_type):
             return mock_sources[source_type]
 
-        with patch.object(service, '_get_source', side_effect=mock_get_source):
+        with patch.object(service, "_get_source", side_effect=mock_get_source):
             from reference_api.models import MultiSourceSearchRequest
 
             request = MultiSourceSearchRequest(
                 query="Python",
                 sources=[SourceType.DBPEDIA, SourceType.WIKIDATA],
-                limit=10
+                limit=10,
             )
             response = await service.search(request)
 
             # Should have cross-reference links
-            cross_ref_links = [link for link in response.links if link.predicate == "sameAs"]  # noqa: E501
+            cross_ref_links = [
+                link for link in response.links if link.predicate == "sameAs"
+            ]  # noqa: E501
             assert len(cross_ref_links) > 0
 
             # Verify cross-reference link properties
             cross_ref = cross_ref_links[0]
             assert cross_ref.attributes["link_type"] == "cross_reference"
             assert cross_ref.attributes["confidence"] >= 0.8
-            assert "dbpedia:" in cross_ref.subject or "dbpedia:" in cross_ref.object  # noqa: E501
-            assert "wikidata:" in cross_ref.subject or "wikidata:" in cross_ref.object  # noqa: E501
+            assert (
+                "dbpedia:" in cross_ref.subject or "dbpedia:" in cross_ref.object
+            )  # noqa: E501
+            assert (
+                "wikidata:" in cross_ref.subject or "wikidata:" in cross_ref.object
+            )  # noqa: E501
 
     @pytest.mark.asyncio
     async def test_service_components_integration(self, service):
         """Test that all service components work together correctly."""
         # Verify service has all expected components
-        assert hasattr(service, 'normalizer')
-        assert hasattr(service, 'aggregator')
-        assert hasattr(service, 'response_builder')
+        assert hasattr(service, "normalizer")
+        assert hasattr(service, "aggregator")
+        assert hasattr(service, "response_builder")
 
         # Verify components are properly initialized
         assert service.normalizer is not None
@@ -534,6 +618,8 @@ class TestReferenceServiceRefactored:
         assert service.response_builder is not None
 
         # Test that components have expected methods
-        assert hasattr(service.normalizer, 'normalize_dbpedia_search_response')
-        assert hasattr(service.aggregator, 'deduplicate_nodes')
-        assert hasattr(service.response_builder, 'build_single_source_response')  # noqa: E501
+        assert hasattr(service.normalizer, "normalize_dbpedia_search_response")
+        assert hasattr(service.aggregator, "deduplicate_nodes")
+        assert hasattr(
+            service.response_builder, "build_single_source_response"
+        )  # noqa: E501

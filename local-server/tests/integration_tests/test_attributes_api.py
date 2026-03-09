@@ -10,7 +10,10 @@ import os
 from uuid import uuid4
 
 sys.path.insert(
-    0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))  # noqa: E501
+    0,
+    os.path.dirname(
+        os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    ),  # noqa: E501
 )
 
 
@@ -32,7 +35,9 @@ class TestAttributesAPIBasicOperations:
         layer = layer_response.json()
 
         # Get attributes
-        attr_response = client.get(f"/api/structure_nodes/{layer['id']}/attributes")  # noqa: E501
+        attr_response = client.get(
+            f"/api/structure_nodes/{layer['id']}/attributes"
+        )  # noqa: E501
         assert attr_response.status_code == 200
         attributes = attr_response.json()
         assert attributes == []
@@ -56,20 +61,22 @@ class TestAttributesAPIBasicOperations:
                 "key": "domain_classification",
                 "title": "Domain Category",
                 "value_type": "string",
-                "value": "legal"
+                "value": "legal",
             }
         ]
 
         set_response = client.post(
             f"/api/structure_nodes/{layer['id']}/attributes",
-            json={"attributes": attributes}
+            json={"attributes": attributes},
         )
         assert set_response.status_code == 200
         updated_node = set_response.json()
         assert updated_node["version"] == 2  # Version incremented
 
         # Verify attributes were set
-        get_response = client.get(f"/api/structure_nodes/{layer['id']}/attributes")  # noqa: E501
+        get_response = client.get(
+            f"/api/structure_nodes/{layer['id']}/attributes"
+        )  # noqa: E501
         assert get_response.status_code == 200
         result_attrs = get_response.json()
         assert len(result_attrs) == 1
@@ -96,30 +103,32 @@ class TestAttributesAPIBasicOperations:
                 "key": "category",
                 "title": "Category",
                 "value_type": "string",
-                "value": "legal"
+                "value": "legal",
             },
             {
                 "key": "version_number",
                 "title": "Version",
                 "value_type": "number",
-                "value": 1
+                "value": 1,
             },
             {
                 "key": "is_active",
                 "title": "Active",
                 "value_type": "boolean",
-                "value": True
-            }
+                "value": True,
+            },
         ]
 
         set_response = client.post(
             f"/api/structure_nodes/{layer['id']}/attributes",
-            json={"attributes": attributes}
+            json={"attributes": attributes},
         )
         assert set_response.status_code == 200
 
         # Verify all attributes were set
-        get_response = client.get(f"/api/structure_nodes/{layer['id']}/attributes")  # noqa: E501
+        get_response = client.get(
+            f"/api/structure_nodes/{layer['id']}/attributes"
+        )  # noqa: E501
         assert get_response.status_code == 200
         result_attrs = get_response.json()
         assert len(result_attrs) == 3
@@ -146,19 +155,19 @@ class TestAttributesAPIBasicOperations:
                 "key": "category",
                 "title": "Category",
                 "value_type": "string",
-                "value": "legal"
+                "value": "legal",
             },
             {
                 "key": "version_number",
                 "title": "Version",
                 "value_type": "number",
-                "value": 1
-            }
+                "value": 1,
+            },
         ]
 
         set_response = client.post(
             f"/api/structure_nodes/{layer['id']}/attributes",
-            json={"attributes": attributes}
+            json={"attributes": attributes},
         )
         assert set_response.status_code == 200
 
@@ -171,7 +180,9 @@ class TestAttributesAPIBasicOperations:
         assert updated_node["version"] == 3  # Version incremented again
 
         # Verify attribute was removed
-        get_response = client.get(f"/api/structure_nodes/{layer['id']}/attributes")  # noqa: E501
+        get_response = client.get(
+            f"/api/structure_nodes/{layer['id']}/attributes"
+        )  # noqa: E501
         assert get_response.status_code == 200
         result_attrs = get_response.json()
         assert len(result_attrs) == 1
@@ -196,32 +207,29 @@ class TestAttributesAPIBasicOperations:
                 "key": "category",
                 "title": "Category",
                 "value_type": "string",
-                "value": "legal"
+                "value": "legal",
             }
         ]
 
         client.post(
             f"/api/structure_nodes/{layer['id']}/attributes",
-            json={"attributes": attributes_v1}
+            json={"attributes": attributes_v1},
         )
 
         # Set new attributes (should replace old ones)
         attributes_v2 = [
-            {
-                "key": "version",
-                "title": "Version",
-                "value_type": "number",
-                "value": 2
-            }
+            {"key": "version", "title": "Version", "value_type": "number", "value": 2}
         ]
 
         client.post(
             f"/api/structure_nodes/{layer['id']}/attributes",
-            json={"attributes": attributes_v2}
+            json={"attributes": attributes_v2},
         )
 
         # Verify old attribute is gone
-        get_response = client.get(f"/api/structure_nodes/{layer['id']}/attributes")  # noqa: E501
+        get_response = client.get(
+            f"/api/structure_nodes/{layer['id']}/attributes"
+        )  # noqa: E501
         assert get_response.status_code == 200
         result_attrs = get_response.json()
         assert len(result_attrs) == 1
@@ -249,12 +257,12 @@ class TestAttributesInheritance:
                 "key": "category",
                 "title": "Category",
                 "value_type": "string",
-                "value": "legal"
+                "value": "legal",
             }
         ]
         client.post(
             f"/api/structure_nodes/{layer['id']}/attributes",
-            json={"attributes": layer_attrs}
+            json={"attributes": layer_attrs},
         )
 
         # Create domain under layer
@@ -265,7 +273,9 @@ class TestAttributesInheritance:
             "parent_node_id": layer["id"],
             "definition": "Test domain",
         }
-        domain_response = client.post("/api/structure_nodes/", json=domain_data)  # noqa: E501
+        domain_response = client.post(
+            "/api/structure_nodes/", json=domain_data
+        )  # noqa: E501
         domain = domain_response.json()
 
         # Create term under domain
@@ -280,7 +290,9 @@ class TestAttributesInheritance:
         term = term_response.json()
 
         # Get term attributes - should inherit from layer
-        attr_response = client.get(f"/api/structure_nodes/{term['id']}/attributes")  # noqa: E501
+        attr_response = client.get(
+            f"/api/structure_nodes/{term['id']}/attributes"
+        )  # noqa: E501
         assert attr_response.status_code == 200
         result_attrs = attr_response.json()
 
@@ -309,12 +321,12 @@ class TestAttributesInheritance:
                 "key": "jurisdiction",
                 "title": "Jurisdiction",
                 "value_type": "string",
-                "value": "US Federal"
+                "value": "US Federal",
             }
         ]
         client.post(
             f"/api/structure_nodes/{layer['id']}/attributes",
-            json={"attributes": layer_attrs}
+            json={"attributes": layer_attrs},
         )
 
         # Create domain under layer
@@ -325,7 +337,9 @@ class TestAttributesInheritance:
             "parent_node_id": layer["id"],
             "definition": "Test domain",
         }
-        domain_response = client.post("/api/structure_nodes/", json=domain_data)  # noqa: E501
+        domain_response = client.post(
+            "/api/structure_nodes/", json=domain_data
+        )  # noqa: E501
         domain = domain_response.json()
 
         # Create term under domain with overriding attribute
@@ -345,16 +359,18 @@ class TestAttributesInheritance:
                 "key": "jurisdiction",
                 "title": "Jurisdiction",
                 "value_type": "string",
-                "value": "New York State"
+                "value": "New York State",
             }
         ]
         client.post(
             f"/api/structure_nodes/{term['id']}/attributes",
-            json={"attributes": term_attrs}
+            json={"attributes": term_attrs},
         )
 
         # Get term attributes
-        attr_response = client.get(f"/api/structure_nodes/{term['id']}/attributes")  # noqa: E501
+        attr_response = client.get(
+            f"/api/structure_nodes/{term['id']}/attributes"
+        )  # noqa: E501
         assert attr_response.status_code == 200
         result_attrs = attr_response.json()
 
@@ -384,12 +400,12 @@ class TestAttributesInheritance:
                 "key": "category",
                 "title": "Category",
                 "value_type": "string",
-                "value": "legal"
+                "value": "legal",
             }
         ]
         client.post(
             f"/api/structure_nodes/{layer['id']}/attributes",
-            json={"attributes": layer_attrs}
+            json={"attributes": layer_attrs},
         )
 
         # Create domain with its own attribute
@@ -400,7 +416,9 @@ class TestAttributesInheritance:
             "parent_node_id": layer["id"],
             "definition": "Test domain",
         }
-        domain_response = client.post("/api/structure_nodes/", json=domain_data)  # noqa: E501
+        domain_response = client.post(
+            "/api/structure_nodes/", json=domain_data
+        )  # noqa: E501
         domain = domain_response.json()
 
         # Set domain attribute
@@ -409,12 +427,12 @@ class TestAttributesInheritance:
                 "key": "jurisdiction",
                 "title": "Jurisdiction",
                 "value_type": "string",
-                "value": "US Federal"
+                "value": "US Federal",
             }
         ]
         client.post(
             f"/api/structure_nodes/{domain['id']}/attributes",
-            json={"attributes": domain_attrs}
+            json={"attributes": domain_attrs},
         )
 
         # Create term under domain
@@ -429,7 +447,9 @@ class TestAttributesInheritance:
         term = term_response.json()
 
         # Get term attributes - should have both layer and domain attributes
-        attr_response = client.get(f"/api/structure_nodes/{term['id']}/attributes")  # noqa: E501
+        attr_response = client.get(
+            f"/api/structure_nodes/{term['id']}/attributes"
+        )  # noqa: E501
         assert attr_response.status_code == 200
         result_attrs = attr_response.json()
 
@@ -465,13 +485,13 @@ class TestAttributeValidation:
                 "key": "123invalid",  # Invalid: starts with number
                 "title": "Title",
                 "value_type": "string",
-                "value": "test"
+                "value": "test",
             }
         ]
 
         response = client.post(
             f"/api/structure_nodes/{layer['id']}/attributes",
-            json={"attributes": attributes}
+            json={"attributes": attributes},
         )
         # Should fail validation
         assert response.status_code >= 400
@@ -495,13 +515,13 @@ class TestAttributeValidation:
                 "key": "count",
                 "title": "Count",
                 "value_type": "number",
-                "value": "not_a_number"
+                "value": "not_a_number",
             }
         ]
 
         response = client.post(
             f"/api/structure_nodes/{layer['id']}/attributes",
-            json={"attributes": attributes}
+            json={"attributes": attributes},
         )
         # Should fail validation
         assert response.status_code >= 400
@@ -525,13 +545,13 @@ class TestAttributeValidation:
                 "key": "active",
                 "title": "Active",
                 "value_type": "boolean",
-                "value": "yes"  # String instead of boolean
+                "value": "yes",  # String instead of boolean
             }
         ]
 
         response = client.post(
             f"/api/structure_nodes/{layer['id']}/attributes",
-            json={"attributes": attributes}
+            json={"attributes": attributes},
         )
         # Should fail validation
         assert response.status_code >= 400
@@ -555,13 +575,13 @@ class TestAttributeValidation:
                 "key": "created",
                 "title": "Created",
                 "value_type": "date",
-                "value": "2025/01/15"  # Invalid format
+                "value": "2025/01/15",  # Invalid format
             }
         ]
 
         response = client.post(
             f"/api/structure_nodes/{layer['id']}/attributes",
-            json={"attributes": attributes}
+            json={"attributes": attributes},
         )
         # Should fail validation
         assert response.status_code >= 400
@@ -585,13 +605,13 @@ class TestAttributeValidation:
                 "key": "created",
                 "title": "Created",
                 "value_type": "date",
-                "value": "2025-01-15"  # Valid ISO 8601 format
+                "value": "2025-01-15",  # Valid ISO 8601 format
             }
         ]
 
         response = client.post(
             f"/api/structure_nodes/{layer['id']}/attributes",
-            json={"attributes": attributes}
+            json={"attributes": attributes},
         )
         # Should succeed
         assert response.status_code == 200
@@ -615,13 +635,13 @@ class TestAttributeValidation:
                 "key": "reference",
                 "title": "Reference",
                 "value_type": "url",
-                "value": "not-a-url"  # Missing protocol
+                "value": "not-a-url",  # Missing protocol
             }
         ]
 
         response = client.post(
             f"/api/structure_nodes/{layer['id']}/attributes",
-            json={"attributes": attributes}
+            json={"attributes": attributes},
         )
         # Should fail validation
         assert response.status_code >= 400
@@ -645,19 +665,19 @@ class TestAttributeValidation:
                 "key": "https_ref",
                 "title": "HTTPS Reference",
                 "value_type": "url",
-                "value": "https://example.com/path"
+                "value": "https://example.com/path",
             },
             {
                 "key": "http_ref",
                 "title": "HTTP Reference",
                 "value_type": "url",
-                "value": "http://example.com"
-            }
+                "value": "http://example.com",
+            },
         ]
 
         response = client.post(
             f"/api/structure_nodes/{layer['id']}/attributes",
-            json={"attributes": attributes}
+            json={"attributes": attributes},
         )
         # Should succeed
         assert response.status_code == 200
@@ -683,19 +703,21 @@ class TestAttributeValidation:
                 "key": "optional_field",
                 "title": "Optional Field",
                 "value_type": "string",
-                "value": None
+                "value": None,
             }
         ]
 
         response = client.post(
             f"/api/structure_nodes/{layer['id']}/attributes",
-            json={"attributes": attributes}
+            json={"attributes": attributes},
         )
         # Should succeed - null values are allowed
         assert response.status_code == 200
 
         # Verify attribute was set with null value
-        get_response = client.get(f"/api/structure_nodes/{layer['id']}/attributes")  # noqa: E501
+        get_response = client.get(
+            f"/api/structure_nodes/{layer['id']}/attributes"
+        )  # noqa: E501
         result_attrs = get_response.json()
         assert len(result_attrs) == 1
         assert result_attrs[0]["value"] is None
@@ -714,23 +736,20 @@ class TestAttributeErrorHandling:
         """Test POST attributes endpoint returns 404 for non-existent node."""
         fake_id = str(uuid4())
         attributes = [
-            {
-                "key": "test",
-                "title": "Test",
-                "value_type": "string",
-                "value": "test"
-            }
+            {"key": "test", "title": "Test", "value_type": "string", "value": "test"}
         ]
         response = client.post(
             f"/api/structure_nodes/{fake_id}/attributes",
-            json={"attributes": attributes}
+            json={"attributes": attributes},
         )
         assert response.status_code == 404
 
     def test_remove_attributes_node_not_found(self, client):
         """Test DELETE attributes endpoint returns 404 for non-existent node."""  # noqa: E501
         fake_id = str(uuid4())
-        response = client.delete(f"/api/structure_nodes/{fake_id}/attributes/test_key")  # noqa: E501
+        response = client.delete(
+            f"/api/structure_nodes/{fake_id}/attributes/test_key"
+        )  # noqa: E501
         assert response.status_code == 404
 
     def test_remove_nonexistent_attribute_key(self, client):
@@ -752,12 +771,12 @@ class TestAttributeErrorHandling:
                 "key": "category",
                 "title": "Category",
                 "value_type": "string",
-                "value": "test"
+                "value": "test",
             }
         ]
         client.post(
             f"/api/structure_nodes/{layer['id']}/attributes",
-            json={"attributes": attributes}
+            json={"attributes": attributes},
         )
 
         # Remove a non-existent key
@@ -767,7 +786,9 @@ class TestAttributeErrorHandling:
         assert response.status_code == 200
 
         # Verify original attribute still exists
-        get_response = client.get(f"/api/structure_nodes/{layer['id']}/attributes")  # noqa: E501
+        get_response = client.get(
+            f"/api/structure_nodes/{layer['id']}/attributes"
+        )  # noqa: E501
         result_attrs = get_response.json()
         assert len(result_attrs) == 1
         assert result_attrs[0]["key"] == "category"
@@ -795,23 +816,24 @@ class TestAttributeEdgeCases:
                 "key": "category",
                 "title": "Category",
                 "value_type": "string",
-                "value": "test"
+                "value": "test",
             }
         ]
         client.post(
             f"/api/structure_nodes/{layer['id']}/attributes",
-            json={"attributes": initial_attrs}
+            json={"attributes": initial_attrs},
         )
 
         # Set empty attributes list
         response = client.post(
-            f"/api/structure_nodes/{layer['id']}/attributes",
-            json={"attributes": []}
+            f"/api/structure_nodes/{layer['id']}/attributes", json={"attributes": []}
         )
         assert response.status_code == 200
 
         # Verify all attributes were removed
-        get_response = client.get(f"/api/structure_nodes/{layer['id']}/attributes")  # noqa: E501
+        get_response = client.get(
+            f"/api/structure_nodes/{layer['id']}/attributes"
+        )  # noqa: E501
         result_attrs = get_response.json()
         assert result_attrs == []
 
@@ -833,12 +855,12 @@ class TestAttributeEdgeCases:
                 "key": "root_attr",
                 "title": "Root Attribute",
                 "value_type": "string",
-                "value": "from_layer"
+                "value": "from_layer",
             }
         ]
         client.post(
             f"/api/structure_nodes/{layer['id']}/attributes",
-            json={"attributes": layer_attrs}
+            json={"attributes": layer_attrs},
         )
 
         # Create domain
@@ -849,7 +871,9 @@ class TestAttributeEdgeCases:
             "parent_node_id": layer["id"],
             "definition": "Test domain",
         }
-        domain_response = client.post("/api/structure_nodes/", json=domain_data)  # noqa: E501
+        domain_response = client.post(
+            "/api/structure_nodes/", json=domain_data
+        )  # noqa: E501
         domain = domain_response.json()
 
         # Create nested terms (5+ levels)
@@ -862,12 +886,16 @@ class TestAttributeEdgeCases:
                 "parent_node_id": current_parent,
                 "definition": f"Test term level {i}",
             }
-            term_response = client.post("/api/structure_nodes/", json=term_data)  # noqa: E501
+            term_response = client.post(
+                "/api/structure_nodes/", json=term_data
+            )  # noqa: E501
             current_term = term_response.json()
             current_parent = current_term["id"]
 
         # Get attributes of deeply nested term - should inherit from layer
-        attr_response = client.get(f"/api/structure_nodes/{current_parent}/attributes")  # noqa: E501
+        attr_response = client.get(
+            f"/api/structure_nodes/{current_parent}/attributes"
+        )  # noqa: E501
         assert attr_response.status_code == 200
         result_attrs = attr_response.json()
 
@@ -895,12 +923,12 @@ class TestAttributeEdgeCases:
                 "key": "shared_key",
                 "title": "Shared Key",
                 "value_type": "string",
-                "value": "layer_value"
+                "value": "layer_value",
             }
         ]
         client.post(
             f"/api/structure_nodes/{layer['id']}/attributes",
-            json={"attributes": layer_attrs}
+            json={"attributes": layer_attrs},
         )
 
         # Create domain with same key
@@ -911,7 +939,9 @@ class TestAttributeEdgeCases:
             "parent_node_id": layer["id"],
             "definition": "Test domain",
         }
-        domain_response = client.post("/api/structure_nodes/", json=domain_data)  # noqa: E501
+        domain_response = client.post(
+            "/api/structure_nodes/", json=domain_data
+        )  # noqa: E501
         domain = domain_response.json()
 
         domain_attrs = [
@@ -919,12 +949,12 @@ class TestAttributeEdgeCases:
                 "key": "shared_key",
                 "title": "Shared Key",
                 "value_type": "string",
-                "value": "domain_value"
+                "value": "domain_value",
             }
         ]
         client.post(
             f"/api/structure_nodes/{domain['id']}/attributes",
-            json={"attributes": domain_attrs}
+            json={"attributes": domain_attrs},
         )
 
         # Create term under domain
@@ -939,7 +969,9 @@ class TestAttributeEdgeCases:
         term = term_response.json()
 
         # Term should get domain's value (nearest ancestor)
-        attr_response = client.get(f"/api/structure_nodes/{term['id']}/attributes")  # noqa: E501
+        attr_response = client.get(
+            f"/api/structure_nodes/{term['id']}/attributes"
+        )  # noqa: E501
         result_attrs = attr_response.json()
 
         assert len(result_attrs) == 1
@@ -966,47 +998,50 @@ class TestAttributeEdgeCases:
                 "key": "str_attr",
                 "title": "String",
                 "value_type": "string",
-                "value": "test_value"
+                "value": "test_value",
             },
-            {
-                "key": "num_attr",
-                "title": "Number",
-                "value_type": "number",
-                "value": 42
-            },
+            {"key": "num_attr", "title": "Number", "value_type": "number", "value": 42},
             {
                 "key": "bool_attr",
                 "title": "Boolean",
                 "value_type": "boolean",
-                "value": True
+                "value": True,
             },
             {
                 "key": "date_attr",
                 "title": "Date",
                 "value_type": "date",
-                "value": "2025-01-15"
+                "value": "2025-01-15",
             },
             {
                 "key": "url_attr",
                 "title": "URL",
                 "value_type": "url",
-                "value": "https://example.com"
-            }
+                "value": "https://example.com",
+            },
         ]
 
         set_response = client.post(
             f"/api/structure_nodes/{layer['id']}/attributes",
-            json={"attributes": attributes}
+            json={"attributes": attributes},
         )
         assert set_response.status_code == 200
 
         # Verify all attributes
-        get_response = client.get(f"/api/structure_nodes/{layer['id']}/attributes")  # noqa: E501
+        get_response = client.get(
+            f"/api/structure_nodes/{layer['id']}/attributes"
+        )  # noqa: E501
         result_attrs = get_response.json()
 
         assert len(result_attrs) == 5
         keys = {attr["key"] for attr in result_attrs}
-        assert keys == {"str_attr", "num_attr", "bool_attr", "date_attr", "url_attr"}  # noqa: E501
+        assert keys == {
+            "str_attr",
+            "num_attr",
+            "bool_attr",
+            "date_attr",
+            "url_attr",
+        }  # noqa: E501
 
 
 class TestOptimisticLocking:
@@ -1032,13 +1067,13 @@ class TestOptimisticLocking:
                 "key": "category",
                 "title": "Category",
                 "value_type": "string",
-                "value": "legal"
+                "value": "legal",
             }
         ]
 
         set_response = client.post(
             f"/api/structure_nodes/{layer['id']}/attributes",
-            json={"attributes": attributes_v1}
+            json={"attributes": attributes_v1},
         )
         assert set_response.status_code == 200
         updated_node = set_response.json()
@@ -1063,13 +1098,13 @@ class TestOptimisticLocking:
                 "key": "category",
                 "title": "Category",
                 "value_type": "string",
-                "value": "legal"
+                "value": "legal",
             }
         ]
 
         set_response1 = client.post(
             f"/api/structure_nodes/{layer['id']}/attributes",
-            json={"attributes": attributes_v1}
+            json={"attributes": attributes_v1},
         )
         assert set_response1.status_code == 200
         node_after_v1 = set_response1.json()
@@ -1081,16 +1116,13 @@ class TestOptimisticLocking:
                 "key": "status",
                 "title": "Status",
                 "value_type": "string",
-                "value": "active"
+                "value": "active",
             }
         ]
 
         set_response2 = client.post(
             f"/api/structure_nodes/{layer['id']}/attributes",
-            json={
-                "attributes": attributes_v2,
-                "expected_version": v1_version
-            }
+            json={"attributes": attributes_v2, "expected_version": v1_version},
         )
         assert set_response2.status_code == 200
         node_after_v2 = set_response2.json()
@@ -1116,13 +1148,13 @@ class TestOptimisticLocking:
                 "key": "category",
                 "title": "Category",
                 "value_type": "string",
-                "value": "legal"
+                "value": "legal",
             }
         ]
 
         set_response1 = client.post(
             f"/api/structure_nodes/{layer['id']}/attributes",
-            json={"attributes": attributes_v1}
+            json={"attributes": attributes_v1},
         )
         assert set_response1.status_code == 200
 
@@ -1132,7 +1164,7 @@ class TestOptimisticLocking:
                 "key": "status",
                 "title": "Status",
                 "value_type": "string",
-                "value": "active"
+                "value": "active",
             }
         ]
 
@@ -1140,8 +1172,8 @@ class TestOptimisticLocking:
             f"/api/structure_nodes/{layer['id']}/attributes",
             json={
                 "attributes": attributes_v2,
-                "expected_version": initial_version  # This is stale
-            }
+                "expected_version": initial_version,  # This is stale
+            },
         )
         assert set_response2.status_code == 409
         error_response = set_response2.json()
@@ -1171,16 +1203,13 @@ class TestOptimisticLocking:
                 "key": "category",
                 "title": "Category",
                 "value_type": "string",
-                "value": "legal"
+                "value": "legal",
             }
         ]
 
         response_a = client.post(
             f"/api/structure_nodes/{layer['id']}/attributes",
-            json={
-                "attributes": attrs_user_a,
-                "expected_version": initial_version
-            }
+            json={"attributes": attrs_user_a, "expected_version": initial_version},
         )
         assert response_a.status_code == 200
         node_a = response_a.json()
@@ -1192,7 +1221,7 @@ class TestOptimisticLocking:
                 "key": "status",
                 "title": "Status",
                 "value_type": "string",
-                "value": "active"
+                "value": "active",
             }
         ]
 
@@ -1200,13 +1229,15 @@ class TestOptimisticLocking:
             f"/api/structure_nodes/{layer['id']}/attributes",
             json={
                 "attributes": attrs_user_b,
-                "expected_version": initial_version  # Stale - User A already updated  # noqa: E501
-            }
+                "expected_version": initial_version,  # Stale - User A already updated  # noqa: E501
+            },
         )
         assert response_b.status_code == 409
 
         # Verify User A's attributes are still there
-        get_response = client.get(f"/api/structure_nodes/{layer['id']}/attributes")  # noqa: E501
+        get_response = client.get(
+            f"/api/structure_nodes/{layer['id']}/attributes"
+        )  # noqa: E501
         result_attrs = get_response.json()
         assert len(result_attrs) == 1
         assert result_attrs[0]["key"] == "category"
@@ -1228,26 +1259,17 @@ class TestOptimisticLocking:
 
         # Update the node
         attrs = [
-            {
-                "key": "test",
-                "title": "Test",
-                "value_type": "string",
-                "value": "test"
-            }
+            {"key": "test", "title": "Test", "value_type": "string", "value": "test"}
         ]
 
         client.post(
-            f"/api/structure_nodes/{layer['id']}/attributes",
-            json={"attributes": attrs}
+            f"/api/structure_nodes/{layer['id']}/attributes", json={"attributes": attrs}
         )
 
         # Try to update with stale version
         conflict_response = client.post(
             f"/api/structure_nodes/{layer['id']}/attributes",
-            json={
-                "attributes": attrs,
-                "expected_version": initial_version
-            }
+            json={"attributes": attrs, "expected_version": initial_version},
         )
 
         assert conflict_response.status_code == 409
@@ -1257,4 +1279,6 @@ class TestOptimisticLocking:
         error_msg = error_data["detail"][0]["msg"]
         # Error message should contain version information
         assert "version" in error_msg.lower()
-        assert str(initial_version) in error_msg or "expected" in error_msg.lower()  # noqa: E501
+        assert (
+            str(initial_version) in error_msg or "expected" in error_msg.lower()
+        )  # noqa: E501

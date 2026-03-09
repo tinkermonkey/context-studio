@@ -3,9 +3,13 @@ Unit tests for RAG processors.
 
 Tests each of the four processor layers with mocked dependencies.
 """
+
 import sys
 import os
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+
+sys.path.insert(
+    0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+)
 
 import pytest  # noqa: E402
 from unittest.mock import Mock, patch  # noqa: E402
@@ -20,7 +24,7 @@ from rag.processors.models import (  # noqa: E402
     KGNode,
     GapConcept,
     GapPriority,
-    ResolutionMethod
+    ResolutionMethod,
 )
 
 
@@ -35,7 +39,7 @@ class TestKGContextProcessor:
     @pytest.fixture
     def mock_nlp_pipeline(self):
         """Mock NLP pipeline"""
-        with patch('rag.processors.kg_context.get_pipeline') as mock:
+        with patch("rag.processors.kg_context.get_pipeline") as mock:
             pipeline = Mock()
             # Mock spaCy doc with sentences
             doc = Mock()
@@ -52,7 +56,7 @@ class TestKGContextProcessor:
     @pytest.fixture
     def mock_embedding_model(self):
         """Mock embedding model"""
-        with patch('rag.processors.kg_context.get_model') as mock:
+        with patch("rag.processors.kg_context.get_model") as mock:
             model = Mock()
             model.encode.return_value = [np.random.rand(384).astype(np.float32)]
             mock.return_value = model
@@ -66,7 +70,9 @@ class TestKGContextProcessor:
         assert processor.top_k == 30
         assert processor.db_session == mock_db_session
 
-    def test_process_with_empty_text(self, mock_db_session, mock_nlp_pipeline, mock_embedding_model):
+    def test_process_with_empty_text(
+        self, mock_db_session, mock_nlp_pipeline, mock_embedding_model
+    ):
         """Test processing with empty text"""
         from rag.processors.kg_context import KGContextProcessor
 
@@ -80,7 +86,9 @@ class TestKGContextProcessor:
         assert isinstance(output.extracted_phrases, list)
         assert isinstance(output.kg_nodes, list)
 
-    def test_trace_capture_enabled(self, mock_db_session, mock_nlp_pipeline, mock_embedding_model):
+    def test_trace_capture_enabled(
+        self, mock_db_session, mock_nlp_pipeline, mock_embedding_model
+    ):
         """Test that trace data is captured when enabled"""
         from rag.processors.kg_context import KGContextProcessor
 
@@ -89,7 +97,7 @@ class TestKGContextProcessor:
 
         output = processor.process(input_data)
 
-        assert 'extracted_phrases' in output.trace_data or len(output.trace_data) >= 0
+        assert "extracted_phrases" in output.trace_data or len(output.trace_data) >= 0
 
     def test_cosine_similarity(self):
         """Test cosine similarity calculation"""
@@ -112,13 +120,13 @@ class TestLLMExtractionProcessor:
     @pytest.fixture
     def mock_llm_service(self):
         """Mock LLM service"""
-        with patch('rag.processors.llm_extraction.LLMService') as mock:
+        with patch("rag.processors.llm_extraction.LLMService") as mock:
             service = Mock()
             # Mock successful LLM response
             response = Mock()
             response.response_content = "Entity: test concept"
             response.execution_id = "test-exec-id"
-            response.token_usage = {'input_tokens': 10, 'output_tokens': 5}
+            response.token_usage = {"input_tokens": 10, "output_tokens": 5}
             service.execute_pipeline_flavor_sync = Mock(return_value=response)
             service.flavor_service = Mock()
             mock.return_value = service
@@ -147,21 +155,22 @@ class TestLLMExtractionProcessor:
                     title="test concept",
                     node_type="term",
                     similarity_score=0.8,
-                    definition="A test concept"
+                    definition="A test concept",
                 )
             ],
             total_sentences=1,
-            trace_data={}
+            trace_data={},
         )
 
         # Create a mock response
         from llm.models import PipelineExecutionResponse
+
         mock_response = PipelineExecutionResponse(
             response_content="Entity: test concept",
             execution_id="test-id",
             flavor_id="default",
             pipeline_type="extract_entities",
-            token_usage={'input_tokens': 10, 'output_tokens': 5}
+            token_usage={"input_tokens": 10, "output_tokens": 5},
         )
 
         # Mock the execute_pipeline_flavor_sync method
@@ -186,22 +195,24 @@ class TestLLMExtractionProcessor:
                     title="concept1",
                     node_type="term",
                     similarity_score=0.9,
-                    definition="Definition 1"
+                    definition="Definition 1",
                 ),
                 KGNode(
                     node_id="node2",
                     title="concept2",
                     node_type="domain",
                     similarity_score=0.8,
-                    definition="Definition 2"
-                )
+                    definition="Definition 2",
+                ),
             ],
             total_sentences=1,
-            trace_data={}
+            trace_data={},
         )
 
         formatted = processor._format_kg_context(kg_context)
-        assert "concept1" in formatted or "Relevant Knowledge Graph Context" in formatted
+        assert (
+            "concept1" in formatted or "Relevant Knowledge Graph Context" in formatted
+        )
         assert isinstance(formatted, str)
 
 
@@ -211,7 +222,7 @@ class TestSpaCyGapProcessor:
     @pytest.fixture
     def mock_nlp_pipeline(self):
         """Mock NLP pipeline"""
-        with patch('rag.processors.spacy_gap.get_pipeline') as mock:
+        with patch("rag.processors.spacy_gap.get_pipeline") as mock:
             pipeline = Mock()
             # Mock spaCy doc with sentences and noun chunks
             doc = Mock()
@@ -265,7 +276,7 @@ class TestSpaCyGapProcessor:
             entities=[],  # No entities recognized
             kg_context_size=0,
             token_usage=None,
-            trace_data={}
+            trace_data={},
         )
 
         output = processor.process(input_data, llm_output)
@@ -310,7 +321,7 @@ class TestConceptResolutionProcessor:
     @pytest.fixture
     def mock_embedding_model(self):
         """Mock embedding model"""
-        with patch('rag.processors.concept_resolution.get_model') as mock:
+        with patch("rag.processors.concept_resolution.get_model") as mock:
             model = Mock()
             model.encode.return_value = [np.random.rand(384).astype(np.float32)]
             mock.return_value = model
@@ -323,12 +334,14 @@ class TestConceptResolutionProcessor:
         processor = ConceptResolutionProcessor(
             mock_db_session,
             web_search_client=mock_web_search_client,
-            similarity_threshold=0.7
+            similarity_threshold=0.7,
         )
         assert processor.similarity_threshold == 0.7
         assert processor.web_search_client == mock_web_search_client
 
-    def test_process_with_no_gaps(self, mock_db_session, mock_web_search_client, mock_embedding_model):
+    def test_process_with_no_gaps(
+        self, mock_db_session, mock_web_search_client, mock_embedding_model
+    ):
         """Test processing with no gaps"""
         from rag.processors.concept_resolution import ConceptResolutionProcessor
 
@@ -336,24 +349,15 @@ class TestConceptResolutionProcessor:
         input_data = ProcessorInput(text="Test", enable_trace=False)
 
         kg_context = KGContextOutput(
-            extracted_phrases=[],
-            kg_nodes=[],
-            total_sentences=1,
-            trace_data={}
+            extracted_phrases=[], kg_nodes=[], total_sentences=1, trace_data={}
         )
 
         llm_output = LLMExtractionOutput(
-            entities=[],
-            kg_context_size=0,
-            token_usage=None,
-            trace_data={}
+            entities=[], kg_context_size=0, token_usage=None, trace_data={}
         )
 
         gap_output = SpaCyGapOutput(
-            gaps=[],  # No gaps
-            total_noun_phrases=0,
-            filtered_count=0,
-            trace_data={}
+            gaps=[], total_noun_phrases=0, filtered_count=0, trace_data={}  # No gaps
         )
 
         output = processor.process(input_data, kg_context, llm_output, gap_output)
@@ -369,7 +373,9 @@ class TestConceptResolutionProcessor:
         processor = ConceptResolutionProcessor(mock_db_session, mock_web_search_client)
 
         # Test cached KG confidence
-        conf = processor._calculate_confidence(ResolutionMethod.CACHED_KG, similarity=0.9)
+        conf = processor._calculate_confidence(
+            ResolutionMethod.CACHED_KG, similarity=0.9
+        )
         assert 0.7 <= conf <= 0.8
 
         # Test full KG confidence
@@ -377,7 +383,9 @@ class TestConceptResolutionProcessor:
         assert 0.6 <= conf <= 0.75
 
         # Test web search confidence
-        conf = processor._calculate_confidence(ResolutionMethod.WEB_SEARCH, snippet_length=150)
+        conf = processor._calculate_confidence(
+            ResolutionMethod.WEB_SEARCH, snippet_length=150
+        )
         assert 0.5 <= conf <= 0.6
 
     def test_should_perform_web_search(self, mock_db_session, mock_web_search_client):
@@ -396,7 +404,7 @@ class TestConceptResolutionProcessor:
             connected_verb="is",
             start_char=0,
             end_char=4,
-            tf_idf_score=0.5
+            tf_idf_score=0.5,
         )
         assert processor._should_perform_web_search(gap_critical)
 
@@ -410,7 +418,7 @@ class TestConceptResolutionProcessor:
             connected_verb="",
             start_char=0,
             end_char=4,
-            tf_idf_score=0.5
+            tf_idf_score=0.5,
         )
         assert not processor._should_perform_web_search(gap_contextual)
 
@@ -447,7 +455,9 @@ class TestWebSearchClient:
         """Test web search client initializes correctly"""
         from rag.processors.web_search import RateLimitedWebSearchClient
 
-        client = RateLimitedWebSearchClient(rate_limit_per_minute=10, max_attempts_per_session=20)
+        client = RateLimitedWebSearchClient(
+            rate_limit_per_minute=10, max_attempts_per_session=20
+        )
         assert client.max_attempts_per_session == 20
         assert client.session_attempt_count == 0
 
@@ -470,7 +480,7 @@ class TestWebSearchClient:
         client.session_attempt_count = 2
         assert not client.can_search()
 
-    @patch('rag.processors.web_search.requests.get')
+    @patch("rag.processors.web_search.requests.get")
     def test_search_with_rate_limit(self, mock_get):
         """Test search respects rate limiting"""
         from rag.processors.web_search import RateLimitedWebSearchClient
@@ -478,15 +488,19 @@ class TestWebSearchClient:
         mock_response = Mock()
         mock_response.status_code = 200
         mock_response.json.return_value = {
-            'Heading': 'Test',
-            'AbstractText': 'Test definition'
+            "Heading": "Test",
+            "AbstractText": "Test definition",
         }
         mock_get.return_value = mock_response
 
-        client = RateLimitedWebSearchClient(rate_limit_per_minute=60)  # High rate for testing
+        client = RateLimitedWebSearchClient(
+            rate_limit_per_minute=60
+        )  # High rate for testing
         result = client.search("test query")
 
-        assert result is not None or result is None  # May succeed or fail depending on timing
+        assert (
+            result is not None or result is None
+        )  # May succeed or fail depending on timing
         assert client.session_attempt_count >= 0  # Counter incremented
 
 

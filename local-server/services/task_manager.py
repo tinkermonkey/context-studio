@@ -17,12 +17,12 @@ from enum import Enum
 from typing import Any, Dict, List, Optional, Awaitable, Protocol
 from utils.logger import get_logger
 
-
 logger = get_logger(__name__)
 
 
 class ProgressCallback(Protocol):
     """Protocol for progress callback functions."""
+
     def __call__(self, task_id: str, progress: float) -> None:
         """
         Called when task progress updates.
@@ -36,6 +36,7 @@ class ProgressCallback(Protocol):
 
 class TaskStatus(Enum):
     """Task execution status."""
+
     PENDING = "pending"
     RUNNING = "running"
     COMPLETED = "completed"
@@ -60,6 +61,7 @@ class BackgroundTask:
         completed_at: Timestamp when task completed/failed/cancelled
         metadata: Additional task-specific metadata
     """
+
     task_id: str
     task_type: str
     status: TaskStatus = TaskStatus.PENDING
@@ -72,12 +74,16 @@ class BackgroundTask:
     metadata: Dict[str, Any] = field(default_factory=dict)
 
     # Internal asyncio task handle (not serialized)
-    _asyncio_task: Optional[asyncio.Task] = field(default=None, repr=False, compare=False)
+    _asyncio_task: Optional[asyncio.Task] = field(
+        default=None, repr=False, compare=False
+    )
 
     def to_dict(self) -> Dict[str, Any]:
         """Convert task to dictionary for API responses."""
         # Filter out internal metadata keys (those starting with '_')
-        public_metadata = {k: v for k, v in self.metadata.items() if not k.startswith('_')}
+        public_metadata = {
+            k: v for k, v in self.metadata.items() if not k.startswith("_")
+        }
 
         return {
             "task_id": self.task_id,
@@ -88,8 +94,10 @@ class BackgroundTask:
             "error": self.error,
             "created_at": self.created_at.isoformat() if self.created_at else None,
             "started_at": self.started_at.isoformat() if self.started_at else None,
-            "completed_at": self.completed_at.isoformat() if self.completed_at else None,
-            "metadata": public_metadata
+            "completed_at": (
+                self.completed_at.isoformat() if self.completed_at else None
+            ),
+            "metadata": public_metadata,
         }
 
 
@@ -119,7 +127,12 @@ class TaskManager:
         await task_manager.shutdown()
     """
 
-    def __init__(self, max_queue_size: int = 100, max_dlq_size: int = 1000, max_task_history: int = 10000):
+    def __init__(
+        self,
+        max_queue_size: int = 100,
+        max_dlq_size: int = 1000,
+        max_task_history: int = 10000,
+    ):
         """
         Initialize the TaskManager.
 
@@ -131,13 +144,17 @@ class TaskManager:
         self.max_queue_size = max_queue_size
         self.max_dlq_size = max_dlq_size
         self.max_task_history = max_task_history
-        self.task_queue: asyncio.Queue[BackgroundTask] = asyncio.Queue(maxsize=max_queue_size)
+        self.task_queue: asyncio.Queue[BackgroundTask] = asyncio.Queue(
+            maxsize=max_queue_size
+        )
         self.tasks: Dict[str, BackgroundTask] = {}  # All tasks by ID
         self.dead_letter_queue: List[BackgroundTask] = []  # Failed tasks for analysis
         self._tasks_lock = asyncio.Lock()  # Protect concurrent access to tasks dict
         self._worker_task: Optional[asyncio.Task] = None
         self._running = False
-        logger.info(f"TaskManager initialized with max_queue_size={max_queue_size}, max_dlq_size={max_dlq_size}, max_task_history={max_task_history}")
+        logger.info(
+            f"TaskManager initialized with max_queue_size={max_queue_size}, max_dlq_size={max_dlq_size}, max_task_history={max_task_history}"
+        )
 
     async def start(self):
         """
@@ -147,7 +164,9 @@ class TaskManager:
         Subsequent calls after the first will be no-ops.
         """
         if self._running:
-            logger.debug("TaskManager is already running; ignoring duplicate start request")
+            logger.debug(
+                "TaskManager is already running; ignoring duplicate start request"
+            )
             return
 
         self._running = True
@@ -170,7 +189,8 @@ class TaskManager:
         # Mark all pending/running tasks as cancelled first, before stopping worker
         # We iterate over a copy since we're modifying task state
         tasks_to_cancel = [
-            task for task in list(self.tasks.values())
+            task
+            for task in list(self.tasks.values())
             if task.status in [TaskStatus.PENDING, TaskStatus.RUNNING]
         ]
 
@@ -183,12 +203,16 @@ class TaskManager:
             try:
                 await asyncio.wait_for(self._worker_task, timeout=timeout)
             except asyncio.TimeoutError:
-                logger.error(f"Worker task did not finish within {timeout}s timeout during shutdown")
+                logger.error(
+                    f"Worker task did not finish within {timeout}s timeout during shutdown"
+                )
             except asyncio.CancelledError:
                 # This is expected when we cancel the task
                 pass
             except Exception as e:
-                logger.error(f"Unexpected exception during worker shutdown: {type(e).__name__}: {e}")
+                logger.error(
+                    f"Unexpected exception during worker shutdown: {type(e).__name__}: {e}"
+                )
 
         logger.info("TaskManager shutdown complete")
 
@@ -198,7 +222,7 @@ class TaskManager:
         coroutine: Awaitable[Any],
         metadata: Optional[Dict[str, Any]] = None,
         progress_callback: Optional[ProgressCallback] = None,
-        timeout: Optional[float] = None
+        timeout: Optional[float] = None,
     ) -> str:
         """
         Submit a new task to the queue.
@@ -219,15 +243,13 @@ class TaskManager:
         task_id = str(uuid.uuid4())
 
         task = BackgroundTask(
-            task_id=task_id,
-            task_type=task_type,
-            metadata=metadata or {}
+            task_id=task_id, task_type=task_type, metadata=metadata or {}
         )
 
         # Store the coroutine, progress callback, and timeout in metadata for worker
-        task.metadata['_coroutine'] = coroutine
-        task.metadata['_progress_callback'] = progress_callback
-        task.metadata['_timeout'] = timeout
+        task.metadata["_coroutine"] = coroutine
+        task.metadata["_progress_callback"] = progress_callback
+        task.metadata["_timeout"] = timeout
 
         # Try to add to queue (raises QueueFull if at capacity)
         try:
@@ -237,7 +259,9 @@ class TaskManager:
             logger.info(f"Task {task_id} ({task_type}) submitted to queue")
             return task_id
         except asyncio.QueueFull:
-            logger.error(f"Task queue is full (max={self.max_queue_size}), cannot submit task")
+            logger.error(
+                f"Task queue is full (max={self.max_queue_size}), cannot submit task"
+            )
             raise
 
     def get_task_status(self, task_id: str) -> Optional[Dict[str, Any]]:
@@ -267,11 +291,15 @@ class TaskManager:
         """
         task = self.tasks.get(task_id)
         if task is None:
-            logger.debug(f"Cannot cancel task {task_id}: not found (may have been cleaned up)")
+            logger.debug(
+                f"Cannot cancel task {task_id}: not found (may have been cleaned up)"
+            )
             return False
 
         if task.status not in [TaskStatus.PENDING, TaskStatus.RUNNING]:
-            logger.debug(f"Cannot cancel task {task_id}: already in state {task.status.value}")
+            logger.debug(
+                f"Cannot cancel task {task_id}: already in state {task.status.value}"
+            )
             return False
 
         await self._cancel_task_internal(task)
@@ -289,7 +317,9 @@ class TaskManager:
             except asyncio.TimeoutError:
                 logger.warning(f"Task {task.task_id} cancellation timed out after 1.0s")
             except Exception as e:
-                logger.warning(f"Exception during task {task.task_id} cancellation: {e}")
+                logger.warning(
+                    f"Exception during task {task.task_id} cancellation: {e}"
+                )
 
         task.status = TaskStatus.CANCELLED
         task.completed_at = datetime.now(timezone.utc)
@@ -319,15 +349,19 @@ class TaskManager:
 
         # Sort by completion time, keeping most recent
         completed_tasks = [
-            (task_id, task) for task_id, task in self.tasks.items()
-            if task.status in [TaskStatus.COMPLETED, TaskStatus.FAILED, TaskStatus.CANCELLED]
+            (task_id, task)
+            for task_id, task in self.tasks.items()
+            if task.status
+            in [TaskStatus.COMPLETED, TaskStatus.FAILED, TaskStatus.CANCELLED]
         ]
 
         if not completed_tasks:
             return
 
         # Sort by completed_at time (most recent last)
-        completed_tasks.sort(key=lambda x: x[1].completed_at or datetime.now(timezone.utc))
+        completed_tasks.sort(
+            key=lambda x: x[1].completed_at or datetime.now(timezone.utc)
+        )
 
         # Calculate how many to remove
         excess = len(self.tasks) - self.max_task_history
@@ -382,9 +416,9 @@ class TaskManager:
         task.started_at = datetime.now(timezone.utc)
 
         # Extract coroutine, progress callback, and timeout from metadata
-        coroutine = task.metadata.pop('_coroutine', None)
-        progress_callback = task.metadata.pop('_progress_callback', None)
-        timeout = task.metadata.pop('_timeout', None)
+        coroutine = task.metadata.pop("_coroutine", None)
+        progress_callback = task.metadata.pop("_progress_callback", None)
+        timeout = task.metadata.pop("_timeout", None)
 
         if coroutine is None:
             logger.error(f"Task {task.task_id} has no coroutine to execute")
@@ -404,7 +438,9 @@ class TaskManager:
                     try:
                         progress_callback(task.task_id, progress)
                     except Exception as e:
-                        logger.warning(f"Progress callback error for task {task.task_id}: {e}")
+                        logger.warning(
+                            f"Progress callback error for task {task.task_id}: {e}"
+                        )
 
                 # Execute the coroutine with progress support
                 # Note: The actual implementation depends on how the coroutine accepts progress updates
@@ -514,7 +550,7 @@ class TaskManager:
             "running": 0,
             "completed": 0,
             "failed": 0,
-            "cancelled": 0
+            "cancelled": 0,
         }
 
         for task in self.tasks.values():
@@ -526,7 +562,7 @@ class TaskManager:
             "max_queue_size": self.max_queue_size,
             "dead_letter_queue_size": len(self.dead_letter_queue),
             "status_counts": status_counts,
-            "is_running": self._running
+            "is_running": self._running,
         }
 
 
@@ -546,11 +582,15 @@ def get_task_manager() -> TaskManager:
     """
     global _task_manager
     if _task_manager is None:
-        raise RuntimeError("TaskManager not initialized. Call initialize_task_manager() first.")
+        raise RuntimeError(
+            "TaskManager not initialized. Call initialize_task_manager() first."
+        )
     return _task_manager
 
 
-def initialize_task_manager(max_queue_size: int = 100, max_dlq_size: int = 1000, max_task_history: int = 10000) -> TaskManager:
+def initialize_task_manager(
+    max_queue_size: int = 100, max_dlq_size: int = 1000, max_task_history: int = 10000
+) -> TaskManager:
     """
     Initialize the global TaskManager instance.
 
@@ -565,12 +605,18 @@ def initialize_task_manager(max_queue_size: int = 100, max_dlq_size: int = 1000,
     global _task_manager
     if _task_manager is not None:
         if _task_manager._running:
-            logger.warning("TaskManager is already running; returning existing instance")
+            logger.warning(
+                "TaskManager is already running; returning existing instance"
+            )
         else:
             logger.debug("Reusing existing TaskManager instance")
         return _task_manager
 
-    _task_manager = TaskManager(max_queue_size=max_queue_size, max_dlq_size=max_dlq_size, max_task_history=max_task_history)
+    _task_manager = TaskManager(
+        max_queue_size=max_queue_size,
+        max_dlq_size=max_dlq_size,
+        max_task_history=max_task_history,
+    )
     logger.info("Global TaskManager initialized")
     return _task_manager
 

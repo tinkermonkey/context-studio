@@ -11,17 +11,19 @@ if use_proxy:
     import ssl
 
     # Set proxy BEFORE importing any libraries
-    os.environ['HTTP_PROXY'] = 'http://localhost:8080'
-    os.environ['HTTPS_PROXY'] = 'http://localhost:8080'
-    os.environ['REQUESTS_CA_BUNDLE'] = ''
-    os.environ['CURL_CA_BUNDLE'] = ''
+    os.environ["HTTP_PROXY"] = "http://localhost:8080"
+    os.environ["HTTPS_PROXY"] = "http://localhost:8080"
+    os.environ["REQUESTS_CA_BUNDLE"] = ""
+    os.environ["CURL_CA_BUNDLE"] = ""
 
     import requests
+
     old_request = requests.Session.request
 
     def new_request(self, *args, **kwargs):
-        kwargs['verify'] = False
+        kwargs["verify"] = False
         return old_request(self, *args, **kwargs)
+
     requests.Session.request = new_request
     urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
     ssl._create_default_https_context = ssl._create_unverified_context
@@ -47,13 +49,15 @@ def main():
     doc = pipeline(text)
     result = process_nlp_result(text, doc)
     # Convert Pydantic model to dict (use model_dump for Pydantic v2)
-    if hasattr(result, 'model_dump'):
+    if hasattr(result, "model_dump"):
         result_dict = result.model_dump()
-    elif hasattr(result, 'dict'):
+    elif hasattr(result, "dict"):
         result_dict = result.model_dump()
     else:
         result_dict = result
-    logs_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "logs")  # noqa: E501
+    logs_dir = os.path.join(
+        os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "logs"
+    )  # noqa: E501
     os.makedirs(logs_dir, exist_ok=True)
     output_path = os.path.join(logs_dir, "debug.json")
     with open(output_path, "w") as f:

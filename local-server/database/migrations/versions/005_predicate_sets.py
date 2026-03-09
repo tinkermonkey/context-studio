@@ -8,6 +8,7 @@ from database.migrations.migration_manager import Migration
 
 class Migration005(Migration):
     """Add predicate sets functionality with predicates table and related schema changes."""
+
     version = 5
     description = "Add predicate sets functionality with predicates table and related schema changes."
 
@@ -29,7 +30,9 @@ class Migration005(Migration):
         """))
 
         # 2. Create index for efficient lookup by identifier
-        connection.execute(text("CREATE INDEX idx_predicates_identifier ON predicates(identifier);"))
+        connection.execute(
+            text("CREATE INDEX idx_predicates_identifier ON predicates(identifier);")
+        )
 
         # 3. Create trigger to update date_modified on updates
         connection.execute(text("""
@@ -100,7 +103,9 @@ class Migration005(Migration):
 
         # Drop old term_relationships table and rename new one
         connection.execute(text("DROP TABLE term_relationships;"))
-        connection.execute(text("ALTER TABLE term_relationships_new RENAME TO term_relationships;"))
+        connection.execute(
+            text("ALTER TABLE term_relationships_new RENAME TO term_relationships;")
+        )
 
         # 6. Recreate layers table without primary_predicate field
         connection.execute(text("""
@@ -190,7 +195,9 @@ class Migration005(Migration):
         """))
 
         connection.execute(text("DROP TABLE term_relationships;"))
-        connection.execute(text("ALTER TABLE term_relationships_old RENAME TO term_relationships;"))
+        connection.execute(
+            text("ALTER TABLE term_relationships_old RENAME TO term_relationships;")
+        )
 
         # 3. Recreate domains table without predicate fields
         connection.execute(text("""
@@ -223,7 +230,9 @@ class Migration005(Migration):
 
         # 4. Drop predicates table and related objects
         connection.execute(text("DROP TABLE IF EXISTS predicates_vec;"))
-        connection.execute(text("DROP TRIGGER IF EXISTS update_predicates_date_modified;"))
+        connection.execute(
+            text("DROP TRIGGER IF EXISTS update_predicates_date_modified;")
+        )
         connection.execute(text("DROP INDEX IF EXISTS idx_predicates_identifier;"))
         connection.execute(text("DROP TABLE predicates;"))
 
@@ -239,8 +248,11 @@ class Migration005(Migration):
                 # If sqlite-vec is not available, skip vector table creation
                 # This allows the migration to succeed even without the extension
                 import logging
+
                 logger = logging.getLogger(__name__)
-                logger.warning("sqlite-vec extension not available. Skipping predicates vector table creation.")
+                logger.warning(
+                    "sqlite-vec extension not available. Skipping predicates vector table creation."
+                )
                 return
 
             raw_connection = connection.connection
@@ -261,6 +273,7 @@ class Migration005(Migration):
             # Don't fail the migration if vector table creation fails
             # The core functionality works without vector search
             import logging
+
             logger = logging.getLogger(__name__)
             logger.warning(f"Could not create predicates vector table: {e}")
 
@@ -275,24 +288,27 @@ class Migration005(Migration):
             predicate_value = row[0]
 
             # Try to find a matching predicate by identifier or title
-            predicate_match = connection.execute(text("""
+            predicate_match = connection.execute(
+                text("""
                 SELECT id FROM predicates
                 WHERE identifier = :predicate OR title = :predicate
                 LIMIT 1
-            """), {"predicate": predicate_value}).fetchone()
+            """),
+                {"predicate": predicate_value},
+            ).fetchone()
 
             if predicate_match:
                 predicate_id = predicate_match[0]
 
                 # Update all term_relationships with this predicate
-                connection.execute(text("""
+                connection.execute(
+                    text("""
                     UPDATE term_relationships
                     SET predicate_id = :predicate_id
                     WHERE predicate = :predicate
-                """), {
-                    "predicate_id": predicate_id,
-                    "predicate": predicate_value
-                })
+                """),
+                    {"predicate_id": predicate_id, "predicate": predicate_value},
+                )
 
     def _generate_identifier_from_title(self, title: str) -> str:
         """
@@ -300,15 +316,16 @@ class Migration005(Migration):
         Converts CamelCase to underscore_lowercase and handles spaces/special chars.
         """
         import re
+
         # First, convert CamelCase to underscore_case
         # Insert underscore before uppercase letters that follow lowercase letters or digits
-        identifier = re.sub(r'([a-z0-9])([A-Z])', r'\1_\2', title)
+        identifier = re.sub(r"([a-z0-9])([A-Z])", r"\1_\2", title)
         # Convert to lowercase
         identifier = identifier.lower()
         # Replace whitespace and special characters with underscores
-        identifier = re.sub(r'[^\w]', '_', identifier)
+        identifier = re.sub(r"[^\w]", "_", identifier)
         # Remove multiple consecutive underscores
-        identifier = re.sub(r'_+', '_', identifier)
+        identifier = re.sub(r"_+", "_", identifier)
         # Remove leading/trailing underscores
-        identifier = identifier.strip('_')
+        identifier = identifier.strip("_")
         return identifier

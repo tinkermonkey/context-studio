@@ -336,13 +336,11 @@ class DiffGenerator:
 
         try:
             result = self.version_manager.db.execute(
-                text(
-                    """
+                text("""
                 SELECT id, entity_type, entity_id, version_number, content, state,
                        parent_version_id, changeset_id, author_id, created_at, metadata
                 FROM entity_versions WHERE id = :version_id
-            """
-                ),
+            """),
                 {"version_id": version_id},
             ).fetchone()
 

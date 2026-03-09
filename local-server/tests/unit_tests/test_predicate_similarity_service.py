@@ -20,13 +20,14 @@ from services.predicate_similarity import (
     PredicateSimilarityService,
     SimilarityResult,
     ClusterResult,
-    BatchError
+    BatchError,
 )
 from embeddings.generate_embeddings import generate_embedding
 
-
 # Skip if embeddings not available
-pytest.importorskip("embeddings.generate_embeddings", reason="embeddings module not available")
+pytest.importorskip(
+    "embeddings.generate_embeddings", reason="embeddings module not available"
+)
 
 
 @pytest.fixture
@@ -40,7 +41,11 @@ def test_manager():
 
     # Add some test external predicates
     test_predicates = [
-        ("subClassOf", "Indicates that one class is a subclass of another", "schema.org"),
+        (
+            "subClassOf",
+            "Indicates that one class is a subclass of another",
+            "schema.org",
+        ),
         ("relatedTo", "Indicates a general semantic relation", "conceptnet"),
         ("locatedIn", "Indicates spatial location", "dbpedia"),
         ("hasProperty", "Indicates entity has a property", "wikidata"),
@@ -58,7 +63,7 @@ def test_manager():
             external_id=f"{source}:{title}",
             title_embedding=title_emb,
             definition_embedding=def_emb,
-            embedding_dims=384
+            embedding_dims=384,
         )
 
     yield manager
@@ -107,7 +112,7 @@ class TestPredicateSimilarityService:
             predicate_definition="Indicates taxonomic hierarchy",
             limit=10,
             threshold=0.5,  # Lower threshold for test data
-            use_cache=False
+            use_cache=False,
         )
 
         assert isinstance(results, list)
@@ -139,7 +144,7 @@ class TestPredicateSimilarityService:
             predicate_definition="spatial position",
             limit=10,
             threshold=0.5,
-            use_cache=True
+            use_cache=True,
         )
 
         # Second search (should be cached)
@@ -148,7 +153,7 @@ class TestPredicateSimilarityService:
             predicate_definition="spatial position",
             limit=10,
             threshold=0.5,
-            use_cache=True
+            use_cache=True,
         )
 
         # Results should be identical
@@ -163,7 +168,7 @@ class TestPredicateSimilarityService:
             predicate_definition="spatial position",
             limit=10,
             threshold=0.5,
-            use_cache=False
+            use_cache=False,
         )
 
         assert len(results3) > 0
@@ -172,10 +177,7 @@ class TestPredicateSimilarityService:
         """Test cache invalidation."""
         # Populate cache
         similarity_service.find_similar_predicates(
-            predicate_title="test_query",
-            limit=10,
-            threshold=0.5,
-            use_cache=True
+            predicate_title="test_query", limit=10, threshold=0.5, use_cache=True
         )
 
         # Verify cache has entries
@@ -198,7 +200,7 @@ class TestPredicateSimilarityService:
             source="schema.org",
             limit=10,
             threshold=0.5,
-            use_cache=False
+            use_cache=False,
         )
 
         # All results should be from schema.org
@@ -211,7 +213,7 @@ class TestPredicateSimilarityService:
             source="conceptnet",
             limit=10,
             threshold=0.5,
-            use_cache=False
+            use_cache=False,
         )
 
         # All results should be from conceptnet
@@ -227,9 +229,7 @@ class TestPredicateSimilarityService:
         ]
 
         results, errors = similarity_service.find_similar_batch(
-            predicates=batch_queries,
-            limit=10,
-            threshold=0.5
+            predicates=batch_queries, limit=10, threshold=0.5
         )
 
         # Should have results for each query
@@ -252,9 +252,7 @@ class TestPredicateSimilarityService:
         ]
 
         results, errors = similarity_service.find_similar_batch(
-            predicates=batch_queries,
-            limit=10,
-            threshold=0.5
+            predicates=batch_queries, limit=10, threshold=0.5
         )
 
         # Should have results for all queries (empty list for errors)
@@ -281,7 +279,7 @@ class TestPredicateSimilarityService:
             predicates=predicates,
             min_similarity=0.7,
             min_cluster_size=2,
-            eps=0.5  # Larger eps for more lenient clustering
+            eps=0.5,  # Larger eps for more lenient clustering
         )
 
         # Should find some clusters
@@ -304,8 +302,7 @@ class TestPredicateSimilarityService:
         ]
 
         clusters = similarity_service.cluster_predicates(
-            predicates=predicates,
-            min_cluster_size=2
+            predicates=predicates, min_cluster_size=2
         )
 
         # Should return empty list
@@ -345,8 +342,7 @@ class TestEdgeCases:
         """Test handling of empty query."""
         with pytest.raises(ValueError):
             similarity_service.find_similar_predicates(
-                predicate_title="",
-                threshold=0.7
+                predicate_title="", threshold=0.7
             )
 
     def test_invalid_threshold(self, similarity_service):
@@ -358,8 +354,7 @@ class TestEdgeCases:
     def test_clustering_empty_list(self, similarity_service):
         """Test clustering with empty predicate list."""
         clusters = similarity_service.cluster_predicates(
-            predicates=[],
-            min_cluster_size=2
+            predicates=[], min_cluster_size=2
         )
 
         assert clusters == []
@@ -368,15 +363,12 @@ class TestEdgeCases:
         """Test clustering with too many predicates (resource exhaustion protection)."""
         # Create a list that exceeds max_predicates limit
         large_list = [
-            (str(uuid4()), f"predicate_{i}", f"definition_{i}")
-            for i in range(1001)
+            (str(uuid4()), f"predicate_{i}", f"definition_{i}") for i in range(1001)
         ]
 
         with pytest.raises(ValueError) as exc_info:
             similarity_service.cluster_predicates(
-                predicates=large_list,
-                min_cluster_size=2,
-                max_predicates=1000
+                predicates=large_list, min_cluster_size=2, max_predicates=1000
             )
 
         assert "Too many predicates" in str(exc_info.value)

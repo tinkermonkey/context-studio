@@ -31,7 +31,9 @@ class NetworkService:
             db_session: SQLAlchemy database session
         """
         self.db_session = db_session
-        self.graph: nx.DiGraph[Any] = nx.DiGraph()  # Directed graph for hierarchical relationships
+        self.graph: nx.DiGraph[Any] = (
+            nx.DiGraph()
+        )  # Directed graph for hierarchical relationships
         self._graph_built = False  # Track if graph has been built
         # Don't build graph immediately - use lazy initialization
 
@@ -53,14 +55,18 @@ class NetworkService:
         self._add_node_link_edges()
 
         self._graph_built = True
-        logger.info(f"NetworkX graph built with {self.graph.number_of_nodes()} structure_nodes and {self.graph.number_of_edges()} edges")
+        logger.info(
+            f"NetworkX graph built with {self.graph.number_of_nodes()} structure_nodes and {self.graph.number_of_edges()} edges"
+        )
 
     def _add_unified_nodes(self):
         """Add all structure_nodes from the unified structure_nodes table."""
         try:
             structure_nodes = self.db_session.query(StructureNode).all()
         except Exception as e:
-            logger.warning(f"Failed to query structure_nodes table (may not exist yet): {e}")
+            logger.warning(
+                f"Failed to query structure_nodes table (may not exist yet): {e}"
+            )
             structure_nodes = []
 
         for structure_node in structure_nodes:
@@ -75,7 +81,7 @@ class NetworkService:
                 created_at=structure_node.created_at,
                 version=structure_node.version,
                 entity_id=structure_node.id,
-                last_modified=structure_node.last_modified
+                last_modified=structure_node.last_modified,
             )
 
     def _add_hierarchical_edges(self):
@@ -83,7 +89,9 @@ class NetworkService:
         try:
             structure_nodes = self.db_session.query(StructureNode).all()
         except Exception as e:
-            logger.warning(f"Failed to query structure_nodes for hierarchical edges: {e}")
+            logger.warning(
+                f"Failed to query structure_nodes for hierarchical edges: {e}"
+            )
             return
 
         for structure_node in structure_nodes:
@@ -96,7 +104,7 @@ class NetworkService:
                         parent_node_id,
                         child_node_id,
                         type="hierarchy",
-                        relationship="parent_child"
+                        relationship="parent_child",
                     )
 
     def _add_node_link_edges(self):
@@ -104,7 +112,9 @@ class NetworkService:
         try:
             links = self.db_session.query(StructureNodeLink).all()
         except Exception as e:
-            logger.warning(f"Failed to query structure_node_links for node link edges: {e}")
+            logger.warning(
+                f"Failed to query structure_node_links for node link edges: {e}"
+            )
             return
 
         for link in links:
@@ -118,12 +128,16 @@ class NetworkService:
                     type="structure_node_link",
                     predicate=link.predicate,
                     predicate_id=link.predicate_id,
-                    created_at=link.created_at
+                    created_at=link.created_at,
                 )
 
     def _get_node_graph_id(self, node_db_id: str) -> Optional[str]:
         """Get the graph structure_node ID from database structure_node ID."""
-        structure_node: Optional[StructureNode] = self.db_session.query(StructureNode).filter(StructureNode.id == node_db_id).first()
+        structure_node: Optional[StructureNode] = (
+            self.db_session.query(StructureNode)
+            .filter(StructureNode.id == node_db_id)
+            .first()
+        )
         if structure_node:
             return f"{structure_node.node_type.value}:{structure_node.id}"
         return None
@@ -146,34 +160,48 @@ class NetworkService:
             "total_nodes": self.graph.number_of_nodes(),
             "total_edges": self.graph.number_of_edges(),
             "is_directed": self.graph.is_directed(),
-            "is_connected": nx.is_weakly_connected(self.graph) if self.graph.is_directed() else nx.is_connected(self.graph),
-            "last_updated": datetime.now().isoformat()
+            "is_connected": (
+                nx.is_weakly_connected(self.graph)
+                if self.graph.is_directed()
+                else nx.is_connected(self.graph)
+            ),
+            "last_updated": datetime.now().isoformat(),
         }
 
         # StructureNode type counts
         node_types: Dict[str, int] = {}
         for structure_node, data in self.graph.nodes(data=True):  # type: ignore
-            node_type = data.get('type', 'unknown')
+            node_type = data.get("type", "unknown")
             node_types[node_type] = node_types.get(node_type, 0) + 1
         stats["node_types"] = node_types
 
         # Edge type counts
         edge_types: Dict[str, int] = {}
         for source, target, data in self.graph.edges(data=True):
-            edge_type = data.get('type', 'unknown')
+            edge_type = data.get("type", "unknown")
             edge_types[edge_type] = edge_types.get(edge_type, 0) + 1
         stats["edge_types"] = edge_types
 
         # Connected components
         if self.graph.is_directed():
-            stats["weakly_connected_components"] = nx.number_weakly_connected_components(self.graph)
-            stats["strongly_connected_components"] = nx.number_strongly_connected_components(self.graph)
+            stats["weakly_connected_components"] = (
+                nx.number_weakly_connected_components(self.graph)
+            )
+            stats["strongly_connected_components"] = (
+                nx.number_strongly_connected_components(self.graph)
+            )
         else:
             stats["connected_components"] = nx.number_connected_components(self.graph)
 
         return stats
 
-    def find_shortest_path(self, source_id: str, target_id: str, source_type: str = "term", target_type: str = "term") -> Optional[List[str]]:
+    def find_shortest_path(
+        self,
+        source_id: str,
+        target_id: str,
+        source_type: str = "term",
+        target_type: str = "term",
+    ) -> Optional[List[str]]:
         """
         Find the shortest path between two structure_nodes.
 
@@ -195,7 +223,13 @@ class NetworkService:
         except nx.NetworkXNoPath:
             return None
 
-    def get_neighbors(self, entity_id: str, entity_type: str = "term", depth: int = 1, direction: str = "both") -> Dict[str, List[str]]:
+    def get_neighbors(
+        self,
+        entity_id: str,
+        entity_type: str = "term",
+        depth: int = 1,
+        direction: str = "both",
+    ) -> Dict[str, List[str]]:
         """
         Get neighbors of a structure_node at specified depth.
 
@@ -280,9 +314,11 @@ class NetworkService:
 
         if method == "louvain":
             import networkx.algorithms.community as nx_comm
+
             return list(nx_comm.louvain_communities(undirected_graph))
         elif method == "label_propagation":
             import networkx.algorithms.community as nx_comm
+
             return list(nx_comm.label_propagation_communities(undirected_graph))
         else:
             raise ValueError(f"Unknown community detection method: {method}")
@@ -316,7 +352,9 @@ class NetworkService:
 
         return terms
 
-    def get_node_hierarchy(self, node_id: str, node_type: Optional[str] = None) -> Dict[str, Any]:
+    def get_node_hierarchy(
+        self, node_id: str, node_type: Optional[str] = None
+    ) -> Dict[str, Any]:
         """
         Get the full hierarchy for any structure node (ancestors and descendants).
         This is node-type agnostic.
@@ -359,15 +397,19 @@ class NetworkService:
             node_data = self.graph.nodes[structure_node]
             try:
                 # Distance from ancestor to node (following parent→child edges)
-                distance = nx.shortest_path_length(self.graph, structure_node, graph_node_id)
-                ancestors.append({
-                    "id": structure_node.split(":", 1)[1],
-                    "type": node_data.get("type"),
-                    "title": node_data.get("title"),
-                    "definition": node_data.get("definition"),
-                    "parent_node_id": node_data.get("parent_node_id"),
-                    "distance": distance
-                })
+                distance = nx.shortest_path_length(
+                    self.graph, structure_node, graph_node_id
+                )
+                ancestors.append(
+                    {
+                        "id": structure_node.split(":", 1)[1],
+                        "type": node_data.get("type"),
+                        "title": node_data.get("title"),
+                        "definition": node_data.get("definition"),
+                        "parent_node_id": node_data.get("parent_node_id"),
+                        "distance": distance,
+                    }
+                )
             except nx.NetworkXNoPath:
                 # This shouldn't happen since we got the structure_node from ancestors
                 continue
@@ -378,15 +420,19 @@ class NetworkService:
             node_data = self.graph.nodes[structure_node]
             try:
                 # Distance from node to descendant (following parent→child edges)
-                distance = nx.shortest_path_length(self.graph, graph_node_id, structure_node)
-                descendants.append({
-                    "id": structure_node.split(":", 1)[1],
-                    "type": node_data.get("type"),
-                    "title": node_data.get("title"),
-                    "definition": node_data.get("definition"),
-                    "parent_node_id": node_data.get("parent_node_id"),
-                    "distance": distance
-                })
+                distance = nx.shortest_path_length(
+                    self.graph, graph_node_id, structure_node
+                )
+                descendants.append(
+                    {
+                        "id": structure_node.split(":", 1)[1],
+                        "type": node_data.get("type"),
+                        "title": node_data.get("title"),
+                        "definition": node_data.get("definition"),
+                        "parent_node_id": node_data.get("parent_node_id"),
+                        "distance": distance,
+                    }
+                )
             except nx.NetworkXNoPath:
                 # This shouldn't happen since we got the structure_node from descendants
                 continue
@@ -395,10 +441,7 @@ class NetworkService:
         ancestors.sort(key=lambda x: x["distance"])
         descendants.sort(key=lambda x: x["distance"])
 
-        return {
-            "ancestors": ancestors,
-            "descendants": descendants
-        }
+        return {"ancestors": ancestors, "descendants": descendants}
 
     def get_term_hierarchy(self, term_id: str) -> Dict[str, Any]:
         """
@@ -423,7 +466,9 @@ class NetworkService:
         nx.write_graphml(self.graph, filepath)
         logger.info(f"Graph exported to {filepath}")
 
-    def get_node_info(self, entity_id: str, entity_type: str = "term") -> Optional[Dict[str, Any]]:
+    def get_node_info(
+        self, entity_id: str, entity_type: str = "term"
+    ) -> Optional[Dict[str, Any]]:
         """
         Get detailed information about a specific structure_node.
 
@@ -443,13 +488,15 @@ class NetworkService:
         node_data = dict(self.graph.structure_nodes[node_id])
 
         # Add network metrics
-        node_data.update({
-            "in_degree": self.graph.in_degree(node_id),
-            "out_degree": self.graph.out_degree(node_id),
-            "neighbors": {
-                "predecessors": list(self.graph.predecessors(node_id)),
-                "successors": list(self.graph.successors(node_id))
+        node_data.update(
+            {
+                "in_degree": self.graph.in_degree(node_id),
+                "out_degree": self.graph.out_degree(node_id),
+                "neighbors": {
+                    "predecessors": list(self.graph.predecessors(node_id)),
+                    "successors": list(self.graph.successors(node_id)),
+                },
             }
-        })
+        )
 
         return node_data

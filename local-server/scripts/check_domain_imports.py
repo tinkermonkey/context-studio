@@ -12,6 +12,7 @@ Exit codes:
     0 - No violations found
     1 - One or more violations found
 """
+
 import ast
 import sys
 from pathlib import Path
@@ -24,14 +25,27 @@ EXEMPT_FILES = {
 # Packages that domain/ code must not import from
 FORBIDDEN_MODULES = {
     # Application layers
-    "database", "services", "adapters", "api",
-    "graph", "nlp", "llm", "rag",
-    "reference_api", "reference_db",
-    "embeddings", "pipeline",
-    "utils", "config",
+    "database",
+    "services",
+    "adapters",
+    "api",
+    "graph",
+    "nlp",
+    "llm",
+    "rag",
+    "reference_api",
+    "reference_db",
+    "embeddings",
+    "pipeline",
+    "utils",
+    "config",
     # Frameworks
-    "sqlalchemy", "fastapi", "uvicorn", "pydantic",
-    "aiofiles", "starlette",
+    "sqlalchemy",
+    "fastapi",
+    "uvicorn",
+    "pydantic",
+    "aiofiles",
+    "starlette",
 }
 
 

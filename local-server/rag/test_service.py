@@ -64,10 +64,7 @@ class RAGTestManagementService:
             Created TestParagraph instance
         """
         test_paragraph = TestParagraph(
-            id=str(uuid.uuid4()),
-            text=text,
-            notes=notes,
-            created_at=datetime.utcnow()
+            id=str(uuid.uuid4()), text=text, notes=notes, created_at=datetime.utcnow()
         )
 
         self.ops_db_session.add(test_paragraph)
@@ -78,11 +75,15 @@ class RAGTestManagementService:
 
     def get_test_paragraph(self, paragraph_id: str) -> Optional[TestParagraph]:
         """Get a test paragraph by ID."""
-        return self.ops_db_session.query(TestParagraph).filter(
-            TestParagraph.id == paragraph_id
-        ).first()
+        return (
+            self.ops_db_session.query(TestParagraph)
+            .filter(TestParagraph.id == paragraph_id)
+            .first()
+        )
 
-    def list_test_paragraphs(self, limit: int = 100, offset: int = 0) -> tuple[List[TestParagraph], int]:
+    def list_test_paragraphs(
+        self, limit: int = 100, offset: int = 0
+    ) -> tuple[List[TestParagraph], int]:
         """
         List test paragraphs with pagination.
 
@@ -95,16 +96,16 @@ class RAGTestManagementService:
         """
         query = self.ops_db_session.query(TestParagraph)
         total_count = query.count()
-        paragraphs = query.order_by(
-            TestParagraph.created_at.desc()
-        ).limit(limit).offset(offset).all()
+        paragraphs = (
+            query.order_by(TestParagraph.created_at.desc())
+            .limit(limit)
+            .offset(offset)
+            .all()
+        )
         return paragraphs, total_count
 
     def update_test_paragraph(
-        self,
-        paragraph_id: str,
-        text: str = None,
-        notes: str = None
+        self, paragraph_id: str, text: str = None, notes: str = None
     ) -> Optional[TestParagraph]:
         """
         Update a test paragraph.
@@ -156,18 +157,16 @@ class RAGTestManagementService:
             return True
 
         except Exception as e:
-            logger.error(f"Error deleting test paragraph {paragraph_id}: {e}", exc_info=True)
+            logger.error(
+                f"Error deleting test paragraph {paragraph_id}: {e}", exc_info=True
+            )
             self.ops_db_session.rollback()
             return False
 
     # ==================== Test Annotation CRUD ====================
 
     def create_test_annotation(
-        self,
-        paragraph_id: str,
-        start_char: int,
-        end_char: int,
-        structure_node_id: str
+        self, paragraph_id: str, start_char: int, end_char: int, structure_node_id: str
     ) -> Optional[TestAnnotation]:
         """
         Create a new annotation for a test paragraph.
@@ -188,7 +187,9 @@ class RAGTestManagementService:
         # Validate paragraph exists
         paragraph = self.get_test_paragraph(paragraph_id)
         if not paragraph:
-            logger.error(f"Cannot create annotation: paragraph {paragraph_id} not found")
+            logger.error(
+                f"Cannot create annotation: paragraph {paragraph_id} not found"
+            )
             return None
 
         # Validate structure_node_id exists in local.db
@@ -212,20 +213,25 @@ class RAGTestManagementService:
             start_char=start_char,
             end_char=end_char,
             structure_node_id=structure_node_id,
-            created_at=datetime.utcnow()
+            created_at=datetime.utcnow(),
         )
 
         self.ops_db_session.add(annotation)
         self.ops_db_session.commit()
 
-        logger.info(f"Created test annotation: {annotation.id} for paragraph {paragraph_id}")
+        logger.info(
+            f"Created test annotation: {annotation.id} for paragraph {paragraph_id}"
+        )
         return annotation
 
     def get_annotations_for_paragraph(self, paragraph_id: str) -> List[TestAnnotation]:
         """Get all annotations for a test paragraph."""
-        return self.ops_db_session.query(TestAnnotation).filter(
-            TestAnnotation.paragraph_id == paragraph_id
-        ).order_by(TestAnnotation.start_char).all()
+        return (
+            self.ops_db_session.query(TestAnnotation)
+            .filter(TestAnnotation.paragraph_id == paragraph_id)
+            .order_by(TestAnnotation.start_char)
+            .all()
+        )
 
     def delete_test_annotation(self, annotation_id: str) -> bool:
         """
@@ -237,9 +243,11 @@ class RAGTestManagementService:
         Returns:
             True if deleted, False if not found
         """
-        annotation = self.ops_db_session.query(TestAnnotation).filter(
-            TestAnnotation.id == annotation_id
-        ).first()
+        annotation = (
+            self.ops_db_session.query(TestAnnotation)
+            .filter(TestAnnotation.id == annotation_id)
+            .first()
+        )
 
         if not annotation:
             logger.warning(f"Test annotation not found: {annotation_id}")
@@ -262,9 +270,11 @@ class RAGTestManagementService:
             True if exists, False otherwise
         """
         try:
-            node = self.kg_db_session.query(StructureNode).filter(
-                StructureNode.id == structure_node_id
-            ).first()
+            node = (
+                self.kg_db_session.query(StructureNode)
+                .filter(StructureNode.id == structure_node_id)
+                .first()
+            )
             return node is not None
         except Exception as e:
             logger.error(f"Error validating structure_node_id: {e}", exc_info=True)
@@ -277,7 +287,7 @@ class RAGTestManagementService:
         paragraph_id: str,
         pipeline_names: List[str],
         enable_trace: bool = False,
-        enable_llm_layer: bool = True
+        enable_llm_layer: bool = True,
     ) -> List[Dict[str, Any]]:
         """
         Run one or more pipelines against a test paragraph and score the results.
@@ -307,7 +317,7 @@ class RAGTestManagementService:
                 start_char=ann.start_char,
                 end_char=ann.end_char,
                 structure_node_id=ann.structure_node_id,
-                text=paragraph.text[ann.start_char:ann.end_char]
+                text=paragraph.text[ann.start_char : ann.end_char],
             )
             for ann in annotations
         ]
@@ -328,7 +338,7 @@ class RAGTestManagementService:
                 annotation_spans,
                 enable_trace,
                 enable_llm_layer,
-                semaphore
+                semaphore,
             )
             for pipeline_name in pipeline_names
         ]
@@ -341,8 +351,7 @@ class RAGTestManagementService:
         for i, result in enumerate(results):
             if isinstance(result, Exception):
                 logger.error(
-                    f"Pipeline {pipeline_names[i]} failed: {result}",
-                    exc_info=result
+                    f"Pipeline {pipeline_names[i]} failed: {result}", exc_info=result
                 )
             else:
                 valid_results.append(result)
@@ -361,7 +370,7 @@ class RAGTestManagementService:
         annotation_spans: List[AnnotationSpan],
         enable_trace: bool,
         enable_llm_layer: bool,
-        semaphore: asyncio.Semaphore
+        semaphore: asyncio.Semaphore,
     ) -> Dict[str, Any]:
         """
         Run a single pipeline and score the results.
@@ -378,7 +387,9 @@ class RAGTestManagementService:
             Dictionary with run results and scores, or error details if pipeline fails
         """
         async with semaphore:
-            logger.info(f"Starting pipeline {pipeline_name} for paragraph {paragraph.id}")
+            logger.info(
+                f"Starting pipeline {pipeline_name} for paragraph {paragraph.id}"
+            )
             start_time = datetime.utcnow()
 
             try:
@@ -387,7 +398,7 @@ class RAGTestManagementService:
                     pipeline_name=pipeline_name,
                     kg_db_session=self.kg_db_session,
                     ops_db_session=self.ops_db_session,
-                    config={}
+                    config={},
                 )
 
                 if not pipeline:
@@ -398,15 +409,17 @@ class RAGTestManagementService:
                 extraction_response = await pipeline.extract_entities(
                     text=paragraph.text,
                     enable_trace=enable_trace,
-                    enable_llm_layer=enable_llm_layer
+                    enable_llm_layer=enable_llm_layer,
                 )
-                execution_time_ms = int((datetime.utcnow() - extraction_start).total_seconds() * 1000)
+                execution_time_ms = int(
+                    (datetime.utcnow() - extraction_start).total_seconds() * 1000
+                )
 
             except Exception as e:
                 # Log error and create error run record
                 logger.error(
                     f"Pipeline {pipeline_name} failed during execution: {e}",
-                    exc_info=True
+                    exc_info=True,
                 )
 
                 # Save error run to database
@@ -416,22 +429,26 @@ class RAGTestManagementService:
                     paragraph_id=paragraph.id,
                     pipeline_class=pipeline_name,
                     executed_at=start_time,
-                    execution_time_ms=int((datetime.utcnow() - start_time).total_seconds() * 1000),
+                    execution_time_ms=int(
+                        (datetime.utcnow() - start_time).total_seconds() * 1000
+                    ),
                     entities_extracted=0,
                     precision_score=None,
                     recall_score=None,
                     f1_score=None,
-                    result_data=json.dumps({
-                        "error": str(e),
-                        "error_type": type(e).__name__
-                    })
+                    result_data=json.dumps(
+                        {"error": str(e), "error_type": type(e).__name__}
+                    ),
                 )
 
                 try:
                     self.ops_db_session.add(error_run)
                     self.ops_db_session.commit()
                 except Exception as db_error:
-                    logger.error(f"Failed to save error run to database: {db_error}", exc_info=True)
+                    logger.error(
+                        f"Failed to save error run to database: {db_error}",
+                        exc_info=True,
+                    )
                     self.ops_db_session.rollback()
 
                 return {
@@ -440,7 +457,7 @@ class RAGTestManagementService:
                     "paragraph_id": paragraph.id,
                     "error": str(e),
                     "error_type": type(e).__name__,
-                    "executed_at": start_time.isoformat()
+                    "executed_at": start_time.isoformat(),
                 }
 
             # If we got here, extraction succeeded - continue with scoring
@@ -449,7 +466,7 @@ class RAGTestManagementService:
                 scoring_result = self.scoring_service.score_extraction(
                     extracted_entities=extraction_response.entities,
                     ground_truth_annotations=annotation_spans,
-                    paragraph_text=paragraph.text
+                    paragraph_text=paragraph.text,
                 )
 
                 # Save pipeline run to database
@@ -461,22 +478,26 @@ class RAGTestManagementService:
                     executed_at=start_time,
                     execution_time_ms=execution_time_ms,
                     entities_extracted=len(extraction_response.entities),
-                    precision_score=int(scoring_result.precision * 100),  # Store as percentage
+                    precision_score=int(
+                        scoring_result.precision * 100
+                    ),  # Store as percentage
                     recall_score=int(scoring_result.recall * 100),
                     f1_score=int(scoring_result.f1_score * 100),
-                    result_data=json.dumps({
-                        "entities": [
-                            {
-                                "text": e.text,
-                                "type": e.type,
-                                "confidence": e.confidence,
-                                "source_layer": e.source_layer,
-                                "metadata": e.metadata
-                            }
-                            for e in extraction_response.entities
-                        ],
-                        "scoring_details": scoring_result.to_dict()
-                    })
+                    result_data=json.dumps(
+                        {
+                            "entities": [
+                                {
+                                    "text": e.text,
+                                    "type": e.type,
+                                    "confidence": e.confidence,
+                                    "source_layer": e.source_layer,
+                                    "metadata": e.metadata,
+                                }
+                                for e in extraction_response.entities
+                            ],
+                            "scoring_details": scoring_result.to_dict(),
+                        }
+                    ),
                 )
 
                 self.ops_db_session.add(pipeline_run)
@@ -497,14 +518,14 @@ class RAGTestManagementService:
                     "execution_time_ms": execution_time_ms,
                     "entities_extracted": len(extraction_response.entities),
                     "scoring": scoring_result.to_dict(),
-                    "executed_at": start_time.isoformat()
+                    "executed_at": start_time.isoformat(),
                 }
 
             except Exception as e:
                 # Handle scoring or database errors
                 logger.error(
                     f"Failed to score or save results for pipeline {pipeline_name}: {e}",
-                    exc_info=True
+                    exc_info=True,
                 )
                 self.ops_db_session.rollback()
 
@@ -515,20 +536,22 @@ class RAGTestManagementService:
                     "paragraph_id": paragraph.id,
                     "error": f"Scoring/save failed: {str(e)}",
                     "error_type": type(e).__name__,
-                    "executed_at": start_time.isoformat()
+                    "executed_at": start_time.isoformat(),
                 }
 
     # ==================== Results Retrieval ====================
 
     def get_pipeline_runs_for_paragraph(
-        self,
-        paragraph_id: str,
-        limit: int = 100
+        self, paragraph_id: str, limit: int = 100
     ) -> List[RAGPipelineRun]:
         """Get all pipeline runs for a specific test paragraph."""
-        return self.ops_db_session.query(RAGPipelineRun).filter(
-            RAGPipelineRun.paragraph_id == paragraph_id
-        ).order_by(RAGPipelineRun.executed_at.desc()).limit(limit).all()
+        return (
+            self.ops_db_session.query(RAGPipelineRun)
+            .filter(RAGPipelineRun.paragraph_id == paragraph_id)
+            .order_by(RAGPipelineRun.executed_at.desc())
+            .limit(limit)
+            .all()
+        )
 
     def get_pipeline_run_details(self, run_id: str) -> Optional[Dict[str, Any]]:
         """
@@ -540,9 +563,11 @@ class RAGTestManagementService:
         Returns:
             Dictionary with run details and full result data
         """
-        run = self.ops_db_session.query(RAGPipelineRun).filter(
-            RAGPipelineRun.id == run_id
-        ).first()
+        run = (
+            self.ops_db_session.query(RAGPipelineRun)
+            .filter(RAGPipelineRun.id == run_id)
+            .first()
+        )
 
         if not run:
             return None
@@ -559,13 +584,11 @@ class RAGTestManagementService:
             "precision_score": run.precision_score,
             "recall_score": run.recall_score,
             "f1_score": run.f1_score,
-            "result_data": result_data
+            "result_data": result_data,
         }
 
     def compare_pipeline_runs(
-        self,
-        paragraph_id: str,
-        pipeline_names: List[str] = None
+        self, paragraph_id: str, pipeline_names: List[str] = None
     ) -> Dict[str, Any]:
         """
         Compare results across multiple pipeline runs for a paragraph.
@@ -589,8 +612,8 @@ class RAGTestManagementService:
                 "summary": {
                     "total_pipelines": 0,
                     "best_pipeline": None,
-                    "best_f1_score": None
-                }
+                    "best_f1_score": None,
+                },
             }
 
         # Group runs by pipeline class (use most recent run for each)
@@ -602,16 +625,18 @@ class RAGTestManagementService:
         # Build comparison
         comparison = []
         for pipeline_class, run in pipeline_runs.items():
-            comparison.append({
-                "pipeline_name": pipeline_class,
-                "run_id": run.id,
-                "f1_score": run.f1_score,
-                "precision_score": run.precision_score,
-                "recall_score": run.recall_score,
-                "entities_extracted": run.entities_extracted,
-                "execution_time_ms": run.execution_time_ms,
-                "executed_at": run.executed_at.isoformat()
-            })
+            comparison.append(
+                {
+                    "pipeline_name": pipeline_class,
+                    "run_id": run.id,
+                    "f1_score": run.f1_score,
+                    "precision_score": run.precision_score,
+                    "recall_score": run.recall_score,
+                    "entities_extracted": run.entities_extracted,
+                    "execution_time_ms": run.execution_time_ms,
+                    "executed_at": run.executed_at.isoformat(),
+                }
+            )
 
         # Sort by F1 score descending
         comparison.sort(key=lambda x: x["f1_score"] or 0, reverse=True)
@@ -622,6 +647,6 @@ class RAGTestManagementService:
             "summary": {
                 "total_pipelines": len(comparison),
                 "best_pipeline": comparison[0]["pipeline_name"] if comparison else None,
-                "best_f1_score": comparison[0]["f1_score"] if comparison else None
-            }
+                "best_f1_score": comparison[0]["f1_score"] if comparison else None,
+            },
         }

@@ -31,7 +31,9 @@ migration_file = os.path.join(
     "versions",
     "006_nodes.py",
 )
-spec = importlib.util.spec_from_file_location("migration_006_nodes", migration_file)  # noqa: E501
+spec = importlib.util.spec_from_file_location(
+    "migration_006_nodes", migration_file
+)  # noqa: E501
 if not spec or not spec.loader:
     raise RuntimeError(f"Failed to load migration spec from {migration_file}")
 
@@ -53,7 +55,9 @@ def check_migration_status(db_path: str) -> bool:
             cursor = conn.cursor()
             # Try different table names for migration tracking
             try:
-                cursor.execute("SELECT version FROM schema_history WHERE version = 6")  # noqa: E501
+                cursor.execute(
+                    "SELECT version FROM schema_history WHERE version = 6"
+                )  # noqa: E501
                 result = cursor.fetchone()
                 return result is not None
             except sqlite3.OperationalError:
@@ -113,7 +117,9 @@ def needs_repair(analysis: Dict[str, Any]) -> bool:
     """Determine if the database needs repair."""
     # Check if we have legacy data but missing structure_nodes data
     total_legacy: int = sum(analysis.get("legacy_counts", {}).values(), 0)
-    structure_nodes_count: int = analysis.get("new_counts", {}).get("structure_nodes", 0)  # noqa: E501
+    structure_nodes_count: int = analysis.get("new_counts", {}).get(
+        "structure_nodes", 0
+    )  # noqa: E501
 
     return bool(total_legacy > 0 and structure_nodes_count == 0)
 
@@ -136,7 +142,9 @@ def repair_database(db_path: str) -> bool:
             migration._migrate_layers_to_structure_nodes(connection)
             migration._migrate_domains_to_structure_nodes(connection)
             migration._migrate_terms_to_structure_nodes(connection)
-            migration._migrate_term_relationships_to_structure_node_links(connection)  # noqa: E501
+            migration._migrate_term_relationships_to_structure_node_links(
+                connection
+            )  # noqa: E501
 
             # Populate vector embeddings if the table exists
             try:
@@ -172,7 +180,9 @@ def main():
     )
     parser.add_argument("db_path", help="Path to the SQLite database file")
     parser.add_argument(
-        "--dry-run", action="store_true", help="Analyze only, don't make changes"  # noqa: E501
+        "--dry-run",
+        action="store_true",
+        help="Analyze only, don't make changes",  # noqa: E501
     )
     parser.add_argument(
         "--force",
@@ -217,7 +227,9 @@ def main():
     logger.info(f"Repair needed: {repair_needed}")
 
     if not repair_needed:
-        logger.info("Database appears to be in good condition, no repair needed")  # noqa: E501
+        logger.info(
+            "Database appears to be in good condition, no repair needed"
+        )  # noqa: E501
         sys.exit(0)
 
     if args.dry_run:

@@ -22,6 +22,7 @@ OPENROUTER_MODELS_URL = "https://openrouter.ai/api/v1/models"
 @dataclass
 class OpenRouterModel:
     """OpenRouter model information"""
+
     id: str
     name: str
     description: str
@@ -50,11 +51,15 @@ class OpenRouterDiscoveryService:
             loop = asyncio.get_event_loop()
             response = await loop.run_in_executor(
                 None,
-                lambda: requests.get(OPENROUTER_MODELS_URL, headers=headers, timeout=10)
+                lambda: requests.get(
+                    OPENROUTER_MODELS_URL, headers=headers, timeout=10
+                ),
             )
 
             if response.status_code != 200:
-                self.logger.error(f"OpenRouter API returned status {response.status_code}")
+                self.logger.error(
+                    f"OpenRouter API returned status {response.status_code}"
+                )
                 return []
 
             data = response.json()
@@ -68,20 +73,26 @@ class OpenRouterDiscoveryService:
                         description=model_data.get("description", ""),
                         context_length=model_data.get("context_length", 0),
                         pricing=model_data.get("pricing", {}),
-                        architecture=model_data.get("architecture", {})
+                        architecture=model_data.get("architecture", {}),
                     )
                     models.append(model)
                 except Exception as e:
-                    self.logger.warning(f"Failed to parse model {model_data.get('id', 'unknown')}: {e}")
+                    self.logger.warning(
+                        f"Failed to parse model {model_data.get('id', 'unknown')}: {e}"
+                    )
 
-            self.logger.info(f"Successfully fetched {len(models)} models from OpenRouter")
+            self.logger.info(
+                f"Successfully fetched {len(models)} models from OpenRouter"
+            )
             return models
 
         except Exception as e:
             self.logger.error(f"Failed to fetch models from OpenRouter: {e}")
             return []
 
-    def convert_to_model_capabilities(self, openrouter_models: List[OpenRouterModel]) -> Dict[str, ModelCapabilities]:
+    def convert_to_model_capabilities(
+        self, openrouter_models: List[OpenRouterModel]
+    ) -> Dict[str, ModelCapabilities]:
         """Convert OpenRouter models to our ModelCapabilities format"""
         capabilities_map = {}
 
@@ -136,18 +147,20 @@ class OpenRouterDiscoveryService:
         clean_name = model_id.split("/")[-1] if "/" in model_id else model_id
 
         # Remove common suffixes that might cause issues
-        clean_name = re.sub(r'-\d{8}$', '', clean_name)  # Remove date suffixes
-        clean_name = re.sub(r'@\w+$', '', clean_name)    # Remove version tags
+        clean_name = re.sub(r"-\d{8}$", "", clean_name)  # Remove date suffixes
+        clean_name = re.sub(r"@\w+$", "", clean_name)  # Remove version tags
 
         return clean_name
 
-    def _infer_capabilities(self, model: OpenRouterModel, provider: str) -> ModelCapabilities:
+    def _infer_capabilities(
+        self, model: OpenRouterModel, provider: str
+    ) -> ModelCapabilities:
         """Infer model capabilities based on provider and model info"""
         # Base capabilities
         capabilities = ModelCapabilities(
             context_window=model.context_length,
             provider=provider,
-            model_family=self._extract_model_family(model.id)
+            model_family=self._extract_model_family(model.id),
         )
 
         # Provider-specific adjustments
@@ -188,11 +201,15 @@ class OpenRouterDiscoveryService:
         try:
             models = await self.fetch_available_models()
             if not models:
-                self.logger.warning("No models fetched from OpenRouter, using empty registry")
+                self.logger.warning(
+                    "No models fetched from OpenRouter, using empty registry"
+                )
                 return {}
 
             capabilities_map = self.convert_to_model_capabilities(models)
-            self.logger.info(f"Generated capabilities for {len(capabilities_map)} OpenRouter models")
+            self.logger.info(
+                f"Generated capabilities for {len(capabilities_map)} OpenRouter models"
+            )
 
             return capabilities_map
 
@@ -200,7 +217,9 @@ class OpenRouterDiscoveryService:
             self.logger.error(f"Failed to generate dynamic model registry: {e}")
             return {}
 
-    def filter_models(self, models: List[OpenRouterModel], criteria: Dict[str, Any]) -> List[OpenRouterModel]:
+    def filter_models(
+        self, models: List[OpenRouterModel], criteria: Dict[str, Any]
+    ) -> List[OpenRouterModel]:
         """Filter models based on criteria"""
         filtered = []
 
@@ -231,7 +250,9 @@ class OpenRouterDiscoveryService:
 _discovery_service = None
 
 
-def get_openrouter_discovery_service(api_key: Optional[str] = None) -> OpenRouterDiscoveryService:
+def get_openrouter_discovery_service(
+    api_key: Optional[str] = None,
+) -> OpenRouterDiscoveryService:
     """Get the global OpenRouter discovery service instance"""
     global _discovery_service
     if _discovery_service is None:

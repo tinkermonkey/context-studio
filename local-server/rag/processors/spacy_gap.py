@@ -4,6 +4,7 @@ Layer 2: spaCy Syntactic Gap Analysis Processor
 This processor identifies unrecognized concepts using spaCy grammatical analysis
 and TF-IDF filtering to reduce noise.
 """
+
 # mypy: ignore-errors
 from typing import List
 from collections import Counter
@@ -15,7 +16,7 @@ from rag.processors.models import (
     GapConcept,
     GapPriority,
     LLMExtractionOutput,
-    KGContextOutput
+    KGContextOutput,
 )
 from nlp.pipeline import get_pipeline
 from utils.logger import get_logger
@@ -37,9 +38,9 @@ class SpaCyGapProcessor:
     """
 
     # Dependency roles that indicate critical concepts
-    CRITICAL_DEP_ROLES = {'nsubj', 'nsubjpass'}  # Subject positions
-    IMPORTANT_DEP_ROLES = {'dobj', 'pobj', 'attr', 'dative'}  # Object positions
-    CONTEXTUAL_DEP_ROLES = {'conj', 'appos', 'compound', 'amod'}  # Contextual modifiers
+    CRITICAL_DEP_ROLES = {"nsubj", "nsubjpass"}  # Subject positions
+    IMPORTANT_DEP_ROLES = {"dobj", "pobj", "attr", "dative"}  # Object positions
+    CONTEXTUAL_DEP_ROLES = {"conj", "appos", "compound", "amod"}  # Contextual modifiers
 
     def __init__(self, tf_idf_threshold: float = 0.1):
         """
@@ -50,13 +51,15 @@ class SpaCyGapProcessor:
         """
         self.tf_idf_threshold = tf_idf_threshold
         self.nlp_pipeline = get_pipeline()
-        logger.info(f"SpaCyGapProcessor initialized with tf_idf_threshold={tf_idf_threshold}")
+        logger.info(
+            f"SpaCyGapProcessor initialized with tf_idf_threshold={tf_idf_threshold}"
+        )
 
     def process(
         self,
         input_data: ProcessorInput,
         llm_output: LLMExtractionOutput,
-        kg_output: KGContextOutput = None
+        kg_output: KGContextOutput = None,
     ) -> SpaCyGapOutput:
         """
         Process input text to identify syntactic gaps.
@@ -84,14 +87,18 @@ class SpaCyGapProcessor:
             kg_excluded_count = 0
             if kg_output and kg_output.phrase_to_kg_map:
                 for phrase_text, matches in kg_output.phrase_to_kg_map.items():
-                    if matches and matches[0]['similarity'] >= 0.6:  # High confidence threshold
+                    if (
+                        matches and matches[0]["similarity"] >= 0.6
+                    ):  # High confidence threshold
                         recognized_texts.add(phrase_text.lower())
                         kg_excluded_count += 1
-                logger.debug(f"Excluded {kg_excluded_count} high-confidence KG matches from gap analysis")
+                logger.debug(
+                    f"Excluded {kg_excluded_count} high-confidence KG matches from gap analysis"
+                )
 
             if input_data.enable_trace:
-                trace_data['kg_matches_excluded'] = kg_excluded_count
-                trace_data['llm_entities_excluded'] = len(llm_output.entities)
+                trace_data["kg_matches_excluded"] = kg_excluded_count
+                trace_data["llm_entities_excluded"] = len(llm_output.entities)
 
             # Extract all noun phrases
             all_noun_phrases = []
@@ -101,7 +108,9 @@ class SpaCyGapProcessor:
                         for chunk in sent.noun_chunks:
                             all_noun_phrases.append((chunk, sent_idx, sent))
                     except Exception as e:
-                        logger.warning(f"Error processing noun chunks in sentence {sent_idx}: {e}")
+                        logger.warning(
+                            f"Error processing noun chunks in sentence {sent_idx}: {e}"
+                        )
                         continue
             except Exception as e:
                 logger.error(f"Error iterating over sentences: {e}", exc_info=True)
@@ -110,7 +119,7 @@ class SpaCyGapProcessor:
                     gaps=[],
                     total_noun_phrases=0,
                     filtered_count=0,
-                    trace_data=trace_data
+                    trace_data=trace_data,
                 )
 
             logger.debug(f"Found {len(all_noun_phrases)} total noun phrases")
@@ -147,7 +156,7 @@ class SpaCyGapProcessor:
                         connected_verb=connected_verb,
                         start_char=chunk.start_char,
                         end_char=chunk.end_char,
-                        tf_idf_score=None  # Will be calculated later
+                        tf_idf_score=None,  # Will be calculated later
                     )
                     potential_gaps.append(gap)
 
@@ -155,38 +164,45 @@ class SpaCyGapProcessor:
                     logger.warning(f"Error processing chunk '{chunk.text}': {e}")
                     continue
 
-            logger.debug(f"Found {len(potential_gaps)} potential gaps (unrecognized noun phrases)")
+            logger.debug(
+                f"Found {len(potential_gaps)} potential gaps (unrecognized noun phrases)"
+            )
 
             # Apply TF-IDF filtering
             gaps, filtered_count = self._apply_tfidf_filtering(potential_gaps, doc)
 
-            logger.info(f"Identified {len(gaps)} significant gaps after TF-IDF filtering ({filtered_count} filtered out)")
+            logger.info(
+                f"Identified {len(gaps)} significant gaps after TF-IDF filtering ({filtered_count} filtered out)"
+            )
 
             if input_data.enable_trace:
-                trace_data['total_noun_phrases_analyzed'] = len(all_noun_phrases)
-                trace_data['potential_gaps_found'] = len(potential_gaps)
-                trace_data['gaps_after_filtering'] = len(gaps)
-                trace_data['gaps_by_priority'] = {  # type: ignore
-                    'critical': len([g for g in gaps if g.priority == GapPriority.CRITICAL]),
-                    'important': len([g for g in gaps if g.priority == GapPriority.IMPORTANT]),
-                    'contextual': len([g for g in gaps if g.priority == GapPriority.CONTEXTUAL])
+                trace_data["total_noun_phrases_analyzed"] = len(all_noun_phrases)
+                trace_data["potential_gaps_found"] = len(potential_gaps)
+                trace_data["gaps_after_filtering"] = len(gaps)
+                trace_data["gaps_by_priority"] = {  # type: ignore
+                    "critical": len(
+                        [g for g in gaps if g.priority == GapPriority.CRITICAL]
+                    ),
+                    "important": len(
+                        [g for g in gaps if g.priority == GapPriority.IMPORTANT]
+                    ),
+                    "contextual": len(
+                        [g for g in gaps if g.priority == GapPriority.CONTEXTUAL]
+                    ),
                 }
 
             return SpaCyGapOutput(
                 gaps=gaps,
                 total_noun_phrases=len(all_noun_phrases),
                 filtered_count=filtered_count,
-                trace_data=trace_data
+                trace_data=trace_data,
             )
 
         except Exception as e:
             logger.error(f"Critical error in spaCy gap analysis: {e}", exc_info=True)
             # Return empty result on critical error
             return SpaCyGapOutput(
-                gaps=[],
-                total_noun_phrases=0,
-                filtered_count=0,
-                trace_data=trace_data
+                gaps=[], total_noun_phrases=0, filtered_count=0, trace_data=trace_data
             )
 
     def _find_connected_verb(self, token) -> str:
@@ -205,14 +221,14 @@ class SpaCyGapProcessor:
         depth = 0
 
         while current and depth < max_depth:
-            if current.pos_ == 'VERB':
+            if current.pos_ == "VERB":
                 return current.text
             current = current.head if current.head != current else None
             depth += 1
 
         # Look in children
         for child in token.children:
-            if child.pos_ == 'VERB':
+            if child.pos_ == "VERB":
                 return child.text
 
         return ""
@@ -235,9 +251,7 @@ class SpaCyGapProcessor:
             return GapPriority.CONTEXTUAL
 
     def _apply_tfidf_filtering(
-        self,
-        gaps: List[GapConcept],
-        doc
+        self, gaps: List[GapConcept], doc
     ) -> tuple[List[GapConcept], int]:
         """
         Apply TF-IDF filtering to distinguish domain-specific terms from common terms.
@@ -255,7 +269,11 @@ class SpaCyGapProcessor:
         # Calculate term frequencies in the document
         doc_terms = []
         for token in doc:
-            if hasattr(token, 'lemma_') and hasattr(token, 'is_stop') and hasattr(token, 'is_alpha'):
+            if (
+                hasattr(token, "lemma_")
+                and hasattr(token, "is_stop")
+                and hasattr(token, "is_alpha")
+            ):
                 if not token.is_stop and token.is_alpha:
                     doc_terms.append(token.lemma_.lower())
 
@@ -292,16 +310,27 @@ class SpaCyGapProcessor:
             gap.tf_idf_score = avg_tfidf
 
             # Filter based on threshold, but always keep CRITICAL priority gaps
-            if gap.priority == GapPriority.CRITICAL or avg_tfidf >= self.tf_idf_threshold:
+            if (
+                gap.priority == GapPriority.CRITICAL
+                or avg_tfidf >= self.tf_idf_threshold
+            ):
                 filtered_gaps.append(gap)
             else:
                 filtered_count += 1
-                logger.debug(f"Filtered gap '{gap.text}' with TF-IDF={avg_tfidf:.3f} < {self.tf_idf_threshold}")
+                logger.debug(
+                    f"Filtered gap '{gap.text}' with TF-IDF={avg_tfidf:.3f} < {self.tf_idf_threshold}"
+                )
 
         # Sort by priority and TF-IDF score
-        filtered_gaps.sort(key=lambda g: (
-            0 if g.priority == GapPriority.CRITICAL else (1 if g.priority == GapPriority.IMPORTANT else 2),
-            -(g.tf_idf_score or 0)
-        ))
+        filtered_gaps.sort(
+            key=lambda g: (
+                (
+                    0
+                    if g.priority == GapPriority.CRITICAL
+                    else (1 if g.priority == GapPriority.IMPORTANT else 2)
+                ),
+                -(g.tf_idf_score or 0),
+            )
+        )
 
         return filtered_gaps, filtered_count

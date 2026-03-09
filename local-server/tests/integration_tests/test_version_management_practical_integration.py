@@ -11,7 +11,10 @@ import os
 from uuid import uuid4
 
 sys.path.insert(
-    0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))  # noqa: E501
+    0,
+    os.path.dirname(
+        os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    ),  # noqa: E501
 )
 
 
@@ -140,13 +143,17 @@ class TestVersionManagementPracticalAPI:
         assert response.status_code == 404
 
         # Test getting diff for non-existent entity
-        response = client.get(f"/api/versions/entities/structure_node/{fake_id}/diff")  # noqa: E501
+        response = client.get(
+            f"/api/versions/entities/structure_node/{fake_id}/diff"
+        )  # noqa: E501
         assert response.status_code == 404
 
     def test_invalid_requests(self, client):
         """Test various invalid request formats."""
         # Test invalid entity type
-        response = client.get("/api/versions/entities/invalid_type/123/versions")  # noqa: E501
+        response = client.get(
+            "/api/versions/entities/invalid_type/123/versions"
+        )  # noqa: E501
         assert response.status_code == 422  # Validation error
 
         # Test invalid UUID format
@@ -159,7 +166,10 @@ class TestVersionManagementPracticalAPI:
         response = client.get(
             f"/api/versions/entities/structure_node/{uuid4()}/versions/-1"
         )
-        assert response.status_code in [404, 422]  # Not found or validation error  # noqa: E501
+        assert response.status_code in [
+            404,
+            422,
+        ]  # Not found or validation error  # noqa: E501
 
     def test_stage_operations_invalid_data(self, client):
         """Test staging operations with invalid data."""
@@ -169,7 +179,9 @@ class TestVersionManagementPracticalAPI:
 
         # Test staging with invalid entity type
         stage_data = {"entity_type": "invalid_type", "entity_id": str(uuid4())}
-        response = client.post("/api/versions/working-tree/stage", json=stage_data)  # noqa: E501
+        response = client.post(
+            "/api/versions/working-tree/stage", json=stage_data
+        )  # noqa: E501
         assert response.status_code == 422  # Validation error
 
     @pytest.mark.skip_suite
@@ -181,7 +193,9 @@ class TestVersionManagementPracticalAPI:
 
         # Test commit with empty message - this returns 400 (Bad Request) for no staged changes  # noqa: E501
         commit_data = {"message": "", "author_id": "test-user"}
-        response = client.post("/api/versions/working-tree/commit", json=commit_data)  # noqa: E501
+        response = client.post(
+            "/api/versions/working-tree/commit", json=commit_data
+        )  # noqa: E501
         # Should return 400 for no staged changes to commit
         assert response.status_code == 400
 
@@ -191,7 +205,8 @@ class TestVersionManagementPracticalAPI:
 
         # Test rollback with missing fields
         response = client.post(
-            f"/api/versions/entities/structure_node/{fake_id}/rollback", json={}  # noqa: E501
+            f"/api/versions/entities/structure_node/{fake_id}/rollback",
+            json={},  # noqa: E501
         )
         assert response.status_code == 422  # Validation error
 
@@ -201,7 +216,10 @@ class TestVersionManagementPracticalAPI:
             f"/api/versions/entities/structure_node/{fake_id}/rollback",
             json=rollback_data,
         )
-        assert response.status_code in [404, 422]  # Not found or validation error  # noqa: E501
+        assert response.status_code in [
+            404,
+            422,
+        ]  # Not found or validation error  # noqa: E501
 
     def test_diff_comparison_invalid_data(self, client):
         """Test diff comparison with invalid data."""
@@ -216,7 +234,9 @@ class TestVersionManagementPracticalAPI:
             "before_version_number": 1,
             "after_version_number": 2,
         }
-        response = client.post("/api/versions/diffs/compare", json=compare_data)  # noqa: E501
+        response = client.post(
+            "/api/versions/diffs/compare", json=compare_data
+        )  # noqa: E501
         assert response.status_code == 422  # Validation error
 
     @pytest.mark.skip_suite
@@ -224,7 +244,11 @@ class TestVersionManagementPracticalAPI:
         """Test that implemented API endpoints exist and return expected status codes."""  # noqa: E501
         endpoints_to_test = [
             ("/api/versions/health", "GET", 200),
-            ("/api/versions/stats", "GET", 200),  # Stats endpoint is now implemented  # noqa: E501
+            (
+                "/api/versions/stats",
+                "GET",
+                200,
+            ),  # Stats endpoint is now implemented  # noqa: E501
             ("/api/versions/working-tree/status", "GET", 200),
             ("/api/versions/working-tree/changes", "GET", 200),
             ("/api/versions/working-tree/preview", "GET", 200),
@@ -240,7 +264,9 @@ class TestVersionManagementPracticalAPI:
                 continue
 
             # Should not return 404 (endpoint exists)
-            assert response.status_code != 404, f"Endpoint {endpoint} not found"  # noqa: E501
+            assert (
+                response.status_code != 404
+            ), f"Endpoint {endpoint} not found"  # noqa: E501
 
             # For GET endpoints, we expect them to work
             if method == "GET":

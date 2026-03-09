@@ -79,32 +79,26 @@ class MigrationTestHarness:
 
         try:
             # Create a layer
-            cursor.execute(
-                """
+            cursor.execute("""
                 INSERT INTO structure_nodes (id, node_type, title, definition, created_at, version, last_modified)
                 VALUES
                     ('node-1', 'layer', 'Test Layer', 'Test layer definition', '2023-01-01 10:00:00', 1, '2023-01-01 10:00:00')
-            """
-            )
+            """)
 
             # Create a domain
-            cursor.execute(
-                """
+            cursor.execute("""
                 INSERT INTO structure_nodes (id, node_type, parent_node_id, title, definition, created_at, version, last_modified)
                 VALUES
                     ('node-2', 'domain', 'node-1', 'Test Domain', 'Test domain definition', '2023-01-02 10:00:00', 1, '2023-01-02 10:00:00')
-            """
-            )
+            """)
 
             # Create terms
-            cursor.execute(
-                """
+            cursor.execute("""
                 INSERT INTO structure_nodes (id, node_type, parent_node_id, title, definition, created_at, version, last_modified)
                 VALUES
                     ('node-3', 'term', 'node-2', 'Bank', 'Financial institution', '2023-01-03 10:00:00', 1, '2023-01-03 10:00:00'),
                     ('node-4', 'term', 'node-2', 'River Bank', 'Edge of a river', '2023-01-04 10:00:00', 1, '2023-01-04 10:00:00')
-            """
-            )
+            """)
 
             conn.commit()
 
@@ -155,12 +149,10 @@ class MigrationTestHarness:
 
                 # Record in schema history
                 conn.execute(
-                    text(
-                        """
+                    text("""
                     INSERT INTO schema_history (version, description, migration_file, checksum, execution_time_ms)
                     VALUES (:version, :description, :migration_file, :checksum, :execution_time_ms)
-                """
-                    ),
+                """),
                     {
                         "version": migration_018.version,
                         "description": migration_018.description,
@@ -204,11 +196,11 @@ class MigrationTestHarness:
             """,
                 (
                     node_id,
-                    'term',
-                    'Test Node',
-                    'Test definition',
-                    json.dumps(attributes)
-                )
+                    "term",
+                    "Test Node",
+                    "Test definition",
+                    json.dumps(attributes),
+                ),
             )
             conn.commit()
         except Exception as e:
@@ -226,7 +218,7 @@ class MigrationTestHarness:
             if attributes is not None:
                 cursor.execute(
                     "UPDATE structure_nodes SET attributes = ? WHERE id = ?",
-                    (json.dumps(attributes), node_id)
+                    (json.dumps(attributes), node_id),
                 )
                 conn.commit()
         except Exception as e:
@@ -242,8 +234,7 @@ class MigrationTestHarness:
 
         try:
             cursor.execute(
-                "SELECT attributes FROM structure_nodes WHERE id = ?",
-                (node_id,)
+                "SELECT attributes FROM structure_nodes WHERE id = ?", (node_id,)
             )
             row = cursor.fetchone()
             if row and row[0]:
@@ -288,7 +279,9 @@ class TestMigration018SchemaChanges:
     def test_migration_adds_attributes_column(self, migration_harness):
         """Test that migration adds attributes column."""
         # Verify column doesn't exist before migration
-        assert not migration_harness.verify_column_exists("structure_nodes", "attributes")
+        assert not migration_harness.verify_column_exists(
+            "structure_nodes", "attributes"
+        )
 
         # Run migration
         migration_harness.run_migration_018()
@@ -363,9 +356,7 @@ class TestMigration018DataPreservation:
         cursor = conn.cursor()
 
         try:
-            cursor.execute(
-                "SELECT attributes FROM structure_nodes WHERE id = 'node-3'"
-            )
+            cursor.execute("SELECT attributes FROM structure_nodes WHERE id = 'node-3'")
             row = cursor.fetchone()
             assert row[0] is None  # attributes should be NULL
         finally:
@@ -382,8 +373,18 @@ class TestMigration018NewColumnFunctionality:
 
         # Insert node with attributes
         attributes = [
-            {"key": "source_language", "title": "Source Language", "value_type": "string", "value": "English"},
-            {"key": "confidence_score", "title": "Confidence Score", "value_type": "number", "value": 0.95}
+            {
+                "key": "source_language",
+                "title": "Source Language",
+                "value_type": "string",
+                "value": "English",
+            },
+            {
+                "key": "confidence_score",
+                "title": "Confidence Score",
+                "value_type": "number",
+                "value": 0.95,
+            },
         ]
         migration_harness.insert_node_with_attributes("test-node-1", attributes)
 
@@ -402,7 +403,12 @@ class TestMigration018NewColumnFunctionality:
 
         # Update existing node with attributes data
         attributes = [
-            {"key": "domain_category", "title": "Domain Category", "value_type": "string", "value": "Finance"}
+            {
+                "key": "domain_category",
+                "title": "Domain Category",
+                "value_type": "string",
+                "value": "Finance",
+            }
         ]
         migration_harness.update_node_attributes("node-3", attributes)
 
@@ -450,7 +456,9 @@ class TestMigration018Rollback:
         migration_harness.rollback_migration_018()
 
         # Verify column is removed
-        assert not migration_harness.verify_column_exists("structure_nodes", "attributes")
+        assert not migration_harness.verify_column_exists(
+            "structure_nodes", "attributes"
+        )
 
     def test_rollback_preserves_existing_data(self, migration_harness):
         """Test that rollback preserves all original data."""
@@ -495,7 +503,14 @@ class TestMigration018Rollback:
         migration_harness.run_migration_018()
 
         # Add data to attributes column
-        attributes = [{"key": "test_key", "title": "Test", "value_type": "string", "value": "test"}]
+        attributes = [
+            {
+                "key": "test_key",
+                "title": "Test",
+                "value_type": "string",
+                "value": "test",
+            }
+        ]
         migration_harness.update_node_attributes("node-3", attributes)
 
         # Rollback migration
@@ -506,16 +521,16 @@ class TestMigration018Rollback:
         cursor = conn.cursor()
 
         try:
-            cursor.execute(
-                "SELECT id, title FROM structure_nodes WHERE id = 'node-3'"
-            )
+            cursor.execute("SELECT id, title FROM structure_nodes WHERE id = 'node-3'")
             node = cursor.fetchone()
             assert node is not None
             assert node[0] == "node-3"
             assert node[1] == "Bank"
 
             # Verify attributes column doesn't exist
-            assert not migration_harness.verify_column_exists("structure_nodes", "attributes")
+            assert not migration_harness.verify_column_exists(
+                "structure_nodes", "attributes"
+            )
         finally:
             cursor.close()
 
@@ -546,11 +561,31 @@ class TestMigration018EdgeCases:
 
         # Insert node with complex JSON data
         attributes = [
-            {"key": "language", "title": "Language", "value_type": "string", "value": "English"},
+            {
+                "key": "language",
+                "title": "Language",
+                "value_type": "string",
+                "value": "English",
+            },
             {"key": "year", "title": "Year", "value_type": "number", "value": 2023},
-            {"key": "is_verified", "title": "Is Verified", "value_type": "boolean", "value": True},
-            {"key": "founding_date", "title": "Founding Date", "value_type": "date", "value": "2023-01-15"},
-            {"key": "homepage", "title": "Homepage", "value_type": "url", "value": "https://example.com"}
+            {
+                "key": "is_verified",
+                "title": "Is Verified",
+                "value_type": "boolean",
+                "value": True,
+            },
+            {
+                "key": "founding_date",
+                "title": "Founding Date",
+                "value_type": "date",
+                "value": "2023-01-15",
+            },
+            {
+                "key": "homepage",
+                "title": "Homepage",
+                "value_type": "url",
+                "value": "https://example.com",
+            },
         ]
         migration_harness.insert_node_with_attributes("test-json", attributes)
 
@@ -558,11 +593,11 @@ class TestMigration018EdgeCases:
         result = migration_harness.get_node_attributes("test-json")
         assert result is not None
         assert len(result) == 5
-        assert result[0]['key'] == "language"
-        assert result[1]['key'] == "year"
-        assert result[2]['key'] == "is_verified"
-        assert result[3]['key'] == "founding_date"
-        assert result[4]['key'] == "homepage"
+        assert result[0]["key"] == "language"
+        assert result[1]["key"] == "year"
+        assert result[2]["key"] == "is_verified"
+        assert result[3]["key"] == "founding_date"
+        assert result[4]["key"] == "homepage"
 
 
 if __name__ == "__main__":

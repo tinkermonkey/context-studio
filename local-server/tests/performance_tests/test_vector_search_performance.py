@@ -14,9 +14,10 @@ from typing import cast
 from reference_db.config import ReferenceConfig
 from reference_db.manager import ReferenceManager
 
-
 # Skip if embeddings not available
-pytest.importorskip("embeddings.generate_embeddings", reason="embeddings module not available")  # noqa: E501
+pytest.importorskip(
+    "embeddings.generate_embeddings", reason="embeddings module not available"
+)  # noqa: E501
 
 
 @pytest.fixture(scope="module")
@@ -37,26 +38,106 @@ def large_dataset_manager():
 
     # Add 100+ entities with real embeddings
     base_entities = [
-        "Person", "Organization", "CreativeWork", "Event", "Place",
-        "Product", "Book", "Movie", "MusicRecording", "Restaurant",
-        "Hotel", "LocalBusiness", "Article", "SoftwareApplication", "WebPage",
-        "VideoObject", "ImageObject", "AudioObject", "MediaObject", "Dataset",
-        "Action", "Thing", "Intangible", "Service", "Offer",
-        "Review", "Rating", "Comment", "Question", "Answer",
-        "Course", "EducationalOrganization", "School", "College", "University",
-        "MedicalEntity", "Drug", "MedicalCondition", "Hospital", "Physician",
-        "Recipe", "NutritionInformation", "Diet", "ExercisePlan", "PhysicalActivity",  # noqa: E501
-        "Vehicle", "Car", "Motorcycle", "BusOrCoach", "Airplane",
-        "TVSeries", "TVEpisode", "RadioSeries", "RadioEpisode", "PodcastSeries",  # noqa: E501
-        "JobPosting", "Occupation", "EducationalOccupationalCredential", "WorkersUnion", "ProfessionalService",  # noqa: E501
-        "GovernmentOrganization", "NGO", "Corporation", "LegalService", "PerformingGroup",  # noqa: E501
-        "MusicGroup", "DanceGroup", "TheaterGroup", "SportsTeam", "SportsOrganization",  # noqa: E501
-        "Airline", "Consortium", "FundingScheme", "Project", "ResearchProject",
-        "Brand", "ContactPoint", "PostalAddress", "GeoCoordinates", "GeoShape",
-        "Country", "State", "City", "AdministrativeArea", "LandmarksOrHistoricalBuildings",  # noqa: E501
-        "Park", "Beach", "Mountain", "BodyOfWater", "Continent",
-        "Cemetery", "Crematorium", "EventVenue", "CivicStructure", "Bridge",
-        "BusStation", "Airport", "SubwayStation", "TrainStation", "TaxiStand",
+        "Person",
+        "Organization",
+        "CreativeWork",
+        "Event",
+        "Place",
+        "Product",
+        "Book",
+        "Movie",
+        "MusicRecording",
+        "Restaurant",
+        "Hotel",
+        "LocalBusiness",
+        "Article",
+        "SoftwareApplication",
+        "WebPage",
+        "VideoObject",
+        "ImageObject",
+        "AudioObject",
+        "MediaObject",
+        "Dataset",
+        "Action",
+        "Thing",
+        "Intangible",
+        "Service",
+        "Offer",
+        "Review",
+        "Rating",
+        "Comment",
+        "Question",
+        "Answer",
+        "Course",
+        "EducationalOrganization",
+        "School",
+        "College",
+        "University",
+        "MedicalEntity",
+        "Drug",
+        "MedicalCondition",
+        "Hospital",
+        "Physician",
+        "Recipe",
+        "NutritionInformation",
+        "Diet",
+        "ExercisePlan",
+        "PhysicalActivity",  # noqa: E501
+        "Vehicle",
+        "Car",
+        "Motorcycle",
+        "BusOrCoach",
+        "Airplane",
+        "TVSeries",
+        "TVEpisode",
+        "RadioSeries",
+        "RadioEpisode",
+        "PodcastSeries",  # noqa: E501
+        "JobPosting",
+        "Occupation",
+        "EducationalOccupationalCredential",
+        "WorkersUnion",
+        "ProfessionalService",  # noqa: E501
+        "GovernmentOrganization",
+        "NGO",
+        "Corporation",
+        "LegalService",
+        "PerformingGroup",  # noqa: E501
+        "MusicGroup",
+        "DanceGroup",
+        "TheaterGroup",
+        "SportsTeam",
+        "SportsOrganization",  # noqa: E501
+        "Airline",
+        "Consortium",
+        "FundingScheme",
+        "Project",
+        "ResearchProject",
+        "Brand",
+        "ContactPoint",
+        "PostalAddress",
+        "GeoCoordinates",
+        "GeoShape",
+        "Country",
+        "State",
+        "City",
+        "AdministrativeArea",
+        "LandmarksOrHistoricalBuildings",  # noqa: E501
+        "Park",
+        "Beach",
+        "Mountain",
+        "BodyOfWater",
+        "Continent",
+        "Cemetery",
+        "Crematorium",
+        "EventVenue",
+        "CivicStructure",
+        "Bridge",
+        "BusStation",
+        "Airport",
+        "SubwayStation",
+        "TrainStation",
+        "TaxiStand",
     ]
 
     for i, entity in enumerate(base_entities):
@@ -72,7 +153,7 @@ def large_dataset_manager():
             external_id=entity,
             title_embedding=title_emb,
             definition_embedding=def_emb,
-            embedding_dims=384
+            embedding_dims=384,
         )
 
     yield manager, db_path
@@ -112,7 +193,7 @@ class TestVectorSearchLatency:
                 query_text="warmup query",
                 limit=20,
                 threshold=0.0,
-                embedding_generator=embedding_gen
+                embedding_generator=embedding_gen,
             )
 
         # Test queries
@@ -148,7 +229,7 @@ class TestVectorSearchLatency:
                 query_text=query,
                 limit=20,
                 threshold=0.0,
-                embedding_generator=lambda _: query_embedding
+                embedding_generator=lambda _: query_embedding,
             )
 
             end_time = time.perf_counter()
@@ -161,12 +242,16 @@ class TestVectorSearchLatency:
         median_time = statistics.median(search_times)
         max_time = max(search_times)
         min_time = min(search_times)
-        p95_time = statistics.quantiles(search_times, n=20)[18]  # 95th percentile  # noqa: E501
+        p95_time = statistics.quantiles(search_times, n=20)[
+            18
+        ]  # 95th percentile  # noqa: E501
 
         print(f"\n{'='*60}")
         print("Vector Search Performance Test Results (TC-P002, TC-S003)")
         print(f"{'='*60}")
-        print(f"Dataset size: {len(test_queries)} queries against {90}+ entities")  # noqa: E501
+        print(
+            f"Dataset size: {len(test_queries)} queries against {90}+ entities"
+        )  # noqa: E501
         print("Search limit: 20 results")
         print("\nLatency Statistics:")
         print(f"  Average:    {avg_time:6.2f} ms")
@@ -179,11 +264,13 @@ class TestVectorSearchLatency:
         print(f"{'='*60}\n")
 
         # Validate TC-P002 and TC-S003
-        assert avg_time < 50.0, \
-            f"Average search latency {avg_time:.2f}ms exceeds 50ms requirement"
+        assert (
+            avg_time < 50.0
+        ), f"Average search latency {avg_time:.2f}ms exceeds 50ms requirement"
 
-        assert p95_time < 50.0, \
-            f"P95 search latency {p95_time:.2f}ms exceeds 50ms requirement"
+        assert (
+            p95_time < 50.0
+        ), f"P95 search latency {p95_time:.2f}ms exceeds 50ms requirement"
 
     def test_search_scales_linearly(self, large_dataset_manager):
         """
@@ -214,7 +301,7 @@ class TestVectorSearchLatency:
                     query_text="test",
                     limit=limit,
                     threshold=0.0,
-                    embedding_generator=embedding_gen
+                    embedding_generator=embedding_gen,
                 )
 
                 end_time = time.perf_counter()
@@ -231,12 +318,15 @@ class TestVectorSearchLatency:
         time_ratio = times[100] / times[10]
         limit_ratio = 100 / 10
 
-        print(f"\nScaling factor: {time_ratio:.2f}x time for {limit_ratio:.0f}x limit")  # noqa: E501
+        print(
+            f"\nScaling factor: {time_ratio:.2f}x time for {limit_ratio:.0f}x limit"
+        )  # noqa: E501
         print(f"Efficiency: {'GOOD' if time_ratio < limit_ratio else 'POOR'}")
 
         # Time should not scale worse than linearly
-        assert time_ratio < limit_ratio * 1.5, \
-            f"Search scaling is suboptimal: {time_ratio:.2f}x time for {limit_ratio:.0f}x limit"  # noqa: E501
+        assert (
+            time_ratio < limit_ratio * 1.5
+        ), f"Search scaling is suboptimal: {time_ratio:.2f}x time for {limit_ratio:.0f}x limit"  # noqa: E501
 
     def test_threshold_filtering_performance(self, large_dataset_manager):
         """
@@ -261,7 +351,7 @@ class TestVectorSearchLatency:
                 query_text="test",
                 limit=20,
                 threshold=0.0,
-                embedding_generator=embedding_gen
+                embedding_generator=embedding_gen,
             )
             no_threshold_times.append((time.perf_counter() - start) * 1000)
 
@@ -273,7 +363,7 @@ class TestVectorSearchLatency:
                 query_text="test",
                 limit=20,
                 threshold=0.8,
-                embedding_generator=embedding_gen
+                embedding_generator=embedding_gen,
             )
             with_threshold_times.append((time.perf_counter() - start) * 1000)
 
@@ -283,12 +373,17 @@ class TestVectorSearchLatency:
         print("\nThreshold Filtering Performance:")
         print(f"  No threshold (0.0):   {avg_no_threshold:6.2f} ms")
         print(f"  With threshold (0.8): {avg_with_threshold:6.2f} ms")
-        print(f"  Overhead:             {avg_with_threshold - avg_no_threshold:6.2f} ms")  # noqa: E501
+        print(
+            f"  Overhead:             {avg_with_threshold - avg_no_threshold:6.2f} ms"
+        )  # noqa: E501
 
         # Threshold filtering should not add significant overhead
-        overhead_pct = ((avg_with_threshold - avg_no_threshold) / avg_no_threshold) * 100  # noqa: E501
+        overhead_pct = (
+            (avg_with_threshold - avg_no_threshold) / avg_no_threshold
+        ) * 100  # noqa: E501
 
         print(f"  Overhead %:           {overhead_pct:6.2f}%")
 
-        assert overhead_pct < 20.0, \
-            f"Threshold filtering adds {overhead_pct:.1f}% overhead (should be <20%)"  # noqa: E501
+        assert (
+            overhead_pct < 20.0
+        ), f"Threshold filtering adds {overhead_pct:.1f}% overhead (should be <20%)"  # noqa: E501

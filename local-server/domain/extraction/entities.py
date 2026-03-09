@@ -42,15 +42,29 @@ class ExtractedEntity:
             raise TypeError(
                 f"entity_type must be an EntityType enum, got {type(self.entity_type).__name__}"
             )
-        if isinstance(self.confidence, bool) or not isinstance(self.confidence, (int, float)) or not (0.0 <= self.confidence <= 1.0):
+        if (
+            isinstance(self.confidence, bool)
+            or not isinstance(self.confidence, (int, float))
+            or not (0.0 <= self.confidence <= 1.0)
+        ):
             raise ValueError("confidence must be a number between 0.0 and 1.0")
-        if isinstance(self.start_pos, bool) or not isinstance(self.start_pos, int) or self.start_pos < 0:
+        if (
+            isinstance(self.start_pos, bool)
+            or not isinstance(self.start_pos, int)
+            or self.start_pos < 0
+        ):
             raise ValueError("start_pos must be a non-negative integer")
-        if isinstance(self.end_pos, bool) or not isinstance(self.end_pos, int) or self.end_pos < 0:
+        if (
+            isinstance(self.end_pos, bool)
+            or not isinstance(self.end_pos, int)
+            or self.end_pos < 0
+        ):
             raise ValueError("end_pos must be a non-negative integer")
         if self.end_pos <= self.start_pos:
             raise ValueError("end_pos must be greater than start_pos")
-        if self.suggested_class_id is not None and not isinstance(self.suggested_class_id, str):
+        if self.suggested_class_id is not None and not isinstance(
+            self.suggested_class_id, str
+        ):
             raise TypeError("suggested_class_id must be None or a string")
 
 
@@ -82,12 +96,16 @@ class ExtractionLayerResult:
             raise TypeError("entities must be a tuple of ExtractedEntity instances")
         for entity in self.entities:
             if not isinstance(entity, ExtractedEntity):
-                raise TypeError(f"All entities must be ExtractedEntity instances, got {type(entity).__name__}")
+                raise TypeError(
+                    f"All entities must be ExtractedEntity instances, got {type(entity).__name__}"
+                )
         if not isinstance(self.relationships, tuple):
             raise TypeError("relationships must be a tuple of dicts (immutable)")
         for rel in self.relationships:
             if not isinstance(rel, dict):
-                raise TypeError(f"All relationships must be dicts, got {type(rel).__name__}")
+                raise TypeError(
+                    f"All relationships must be dicts, got {type(rel).__name__}"
+                )
 
 
 @dataclass
@@ -113,6 +131,8 @@ class ExtractionResult:
             raise TypeError("layers must be a tuple of ExtractionLayerResult instances")
         for layer in self.layers:
             if not isinstance(layer, ExtractionLayerResult):
-                raise TypeError(f"All layers must be ExtractionLayerResult instances, got {type(layer).__name__}")
+                raise TypeError(
+                    f"All layers must be ExtractionLayerResult instances, got {type(layer).__name__}"
+                )
         if self.execution_id is not None and not isinstance(self.execution_id, str):
             raise TypeError("execution_id must be None or a string")

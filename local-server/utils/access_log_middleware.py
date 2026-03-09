@@ -1,6 +1,7 @@
 """
 Custom middleware for logging API access requests in Apache Common Log Format style.  # noqa: E501
 """
+
 import time
 from fastapi import Request, Response
 from starlette.middleware.base import BaseHTTPMiddleware

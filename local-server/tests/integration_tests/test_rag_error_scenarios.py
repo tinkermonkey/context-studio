@@ -3,8 +3,10 @@ Error scenario integration tests for RAG Pipeline.
 
 These tests verify graceful degradation, error handling, and timeout enforcement.  # noqa: E501
 """
+
 import sys
 import os
+
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import pytest  # noqa: E402
@@ -19,7 +21,7 @@ from rag.processors.models import (  # noqa: E402
     KGContextOutput,
     LLMExtractionOutput,
     SpaCyGapOutput,
-    ConceptResolutionOutput
+    ConceptResolutionOutput,
 )
 from database.models import Base  # noqa: E402
 
@@ -92,17 +94,23 @@ class TestRAGErrorScenarios:
     @pytest.mark.asyncio
     async def test_all_layers_timeout(self, test_dbs):
         """Test pipeline completes when all layers timeout."""
-        (kg_engine, kg_session_maker), (ops_engine, ops_session_maker) = test_dbs  # noqa: E501
+        (kg_engine, kg_session_maker), (ops_engine, ops_session_maker) = (
+            test_dbs  # noqa: E501
+        )
 
         kg_session = kg_session_maker()
         ops_session = ops_session_maker()
 
         try:
-            with patch('rag.rag_pipeline_service.KGContextProcessor') as MockKG, \
-                 patch('rag.rag_pipeline_service.LLMExtractionProcessor') as MockLLM, \
-                 patch('rag.rag_pipeline_service.SpaCyGapProcessor') as MockSpaCy, \
-                 patch('rag.rag_pipeline_service.ConceptResolutionProcessor') as MockConcept, \
-                 patch('rag.rag_pipeline_service.RAGObservabilityStore') as MockObs:  # noqa: E501
+            with patch("rag.rag_pipeline_service.KGContextProcessor") as MockKG, patch(
+                "rag.rag_pipeline_service.LLMExtractionProcessor"
+            ) as MockLLM, patch(
+                "rag.rag_pipeline_service.SpaCyGapProcessor"
+            ) as MockSpaCy, patch(
+                "rag.rag_pipeline_service.ConceptResolutionProcessor"
+            ) as MockConcept, patch(
+                "rag.rag_pipeline_service.RAGObservabilityStore"
+            ) as MockObs:  # noqa: E501
 
                 # Make all processors timeout
                 async def timeout():
@@ -122,10 +130,12 @@ class TestRAGErrorScenarios:
                     timeout_layer_0=0.1,
                     timeout_layer_1=0.1,
                     timeout_layer_2=0.1,
-                    timeout_layer_3=0.1
+                    timeout_layer_3=0.1,
                 )
 
-                response = await service.extract_entities("Test text", enable_trace=False)  # noqa: E501
+                response = await service.extract_entities(
+                    "Test text", enable_trace=False
+                )  # noqa: E501
 
                 # Pipeline should complete with no entities
                 assert response.request_id is not None
@@ -139,41 +149,64 @@ class TestRAGErrorScenarios:
     @pytest.mark.asyncio
     async def test_layer_0_exception_graceful_degradation(self, test_dbs):
         """Test that Layer 0 exception allows pipeline to continue."""
-        (kg_engine, kg_session_maker), (ops_engine, ops_session_maker) = test_dbs  # noqa: E501
+        (kg_engine, kg_session_maker), (ops_engine, ops_session_maker) = (
+            test_dbs  # noqa: E501
+        )
 
         kg_session = kg_session_maker()
         ops_session = ops_session_maker()
 
         try:
-            with patch('rag.rag_pipeline_service.KGContextProcessor') as MockKG, \
-                 patch('rag.rag_pipeline_service.LLMExtractionProcessor') as MockLLM, \
-                 patch('rag.rag_pipeline_service.SpaCyGapProcessor') as MockSpaCy, \
-                 patch('rag.rag_pipeline_service.ConceptResolutionProcessor') as MockConcept, \
-                 patch('rag.rag_pipeline_service.RAGObservabilityStore') as MockObs:  # noqa: E501
+            with patch("rag.rag_pipeline_service.KGContextProcessor") as MockKG, patch(
+                "rag.rag_pipeline_service.LLMExtractionProcessor"
+            ) as MockLLM, patch(
+                "rag.rag_pipeline_service.SpaCyGapProcessor"
+            ) as MockSpaCy, patch(
+                "rag.rag_pipeline_service.ConceptResolutionProcessor"
+            ) as MockConcept, patch(
+                "rag.rag_pipeline_service.RAGObservabilityStore"
+            ) as MockObs:  # noqa: E501
 
                 # Layer 0 raises exception
-                MockKG.return_value.process.side_effect = Exception("Layer 0 error")  # noqa: E501
+                MockKG.return_value.process.side_effect = Exception(
+                    "Layer 0 error"
+                )  # noqa: E501
 
                 # Other layers succeed with empty results
-                MockLLM.return_value.process.return_value = LLMExtractionOutput(  # noqa: E501
-                    entities=[], kg_context_size=0, token_usage=None, trace_data={}  # noqa: E501
+                MockLLM.return_value.process.return_value = (
+                    LLMExtractionOutput(  # noqa: E501
+                        entities=[],
+                        kg_context_size=0,
+                        token_usage=None,
+                        trace_data={},  # noqa: E501
+                    )
                 )
                 MockSpaCy.return_value.process.return_value = SpaCyGapOutput(
-                    gaps=[], total_noun_phrases=0, filtered_count=0, trace_data={}  # noqa: E501
+                    gaps=[],
+                    total_noun_phrases=0,
+                    filtered_count=0,
+                    trace_data={},  # noqa: E501
                 )
-                MockConcept.return_value.process.return_value = ConceptResolutionOutput(  # noqa: E501
-                    resolved_concepts=[], unresolved_gaps=[], web_searches_performed=0,  # noqa: E501
-                    cached_kg_hits=0, full_kg_hits=0, trace_data={}
+                MockConcept.return_value.process.return_value = (
+                    ConceptResolutionOutput(  # noqa: E501
+                        resolved_concepts=[],
+                        unresolved_gaps=[],
+                        web_searches_performed=0,  # noqa: E501
+                        cached_kg_hits=0,
+                        full_kg_hits=0,
+                        trace_data={},
+                    )
                 )
 
                 MockObs.return_value.save_metrics.return_value = "metrics123"
 
                 service = RAGPipelineService(
-                    kg_db_session=kg_session,
-                    ops_db_session=ops_session
+                    kg_db_session=kg_session, ops_db_session=ops_session
                 )
 
-                response = await service.extract_entities("Test text", enable_trace=False)  # noqa: E501
+                response = await service.extract_entities(
+                    "Test text", enable_trace=False
+                )  # noqa: E501
 
                 # Should complete successfully despite Layer 0 error
                 assert response.request_id is not None
@@ -190,41 +223,62 @@ class TestRAGErrorScenarios:
     @pytest.mark.asyncio
     async def test_layer_1_llm_service_unavailable(self, test_dbs):
         """Test handling of LLM service unavailability."""
-        (kg_engine, kg_session_maker), (ops_engine, ops_session_maker) = test_dbs  # noqa: E501
+        (kg_engine, kg_session_maker), (ops_engine, ops_session_maker) = (
+            test_dbs  # noqa: E501
+        )
 
         kg_session = kg_session_maker()
         ops_session = ops_session_maker()
 
         try:
-            with patch('rag.rag_pipeline_service.KGContextProcessor') as MockKG, \
-                 patch('rag.rag_pipeline_service.LLMExtractionProcessor') as MockLLM, \
-                 patch('rag.rag_pipeline_service.SpaCyGapProcessor') as MockSpaCy, \
-                 patch('rag.rag_pipeline_service.ConceptResolutionProcessor') as MockConcept, \
-                 patch('rag.rag_pipeline_service.RAGObservabilityStore') as MockObs:  # noqa: E501
+            with patch("rag.rag_pipeline_service.KGContextProcessor") as MockKG, patch(
+                "rag.rag_pipeline_service.LLMExtractionProcessor"
+            ) as MockLLM, patch(
+                "rag.rag_pipeline_service.SpaCyGapProcessor"
+            ) as MockSpaCy, patch(
+                "rag.rag_pipeline_service.ConceptResolutionProcessor"
+            ) as MockConcept, patch(
+                "rag.rag_pipeline_service.RAGObservabilityStore"
+            ) as MockObs:  # noqa: E501
 
                 MockKG.return_value.process.return_value = KGContextOutput(
-                    extracted_phrases=[], kg_nodes=[], total_sentences=1, trace_data={}  # noqa: E501
+                    extracted_phrases=[],
+                    kg_nodes=[],
+                    total_sentences=1,
+                    trace_data={},  # noqa: E501
                 )
 
                 # LLM service raises exception (e.g., API unavailable)
-                MockLLM.return_value.process.side_effect = ConnectionError("LLM API unavailable")  # noqa: E501
+                MockLLM.return_value.process.side_effect = ConnectionError(
+                    "LLM API unavailable"
+                )  # noqa: E501
 
                 MockSpaCy.return_value.process.return_value = SpaCyGapOutput(
-                    gaps=[], total_noun_phrases=0, filtered_count=0, trace_data={}  # noqa: E501
+                    gaps=[],
+                    total_noun_phrases=0,
+                    filtered_count=0,
+                    trace_data={},  # noqa: E501
                 )
-                MockConcept.return_value.process.return_value = ConceptResolutionOutput(  # noqa: E501
-                    resolved_concepts=[], unresolved_gaps=[], web_searches_performed=0,  # noqa: E501
-                    cached_kg_hits=0, full_kg_hits=0, trace_data={}
+                MockConcept.return_value.process.return_value = (
+                    ConceptResolutionOutput(  # noqa: E501
+                        resolved_concepts=[],
+                        unresolved_gaps=[],
+                        web_searches_performed=0,  # noqa: E501
+                        cached_kg_hits=0,
+                        full_kg_hits=0,
+                        trace_data={},
+                    )
                 )
 
                 MockObs.return_value.save_metrics.return_value = "metrics123"
 
                 service = RAGPipelineService(
-                    kg_db_session=kg_session,
-                    ops_db_session=ops_session
+                    kg_db_session=kg_session, ops_db_session=ops_session
                 )
 
-                response = await service.extract_entities("Test text", enable_trace=False)  # noqa: E501
+                response = await service.extract_entities(
+                    "Test text", enable_trace=False
+                )  # noqa: E501
 
                 # Should continue to other layers
                 assert response.request_id is not None
@@ -241,42 +295,66 @@ class TestRAGErrorScenarios:
     @pytest.mark.asyncio
     async def test_layer_3_web_search_unavailable(self, test_dbs):
         """Test handling when web search service is unavailable."""
-        (kg_engine, kg_session_maker), (ops_engine, ops_session_maker) = test_dbs  # noqa: E501
+        (kg_engine, kg_session_maker), (ops_engine, ops_session_maker) = (
+            test_dbs  # noqa: E501
+        )
 
         kg_session = kg_session_maker()
         ops_session = ops_session_maker()
 
         try:
-            with patch('rag.rag_pipeline_service.KGContextProcessor') as MockKG, \
-                 patch('rag.rag_pipeline_service.LLMExtractionProcessor') as MockLLM, \
-                 patch('rag.rag_pipeline_service.SpaCyGapProcessor') as MockSpaCy, \
-                 patch('rag.rag_pipeline_service.ConceptResolutionProcessor') as MockConcept, \
-                 patch('rag.rag_pipeline_service.RAGObservabilityStore') as MockObs:  # noqa: E501
+            with patch("rag.rag_pipeline_service.KGContextProcessor") as MockKG, patch(
+                "rag.rag_pipeline_service.LLMExtractionProcessor"
+            ) as MockLLM, patch(
+                "rag.rag_pipeline_service.SpaCyGapProcessor"
+            ) as MockSpaCy, patch(
+                "rag.rag_pipeline_service.ConceptResolutionProcessor"
+            ) as MockConcept, patch(
+                "rag.rag_pipeline_service.RAGObservabilityStore"
+            ) as MockObs:  # noqa: E501
 
                 MockKG.return_value.process.return_value = KGContextOutput(
-                    extracted_phrases=[], kg_nodes=[], total_sentences=1, trace_data={}  # noqa: E501
+                    extracted_phrases=[],
+                    kg_nodes=[],
+                    total_sentences=1,
+                    trace_data={},  # noqa: E501
                 )
-                MockLLM.return_value.process.return_value = LLMExtractionOutput(  # noqa: E501
-                    entities=[], kg_context_size=0, token_usage=None, trace_data={}  # noqa: E501
+                MockLLM.return_value.process.return_value = (
+                    LLMExtractionOutput(  # noqa: E501
+                        entities=[],
+                        kg_context_size=0,
+                        token_usage=None,
+                        trace_data={},  # noqa: E501
+                    )
                 )
                 MockSpaCy.return_value.process.return_value = SpaCyGapOutput(
-                    gaps=[], total_noun_phrases=0, filtered_count=0, trace_data={}  # noqa: E501
+                    gaps=[],
+                    total_noun_phrases=0,
+                    filtered_count=0,
+                    trace_data={},  # noqa: E501
                 )
 
                 # Layer 3 handles web search unavailability gracefully
-                MockConcept.return_value.process.return_value = ConceptResolutionOutput(  # noqa: E501
-                    resolved_concepts=[], unresolved_gaps=[], web_searches_performed=0,  # noqa: E501
-                    cached_kg_hits=0, full_kg_hits=0, trace_data={}
+                MockConcept.return_value.process.return_value = (
+                    ConceptResolutionOutput(  # noqa: E501
+                        resolved_concepts=[],
+                        unresolved_gaps=[],
+                        web_searches_performed=0,  # noqa: E501
+                        cached_kg_hits=0,
+                        full_kg_hits=0,
+                        trace_data={},
+                    )
                 )
 
                 MockObs.return_value.save_metrics.return_value = "metrics123"
 
                 service = RAGPipelineService(
-                    kg_db_session=kg_session,
-                    ops_db_session=ops_session
+                    kg_db_session=kg_session, ops_db_session=ops_session
                 )
 
-                response = await service.extract_entities("Test text", enable_trace=False)  # noqa: E501
+                response = await service.extract_entities(
+                    "Test text", enable_trace=False
+                )  # noqa: E501
 
                 # Should complete successfully
                 assert response.request_id is not None
@@ -289,7 +367,9 @@ class TestRAGErrorScenarios:
     @pytest.mark.asyncio
     async def test_malformed_input_special_characters(self, test_dbs):
         """Test handling of malformed input with special characters."""
-        (kg_engine, kg_session_maker), (ops_engine, ops_session_maker) = test_dbs  # noqa: E501
+        (kg_engine, kg_session_maker), (ops_engine, ops_session_maker) = (
+            test_dbs  # noqa: E501
+        )
 
         kg_session = kg_session_maker()
         ops_session = ops_session_maker()
@@ -299,20 +379,22 @@ class TestRAGErrorScenarios:
                 kg_db_session=kg_session,
                 ops_db_session=ops_session,
                 timeout_layer_0=2.0,
-                timeout_layer_2=2.0
+                timeout_layer_2=2.0,
             )
 
             # Test with various special characters
             special_inputs = [
                 "Test\x00with\x00null\x00bytes",
                 "Test with emoji 🔥 💡 🚀",
-                "Test with unicode \u2022 \u2026 \u00A9",
+                "Test with unicode \u2022 \u2026 \u00a9",
                 "Test with RTL text עברית",
                 "Test with Chinese characters 中文测试",
             ]
 
             for input_text in special_inputs:
-                response = await service.extract_entities(input_text, enable_trace=False)  # noqa: E501
+                response = await service.extract_entities(
+                    input_text, enable_trace=False
+                )  # noqa: E501
 
                 # Should handle without crashing
                 assert response.request_id is not None
@@ -325,7 +407,9 @@ class TestRAGErrorScenarios:
     @pytest.mark.asyncio
     async def test_very_long_input(self, test_dbs):
         """Test handling of very long input text."""
-        (kg_engine, kg_session_maker), (ops_engine, ops_session_maker) = test_dbs  # noqa: E501
+        (kg_engine, kg_session_maker), (ops_engine, ops_session_maker) = (
+            test_dbs  # noqa: E501
+        )
 
         kg_session = kg_session_maker()
         ops_session = ops_session_maker()
@@ -335,13 +419,17 @@ class TestRAGErrorScenarios:
                 kg_db_session=kg_session,
                 ops_db_session=ops_session,
                 timeout_layer_0=3.0,
-                timeout_layer_2=3.0
+                timeout_layer_2=3.0,
             )
 
             # Create very long input (10,000 characters)
-            long_text = "Machine learning is a subset of artificial intelligence. " * 200  # noqa: E501
+            long_text = (
+                "Machine learning is a subset of artificial intelligence. " * 200
+            )  # noqa: E501
 
-            response = await service.extract_entities(long_text, enable_trace=False)  # noqa: E501
+            response = await service.extract_entities(
+                long_text, enable_trace=False
+            )  # noqa: E501
 
             # Should handle without crashing
             assert response.request_id is not None
@@ -354,42 +442,68 @@ class TestRAGErrorScenarios:
     @pytest.mark.asyncio
     async def test_observability_store_failure(self, test_dbs):
         """Test that pipeline completes even if observability store fails."""
-        (kg_engine, kg_session_maker), (ops_engine, ops_session_maker) = test_dbs  # noqa: E501
+        (kg_engine, kg_session_maker), (ops_engine, ops_session_maker) = (
+            test_dbs  # noqa: E501
+        )
 
         kg_session = kg_session_maker()
         ops_session = ops_session_maker()
 
         try:
-            with patch('rag.rag_pipeline_service.KGContextProcessor') as MockKG, \
-                 patch('rag.rag_pipeline_service.LLMExtractionProcessor') as MockLLM, \
-                 patch('rag.rag_pipeline_service.SpaCyGapProcessor') as MockSpaCy, \
-                 patch('rag.rag_pipeline_service.ConceptResolutionProcessor') as MockConcept, \
-                 patch('rag.rag_pipeline_service.RAGObservabilityStore') as MockObs:  # noqa: E501
+            with patch("rag.rag_pipeline_service.KGContextProcessor") as MockKG, patch(
+                "rag.rag_pipeline_service.LLMExtractionProcessor"
+            ) as MockLLM, patch(
+                "rag.rag_pipeline_service.SpaCyGapProcessor"
+            ) as MockSpaCy, patch(
+                "rag.rag_pipeline_service.ConceptResolutionProcessor"
+            ) as MockConcept, patch(
+                "rag.rag_pipeline_service.RAGObservabilityStore"
+            ) as MockObs:  # noqa: E501
 
                 MockKG.return_value.process.return_value = KGContextOutput(
-                    extracted_phrases=[], kg_nodes=[], total_sentences=1, trace_data={}  # noqa: E501
+                    extracted_phrases=[],
+                    kg_nodes=[],
+                    total_sentences=1,
+                    trace_data={},  # noqa: E501
                 )
-                MockLLM.return_value.process.return_value = LLMExtractionOutput(  # noqa: E501
-                    entities=[], kg_context_size=0, token_usage=None, trace_data={}  # noqa: E501
+                MockLLM.return_value.process.return_value = (
+                    LLMExtractionOutput(  # noqa: E501
+                        entities=[],
+                        kg_context_size=0,
+                        token_usage=None,
+                        trace_data={},  # noqa: E501
+                    )
                 )
                 MockSpaCy.return_value.process.return_value = SpaCyGapOutput(
-                    gaps=[], total_noun_phrases=0, filtered_count=0, trace_data={}  # noqa: E501
+                    gaps=[],
+                    total_noun_phrases=0,
+                    filtered_count=0,
+                    trace_data={},  # noqa: E501
                 )
-                MockConcept.return_value.process.return_value = ConceptResolutionOutput(  # noqa: E501
-                    resolved_concepts=[], unresolved_gaps=[], web_searches_performed=0,  # noqa: E501
-                    cached_kg_hits=0, full_kg_hits=0, trace_data={}
+                MockConcept.return_value.process.return_value = (
+                    ConceptResolutionOutput(  # noqa: E501
+                        resolved_concepts=[],
+                        unresolved_gaps=[],
+                        web_searches_performed=0,  # noqa: E501
+                        cached_kg_hits=0,
+                        full_kg_hits=0,
+                        trace_data={},
+                    )
                 )
 
                 # Observability store fails to save metrics
-                MockObs.return_value.save_metrics.side_effect = Exception("Database write error")  # noqa: E501
+                MockObs.return_value.save_metrics.side_effect = Exception(
+                    "Database write error"
+                )  # noqa: E501
 
                 service = RAGPipelineService(
-                    kg_db_session=kg_session,
-                    ops_db_session=ops_session
+                    kg_db_session=kg_session, ops_db_session=ops_session
                 )
 
                 # Pipeline should complete successfully despite observability failure  # noqa: E501
-                response = await service.extract_entities("Test text", enable_trace=False)  # noqa: E501
+                response = await service.extract_entities(
+                    "Test text", enable_trace=False
+                )  # noqa: E501
 
                 assert response.request_id is not None
                 # Metrics should still be populated in response even if save failed  # noqa: E501
@@ -402,7 +516,9 @@ class TestRAGErrorScenarios:
     @pytest.mark.asyncio
     async def test_concurrent_requests(self, test_dbs):
         """Test handling of multiple concurrent RAG extraction requests."""
-        (kg_engine, kg_session_maker), (ops_engine, ops_session_maker) = test_dbs  # noqa: E501
+        (kg_engine, kg_session_maker), (ops_engine, ops_session_maker) = (
+            test_dbs  # noqa: E501
+        )
 
         kg_session = kg_session_maker()
         ops_session = ops_session_maker()
@@ -412,7 +528,7 @@ class TestRAGErrorScenarios:
                 kg_db_session=kg_session,
                 ops_db_session=ops_session,
                 timeout_layer_0=2.0,
-                timeout_layer_2=2.0
+                timeout_layer_2=2.0,
             )
 
             # Create multiple concurrent requests
@@ -421,11 +537,13 @@ class TestRAGErrorScenarios:
                 "Second test paragraph about neural networks.",
                 "Third test paragraph about artificial intelligence.",
                 "Fourth test paragraph about deep learning.",
-                "Fifth test paragraph about natural language processing."
+                "Fifth test paragraph about natural language processing.",
             ]
 
             # Execute all requests concurrently
-            tasks = [service.extract_entities(text, enable_trace=False) for text in texts]  # noqa: E501
+            tasks = [
+                service.extract_entities(text, enable_trace=False) for text in texts
+            ]  # noqa: E501
             responses = await asyncio.gather(*tasks, return_exceptions=True)
 
             # All requests should complete successfully

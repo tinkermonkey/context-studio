@@ -29,7 +29,11 @@ class TestEnvironment:
     pollute the development environment.
     """
 
-    def __init__(self, temp_dir: Optional[str] = None, config_overrides: Optional[Dict[str, Any]] = None):  # noqa: E501
+    def __init__(
+        self,
+        temp_dir: Optional[str] = None,
+        config_overrides: Optional[Dict[str, Any]] = None,
+    ):  # noqa: E501
         """
         Initialize test environment.
 
@@ -68,11 +72,17 @@ class TestEnvironment:
             Tuple of (settings, engine, session_local_factory)
         """
         # Create isolated configuration
-        self.settings = self.config_manager.get_test_settings(self.config_overrides)  # noqa: E501
+        self.settings = self.config_manager.get_test_settings(
+            self.config_overrides
+        )  # noqa: E501
 
         # Create primary database with migrations
-        self.primary_engine, self.primary_session_local, self.primary_db_path = (  # noqa: E501
-            self.db_manager.create_migrated_database("primary_test.db")
+        (
+            self.primary_engine,
+            self.primary_session_local,
+            self.primary_db_path,
+        ) = self.db_manager.create_migrated_database(  # noqa: E501
+            "primary_test.db"
         )
 
         return self.settings, self.primary_engine, self.primary_session_local
@@ -85,11 +95,15 @@ class TestEnvironment:
             SQLAlchemy Session: New database session
         """
         if not self.primary_session_local:
-            raise RuntimeError("Test environment not set up. Call setup() first.")  # noqa: E501
+            raise RuntimeError(
+                "Test environment not set up. Call setup() first."
+            )  # noqa: E501
 
         return cast(Session, self.primary_session_local())
 
-    def create_additional_database(self, db_name: str) -> Tuple[Engine, sessionmaker, Path]:  # noqa: E501
+    def create_additional_database(
+        self, db_name: str
+    ) -> Tuple[Engine, sessionmaker, Path]:  # noqa: E501
         """
         Create an additional isolated database for testing.
 
@@ -150,7 +164,9 @@ class TestEnvironment:
 
 
 @contextmanager
-def isolated_test_environment(config_overrides: Optional[Dict[str, Any]] = None, temp_dir: Optional[str] = None):  # noqa: E501
+def isolated_test_environment(
+    config_overrides: Optional[Dict[str, Any]] = None, temp_dir: Optional[str] = None
+):  # noqa: E501
     """
     Context manager for creating a completely isolated test environment.
 
@@ -179,7 +195,9 @@ def isolated_test_environment(config_overrides: Optional[Dict[str, Any]] = None,
 
 
 @contextmanager
-def isolated_test_session(config_overrides: Optional[Dict[str, Any]] = None, temp_dir: Optional[str] = None):  # noqa: E501
+def isolated_test_session(
+    config_overrides: Optional[Dict[str, Any]] = None, temp_dir: Optional[str] = None
+):  # noqa: E501
     """
     Context manager for creating an isolated test session with complete environment.  # noqa: E501
 
@@ -231,7 +249,9 @@ class TestEnvironmentBuilder:
         self.config_overrides.update(overrides)
         return self
 
-    def with_config_dict(self, overrides: Dict[str, Any]) -> "TestEnvironmentBuilder":  # noqa: E501
+    def with_config_dict(
+        self, overrides: Dict[str, Any]
+    ) -> "TestEnvironmentBuilder":  # noqa: E501
         """Add configuration overrides from a dictionary."""
         self.config_overrides.update(overrides)
         return self
@@ -258,7 +278,9 @@ class TestEnvironmentBuilder:
     @contextmanager
     def context(self):
         """Create a context manager for the configured test environment."""
-        with isolated_test_environment(self.config_overrides, self.temp_dir) as env:  # noqa: E501
+        with isolated_test_environment(
+            self.config_overrides, self.temp_dir
+        ) as env:  # noqa: E501
             yield env
 
 
@@ -307,18 +329,26 @@ def verify_no_test_artifacts():
     # Check for database files
     db_files = list(current_dir.glob("test_*.db*"))
     if db_files:
-        raise AssertionError(f"Test database files found in root directory: {db_files}")  # noqa: E501
+        raise AssertionError(
+            f"Test database files found in root directory: {db_files}"
+        )  # noqa: E501
 
     # Check for test configuration files
     config_files = list(current_dir.glob("*test*.json"))
     config_files.extend(current_dir.glob("test_config.*"))
     if config_files:
-        raise AssertionError(f"Test configuration files found in root directory: {config_files}")  # noqa: E501
+        raise AssertionError(
+            f"Test configuration files found in root directory: {config_files}"
+        )  # noqa: E501
 
     # Check for temporary directories
-    temp_dirs = [d for d in current_dir.iterdir() if d.is_dir() and "test_env_" in d.name]  # noqa: E501
+    temp_dirs = [
+        d for d in current_dir.iterdir() if d.is_dir() and "test_env_" in d.name
+    ]  # noqa: E501
     if temp_dirs:
-        raise AssertionError(f"Test temporary directories found in root directory: {temp_dirs}")  # noqa: E501
+        raise AssertionError(
+            f"Test temporary directories found in root directory: {temp_dirs}"
+        )  # noqa: E501
 
 
 def cleanup_test_artifacts():

@@ -176,14 +176,18 @@ class ChangeEventHandler:
     ) -> ChangeEvent:
         """Convenience method for property definition creation events."""
         return self.fire_created_event(
-            RecordType.PROPERTY_DEFINITION, property_definition_id, property_definition_data
+            RecordType.PROPERTY_DEFINITION,
+            property_definition_id,
+            property_definition_data,
         )
 
     def fire_ontology_entity_created_event(
         self, entity_id: str, entity_data: Dict[str, Any]
     ) -> ChangeEvent:
         """Convenience method for ontology entity creation events."""
-        return self.fire_created_event(RecordType.ONTOLOGY_ENTITY, entity_id, entity_data)
+        return self.fire_created_event(
+            RecordType.ONTOLOGY_ENTITY, entity_id, entity_data
+        )
 
     def fire_relationship_created_event(
         self, relationship_id: str, relationship_data: Dict[str, Any]
@@ -206,9 +210,7 @@ class ChangeEventHandler:
         self, node_id: str, node_data: Dict[str, Any]
     ) -> ChangeEvent:
         """Deprecated: use fire_ontology_entity_created_event() instead."""
-        return self.fire_created_event(
-            RecordType.STRUCTURE_NODE, node_id, node_data
-        )
+        return self.fire_created_event(RecordType.STRUCTURE_NODE, node_id, node_data)
 
     def fire_structure_node_link_created_event(
         self, link_id: str, link_data: Dict[str, Any]
@@ -236,7 +238,10 @@ class ChangeEventHandler:
         if record_type is not None:
             query = query.filter(ChangeEvent.record_type == record_type)
 
-        return cast(List[ChangeEvent], query.order_by(ChangeEvent.timestamp.asc()).limit(limit).all())
+        return cast(
+            List[ChangeEvent],
+            query.order_by(ChangeEvent.timestamp.asc()).limit(limit).all(),
+        )
 
     def get_events_for_record(
         self, record_id: str, limit: int = 100
@@ -251,13 +256,16 @@ class ChangeEventHandler:
         Returns:
             List of ChangeEvent objects for the specified record
         """
-        return cast(List[ChangeEvent], (
-            self.db.query(ChangeEvent)
-            .filter(ChangeEvent.record_id == record_id)
-            .order_by(ChangeEvent.timestamp.desc())
-            .limit(limit)
-            .all()
-        ))
+        return cast(
+            List[ChangeEvent],
+            (
+                self.db.query(ChangeEvent)
+                .filter(ChangeEvent.record_id == record_id)
+                .order_by(ChangeEvent.timestamp.desc())
+                .limit(limit)
+                .all()
+            ),
+        )
 
     def mark_event_processed(self, event_id: int) -> bool:
         """

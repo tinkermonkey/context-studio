@@ -37,7 +37,9 @@ class PipelineConfiguration:
     pipeline_type: PipelineType
     model_name: str
     prompt_template: str
-    parameters: types.MappingProxyType = field(default_factory=lambda: types.MappingProxyType({}))
+    parameters: types.MappingProxyType = field(
+        default_factory=lambda: types.MappingProxyType({})
+    )
     created_at: str = ""
     updated_at: str = ""
 
@@ -48,9 +50,13 @@ class PipelineConfiguration:
         if not self.name or not isinstance(self.name, str):
             raise ValueError("Pipeline configuration name must be a non-empty string")
         if not self.model_name or not isinstance(self.model_name, str):
-            raise ValueError("Pipeline configuration model_name must be a non-empty string")
+            raise ValueError(
+                "Pipeline configuration model_name must be a non-empty string"
+            )
         if not self.prompt_template or not isinstance(self.prompt_template, str):
-            raise ValueError("Pipeline configuration prompt_template must be a non-empty string")
+            raise ValueError(
+                "Pipeline configuration prompt_template must be a non-empty string"
+            )
         if not isinstance(self.pipeline_type, PipelineType):
             raise TypeError(
                 f"pipeline_type must be a PipelineType enum, got {type(self.pipeline_type).__name__}"
@@ -100,10 +106,16 @@ class Execution:
             )
         if not isinstance(self.input_data, types.MappingProxyType):
             raise TypeError("input_data must be a MappingProxyType (immutable mapping)")
-        if self.output_data is not None and not isinstance(self.output_data, types.MappingProxyType):
-            raise TypeError("output_data must be None or MappingProxyType (immutable mapping)")
+        if self.output_data is not None and not isinstance(
+            self.output_data, types.MappingProxyType
+        ):
+            raise TypeError(
+                "output_data must be None or MappingProxyType (immutable mapping)"
+            )
         if not self.created_at or not isinstance(self.created_at, str):
-            raise ValueError("Execution created_at must be a non-empty timestamp string")
+            raise ValueError(
+                "Execution created_at must be a non-empty timestamp string"
+            )
         if self.completed_at is not None and not isinstance(self.completed_at, str):
             raise TypeError("Execution completed_at must be None or a timestamp string")
         if self.error_message is not None and not isinstance(self.error_message, str):

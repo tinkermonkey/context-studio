@@ -25,7 +25,7 @@ class PipelineRegistry:
     enabling systematic testing and comparison of different configurations.
     """
 
-    _instance: Optional['PipelineRegistry'] = None
+    _instance: Optional["PipelineRegistry"] = None
     _lock = threading.Lock()
     _pipelines: Dict[str, Type[BaseRAGPipeline]] = {}
 
@@ -109,7 +109,7 @@ class PipelineRegistry:
         return {
             "name": pipeline_class.get_name(),
             "description": pipeline_class.get_description(),
-            "class": pipeline_class.__name__
+            "class": pipeline_class.__name__,
         }
 
     @classmethod
@@ -120,10 +120,7 @@ class PipelineRegistry:
         Returns:
             List of dictionaries with pipeline info
         """
-        return [
-            cls.get_pipeline_info(name)
-            for name in cls.list_pipelines()
-        ]
+        return [cls.get_pipeline_info(name) for name in cls.list_pipelines()]
 
     @classmethod
     def create_pipeline(
@@ -131,7 +128,7 @@ class PipelineRegistry:
         pipeline_name: str,
         kg_db_session: Session,
         ops_db_session: Session,
-        config: Dict[str, Any] = None
+        config: Dict[str, Any] = None,
     ) -> Optional[BaseRAGPipeline]:
         """
         Create an instance of a registered pipeline.
@@ -154,13 +151,15 @@ class PipelineRegistry:
             pipeline_instance = pipeline_class(
                 kg_db_session=kg_db_session,
                 ops_db_session=ops_db_session,
-                config=config
+                config=config,
             )
             logger.info(f"Created pipeline instance: {pipeline_name}")
             return pipeline_instance
 
         except Exception as e:
-            logger.error(f"Failed to create pipeline '{pipeline_name}': {e}", exc_info=True)
+            logger.error(
+                f"Failed to create pipeline '{pipeline_name}': {e}", exc_info=True
+            )
             return None
 
     @classmethod
@@ -203,6 +202,7 @@ def _register_default_pipelines():
     """Register default pipeline implementations."""
     try:
         from rag.standard_pipeline import StandardRAGPipeline
+
         PipelineRegistry.register(StandardRAGPipeline)
         logger.info("Default pipelines registered successfully")
     except Exception as e:

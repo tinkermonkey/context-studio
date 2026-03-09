@@ -16,7 +16,9 @@ class Migration017(Migration):
 
     def up(self, connection: Connection) -> None:
         """Apply the migration."""
-        logger.info("Adding reference_links and word_senses columns to structure_nodes table...")
+        logger.info(
+            "Adding reference_links and word_senses columns to structure_nodes table..."
+        )
 
         # Add reference_links column (JSON array stored as TEXT)
         # Stores external reference node identifiers like:
@@ -36,11 +38,15 @@ class Migration017(Migration):
         """))
         logger.info("Added word_senses column")
 
-        logger.info("Successfully added reference_links and word_senses columns to structure_nodes")
+        logger.info(
+            "Successfully added reference_links and word_senses columns to structure_nodes"
+        )
 
     def down(self, connection: Connection) -> None:
         """Rollback the migration."""
-        logger.info("Removing reference_links and word_senses columns from structure_nodes table...")
+        logger.info(
+            "Removing reference_links and word_senses columns from structure_nodes table..."
+        )
 
         # SQLite doesn't support DROP COLUMN directly, so we need to recreate the table
         # This is the standard SQLite approach for removing columns
@@ -82,7 +88,9 @@ class Migration017(Migration):
         connection.execute(text("DROP TABLE structure_nodes"))
 
         # Step 4: Rename the temp table to the original name
-        connection.execute(text("ALTER TABLE structure_nodes_temp RENAME TO structure_nodes"))
+        connection.execute(
+            text("ALTER TABLE structure_nodes_temp RENAME TO structure_nodes")
+        )
 
         # Step 5: Recreate indexes that existed on the original table
         # Check for existing indexes in migration 013
@@ -91,4 +99,6 @@ class Migration017(Migration):
             ON structure_nodes(title)
         """))
 
-        logger.info("Successfully removed reference_links and word_senses columns from structure_nodes")
+        logger.info(
+            "Successfully removed reference_links and word_senses columns from structure_nodes"
+        )

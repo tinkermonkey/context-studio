@@ -5,10 +5,16 @@ from typing import Optional, List
 import nltk
 from nltk.corpus import wordnet as wn
 from .base import BaseReferenceSource
-from ..models import WordNetSearchResponse, WordNetRelationsResponse, WordNetSynset, WordNetRelation
+from ..models import (
+    WordNetSearchResponse,
+    WordNetRelationsResponse,
+    WordNetSynset,
+    WordNetRelation,
+)
 import logging
 
 logger = logging.getLogger(__name__)
+
 
 class WordNetSource(BaseReferenceSource):
     """WordNet source using NLTK"""
@@ -21,11 +27,11 @@ class WordNetSource(BaseReferenceSource):
         """Ensure WordNet data is downloaded"""
         try:
             # Try to access wordnet to see if it's available
-            list(wn.synsets('test'))
+            list(wn.synsets("test"))
         except LookupError:
             logger.info("Downloading WordNet data...")
-            nltk.download('wordnet', quiet=True)
-            nltk.download('omw-1.4', quiet=True)  # For multilingual support
+            nltk.download("wordnet", quiet=True)
+            nltk.download("omw-1.4", quiet=True)  # For multilingual support
 
     def _get_default_base_url(self) -> str:
         """WordNet doesn't use HTTP, return placeholder"""
@@ -35,7 +41,9 @@ class WordNetSource(BaseReferenceSource):
         """WordNet doesn't use proxy"""
         return "wordnet"
 
-    async def search_synsets(self, word: str, pos: Optional[str] = None, lang: str = "eng", limit: int = 20) -> WordNetSearchResponse:
+    async def search_synsets(
+        self, word: str, pos: Optional[str] = None, lang: str = "eng", limit: int = 20
+    ) -> WordNetSearchResponse:
         """Search for synsets of a word"""
         try:
             # Convert pos parameter to WordNet format
@@ -45,7 +53,7 @@ class WordNetSource(BaseReferenceSource):
                     "noun": wn.NOUN,
                     "verb": wn.VERB,
                     "adj": wn.ADJ,
-                    "adv": wn.ADV
+                    "adv": wn.ADV,
                 }
                 wn_pos = pos_map.get(pos.lower())
 
@@ -59,10 +67,7 @@ class WordNetSource(BaseReferenceSource):
                 synset_data.append(synset_model)
 
             return WordNetSearchResponse(
-                **self._create_base_response(),
-                word=word,
-                pos=pos,
-                synsets=synset_data
+                **self._create_base_response(), word=word, pos=pos, synsets=synset_data
             )
 
         except Exception as e:
@@ -71,7 +76,9 @@ class WordNetSource(BaseReferenceSource):
                 **self._create_base_response(success=False, error=str(e))
             )
 
-    async def get_synset_relations(self, synset_name: str, relation_types: Optional[List[str]] = None) -> WordNetRelationsResponse:
+    async def get_synset_relations(
+        self, synset_name: str, relation_types: Optional[List[str]] = None
+    ) -> WordNetRelationsResponse:
         """Get semantic relations for a synset"""
         try:
             synset = wn.synset(synset_name)
@@ -92,12 +99,14 @@ class WordNetSource(BaseReferenceSource):
                 "also": synset.also,
                 "similar_tos": synset.similar_tos,
                 "verb_groups": synset.verb_groups,
-                "attributes": synset.attributes
+                "attributes": synset.attributes,
             }
 
             # Filter by requested relation types
             if relation_types:
-                relations_to_check = {k: v for k, v in available_relations.items() if k in relation_types}
+                relations_to_check = {
+                    k: v for k, v in available_relations.items() if k in relation_types
+                }
             else:
                 relations_to_check = available_relations
 
@@ -108,17 +117,19 @@ class WordNetSource(BaseReferenceSource):
                     for related_synset in related_synsets:
                         relation = WordNetRelation(
                             relation_type=relation_type,
-                            target_synset=self._transform_synset(related_synset)
+                            target_synset=self._transform_synset(related_synset),
                         )
                         relations.append(relation)
                 except Exception as e:
-                    logger.warning(f"Failed to get {relation_type} for {synset_name}: {e}")
+                    logger.warning(
+                        f"Failed to get {relation_type} for {synset_name}: {e}"
+                    )
                     continue
 
             return WordNetRelationsResponse(
                 **self._create_base_response(),
                 synset_id=synset_name,
-                relations=relations
+                relations=relations,
             )
 
         except Exception as e:
@@ -137,5 +148,5 @@ class WordNetSource(BaseReferenceSource):
             examples=synset.examples(),
             lemmas=synset.lemma_names(),
             lexfile=synset.lexname(),
-            offset=synset.offset()
+            offset=synset.offset(),
         )

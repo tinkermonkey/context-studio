@@ -16,12 +16,9 @@ from llm.models import (  # noqa: E402
     PipelineExecutionRequest,
     PipelineExecutionResponse,
     PipelineType,
-    StreamingLLMResponse
+    StreamingLLMResponse,
 )
-from llm.exceptions import (  # noqa: E402
-    LLMProcessingError,
-    LLMTimeoutError
-)
+from llm.exceptions import LLMProcessingError, LLMTimeoutError  # noqa: E402
 
 
 class TestGenericPipelineExecution:
@@ -30,7 +27,12 @@ class TestGenericPipelineExecution:
     @pytest.fixture
     def mock_llm_service(self):
         """Create a mock LLM service with required dependencies"""
-        with patch.dict("os.environ", {"OPENAI_API_KEY": "sk-test1234567890abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMN"}):
+        with patch.dict(
+            "os.environ",
+            {
+                "OPENAI_API_KEY": "sk-test1234567890abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMN"
+            },
+        ):
             # Create a mock provider router with proper configuration
             mock_provider_router = MagicMock()
             mock_provider_router.get_enabled_models.return_value = ["gpt-3.5-turbo"]
@@ -43,14 +45,19 @@ class TestGenericPipelineExecution:
 
             # Import ProviderType for proper mocking
             from llm.enabled_models import ProviderType
+
             mock_model_config.provider_type = ProviderType.NATIVE_OPENAI
 
             mock_provider_router.models_manager = MagicMock()
-            mock_provider_router.models_manager.get_model_config.return_value = mock_model_config
+            mock_provider_router.models_manager.get_model_config.return_value = (
+                mock_model_config
+            )
 
-            with patch('llm.service.get_provider_router', return_value=mock_provider_router):
-                with patch('llm.service.PipelineFlavorService'):
-                    with patch('llm.service.ExecutionTracker'):
+            with patch(
+                "llm.service.get_provider_router", return_value=mock_provider_router
+            ):
+                with patch("llm.service.PipelineFlavorService"):
+                    with patch("llm.service.ExecutionTracker"):
                         service = LLMService()
                         service.flavor_service = AsyncMock()
                         service.execution_tracker = MagicMock()
@@ -65,8 +72,8 @@ class TestGenericPipelineExecution:
             context_data={
                 "term": "test term",
                 "domain_title": "test domain",
-                "domain_definition": "test domain definition"
-            }
+                "domain_definition": "test domain definition",
+            },
         )
 
     @pytest.fixture
@@ -84,7 +91,9 @@ class TestGenericPipelineExecution:
         return flavor
 
     @pytest.mark.asyncio
-    async def test_execute_pipeline_flavor_success(self, mock_llm_service, sample_request, mock_flavor):
+    async def test_execute_pipeline_flavor_success(
+        self, mock_llm_service, sample_request, mock_flavor
+    ):
         """Test successful generic pipeline execution"""
         # Mock dependencies
         mock_llm_service.flavor_service.get_default_flavor.return_value = mock_flavor
@@ -98,16 +107,20 @@ class TestGenericPipelineExecution:
         mock_response.reasoning = "Test reasoning"
         mock_response.discrepancies = "Test discrepancies"
         mock_response.response_metadata = {
-            'token_usage': {
-                'prompt_tokens': 10,
-                'completion_tokens': 20,
-                'total_tokens': 30
+            "token_usage": {
+                "prompt_tokens": 10,
+                "completion_tokens": 20,
+                "total_tokens": 30,
             }
         }
         mock_llm.ainvoke.return_value = mock_response
 
-        with patch.object(mock_llm_service, '_create_llm_from_flavor', return_value=mock_llm):
-            with patch.object(mock_llm_service, '_get_flavor', return_value=mock_flavor):
+        with patch.object(
+            mock_llm_service, "_create_llm_from_flavor", return_value=mock_llm
+        ):
+            with patch.object(
+                mock_llm_service, "_get_flavor", return_value=mock_flavor
+            ):
                 result = await mock_llm_service.execute_pipeline_flavor(sample_request)
 
         # Assertions
@@ -119,14 +132,16 @@ class TestGenericPipelineExecution:
         assert result.flavor_id == "test-flavor-id"
         assert result.pipeline_type == "suggest_term_definition"
         assert result.token_usage is not None
-        assert result.token_usage['input_tokens'] == 10
+        assert result.token_usage["input_tokens"] == 10
 
         # Verify execution tracking
         mock_llm_service.execution_tracker.start_execution.assert_called_once()
         mock_llm_service.execution_tracker.complete_execution.assert_called_once()
 
     @pytest.mark.asyncio
-    async def test_execute_pipeline_flavor_timeout(self, mock_llm_service, sample_request, mock_flavor):
+    async def test_execute_pipeline_flavor_timeout(
+        self, mock_llm_service, sample_request, mock_flavor
+    ):
         """Test generic pipeline execution with timeout"""
         # Mock dependencies
         mock_llm_service.flavor_service.get_default_flavor.return_value = mock_flavor
@@ -135,21 +150,27 @@ class TestGenericPipelineExecution:
         # Mock LLM timeout
         mock_llm = AsyncMock()
 
-        with patch.object(mock_llm_service, '_create_llm_from_flavor', return_value=mock_llm):
-            with patch.object(mock_llm_service, '_get_flavor', return_value=mock_flavor):
-                with patch('asyncio.wait_for', side_effect=TimeoutError()):
+        with patch.object(
+            mock_llm_service, "_create_llm_from_flavor", return_value=mock_llm
+        ):
+            with patch.object(
+                mock_llm_service, "_get_flavor", return_value=mock_flavor
+            ):
+                with patch("asyncio.wait_for", side_effect=TimeoutError()):
                     with pytest.raises(LLMTimeoutError):
                         await mock_llm_service.execute_pipeline_flavor(sample_request)
 
         # Verify error tracking
         mock_llm_service.execution_tracker.complete_execution.assert_called_once()
         call_args = mock_llm_service.execution_tracker.complete_execution.call_args
-        assert call_args[1]['execution_id'] == "exec-123"
-        assert call_args[1]['success'] is False
-        assert "Configuration or timeout error" in call_args[1]['error_message']
+        assert call_args[1]["execution_id"] == "exec-123"
+        assert call_args[1]["success"] is False
+        assert "Configuration or timeout error" in call_args[1]["error_message"]
 
     @pytest.mark.asyncio
-    async def test_execute_pipeline_flavor_processing_error(self, mock_llm_service, sample_request, mock_flavor):
+    async def test_execute_pipeline_flavor_processing_error(
+        self, mock_llm_service, sample_request, mock_flavor
+    ):
         """Test generic pipeline execution with processing error"""
         # Mock dependencies
         mock_llm_service.flavor_service.get_default_flavor.return_value = mock_flavor
@@ -159,8 +180,12 @@ class TestGenericPipelineExecution:
         mock_llm = AsyncMock()
         mock_llm.ainvoke.side_effect = Exception("Test processing error")
 
-        with patch.object(mock_llm_service, '_create_llm_from_flavor', return_value=mock_llm):
-            with patch.object(mock_llm_service, '_get_flavor', return_value=mock_flavor):
+        with patch.object(
+            mock_llm_service, "_create_llm_from_flavor", return_value=mock_llm
+        ):
+            with patch.object(
+                mock_llm_service, "_get_flavor", return_value=mock_flavor
+            ):
                 with pytest.raises(LLMProcessingError) as exc_info:
                     await mock_llm_service.execute_pipeline_flavor(sample_request)
 
@@ -169,11 +194,13 @@ class TestGenericPipelineExecution:
         # Verify error tracking
         mock_llm_service.execution_tracker.complete_execution.assert_called_once()
         call_args = mock_llm_service.execution_tracker.complete_execution.call_args
-        assert call_args[1]['success'] is False
-        assert "Unexpected error" in call_args[1]['error_message']
+        assert call_args[1]["success"] is False
+        assert "Unexpected error" in call_args[1]["error_message"]
 
     @pytest.mark.asyncio
-    async def test_execute_pipeline_flavor_streaming_success(self, mock_llm_service, sample_request, mock_flavor):
+    async def test_execute_pipeline_flavor_streaming_success(
+        self, mock_llm_service, sample_request, mock_flavor
+    ):
         """Test successful generic streaming pipeline execution"""
         # Mock dependencies
         mock_llm_service.flavor_service.get_default_flavor.return_value = mock_flavor
@@ -184,7 +211,7 @@ class TestGenericPipelineExecution:
         mock_chunks = [
             MagicMock(content="Hello"),
             MagicMock(content=" world"),
-            MagicMock(content="!")
+            MagicMock(content="!"),
         ]
 
         async def async_chunks():
@@ -198,10 +225,16 @@ class TestGenericPipelineExecution:
 
         mock_llm.astream = mock_astream
 
-        with patch.object(mock_llm_service, '_create_llm_from_flavor', return_value=mock_llm):
-            with patch.object(mock_llm_service, '_get_flavor', return_value=mock_flavor):
+        with patch.object(
+            mock_llm_service, "_create_llm_from_flavor", return_value=mock_llm
+        ):
+            with patch.object(
+                mock_llm_service, "_get_flavor", return_value=mock_flavor
+            ):
                 chunks = []
-                async for chunk in mock_llm_service.execute_pipeline_flavor_streaming(sample_request):
+                async for chunk in mock_llm_service.execute_pipeline_flavor_streaming(
+                    sample_request
+                ):
                     chunks.append(chunk)
 
         # Verify streaming response structure
@@ -220,7 +253,9 @@ class TestGenericPipelineExecution:
         assert final_chunk.error is None
 
     @pytest.mark.asyncio
-    async def test_execute_pipeline_flavor_streaming_error(self, mock_llm_service, sample_request, mock_flavor):
+    async def test_execute_pipeline_flavor_streaming_error(
+        self, mock_llm_service, sample_request, mock_flavor
+    ):
         """Test generic streaming pipeline execution with error"""
         # Mock dependencies
         mock_llm_service.flavor_service.get_default_flavor.return_value = mock_flavor
@@ -236,10 +271,16 @@ class TestGenericPipelineExecution:
         # Assign the function itself, not call it
         mock_llm.astream = mock_astream_error
 
-        with patch.object(mock_llm_service, '_create_llm_from_flavor', return_value=mock_llm):
-            with patch.object(mock_llm_service, '_get_flavor', return_value=mock_flavor):
+        with patch.object(
+            mock_llm_service, "_create_llm_from_flavor", return_value=mock_llm
+        ):
+            with patch.object(
+                mock_llm_service, "_get_flavor", return_value=mock_flavor
+            ):
                 chunks = []
-                async for chunk in mock_llm_service.execute_pipeline_flavor_streaming(sample_request):
+                async for chunk in mock_llm_service.execute_pipeline_flavor_streaming(
+                    sample_request
+                ):
                     chunks.append(chunk)
 
         # Verify error response
@@ -256,7 +297,7 @@ class TestGenericPipelineExecution:
         context_data = {
             "term": "apple",
             "domain_title": "Food",
-            "current_definition": "A fruit"
+            "current_definition": "A fruit",
         }
 
         result = mock_llm_service._render_user_prompt_generic(template, context_data)
@@ -266,14 +307,18 @@ class TestGenericPipelineExecution:
 
     def test_render_user_prompt_generic_with_none_values(self, mock_llm_service):
         """Test generic user prompt rendering with None values"""
-        template = "Term: {term}, Domain: {domain_title}, Definition: {current_definition}"
+        template = (
+            "Term: {term}, Domain: {domain_title}, Definition: {current_definition}"
+        )
         context_data = {
             "term": "apple",
             "domain_title": None,
-            "current_definition": "A fruit"
+            "current_definition": "A fruit",
         }
 
-        result = mock_llm_service._render_user_prompt_generic(template, context_data, strict=False)
+        result = mock_llm_service._render_user_prompt_generic(
+            template, context_data, strict=False
+        )
 
         expected = "Term: apple, Domain: Not specified, Definition: A fruit"
         assert result == expected
@@ -281,12 +326,11 @@ class TestGenericPipelineExecution:
     def test_render_user_prompt_generic_with_lists(self, mock_llm_service):
         """Test generic user prompt rendering with list values"""
         template = "Terms: {terms}, Numbers: {numbers}"
-        context_data = {
-            "terms": ["apple", "orange", "banana"],
-            "numbers": [1, 2, 3]
-        }
+        context_data = {"terms": ["apple", "orange", "banana"], "numbers": [1, 2, 3]}
 
-        result = mock_llm_service._render_user_prompt_generic(template, context_data, strict=False)
+        result = mock_llm_service._render_user_prompt_generic(
+            template, context_data, strict=False
+        )
 
         expected = "Terms: apple, orange, banana, Numbers: [1, 2, 3]"
         assert result == expected
@@ -294,9 +338,7 @@ class TestGenericPipelineExecution:
     def test_render_user_prompt_generic_with_dict(self, mock_llm_service):
         """Test generic user prompt rendering with dictionary values"""
         template = "Context: {context}"
-        context_data = {
-            "context": {"key1": "value1", "key2": "value2"}
-        }
+        context_data = {"context": {"key1": "value1", "key2": "value2"}}
 
         result = mock_llm_service._render_user_prompt_generic(template, context_data)
 
@@ -306,12 +348,12 @@ class TestGenericPipelineExecution:
     def test_render_user_prompt_generic_missing_variable(self, mock_llm_service):
         """Test generic user prompt rendering with missing template variable - now returns 'Not specified'"""
         template = "Term: {term}, Missing: {missing_var}"
-        context_data = {
-            "term": "apple"
-        }
+        context_data = {"term": "apple"}
 
         # Missing variables should now return "Not specified" instead of raising an error
-        result = mock_llm_service._render_user_prompt_generic(template, context_data, strict=False)
+        result = mock_llm_service._render_user_prompt_generic(
+            template, context_data, strict=False
+        )
 
         assert "apple" in result
         assert "Not specified" in result
@@ -322,7 +364,7 @@ class TestGenericPipelineExecution:
         request = PipelineExecutionRequest(
             flavor_id="test-flavor",
             pipeline_type=PipelineType.SUGGEST_TERM_DEFINITION,
-            context_data={"term": "test"}
+            context_data={"term": "test"},
         )
         assert request.flavor_id == "test-flavor"
         assert request.pipeline_type == PipelineType.SUGGEST_TERM_DEFINITION
@@ -334,7 +376,7 @@ class TestGenericPipelineExecution:
             PipelineExecutionRequest(
                 flavor_id="test-flavor",
                 pipeline_type=PipelineType.SUGGEST_TERM_DEFINITION,
-                context_data={}
+                context_data={},
             )
 
         assert "context_data cannot be empty" in str(exc_info.value)
@@ -346,7 +388,7 @@ class TestGenericPipelineExecution:
             execution_id="exec-123",
             flavor_id="flavor-456",
             pipeline_type="suggest_term_definition",
-            token_usage={"input_tokens": 10, "output_tokens": 20, "total_tokens": 30}
+            token_usage={"input_tokens": 10, "output_tokens": 20, "total_tokens": 30},
         )
 
         assert response.response_content == "Test response"

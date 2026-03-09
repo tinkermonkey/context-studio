@@ -127,7 +127,9 @@ class RelationshipService:
             logger.error(f"Failed to create relationship: {e}")
             raise ValueError(f"Failed to create relationship: {e}")
 
-    def update_relationship(self, relationship_id: str, relationship_data: Dict[str, Any]) -> Relationship:
+    def update_relationship(
+        self, relationship_id: str, relationship_data: Dict[str, Any]
+    ) -> Relationship:
         """
         Update an existing relationship.
 
@@ -153,12 +155,21 @@ class RelationshipService:
             raise ValueError(f"Relationship not found: {relationship_id}")
 
         # Validate updated fields
-        if "source_entity_id" in relationship_data or "target_entity_id" in relationship_data:
-            source_id = relationship_data.get("source_entity_id", relationship.source_entity_id)
-            target_id = relationship_data.get("target_entity_id", relationship.target_entity_id)
+        if (
+            "source_entity_id" in relationship_data
+            or "target_entity_id" in relationship_data
+        ):
+            source_id = relationship_data.get(
+                "source_entity_id", relationship.source_entity_id
+            )
+            target_id = relationship_data.get(
+                "target_entity_id", relationship.target_entity_id
+            )
 
             if source_id == target_id:
-                raise ValueError("Source and target ontology_entities cannot be the same")
+                raise ValueError(
+                    "Source and target ontology_entities cannot be the same"
+                )
 
             # Get ontology_entities to validate
             source: Optional[OntologyEntity] = (
@@ -537,7 +548,9 @@ class RelationshipService:
             "target_entity_id": relationship.target_entity_id,
             "predicate": relationship.predicate,
             "predicate_id": relationship.predicate_id,
-            "created_at": relationship.created_at.isoformat() if relationship.created_at else None,
+            "created_at": (
+                relationship.created_at.isoformat() if relationship.created_at else None
+            ),
         }
 
     # Deprecated method wrappers for backward compatibility
@@ -545,8 +558,10 @@ class RelationshipService:
         """Deprecated: use create_relationship() instead"""
         # Translate old key names to new ones
         translated_data = {
-            "source_entity_id": link_data.get("source_node_id") or link_data.get("source_entity_id"),
-            "target_entity_id": link_data.get("target_node_id") or link_data.get("target_entity_id"),
+            "source_entity_id": link_data.get("source_node_id")
+            or link_data.get("source_entity_id"),
+            "target_entity_id": link_data.get("target_node_id")
+            or link_data.get("target_entity_id"),
             "predicate": link_data.get("predicate"),
             "predicate_id": link_data.get("predicate_id"),
         }

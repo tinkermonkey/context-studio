@@ -258,7 +258,7 @@ class BatchOperationProcessor:
                 logger.error(
                     f"Failed to handle transaction - commit/rollback failed: {transaction_error}. "
                     f"Batch operation marked as failed due to transaction failure.",
-                    exc_info=True
+                    exc_info=True,
                 )
                 batch_result.failed_items += batch_result.successful_items
                 batch_result.successful_items = 0
@@ -267,7 +267,7 @@ class BatchOperationProcessor:
                         entity_id="<transaction>",
                         error_type=type(transaction_error).__name__,
                         error_message=str(transaction_error),
-                        additional_context={"phase": "commit/rollback"}
+                        additional_context={"phase": "commit/rollback"},
                     )
                 )
 
@@ -496,9 +496,13 @@ class BatchOperationProcessor:
                     "processing_time": processing_time,
                     "components": list(components_dict.keys()),
                 }
-                success = self.s3_sync.write_metadata_to_s3(checkpoint_metadata, checkpoint_path)
+                success = self.s3_sync.write_metadata_to_s3(
+                    checkpoint_metadata, checkpoint_path
+                )
                 if not success:
-                    logger.warning(f"Failed to persist checkpoint {checkpoint_id} to S3, but checkpoint stored locally")
+                    logger.warning(
+                        f"Failed to persist checkpoint {checkpoint_id} to S3, but checkpoint stored locally"
+                    )
 
             # Store checkpoint in history and checkpoints dict
             with self._operation_lock:
@@ -629,7 +633,9 @@ class BatchOperationProcessor:
             if hasattr(self.sqlite_conn, "rollback"):
                 self.sqlite_conn.rollback()
 
-            logger.info(f"Successfully restored from checkpoint: {checkpoint.checkpoint_name}")
+            logger.info(
+                f"Successfully restored from checkpoint: {checkpoint.checkpoint_name}"
+            )
             return True
 
         except Exception as e:
@@ -827,7 +833,9 @@ class BatchOperationProcessor:
         """Analyze conflicts across multiple changesets."""
 
         # Comprehensive conflict detection not yet implemented
-        logger.warning("Comprehensive conflict detection not yet implemented - returning placeholder")
+        logger.warning(
+            "Comprehensive conflict detection not yet implemented - returning placeholder"
+        )
 
         analysis = {
             "total_changesets": len(changeset_ids),
@@ -845,7 +853,9 @@ class BatchOperationProcessor:
         """Calculate optimal order for merging changesets."""
 
         # Optimal merge order calculation not yet implemented
-        logger.warning("Optimal merge order calculation not yet implemented - returning original order without optimization")
+        logger.warning(
+            "Optimal merge order calculation not yet implemented - returning original order without optimization"
+        )
 
         return changeset_ids.copy()
 
@@ -855,7 +865,9 @@ class BatchOperationProcessor:
         """Merge a single changeset with optimization."""
 
         # Optimized changeset merge not yet implemented
-        logger.warning(f"Optimized changeset merge not yet implemented for changeset {changeset_id}")
+        logger.warning(
+            f"Optimized changeset merge not yet implemented for changeset {changeset_id}"
+        )
 
         return {
             "changeset_id": changeset_id,

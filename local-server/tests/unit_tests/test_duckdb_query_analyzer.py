@@ -19,7 +19,7 @@ from datetime import datetime  # noqa: E402
 from services.duckdb_query_analyzer import (  # noqa: E402
     DuckDBQueryAnalyzer,
     IntelligentQueryCache,
-    QueryPerformanceMetrics
+    QueryPerformanceMetrics,
 )
 
 
@@ -36,14 +36,14 @@ class TestIntelligentQueryCache:
         assert query_cache.max_cache_size == 10
         assert query_cache.ttl_seconds == 60
         assert len(query_cache.cache) == 0
-        assert query_cache.cache_stats == {'hits': 0, 'misses': 0, 'evictions': 0}
+        assert query_cache.cache_stats == {"hits": 0, "misses": 0, "evictions": 0}
 
     def test_cache_miss(self, query_cache):
         """Test cache miss scenario."""
         result = query_cache.get_cached_result("nonexistent_hash")
         assert result is None
-        assert query_cache.cache_stats['misses'] == 1
-        assert query_cache.cache_stats['hits'] == 0
+        assert query_cache.cache_stats["misses"] == 1
+        assert query_cache.cache_stats["hits"] == 0
 
     def test_cache_hit(self, query_cache):
         """Test cache hit scenario."""
@@ -56,8 +56,8 @@ class TestIntelligentQueryCache:
         # Retrieve the result
         cached_result = query_cache.get_cached_result("test_hash")
         assert cached_result == test_result
-        assert query_cache.cache_stats['hits'] == 1
-        assert query_cache.cache_stats['misses'] == 0
+        assert query_cache.cache_stats["hits"] == 1
+        assert query_cache.cache_stats["misses"] == 0
 
     def test_cache_ttl_expiration(self):
         """Test cache TTL expiration."""
@@ -69,7 +69,7 @@ class TestIntelligentQueryCache:
         # Should hit immediately
         result = cache.get_cached_result("test_hash")
         assert result is not None
-        assert cache.cache_stats['hits'] == 1
+        assert cache.cache_stats["hits"] == 1
 
         # Wait for TTL to expire
         time.sleep(0.2)
@@ -77,7 +77,7 @@ class TestIntelligentQueryCache:
         # Should miss after expiration
         result = cache.get_cached_result("test_hash")
         assert result is None
-        assert cache.cache_stats['misses'] == 1
+        assert cache.cache_stats["misses"] == 1
 
     def test_cache_lru_eviction(self, query_cache):
         """Test LRU eviction when cache is full."""
@@ -92,7 +92,7 @@ class TestIntelligentQueryCache:
 
         # Cache should still be at max size
         assert len(query_cache.cache) == query_cache.max_cache_size
-        assert query_cache.cache_stats['evictions'] == 1
+        assert query_cache.cache_stats["evictions"] == 1
 
         # Oldest item should be evicted (hash_0)
         result = query_cache.get_cached_result("hash_0")
@@ -112,13 +112,13 @@ class TestIntelligentQueryCache:
 
         stats = query_cache.get_cache_stats()
 
-        assert stats['cache_size'] == 1
-        assert stats['max_cache_size'] == 10
-        assert stats['hit_rate'] == 0.3333333333333333  # 1 hit out of 3 requests
-        assert stats['total_requests'] == 3
-        assert stats['hits'] == 1
-        assert stats['misses'] == 2
-        assert stats['evictions'] == 0
+        assert stats["cache_size"] == 1
+        assert stats["max_cache_size"] == 10
+        assert stats["hit_rate"] == 0.3333333333333333  # 1 hit out of 3 requests
+        assert stats["total_requests"] == 3
+        assert stats["hits"] == 1
+        assert stats["misses"] == 2
+        assert stats["evictions"] == 0
 
 
 class TestSanitizationMethods:
@@ -128,17 +128,20 @@ class TestSanitizationMethods:
     def mock_duckdb_conn(self):
         """Create a mock DuckDB connection."""
         mock_conn = Mock()
-        mock_conn.execute.return_value.fetchall.return_value = [('result1',), ('result2',)]
+        mock_conn.execute.return_value.fetchall.return_value = [
+            ("result1",),
+            ("result2",),
+        ]
         return mock_conn
 
     @pytest.fixture
     def s3_config(self):
         """Create test S3 configuration."""
         return {
-            'bucket': 'test-bucket',
-            'access_key_id': 'test-key',
-            'secret_access_key': 'test-secret',
-            'region': 'us-east-1'
+            "bucket": "test-bucket",
+            "access_key_id": "test-key",
+            "secret_access_key": "test-secret",
+            "region": "us-east-1",
         }
 
     @pytest.fixture
@@ -150,17 +153,19 @@ class TestSanitizationMethods:
     def test_is_valid_identifier_valid_names(self, query_optimizer):
         """Test that valid SQL identifiers are accepted."""
         valid_identifiers = [
-            'id',
-            'name',
-            'created_at',
-            '_private_field',
-            'Column123',
-            '__double_underscore',
-            'a',
-            '_'
+            "id",
+            "name",
+            "created_at",
+            "_private_field",
+            "Column123",
+            "__double_underscore",
+            "a",
+            "_",
         ]
         for identifier in valid_identifiers:
-            assert query_optimizer._is_valid_identifier(identifier), f"Should accept: {identifier}"
+            assert query_optimizer._is_valid_identifier(
+                identifier
+            ), f"Should accept: {identifier}"
 
     def test_is_valid_identifier_empty_string(self, query_optimizer):
         """Test that empty string is rejected."""
@@ -168,40 +173,34 @@ class TestSanitizationMethods:
 
     def test_is_valid_identifier_starts_with_digit(self, query_optimizer):
         """Test that identifiers starting with digits are rejected."""
-        invalid_identifiers = [
-            '123abc',
-            '9column',
-            '0_field'
-        ]
+        invalid_identifiers = ["123abc", "9column", "0_field"]
         for identifier in invalid_identifiers:
-            assert query_optimizer._is_valid_identifier(identifier) is False, \
-                f"Should reject: {identifier}"
+            assert (
+                query_optimizer._is_valid_identifier(identifier) is False
+            ), f"Should reject: {identifier}"
 
     def test_is_valid_identifier_special_characters(self, query_optimizer):
         """Test that identifiers with special characters are rejected."""
         invalid_identifiers = [
-            'col-name',
-            'col name',
-            'col.name',
-            'col; DROP TABLE',
+            "col-name",
+            "col name",
+            "col.name",
+            "col; DROP TABLE",
             'col"name',
             "col'name",
-            'col$name',
-            'col@name'
+            "col$name",
+            "col@name",
         ]
         for identifier in invalid_identifiers:
-            assert query_optimizer._is_valid_identifier(identifier) is False, \
-                f"Should reject: {identifier}"
+            assert (
+                query_optimizer._is_valid_identifier(identifier) is False
+            ), f"Should reject: {identifier}"
 
     def test_is_valid_identifier_sql_keywords(self, query_optimizer):
         """Test that SQL keywords are still validated as identifiers (not prevented)."""
         # SQL keywords can be used as identifiers if properly quoted, so validation
         # should just check syntax, not prevent keywords
-        keyword_identifiers = [
-            'select',
-            'where',
-            'order'
-        ]
+        keyword_identifiers = ["select", "where", "order"]
         for identifier in keyword_identifiers:
             # These should pass basic syntax validation (letters + underscores)
             assert query_optimizer._is_valid_identifier(identifier) is True
@@ -264,76 +263,81 @@ class TestSanitizationMethods:
     def test_is_valid_date_string_valid_dates(self, query_optimizer):
         """Test that valid YYYY-MM-DD dates are accepted."""
         valid_dates = [
-            '2024-01-01',
-            '2024-12-31',
-            '2023-06-15',
-            '1999-01-01',
-            '2099-12-31'
+            "2024-01-01",
+            "2024-12-31",
+            "2023-06-15",
+            "1999-01-01",
+            "2099-12-31",
         ]
         for date_str in valid_dates:
-            assert query_optimizer._is_valid_date_string(date_str), \
-                f"Should accept: {date_str}"
+            assert query_optimizer._is_valid_date_string(
+                date_str
+            ), f"Should accept: {date_str}"
 
     def test_is_valid_date_string_invalid_formats(self, query_optimizer):
         """Test that invalid date formats are rejected."""
         invalid_dates = [
-            '2024-1-1',  # missing leading zeros
-            '24-01-01',  # two-digit year
-            '2024/01/01',  # slashes
-            '01-01-2024',  # wrong order
-            '2024-01',  # missing day
-            '2024',  # year only
-            '',  # empty
-            '2024-01-01T00:00:00',  # with time
-            '../../../etc/passwd',  # path traversal
-            '*',  # wildcard
+            "2024-1-1",  # missing leading zeros
+            "24-01-01",  # two-digit year
+            "2024/01/01",  # slashes
+            "01-01-2024",  # wrong order
+            "2024-01",  # missing day
+            "2024",  # year only
+            "",  # empty
+            "2024-01-01T00:00:00",  # with time
+            "../../../etc/passwd",  # path traversal
+            "*",  # wildcard
         ]
         for date_str in invalid_dates:
-            assert query_optimizer._is_valid_date_string(date_str) is False, \
-                f"Should reject: {date_str}"
+            assert (
+                query_optimizer._is_valid_date_string(date_str) is False
+            ), f"Should reject: {date_str}"
 
     def test_is_valid_date_string_format_validation_only(self, query_optimizer):
         """Test that date validation is format-only, not semantic."""
         # Date validation checks format, not whether the date actually exists
         # This is acceptable for this use case (S3 path patterns)
-        assert query_optimizer._is_valid_date_string('2024-13-01') is True  # invalid month
-        assert query_optimizer._is_valid_date_string('2024-01-32') is True  # invalid day
-        assert query_optimizer._is_valid_date_string('2024-02-30') is True  # invalid for February
+        assert (
+            query_optimizer._is_valid_date_string("2024-13-01") is True
+        )  # invalid month
+        assert (
+            query_optimizer._is_valid_date_string("2024-01-32") is True
+        )  # invalid day
+        assert (
+            query_optimizer._is_valid_date_string("2024-02-30") is True
+        )  # invalid for February
 
     # Integration tests
     def test_column_pruning_with_malicious_column_names(self, query_optimizer):
         """Test that column pruning sanitizes malicious column names."""
         test_query = "SELECT * FROM test_table"
         context = {
-            'required_columns': [
-                'id',
-                'name',
+            "required_columns": [
+                "id",
+                "name",
                 "invalid'; DROP TABLE changes; --",
-                'valid_column',
-                '123invalid',
-                'another_valid'
+                "valid_column",
+                "123invalid",
+                "another_valid",
             ]
         }
 
         optimized_query, metrics = query_optimizer.analyze_query(test_query, context)
 
         # Should only include valid column names
-        assert 'id' in optimized_query
-        assert 'name' in optimized_query
-        assert 'valid_column' in optimized_query
-        assert 'another_valid' in optimized_query
+        assert "id" in optimized_query
+        assert "name" in optimized_query
+        assert "valid_column" in optimized_query
+        assert "another_valid" in optimized_query
 
         # Should not include invalid column names
-        assert '123invalid' not in optimized_query
+        assert "123invalid" not in optimized_query
 
     def test_partition_elimination_with_malicious_values(self, query_optimizer):
         """Test that partition elimination sanitizes malicious values."""
         test_query = "SELECT * FROM changes/*/*/*.parquet WHERE year = {year} AND month IN ({month})"
         context = {
-            'partition_filter': {
-                'year': "2024' OR '1'='1",
-                'month': "1) OR (1=1"
-            }
+            "partition_filter": {"year": "2024' OR '1'='1", "month": "1) OR (1=1"}
         }
 
         optimized_query, metrics = query_optimizer.analyze_query(test_query, context)
@@ -347,19 +351,19 @@ class TestSanitizationMethods:
         """Test that predicate pushdown sanitizes malicious entity_types."""
         test_query = "SELECT * FROM changes/*/*/*.parquet WHERE entity_type = 'test'"
         context = {
-            'entity_types': [
-                'valid_type',
+            "entity_types": [
+                "valid_type",
                 "'; DROP TABLE changes; --",
                 "' OR '1'='1",
-                'another_type'
+                "another_type",
             ]
         }
 
         optimized_query, metrics = query_optimizer.analyze_query(test_query, context)
 
         # Should safely include valid types
-        assert 'valid_type' in optimized_query
-        assert 'another_type' in optimized_query
+        assert "valid_type" in optimized_query
+        assert "another_type" in optimized_query
 
         # Values are escaped with doubled single quotes, preventing SQL injection
         # The malicious payloads are now string literals that can't break out
@@ -374,17 +378,20 @@ class TestDuckDBQueryAnalyzer:
     def mock_duckdb_conn(self):
         """Create a mock DuckDB connection."""
         mock_conn = Mock()
-        mock_conn.execute.return_value.fetchall.return_value = [('result1',), ('result2',)]
+        mock_conn.execute.return_value.fetchall.return_value = [
+            ("result1",),
+            ("result2",),
+        ]
         return mock_conn
 
     @pytest.fixture
     def s3_config(self):
         """Create test S3 configuration."""
         return {
-            'bucket': 'test-bucket',
-            'access_key_id': 'test-key',
-            'secret_access_key': 'test-secret',
-            'region': 'us-east-1'
+            "bucket": "test-bucket",
+            "access_key_id": "test-key",
+            "secret_access_key": "test-secret",
+            "region": "us-east-1",
         }
 
     @pytest.fixture
@@ -414,7 +421,7 @@ class TestDuckDBQueryAnalyzer:
             "SET threads=8;",
             "SET s3_use_ssl=true;",
             "SET s3_url_style='path';",
-            "SET enable_http_metadata_cache=true;"
+            "SET enable_http_metadata_cache=true;",
         ]
 
         # Verify that execute was called with optimization settings
@@ -436,17 +443,17 @@ class TestDuckDBQueryAnalyzer:
         """Test predicate pushdown optimization strategy."""
         test_query = "SELECT * FROM changes/*/*/*.parquet WHERE entity_type = 'test'"
         context = {
-            'time_range': {
-                'start': '2024-01-01',
-                'end': '2024-01-31'
-            },
-            'entity_types': ['test', 'example']
+            "time_range": {"start": "2024-01-01", "end": "2024-01-31"},
+            "entity_types": ["test", "example"],
         }
 
         optimized_query, metrics = query_optimizer.analyze_query(test_query, context)
 
         # Should have applied time-based partitioning
-        assert '2024-01-01' in optimized_query or 'changes/*/*/*2024-01-01*2024-01-31*.parquet' in optimized_query
+        assert (
+            "2024-01-01" in optimized_query
+            or "changes/*/*/*2024-01-01*2024-01-31*.parquet" in optimized_query
+        )
 
         # Should have applied entity type filtering
         assert "entity_type IN ('test', 'example')" in optimized_query
@@ -454,9 +461,7 @@ class TestDuckDBQueryAnalyzer:
     def test_column_pruning_optimization(self, query_optimizer):
         """Test column pruning optimization strategy."""
         test_query = "SELECT * FROM test_table"
-        context = {
-            'required_columns': ['id', 'name', 'created_at']
-        }
+        context = {"required_columns": ["id", "name", "created_at"]}
 
         optimized_query, metrics = query_optimizer.analyze_query(test_query, context)
 
@@ -479,7 +484,7 @@ class TestDuckDBQueryAnalyzer:
 
         # Cache should have been used for second call
         cache_stats = query_optimizer.query_cache.get_cache_stats()
-        assert cache_stats['hits'] >= 1
+        assert cache_stats["hits"] >= 1
 
     def test_materialized_view_creation(self, query_optimizer, mock_duckdb_conn):
         """Test materialized view creation."""
@@ -495,10 +500,10 @@ class TestDuckDBQueryAnalyzer:
         assert view_name in query_optimizer.materialized_views
 
         view_config = query_optimizer.materialized_views[view_name]
-        assert view_config['query'] == view_query
-        assert view_config['refresh_strategy'] == 'manual'
-        assert 'created_at' in view_config
-        assert 'last_refreshed' in view_config
+        assert view_config["query"] == view_query
+        assert view_config["refresh_strategy"] == "manual"
+        assert "created_at" in view_config
+        assert "last_refreshed" in view_config
 
     def test_materialized_view_refresh(self, query_optimizer, mock_duckdb_conn):
         """Test materialized view refresh functionality."""
@@ -518,7 +523,7 @@ class TestDuckDBQueryAnalyzer:
         # Verify refresh was attempted
         expected_calls = [
             f"DROP TABLE IF EXISTS {view_name}",
-            f"CREATE TABLE {view_name} AS {view_query}"
+            f"CREATE TABLE {view_name} AS {view_query}",
         ]
 
         # Check that refresh operations were called
@@ -529,10 +534,10 @@ class TestDuckDBQueryAnalyzer:
     def test_query_hash_generation(self, query_optimizer):
         """Test query hash generation for caching."""
         query1 = "SELECT * FROM table1"
-        context1 = {'param': 'value1'}
+        context1 = {"param": "value1"}
 
         query2 = "SELECT * FROM table1"
-        context2 = {'param': 'value2'}
+        context2 = {"param": "value2"}
 
         hash1 = query_optimizer._generate_query_hash(query1, context1)
         hash2 = query_optimizer._generate_query_hash(query2, context2)
@@ -554,7 +559,7 @@ class TestDuckDBQueryAnalyzer:
         assert metrics.query_text == test_query
         assert metrics.execution_time_ms > 0
         assert metrics.rows_processed >= 0
-        assert metrics.optimization_level in ['none', 'basic', 'advanced', 'failed']
+        assert metrics.optimization_level in ["none", "basic", "advanced", "failed"]
         assert isinstance(metrics.created_at, datetime)
 
         # Check that metrics were stored
@@ -567,7 +572,7 @@ class TestDuckDBQueryAnalyzer:
         queries = [
             "SELECT * FROM table1",
             "SELECT * FROM table2",
-            "SELECT COUNT(*) FROM table3"
+            "SELECT COUNT(*) FROM table3",
         ]
 
         for query in queries:
@@ -576,14 +581,14 @@ class TestDuckDBQueryAnalyzer:
         stats = query_optimizer.get_analysis_statistics()
 
         # Check statistics structure
-        assert 'total_queries' in stats
-        assert 'avg_execution_time_ms' in stats
-        assert 'cache_stats' in stats
-        assert 'materialized_views_count' in stats
+        assert "total_queries" in stats
+        assert "avg_execution_time_ms" in stats
+        assert "cache_stats" in stats
+        assert "materialized_views_count" in stats
 
-        assert stats['total_queries'] == 3
-        assert stats['avg_execution_time_ms'] > 0
-        assert stats['materialized_views_count'] == 0
+        assert stats["total_queries"] == 3
+        assert stats["avg_execution_time_ms"] > 0
+        assert stats["materialized_views_count"] == 0
 
     def test_performance_metrics_rolling_window(self, query_optimizer):
         """Test that performance metrics maintain rolling window."""
@@ -598,14 +603,18 @@ class TestDuckDBQueryAnalyzer:
         last_metric = query_optimizer.performance_metrics[-1]
         assert "SELECT 1099" in last_metric.query_text
 
-    @patch('services.duckdb_query_analyzer.logger')
-    def test_error_handling_during_query_execution(self, mock_logger, query_optimizer, mock_duckdb_conn):
+    @patch("services.duckdb_query_analyzer.logger")
+    def test_error_handling_during_query_execution(
+        self, mock_logger, query_optimizer, mock_duckdb_conn
+    ):
         """Test error handling when query execution fails."""
         # Make query execution fail
         mock_duckdb_conn.execute.side_effect = Exception("Query execution failed")
 
         # Query optimization should not raise exception but return error metrics
-        optimized_query, metrics = query_optimizer.analyze_query("SELECT * FROM invalid_table")
+        optimized_query, metrics = query_optimizer.analyze_query(
+            "SELECT * FROM invalid_table"
+        )
 
         assert metrics.optimization_level == "failed"
         assert metrics.rows_processed == 0
@@ -616,7 +625,9 @@ class TestDuckDBQueryAnalyzer:
         # Make view creation fail
         mock_duckdb_conn.execute.side_effect = Exception("Table creation failed")
 
-        success = query_optimizer.create_materialized_view("test_view", "SELECT * FROM invalid")
+        success = query_optimizer.create_materialized_view(
+            "test_view", "SELECT * FROM invalid"
+        )
 
         assert success is False
         assert "test_view" not in query_optimizer.materialized_views
@@ -629,10 +640,10 @@ class TestDuckDBQueryAnalyzer:
         """
 
         context = {
-            'time_range': {'start': '2024-01-01', 'end': '2024-01-31'},
-            'entity_types': ['test'],
-            'required_columns': ['id', 'entity_type', 'created_at'],
-            'partition_filter': {'year': 2024, 'month': [1, 2, 3]}
+            "time_range": {"start": "2024-01-01", "end": "2024-01-31"},
+            "entity_types": ["test"],
+            "required_columns": ["id", "entity_type", "created_at"],
+            "partition_filter": {"year": 2024, "month": [1, 2, 3]},
         }
 
         optimized_query, metrics = query_optimizer.analyze_query(complex_query, context)

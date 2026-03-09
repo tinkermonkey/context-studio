@@ -10,8 +10,11 @@ logger = logging.getLogger(__name__)
 
 class Migration015(Migration):
     """Update structure_node triggers to generate update-type and move events."""
+
     version = 15
-    description = "Update structure_node triggers for specific event types (update-type, move)"
+    description = (
+        "Update structure_node triggers for specific event types (update-type, move)"
+    )
 
     def up(self, connection: Connection) -> None:
         """Apply the migration - update the structure_node update trigger."""

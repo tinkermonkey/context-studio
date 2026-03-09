@@ -2,13 +2,19 @@
 
 import sys
 import os
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+
+sys.path.append(
+    os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+)
 
 import pytest  # noqa: E402
 
 from reference_api.aggregators import ResultAggregator  # noqa: E402
 from reference_api.models import (  # noqa: E402
-    SourceType, SearchNode, SearchLink, MultiSourceSearchResponse
+    SourceType,
+    SearchNode,
+    SearchLink,
+    MultiSourceSearchResponse,
 )
 
 
@@ -31,7 +37,7 @@ class TestResultAggregator:
                 definition="High-level programming language",
                 attributes={"uri": "http://dbpedia.org/resource/Python"},
                 source_url="http://dbpedia.org/resource/Python",
-                relevance_score=0.95
+                relevance_score=0.95,
             ),
             SearchNode(
                 id="wikidata:http://www.wikidata.org/entity/Q28865",
@@ -40,7 +46,7 @@ class TestResultAggregator:
                 definition="programming language",
                 attributes={"uri": "http://www.wikidata.org/entity/Q28865"},
                 source_url="http://www.wikidata.org/entity/Q28865",
-                relevance_score=0.90
+                relevance_score=0.90,
             ),
             SearchNode(
                 id="conceptnet:/c/en/python",
@@ -49,7 +55,7 @@ class TestResultAggregator:
                 definition=None,
                 attributes={"concept_uri": "/c/en/python"},
                 source_url="http://conceptnet.io/c/en/python",
-                relevance_score=0.85
+                relevance_score=0.85,
             ),
             SearchNode(
                 id="schema_org:ComputerLanguage",
@@ -58,8 +64,8 @@ class TestResultAggregator:
                 definition="This type covers computer languages such as Scheme and Lisp",
                 attributes={"identifier": "ComputerLanguage"},
                 source_url="https://schema.org/ComputerLanguage",
-                relevance_score=0.80
-            )
+                relevance_score=0.80,
+            ),
         ]
 
     @pytest.fixture
@@ -73,7 +79,7 @@ class TestResultAggregator:
                 predicate="IsA",
                 object="conceptnet:/c/en/programming_language",
                 weight=0.8,
-                attributes={"relation_uri": "/r/IsA"}
+                attributes={"relation_uri": "/r/IsA"},
             ),
             SearchLink(
                 id="link2",
@@ -82,7 +88,7 @@ class TestResultAggregator:
                 predicate="instance of",
                 object="wikidata:http://www.wikidata.org/entity/Q9143",
                 weight=1.0,
-                attributes={"property_id": "P31"}
+                attributes={"property_id": "P31"},
             ),
             SearchLink(
                 id="link1",  # Duplicate ID
@@ -91,8 +97,8 @@ class TestResultAggregator:
                 predicate="IsA",
                 object="conceptnet:/c/en/programming_language",
                 weight=0.8,
-                attributes={"relation_uri": "/r/IsA"}
-            )
+                attributes={"relation_uri": "/r/IsA"},
+            ),
         ]
 
     def test_deduplicate_nodes_success(self, aggregator, sample_nodes):
@@ -105,7 +111,7 @@ class TestResultAggregator:
             definition="Duplicate node",
             attributes={},
             source_url="http://dbpedia.org/resource/Python",
-            relevance_score=0.50
+            relevance_score=0.50,
         )
 
         nodes_with_duplicates = sample_nodes + [duplicate_node]
@@ -114,7 +120,9 @@ class TestResultAggregator:
 
         # Should keep only the first occurrence of each ID
         assert len(unique_nodes) == 4  # Original 4 nodes, duplicate removed
-        assert unique_nodes[0].title == "Python (programming language)"  # First occurrence kept
+        assert (
+            unique_nodes[0].title == "Python (programming language)"
+        )  # First occurrence kept
 
         # Verify all IDs are unique
         ids = [node.id for node in unique_nodes]
@@ -131,7 +139,7 @@ class TestResultAggregator:
             "conceptnet:/c/en/python",
             "conceptnet:/c/en/programming_language",
             "wikidata:http://www.wikidata.org/entity/Q28865",
-            "wikidata:http://www.wikidata.org/entity/Q9143"
+            "wikidata:http://www.wikidata.org/entity/Q9143",
         }
 
         unique_links = aggregator.deduplicate_links(sample_links, valid_node_ids)
@@ -153,7 +161,7 @@ class TestResultAggregator:
         # Only include some of the referenced nodes
         valid_node_ids = {
             "conceptnet:/c/en/python",
-            "wikidata:http://www.wikidata.org/entity/Q28865"
+            "wikidata:http://www.wikidata.org/entity/Q28865",
         }
 
         unique_links = aggregator.deduplicate_links(sample_links, valid_node_ids)
@@ -172,7 +180,7 @@ class TestResultAggregator:
                 definition="High-level programming language",
                 attributes={},
                 source_url="http://dbpedia.org/resource/Python",
-                relevance_score=0.95
+                relevance_score=0.95,
             ),
             SearchNode(
                 id="wikidata:http://www.wikidata.org/entity/Q28865",
@@ -181,7 +189,7 @@ class TestResultAggregator:
                 definition="programming language",
                 attributes={},
                 source_url="http://www.wikidata.org/entity/Q28865",
-                relevance_score=0.90
+                relevance_score=0.90,
             ),
             SearchNode(
                 id="conceptnet:/c/en/python",
@@ -190,8 +198,8 @@ class TestResultAggregator:
                 definition=None,
                 attributes={},
                 source_url="http://conceptnet.io/c/en/python",
-                relevance_score=0.85
-            )
+                relevance_score=0.85,
+            ),
         ]
 
         cross_links = aggregator.discover_cross_references(nodes)
@@ -217,7 +225,7 @@ class TestResultAggregator:
                 definition="High-level programming language",
                 attributes={},
                 source_url="http://dbpedia.org/resource/Python",
-                relevance_score=0.95
+                relevance_score=0.95,
             ),
             SearchNode(
                 id="wikidata:http://www.wikidata.org/entity/Q28865",
@@ -226,8 +234,8 @@ class TestResultAggregator:
                 definition="Object-oriented programming language",
                 attributes={},
                 source_url="http://www.wikidata.org/entity/Q28865",
-                relevance_score=0.90
-            )
+                relevance_score=0.90,
+            ),
         ]
 
         cross_links = aggregator.discover_cross_references(nodes)
@@ -245,7 +253,7 @@ class TestResultAggregator:
                 definition="Programming language",
                 attributes={},
                 source_url="http://dbpedia.org/resource/Python1",
-                relevance_score=0.95
+                relevance_score=0.95,
             ),
             SearchNode(
                 id="dbpedia:http://dbpedia.org/resource/Python2",
@@ -254,8 +262,8 @@ class TestResultAggregator:
                 definition="Programming language",
                 attributes={},
                 source_url="http://dbpedia.org/resource/Python2",
-                relevance_score=0.90
-            )
+                relevance_score=0.90,
+            ),
         ]
 
         cross_links = aggregator.discover_cross_references(nodes)
@@ -275,7 +283,7 @@ class TestResultAggregator:
                     definition="Programming language",
                     attributes={},
                     source_url="http://dbpedia.org/resource/Python",
-                    relevance_score=0.95
+                    relevance_score=0.95,
                 )
             ],
             links=[],
@@ -285,7 +293,7 @@ class TestResultAggregator:
             source_errors={},
             offset=0,
             limit=10,
-            search_time_ms=100.0
+            search_time_ms=100.0,
         )
 
         response2 = MultiSourceSearchResponse(
@@ -298,7 +306,7 @@ class TestResultAggregator:
                     definition="Programming language",
                     attributes={},
                     source_url="http://www.wikidata.org/entity/Q28865",
-                    relevance_score=0.90
+                    relevance_score=0.90,
                 )
             ],
             links=[],
@@ -308,7 +316,7 @@ class TestResultAggregator:
             source_errors={"wikidata": "timeout"},
             offset=0,
             limit=10,
-            search_time_ms=200.0
+            search_time_ms=200.0,
         )
 
         merged = aggregator.merge_responses([response1, response2])
@@ -334,28 +342,40 @@ class TestResultAggregator:
     def test_aggregate_source_results_success(self, aggregator):
         """Test successful aggregation of source results."""
         source_results = [
-            (SourceType.DBPEDIA, ([
-                SearchNode(
-                    id="dbpedia:python",
-                    source=SourceType.DBPEDIA,
-                    title="Python",
-                    definition="Programming language",
-                    attributes={},
-                    source_url="http://dbpedia.org/resource/Python",
-                    relevance_score=0.95
-                )
-            ], [])),
-            (SourceType.WIKIDATA, ([
-                SearchNode(
-                    id="wikidata:python",
-                    source=SourceType.WIKIDATA,
-                    title="Python",
-                    definition="Programming language",
-                    attributes={},
-                    source_url="http://www.wikidata.org/entity/Q28865",
-                    relevance_score=0.90
-                )
-            ], []))
+            (
+                SourceType.DBPEDIA,
+                (
+                    [
+                        SearchNode(
+                            id="dbpedia:python",
+                            source=SourceType.DBPEDIA,
+                            title="Python",
+                            definition="Programming language",
+                            attributes={},
+                            source_url="http://dbpedia.org/resource/Python",
+                            relevance_score=0.95,
+                        )
+                    ],
+                    [],
+                ),
+            ),
+            (
+                SourceType.WIKIDATA,
+                (
+                    [
+                        SearchNode(
+                            id="wikidata:python",
+                            source=SourceType.WIKIDATA,
+                            title="Python",
+                            definition="Programming language",
+                            attributes={},
+                            source_url="http://www.wikidata.org/entity/Q28865",
+                            relevance_score=0.90,
+                        )
+                    ],
+                    [],
+                ),
+            ),
         ]
 
         response = aggregator.aggregate_source_results(
@@ -364,7 +384,7 @@ class TestResultAggregator:
             limit=10,
             offset=0,
             search_time_ms=150.0,
-            source_errors={}
+            source_errors={},
         )
 
         assert response.query == "python"
@@ -420,7 +440,7 @@ class TestResultAggregator:
                 definition="Programming language",
                 attributes={},
                 source_url="http://dbpedia.org/resource/Python",
-                relevance_score=0.95
+                relevance_score=0.95,
             ),
             SearchNode(
                 id="wikidata:python",
@@ -429,8 +449,8 @@ class TestResultAggregator:
                 definition="Programming language",
                 attributes={},
                 source_url="http://www.wikidata.org/entity/Q28865",
-                relevance_score=0.90
-            )
+                relevance_score=0.90,
+            ),
         ]
 
         cross_links = aggregator.discover_cross_references(nodes)
@@ -442,28 +462,40 @@ class TestResultAggregator:
         """Test complex aggregation scenario with cross-references."""
         # Create nodes that should have cross-references
         source_results = [
-            (SourceType.DBPEDIA, ([
-                SearchNode(
-                    id="dbpedia:python",
-                    source=SourceType.DBPEDIA,
-                    title="Python",
-                    definition="Programming language",
-                    attributes={},
-                    source_url="http://dbpedia.org/resource/Python",
-                    relevance_score=0.95
-                )
-            ], [])),
-            (SourceType.WIKIDATA, ([
-                SearchNode(
-                    id="wikidata:python",
-                    source=SourceType.WIKIDATA,
-                    title="Python",
-                    definition="Programming language",
-                    attributes={},
-                    source_url="http://www.wikidata.org/entity/Q28865",
-                    relevance_score=0.90
-                )
-            ], []))
+            (
+                SourceType.DBPEDIA,
+                (
+                    [
+                        SearchNode(
+                            id="dbpedia:python",
+                            source=SourceType.DBPEDIA,
+                            title="Python",
+                            definition="Programming language",
+                            attributes={},
+                            source_url="http://dbpedia.org/resource/Python",
+                            relevance_score=0.95,
+                        )
+                    ],
+                    [],
+                ),
+            ),
+            (
+                SourceType.WIKIDATA,
+                (
+                    [
+                        SearchNode(
+                            id="wikidata:python",
+                            source=SourceType.WIKIDATA,
+                            title="Python",
+                            definition="Programming language",
+                            attributes={},
+                            source_url="http://www.wikidata.org/entity/Q28865",
+                            relevance_score=0.90,
+                        )
+                    ],
+                    [],
+                ),
+            ),
         ]
 
         response = aggregator.aggregate_source_results(
@@ -472,7 +504,7 @@ class TestResultAggregator:
             limit=10,
             offset=0,
             search_time_ms=150.0,
-            source_errors={}
+            source_errors={},
         )
 
         # Should have nodes + cross-reference links
@@ -480,7 +512,9 @@ class TestResultAggregator:
         assert len(response.links) > 0  # Should have cross-reference links
 
         # Verify cross-reference link exists
-        cross_ref_links = [link for link in response.links if link.predicate == "sameAs"]
+        cross_ref_links = [
+            link for link in response.links if link.predicate == "sameAs"
+        ]
         assert len(cross_ref_links) > 0
 
         cross_ref = cross_ref_links[0]

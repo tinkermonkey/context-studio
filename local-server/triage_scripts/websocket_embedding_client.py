@@ -45,7 +45,9 @@ async def test_embedding_regeneration(uri: str, force: bool = False):
 
                         print(f"📊 Progress: {percentage:.1f}% ({completed}/{total})")
                         print(f"   Current: {node_type} - {current_node}")
-                        print(f"   Rate: {rate:.2f}/sec, ETA: {eta:.0f}s, Errors: {errors}")
+                        print(
+                            f"   Rate: {rate:.2f}/sec, ETA: {eta:.0f}s, Errors: {errors}"
+                        )
 
                     elif msg_type == "completed":
                         print(f"✅ Completed: {data.get('message')}")
@@ -63,7 +65,7 @@ async def test_embedding_regeneration(uri: str, force: bool = False):
 
                 except json.JSONDecodeError:
                     if isinstance(message, bytes):
-                        message = message.decode('utf-8', errors='replace')
+                        message = message.decode("utf-8", errors="replace")
                     print(f"⚠️  Invalid JSON received: {message}")
 
     except ConnectionClosed:
@@ -73,22 +75,17 @@ async def test_embedding_regeneration(uri: str, force: bool = False):
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Test embedding regeneration WebSocket")
-    parser.add_argument(
-        "--host",
-        default="localhost",
-        help="Server host (default: localhost)"
+    parser = argparse.ArgumentParser(
+        description="Test embedding regeneration WebSocket"
     )
     parser.add_argument(
-        "--port",
-        type=int,
-        default=8000,
-        help="Server port (default: 8000)"
+        "--host", default="localhost", help="Server host (default: localhost)"
     )
     parser.add_argument(
-        "--force",
-        action="store_true",
-        help="Force regeneration of all embeddings"
+        "--port", type=int, default=8000, help="Server port (default: 8000)"
+    )
+    parser.add_argument(
+        "--force", action="store_true", help="Force regeneration of all embeddings"
     )
 
     args = parser.parse_args()

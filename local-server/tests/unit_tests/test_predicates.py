@@ -11,7 +11,12 @@ import uuid  # noqa: E402
 from unittest.mock import Mock, patch  # noqa: E402
 from sqlalchemy import create_engine  # noqa: E402
 from sqlalchemy.orm import sessionmaker  # noqa: E402
-from database.models import Base, Predicate, StructureNode, StructureNodeLink  # noqa: E402, E501
+from database.models import (
+    Base,
+    Predicate,
+    StructureNode,
+    StructureNodeLink,
+)  # noqa: E402, E501
 from database.predicate_utils import generate_identifier_from_title  # noqa: E402, E501
 
 

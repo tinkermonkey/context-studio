@@ -77,7 +77,9 @@ def test_rag_config_field_types():
     assert isinstance(config.gap_detection_deps, list)
 
     # Optional fields
-    assert config.llm_pipeline_flavor is None or isinstance(config.llm_pipeline_flavor, str)
+    assert config.llm_pipeline_flavor is None or isinstance(
+        config.llm_pipeline_flavor, str
+    )
 
 
 def test_rag_config_kg_context_top_k_validation():
@@ -203,7 +205,7 @@ def test_rag_config_in_settings():
     settings = Settings()
 
     # Check that rag_pipeline section exists
-    assert hasattr(settings, 'rag_pipeline')
+    assert hasattr(settings, "rag_pipeline")
     assert isinstance(settings.rag_pipeline, RAGPipelineConfig)
 
     # Check default values through Settings
@@ -217,28 +219,32 @@ def test_rag_config_field_descriptions():
     model_fields = RAGPipelineConfig.model_fields
 
     required_fields = [
-        'kg_context_top_k',
-        'kg_vector_threshold',
-        'llm_pipeline_flavor',
-        'llm_timeout',
-        'gap_detection_deps',
-        'web_search_enabled',
-        'web_search_max_attempts',
-        'web_search_rate_limit',
-        'web_search_max_per_session',
-        'enable_observability',
-        'observability_retention_days',
-        'trace_retention_days',
-        'trace_max_data_size_kb',
-        'deduplication_threshold',
-        'extraction_confidence_threshold'
+        "kg_context_top_k",
+        "kg_vector_threshold",
+        "llm_pipeline_flavor",
+        "llm_timeout",
+        "gap_detection_deps",
+        "web_search_enabled",
+        "web_search_max_attempts",
+        "web_search_rate_limit",
+        "web_search_max_per_session",
+        "enable_observability",
+        "observability_retention_days",
+        "trace_retention_days",
+        "trace_max_data_size_kb",
+        "deduplication_threshold",
+        "extraction_confidence_threshold",
     ]
 
     for field_name in required_fields:
         assert field_name in model_fields, f"Field {field_name} not found in model"
         field_info = model_fields[field_name]
-        assert field_info.description is not None, f"Field {field_name} has no description"
-        assert len(field_info.description) > 0, f"Field {field_name} has empty description"
+        assert (
+            field_info.description is not None
+        ), f"Field {field_name} has no description"
+        assert (
+            len(field_info.description) > 0
+        ), f"Field {field_name} has empty description"
 
 
 def test_rag_config_custom_values():
@@ -258,7 +264,7 @@ def test_rag_config_custom_values():
         trace_retention_days=14,
         trace_max_data_size_kb=200,
         deduplication_threshold=0.95,
-        extraction_confidence_threshold=0.8
+        extraction_confidence_threshold=0.8,
     )
 
     assert config.kg_context_top_k == 100

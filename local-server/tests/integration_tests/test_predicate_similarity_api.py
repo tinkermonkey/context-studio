@@ -18,7 +18,10 @@ from sqlalchemy.orm import sessionmaker
 
 # Setup test environment
 import sys
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))  # noqa: E501
+
+sys.path.insert(
+    0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+)  # noqa: E501
 
 from app import app  # noqa: E402
 from database.models import Base, Predicate  # noqa: E402
@@ -27,9 +30,10 @@ from reference_db.config import ReferenceConfig  # noqa: E402
 from reference_db.manager import ReferenceManager  # noqa: E402
 from embeddings.generate_embeddings import generate_embedding  # noqa: E402
 
-
 # Skip if embeddings not available
-pytest.importorskip("embeddings.generate_embeddings", reason="embeddings module not available")  # noqa: E501
+pytest.importorskip(
+    "embeddings.generate_embeddings", reason="embeddings module not available"
+)  # noqa: E501
 
 
 @pytest.fixture(scope="module")
@@ -82,7 +86,7 @@ def test_db():
     session.test_predicate_ids = {
         "pred_1": pred_uuid_1,
         "pred_2": pred_uuid_2,
-        "pred_3": pred_uuid_3
+        "pred_3": pred_uuid_3,
     }
 
     yield session, db_path
@@ -124,7 +128,7 @@ def test_reference_db():
             external_id=f"{source}:{title}",
             title_embedding=title_emb,
             definition_embedding=def_emb,
-            embedding_dims=384
+            embedding_dims=384,
         )
 
     yield manager, db_path
@@ -166,11 +170,7 @@ class TestFindSimilarEndpoint:
 
         response = client.post(
             f"/api/predicates/{pred_id}/find-similar",
-            params={
-                "limit": 10,
-                "threshold": 0.5,
-                "use_cache": False
-            }
+            params={"limit": 10, "threshold": 0.5, "use_cache": False},
         )
 
         assert response.status_code == 200
@@ -215,8 +215,8 @@ class TestFindSimilarEndpoint:
                 "source": "conceptnet",
                 "limit": 10,
                 "threshold": 0.5,
-                "use_cache": False
-            }
+                "use_cache": False,
+            },
         )
 
         assert response.status_code == 200
@@ -233,11 +233,7 @@ class TestFindSimilarEndpoint:
         # First request (may or may not be cached depending on test run order)
         response1 = client.post(
             f"/api/predicates/{pred_id}/find-similar",
-            params={
-                "limit": 10,
-                "threshold": 0.7,
-                "use_cache": True
-            }
+            params={"limit": 10, "threshold": 0.7, "use_cache": True},
         )
 
         assert response1.status_code == 200
@@ -247,11 +243,7 @@ class TestFindSimilarEndpoint:
         # Second request (should be consistent with first)
         response2 = client.post(
             f"/api/predicates/{pred_id}/find-similar",
-            params={
-                "limit": 10,
-                "threshold": 0.7,
-                "use_cache": True
-            }
+            params={"limit": 10, "threshold": 0.7, "use_cache": True},
         )
 
         assert response2.status_code == 200
@@ -268,7 +260,7 @@ class TestFindSimilarEndpoint:
         """Test similarity search with invalid predicate ID."""
         response = client.post(
             "/api/predicates/invalid-id/find-similar",
-            params={"limit": 10, "threshold": 0.7}
+            params={"limit": 10, "threshold": 0.7},
         )
 
         assert response.status_code == 400  # Invalid UUID format
@@ -277,7 +269,7 @@ class TestFindSimilarEndpoint:
         """Test similarity search with nonexistent predicate."""
         response = client.post(
             "/api/predicates/00000000-0000-0000-0000-000000000000/find-similar",  # noqa: E501
-            params={"limit": 10, "threshold": 0.7}
+            params={"limit": 10, "threshold": 0.7},
         )
 
         assert response.status_code == 404
@@ -289,7 +281,7 @@ class TestFindSimilarEndpoint:
         # Invalid limit (too high)
         response = client.post(
             f"/api/predicates/{pred_id}/find-similar",
-            params={"limit": 200, "threshold": 0.7}
+            params={"limit": 200, "threshold": 0.7},
         )
 
         assert response.status_code == 422  # Validation error
@@ -297,7 +289,7 @@ class TestFindSimilarEndpoint:
         # Invalid threshold (out of range)
         response = client.post(
             f"/api/predicates/{pred_id}/find-similar",
-            params={"limit": 10, "threshold": 1.5}
+            params={"limit": 10, "threshold": 1.5},
         )
 
         assert response.status_code == 422
@@ -310,11 +302,7 @@ class TestClusterPredicatesEndpoint:
         """Test clustering all predicates."""
         response = client.post(
             "/api/predicates/cluster-predicates",
-            params={
-                "min_similarity": 0.7,
-                "min_cluster_size": 2,
-                "eps": 0.5
-            }
+            params={"min_similarity": 0.7, "min_cluster_size": 2, "eps": 0.5},
         )
 
         assert response.status_code == 200
@@ -351,16 +339,12 @@ class TestClusterPredicatesEndpoint:
         pred_ids = [
             client.test_predicate_ids["pred_1"],
             client.test_predicate_ids["pred_2"],
-            client.test_predicate_ids["pred_3"]
+            client.test_predicate_ids["pred_3"],
         ]
 
         response = client.post(
             "/api/predicates/cluster-predicates",
-            params={
-                "predicate_ids": pred_ids,
-                "min_cluster_size": 2,
-                "eps": 0.5
-            }
+            params={"predicate_ids": pred_ids, "min_cluster_size": 2, "eps": 0.5},
         )
 
         assert response.status_code == 200
@@ -379,10 +363,7 @@ class TestClusterPredicatesEndpoint:
 
         response = client.post(
             "/api/predicates/cluster-predicates",
-            params={
-                "predicate_ids": [pred_id],
-                "min_cluster_size": 2
-            }
+            params={"predicate_ids": [pred_id], "min_cluster_size": 2},
         )
 
         assert response.status_code == 400
@@ -392,10 +373,7 @@ class TestClusterPredicatesEndpoint:
         """Test clustering with invalid predicate ID."""
         response = client.post(
             "/api/predicates/cluster-predicates",
-            params={
-                "predicate_ids": ["invalid-id"],
-                "min_cluster_size": 2
-            }
+            params={"predicate_ids": ["invalid-id"], "min_cluster_size": 2},
         )
 
         assert response.status_code == 400
@@ -406,8 +384,8 @@ class TestClusterPredicatesEndpoint:
             "/api/predicates/cluster-predicates",
             params={
                 "predicate_ids": ["00000000-0000-0000-0000-000000000000"],
-                "min_cluster_size": 2
-            }
+                "min_cluster_size": 2,
+            },
         )
 
         assert response.status_code == 404
@@ -438,7 +416,7 @@ class TestEndToEndWorkflow:
         # 1. Find similar predicates
         search_response = client.post(
             f"/api/predicates/{pred_id}/find-similar",
-            params={"limit": 10, "threshold": 0.5}
+            params={"limit": 10, "threshold": 0.5},
         )
         assert search_response.status_code == 200
         search_data = search_response.json()
@@ -446,15 +424,16 @@ class TestEndToEndWorkflow:
 
         # 2. Cluster predicates
         cluster_response = client.post(
-            "/api/predicates/cluster-predicates",
-            params={"min_cluster_size": 2}
+            "/api/predicates/cluster-predicates", params={"min_cluster_size": 2}
         )
         assert cluster_response.status_code == 200
         cluster_data = cluster_response.json()
         assert cluster_data["total_clusters"] >= 0
 
         # 3. Invalidate cache
-        cache_response = client.post("/api/predicates/invalidate-similarity-cache")  # noqa: E501
+        cache_response = client.post(
+            "/api/predicates/invalidate-similarity-cache"
+        )  # noqa: E501
         assert cache_response.status_code == 200
         assert cache_response.json()["success"] is True
 
@@ -470,7 +449,7 @@ class TestEndToEndWorkflow:
         for _ in range(3):
             response = client.post(
                 f"/api/predicates/{pred_id}/find-similar",
-                params={"limit": 10, "threshold": 0.7, "use_cache": True}
+                params={"limit": 10, "threshold": 0.7, "use_cache": True},
             )
             assert response.status_code == 200
             search_times.append(response.json()["search_time_ms"])

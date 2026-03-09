@@ -36,7 +36,10 @@ from services.service_factory import (  # noqa: E402
     set_service_factory,
 )
 from tests.test_config import TestConfigurationManager  # noqa: E402
-from utils.event_processor import get_global_event_processor, set_global_event_processor  # noqa: E402, E501
+from utils.event_processor import (
+    get_global_event_processor,
+    set_global_event_processor,
+)  # noqa: E402, E501
 
 
 def pytest_collection_modifyitems(config, items):
@@ -51,7 +54,11 @@ def pytest_ignore_collect(collection_path, config):
     path_str = str(collection_path)
 
     # List of utility files that should not be collected
-    utility_files = ["test_config.py", "test_db_utils.py", "test_environment.py"]  # noqa: E501
+    utility_files = [
+        "test_config.py",
+        "test_db_utils.py",
+        "test_environment.py",
+    ]  # noqa: E501
 
     # Check if this is one of our utility files (not in subdirectories)
     for util_file in utility_files:
@@ -237,12 +244,20 @@ def global_test_isolation():
         config_manager.cleanup()
 
         # Verify test isolation - check that critical files haven't been polluted  # noqa: E501
-        if os.path.exists("./config.json") and os.path.exists("./datasets.json"):  # noqa: E501
+        if os.path.exists("./config.json") and os.path.exists(
+            "./datasets.json"
+        ):  # noqa: E501
             # Verify config.json and datasets.json were not modified by tests
             # This is critical for data safety
             try:
                 result = subprocess.run(
-                    ["git", "status", "--porcelain", "config.json", "datasets.json"],  # noqa: E501
+                    [
+                        "git",
+                        "status",
+                        "--porcelain",
+                        "config.json",
+                        "datasets.json",
+                    ],  # noqa: E501
                     capture_output=True,
                     text=True,
                     cwd=".",
@@ -314,7 +329,9 @@ def reset_service_factory_cache(request, test_service_factory):
     try:
         test_service_factory.clear_cache()
     except Exception as e:
-        print(f"Warning: Error clearing service factory cache before test: {e}")  # noqa: E501
+        print(
+            f"Warning: Error clearing service factory cache before test: {e}"
+        )  # noqa: E501
 
     yield
 
@@ -447,7 +464,9 @@ def db_session(shared_app):
                 # (that's handled in session cleanup)
                 global_processor.stop()
             except Exception as e:
-                print(f"Warning: Error stopping EventProcessor in test cleanup: {e}")  # noqa: E501
+                print(
+                    f"Warning: Error stopping EventProcessor in test cleanup: {e}"
+                )  # noqa: E501
 
         # Always close the session first
         session.close()

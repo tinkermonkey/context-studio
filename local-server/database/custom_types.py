@@ -116,7 +116,9 @@ class RecordTypeColumn(TypeDecorator):
             return value.value
         return value
 
-    def process_result_value(self, value: Optional[str], dialect) -> Optional[RecordType]:
+    def process_result_value(
+        self, value: Optional[str], dialect
+    ) -> Optional[RecordType]:
         """
         Convert database string value to Python enum.
 

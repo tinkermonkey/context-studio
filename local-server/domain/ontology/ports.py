@@ -4,6 +4,7 @@ Port interfaces for the Ontology bounded context.
 Ports define the contracts between the domain core and infrastructure adapters.
 They use typing.Protocol for structural subtyping and reference only domain entity types.
 """
+
 from typing import Protocol, Optional, Sequence, Callable, Any
 
 from domain.ontology.entities import (
@@ -43,7 +44,9 @@ class OntologyRepository(Protocol):
         """Retrieve a concept scheme by ID."""
         ...
 
-    def list_concept_schemes(self, taxonomy_id: Optional[str] = None) -> Sequence[ConceptScheme]:
+    def list_concept_schemes(
+        self, taxonomy_id: Optional[str] = None
+    ) -> Sequence[ConceptScheme]:
         """List all concept schemes, optionally filtered by taxonomy."""
         ...
 
@@ -113,11 +116,15 @@ class OntologyRepository(Protocol):
         """Retrieve a property definition by ID."""
         ...
 
-    def get_property_definition_by_identifier(self, identifier: str) -> Optional[PropertyDefinition]:
+    def get_property_definition_by_identifier(
+        self, identifier: str
+    ) -> Optional[PropertyDefinition]:
         """Retrieve a property definition by its identifier string."""
         ...
 
-    def list_property_definitions(self, is_relevant: Optional[bool] = None) -> Sequence[PropertyDefinition]:
+    def list_property_definitions(
+        self, is_relevant: Optional[bool] = None
+    ) -> Sequence[PropertyDefinition]:
         """List all property definitions, optionally filtered by relevance."""
         ...
 
@@ -163,7 +170,9 @@ class OntologyRepository(Protocol):
         ...
 
     # Bulk operations
-    def get_all_entities_and_relationships(self) -> tuple[Sequence[Any], Sequence[Relationship]]:
+    def get_all_entities_and_relationships(
+        self,
+    ) -> tuple[Sequence[Any], Sequence[Relationship]]:
         """Return all entities and relationships for graph building."""
         ...
 
@@ -197,6 +206,8 @@ class EventPublisher(Protocol):
         """Publish a domain event."""
         ...
 
-    def subscribe(self, event_type: type, handler: Callable[[DomainEvent], None]) -> None:
+    def subscribe(
+        self, event_type: type, handler: Callable[[DomainEvent], None]
+    ) -> None:
         """Subscribe a handler to a specific event type."""
         ...

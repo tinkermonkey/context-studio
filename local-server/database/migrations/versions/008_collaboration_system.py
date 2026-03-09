@@ -201,34 +201,106 @@ class Migration008(Migration):
         logger.info("Creating indexes...")
 
         # Changesets indexes
-        connection.execute(text("CREATE INDEX IF NOT EXISTS idx_changesets_author ON changesets(author_id);"))
-        connection.execute(text("CREATE INDEX IF NOT EXISTS idx_changesets_state ON changesets(state);"))
-        connection.execute(text("CREATE INDEX IF NOT EXISTS idx_changesets_created ON changesets(created_at);"))
-        connection.execute(text("CREATE INDEX IF NOT EXISTS idx_changesets_parent ON changesets(parent_changeset_id);"))
+        connection.execute(
+            text(
+                "CREATE INDEX IF NOT EXISTS idx_changesets_author ON changesets(author_id);"
+            )
+        )
+        connection.execute(
+            text(
+                "CREATE INDEX IF NOT EXISTS idx_changesets_state ON changesets(state);"
+            )
+        )
+        connection.execute(
+            text(
+                "CREATE INDEX IF NOT EXISTS idx_changesets_created ON changesets(created_at);"
+            )
+        )
+        connection.execute(
+            text(
+                "CREATE INDEX IF NOT EXISTS idx_changesets_parent ON changesets(parent_changeset_id);"
+            )
+        )
 
         # Proposals indexes
-        connection.execute(text("CREATE INDEX IF NOT EXISTS idx_proposals_changeset ON proposals(changeset_id);"))
-        connection.execute(text("CREATE INDEX IF NOT EXISTS idx_proposals_status ON proposals(status);"))
-        connection.execute(text("CREATE INDEX IF NOT EXISTS idx_proposals_created_by ON proposals(created_by);"))
-        connection.execute(text("CREATE INDEX IF NOT EXISTS idx_proposals_created ON proposals(created_at);"))
+        connection.execute(
+            text(
+                "CREATE INDEX IF NOT EXISTS idx_proposals_changeset ON proposals(changeset_id);"
+            )
+        )
+        connection.execute(
+            text(
+                "CREATE INDEX IF NOT EXISTS idx_proposals_status ON proposals(status);"
+            )
+        )
+        connection.execute(
+            text(
+                "CREATE INDEX IF NOT EXISTS idx_proposals_created_by ON proposals(created_by);"
+            )
+        )
+        connection.execute(
+            text(
+                "CREATE INDEX IF NOT EXISTS idx_proposals_created ON proposals(created_at);"
+            )
+        )
 
         # Proposal votes indexes
-        connection.execute(text("CREATE INDEX IF NOT EXISTS idx_proposal_votes_proposal ON proposal_votes(proposal_id);"))
-        connection.execute(text("CREATE INDEX IF NOT EXISTS idx_proposal_votes_user ON proposal_votes(user_id);"))
-        connection.execute(text("CREATE INDEX IF NOT EXISTS idx_proposal_votes_vote ON proposal_votes(vote);"))
-        connection.execute(text("CREATE INDEX IF NOT EXISTS idx_proposal_votes_voted_at ON proposal_votes(voted_at);"))
+        connection.execute(
+            text(
+                "CREATE INDEX IF NOT EXISTS idx_proposal_votes_proposal ON proposal_votes(proposal_id);"
+            )
+        )
+        connection.execute(
+            text(
+                "CREATE INDEX IF NOT EXISTS idx_proposal_votes_user ON proposal_votes(user_id);"
+            )
+        )
+        connection.execute(
+            text(
+                "CREATE INDEX IF NOT EXISTS idx_proposal_votes_vote ON proposal_votes(vote);"
+            )
+        )
+        connection.execute(
+            text(
+                "CREATE INDEX IF NOT EXISTS idx_proposal_votes_voted_at ON proposal_votes(voted_at);"
+            )
+        )
 
         # User identities indexes
-        connection.execute(text("CREATE INDEX IF NOT EXISTS idx_user_identities_email ON user_identities(email);"))
-        connection.execute(text("CREATE INDEX IF NOT EXISTS idx_user_identities_verified ON user_identities(verified);"))
-        connection.execute(text("CREATE INDEX IF NOT EXISTS idx_user_identities_trust_level ON user_identities(trust_level);"))
+        connection.execute(
+            text(
+                "CREATE INDEX IF NOT EXISTS idx_user_identities_email ON user_identities(email);"
+            )
+        )
+        connection.execute(
+            text(
+                "CREATE INDEX IF NOT EXISTS idx_user_identities_verified ON user_identities(verified);"
+            )
+        )
+        connection.execute(
+            text(
+                "CREATE INDEX IF NOT EXISTS idx_user_identities_trust_level ON user_identities(trust_level);"
+            )
+        )
 
         # User trust relationships indexes
-        connection.execute(text("CREATE INDEX IF NOT EXISTS idx_user_trust_trusted ON user_trust_relationships(trusted_user_id);"))
-        connection.execute(text("CREATE INDEX IF NOT EXISTS idx_user_trust_trustee ON user_trust_relationships(trustee_user_id);"))
+        connection.execute(
+            text(
+                "CREATE INDEX IF NOT EXISTS idx_user_trust_trusted ON user_trust_relationships(trusted_user_id);"
+            )
+        )
+        connection.execute(
+            text(
+                "CREATE INDEX IF NOT EXISTS idx_user_trust_trustee ON user_trust_relationships(trustee_user_id);"
+            )
+        )
 
         # Verification codes indexes
-        connection.execute(text("CREATE INDEX IF NOT EXISTS idx_verification_codes_expires ON verification_codes(expires_at);"))
+        connection.execute(
+            text(
+                "CREATE INDEX IF NOT EXISTS idx_verification_codes_expires ON verification_codes(expires_at);"
+            )
+        )
 
         logger.info("Successfully created all indexes")
 
@@ -238,8 +310,12 @@ class Migration008(Migration):
 
         # Check that all tables were created
         required_tables = [
-            'changesets', 'proposals', 'proposal_votes',
-            'user_identities', 'user_trust_relationships', 'verification_codes'
+            "changesets",
+            "proposals",
+            "proposal_votes",
+            "user_identities",
+            "user_trust_relationships",
+            "verification_codes",
         ]
 
         for table_name in required_tables:
@@ -274,7 +350,9 @@ class Migration008(Migration):
             raise Exception("Changeset state constraint failed")
         except Exception as e:
             if "CHECK constraint failed" not in str(e):
-                raise Exception("Changeset state constraint validation failed unexpectedly")
+                raise Exception(
+                    "Changeset state constraint validation failed unexpectedly"
+                )
 
         try:
             # Test invalid proposal status
@@ -285,7 +363,9 @@ class Migration008(Migration):
             raise Exception("Proposal status constraint failed")
         except Exception as e:
             if "CHECK constraint failed" not in str(e):
-                raise Exception("Proposal status constraint validation failed unexpectedly")
+                raise Exception(
+                    "Proposal status constraint validation failed unexpectedly"
+                )
 
         try:
             # Test invalid vote

@@ -7,8 +7,11 @@ from database.migrations.migration_manager import Migration
 
 class Migration004(Migration):
     """Enforce uniqueness for domain title within layer and term title within domain."""
+
     version = 4
-    description = "Enforce uniqueness for domain title within layer and term title within domain."
+    description = (
+        "Enforce uniqueness for domain title within layer and term title within domain."
+    )
 
     def up(self, connection: Connection) -> None:
         """Apply the migration."""

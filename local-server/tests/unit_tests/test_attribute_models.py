@@ -4,6 +4,7 @@ Unit tests for structure node attribute models with type validation.
 Tests the StructureNodeAttribute and ResolvedAttribute Pydantic models,
 including key format validation, value type validation, and inheritance markers.
 """
+
 import sys
 import os
 from uuid import UUID, uuid4
@@ -552,7 +553,9 @@ class TestAttributeIntegration:
             ),
         ]
         assert len(attributes) == 3
-        assert all(not attr.inherited for attr in attributes if hasattr(attr, "inherited"))
+        assert all(
+            not attr.inherited for attr in attributes if hasattr(attr, "inherited")
+        )
 
     def test_resolve_attribute_hierarchy(self):
         """Test resolving attributes with inheritance from parent."""

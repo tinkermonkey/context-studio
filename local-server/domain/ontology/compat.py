@@ -52,7 +52,9 @@ NODE_TYPE_LEGACY_TO_NEW: Dict[LegacyNodeType, NodeType] = {
     LegacyNodeType.TERM: NodeType.CLASS,
 }
 
-NODE_TYPE_NEW_TO_LEGACY: Dict[NodeType, LegacyNodeType] = {v: k for k, v in NODE_TYPE_LEGACY_TO_NEW.items()}
+NODE_TYPE_NEW_TO_LEGACY: Dict[NodeType, LegacyNodeType] = {
+    v: k for k, v in NODE_TYPE_LEGACY_TO_NEW.items()
+}
 
 # Export new domain entity types and type mappings
 __all__ = [

@@ -28,6 +28,7 @@ class OperationsDatabaseManager:
         if operations_db_path is None:
             # Use config path for operations database
             from config import get_settings
+
             settings = get_settings()
             operations_db_path = settings.database.operations_path
 
@@ -50,19 +51,14 @@ class OperationsDatabaseManager:
             # Use NullPool to avoid readonly connection caching issues in E2E tests
             self.engine = create_engine(
                 f"sqlite:///{self.operations_db_path}",
-                connect_args={
-                    "check_same_thread": False,
-                    "timeout": 20
-                },
+                connect_args={"check_same_thread": False, "timeout": 20},
                 poolclass=NullPool,  # Don't pool connections - create fresh each time
-                echo=False
+                echo=False,
             )
 
             # Create session factory
             self.session_local = sessionmaker(
-                autocommit=False,
-                autoflush=False,
-                bind=self.engine
+                autocommit=False, autoflush=False, bind=self.engine
             )
 
             # Create schema if it doesn't exist

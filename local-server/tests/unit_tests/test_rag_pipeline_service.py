@@ -1,8 +1,10 @@
 """
 Unit tests for RAG Pipeline Service with mocked processors.
 """
+
 import sys
 import os
+
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import pytest  # noqa: E402
@@ -20,7 +22,7 @@ from rag.processors.models import (  # noqa: E402
     GapPriority,
     ResolvedConcept,
     ResolutionMethod,
-    ExtractedPhrase
+    ExtractedPhrase,
 )
 
 
@@ -40,8 +42,12 @@ def mock_kg_context_output():
     """Create mock KG context output."""
     return KGContextOutput(
         extracted_phrases=[
-            ExtractedPhrase(text="machine learning", sentence_index=0, start_char=0, end_char=16),
-            ExtractedPhrase(text="neural networks", sentence_index=0, start_char=20, end_char=35)
+            ExtractedPhrase(
+                text="machine learning", sentence_index=0, start_char=0, end_char=16
+            ),
+            ExtractedPhrase(
+                text="neural networks", sentence_index=0, start_char=20, end_char=35
+            ),
         ],
         kg_nodes=[
             KGNode(
@@ -49,18 +55,18 @@ def mock_kg_context_output():
                 title="Machine Learning",
                 node_type="term",
                 similarity_score=0.95,
-                definition="A field of artificial intelligence"
+                definition="A field of artificial intelligence",
             ),
             KGNode(
                 node_id="kg2",
                 title="Neural Networks",
                 node_type="term",
                 similarity_score=0.90,
-                definition="Computing systems inspired by biological neural networks"
-            )
+                definition="Computing systems inspired by biological neural networks",
+            ),
         ],
         total_sentences=1,
-        trace_data={}
+        trace_data={},
     )
 
 
@@ -76,7 +82,7 @@ def mock_llm_extraction_output():
                 sentence_indices=[0],
                 matched_kg_node="kg1",
                 start_char=0,
-                end_char=16
+                end_char=16,
             ),
             ProcessorExtractedEntity(
                 text="artificial intelligence",
@@ -85,12 +91,12 @@ def mock_llm_extraction_output():
                 sentence_indices=[0],
                 matched_kg_node=None,
                 start_char=50,
-                end_char=73
-            )
+                end_char=73,
+            ),
         ],
         kg_context_size=2,
         token_usage={"prompt_tokens": 100, "completion_tokens": 50},
-        trace_data={}
+        trace_data={},
     )
 
 
@@ -108,12 +114,12 @@ def mock_spacy_gap_output():
                 connected_verb="uses",
                 start_char=80,
                 end_char=93,
-                tf_idf_score=0.25
+                tf_idf_score=0.25,
             )
         ],
         total_noun_phrases=5,
         filtered_count=2,
-        trace_data={}
+        trace_data={},
     )
 
 
@@ -130,17 +136,17 @@ def mock_concept_resolution_output(mock_spacy_gap_output):
                     title="Deep Learning",
                     node_type="term",
                     similarity_score=0.88,
-                    definition="Subset of machine learning"
+                    definition="Subset of machine learning",
                 ),
                 web_definition=None,
-                confidence=0.70
+                confidence=0.70,
             )
         ],
         unresolved_gaps=[],
         web_searches_performed=0,
         cached_kg_hits=0,
         full_kg_hits=1,
-        trace_data={}
+        trace_data={},
     )
 
 
@@ -154,16 +160,22 @@ class TestRAGPipelineService:
         mock_kg_context_output,
         mock_llm_extraction_output,
         mock_spacy_gap_output,
-        mock_concept_resolution_output
+        mock_concept_resolution_output,
     ):
         """Test successful entity extraction through all four layers."""
         kg_session, ops_session = mock_db_sessions
 
-        with patch('rag.rag_pipeline_service.KGContextProcessor') as MockKGProcessor, \
-             patch('rag.rag_pipeline_service.LLMExtractionProcessor') as MockLLMProcessor, \
-             patch('rag.rag_pipeline_service.SpaCyGapProcessor') as MockSpaCyProcessor, \
-             patch('rag.rag_pipeline_service.ConceptResolutionProcessor') as MockConceptProcessor, \
-             patch('rag.rag_pipeline_service.RAGObservabilityStore') as MockObsStore:
+        with patch(
+            "rag.rag_pipeline_service.KGContextProcessor"
+        ) as MockKGProcessor, patch(
+            "rag.rag_pipeline_service.LLMExtractionProcessor"
+        ) as MockLLMProcessor, patch(
+            "rag.rag_pipeline_service.SpaCyGapProcessor"
+        ) as MockSpaCyProcessor, patch(
+            "rag.rag_pipeline_service.ConceptResolutionProcessor"
+        ) as MockConceptProcessor, patch(
+            "rag.rag_pipeline_service.RAGObservabilityStore"
+        ) as MockObsStore:
 
             # Setup mocks
             mock_kg_proc = MockKGProcessor.return_value
@@ -210,23 +222,27 @@ class TestRAGPipelineService:
         """Test that Layer 0 timeout allows pipeline to continue with empty KG context."""
         kg_session, ops_session = mock_db_sessions
 
-        with patch('rag.rag_pipeline_service.KGContextProcessor') as MockKGProcessor, \
-             patch('rag.rag_pipeline_service.LLMExtractionProcessor') as MockLLMProcessor, \
-             patch('rag.rag_pipeline_service.SpaCyGapProcessor') as MockSpaCyProcessor, \
-             patch('rag.rag_pipeline_service.ConceptResolutionProcessor') as MockConceptProcessor, \
-             patch('rag.rag_pipeline_service.RAGObservabilityStore') as MockObsStore:
+        with patch(
+            "rag.rag_pipeline_service.KGContextProcessor"
+        ) as MockKGProcessor, patch(
+            "rag.rag_pipeline_service.LLMExtractionProcessor"
+        ) as MockLLMProcessor, patch(
+            "rag.rag_pipeline_service.SpaCyGapProcessor"
+        ) as MockSpaCyProcessor, patch(
+            "rag.rag_pipeline_service.ConceptResolutionProcessor"
+        ) as MockConceptProcessor, patch(
+            "rag.rag_pipeline_service.RAGObservabilityStore"
+        ) as MockObsStore:
 
             # Setup Layer 0 to timeout
             mock_kg_proc = MockKGProcessor.return_value
 
             def timeout_func(*args, **kwargs):
                 import time
+
                 time.sleep(1.0)  # Longer than 500ms timeout
                 return KGContextOutput(
-                    extracted_phrases=[],
-                    kg_nodes=[],
-                    total_sentences=1,
-                    trace_data={}
+                    extracted_phrases=[], kg_nodes=[], total_sentences=1, trace_data={}
                 )
 
             mock_kg_proc.process.side_effect = timeout_func
@@ -234,10 +250,7 @@ class TestRAGPipelineService:
             # Setup other layers to succeed
             mock_llm_proc = MockLLMProcessor.return_value
             mock_llm_proc.process.return_value = LLMExtractionOutput(
-                entities=[],
-                kg_context_size=0,
-                token_usage=None,
-                trace_data={}
+                entities=[], kg_context_size=0, token_usage=None, trace_data={}
             )
 
             mock_spacy_proc = MockSpaCyProcessor.return_value
@@ -252,7 +265,7 @@ class TestRAGPipelineService:
                 web_searches_performed=0,
                 cached_kg_hits=0,
                 full_kg_hits=0,
-                trace_data={}
+                trace_data={},
             )
 
             mock_obs_store = MockObsStore.return_value
@@ -273,18 +286,22 @@ class TestRAGPipelineService:
 
     @pytest.mark.asyncio
     async def test_layer_1_timeout_graceful_degradation(
-        self,
-        mock_db_sessions,
-        mock_kg_context_output
+        self, mock_db_sessions, mock_kg_context_output
     ):
         """Test that Layer 1 timeout allows pipeline to continue without LLM entities."""
         kg_session, ops_session = mock_db_sessions
 
-        with patch('rag.rag_pipeline_service.KGContextProcessor') as MockKGProcessor, \
-             patch('rag.rag_pipeline_service.LLMExtractionProcessor') as MockLLMProcessor, \
-             patch('rag.rag_pipeline_service.SpaCyGapProcessor') as MockSpaCyProcessor, \
-             patch('rag.rag_pipeline_service.ConceptResolutionProcessor') as MockConceptProcessor, \
-             patch('rag.rag_pipeline_service.RAGObservabilityStore') as MockObsStore:
+        with patch(
+            "rag.rag_pipeline_service.KGContextProcessor"
+        ) as MockKGProcessor, patch(
+            "rag.rag_pipeline_service.LLMExtractionProcessor"
+        ) as MockLLMProcessor, patch(
+            "rag.rag_pipeline_service.SpaCyGapProcessor"
+        ) as MockSpaCyProcessor, patch(
+            "rag.rag_pipeline_service.ConceptResolutionProcessor"
+        ) as MockConceptProcessor, patch(
+            "rag.rag_pipeline_service.RAGObservabilityStore"
+        ) as MockObsStore:
 
             # Setup Layer 0 to succeed
             mock_kg_proc = MockKGProcessor.return_value
@@ -295,12 +312,10 @@ class TestRAGPipelineService:
 
             def timeout_func(*args, **kwargs):
                 import time
+
                 time.sleep(2.0)  # Longer than the configured timeout
                 return LLMExtractionOutput(
-                    entities=[],
-                    kg_context_size=0,
-                    token_usage=None,
-                    trace_data={}
+                    entities=[], kg_context_size=0, token_usage=None, trace_data={}
                 )
 
             mock_llm_proc.process.side_effect = timeout_func
@@ -322,7 +337,7 @@ class TestRAGPipelineService:
                 web_searches_performed=0,
                 cached_kg_hits=0,
                 full_kg_hits=0,
-                trace_data={}
+                trace_data={},
             )
 
             mock_obs_store = MockObsStore.return_value
@@ -343,19 +358,22 @@ class TestRAGPipelineService:
         """Test that entities with 90%+ similarity are deduplicated."""
         kg_session, ops_session = mock_db_sessions
 
-        with patch('rag.rag_pipeline_service.KGContextProcessor') as MockKGProcessor, \
-             patch('rag.rag_pipeline_service.LLMExtractionProcessor') as MockLLMProcessor, \
-             patch('rag.rag_pipeline_service.SpaCyGapProcessor') as MockSpaCyProcessor, \
-             patch('rag.rag_pipeline_service.ConceptResolutionProcessor') as MockConceptProcessor, \
-             patch('rag.rag_pipeline_service.RAGObservabilityStore') as MockObsStore:
+        with patch(
+            "rag.rag_pipeline_service.KGContextProcessor"
+        ) as MockKGProcessor, patch(
+            "rag.rag_pipeline_service.LLMExtractionProcessor"
+        ) as MockLLMProcessor, patch(
+            "rag.rag_pipeline_service.SpaCyGapProcessor"
+        ) as MockSpaCyProcessor, patch(
+            "rag.rag_pipeline_service.ConceptResolutionProcessor"
+        ) as MockConceptProcessor, patch(
+            "rag.rag_pipeline_service.RAGObservabilityStore"
+        ) as MockObsStore:
 
             # Setup mocks
             mock_kg_proc = MockKGProcessor.return_value
             mock_kg_proc.process.return_value = KGContextOutput(
-                extracted_phrases=[],
-                kg_nodes=[],
-                total_sentences=1,
-                trace_data={}
+                extracted_phrases=[], kg_nodes=[], total_sentences=1, trace_data={}
             )
 
             # LLM extracts "machine learning"
@@ -369,12 +387,12 @@ class TestRAGPipelineService:
                         sentence_indices=[0],
                         matched_kg_node=None,
                         start_char=0,
-                        end_char=16
+                        end_char=16,
                     )
                 ],
                 kg_context_size=0,
                 token_usage=None,
-                trace_data={}
+                trace_data={},
             )
 
             # spaCy detects "Machine Learning" (same entity, different case)
@@ -387,15 +405,12 @@ class TestRAGPipelineService:
                 connected_verb="test",
                 start_char=0,
                 end_char=16,
-                tf_idf_score=0.25
+                tf_idf_score=0.25,
             )
 
             mock_spacy_proc = MockSpaCyProcessor.return_value
             mock_spacy_proc.process.return_value = SpaCyGapOutput(
-                gaps=[gap],
-                total_noun_phrases=1,
-                filtered_count=0,
-                trace_data={}
+                gaps=[gap], total_noun_phrases=1, filtered_count=0, trace_data={}
             )
 
             # Resolution resolves the gap
@@ -407,14 +422,14 @@ class TestRAGPipelineService:
                         resolution_method=ResolutionMethod.CACHED_KG,
                         matched_kg_node=None,
                         web_definition="A definition",
-                        confidence=0.75
+                        confidence=0.75,
                     )
                 ],
                 unresolved_gaps=[],
                 web_searches_performed=0,
                 cached_kg_hits=1,
                 full_kg_hits=0,
-                trace_data={}
+                trace_data={},
             )
 
             mock_obs_store = MockObsStore.return_value
@@ -424,7 +439,9 @@ class TestRAGPipelineService:
             service = RAGPipelineService(kg_session, ops_session)
 
             # Execute extraction
-            response = await service.extract_entities("Machine learning test", enable_trace=False)
+            response = await service.extract_entities(
+                "Machine learning test", enable_trace=False
+            )
 
             # Assertions - should only have 1 entity after deduplication
             assert len(response.entities) == 1
@@ -439,16 +456,22 @@ class TestRAGPipelineService:
         mock_kg_context_output,
         mock_llm_extraction_output,
         mock_spacy_gap_output,
-        mock_concept_resolution_output
+        mock_concept_resolution_output,
     ):
         """Test that observability metrics are saved to database."""
         kg_session, ops_session = mock_db_sessions
 
-        with patch('rag.rag_pipeline_service.KGContextProcessor') as MockKGProcessor, \
-             patch('rag.rag_pipeline_service.LLMExtractionProcessor') as MockLLMProcessor, \
-             patch('rag.rag_pipeline_service.SpaCyGapProcessor') as MockSpaCyProcessor, \
-             patch('rag.rag_pipeline_service.ConceptResolutionProcessor') as MockConceptProcessor, \
-             patch('rag.rag_pipeline_service.RAGObservabilityStore') as MockObsStore:
+        with patch(
+            "rag.rag_pipeline_service.KGContextProcessor"
+        ) as MockKGProcessor, patch(
+            "rag.rag_pipeline_service.LLMExtractionProcessor"
+        ) as MockLLMProcessor, patch(
+            "rag.rag_pipeline_service.SpaCyGapProcessor"
+        ) as MockSpaCyProcessor, patch(
+            "rag.rag_pipeline_service.ConceptResolutionProcessor"
+        ) as MockConceptProcessor, patch(
+            "rag.rag_pipeline_service.RAGObservabilityStore"
+        ) as MockObsStore:
 
             # Setup mocks
             mock_kg_proc = MockKGProcessor.return_value
@@ -487,16 +510,22 @@ class TestRAGPipelineService:
         mock_kg_context_output,
         mock_llm_extraction_output,
         mock_spacy_gap_output,
-        mock_concept_resolution_output
+        mock_concept_resolution_output,
     ):
         """Test that observability traces are saved when trace is enabled."""
         kg_session, ops_session = mock_db_sessions
 
-        with patch('rag.rag_pipeline_service.KGContextProcessor') as MockKGProcessor, \
-             patch('rag.rag_pipeline_service.LLMExtractionProcessor') as MockLLMProcessor, \
-             patch('rag.rag_pipeline_service.SpaCyGapProcessor') as MockSpaCyProcessor, \
-             patch('rag.rag_pipeline_service.ConceptResolutionProcessor') as MockConceptProcessor, \
-             patch('rag.rag_pipeline_service.RAGObservabilityStore') as MockObsStore:
+        with patch(
+            "rag.rag_pipeline_service.KGContextProcessor"
+        ) as MockKGProcessor, patch(
+            "rag.rag_pipeline_service.LLMExtractionProcessor"
+        ) as MockLLMProcessor, patch(
+            "rag.rag_pipeline_service.SpaCyGapProcessor"
+        ) as MockSpaCyProcessor, patch(
+            "rag.rag_pipeline_service.ConceptResolutionProcessor"
+        ) as MockConceptProcessor, patch(
+            "rag.rag_pipeline_service.RAGObservabilityStore"
+        ) as MockObsStore:
 
             # Setup mocks
             mock_kg_proc = MockKGProcessor.return_value

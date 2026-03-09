@@ -15,7 +15,9 @@ import time
 import uuid
 from fastapi.testclient import TestClient
 
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../../")))  # noqa: E501
+sys.path.insert(
+    0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../../"))
+)  # noqa: E501
 
 from app import create_app  # noqa: E402
 from utils.logger import get_logger  # noqa: E402
@@ -29,7 +31,6 @@ from services.service_factory import (  # noqa: E402
 )
 from database.models import StructureNode, StructureNodeLink  # noqa: E402
 from database.enums import NodeType  # noqa: E402
-
 
 logger = get_logger("scale_perf_test")
 
@@ -179,7 +180,9 @@ def create_relationship(client, source_node_id, target_node_id):
 
 
 def update_node(client, node_id, update_payload):
-    response = client.put(f"/api/structure_nodes/{node_id}", json=update_payload)  # noqa: E501
+    response = client.put(
+        f"/api/structure_nodes/{node_id}", json=update_payload
+    )  # noqa: E501
     assert response.status_code == 200, response.text
     return response.json()
 
@@ -226,7 +229,9 @@ def populate_scale_test(
         .count()
     )
     layer_progress = current_layer_count
-    logger.info(f"Total layers to exist: {total_layers}, {current_layer_count} found")  # noqa: E501
+    logger.info(
+        f"Total layers to exist: {total_layers}, {current_layer_count} found"
+    )  # noqa: E501
     if current_layer_count < num_layers:
         logger.debug(
             f"Creating {num_layers - current_layer_count} layers to reach {num_layers}..."  # noqa: E501
@@ -261,7 +266,9 @@ def populate_scale_test(
         for domain in domains
     ]
     domain_progress = len(domains)
-    logger.info(f"Total domains to exist: {total_domains}, {domain_progress} found")  # noqa: E501
+    logger.info(
+        f"Total domains to exist: {total_domains}, {domain_progress} found"
+    )  # noqa: E501
     for li, layer in enumerate(layers):
         current_domains = (
             DB_SESSION.query(StructureNode)
@@ -293,8 +300,12 @@ def populate_scale_test(
                     }
                 )
                 domain_progress += 1
-                if domain_progress % 100 == 0 or domain_progress == total_domains:  # noqa: E501
-                    logger.info(f"Domain progress: {domain_progress}/{total_domains}")  # noqa: E501
+                if (
+                    domain_progress % 100 == 0 or domain_progress == total_domains
+                ):  # noqa: E501
+                    logger.info(
+                        f"Domain progress: {domain_progress}/{total_domains}"
+                    )  # noqa: E501
 
     # Terms
     total_terms = total_domains * num_terms_per_domain
@@ -304,7 +315,11 @@ def populate_scale_test(
         .all()
     )
     terms = [
-        {"id": term.id, "title": term.title, "parent_node_id": term.parent_node_id}  # noqa: E501
+        {
+            "id": term.id,
+            "title": term.title,
+            "parent_node_id": term.parent_node_id,
+        }  # noqa: E501
         for term in terms
     ]
     term_progress = len(terms)
@@ -383,7 +398,8 @@ def populate_scale_test(
                     )
                     relationship_progress += 1
                     if (
-                        relationship_progress % relationship_progress_check == 0  # noqa: E501
+                        relationship_progress % relationship_progress_check
+                        == 0  # noqa: E501
                         or relationship_progress == total_relationships
                     ):
                         logger.info(
@@ -399,7 +415,10 @@ def main():
     global DB_SESSION
     parser = argparse.ArgumentParser(description="Scale Performance Test")
     parser.add_argument(
-        "--scale", type=str, default="small", help="Scale: small, medium, large, xlarge"  # noqa: E501
+        "--scale",
+        type=str,
+        default="small",
+        help="Scale: small, medium, large, xlarge",  # noqa: E501
     )
     args = parser.parse_args()
     scale = args.scale.lower()
@@ -488,7 +507,9 @@ def main():
         )
         db_setup_end = time.time()
         print_mem_usage("After populate_scale_test")
-        logger.info(f"Database setup time: {db_setup_end - db_setup_start:.2f} seconds")  # noqa: E501
+        logger.info(
+            f"Database setup time: {db_setup_end - db_setup_start:.2f} seconds"
+        )  # noqa: E501
 
         # Check service factory stats after population
         check_service_factory_stats(client, "AFTER_POPULATE")
@@ -522,7 +543,9 @@ def main():
                 elif node_type == "term":
                     domain = domains[i % len(domains)]
                     created_nodes["term"].append(
-                        create_term(client, domain=domain, name=f"PerfTerm_{node_id}")  # noqa: E501
+                        create_term(
+                            client, domain=domain, name=f"PerfTerm_{node_id}"
+                        )  # noqa: E501
                     )
             timings[f"{node_type}_create"] = time.time() - start
             # print_mem_usage(f"After {node_type} create")
@@ -569,7 +592,11 @@ def main():
         # Delete in reverse order since cascade deletes happen
         for node_type, node_list in zip(
             ["term", "domain", "layer"],
-            [created_nodes["term"], created_nodes["domain"], created_nodes["layer"]],  # noqa: E501
+            [
+                created_nodes["term"],
+                created_nodes["domain"],
+                created_nodes["layer"],
+            ],  # noqa: E501
         ):
             logger.info(f"Deleting {len(node_list)} {node_type}s...")
             start = time.time()
@@ -577,7 +604,9 @@ def main():
                 try:
                     delete_node(client, node["id"])
                 except Exception as e:
-                    logger.error(f"Failed to delete {node_type} {node['id']}: {e}")  # noqa: E501
+                    logger.error(
+                        f"Failed to delete {node_type} {node['id']}: {e}"
+                    )  # noqa: E501
 
             timings[f"{node_type}_delete"] = time.time() - start
         # print_mem_usage(f"After {node_type} delete")

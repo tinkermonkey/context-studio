@@ -4,8 +4,8 @@ Port interfaces for the Graph bounded context.
 Ports define the contracts between the domain core and infrastructure adapters.
 They use typing.Protocol for structural subtyping and reference only domain entity types.
 """
-from typing import Protocol, Optional, Sequence
 
+from typing import Protocol, Optional, Sequence
 
 
 class GraphEngine(Protocol):
@@ -18,8 +18,8 @@ class GraphEngine(Protocol):
 
     def build_from_data(
         self,
-        nodes: Sequence[dict],      # [{id, title, node_type, ...}]
-        edges: Sequence[dict],      # [{source_id, target_id, property_label, ...}]
+        nodes: Sequence[dict],  # [{id, title, node_type, ...}]
+        edges: Sequence[dict],  # [{source_id, target_id, property_label, ...}]
     ) -> None:
         """Populate the graph from node and edge data."""
         ...
@@ -36,7 +36,9 @@ class GraphEngine(Protocol):
         """Find shortest path between two nodes."""
         ...
 
-    def all_paths(self, source_id: str, target_id: str, max_depth: int = 5) -> list[list[str]]:
+    def all_paths(
+        self, source_id: str, target_id: str, max_depth: int = 5
+    ) -> list[list[str]]:
         """Find all paths between two nodes up to max_depth."""
         ...
 

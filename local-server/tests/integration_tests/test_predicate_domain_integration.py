@@ -94,7 +94,9 @@ class TestPredicateDomainIntegration:
             "title": "Test Domain 3",
             "definition": "Domain for testing",
             "parent_node_id": test_data["layer"]["id"],
-            "structural_predicate_id": str(uuid.uuid4()),  # Non-existent predicate  # noqa: E501
+            "structural_predicate_id": str(
+                uuid.uuid4()
+            ),  # Non-existent predicate  # noqa: E501
         }
 
         response = client.post("/api/structure_nodes/", json=domain_data)
@@ -112,7 +114,9 @@ class TestPredicateDomainIntegration:
             "title": "Test Domain 4",
             "definition": "Domain for testing",
             "parent_node_id": test_data["layer"]["id"],
-            "structural_predicate_id": str(uuid.uuid4()),  # Non-existent predicate ID  # noqa: E501
+            "structural_predicate_id": str(
+                uuid.uuid4()
+            ),  # Non-existent predicate ID  # noqa: E501
         }
 
         response = client.post("/api/structure_nodes/", json=domain_data)

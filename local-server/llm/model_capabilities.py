@@ -43,104 +43,92 @@ MODEL_CAPABILITIES: Dict[str, ModelCapabilities] = {
         max_tokens_limit=4096,
         context_window=8192,
         provider="openai",
-        model_family="gpt-4"
+        model_family="gpt-4",
     ),
-
     "gpt-4-turbo": ModelCapabilities(
         supports_top_k=False,
         max_tokens_limit=4096,
         context_window=128000,
         provider="openai",
-        model_family="gpt-4"
+        model_family="gpt-4",
     ),
-
     "gpt-4-turbo-preview": ModelCapabilities(
         supports_top_k=False,
         max_tokens_limit=4096,
         context_window=128000,
         provider="openai",
-        model_family="gpt-4"
+        model_family="gpt-4",
     ),
-
     # OpenAI GPT-4o family (still clearly inferior)
     "gpt-4o": ModelCapabilities(
         supports_top_k=False,
         max_tokens_limit=4096,
         context_window=128000,
         provider="openai",
-        model_family="gpt-4o"
+        model_family="gpt-4o",
     ),
-
     "gpt-4o-mini": ModelCapabilities(
         supports_top_k=False,
-        max_tokens_limit=2048,              # Smaller and more limited
-        context_window=64000,               # Reduced context window
+        max_tokens_limit=2048,  # Smaller and more limited
+        context_window=64000,  # Reduced context window
         provider="openai",
-        model_family="gpt-4o"
+        model_family="gpt-4o",
     ),
-
     "gpt-4o-turbo": ModelCapabilities(
         supports_top_k=False,
         max_tokens_limit=4096,
         context_window=128000,
         provider="openai",
-        model_family="gpt-4o"
+        model_family="gpt-4o",
     ),
-
     "gpt-4o-latest": ModelCapabilities(
         supports_top_k=False,
         max_tokens_limit=4096,
         context_window=128000,
         provider="openai",
-        model_family="gpt-4o"
+        model_family="gpt-4o",
     ),
-
     # OpenAI GPT-5 family (attempting to catch up but still inferior)
     "gpt-5": ModelCapabilities(
-        supports_top_k=False,              # Still no top_k support
-        supports_structured_output=True,   # Finally catching up
-        max_tokens_limit=8192,             # Slightly improved
-        context_window=200000,             # Still smaller than Claude-4
+        supports_top_k=False,  # Still no top_k support
+        supports_structured_output=True,  # Finally catching up
+        max_tokens_limit=8192,  # Slightly improved
+        context_window=200000,  # Still smaller than Claude-4
         provider="openai",
-        model_family="gpt-5"
+        model_family="gpt-5",
     ),
-
     "gpt-5-turbo": ModelCapabilities(
         supports_top_k=False,
         supports_structured_output=True,
         max_tokens_limit=8192,
         context_window=200000,
         provider="openai",
-        model_family="gpt-5"
+        model_family="gpt-5",
     ),
-
     "gpt-5-preview": ModelCapabilities(
         supports_top_k=False,
         supports_structured_output=True,
-        max_tokens_limit=4096,             # Preview limitations
-        context_window=150000,             # Reduced for preview
+        max_tokens_limit=4096,  # Preview limitations
+        context_window=150000,  # Reduced for preview
         provider="openai",
-        model_family="gpt-5"
+        model_family="gpt-5",
     ),
-
     "gpt-5-mini": ModelCapabilities(
         supports_top_k=False,
         supports_structured_output=False,  # Mini version lacks features
-        max_tokens_limit=2048,             # Very limited
-        context_window=64000,              # Small context window
+        max_tokens_limit=2048,  # Very limited
+        context_window=64000,  # Small context window
         provider="openai",
-        model_family="gpt-5"
+        model_family="gpt-5",
     ),
-
     # OpenAI GPT-3.5 family
     "gpt-3.5-turbo": ModelCapabilities(
         supports_top_k=False,
         max_tokens_limit=4096,
         context_window=16385,
         provider="openai",
-        model_family="gpt-3.5"
+        model_family="gpt-3.5",
     ),
-
     # Anthropic Claude-3 family
     "claude-3-sonnet-20240229": ModelCapabilities(
         supports_frequency_penalty=False,  # Anthropic uses different parameters
@@ -149,9 +137,8 @@ MODEL_CAPABILITIES: Dict[str, ModelCapabilities] = {
         max_tokens_limit=4096,
         context_window=200000,
         provider="anthropic",
-        model_family="claude-3"
+        model_family="claude-3",
     ),
-
     "claude-3-opus-20240229": ModelCapabilities(
         supports_frequency_penalty=False,
         supports_presence_penalty=False,
@@ -159,9 +146,8 @@ MODEL_CAPABILITIES: Dict[str, ModelCapabilities] = {
         max_tokens_limit=4096,
         context_window=200000,
         provider="anthropic",
-        model_family="claude-3"
+        model_family="claude-3",
     ),
-
     "claude-3-haiku-20240307": ModelCapabilities(
         supports_frequency_penalty=False,
         supports_presence_penalty=False,
@@ -169,21 +155,19 @@ MODEL_CAPABILITIES: Dict[str, ModelCapabilities] = {
         max_tokens_limit=4096,
         context_window=200000,
         provider="anthropic",
-        model_family="claude-3"
+        model_family="claude-3",
     ),
-
     # Anthropic Claude-4 family (clearly superior)
     "claude-4": ModelCapabilities(
         supports_frequency_penalty=False,  # Anthropic uses different parameters
         supports_presence_penalty=False,
-        supports_structured_output=True,   # Enhanced structured output capabilities
+        supports_structured_output=True,  # Enhanced structured output capabilities
         supports_function_calling=True,
-        max_tokens_limit=8192,             # Increased token limit
-        context_window=1000000,            # Massive context window
+        max_tokens_limit=8192,  # Increased token limit
+        context_window=1000000,  # Massive context window
         provider="anthropic",
-        model_family="claude-4"
+        model_family="claude-4",
     ),
-
     "claude-4-turbo": ModelCapabilities(
         supports_frequency_penalty=False,
         supports_presence_penalty=False,
@@ -192,42 +176,38 @@ MODEL_CAPABILITIES: Dict[str, ModelCapabilities] = {
         max_tokens_limit=8192,
         context_window=1000000,
         provider="anthropic",
-        model_family="claude-4"
+        model_family="claude-4",
     ),
-
     "claude-4-sonnet": ModelCapabilities(
         supports_frequency_penalty=False,
         supports_presence_penalty=False,
         supports_structured_output=True,
         supports_function_calling=True,
         max_tokens_limit=8192,
-        context_window=500000,             # Balanced performance
+        context_window=500000,  # Balanced performance
         provider="anthropic",
-        model_family="claude-4"
+        model_family="claude-4",
     ),
-
     "claude-4-opus": ModelCapabilities(
         supports_frequency_penalty=False,
         supports_presence_penalty=False,
         supports_structured_output=True,
         supports_function_calling=True,
-        max_tokens_limit=16384,            # Maximum creativity and capability
-        context_window=2000000,            # Largest context window
+        max_tokens_limit=16384,  # Maximum creativity and capability
+        context_window=2000000,  # Largest context window
         provider="anthropic",
-        model_family="claude-4"
+        model_family="claude-4",
     ),
-
     "claude-4-haiku": ModelCapabilities(
         supports_frequency_penalty=False,
         supports_presence_penalty=False,
         supports_structured_output=True,
         supports_function_calling=True,
-        max_tokens_limit=4096,             # Fast and efficient
+        max_tokens_limit=4096,  # Fast and efficient
         context_window=200000,
         provider="anthropic",
-        model_family="claude-4"
+        model_family="claude-4",
     ),
-
     # Add more models as needed...
 }
 
@@ -253,7 +233,8 @@ def get_supported_models() -> List[str]:
 def get_models_by_provider(provider: str) -> List[str]:
     """Get list of models for a specific provider."""
     return [
-        model_name for model_name, capabilities in MODEL_CAPABILITIES.items()
+        model_name
+        for model_name, capabilities in MODEL_CAPABILITIES.items()
         if capabilities.provider == provider
     ]
 
@@ -269,14 +250,16 @@ def get_provider_parameter_filters(provider: str) -> Dict[str, bool]:
         },
         "anthropic": {
             "frequency_penalty": True,  # Remove frequency_penalty for Anthropic
-            "presence_penalty": True,   # Remove presence_penalty for Anthropic
-        }
+            "presence_penalty": True,  # Remove presence_penalty for Anthropic
+        },
     }
 
     return filters.get(provider.lower(), {})
 
 
-def validate_model_config(model_name: str, config: Dict[str, Any]) -> tuple[Dict[str, Any], List[str]]:
+def validate_model_config(
+    model_name: str, config: Dict[str, Any]
+) -> tuple[Dict[str, Any], List[str]]:
     """
     Validate and filter model configuration based on capabilities.
 
@@ -301,13 +284,20 @@ def validate_model_config(model_name: str, config: Dict[str, Any]) -> tuple[Dict
     for param, supported in parameter_checks.items():
         if param in filtered_config and not supported:
             filtered_config.pop(param)
-            warnings.append(f"Parameter '{param}' not supported by {model_name}, removed from configuration")
+            warnings.append(
+                f"Parameter '{param}' not supported by {model_name}, removed from configuration"
+            )
 
     # Check max_tokens limit
     if "max_tokens" in filtered_config and capabilities.max_tokens_limit:
         requested_tokens = filtered_config["max_tokens"]
-        if requested_tokens is not None and requested_tokens > capabilities.max_tokens_limit:
+        if (
+            requested_tokens is not None
+            and requested_tokens > capabilities.max_tokens_limit
+        ):
             filtered_config["max_tokens"] = capabilities.max_tokens_limit
-            warnings.append(f"max_tokens reduced from {requested_tokens} to {capabilities.max_tokens_limit} for {model_name}")
+            warnings.append(
+                f"max_tokens reduced from {requested_tokens} to {capabilities.max_tokens_limit} for {model_name}"
+            )
 
     return filtered_config, warnings

@@ -44,9 +44,9 @@ class TestNewAPIRoutesMatchOldBehavior:
             "predicate": "is_a",
         }
         rel_resp = e2e_client.post("/api/property_definitions/", json=rel_data)
-        assert rel_resp.status_code == 201, (
-            f"Failed to create relationship: {rel_resp.status_code} {rel_resp.text}"
-        )
+        assert (
+            rel_resp.status_code == 201
+        ), f"Failed to create relationship: {rel_resp.status_code} {rel_resp.text}"
         relationship_id = rel_resp.json()["id"]
 
         # Verify taxonomy is visible via new route with correct terminology
@@ -204,7 +204,9 @@ class TestDatabaseMigrationDataIntegrity:
             # Verify structure_nodes table does not exist
             try:
                 conn.execute(text("SELECT 1 FROM structure_nodes LIMIT 1"))
-                pytest.fail("structure_nodes table should not exist after migration 019")
+                pytest.fail(
+                    "structure_nodes table should not exist after migration 019"
+                )
             except Exception:
                 # Expected: table should not exist
                 pass
@@ -212,7 +214,9 @@ class TestDatabaseMigrationDataIntegrity:
             # Verify structure_node_links table does not exist
             try:
                 conn.execute(text("SELECT 1 FROM structure_node_links LIMIT 1"))
-                pytest.fail("structure_node_links table should not exist after migration 019")
+                pytest.fail(
+                    "structure_node_links table should not exist after migration 019"
+                )
             except Exception:
                 # Expected: table should not exist
                 pass
@@ -232,52 +236,44 @@ class TestDatabaseMigrationDataIntegrity:
 
             # Verify the taxonomy entity in database has node_type = 'taxonomy'
             result = conn.execute(
-                text(
-                    "SELECT node_type FROM ontology_entities WHERE id = :id"
-                ),
+                text("SELECT node_type FROM ontology_entities WHERE id = :id"),
                 {"id": taxonomy_id},
             )
             node_type = result.scalar()
-            assert node_type == "taxonomy", (
-                f"Expected node_type='taxonomy' but got '{node_type}'"
-            )
+            assert (
+                node_type == "taxonomy"
+            ), f"Expected node_type='taxonomy' but got '{node_type}'"
 
             # Verify the scheme entity has node_type = 'concept_scheme'
             result = conn.execute(
-                text(
-                    "SELECT node_type FROM ontology_entities WHERE id = :id"
-                ),
+                text("SELECT node_type FROM ontology_entities WHERE id = :id"),
                 {"id": scheme_id},
             )
             node_type = result.scalar()
-            assert node_type == "concept_scheme", (
-                f"Expected node_type='concept_scheme' but got '{node_type}'"
-            )
+            assert (
+                node_type == "concept_scheme"
+            ), f"Expected node_type='concept_scheme' but got '{node_type}'"
 
             # Verify classes have node_type = 'class'
             for class_id in class_ids:
                 result = conn.execute(
-                    text(
-                        "SELECT node_type FROM ontology_entities WHERE id = :id"
-                    ),
+                    text("SELECT node_type FROM ontology_entities WHERE id = :id"),
                     {"id": class_id},
                 )
                 node_type = result.scalar()
-                assert node_type == "class", (
-                    f"Expected node_type='class' but got '{node_type}'"
-                )
+                assert (
+                    node_type == "class"
+                ), f"Expected node_type='class' but got '{node_type}'"
 
             # Verify parent relationships use parent_entity_id
             result = conn.execute(
-                text(
-                    "SELECT parent_entity_id FROM ontology_entities WHERE id = :id"
-                ),
+                text("SELECT parent_entity_id FROM ontology_entities WHERE id = :id"),
                 {"id": scheme_id},
             )
             parent_id = result.scalar()
-            assert parent_id == taxonomy_id, (
-                f"Scheme's parent_entity_id should be {taxonomy_id}, got {parent_id}"
-            )
+            assert (
+                parent_id == taxonomy_id
+            ), f"Scheme's parent_entity_id should be {taxonomy_id}, got {parent_id}"
 
             conn.commit()
 
@@ -333,22 +329,22 @@ class TestMigrationRollback:
                     )
                     node_type = result.scalar()
                     # After downgrade, should see old terminology
-                    assert node_type in ["layer", "domain", "term"], (
-                        f"Expected old node_type after rollback but got '{node_type}'"
-                    )
+                    assert node_type in [
+                        "layer",
+                        "domain",
+                        "term",
+                    ], f"Expected old node_type after rollback but got '{node_type}'"
                 except Exception as e:
-                    pytest.fail(
-                        f"Failed to query structure_nodes after downgrade: {e}"
-                    )
+                    pytest.fail(f"Failed to query structure_nodes after downgrade: {e}")
                 conn.commit()
 
             # Verify old API routes still work with old terminology
             tax_old_api = e2e_client.get(f"/api/structure_nodes/{taxonomy_id}")
             assert tax_old_api.status_code == 200
             tax_data = tax_old_api.json()
-            assert tax_data["node_type"] == "layer", (
-                "After downgrade, node_type should be 'layer'"
-            )
+            assert (
+                tax_data["node_type"] == "layer"
+            ), "After downgrade, node_type should be 'layer'"
 
         finally:
             # Re-apply up() to restore migration 019 (cleanup)
@@ -358,15 +354,13 @@ class TestMigrationRollback:
             with engine.connect() as conn:
                 try:
                     result = conn.execute(
-                        text(
-                            "SELECT node_type FROM ontology_entities WHERE id = :id"
-                        ),
+                        text("SELECT node_type FROM ontology_entities WHERE id = :id"),
                         {"id": taxonomy_id},
                     )
                     node_type = result.scalar()
-                    assert node_type == "taxonomy", (
-                        "After re-upgrade, should see new terminology"
-                    )
+                    assert (
+                        node_type == "taxonomy"
+                    ), "After re-upgrade, should see new terminology"
                 except Exception as e:
                     pytest.fail(
                         f"Failed to query ontology_entities after re-upgrade: {e}"
@@ -429,9 +423,9 @@ class TestDualTerminologyCoexistence:
         entity_count_old = len(entities_old.json())
 
         # Both should show the same total count (same underlying table)
-        assert entity_count_new == entity_count_old, (
-            "New and old API should show same entity count from same table"
-        )
+        assert (
+            entity_count_new == entity_count_old
+        ), "New and old API should show same entity count from same table"
 
 
 class TestRenamedEnumValuesInQueries:
@@ -485,9 +479,9 @@ class TestRenamedEnumValuesInQueries:
         assert tax_query.status_code == 200
         tax_results = tax_query.json()
         tax_matching = [e for e in tax_results if e["id"] == taxonomy_id]
-        assert len(tax_matching) == 1, (
-            "Should find exactly one taxonomy with node_type=taxonomy filter"
-        )
+        assert (
+            len(tax_matching) == 1
+        ), "Should find exactly one taxonomy with node_type=taxonomy filter"
 
         # Query by new terminology (concept_scheme)
         scheme_query = e2e_client.get(
@@ -496,18 +490,18 @@ class TestRenamedEnumValuesInQueries:
         assert scheme_query.status_code == 200
         scheme_results = scheme_query.json()
         scheme_matching = [e for e in scheme_results if e["id"] == scheme_id]
-        assert len(scheme_matching) == 1, (
-            "Should find exactly one concept_scheme with node_type=concept_scheme filter"
-        )
+        assert (
+            len(scheme_matching) == 1
+        ), "Should find exactly one concept_scheme with node_type=concept_scheme filter"
 
         # Query by new terminology (class)
         class_query = e2e_client.get("/api/ontology_entities/?node_type=class")
         assert class_query.status_code == 200
         class_results = class_query.json()
         class_matching = [e for e in class_results if e["id"] == class_id]
-        assert len(class_matching) == 1, (
-            "Should find exactly one class with node_type=class filter"
-        )
+        assert (
+            len(class_matching) == 1
+        ), "Should find exactly one class with node_type=class filter"
 
         # Query by old terminology via old API (layer = taxonomy during transition)
         layer_query = e2e_client.get("/api/structure_nodes/?node_type=layer")
@@ -515,6 +509,6 @@ class TestRenamedEnumValuesInQueries:
         layer_results = layer_query.json()
         # The taxonomy we created should appear as layer in old API
         layer_matching = [e for e in layer_results if e["id"] == taxonomy_id]
-        assert len(layer_matching) == 1, (
-            "Should find exactly one layer (taxonomy) with node_type=layer filter on old API"
-        )
+        assert (
+            len(layer_matching) == 1
+        ), "Should find exactly one layer (taxonomy) with node_type=layer filter on old API"

@@ -17,7 +17,10 @@ from unittest.mock import Mock, patch  # noqa: E402
 
 from services.proposal_manager import ProposalManager  # noqa: E402
 from services.collaboration_models import (  # noqa: E402
-    Proposal, ProposalStatus, ChangesetState, Changeset
+    Proposal,
+    ProposalStatus,
+    ChangesetState,
+    Changeset,
 )
 from services.changeset_manager import ChangesetManager  # noqa: E402
 from services.s3_sync_manager import S3SyncManager  # noqa: E402
@@ -46,17 +49,19 @@ class TestProposalManager:
     def mock_s3_sync_manager(self):
         """Mock S3SyncManager."""
         s3_sync = Mock(spec=S3SyncManager)
-        s3_sync.s3_config = {'bucket': 'test-bucket'}
+        s3_sync.s3_config = {"bucket": "test-bucket"}
         s3_sync.write_metadata_to_s3 = Mock(return_value=True)
         return s3_sync
 
     @pytest.fixture
-    def proposal_manager(self, mock_db_session, mock_changeset_manager, mock_s3_sync_manager):
+    def proposal_manager(
+        self, mock_db_session, mock_changeset_manager, mock_s3_sync_manager
+    ):
         """Create ProposalManager instance for testing."""
         return ProposalManager(
             db=mock_db_session,
             s3_sync_manager=mock_s3_sync_manager,
-            changeset_manager=mock_changeset_manager
+            changeset_manager=mock_changeset_manager,
         )
 
     @pytest.fixture
@@ -79,25 +84,33 @@ class TestProposalManager:
         proposal.to_dict.return_value = {"id": "proposal123", "title": "Test Proposal"}
         return proposal
 
-    def test_initialization(self, proposal_manager, mock_db_session, mock_changeset_manager, mock_s3_sync_manager):
+    def test_initialization(
+        self,
+        proposal_manager,
+        mock_db_session,
+        mock_changeset_manager,
+        mock_s3_sync_manager,
+    ):
         """Test ProposalManager initialization."""
         assert proposal_manager.db == mock_db_session
         assert proposal_manager.changeset_manager == mock_changeset_manager
         assert proposal_manager.s3_sync == mock_s3_sync_manager
 
-    def test_create_proposal_success(self, proposal_manager, mock_changeset_manager, mock_changeset):
+    def test_create_proposal_success(
+        self, proposal_manager, mock_changeset_manager, mock_changeset
+    ):
         """Test successful proposal creation."""
         mock_changeset_manager.get_changeset.return_value = mock_changeset
 
-        with patch('uuid.uuid4') as mock_uuid:
-            mock_uuid.return_value = uuid.UUID('12345678-1234-5678-9abc-123456789abc')
+        with patch("uuid.uuid4") as mock_uuid:
+            mock_uuid.return_value = uuid.UUID("12345678-1234-5678-9abc-123456789abc")
 
             proposal = proposal_manager.create_proposal(
                 changeset_id="changeset123",
                 title="Test Proposal",
                 description="Test description",
                 created_by="user123",
-                required_approvals=2
+                required_approvals=2,
             )
 
         assert proposal.id == "12345678-1234-5678-9abc-123456789abc"
@@ -108,7 +121,9 @@ class TestProposalManager:
         assert proposal.required_approvals == 2
         assert proposal.status == ProposalStatus.OPEN
 
-    def test_create_proposal_changeset_not_found(self, proposal_manager, mock_changeset_manager):
+    def test_create_proposal_changeset_not_found(
+        self, proposal_manager, mock_changeset_manager
+    ):
         """Test proposal creation when changeset not found."""
         mock_changeset_manager.get_changeset.return_value = None
 
@@ -117,24 +132,30 @@ class TestProposalManager:
                 changeset_id="changeset123",
                 title="Test Proposal",
                 description="Test description",
-                created_by="user123"
+                created_by="user123",
             )
 
-    def test_create_proposal_invalid_changeset_state(self, proposal_manager, mock_changeset_manager):
+    def test_create_proposal_invalid_changeset_state(
+        self, proposal_manager, mock_changeset_manager
+    ):
         """Test proposal creation with invalid changeset state."""
         mock_changeset = Mock()
         mock_changeset.state = ChangesetState.MERGED
         mock_changeset_manager.get_changeset.return_value = mock_changeset
 
-        with pytest.raises(ValueError, match=r"Cannot create proposal for changeset in MERGED state"):
+        with pytest.raises(
+            ValueError, match=r"Cannot create proposal for changeset in MERGED state"
+        ):
             proposal_manager.create_proposal(
                 changeset_id="changeset123",
                 title="Test Proposal",
                 description="Test description",
-                created_by="user123"
+                created_by="user123",
             )
 
-    def test_create_proposal_invalid_approvals(self, proposal_manager, mock_changeset_manager, mock_changeset):
+    def test_create_proposal_invalid_approvals(
+        self, proposal_manager, mock_changeset_manager, mock_changeset
+    ):
         """Test proposal creation with invalid required approvals."""
         mock_changeset_manager.get_changeset.return_value = mock_changeset
 
@@ -144,22 +165,24 @@ class TestProposalManager:
                 title="Test Proposal",
                 description="Test description",
                 created_by="user123",
-                required_approvals=0
+                required_approvals=0,
             )
 
     def test_vote_on_proposal_success(self, proposal_manager, mock_proposal):
         """Test successful voting on proposal."""
-        with patch.object(proposal_manager, 'get_proposal', return_value=mock_proposal):
-            with patch.object(proposal_manager, 'get_user_vote', return_value=None):
-                with patch.object(proposal_manager, '_store_vote_locally'):
-                    with patch.object(proposal_manager, '_push_vote_to_s3'):
-                        with patch.object(proposal_manager, '_evaluate_proposal_status'):
+        with patch.object(proposal_manager, "get_proposal", return_value=mock_proposal):
+            with patch.object(proposal_manager, "get_user_vote", return_value=None):
+                with patch.object(proposal_manager, "_store_vote_locally"):
+                    with patch.object(proposal_manager, "_push_vote_to_s3"):
+                        with patch.object(
+                            proposal_manager, "_evaluate_proposal_status"
+                        ):
 
                             vote = proposal_manager.vote_on_proposal(
                                 proposal_id="proposal123",
                                 user_id="user456",
                                 vote="approve",
-                                comment="Looks good!"
+                                comment="Looks good!",
                             )
 
         assert vote.proposal_id == "proposal123"
@@ -169,22 +192,22 @@ class TestProposalManager:
 
     def test_vote_on_proposal_invalid_vote(self, proposal_manager):
         """Test voting with invalid vote value."""
-        with pytest.raises(ValueError, match="Vote must be 'approve', 'reject', or 'abstain'"):
+        with pytest.raises(
+            ValueError, match="Vote must be 'approve', 'reject', or 'abstain'"
+        ):
             proposal_manager.vote_on_proposal(
                 proposal_id="proposal123",
                 user_id="user456",
                 vote="invalid",
-                comment="Invalid vote"
+                comment="Invalid vote",
             )
 
     def test_vote_on_proposal_not_found(self, proposal_manager):
         """Test voting on non-existent proposal."""
-        with patch.object(proposal_manager, 'get_proposal', return_value=None):
+        with patch.object(proposal_manager, "get_proposal", return_value=None):
             with pytest.raises(ValueError, match="Proposal proposal123 not found"):
                 proposal_manager.vote_on_proposal(
-                    proposal_id="proposal123",
-                    user_id="user456",
-                    vote="approve"
+                    proposal_id="proposal123", user_id="user456", vote="approve"
                 )
 
     def test_vote_on_proposal_closed(self, proposal_manager):
@@ -192,12 +215,12 @@ class TestProposalManager:
         mock_proposal = Mock()
         mock_proposal.status = ProposalStatus.APPROVED
 
-        with patch.object(proposal_manager, 'get_proposal', return_value=mock_proposal):
-            with pytest.raises(ValueError, match="Cannot vote on proposal with status approved"):
+        with patch.object(proposal_manager, "get_proposal", return_value=mock_proposal):
+            with pytest.raises(
+                ValueError, match="Cannot vote on proposal with status approved"
+            ):
                 proposal_manager.vote_on_proposal(
-                    proposal_id="proposal123",
-                    user_id="user456",
-                    vote="approve"
+                    proposal_id="proposal123", user_id="user456", vote="approve"
                 )
 
     def test_vote_update_existing(self, proposal_manager, mock_proposal):
@@ -205,16 +228,22 @@ class TestProposalManager:
         existing_vote = Mock()
         existing_vote.vote = "abstain"
 
-        with patch.object(proposal_manager, 'get_proposal', return_value=mock_proposal):
-            with patch.object(proposal_manager, 'get_user_vote', return_value=existing_vote):
-                with patch.object(proposal_manager, '_store_vote_locally') as mock_store:
-                    with patch.object(proposal_manager, '_push_vote_to_s3'):
-                        with patch.object(proposal_manager, '_evaluate_proposal_status'):
+        with patch.object(proposal_manager, "get_proposal", return_value=mock_proposal):
+            with patch.object(
+                proposal_manager, "get_user_vote", return_value=existing_vote
+            ):
+                with patch.object(
+                    proposal_manager, "_store_vote_locally"
+                ) as mock_store:
+                    with patch.object(proposal_manager, "_push_vote_to_s3"):
+                        with patch.object(
+                            proposal_manager, "_evaluate_proposal_status"
+                        ):
 
                             proposal_manager.vote_on_proposal(
                                 proposal_id="proposal123",
                                 user_id="user456",
-                                vote="approve"
+                                vote="approve",
                             )
 
         # Verify store was called with is_update=True
@@ -226,17 +255,17 @@ class TestProposalManager:
         """Test successful proposal retrieval."""
         # Mock database response as tuple matching row_to_proposal() expectations
         mock_row = (
-            "proposal123",                      # id
-            "changeset123",                     # changeset_id
-            "Test Proposal",                    # title
-            "Test description",                 # description
-            "open",                             # status
-            2,                                  # required_approvals
-            "user123",                          # created_by
-            "2023-01-01T00:00:00+00:00",       # created_at
-            None,                               # closed_at
-            None,                               # merge_commit_id
-            None                                # metadata
+            "proposal123",  # id
+            "changeset123",  # changeset_id
+            "Test Proposal",  # title
+            "Test description",  # description
+            "open",  # status
+            2,  # required_approvals
+            "user123",  # created_by
+            "2023-01-01T00:00:00+00:00",  # created_at
+            None,  # closed_at
+            None,  # merge_commit_id
+            None,  # metadata
         )
 
         mock_db_session.execute.return_value.fetchone.return_value = mock_row
@@ -260,25 +289,23 @@ class TestProposalManager:
         """Test listing proposals with filters."""
         # Mock database response as tuple matching row_to_proposal() expectations
         mock_row = (
-            "proposal123",                      # id
-            "changeset123",                     # changeset_id
-            "Test Proposal",                    # title
-            "Test description",                 # description
-            "open",                             # status
-            2,                                  # required_approvals
-            "user123",                          # created_by
-            "2023-01-01T00:00:00+00:00",       # created_at
-            None,                               # closed_at
-            None,                               # merge_commit_id
-            None                                # metadata
+            "proposal123",  # id
+            "changeset123",  # changeset_id
+            "Test Proposal",  # title
+            "Test description",  # description
+            "open",  # status
+            2,  # required_approvals
+            "user123",  # created_by
+            "2023-01-01T00:00:00+00:00",  # created_at
+            None,  # closed_at
+            None,  # merge_commit_id
+            None,  # metadata
         )
 
         mock_db_session.execute.return_value.fetchall.return_value = [mock_row]
 
         proposals = proposal_manager.list_proposals(
-            status=ProposalStatus.OPEN,
-            created_by="user123",
-            limit=50
+            status=ProposalStatus.OPEN, created_by="user123", limit=50
         )
 
         assert len(proposals) == 1
@@ -289,11 +316,11 @@ class TestProposalManager:
         """Test getting proposal votes."""
         # Mock database response as tuple matching row_to_vote() expectations
         mock_row = (
-            "proposal123",                      # proposal_id
-            "user456",                          # user_id
-            "approve",                          # vote
-            "Looks good!",                      # comment
-            "2023-01-01T00:00:00+00:00"        # voted_at
+            "proposal123",  # proposal_id
+            "user456",  # user_id
+            "approve",  # vote
+            "Looks good!",  # comment
+            "2023-01-01T00:00:00+00:00",  # voted_at
         )
 
         mock_db_session.execute.return_value.fetchall.return_value = [mock_row]
@@ -311,10 +338,12 @@ class TestProposalManager:
             Mock(vote="approve", user_id="user1"),
             Mock(vote="approve", user_id="user2"),
             Mock(vote="reject", user_id="user3"),
-            Mock(vote="abstain", user_id="user4")
+            Mock(vote="abstain", user_id="user4"),
         ]
 
-        with patch.object(proposal_manager, 'get_proposal_votes', return_value=mock_votes):
+        with patch.object(
+            proposal_manager, "get_proposal_votes", return_value=mock_votes
+        ):
             summary = proposal_manager.get_vote_summary("proposal123")
 
         assert summary["total_votes"] == 4
@@ -333,14 +362,18 @@ class TestProposalManager:
             "approve_votes": 2,
             "reject_votes": 0,
             "abstain_votes": 0,
-            "total_votes": 2
+            "total_votes": 2,
         }
 
-        with patch.object(proposal_manager, 'get_proposal', return_value=mock_proposal):
-            with patch.object(proposal_manager, 'get_proposal_votes', return_value=[]):
-                with patch.object(proposal_manager, 'get_vote_summary', return_value=vote_summary):
-                    with patch.object(proposal_manager, '_update_proposal_status') as mock_update:
-                        with patch.object(proposal_manager, '_auto_merge_if_enabled'):
+        with patch.object(proposal_manager, "get_proposal", return_value=mock_proposal):
+            with patch.object(proposal_manager, "get_proposal_votes", return_value=[]):
+                with patch.object(
+                    proposal_manager, "get_vote_summary", return_value=vote_summary
+                ):
+                    with patch.object(
+                        proposal_manager, "_update_proposal_status"
+                    ) as mock_update:
+                        with patch.object(proposal_manager, "_auto_merge_if_enabled"):
 
                             proposal_manager._evaluate_proposal_status("proposal123")
 
@@ -356,25 +389,33 @@ class TestProposalManager:
             "approve_votes": 0,
             "reject_votes": 2,
             "abstain_votes": 0,
-            "total_votes": 2
+            "total_votes": 2,
         }
 
-        with patch.object(proposal_manager, 'get_proposal', return_value=mock_proposal):
-            with patch.object(proposal_manager, 'get_proposal_votes', return_value=[]):
-                with patch.object(proposal_manager, 'get_vote_summary', return_value=vote_summary):
-                    with patch.object(proposal_manager, '_update_proposal_status') as mock_update:
+        with patch.object(proposal_manager, "get_proposal", return_value=mock_proposal):
+            with patch.object(proposal_manager, "get_proposal_votes", return_value=[]):
+                with patch.object(
+                    proposal_manager, "get_vote_summary", return_value=vote_summary
+                ):
+                    with patch.object(
+                        proposal_manager, "_update_proposal_status"
+                    ) as mock_update:
 
                         proposal_manager._evaluate_proposal_status("proposal123")
 
         mock_update.assert_called_once_with("proposal123", ProposalStatus.REJECTED)
 
-    def test_update_proposal_status_with_changeset_update(self, proposal_manager, mock_changeset_manager):
+    def test_update_proposal_status_with_changeset_update(
+        self, proposal_manager, mock_changeset_manager
+    ):
         """Test proposal status update also updates changeset state."""
         mock_proposal = Mock()
         mock_proposal.changeset_id = "changeset123"
 
-        with patch.object(proposal_manager, 'get_proposal', return_value=mock_proposal):
-            proposal_manager._update_proposal_status("proposal123", ProposalStatus.APPROVED)
+        with patch.object(proposal_manager, "get_proposal", return_value=mock_proposal):
+            proposal_manager._update_proposal_status(
+                "proposal123", ProposalStatus.APPROVED
+            )
 
         mock_changeset_manager.update_changeset_state.assert_called_once_with(
             "changeset123", ChangesetState.APPROVED
@@ -385,25 +426,35 @@ class TestProposalManager:
         mock_vote = Mock()
         mock_vote.proposal_id = "proposal123"
         mock_vote.user_id = "user456"
-        mock_vote.to_dict.return_value = {"proposal_id": "proposal123", "user_id": "user456"}
+        mock_vote.to_dict.return_value = {
+            "proposal_id": "proposal123",
+            "user_id": "user456",
+        }
 
         proposal_manager._push_vote_to_s3(mock_vote)
 
         mock_s3_sync_manager.write_metadata_to_s3.assert_called_once()
 
-    def test_push_vote_to_s3_failure_handling(self, proposal_manager, mock_s3_sync_manager):
+    def test_push_vote_to_s3_failure_handling(
+        self, proposal_manager, mock_s3_sync_manager
+    ):
         """Test S3 push failure doesn't break operation."""
         mock_vote = Mock()
         mock_vote.proposal_id = "proposal123"
         mock_vote.user_id = "user456"
-        mock_vote.to_dict.return_value = {"proposal_id": "proposal123", "user_id": "user456"}
+        mock_vote.to_dict.return_value = {
+            "proposal_id": "proposal123",
+            "user_id": "user456",
+        }
 
         mock_s3_sync_manager.write_metadata_to_s3.side_effect = Exception("S3 error")
 
         # Should not raise exception
         proposal_manager._push_vote_to_s3(mock_vote)
 
-    def test_push_vote_to_s3_when_not_configured(self, mock_db_session, mock_changeset_manager):
+    def test_push_vote_to_s3_when_not_configured(
+        self, mock_db_session, mock_changeset_manager
+    ):
         """Test S3 push is skipped when S3 is not configured."""
         # Create mock S3 sync manager with s3_config = None
         mock_s3_sync = Mock(spec=S3SyncManager)
@@ -413,13 +464,16 @@ class TestProposalManager:
         proposal_manager = ProposalManager(
             db=mock_db_session,
             s3_sync_manager=mock_s3_sync,
-            changeset_manager=mock_changeset_manager
+            changeset_manager=mock_changeset_manager,
         )
 
         mock_vote = Mock()
         mock_vote.proposal_id = "proposal123"
         mock_vote.user_id = "user456"
-        mock_vote.to_dict.return_value = {"proposal_id": "proposal123", "user_id": "user456"}
+        mock_vote.to_dict.return_value = {
+            "proposal_id": "proposal123",
+            "user_id": "user456",
+        }
 
         # Should not raise exception and should not call parquet_writer
         proposal_manager._push_vote_to_s3(mock_vote)
@@ -427,7 +481,9 @@ class TestProposalManager:
         # Verify parquet_writer was never called
         mock_s3_sync.parquet_writer.write_metadata.assert_not_called()
 
-    def test_push_proposal_to_s3_when_not_configured(self, mock_db_session, mock_changeset_manager):
+    def test_push_proposal_to_s3_when_not_configured(
+        self, mock_db_session, mock_changeset_manager
+    ):
         """Test S3 push is skipped when S3 is not configured."""
         # Create mock S3 sync manager with s3_config = None
         mock_s3_sync = Mock(spec=S3SyncManager)
@@ -437,7 +493,7 @@ class TestProposalManager:
         proposal_manager = ProposalManager(
             db=mock_db_session,
             s3_sync_manager=mock_s3_sync,
-            changeset_manager=mock_changeset_manager
+            changeset_manager=mock_changeset_manager,
         )
 
         mock_proposal = Mock()
@@ -450,7 +506,9 @@ class TestProposalManager:
         # Verify parquet_writer was never called
         mock_s3_sync.parquet_writer.write_metadata.assert_not_called()
 
-    def test_database_transaction_rollback_on_error(self, proposal_manager, mock_db_session, mock_changeset_manager, mock_changeset):
+    def test_database_transaction_rollback_on_error(
+        self, proposal_manager, mock_db_session, mock_changeset_manager, mock_changeset
+    ):
         """Test database rollback on error."""
         mock_changeset_manager.get_changeset.return_value = mock_changeset
         mock_db_session.execute.side_effect = Exception("Database error")
@@ -460,7 +518,7 @@ class TestProposalManager:
                 changeset_id="changeset123",
                 title="Test Proposal",
                 description="Test description",
-                created_by="user123"
+                created_by="user123",
             )
 
         # Verify rollback was called on vote operation error

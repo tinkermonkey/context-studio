@@ -16,7 +16,9 @@ from utils.logger import get_logger
 logger = get_logger(__name__)
 
 
-def to_node_out(structure_node: StructureNode, include_embeddings: bool = True) -> NodeOut:  # noqa: E501
+def to_node_out(
+    structure_node: StructureNode, include_embeddings: bool = True
+) -> NodeOut:  # noqa: E501
     """
     Convert a database StructureNode model to API NodeOut model.
 
@@ -34,27 +36,37 @@ def to_node_out(structure_node: StructureNode, include_embeddings: bool = True) 
     # Only process embeddings if explicitly requested (to avoid expensive operations in list views)  # noqa: E501
     if include_embeddings:
         # Check if the attribute is loaded (not deferred) before accessing
-        if hasattr(structure_node, 'title_embedding') and structure_node.title_embedding:  # noqa: E501
+        if (
+            hasattr(structure_node, "title_embedding")
+            and structure_node.title_embedding
+        ):  # noqa: E501
             try:
                 # Embeddings are stored as raw numpy float32 bytes via np.float32.tobytes()  # noqa: E501
-                title_embedding = np.frombuffer(bytes(structure_node.title_embedding), dtype=np.float32).tolist()  # noqa: E501
+                title_embedding = np.frombuffer(
+                    bytes(structure_node.title_embedding), dtype=np.float32
+                ).tolist()  # noqa: E501
             except Exception as e:
                 logger.warning(
                     f"Failed to deserialize title embedding for node {structure_node.id}: {e}. "  # noqa: E501
                     "Embedding will be excluded from response, which may impact semantic search.",  # noqa: E501
-                    exc_info=True
+                    exc_info=True,
                 )
                 title_embedding = None
 
-        if hasattr(structure_node, 'definition_embedding') and structure_node.definition_embedding:  # noqa: E501
+        if (
+            hasattr(structure_node, "definition_embedding")
+            and structure_node.definition_embedding
+        ):  # noqa: E501
             try:
                 # Embeddings are stored as raw numpy float32 bytes via np.float32.tobytes()  # noqa: E501
-                definition_embedding = np.frombuffer(bytes(structure_node.definition_embedding), dtype=np.float32).tolist()  # noqa: E501
+                definition_embedding = np.frombuffer(
+                    bytes(structure_node.definition_embedding), dtype=np.float32
+                ).tolist()  # noqa: E501
             except Exception as e:
                 logger.warning(
                     f"Failed to deserialize definition embedding for node {structure_node.id}: {e}. "  # noqa: E501
                     "Embedding will be excluded from response, which may impact semantic search.",  # noqa: E501
-                    exc_info=True
+                    exc_info=True,
                 )
                 definition_embedding = None
 
@@ -82,16 +94,28 @@ def to_node_out(structure_node: StructureNode, include_embeddings: bool = True) 
 
     return NodeOut(
         id=node_id,
-        node_type=NodeTypeEnum(structure_node.node_type.value),  # Convert to NodeTypeEnum  # noqa: E501
-        parent_node_id=UUID(str(structure_node.parent_node_id)) if structure_node.parent_node_id else None,  # noqa: E501
+        node_type=NodeTypeEnum(
+            structure_node.node_type.value
+        ),  # Convert to NodeTypeEnum  # noqa: E501
+        parent_node_id=(
+            UUID(str(structure_node.parent_node_id))
+            if structure_node.parent_node_id
+            else None
+        ),  # noqa: E501
         title=str(structure_node.title),
-        definition=str(structure_node.definition) if structure_node.definition else None,  # noqa: E501
-        structural_predicate_id=UUID(str(structure_node.structural_predicate_id)) if structure_node.structural_predicate_id else None,  # noqa: E501
+        definition=(
+            str(structure_node.definition) if structure_node.definition else None
+        ),  # noqa: E501
+        structural_predicate_id=(
+            UUID(str(structure_node.structural_predicate_id))
+            if structure_node.structural_predicate_id
+            else None
+        ),  # noqa: E501
         title_embedding=title_embedding,
         definition_embedding=definition_embedding,
         created_at=str(structure_node.created_at.isoformat()) if structure_node.created_at else None,  # type: ignore  # noqa: E501
         version=int(structure_node.version),
-        last_modified=str(structure_node.last_modified.isoformat()) if structure_node.last_modified else None  # type: ignore  # noqa: E501
+        last_modified=str(structure_node.last_modified.isoformat()) if structure_node.last_modified else None,  # type: ignore  # noqa: E501
     )
 
 
@@ -110,12 +134,16 @@ def to_node_link_out(link: StructureNodeLink) -> NodeLinkOut:
         source_node_id=UUID(str(link.source_node_id)),
         target_node_id=UUID(str(link.target_node_id)),
         predicate=str(link.predicate),
-        predicate_id=UUID(str(link.predicate_id)) if link.predicate_id else None,  # noqa: E501
-        created_at=str(link.created_at.isoformat()) if link.created_at else None  # type: ignore  # noqa: E501
+        predicate_id=(
+            UUID(str(link.predicate_id)) if link.predicate_id else None
+        ),  # noqa: E501
+        created_at=str(link.created_at.isoformat()) if link.created_at else None,  # type: ignore  # noqa: E501
     )
 
 
-def nodes_to_paginated_response(structure_nodes: List[StructureNode], total: int, skip: int, limit: int) -> dict:  # noqa: E501
+def nodes_to_paginated_response(
+    structure_nodes: List[StructureNode], total: int, skip: int, limit: int
+) -> dict:  # noqa: E501
     """
     Convert a list of structure_nodes and pagination info to a paginated response.  # noqa: E501
 
@@ -129,10 +157,13 @@ def nodes_to_paginated_response(structure_nodes: List[StructureNode], total: int
         Dictionary for PaginatedNodesResponse
     """
     return {
-        "data": [to_node_out(structure_node, include_embeddings=False) for structure_node in structure_nodes],  # noqa: E501
+        "data": [
+            to_node_out(structure_node, include_embeddings=False)
+            for structure_node in structure_nodes
+        ],  # noqa: E501
         "total": total,
         "skip": skip,
-        "limit": limit
+        "limit": limit,
     }
 
 

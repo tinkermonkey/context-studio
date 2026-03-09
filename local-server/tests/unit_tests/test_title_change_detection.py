@@ -6,7 +6,10 @@ Tests edge cases and error handling for the title change detection logic.
 
 import sys
 import os
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+
+sys.path.append(
+    os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+)
 
 import pytest  # noqa: E402
 import json  # noqa: E402
@@ -23,9 +26,7 @@ class TestTitleChangeDetection:
     def event_processor(self):
         """Create a mock EventProcessor for testing."""
         processor = EventProcessor(
-            database_url="sqlite:///:memory:",
-            poll_interval=1.0,
-            max_events=10
+            database_url="sqlite:///:memory:", poll_interval=1.0, max_events=10
         )
         # Mock the logger to avoid logging during tests
         processor.logger = Mock()
@@ -38,17 +39,11 @@ class TestTitleChangeDetection:
         event = Mock()
         event.record_id = str(uuid4())
         event.operation = "update"
-        event.old_data = json.dumps({
-            "title": "old title",
-            "definition": "test"
-        })
-        event.new_data = json.dumps({
-            "title": "new title",
-            "definition": "test"
-        })
+        event.old_data = json.dumps({"title": "old title", "definition": "test"})
+        event.new_data = json.dumps({"title": "new title", "definition": "test"})
 
         # Mock the enqueue method
-        with patch.object(event_processor, '_enqueue_nlp_reanalysis') as mock_enqueue:
+        with patch.object(event_processor, "_enqueue_nlp_reanalysis") as mock_enqueue:
             event_processor._handle_title_change(event)
 
             # Verify enqueue was called with correct parameters
@@ -60,17 +55,15 @@ class TestTitleChangeDetection:
         event = Mock()
         event.record_id = str(uuid4())
         event.operation = "update"
-        event.old_data = json.dumps({
-            "title": "same title",
-            "definition": "old definition"
-        })
-        event.new_data = json.dumps({
-            "title": "same title",
-            "definition": "new definition"
-        })
+        event.old_data = json.dumps(
+            {"title": "same title", "definition": "old definition"}
+        )
+        event.new_data = json.dumps(
+            {"title": "same title", "definition": "new definition"}
+        )
 
         # Mock the enqueue method
-        with patch.object(event_processor, '_enqueue_nlp_reanalysis') as mock_enqueue:
+        with patch.object(event_processor, "_enqueue_nlp_reanalysis") as mock_enqueue:
             event_processor._handle_title_change(event)
 
             # Verify enqueue was NOT called
@@ -86,7 +79,7 @@ class TestTitleChangeDetection:
         event.new_data = json.dumps({"title": "new title"})
 
         # Should not raise exception
-        with patch.object(event_processor, '_enqueue_nlp_reanalysis') as mock_enqueue:
+        with patch.object(event_processor, "_enqueue_nlp_reanalysis") as mock_enqueue:
             event_processor._handle_title_change(event)
 
             # Verify error was logged
@@ -105,7 +98,7 @@ class TestTitleChangeDetection:
         event.new_data = "not valid json{"
 
         # Should not raise exception
-        with patch.object(event_processor, '_enqueue_nlp_reanalysis') as mock_enqueue:
+        with patch.object(event_processor, "_enqueue_nlp_reanalysis") as mock_enqueue:
             event_processor._handle_title_change(event)
 
             # Verify error was logged
@@ -124,7 +117,7 @@ class TestTitleChangeDetection:
         event.new_data = json.dumps({"title": "new title"})
 
         # Should not trigger re-analysis (no old title to compare)
-        with patch.object(event_processor, '_enqueue_nlp_reanalysis') as mock_enqueue:
+        with patch.object(event_processor, "_enqueue_nlp_reanalysis") as mock_enqueue:
             event_processor._handle_title_change(event)
 
             # Verify enqueue was NOT called
@@ -140,7 +133,7 @@ class TestTitleChangeDetection:
         event.new_data = json.dumps({"definition": "test"})  # No title
 
         # Should not trigger re-analysis (no new title)
-        with patch.object(event_processor, '_enqueue_nlp_reanalysis') as mock_enqueue:
+        with patch.object(event_processor, "_enqueue_nlp_reanalysis") as mock_enqueue:
             event_processor._handle_title_change(event)
 
             # Verify enqueue was NOT called
@@ -156,7 +149,7 @@ class TestTitleChangeDetection:
         event.new_data = json.dumps({"title": ""})
 
         # Should not trigger re-analysis (empty titles)
-        with patch.object(event_processor, '_enqueue_nlp_reanalysis') as mock_enqueue:
+        with patch.object(event_processor, "_enqueue_nlp_reanalysis") as mock_enqueue:
             event_processor._handle_title_change(event)
 
             # Verify enqueue was NOT called
@@ -172,7 +165,7 @@ class TestTitleChangeDetection:
         event.new_data = json.dumps({"title": "new title"})
 
         # Should not trigger re-analysis (no old data)
-        with patch.object(event_processor, '_enqueue_nlp_reanalysis') as mock_enqueue:
+        with patch.object(event_processor, "_enqueue_nlp_reanalysis") as mock_enqueue:
             event_processor._handle_title_change(event)
 
             # Verify enqueue was NOT called
@@ -188,7 +181,7 @@ class TestTitleChangeDetection:
         event.new_data = None
 
         # Should not trigger re-analysis (no new data)
-        with patch.object(event_processor, '_enqueue_nlp_reanalysis') as mock_enqueue:
+        with patch.object(event_processor, "_enqueue_nlp_reanalysis") as mock_enqueue:
             event_processor._handle_title_change(event)
 
             # Verify enqueue was NOT called
@@ -204,7 +197,7 @@ class TestTitleChangeDetection:
         event.new_data = json.dumps({"title": "   "})
 
         # Should not trigger re-analysis (whitespace-only titles are functionally empty)
-        with patch.object(event_processor, '_enqueue_nlp_reanalysis') as mock_enqueue:
+        with patch.object(event_processor, "_enqueue_nlp_reanalysis") as mock_enqueue:
             event_processor._handle_title_change(event)
 
             # Verify enqueue was NOT called (whitespace is treated as valid but no change)
@@ -220,7 +213,7 @@ class TestTitleChangeDetection:
         event.new_data = json.dumps({"title": "bank"})
 
         # Should trigger re-analysis (case change is considered a change)
-        with patch.object(event_processor, '_enqueue_nlp_reanalysis') as mock_enqueue:
+        with patch.object(event_processor, "_enqueue_nlp_reanalysis") as mock_enqueue:
             event_processor._handle_title_change(event)
 
             # Verify enqueue WAS called (case change counts as title change)
@@ -229,7 +222,7 @@ class TestTitleChangeDetection:
     def test_enqueue_nlp_reanalysis_task_manager_not_initialized(self, event_processor):
         """Test handling when TaskManager is not initialized."""
 
-        with patch('services.task_manager.get_task_manager') as mock_get_tm:
+        with patch("services.task_manager.get_task_manager") as mock_get_tm:
             mock_get_tm.side_effect = RuntimeError("TaskManager not initialized")
 
             # Should not raise exception
@@ -241,7 +234,7 @@ class TestTitleChangeDetection:
     def test_enqueue_nlp_reanalysis_exception_handling(self, event_processor):
         """Test exception handling in _enqueue_nlp_reanalysis."""
 
-        with patch('services.task_manager.get_task_manager') as mock_get_tm:
+        with patch("services.task_manager.get_task_manager") as mock_get_tm:
             mock_get_tm.side_effect = Exception("Unexpected error")
 
             # Should not raise exception
@@ -260,7 +253,7 @@ class TestTitleChangeDetection:
         event.new_data = {"title": "new title"}  # Already a dict
 
         # Should handle gracefully
-        with patch.object(event_processor, '_enqueue_nlp_reanalysis') as mock_enqueue:
+        with patch.object(event_processor, "_enqueue_nlp_reanalysis") as mock_enqueue:
             event_processor._handle_title_change(event)
 
             # Verify enqueue was called
@@ -276,7 +269,7 @@ class TestTitleChangeDetection:
         event.new_data = json.dumps({"title": "   "})  # Whitespace only
 
         # Should not trigger re-analysis (empty after strip)
-        with patch.object(event_processor, '_enqueue_nlp_reanalysis') as mock_enqueue:
+        with patch.object(event_processor, "_enqueue_nlp_reanalysis") as mock_enqueue:
             event_processor._handle_title_change(event)
 
             # Verify warning was logged
@@ -297,7 +290,7 @@ class TestTitleChangeDetection:
         event.new_data = json.dumps({"title": long_title})
 
         # Should not trigger re-analysis (title too long)
-        with patch.object(event_processor, '_enqueue_nlp_reanalysis') as mock_enqueue:
+        with patch.object(event_processor, "_enqueue_nlp_reanalysis") as mock_enqueue:
             event_processor._handle_title_change(event)
 
             # Verify warning was logged
@@ -331,16 +324,22 @@ class TestTitleChangeDetection:
             enqueue_calls.append((node_id, title))
             time.sleep(0.1)  # Simulate slow processing
 
-        with patch.object(event_processor, '_enqueue_nlp_reanalysis', side_effect=slow_enqueue):
+        with patch.object(
+            event_processor, "_enqueue_nlp_reanalysis", side_effect=slow_enqueue
+        ):
             # Start processing first event in thread 1
-            thread1 = threading.Thread(target=event_processor._handle_title_change, args=(event1,))
+            thread1 = threading.Thread(
+                target=event_processor._handle_title_change, args=(event1,)
+            )
             thread1.start()
 
             # Small delay to ensure thread1 acquires lock
             time.sleep(0.01)
 
             # Try to process second event for same node in thread 2
-            thread2 = threading.Thread(target=event_processor._handle_title_change, args=(event2,))
+            thread2 = threading.Thread(
+                target=event_processor._handle_title_change, args=(event2,)
+            )
             thread2.start()
 
             thread1.join()
@@ -360,9 +359,7 @@ class TestNLPReanalysisEdgeCases:
     def event_processor(self):
         """Create a mock EventProcessor for testing."""
         processor = EventProcessor(
-            database_url="sqlite:///:memory:",
-            poll_interval=1.0,
-            max_events=10
+            database_url="sqlite:///:memory:", poll_interval=1.0, max_events=10
         )
         processor.logger = Mock()
         return processor
@@ -371,7 +368,7 @@ class TestNLPReanalysisEdgeCases:
     async def test_nlp_pipeline_not_initialized(self, event_processor):
         """Test handling when NLP pipeline is not initialized."""
 
-        with patch('nlp.pipeline.get_pipeline') as mock_get_pipeline:
+        with patch("nlp.pipeline.get_pipeline") as mock_get_pipeline:
             mock_pipeline = Mock()
             mock_pipeline.is_initialized.return_value = False
             mock_get_pipeline.return_value = mock_pipeline
@@ -379,14 +376,14 @@ class TestNLPReanalysisEdgeCases:
             result = await event_processor._perform_nlp_reanalysis(str(uuid4()), "test")
 
             # Should return error result
-            assert result['success'] is False
-            assert 'error' in result
+            assert result["success"] is False
+            assert "error" in result
 
     @pytest.mark.asyncio
     async def test_nlp_pipeline_unavailable(self, event_processor):
         """Test handling when NLP pipeline is unavailable."""
 
-        with patch('nlp.pipeline.get_pipeline') as mock_get_pipeline:
+        with patch("nlp.pipeline.get_pipeline") as mock_get_pipeline:
             mock_pipeline = Mock()
             mock_pipeline.is_initialized.return_value = True
             mock_pipeline.get_nlp.return_value = None
@@ -395,14 +392,14 @@ class TestNLPReanalysisEdgeCases:
             result = await event_processor._perform_nlp_reanalysis(str(uuid4()), "test")
 
             # Should return error result
-            assert result['success'] is False
-            assert 'error' in result
+            assert result["success"] is False
+            assert "error" in result
 
     @pytest.mark.asyncio
     async def test_node_not_found(self, event_processor):
         """Test handling when structure node is not found."""
 
-        with patch('nlp.pipeline.get_pipeline') as mock_get_pipeline:
+        with patch("nlp.pipeline.get_pipeline") as mock_get_pipeline:
             mock_pipeline = Mock()
             mock_pipeline.is_initialized.return_value = True
             mock_nlp = Mock()
@@ -411,30 +408,36 @@ class TestNLPReanalysisEdgeCases:
             mock_get_pipeline.return_value = mock_pipeline
 
             # Mock process_nlp_result
-            with patch('nlp.processors.process_nlp_result') as mock_process:
+            with patch("nlp.processors.process_nlp_result") as mock_process:
                 mock_process.return_value = Mock(tokens=[])
 
                 # Mock WordSenseService to raise ValueError (node not found)
-                with patch('services.word_sense_service.WordSenseService') as mock_wss:
+                with patch("services.word_sense_service.WordSenseService") as mock_wss:
                     mock_service = Mock()
-                    mock_service.update_word_senses.side_effect = ValueError("StructureNode not found")
+                    mock_service.update_word_senses.side_effect = ValueError(
+                        "StructureNode not found"
+                    )
                     mock_wss.return_value = mock_service
 
                     # Mock _get_managed_session
-                    with patch.object(event_processor, '_get_managed_session') as mock_session:
+                    with patch.object(
+                        event_processor, "_get_managed_session"
+                    ) as mock_session:
                         mock_session.return_value.__enter__.return_value = Mock()
 
-                        result = await event_processor._perform_nlp_reanalysis(str(uuid4()), "test")
+                        result = await event_processor._perform_nlp_reanalysis(
+                            str(uuid4()), "test"
+                        )
 
                         # Should return error result
-                        assert result['success'] is False
-                        assert 'error' in result
+                        assert result["success"] is False
+                        assert "error" in result
 
     @pytest.mark.asyncio
     async def test_transient_error_retry_success(self, event_processor):
         """Test retry logic succeeds after transient error."""
 
-        with patch('nlp.pipeline.get_pipeline') as mock_get_pipeline:
+        with patch("nlp.pipeline.get_pipeline") as mock_get_pipeline:
             mock_pipeline = Mock()
             mock_pipeline.is_initialized.return_value = True
             mock_nlp = Mock()
@@ -444,7 +447,7 @@ class TestNLPReanalysisEdgeCases:
             mock_get_pipeline.return_value = mock_pipeline
 
             # Mock process_nlp_result
-            with patch('nlp.processors.process_nlp_result') as mock_process:
+            with patch("nlp.processors.process_nlp_result") as mock_process:
                 mock_process.return_value = Mock(tokens=[])
 
                 # Mock WordSenseService - fail first time, succeed second time
@@ -456,28 +459,34 @@ class TestNLPReanalysisEdgeCases:
                         raise ConnectionError("Temporary connection error")
                     return []
 
-                with patch('services.word_sense_service.WordSenseService') as mock_wss:
+                with patch("services.word_sense_service.WordSenseService") as mock_wss:
                     mock_service = Mock()
                     mock_service.extract_word_senses.return_value = []
-                    mock_service.update_word_senses.side_effect = update_word_senses_side_effect
+                    mock_service.update_word_senses.side_effect = (
+                        update_word_senses_side_effect
+                    )
                     mock_wss.return_value = mock_service
 
                     # Mock _get_managed_session and db.begin()
-                    with patch.object(event_processor, '_get_managed_session') as mock_session:
+                    with patch.object(
+                        event_processor, "_get_managed_session"
+                    ) as mock_session:
                         mock_db = MagicMock()
                         mock_session.return_value.__enter__.return_value = mock_db
 
-                        result = await event_processor._perform_nlp_reanalysis(str(uuid4()), "test")
+                        result = await event_processor._perform_nlp_reanalysis(
+                            str(uuid4()), "test"
+                        )
 
                         # Should succeed after retry
-                        assert result['success'] is True
-                        assert result['attempts'] == 2
+                        assert result["success"] is True
+                        assert result["attempts"] == 2
 
     @pytest.mark.asyncio
     async def test_transient_error_retry_exhausted(self, event_processor):
         """Test retry logic exhausts all attempts with transient errors."""
 
-        with patch('nlp.pipeline.get_pipeline') as mock_get_pipeline:
+        with patch("nlp.pipeline.get_pipeline") as mock_get_pipeline:
             mock_pipeline = Mock()
             mock_pipeline.is_initialized.return_value = True
             mock_nlp = Mock()
@@ -487,33 +496,39 @@ class TestNLPReanalysisEdgeCases:
             mock_get_pipeline.return_value = mock_pipeline
 
             # Mock process_nlp_result
-            with patch('nlp.processors.process_nlp_result') as mock_process:
+            with patch("nlp.processors.process_nlp_result") as mock_process:
                 mock_process.return_value = Mock(tokens=[])
 
                 # Mock WordSenseService - always fail with transient error
-                with patch('services.word_sense_service.WordSenseService') as mock_wss:
+                with patch("services.word_sense_service.WordSenseService") as mock_wss:
                     mock_service = Mock()
                     mock_service.extract_word_senses.return_value = []
-                    mock_service.update_word_senses.side_effect = ConnectionError("Persistent connection error")
+                    mock_service.update_word_senses.side_effect = ConnectionError(
+                        "Persistent connection error"
+                    )
                     mock_wss.return_value = mock_service
 
                     # Mock _get_managed_session and db.begin()
-                    with patch.object(event_processor, '_get_managed_session') as mock_session:
+                    with patch.object(
+                        event_processor, "_get_managed_session"
+                    ) as mock_session:
                         mock_db = MagicMock()
                         mock_session.return_value.__enter__.return_value = mock_db
 
-                        result = await event_processor._perform_nlp_reanalysis(str(uuid4()), "test")
+                        result = await event_processor._perform_nlp_reanalysis(
+                            str(uuid4()), "test"
+                        )
 
                         # Should fail after all retries
-                        assert result['success'] is False
-                        assert result['attempts'] == event_processor.NLP_RETRY_ATTEMPTS
-                        assert 'error' in result
+                        assert result["success"] is False
+                        assert result["attempts"] == event_processor.NLP_RETRY_ATTEMPTS
+                        assert "error" in result
 
     @pytest.mark.asyncio
     async def test_non_transient_error_no_retry(self, event_processor):
         """Test non-transient errors fail immediately without retry."""
 
-        with patch('nlp.pipeline.get_pipeline') as mock_get_pipeline:
+        with patch("nlp.pipeline.get_pipeline") as mock_get_pipeline:
             mock_pipeline = Mock()
             mock_pipeline.is_initialized.return_value = True
             mock_nlp = Mock()
@@ -523,33 +538,39 @@ class TestNLPReanalysisEdgeCases:
             mock_get_pipeline.return_value = mock_pipeline
 
             # Mock process_nlp_result
-            with patch('nlp.processors.process_nlp_result') as mock_process:
+            with patch("nlp.processors.process_nlp_result") as mock_process:
                 mock_process.return_value = Mock(tokens=[])
 
                 # Mock WordSenseService - fail with non-transient error
-                with patch('services.word_sense_service.WordSenseService') as mock_wss:
+                with patch("services.word_sense_service.WordSenseService") as mock_wss:
                     mock_service = Mock()
                     mock_service.extract_word_senses.return_value = []
-                    mock_service.update_word_senses.side_effect = ValueError("Invalid node ID")
+                    mock_service.update_word_senses.side_effect = ValueError(
+                        "Invalid node ID"
+                    )
                     mock_wss.return_value = mock_service
 
                     # Mock _get_managed_session and db.begin()
-                    with patch.object(event_processor, '_get_managed_session') as mock_session:
+                    with patch.object(
+                        event_processor, "_get_managed_session"
+                    ) as mock_session:
                         mock_db = MagicMock()
                         mock_session.return_value.__enter__.return_value = mock_db
 
-                        result = await event_processor._perform_nlp_reanalysis(str(uuid4()), "test")
+                        result = await event_processor._perform_nlp_reanalysis(
+                            str(uuid4()), "test"
+                        )
 
                         # Should fail immediately without retries
-                        assert result['success'] is False
-                        assert result['attempts'] == 1  # Only first attempt
-                        assert 'error' in result
+                        assert result["success"] is False
+                        assert result["attempts"] == 1  # Only first attempt
+                        assert "error" in result
 
     @pytest.mark.asyncio
     async def test_transaction_rollback_on_error(self, event_processor):
         """Test that database transaction is properly managed on error."""
 
-        with patch('nlp.pipeline.get_pipeline') as mock_get_pipeline:
+        with patch("nlp.pipeline.get_pipeline") as mock_get_pipeline:
             mock_pipeline = Mock()
             mock_pipeline.is_initialized.return_value = True
             mock_nlp = Mock()
@@ -558,27 +579,33 @@ class TestNLPReanalysisEdgeCases:
 
             mock_get_pipeline.return_value = mock_pipeline
 
-            with patch('nlp.processors.process_nlp_result') as mock_process:
+            with patch("nlp.processors.process_nlp_result") as mock_process:
                 mock_process.return_value = Mock(tokens=[])
 
-                with patch('services.word_sense_service.WordSenseService') as mock_wss:
+                with patch("services.word_sense_service.WordSenseService") as mock_wss:
                     mock_service = Mock()
                     mock_service.extract_word_senses.return_value = []
                     # Simulate error during transaction
-                    mock_service.update_word_senses.side_effect = ValueError("Database error")
+                    mock_service.update_word_senses.side_effect = ValueError(
+                        "Database error"
+                    )
                     mock_wss.return_value = mock_service
 
-                    with patch.object(event_processor, '_get_managed_session') as mock_session:
+                    with patch.object(
+                        event_processor, "_get_managed_session"
+                    ) as mock_session:
                         mock_db = MagicMock()
                         mock_session.return_value.__enter__.return_value = mock_db
 
-                        result = await event_processor._perform_nlp_reanalysis(str(uuid4()), "test")
+                        result = await event_processor._perform_nlp_reanalysis(
+                            str(uuid4()), "test"
+                        )
 
                         # Verify transaction begin was called
                         assert mock_db.begin.called
 
                         # Should fail
-                        assert result['success'] is False
+                        assert result["success"] is False
 
 
 if __name__ == "__main__":

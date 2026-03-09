@@ -26,6 +26,7 @@ logger = get_logger(__name__)
 @dataclass
 class SyncOperation:
     """Represents a synchronization operation."""
+
     id: str
     operation_type: str
     started_at: datetime
@@ -44,18 +45,23 @@ def row_to_sync_operation(row) -> SyncOperation:
         completed_at=datetime.fromisoformat(row[3]) if row[3] else None,
         entity_count=row[4] or 0,
         sync_strategy=row[5] or "",
-        metadata=json.loads(row[6]) if row[6] else {}
+        metadata=json.loads(row[6]) if row[6] else {},
     )
 
 
 class IncrementalSyncEngine:
     """Handles efficient incremental synchronization using partitioned queries."""
-    
-    def __init__(self, db: Session, duckdb_service: DuckDBService, 
-                 version_manager: VersionManager, s3_config: Dict[str, str]):
+
+    def __init__(
+        self,
+        db: Session,
+        duckdb_service: DuckDBService,
+        version_manager: VersionManager,
+        s3_config: Dict[str, str],
+    ):
         """
         Initialize the incremental sync engine.
-        
+
         Args:
             db: SQLAlchemy database session
             duckdb_service: DuckDB service for analytical queries
@@ -67,30 +73,34 @@ class IncrementalSyncEngine:
         self.version_manager = version_manager
         self.s3_config = s3_config
         logger.info("IncrementalSyncEngine initialized")
-    
-    def sync_incremental(self, since: datetime, until: Optional[datetime] = None,
-                        entity_types: Optional[List[str]] = None,
-                        sync_strategy: str = "auto") -> Dict[str, Any]:
+
+    def sync_incremental(
+        self,
+        since: datetime,
+        until: Optional[datetime] = None,
+        entity_types: Optional[List[str]] = None,
+        sync_strategy: str = "auto",
+    ) -> Dict[str, Any]:
         """
         Perform incremental sync for specified time range and entity types.
-        
+
         Args:
             since: Start timestamp for sync
             until: End timestamp (defaults to now)
             entity_types: Optional list of entity types to sync
             sync_strategy: Sync strategy ('auto', 'parallel', 'sequential')
-            
+
         Returns:
             Sync operation results
         """
         if until is None:
             until = datetime.now(timezone.utc)
-        
+
         logger.info(f"Starting incremental sync from {since} to {until}")
-        
+
         # Create sync operation record
         sync_operation = self._create_sync_operation(since, until, entity_types)
-        
+
         try:
             # Determine optimal sync strategy if auto
             if sync_strategy == "auto":
@@ -98,18 +108,20 @@ class IncrementalSyncEngine:
                 try:
                     time_range_days = (until - since).days
                 except (TypeError, AttributeError) as e:
-                    logger.debug(f"Using default time range due to date calculation issue: {e}")
+                    logger.debug(
+                        f"Using default time range due to date calculation issue: {e}"
+                    )
                     time_range_days = 7  # Default to 7 days
 
                 optimal_strategy = self.get_optimal_sync_strategy(
                     target_entity_count=1000,  # Estimate
-                    time_range_days=time_range_days
+                    time_range_days=time_range_days,
                 )
                 sync_strategy = optimal_strategy["recommended_strategy"]
-            
+
             # Generate partitioned query based on time range
             partitions = self._generate_time_partitions(since, until)
-            
+
             sync_results = {
                 "operation_id": sync_operation.id,
                 "synced_changes": 0,
@@ -118,95 +130,108 @@ class IncrementalSyncEngine:
                 "sync_duration_seconds": 0,
                 "partitions_processed": len(partitions),
                 "strategy_used": sync_strategy,
-                "errors": []
+                "errors": [],
             }
-            
+
             start_time = time.time()
-            
+
             # Execute sync based on strategy
             if sync_strategy == "parallel" and len(partitions) > 1:
-                sync_results.update(self._sync_partitions_parallel(partitions, entity_types))
+                sync_results.update(
+                    self._sync_partitions_parallel(partitions, entity_types)
+                )
             else:
-                sync_results.update(self._sync_partitions_sequential(partitions, entity_types))
-            
+                sync_results.update(
+                    self._sync_partitions_sequential(partitions, entity_types)
+                )
+
             sync_results["sync_duration_seconds"] = time.time() - start_time
-            
+
             # Update sync operation with results
             self._complete_sync_operation(sync_operation.id, sync_results)
-            
-            logger.info(f"Incremental sync completed: {sync_results['synced_changes']} changes in {sync_results['sync_duration_seconds']:.1f}s")
-            
+
+            logger.info(
+                f"Incremental sync completed: {sync_results['synced_changes']} changes in {sync_results['sync_duration_seconds']:.1f}s"
+            )
+
             return sync_results
-            
+
         except Exception as e:
             logger.error(f"Incremental sync failed: {e}")
-            
+
             # Record sync failure
             error_details = {
                 "error": str(e),
                 "error_type": type(e).__name__,
-                "timestamp": datetime.now(timezone.utc).isoformat()
+                "timestamp": datetime.now(timezone.utc).isoformat(),
             }
-            
+
             self._fail_sync_operation(sync_operation.id, [error_details])
-            
+
             return {
                 "operation_id": sync_operation.id,
                 "status": "failed",
                 "error": str(e),
-                "sync_duration_seconds": time.time() - start_time if 'start_time' in locals() else 0
+                "sync_duration_seconds": (
+                    time.time() - start_time if "start_time" in locals() else 0
+                ),
             }
-    
-    def get_optimal_sync_strategy(self, target_entity_count: int, 
-                                 time_range_days: int) -> Dict[str, Any]:
+
+    def get_optimal_sync_strategy(
+        self, target_entity_count: int, time_range_days: int
+    ) -> Dict[str, Any]:
         """
         Determine optimal sync strategy based on data volume.
-        
+
         Args:
             target_entity_count: Estimated number of entities
             time_range_days: Time range in days
-            
+
         Returns:
             Optimal sync strategy recommendation
         """
-        logger.debug(f"Determining optimal sync strategy for {target_entity_count} entities over {time_range_days} days")
-        
+        logger.debug(
+            f"Determining optimal sync strategy for {target_entity_count} entities over {time_range_days} days"
+        )
+
         # Estimate data volume
         estimated_changes = self._estimate_change_volume(time_range_days)
-        
+
         if estimated_changes < 1000:
             strategy = "sequential"
             batch_size = 100
             parallelization = False
         elif target_entity_count < 10000:
-            strategy = "sequential"  
+            strategy = "sequential"
             batch_size = 500
             parallelization = False
         else:
             strategy = "parallel"
             batch_size = 1000
             parallelization = True
-        
+
         return {
             "recommended_strategy": strategy,
             "estimated_changes": estimated_changes,
             "batch_size": batch_size,
             "parallelization": parallelization,
-            "reasoning": self._get_strategy_reasoning(strategy, estimated_changes, target_entity_count)
+            "reasoning": self._get_strategy_reasoning(
+                strategy, estimated_changes, target_entity_count
+            ),
         }
-    
+
     def get_sync_history(self, limit: int = 50) -> List[SyncOperation]:
         """
         Get history of sync operations.
-        
+
         Args:
             limit: Maximum number of operations to return
-            
+
         Returns:
             List of SyncOperation objects
         """
         logger.debug(f"Getting sync history (limit: {limit})")
-        
+
         try:
             results = self.db.execute(
                 text("""
@@ -214,33 +239,35 @@ class IncrementalSyncEngine:
                     ORDER BY started_at DESC
                     LIMIT :limit
                 """),
-                {"limit": limit}
+                {"limit": limit},
             ).fetchall()
-            
+
             operations = [row_to_sync_operation(row) for row in results]
             logger.debug(f"Found {len(operations)} sync operations")
-            
+
             return operations
-            
+
         except Exception as e:
             logger.error(f"Failed to get sync history: {e}")
             return []
-    
+
     def get_sync_statistics(self, days: int = 30) -> Dict[str, Any]:
         """
         Get sync operation statistics.
-        
+
         Args:
             days: Number of days to analyze
-            
+
         Returns:
             Sync statistics
         """
         logger.debug(f"Getting sync statistics for {days} days")
-        
+
         try:
-            cutoff_date = (datetime.now(timezone.utc) - timedelta(days=days)).isoformat()
-            
+            cutoff_date = (
+                datetime.now(timezone.utc) - timedelta(days=days)
+            ).isoformat()
+
             result = self.db.execute(
                 text("""
                     SELECT
@@ -258,9 +285,9 @@ class IncrementalSyncEngine:
                     FROM sync_operations
                     WHERE started_at >= :cutoff_date
                 """),
-                {"cutoff_date": cutoff_date}
+                {"cutoff_date": cutoff_date},
             ).fetchone()
-            
+
             if result:
                 return {
                     "total_syncs": result.total_syncs or 0,
@@ -268,74 +295,83 @@ class IncrementalSyncEngine:
                     "avg_duration_seconds": result.avg_duration_seconds or 0,
                     "completed_syncs": result.completed_syncs or 0,
                     "failed_syncs": result.failed_syncs or 0,
-                    "success_rate": (result.completed_syncs or 0) / max(result.total_syncs or 1, 1)
+                    "success_rate": (result.completed_syncs or 0)
+                    / max(result.total_syncs or 1, 1),
                 }
             else:
                 return self._get_empty_sync_stats()
-                
+
         except Exception as e:
             logger.error(f"Failed to get sync statistics: {e}")
             return self._get_empty_sync_stats()
-    
-    def _generate_time_partitions(self, since: datetime, until: datetime) -> List[Dict[str, Any]]:
+
+    def _generate_time_partitions(
+        self, since: datetime, until: datetime
+    ) -> List[Dict[str, Any]]:
         """Generate time-based partition queries for efficient S3 access."""
         logger.debug(f"Generating time partitions from {since} to {until}")
-        
+
         partitions = []
         current = since.date()
         end_date = until.date()
-        
+
         while current <= end_date:
-            partitions.append({
-                "year": current.year,
-                "month": current.month,
-                "day": current.day,
-                "date": current,
-                "s3_path_pattern": f"s3://{self.s3_config['bucket']}/changes/year={current.year}/month={current.month:02d}/day={current.day:02d}/*.parquet"
-            })
+            partitions.append(
+                {
+                    "year": current.year,
+                    "month": current.month,
+                    "day": current.day,
+                    "date": current,
+                    "s3_path_pattern": f"s3://{self.s3_config['bucket']}/changes/year={current.year}/month={current.month:02d}/day={current.day:02d}/*.parquet",
+                }
+            )
             current += timedelta(days=1)
-        
+
         logger.debug(f"Generated {len(partitions)} time partitions")
         return partitions
-    
-    def _sync_partitions_sequential(self, partitions: List[Dict[str, Any]], 
-                                   entity_types: Optional[List[str]]) -> Dict[str, Any]:
+
+    def _sync_partitions_sequential(
+        self, partitions: List[Dict[str, Any]], entity_types: Optional[List[str]]
+    ) -> Dict[str, Any]:
         """Sync partitions sequentially."""
         logger.debug(f"Syncing {len(partitions)} partitions sequentially")
-        
+
         results = {
             "synced_changes": 0,
             "new_entities": 0,
             "updated_entities": 0,
-            "errors": []
+            "errors": [],
         }
-        
+
         for i, partition in enumerate(partitions):
             try:
                 partition_result = self._sync_partition(partition, entity_types)
-                
+
                 results["synced_changes"] += partition_result["changes_count"]
                 results["new_entities"] += partition_result["new_entities"]
                 results["updated_entities"] += partition_result["updated_entities"]
-                
-                logger.debug(f"Completed partition {i+1}/{len(partitions)}: {partition_result['changes_count']} changes")
-                
+
+                logger.debug(
+                    f"Completed partition {i+1}/{len(partitions)}: {partition_result['changes_count']} changes"
+                )
+
             except Exception as e:
                 error_details = {
                     "partition": partition["date"].isoformat(),
                     "error": str(e),
-                    "error_type": type(e).__name__
+                    "error_type": type(e).__name__,
                 }
                 results["errors"].append(error_details)
                 logger.warning(f"Partition sync failed for {partition['date']}: {e}")
-        
+
         return results
-    
-    def _sync_partitions_parallel(self, partitions: List[Dict[str, Any]], 
-                                 entity_types: Optional[List[str]]) -> Dict[str, Any]:
+
+    def _sync_partitions_parallel(
+        self, partitions: List[Dict[str, Any]], entity_types: Optional[List[str]]
+    ) -> Dict[str, Any]:
         """Sync partitions in parallel (simplified implementation)."""
         logger.debug(f"Syncing {len(partitions)} partitions in parallel")
-        
+
         # For now, implement as sequential with batching
         # In a full implementation, this would use threading or multiprocessing
         batch_size = 3
@@ -343,105 +379,115 @@ class IncrementalSyncEngine:
             "synced_changes": 0,
             "new_entities": 0,
             "updated_entities": 0,
-            "errors": []
+            "errors": [],
         }
-        
+
         for i in range(0, len(partitions), batch_size):
-            batch = partitions[i:i + batch_size]
-            logger.debug(f"Processing batch {i//batch_size + 1}: {len(batch)} partitions")
-            
+            batch = partitions[i : i + batch_size]
+            logger.debug(
+                f"Processing batch {i//batch_size + 1}: {len(batch)} partitions"
+            )
+
             for partition in batch:
                 try:
                     partition_result = self._sync_partition(partition, entity_types)
-                    
+
                     results["synced_changes"] += partition_result["changes_count"]
                     results["new_entities"] += partition_result["new_entities"]
                     results["updated_entities"] += partition_result["updated_entities"]
-                    
+
                 except Exception as e:
                     error_details = {
                         "partition": partition["date"].isoformat(),
                         "error": str(e),
-                        "error_type": type(e).__name__
+                        "error_type": type(e).__name__,
                     }
                     results["errors"].append(error_details)
-                    logger.warning(f"Parallel partition sync failed for {partition['date']}: {e}")
-        
+                    logger.warning(
+                        f"Parallel partition sync failed for {partition['date']}: {e}"
+                    )
+
         return results
-    
-    def _sync_partition(self, partition: Dict[str, Any], 
-                       entity_types: Optional[List[str]]) -> Dict[str, Any]:
+
+    def _sync_partition(
+        self, partition: Dict[str, Any], entity_types: Optional[List[str]]
+    ) -> Dict[str, Any]:
         """Sync specific time partition."""
         logger.debug(f"Syncing partition for {partition['date']}")
-        
+
         # Build query with optional entity type filtering
         entity_filter = ""
         if entity_types:
             entity_list = "', '".join(entity_types)
             entity_filter = f"AND entity_type IN ('{entity_list}')"
-        
+
         query = f"""
         SELECT * FROM read_parquet('{partition["s3_path_pattern"]}')
         WHERE 1=1 {entity_filter}
         ORDER BY created_at
         """
-        
+
         try:
             # Execute partitioned query
             result_df = self.duckdb.execute_query(query)
-            
+
             if result_df.empty:
                 return {"changes_count": 0, "new_entities": 0, "updated_entities": 0}
-            
+
             # Apply changes to local database
             return self._apply_changes_locally(result_df)
-            
+
         except Exception as e:
             # Partition might not exist (no changes on that day)
             if "No files found" in str(e) or "not found" in str(e).lower():
-                logger.debug(f"No data found for partition {partition['date']} - skipping")
+                logger.debug(
+                    f"No data found for partition {partition['date']} - skipping"
+                )
                 return {"changes_count": 0, "new_entities": 0, "updated_entities": 0}
             raise
-    
+
     def _apply_changes_locally(self, changes_df) -> Dict[str, Any]:
         """Apply remote changes to local SQLite database."""
         logger.debug(f"Applying {len(changes_df)} changes locally")
-        
+
         new_entities = 0
         updated_entities = 0
-        
+
         try:
             for _, change_row in changes_df.iterrows():
                 # Check if entity exists locally
                 entity_exists = self._entity_exists_locally(
-                    change_row['entity_type'], 
-                    change_row['entity_id']
+                    change_row["entity_type"], change_row["entity_id"]
                 )
-                
+
                 # Create or update entity version
                 self.version_manager.create_version(
-                    entity_type=change_row['entity_type'],
-                    entity_id=change_row['entity_id'],
-                    content=json.loads(change_row['content']) if isinstance(change_row['content'], str) else change_row['content'],
-                    author_id=change_row['author_id'],
-                    state=ChangeState.MERGED  # Remote changes are already approved
+                    entity_type=change_row["entity_type"],
+                    entity_id=change_row["entity_id"],
+                    content=(
+                        json.loads(change_row["content"])
+                        if isinstance(change_row["content"], str)
+                        else change_row["content"]
+                    ),
+                    author_id=change_row["author_id"],
+                    state=ChangeState.MERGED,  # Remote changes are already approved
                 )
-                
+
                 if entity_exists:
                     updated_entities += 1
                 else:
                     new_entities += 1
-            
+
             return {
                 "changes_count": len(changes_df),
                 "new_entities": new_entities,
-                "updated_entities": updated_entities
+                "updated_entities": updated_entities,
             }
-            
+
         except Exception as e:
             logger.error(f"Failed to apply changes locally: {e}")
             raise
-    
+
     def _entity_exists_locally(self, entity_type: str, entity_id: str) -> bool:
         """Check if entity exists in local database."""
         try:
@@ -451,44 +497,50 @@ class IncrementalSyncEngine:
                     WHERE entity_type = :entity_type AND entity_id = :entity_id
                     LIMIT 1
                 """),
-                {"entity_type": entity_type, "entity_id": entity_id}
+                {"entity_type": entity_type, "entity_id": entity_id},
             ).fetchone()
-            
+
             return result is not None
-            
+
         except Exception as e:
             logger.warning(f"Failed to check entity existence: {e}")
             return False
-    
+
     def _estimate_change_volume(self, time_range_days: int) -> int:
         """Estimate change volume for time range."""
         # Simple estimation based on recent activity
         try:
             # Handle potential Mock objects in tests
-            if hasattr(time_range_days, '_mock_name'):
-                logger.debug("Mock object detected in time_range_days, using default estimate")
+            if hasattr(time_range_days, "_mock_name"):
+                logger.debug(
+                    "Mock object detected in time_range_days, using default estimate"
+                )
                 return 1000
 
             # Ensure we have a valid integer
             time_range_days = int(time_range_days) if time_range_days is not None else 7
 
             recent_days = min(7, time_range_days)
-            cutoff_date = (datetime.now(timezone.utc) - timedelta(days=recent_days)).isoformat()
-            
+            cutoff_date = (
+                datetime.now(timezone.utc) - timedelta(days=recent_days)
+            ).isoformat()
+
             result = self.db.execute(
                 text("""
                     SELECT COUNT(*) as recent_changes
                     FROM entity_versions
                     WHERE created_at >= :cutoff_date
                 """),
-                {"cutoff_date": cutoff_date}
+                {"cutoff_date": cutoff_date},
             ).fetchone()
-            
+
             recent_changes = result.recent_changes if result else 0
 
             # Handle potential Mock objects in test environment
-            if hasattr(recent_changes, '_mock_name'):
-                logger.debug("Mock object detected in recent_changes, using default value")
+            if hasattr(recent_changes, "_mock_name"):
+                logger.debug(
+                    "Mock object detected in recent_changes, using default value"
+                )
                 recent_changes = 0
 
             # Ensure we have a valid number
@@ -497,15 +549,19 @@ class IncrementalSyncEngine:
             # Extrapolate to full time range
             daily_rate = recent_changes / max(recent_days, 1)
             estimated_changes = int(daily_rate * time_range_days)
-            
-            logger.debug(f"Estimated {estimated_changes} changes for {time_range_days} days")
+
+            logger.debug(
+                f"Estimated {estimated_changes} changes for {time_range_days} days"
+            )
             return estimated_changes
-            
+
         except Exception as e:
             logger.warning(f"Failed to estimate change volume: {e}")
             return 1000  # Default estimate
-    
-    def _get_strategy_reasoning(self, strategy: str, estimated_changes: int, target_entity_count: int) -> str:
+
+    def _get_strategy_reasoning(
+        self, strategy: str, estimated_changes: int, target_entity_count: int
+    ) -> str:
         """Get reasoning for sync strategy choice."""
         if strategy == "sequential":
             return f"Sequential processing recommended due to manageable data volume ({estimated_changes} changes)"
@@ -513,9 +569,13 @@ class IncrementalSyncEngine:
             return f"Parallel processing recommended for large dataset ({estimated_changes} changes, {target_entity_count} entities)"
         else:
             return f"Strategy {strategy} selected based on data characteristics"
-    
-    def _create_sync_operation(self, since: datetime, until: Optional[datetime],
-                              entity_types: Optional[List[str]]) -> SyncOperation:
+
+    def _create_sync_operation(
+        self,
+        since: datetime,
+        until: Optional[datetime],
+        entity_types: Optional[List[str]],
+    ) -> SyncOperation:
         """Create sync operation record."""
         operation = SyncOperation(
             id=str(uuid.uuid4()),
@@ -531,15 +591,15 @@ class IncrementalSyncEngine:
                 "synced_changes": 0,
                 "new_entities": 0,
                 "updated_entities": 0,
-                "errors": []
-            }
+                "errors": [],
+            },
         )
-        
+
         # Store in database
         self._store_sync_operation(operation)
-        
+
         return operation
-    
+
     def _store_sync_operation(self, operation: SyncOperation) -> None:
         """Store sync operation in database."""
         query = """
@@ -554,16 +614,20 @@ class IncrementalSyncEngine:
             "id": operation.id,
             "operation_type": operation.operation_type,
             "started_at": operation.started_at.isoformat(),
-            "completed_at": operation.completed_at.isoformat() if operation.completed_at else None,
+            "completed_at": (
+                operation.completed_at.isoformat() if operation.completed_at else None
+            ),
             "entity_count": operation.entity_count,
             "sync_strategy": operation.sync_strategy,
-            "metadata": json.dumps(operation.metadata) if operation.metadata else None
+            "metadata": json.dumps(operation.metadata) if operation.metadata else None,
         }
 
         self.db.execute(text(query), params)
         self.db.commit()
-    
-    def _complete_sync_operation(self, operation_id: str, results: Dict[str, Any]) -> None:
+
+    def _complete_sync_operation(
+        self, operation_id: str, results: Dict[str, Any]
+    ) -> None:
         """Complete sync operation with results."""
         self.db.execute(
             text("""
@@ -575,18 +639,22 @@ class IncrementalSyncEngine:
             {
                 "completed_at": datetime.now(timezone.utc).isoformat(),
                 "entity_count": results["synced_changes"],
-                "metadata": json.dumps({
-                    "synced_changes": results["synced_changes"],
-                    "new_entities": results["new_entities"],
-                    "updated_entities": results["updated_entities"],
-                    "errors": results["errors"]
-                }),
-                "operation_id": operation_id
-            }
+                "metadata": json.dumps(
+                    {
+                        "synced_changes": results["synced_changes"],
+                        "new_entities": results["new_entities"],
+                        "updated_entities": results["updated_entities"],
+                        "errors": results["errors"],
+                    }
+                ),
+                "operation_id": operation_id,
+            },
         )
         self.db.commit()
-    
-    def _fail_sync_operation(self, operation_id: str, errors: List[Dict[str, Any]]) -> None:
+
+    def _fail_sync_operation(
+        self, operation_id: str, errors: List[Dict[str, Any]]
+    ) -> None:
         """Mark sync operation as failed."""
         self.db.execute(
             text("""
@@ -597,11 +665,11 @@ class IncrementalSyncEngine:
             {
                 "completed_at": datetime.now(timezone.utc).isoformat(),
                 "metadata": json.dumps({"errors": errors}),
-                "operation_id": operation_id
-            }
+                "operation_id": operation_id,
+            },
         )
         self.db.commit()
-    
+
     def _get_empty_sync_stats(self) -> Dict[str, Any]:
         """Return empty sync statistics."""
         return {
@@ -610,7 +678,7 @@ class IncrementalSyncEngine:
             "avg_duration_seconds": 0,
             "completed_syncs": 0,
             "failed_syncs": 0,
-            "success_rate": 0
+            "success_rate": 0,
         }
 
     def get_sync_system_status(self) -> Dict[str, Any]:
@@ -624,43 +692,43 @@ class IncrementalSyncEngine:
 
         try:
             # Count active operations (not completed)
-            active_result = self.db.execute(
-                text("""
+            active_result = self.db.execute(text("""
                     SELECT COUNT(*) as active_count
                     FROM sync_operations
                     WHERE completed_at IS NULL
-                """)
-            ).fetchone()
+                """)).fetchone()
 
             active_operations = active_result.active_count if active_result else 0
 
             # Get today's operations count
-            today_start = datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0)
+            today_start = datetime.now(timezone.utc).replace(
+                hour=0, minute=0, second=0, microsecond=0
+            )
             today_result = self.db.execute(
                 text("""
                     SELECT COUNT(*) as today_count
                     FROM sync_operations
                     WHERE started_at >= :today_start
                 """),
-                {"today_start": today_start.isoformat()}
+                {"today_start": today_start.isoformat()},
             ).fetchone()
 
             total_operations_today = today_result.today_count if today_result else 0
 
             # Get last successful sync
-            last_sync_result = self.db.execute(
-                text("""
+            last_sync_result = self.db.execute(text("""
                     SELECT completed_at
                     FROM sync_operations
                     WHERE completed_at IS NOT NULL
                     ORDER BY completed_at DESC
                     LIMIT 1
-                """)
-            ).fetchone()
+                """)).fetchone()
 
             last_successful_sync = None
             if last_sync_result and last_sync_result.completed_at:
-                last_successful_sync = datetime.fromisoformat(last_sync_result.completed_at)
+                last_successful_sync = datetime.fromisoformat(
+                    last_sync_result.completed_at
+                )
 
             # Calculate sync health score (0-1 based on recent success rate)
             stats = self.get_sync_statistics(days=7)
@@ -673,7 +741,7 @@ class IncrementalSyncEngine:
                 "last_successful_sync": last_successful_sync,
                 "system_load_percent": 0.0,  # Placeholder for system load monitoring
                 "available_workers": 4,  # Default worker count
-                "sync_health_score": sync_health_score
+                "sync_health_score": sync_health_score,
             }
 
         except Exception as e:
@@ -685,7 +753,7 @@ class IncrementalSyncEngine:
                 "last_successful_sync": None,
                 "system_load_percent": 0.0,
                 "available_workers": 4,
-                "sync_health_score": 1.0
+                "sync_health_score": 1.0,
             }
 
     def get_sync_performance_metrics(self, days: int = 7) -> Dict[str, Any]:
@@ -730,8 +798,8 @@ class IncrementalSyncEngine:
                 "bottleneck_analysis": {
                     "s3_latency": "acceptable",
                     "batch_processing": "optimal",
-                    "database_writes": "good"
-                }
+                    "database_writes": "good",
+                },
             }
 
         except Exception as e:
@@ -745,8 +813,8 @@ class IncrementalSyncEngine:
                 "bottleneck_analysis": {
                     "s3_latency": "unknown",
                     "batch_processing": "unknown",
-                    "database_writes": "unknown"
-                }
+                    "database_writes": "unknown",
+                },
             }
 
     def get_sync_system_health(self) -> Dict[str, Any]:
@@ -809,7 +877,7 @@ class IncrementalSyncEngine:
                 "worker_pool_health": worker_pool_healthy,
                 "last_health_check": datetime.now(timezone.utc),
                 "performance_grade": performance_grade,
-                "recommended_actions": recommended_actions
+                "recommended_actions": recommended_actions,
             }
 
         except Exception as e:
@@ -821,5 +889,5 @@ class IncrementalSyncEngine:
                 "worker_pool_health": False,
                 "last_health_check": datetime.now(timezone.utc),
                 "performance_grade": "F",
-                "recommended_actions": ["System health check failed"]
+                "recommended_actions": ["System health check failed"],
             }

@@ -14,6 +14,7 @@ import json
 
 class ChangesetState(Enum):
     """States for changeset lifecycle."""
+
     DRAFT = "DRAFT"
     PROPOSED = "PROPOSED"
     APPROVED = "APPROVED"
@@ -23,6 +24,7 @@ class ChangesetState(Enum):
 
 class ProposalStatus(Enum):
     """Status for proposal lifecycle."""
+
     OPEN = "open"
     APPROVED = "approved"
     REJECTED = "rejected"
@@ -31,12 +33,14 @@ class ProposalStatus(Enum):
 
 class CRDTConflictError(Exception):
     """Exception raised when CRDT merge conflicts cannot be automatically resolved."""
+
     pass
 
 
 @dataclass
 class Changeset:
     """A collection of related changes bundled together for collaboration."""
+
     id: str
     title: str
     description: str
@@ -47,7 +51,7 @@ class Changeset:
     created_at: datetime
     merged_at: Optional[datetime] = None
     metadata: Optional[Dict[str, Any]] = None
-    
+
     def to_dict(self) -> Dict[str, Any]:
         """Convert changeset to dictionary for serialization."""
         return {
@@ -60,11 +64,11 @@ class Changeset:
             "author_id": self.author_id,
             "created_at": self.created_at.isoformat(),
             "merged_at": self.merged_at.isoformat() if self.merged_at else None,
-            "metadata": self.metadata
+            "metadata": self.metadata,
         }
-    
+
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> 'Changeset':
+    def from_dict(cls, data: Dict[str, Any]) -> "Changeset":
         """Create changeset from dictionary."""
         return cls(
             id=data["id"],
@@ -75,32 +79,38 @@ class Changeset:
             parent_changeset_id=data.get("parent_changeset_id"),
             author_id=data["author_id"],
             created_at=datetime.fromisoformat(data["created_at"]),
-            merged_at=datetime.fromisoformat(data["merged_at"]) if data.get("merged_at") else None,
-            metadata=data.get("metadata")
+            merged_at=(
+                datetime.fromisoformat(data["merged_at"])
+                if data.get("merged_at")
+                else None
+            ),
+            metadata=data.get("metadata"),
         )
 
 
 @dataclass
 class ChangesetVersion:
     """A specific version of entities included in a changeset."""
+
     changeset_id: str
     version_ids: List[str]  # List of entity_version IDs included
     summary: Dict[str, Any]  # Summary statistics
     created_at: datetime
-    
+
     def to_dict(self) -> Dict[str, Any]:
         """Convert changeset version to dictionary."""
         return {
             "changeset_id": self.changeset_id,
             "version_ids": self.version_ids,
             "summary": self.summary,
-            "created_at": self.created_at.isoformat()
+            "created_at": self.created_at.isoformat(),
         }
 
 
 @dataclass
 class Proposal:
     """A proposal for reviewing and approving a changeset."""
+
     id: str
     changeset_id: str
     title: str
@@ -112,7 +122,7 @@ class Proposal:
     closed_at: Optional[datetime] = None
     merge_commit_id: Optional[str] = None
     metadata: Optional[Dict[str, Any]] = None
-    
+
     def to_dict(self) -> Dict[str, Any]:
         """Convert proposal to dictionary for serialization."""
         return {
@@ -126,11 +136,11 @@ class Proposal:
             "created_at": self.created_at.isoformat(),
             "closed_at": self.closed_at.isoformat() if self.closed_at else None,
             "merge_commit_id": self.merge_commit_id,
-            "metadata": self.metadata
+            "metadata": self.metadata,
         }
-    
+
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> 'Proposal':
+    def from_dict(cls, data: Dict[str, Any]) -> "Proposal":
         """Create proposal from dictionary."""
         return cls(
             id=data["id"],
@@ -141,21 +151,26 @@ class Proposal:
             required_approvals=data["required_approvals"],
             created_by=data["created_by"],
             created_at=datetime.fromisoformat(data["created_at"]),
-            closed_at=datetime.fromisoformat(data["closed_at"]) if data.get("closed_at") else None,
+            closed_at=(
+                datetime.fromisoformat(data["closed_at"])
+                if data.get("closed_at")
+                else None
+            ),
             merge_commit_id=data.get("merge_commit_id"),
-            metadata=data.get("metadata")
+            metadata=data.get("metadata"),
         )
 
 
 @dataclass
 class ProposalVote:
     """A vote cast on a proposal."""
+
     proposal_id: str
     user_id: str
     vote: str  # 'approve', 'reject', 'abstain'
     comment: Optional[str]
     voted_at: datetime
-    
+
     def to_dict(self) -> Dict[str, Any]:
         """Convert vote to dictionary for serialization."""
         return {
@@ -163,24 +178,25 @@ class ProposalVote:
             "user_id": self.user_id,
             "vote": self.vote,
             "comment": self.comment,
-            "voted_at": self.voted_at.isoformat()
+            "voted_at": self.voted_at.isoformat(),
         }
-    
+
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> 'ProposalVote':
+    def from_dict(cls, data: Dict[str, Any]) -> "ProposalVote":
         """Create vote from dictionary."""
         return cls(
             proposal_id=data["proposal_id"],
             user_id=data["user_id"],
             vote=data["vote"],
             comment=data.get("comment"),
-            voted_at=datetime.fromisoformat(data["voted_at"])
+            voted_at=datetime.fromisoformat(data["voted_at"]),
         )
 
 
 @dataclass
 class UserIdentity:
     """User identity with trust levels for collaboration."""
+
     user_id: str
     email: str
     display_name: str
@@ -189,7 +205,7 @@ class UserIdentity:
     trust_level: int  # 0=unverified, 1=email verified, 2=team verified
     created_at: datetime
     verified_at: Optional[datetime] = None
-    
+
     def to_dict(self) -> Dict[str, Any]:
         """Convert user identity to dictionary for serialization."""
         return {
@@ -200,11 +216,11 @@ class UserIdentity:
             "verified": self.verified,
             "trust_level": self.trust_level,
             "created_at": self.created_at.isoformat(),
-            "verified_at": self.verified_at.isoformat() if self.verified_at else None
+            "verified_at": self.verified_at.isoformat() if self.verified_at else None,
         }
-    
+
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> 'UserIdentity':
+    def from_dict(cls, data: Dict[str, Any]) -> "UserIdentity":
         """Create user identity from dictionary."""
         return cls(
             user_id=data["user_id"],
@@ -214,7 +230,11 @@ class UserIdentity:
             verified=data["verified"],
             trust_level=data["trust_level"],
             created_at=datetime.fromisoformat(data["created_at"]),
-            verified_at=datetime.fromisoformat(data["verified_at"]) if data.get("verified_at") else None
+            verified_at=(
+                datetime.fromisoformat(data["verified_at"])
+                if data.get("verified_at")
+                else None
+            ),
         )
 
 
@@ -231,7 +251,7 @@ def row_to_changeset(row) -> Changeset:
         author_id=row[6],  # author_id
         created_at=datetime.fromisoformat(row[7]),  # created_at
         merged_at=datetime.fromisoformat(row[8]) if row[8] else None,  # merged_at
-        metadata=json.loads(row[9]) if row[9] else None  # metadata
+        metadata=json.loads(row[9]) if row[9] else None,  # metadata
     )
 
 
@@ -248,7 +268,7 @@ def row_to_proposal(row) -> Proposal:
         created_at=datetime.fromisoformat(row[7]),  # created_at
         closed_at=datetime.fromisoformat(row[8]) if row[8] else None,  # closed_at
         merge_commit_id=row[9],  # merge_commit_id
-        metadata=json.loads(row[10]) if row[10] else None  # metadata
+        metadata=json.loads(row[10]) if row[10] else None,  # metadata
     )
 
 
@@ -259,7 +279,7 @@ def row_to_vote(row) -> ProposalVote:
         user_id=row[1],  # user_id
         vote=row[2],  # vote
         comment=row[3],  # comment
-        voted_at=datetime.fromisoformat(row[4])  # voted_at
+        voted_at=datetime.fromisoformat(row[4]),  # voted_at
     )
 
 
@@ -273,5 +293,5 @@ def row_to_identity(row) -> UserIdentity:
         verified=bool(row[4]),  # verified
         trust_level=row[5],  # trust_level
         created_at=datetime.fromisoformat(row[6]),  # created_at
-        verified_at=datetime.fromisoformat(row[7]) if row[7] else None  # verified_at
+        verified_at=datetime.fromisoformat(row[7]) if row[7] else None,  # verified_at
     )

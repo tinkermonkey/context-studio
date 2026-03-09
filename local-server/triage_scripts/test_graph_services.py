@@ -7,6 +7,7 @@ graph operations on the Context Studio data.
 
 import sys
 import os
+
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from database.utils import get_engine, get_session_local, init_db
@@ -20,27 +21,27 @@ logger = get_logger(__name__)
 def test_graph_services():
     """Test the graph services with sample operations."""
     logger.info("Starting graph services test...")
-    
+
     # Initialize database and get session
     try:
         engine = get_engine()
         init_db(engine)
         SessionLocal = get_session_local(engine)
         session = SessionLocal()
-        
+
         # Initialize graph service
         logger.info("Initializing GraphService...")
         graph_service = GraphService(session)
-        
+
         # Test 1: Get comprehensive statistics
         logger.info("Test 1: Getting comprehensive statistics...")
         stats = graph_service.get_comprehensive_stats()
         print("\n=== COMPREHENSIVE GRAPH STATISTICS ===")
         print(json.dumps(stats, indent=2, default=str))
-        
+
         # Test 2: Execute sample SPARQL queries
         logger.info("Test 2: Executing SPARQL queries...")
-        
+
         # Query to count all entities by type
         count_query = """
         PREFIX cs: <http://context-studio.local/vocab/>
@@ -51,12 +52,12 @@ def test_graph_services():
         }
         GROUP BY ?type
         """
-        
+
         count_results = graph_service.sparql_query(count_query)
         print("\n=== ENTITY COUNTS BY TYPE ===")
         for result in count_results:
             print(f"{result.get('type', 'Unknown')}: {result.get('count', 0)}")
-        
+
         # Query to find all terms
         terms_query = """
         PREFIX cs: <http://context-studio.local/vocab/>
@@ -69,27 +70,29 @@ def test_graph_services():
         }
         LIMIT 5
         """
-        
+
         terms_results = graph_service.sparql_query(terms_query)
         print("\n=== SAMPLE TERMS ===")
         for term in terms_results:
             print(f"Term: {term.get('title', 'N/A')}")
             print(f"Definition: {term.get('definition', 'N/A')[:100]}...")
             print("---")
-        
+
         # Test 3: NetworkX analytics
         logger.info("Test 3: Running NetworkX analytics...")
-        
+
         # Calculate centrality
         try:
             centrality = graph_service.calculate_centrality("pagerank")
             print("\n=== TOP 5 NODES BY PAGERANK CENTRALITY ===")
-            sorted_centrality = sorted(centrality.items(), key=lambda x: x[1], reverse=True)
+            sorted_centrality = sorted(
+                centrality.items(), key=lambda x: x[1], reverse=True
+            )
             for structure_node, score in sorted_centrality[:5]:
                 print(f"{structure_node}: {score:.6f}")
         except Exception as e:
             print(f"Centrality calculation failed: {e}")
-        
+
         # Detect communities
         try:
             communities = graph_service.detect_communities("louvain")
@@ -100,10 +103,10 @@ def test_graph_services():
                 print(f"Sample structure_nodes: {community[:5]}")
         except Exception as e:
             print(f"Community detection failed: {e}")
-        
+
         # Test 4: Search functionality
         logger.info("Test 4: Testing search functionality...")
-        
+
         # Search for terms (this will work if there are terms in the database)
         try:
             search_results = graph_service.find_terms_by_title("test", exact=False)
@@ -113,35 +116,41 @@ def test_graph_services():
                 print(f"- {result.get('title', 'N/A')}")
         except Exception as e:
             print(f"Search failed: {e}")
-        
+
         # Test 5: Export capabilities
         logger.info("Test 5: Testing export capabilities...")
-        
+
         try:
             # Export as Turtle RDF
             turtle_export = graph_service.serialize_rdf("turtle")
             print("\n=== RDF EXPORT (TURTLE) - First 500 chars ===")
-            print(turtle_export[:500] + "..." if len(turtle_export) > 500 else turtle_export)
+            print(
+                turtle_export[:500] + "..."
+                if len(turtle_export) > 500
+                else turtle_export
+            )
         except Exception as e:
             print(f"RDF export failed: {e}")
-        
+
         # Test 6: Hierarchy analysis (if terms exist)
         logger.info("Test 6: Testing hierarchy analysis...")
-        
+
         # Get all domain hierarchy
         try:
             hierarchy = graph_service.get_domain_hierarchy()
             print("\n=== DOMAIN HIERARCHY ===")
             print(f"Found {len(hierarchy)} domain-layer relationships")
             for rel in hierarchy[:5]:  # Show first 5
-                print(f"Domain: {rel.get('domainTitle', 'N/A')} -> Layer: {rel.get('layerTitle', 'N/A')}")
+                print(
+                    f"Domain: {rel.get('domainTitle', 'N/A')} -> Layer: {rel.get('layerTitle', 'N/A')}"
+                )
         except Exception as e:
             print(f"Hierarchy analysis failed: {e}")
-        
+
         logger.info("Graph services test completed successfully!")
-        
+
         session.close()
-        
+
     except Exception as e:
         logger.error(f"Test failed: {e}")
         raise
@@ -150,16 +159,16 @@ def test_graph_services():
 def test_individual_services():
     """Test individual SPARQL and NetworkX services."""
     logger.info("Testing individual services...")
-    
+
     try:
         engine = get_engine()
         init_db(engine)
         SessionLocal = get_session_local(engine)
         session = SessionLocal()
-        
+
         from graph.sparql_service import SPARQLService
         from graph.network_service import NetworkService
-        
+
         # Test SPARQL service
         logger.info("Testing SPARQL service...")
         sparql_service = SPARQLService(session)
@@ -168,7 +177,7 @@ def test_individual_services():
         print(f"Total triples: {sparql_stats['total_triples']}")
         print(f"Total subjects: {sparql_stats['total_subjects']}")
         print(f"Total predicates: {sparql_stats['total_predicates']}")
-        
+
         # Test NetworkX service
         logger.info("Testing NetworkX service...")
         network_service = NetworkService(session)
@@ -178,13 +187,13 @@ def test_individual_services():
         print(f"Total edges: {network_stats['total_edges']}")
         print(f"StructureNode types: {network_stats.get('node_types', {})}")
         print(f"Edge types: {network_stats.get('edge_types', {})}")
-        
+
         # Test term hierarchy algorithm
         logger.info("Testing term hierarchy algorithm...")
         test_term_hierarchy(network_service)
-        
+
         session.close()
-        
+
     except Exception as e:
         logger.error(f"Individual services test failed: {e}")
         raise
@@ -194,58 +203,70 @@ def test_term_hierarchy(network_service):
     """Test the term hierarchy algorithm specifically."""
     try:
         logger.info("Testing get_term_hierarchy method...")
-        
+
         # First, get some sample terms to test with
         sample_nodes = list(network_service.graph.nodes())
-        term_nodes = [structure_node for structure_node in sample_nodes if structure_node.startswith("term:")]
-        
+        term_nodes = [
+            structure_node
+            for structure_node in sample_nodes
+            if structure_node.startswith("term:")
+        ]
+
         if not term_nodes:
             logger.warning("No term structure_nodes found in graph")
             return
-        
+
         # Test with the first available term
         test_term_node = term_nodes[0]
         term_id = test_term_node.split(":", 1)[1]
-        
+
         logger.info(f"Testing hierarchy for term: {term_id}")
-        
+
         # Get hierarchy using the updated algorithm
         hierarchy = network_service.get_term_hierarchy(term_id)
-        
+
         print("\n=== TERM HIERARCHY TEST ===")
         print(f"Term ID: {term_id}")
         print(f"Number of ancestors: {len(hierarchy['ancestors'])}")
         print(f"Number of descendants: {len(hierarchy['descendants'])}")
-        
+
         # Print ancestors
-        if hierarchy['ancestors']:
+        if hierarchy["ancestors"]:
             print("Ancestors:")
-            for ancestor in hierarchy['ancestors']:
-                print(f"  - {ancestor['type']}: {ancestor['title']} (distance: {ancestor['distance']})")
-        
+            for ancestor in hierarchy["ancestors"]:
+                print(
+                    f"  - {ancestor['type']}: {ancestor['title']} (distance: {ancestor['distance']})"
+                )
+
         # Print descendants
-        if hierarchy['descendants']:
+        if hierarchy["descendants"]:
             print("Descendants:")
-            for descendant in hierarchy['descendants']:
-                print(f"  - {descendant['type']}: {descendant['title']} (distance: {descendant['distance']})")
-        
+            for descendant in hierarchy["descendants"]:
+                print(
+                    f"  - {descendant['type']}: {descendant['title']} (distance: {descendant['distance']})"
+                )
+
         # Also test find_terms_in_domain_tree if there are domains
-        domain_nodes = [structure_node for structure_node in sample_nodes if structure_node.startswith("domain:")]
+        domain_nodes = [
+            structure_node
+            for structure_node in sample_nodes
+            if structure_node.startswith("domain:")
+        ]
         if domain_nodes:
             test_domain_node = domain_nodes[0]
             domain_id = test_domain_node.split(":", 1)[1]
-            
+
             logger.info(f"Testing find_terms_in_domain_tree for domain: {domain_id}")
             terms_in_domain = network_service.find_terms_in_domain_tree(domain_id)
-            
+
             print("\n=== DOMAIN TREE TEST ===")
             print(f"Domain ID: {domain_id}")
             print(f"Number of terms in domain tree: {len(terms_in_domain)}")
             if terms_in_domain:
                 print(f"First few terms: {terms_in_domain[:5]}")
-        
+
         logger.info("Term hierarchy test completed successfully!")
-        
+
     except Exception as e:
         logger.error(f"Term hierarchy test failed: {e}")
         raise
@@ -254,18 +275,18 @@ def test_term_hierarchy(network_service):
 if __name__ == "__main__":
     print("Context Studio Graph Services Test")
     print("===================================")
-    
+
     try:
         # Test individual services first
         test_individual_services()
-        
-        print("\n" + "="*50)
-        
+
+        print("\n" + "=" * 50)
+
         # Test combined services
         test_graph_services()
-        
+
         print("\n✅ All tests completed successfully!")
-        
+
     except Exception as e:
         print(f"\n❌ Tests failed: {e}")
         sys.exit(1)

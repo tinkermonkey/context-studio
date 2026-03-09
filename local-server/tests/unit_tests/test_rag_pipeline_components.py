@@ -10,7 +10,9 @@ import sys
 import os
 
 # Add parent directory to path for imports
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+sys.path.append(
+    os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+)
 
 
 class TestPipelineRegistry:
@@ -23,7 +25,9 @@ class TestPipelineRegistry:
         instance1 = PipelineRegistry()
         instance2 = PipelineRegistry()
 
-        assert instance1 is instance2, "PipelineRegistry should return the same instance"
+        assert (
+            instance1 is instance2
+        ), "PipelineRegistry should return the same instance"
 
     def test_register_pipeline(self):
         """Test registering a pipeline class."""
@@ -40,7 +44,9 @@ class TestPipelineRegistry:
             def get_description():
                 return "Mock pipeline for testing"
 
-            async def extract_entities(self, text, enable_trace=False, enable_llm_layer=True):
+            async def extract_entities(
+                self, text, enable_trace=False, enable_llm_layer=True
+            ):
                 pass
 
             def get_config(self):
@@ -70,7 +76,9 @@ class TestPipelineRegistry:
             def get_description():
                 return "Test description"
 
-            async def extract_entities(self, text, enable_trace=False, enable_llm_layer=True):
+            async def extract_entities(
+                self, text, enable_trace=False, enable_llm_layer=True
+            ):
                 pass
 
             def get_config(self):
@@ -100,7 +108,9 @@ class TestPipelineRegistry:
             def get_description():
                 return "Test"
 
-            async def extract_entities(self, text, enable_trace=False, enable_llm_layer=True):
+            async def extract_entities(
+                self, text, enable_trace=False, enable_llm_layer=True
+            ):
                 pass
 
             def get_config(self):
@@ -131,7 +141,7 @@ class TestStandardPipelineValidation:
             StandardRAGPipeline(
                 kg_db_session=mock_kg_session,
                 ops_db_session=mock_ops_session,
-                config={"kg_top_k": 0}
+                config={"kg_top_k": 0},
             )
 
     def test_invalid_kg_vector_threshold(self):
@@ -141,11 +151,13 @@ class TestStandardPipelineValidation:
         mock_kg_session = Mock()
         mock_ops_session = Mock()
 
-        with pytest.raises(ValueError, match="kg_vector_threshold must be between 0 and 1"):
+        with pytest.raises(
+            ValueError, match="kg_vector_threshold must be between 0 and 1"
+        ):
             StandardRAGPipeline(
                 kg_db_session=mock_kg_session,
                 ops_db_session=mock_ops_session,
-                config={"kg_vector_threshold": 1.5}
+                config={"kg_vector_threshold": 1.5},
             )
 
     def test_invalid_timeout(self):
@@ -159,7 +171,7 @@ class TestStandardPipelineValidation:
             StandardRAGPipeline(
                 kg_db_session=mock_kg_session,
                 ops_db_session=mock_ops_session,
-                config={"timeout_layer_1": -1}
+                config={"timeout_layer_1": -1},
             )
 
     def test_invalid_dedup_threshold(self):
@@ -169,11 +181,13 @@ class TestStandardPipelineValidation:
         mock_kg_session = Mock()
         mock_ops_session = Mock()
 
-        with pytest.raises(ValueError, match="dedup_similarity_threshold must be between 0 and 1"):
+        with pytest.raises(
+            ValueError, match="dedup_similarity_threshold must be between 0 and 1"
+        ):
             StandardRAGPipeline(
                 kg_db_session=mock_kg_session,
                 ops_db_session=mock_ops_session,
-                config={"dedup_similarity_threshold": 2.0}
+                config={"dedup_similarity_threshold": 2.0},
             )
 
 
@@ -194,8 +208,7 @@ class TestRAGTestManagementService:
         mock_ops_session.commit = Mock()
 
         paragraph = service.create_test_paragraph(
-            text="This is a test paragraph.",
-            notes="Test notes"
+            text="This is a test paragraph.", notes="Test notes"
         )
 
         assert paragraph.text == "This is a test paragraph."
@@ -214,7 +227,9 @@ class TestRAGTestManagementService:
 
         # Mock query to return a node
         mock_node = Mock(spec=StructureNode)
-        mock_kg_session.query.return_value.filter.return_value.first.return_value = mock_node
+        mock_kg_session.query.return_value.filter.return_value.first.return_value = (
+            mock_node
+        )
 
         service = RAGTestManagementService(mock_kg_session, mock_ops_session)
 

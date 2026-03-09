@@ -13,9 +13,7 @@ from datetime import datetime, timezone
 from sqlalchemy.orm import Session
 from sqlalchemy import text
 
-from services.collaboration_models import (
-    Changeset, ChangesetState, row_to_changeset
-)
+from services.collaboration_models import Changeset, ChangesetState, row_to_changeset
 from services.version_manager import VersionManager
 from services.working_tree_manager import WorkingTreeManager
 from services.s3_sync_manager import S3SyncManager
@@ -26,12 +24,17 @@ logger = get_logger(__name__)
 
 class ChangesetManager:
     """Manages changeset creation, modification, and lifecycle."""
-    
-    def __init__(self, db: Session, s3_sync_manager: S3SyncManager, 
-                 working_tree_manager: WorkingTreeManager, version_manager: VersionManager):
+
+    def __init__(
+        self,
+        db: Session,
+        s3_sync_manager: S3SyncManager,
+        working_tree_manager: WorkingTreeManager,
+        version_manager: VersionManager,
+    ):
         """
         Initialize the ChangesetManager.
-        
+
         Args:
             db: SQLAlchemy database session
             s3_sync_manager: S3 synchronization manager
@@ -43,9 +46,10 @@ class ChangesetManager:
         self.working_tree = working_tree_manager
         self.version_manager = version_manager
         logger.info("ChangesetManager initialized")
-    
-    def create_changeset(self, title: str, description: str, author_id: str,
-                        include_staged: bool = True) -> Changeset:
+
+    def create_changeset(
+        self, title: str, description: str, author_id: str, include_staged: bool = True
+    ) -> Changeset:
         """
         Create a new changeset from staged or all working changes.
 
@@ -62,7 +66,9 @@ class ChangesetManager:
             ValueError: If no changes are available or validation fails
             RuntimeError: If database operation fails
         """
-        logger.info(f"Creating changeset '{title}' by {author_id} (staged_only={include_staged})")
+        logger.info(
+            f"Creating changeset '{title}' by {author_id} (staged_only={include_staged})"
+        )
 
         # Validate input parameters
         if not title or not description:
@@ -100,7 +106,7 @@ class ChangesetManager:
             parent_changeset_id=None,
             author_id=author_id,
             created_at=datetime.now(timezone.utc),
-            metadata={"changes_count": len(changes)}
+            metadata={"changes_count": len(changes)},
         )
 
         try:
@@ -109,18 +115,20 @@ class ChangesetManager:
 
             # Store changeset locally
             self._store_changeset_locally(changeset, changes)
-            
+
             # Update version records with changeset_id
             self._associate_versions_with_changeset(changeset_id, changes)
-            
-            logger.info(f"Successfully created changeset {changeset_id} with {len(changes)} changes")
+
+            logger.info(
+                f"Successfully created changeset {changeset_id} with {len(changes)} changes"
+            )
             return changeset
-            
+
         except Exception as e:
             logger.error(f"Failed to create changeset: {e}")
             self.db.rollback()
             raise RuntimeError(f"Failed to create changeset: {e}")
-    
+
     def get_changeset(self, changeset_id: str) -> Optional[Changeset]:
         """
         Retrieve changeset by ID.
@@ -139,7 +147,7 @@ class ChangesetManager:
         try:
             result = self.db.execute(
                 text("SELECT * FROM changesets WHERE id = :changeset_id"),
-                {"changeset_id": changeset_id}
+                {"changeset_id": changeset_id},
             ).fetchone()
 
             if not result:
@@ -151,10 +159,13 @@ class ChangesetManager:
         except Exception as e:
             logger.error(f"Failed to retrieve changeset {changeset_id}: {e}")
             raise RuntimeError(f"Failed to retrieve changeset {changeset_id}: {e}")
-    
-    def list_changesets(self, author_id: Optional[str] = None,
-                       state: Optional[ChangesetState] = None,
-                       limit: int = 100) -> List[Changeset]:
+
+    def list_changesets(
+        self,
+        author_id: Optional[str] = None,
+        state: Optional[ChangesetState] = None,
+        limit: int = 100,
+    ) -> List[Changeset]:
         """
         List changesets with optional filtering.
 
@@ -169,7 +180,9 @@ class ChangesetManager:
         Raises:
             RuntimeError: If database query fails
         """
-        logger.debug(f"Listing changesets (author={author_id}, state={state}, limit={limit})")
+        logger.debug(
+            f"Listing changesets (author={author_id}, state={state}, limit={limit})"
+        )
 
         try:
             query = "SELECT * FROM changesets WHERE 1=1"
@@ -196,9 +209,13 @@ class ChangesetManager:
         except Exception as e:
             logger.error(f"Failed to list changesets: {e}")
             raise RuntimeError(f"Failed to list changesets: {e}")
-    
-    def update_changeset(self, changeset_id: str, title: Optional[str] = None,
-                        description: Optional[str] = None) -> bool:
+
+    def update_changeset(
+        self,
+        changeset_id: str,
+        title: Optional[str] = None,
+        description: Optional[str] = None,
+    ) -> bool:
         """
         Update changeset metadata.
 
@@ -231,7 +248,9 @@ class ChangesetManager:
                 updates.append("description = :description")
                 params["description"] = description
 
-            query = f"UPDATE changesets SET {', '.join(updates)} WHERE id = :changeset_id"
+            query = (
+                f"UPDATE changesets SET {', '.join(updates)} WHERE id = :changeset_id"
+            )
 
             cursor = self.db.execute(text(query), params)
             self.db.commit()
@@ -249,8 +268,10 @@ class ChangesetManager:
             logger.error(f"Failed to update changeset {changeset_id}: {e}")
             self.db.rollback()
             raise RuntimeError(f"Failed to update changeset {changeset_id}: {e}")
-    
-    def update_changeset_state(self, changeset_id: str, new_state: ChangesetState) -> bool:
+
+    def update_changeset_state(
+        self, changeset_id: str, new_state: ChangesetState
+    ) -> bool:
         """
         Update changeset state.
 
@@ -273,7 +294,7 @@ class ChangesetManager:
                 params = {
                     "state": new_state.value,
                     "merged_at": datetime.now(timezone.utc).isoformat(),
-                    "changeset_id": changeset_id
+                    "changeset_id": changeset_id,
                 }
             else:
                 query = "UPDATE changesets SET state = :state WHERE id = :changeset_id"
@@ -286,14 +307,16 @@ class ChangesetManager:
                 logger.warning(f"No changeset found with ID {changeset_id}")
                 return False
 
-            logger.info(f"Successfully updated changeset {changeset_id} state to {new_state.value}")
+            logger.info(
+                f"Successfully updated changeset {changeset_id} state to {new_state.value}"
+            )
             return True
 
         except Exception as e:
             logger.error(f"Failed to update changeset {changeset_id} state: {e}")
             self.db.rollback()
             raise RuntimeError(f"Failed to update changeset {changeset_id} state: {e}")
-    
+
     def get_changeset_versions(self, changeset_id: str) -> List[str]:
         """
         Get all version IDs associated with a changeset.
@@ -311,63 +334,75 @@ class ChangesetManager:
 
         try:
             results = self.db.execute(
-                text("SELECT id FROM entity_versions WHERE changeset_id = :changeset_id"),
-                {"changeset_id": changeset_id}
+                text(
+                    "SELECT id FROM entity_versions WHERE changeset_id = :changeset_id"
+                ),
+                {"changeset_id": changeset_id},
             ).fetchall()
 
             version_ids = [row[0] for row in results]
-            logger.debug(f"Found {len(version_ids)} versions for changeset {changeset_id}")
+            logger.debug(
+                f"Found {len(version_ids)} versions for changeset {changeset_id}"
+            )
             return version_ids
 
         except Exception as e:
             logger.error(f"Failed to get versions for changeset {changeset_id}: {e}")
-            raise RuntimeError(f"Failed to get versions for changeset {changeset_id}: {e}")
-    
+            raise RuntimeError(
+                f"Failed to get versions for changeset {changeset_id}: {e}"
+            )
+
     def delete_changeset(self, changeset_id: str) -> bool:
         """
         Delete a changeset and disassociate its versions.
-        
+
         Args:
             changeset_id: Changeset identifier
-            
+
         Returns:
             True if deleted successfully
         """
         logger.info(f"Deleting changeset {changeset_id}")
-        
+
         try:
             # Check if changeset exists
             changeset = self.get_changeset(changeset_id)
             if not changeset:
-                logger.debug(f"Cannot delete changeset {changeset_id}: changeset not found")
+                logger.debug(
+                    f"Cannot delete changeset {changeset_id}: changeset not found"
+                )
                 return False
-                
+
             # Don't allow deletion of merged changesets
             if changeset.state == ChangesetState.MERGED:
-                logger.warning(f"Cannot delete changeset {changeset_id} in merged state")
+                logger.warning(
+                    f"Cannot delete changeset {changeset_id} in merged state"
+                )
                 raise ValueError("Cannot delete changeset in merged state")
-            
+
             # Remove changeset association from versions
             self.db.execute(
-                text("UPDATE entity_versions SET changeset_id = NULL WHERE changeset_id = :changeset_id"),
-                {"changeset_id": changeset_id}
+                text(
+                    "UPDATE entity_versions SET changeset_id = NULL WHERE changeset_id = :changeset_id"
+                ),
+                {"changeset_id": changeset_id},
             )
 
             # Delete the changeset
             cursor = self.db.execute(
                 text("DELETE FROM changesets WHERE id = :changeset_id"),
-                {"changeset_id": changeset_id}
+                {"changeset_id": changeset_id},
             )
-            
+
             self.db.commit()
-            
+
             if cursor.rowcount == 0:
                 logger.warning(f"No changeset deleted for ID {changeset_id}")
                 return False
-                
+
             logger.info(f"Successfully deleted changeset {changeset_id}")
             return True
-            
+
         except ValueError:
             # Re-raise validation errors directly
             raise
@@ -375,17 +410,17 @@ class ChangesetManager:
             logger.error(f"Failed to delete changeset {changeset_id}: {e}")
             self.db.rollback()
             raise RuntimeError(f"Failed to delete changeset: {e}")
-    
+
     def _store_changeset_locally(self, changeset: Changeset, changes: List) -> None:
         """
         Store changeset in local SQLite database.
-        
+
         Args:
             changeset: Changeset instance to store
             changes: List of changes associated with changeset
         """
         logger.debug(f"Storing changeset {changeset.id} locally")
-        
+
         query = """
         INSERT INTO changesets (
             id, title, description, state, branch_name, parent_changeset_id,
@@ -403,29 +438,35 @@ class ChangesetManager:
             "parent_changeset_id": changeset.parent_changeset_id,
             "author_id": changeset.author_id,
             "created_at": changeset.created_at.isoformat(),
-            "merged_at": changeset.merged_at.isoformat() if changeset.merged_at else None,
-            "metadata": json.dumps(changeset.metadata) if changeset.metadata else None
+            "merged_at": (
+                changeset.merged_at.isoformat() if changeset.merged_at else None
+            ),
+            "metadata": json.dumps(changeset.metadata) if changeset.metadata else None,
         }
 
         self.db.execute(text(query), params)
         logger.debug(f"Stored changeset {changeset.id} in database")
-    
-    def _associate_versions_with_changeset(self, changeset_id: str, changes: List) -> None:
+
+    def _associate_versions_with_changeset(
+        self, changeset_id: str, changes: List
+    ) -> None:
         """
         Associate version records with changeset.
-        
+
         Args:
             changeset_id: Changeset identifier
             changes: List of working tree entries with changes
         """
-        logger.debug(f"Associating {len(changes)} versions with changeset {changeset_id}")
-        
+        logger.debug(
+            f"Associating {len(changes)} versions with changeset {changeset_id}"
+        )
+
         try:
             # Update current versions of changed entities to associate with changeset
             for change in changes:
                 # Handle both dict format (from get_staged_changes) and object format (from get_working_changes)
                 if isinstance(change, dict):
-                    version_id = change['version_id']
+                    version_id = change["version_id"]
                 else:
                     version_id = change.current_version_id
 
@@ -435,15 +476,19 @@ class ChangesetManager:
                         SET changeset_id = :changeset_id
                         WHERE id = :version_id
                     """),
-                    {"changeset_id": changeset_id, "version_id": version_id}
+                    {"changeset_id": changeset_id, "version_id": version_id},
                 )
-            
-            logger.debug(f"Successfully associated versions with changeset {changeset_id}")
-            
+
+            logger.debug(
+                f"Successfully associated versions with changeset {changeset_id}"
+            )
+
         except Exception as e:
-            logger.error(f"Failed to associate versions with changeset {changeset_id}: {e}")
+            logger.error(
+                f"Failed to associate versions with changeset {changeset_id}: {e}"
+            )
             raise
-    
+
     def push_changeset_to_s3(self, changeset_id: str) -> bool:
         """
         Push changeset data to S3 for collaboration.

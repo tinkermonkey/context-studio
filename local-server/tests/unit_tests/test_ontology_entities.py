@@ -6,13 +6,23 @@ Tests the business logic validation in Class, Taxonomy, ConceptScheme, and other
 
 import sys
 import os
+
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import pytest  # noqa: E402
 from datetime import datetime, timezone  # noqa: E402
 
-from domain.ontology.entities import Class, Taxonomy, ConceptScheme, Individual  # noqa: E402, E501
-from domain.ontology.value_objects import NodeType, ExternalReference, LexicalSense  # noqa: E402, E501
+from domain.ontology.entities import (
+    Class,
+    Taxonomy,
+    ConceptScheme,
+    Individual,
+)  # noqa: E402, E501
+from domain.ontology.value_objects import (
+    NodeType,
+    ExternalReference,
+    LexicalSense,
+)  # noqa: E402, E501
 
 
 class TestClassEntity:
@@ -31,14 +41,17 @@ class TestClassEntity:
             parent_id=None,
             created_at=datetime.now(timezone.utc).isoformat(),
             updated_at=datetime.now(timezone.utc).isoformat(),
-            subclass_of=[]
+            subclass_of=[],
         )
 
     def test_class_creation(self, sample_class):
         """Test creating a Class entity."""
         assert sample_class.id == "class-001"
         assert sample_class.title == "Animal"
-        assert sample_class.definition == "A living organism classified in the kingdom Animalia"
+        assert (
+            sample_class.definition
+            == "A living organism classified in the kingdom Animalia"
+        )
         assert sample_class.node_type == NodeType.CLASS
         assert sample_class.subclass_of == []
 
@@ -128,7 +141,7 @@ class TestClassEntity:
                 source="DBpedia",
                 uri="http://dbpedia.org/resource/Animal",
                 label="Animal (DBpedia)",
-                confidence=0.95
+                confidence=0.95,
             )
         ]
 
@@ -139,7 +152,7 @@ class TestClassEntity:
                 definition="A living being",
                 lemma="animal",
                 confidence=0.9,
-                source="wordnet"
+                source="wordnet",
             )
         ]
 
@@ -162,7 +175,7 @@ class TestClassEntity:
             node_type=NodeType.CLASS,
             parent_id=None,
             created_at=datetime.now(timezone.utc).isoformat(),
-            updated_at=datetime.now(timezone.utc).isoformat()
+            updated_at=datetime.now(timezone.utc).isoformat(),
         )
 
         child_class = Class(
@@ -174,14 +187,14 @@ class TestClassEntity:
             node_type=NodeType.CLASS,
             parent_id=parent_class.id,  # Direct parent
             created_at=datetime.now(timezone.utc).isoformat(),
-            updated_at=datetime.now(timezone.utc).isoformat()
+            updated_at=datetime.now(timezone.utc).isoformat(),
         )
 
         assert child_class.parent_id == parent_class.id
 
     def test_class_embedding_storage(self, sample_class):
         """Test that class can store embedding bytes."""
-        embedding_bytes = b'\x00\x01\x02\x03'
+        embedding_bytes = b"\x00\x01\x02\x03"
         sample_class.embedding = embedding_bytes
 
         assert sample_class.embedding == embedding_bytes
@@ -209,7 +222,7 @@ class TestTaxonomyEntity:
             node_type=NodeType.TAXONOMY,
             created_at=datetime.now(timezone.utc).isoformat(),
             updated_at=datetime.now(timezone.utc).isoformat(),
-            concept_schemes=[]
+            concept_schemes=[],
         )
 
     def test_taxonomy_creation(self, sample_taxonomy):
@@ -242,7 +255,7 @@ class TestConceptSchemeEntity:
             node_type=NodeType.CONCEPT_SCHEME,
             created_at=datetime.now(timezone.utc).isoformat(),
             updated_at=datetime.now(timezone.utc).isoformat(),
-            classes=[]
+            classes=[],
         )
 
     def test_concept_scheme_creation(self, sample_concept_scheme):
@@ -273,7 +286,7 @@ class TestIndividualEntity:
             class_id="class-programming-language",
             node_type=NodeType.INDIVIDUAL,
             created_at=datetime.now(timezone.utc).isoformat(),
-            updated_at=datetime.now(timezone.utc).isoformat()
+            updated_at=datetime.now(timezone.utc).isoformat(),
         )
 
     def test_individual_creation(self, sample_individual):
@@ -298,7 +311,7 @@ class TestClassBusinessLogicInvariants:
             node_type=NodeType.CLASS,
             parent_id=None,
             created_at=datetime.now(timezone.utc).isoformat(),
-            updated_at=datetime.now(timezone.utc).isoformat()
+            updated_at=datetime.now(timezone.utc).isoformat(),
         )
 
         # Attempting to make a class a subclass of itself should fail
@@ -316,7 +329,7 @@ class TestClassBusinessLogicInvariants:
             node_type=NodeType.CLASS,
             parent_id=None,
             created_at=datetime.now(timezone.utc).isoformat(),
-            updated_at=datetime.now(timezone.utc).isoformat()
+            updated_at=datetime.now(timezone.utc).isoformat(),
         )
 
         # First rename succeeds
@@ -345,7 +358,7 @@ class TestClassBusinessLogicInvariants:
             node_type=NodeType.CLASS,
             parent_id=None,
             created_at=datetime.now(timezone.utc).isoformat(),
-            updated_at=datetime.now(timezone.utc).isoformat()
+            updated_at=datetime.now(timezone.utc).isoformat(),
         )
 
         mammal = Class(
@@ -357,7 +370,7 @@ class TestClassBusinessLogicInvariants:
             node_type=NodeType.CLASS,
             parent_id=None,
             created_at=datetime.now(timezone.utc).isoformat(),
-            updated_at=datetime.now(timezone.utc).isoformat()
+            updated_at=datetime.now(timezone.utc).isoformat(),
         )
 
         dog = Class(
@@ -369,7 +382,7 @@ class TestClassBusinessLogicInvariants:
             node_type=NodeType.CLASS,
             parent_id=None,
             created_at=datetime.now(timezone.utc).isoformat(),
-            updated_at=datetime.now(timezone.utc).isoformat()
+            updated_at=datetime.now(timezone.utc).isoformat(),
         )
 
         # Build the graph
@@ -393,7 +406,7 @@ class TestClassBusinessLogicInvariants:
             node_type=NodeType.CLASS,
             parent_id=None,
             created_at=datetime.now(timezone.utc).isoformat(),
-            updated_at=datetime.now(timezone.utc).isoformat()
+            updated_at=datetime.now(timezone.utc).isoformat(),
         )
 
         # Multiple valid renames

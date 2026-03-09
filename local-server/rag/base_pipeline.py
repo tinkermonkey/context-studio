@@ -29,7 +29,7 @@ class BaseRAGPipeline(ABC):
         self,
         kg_db_session: Session,
         ops_db_session: Session,
-        config: Optional[Dict[str, Any]] = None
+        config: Optional[Dict[str, Any]] = None,
     ):
         """
         Initialize the RAG pipeline.
@@ -46,10 +46,7 @@ class BaseRAGPipeline(ABC):
 
     @abstractmethod
     async def extract_entities(
-        self,
-        text: str,
-        enable_trace: bool = False,
-        enable_llm_layer: bool = True
+        self, text: str, enable_trace: bool = False, enable_llm_layer: bool = True
     ) -> RAGExtractionResponse:
         """
         Extract entities from text using this pipeline variant.

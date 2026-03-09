@@ -10,11 +10,16 @@ import os
 
 # Add the project root to the path to import utils
 sys.path.append(
-    os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))  # noqa: E501
+    os.path.dirname(
+        os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    )  # noqa: E501
 )
 
 try:
-    from utils.monitoring_analysis import analyze_proxy_health, get_performance_summary  # noqa: E501
+    from utils.monitoring_analysis import (
+        analyze_proxy_health,
+        get_performance_summary,
+    )  # noqa: E501
 
     ANALYSIS_AVAILABLE = True
 except ImportError:
@@ -74,7 +79,9 @@ def test_proxy_monitoring() -> None:
                     if stat_type in stats and stats[stat_type]:
                         print(f"\n{stat_type.replace('_', ' ').title()}:")
                         stat_data = stats[stat_type]
-                        if isinstance(stat_data, dict) and "error" not in stat_data:  # noqa: E501
+                        if (
+                            isinstance(stat_data, dict) and "error" not in stat_data
+                        ):  # noqa: E501
                             print(json.dumps(stat_data, indent=2))
                         else:
                             print(f"  Error or unavailable: {stat_data}")
@@ -97,7 +104,9 @@ def test_proxy_monitoring() -> None:
                             print(
                                 f"  [{alert['level'].upper()}] {alert['type']}: {alert['message']}"  # noqa: E501
                             )
-                            print(f"    Recommendation: {alert['recommendation']}")  # noqa: E501
+                            print(
+                                f"    Recommendation: {alert['recommendation']}"
+                            )  # noqa: E501
 
                     # Get performance summary
                     perf_summary = get_performance_summary(stats)

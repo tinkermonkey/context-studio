@@ -325,33 +325,81 @@ def upgrade(connection):
 
         # Insert default optimization configuration
         default_configs = [
-            ("query_cache_ttl_seconds", "query", "3600", "number", "Query cache time-to-live in seconds"),
-            ("query_optimization_enabled", "query", "true", "boolean", "Enable automatic query optimization"),
-            ("storage_lifecycle_policies_enabled", "storage", "true", "boolean", "Enable S3 lifecycle policies"),
-            ("performance_monitoring_interval_seconds", "performance", "300", "number", "Performance monitoring interval"),
-            ("auto_optimization_enabled", "system", "true", "boolean", "Enable automatic optimization"),
-            ("batch_operation_default_size", "batch", "1000", "number", "Default batch operation size"),
-            ("alert_notification_enabled", "performance", "true", "boolean", "Enable performance alert notifications")
+            (
+                "query_cache_ttl_seconds",
+                "query",
+                "3600",
+                "number",
+                "Query cache time-to-live in seconds",
+            ),
+            (
+                "query_optimization_enabled",
+                "query",
+                "true",
+                "boolean",
+                "Enable automatic query optimization",
+            ),
+            (
+                "storage_lifecycle_policies_enabled",
+                "storage",
+                "true",
+                "boolean",
+                "Enable S3 lifecycle policies",
+            ),
+            (
+                "performance_monitoring_interval_seconds",
+                "performance",
+                "300",
+                "number",
+                "Performance monitoring interval",
+            ),
+            (
+                "auto_optimization_enabled",
+                "system",
+                "true",
+                "boolean",
+                "Enable automatic optimization",
+            ),
+            (
+                "batch_operation_default_size",
+                "batch",
+                "1000",
+                "number",
+                "Default batch operation size",
+            ),
+            (
+                "alert_notification_enabled",
+                "performance",
+                "true",
+                "boolean",
+                "Enable performance alert notifications",
+            ),
         ]
 
         for config_key, category, value, config_type, description in default_configs:
-            connection.execute(text("""
+            connection.execute(
+                text("""
             INSERT INTO optimization_configuration
             (config_key, config_category, config_value, config_type, description, last_updated_at, updated_by)  
             VALUES (:config_key, :category, :value, :config_type, :description, :last_updated_at, 'system')  
-            """), {
-                "config_key": config_key,
-                "category": category,
-                "value": value,
-                "config_type": config_type,
-                "description": description,
-                "last_updated_at": datetime.now().isoformat()
-            })
+            """),
+                {
+                    "config_key": config_key,
+                    "category": category,
+                    "value": value,
+                    "config_type": config_type,
+                    "description": description,
+                    "last_updated_at": datetime.now().isoformat(),
+                },
+            )
 
         # Update schema version
-        connection.execute(text(f"""
+        connection.execute(
+            text(f"""
         UPDATE schema_version SET version = {MIGRATION_VERSION}, updated_at = :updated_at
-        """), {"updated_at": datetime.now().isoformat()})
+        """),
+            {"updated_at": datetime.now().isoformat()},
+        )
 
         connection.commit()
         logger.info(f"Migration {MIGRATION_VERSION} completed successfully")
@@ -382,9 +430,12 @@ def downgrade(connection):
         connection.execute(text("DROP TABLE IF EXISTS query_performance_metrics"))
 
         # Revert schema version
-        connection.execute(text(f"""
+        connection.execute(
+            text(f"""
         UPDATE schema_version SET version = {MIGRATION_VERSION - 1}, updated_at = :updated_at
-        """), {"updated_at": datetime.now().isoformat()})
+        """),
+            {"updated_at": datetime.now().isoformat()},
+        )
 
         connection.commit()
         logger.info(f"Migration {MIGRATION_VERSION} rollback completed")

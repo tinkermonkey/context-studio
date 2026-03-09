@@ -15,7 +15,12 @@ import pytest  # noqa: E402
 from datetime import datetime, timezone  # noqa: E402
 from unittest.mock import Mock, patch  # noqa: E402
 
-from services.crdt_merge_engine import CRDTMergeEngine, MergeStrategy, MergeResult, ChangesetMergeResult  # noqa: E402, E501
+from services.crdt_merge_engine import (
+    CRDTMergeEngine,
+    MergeStrategy,
+    MergeResult,
+    ChangesetMergeResult,
+)  # noqa: E402, E501
 from services.collaboration_models import Changeset, ChangesetState  # noqa: E402, E501
 from services.changeset_manager import ChangesetManager  # noqa: E402
 from services.working_tree_manager import WorkingTreeManager  # noqa: E402
@@ -50,12 +55,14 @@ class TestCRDTMergeEngine:
         return Mock(spec=VersionManager)
 
     @pytest.fixture
-    def crdt_merge_engine(self, mock_db_session, mock_changeset_manager, mock_version_manager):
+    def crdt_merge_engine(
+        self, mock_db_session, mock_changeset_manager, mock_version_manager
+    ):
         """Create CRDTMergeEngine instance for testing."""
         return CRDTMergeEngine(
             db=mock_db_session,
             changeset_manager=mock_changeset_manager,
-            version_manager=mock_version_manager
+            version_manager=mock_version_manager,
         )
 
     @pytest.fixture
@@ -68,13 +75,21 @@ class TestCRDTMergeEngine:
         changeset.created_at = datetime.now(timezone.utc)
         return changeset
 
-    def test_initialization(self, crdt_merge_engine, mock_db_session, mock_changeset_manager, mock_version_manager):
+    def test_initialization(
+        self,
+        crdt_merge_engine,
+        mock_db_session,
+        mock_changeset_manager,
+        mock_version_manager,
+    ):
         """Test CRDTMergeEngine initialization."""
         assert crdt_merge_engine.db == mock_db_session
         assert crdt_merge_engine.changeset_manager == mock_changeset_manager
         assert crdt_merge_engine.version_manager == mock_version_manager
 
-    def test_merge_changeset_success(self, crdt_merge_engine, mock_changeset_manager, mock_version_manager):
+    def test_merge_changeset_success(
+        self, crdt_merge_engine, mock_changeset_manager, mock_version_manager
+    ):
         """Test successful changeset merging."""
         # Mock approved changeset
         mock_changeset = Mock()
@@ -86,12 +101,18 @@ class TestCRDTMergeEngine:
         mock_version.id = "version123"
         mock_version_manager.create_version.return_value = mock_version
 
-        with patch.object(crdt_merge_engine, '_get_changeset_versions', return_value=[]):
-            with patch.object(crdt_merge_engine, '_group_versions_by_entity', return_value={}):
-                with patch.object(crdt_merge_engine, 'db') as mock_db:
+        with patch.object(
+            crdt_merge_engine, "_get_changeset_versions", return_value=[]
+        ):
+            with patch.object(
+                crdt_merge_engine, "_group_versions_by_entity", return_value={}
+            ):
+                with patch.object(crdt_merge_engine, "db") as mock_db:
                     mock_db.commit.return_value = None
 
-                    result = crdt_merge_engine.merge_changeset("changeset123", "user123")
+                    result = crdt_merge_engine.merge_changeset(
+                        "changeset123", "user123"
+                    )
 
         assert isinstance(result, ChangesetMergeResult)
         assert result.changeset_id == "changeset123"
@@ -105,7 +126,9 @@ class TestCRDTMergeEngine:
         with pytest.raises(ValueError, match="not found"):
             crdt_merge_engine.merge_changeset("nonexistent", "user123")
 
-    def test_merge_changeset_invalid_state(self, crdt_merge_engine, mock_changeset_manager):
+    def test_merge_changeset_invalid_state(
+        self, crdt_merge_engine, mock_changeset_manager
+    ):
         """Test merging changeset in invalid state."""
         mock_changeset = Mock()
         mock_changeset.state = ChangesetState.DRAFT
@@ -159,7 +182,7 @@ class TestCRDTMergeEngine:
             merged_version_id="version123",
             status="success",
             error_message=None,
-            conflicts=None
+            conflicts=None,
         )
 
         assert result.entity_type == "test_entity"
@@ -169,13 +192,23 @@ class TestCRDTMergeEngine:
         assert result.error_message is None
         assert result.conflicts is None
 
-    def test_database_transaction_rollback_on_error(self, crdt_merge_engine, mock_db_session, mock_changeset_manager, mock_version_manager):
+    def test_database_transaction_rollback_on_error(
+        self,
+        crdt_merge_engine,
+        mock_db_session,
+        mock_changeset_manager,
+        mock_version_manager,
+    ):
         """Test database rollback on merge error."""
         mock_changeset = Mock()
         mock_changeset.state = ChangesetState.APPROVED
         mock_changeset_manager.get_changeset.return_value = mock_changeset
 
-        with patch.object(crdt_merge_engine, '_get_changeset_versions', side_effect=Exception("Merge error")):
+        with patch.object(
+            crdt_merge_engine,
+            "_get_changeset_versions",
+            side_effect=Exception("Merge error"),
+        ):
             with pytest.raises(RuntimeError, match="Failed to merge changeset"):
                 crdt_merge_engine.merge_changeset("changeset1", "user123")
 
@@ -187,7 +220,7 @@ class TestCRDTMergeEngine:
             entity_type="test_entity",
             entity_id="entity123",
             merged_version_id="version123",
-            status="success"
+            status="success",
         )
 
         result = ChangesetMergeResult(
@@ -196,7 +229,7 @@ class TestCRDTMergeEngine:
             conflicts=0,
             results=[merge_result],
             conflict_details=[],
-            merge_commit_id="commit123"
+            merge_commit_id="commit123",
         )
 
         assert result.changeset_id == "changeset123"
@@ -212,11 +245,14 @@ class TestCRDTMergeEngine:
         mock_version.id = "resolved_version123"
         mock_version_manager.create_version.return_value = mock_version
 
-        with patch.object(crdt_merge_engine, '_update_canonical_version'):
-            with patch.object(crdt_merge_engine, 'db') as mock_db:
+        with patch.object(crdt_merge_engine, "_update_canonical_version"):
+            with patch.object(crdt_merge_engine, "db") as mock_db:
                 mock_db.commit.return_value = None
 
-                resolution_content = {"title": "Resolved Title", "description": "Resolved Description"}
+                resolution_content = {
+                    "title": "Resolved Title",
+                    "description": "Resolved Description",
+                }
                 result = crdt_merge_engine.resolve_conflict(
                     "test_entity", "entity123", resolution_content, "resolver123"
                 )
@@ -261,14 +297,10 @@ class TestCRDTMergeEngine:
 
     def test_resolve_scalar_conflict_counter(self, crdt_merge_engine):
         """Test counter conflict resolution returns maximum."""
-        resolved = crdt_merge_engine._resolve_scalar_conflict(
-            "view_count", 10, 15
-        )
+        resolved = crdt_merge_engine._resolve_scalar_conflict("view_count", 10, 15)
         assert resolved == 15
 
     def test_resolve_scalar_conflict_boolean(self, crdt_merge_engine):
         """Test boolean conflict resolution returns OR result."""
-        resolved = crdt_merge_engine._resolve_scalar_conflict(
-            "is_active", True, False
-        )
+        resolved = crdt_merge_engine._resolve_scalar_conflict("is_active", True, False)
         assert resolved is True

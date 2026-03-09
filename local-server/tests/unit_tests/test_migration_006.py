@@ -80,29 +80,24 @@ class MigrationTestHarness:
 
         try:
             # Create layers
-            cursor.execute(
-                """
+            cursor.execute("""
                 INSERT INTO layers (id, title, definition, created_at, version, last_modified)
                 VALUES
                     ('layer-1', 'Science Layer', 'Scientific concepts', '2023-01-01 10:00:00', 1, '2023-01-01 10:00:00'),
                     ('layer-2', 'Technology Layer', 'Technical concepts', '2023-01-02 10:00:00', 1, '2023-01-02 10:00:00')
-            """
-            )
+            """)
 
             # Create domains
-            cursor.execute(
-                """
+            cursor.execute("""
                 INSERT INTO domains (id, layer_id, title, definition, primary_predicate_id, created_at, version, last_modified)
                 VALUES
                     ('domain-1', 'layer-1', 'Biology', 'Study of living organisms', 'pred-1', '2023-01-03 10:00:00', 1, '2023-01-03 10:00:00'),
                     ('domain-2', 'layer-1', 'Chemistry', 'Study of matter and chemical reactions', 'pred-2', '2023-01-04 10:00:00', 1, '2023-01-04 10:00:00'),
                     ('domain-3', 'layer-2', 'Software Engineering', 'Development of software systems', NULL, '2023-01-05 10:00:00', 1, '2023-01-05 10:00:00')
-            """
-            )
+            """)
 
             # Create terms with hierarchical relationships
-            cursor.execute(
-                """
+            cursor.execute("""
                 INSERT INTO terms (id, domain_id, layer_id, title, definition, parent_term_id, created_at, version, last_modified)
                 VALUES
                     ('term-1', 'domain-1', 'layer-1', 'Cell', 'Basic unit of life', NULL, '2023-01-06 10:00:00', 1, '2023-01-06 10:00:00'),
@@ -111,29 +106,24 @@ class MigrationTestHarness:
                     ('term-4', 'domain-2', 'layer-1', 'Molecule', 'Group of atoms bonded together', NULL, '2023-01-09 10:00:00', 1, '2023-01-09 10:00:00'),
                     ('term-5', 'domain-2', 'layer-1', 'Water Molecule', 'H2O molecule', 'term-4', '2023-01-10 10:00:00', 1, '2023-01-10 10:00:00'),
                     ('term-6', 'domain-3', 'layer-2', 'Algorithm', 'Step-by-step procedure', NULL, '2023-01-11 10:00:00', 1, '2023-01-11 10:00:00')
-            """
-            )
+            """)
 
             # Create term relationships
-            cursor.execute(
-                """
+            cursor.execute("""
                 INSERT INTO term_relationships (id, source_term_id, target_term_id, predicate, predicate_id, created_at)
                 VALUES
                     ('rel-1', 'term-2', 'term-3', 'related_to', 'pred-3', '2023-01-12 10:00:00'),
                     ('rel-2', 'term-1', 'term-4', 'composed_of', 'pred-4', '2023-01-13 10:00:00')
-            """
-            )
+            """)
 
             # Create graph events
-            cursor.execute(
-                """
+            cursor.execute("""
                 INSERT INTO graph_events (event_type, entity_type, old_data, new_data, timestamp, processed)
                 VALUES
                     ('create', 'layer', NULL, '{"id": "layer-1", "title": "Science Layer"}', '2023-01-01 10:00:00', 0),
                     ('create', 'domain', NULL, '{"id": "domain-1", "title": "Biology"}', '2023-01-03 10:00:00', 1),
                     ('create', 'term', NULL, '{"id": "term-1", "title": "Cell"}', '2023-01-06 10:00:00', 0)
-            """
-            )
+            """)
 
             conn.commit()
 
@@ -223,12 +213,10 @@ class MigrationTestHarness:
 
                 # Record in schema history
                 conn.execute(
-                    text(
-                        """
+                    text("""
                     INSERT INTO schema_history (version, description, migration_file, checksum, execution_time_ms)
                     VALUES (:version, :description, :migration_file, :checksum, :execution_time_ms)
-                """
-                    ),
+                """),
                     {
                         "version": migration_006.version,
                         "description": migration_006.description,
@@ -265,13 +253,11 @@ class MigrationTestHarness:
         cursor = conn.cursor()
 
         try:
-            cursor.execute(
-                """
+            cursor.execute("""
                 SELECT COUNT(*) FROM structure_nodes n1
                 WHERE n1.parent_node_id IS NOT NULL
                 AND NOT EXISTS (SELECT 1 FROM structure_nodes n2 WHERE n2.id = n1.parent_node_id)
-            """
-            )
+            """)
             invalid_count = cursor.fetchone()[0]
             return invalid_count == 0
 
@@ -285,12 +271,10 @@ class MigrationTestHarness:
 
         try:
             # Check if any structure_nodes have embeddings
-            cursor.execute(
-                """
+            cursor.execute("""
                 SELECT COUNT(*) FROM structure_nodes
                 WHERE title_embedding IS NOT NULL OR definition_embedding IS NOT NULL
-            """
-            )
+            """)
             cursor.fetchone()[0]
 
             # For this test, we'll assume embeddings migration is successful if no error occurs
@@ -307,23 +291,19 @@ class MigrationTestHarness:
 
         try:
             # Check that domains have layers as parents
-            cursor.execute(
-                """
+            cursor.execute("""
                 SELECT COUNT(*) FROM structure_nodes d
                 JOIN structure_nodes p ON d.parent_node_id = p.id
                 WHERE d.node_type = 'domain' AND p.node_type != 'layer'
-            """
-            )
+            """)
             invalid_domain_parents = cursor.fetchone()[0]
 
             # Check that terms with parent_term_id have term parents
-            cursor.execute(
-                """
+            cursor.execute("""
                 SELECT COUNT(*) FROM structure_nodes t
                 JOIN structure_nodes p ON t.parent_node_id = p.id
                 WHERE t.node_type = 'term' AND p.node_type NOT IN ('domain', 'term')
-            """
-            )
+            """)
             invalid_term_parents = cursor.fetchone()[0]
 
             return invalid_domain_parents == 0 and invalid_term_parents == 0
@@ -570,28 +550,24 @@ class TestMigration006ParentChildRelationships:
             assert layer_parent is None, "Layers should not have parents"
 
             # Test domain has layer parent
-            cursor.execute(
-                """
+            cursor.execute("""
                 SELECT n.id, n.title, p.node_type, p.title
                 FROM structure_nodes n
                 JOIN structure_nodes p ON n.parent_node_id = p.id
                 WHERE n.node_type = 'domain' AND n.id = 'domain-1'
-            """
-            )
+            """)
             domain_relationship = cursor.fetchone()
             assert domain_relationship is not None
             assert domain_relationship[2] == "layer"  # parent node_type
             assert domain_relationship[3] == "Science Layer"  # parent title
 
             # Test term has correct parent (could be domain or term)
-            cursor.execute(
-                """
+            cursor.execute("""
                 SELECT n.id, n.title, p.node_type, p.title
                 FROM structure_nodes n
                 JOIN structure_nodes p ON n.parent_node_id = p.id
                 WHERE n.node_type = 'term' AND n.id = 'term-2'
-            """
-            )
+            """)
             term_relationship = cursor.fetchone()
             assert term_relationship is not None
             assert term_relationship[2] == "term"  # parent node_type (term-1)
@@ -608,25 +584,19 @@ class TestMigration006ParentChildRelationships:
 
         try:
             # Create a deep term hierarchy: term-root -> term-level1 -> term-level2 -> term-level3
-            cursor.execute(
-                """
+            cursor.execute("""
                 INSERT INTO layers (id, title, definition) VALUES ('layer-deep', 'Deep Layer', 'For hierarchy testing')
-            """
-            )
-            cursor.execute(
-                """
+            """)
+            cursor.execute("""
                 INSERT INTO domains (id, layer_id, title, definition) VALUES ('domain-deep', 'layer-deep', 'Deep Domain', 'For hierarchy testing')
-            """
-            )
-            cursor.execute(
-                """
+            """)
+            cursor.execute("""
                 INSERT INTO terms (id, domain_id, layer_id, title, definition, parent_term_id) VALUES
                     ('term-root', 'domain-deep', 'layer-deep', 'Root Term', 'Root of hierarchy', NULL),
                     ('term-l1', 'domain-deep', 'layer-deep', 'Level 1 Term', 'First level', 'term-root'),
                     ('term-l2', 'domain-deep', 'layer-deep', 'Level 2 Term', 'Second level', 'term-l1'),
                     ('term-l3', 'domain-deep', 'layer-deep', 'Level 3 Term', 'Third level', 'term-l2')
-            """
-            )
+            """)
             conn.commit()
 
         finally:
@@ -726,17 +696,13 @@ class TestMigration006EdgeCases:
         cursor = conn.cursor()
 
         try:
-            cursor.execute(
-                """
+            cursor.execute("""
                 INSERT INTO layers (id, title, definition) VALUES ('layer-test', 'Test Layer', 'Test')
-            """
-            )
-            cursor.execute(
-                """
+            """)
+            cursor.execute("""
                 INSERT INTO domains (id, layer_id, title, definition, primary_predicate_id)
                 VALUES ('domain-test', 'layer-test', 'Test Domain', 'Test', 'nonexistent-predicate')
-            """
-            )
+            """)
             conn.commit()
 
         finally:
@@ -783,24 +749,18 @@ class TestMigration006EdgeCases:
         cursor = conn.cursor()
 
         try:
-            cursor.execute(
-                """
+            cursor.execute("""
                 INSERT INTO layers (id, title, definition) VALUES ('layer-orphan', 'Orphan Layer', 'Test')
-            """
-            )
-            cursor.execute(
-                """
+            """)
+            cursor.execute("""
                 INSERT INTO domains (id, layer_id, title, definition)
                 VALUES ('domain-orphan', 'layer-orphan', 'Orphan Domain', 'Test')
-            """
-            )
+            """)
             # Create term with invalid domain_id
-            cursor.execute(
-                """
+            cursor.execute("""
                 INSERT INTO terms (id, domain_id, layer_id, title, definition)
                 VALUES ('term-orphan', 'nonexistent-domain', 'layer-orphan', 'Orphan Term', 'Test')
-            """
-            )
+            """)
             conn.commit()
 
         finally:

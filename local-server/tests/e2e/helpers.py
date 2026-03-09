@@ -12,7 +12,6 @@ from typing import Callable, Any, Dict, List, Optional
 
 import pytest
 
-
 # Transient exceptions that warrant retry: network failures, temporary service unavailability
 TRANSIENT_EXCEPTIONS = (
     ConnectionError,
@@ -49,6 +48,7 @@ def retry_on_external_failure(max_retries: int = 2, delay: float = 5):
                      unavailable services from real test failures.
         AssertionError: Genuine test failures are re-raised immediately without retry.
     """
+
     def decorator(func: Callable) -> Callable:
         @functools.wraps(func)
         def wrapper(*args, **kwargs):
@@ -70,7 +70,9 @@ def retry_on_external_failure(max_retries: int = 2, delay: float = 5):
                     )
             # Should not reach here, but fail safely if no exception was raised
             assert False, "Unexpected state in retry_on_external_failure"
+
         return wrapper
+
     return decorator
 
 
@@ -129,7 +131,9 @@ def poll_until(
     # Timeout reached: include exception info if we have it
     error_msg = f"Timed out after {timeout_seconds}s waiting for {description}. Last result: {last_result}"
     if last_exception:
-        error_msg += f". Last exception: {type(last_exception).__name__}: {last_exception}"
+        error_msg += (
+            f". Last exception: {type(last_exception).__name__}: {last_exception}"
+        )
     raise TimeoutError(error_msg)
 
 
@@ -193,7 +197,9 @@ def create_test_hierarchy(
             "definition": layer_definition,
         },
     )
-    assert layer_response.status_code == 201, f"Failed to create layer: {layer_response.text}"
+    assert (
+        layer_response.status_code == 201
+    ), f"Failed to create layer: {layer_response.text}"
     layer_id = layer_response.json()["id"]
 
     # Step 2: Create domain under layer
@@ -206,7 +212,9 @@ def create_test_hierarchy(
             "definition": scheme_definition,
         },
     )
-    assert domain_response.status_code == 201, f"Failed to create domain: {domain_response.text}"
+    assert (
+        domain_response.status_code == 201
+    ), f"Failed to create domain: {domain_response.text}"
     domain_id = domain_response.json()["id"]
 
     # Step 3: Create all terms under domain
@@ -221,9 +229,9 @@ def create_test_hierarchy(
                 "definition": cls["definition"],
             },
         )
-        assert term_response.status_code == 201, (
-            f"Failed to create term '{cls['title']}': {term_response.text}"
-        )
+        assert (
+            term_response.status_code == 201
+        ), f"Failed to create term '{cls['title']}': {term_response.text}"
         term_ids[cls["title"]] = term_response.json()["id"]
 
     return {
@@ -286,17 +294,17 @@ def create_test_hierarchy_new_api(
 
     # Create taxonomy
     taxonomy_resp = client.post("/api/ontology_entities/", json=taxonomy_data)
-    assert taxonomy_resp.status_code == 201, (
-        f"Failed to create taxonomy: {taxonomy_resp.status_code} {taxonomy_resp.text}"
-    )
+    assert (
+        taxonomy_resp.status_code == 201
+    ), f"Failed to create taxonomy: {taxonomy_resp.status_code} {taxonomy_resp.text}"
     taxonomy_id = taxonomy_resp.json()["id"]
 
     # Create concept scheme under taxonomy (merge parent_entity_id without mutating caller's dict)
     scheme_payload = {**scheme_data, "parent_entity_id": taxonomy_id}
     scheme_resp = client.post("/api/ontology_entities/", json=scheme_payload)
-    assert scheme_resp.status_code == 201, (
-        f"Failed to create concept scheme: {scheme_resp.status_code} {scheme_resp.text}"
-    )
+    assert (
+        scheme_resp.status_code == 201
+    ), f"Failed to create concept scheme: {scheme_resp.status_code} {scheme_resp.text}"
     scheme_id = scheme_resp.json()["id"]
 
     # Create classes under concept scheme (merge parent_entity_id without mutating caller's dicts)

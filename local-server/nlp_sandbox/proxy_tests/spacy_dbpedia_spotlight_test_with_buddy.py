@@ -4,7 +4,7 @@ import time
 import requests
 from reference_api_buddy.core.proxy import CachingProxy
 
-#os.environ['HTTP_PROXY'] = 'http://localhost:8080'
+# os.environ['HTTP_PROXY'] = 'http://localhost:8080'
 
 config = {
     "logging": {
@@ -23,7 +23,7 @@ config = {
         # Intercept requests to /dbpedia_spotlight and map to api.dbpedia-spotlight.org
         "dbpedia_spotlight": {"upstream": "https://api.dbpedia-spotlight.org/en/"}
     },
-    #"cache": {"database_path": "smoke_tests/cache.db", "max_cache_response_size": 10485760},
+    # "cache": {"database_path": "smoke_tests/cache.db", "max_cache_response_size": 10485760},
     "security": {},
     "throttling": {},
     "callbacks": {},
@@ -41,26 +41,31 @@ if False:
     # Target endpoint: /dbpedia_spotlight/annotate (maps to https://api.dbpedia-spotlight.org/en/annotate)
     proxy_url = "http://127.0.0.1:18080/dbpedia_spotlight/annotate"
 
-    payload = {
-    "text": "A sentence about apple sauce."
-    }
+    payload = {"text": "A sentence about apple sauce."}
 
-    headers = {
-        "accept": "application/json"
-    }
+    headers = {"accept": "application/json"}
 
     print("Making first request (should be a cache miss)...")
     start1 = time.time()
     resp1 = requests.post(proxy_url, data=payload, headers=headers)
     duration1 = time.time() - start1
-    print(f"First request status: {resp1.status_code}, duration: {duration1:.3f}s, body: {resp1.text}...")
+    print(
+        f"First request status: {resp1.status_code}, duration: {duration1:.3f}s, body: {resp1.text}..."
+    )
 
 if True:
-    nlp = spacy.blank('en')
-    nlp.add_pipe('dbpedia_spotlight', config={'dbpedia_rest_endpoint': 'http://127.0.0.1:18080/dbpedia_spotlight'})
+    nlp = spacy.blank("en")
+    nlp.add_pipe(
+        "dbpedia_spotlight",
+        config={"dbpedia_rest_endpoint": "http://127.0.0.1:18080/dbpedia_spotlight"},
+    )
 
-    doc = nlp('A sentence about apple sauce.')
-    print([(ent.text, ent.kb_id_, ent._.dbpedia_raw_result['@similarityScore']) for ent in doc.ents])
+    doc = nlp("A sentence about apple sauce.")
+    print(
+        [
+            (ent.text, ent.kb_id_, ent._.dbpedia_raw_result["@similarityScore"])
+            for ent in doc.ents
+        ]
+    )
 
-    print("Spans: ", doc.spans['dbpedia_spotlight'])
-
+    print("Spans: ", doc.spans["dbpedia_spotlight"])

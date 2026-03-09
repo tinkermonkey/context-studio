@@ -5,7 +5,11 @@ import os
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../")))
 
 from fastapi.testclient import TestClient
-from triage_scripts.triage_helper import create_test_app_with_migrations, cleanup_test_database, create_test_client
+from triage_scripts.triage_helper import (
+    create_test_app_with_migrations,
+    cleanup_test_database,
+    create_test_client,
+)
 import uuid
 from sqlalchemy import text
 from utils.logger import get_logger
@@ -13,7 +17,9 @@ from utils.logger import get_logger
 logger = get_logger(__name__)
 
 # Create test app with migrations applied
-app, test_db_fd, test_db_path, engine, TestingSessionLocal = create_test_app_with_migrations()
+app, test_db_fd, test_db_path, engine, TestingSessionLocal = (
+    create_test_app_with_migrations()
+)
 
 
 def client():
@@ -32,8 +38,12 @@ def create_layer(client, title=None, definition=None, primary_predicate=None):
     return response.json()
 
 
-def test_create_layer(client, title=f"Test Layer {uuid.uuid4()}", definition=None, primary_predicate=None):
-    data = create_layer(client, title=title, definition=definition, primary_predicate=primary_predicate)
+def test_create_layer(
+    client, title=f"Test Layer {uuid.uuid4()}", definition=None, primary_predicate=None
+):
+    data = create_layer(
+        client, title=title, definition=definition, primary_predicate=primary_predicate
+    )
     assert "id" in data
     assert data["title"] == title, f"Expected title '{title}', got '{data['title']}'"
     assert data["definition"] == definition
@@ -50,7 +60,9 @@ def test_find_layer_by_title(client, title):
 
 
 def test_find_layer_by_definition(client, definition):
-    response = client.post("/api/layers/find", json={"definition": definition, "limit": 1})
+    response = client.post(
+        "/api/layers/find", json={"definition": definition, "limit": 1}
+    )
     assert response.status_code == 200, response.text
     data = response.json()
     assert len(data) > 0, "No layers found with the given definition"
@@ -97,7 +109,9 @@ if __name__ == "__main__":
         for layer in layer_results:
             try:
                 logger.info(f"Searching for layer with title: {layer['title']}")
-                results = test_find_layer_by_title(client_instance, title=layer["title"])
+                results = test_find_layer_by_title(
+                    client_instance, title=layer["title"]
+                )
                 assert (
                     results[0]["title"] == layer["title"]
                 ), f"Expected title '{layer['title']}', got '{results[0]['title']}'"
@@ -106,8 +120,12 @@ if __name__ == "__main__":
                         f"Found layer with ID: {result['id']}, Title: {result['title']} and score: {result.get('score', 'N/A')}"
                     )
 
-                logger.info(f"Searching for layer with definition: {layer['definition']}")
-                results = test_find_layer_by_definition(client_instance, definition=layer["definition"])
+                logger.info(
+                    f"Searching for layer with definition: {layer['definition']}"
+                )
+                results = test_find_layer_by_definition(
+                    client_instance, definition=layer["definition"]
+                )
                 assert (
                     results[0]["definition"] == layer["definition"]
                 ), f"Expected definition '{layer['definition']}', got '{results[0]['definition']}'"
@@ -123,29 +141,37 @@ if __name__ == "__main__":
                 title_emb = layer.get("title_embedding", None)
                 emb_str = "[" + ", ".join(f"{x:.6f}" for x in title_emb) + "]"
                 if not emb_str:
-                    logger.error(f"No embedding found for layer with title: {layer['title']}")
+                    logger.error(
+                        f"No embedding found for layer with title: {layer['title']}"
+                    )
                     continue
 
                 with TestingSessionLocal() as db:
                     logger.info(f"Searching for layer with title: {layer['title']}")
                     try:
-                        sql = text(
-                            """
+                        sql = text("""
                             SELECT id, distance
                             FROM layers_vec
                             WHERE title_embedding match :emb
                             ORDER BY distance
                             LIMIT :limit
-                        """
-                        )
-                        rows = db.execute(sql, {"emb": emb_str, "limit": len(layer_results)}).fetchall()
+                        """)
+                        rows = db.execute(
+                            sql, {"emb": emb_str, "limit": len(layer_results)}
+                        ).fetchall()
                         if rows:
                             for row in rows:
-                                logger.info(f"Found layer in DB with ID: {row[0]}, Distance: {row[1]}")
+                                logger.info(
+                                    f"Found layer in DB with ID: {row[0]}, Distance: {row[1]}"
+                                )
                         else:
-                            logger.warning("No layers found in the database with the given embedding.")
+                            logger.warning(
+                                "No layers found in the database with the given embedding."
+                            )
                     except Exception as db_error:
-                        logger.error(f"Database error while searching for layer: {db_error}")
+                        logger.error(
+                            f"Database error while searching for layer: {db_error}"
+                        )
 
         # Test searching for a similar title
         similar_titles = ["A beautiful sunset", "A great flight"]
@@ -167,8 +193,12 @@ if __name__ == "__main__":
         ]
         for similar_definition in similar_definitions:
             try:
-                logger.info(f"Testing search for similar definition: {similar_definition}")
-                results = test_find_layer_by_definition(client_instance, definition=similar_definition)
+                logger.info(
+                    f"Testing search for similar definition: {similar_definition}"
+                )
+                results = test_find_layer_by_definition(
+                    client_instance, definition=similar_definition
+                )
                 for result in results:
                     logger.info(
                         f"Found layer with ID: {result['id']}, Definition: {result['definition']} and score: {result.get('score', 'N/A')}"

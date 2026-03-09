@@ -7,6 +7,7 @@ DataPropertyValue, OntologyMapping, and SearchCriteria.
 
 import sys
 import os
+
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import pytest  # noqa: E402
@@ -203,7 +204,7 @@ class TestExternalReferenceValueObject:
             source="wikidata",
             uri="https://www.wikidata.org/wiki/Q1234",
             label="Example Entity",
-            confidence=0.95
+            confidence=0.95,
         )
 
         assert ref.source == "wikidata"
@@ -217,7 +218,7 @@ class TestExternalReferenceValueObject:
             source="dbpedia",
             uri="http://dbpedia.org/resource/Example",
             label="Example",
-            confidence=0.9
+            confidence=0.9,
         )
 
         # Attempting to modify should raise error
@@ -231,7 +232,7 @@ class TestExternalReferenceValueObject:
             uri="http://dbpedia.org/resource/Example",
             label="Example",
             confidence=0.9,
-            metadata={"key": "value"}
+            metadata={"key": "value"},
         )
 
         # Metadata should be a MappingProxyType (read-only)
@@ -247,7 +248,7 @@ class TestExternalReferenceValueObject:
             source="wikidata",
             uri="https://example.com",
             label="Example",
-            confidence=0.8
+            confidence=0.8,
         )
 
         assert isinstance(ref.metadata, types.MappingProxyType)
@@ -264,7 +265,7 @@ class TestLexicalSenseValueObject:
             definition="A definition of the sense",
             lemma="example",
             confidence=0.9,
-            source="wordnet"
+            source="wordnet",
         )
 
         assert sense.synset_id == "synset-001"
@@ -280,7 +281,7 @@ class TestLexicalSenseValueObject:
             definition="Definition",
             lemma="word",
             confidence=0.85,
-            source="wordnet"
+            source="wordnet",
         )
 
         with pytest.raises((AttributeError, TypeError)):
@@ -292,11 +293,7 @@ class TestDataPropertyValueValueObject:
 
     def test_data_property_value_creation(self):
         """Test creating a DataPropertyValue."""
-        prop = DataPropertyValue(
-            key="color",
-            value="red",
-            datatype="xsd:string"
-        )
+        prop = DataPropertyValue(key="color", value="red", datatype="xsd:string")
 
         assert prop.key == "color"
         assert prop.value == "red"
@@ -304,11 +301,7 @@ class TestDataPropertyValueValueObject:
 
     def test_data_property_value_immutability(self):
         """Test that DataPropertyValue is immutable."""
-        prop = DataPropertyValue(
-            key="age",
-            value="25",
-            datatype="xsd:integer"
-        )
+        prop = DataPropertyValue(key="age", value="25", datatype="xsd:integer")
 
         with pytest.raises((AttributeError, TypeError)):
             prop.value = "30"
@@ -323,7 +316,7 @@ class TestOntologyMappingValueObject:
             ontology="skos",
             uri="http://www.w3.org/2004/02/skos/core#Concept",
             label="Concept",
-            exact_match=True
+            exact_match=True,
         )
 
         assert mapping.ontology == "skos"
@@ -337,7 +330,7 @@ class TestOntologyMappingValueObject:
             ontology="rdfs",
             uri="http://example.com/resource",
             label="Resource",
-            exact_match=False
+            exact_match=False,
         )
 
         with pytest.raises((AttributeError, TypeError)):
@@ -368,7 +361,7 @@ class TestSearchCriteriaValueObject:
             parent_id="parent-001",
             use_semantic_search=True,
             limit=50,
-            offset=10
+            offset=10,
         )
 
         assert criteria.query == "animal"

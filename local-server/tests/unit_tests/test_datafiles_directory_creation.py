@@ -64,9 +64,11 @@ class TestPipelineDatabaseManager:
         with tempfile.TemporaryDirectory() as temp_dir:
             # Mock settings to use temp directory
             mock_settings = MagicMock()
-            mock_settings.database.operations_path = os.path.join(temp_dir, "datafiles", "operations.db")
+            mock_settings.database.operations_path = os.path.join(
+                temp_dir, "datafiles", "operations.db"
+            )
 
-            with patch('config.get_settings', return_value=mock_settings):
+            with patch("config.get_settings", return_value=mock_settings):
                 from pipeline.manager import PipelineDatabaseManager
 
                 manager = PipelineDatabaseManager()
@@ -148,8 +150,7 @@ class TestDatasetManager:
 
             config_path = os.path.join(temp_dir, "datasets.json")
             DatasetManager(
-                datasets_config_path=config_path,
-                datasets_directory=datasets_dir
+                datasets_config_path=config_path, datasets_directory=datasets_dir
             )
 
             # Verify directory was created
@@ -167,8 +168,7 @@ class TestDatasetManager:
 
             config_path = os.path.join(temp_dir, "datasets.json")
             DatasetManager(
-                datasets_config_path=config_path,
-                datasets_directory=datasets_dir
+                datasets_config_path=config_path, datasets_directory=datasets_dir
             )
 
             # Verify no errors occurred
@@ -184,21 +184,25 @@ class TestDirectoryCreationPatterns:
 
         # List of manager modules to check
         manager_modules = [
-            'pipeline.manager',
-            'reference_db.manager',
-            'dataset.manager',
-            'nlp.proxy_manager'
+            "pipeline.manager",
+            "reference_db.manager",
+            "dataset.manager",
+            "nlp.proxy_manager",
         ]
 
         for module_name in manager_modules:
-            module = __import__(module_name, fromlist=[''])
+            module = __import__(module_name, fromlist=[""])
 
             # Get source code of the module
             source = inspect.getsource(module)
 
             # Check for directory creation pattern
-            assert 'os.makedirs' in source, f"{module_name} should use os.makedirs for directory creation"
-            assert 'exist_ok=True' in source, f"{module_name} should use exist_ok=True to handle existing directories"
+            assert (
+                "os.makedirs" in source
+            ), f"{module_name} should use os.makedirs for directory creation"
+            assert (
+                "exist_ok=True" in source
+            ), f"{module_name} should use exist_ok=True to handle existing directories"
 
     def test_directory_creation_before_database_access(self):
         """Verify directory creation happens before first database access in each manager."""
@@ -207,22 +211,28 @@ class TestDirectoryCreationPatterns:
 
         # For PipelineDatabaseManager
         from pipeline.manager import PipelineDatabaseManager
+
         init_source = inspect.getsource(PipelineDatabaseManager.__init__)
 
         # Find position of makedirs and database initialization
-        makedirs_pos = init_source.find('os.makedirs')
-        db_init_pos = init_source.find('self._initialize_database')
+        makedirs_pos = init_source.find("os.makedirs")
+        db_init_pos = init_source.find("self._initialize_database")
 
-        assert makedirs_pos < db_init_pos, "Pipeline manager should create directory before initializing database"
+        assert (
+            makedirs_pos < db_init_pos
+        ), "Pipeline manager should create directory before initializing database"
 
         # For ReferenceManager
         from reference_db.manager import ReferenceManager
+
         init_method_source = inspect.getsource(ReferenceManager._initialize_database)
 
-        makedirs_pos = init_method_source.find('os.makedirs')
-        engine_pos = init_method_source.find('create_engine')
+        makedirs_pos = init_method_source.find("os.makedirs")
+        engine_pos = init_method_source.find("create_engine")
 
-        assert makedirs_pos < engine_pos, "Reference manager should create directory before creating engine"
+        assert (
+            makedirs_pos < engine_pos
+        ), "Reference manager should create directory before creating engine"
 
 
 class TestFreshInstallation:
@@ -242,7 +252,9 @@ class TestFreshInstallation:
 
             # Create pipeline manager
             operations_db_path = os.path.join(datafiles_dir, "operations.db")
-            pipeline_manager = PipelineDatabaseManager(operations_db_path=operations_db_path)
+            pipeline_manager = PipelineDatabaseManager(
+                operations_db_path=operations_db_path
+            )
 
             # Verify datafiles directory was created
             assert os.path.exists(datafiles_dir)
@@ -250,7 +262,9 @@ class TestFreshInstallation:
             # Create reference manager
             reference_db_path = os.path.join(datafiles_dir, "reference.db")
             reference_config = ReferenceConfig()
-            reference_manager = ReferenceManager(reference_config, db_path=reference_db_path)
+            reference_manager = ReferenceManager(
+                reference_config, db_path=reference_db_path
+            )
 
             # Verify all databases exist
             assert os.path.exists(operations_db_path)
@@ -267,6 +281,7 @@ class TestFreshInstallation:
             db_path = os.path.join(datafiles_dir, "operations.db")
 
             from pipeline.manager import PipelineDatabaseManager
+
             manager = PipelineDatabaseManager(operations_db_path=db_path)
 
             # Check directory permissions

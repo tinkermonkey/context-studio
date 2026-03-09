@@ -29,6 +29,7 @@ router = APIRouter(prefix="/api/analytics", tags=["analytics"])
 
 class AnalyticsHealthOut(BaseModel):
     """API model for analytics system health."""
+
     status: str
     duckdb_available: bool
     s3_configured: bool
@@ -40,6 +41,7 @@ class AnalyticsHealthOut(BaseModel):
 
 class ChangeSummaryOut(BaseModel):
     """API model for change summary output."""
+
     total_changes: int
     entities_modified: int
     active_users: int
@@ -50,6 +52,7 @@ class ChangeSummaryOut(BaseModel):
 
 class UserActivityOut(BaseModel):
     """API model for user activity output."""
+
     author_id: str
     total_changes: int
     total_entities: int
@@ -60,6 +63,7 @@ class UserActivityOut(BaseModel):
 
 class EntityHotspotOut(BaseModel):
     """API model for entity hotspot output."""
+
     entity_type: str
     entity_id: str
     total_modifications: int
@@ -70,6 +74,7 @@ class EntityHotspotOut(BaseModel):
 
 class CollaborationMetricsOut(BaseModel):
     """API model for collaboration metrics output."""
+
     proposal_authors: int
     voters: int
     total_votes: int
@@ -79,6 +84,7 @@ class CollaborationMetricsOut(BaseModel):
 
 class ChangeImpactOut(BaseModel):
     """API model for change impact analysis."""
+
     changeset_id: str
     total_entities: int
     entity_types_affected: Optional[int]
@@ -91,6 +97,7 @@ class ChangeImpactOut(BaseModel):
 
 class TrendAnalysisOut(BaseModel):
     """API model for trend analysis output."""
+
     daily_trends: List[Dict[str, Any]]
     peak_hours: List[Dict[str, Any]]
     analysis_period_days: int
@@ -98,12 +105,14 @@ class TrendAnalysisOut(BaseModel):
 
 class PerformanceMetricsOut(BaseModel):
     """API model for performance metrics output."""
+
     sync_performance: Dict[str, Any]
     system_load: List[Dict[str, Any]]
 
 
 class CollaborationInsightsOut(BaseModel):
     """API model for collaboration insights output."""
+
     collaboration_networks: List[Dict[str, Any]]
     team_productivity: List[Dict[str, Any]]
     analysis_period_days: int
@@ -111,6 +120,7 @@ class CollaborationInsightsOut(BaseModel):
 
 class ExecutiveSummaryOut(BaseModel):
     """API model for executive summary output."""
+
     summary_period_days: int
     key_metrics: Dict[str, Any]
     collaboration_health: Dict[str, Any]
@@ -126,31 +136,41 @@ def get_analytics_engine():
 
 # Core Analytics Endpoints
 
+
 @router.get("/summary", response_model=ChangeSummaryOut)
 def get_change_summary(
-    days: int = Query(30, ge=1, le=365, description="Number of days to analyze"),  # noqa: E501
-    analytics_engine=Depends(get_analytics_engine)
+    days: int = Query(
+        30, ge=1, le=365, description="Number of days to analyze"
+    ),  # noqa: E501
+    analytics_engine=Depends(get_analytics_engine),
 ):
     """Get comprehensive change summary for specified period."""
     try:
         summary = analytics_engine.get_change_summary(days=days)
         return ChangeSummaryOut.model_validate(summary)
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to get change summary: {str(e)}")  # noqa: E501
+        raise HTTPException(
+            status_code=500, detail=f"Failed to get change summary: {str(e)}"
+        )  # noqa: E501
 
 
 @router.get("/user-activity", response_model=List[UserActivityOut])
 def get_user_activity_report(
-    user_id: Optional[str] = Query(None, description="Specific user ID to analyze"),  # noqa: E501
-    days: int = Query(30, ge=1, le=365, description="Number of days to analyze"),  # noqa: E501
-    limit: int = Query(100, ge=1, le=1000, description="Maximum number of users to return"),  # noqa: E501
-    analytics_engine=Depends(get_analytics_engine)
+    user_id: Optional[str] = Query(
+        None, description="Specific user ID to analyze"
+    ),  # noqa: E501
+    days: int = Query(
+        30, ge=1, le=365, description="Number of days to analyze"
+    ),  # noqa: E501
+    limit: int = Query(
+        100, ge=1, le=1000, description="Maximum number of users to return"
+    ),  # noqa: E501
+    analytics_engine=Depends(get_analytics_engine),
 ):
     """Get comprehensive user activity reports."""
     try:
         activity_df = analytics_engine.get_user_activity_report(
-            user_id=user_id,
-            days=days
+            user_id=user_id, days=days
         )
 
         if activity_df.empty:
@@ -158,15 +178,22 @@ def get_user_activity_report(
 
         # Apply limit
         limited_df = activity_df.head(limit)
-        return [UserActivityOut.model_validate(row.to_dict()) for _, row in limited_df.iterrows()]  # noqa: E501
+        return [
+            UserActivityOut.model_validate(row.to_dict())
+            for _, row in limited_df.iterrows()
+        ]  # noqa: E501
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to get user activity: {str(e)}")  # noqa: E501
+        raise HTTPException(
+            status_code=500, detail=f"Failed to get user activity: {str(e)}"
+        )  # noqa: E501
 
 
 @router.get("/entity-hotspots", response_model=List[EntityHotspotOut])
 def get_entity_hotspots(
-    limit: int = Query(50, ge=1, le=500, description="Maximum number of hotspots to return"),  # noqa: E501
-    analytics_engine=Depends(get_analytics_engine)
+    limit: int = Query(
+        50, ge=1, le=500, description="Maximum number of hotspots to return"
+    ),  # noqa: E501
+    analytics_engine=Depends(get_analytics_engine),
 ):
     """Get entities with highest modification frequency (hotspots)."""
     try:
@@ -175,113 +202,140 @@ def get_entity_hotspots(
         if hotspots_df.empty:
             return []
 
-        return [EntityHotspotOut.model_validate(row.to_dict()) for _, row in hotspots_df.iterrows()]  # noqa: E501
+        return [
+            EntityHotspotOut.model_validate(row.to_dict())
+            for _, row in hotspots_df.iterrows()
+        ]  # noqa: E501
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to get entity hotspots: {str(e)}")  # noqa: E501
+        raise HTTPException(
+            status_code=500, detail=f"Failed to get entity hotspots: {str(e)}"
+        )  # noqa: E501
 
 
 @router.get("/collaboration-metrics", response_model=CollaborationMetricsOut)
 def get_collaboration_metrics(
-    days: int = Query(60, ge=1, le=365, description="Number of days to analyze"),  # noqa: E501
-    analytics_engine=Depends(get_analytics_engine)
+    days: int = Query(
+        60, ge=1, le=365, description="Number of days to analyze"
+    ),  # noqa: E501
+    analytics_engine=Depends(get_analytics_engine),
 ):
     """Get collaboration effectiveness metrics."""
     try:
         metrics = analytics_engine.get_collaboration_metrics(days=days)
         return CollaborationMetricsOut.model_validate(metrics)
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to get collaboration metrics: {str(e)}")  # noqa: E501
+        raise HTTPException(
+            status_code=500, detail=f"Failed to get collaboration metrics: {str(e)}"
+        )  # noqa: E501
 
 
 @router.get("/change-impact/{changeset_id}", response_model=ChangeImpactOut)
 def get_change_impact_analysis(
     changeset_id: str = Path(..., description="Changeset ID to analyze"),
-    analytics_engine=Depends(get_analytics_engine)
+    analytics_engine=Depends(get_analytics_engine),
 ):
     """Get comprehensive impact analysis for a specific changeset."""
     try:
         impact = analytics_engine.generate_change_impact_analysis(changeset_id)
         return ChangeImpactOut.model_validate(impact)
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to get change impact analysis: {str(e)}")  # noqa: E501
+        raise HTTPException(
+            status_code=500, detail=f"Failed to get change impact analysis: {str(e)}"
+        )  # noqa: E501
 
 
 @router.get("/trends", response_model=TrendAnalysisOut)
 def get_change_trends(
-    days: int = Query(90, ge=1, le=365, description="Number of days to analyze"),  # noqa: E501
-    analytics_engine=Depends(get_analytics_engine)
+    days: int = Query(
+        90, ge=1, le=365, description="Number of days to analyze"
+    ),  # noqa: E501
+    analytics_engine=Depends(get_analytics_engine),
 ):
     """Get comprehensive change trends and patterns over time."""
     try:
         trends = analytics_engine.get_comprehensive_change_trends(days=days)
         return TrendAnalysisOut.model_validate(trends)
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to get change trends: {str(e)}")  # noqa: E501
+        raise HTTPException(
+            status_code=500, detail=f"Failed to get change trends: {str(e)}"
+        )  # noqa: E501
 
 
 @router.get("/performance", response_model=PerformanceMetricsOut)
-def get_system_performance_metrics(
-    analytics_engine=Depends(get_analytics_engine)
-):
+def get_system_performance_metrics(analytics_engine=Depends(get_analytics_engine)):
     """Get system performance and health metrics."""
     try:
         metrics = analytics_engine.get_system_performance_metrics()
         return PerformanceMetricsOut.model_validate(metrics)
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to get performance metrics: {str(e)}")  # noqa: E501
+        raise HTTPException(
+            status_code=500, detail=f"Failed to get performance metrics: {str(e)}"
+        )  # noqa: E501
 
 
 @router.get("/collaboration-insights", response_model=CollaborationInsightsOut)
 def get_collaboration_insights(
-    days: int = Query(60, ge=1, le=365, description="Number of days to analyze"),  # noqa: E501
-    analytics_engine=Depends(get_analytics_engine)
+    days: int = Query(
+        60, ge=1, le=365, description="Number of days to analyze"
+    ),  # noqa: E501
+    analytics_engine=Depends(get_analytics_engine),
 ):
     """Get advanced insights into collaboration patterns and team productivity."""  # noqa: E501
     try:
-        insights = analytics_engine.get_advanced_collaboration_insights(days=days)  # noqa: E501
+        insights = analytics_engine.get_advanced_collaboration_insights(
+            days=days
+        )  # noqa: E501
         return CollaborationInsightsOut.model_validate(insights)
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to get collaboration insights: {str(e)}")  # noqa: E501
+        raise HTTPException(
+            status_code=500, detail=f"Failed to get collaboration insights: {str(e)}"
+        )  # noqa: E501
 
 
 @router.get("/executive-summary", response_model=ExecutiveSummaryOut)
 def get_executive_summary(
-    days: int = Query(30, ge=1, le=365, description="Number of days to analyze"),  # noqa: E501
-    analytics_engine=Depends(get_analytics_engine)
+    days: int = Query(
+        30, ge=1, le=365, description="Number of days to analyze"
+    ),  # noqa: E501
+    analytics_engine=Depends(get_analytics_engine),
 ):
     """Generate executive summary of system activity and health."""
     try:
         summary = analytics_engine.generate_executive_summary(days=days)
         return ExecutiveSummaryOut.model_validate(summary)
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to generate executive summary: {str(e)}")  # noqa: E501
+        raise HTTPException(
+            status_code=500, detail=f"Failed to generate executive summary: {str(e)}"
+        )  # noqa: E501
 
 
 # Conflict Analytics (delegated from other systems)
 
+
 @router.get("/conflict-metrics")
-def get_conflict_resolution_metrics(
-    analytics_engine=Depends(get_analytics_engine)
-):
+def get_conflict_resolution_metrics(analytics_engine=Depends(get_analytics_engine)):
     """Get comprehensive conflict resolution analytics."""
     try:
         metrics = analytics_engine.get_conflict_resolution_metrics()
         return metrics
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to get conflict metrics: {str(e)}")  # noqa: E501
+        raise HTTPException(
+            status_code=500, detail=f"Failed to get conflict metrics: {str(e)}"
+        )  # noqa: E501
 
 
 # System Health and Monitoring
 
+
 @router.get("/health", response_model=AnalyticsHealthOut)
-def get_analytics_health(
-    analytics_engine=Depends(get_analytics_engine)
-):
+def get_analytics_health(analytics_engine=Depends(get_analytics_engine)):
     """Get analytics system health and performance status."""
     try:
         # Check DuckDB availability
         duckdb_available = analytics_engine.duckdb.connection is not None
-        s3_configured = bool(analytics_engine.s3_config and 'bucket' in analytics_engine.s3_config)  # noqa: E501
+        s3_configured = bool(
+            analytics_engine.s3_config and "bucket" in analytics_engine.s3_config
+        )  # noqa: E501
 
         # Check active views
         active_views = 0
@@ -291,12 +345,17 @@ def get_analytics_health(
                 view_check_result = analytics_engine.duckdb.execute_query(
                     "SELECT COUNT(*) as view_count FROM information_schema.views WHERE table_schema = 'main'"  # noqa: E501
                 )
-                active_views = view_check_result.iloc[0]['view_count'] if not view_check_result.empty else 0  # noqa: E501
+                active_views = (
+                    view_check_result.iloc[0]["view_count"]
+                    if not view_check_result.empty
+                    else 0
+                )  # noqa: E501
             except Exception:
                 active_views = 0
 
         # Basic performance check
         import time
+
         start_time = time.time()
         try:
             analytics_engine.get_change_summary(days=1)
@@ -313,19 +372,27 @@ def get_analytics_health(
             active_views=active_views,
             data_freshness_hours=None,  # Would need to check actual data timestamps  # noqa: E501
             query_performance_ms=query_performance_ms,
-            system_version="4.0.0"
+            system_version="4.0.0",
         )
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to get analytics health: {str(e)}")  # noqa: E501
+        raise HTTPException(
+            status_code=500, detail=f"Failed to get analytics health: {str(e)}"
+        )  # noqa: E501
 
 
 # Export and Reporting Endpoints
 
+
 @router.get("/export/csv/{report_type}")
 def export_analytics_csv(
-    report_type: str = Path(..., description="Type of report to export (summary, user-activity, hotspots, trends)"),  # noqa: E501
-    days: int = Query(30, ge=1, le=365, description="Number of days to analyze"),  # noqa: E501
-    analytics_engine=Depends(get_analytics_engine)
+    report_type: str = Path(
+        ...,
+        description="Type of report to export (summary, user-activity, hotspots, trends)",
+    ),  # noqa: E501
+    days: int = Query(
+        30, ge=1, le=365, description="Number of days to analyze"
+    ),  # noqa: E501
+    analytics_engine=Depends(get_analytics_engine),
 ):
     """Export analytics data as CSV format."""
     from fastapi.responses import StreamingResponse
@@ -338,10 +405,14 @@ def export_analytics_csv(
         elif report_type == "hotspots":
             df = analytics_engine.get_entity_hotspots(limit=1000)
         elif report_type == "trends":
-            trends = analytics_engine.get_comprehensive_change_trends(days=days)  # noqa: E501
+            trends = analytics_engine.get_comprehensive_change_trends(
+                days=days
+            )  # noqa: E501
             df = pd.DataFrame(trends.get("daily_trends", []))
         else:
-            raise HTTPException(status_code=400, detail=f"Unsupported report type: {report_type}")  # noqa: E501
+            raise HTTPException(
+                status_code=400, detail=f"Unsupported report type: {report_type}"
+            )  # noqa: E501
 
         # Convert to CSV (even if empty)
         csv_buffer = io.StringIO()
@@ -351,26 +422,37 @@ def export_analytics_csv(
         return StreamingResponse(
             io.BytesIO(csv_buffer.getvalue().encode()),
             media_type="text/csv",
-            headers={"Content-Disposition": f"attachment; filename={report_type}_analytics_{days}days.csv"}  # noqa: E501
+            headers={
+                "Content-Disposition": f"attachment; filename={report_type}_analytics_{days}days.csv"
+            },  # noqa: E501
         )
     except HTTPException:
         raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to export analytics: {str(e)}")  # noqa: E501
+        raise HTTPException(
+            status_code=500, detail=f"Failed to export analytics: {str(e)}"
+        )  # noqa: E501
 
 
 # Real-time Analytics Dashboard Support
 
+
 @router.get("/dashboard/metrics")
 def get_dashboard_metrics(
-    refresh_interval: int = Query(300, ge=60, le=3600, description="Refresh interval in seconds"),  # noqa: E501
-    analytics_engine=Depends(get_analytics_engine)
+    refresh_interval: int = Query(
+        300, ge=60, le=3600, description="Refresh interval in seconds"
+    ),  # noqa: E501
+    analytics_engine=Depends(get_analytics_engine),
 ):
     """Get real-time metrics suitable for dashboard display."""
     try:
         # Get key metrics for dashboard
-        change_summary = analytics_engine.get_change_summary(days=1)  # Last 24 hours  # noqa: E501
-        user_activity = analytics_engine.get_user_activity_report(days=7)  # Last week  # noqa: E501
+        change_summary = analytics_engine.get_change_summary(
+            days=1
+        )  # Last 24 hours  # noqa: E501
+        user_activity = analytics_engine.get_user_activity_report(
+            days=7
+        )  # Last week  # noqa: E501
         conflict_metrics = analytics_engine.get_conflict_resolution_metrics()
         performance_metrics = analytics_engine.get_system_performance_metrics()
 
@@ -379,14 +461,22 @@ def get_dashboard_metrics(
             "refresh_interval": refresh_interval,
             "metrics": {
                 "changes_today": change_summary.get("total_changes", 0),
-                "active_users_week": len(user_activity) if not user_activity.empty else 0,  # noqa: E501
+                "active_users_week": (
+                    len(user_activity) if not user_activity.empty else 0
+                ),  # noqa: E501
                 "unresolved_conflicts": (
-                    conflict_metrics.get("total_conflicts", 0) -
-                    conflict_metrics.get("resolved_conflicts", 0)
+                    conflict_metrics.get("total_conflicts", 0)
+                    - conflict_metrics.get("resolved_conflicts", 0)
                 ),
-                "avg_sync_time": performance_metrics.get("sync_performance", {}).get("avg_sync_time_minutes", 0),  # noqa: E501
-                "system_status": "healthy" if analytics_engine.duckdb.connection else "degraded"  # noqa: E501
-            }
+                "avg_sync_time": performance_metrics.get("sync_performance", {}).get(
+                    "avg_sync_time_minutes", 0
+                ),  # noqa: E501
+                "system_status": (
+                    "healthy" if analytics_engine.duckdb.connection else "degraded"
+                ),  # noqa: E501
+            },
         }
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to get dashboard metrics: {str(e)}")  # noqa: E501
+        raise HTTPException(
+            status_code=500, detail=f"Failed to get dashboard metrics: {str(e)}"
+        )  # noqa: E501

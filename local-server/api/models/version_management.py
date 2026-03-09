@@ -14,6 +14,7 @@ from datetime import datetime
 
 class ChangeStateEnum(str, Enum):
     """API enum for version change states."""
+
     WORKING = "WORKING"
     STAGED = "STAGED"
     PROPOSED = "PROPOSED"
@@ -24,17 +25,22 @@ class ChangeStateEnum(str, Enum):
 
 class EntityTypeEnum(str, Enum):
     """API enum for entity types that support versioning."""
+
     STRUCTURE_NODE = "structure_node"
     STRUCTURE_NODE_LINK = "structure_node_link"
 
 
 # Version Management Models
 
+
 class EntityVersionBase(BaseModel):
     """Base model for entity version data."""
+
     entity_type: EntityTypeEnum
     entity_id: UUID
-    content: Dict[str, Any] = Field(..., description="Full entity snapshot as JSON")  # noqa: E501
+    content: Dict[str, Any] = Field(
+        ..., description="Full entity snapshot as JSON"
+    )  # noqa: E501
     state: ChangeStateEnum = ChangeStateEnum.WORKING
     author_id: str = Field(..., min_length=1, max_length=255)
     metadata: Optional[Dict[str, Any]] = None
@@ -42,6 +48,7 @@ class EntityVersionBase(BaseModel):
 
 class EntityVersionOut(EntityVersionBase):
     """Model for entity version output/response."""
+
     id: UUID
     version_number: int
     parent_version_id: Optional[UUID] = None
@@ -53,6 +60,7 @@ class EntityVersionOut(EntityVersionBase):
 
 class EntityVersionSummary(BaseModel):
     """Summary model for entity version (without full content)."""
+
     id: UUID
     entity_type: EntityTypeEnum
     entity_id: UUID
@@ -68,21 +76,26 @@ class EntityVersionSummary(BaseModel):
 
 # Working Tree Models
 
+
 class WorkingTreeEntryOut(BaseModel):
     """Model for working tree entry output/response."""
+
     entity_type: EntityTypeEnum
     entity_id: UUID
     current_version_id: UUID
     canonical_version_id: UUID
     staged: bool
     modified_at: datetime
-    has_changes: bool = Field(..., description="Whether working differs from canonical")  # noqa: E501
+    has_changes: bool = Field(
+        ..., description="Whether working differs from canonical"
+    )  # noqa: E501
 
     model_config = ConfigDict(from_attributes=True)
 
 
 class WorkingTreeStatusOut(BaseModel):
     """Model for working tree status output/response."""
+
     total_entities: int
     modified_entities: int
     staged_entities: int
@@ -92,8 +105,10 @@ class WorkingTreeStatusOut(BaseModel):
 
 # Diff Models
 
+
 class DiffSummaryOut(BaseModel):
     """Model for diff summary output/response."""
+
     added_items: int = 0
     removed_items: int = 0
     modified_items: int = 0
@@ -104,11 +119,14 @@ class DiffSummaryOut(BaseModel):
 
 class EntityDiffOut(BaseModel):
     """Model for entity diff output/response."""
+
     entity_type: EntityTypeEnum
     entity_id: UUID
     before_version: Optional[EntityVersionSummary] = None
     after_version: EntityVersionSummary
-    changes: Dict[str, Any] = Field(..., description="Structured diff using DeepDiff format")  # noqa: E501
+    changes: Dict[str, Any] = Field(
+        ..., description="Structured diff using DeepDiff format"
+    )  # noqa: E501
     summary: DiffSummaryOut
     has_changes: bool
     generated_at: datetime
@@ -118,9 +136,13 @@ class EntityDiffOut(BaseModel):
 
 # Request Models
 
+
 class RollbackRequest(BaseModel):
     """Model for rollback operation request."""
-    target_version_number: int = Field(..., ge=1, description="Version number to rollback to", alias="target_version")  # noqa: E501
+
+    target_version_number: int = Field(
+        ..., ge=1, description="Version number to rollback to", alias="target_version"
+    )  # noqa: E501
     author_id: str = Field(..., min_length=1, max_length=255)
 
     model_config = ConfigDict(populate_by_name=True)
@@ -128,31 +150,39 @@ class RollbackRequest(BaseModel):
 
 class StateUpdateRequest(BaseModel):
     """Model for updating version state."""
+
     new_state: ChangeStateEnum
     author_id: str = Field(..., min_length=1, max_length=255)
 
 
 class CommitRequest(BaseModel):
     """Model for committing staged changes."""
+
     author_id: str = Field(..., min_length=1, max_length=255)
-    message: Optional[str] = Field(None, max_length=1000, description="Optional commit message")  # noqa: E501
+    message: Optional[str] = Field(
+        None, max_length=1000, description="Optional commit message"
+    )  # noqa: E501
 
 
 class StageRequest(BaseModel):
     """Model for staging/unstaging entities."""
+
     entity_type: EntityTypeEnum
     entity_id: UUID
 
 
 # Batch Operation Models
 
+
 class BatchStageRequest(BaseModel):
     """Model for batch staging operations."""
+
     entities: List[StageRequest] = Field(..., min_length=1)
 
 
 class BatchOperationResult(BaseModel):
     """Model for batch operation results."""
+
     successful: List[Dict[str, Any]]
     failed: List[Dict[str, Any]]
     total_requested: int
@@ -162,8 +192,10 @@ class BatchOperationResult(BaseModel):
 
 # Query Models
 
+
 class VersionQueryParams(BaseModel):
     """Model for version query parameters."""
+
     entity_type: Optional[EntityTypeEnum] = None
     entity_id: Optional[UUID] = None
     state: Optional[ChangeStateEnum] = None
@@ -174,6 +206,7 @@ class VersionQueryParams(BaseModel):
 
 class DiffFormatEnum(str, Enum):
     """Enum for diff format options."""
+
     SUMMARY = "summary"
     DETAILED = "detailed"
     JSON = "json"
@@ -181,28 +214,37 @@ class DiffFormatEnum(str, Enum):
 
 class DiffRequest(BaseModel):
     """Model for requesting diffs."""
+
     entity_type: EntityTypeEnum
     entity_id: UUID
-    before_version_number: Optional[int] = Field(None, ge=0, alias="before_version")  # Allow 0  # noqa: E501
+    before_version_number: Optional[int] = Field(
+        None, ge=0, alias="before_version"
+    )  # Allow 0  # noqa: E501
     after_version_number: int = Field(..., ge=1, alias="after_version")
     format: DiffFormatEnum = DiffFormatEnum.SUMMARY
 
     model_config = ConfigDict(populate_by_name=True)
 
-    @field_validator('before_version_number')
+    @field_validator("before_version_number")
     @classmethod
     def validate_before_version(cls, v, info):
-        if v is not None and 'after_version_number' in info.data:
-            if v >= info.data['after_version_number']:
-                raise ValueError('before_version must be less than after_version')  # noqa: E501
+        if v is not None and "after_version_number" in info.data:
+            if v >= info.data["after_version_number"]:
+                raise ValueError(
+                    "before_version must be less than after_version"
+                )  # noqa: E501
         return v
 
 
 # Health and Status Models
 
+
 class VersionManagementHealthOut(BaseModel):
     """Model for version management system health."""
-    status: str = Field(..., description="Overall health status: healthy, warning, error")  # noqa: E501
+
+    status: str = Field(
+        ..., description="Overall health status: healthy, warning, error"
+    )  # noqa: E501
     total_versions: int
     total_working_tree_entries: int
     total_staged_entities: int
@@ -214,6 +256,7 @@ class VersionManagementHealthOut(BaseModel):
 
 class VersionManagementStatsOut(BaseModel):
     """Model for version management statistics."""
+
     versions_by_entity_type: Dict[str, int]
     versions_by_state: Dict[str, int]
     working_tree_summary: WorkingTreeStatusOut

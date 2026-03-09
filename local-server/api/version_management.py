@@ -34,13 +34,24 @@ from services.diff_generator import DiffGenerator
 from services.service_factory import (
     get_version_manager_via_factory,
     get_working_tree_manager_via_factory,
-    get_diff_generator_via_factory
+    get_diff_generator_via_factory,
 )
 from api.models.version_management import (
-    EntityVersionOut, EntityVersionSummary, WorkingTreeStatusOut, WorkingTreeEntryOut,  # noqa: E501
-    EntityDiffOut, DiffSummaryOut, RollbackRequest, CommitRequest,
-    StageRequest, DiffRequest, DiffFormatEnum, VersionManagementHealthOut, VersionManagementStatsOut,  # noqa: E501
-    EntityTypeEnum, ChangeStateEnum
+    EntityVersionOut,
+    EntityVersionSummary,
+    WorkingTreeStatusOut,
+    WorkingTreeEntryOut,  # noqa: E501
+    EntityDiffOut,
+    DiffSummaryOut,
+    RollbackRequest,
+    CommitRequest,
+    StageRequest,
+    DiffRequest,
+    DiffFormatEnum,
+    VersionManagementHealthOut,
+    VersionManagementStatsOut,  # noqa: E501
+    EntityTypeEnum,
+    ChangeStateEnum,
 )
 
 logger = logging.getLogger(__name__)
@@ -48,11 +59,14 @@ logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/versions", tags=["version_management"])
 
 
-@router.get("/entities/{entity_type}/{entity_id}/versions", response_model=List[EntityVersionSummary])  # noqa: E501
+@router.get(
+    "/entities/{entity_type}/{entity_id}/versions",
+    response_model=List[EntityVersionSummary],
+)  # noqa: E501
 def get_entity_versions(
     entity_type: EntityTypeEnum = Path(..., description="Entity type"),
     entity_id: UUID = Path(..., description="Entity ID"),
-    version_manager: VersionManager = Depends(get_version_manager_via_factory)
+    version_manager: VersionManager = Depends(get_version_manager_via_factory),
 ):
     """
     Get version history for an entity.
@@ -60,19 +74,26 @@ def get_entity_versions(
     Returns all versions of the specified entity ordered by version number.
     """
     try:
-        versions = version_manager.get_entity_versions(entity_type.value, str(entity_id))  # noqa: E501
+        versions = version_manager.get_entity_versions(
+            entity_type.value, str(entity_id)
+        )  # noqa: E501
         return [_entity_version_to_summary(version) for version in versions]
 
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to retrieve versions: {str(e)}")  # noqa: E501
+        raise HTTPException(
+            status_code=500, detail=f"Failed to retrieve versions: {str(e)}"
+        )  # noqa: E501
 
 
-@router.get("/entities/{entity_type}/{entity_id}/versions/{version_number}", response_model=EntityVersionOut)  # noqa: E501
+@router.get(
+    "/entities/{entity_type}/{entity_id}/versions/{version_number}",
+    response_model=EntityVersionOut,
+)  # noqa: E501
 def get_entity_version(
     entity_type: EntityTypeEnum = Path(..., description="Entity type"),
     entity_id: UUID = Path(..., description="Entity ID"),
     version_number: int = Path(..., ge=1, description="Version number"),
-    version_manager: VersionManager = Depends(get_version_manager_via_factory)
+    version_manager: VersionManager = Depends(get_version_manager_via_factory),
 ):
     """
     Get specific version of an entity.
@@ -80,16 +101,22 @@ def get_entity_version(
     Returns the full content and metadata for the specified version.
     """
     try:
-        version = version_manager.get_version_by_number(entity_type.value, str(entity_id), version_number)  # noqa: E501
+        version = version_manager.get_version_by_number(
+            entity_type.value, str(entity_id), version_number
+        )  # noqa: E501
         if not version:
-            raise HTTPException(status_code=404, detail=f"Version {version_number} not found")  # noqa: E501
+            raise HTTPException(
+                status_code=404, detail=f"Version {version_number} not found"
+            )  # noqa: E501
 
         return _entity_version_to_out(version)
 
     except HTTPException:
         raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to retrieve version: {str(e)}")  # noqa: E501
+        raise HTTPException(
+            status_code=500, detail=f"Failed to retrieve version: {str(e)}"
+        )  # noqa: E501
 
 
 @router.post("/entities/{entity_type}/{entity_id}/rollback")
@@ -97,7 +124,7 @@ def rollback_entity(
     rollback_request: RollbackRequest,
     entity_type: EntityTypeEnum = Path(..., description="Entity type"),
     entity_id: UUID = Path(..., description="Entity ID"),
-    version_manager: VersionManager = Depends(get_version_manager_via_factory)
+    version_manager: VersionManager = Depends(get_version_manager_via_factory),
 ):
     """
     Rollback entity to specific version.
@@ -111,10 +138,13 @@ def rollback_entity(
             entity_type.value,
             str(entity_id),
             rollback_request.target_version_number,
-            rollback_request.author_id
+            rollback_request.author_id,
         )
 
-        return {"success": True, "version": _entity_version_to_out(rollback_version)}  # noqa: E501
+        return {
+            "success": True,
+            "version": _entity_version_to_out(rollback_version),
+        }  # noqa: E501
 
     except ValueError as e:
         # Check if error message indicates entity/version not found
@@ -124,15 +154,19 @@ def rollback_entity(
         else:
             raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Rollback failed: {str(e)}")  # noqa: E501
+        raise HTTPException(
+            status_code=500, detail=f"Rollback failed: {str(e)}"
+        )  # noqa: E501
 
 
 @router.get("/entities/{entity_type}/{entity_id}/diff")
 def get_working_diff(
     entity_type: EntityTypeEnum = Path(..., description="Entity type"),
     entity_id: UUID = Path(..., description="Entity ID"),
-    format: DiffFormatEnum = Query(DiffFormatEnum.SUMMARY, description="Diff format"),  # noqa: E501
-    diff_generator: DiffGenerator = Depends(get_diff_generator_via_factory)
+    format: DiffFormatEnum = Query(
+        DiffFormatEnum.SUMMARY, description="Diff format"
+    ),  # noqa: E501
+    diff_generator: DiffGenerator = Depends(get_diff_generator_via_factory),
 ):
     """
     Get diff between working and canonical versions.
@@ -140,7 +174,9 @@ def get_working_diff(
     Shows what changes exist in the working version compared to the last committed version.  # noqa: E501
     """
     try:
-        diff = diff_generator.generate_working_diff(entity_type.value, str(entity_id))  # noqa: E501
+        diff = diff_generator.generate_working_diff(
+            entity_type.value, str(entity_id)
+        )  # noqa: E501
         diff_out = _entity_diff_to_out(diff)
         # Add diff field that tests expect (alias for changes)
         response = diff_out.dict()
@@ -150,12 +186,16 @@ def get_working_diff(
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to generate diff: {str(e)}")  # noqa: E501
+        raise HTTPException(
+            status_code=500, detail=f"Failed to generate diff: {str(e)}"
+        )  # noqa: E501
 
 
 @router.get("/working-tree/status", response_model=WorkingTreeStatusOut)
 def get_working_tree_status(
-    working_tree_manager: WorkingTreeManager = Depends(get_working_tree_manager_via_factory)  # noqa: E501
+    working_tree_manager: WorkingTreeManager = Depends(
+        get_working_tree_manager_via_factory
+    ),  # noqa: E501
 ):
     """
     Get working tree status.
@@ -169,16 +209,22 @@ def get_working_tree_status(
             modified_entities=status.modified_entities,
             staged_entities=status.staged_entities,
             unstaged_entities=status.unstaged_entities,
-            entries=[_working_tree_entry_to_out(entry) for entry in status.entries]  # noqa: E501
+            entries=[
+                _working_tree_entry_to_out(entry) for entry in status.entries
+            ],  # noqa: E501
         )
 
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to get working tree status: {str(e)}")  # noqa: E501
+        raise HTTPException(
+            status_code=500, detail=f"Failed to get working tree status: {str(e)}"
+        )  # noqa: E501
 
 
 @router.get("/working-tree/changes", response_model=List[WorkingTreeEntryOut])
 def get_working_changes(
-    working_tree_manager: WorkingTreeManager = Depends(get_working_tree_manager_via_factory)  # noqa: E501
+    working_tree_manager: WorkingTreeManager = Depends(
+        get_working_tree_manager_via_factory
+    ),  # noqa: E501
 ):
     """
     Get all entities with working changes.
@@ -190,13 +236,17 @@ def get_working_changes(
         return [_working_tree_entry_to_out(entry) for entry in changes]
 
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to get working changes: {str(e)}")  # noqa: E501
+        raise HTTPException(
+            status_code=500, detail=f"Failed to get working changes: {str(e)}"
+        )  # noqa: E501
 
 
 @router.post("/working-tree/stage")
 def stage_entity(
     stage_request: StageRequest,
-    working_tree_manager: WorkingTreeManager = Depends(get_working_tree_manager_via_factory)  # noqa: E501
+    working_tree_manager: WorkingTreeManager = Depends(
+        get_working_tree_manager_via_factory
+    ),  # noqa: E501
 ):
     """
     Stage an entity for commit.
@@ -206,12 +256,13 @@ def stage_entity(
     """
     try:
         success = working_tree_manager.stage_entity(
-            stage_request.entity_type.value,
-            str(stage_request.entity_id)
+            stage_request.entity_type.value, str(stage_request.entity_id)
         )
 
         # Return success even if no changes - staging is idempotent
-        message = "Entity staged successfully" if success else "No changes to stage"  # noqa: E501
+        message = (
+            "Entity staged successfully" if success else "No changes to stage"
+        )  # noqa: E501
 
         return {"success": True, "message": message}
 
@@ -220,13 +271,17 @@ def stage_entity(
     except HTTPException:
         raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to stage entity: {str(e)}")  # noqa: E501
+        raise HTTPException(
+            status_code=500, detail=f"Failed to stage entity: {str(e)}"
+        )  # noqa: E501
 
 
 @router.post("/working-tree/unstage")
 def unstage_entity(
     stage_request: StageRequest,
-    working_tree_manager: WorkingTreeManager = Depends(get_working_tree_manager_via_factory)  # noqa: E501
+    working_tree_manager: WorkingTreeManager = Depends(
+        get_working_tree_manager_via_factory
+    ),  # noqa: E501
 ):
     """
     Unstage an entity.
@@ -235,8 +290,7 @@ def unstage_entity(
     """
     try:
         working_tree_manager.unstage_entity(
-            stage_request.entity_type.value,
-            str(stage_request.entity_id)
+            stage_request.entity_type.value, str(stage_request.entity_id)
         )
 
         return {"success": True, "message": "Entity unstaged successfully"}
@@ -244,13 +298,17 @@ def unstage_entity(
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to unstage entity: {str(e)}")  # noqa: E501
+        raise HTTPException(
+            status_code=500, detail=f"Failed to unstage entity: {str(e)}"
+        )  # noqa: E501
 
 
 @router.post("/working-tree/commit")
 def commit_staged_changes(
     commit_request: CommitRequest,
-    working_tree_manager: WorkingTreeManager = Depends(get_working_tree_manager_via_factory)  # noqa: E501
+    working_tree_manager: WorkingTreeManager = Depends(
+        get_working_tree_manager_via_factory
+    ),  # noqa: E501
 ):
     """
     Commit all staged changes.
@@ -259,27 +317,35 @@ def commit_staged_changes(
     Returns 400 if there are no staged changes to commit.
     """
     try:
-        committed_versions = working_tree_manager.commit_staged_changes(commit_request.author_id)  # noqa: E501
+        committed_versions = working_tree_manager.commit_staged_changes(
+            commit_request.author_id
+        )  # noqa: E501
 
         # Return 400 if nothing to commit
         if not committed_versions:
-            raise HTTPException(status_code=400, detail="No staged changes to commit")  # noqa: E501
+            raise HTTPException(
+                status_code=400, detail="No staged changes to commit"
+            )  # noqa: E501
 
         return {
             "success": True,
             "committed_count": len(committed_versions),
-            "versions": [_entity_version_to_summary(version) for version in committed_versions]  # noqa: E501
+            "versions": [
+                _entity_version_to_summary(version) for version in committed_versions
+            ],  # noqa: E501
         }
 
     except HTTPException:
         raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to commit changes: {str(e)}")  # noqa: E501
+        raise HTTPException(
+            status_code=500, detail=f"Failed to commit changes: {str(e)}"
+        )  # noqa: E501
 
 
 @router.get("/working-tree/preview", response_model=List[EntityDiffOut])
 def get_commit_preview(
-    diff_generator: DiffGenerator = Depends(get_diff_generator_via_factory)
+    diff_generator: DiffGenerator = Depends(get_diff_generator_via_factory),
 ):
     """
     Preview what would be committed.
@@ -291,12 +357,14 @@ def get_commit_preview(
         return [_entity_diff_to_out(diff) for diff in diffs]
 
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to generate commit preview: {str(e)}")  # noqa: E501
+        raise HTTPException(
+            status_code=500, detail=f"Failed to generate commit preview: {str(e)}"
+        )  # noqa: E501
 
 
 @router.get("/diffs/working", response_model=List[EntityDiffOut])
 def get_all_working_diffs(
-    diff_generator: DiffGenerator = Depends(get_diff_generator_via_factory)
+    diff_generator: DiffGenerator = Depends(get_diff_generator_via_factory),
 ):
     """
     Get diffs for all entities with working changes.
@@ -308,13 +376,15 @@ def get_all_working_diffs(
         return [_entity_diff_to_out(diff) for diff in diffs]
 
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to generate working diffs: {str(e)}")  # noqa: E501
+        raise HTTPException(
+            status_code=500, detail=f"Failed to generate working diffs: {str(e)}"
+        )  # noqa: E501
 
 
 @router.post("/diffs/compare")
 def compare_versions(
     diff_request: DiffRequest,
-    diff_generator: DiffGenerator = Depends(get_diff_generator_via_factory)
+    diff_generator: DiffGenerator = Depends(get_diff_generator_via_factory),
 ):
     """
     Compare two specific versions of an entity.
@@ -326,7 +396,7 @@ def compare_versions(
             diff_request.entity_type.value,
             str(diff_request.entity_id),
             diff_request.before_version_number,
-            diff_request.after_version_number
+            diff_request.after_version_number,
         )
 
         diff_out = _entity_diff_to_out(diff)
@@ -338,13 +408,17 @@ def compare_versions(
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to compare versions: {str(e)}")  # noqa: E501
+        raise HTTPException(
+            status_code=500, detail=f"Failed to compare versions: {str(e)}"
+        )  # noqa: E501
 
 
 @router.get("/health", response_model=VersionManagementHealthOut)
 def get_version_management_health(
     version_manager: VersionManager = Depends(get_version_manager_via_factory),
-    working_tree_manager: WorkingTreeManager = Depends(get_working_tree_manager_via_factory)  # noqa: E501
+    working_tree_manager: WorkingTreeManager = Depends(
+        get_working_tree_manager_via_factory
+    ),  # noqa: E501
 ):
     """
     Get version management system health status.
@@ -355,10 +429,26 @@ def get_version_management_health(
         # Get basic statistics using the version manager's database session
         db = version_manager.db
 
-        total_versions = db.execute(text("SELECT COUNT(*) FROM entity_versions")).scalar() or 0  # noqa: E501
-        total_working_entries = db.execute(text("SELECT COUNT(*) FROM working_tree")).scalar() or 0  # noqa: E501
-        staged_entities = db.execute(text("SELECT COUNT(*) FROM working_tree WHERE staged = 1")).scalar() or 0  # noqa: E501
-        modified_entities = db.execute(text("SELECT COUNT(*) FROM working_tree WHERE current_version_id != canonical_version_id")).scalar() or 0  # noqa: E501
+        total_versions = (
+            db.execute(text("SELECT COUNT(*) FROM entity_versions")).scalar() or 0
+        )  # noqa: E501
+        total_working_entries = (
+            db.execute(text("SELECT COUNT(*) FROM working_tree")).scalar() or 0
+        )  # noqa: E501
+        staged_entities = (
+            db.execute(
+                text("SELECT COUNT(*) FROM working_tree WHERE staged = 1")
+            ).scalar()
+            or 0
+        )  # noqa: E501
+        modified_entities = (
+            db.execute(
+                text(
+                    "SELECT COUNT(*) FROM working_tree WHERE current_version_id != canonical_version_id"
+                )
+            ).scalar()
+            or 0
+        )  # noqa: E501
 
         # Check for issues
         issues = []
@@ -383,7 +473,9 @@ def get_version_management_health(
         """)).scalar() or 0
 
         if inconsistent_entries > 0:
-            issues.append(f"{inconsistent_entries} working tree entries reference missing versions")  # noqa: E501
+            issues.append(
+                f"{inconsistent_entries} working tree entries reference missing versions"
+            )  # noqa: E501
             status = "error"
 
         return VersionManagementHealthOut(
@@ -393,7 +485,7 @@ def get_version_management_health(
             total_staged_entities=staged_entities,
             total_modified_entities=modified_entities,
             issues=issues,
-            database_status="connected"
+            database_status="connected",
         )
 
     except Exception as e:
@@ -404,14 +496,16 @@ def get_version_management_health(
             total_staged_entities=0,
             total_modified_entities=0,
             issues=[f"Health check failed: {str(e)}"],
-            database_status="error"
+            database_status="error",
         )
 
 
 @router.get("/stats", response_model=VersionManagementStatsOut)
 def get_version_management_stats(
     version_manager: VersionManager = Depends(get_version_manager_via_factory),
-    working_tree_manager: WorkingTreeManager = Depends(get_working_tree_manager_via_factory)  # noqa: E501
+    working_tree_manager: WorkingTreeManager = Depends(
+        get_working_tree_manager_via_factory
+    ),  # noqa: E501
 ):
     """
     Get version management system statistics.
@@ -446,13 +540,18 @@ def get_version_management_stats(
             versions_by_state[state] = count
 
         # Get working tree status and convert to API model
-        working_tree_status_raw = working_tree_manager.get_working_tree_status()  # noqa: E501
+        working_tree_status_raw = (
+            working_tree_manager.get_working_tree_status()
+        )  # noqa: E501
         working_tree_status = WorkingTreeStatusOut(
             total_entities=working_tree_status_raw.total_entities,
             modified_entities=working_tree_status_raw.modified_entities,
             staged_entities=working_tree_status_raw.staged_entities,
             unstaged_entities=working_tree_status_raw.unstaged_entities,
-            entries=[_working_tree_entry_to_out(entry) for entry in working_tree_status_raw.entries]  # noqa: E501
+            entries=[
+                _working_tree_entry_to_out(entry)
+                for entry in working_tree_status_raw.entries
+            ],  # noqa: E501
         )
 
         # Get recent activity (last 10 versions created)
@@ -465,20 +564,22 @@ def get_version_management_stats(
         """)).fetchall()
 
         for result in recent_results:
-            recent_activity.append({
-                "entity_type": result[0],
-                "entity_id": result[1],
-                "version_number": result[2],
-                "state": result[3],
-                "author_id": result[4],
-                "created_at": result[5]
-            })
+            recent_activity.append(
+                {
+                    "entity_type": result[0],
+                    "entity_id": result[1],
+                    "version_number": result[2],
+                    "state": result[3],
+                    "author_id": result[4],
+                    "created_at": result[5],
+                }
+            )
 
         # Performance metrics (basic for now)
         performance_metrics = {
             "avg_versions_per_entity": 0,
             "largest_version_count": 0,
-            "total_storage_mb": 0  # Would need to calculate actual storage
+            "total_storage_mb": 0,  # Would need to calculate actual storage
         }
 
         # Calculate average versions per entity
@@ -489,7 +590,9 @@ def get_version_management_stats(
         """)).scalar() or 0
 
         if unique_entities > 0:
-            performance_metrics["avg_versions_per_entity"] = round(total_versions / unique_entities, 2)  # noqa: E501
+            performance_metrics["avg_versions_per_entity"] = round(
+                total_versions / unique_entities, 2
+            )  # noqa: E501
 
         # Find entity with most versions
         max_versions = db.execute(text("""
@@ -507,14 +610,17 @@ def get_version_management_stats(
             versions_by_state=versions_by_state,
             working_tree_summary=working_tree_status,
             recent_activity=recent_activity,
-            performance_metrics=performance_metrics
+            performance_metrics=performance_metrics,
         )
 
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to retrieve statistics: {str(e)}")  # noqa: E501
+        raise HTTPException(
+            status_code=500, detail=f"Failed to retrieve statistics: {str(e)}"
+        )  # noqa: E501
 
 
 # Helper functions for data conversion
+
 
 def _entity_version_to_out(version: EntityVersion) -> EntityVersionOut:
     """Convert EntityVersion to API output model."""
@@ -525,11 +631,15 @@ def _entity_version_to_out(version: EntityVersion) -> EntityVersionOut:
         version_number=version.version_number,
         content=version.content,
         state=ChangeStateEnum(version.state.value),
-        parent_version_id=UUID(version.parent_version_id) if version.parent_version_id else None,  # noqa: E501
-        changeset_id=UUID(version.changeset_id) if version.changeset_id else None,  # noqa: E501
+        parent_version_id=(
+            UUID(version.parent_version_id) if version.parent_version_id else None
+        ),  # noqa: E501
+        changeset_id=(
+            UUID(version.changeset_id) if version.changeset_id else None
+        ),  # noqa: E501
         author_id=version.author_id,
         created_at=version.created_at,
-        metadata=version.metadata
+        metadata=version.metadata,
     )
 
 
@@ -543,8 +653,12 @@ def _entity_version_to_summary(version: EntityVersion) -> EntityVersionSummary:
         state=ChangeStateEnum(version.state.value),
         author_id=version.author_id,
         created_at=version.created_at,
-        parent_version_id=UUID(version.parent_version_id) if version.parent_version_id else None,  # noqa: E501
-        changeset_id=UUID(version.changeset_id) if version.changeset_id else None  # noqa: E501
+        parent_version_id=(
+            UUID(version.parent_version_id) if version.parent_version_id else None
+        ),  # noqa: E501
+        changeset_id=(
+            UUID(version.changeset_id) if version.changeset_id else None
+        ),  # noqa: E501
     )
 
 
@@ -557,22 +671,24 @@ def _working_tree_entry_to_out(entry) -> WorkingTreeEntryOut:
         canonical_version_id=UUID(entry.canonical_version_id),
         staged=entry.staged,
         modified_at=entry.modified_at,
-        has_changes=entry.has_changes()
+        has_changes=entry.has_changes(),
     )
 
 
 def _entity_diff_to_out(diff) -> EntityDiffOut:
     """Convert EntityDiff to API output model."""
     # Convert summary data to DiffSummaryOut
-    if hasattr(diff, 'summary') and isinstance(diff.summary, dict):
+    if hasattr(diff, "summary") and isinstance(diff.summary, dict):
         summary_data = diff.summary
         summary = DiffSummaryOut(
-            added_items=summary_data.get('dictionary_item_added', 0) + summary_data.get('iterable_item_added', 0),  # noqa: E501
-            removed_items=summary_data.get('dictionary_item_removed', 0) + summary_data.get('iterable_item_removed', 0),  # noqa: E501
-            modified_items=summary_data.get('values_changed', 0),
-            type_changes=summary_data.get('type_changes', 0),
+            added_items=summary_data.get("dictionary_item_added", 0)
+            + summary_data.get("iterable_item_added", 0),  # noqa: E501
+            removed_items=summary_data.get("dictionary_item_removed", 0)
+            + summary_data.get("iterable_item_removed", 0),  # noqa: E501
+            modified_items=summary_data.get("values_changed", 0),
+            type_changes=summary_data.get("type_changes", 0),
             moved_items=0,  # DeepDiff doesn't track moves by default
-            total_changes=sum(summary_data.values())
+            total_changes=sum(summary_data.values()),
         )
     else:
         summary = DiffSummaryOut()
@@ -580,10 +696,14 @@ def _entity_diff_to_out(diff) -> EntityDiffOut:
     return EntityDiffOut(
         entity_type=EntityTypeEnum(diff.entity_type),
         entity_id=UUID(diff.entity_id),
-        before_version=_entity_version_to_summary(diff.before_version) if diff.before_version else None,  # noqa: E501
+        before_version=(
+            _entity_version_to_summary(diff.before_version)
+            if diff.before_version
+            else None
+        ),  # noqa: E501
         after_version=_entity_version_to_summary(diff.after_version),
         changes=diff.changes,
         summary=summary,
         has_changes=diff.has_changes(),
-        generated_at=diff.generated_at
+        generated_at=diff.generated_at,
     )

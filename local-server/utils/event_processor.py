@@ -6,24 +6,22 @@ from typing import Dict, Optional, Any
 from sqlalchemy import text
 
 from database.enums import RecordType
-from database.utils import (
-    get_database_manager
-)
+from database.utils import get_database_manager
 from utils.logger import get_logger
 
 # Global reference to the active EventProcessor for dataset switching
 # This singleton pattern enables coordination across modules when switching active datasets.  # noqa: E501
 # Thread safety is ensured by the set/get functions which maintain a simple reference  # noqa: E501
 # without concurrent mutations during normal operation.
-_global_event_processor: Optional['EventProcessor'] = None
+_global_event_processor: Optional["EventProcessor"] = None
 
 
-def get_global_event_processor() -> Optional['EventProcessor']:
+def get_global_event_processor() -> Optional["EventProcessor"]:
     """Get the global EventProcessor instance."""
     return _global_event_processor
 
 
-def set_global_event_processor(processor: Optional['EventProcessor']):
+def set_global_event_processor(processor: Optional["EventProcessor"]):
     """Set the global EventProcessor instance."""
     global _global_event_processor
     _global_event_processor = processor
@@ -46,17 +44,19 @@ class EventProcessor:
     """
 
     # Configuration constants
-    NLP_PIPELINE_FLAVOR = 'analyze_text'
+    NLP_PIPELINE_FLAVOR = "analyze_text"
     MAX_TITLE_LENGTH = 500
     NLP_RETRY_ATTEMPTS = 3
     NLP_RETRY_DELAY = 1.0  # seconds, will use exponential backoff
 
-    def __init__(self,
-                 database_url: str,
-                 poll_interval: float = 1.0,
-                 max_events: int = 100,
-                 version_manager=None,
-                 working_tree_manager=None):
+    def __init__(
+        self,
+        database_url: str,
+        poll_interval: float = 1.0,
+        max_events: int = 100,
+        version_manager=None,
+        working_tree_manager=None,
+    ):
         """
         Initialize the EventProcessor.
 
@@ -70,7 +70,9 @@ class EventProcessor:
         self.database_url = database_url
         self.poll_interval = poll_interval
         self.max_events = max_events
-        self.version_manager = version_manager  # Will be injected for version creation  # noqa: E501
+        self.version_manager = (
+            version_manager  # Will be injected for version creation  # noqa: E501
+        )
         self.working_tree_manager = working_tree_manager  # Will be injected for working tree management  # noqa: E501
 
         self._stop_event = threading.Event()
@@ -107,15 +109,23 @@ class EventProcessor:
         # Ensure we have an optimized engine for event processing
         if self.engine_id not in self.db_manager._engines:
             try:
-                self.db_manager.create_managed_engine(self.database_url, self.engine_id)  # noqa: E501
+                self.db_manager.create_managed_engine(
+                    self.database_url, self.engine_id
+                )  # noqa: E501
             except Exception as e:
-                self.logger.error(f"Failed to create optimized engine '{self.engine_id}': {e}")  # noqa: E501
+                self.logger.error(
+                    f"Failed to create optimized engine '{self.engine_id}': {e}"
+                )  # noqa: E501
                 raise
 
         try:
-            return self.db_manager.get_session(self.engine_id, self.database_url)  # noqa: E501
+            return self.db_manager.get_session(
+                self.engine_id, self.database_url
+            )  # noqa: E501
         except Exception as e:
-            self.logger.error(f"Failed to get optimized session for '{self.engine_id}': {e}")  # noqa: E501
+            self.logger.error(
+                f"Failed to get optimized session for '{self.engine_id}': {e}"
+            )  # noqa: E501
             raise
 
     def _initialize_last_processed_id(self):
@@ -131,12 +141,18 @@ class EventProcessor:
 
                 if result:
                     self._last_processed_id = result[0]
-                    self.logger.debug(f"Last processed ID initialized to {self._last_processed_id}")  # noqa: E501
+                    self.logger.debug(
+                        f"Last processed ID initialized to {self._last_processed_id}"
+                    )  # noqa: E501
                 else:
-                    self.logger.debug("No processed events found; starting from ID 0")  # noqa: E501
+                    self.logger.debug(
+                        "No processed events found; starting from ID 0"
+                    )  # noqa: E501
 
         except Exception as e:
-            self.logger.debug(f"Could not initialize last processed ID from database (expected on first run): {e}")  # noqa: E501
+            self.logger.debug(
+                f"Could not initialize last processed ID from database (expected on first run): {e}"
+            )  # noqa: E501
             # Start from 0 if we can't get the last processed ID
             self._last_processed_id = 0
 
@@ -145,14 +161,18 @@ class EventProcessor:
         self.logger.debug("[EventProcessor] start() called")
         if self._thread is None or not self._thread.is_alive():
             # Create optimized engine before starting threads
-            self.db_manager.create_managed_engine(self.database_url, self.engine_id)  # noqa: E501
+            self.db_manager.create_managed_engine(
+                self.database_url, self.engine_id
+            )  # noqa: E501
 
             self._stop_event.clear()
             self._thread = threading.Thread(target=self._run, daemon=True)
             self._thread.start()
             self.logger.debug("[EventProcessor] main thread started")
 
-            self._cleanup_thread = threading.Thread(target=self._cleanup_loop, daemon=True)  # noqa: E501
+            self._cleanup_thread = threading.Thread(
+                target=self._cleanup_loop, daemon=True
+            )  # noqa: E501
             self._cleanup_thread.start()
             self.logger.debug("[EventProcessor] cleanup thread started")
 
@@ -182,7 +202,9 @@ class EventProcessor:
         Args:
             new_database_url: The new database URL to connect to
         """
-        self.logger.info(f"[EventProcessor] Switching dataset from {self.database_url} to {new_database_url}")  # noqa: E501
+        self.logger.info(
+            f"[EventProcessor] Switching dataset from {self.database_url} to {new_database_url}"
+        )  # noqa: E501
 
         # Stop current processing
         self.stop()
@@ -212,7 +234,10 @@ class EventProcessor:
                 self._events_processed += events_processed
 
                 # Log performance metrics periodically
-                if datetime.now() - self._last_performance_log >= self._performance_log_interval:  # noqa: E501
+                if (
+                    datetime.now() - self._last_performance_log
+                    >= self._performance_log_interval
+                ):  # noqa: E501
                     self._log_performance_metrics()
 
             except Exception as e:
@@ -239,7 +264,9 @@ class EventProcessor:
             self._last_performance_log = datetime.now()
 
         except Exception as e:
-            self.logger.warning(f"[EventProcessor] Failed to log performance metrics: {e}")  # noqa: E501
+            self.logger.warning(
+                f"[EventProcessor] Failed to log performance metrics: {e}"
+            )  # noqa: E501
 
     def process_events(self) -> int:
         """
@@ -253,29 +280,57 @@ class EventProcessor:
         try:
             with self._get_managed_session() as db:
                 # Get unprocessed ChangeEvents since last processed ID
-                events = db.execute(text("""
+                events = db.execute(
+                    text("""
                     SELECT id, event_type, record_type, record_id, old_data, new_data, timestamp
                     FROM change_events
                     WHERE processed = 0 AND id > :last_processed_id
                     ORDER BY id ASC
                     LIMIT :max_events
-                """), {"last_processed_id": self._last_processed_id, "max_events": self.max_events}).fetchall()  # noqa: E501
+                """),
+                    {
+                        "last_processed_id": self._last_processed_id,
+                        "max_events": self.max_events,
+                    },
+                ).fetchall()  # noqa: E501
 
                 for event in events:
                     try:
-                        event_id, event_type, record_type, record_id, old_data, new_data, timestamp = event  # noqa: E501
+                        (
+                            event_id,
+                            event_type,
+                            record_type,
+                            record_id,
+                            old_data,
+                            new_data,
+                            timestamp,
+                        ) = event  # noqa: E501
 
-                        self._process_single_event(event_id, event_type, record_type, record_id, old_data, new_data, timestamp)  # noqa: E501
+                        self._process_single_event(
+                            event_id,
+                            event_type,
+                            record_type,
+                            record_id,
+                            old_data,
+                            new_data,
+                            timestamp,
+                        )  # noqa: E501
 
                         # Mark as processed
-                        db.execute(text("UPDATE change_events SET processed = 1 WHERE id = :event_id"),  # noqa: E501
-                                   {"event_id": event_id})
+                        db.execute(
+                            text(
+                                "UPDATE change_events SET processed = 1 WHERE id = :event_id"
+                            ),  # noqa: E501
+                            {"event_id": event_id},
+                        )
 
                         self._last_processed_id = event_id
                         events_processed += 1
 
                     except Exception as e:
-                        self.logger.error(f"[EventProcessor] Failed to process event {event_id}: {e}")  # noqa: E501
+                        self.logger.error(
+                            f"[EventProcessor] Failed to process event {event_id}: {e}"
+                        )  # noqa: E501
                         # Continue processing other events even if one fails
 
                 # Session commits automatically via context manager
@@ -285,9 +340,20 @@ class EventProcessor:
 
         return events_processed
 
-    def _process_single_event(self, event_id, event_type, record_type, record_id, old_data, new_data, timestamp):  # noqa: E501
+    def _process_single_event(
+        self,
+        event_id,
+        event_type,
+        record_type,
+        record_id,
+        old_data,
+        new_data,
+        timestamp,
+    ):  # noqa: E501
         """Process a single ChangeEvent using record_type routing."""
-        self.logger.debug(f"[EventProcessor] Processing ChangeEvent {event_id}: {event_type} {record_type}")  # noqa: E501
+        self.logger.debug(
+            f"[EventProcessor] Processing ChangeEvent {event_id}: {event_type} {record_type}"
+        )  # noqa: E501
 
         # Convert string back to enum if needed (for database compatibility)
         if isinstance(record_type, str):
@@ -307,15 +373,19 @@ class EventProcessor:
 
         if handler:
             # Create a simple event object
-            event_obj = type('Event', (), {
-                'id': event_id,
-                'operation': event_type,
-                'record_type': record_type,
-                'record_id': record_id,
-                'old_data': old_data,
-                'new_data': new_data,
-                'timestamp': timestamp
-            })()
+            event_obj = type(
+                "Event",
+                (),
+                {
+                    "id": event_id,
+                    "operation": event_type,
+                    "record_type": record_type,
+                    "record_id": record_id,
+                    "old_data": old_data,
+                    "new_data": new_data,
+                    "timestamp": timestamp,
+                },
+            )()
             handler(event_obj)
         else:
             self.logger.error(
@@ -328,18 +398,30 @@ class EventProcessor:
         self.logger.info(f"Processing structure_node event: {event.operation}")
 
         # Create version when entity is modified (only for create/update operations)  # noqa: E501
-        if self.version_manager and event.operation in ['create', 'update'] and event.record_id:  # noqa: E501
+        if (
+            self.version_manager
+            and event.operation in ["create", "update"]
+            and event.record_id
+        ):  # noqa: E501
             try:
                 # Get the current entity data
                 content = {}
                 if event.new_data:
                     try:
-                        content = json.loads(event.new_data) if isinstance(event.new_data, str) else event.new_data  # noqa: E501
+                        content = (
+                            json.loads(event.new_data)
+                            if isinstance(event.new_data, str)
+                            else event.new_data
+                        )  # noqa: E501
                     except (json.JSONDecodeError, TypeError):
                         content = event.new_data if event.new_data else {}
                 elif event.old_data:
                     try:
-                        content = json.loads(event.old_data) if isinstance(event.old_data, str) else event.old_data  # noqa: E501
+                        content = (
+                            json.loads(event.old_data)
+                            if isinstance(event.old_data, str)
+                            else event.old_data
+                        )  # noqa: E501
                     except (json.JSONDecodeError, TypeError):
                         content = event.old_data if event.old_data else {}
 
@@ -348,75 +430,102 @@ class EventProcessor:
 
                     # Create version for this entity change
                     version = self.version_manager.create_version(
-                        entity_type='structure_node',
+                        entity_type="structure_node",
                         entity_id=event.record_id,
                         content=content,
-                        author_id='system',
-                        state=ChangeState.WORKING
+                        author_id="system",
+                        state=ChangeState.WORKING,
                     )
 
                     # Link the change event to the created version
-                    self._link_event_to_version(event.id, version.id, ChangeState.WORKING)  # noqa: E501
+                    self._link_event_to_version(
+                        event.id, version.id, ChangeState.WORKING
+                    )  # noqa: E501
 
                     # Update working tree if working tree manager is available
                     if self.working_tree_manager:
                         try:
                             # Check if entity already exists in working tree
                             existing_entry = self.working_tree_manager.get_working_tree_entry(  # noqa: E501
-                                entity_type='structure_node',
-                                entity_id=event.record_id
+                                entity_type="structure_node", entity_id=event.record_id
                             )
 
                             if existing_entry:
                                 # Entity already tracked - update current version  # noqa: E501
                                 self.working_tree_manager.update_current_version(  # noqa: E501
-                                    entity_type='structure_node',
+                                    entity_type="structure_node",
                                     entity_id=event.record_id,
-                                    new_version_id=version.id
+                                    new_version_id=version.id,
                                 )
-                                self.logger.debug(f"[EventProcessor] Updated working tree for structure_node {event.record_id}")  # noqa: E501
+                                self.logger.debug(
+                                    f"[EventProcessor] Updated working tree for structure_node {event.record_id}"
+                                )  # noqa: E501
                             else:
                                 # Entity not yet tracked - initialize it
                                 self.working_tree_manager.initialize_entity_in_working_tree(  # noqa: E501
-                                    entity_type='structure_node',
+                                    entity_type="structure_node",
                                     entity_id=event.record_id,
-                                    initial_version_id=version.id
+                                    initial_version_id=version.id,
                                 )
-                                self.logger.debug(f"[EventProcessor] Initialized working tree for new structure_node {event.record_id}")  # noqa: E501
+                                self.logger.debug(
+                                    f"[EventProcessor] Initialized working tree for new structure_node {event.record_id}"
+                                )  # noqa: E501
                         except Exception as wt_e:
-                            self.logger.error(f"[EventProcessor] Failed to manage working tree: {wt_e}")  # noqa: E501
+                            self.logger.error(
+                                f"[EventProcessor] Failed to manage working tree: {wt_e}"
+                            )  # noqa: E501
 
-                    self.logger.debug(f"[EventProcessor] Created version {version.version_number} for structure_node {event.record_id}")  # noqa: E501
+                    self.logger.debug(
+                        f"[EventProcessor] Created version {version.version_number} for structure_node {event.record_id}"
+                    )  # noqa: E501
 
             except Exception as e:
-                self.logger.error(f"[EventProcessor] Failed to create version for structure_node {event.record_id}: {e}")  # noqa: E501
+                self.logger.error(
+                    f"[EventProcessor] Failed to create version for structure_node {event.record_id}: {e}"
+                )  # noqa: E501
                 # Continue processing even if version creation fails
 
         # Detect title changes and trigger NLP re-analysis
-        if event.operation == 'update' and event.old_data and event.new_data:
+        if event.operation == "update" and event.old_data and event.new_data:
             try:
                 self._handle_title_change(event)
             except Exception as e:
-                self.logger.error(f"[EventProcessor] Failed to handle title change for structure_node {event.record_id}: {e}")  # noqa: E501
+                self.logger.error(
+                    f"[EventProcessor] Failed to handle title change for structure_node {event.record_id}: {e}"
+                )  # noqa: E501
                 # Continue processing even if title change handling fails
 
     def process_structure_node_link_event(self, event):
         """Process structure_node_link-related events with version management integration."""  # noqa: E501
-        self.logger.info(f"Processing structure_node_link event: {event.operation}")  # noqa: E501
+        self.logger.info(
+            f"Processing structure_node_link event: {event.operation}"
+        )  # noqa: E501
 
         # Create version when entity is modified (only for create/update operations)  # noqa: E501
-        if self.version_manager and event.operation in ['create', 'update'] and event.record_id:  # noqa: E501
+        if (
+            self.version_manager
+            and event.operation in ["create", "update"]
+            and event.record_id
+        ):  # noqa: E501
             try:
                 # Get the current entity data
                 content = {}
                 if event.new_data:
                     try:
-                        content = json.loads(event.new_data) if isinstance(event.new_data, str) else event.new_data  # noqa: E501
+                        content = (
+                            json.loads(event.new_data)
+                            if isinstance(event.new_data, str)
+                            else event.new_data
+                        )  # noqa: E501
                     except (json.JSONDecodeError, TypeError):
                         content = event.new_data if event.new_data else {}
                 elif event.old_data:
                     try:
-                        content = json.loads(event.old_data) if isinstance(event.old_data, str) else event.old_data  # noqa: E501
+                        content = (
+                            json.loads(event.old_data)
+                            if isinstance(event.old_data, str)
+                            else event.old_data
+                        )  # noqa: E501
                     except (json.JSONDecodeError, TypeError):
                         content = event.old_data if event.old_data else {}
 
@@ -425,73 +534,94 @@ class EventProcessor:
 
                     # Create version for this entity change
                     version = self.version_manager.create_version(
-                        entity_type='structure_node_link',
+                        entity_type="structure_node_link",
                         entity_id=event.record_id,
                         content=content,
-                        author_id='system',
-                        state=ChangeState.WORKING
+                        author_id="system",
+                        state=ChangeState.WORKING,
                     )
 
                     # Link the change event to the created version
-                    self._link_event_to_version(event.id, version.id, ChangeState.WORKING)  # noqa: E501
+                    self._link_event_to_version(
+                        event.id, version.id, ChangeState.WORKING
+                    )  # noqa: E501
 
                     # Update working tree if working tree manager is available
                     if self.working_tree_manager:
                         try:
                             # Check if entity already exists in working tree
                             existing_entry = self.working_tree_manager.get_working_tree_entry(  # noqa: E501
-                                entity_type='structure_node_link',
-                                entity_id=event.record_id
+                                entity_type="structure_node_link",
+                                entity_id=event.record_id,
                             )
 
                             if existing_entry:
                                 # Entity already tracked - update current version  # noqa: E501
                                 self.working_tree_manager.update_current_version(  # noqa: E501
-                                    entity_type='structure_node_link',
+                                    entity_type="structure_node_link",
                                     entity_id=event.record_id,
-                                    new_version_id=version.id
+                                    new_version_id=version.id,
                                 )
-                                self.logger.debug(f"[EventProcessor] Updated working tree for structure_node_link {event.record_id}")  # noqa: E501
+                                self.logger.debug(
+                                    f"[EventProcessor] Updated working tree for structure_node_link {event.record_id}"
+                                )  # noqa: E501
                             else:
                                 # Entity not yet tracked - initialize it
                                 self.working_tree_manager.initialize_entity_in_working_tree(  # noqa: E501
-                                    entity_type='structure_node_link',
+                                    entity_type="structure_node_link",
                                     entity_id=event.record_id,
-                                    initial_version_id=version.id
+                                    initial_version_id=version.id,
                                 )
-                                self.logger.debug(f"[EventProcessor] Initialized working tree for new structure_node_link {event.record_id}")  # noqa: E501
+                                self.logger.debug(
+                                    f"[EventProcessor] Initialized working tree for new structure_node_link {event.record_id}"
+                                )  # noqa: E501
                         except Exception as wt_e:
-                            self.logger.error(f"[EventProcessor] Failed to manage working tree: {wt_e}")  # noqa: E501
+                            self.logger.error(
+                                f"[EventProcessor] Failed to manage working tree: {wt_e}"
+                            )  # noqa: E501
 
-                    self.logger.debug(f"[EventProcessor] Created version {version.version_number} for structure_node_link {event.record_id}")  # noqa: E501
+                    self.logger.debug(
+                        f"[EventProcessor] Created version {version.version_number} for structure_node_link {event.record_id}"
+                    )  # noqa: E501
 
             except Exception as e:
-                self.logger.error(f"[EventProcessor] Failed to create version for structure_node_link {event.record_id}: {e}")  # noqa: E501
+                self.logger.error(
+                    f"[EventProcessor] Failed to create version for structure_node_link {event.record_id}: {e}"
+                )  # noqa: E501
                 # Continue processing even if version creation fails
 
     def process_predicate_event(self, event):
         """Process predicate-related events."""
-        self.logger.info(f"Processing predicate event: {event.operation} id={event.id}")  # noqa: E501
+        self.logger.info(
+            f"Processing predicate event: {event.operation} id={event.id}"
+        )  # noqa: E501
         # Predicate changes are logged via ChangeEvent but do not require
         # additional processing (unlike structure_nodes which need version tracking)  # noqa: E501
 
-    def _link_event_to_version(self, event_id: int, version_id: str, change_state):  # noqa: E501
+    def _link_event_to_version(
+        self, event_id: int, version_id: str, change_state
+    ):  # noqa: E501
         """Link a change event to its corresponding version."""
         try:
             with self._get_managed_session() as db:
-                db.execute(text("""
+                db.execute(
+                    text("""
                     UPDATE change_events
                     SET version_id = :version_id, change_state = :change_state
                     WHERE id = :event_id
-                """), {
-                    "version_id": version_id,
-                    "change_state": change_state.value,
-                    "event_id": event_id
-                })
+                """),
+                    {
+                        "version_id": version_id,
+                        "change_state": change_state.value,
+                        "event_id": event_id,
+                    },
+                )
                 # Session commits automatically via context manager
 
         except Exception as e:
-            self.logger.error(f"[EventProcessor] Failed to link event {event_id} to version {version_id}: {e}")  # noqa: E501
+            self.logger.error(
+                f"[EventProcessor] Failed to link event {event_id} to version {version_id}: {e}"
+            )  # noqa: E501
 
     def _get_node_lock(self, node_id: str) -> threading.Lock:
         """
@@ -517,17 +647,27 @@ class EventProcessor:
         """
         try:
             # Parse old and new data
-            old_data = json.loads(event.old_data) if isinstance(event.old_data, str) else event.old_data  # noqa: E501
-            new_data = json.loads(event.new_data) if isinstance(event.new_data, str) else event.new_data  # noqa: E501
+            old_data = (
+                json.loads(event.old_data)
+                if isinstance(event.old_data, str)
+                else event.old_data
+            )  # noqa: E501
+            new_data = (
+                json.loads(event.new_data)
+                if isinstance(event.new_data, str)
+                else event.new_data
+            )  # noqa: E501
 
-            old_title = old_data.get('title', '') if old_data else ''
-            new_title = new_data.get('title', '') if new_data else ''
+            old_title = old_data.get("title", "") if old_data else ""
+            new_title = new_data.get("title", "") if new_data else ""
 
             # Check if title has actually changed
             if old_title and new_title and old_title != new_title:
                 # Validate new title
                 if not new_title.strip():
-                    raise ValueError(f"Empty title detected for structure_node {event.record_id}")  # noqa: E501
+                    raise ValueError(
+                        f"Empty title detected for structure_node {event.record_id}"
+                    )  # noqa: E501
 
                 if len(new_title) > self.MAX_TITLE_LENGTH:
                     raise ValueError(
@@ -547,7 +687,9 @@ class EventProcessor:
                 if node_lock.acquire(blocking=False):
                     try:
                         # Enqueue async NLP re-analysis task
-                        self._enqueue_nlp_reanalysis(event.record_id, new_title)  # noqa: E501
+                        self._enqueue_nlp_reanalysis(
+                            event.record_id, new_title
+                        )  # noqa: E501
                     finally:
                         node_lock.release()
                 else:
@@ -559,19 +701,23 @@ class EventProcessor:
         except json.JSONDecodeError as e:
             self.logger.error(
                 f"[EventProcessor] Failed to parse event data for title change detection: {e}",  # noqa: E501
-                exc_info=True
+                exc_info=True,
             )
         except ValueError as e:
             # Expected validation errors
-            self.logger.warning(f"[EventProcessor] Title validation error: {e}")  # noqa: E501
+            self.logger.warning(
+                f"[EventProcessor] Title validation error: {e}"
+            )  # noqa: E501
         except RuntimeError as e:
             # Expected runtime errors (e.g., TaskManager not initialized)
-            self.logger.warning(f"[EventProcessor] Runtime error in title change handling: {e}")  # noqa: E501
+            self.logger.warning(
+                f"[EventProcessor] Runtime error in title change handling: {e}"
+            )  # noqa: E501
         except Exception as e:
             # Unexpected system errors
             self.logger.error(
                 f"[EventProcessor] Unexpected error in title change detection for node {event.record_id}: {e}",  # noqa: E501
-                exc_info=True
+                exc_info=True,
             )
 
     def _enqueue_nlp_reanalysis(self, node_id: str, new_title: str):
@@ -616,21 +762,22 @@ class EventProcessor:
             # Submit the task to the task manager
             async def submit_task():
                 await task_manager.submit_task(
-                    task_type='nlp_reanalysis',
+                    task_type="nlp_reanalysis",
                     coroutine=nlp_reanalysis_task(),
-                    metadata={
-                        'node_id': node_id,
-                        'new_title': new_title
-                    }
+                    metadata={"node_id": node_id, "new_title": new_title},
                 )
 
             # Run the submission in the event loop
             asyncio.run_coroutine_threadsafe(submit_task(), loop)
 
-            self.logger.info(f"[EventProcessor] Enqueued NLP re-analysis task for node {node_id}")  # noqa: E501
+            self.logger.info(
+                f"[EventProcessor] Enqueued NLP re-analysis task for node {node_id}"
+            )  # noqa: E501
 
         except Exception as e:
-            self.logger.error(f"[EventProcessor] Failed to enqueue NLP re-analysis task: {e}")  # noqa: E501
+            self.logger.error(
+                f"[EventProcessor] Failed to enqueue NLP re-analysis task: {e}"
+            )  # noqa: E501
 
     async def _perform_nlp_reanalysis(self, node_id: str, new_title: str):
         """
@@ -677,7 +824,9 @@ class EventProcessor:
                     word_sense_service = WordSenseService(db)
 
                     # Extract new senses
-                    new_senses = word_sense_service.extract_word_senses(nlp_response)  # noqa: E501
+                    new_senses = word_sense_service.extract_word_senses(
+                        nlp_response
+                    )  # noqa: E501
 
                     self.logger.debug(
                         f"[EventProcessor] Extracted {len(new_senses)} word senses from NLP analysis"  # noqa: E501
@@ -688,9 +837,7 @@ class EventProcessor:
                         # Update word senses with conservative filtering
                         # This will preserve existing senses that match and remove only obsolete ones  # noqa: E501
                         updated_senses = word_sense_service.update_word_senses(
-                            node_id=node_id,
-                            new_senses=new_senses,
-                            conservative=True
+                            node_id=node_id, new_senses=new_senses, conservative=True
                         )
 
                         self.logger.info(
@@ -700,11 +847,11 @@ class EventProcessor:
 
                     # Success - return results
                     return {
-                        'success': True,
-                        'node_id': node_id,
-                        'new_title': new_title,
-                        'senses_count': len(updated_senses),
-                        'attempts': attempt
+                        "success": True,
+                        "node_id": node_id,
+                        "new_title": new_title,
+                        "senses_count": len(updated_senses),
+                        "attempts": attempt,
                     }
 
             except (RuntimeError, ConnectionError, TimeoutError) as e:
@@ -717,35 +864,39 @@ class EventProcessor:
 
                 if attempt < self.NLP_RETRY_ATTEMPTS:
                     delay = self.NLP_RETRY_DELAY * (2 ** (attempt - 1))
-                    self.logger.info(f"[EventProcessor] Retrying in {delay} seconds...")  # noqa: E501
+                    self.logger.info(
+                        f"[EventProcessor] Retrying in {delay} seconds..."
+                    )  # noqa: E501
                     await asyncio.sleep(delay)
                 else:
                     self.logger.error(
                         f"[EventProcessor] NLP re-analysis failed for node {node_id} after {attempt} attempts",  # noqa: E501
-                        exc_info=True
+                        exc_info=True,
                     )
 
             except Exception as e:
                 # Non-transient errors - fail immediately
                 self.logger.error(
                     f"[EventProcessor] NLP re-analysis failed for node {node_id} with non-retryable error: {e}",  # noqa: E501
-                    exc_info=True
+                    exc_info=True,
                 )
                 return {
-                    'success': False,
-                    'node_id': node_id,
-                    'new_title': new_title,
-                    'error': str(e),
-                    'attempts': attempt
+                    "success": False,
+                    "node_id": node_id,
+                    "new_title": new_title,
+                    "error": str(e),
+                    "attempts": attempt,
                 }
 
         # All retries exhausted
         return {
-            'success': False,
-            'node_id': node_id,
-            'new_title': new_title,
-            'error': str(last_error) if last_error else 'Unknown error after retries',  # noqa: E501
-            'attempts': self.NLP_RETRY_ATTEMPTS
+            "success": False,
+            "node_id": node_id,
+            "new_title": new_title,
+            "error": (
+                str(last_error) if last_error else "Unknown error after retries"
+            ),  # noqa: E501
+            "attempts": self.NLP_RETRY_ATTEMPTS,
         }
 
     def _cleanup_loop(self):
@@ -754,23 +905,25 @@ class EventProcessor:
 
         while not self._stop_event.is_set():
             try:
-                self.logger.debug("[EventProcessor] cleanup_old_events() running...")  # noqa: E501
+                self.logger.debug(
+                    "[EventProcessor] cleanup_old_events() running..."
+                )  # noqa: E501
                 self.cleanup_old_events()
 
                 # Also trigger Database Manager health check if available
-                if hasattr(self.db_manager, 'perform_health_check'):
+                if hasattr(self.db_manager, "perform_health_check"):
                     health = self.db_manager.perform_health_check()
-                    overall_status = health.get('overall_status')
+                    overall_status = health.get("overall_status")
 
                     # Only log warnings for actual errors, not degraded status from slow queries  # noqa: E501
-                    if overall_status == 'error':
-                        errors = health.get('errors', [])
+                    if overall_status == "error":
+                        errors = health.get("errors", [])
                         self.logger.warning(
                             f"[EventProcessor] Database health error detected: {errors}"  # noqa: E501
                         )
-                    elif overall_status == 'degraded':
+                    elif overall_status == "degraded":
                         # Degraded can be expected during high load; log at debug level  # noqa: E501
-                        warnings = health.get('warnings', [])
+                        warnings = health.get("warnings", [])
                         self.logger.debug(
                             f"[EventProcessor] Database performance degraded: {warnings}"  # noqa: E501
                         )
@@ -800,19 +953,26 @@ class EventProcessor:
         try:
             with self._get_managed_session() as db:
                 # Delete old processed events
-                result = db.execute(text("""
+                result = db.execute(
+                    text("""
                     DELETE FROM change_events
                     WHERE processed = 1 AND timestamp < :cutoff
-                """), {"cutoff": cutoff.isoformat()})
+                """),
+                    {"cutoff": cutoff.isoformat()},
+                )
 
                 deleted_count = result.rowcount
                 # Session commits automatically via context manager
 
                 if deleted_count > 0:
-                    self.logger.info(f"[EventProcessor] Deleted {deleted_count} old processed events.")  # noqa: E501
+                    self.logger.info(
+                        f"[EventProcessor] Deleted {deleted_count} old processed events."
+                    )  # noqa: E501
 
         except Exception as e:
-            self.logger.error(f"[EventProcessor] Error in cleanup_old_events: {e}")  # noqa: E501
+            self.logger.error(
+                f"[EventProcessor] Error in cleanup_old_events: {e}"
+            )  # noqa: E501
 
     def get_stats(self) -> Dict[str, Any]:
         """Get event processor statistics including database metrics."""
@@ -832,19 +992,24 @@ class EventProcessor:
                 db_metrics = self.db_manager._get_metrics_summary()
 
                 return {
-                    "unprocessed_count": unprocessed_result[0] if unprocessed_result else 0,  # noqa: E501
-                    "processed_count": processed_result[0] if processed_result else 0,  # noqa: E501
+                    "unprocessed_count": (
+                        unprocessed_result[0] if unprocessed_result else 0
+                    ),  # noqa: E501
+                    "processed_count": (
+                        processed_result[0] if processed_result else 0
+                    ),  # noqa: E501
                     "events_processed_total": self._events_processed,
                     "last_processed_id": self._last_processed_id,
-                    "is_running": self._thread is not None and self._thread.is_alive(),  # noqa: E501
+                    "is_running": self._thread is not None
+                    and self._thread.is_alive(),  # noqa: E501
                     "table_exists": True,
                     "engine_id": self.engine_id,
                     "database_metrics": db_metrics,
                     "optimized_features": {
                         "optimized_pooling": True,
                         "performance_monitoring": True,
-                        "health_monitoring": True
-                    }
+                        "health_monitoring": True,
+                    },
                 }
         except Exception as e:
             self.logger.error(f"[EventProcessor] Error in get_stats: {e}")
@@ -853,7 +1018,8 @@ class EventProcessor:
                 "processed_count": 0,
                 "events_processed_total": self._events_processed,
                 "last_processed_id": self._last_processed_id,
-                "is_running": self._thread is not None and self._thread.is_alive(),  # noqa: E501
+                "is_running": self._thread is not None
+                and self._thread.is_alive(),  # noqa: E501
                 "table_exists": False,
                 "engine_id": self.engine_id,
                 "error": str(e),
@@ -861,8 +1027,8 @@ class EventProcessor:
                     "optimized_pooling": True,
                     "performance_monitoring": True,
                     "environment_aware": True,
-                    "health_monitoring": True
-                }
+                    "health_monitoring": True,
+                },
             }
 
     def get_health_status(self) -> Dict[str, Any]:
@@ -880,15 +1046,21 @@ class EventProcessor:
 
             if stats["unprocessed_count"] > 1000:
                 processor_health = "warning"
-                issues.append(f"High unprocessed event count: {stats['unprocessed_count']}")  # noqa: E501
+                issues.append(
+                    f"High unprocessed event count: {stats['unprocessed_count']}"
+                )  # noqa: E501
 
             if not stats["is_running"]:
                 processor_health = "error"
                 issues.append("Event processor is not running")
 
             if db_health.get("overall_status") != "healthy":
-                processor_health = "warning" if processor_health == "healthy" else "error"  # noqa: E501
-                issues.append(f"Database health issue: {db_health.get('overall_status')}")  # noqa: E501
+                processor_health = (
+                    "warning" if processor_health == "healthy" else "error"
+                )  # noqa: E501
+                issues.append(
+                    f"Database health issue: {db_health.get('overall_status')}"
+                )  # noqa: E501
 
             return {
                 "timestamp": datetime.now().isoformat(),
@@ -897,7 +1069,7 @@ class EventProcessor:
                 "overall_status": processor_health,
                 "issues": issues,
                 "stats": stats,
-                "database_health": db_health
+                "database_health": db_health,
             }
 
         except Exception as e:
@@ -907,13 +1079,17 @@ class EventProcessor:
                 "database_status": "error",
                 "overall_status": "error",
                 "issues": [f"Health check failed: {str(e)}"],
-                "error": str(e)
+                "error": str(e),
             }
 
 
-def create_event_processor(database_url: str, version_manager=None, working_tree_manager=None,  # noqa: E501
-                          poll_interval: float = 1.0,  # noqa: E128
-                          max_events: int = 100) -> EventProcessor:  # noqa: E128, E501
+def create_event_processor(
+    database_url: str,
+    version_manager=None,
+    working_tree_manager=None,  # noqa: E501
+    poll_interval: float = 1.0,  # noqa: E128
+    max_events: int = 100,
+) -> EventProcessor:  # noqa: E128, E501
     """
     Factory function to create an EventProcessor with optimized database connections.  # noqa: E501
 
@@ -925,7 +1101,9 @@ def create_event_processor(database_url: str, version_manager=None, working_tree
     Returns:
         EventProcessor instance with optimized connection pooling
     """
-    return EventProcessor(database_url, poll_interval, max_events, version_manager, working_tree_manager)  # noqa: E501
+    return EventProcessor(
+        database_url, poll_interval, max_events, version_manager, working_tree_manager
+    )  # noqa: E501
 
 
 def EventProcessorFactory(database_url: str, **kwargs) -> EventProcessor:

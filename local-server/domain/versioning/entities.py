@@ -67,7 +67,9 @@ class ChangeEvent:
         if not isinstance(self.payload, types.MappingProxyType):
             raise TypeError("payload must be a MappingProxyType (immutable mapping)")
         if not self.occurred_at or not isinstance(self.occurred_at, str):
-            raise ValueError("ChangeEvent occurred_at must be a non-empty timestamp string")
+            raise ValueError(
+                "ChangeEvent occurred_at must be a non-empty timestamp string"
+            )
         if not isinstance(self.state, ChangeState):
             raise TypeError(
                 f"state must be a ChangeState enum, got {type(self.state).__name__}"
@@ -95,12 +97,18 @@ class EntityVersion:
         """Validate entity version invariants."""
         if not self.entity_id or not isinstance(self.entity_id, str):
             raise ValueError("EntityVersion entity_id must be a non-empty string")
-        if isinstance(self.version, bool) or not isinstance(self.version, int) or self.version <= 0:
+        if (
+            isinstance(self.version, bool)
+            or not isinstance(self.version, int)
+            or self.version <= 0
+        ):
             raise ValueError("EntityVersion version must be a positive integer")
         if not isinstance(self.snapshot, types.MappingProxyType):
             raise TypeError("snapshot must be a MappingProxyType (immutable mapping)")
         if not self.recorded_at or not isinstance(self.recorded_at, str):
-            raise ValueError("EntityVersion recorded_at must be a non-empty timestamp string")
+            raise ValueError(
+                "EntityVersion recorded_at must be a non-empty timestamp string"
+            )
 
 
 @dataclass
@@ -132,7 +140,9 @@ class Conflict:
             raise TypeError("conflict_fields must be a tuple of strings (immutable)")
         for field_name in self.conflict_fields:
             if not isinstance(field_name, str):
-                raise TypeError(f"All conflict_fields must be strings, got {type(field_name).__name__}")
+                raise TypeError(
+                    f"All conflict_fields must be strings, got {type(field_name).__name__}"
+                )
 
 
 @dataclass
@@ -155,12 +165,18 @@ class ConflictReport:
         if not self.sync_id or not isinstance(self.sync_id, str):
             raise ValueError("ConflictReport sync_id must be a non-empty string")
         if not isinstance(self.conflicts, tuple):
-            raise TypeError("conflicts must be a tuple of Conflict instances (immutable)")
+            raise TypeError(
+                "conflicts must be a tuple of Conflict instances (immutable)"
+            )
         for conflict in self.conflicts:
             if not isinstance(conflict, Conflict):
-                raise TypeError(f"All conflicts must be Conflict instances, got {type(conflict).__name__}")
+                raise TypeError(
+                    f"All conflicts must be Conflict instances, got {type(conflict).__name__}"
+                )
         if not self.generated_at or not isinstance(self.generated_at, str):
-            raise ValueError("ConflictReport generated_at must be a non-empty timestamp string")
+            raise ValueError(
+                "ConflictReport generated_at must be a non-empty timestamp string"
+            )
 
 
 @dataclass
@@ -184,9 +200,23 @@ class MergeResult:
         """Validate merge result invariants."""
         if not self.sync_id or not isinstance(self.sync_id, str):
             raise ValueError("MergeResult sync_id must be a non-empty string")
-        if isinstance(self.merged_count, bool) or not isinstance(self.merged_count, int) or self.merged_count < 0:
+        if (
+            isinstance(self.merged_count, bool)
+            or not isinstance(self.merged_count, int)
+            or self.merged_count < 0
+        ):
             raise ValueError("MergeResult merged_count must be a non-negative integer")
-        if isinstance(self.conflict_count, bool) or not isinstance(self.conflict_count, int) or self.conflict_count < 0:
-            raise ValueError("MergeResult conflict_count must be a non-negative integer")
-        if isinstance(self.skipped_count, bool) or not isinstance(self.skipped_count, int) or self.skipped_count < 0:
+        if (
+            isinstance(self.conflict_count, bool)
+            or not isinstance(self.conflict_count, int)
+            or self.conflict_count < 0
+        ):
+            raise ValueError(
+                "MergeResult conflict_count must be a non-negative integer"
+            )
+        if (
+            isinstance(self.skipped_count, bool)
+            or not isinstance(self.skipped_count, int)
+            or self.skipped_count < 0
+        ):
             raise ValueError("MergeResult skipped_count must be a non-negative integer")

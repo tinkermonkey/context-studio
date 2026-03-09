@@ -16,7 +16,9 @@ import sys
 import os
 from datetime import datetime
 
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))  # noqa: E501
+sys.path.append(
+    os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+)  # noqa: E501
 
 import pytest  # noqa: E402
 
@@ -71,9 +73,7 @@ class TestPhase0BaselineTests:
         assert "Index" in term_ids
 
         # Step 2: Verify list operations - layer type
-        list_layers_response = e2e_client.get(
-            "/api/structure_nodes/?node_type=layer"
-        )
+        list_layers_response = e2e_client.get("/api/structure_nodes/?node_type=layer")
         assert list_layers_response.status_code == 200
         layers_data = list_layers_response.json()
         assert "data" in layers_data
@@ -88,9 +88,9 @@ class TestPhase0BaselineTests:
         )
         assert list_terms_response.status_code == 200
         terms_data = list_terms_response.json()
-        assert terms_data["total"] == 4, (
-            f"Expected 4 terms under domain, got {terms_data['total']}"
-        )
+        assert (
+            terms_data["total"] == 4
+        ), f"Expected 4 terms under domain, got {terms_data['total']}"
         term_titles = [node["title"] for node in terms_data["data"]]
         assert "Database" in term_titles
         assert "Relational Database" in term_titles
@@ -107,9 +107,9 @@ class TestPhase0BaselineTests:
             predicate_response = e2e_client.post(
                 "/api/predicates/", json=predicate_data
             )
-            assert predicate_response.status_code == 201, (
-                f"Failed to create predicate: {predicate_response.text}"
-            )
+            assert (
+                predicate_response.status_code == 201
+            ), f"Failed to create predicate: {predicate_response.text}"
             predicate = predicate_response.json()
             predicates[predicate_def["identifier"]] = predicate["id"]
 
@@ -118,8 +118,7 @@ class TestPhase0BaselineTests:
         for source_title, target_title, predicate_identifier in STABLE_RELATIONSHIPS:
             # Get the predicate title from STABLE_PREDICATES
             predicate_def = next(
-                p for p in STABLE_PREDICATES
-                if p["identifier"] == predicate_identifier
+                p for p in STABLE_PREDICATES if p["identifier"] == predicate_identifier
             )
             link_data = {
                 "source_node_id": term_ids[source_title],
@@ -130,9 +129,9 @@ class TestPhase0BaselineTests:
             link_response = e2e_client.post(
                 "/api/structure_nodes/links", json=link_data
             )
-            assert link_response.status_code == 201, (
-                f"Failed to create link from {source_title} to {target_title}: {link_response.text}"  # noqa: E501
-            )
+            assert (
+                link_response.status_code == 201
+            ), f"Failed to create link from {source_title} to {target_title}: {link_response.text}"  # noqa: E501
             link = link_response.json()
             link_ids.append(link["id"])
 
@@ -146,7 +145,9 @@ class TestPhase0BaselineTests:
         assert isinstance(links_data, dict), "Response should be a dict"
         assert "data" in links_data, "Response should have 'data' key"
         assert isinstance(links_data["data"], list), "Response 'data' should be a list"
-        assert len(links_data["data"]) >= 1, "Should have at least one link from Relational Database"  # noqa: E501
+        assert (
+            len(links_data["data"]) >= 1
+        ), "Should have at least one link from Relational Database"  # noqa: E501
 
         # Step 7: Verify semantic search returns "Database" in top results
         search_data = {
@@ -154,26 +155,22 @@ class TestPhase0BaselineTests:
             "node_type": "term",
             "limit": 10,
         }
-        search_response = e2e_client.post(
-            "/api/structure_nodes/find", json=search_data
-        )
-        assert search_response.status_code == 200, (
-            f"Search failed: {search_response.text}"
-        )
+        search_response = e2e_client.post("/api/structure_nodes/find", json=search_data)
+        assert (
+            search_response.status_code == 200
+        ), f"Search failed: {search_response.text}"
         search_results = search_response.json()
-        assert isinstance(search_results, list), (
-            f"Search results should be a list, got {type(search_results)}"
-        )
+        assert isinstance(
+            search_results, list
+        ), f"Search results should be a list, got {type(search_results)}"
 
         # "Database" should appear in the top results (before unrelated terms like "Firewall")
-        assert len(search_results) > 0, (
-            "Search should return at least one result"
-        )
+        assert len(search_results) > 0, "Search should return at least one result"
         search_titles = [result.get("title") for result in search_results]
         # "Database" should be in results since its definition matches the search query
-        assert "Database" in search_titles, (
-            f"'Database' should be in search results. Got: {search_titles}"
-        )
+        assert (
+            "Database" in search_titles
+        ), f"'Database' should be in search results. Got: {search_titles}"
         # Verify search correctness: "Database" should rank in top 3 results
         # This validates search quality for the Phase 0 regression gate
         database_pos = search_titles.index("Database")
@@ -188,67 +185,56 @@ class TestPhase0BaselineTests:
             delete_link_response = e2e_client.delete(
                 f"/api/structure_nodes/links/{link_id}"
             )
-            assert delete_link_response.status_code == 204, (
-                f"Failed to delete link: {delete_link_response.text}"
-            )
+            assert (
+                delete_link_response.status_code == 204
+            ), f"Failed to delete link: {delete_link_response.text}"
 
         # Delete all predicates
         for predicate_id in predicates.values():
             delete_predicate_response = e2e_client.delete(
                 f"/api/predicates/{predicate_id}"
             )
-            assert delete_predicate_response.status_code in [200, 204], (
-                f"Failed to delete predicate: {delete_predicate_response.text}"
-            )
+            assert delete_predicate_response.status_code in [
+                200,
+                204,
+            ], f"Failed to delete predicate: {delete_predicate_response.text}"
 
         # Delete all terms
         for term_id in term_ids.values():
-            delete_term_response = e2e_client.delete(
-                f"/api/structure_nodes/{term_id}"
-            )
-            assert delete_term_response.status_code == 204, (
-                f"Failed to delete term: {delete_term_response.text}"
-            )
+            delete_term_response = e2e_client.delete(f"/api/structure_nodes/{term_id}")
+            assert (
+                delete_term_response.status_code == 204
+            ), f"Failed to delete term: {delete_term_response.text}"
 
         # Delete domain
-        delete_domain_response = e2e_client.delete(
-            f"/api/structure_nodes/{domain_id}"
-        )
-        assert delete_domain_response.status_code == 204, (
-            f"Failed to delete domain: {delete_domain_response.text}"
-        )
+        delete_domain_response = e2e_client.delete(f"/api/structure_nodes/{domain_id}")
+        assert (
+            delete_domain_response.status_code == 204
+        ), f"Failed to delete domain: {delete_domain_response.text}"
 
         # Delete layer
-        delete_layer_response = e2e_client.delete(
-            f"/api/structure_nodes/{layer_id}"
-        )
-        assert delete_layer_response.status_code == 204, (
-            f"Failed to delete layer: {delete_layer_response.text}"
-        )
+        delete_layer_response = e2e_client.delete(f"/api/structure_nodes/{layer_id}")
+        assert (
+            delete_layer_response.status_code == 204
+        ), f"Failed to delete layer: {delete_layer_response.text}"
 
         # Verify clean state after deletion
         # Check layer is deleted
         verify_layer_response = e2e_client.get(f"/api/structure_nodes/{layer_id}")
-        assert verify_layer_response.status_code == 404, (
-            "Layer should be deleted"
-        )
+        assert verify_layer_response.status_code == 404, "Layer should be deleted"
 
         # Check domain is deleted
         verify_domain_response = e2e_client.get(f"/api/structure_nodes/{domain_id}")
-        assert verify_domain_response.status_code == 404, (
-            "Domain should be deleted"
-        )
+        assert verify_domain_response.status_code == 404, "Domain should be deleted"
 
         # Verify list-nodes for our layer returns zero
-        final_list_response = e2e_client.get(
-            "/api/structure_nodes/?node_type=layer"
-        )
+        final_list_response = e2e_client.get("/api/structure_nodes/?node_type=layer")
         assert final_list_response.status_code == 200
         final_data = final_list_response.json()
         final_titles = [node["title"] for node in final_data["data"]]
-        assert "Computer Science" not in final_titles, (
-            "Layer should be removed from list"
-        )
+        assert (
+            "Computer Science" not in final_titles
+        ), "Layer should be removed from list"
 
     def test_baseline_embedding_generation(self, e2e_client):
         """
@@ -324,42 +310,40 @@ class TestPhase0BaselineTests:
         # Step 3: Assert embeddings are present and valid for all terms
         for term_title, term_id in term_ids.items():
             response = e2e_client.get(f"/api/structure_nodes/{term_id}")
-            assert response.status_code == 200, (
-                f"Failed to retrieve term {term_title}: {response.text}"
-            )
+            assert (
+                response.status_code == 200
+            ), f"Failed to retrieve term {term_title}: {response.text}"
             node = response.json()
 
             # Assert title_embedding exists and is valid
-            assert node.get("title_embedding") is not None, (
-                f"Term '{term_title}' missing title_embedding"
-            )
+            assert (
+                node.get("title_embedding") is not None
+            ), f"Term '{term_title}' missing title_embedding"
             title_emb = node.get("title_embedding")
-            assert isinstance(title_emb, list), (
-                f"Term '{term_title}' title_embedding must be a list, got {type(title_emb)}"  # noqa: E501
-            )
-            assert len(title_emb) > 0, (
-                f"Term '{term_title}' title_embedding is empty"
-            )
+            assert isinstance(
+                title_emb, list
+            ), f"Term '{term_title}' title_embedding must be a list, got {type(title_emb)}"  # noqa: E501
+            assert len(title_emb) > 0, f"Term '{term_title}' title_embedding is empty"
             # Verify it contains actual float values (not zeros)
-            assert any(v != 0.0 for v in title_emb), (
-                f"Term '{term_title}' title_embedding is all zeros"
-            )
+            assert any(
+                v != 0.0 for v in title_emb
+            ), f"Term '{term_title}' title_embedding is all zeros"
 
             # Assert definition_embedding exists and is valid
-            assert node.get("definition_embedding") is not None, (
-                f"Term '{term_title}' missing definition_embedding"
-            )
+            assert (
+                node.get("definition_embedding") is not None
+            ), f"Term '{term_title}' missing definition_embedding"
             def_emb = node.get("definition_embedding")
-            assert isinstance(def_emb, list), (
-                f"Term '{term_title}' definition_embedding must be a list, got {type(def_emb)}"  # noqa: E501
-            )
-            assert len(def_emb) > 0, (
-                f"Term '{term_title}' definition_embedding is empty"
-            )
+            assert isinstance(
+                def_emb, list
+            ), f"Term '{term_title}' definition_embedding must be a list, got {type(def_emb)}"  # noqa: E501
+            assert (
+                len(def_emb) > 0
+            ), f"Term '{term_title}' definition_embedding is empty"
             # Verify it contains actual float values (not zeros)
-            assert any(v != 0.0 for v in def_emb), (
-                f"Term '{term_title}' definition_embedding is all zeros"
-            )
+            assert any(
+                v != 0.0 for v in def_emb
+            ), f"Term '{term_title}' definition_embedding is all zeros"
 
         # Step 4: Verify semantic search ranking
         # Search query should rank "Database" and "Data Store" above "Firewall"
@@ -368,22 +352,20 @@ class TestPhase0BaselineTests:
             "node_type": "term",
             "limit": 10,
         }
-        search_response = e2e_client.post(
-            "/api/structure_nodes/find", json=search_data
-        )
-        assert search_response.status_code == 200, (
-            f"Search failed: {search_response.text}"
-        )
+        search_response = e2e_client.post("/api/structure_nodes/find", json=search_data)
+        assert (
+            search_response.status_code == 200
+        ), f"Search failed: {search_response.text}"
         search_results = search_response.json()
-        assert isinstance(search_results, list), (
-            f"Search results should be a list, got {type(search_results)}"
-        )
+        assert isinstance(
+            search_results, list
+        ), f"Search results should be a list, got {type(search_results)}"
 
         # Extract search result titles and verify ranking
         search_titles = [result.get("title") for result in search_results]
-        assert "Database" in search_titles, (
-            f"'Database' should appear in search results. Got: {search_titles}"
-        )
+        assert (
+            "Database" in search_titles
+        ), f"'Database' should appear in search results. Got: {search_titles}"
 
         # Find positions in search results
         database_pos = search_titles.index("Database")
@@ -400,13 +382,13 @@ class TestPhase0BaselineTests:
         )
 
         # Verify "Data Store" appears in results (high semantic similarity to search query)
-        assert "Data Store" in search_titles, (
-            f"'Data Store' should appear in search results. Got: {search_titles}"
-        )
+        assert (
+            "Data Store" in search_titles
+        ), f"'Data Store' should appear in search results. Got: {search_titles}"
         data_store_pos = search_titles.index("Data Store")
-        assert data_store_pos < 5, (
-            f"'Data Store' should appear in top 5 results, found at position {data_store_pos}"  # noqa: E501
-        )
+        assert (
+            data_store_pos < 5
+        ), f"'Data Store' should appear in top 5 results, found at position {data_store_pos}"  # noqa: E501
 
         # Step 5: Verify embedding regeneration on title update
         # Get the original title_embedding
@@ -416,24 +398,22 @@ class TestPhase0BaselineTests:
         assert original_response.status_code == 200
         original_node = original_response.json()
         original_title_embedding = original_node.get("title_embedding")
-        assert original_title_embedding is not None, (
-            "Original title_embedding should not be None"
-        )
+        assert (
+            original_title_embedding is not None
+        ), "Original title_embedding should not be None"
 
         # Update the title
         update_data = {"title": "Relational Database System"}
         update_response = e2e_client.put(
             f"/api/structure_nodes/{term_ids['Database']}", json=update_data
         )
-        assert update_response.status_code == 200, (
-            f"Failed to update node: {update_response.text}"
-        )
+        assert (
+            update_response.status_code == 200
+        ), f"Failed to update node: {update_response.text}"
 
         # Poll until the embedding is regenerated (should differ from original)
         def embedding_updated():
-            response = e2e_client.get(
-                f"/api/structure_nodes/{term_ids['Database']}"
-            )
+            response = e2e_client.get(f"/api/structure_nodes/{term_ids['Database']}")
             if response.status_code != 200:
                 return (False, "Failed to retrieve node")
             node = response.json()
@@ -453,15 +433,13 @@ class TestPhase0BaselineTests:
         )
 
         # Verify the final state
-        final_response = e2e_client.get(
-            f"/api/structure_nodes/{term_ids['Database']}"
-        )
+        final_response = e2e_client.get(f"/api/structure_nodes/{term_ids['Database']}")
         assert final_response.status_code == 200
         final_node = final_response.json()
         new_title_embedding = final_node.get("title_embedding")
-        assert new_title_embedding != original_title_embedding, (
-            "Title embedding should differ after updating the title"
-        )
+        assert (
+            new_title_embedding != original_title_embedding
+        ), "Title embedding should differ after updating the title"
 
     def test_baseline_change_event_tracking(self, e2e_client):
         """
@@ -484,17 +462,15 @@ class TestPhase0BaselineTests:
         that change events are recorded with correct structure and ordering.
         """
         # Step 1: Capture initial change event count (for delta-based isolation)
-        initial_events_response = e2e_client.get(
-            "/api/change_events/?limit=1000"
-        )
+        initial_events_response = e2e_client.get("/api/change_events/?limit=1000")
         assert initial_events_response.status_code == 200, (
             f"Failed to fetch initial events: {initial_events_response.status_code}. "
             f"Response: {initial_events_response.text}"
         )
         initial_events = initial_events_response.json()
-        assert isinstance(initial_events, list), (
-            f"Expected list of change events, got {type(initial_events)}"
-        )
+        assert isinstance(
+            initial_events, list
+        ), f"Expected list of change events, got {type(initial_events)}"
         initial_count = len(initial_events)
 
         # Step 2: Create taxonomy (layer) - event 1
@@ -505,9 +481,7 @@ class TestPhase0BaselineTests:
             "title": STABLE_TAXONOMY["layer"]["title"],
             "definition": STABLE_TAXONOMY["layer"]["definition"],
         }
-        layer_response = e2e_client.post(
-            "/api/structure_nodes/", json=layer_data
-        )
+        layer_response = e2e_client.post("/api/structure_nodes/", json=layer_data)
         assert layer_response.status_code == 201, (
             f"Failed to create layer: {layer_response.status_code}. "
             f"Response: {layer_response.text}"
@@ -523,9 +497,7 @@ class TestPhase0BaselineTests:
             "title": STABLE_TAXONOMY["scheme"]["title"],
             "definition": STABLE_TAXONOMY["scheme"]["definition"],
         }
-        domain_response = e2e_client.post(
-            "/api/structure_nodes/", json=domain_data
-        )
+        domain_response = e2e_client.post("/api/structure_nodes/", json=domain_data)
         assert domain_response.status_code == 201, (
             f"Failed to create domain: {domain_response.status_code}. "
             f"Response: {domain_response.text}"
@@ -536,7 +508,9 @@ class TestPhase0BaselineTests:
         # Step 4: Create 3 terms using stable taxonomy concepts - events 3, 4, 5
         # Use stable concepts from STABLE_TAXONOMY for deterministic embedding behavior
         term_ids = {}
-        stable_terms = STABLE_TAXONOMY["classes"][:3]  # Database, Relational Database, SQL
+        stable_terms = STABLE_TAXONOMY["classes"][
+            :3
+        ]  # Database, Relational Database, SQL
         for i, term_def in enumerate(stable_terms):
             term_data = {
                 "node_type": "term",
@@ -544,9 +518,7 @@ class TestPhase0BaselineTests:
                 "title": term_def["title"],
                 "definition": term_def["definition"],
             }
-            term_response = e2e_client.post(
-                "/api/structure_nodes/", json=term_data
-            )
+            term_response = e2e_client.post("/api/structure_nodes/", json=term_data)
             assert term_response.status_code == 201, (
                 f"Failed to create term '{term_def['title']}': {term_response.status_code}. "
                 f"Response: {term_response.text}"
@@ -559,9 +531,7 @@ class TestPhase0BaselineTests:
             "title": "test_predicate_change_events",
             "definition": "A test predicate for change event tracking",
         }
-        predicate_response = e2e_client.post(
-            "/api/predicates/", json=predicate_data
-        )
+        predicate_response = e2e_client.post("/api/predicates/", json=predicate_data)
         assert predicate_response.status_code == 201, (
             f"Failed to create predicate: {predicate_response.status_code}. "
             f"Response: {predicate_response.text}"
@@ -577,9 +547,7 @@ class TestPhase0BaselineTests:
             "predicate": "test_predicate_change_events",
             "predicate_id": predicate_id,
         }
-        link1_response = e2e_client.post(
-            "/api/structure_nodes/links", json=link1_data
-        )
+        link1_response = e2e_client.post("/api/structure_nodes/links", json=link1_data)
         assert link1_response.status_code == 201, (
             f"Failed to create link 1: {link1_response.status_code}. "
             f"Response: {link1_response.text}"
@@ -593,9 +561,7 @@ class TestPhase0BaselineTests:
             "predicate": "test_predicate_change_events",
             "predicate_id": predicate_id,
         }
-        link2_response = e2e_client.post(
-            "/api/structure_nodes/links", json=link2_data
-        )
+        link2_response = e2e_client.post("/api/structure_nodes/links", json=link2_data)
         assert link2_response.status_code == 201, (
             f"Failed to create link 2: {link2_response.status_code}. "
             f"Response: {link2_response.text}"
@@ -604,17 +570,15 @@ class TestPhase0BaselineTests:
         link_ids.append(link2["id"])
 
         # Step 7: Retrieve all change events after operations
-        final_events_response = e2e_client.get(
-            "/api/change_events/?limit=1000"
-        )
+        final_events_response = e2e_client.get("/api/change_events/?limit=1000")
         assert final_events_response.status_code == 200, (
             f"Failed to fetch final events: {final_events_response.status_code}. "
             f"Response: {final_events_response.text}"
         )
         final_events = final_events_response.json()
-        assert isinstance(final_events, list), (
-            f"Expected list of change events, got {type(final_events)}"
-        )
+        assert isinstance(
+            final_events, list
+        ), f"Expected list of change events, got {type(final_events)}"
         final_count = len(final_events)
 
         # Step 8: Verify change event count matches spec requirement (using stable domain terms)
@@ -638,42 +602,40 @@ class TestPhase0BaselineTests:
         structure_node_events = [
             e for e in new_events if e["record_type"] == "structure_node"
         ]
-        predicate_events = [
-            e for e in new_events if e["record_type"] == "predicate"
-        ]
+        predicate_events = [e for e in new_events if e["record_type"] == "predicate"]
         link_events = [
             e for e in new_events if e["record_type"] == "structure_node_link"
         ]
 
         # Get unique record IDs (to account for possible duplicates)
-        unique_structure_node_ids = set(
-            e["record_id"] for e in structure_node_events
-        )
-        unique_predicate_ids = set(
-            e["record_id"] for e in predicate_events
-        )
-        unique_link_ids = set(
-            e["record_id"] for e in link_events
-        )
+        unique_structure_node_ids = set(e["record_id"] for e in structure_node_events)
+        unique_predicate_ids = set(e["record_id"] for e in predicate_events)
+        unique_link_ids = set(e["record_id"] for e in link_events)
 
         # Verify correct number of unique entities (regardless of duplicate events)
         assert len(unique_structure_node_ids) == 5, (
             f"Expected 5 unique structure_node IDs (1 layer + 1 domain + 3 terms), "
             f"got {len(unique_structure_node_ids)}: {unique_structure_node_ids}"
         )
-        assert len(unique_predicate_ids) == 1, (
-            f"Expected 1 unique predicate ID, got {len(unique_predicate_ids)}: {unique_predicate_ids}"
-        )
-        assert len(unique_link_ids) == 2, (
-            f"Expected 2 unique structure_node_link IDs, got {len(unique_link_ids)}: {unique_link_ids}"
-        )
+        assert (
+            len(unique_predicate_ids) == 1
+        ), f"Expected 1 unique predicate ID, got {len(unique_predicate_ids)}: {unique_predicate_ids}"
+        assert (
+            len(unique_link_ids) == 2
+        ), f"Expected 2 unique structure_node_link IDs, got {len(unique_link_ids)}: {unique_link_ids}"
 
         # Step 10: Verify all create events have correct structure
         for event in new_events:
             # Validate all required fields exist
             required_fields = {
-                "id", "event_type", "record_type", "record_id",
-                "old_data", "new_data", "event_timestamp", "processed"
+                "id",
+                "event_type",
+                "record_type",
+                "record_id",
+                "old_data",
+                "new_data",
+                "event_timestamp",
+                "processed",
             }
             missing_fields = required_fields - set(event.keys())
             assert not missing_fields, (
@@ -696,27 +658,27 @@ class TestPhase0BaselineTests:
                     f"Create event {event.get('id')} should have old_data=None, "
                     f"got {event['old_data']}"
                 )
-                assert event["new_data"] is not None, (
-                    f"Create event {event.get('id')} should have non-null new_data"
-                )
+                assert (
+                    event["new_data"] is not None
+                ), f"Create event {event.get('id')} should have non-null new_data"
                 assert isinstance(event["new_data"], dict), (
                     f"Create event {event.get('id')} new_data should be a dict, "
                     f"got {type(event['new_data'])}"
                 )
             elif event["event_type"] == "update":
                 # Update events should have both old_data and new_data populated
-                assert event["old_data"] is not None, (
-                    f"Update event {event.get('id')} should have old_data populated"
-                )
-                assert event["new_data"] is not None, (
-                    f"Update event {event.get('id')} should have new_data populated"
-                )
-                assert isinstance(event["old_data"], dict), (
-                    f"Update event {event.get('id')} old_data should be a dict"
-                )
-                assert isinstance(event["new_data"], dict), (
-                    f"Update event {event.get('id')} new_data should be a dict"
-                )
+                assert (
+                    event["old_data"] is not None
+                ), f"Update event {event.get('id')} should have old_data populated"
+                assert (
+                    event["new_data"] is not None
+                ), f"Update event {event.get('id')} should have new_data populated"
+                assert isinstance(
+                    event["old_data"], dict
+                ), f"Update event {event.get('id')} old_data should be a dict"
+                assert isinstance(
+                    event["new_data"], dict
+                ), f"Update event {event.get('id')} new_data should be a dict"
 
             # Verify timestamp is valid ISO8601
             try:
@@ -776,39 +738,29 @@ class TestPhase0BaselineTests:
         )
 
         # Find the update event (it should be the newest one for this record)
-        assert len(term1_after_events) > 0, (
-            "No events found for term1 after update"
-        )
+        assert len(term1_after_events) > 0, "No events found for term1 after update"
         update_event = term1_after_events[0]
-        assert update_event["event_type"] == "update", (
-            f"Expected update event_type, got {update_event['event_type']}"
-        )
-        assert update_event["old_data"] is not None, (
-            "Update event should have old_data populated"
-        )
-        assert update_event["new_data"] is not None, (
-            "Update event should have new_data populated"
-        )
-        assert isinstance(update_event["old_data"], dict), (
-            "old_data should be a dict"
-        )
-        assert isinstance(update_event["new_data"], dict), (
-            "new_data should be a dict"
-        )
+        assert (
+            update_event["event_type"] == "update"
+        ), f"Expected update event_type, got {update_event['event_type']}"
+        assert (
+            update_event["old_data"] is not None
+        ), "Update event should have old_data populated"
+        assert (
+            update_event["new_data"] is not None
+        ), "Update event should have new_data populated"
+        assert isinstance(update_event["old_data"], dict), "old_data should be a dict"
+        assert isinstance(update_event["new_data"], dict), "new_data should be a dict"
 
         # Verify the old and new data contain title information
-        assert "title" in update_event["old_data"], (
-            "old_data should contain title"
-        )
-        assert "title" in update_event["new_data"], (
-            "new_data should contain title"
-        )
-        assert update_event["old_data"]["title"] == original_title, (
-            "old_data should have original title"
-        )
-        assert update_event["new_data"]["title"] == "Updated Database System", (
-            "new_data should have updated title"
-        )
+        assert "title" in update_event["old_data"], "old_data should contain title"
+        assert "title" in update_event["new_data"], "new_data should contain title"
+        assert (
+            update_event["old_data"]["title"] == original_title
+        ), "old_data should have original title"
+        assert (
+            update_event["new_data"]["title"] == "Updated Database System"
+        ), "new_data should have updated title"
 
     def test_baseline_predicate_management(self, e2e_client):
         """
@@ -860,48 +812,43 @@ class TestPhase0BaselineTests:
             "title": "Is Part Of",
             "identifier": "is_part_of",
             "definition": "Indicates a part-whole relationship",
-            "mapping": {
-                "source": "conceptnet",
-                "uri": "/r/PartOf"
-            },
+            "mapping": {"source": "conceptnet", "uri": "/r/PartOf"},
         }
-        predicate_response = e2e_client.post(
-            "/api/predicates/", json=predicate_data
-        )
-        assert predicate_response.status_code == 201, (
-            f"Failed to create predicate: {predicate_response.text}"
-        )
+        predicate_response = e2e_client.post("/api/predicates/", json=predicate_data)
+        assert (
+            predicate_response.status_code == 201
+        ), f"Failed to create predicate: {predicate_response.text}"
         predicate = predicate_response.json()
         predicate_id = predicate["id"]
 
         # Verify predicate creation response fields
         assert predicate["id"] is not None, "Predicate ID must not be None"
-        assert predicate["identifier"] == "is_part_of", (
-            f"Expected identifier 'is_part_of', got {predicate['identifier']}"
-        )
-        assert predicate["title"] == "Is Part Of", (
-            f"Expected title 'Is Part Of', got {predicate['title']}"
-        )
-        assert predicate["definition"] == "Indicates a part-whole relationship", (
-            f"Expected definition, got {predicate['definition']}"
-        )
+        assert (
+            predicate["identifier"] == "is_part_of"
+        ), f"Expected identifier 'is_part_of', got {predicate['identifier']}"
+        assert (
+            predicate["title"] == "Is Part Of"
+        ), f"Expected title 'Is Part Of', got {predicate['title']}"
+        assert (
+            predicate["definition"] == "Indicates a part-whole relationship"
+        ), f"Expected definition, got {predicate['definition']}"
         # Verify mapping is persisted
         assert predicate["mapping"] is not None, "Mapping field must not be None"
-        assert predicate["mapping"]["source"] == "conceptnet", (
-            f"Expected mapping.source 'conceptnet', got {predicate['mapping'].get('source')}"
-        )
-        assert predicate["mapping"]["uri"] == "/r/PartOf", (
-            f"Expected mapping.uri '/r/PartOf', got {predicate['mapping'].get('uri')}"
-        )
+        assert (
+            predicate["mapping"]["source"] == "conceptnet"
+        ), f"Expected mapping.source 'conceptnet', got {predicate['mapping'].get('source')}"
+        assert (
+            predicate["mapping"]["uri"] == "/r/PartOf"
+        ), f"Expected mapping.uri '/r/PartOf', got {predicate['mapping'].get('uri')}"
         # Verify timestamps are present
         assert "date_created" in predicate, "date_created field must be present"
         assert "date_modified" in predicate, "date_modified field must be present"
 
         # Step 3: Verify predicate is retrievable by ID
         get_predicate_response = e2e_client.get(f"/api/predicates/{predicate_id}")
-        assert get_predicate_response.status_code == 200, (
-            f"Failed to retrieve predicate: {get_predicate_response.text}"
-        )
+        assert (
+            get_predicate_response.status_code == 200
+        ), f"Failed to retrieve predicate: {get_predicate_response.text}"
         predicate_retrieved = get_predicate_response.json()
         assert predicate_retrieved["id"] == predicate_id
         assert predicate_retrieved["title"] == "Is Part Of"
@@ -955,12 +902,10 @@ class TestPhase0BaselineTests:
             "predicate": "Is Part Of",
             "predicate_id": predicate_id,
         }
-        link_response = e2e_client.post(
-            "/api/structure_nodes/links", json=link_data
-        )
-        assert link_response.status_code == 201, (
-            f"Failed to create link: {link_response.text}"
-        )
+        link_response = e2e_client.post("/api/structure_nodes/links", json=link_data)
+        assert (
+            link_response.status_code == 201
+        ), f"Failed to create link: {link_response.text}"
         link = link_response.json()
         link_id = link["id"]
 
@@ -971,16 +916,16 @@ class TestPhase0BaselineTests:
         assert list_links_response.status_code == 200
         response_data = list_links_response.json()
         # Response should be a paginated response with 'data', 'total', 'skip', 'limit'
-        assert isinstance(response_data, dict), (
-            f"Expected paginated response dict, got {type(response_data)}"
-        )
-        assert "data" in response_data, (
-            f"Expected 'data' key in response, got keys: {response_data.keys()}"
-        )
+        assert isinstance(
+            response_data, dict
+        ), f"Expected paginated response dict, got {type(response_data)}"
+        assert (
+            "data" in response_data
+        ), f"Expected 'data' key in response, got keys: {response_data.keys()}"
         links = response_data["data"]
-        assert isinstance(links, list), (
-            f"Expected 'data' to be a list, got {type(links)}"
-        )
+        assert isinstance(
+            links, list
+        ), f"Expected 'data' to be a list, got {type(links)}"
         assert len(links) >= 1, "Should have at least one link"
         found_link = False
         for link_item in links:
@@ -997,23 +942,21 @@ class TestPhase0BaselineTests:
         delete_second_predicate_response = e2e_client.delete(
             f"/api/predicates/{second_predicate_id}"
         )
-        assert delete_second_predicate_response.status_code == 200, (
-            f"Failed to delete unused predicate: {delete_second_predicate_response.text}"
-        )
+        assert (
+            delete_second_predicate_response.status_code == 200
+        ), f"Failed to delete unused predicate: {delete_second_predicate_response.text}"
 
         # Verify deleted predicate returns 404
         verify_deleted_response = e2e_client.get(
             f"/api/predicates/{second_predicate_id}"
         )
-        assert verify_deleted_response.status_code == 404, (
-            f"Deleted predicate should return 404, got {verify_deleted_response.status_code}"
-        )
+        assert (
+            verify_deleted_response.status_code == 404
+        ), f"Deleted predicate should return 404, got {verify_deleted_response.status_code}"
 
         # Step 10: Test predicate deletion while a link still references it
         # According to the issue, we document the baseline behavior (Phase 2 will formalize)
-        delete_predicate_response = e2e_client.delete(
-            f"/api/predicates/{predicate_id}"
-        )
+        delete_predicate_response = e2e_client.delete(f"/api/predicates/{predicate_id}")
         # Based on the API code, deletion should fail if predicate is in use
         assert delete_predicate_response.status_code == 400, (
             f"Expected 400 when deleting predicate in use, "
@@ -1023,28 +966,26 @@ class TestPhase0BaselineTests:
 
         # Verify predicate still exists (deletion was prevented)
         verify_predicate_response = e2e_client.get(f"/api/predicates/{predicate_id}")
-        assert verify_predicate_response.status_code == 200, (
-            "Predicate deletion should have been prevented; predicate should still exist"
-        )
+        assert (
+            verify_predicate_response.status_code == 200
+        ), "Predicate deletion should have been prevented; predicate should still exist"
 
         # Step 11: Now delete the link, then delete the predicate
         delete_link_response = e2e_client.delete(
             f"/api/structure_nodes/links/{link_id}"
         )
-        assert delete_link_response.status_code == 204, (
-            f"Failed to delete link: {delete_link_response.text}"
-        )
+        assert (
+            delete_link_response.status_code == 204
+        ), f"Failed to delete link: {delete_link_response.text}"
 
         # Now delete the predicate (should succeed since it's no longer referenced)
-        delete_predicate_response = e2e_client.delete(
-            f"/api/predicates/{predicate_id}"
-        )
-        assert delete_predicate_response.status_code == 200, (
-            f"Failed to delete predicate after removing link: {delete_predicate_response.text}"
-        )
+        delete_predicate_response = e2e_client.delete(f"/api/predicates/{predicate_id}")
+        assert (
+            delete_predicate_response.status_code == 200
+        ), f"Failed to delete predicate after removing link: {delete_predicate_response.text}"
 
         # Verify deleted predicate returns 404
         verify_final_response = e2e_client.get(f"/api/predicates/{predicate_id}")
-        assert verify_final_response.status_code == 404, (
-            f"Deleted predicate should return 404, got {verify_final_response.status_code}"
-        )
+        assert (
+            verify_final_response.status_code == 404
+        ), f"Deleted predicate should return 404, got {verify_final_response.status_code}"

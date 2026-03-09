@@ -8,7 +8,9 @@ including WebSocket-based embedding regeneration with real-time progress updates
 import json
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect, Query
 
-from services.embedding_regeneration_service import get_embedding_regeneration_service  # noqa: E501
+from services.embedding_regeneration_service import (
+    get_embedding_regeneration_service,
+)  # noqa: E501
 from utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -19,7 +21,9 @@ router = APIRouter(prefix="/api/embeddings", tags=["embeddings"])
 @router.websocket("/regenerate")
 async def websocket_regenerate_embeddings(
     websocket: WebSocket,
-    force: bool = Query(False, description="Force regeneration even if embeddings exist")  # noqa: E501
+    force: bool = Query(
+        False, description="Force regeneration even if embeddings exist"
+    ),  # noqa: E501
 ):
     """
     WebSocket endpoint for regenerating structure_nodes embeddings with real-time progress.  # noqa: E501
@@ -49,17 +53,23 @@ async def websocket_regenerate_embeddings(
 
     try:
         # Send initial connection confirmation
-        await websocket.send_text(json.dumps({
-            "type": "connected",
-            "message": "WebSocket connected for embedding regeneration",
-            "force_regenerate": force
-        }))
+        await websocket.send_text(
+            json.dumps(
+                {
+                    "type": "connected",
+                    "message": "WebSocket connected for embedding regeneration",
+                    "force_regenerate": force,
+                }
+            )
+        )
 
         # Get the embedding service
         service = get_embedding_regeneration_service()
 
         # Start the regeneration process
-        await service.regenerate_all_embeddings(websocket, force_regenerate=force)  # noqa: E501
+        await service.regenerate_all_embeddings(
+            websocket, force_regenerate=force
+        )  # noqa: E501
 
     except WebSocketDisconnect:
         logger.info("WebSocket disconnected during embedding regeneration")
@@ -69,10 +79,9 @@ async def websocket_regenerate_embeddings(
     except Exception as e:
         logger.error(f"Error in embedding regeneration WebSocket: {e}")
         try:
-            await websocket.send_text(json.dumps({
-                "type": "error",
-                "message": f"Unexpected error: {str(e)}"
-            }))
+            await websocket.send_text(
+                json.dumps({"type": "error", "message": f"Unexpected error: {str(e)}"})
+            )
         except Exception:
             # WebSocket might be closed already
             pass
@@ -87,9 +96,7 @@ async def get_regeneration_status():
     - is_running: Whether regeneration is currently in progress
     """
     service = get_embedding_regeneration_service()
-    return {
-        "is_running": service.is_running
-    }
+    return {"is_running": service.is_running}
 
 
 @router.post("/stop")
@@ -105,12 +112,9 @@ async def stop_regeneration():
     stopped = service.stop_regeneration()
 
     if stopped:
-        return {
-            "stopped": True,
-            "message": "Embedding regeneration stop requested"
-        }
+        return {"stopped": True, "message": "Embedding regeneration stop requested"}
     else:
         return {
             "stopped": False,
-            "message": "No embedding regeneration process is currently running"
+            "message": "No embedding regeneration process is currently running",
         }

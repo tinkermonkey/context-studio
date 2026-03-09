@@ -9,8 +9,10 @@ and ensure compliance with time budgets:
 - Layer 3: <30s
 - Total: <120s (max budget), target 5-15s for typical inputs
 """
+
 import sys
 import os
+
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import pytest  # noqa: E402
@@ -24,44 +26,29 @@ from database.models import Base, StructureNode  # noqa: E402
 from database.custom_types import NodeType  # noqa: E402
 import numpy as np  # noqa: E402
 
-
 # Realistic test paragraphs for different domains
 REALISTIC_PARAGRAPHS = {
     "ai_ml": [
         "Machine learning is a subset of artificial intelligence that focuses on developing algorithms that can learn from and make predictions based on data. Neural networks, inspired by biological neural systems, have become particularly effective at pattern recognition tasks. Deep learning, which uses multi-layered neural networks, has revolutionized fields such as computer vision and natural language processing.",  # noqa: E501
-
         "Supervised learning algorithms require labeled training data to learn the relationship between inputs and outputs. Common techniques include linear regression for continuous predictions, logistic regression for binary classification, and decision trees for both regression and classification tasks. These models form the foundation of many practical applications in industry.",  # noqa: E501
-
         "Unsupervised learning algorithms discover hidden patterns in unlabeled data without explicit guidance. Clustering algorithms like K-means group similar data points together, while dimensionality reduction techniques like PCA simplify complex datasets. These methods are crucial for exploratory data analysis and feature engineering.",  # noqa: E501
-
         "Reinforcement learning enables agents to learn optimal behavior through trial and error interactions with an environment. The agent receives rewards or penalties based on its actions and learns to maximize cumulative reward over time. This approach has achieved remarkable success in game playing, robotics, and autonomous systems.",  # noqa: E501
-
-        "Transfer learning leverages knowledge gained from solving one problem to improve performance on a related but different task. Pre-trained models, such as those trained on ImageNet for computer vision or large language models for NLP, can be fine-tuned with relatively small amounts of task-specific data, dramatically reducing training time and data requirements."  # noqa: E501
+        "Transfer learning leverages knowledge gained from solving one problem to improve performance on a related but different task. Pre-trained models, such as those trained on ImageNet for computer vision or large language models for NLP, can be fine-tuned with relatively small amounts of task-specific data, dramatically reducing training time and data requirements.",  # noqa: E501
     ],
-
     "biology": [
         "Cellular respiration is the process by which cells convert glucose and oxygen into energy in the form of ATP. This process occurs in three main stages: glycolysis in the cytoplasm, the Krebs cycle in the mitochondrial matrix, and the electron transport chain in the inner mitochondrial membrane. Together, these stages produce approximately 36-38 ATP molecules per glucose molecule.",  # noqa: E501
-
         "DNA replication is a semi-conservative process that ensures genetic information is accurately copied before cell division. The enzyme helicase unwinds the double helix, DNA polymerase synthesizes new complementary strands, and ligase seals any gaps in the sugar-phosphate backbone. This precise mechanism maintains genomic integrity across generations.",  # noqa: E501
-
         "Photosynthesis converts light energy into chemical energy stored in glucose molecules. In the light-dependent reactions, chlorophyll absorbs photons and generates ATP and NADPH through the electron transport chain. The light-independent reactions, or Calvin cycle, use these products to fix carbon dioxide into organic compounds through a series of enzyme-catalyzed steps.",  # noqa: E501
-
         "Protein synthesis involves two major processes: transcription and translation. During transcription, RNA polymerase reads DNA sequences and produces messenger RNA. In translation, ribosomes read mRNA codons and assemble amino acids into polypeptide chains according to the genetic code, which are then folded into functional proteins.",  # noqa: E501
-
-        "The immune system provides defense against pathogens through innate and adaptive responses. Innate immunity offers immediate but non-specific protection through physical barriers, phagocytic cells, and inflammatory responses. Adaptive immunity develops more slowly but provides specific, long-lasting protection through T cells and B cells that recognize particular antigens."  # noqa: E501
+        "The immune system provides defense against pathogens through innate and adaptive responses. Innate immunity offers immediate but non-specific protection through physical barriers, phagocytic cells, and inflammatory responses. Adaptive immunity develops more slowly but provides specific, long-lasting protection through T cells and B cells that recognize particular antigens.",  # noqa: E501
     ],
-
     "technology": [
         "Cloud computing delivers computing services over the internet, enabling organizations to access scalable resources without maintaining physical infrastructure. The three main service models are Infrastructure as a Service (IaaS), Platform as a Service (PaaS), and Software as a Service (SaaS). Major providers like AWS, Azure, and Google Cloud offer comprehensive ecosystems of tools and services.",  # noqa: E501
-
         "Blockchain technology creates immutable, distributed ledgers that record transactions across a network of computers. Each block contains a cryptographic hash of the previous block, creating a chain that is extremely difficult to alter retroactively. This technology underpins cryptocurrencies and has potential applications in supply chain management, identity verification, and smart contracts.",  # noqa: E501
-
         "The Internet of Things (IoT) connects physical devices with sensors and software to collect and exchange data. Smart home devices, industrial sensors, and wearable technology generate massive amounts of data that can be analyzed to improve efficiency, predict maintenance needs, and enhance user experiences. Security and privacy remain significant challenges in IoT deployments.",  # noqa: E501
-
         "Quantum computing leverages quantum mechanical phenomena like superposition and entanglement to perform certain calculations exponentially faster than classical computers. While still in early stages of development, quantum computers show promise for applications in cryptography, drug discovery, optimization problems, and simulation of quantum systems.",  # noqa: E501
-
-        "Edge computing processes data closer to where it is generated rather than sending it to centralized cloud servers. This approach reduces latency, conserves bandwidth, and enables real-time processing for applications like autonomous vehicles, industrial automation, and augmented reality. Edge computing complements rather than replaces cloud computing."  # noqa: E501
-    ]
+        "Edge computing processes data closer to where it is generated rather than sending it to centralized cloud servers. This approach reduces latency, conserves bandwidth, and enables real-time processing for applications like autonomous vehicles, industrial automation, and augmented reality. Edge computing complements rather than replaces cloud computing.",  # noqa: E501
+    ],
 }
 
 
@@ -78,24 +65,52 @@ def test_kg_db_with_content():
     session = SessionLocal()
     try:
         from embeddings.generate_embeddings import get_model
+
         model = get_model()
 
         # Add relevant terms for test domains
         terms_data = [
-            ("Machine Learning", "A subset of AI focused on algorithms that learn from data"),  # noqa: E501
-            ("Neural Networks", "Computing systems inspired by biological neural networks"),  # noqa: E501
-            ("Deep Learning", "Multi-layered neural networks for complex pattern recognition"),  # noqa: E501
+            (
+                "Machine Learning",
+                "A subset of AI focused on algorithms that learn from data",
+            ),  # noqa: E501
+            (
+                "Neural Networks",
+                "Computing systems inspired by biological neural networks",
+            ),  # noqa: E501
+            (
+                "Deep Learning",
+                "Multi-layered neural networks for complex pattern recognition",
+            ),  # noqa: E501
             ("Supervised Learning", "ML with labeled training data"),
-            ("Reinforcement Learning", "Learning through trial and error with rewards"),  # noqa: E501
-            ("Cellular Respiration", "Process converting glucose to ATP energy"),  # noqa: E501
-            ("DNA Replication", "Copying genetic information before cell division"),  # noqa: E501
+            (
+                "Reinforcement Learning",
+                "Learning through trial and error with rewards",
+            ),  # noqa: E501
+            (
+                "Cellular Respiration",
+                "Process converting glucose to ATP energy",
+            ),  # noqa: E501
+            (
+                "DNA Replication",
+                "Copying genetic information before cell division",
+            ),  # noqa: E501
             ("Photosynthesis", "Converting light energy into chemical energy"),
-            ("Protein Synthesis", "Process of creating proteins from genetic code"),  # noqa: E501
+            (
+                "Protein Synthesis",
+                "Process of creating proteins from genetic code",
+            ),  # noqa: E501
             ("Immune System", "Defense mechanism against pathogens"),
-            ("Cloud Computing", "Computing services delivered over the internet"),  # noqa: E501
+            (
+                "Cloud Computing",
+                "Computing services delivered over the internet",
+            ),  # noqa: E501
             ("Blockchain", "Distributed ledger technology"),
             ("Internet of Things", "Network of connected physical devices"),
-            ("Quantum Computing", "Computing using quantum mechanical phenomena"),  # noqa: E501
+            (
+                "Quantum Computing",
+                "Computing using quantum mechanical phenomena",
+            ),  # noqa: E501
             ("Edge Computing", "Processing data closer to its source"),
         ]
 
@@ -108,7 +123,7 @@ def test_kg_db_with_content():
                 title=title,
                 definition=definition,
                 title_embedding=embedding_blob,
-                parent_node_id=None
+                parent_node_id=None,
             )
             session.add(node)
 
@@ -175,7 +190,9 @@ class TestMultiParagraphPerformance:
     """Performance tests with multiple paragraphs."""
 
     @pytest.mark.asyncio
-    async def test_single_paragraph_performance(self, test_kg_db_with_content, test_ops_db):  # noqa: E501
+    async def test_single_paragraph_performance(
+        self, test_kg_db_with_content, test_ops_db
+    ):  # noqa: E501
         """Test performance with 1 paragraph (baseline)."""
         kg_engine, kg_session_maker = test_kg_db_with_content
         ops_engine, ops_session_maker = test_ops_db
@@ -189,13 +206,15 @@ class TestMultiParagraphPerformance:
                 ops_db_session=ops_session,
                 kg_top_k=30,
                 timeout_layer_0=2.0,
-                timeout_layer_2=2.0
+                timeout_layer_2=2.0,
             )
 
             input_text = REALISTIC_PARAGRAPHS["ai_ml"][0]
 
             start = time.time()
-            response = await service.extract_entities(input_text, enable_trace=False)  # noqa: E501
+            response = await service.extract_entities(
+                input_text, enable_trace=False
+            )  # noqa: E501
             elapsed = time.time() - start
 
             # Assertions
@@ -203,24 +222,32 @@ class TestMultiParagraphPerformance:
             assert response.metrics.total_execution_time_ms > 0
 
             # Performance targets
-            assert elapsed < 15.0, f"Single paragraph took {elapsed:.2f}s (target: <15s)"  # noqa: E501
+            assert (
+                elapsed < 15.0
+            ), f"Single paragraph took {elapsed:.2f}s (target: <15s)"  # noqa: E501
 
             # Layer 0 should be fast
-            assert response.metrics.kg_layer.execution_time_ms < 2000, \
-                f"Layer 0 took {response.metrics.kg_layer.execution_time_ms}ms (target: <500ms, relaxed to 2s for test)"  # noqa: E501
+            assert (
+                response.metrics.kg_layer.execution_time_ms < 2000
+            ), f"Layer 0 took {response.metrics.kg_layer.execution_time_ms}ms (target: <500ms, relaxed to 2s for test)"  # noqa: E501
 
             # Layer 2 should be fast
-            assert response.metrics.nlp_layer.execution_time_ms < 2000, \
-                f"Layer 2 took {response.metrics.nlp_layer.execution_time_ms}ms (target: <500ms, relaxed to 2s for test)"  # noqa: E501
+            assert (
+                response.metrics.nlp_layer.execution_time_ms < 2000
+            ), f"Layer 2 took {response.metrics.nlp_layer.execution_time_ms}ms (target: <500ms, relaxed to 2s for test)"  # noqa: E501
 
-            print(f"\n1 paragraph: {elapsed:.2f}s total, {response.metrics.total_sentences} sentences")  # noqa: E501
+            print(
+                f"\n1 paragraph: {elapsed:.2f}s total, {response.metrics.total_sentences} sentences"
+            )  # noqa: E501
 
         finally:
             kg_session.close()
             ops_session.close()
 
     @pytest.mark.asyncio
-    async def test_two_paragraph_performance(self, test_kg_db_with_content, test_ops_db):  # noqa: E501
+    async def test_two_paragraph_performance(
+        self, test_kg_db_with_content, test_ops_db
+    ):  # noqa: E501
         """Test performance with 2 paragraphs."""
         kg_engine, kg_session_maker = test_kg_db_with_content
         ops_engine, ops_session_maker = test_ops_db
@@ -234,26 +261,34 @@ class TestMultiParagraphPerformance:
                 ops_db_session=ops_session,
                 kg_top_k=30,
                 timeout_layer_0=2.0,
-                timeout_layer_2=2.0
+                timeout_layer_2=2.0,
             )
 
             input_text = " ".join(REALISTIC_PARAGRAPHS["ai_ml"][:2])
 
             start = time.time()
-            response = await service.extract_entities(input_text, enable_trace=False)  # noqa: E501
+            response = await service.extract_entities(
+                input_text, enable_trace=False
+            )  # noqa: E501
             elapsed = time.time() - start
 
             assert response.request_id is not None
-            assert elapsed < 30.0, f"2 paragraphs took {elapsed:.2f}s (target: <30s)"  # noqa: E501
+            assert (
+                elapsed < 30.0
+            ), f"2 paragraphs took {elapsed:.2f}s (target: <30s)"  # noqa: E501
 
-            print(f"\n2 paragraphs: {elapsed:.2f}s total, {response.metrics.total_sentences} sentences")  # noqa: E501
+            print(
+                f"\n2 paragraphs: {elapsed:.2f}s total, {response.metrics.total_sentences} sentences"
+            )  # noqa: E501
 
         finally:
             kg_session.close()
             ops_session.close()
 
     @pytest.mark.asyncio
-    async def test_three_paragraph_performance(self, test_kg_db_with_content, test_ops_db):  # noqa: E501
+    async def test_three_paragraph_performance(
+        self, test_kg_db_with_content, test_ops_db
+    ):  # noqa: E501
         """Test performance with 3 paragraphs."""
         kg_engine, kg_session_maker = test_kg_db_with_content
         ops_engine, ops_session_maker = test_ops_db
@@ -267,26 +302,34 @@ class TestMultiParagraphPerformance:
                 ops_db_session=ops_session,
                 kg_top_k=30,
                 timeout_layer_0=2.0,
-                timeout_layer_2=2.0
+                timeout_layer_2=2.0,
             )
 
             input_text = " ".join(REALISTIC_PARAGRAPHS["biology"][:3])
 
             start = time.time()
-            response = await service.extract_entities(input_text, enable_trace=False)  # noqa: E501
+            response = await service.extract_entities(
+                input_text, enable_trace=False
+            )  # noqa: E501
             elapsed = time.time() - start
 
             assert response.request_id is not None
-            assert elapsed < 60.0, f"3 paragraphs took {elapsed:.2f}s (target: <60s)"  # noqa: E501
+            assert (
+                elapsed < 60.0
+            ), f"3 paragraphs took {elapsed:.2f}s (target: <60s)"  # noqa: E501
 
-            print(f"\n3 paragraphs: {elapsed:.2f}s total, {response.metrics.total_sentences} sentences")  # noqa: E501
+            print(
+                f"\n3 paragraphs: {elapsed:.2f}s total, {response.metrics.total_sentences} sentences"
+            )  # noqa: E501
 
         finally:
             kg_session.close()
             ops_session.close()
 
     @pytest.mark.asyncio
-    async def test_five_paragraph_performance(self, test_kg_db_with_content, test_ops_db):  # noqa: E501
+    async def test_five_paragraph_performance(
+        self, test_kg_db_with_content, test_ops_db
+    ):  # noqa: E501
         """Test performance with 5 paragraphs (max budget test)."""
         kg_engine, kg_session_maker = test_kg_db_with_content
         ops_engine, ops_session_maker = test_ops_db
@@ -300,32 +343,48 @@ class TestMultiParagraphPerformance:
                 ops_db_session=ops_session,
                 kg_top_k=30,
                 timeout_layer_0=2.0,
-                timeout_layer_2=2.0
+                timeout_layer_2=2.0,
             )
 
             input_text = " ".join(REALISTIC_PARAGRAPHS["technology"])
 
             start = time.time()
-            response = await service.extract_entities(input_text, enable_trace=False)  # noqa: E501
+            response = await service.extract_entities(
+                input_text, enable_trace=False
+            )  # noqa: E501
             elapsed = time.time() - start
 
             assert response.request_id is not None
 
             # Must complete within max budget
-            assert elapsed < 120.0, f"5 paragraphs took {elapsed:.2f}s (MAX budget: <120s)"  # noqa: E501
+            assert (
+                elapsed < 120.0
+            ), f"5 paragraphs took {elapsed:.2f}s (MAX budget: <120s)"  # noqa: E501
 
-            print(f"\n5 paragraphs: {elapsed:.2f}s total, {response.metrics.total_sentences} sentences")  # noqa: E501
-            print(f"  Layer 0: {response.metrics.kg_layer.execution_time_ms}ms")  # noqa: E501
-            print(f"  Layer 1: {response.metrics.llm_layer.execution_time_ms}ms")  # noqa: E501
-            print(f"  Layer 2: {response.metrics.nlp_layer.execution_time_ms}ms")  # noqa: E501
-            print(f"  Layer 3: {response.metrics.web_layer.execution_time_ms}ms")  # noqa: E501
+            print(
+                f"\n5 paragraphs: {elapsed:.2f}s total, {response.metrics.total_sentences} sentences"
+            )  # noqa: E501
+            print(
+                f"  Layer 0: {response.metrics.kg_layer.execution_time_ms}ms"
+            )  # noqa: E501
+            print(
+                f"  Layer 1: {response.metrics.llm_layer.execution_time_ms}ms"
+            )  # noqa: E501
+            print(
+                f"  Layer 2: {response.metrics.nlp_layer.execution_time_ms}ms"
+            )  # noqa: E501
+            print(
+                f"  Layer 3: {response.metrics.web_layer.execution_time_ms}ms"
+            )  # noqa: E501
 
         finally:
             kg_session.close()
             ops_session.close()
 
     @pytest.mark.asyncio
-    async def test_domain_specific_biology(self, test_kg_db_with_content, test_ops_db):  # noqa: E501
+    async def test_domain_specific_biology(
+        self, test_kg_db_with_content, test_ops_db
+    ):  # noqa: E501
         """Test with domain-specific biology text."""
         kg_engine, kg_session_maker = test_kg_db_with_content
         ops_engine, ops_session_maker = test_ops_db
@@ -339,12 +398,14 @@ class TestMultiParagraphPerformance:
                 ops_db_session=ops_session,
                 kg_top_k=30,
                 timeout_layer_0=2.0,
-                timeout_layer_2=2.0
+                timeout_layer_2=2.0,
             )
 
             input_text = " ".join(REALISTIC_PARAGRAPHS["biology"][:3])
 
-            response = await service.extract_entities(input_text, enable_trace=False)  # noqa: E501
+            response = await service.extract_entities(
+                input_text, enable_trace=False
+            )  # noqa: E501
 
             # Should extract biology-related entities
             assert response.request_id is not None
@@ -356,7 +417,9 @@ class TestMultiParagraphPerformance:
             ops_session.close()
 
     @pytest.mark.asyncio
-    async def test_varying_paragraph_length(self, test_kg_db_with_content, test_ops_db):  # noqa: E501
+    async def test_varying_paragraph_length(
+        self, test_kg_db_with_content, test_ops_db
+    ):  # noqa: E501
         """Test with paragraphs of varying lengths."""
         kg_engine, kg_session_maker = test_kg_db_with_content
         ops_engine, ops_session_maker = test_ops_db
@@ -370,30 +433,36 @@ class TestMultiParagraphPerformance:
                 ops_db_session=ops_session,
                 kg_top_k=30,
                 timeout_layer_0=2.0,
-                timeout_layer_2=2.0
+                timeout_layer_2=2.0,
             )
 
             # Mix short and long paragraphs
             mixed_text = (
-                "AI is transforming technology. " +  # Very short
-                REALISTIC_PARAGRAPHS["ai_ml"][0] +  # Medium
-                " " +
-                REALISTIC_PARAGRAPHS["technology"][4]  # Long
+                "AI is transforming technology. "  # Very short
+                + REALISTIC_PARAGRAPHS["ai_ml"][0]  # Medium
+                + " "
+                + REALISTIC_PARAGRAPHS["technology"][4]  # Long
             )
 
             start = time.time()
-            response = await service.extract_entities(mixed_text, enable_trace=False)  # noqa: E501
+            response = await service.extract_entities(
+                mixed_text, enable_trace=False
+            )  # noqa: E501
             elapsed = time.time() - start
 
             assert response.request_id is not None
-            assert elapsed < 45.0, f"Mixed paragraphs took {elapsed:.2f}s (target: <45s)"  # noqa: E501
+            assert (
+                elapsed < 45.0
+            ), f"Mixed paragraphs took {elapsed:.2f}s (target: <45s)"  # noqa: E501
 
         finally:
             kg_session.close()
             ops_session.close()
 
     @pytest.mark.asyncio
-    async def test_performance_consistency_across_runs(self, test_kg_db_with_content, test_ops_db):  # noqa: E501
+    async def test_performance_consistency_across_runs(
+        self, test_kg_db_with_content, test_ops_db
+    ):  # noqa: E501
         """Test that performance is consistent across multiple runs."""
         kg_engine, kg_session_maker = test_kg_db_with_content
         ops_engine, ops_session_maker = test_ops_db
@@ -407,7 +476,7 @@ class TestMultiParagraphPerformance:
                 ops_db_session=ops_session,
                 kg_top_k=30,
                 timeout_layer_0=2.0,
-                timeout_layer_2=2.0
+                timeout_layer_2=2.0,
             )
 
             input_text = REALISTIC_PARAGRAPHS["ai_ml"][0]
@@ -416,7 +485,9 @@ class TestMultiParagraphPerformance:
             elapsed_times = []
             for i in range(3):
                 start = time.time()
-                response = await service.extract_entities(input_text, enable_trace=False)  # noqa: E501
+                response = await service.extract_entities(
+                    input_text, enable_trace=False
+                )  # noqa: E501
                 elapsed = time.time() - start
                 elapsed_times.append(elapsed)
                 assert response.request_id is not None
@@ -425,10 +496,13 @@ class TestMultiParagraphPerformance:
             avg_time = sum(elapsed_times) / len(elapsed_times)
             for t in elapsed_times:
                 variance = abs(t - avg_time) / avg_time
-                assert variance < 0.5, \
-                    f"Performance variance too high: {variance:.2%} (times: {elapsed_times})"  # noqa: E501
+                assert (
+                    variance < 0.5
+                ), f"Performance variance too high: {variance:.2%} (times: {elapsed_times})"  # noqa: E501
 
-            print(f"\nConsistency test - times: {[f'{t:.2f}s' for t in elapsed_times]}, avg: {avg_time:.2f}s")  # noqa: E501
+            print(
+                f"\nConsistency test - times: {[f'{t:.2f}s' for t in elapsed_times]}, avg: {avg_time:.2f}s"
+            )  # noqa: E501
 
         finally:
             kg_session.close()

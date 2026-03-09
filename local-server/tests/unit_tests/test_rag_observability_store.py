@@ -3,8 +3,10 @@ Unit tests for RAG Observability Store.
 
 Tests persistence, retrieval, and cleanup of RAG observability data.
 """
+
 import sys
 import os
+
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import pytest  # noqa: E402
@@ -104,19 +106,22 @@ class TestRAGObservabilityStore:
                 layer_2_count=2,
                 layer_3_time_ms=400.5,
                 layer_3_count=4,
-                input_text="Test input paragraph"
+                input_text="Test input paragraph",
             )
 
             # Verify metrics were saved
             assert metrics_id is not None
 
             # Query database directly to verify
-            result = session.execute(text("""
+            result = session.execute(
+                text("""
                 SELECT request_id, total_time_ms, layer_0_count, layer_1_count,
                        layer_2_count, layer_3_count, sentence_text
                 FROM rag_processing_metrics
                 WHERE id = :id
-            """), {"id": metrics_id}).fetchone()
+            """),
+                {"id": metrics_id},
+            ).fetchone()
 
             assert result is not None
             assert result[0] == request_id
@@ -152,15 +157,18 @@ class TestRAGObservabilityStore:
                 layer_2_count=0,
                 layer_3_time_ms=40.0,
                 layer_3_count=0,
-                input_text=long_text
+                input_text=long_text,
             )
 
             # Query database to verify truncation
-            result = session.execute(text("""
+            result = session.execute(
+                text("""
                 SELECT sentence_text
                 FROM rag_processing_metrics
                 WHERE id = :id
-            """), {"id": metrics_id}).fetchone()
+            """),
+                {"id": metrics_id},
+            ).fetchone()
 
             saved_text = result[0]
             assert len(saved_text) == 500
@@ -181,7 +189,7 @@ class TestRAGObservabilityStore:
             trace_data = {
                 "input_phrases": ["machine learning", "neural networks"],
                 "kg_nodes_found": 3,
-                "similarity_scores": [0.95, 0.88, 0.82]
+                "similarity_scores": [0.95, 0.88, 0.82],
             }
 
             trace_id = store.save_trace(
@@ -189,18 +197,21 @@ class TestRAGObservabilityStore:
                 sentence_index=0,
                 layer_name="kg_context",
                 operation_type="output",
-                trace_data=trace_data
+                trace_data=trace_data,
             )
 
             # Verify trace was saved
             assert trace_id is not None
 
             # Query database directly to verify
-            result = session.execute(text("""
+            result = session.execute(
+                text("""
                 SELECT request_id, sentence_index, layer_name, operation_type, trace_data  
                 FROM rag_observability_trace
                 WHERE id = :id
-            """), {"id": trace_id}).fetchone()
+            """),
+                {"id": trace_id},
+            ).fetchone()
 
             assert result is not None
             assert result[0] == request_id
@@ -230,7 +241,7 @@ class TestRAGObservabilityStore:
                 ("kg_context", "output", {"kg_nodes": 5}),
                 ("llm_extraction", "output", {"entities": 3}),
                 ("spacy_gap", "output", {"gaps": 2}),
-                ("concept_resolution", "output", {"resolved": 2})
+                ("concept_resolution", "output", {"resolved": 2}),
             ]
 
             trace_ids = []
@@ -240,7 +251,7 @@ class TestRAGObservabilityStore:
                     sentence_index=0,
                     layer_name=layer_name,
                     operation_type=op_type,
-                    trace_data=data
+                    trace_data=data,
                 )
                 trace_ids.append(trace_id)
 
@@ -249,11 +260,14 @@ class TestRAGObservabilityStore:
             assert len(set(trace_ids)) == 4  # All unique
 
             # Query database to verify all traces
-            result = session.execute(text("""
+            result = session.execute(
+                text("""
                 SELECT COUNT(*)
                 FROM rag_observability_trace
                 WHERE request_id = :request_id
-            """), {"request_id": request_id}).scalar()
+            """),
+                {"request_id": request_id},
+            ).scalar()
 
             assert result == 4
 
@@ -280,7 +294,7 @@ class TestRAGObservabilityStore:
                 layer_2_count=2,
                 layer_3_time_ms=150.0,
                 layer_3_count=4,
-                input_text="Test input"
+                input_text="Test input",
             )
 
             # Retrieve metrics
@@ -335,7 +349,7 @@ class TestRAGObservabilityStore:
                 sentence_index=0,
                 layer_name="kg_context",
                 operation_type="output",
-                trace_data=trace_data_1
+                trace_data=trace_data_1,
             )
 
             store.save_trace(
@@ -343,7 +357,7 @@ class TestRAGObservabilityStore:
                 sentence_index=0,
                 layer_name="llm_extraction",
                 operation_type="output",
-                trace_data=trace_data_2
+                trace_data=trace_data_2,
             )
 
             # Retrieve traces
@@ -388,7 +402,7 @@ class TestRAGObservabilityStore:
                 sentence_index=1,
                 layer_name="kg_context",
                 operation_type="output",
-                trace_data={"sentence": 1}
+                trace_data={"sentence": 1},
             )
 
             store.save_trace(
@@ -396,7 +410,7 @@ class TestRAGObservabilityStore:
                 sentence_index=0,
                 layer_name="kg_context",
                 operation_type="output",
-                trace_data={"sentence": 0}
+                trace_data={"sentence": 0},
             )
 
             # Retrieve traces
@@ -420,7 +434,8 @@ class TestRAGObservabilityStore:
 
             # Insert old metrics (40 days old)
             old_timestamp = datetime.now(timezone.utc) - timedelta(days=40)
-            session.execute(text("""
+            session.execute(
+                text("""
                 INSERT INTO rag_processing_metrics (
                     id, request_id, sentence_text, layer_0_time_ms, layer_0_count,  
                     layer_1_time_ms, layer_1_count, layer_2_time_ms, layer_2_count,  
@@ -428,11 +443,14 @@ class TestRAGObservabilityStore:
                 ) VALUES (
                     'old-metric-1', 'old-request', 'old text', 10, 0, 20, 0, 30, 0, 40, 0, 100, :timestamp, 30  
                 )
-            """), {"timestamp": old_timestamp})
+            """),
+                {"timestamp": old_timestamp},
+            )
 
             # Insert recent metrics (10 days old)
             recent_timestamp = datetime.now(timezone.utc) - timedelta(days=10)
-            session.execute(text("""
+            session.execute(
+                text("""
                 INSERT INTO rag_processing_metrics (
                     id, request_id, sentence_text, layer_0_time_ms, layer_0_count,  
                     layer_1_time_ms, layer_1_count, layer_2_time_ms, layer_2_count,  
@@ -440,11 +458,14 @@ class TestRAGObservabilityStore:
                 ) VALUES (
                     'recent-metric-1', 'recent-request', 'recent text', 10, 0, 20, 0, 30, 0, 40, 0, 100, :timestamp, 30  
                 )
-            """), {"timestamp": recent_timestamp})
+            """),
+                {"timestamp": recent_timestamp},
+            )
 
             # Insert old traces (10 days old, should be deleted with 7-day retention)
             old_trace_timestamp = datetime.now(timezone.utc) - timedelta(days=10)
-            session.execute(text("""
+            session.execute(
+                text("""
                 INSERT INTO rag_observability_trace (
                     id, request_id, sentence_index, layer_name, operation_type,
                     trace_data, timestamp, retention_days
@@ -452,11 +473,14 @@ class TestRAGObservabilityStore:
                     'old-trace-1', 'old-request', 0, 'kg_context', 'output',
                     '{}', :timestamp, 7
                 )
-            """), {"timestamp": old_trace_timestamp})
+            """),
+                {"timestamp": old_trace_timestamp},
+            )
 
             # Insert recent traces (2 days old)
             recent_trace_timestamp = datetime.now(timezone.utc) - timedelta(days=2)
-            session.execute(text("""
+            session.execute(
+                text("""
                 INSERT INTO rag_observability_trace (
                     id, request_id, sentence_index, layer_name, operation_type,
                     trace_data, timestamp, retention_days
@@ -464,7 +488,9 @@ class TestRAGObservabilityStore:
                     'recent-trace-1', 'recent-request', 0, 'kg_context', 'output',  
                     '{}', :timestamp, 7
                 )
-            """), {"timestamp": recent_trace_timestamp})
+            """),
+                {"timestamp": recent_trace_timestamp},
+            )
 
             session.commit()
 
@@ -531,7 +557,7 @@ class TestRAGObservabilityStore:
                     layer_2_count=0,
                     layer_3_time_ms=40.0,
                     layer_3_count=0,
-                    input_text="test"
+                    input_text="test",
                 )
 
         finally:
@@ -556,7 +582,7 @@ class TestRAGObservabilityStore:
                     sentence_index=0,
                     layer_name="kg_context",
                     operation_type="output",
-                    trace_data={}
+                    trace_data={},
                 )
 
         finally:

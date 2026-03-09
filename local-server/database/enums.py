@@ -18,6 +18,7 @@ class NodeType(str, Enum):
     See domain/ontology/compat.py for the migration path and mapping utilities.
     Issue #270 tracks the consolidation of these duplicate enums.
     """
+
     LAYER = "layer"
     DOMAIN = "domain"
     TERM = "term"
@@ -37,11 +38,14 @@ class RecordType(str, Enum):
     - STRUCTURE_NODE_LINK: Legacy name for RELATIONSHIP
     - PREDICATE: Legacy name for PROPERTY_DEFINITION
     """
+
     # New values (primary)
     ONTOLOGY_ENTITY = "ontology_entity"
     RELATIONSHIP = "relationship"
     PROPERTY_DEFINITION = "property_definition"
     # Legacy aliases — deprecated, will be removed in Phase 5
     STRUCTURE_NODE = "structure_node"  # For layers, domains, terms
-    STRUCTURE_NODE_LINK = "structure_node_link"  # For relationships between structure nodes  # noqa: E501
+    STRUCTURE_NODE_LINK = (
+        "structure_node_link"  # For relationships between structure nodes  # noqa: E501
+    )
     PREDICATE = "predicate"  # For predicate definitions

@@ -4,6 +4,7 @@ Port interfaces for the Admin bounded context.
 Ports define the contracts between the domain core and infrastructure adapters.
 They use typing.Protocol for structural subtyping and reference only domain entity types.
 """
+
 from typing import Protocol
 
 from domain.admin.entities import AppConfiguration

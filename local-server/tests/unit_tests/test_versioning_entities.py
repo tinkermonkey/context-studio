@@ -7,7 +7,10 @@ change events, entity versions, conflicts, and conflict reports.
 
 import sys
 import os
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+
+sys.path.insert(
+    0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+)
 
 import types
 import pytest
@@ -18,7 +21,7 @@ from domain.versioning.entities import (
     Conflict,
     ConflictReport,
     MergeResult,
-    ChangeState
+    ChangeState,
 )
 from domain.versioning.enums import ChangeType
 
@@ -55,7 +58,7 @@ class TestChangeEvent:
             change_type=ChangeType.CREATED,
             payload=types.MappingProxyType({"title": "NewClass"}),
             occurred_at="2025-03-06T00:00:00Z",
-            state=ChangeState.PENDING
+            state=ChangeState.PENDING,
         )
         assert event.id == "change-1"
         assert event.entity_type == "Class"
@@ -68,9 +71,11 @@ class TestChangeEvent:
             entity_type="Relationship",
             entity_id="rel-456",
             change_type=ChangeType.UPDATED,
-            payload=types.MappingProxyType({"old_label": "knows", "new_label": "knows_well"}),
+            payload=types.MappingProxyType(
+                {"old_label": "knows", "new_label": "knows_well"}
+            ),
             occurred_at="2025-03-06T00:01:00Z",
-            state=ChangeState.SYNCED
+            state=ChangeState.SYNCED,
         )
         assert event.change_type == ChangeType.UPDATED
         assert event.state == ChangeState.SYNCED
@@ -84,7 +89,7 @@ class TestChangeEvent:
             change_type=ChangeType.DELETED,
             payload=types.MappingProxyType({"deleted_at": "2025-03-06T00:02:00Z"}),
             occurred_at="2025-03-06T00:02:00Z",
-            state=ChangeState.CONFLICT
+            state=ChangeState.CONFLICT,
         )
         assert event.change_type == ChangeType.DELETED
         assert event.state == ChangeState.CONFLICT
@@ -97,21 +102,23 @@ class TestChangeEvent:
             entity_id="class-123",
             change_type=ChangeType.CREATED,
             payload=types.MappingProxyType({"title": "NewClass"}),
-            occurred_at="2025-03-06T00:00:00Z"
+            occurred_at="2025-03-06T00:00:00Z",
         )
         with pytest.raises(TypeError):
             event.payload["title"] = "OtherClass"
 
     def test_change_event_invalid_id(self):
         """Test that empty id raises ValueError."""
-        with pytest.raises(ValueError, match="ChangeEvent id must be a non-empty string"):
+        with pytest.raises(
+            ValueError, match="ChangeEvent id must be a non-empty string"
+        ):
             ChangeEvent(
                 id="",
                 entity_type="Class",
                 entity_id="class-123",
                 change_type=ChangeType.CREATED,
                 payload=types.MappingProxyType({}),
-                occurred_at="2025-03-06T00:00:00Z"
+                occurred_at="2025-03-06T00:00:00Z",
             )
 
     def test_change_event_invalid_entity_type(self):
@@ -123,7 +130,7 @@ class TestChangeEvent:
                 entity_id="class-123",
                 change_type=ChangeType.CREATED,
                 payload=types.MappingProxyType({}),
-                occurred_at="2025-03-06T00:00:00Z"
+                occurred_at="2025-03-06T00:00:00Z",
             )
 
     def test_change_event_invalid_change_type(self):
@@ -135,7 +142,7 @@ class TestChangeEvent:
                 entity_id="class-123",
                 change_type="created",  # String instead of enum
                 payload=types.MappingProxyType({}),
-                occurred_at="2025-03-06T00:00:00Z"
+                occurred_at="2025-03-06T00:00:00Z",
             )
 
     def test_change_event_invalid_payload(self):
@@ -147,7 +154,7 @@ class TestChangeEvent:
                 entity_id="class-123",
                 change_type=ChangeType.CREATED,
                 payload={"title": "NewClass"},  # Dict instead of MappingProxyType
-                occurred_at="2025-03-06T00:00:00Z"
+                occurred_at="2025-03-06T00:00:00Z",
             )
 
 
@@ -159,8 +166,10 @@ class TestEntityVersion:
         version = EntityVersion(
             entity_id="class-123",
             version=1,
-            snapshot=types.MappingProxyType({"title": "Class1", "description": "A class"}),
-            recorded_at="2025-03-06T00:00:00Z"
+            snapshot=types.MappingProxyType(
+                {"title": "Class1", "description": "A class"}
+            ),
+            recorded_at="2025-03-06T00:00:00Z",
         )
         assert version.entity_id == "class-123"
         assert version.version == 1
@@ -172,13 +181,13 @@ class TestEntityVersion:
             entity_id="class-123",
             version=1,
             snapshot=types.MappingProxyType({"title": "ClassV1"}),
-            recorded_at="2025-03-06T00:00:00Z"
+            recorded_at="2025-03-06T00:00:00Z",
         )
         v2 = EntityVersion(
             entity_id="class-123",
             version=2,
             snapshot=types.MappingProxyType({"title": "ClassV2"}),
-            recorded_at="2025-03-06T00:01:00Z"
+            recorded_at="2025-03-06T00:01:00Z",
         )
         assert v1.version < v2.version
 
@@ -188,7 +197,7 @@ class TestEntityVersion:
             entity_id="class-123",
             version=1,
             snapshot=types.MappingProxyType({"title": "Class1"}),
-            recorded_at="2025-03-06T00:00:00Z"
+            recorded_at="2025-03-06T00:00:00Z",
         )
         with pytest.raises(TypeError):
             version.snapshot["title"] = "Class2"
@@ -200,7 +209,7 @@ class TestEntityVersion:
                 entity_id="",
                 version=1,
                 snapshot=types.MappingProxyType({}),
-                recorded_at="2025-03-06T00:00:00Z"
+                recorded_at="2025-03-06T00:00:00Z",
             )
 
     def test_entity_version_invalid_version(self):
@@ -211,7 +220,7 @@ class TestEntityVersion:
                 entity_id="class-123",
                 version=0,
                 snapshot=types.MappingProxyType({}),
-                recorded_at="2025-03-06T00:00:00Z"
+                recorded_at="2025-03-06T00:00:00Z",
             )
 
         # Invalid: negative
@@ -220,7 +229,7 @@ class TestEntityVersion:
                 entity_id="class-123",
                 version=-1,
                 snapshot=types.MappingProxyType({}),
-                recorded_at="2025-03-06T00:00:00Z"
+                recorded_at="2025-03-06T00:00:00Z",
             )
 
 
@@ -233,19 +242,19 @@ class TestConflict:
             entity_id="class-123",
             version=1,
             snapshot=types.MappingProxyType({"title": "LocalClass"}),
-            recorded_at="2025-03-06T00:00:00Z"
+            recorded_at="2025-03-06T00:00:00Z",
         )
         remote_version = EntityVersion(
             entity_id="class-123",
             version=1,
             snapshot=types.MappingProxyType({"title": "RemoteClass"}),
-            recorded_at="2025-03-06T00:00:00Z"
+            recorded_at="2025-03-06T00:00:00Z",
         )
         conflict = Conflict(
             entity_id="class-123",
             local_version=local_version,
             remote_version=remote_version,
-            conflict_fields=("title",)
+            conflict_fields=("title",),
         )
         assert conflict.entity_id == "class-123"
         assert len(conflict.conflict_fields) == 1
@@ -256,20 +265,24 @@ class TestConflict:
         local_version = EntityVersion(
             entity_id="class-123",
             version=1,
-            snapshot=types.MappingProxyType({"title": "LocalClass", "description": "Local"}),
-            recorded_at="2025-03-06T00:00:00Z"
+            snapshot=types.MappingProxyType(
+                {"title": "LocalClass", "description": "Local"}
+            ),
+            recorded_at="2025-03-06T00:00:00Z",
         )
         remote_version = EntityVersion(
             entity_id="class-123",
             version=1,
-            snapshot=types.MappingProxyType({"title": "RemoteClass", "description": "Remote"}),
-            recorded_at="2025-03-06T00:00:00Z"
+            snapshot=types.MappingProxyType(
+                {"title": "RemoteClass", "description": "Remote"}
+            ),
+            recorded_at="2025-03-06T00:00:00Z",
         )
         conflict = Conflict(
             entity_id="class-123",
             local_version=local_version,
             remote_version=remote_version,
-            conflict_fields=("title", "description")
+            conflict_fields=("title", "description"),
         )
         assert len(conflict.conflict_fields) == 2
 
@@ -279,13 +292,13 @@ class TestConflict:
             entity_id="class-123",
             version=1,
             snapshot=types.MappingProxyType({}),
-            recorded_at="2025-03-06T00:00:00Z"
+            recorded_at="2025-03-06T00:00:00Z",
         )
         conflict = Conflict(
             entity_id="class-123",
             local_version=version,
             remote_version=version,
-            conflict_fields=()
+            conflict_fields=(),
         )
         assert conflict.conflict_fields == ()
 
@@ -295,13 +308,13 @@ class TestConflict:
             entity_id="class-123",
             version=1,
             snapshot=types.MappingProxyType({}),
-            recorded_at="2025-03-06T00:00:00Z"
+            recorded_at="2025-03-06T00:00:00Z",
         )
         conflict = Conflict(
             entity_id="class-123",
             local_version=version,
             remote_version=version,
-            conflict_fields=("title",)
+            conflict_fields=("title",),
         )
         with pytest.raises((TypeError, AttributeError)):
             conflict.conflict_fields[0] = "description"
@@ -312,14 +325,14 @@ class TestConflict:
             entity_id="class-123",
             version=1,
             snapshot=types.MappingProxyType({}),
-            recorded_at="2025-03-06T00:00:00Z"
+            recorded_at="2025-03-06T00:00:00Z",
         )
         with pytest.raises(ValueError, match="entity_id must be a non-empty string"):
             Conflict(
                 entity_id="",
                 local_version=version,
                 remote_version=version,
-                conflict_fields=()
+                conflict_fields=(),
             )
 
     def test_conflict_invalid_conflict_fields_element(self):
@@ -328,14 +341,14 @@ class TestConflict:
             entity_id="class-123",
             version=1,
             snapshot=types.MappingProxyType({}),
-            recorded_at="2025-03-06T00:00:00Z"
+            recorded_at="2025-03-06T00:00:00Z",
         )
         with pytest.raises(TypeError, match="All conflict_fields must be strings"):
             Conflict(
                 entity_id="class-123",
                 local_version=version,
                 remote_version=version,
-                conflict_fields=(123,)  # Integer instead of string
+                conflict_fields=(123,),  # Integer instead of string
             )
 
 
@@ -348,18 +361,18 @@ class TestConflictReport:
             entity_id="class-123",
             version=1,
             snapshot=types.MappingProxyType({}),
-            recorded_at="2025-03-06T00:00:00Z"
+            recorded_at="2025-03-06T00:00:00Z",
         )
         conflict = Conflict(
             entity_id="class-123",
             local_version=version,
             remote_version=version,
-            conflict_fields=("title",)
+            conflict_fields=("title",),
         )
         report = ConflictReport(
             sync_id="sync-001",
             conflicts=(conflict,),
-            generated_at="2025-03-06T00:02:00Z"
+            generated_at="2025-03-06T00:02:00Z",
         )
         assert report.sync_id == "sync-001"
         assert len(report.conflicts) == 1
@@ -367,9 +380,7 @@ class TestConflictReport:
     def test_conflict_report_no_conflicts(self):
         """Test conflict report with no conflicts."""
         report = ConflictReport(
-            sync_id="sync-001",
-            conflicts=(),
-            generated_at="2025-03-06T00:00:00Z"
+            sync_id="sync-001", conflicts=(), generated_at="2025-03-06T00:00:00Z"
         )
         assert report.conflicts == ()
 
@@ -379,18 +390,18 @@ class TestConflictReport:
             entity_id="class-123",
             version=1,
             snapshot=types.MappingProxyType({}),
-            recorded_at="2025-03-06T00:00:00Z"
+            recorded_at="2025-03-06T00:00:00Z",
         )
         conflict = Conflict(
             entity_id="class-123",
             local_version=version,
             remote_version=version,
-            conflict_fields=()
+            conflict_fields=(),
         )
         report = ConflictReport(
             sync_id="sync-001",
             conflicts=(conflict,),
-            generated_at="2025-03-06T00:02:00Z"
+            generated_at="2025-03-06T00:02:00Z",
         )
         with pytest.raises((TypeError, AttributeError)):
             report.conflicts[0] = None
@@ -399,19 +410,15 @@ class TestConflictReport:
         """Test that empty sync_id raises ValueError."""
         with pytest.raises(ValueError, match="sync_id must be a non-empty string"):
             ConflictReport(
-                sync_id="",
-                conflicts=(),
-                generated_at="2025-03-06T00:00:00Z"
+                sync_id="", conflicts=(), generated_at="2025-03-06T00:00:00Z"
             )
 
     def test_conflict_report_invalid_generated_at(self):
         """Test that empty generated_at raises ValueError."""
-        with pytest.raises(ValueError, match="generated_at must be a non-empty timestamp string"):
-            ConflictReport(
-                sync_id="sync-001",
-                conflicts=(),
-                generated_at=""
-            )
+        with pytest.raises(
+            ValueError, match="generated_at must be a non-empty timestamp string"
+        ):
+            ConflictReport(sync_id="sync-001", conflicts=(), generated_at="")
 
 
 class TestMergeResult:
@@ -420,10 +427,7 @@ class TestMergeResult:
     def test_valid_merge_result(self):
         """Test creating a valid merge result."""
         result = MergeResult(
-            sync_id="sync-001",
-            merged_count=10,
-            conflict_count=2,
-            skipped_count=3
+            sync_id="sync-001", merged_count=10, conflict_count=2, skipped_count=3
         )
         assert result.sync_id == "sync-001"
         assert result.merged_count == 10
@@ -433,49 +437,38 @@ class TestMergeResult:
     def test_merge_result_all_counts_zero(self):
         """Test merge result with all counts as zero."""
         result = MergeResult(
-            sync_id="sync-001",
-            merged_count=0,
-            conflict_count=0,
-            skipped_count=0
+            sync_id="sync-001", merged_count=0, conflict_count=0, skipped_count=0
         )
         assert result.merged_count == 0
 
     def test_merge_result_invalid_sync_id(self):
         """Test that empty sync_id raises ValueError."""
         with pytest.raises(ValueError, match="sync_id must be a non-empty string"):
-            MergeResult(
-                sync_id="",
-                merged_count=0,
-                conflict_count=0,
-                skipped_count=0
-            )
+            MergeResult(sync_id="", merged_count=0, conflict_count=0, skipped_count=0)
 
     def test_merge_result_invalid_merged_count(self):
         """Test that negative merged_count raises ValueError."""
-        with pytest.raises(ValueError, match="merged_count must be a non-negative integer"):
+        with pytest.raises(
+            ValueError, match="merged_count must be a non-negative integer"
+        ):
             MergeResult(
-                sync_id="sync-001",
-                merged_count=-1,
-                conflict_count=0,
-                skipped_count=0
+                sync_id="sync-001", merged_count=-1, conflict_count=0, skipped_count=0
             )
 
     def test_merge_result_invalid_conflict_count(self):
         """Test that negative conflict_count raises ValueError."""
-        with pytest.raises(ValueError, match="conflict_count must be a non-negative integer"):
+        with pytest.raises(
+            ValueError, match="conflict_count must be a non-negative integer"
+        ):
             MergeResult(
-                sync_id="sync-001",
-                merged_count=0,
-                conflict_count=-1,
-                skipped_count=0
+                sync_id="sync-001", merged_count=0, conflict_count=-1, skipped_count=0
             )
 
     def test_merge_result_invalid_skipped_count(self):
         """Test that negative skipped_count raises ValueError."""
-        with pytest.raises(ValueError, match="skipped_count must be a non-negative integer"):
+        with pytest.raises(
+            ValueError, match="skipped_count must be a non-negative integer"
+        ):
             MergeResult(
-                sync_id="sync-001",
-                merged_count=0,
-                conflict_count=0,
-                skipped_count=-1
+                sync_id="sync-001", merged_count=0, conflict_count=0, skipped_count=-1
             )

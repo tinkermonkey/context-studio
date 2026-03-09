@@ -21,7 +21,9 @@ from utils.logger import get_logger
 logger = get_logger(__name__)
 
 MIGRATION_VERSION = 9
-MIGRATION_DESCRIPTION = "Add Advanced Features - Branch Management, Conflict Resolution, and Analytics"
+MIGRATION_DESCRIPTION = (
+    "Add Advanced Features - Branch Management, Conflict Resolution, and Analytics"
+)
 
 
 def upgrade(connection):
@@ -224,9 +226,12 @@ def upgrade(connection):
         """))
 
         # Update schema version
-        connection.execute(text(f"""
+        connection.execute(
+            text(f"""
         UPDATE schema_version SET version = {MIGRATION_VERSION}, updated_at = :updated_at
-        """), {"updated_at": datetime.now().isoformat()})
+        """),
+            {"updated_at": datetime.now().isoformat()},
+        )
 
         connection.commit()
         logger.info(f"Migration {MIGRATION_VERSION} completed successfully")
@@ -254,9 +259,12 @@ def downgrade(connection):
         connection.execute(text("DROP TABLE IF EXISTS branches"))
 
         # Revert schema version
-        connection.execute(text(f"""
+        connection.execute(
+            text(f"""
         UPDATE schema_version SET version = {MIGRATION_VERSION - 1}, updated_at = :updated_at
-        """), {"updated_at": datetime.now().isoformat()})
+        """),
+            {"updated_at": datetime.now().isoformat()},
+        )
 
         connection.commit()
         logger.info(f"Migration {MIGRATION_VERSION} rollback completed")

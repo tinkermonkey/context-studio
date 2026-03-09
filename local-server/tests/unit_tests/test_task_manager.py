@@ -18,7 +18,9 @@ import asyncio
 import logging
 
 # Add parent directory to path for imports
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+sys.path.append(
+    os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+)
 
 from services.task_manager import (  # noqa: E402
     TaskManager,
@@ -26,7 +28,7 @@ from services.task_manager import (  # noqa: E402
     TaskStatus,
     initialize_task_manager,
     get_task_manager,
-    shutdown_task_manager
+    shutdown_task_manager,
 )
 
 
@@ -53,10 +55,7 @@ class TestBackgroundTaskDataclass:
 
     def test_background_task_creation(self):
         """Test creating a BackgroundTask instance."""
-        task = BackgroundTask(
-            task_id="test-123",
-            task_type="discovery"
-        )
+        task = BackgroundTask(task_id="test-123", task_type="discovery")
 
         assert task.task_id == "test-123"
         assert task.task_type == "discovery"
@@ -72,9 +71,7 @@ class TestBackgroundTaskDataclass:
     def test_background_task_to_dict(self):
         """Test converting BackgroundTask to dictionary."""
         task = BackgroundTask(
-            task_id="test-123",
-            task_type="discovery",
-            metadata={"key": "value"}
+            task_id="test-123", task_type="discovery", metadata={"key": "value"}
         )
 
         task_dict = task.to_dict()
@@ -149,8 +146,7 @@ class TestTaskSubmission:
             return "success"
 
         task_id = await task_manager.submit_task(
-            task_type="test",
-            coroutine=simple_task()
+            task_type="test", coroutine=simple_task()
         )
 
         assert task_id is not None
@@ -177,9 +173,7 @@ class TestTaskSubmission:
 
         metadata = {"description": "Test task", "priority": "high"}
         task_id = await task_manager.submit_task(
-            task_type="discovery",
-            coroutine=simple_task(),
-            metadata=metadata
+            task_type="discovery", coroutine=simple_task(), metadata=metadata
         )
 
         task_status = task_manager.get_task_status(task_id)
@@ -390,7 +384,7 @@ class TestProgressTracking:
 
         async def task_with_progress():
             # Manually call the callback to simulate progress updates
-            if hasattr(task_manager, '_update_progress'):
+            if hasattr(task_manager, "_update_progress"):
                 # First update progress internally
                 task_manager._update_progress(task_id, 0.5)
                 # Then call callback if it exists (simulating what the wrapper would do)
@@ -399,9 +393,7 @@ class TestProgressTracking:
             return "done"
 
         task_id = await task_manager.submit_task(
-            "test",
-            task_with_progress(),
-            progress_callback=progress_callback
+            "test", task_with_progress(), progress_callback=progress_callback
         )
 
         # Wait for task to complete
@@ -567,10 +559,7 @@ class TestDeadLetterQueue:
 
         # Submit multiple failing tasks
         for i in range(3):
-            await task_manager.submit_task(
-                "test",
-                failing_task(f"Error {i}")
-            )
+            await task_manager.submit_task("test", failing_task(f"Error {i}"))
 
         # Wait for all tasks to fail
         await asyncio.sleep(0.5)
@@ -775,7 +764,7 @@ class TestResourceCleanup:
             assert status["status"] in [
                 TaskStatus.CANCELLED.value,
                 TaskStatus.PENDING.value,
-                TaskStatus.RUNNING.value  # Might be running if shutdown is fast
+                TaskStatus.RUNNING.value,  # Might be running if shutdown is fast
             ]
 
     @pytest.mark.asyncio
@@ -796,6 +785,7 @@ class TestResourceCleanup:
 
         # Shutdown with short timeout
         import time
+
         start = time.time()
         await task_manager.shutdown(timeout=0.5)
         duration = time.time() - start
@@ -861,11 +851,7 @@ class TestTaskTimeout:
             return "completed"
 
         # Submit task with 0.5 second timeout
-        task_id = await task_manager.submit_task(
-            "test",
-            slow_task(),
-            timeout=0.5
-        )
+        task_id = await task_manager.submit_task("test", slow_task(), timeout=0.5)
 
         # Wait for timeout to occur
         await asyncio.sleep(1.0)
@@ -888,11 +874,7 @@ class TestTaskTimeout:
             return "success"
 
         # Submit task with 2 second timeout (should complete first)
-        task_id = await task_manager.submit_task(
-            "test",
-            quick_task(),
-            timeout=2.0
-        )
+        task_id = await task_manager.submit_task("test", quick_task(), timeout=2.0)
 
         # Wait for completion
         await asyncio.sleep(0.3)
@@ -960,8 +942,7 @@ class TestEdgeCases:
 
         # Submit tasks concurrently
         tasks = [
-            task_manager.submit_task(f"test-{i}", simple_task(i))
-            for i in range(10)
+            task_manager.submit_task(f"test-{i}", simple_task(i)) for i in range(10)
         ]
 
         task_ids = await asyncio.gather(*tasks)
@@ -996,9 +977,12 @@ class TestEdgeCases:
 
         # Verify sequential execution (each task completes before next starts)
         assert execution_order == [
-            "start-0", "end-0",
-            "start-1", "end-1",
-            "start-2", "end-2"
+            "start-0",
+            "end-0",
+            "start-1",
+            "end-1",
+            "start-2",
+            "end-2",
         ]
 
         await task_manager.shutdown()

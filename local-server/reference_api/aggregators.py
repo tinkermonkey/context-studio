@@ -38,10 +38,14 @@ class ResultAggregator:
                 seen_ids.add(node.id)
                 unique_nodes.append(node)
 
-        logger.debug(f"Deduplicated {len(nodes)} nodes to {len(unique_nodes)} unique nodes")
+        logger.debug(
+            f"Deduplicated {len(nodes)} nodes to {len(unique_nodes)} unique nodes"
+        )
         return unique_nodes
 
-    def deduplicate_links(self, links: List[SearchLink], valid_node_ids: Set[str]) -> List[SearchLink]:
+    def deduplicate_links(
+        self, links: List[SearchLink], valid_node_ids: Set[str]
+    ) -> List[SearchLink]:
         """
         Deduplicate links by ID and filter to only include links between valid nodes.
 
@@ -57,13 +61,17 @@ class ResultAggregator:
 
         for link in links:
             # Only include links where both subject and object nodes are in our results
-            if (link.id not in seen_ids and
-                link.subject in valid_node_ids and
-                link.object in valid_node_ids):
+            if (
+                link.id not in seen_ids
+                and link.subject in valid_node_ids
+                and link.object in valid_node_ids
+            ):
                 seen_ids.add(link.id)
                 unique_links.append(link)
 
-        logger.debug(f"Deduplicated {len(links)} links to {len(unique_links)} unique valid links")
+        logger.debug(
+            f"Deduplicated {len(links)} links to {len(unique_links)} unique valid links"
+        )
         return unique_links
 
     def discover_cross_references(self, nodes: List[SearchNode]) -> List[SearchLink]:
@@ -111,29 +119,37 @@ class ResultAggregator:
                     for node1 in nodes1[:1]:  # Take best match from each source
                         for node2 in nodes2[:1]:
                             # Calculate confidence based on title similarity
-                            confidence = self._calculate_title_similarity(node1.title, node2.title)
+                            confidence = self._calculate_title_similarity(
+                                node1.title, node2.title
+                            )
 
-                            if confidence >= 0.8:  # High confidence threshold for cross-references
-                                cross_links.append(SearchLink(
-                                    id=f"cross_ref:{node1.source.value}:{node2.source.value}:{hash(node1.id + node2.id)}",
-                                    source=SourceType.CONCEPTNET,  # Use ConceptNet as the source for cross-references
-                                    subject=node1.id,
-                                    predicate="sameAs",
-                                    object=node2.id,
-                                    weight=confidence,
-                                    attributes={
-                                        "link_type": "cross_reference",
-                                        "confidence": confidence,
-                                        "matching_title": normalized_title,
-                                        "source1": node1.source.value,
-                                        "source2": node2.source.value
-                                    }
-                                ))
+                            if (
+                                confidence >= 0.8
+                            ):  # High confidence threshold for cross-references
+                                cross_links.append(
+                                    SearchLink(
+                                        id=f"cross_ref:{node1.source.value}:{node2.source.value}:{hash(node1.id + node2.id)}",
+                                        source=SourceType.CONCEPTNET,  # Use ConceptNet as the source for cross-references
+                                        subject=node1.id,
+                                        predicate="sameAs",
+                                        object=node2.id,
+                                        weight=confidence,
+                                        attributes={
+                                            "link_type": "cross_reference",
+                                            "confidence": confidence,
+                                            "matching_title": normalized_title,
+                                            "source1": node1.source.value,
+                                            "source2": node2.source.value,
+                                        },
+                                    )
+                                )
 
         logger.debug(f"Discovered {len(cross_links)} cross-reference links")
         return cross_links
 
-    def merge_responses(self, responses: List[MultiSourceSearchResponse]) -> MultiSourceSearchResponse:
+    def merge_responses(
+        self, responses: List[MultiSourceSearchResponse]
+    ) -> MultiSourceSearchResponse:
         """
         Merge multiple MultiSourceSearchResponse objects into a single aggregated response.
 
@@ -154,7 +170,7 @@ class ResultAggregator:
                 source_errors={},
                 offset=0,
                 limit=0,
-                search_time_ms=0.0
+                search_time_ms=0.0,
             )
 
         # Use the first response as a template
@@ -190,9 +206,11 @@ class ResultAggregator:
         seen_cross_link_ids = {link.id for link in unique_links}
 
         for cross_link in cross_links:
-            if (cross_link.subject in valid_node_ids and
-                cross_link.object in valid_node_ids and
-                cross_link.id not in seen_cross_link_ids):
+            if (
+                cross_link.subject in valid_node_ids
+                and cross_link.object in valid_node_ids
+                and cross_link.id not in seen_cross_link_ids
+            ):
                 seen_cross_link_ids.add(cross_link.id)
                 filtered_cross_links.append(cross_link)
 
@@ -209,12 +227,20 @@ class ResultAggregator:
             source_errors=all_source_errors,
             offset=base_response.offset,
             limit=base_response.limit,
-            search_time_ms=total_search_time
+            search_time_ms=total_search_time,
         )
 
-    def aggregate_source_results(self, source_results: List[Tuple[SourceType, Tuple[List[SearchNode], List[SearchLink]]]],
-                                query: str, limit: int, offset: int, search_time_ms: float,
-                                source_errors: Dict[str, str]) -> MultiSourceSearchResponse:
+    def aggregate_source_results(
+        self,
+        source_results: List[
+            Tuple[SourceType, Tuple[List[SearchNode], List[SearchLink]]]
+        ],
+        query: str,
+        limit: int,
+        offset: int,
+        search_time_ms: float,
+        source_errors: Dict[str, str],
+    ) -> MultiSourceSearchResponse:
         """
         Aggregate results from multiple sources into a single MultiSourceSearchResponse.
 
@@ -253,17 +279,21 @@ class ResultAggregator:
         seen_link_ids = {link.id for link in unique_links}
 
         for cross_link in cross_links:
-            if (cross_link.subject in valid_node_ids and
-                cross_link.object in valid_node_ids and
-                cross_link.id not in seen_link_ids):
+            if (
+                cross_link.subject in valid_node_ids
+                and cross_link.object in valid_node_ids
+                and cross_link.id not in seen_link_ids
+            ):
                 seen_link_ids.add(cross_link.id)
                 filtered_cross_links.append(cross_link)
 
         # Combine regular links with cross-links
         all_final_links = unique_links + filtered_cross_links
 
-        logger.info(f"Aggregated results: {len(unique_nodes)} nodes, {len(all_final_links)} links "
-                   f"({len(filtered_cross_links)} cross-references) from {len(sources_queried)} sources")
+        logger.info(
+            f"Aggregated results: {len(unique_nodes)} nodes, {len(all_final_links)} links "
+            f"({len(filtered_cross_links)} cross-references) from {len(sources_queried)} sources"
+        )
 
         return MultiSourceSearchResponse(
             query=query,
@@ -275,7 +305,7 @@ class ResultAggregator:
             source_errors=source_errors,
             offset=offset,
             limit=limit,
-            search_time_ms=search_time_ms
+            search_time_ms=search_time_ms,
         )
 
     def _normalize_title(self, title: str) -> str:
@@ -302,7 +332,7 @@ class ResultAggregator:
             return normalized
 
         # Remove parenthetical content that might differ between sources
-        normalized = re.sub(r'\([^)]*\)', '', normalized).strip()
+        normalized = re.sub(r"\([^)]*\)", "", normalized).strip()
 
         return normalized
 
@@ -335,7 +365,10 @@ class ResultAggregator:
             return 1.0 if shorter == 0 else 0.0
 
         # Count matching characters
-        matches = sum(1 for i in range(min(len(title1_norm), len(title2_norm)))
-                     if title1_norm[i] == title2_norm[i])
+        matches = sum(
+            1
+            for i in range(min(len(title1_norm), len(title2_norm)))
+            if title1_norm[i] == title2_norm[i]
+        )
 
         return matches / longer

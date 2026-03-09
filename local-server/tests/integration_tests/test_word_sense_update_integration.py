@@ -10,7 +10,10 @@ import os
 from uuid import uuid4
 
 sys.path.insert(
-    0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))  # noqa: E501
+    0,
+    os.path.dirname(
+        os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    ),  # noqa: E501
 )
 
 
@@ -33,7 +36,9 @@ class TestWordSenseUpdateAPI:
             "title": f"Test Domain {uuid4()}",
             "parent_node_id": layer["id"],
         }
-        domain_response = client.post("/api/structure_nodes/", json=domain_data)  # noqa: E501
+        domain_response = client.post(
+            "/api/structure_nodes/", json=domain_data
+        )  # noqa: E501
         domain = domain_response.json()
 
         term_data = {
@@ -53,14 +58,13 @@ class TestWordSenseUpdateAPI:
                     "term": "test",
                     "sense_type": "wordnet",
                     "sense_id": "test.n.01",
-                    "definition": "a test definition"
+                    "definition": "a test definition",
                 }
             ]
         }
 
         response = client.put(
-            f"/api/structure_nodes/{node_id}/word_senses",
-            json=word_senses_data
+            f"/api/structure_nodes/{node_id}/word_senses", json=word_senses_data
         )
 
         assert response.status_code == 200
@@ -73,7 +77,9 @@ class TestWordSenseUpdateAPI:
         assert result[0]["definition"] == "a test definition"
 
         # Verify persisted by fetching again
-        get_response = client.get(f"/api/structure_nodes/{node_id}/word_senses")  # noqa: E501
+        get_response = client.get(
+            f"/api/structure_nodes/{node_id}/word_senses"
+        )  # noqa: E501
         assert get_response.status_code == 200
         fetched = get_response.json()
         assert len(fetched) == 1
@@ -94,7 +100,9 @@ class TestWordSenseUpdateAPI:
             "title": f"Test Domain {uuid4()}",
             "parent_node_id": layer["id"],
         }
-        domain_response = client.post("/api/structure_nodes/", json=domain_data)  # noqa: E501
+        domain_response = client.post(
+            "/api/structure_nodes/", json=domain_data
+        )  # noqa: E501
         domain = domain_response.json()
 
         term_data = {
@@ -114,21 +122,20 @@ class TestWordSenseUpdateAPI:
                     "sense_type": "wordnet",
                     "sense_id": "bank.n.01",
                     "definition": "financial institution",
-                    "domain": "noun.group"
+                    "domain": "noun.group",
                 },
                 {
                     "term": "account",
                     "sense_type": "wordnet",
                     "sense_id": "account.n.01",
                     "definition": "a record or narrative description",
-                    "domain": "noun.communication"
-                }
+                    "domain": "noun.communication",
+                },
             ]
         }
 
         response1 = client.put(
-            f"/api/structure_nodes/{node_id}/word_senses",
-            json=initial_senses
+            f"/api/structure_nodes/{node_id}/word_senses", json=initial_senses
         )
         assert response1.status_code == 200
 
@@ -140,14 +147,13 @@ class TestWordSenseUpdateAPI:
                     "sense_type": "wordnet",
                     "sense_id": "bank.n.02",
                     "definition": "sloping land beside water",
-                    "domain": "noun.object"
+                    "domain": "noun.object",
                 }
             ]
         }
 
         response2 = client.put(
-            f"/api/structure_nodes/{node_id}/word_senses",
-            json=updated_senses
+            f"/api/structure_nodes/{node_id}/word_senses", json=updated_senses
         )
         assert response2.status_code == 200
         result = response2.json()
@@ -179,7 +185,9 @@ class TestWordSenseUpdateAPI:
             "title": f"Test Domain {uuid4()}",
             "parent_node_id": layer["id"],
         }
-        domain_response = client.post("/api/structure_nodes/", json=domain_data)  # noqa: E501
+        domain_response = client.post(
+            "/api/structure_nodes/", json=domain_data
+        )  # noqa: E501
         domain = domain_response.json()
 
         term_data = {
@@ -198,20 +206,19 @@ class TestWordSenseUpdateAPI:
                     "term": "bank",
                     "sense_type": "wordnet",
                     "sense_id": "bank.n.01",
-                    "definition": "financial institution"
+                    "definition": "financial institution",
                 },
                 {
                     "term": "bank",
                     "sense_type": "wordnet",
                     "sense_id": "bank.n.02",
-                    "definition": "sloping land beside water"
-                }
+                    "definition": "sloping land beside water",
+                },
             ]
         }
 
         response1 = client.put(
-            f"/api/structure_nodes/{node_id}/word_senses",
-            json=initial_senses
+            f"/api/structure_nodes/{node_id}/word_senses", json=initial_senses
         )
         assert response1.status_code == 200
 
@@ -222,14 +229,13 @@ class TestWordSenseUpdateAPI:
                     "term": "bank",
                     "sense_type": "wordnet",
                     "sense_id": "bank.n.03",
-                    "definition": "building housing a bank"
+                    "definition": "building housing a bank",
                 }
             ]
         }
 
         response2 = client.put(
-            f"/api/structure_nodes/{node_id}/word_senses",
-            json=updated_senses
+            f"/api/structure_nodes/{node_id}/word_senses", json=updated_senses
         )
         assert response2.status_code == 200
         result = response2.json()
@@ -253,7 +259,9 @@ class TestWordSenseUpdateAPI:
             "title": f"Test Domain {uuid4()}",
             "parent_node_id": layer["id"],
         }
-        domain_response = client.post("/api/structure_nodes/", json=domain_data)  # noqa: E501
+        domain_response = client.post(
+            "/api/structure_nodes/", json=domain_data
+        )  # noqa: E501
         domain = domain_response.json()
 
         term_data = {
@@ -272,14 +280,13 @@ class TestWordSenseUpdateAPI:
                     "term": "test",
                     "sense_type": "wordnet",
                     "sense_id": "invalid-format",  # Invalid WordNet format
-                    "definition": "test definition"
+                    "definition": "test definition",
                 }
             ]
         }
 
         response = client.put(
-            f"/api/structure_nodes/{node_id}/word_senses",
-            json=invalid_senses
+            f"/api/structure_nodes/{node_id}/word_senses", json=invalid_senses
         )
 
         # Should return 400 Bad Request
@@ -296,14 +303,13 @@ class TestWordSenseUpdateAPI:
                     "term": "test",
                     "sense_type": "wordnet",
                     "sense_id": "test.n.01",
-                    "definition": "test definition"
+                    "definition": "test definition",
                 }
             ]
         }
 
         response = client.put(
-            f"/api/structure_nodes/{fake_id}/word_senses",
-            json=word_senses_data
+            f"/api/structure_nodes/{fake_id}/word_senses", json=word_senses_data
         )
 
         assert response.status_code == 404
@@ -324,7 +330,9 @@ class TestWordSenseUpdateAPI:
             "title": f"Test Domain {uuid4()}",
             "parent_node_id": layer["id"],
         }
-        domain_response = client.post("/api/structure_nodes/", json=domain_data)  # noqa: E501
+        domain_response = client.post(
+            "/api/structure_nodes/", json=domain_data
+        )  # noqa: E501
         domain = domain_response.json()
 
         term_data = {
@@ -335,7 +343,9 @@ class TestWordSenseUpdateAPI:
         term_response = client.post("/api/structure_nodes/", json=term_data)
         term = term_response.json()
         node_id = term["id"]
-        initial_version = term["version"]  # Get initial version from create response  # noqa: E501
+        initial_version = term[
+            "version"
+        ]  # Get initial version from create response  # noqa: E501
 
         # Update word senses
         word_senses_data = {
@@ -344,15 +354,12 @@ class TestWordSenseUpdateAPI:
                     "term": "test",
                     "sense_type": "wordnet",
                     "sense_id": "test.n.01",
-                    "definition": "test definition"
+                    "definition": "test definition",
                 }
             ]
         }
 
-        client.put(
-            f"/api/structure_nodes/{node_id}/word_senses",
-            json=word_senses_data
-        )
+        client.put(f"/api/structure_nodes/{node_id}/word_senses", json=word_senses_data)
 
         # Get updated node to verify version increment
         updated_node = client.get(f"/api/structure_nodes/{node_id}").json()
@@ -375,7 +382,9 @@ class TestWordSenseUpdateAPI:
             "title": f"Test Domain {uuid4()}",
             "parent_node_id": layer["id"],
         }
-        domain_response = client.post("/api/structure_nodes/", json=domain_data)  # noqa: E501
+        domain_response = client.post(
+            "/api/structure_nodes/", json=domain_data
+        )  # noqa: E501
         domain = domain_response.json()
 
         term_data = {
@@ -394,24 +403,18 @@ class TestWordSenseUpdateAPI:
                     "term": "test",
                     "sense_type": "wordnet",
                     "sense_id": "test.n.01",
-                    "definition": "test definition"
+                    "definition": "test definition",
                 }
             ]
         }
 
-        client.put(
-            f"/api/structure_nodes/{node_id}/word_senses",
-            json=initial_senses
-        )
+        client.put(f"/api/structure_nodes/{node_id}/word_senses", json=initial_senses)
 
         # Update with empty list (technically no terms to update, so all senses preserved)  # noqa: E501
-        empty_update = {
-            "selected_senses": []
-        }
+        empty_update = {"selected_senses": []}
 
         response = client.put(
-            f"/api/structure_nodes/{node_id}/word_senses",
-            json=empty_update
+            f"/api/structure_nodes/{node_id}/word_senses", json=empty_update
         )
 
         assert response.status_code == 200
@@ -424,4 +427,5 @@ class TestWordSenseUpdateAPI:
 
 if __name__ == "__main__":
     import pytest
+
     pytest.main([__file__, "-v"])

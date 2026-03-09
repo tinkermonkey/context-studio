@@ -7,7 +7,10 @@ pipeline configuration and execution entities.
 
 import sys
 import os
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+
+sys.path.insert(
+    0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+)
 
 import types
 import pytest
@@ -68,7 +71,7 @@ class TestPipelineConfiguration:
             prompt_template="Extract entities from: {text}",
             parameters=types.MappingProxyType({"max_tokens": 100}),
             created_at="2025-03-06T00:00:00Z",
-            updated_at="2025-03-06T00:00:00Z"
+            updated_at="2025-03-06T00:00:00Z",
         )
         assert config.id == "test-pipeline-1"
         assert config.name == "Test Pipeline"
@@ -87,7 +90,7 @@ class TestPipelineConfiguration:
                 prompt_template="Extract entities from: {text}",
                 parameters={"max_tokens": 100},
                 created_at="2025-03-06T00:00:00Z",
-                updated_at="2025-03-06T00:00:00Z"
+                updated_at="2025-03-06T00:00:00Z",
             )
 
     def test_pipeline_configuration_parameters_immutable(self):
@@ -101,7 +104,7 @@ class TestPipelineConfiguration:
             prompt_template="Extract entities from: {text}",
             parameters=types.MappingProxyType({"max_tokens": 100}),
             created_at="2025-03-06T00:00:00Z",
-            updated_at="2025-03-06T00:00:00Z"
+            updated_at="2025-03-06T00:00:00Z",
         )
         with pytest.raises(TypeError):
             config.parameters["max_tokens"] = 200
@@ -115,7 +118,7 @@ class TestPipelineConfiguration:
                 description="A test pipeline",
                 pipeline_type=PipelineType.EXTRACTION,
                 model_name="gpt-4",
-                prompt_template="Extract entities from: {text}"
+                prompt_template="Extract entities from: {text}",
             )
 
     def test_pipeline_configuration_invalid_name(self):
@@ -127,19 +130,21 @@ class TestPipelineConfiguration:
                 description="A test pipeline",
                 pipeline_type=PipelineType.EXTRACTION,
                 model_name="gpt-4",
-                prompt_template="Extract entities from: {text}"
+                prompt_template="Extract entities from: {text}",
             )
 
     def test_pipeline_configuration_invalid_pipeline_type(self):
         """Test that non-enum pipeline_type raises TypeError."""
-        with pytest.raises(TypeError, match="pipeline_type must be a PipelineType enum"):
+        with pytest.raises(
+            TypeError, match="pipeline_type must be a PipelineType enum"
+        ):
             PipelineConfiguration(
                 id="test-pipeline-1",
                 name="Test Pipeline",
                 description="A test pipeline",
                 pipeline_type="extraction",  # String instead of enum
                 model_name="gpt-4",
-                prompt_template="Extract entities from: {text}"
+                prompt_template="Extract entities from: {text}",
             )
 
     def test_pipeline_configuration_invalid_model_name(self):
@@ -151,19 +156,21 @@ class TestPipelineConfiguration:
                 description="A test pipeline",
                 pipeline_type=PipelineType.EXTRACTION,
                 model_name="",
-                prompt_template="Extract entities from: {text}"
+                prompt_template="Extract entities from: {text}",
             )
 
     def test_pipeline_configuration_invalid_prompt_template(self):
         """Test that empty prompt_template raises ValueError."""
-        with pytest.raises(ValueError, match="prompt_template must be a non-empty string"):
+        with pytest.raises(
+            ValueError, match="prompt_template must be a non-empty string"
+        ):
             PipelineConfiguration(
                 id="test-pipeline-1",
                 name="Test Pipeline",
                 description="A test pipeline",
                 pipeline_type=PipelineType.EXTRACTION,
                 model_name="gpt-4",
-                prompt_template=""
+                prompt_template="",
             )
 
 
@@ -180,7 +187,7 @@ class TestExecution:
             output_data=None,
             error_message=None,
             created_at="2025-03-06T00:00:00Z",
-            completed_at=None
+            completed_at=None,
         )
         assert execution.id == "execution-1"
         assert execution.pipeline_id == "pipeline-1"
@@ -197,7 +204,7 @@ class TestExecution:
                 output_data=None,
                 error_message=None,
                 created_at="2025-03-06T00:00:00Z",
-                completed_at=None
+                completed_at=None,
             )
 
     def test_execution_with_output_data(self):
@@ -210,7 +217,7 @@ class TestExecution:
             output_data=types.MappingProxyType({"entities": []}),
             error_message=None,
             created_at="2025-03-06T00:00:00Z",
-            completed_at="2025-03-06T00:01:00Z"
+            completed_at="2025-03-06T00:01:00Z",
         )
         assert execution.output_data["entities"] == []
 
@@ -224,7 +231,7 @@ class TestExecution:
             output_data=types.MappingProxyType({"entities": []}),
             error_message=None,
             created_at="2025-03-06T00:00:00Z",
-            completed_at="2025-03-06T00:01:00Z"
+            completed_at="2025-03-06T00:01:00Z",
         )
         with pytest.raises(TypeError):
             execution.output_data["entities"] = ["new_entity"]
@@ -240,12 +247,14 @@ class TestExecution:
                 output_data=None,
                 error_message=None,
                 created_at="2025-03-06T00:00:00Z",
-                completed_at=None
+                completed_at=None,
             )
 
     def test_execution_invalid_pipeline_id(self):
         """Test that empty pipeline_id raises ValueError."""
-        with pytest.raises(ValueError, match="Execution pipeline_id must be a non-empty string"):
+        with pytest.raises(
+            ValueError, match="Execution pipeline_id must be a non-empty string"
+        ):
             Execution(
                 id="execution-1",
                 pipeline_id="",
@@ -254,7 +263,7 @@ class TestExecution:
                 output_data=None,
                 error_message=None,
                 created_at="2025-03-06T00:00:00Z",
-                completed_at=None
+                completed_at=None,
             )
 
     def test_execution_invalid_status(self):
@@ -268,12 +277,15 @@ class TestExecution:
                 output_data=None,
                 error_message=None,
                 created_at="2025-03-06T00:00:00Z",
-                completed_at=None
+                completed_at=None,
             )
 
     def test_execution_invalid_created_at(self):
         """Test that empty created_at raises ValueError."""
-        with pytest.raises(ValueError, match="Execution created_at must be a non-empty timestamp string"):
+        with pytest.raises(
+            ValueError,
+            match="Execution created_at must be a non-empty timestamp string",
+        ):
             Execution(
                 id="execution-1",
                 pipeline_id="pipeline-1",
@@ -282,12 +294,14 @@ class TestExecution:
                 output_data=None,
                 error_message=None,
                 created_at="",
-                completed_at=None
+                completed_at=None,
             )
 
     def test_execution_invalid_output_data_type(self):
         """Test that invalid output_data type raises TypeError."""
-        with pytest.raises(TypeError, match="output_data must be None or MappingProxyType"):
+        with pytest.raises(
+            TypeError, match="output_data must be None or MappingProxyType"
+        ):
             Execution(
                 id="execution-1",
                 pipeline_id="pipeline-1",
@@ -296,7 +310,7 @@ class TestExecution:
                 output_data={"entities": []},  # Dict instead of MappingProxyType
                 error_message=None,
                 created_at="2025-03-06T00:00:00Z",
-                completed_at="2025-03-06T00:01:00Z"
+                completed_at="2025-03-06T00:01:00Z",
             )
 
     def test_execution_invalid_error_message(self):
@@ -310,5 +324,5 @@ class TestExecution:
                 output_data=None,
                 error_message=123,  # Integer instead of string
                 created_at="2025-03-06T00:00:00Z",
-                completed_at="2025-03-06T00:01:00Z"
+                completed_at="2025-03-06T00:01:00Z",
             )

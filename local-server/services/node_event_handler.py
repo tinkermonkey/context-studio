@@ -207,7 +207,9 @@ class NodeEventHandler:
             True if successful, False otherwise
         """
         try:
-            event: Optional[NodeEvent] = self.db.query(NodeEvent).filter(NodeEvent.id == event_id).first()
+            event: Optional[NodeEvent] = (
+                self.db.query(NodeEvent).filter(NodeEvent.id == event_id).first()
+            )
             if event:
                 event.processed = True  # type: ignore
                 self.db.commit()
@@ -229,9 +231,7 @@ class NodeEventHandler:
             Dictionary with event statistics
         """
         total_events = self.db.query(NodeEvent).count()
-        processed_events = (
-            self.db.query(NodeEvent).filter(NodeEvent.processed).count()
-        )
+        processed_events = self.db.query(NodeEvent).filter(NodeEvent.processed).count()
         unprocessed_events = total_events - processed_events
 
         # Events by type

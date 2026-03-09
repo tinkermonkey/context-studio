@@ -14,7 +14,9 @@ import os
 import sys
 import warnings
 
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+sys.path.append(
+    os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+)
 
 import pytest
 from fastapi.testclient import TestClient
@@ -85,7 +87,9 @@ def e2e_app(tmp_path_factory):
     Yields:
         Tuple[FastAPI, Engine, SessionLocal]: The app instance, database engine, and session factory  # noqa: E501
     """
-    engine, session_local, db_path = create_e2e_database_with_migrations(tmp_path_factory)
+    engine, session_local, db_path = create_e2e_database_with_migrations(
+        tmp_path_factory
+    )
 
     try:
         # Set up the service factory with optimized test settings
@@ -108,7 +112,7 @@ def e2e_app(tmp_path_factory):
         model = get_model()
         assert model is not None, "Embedding model failed to initialize"
         # Confirm model loaded successfully (determinism requires this pinned version)
-        assert hasattr(model, 'encode'), "Model missing encode method for embeddings"
+        assert hasattr(model, "encode"), "Model missing encode method for embeddings"
 
         yield app, engine, session_local
     finally:
@@ -198,7 +202,12 @@ def clean_tables(e2e_app):
         cleanup_session.execute(text("PRAGMA foreign_keys = OFF"))
 
         # Delete all rows from tables (order is conventional; FKs are disabled)
-        for table in ["relationships", "ontology_entities", "property_definitions", "change_events"]:
+        for table in [
+            "relationships",
+            "ontology_entities",
+            "property_definitions",
+            "change_events",
+        ]:
             cleanup_session.execute(text(f"DELETE FROM {table}"))
 
         # Re-enable foreign key checks

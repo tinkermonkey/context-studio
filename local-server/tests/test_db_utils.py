@@ -40,7 +40,9 @@ class TestDatabaseManager:
             temp_dir: Optional temporary directory path. If not provided,
                      a new temporary directory will be created.
         """
-        self.temp_dir = Path(temp_dir) if temp_dir else Path(tempfile.mkdtemp())  # noqa: E501
+        self.temp_dir = (
+            Path(temp_dir) if temp_dir else Path(tempfile.mkdtemp())
+        )  # noqa: E501
         self.created_databases: List[Path] = []
         self.active_engines: List[Engine] = []
 
@@ -66,7 +68,9 @@ class TestDatabaseManager:
 
         return engine, session_local
 
-    def create_file_database(self, db_name: Optional[str] = None) -> Tuple[Engine, sessionmaker, Path]:  # noqa: E501
+    def create_file_database(
+        self, db_name: Optional[str] = None
+    ) -> Tuple[Engine, sessionmaker, Path]:  # noqa: E501
         """
         Create a file-based SQLite database for testing.
 
@@ -98,7 +102,9 @@ class TestDatabaseManager:
 
         return engine, session_local, db_path
 
-    def create_migrated_database(self, db_name: Optional[str] = None) -> Tuple[Engine, sessionmaker, Path]:  # noqa: E501
+    def create_migrated_database(
+        self, db_name: Optional[str] = None
+    ) -> Tuple[Engine, sessionmaker, Path]:  # noqa: E501
         """
         Create a file-based database with all migrations applied.
 
@@ -117,7 +123,9 @@ class TestDatabaseManager:
         migration_manager = MigrationManager(str(db_path))
         success = migration_manager.migrate_to_latest()
         if not success:
-            raise RuntimeError(f"Failed to apply migrations to test database: {db_path}")  # noqa: E501
+            raise RuntimeError(
+                f"Failed to apply migrations to test database: {db_path}"
+            )  # noqa: E501
 
         return engine, session_local, db_path
 
@@ -227,7 +235,9 @@ def isolated_session(db_type: str = "memory", temp_dir: Optional[str] = None):
             session.close()
 
 
-def clean_database_tables(session: Session, exclude_tables: Optional[List[str]] = None) -> None:  # noqa: E501
+def clean_database_tables(
+    session: Session, exclude_tables: Optional[List[str]] = None
+) -> None:  # noqa: E501
     """
     Clean all data from database tables while preserving schema.
 
@@ -240,13 +250,11 @@ def clean_database_tables(session: Session, exclude_tables: Optional[List[str]] 
 
     try:
         # Get all table names
-        tables_result = session.execute(
-            text("""
+        tables_result = session.execute(text("""
                 SELECT name FROM sqlite_master
                 WHERE type='table' AND name NOT LIKE 'sqlite_%'
                 ORDER BY name
-            """)
-        ).fetchall()
+            """)).fetchall()
 
         # Clean all data (preserve schema)
         session.execute(text("PRAGMA foreign_keys = OFF"))
@@ -273,6 +281,7 @@ def verify_database_isolation(test_func):
     Returns:
         Wrapped test function that verifies isolation
     """
+
     def wrapper(*args, **kwargs):
         # Get current directory files before test
         current_dir = Path.cwd()
@@ -310,10 +319,16 @@ def verify_database_isolation(test_func):
 def create_test_database_in_memory() -> Tuple[Engine, sessionmaker]:
     """Create an in-memory test database with schema."""
     with TestDatabaseManager() as manager:
-        return cast(Tuple[Engine, sessionmaker], manager.create_in_memory_database())  # noqa: E501
+        return cast(
+            Tuple[Engine, sessionmaker], manager.create_in_memory_database()
+        )  # noqa: E501
 
 
-def create_test_database_with_migrations(temp_dir: Optional[str] = None) -> Tuple[Engine, sessionmaker, Path]:  # noqa: E501
+def create_test_database_with_migrations(
+    temp_dir: Optional[str] = None,
+) -> Tuple[Engine, sessionmaker, Path]:  # noqa: E501
     """Create a file-based test database with all migrations applied."""
     with TestDatabaseManager(temp_dir) as manager:
-        return cast(Tuple[Engine, sessionmaker, Path], manager.create_migrated_database())  # noqa: E501
+        return cast(
+            Tuple[Engine, sessionmaker, Path], manager.create_migrated_database()
+        )  # noqa: E501

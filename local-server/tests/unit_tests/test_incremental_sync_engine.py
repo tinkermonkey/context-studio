@@ -6,6 +6,7 @@ Tests the incremental synchronization functionality.
 
 import sys
 import os
+
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import pytest  # noqa: E402
@@ -44,26 +45,30 @@ class TestIncrementalSyncEngine:
             "bucket": "test-bucket",
             "aws_access_key_id": "test-key",
             "aws_secret_access_key": "test-secret",
-            "aws_region": "us-east-1"
+            "aws_region": "us-east-1",
         }
 
     @pytest.fixture
-    def sync_engine(self, mock_db, mock_duckdb_service, mock_version_manager, mock_s3_config):
+    def sync_engine(
+        self, mock_db, mock_duckdb_service, mock_version_manager, mock_s3_config
+    ):
         """Create IncrementalSyncEngine instance with mocked dependencies."""
         return IncrementalSyncEngine(
             db=mock_db,
             duckdb_service=mock_duckdb_service,
             version_manager=mock_version_manager,
-            s3_config=mock_s3_config
+            s3_config=mock_s3_config,
         )
 
-    def test_init_sync_engine(self, mock_db, mock_duckdb_service, mock_version_manager, mock_s3_config):
+    def test_init_sync_engine(
+        self, mock_db, mock_duckdb_service, mock_version_manager, mock_s3_config
+    ):
         """Test IncrementalSyncEngine initialization."""
         engine = IncrementalSyncEngine(
             db=mock_db,
             duckdb_service=mock_duckdb_service,
             version_manager=mock_version_manager,
-            s3_config=mock_s3_config
+            s3_config=mock_s3_config,
         )
 
         assert engine.db == mock_db
@@ -71,10 +76,18 @@ class TestIncrementalSyncEngine:
         assert engine.version_manager == mock_version_manager
         assert engine.s3_config == mock_s3_config
 
-    @patch('services.incremental_sync_engine.IncrementalSyncEngine._create_sync_operation')
-    @patch('services.incremental_sync_engine.IncrementalSyncEngine._store_sync_operation')
-    @patch('services.incremental_sync_engine.IncrementalSyncEngine._complete_sync_operation')
-    def test_sync_incremental_invalid_time_range(self, mock_complete, mock_store, mock_create, sync_engine, mock_duckdb_service):
+    @patch(
+        "services.incremental_sync_engine.IncrementalSyncEngine._create_sync_operation"
+    )
+    @patch(
+        "services.incremental_sync_engine.IncrementalSyncEngine._store_sync_operation"
+    )
+    @patch(
+        "services.incremental_sync_engine.IncrementalSyncEngine._complete_sync_operation"
+    )
+    def test_sync_incremental_invalid_time_range(
+        self, mock_complete, mock_store, mock_create, sync_engine, mock_duckdb_service
+    ):
         """Test incremental sync with invalid time range."""
         # Mock the sync operation creation
         mock_sync_op = Mock()
@@ -89,18 +102,30 @@ class TestIncrementalSyncEngine:
         until_time = datetime(2024, 1, 1, tzinfo=timezone.utc)  # Before since
 
         result = sync_engine.sync_incremental(
-            since=since_time,
-            until=until_time,
-            entity_types=["structure_node"]
+            since=since_time, until=until_time, entity_types=["structure_node"]
         )
 
         # Should return a result with the operation_id
         assert "operation_id" in result
 
-    @patch('services.incremental_sync_engine.IncrementalSyncEngine._create_sync_operation')
-    @patch('services.incremental_sync_engine.IncrementalSyncEngine._store_sync_operation')
-    @patch('services.incremental_sync_engine.IncrementalSyncEngine._complete_sync_operation')
-    def test_sync_incremental_success(self, mock_complete, mock_store, mock_create, sync_engine, mock_db, mock_duckdb_service):
+    @patch(
+        "services.incremental_sync_engine.IncrementalSyncEngine._create_sync_operation"
+    )
+    @patch(
+        "services.incremental_sync_engine.IncrementalSyncEngine._store_sync_operation"
+    )
+    @patch(
+        "services.incremental_sync_engine.IncrementalSyncEngine._complete_sync_operation"
+    )
+    def test_sync_incremental_success(
+        self,
+        mock_complete,
+        mock_store,
+        mock_create,
+        sync_engine,
+        mock_db,
+        mock_duckdb_service,
+    ):
         """Test successful incremental sync operation."""
         # Mock the sync operation creation
         mock_sync_op = Mock()
@@ -120,9 +145,7 @@ class TestIncrementalSyncEngine:
 
         # Execute
         result = sync_engine.sync_incremental(
-            since=since_time,
-            until=until_time,
-            entity_types=["structure_node"]
+            since=since_time, until=until_time, entity_types=["structure_node"]
         )
 
         # Verify
@@ -143,8 +166,7 @@ class TestIncrementalSyncEngine:
     def test_get_optimal_sync_strategy(self, sync_engine):
         """Test optimal sync strategy determination."""
         result = sync_engine.get_optimal_sync_strategy(
-            target_entity_count=1000,
-            time_range_days=7
+            target_entity_count=1000, time_range_days=7
         )
 
         assert "recommended_strategy" in result
@@ -155,8 +177,15 @@ class TestIncrementalSyncEngine:
         """Test sync history retrieval."""
         # Mock database query result - simpler format matching actual SyncOperation fields
         mock_db.execute.return_value.fetchall.return_value = [
-            ("sync-123", "incremental", "2024-01-01T00:00:00+00:00",
-             "2024-01-01T00:05:00+00:00", 100, "sequential", '{}')
+            (
+                "sync-123",
+                "incremental",
+                "2024-01-01T00:00:00+00:00",
+                "2024-01-01T00:05:00+00:00",
+                100,
+                "sequential",
+                "{}",
+            )
         ]
 
         result = sync_engine.get_sync_history(limit=10)
@@ -165,8 +194,8 @@ class TestIncrementalSyncEngine:
         if result:  # Only check if we have results
             # The method returns SyncOperation objects, so check object attributes
             sync_op = result[0]
-            assert hasattr(sync_op, 'id')
-            assert hasattr(sync_op, 'operation_type')
+            assert hasattr(sync_op, "id")
+            assert hasattr(sync_op, "operation_type")
             assert sync_op.id == "sync-123"
 
         mock_db.execute.assert_called_once()

@@ -36,7 +36,9 @@ class ModelDownloader:
             logger.warning(f"Unexpected error checking spaCy model {model_name}: {e}")
             return False
 
-    def download_spacy_model(self, model_name: str, timeout: int = 300) -> Tuple[bool, Optional[str]]:
+    def download_spacy_model(
+        self, model_name: str, timeout: int = 300
+    ) -> Tuple[bool, Optional[str]]:
         """
         Download a spaCy model using spacy download command.
 
@@ -52,7 +54,10 @@ class ModelDownloader:
         try:
             # Run spacy download command
             result = subprocess.run(
-                [sys.executable, "-m", "spacy", "download", model_name], capture_output=True, text=True, timeout=timeout
+                [sys.executable, "-m", "spacy", "download", model_name],
+                capture_output=True,
+                text=True,
+                timeout=timeout,
             )
 
             if result.returncode == 0:
@@ -91,7 +96,9 @@ class ModelDownloader:
             return True, None
 
         if not auto_download:
-            error_msg = f"spaCy model {model_name} not available and auto-download disabled"
+            error_msg = (
+                f"spaCy model {model_name} not available and auto-download disabled"
+            )
             logger.warning(error_msg)
             return False, error_msg
 

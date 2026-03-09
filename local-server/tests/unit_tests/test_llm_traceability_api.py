@@ -1,5 +1,6 @@
 import sys
 import os
+
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from fastapi.testclient import TestClient  # noqa: E402
@@ -10,6 +11,7 @@ from llm.models import PipelineType  # noqa: E402
 
 # Create test client
 from fastapi import FastAPI  # noqa: E402
+
 app = FastAPI()
 app.include_router(router)
 client = TestClient(app)
@@ -17,7 +19,7 @@ client = TestClient(app)
 
 class TestLLMTraceabilityAPI:
 
-    @patch('api.llm_traceability.ExecutionTracker')
+    @patch("api.llm_traceability.ExecutionTracker")
     def test_record_selection_success(self, mock_tracker_class):
         """Test successful selection recording."""
 
@@ -25,13 +27,16 @@ class TestLLMTraceabilityAPI:
         mock_tracker_class.return_value = mock_tracker
         mock_tracker.record_selection.return_value = "selection-123"
 
-        response = client.post("/api/llm/record-selection", json={
-            "execution_id": "exec-123",
-            "record_type": "structure_node",
-            "record_id": "node-456",
-            "suggestion_field": "definition",
-            "selected_content": "Test definition"
-        })
+        response = client.post(
+            "/api/llm/record-selection",
+            json={
+                "execution_id": "exec-123",
+                "record_type": "structure_node",
+                "record_id": "node-456",
+                "suggestion_field": "definition",
+                "selected_content": "Test definition",
+            },
+        )
 
         assert response.status_code == 200
         data = response.json()
@@ -48,7 +53,7 @@ class TestLLMTraceabilityAPI:
         assert call_args.suggestion_field == "definition"
         assert call_args.selected_content == "Test definition"
 
-    @patch('api.llm_traceability.ExecutionTracker')
+    @patch("api.llm_traceability.ExecutionTracker")
     def test_record_selection_invalid_execution(self, mock_tracker_class):
         """Test selection recording with invalid execution ID."""
 
@@ -56,19 +61,22 @@ class TestLLMTraceabilityAPI:
         mock_tracker_class.return_value = mock_tracker
         mock_tracker.record_selection.side_effect = ValueError("Execution not found")
 
-        response = client.post("/api/llm/record-selection", json={
-            "execution_id": "nonexistent",
-            "record_type": "structure_node",
-            "record_id": "node-456",
-            "suggestion_field": "definition",
-            "selected_content": "Test definition"
-        })
+        response = client.post(
+            "/api/llm/record-selection",
+            json={
+                "execution_id": "nonexistent",
+                "record_type": "structure_node",
+                "record_id": "node-456",
+                "suggestion_field": "definition",
+                "selected_content": "Test definition",
+            },
+        )
 
         assert response.status_code == 400
         data = response.json()
         assert "Execution not found" in data["detail"]
 
-    @patch('api.llm_traceability.ExecutionTracker')
+    @patch("api.llm_traceability.ExecutionTracker")
     def test_record_selection_server_error(self, mock_tracker_class):
         """Test selection recording with server error."""
 
@@ -76,19 +84,22 @@ class TestLLMTraceabilityAPI:
         mock_tracker_class.return_value = mock_tracker
         mock_tracker.record_selection.side_effect = Exception("Database error")
 
-        response = client.post("/api/llm/record-selection", json={
-            "execution_id": "exec-123",
-            "record_type": "structure_node",
-            "record_id": "node-456",
-            "suggestion_field": "definition",
-            "selected_content": "Test definition"
-        })
+        response = client.post(
+            "/api/llm/record-selection",
+            json={
+                "execution_id": "exec-123",
+                "record_type": "structure_node",
+                "record_id": "node-456",
+                "suggestion_field": "definition",
+                "selected_content": "Test definition",
+            },
+        )
 
         assert response.status_code == 500
         data = response.json()
         assert data["detail"] == "Failed to record selection"
 
-    @patch('api.llm_traceability.ExecutionTracker')
+    @patch("api.llm_traceability.ExecutionTracker")
     def test_get_execution_analytics_success(self, mock_tracker_class):
         """Test successful execution analytics retrieval."""
 
@@ -101,7 +112,7 @@ class TestLLMTraceabilityAPI:
             "avg_execution_time": 1500.0,
             "total_tokens_used": 50000,
             "total_selections": 20,
-            "selection_rate": 0.21
+            "selection_rate": 0.21,
         }
 
         response = client.get("/api/llm/execution-analytics?days_back=7")
@@ -117,7 +128,7 @@ class TestLLMTraceabilityAPI:
         # Verify tracker was called with correct parameters
         mock_tracker.get_execution_analytics.assert_called_once_with(None, 7)
 
-    @patch('api.llm_traceability.ExecutionTracker')
+    @patch("api.llm_traceability.ExecutionTracker")
     def test_get_execution_analytics_with_pipeline_type(self, mock_tracker_class):
         """Test execution analytics with pipeline type filter."""
 
@@ -130,7 +141,7 @@ class TestLLMTraceabilityAPI:
             "avg_execution_time": 1200.0,
             "total_tokens_used": 25000,
             "total_selections": 10,
-            "selection_rate": 0.208
+            "selection_rate": 0.208,
         }
 
         response = client.get(
@@ -152,7 +163,7 @@ class TestLLMTraceabilityAPI:
         assert call_args[0] == PipelineType.SUGGEST_TERM_DEFINITION
         assert call_args[1] == 30
 
-    @patch('api.llm_traceability.ExecutionTracker')
+    @patch("api.llm_traceability.ExecutionTracker")
     def test_get_execution_analytics_error(self, mock_tracker_class):
         """Test execution analytics with error."""
 
@@ -166,7 +177,7 @@ class TestLLMTraceabilityAPI:
         data = response.json()
         assert data["detail"] == "Failed to get execution analytics"
 
-    @patch('api.llm_traceability.ExecutionTracker')
+    @patch("api.llm_traceability.ExecutionTracker")
     def test_get_execution_details_success(self, mock_tracker_class):
         """Test successful execution details retrieval."""
 
@@ -181,17 +192,17 @@ class TestLLMTraceabilityAPI:
                 "token_usage": {
                     "input_tokens": 10,
                     "output_tokens": 15,
-                    "total_tokens": 25
-                }
+                    "total_tokens": 25,
+                },
             },
             "selections": [
                 {
                     "id": "sel-456",
                     "record_type": "structure_node",
                     "suggestion_field": "definition",
-                    "selected_content": "Test content"
+                    "selected_content": "Test content",
                 }
-            ]
+            ],
         }
 
         response = client.get("/api/llm/execution-details/exec-123")
@@ -206,7 +217,7 @@ class TestLLMTraceabilityAPI:
         # Verify tracker was called with correct ID
         mock_tracker.get_execution_details.assert_called_once_with("exec-123")
 
-    @patch('api.llm_traceability.ExecutionTracker')
+    @patch("api.llm_traceability.ExecutionTracker")
     def test_get_execution_details_not_found(self, mock_tracker_class):
         """Test execution details for non-existent execution."""
 
@@ -220,7 +231,7 @@ class TestLLMTraceabilityAPI:
         data = response.json()
         assert "Execution nonexistent not found" in data["detail"]
 
-    @patch('api.llm_traceability.ExecutionTracker')
+    @patch("api.llm_traceability.ExecutionTracker")
     def test_get_execution_details_error(self, mock_tracker_class):
         """Test execution details with server error."""
 
@@ -234,7 +245,7 @@ class TestLLMTraceabilityAPI:
         data = response.json()
         assert data["detail"] == "Failed to get execution details"
 
-    @patch('api.llm_traceability.ExecutionTracker')
+    @patch("api.llm_traceability.ExecutionTracker")
     def test_traceability_health_success(self, mock_tracker_class):
         """Test traceability health check success."""
 
@@ -242,7 +253,7 @@ class TestLLMTraceabilityAPI:
         mock_tracker_class.return_value = mock_tracker
         mock_tracker.get_execution_analytics.return_value = {
             "total_executions": 10,
-            "success_rate": 0.9
+            "success_rate": 0.9,
         }
 
         response = client.get("/api/llm/health")
@@ -254,13 +265,15 @@ class TestLLMTraceabilityAPI:
         assert data["database_accessible"] is True
         assert "timestamp" in data
 
-    @patch('api.llm_traceability.ExecutionTracker')
+    @patch("api.llm_traceability.ExecutionTracker")
     def test_traceability_health_unhealthy(self, mock_tracker_class):
         """Test traceability health check failure."""
 
         mock_tracker = Mock()
         mock_tracker_class.return_value = mock_tracker
-        mock_tracker.get_execution_analytics.side_effect = Exception("Health check failed")
+        mock_tracker.get_execution_analytics.side_effect = Exception(
+            "Health check failed"
+        )
 
         response = client.get("/api/llm/health")
 
@@ -272,11 +285,14 @@ class TestLLMTraceabilityAPI:
         """Test selection recording with validation error."""
 
         # Missing required fields
-        response = client.post("/api/llm/record-selection", json={
-            "execution_id": "exec-123",
-            "record_type": "structure_node"
-            # Missing required fields
-        })
+        response = client.post(
+            "/api/llm/record-selection",
+            json={
+                "execution_id": "exec-123",
+                "record_type": "structure_node",
+                # Missing required fields
+            },
+        )
 
         assert response.status_code == 422  # Validation error
 
@@ -287,7 +303,7 @@ class TestLLMTraceabilityAPI:
 
         assert response.status_code == 422  # Validation error
 
-    @patch('api.llm_traceability.ExecutionTracker')
+    @patch("api.llm_traceability.ExecutionTracker")
     def test_get_execution_history_success(self, mock_tracker_class):
         """Test successful execution history retrieval."""
 
@@ -303,17 +319,19 @@ class TestLLMTraceabilityAPI:
                     "token_usage": {
                         "input_tokens": 10,
                         "output_tokens": 15,
-                        "total_tokens": 25
+                        "total_tokens": 25,
                     },
                     "started_at": "2024-01-01T10:00:00Z",
-                    "completed_at": "2024-01-01T10:00:01Z"
+                    "completed_at": "2024-01-01T10:00:01Z",
                 }
             ],
             "total_count": 5,
-            "flavor_id": "test-flavor-123"
+            "flavor_id": "test-flavor-123",
         }
 
-        response = client.get("/api/llm/execution-history?flavor_id=test-flavor-123&limit=10")
+        response = client.get(
+            "/api/llm/execution-history?flavor_id=test-flavor-123&limit=10"
+        )
 
         assert response.status_code == 200
         data = response.json()
@@ -324,9 +342,11 @@ class TestLLMTraceabilityAPI:
         assert data["executions"][0]["status"] == "success"
 
         # Verify tracker was called with correct parameters
-        mock_tracker.get_flavor_execution_history.assert_called_once_with("test-flavor-123", 10)
+        mock_tracker.get_flavor_execution_history.assert_called_once_with(
+            "test-flavor-123", 10
+        )
 
-    @patch('api.llm_traceability.ExecutionTracker')
+    @patch("api.llm_traceability.ExecutionTracker")
     def test_get_execution_history_invalid_flavor(self, mock_tracker_class):
         """Test execution history with invalid flavor ID."""
 
@@ -335,10 +355,12 @@ class TestLLMTraceabilityAPI:
         mock_tracker.get_flavor_execution_history.return_value = {
             "executions": [],
             "total_count": 0,
-            "flavor_id": "nonexistent-flavor"
+            "flavor_id": "nonexistent-flavor",
         }
 
-        response = client.get("/api/llm/execution-history?flavor_id=nonexistent-flavor&limit=10")
+        response = client.get(
+            "/api/llm/execution-history?flavor_id=nonexistent-flavor&limit=10"
+        )
 
         assert response.status_code == 200
         data = response.json()
@@ -347,15 +369,19 @@ class TestLLMTraceabilityAPI:
         assert len(data["executions"]) == 0
 
         # Verify tracker was called with correct parameters
-        mock_tracker.get_flavor_execution_history.assert_called_once_with("nonexistent-flavor", 10)
+        mock_tracker.get_flavor_execution_history.assert_called_once_with(
+            "nonexistent-flavor", 10
+        )
 
-    @patch('api.llm_traceability.ExecutionTracker')
+    @patch("api.llm_traceability.ExecutionTracker")
     def test_get_execution_history_error(self, mock_tracker_class):
         """Test execution history with server error."""
 
         mock_tracker = Mock()
         mock_tracker_class.return_value = mock_tracker
-        mock_tracker.get_flavor_execution_history.side_effect = Exception("Database error")
+        mock_tracker.get_flavor_execution_history.side_effect = Exception(
+            "Database error"
+        )
 
         response = client.get("/api/llm/execution-history?flavor_id=test-flavor-123")
 
@@ -363,7 +389,7 @@ class TestLLMTraceabilityAPI:
         data = response.json()
         assert data["detail"] == "Failed to get execution history"
 
-    @patch('api.llm_traceability.ExecutionTracker')
+    @patch("api.llm_traceability.ExecutionTracker")
     def test_get_flavor_analytics_success(self, mock_tracker_class):
         """Test successful flavor analytics retrieval."""
 
@@ -378,9 +404,9 @@ class TestLLMTraceabilityAPI:
                 "avg_execution_time": 1200.0,
                 "total_tokens_used": 25000,
                 "total_selections": 15,
-                "selection_rate": 0.33
+                "selection_rate": 0.33,
             },
-            "time_range_days": 7
+            "time_range_days": 7,
         }
 
         response = client.get("/api/llm/flavor-analytics/test-flavor-123?days_back=7")
@@ -396,7 +422,7 @@ class TestLLMTraceabilityAPI:
         # Verify tracker was called with correct parameters
         mock_tracker.get_flavor_analytics.assert_called_once_with("test-flavor-123", 7)
 
-    @patch('api.llm_traceability.ExecutionTracker')
+    @patch("api.llm_traceability.ExecutionTracker")
     def test_get_flavor_analytics_error(self, mock_tracker_class):
         """Test flavor analytics with server error."""
 
@@ -410,7 +436,7 @@ class TestLLMTraceabilityAPI:
         data = response.json()
         assert data["detail"] == "Failed to get flavor analytics"
 
-    @patch('api.llm_traceability.ExecutionTracker')
+    @patch("api.llm_traceability.ExecutionTracker")
     def test_execution_details_endpoint_renamed(self, mock_tracker_class):
         """Test that execution-details endpoint still works after rename."""
 
@@ -421,9 +447,9 @@ class TestLLMTraceabilityAPI:
                 "id": "exec-123",
                 "pipeline_type": "suggest_term_definition",
                 "status": "success",
-                "execution_time_ms": 1500
+                "execution_time_ms": 1500,
             },
-            "selections": []
+            "selections": [],
         }
 
         response = client.get("/api/llm/execution-details/exec-123")

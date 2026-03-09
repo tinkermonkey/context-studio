@@ -92,7 +92,9 @@ class WordSenseService:
                         )
 
                     except Exception as e:
-                        logger.warning(f"Failed to extract word sense from synset {synset}: {e}")
+                        logger.warning(
+                            f"Failed to extract word sense from synset {synset}: {e}"
+                        )
                         continue
 
         logger.info(f"Extracted {len(word_senses)} word senses from NLP analysis")
@@ -146,7 +148,9 @@ class WordSenseService:
 
             # Add new senses that weren't already preserved
             added_senses = [
-                sense for sense in new_senses if sense.sense_id not in preserved_sense_ids
+                sense
+                for sense in new_senses
+                if sense.sense_id not in preserved_sense_ids
             ]
 
             # Combine preserved and new senses
@@ -227,10 +231,7 @@ class WordSenseService:
                         f"Failed to parse word sense for node {node_id}: {e}. "
                         f"Invalid entry: {sense_dict}"
                     )
-                    parse_failures.append({
-                        "data": sense_dict,
-                        "error": str(e)
-                    })
+                    parse_failures.append({"data": sense_dict, "error": str(e)})
 
             # If any senses failed to parse, raise error - data is corrupted
             if parse_failures:
@@ -255,9 +256,7 @@ class WordSenseService:
                 f"Please contact support to recover this data."
             )
 
-    def remove_word_senses(
-        self, node_id: str, sense_ids: List[str]
-    ) -> List[WordSense]:
+    def remove_word_senses(self, node_id: str, sense_ids: List[str]) -> List[WordSense]:
         """
         Remove specific word senses from a structure node by sense_id.
 
@@ -310,9 +309,7 @@ class WordSenseService:
             logger.error(f"Failed to remove word senses from node {node_id}: {e}")
             raise ValueError(f"Failed to remove word senses: {e}")
 
-    def validate_sense_identifier(
-        self, sense_type: str, sense_id: str
-    ) -> bool:
+    def validate_sense_identifier(self, sense_type: str, sense_id: str) -> bool:
         """
         Validate a sense identifier format.
 
@@ -345,7 +342,13 @@ class WordSenseService:
             word, pos, number = parts
 
             # Validate POS tag is valid WordNet POS
-            valid_pos = {"n", "v", "a", "r", "s"}  # noun, verb, adjective, adverb, satellite adj
+            valid_pos = {
+                "n",
+                "v",
+                "a",
+                "r",
+                "s",
+            }  # noun, verb, adjective, adverb, satellite adj
             if pos not in valid_pos:
                 raise ValueError(
                     f"Invalid WordNet POS tag: '{pos}'. Must be one of {valid_pos}"
@@ -363,7 +366,9 @@ class WordSenseService:
         else:
             # For other sense types, just check it's not empty
             if not sense_id:
-                raise ValueError(f"sense_id cannot be empty for sense_type '{sense_type}'")
+                raise ValueError(
+                    f"sense_id cannot be empty for sense_type '{sense_type}'"
+                )
 
             logger.debug(f"Validated sense_id for {sense_type}: {sense_id}")
             return True
@@ -411,14 +416,17 @@ class WordSenseService:
             existing_senses = self.get_word_senses(node_id)
         except ValueError as e:
             logger.error(f"Failed to load existing word senses for node {node_id}: {e}")
-            raise ValueError(f"Cannot update word senses: existing data is corrupted. {e}")
+            raise ValueError(
+                f"Cannot update word senses: existing data is corrupted. {e}"
+            )
 
         # Create set of words (terms) being updated
         updated_terms = {sense.term.lower() for sense in selected_senses}
 
         # Preserve existing senses for words NOT included in this update
         preserved_senses = [
-            sense for sense in existing_senses
+            sense
+            for sense in existing_senses
             if sense.term.lower() not in updated_terms
         ]
 
@@ -446,7 +454,9 @@ class WordSenseService:
             return updated_senses
         except Exception as e:
             self.db.rollback()
-            logger.error(f"Failed to update selected word senses for node {node_id}: {e}")
+            logger.error(
+                f"Failed to update selected word senses for node {node_id}: {e}"
+            )
             raise ValueError(f"Failed to update selected word senses: {e}")
 
     def get_nodes_with_word_sense(
@@ -468,17 +478,21 @@ class WordSenseService:
         # This filters at the database level instead of fetching all nodes
         from sqlalchemy import text
 
-        query = self.db.query(StructureNode).filter(
-            StructureNode.word_senses.isnot(None),
-            StructureNode.word_senses != "",
-            StructureNode.word_senses != "[]",
-            text(
-                "EXISTS ("
-                "  SELECT 1 FROM json_each(word_senses) "
-                "  WHERE json_extract(value, '$.sense_id') = :sense_id"
-                ")"
+        query = (
+            self.db.query(StructureNode)
+            .filter(
+                StructureNode.word_senses.isnot(None),
+                StructureNode.word_senses != "",
+                StructureNode.word_senses != "[]",
+                text(
+                    "EXISTS ("
+                    "  SELECT 1 FROM json_each(word_senses) "
+                    "  WHERE json_extract(value, '$.sense_id') = :sense_id"
+                    ")"
+                ),
             )
-        ).params(sense_id=sense_id)
+            .params(sense_id=sense_id)
+        )
 
         if limit:
             query = query.limit(limit)

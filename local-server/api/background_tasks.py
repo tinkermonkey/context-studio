@@ -12,7 +12,6 @@ from typing import Any, Dict, List, Optional
 from services.task_manager import get_task_manager
 from utils.logger import get_logger
 
-
 logger = get_logger(__name__)
 router = APIRouter(prefix="/api/tasks", tags=["background-tasks"])
 
@@ -20,6 +19,7 @@ router = APIRouter(prefix="/api/tasks", tags=["background-tasks"])
 # Response models
 class TaskStatusResponse(BaseModel):
     """Response model for task status."""
+
     task_id: str
     task_type: str
     status: str
@@ -34,12 +34,14 @@ class TaskStatusResponse(BaseModel):
 
 class TaskListResponse(BaseModel):
     """Response model for list of tasks."""
+
     tasks: List[TaskStatusResponse]
     total: int
 
 
 class TaskStatsResponse(BaseModel):
     """Response model for task statistics."""
+
     total_tasks: int
     queue_size: int
     max_queue_size: int
@@ -50,6 +52,7 @@ class TaskStatsResponse(BaseModel):
 
 class CancelTaskResponse(BaseModel):
     """Response model for task cancellation."""
+
     task_id: str
     cancelled: bool
     message: str
@@ -58,10 +61,10 @@ class CancelTaskResponse(BaseModel):
 # NOTE: Specific routes (with literal paths) must be defined BEFORE
 # parameterized routes (with path parameters like {task_id}) to avoid conflicts
 
+
 @router.get("", response_model=TaskListResponse)
 async def list_tasks(
-    status_filter: Optional[str] = None,
-    task_type: Optional[str] = None
+    status_filter: Optional[str] = None, task_type: Optional[str] = None
 ):
     """
     List all background tasks with optional filtering.
@@ -83,32 +86,28 @@ async def list_tasks(
         if status_filter:
             status_filter_lower = status_filter.lower()
             filtered_tasks = [
-                t for t in filtered_tasks
-                if t['status'].lower() == status_filter_lower
+                t for t in filtered_tasks if t["status"].lower() == status_filter_lower
             ]
 
         if task_type:
-            filtered_tasks = [
-                t for t in filtered_tasks
-                if t['task_type'] == task_type
-            ]
+            filtered_tasks = [t for t in filtered_tasks if t["task_type"] == task_type]
 
         return TaskListResponse(
             tasks=[TaskStatusResponse(**t) for t in filtered_tasks],
-            total=len(filtered_tasks)
+            total=len(filtered_tasks),
         )
 
     except RuntimeError as e:
         logger.error(f"TaskManager not initialized: {e}")
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail="Task management service not available"
+            detail="Task management service not available",
         )
     except Exception as e:
         logger.error(f"Error listing tasks: {e}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Internal server error"
+            detail="Internal server error",
         )
 
 
@@ -130,13 +129,13 @@ async def get_task_stats():
         logger.error(f"TaskManager not initialized: {e}")
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail="Task management service not available"
+            detail="Task management service not available",
         )
     except Exception as e:
         logger.error(f"Error getting task stats: {e}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Internal server error"
+            detail="Internal server error",
         )
 
 
@@ -154,20 +153,20 @@ async def get_dead_letter_queue():
 
         return TaskListResponse(
             tasks=[TaskStatusResponse(**t) for t in dead_letter_tasks],
-            total=len(dead_letter_tasks)
+            total=len(dead_letter_tasks),
         )
 
     except RuntimeError as e:
         logger.error(f"TaskManager not initialized: {e}")
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail="Task management service not available"
+            detail="Task management service not available",
         )
     except Exception as e:
         logger.error(f"Error getting dead letter queue: {e}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Internal server error"
+            detail="Internal server error",
         )
 
 
@@ -192,7 +191,7 @@ async def get_task_status(task_id: str):
         if task_status is None:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Task {task_id} not found"
+                detail=f"Task {task_id} not found",
             )
 
         return TaskStatusResponse(**task_status)
@@ -201,7 +200,7 @@ async def get_task_status(task_id: str):
         logger.error(f"TaskManager not initialized: {e}")
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail="Task management service not available"
+            detail="Task management service not available",
         )
     except HTTPException:
         raise
@@ -209,7 +208,7 @@ async def get_task_status(task_id: str):
         logger.error(f"Error getting task status: {e}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Internal server error"
+            detail="Internal server error",
         )
 
 
@@ -235,16 +234,16 @@ async def cancel_task(task_id: str):
         if task_status is None:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Task {task_id} not found"
+                detail=f"Task {task_id} not found",
             )
 
         # Check if task can be cancelled
-        current_status = task_status['status']
-        if current_status not in ['pending', 'running']:
+        current_status = task_status["status"]
+        if current_status not in ["pending", "running"]:
             return CancelTaskResponse(
                 task_id=task_id,
                 cancelled=False,
-                message=f"Task is in state '{current_status}' and cannot be cancelled"  # noqa: E501
+                message=f"Task is in state '{current_status}' and cannot be cancelled",  # noqa: E501
             )
 
         # Cancel the task
@@ -253,14 +252,18 @@ async def cancel_task(task_id: str):
         return CancelTaskResponse(
             task_id=task_id,
             cancelled=cancelled,
-            message="Task cancelled successfully" if cancelled else "Task cancellation failed"  # noqa: E501
+            message=(
+                "Task cancelled successfully"
+                if cancelled
+                else "Task cancellation failed"
+            ),  # noqa: E501
         )
 
     except RuntimeError as e:
         logger.error(f"TaskManager not initialized: {e}")
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail="Task management service not available"
+            detail="Task management service not available",
         )
     except HTTPException:
         raise
@@ -268,5 +271,5 @@ async def cancel_task(task_id: str):
         logger.error(f"Error cancelling task: {e}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Internal server error"
+            detail="Internal server error",
         )

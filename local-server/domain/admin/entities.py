@@ -11,7 +11,12 @@ import types
 from dataclasses import dataclass, field
 from typing import Optional
 
-from domain.admin.enums import SystemHealthStatus, BackgroundTaskStatus, BackgroundTaskType, LogLevel
+from domain.admin.enums import (
+    SystemHealthStatus,
+    BackgroundTaskStatus,
+    BackgroundTaskType,
+    LogLevel,
+)
 
 
 @dataclass
@@ -29,7 +34,9 @@ class SystemHealth:
     status: SystemHealthStatus
     database_ok: bool
     embedding_service_ok: bool
-    details: types.MappingProxyType = field(default_factory=lambda: types.MappingProxyType({}))
+    details: types.MappingProxyType = field(
+        default_factory=lambda: types.MappingProxyType({})
+    )
 
     def __post_init__(self) -> None:
         """Validate system health invariants."""
@@ -80,10 +87,16 @@ class BackgroundTask:
             raise TypeError(
                 f"status must be a BackgroundTaskStatus enum, got {type(self.status).__name__}"
             )
-        if isinstance(self.progress, bool) or not isinstance(self.progress, (int, float)) or not (0.0 <= self.progress <= 1.0):
+        if (
+            isinstance(self.progress, bool)
+            or not isinstance(self.progress, (int, float))
+            or not (0.0 <= self.progress <= 1.0)
+        ):
             raise ValueError("progress must be a number between 0.0 and 1.0")
         if not self.created_at or not isinstance(self.created_at, str):
-            raise ValueError("BackgroundTask created_at must be a non-empty timestamp string")
+            raise ValueError(
+                "BackgroundTask created_at must be a non-empty timestamp string"
+            )
         if self.completed_at is not None and not isinstance(self.completed_at, str):
             raise TypeError("completed_at must be None or a timestamp string")
         if self.error is not None and not isinstance(self.error, str):
@@ -107,16 +120,22 @@ class AppConfiguration:
     embedding_model: str
     database_path: str
     log_level: LogLevel
-    extra: types.MappingProxyType = field(default_factory=lambda: types.MappingProxyType({}))
+    extra: types.MappingProxyType = field(
+        default_factory=lambda: types.MappingProxyType({})
+    )
 
     def __post_init__(self) -> None:
         """Validate application configuration invariants."""
         if not self.llm_provider or not isinstance(self.llm_provider, str):
             raise ValueError("AppConfiguration llm_provider must be a non-empty string")
         if not self.embedding_model or not isinstance(self.embedding_model, str):
-            raise ValueError("AppConfiguration embedding_model must be a non-empty string")
+            raise ValueError(
+                "AppConfiguration embedding_model must be a non-empty string"
+            )
         if not self.database_path or not isinstance(self.database_path, str):
-            raise ValueError("AppConfiguration database_path must be a non-empty string")
+            raise ValueError(
+                "AppConfiguration database_path must be a non-empty string"
+            )
         if not isinstance(self.log_level, LogLevel):
             raise TypeError(
                 f"log_level must be a LogLevel enum, got {type(self.log_level).__name__}"

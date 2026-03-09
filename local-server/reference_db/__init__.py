@@ -13,10 +13,10 @@ from reference_db.config import ReferenceConfig, REFERENCE_SCHEMA_VERSION
 from reference_db.manager import ReferenceManager
 
 __all__ = [
-    'ReferenceNode',
-    'ReferenceLink',
-    'ExternalPredicate',
-    'ReferenceConfig',
-    'ReferenceManager',
-    'REFERENCE_SCHEMA_VERSION',
+    "ReferenceNode",
+    "ReferenceLink",
+    "ExternalPredicate",
+    "ReferenceConfig",
+    "ReferenceManager",
+    "REFERENCE_SCHEMA_VERSION",
 ]

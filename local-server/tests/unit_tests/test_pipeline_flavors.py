@@ -19,7 +19,10 @@ from llm.models import (  # noqa: E402
     LLMConfig,
     PipelineFlavor,
 )
-from llm.exceptions import FlavorNotFoundError, FlavorValidationError  # noqa: E402, E501
+from llm.exceptions import (
+    FlavorNotFoundError,
+    FlavorValidationError,
+)  # noqa: E402, E501
 
 
 class TestPipelineFlavorService:
@@ -100,9 +103,7 @@ class TestPipelineFlavorService:
             )  # Check existing + Insert + Select
             mock_session.commit.assert_called_once()
 
-    def test_create_flavor_duplicate_title(
-        self, flavor_service, sample_create_request
-    ):
+    def test_create_flavor_duplicate_title(self, flavor_service, sample_create_request):
         """Test flavor creation with duplicate title"""
         with patch("llm.flavor_service.get_pipeline_session") as mock_db:
             mock_session = Mock()
@@ -148,9 +149,7 @@ class TestPipelineFlavorService:
             )  # Get existing + Update + Get updated
             mock_session.commit.assert_called_once()
 
-    def test_update_nonexistent_flavor(
-        self, flavor_service, sample_update_request
-    ):
+    def test_update_nonexistent_flavor(self, flavor_service, sample_update_request):
         """Test updating non-existent flavor"""
         with patch("llm.flavor_service.get_pipeline_session") as mock_db:
             mock_session = Mock()
@@ -160,9 +159,7 @@ class TestPipelineFlavorService:
             mock_session.execute.return_value.fetchone.return_value = None
 
             with pytest.raises(FlavorNotFoundError) as exc_info:
-                flavor_service.update_flavor(
-                    "nonexistent-id", sample_update_request
-                )
+                flavor_service.update_flavor("nonexistent-id", sample_update_request)
 
             assert "not found" in str(exc_info.value)
 
@@ -327,9 +324,7 @@ class TestPipelineFlavorService:
             mock_db.return_value.__enter__.return_value = mock_session
             mock_session.execute.return_value.fetchall.return_value = [mock_flavor_row]
 
-            result = flavor_service.list_flavors(
-                PipelineType.SUGGEST_TERM_DEFINITION
-            )
+            result = flavor_service.list_flavors(PipelineType.SUGGEST_TERM_DEFINITION)
 
             # Verify result (includes default flavor + user flavors)
             assert isinstance(result, list)
@@ -357,9 +352,7 @@ class TestPipelineFlavorService:
     def test_get_default_flavor_exists(self, flavor_service, mock_flavor_row):
         """Test getting default flavor when it exists"""
         # This method doesn't use database - it uses DefaultFlavorProvider
-        result = flavor_service.get_default_flavor(
-            PipelineType.SUGGEST_TERM_DEFINITION
-        )
+        result = flavor_service.get_default_flavor(PipelineType.SUGGEST_TERM_DEFINITION)
 
         # Verify result
         assert result is not None

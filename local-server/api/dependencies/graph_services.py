@@ -69,7 +69,7 @@ def get_sparql_service(db: Session = Depends(get_db)) -> SPARQLService:
 
 
 def get_all_graph_services(
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
 ) -> tuple[GraphService, NetworkService, SPARQLService]:
     """
     Get all graph services in one dependency call for efficiency.
@@ -84,5 +84,5 @@ def get_all_graph_services(
     return (
         factory.create_graph_service(db),
         factory.create_network_service(db),
-        factory.create_sparql_service(db)
+        factory.create_sparql_service(db),
     )

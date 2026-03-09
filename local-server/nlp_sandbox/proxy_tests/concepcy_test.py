@@ -3,24 +3,26 @@
 """
 Simple test to verify concepCy requests can be made through a proxy.
 """
+
 import spacy
 import os
 import urllib3
 import ssl
 
 # Set proxy BEFORE importing any libraries
-os.environ['HTTP_PROXY'] = 'http://localhost:8080'
-os.environ['HTTPS_PROXY'] = 'http://localhost:8080'
+os.environ["HTTP_PROXY"] = "http://localhost:8080"
+os.environ["HTTPS_PROXY"] = "http://localhost:8080"
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 ssl._create_default_https_context = ssl._create_unverified_context
 
+
 def main():
     print("✅ concepCy imported successfully!")
-    
+
     # Create a new spaCy pipeline
     nlp = spacy.load("en_core_web_sm")
-    
+
     predicates = [
         "RelatedTo",
         "FormOf",
@@ -55,15 +57,17 @@ def main():
         "CausesDesire",
         "MadeOf",
         "ReceivesAction",
-        "ExternalURL"
+        "ExternalURL",
     ]
 
-    nlp.add_pipe("concepcy",
-                 config={
-        "relations_of_interest": predicates,
-        "filter_missing_text": True,
-        "filter_edge_weight": 2,
-    })
+    nlp.add_pipe(
+        "concepcy",
+        config={
+            "relations_of_interest": predicates,
+            "filter_missing_text": True,
+            "filter_edge_weight": 2,
+        },
+    )
 
     doc = nlp("email is a great way to communicate.")
 
@@ -87,12 +91,13 @@ def main():
             print(getattr(doc._, attr))
 
     # dbpedia_raw_result
-    if hasattr(doc._, 'dbpedia_raw_result') and doc._.dbpedia_raw_result:
+    if hasattr(doc._, "dbpedia_raw_result") and doc._.dbpedia_raw_result:
         print(f"DBpedia raw result: {doc._.dbpedia_raw_result}")
-    
+
     # instanceof
-    if hasattr(doc._, 'instanceof') and doc._.instanceof:
+    if hasattr(doc._, "instanceof") and doc._.instanceof:
         print(f"Instanceof: {doc._.instanceof}")
+
 
 if __name__ == "__main__":
     main()
