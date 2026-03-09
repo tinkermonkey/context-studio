@@ -3,7 +3,7 @@ API endpoints for managing pipeline flavors.
 """
 
 from typing import Optional
-from fastapi import APIRouter, HTTPException, Depends, Query, status
+from fastapi import APIRouter, HTTPException, Depends, Query, status, Response
 
 from api.dependencies.llm_services import get_pipeline_flavor_service
 from llm.flavor_service import PipelineFlavorService
@@ -28,10 +28,13 @@ def get_flavor_service() -> PipelineFlavorService:
 
 @router.post("", response_model=PipelineFlavor, status_code=status.HTTP_201_CREATED)  # noqa: E501
 async def create_flavor(
+    response: Response,
     request: CreatePipelineFlavorRequest,
     flavor_service: PipelineFlavorService = Depends(get_pipeline_flavor_service)  # noqa: E501
 ):
     """Create a new pipeline flavor"""
+    response.headers['Deprecation'] = 'true'
+    response.headers['Sunset'] = 'Phase 3'
     try:
         logger.info(f"Creating new flavor '{request.title}' for pipeline '{request.pipeline.value}'")  # noqa: E501
         flavor = flavor_service.create_flavor(request)
@@ -48,10 +51,13 @@ async def create_flavor(
 
 @router.get("", response_model=PipelineFlavorListResponse)
 async def list_flavors(
+    response: Response,
     pipeline: Optional[PipelineType] = Query(None, description="Filter by pipeline type"),  # noqa: E501
     flavor_service: PipelineFlavorService = Depends(get_pipeline_flavor_service)  # noqa: E501
 ):
     """List all flavors, optionally filtered by pipeline"""
+    response.headers['Deprecation'] = 'true'
+    response.headers['Sunset'] = 'Phase 3'
     try:
         logger.info(f"Listing flavors for pipeline: {pipeline.value if pipeline else 'all'}")  # noqa: E501
         flavors = flavor_service.list_flavors(pipeline)
@@ -67,11 +73,14 @@ async def list_flavors(
 
 @router.get("/{flavor_id}", response_model=PipelineFlavor)
 async def get_flavor(
+    response: Response,
     flavor_id: str,
     pipeline: Optional[PipelineType] = Query(None, description="Pipeline type (required for default flavor)"),  # noqa: E501
     flavor_service: PipelineFlavorService = Depends(get_flavor_service)
 ):
     """Get a specific flavor by ID"""
+    response.headers['Deprecation'] = 'true'
+    response.headers['Sunset'] = 'Phase 3'
     try:
         # Handle default flavor special case
         if flavor_id == "default":
@@ -97,11 +106,14 @@ async def get_flavor(
 
 @router.put("/{flavor_id}", response_model=PipelineFlavor)
 async def update_flavor(
+    response: Response,
     flavor_id: str,
     request: UpdatePipelineFlavorRequest,
     flavor_service: PipelineFlavorService = Depends(get_flavor_service)
 ):
     """Update an existing flavor"""
+    response.headers['Deprecation'] = 'true'
+    response.headers['Sunset'] = 'Phase 3'
     # Prevent updating default flavors
     if flavor_id == "default":
         raise HTTPException(
@@ -127,10 +139,13 @@ async def update_flavor(
 
 @router.delete("/{flavor_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_flavor(
+    response: Response,
     flavor_id: str,
     flavor_service: PipelineFlavorService = Depends(get_flavor_service)
 ):
     """Delete a flavor"""
+    response.headers['Deprecation'] = 'true'
+    response.headers['Sunset'] = 'Phase 3'
     # Prevent deleting default flavors
     if flavor_id == "default":
         raise HTTPException(

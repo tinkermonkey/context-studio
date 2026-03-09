@@ -31,15 +31,9 @@ router = APIRouter(prefix="/api/pipeline_configurations", tags=["Pipeline Config
 logger = get_logger(__name__)
 
 
-def get_configuration_service() -> PipelineFlavorService:
-    """Dependency to get configuration service instance (delegates to flavor service)"""
-    return PipelineFlavorService()
-
-
 @router.post("", response_model=PipelineFlavor, status_code=status.HTTP_201_CREATED)  # noqa: E501
 async def create_configuration(
     request: CreatePipelineFlavorRequest,
-    response: Response,
     flavor_service: PipelineFlavorService = Depends(get_pipeline_flavor_service)  # noqa: E501
 ):
     """
@@ -90,7 +84,7 @@ async def list_configurations(
 async def get_configuration(
     configuration_id: str = Path(..., description="The ID of the configuration to retrieve"),
     pipeline: Optional[PipelineType] = Query(None, description="Pipeline type (required for default configuration)"),  # noqa: E501
-    flavor_service: PipelineFlavorService = Depends(get_configuration_service)
+    flavor_service: PipelineFlavorService = Depends(get_pipeline_flavor_service)
 ):
     """
     Get a specific pipeline configuration by ID.
@@ -124,7 +118,7 @@ async def get_configuration(
 async def update_configuration(
     configuration_id: str = Path(..., description="The ID of the configuration to update"),
     request: UpdatePipelineFlavorRequest = ...,
-    flavor_service: PipelineFlavorService = Depends(get_configuration_service)
+    flavor_service: PipelineFlavorService = Depends(get_pipeline_flavor_service)
 ):
     """
     Update an existing pipeline configuration.
@@ -158,7 +152,7 @@ async def update_configuration(
 @router.delete("/{configuration_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_configuration(
     configuration_id: str = Path(..., description="The ID of the configuration to delete"),
-    flavor_service: PipelineFlavorService = Depends(get_configuration_service)
+    flavor_service: PipelineFlavorService = Depends(get_pipeline_flavor_service)
 ):
     """
     Delete a pipeline configuration.

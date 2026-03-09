@@ -16,8 +16,7 @@ Endpoints:
 import datetime
 import json
 from fastapi import APIRouter, HTTPException, Query, Depends, Path, Response
-from pydantic import BaseModel, Field, ConfigDict
-from typing import List, Optional, Dict, Any
+from typing import List, Optional
 from uuid import UUID, uuid4
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
@@ -27,44 +26,14 @@ from database.utils import get_db
 from database.predicate_utils import (
     generate_identifier_from_title, validate_predicate_identifier
 )
+from api.models.property_definitions import (
+    PropertyDefinitionBase, PropertyDefinitionCreate, PropertyDefinitionUpdate,
+    PropertyDefinitionOut, PaginatedPropertyDefinitionsResponse
+)
 from utils.logger import get_logger
 
 logger = get_logger("property_definitions_api")
 router = APIRouter(prefix="/api/property_definitions", tags=["property_definitions"])
-
-
-# Pydantic models for Property Definition (new terminology)
-class PropertyDefinitionBase(BaseModel):
-    title: str = Field(..., min_length=1, max_length=255)
-    definition: Optional[str] = None
-    mapping: Optional[dict] = None
-
-
-class PropertyDefinitionCreate(PropertyDefinitionBase):
-    identifier: Optional[str] = None
-
-
-class PropertyDefinitionUpdate(BaseModel):
-    title: Optional[str] = None
-    definition: Optional[str] = None
-    mapping: Optional[dict] = None
-    identifier: Optional[str] = None
-
-
-class PropertyDefinitionOut(PropertyDefinitionBase):
-    id: str
-    identifier: str
-    date_created: str
-    date_modified: str
-
-    model_config = ConfigDict(from_attributes=True)
-
-
-class PaginatedPropertyDefinitionsResponse(BaseModel):
-    data: List[PropertyDefinitionOut]
-    total: int
-    skip: int
-    limit: int
 
 
 def to_property_definition_out(predicate: models.Predicate) -> PropertyDefinitionOut:

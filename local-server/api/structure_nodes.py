@@ -53,6 +53,7 @@ router = APIRouter(prefix="/api/structure_nodes", tags=["structure_nodes"])
 
 @router.post("/", response_model=NodeOut, status_code=201)
 def create_node(
+    response: Response,
     structure_node: NodeCreate,
     node_service: NodeService = Depends(get_node_service)
 ):
@@ -65,6 +66,8 @@ def create_node(
     - Domains must have a layer parent
     - Terms must have a domain parent
     """
+    response.headers['Deprecation'] = 'true'
+    response.headers['Sunset'] = 'Phase 3'
     from utils.logger import get_logger
     from api.graph import invalidate_graph_cache
     logger = get_logger(__name__)
@@ -106,6 +109,7 @@ def create_node(
 
 @router.get("/", response_model=PaginatedNodesResponse)
 def list_nodes(
+    response: Response,
     node_type: Optional[NodeTypeEnum] = Query(None, description="Filter by structure_node type"),  # noqa: E501
     parent_node_id: Optional[UUID] = Query(None, description="Filter by parent structure_node ID"),  # noqa: E501
     skip: int = Query(0, ge=0, description="Number of structure_nodes to skip"),  # noqa: E501
@@ -119,6 +123,8 @@ def list_nodes(
     Supports filtering by structure_node type and parent, with configurable pagination  # noqa: E501
     and sorting. This replaces the separate endpoints for layers, domains, and terms.  # noqa: E501
     """
+    response.headers['Deprecation'] = 'true'
+    response.headers['Sunset'] = 'Phase 3'
     try:
         import time
         from utils.logger import get_logger
@@ -179,6 +185,7 @@ def list_nodes(
 
 @router.post("/find", response_model=List[NodeSearchResult])
 def search_nodes(
+    response: Response,
     search_request: NodeSearchRequest,
     node_service: NodeService = Depends(get_node_service)
 ):
@@ -189,6 +196,8 @@ def search_nodes(
     Supports semantic search across structure_node titles and definitions with optional  # noqa: E501
     type filtering and configurable similarity thresholds.
     """
+    response.headers['Deprecation'] = 'true'
+    response.headers['Sunset'] = 'Phase 3'
     from utils.logger import get_logger
     from sqlalchemy import text
     from embeddings.generate_embeddings import generate_embedding
@@ -283,6 +292,7 @@ def search_nodes(
 # StructureNode Links endpoints
 @router.post("/links", response_model=NodeLinkOut, status_code=201)
 def create_node_link(
+    response: Response,
     link: NodeLinkCreate,
     link_service: NodeLinkService = Depends(get_node_link_service)
 ):
@@ -292,6 +302,8 @@ def create_node_link(
     Links can only be created between structure_nodes of the same type (layers to layers,  # noqa: E501
     domains to domains, terms to terms) as per the Great Normalization requirements.  # noqa: E501
     """
+    response.headers['Deprecation'] = 'true'
+    response.headers['Sunset'] = 'Phase 3'
     from api.graph import invalidate_graph_cache
 
     try:
@@ -318,6 +330,7 @@ def create_node_link(
 
 @router.get("/links", response_model=PaginatedNodeLinksResponse)
 def list_node_links(
+    response: Response,
     source_node_id: Optional[UUID] = Query(None, description="Filter by source structure_node ID"),  # noqa: E501
     target_node_id: Optional[UUID] = Query(None, description="Filter by target structure_node ID"),  # noqa: E501
     predicate: Optional[str] = Query(None, description="Filter by predicate"),
@@ -331,6 +344,8 @@ def list_node_links(
     Supports filtering by source structure_node, target structure_node, and predicate.  # noqa: E501
     Returns all relationships in the unified structure_node graph with pagination metadata.  # noqa: E501
     """
+    response.headers['Deprecation'] = 'true'
+    response.headers['Sunset'] = 'Phase 3'
     try:
         # Convert UUID to string for filtering
         source_node_id_str = str(source_node_id) if source_node_id else None
@@ -366,6 +381,7 @@ def list_node_links(
 
 @router.put("/links/{link_id}", response_model=NodeLinkOut)
 def update_node_link(
+    response: Response,
     link_id: UUID = Path(..., description="The ID of the link to update"),
     link_update: NodeLinkCreate = ...,  # Reuse create model for updates
     link_service: NodeLinkService = Depends(get_node_link_service)
@@ -376,6 +392,8 @@ def update_node_link(
     Allows updating the predicate and predicate_id of an existing link.
     Source and target structure_nodes can also be updated if the new configuration is valid.  # noqa: E501
     """
+    response.headers['Deprecation'] = 'true'
+    response.headers['Sunset'] = 'Phase 3'
     from api.graph import invalidate_graph_cache
 
     try:
@@ -402,6 +420,7 @@ def update_node_link(
 
 @router.delete("/links/{link_id}", status_code=204)
 def delete_node_link(
+    response: Response,
     link_id: UUID = Path(..., description="The ID of the link to delete"),
     link_service: NodeLinkService = Depends(get_node_link_service)
 ):
@@ -410,6 +429,8 @@ def delete_node_link(
 
     Removes the relationship between two structure_nodes. This operation cannot be undone.  # noqa: E501
     """
+    response.headers['Deprecation'] = 'true'
+    response.headers['Sunset'] = 'Phase 3'
     from api.graph import invalidate_graph_cache
 
     try:
@@ -429,6 +450,7 @@ def delete_node_link(
 
 @router.get("/{node_id}", response_model=NodeOut)
 def get_node(
+    response: Response,
     node_id: UUID = Path(..., description="The ID of the structure_node to retrieve"),  # noqa: E501
     node_service: NodeService = Depends(get_node_service_simple)
 ):
@@ -438,6 +460,8 @@ def get_node(
     Returns the complete structure_node information including embeddings,
     hierarchy information, and metadata.
     """
+    response.headers['Deprecation'] = 'true'
+    response.headers['Sunset'] = 'Phase 3'
     try:
         structure_node = node_service.get_node(str(node_id))
         if not structure_node:
@@ -460,6 +484,7 @@ def get_node(
 
 @router.put("/{node_id}", response_model=NodeOut)
 def update_node(
+    response: Response,
     node_id: UUID = Path(..., description="The ID of the structure_node to update"),  # noqa: E501
     node_update: NodeUpdate = ...,
     node_service: NodeService = Depends(get_node_service)
@@ -470,6 +495,8 @@ def update_node(
     Supports updating title, definition, parent relationships, and structural predicates.  # noqa: E501
     Circular reference validation is automatically enforced.
     """
+    response.headers['Deprecation'] = 'true'
+    response.headers['Sunset'] = 'Phase 3'
     from api.graph import invalidate_graph_cache
 
     try:
@@ -512,6 +539,7 @@ def update_node(
 
 @router.delete("/{node_id}", status_code=204)
 def delete_node(
+    response: Response,
     node_id: UUID = Path(..., description="The ID of the structure_node to delete"),  # noqa: E501
     node_service: NodeService = Depends(get_node_service)
 ):
@@ -521,6 +549,8 @@ def delete_node(
     This operation cascades to all child structure_nodes and their relationships.  # noqa: E501
     Use with caution as this operation cannot be undone.
     """
+    response.headers['Deprecation'] = 'true'
+    response.headers['Sunset'] = 'Phase 3'
     from api.graph import invalidate_graph_cache
 
     try:
@@ -550,6 +580,7 @@ def delete_node(
 # Attribute endpoints
 @router.get("/{node_id}/attributes", response_model=List[ResolvedAttribute])
 def get_node_attributes(
+    response: Response,
     node_id: UUID = Path(..., description="The ID of the structure node"),
     node_service: NodeService = Depends(get_node_service)
 ):
@@ -570,6 +601,8 @@ def get_node_attributes(
         404: If structure node not found
         500: If an unexpected error occurs
     """
+    response.headers['Deprecation'] = 'true'
+    response.headers['Sunset'] = 'Phase 3'
     from utils.logger import get_logger
     logger = get_logger(__name__)
 
@@ -584,6 +617,7 @@ def get_node_attributes(
 
 @router.post("/{node_id}/attributes", response_model=NodeOut)
 def set_node_attributes(
+    response: Response,
     node_id: UUID = Path(..., description="The ID of the structure node"),
     request: SetNodeAttributesRequest = ...,
     node_service: NodeService = Depends(get_node_service)
@@ -614,6 +648,8 @@ def set_node_attributes(
         409: If expected_version is provided and doesn't match current version (conflict)  # noqa: E501
         500: If an unexpected error occurs
     """
+    response.headers['Deprecation'] = 'true'
+    response.headers['Sunset'] = 'Phase 3'
     from utils.logger import get_logger
     logger = get_logger(__name__)
 
@@ -637,6 +673,7 @@ def set_node_attributes(
 
 @router.delete("/{node_id}/attributes/{key}", response_model=NodeOut)
 def remove_node_attribute(
+    response: Response,
     node_id: UUID = Path(..., description="The ID of the structure node"),
     key: str = Path(..., description="The attribute key to remove"),
     node_service: NodeService = Depends(get_node_service)
@@ -659,6 +696,8 @@ def remove_node_attribute(
         404: If structure node not found
         500: If an unexpected error occurs
     """
+    response.headers['Deprecation'] = 'true'
+    response.headers['Sunset'] = 'Phase 3'
     from utils.logger import get_logger
     logger = get_logger(__name__)
 
@@ -675,6 +714,7 @@ def remove_node_attribute(
 # Reference Links endpoints
 @router.post("/{node_id}/reference_links", response_model=List[ReferenceLink], status_code=200)  # noqa: E501
 def add_reference_links(
+    response: Response,
     node_id: UUID = Path(..., description="The ID of the structure node"),
     links: List[ReferenceLink] = ...,
     reference_link_service: ReferenceLinkService = Depends(get_reference_link_service)  # noqa: E501
@@ -698,6 +738,8 @@ def add_reference_links(
         404: If structure node not found
         500: If an unexpected error occurs
     """
+    response.headers['Deprecation'] = 'true'
+    response.headers['Sunset'] = 'Phase 3'
     from utils.logger import get_logger
     logger = get_logger(__name__)
 
@@ -720,6 +762,7 @@ def add_reference_links(
 
 @router.delete("/{node_id}/reference_links", response_model=List[ReferenceLink], status_code=200)  # noqa: E501
 def remove_reference_links(
+    response: Response,
     node_id: UUID = Path(..., description="The ID of the structure node"),
     links: List[ReferenceLink] = ...,
     reference_link_service: ReferenceLinkService = Depends(get_reference_link_service)  # noqa: E501
@@ -741,6 +784,8 @@ def remove_reference_links(
         404: If structure node not found
         500: If an unexpected error occurs
     """
+    response.headers['Deprecation'] = 'true'
+    response.headers['Sunset'] = 'Phase 3'
     from utils.logger import get_logger
     logger = get_logger(__name__)
 
@@ -761,6 +806,7 @@ def remove_reference_links(
 
 @router.get("/{node_id}/reference_links", response_model=List[ReferenceLink])
 def get_reference_links(
+    response: Response,
     node_id: UUID = Path(..., description="The ID of the structure node"),
     reference_link_service: ReferenceLinkService = Depends(get_reference_link_service)  # noqa: E501
 ):
@@ -780,6 +826,8 @@ def get_reference_links(
         404: If structure node not found
         500: If an unexpected error occurs
     """
+    response.headers['Deprecation'] = 'true'
+    response.headers['Sunset'] = 'Phase 3'
     from utils.logger import get_logger
     logger = get_logger(__name__)
 
@@ -798,6 +846,7 @@ def get_reference_links(
 
 @router.get("/{node_id}/word_senses", response_model=List[WordSense])
 def get_word_senses(
+    response: Response,
     node_id: UUID = Path(..., description="The ID of the structure node"),
     word_sense_service: WordSenseService = Depends(get_word_sense_service)
 ):
@@ -821,6 +870,8 @@ def get_word_senses(
         404: If structure node not found
         500: If an unexpected error occurs
     """
+    response.headers['Deprecation'] = 'true'
+    response.headers['Sunset'] = 'Phase 3'
     from utils.logger import get_logger
     logger = get_logger(__name__)
 
@@ -843,6 +894,7 @@ def get_word_senses(
 
 @router.put("/{node_id}/word_senses", response_model=List[WordSense])
 def update_word_senses(
+    response: Response,
     node_id: UUID = Path(..., description="The ID of the structure node"),
     update_request: SelectedWordSensesUpdate = ...,
     word_sense_service: WordSenseService = Depends(get_word_sense_service)
@@ -869,6 +921,8 @@ def update_word_senses(
         404: If structure node not found
         500: If an unexpected error occurs
     """
+    response.headers['Deprecation'] = 'true'
+    response.headers['Sunset'] = 'Phase 3'
     from utils.logger import get_logger
     logger = get_logger(__name__)
 
@@ -895,6 +949,7 @@ def update_word_senses(
 # Reference Link Validation endpoints
 @router.post("/reference_links/validate", response_model=dict)
 def validate_all_reference_links(
+    response: Response,
     check_existence: bool = Query(True, description="Check if references exist in reference.db"),  # noqa: E501
     limit: Optional[int] = Query(None, ge=1, le=1000, description="Limit number of nodes to validate"),  # noqa: E501
     batch_size: int = Query(100, ge=10, le=1000, description="Number of nodes to process per batch"),  # noqa: E501
@@ -920,6 +975,8 @@ def validate_all_reference_links(
     Returns:
         Validation results with statistics and list of problematic nodes
     """
+    response.headers['Deprecation'] = 'true'
+    response.headers['Sunset'] = 'Phase 3'
     from utils.logger import get_logger
     logger = get_logger(__name__)
 
@@ -940,6 +997,7 @@ def validate_all_reference_links(
 
 @router.post("/{node_id}/reference_links/validate", response_model=dict)
 def validate_node_reference_links(
+    response: Response,
     node_id: UUID = Path(..., description="The ID of the structure node"),
     check_existence: bool = Query(True, description="Check if references exist in reference.db"),  # noqa: E501
     reference_link_service: ReferenceLinkService = Depends(get_reference_link_service)  # noqa: E501
@@ -963,6 +1021,8 @@ def validate_node_reference_links(
         404: If structure node not found
         500: If an unexpected error occurs
     """
+    response.headers['Deprecation'] = 'true'
+    response.headers['Sunset'] = 'Phase 3'
     from utils.logger import get_logger
     logger = get_logger(__name__)
 
@@ -985,6 +1045,7 @@ def validate_node_reference_links(
 # Additional utility endpoints
 @router.post("/move", response_model=MoveNodesResponse)
 def move_nodes(
+    response: Response,
     move_request: MoveNodesRequest,
     node_service: NodeService = Depends(get_node_service)
 ):
@@ -1011,6 +1072,8 @@ def move_nodes(
     The move operation is atomic - either all structure_nodes are moved successfully,  # noqa: E501
     or the entire operation is rolled back.
     """
+    response.headers['Deprecation'] = 'true'
+    response.headers['Sunset'] = 'Phase 3'
     try:
         # Convert UUID objects to strings for service
         node_ids = [str(node_id) for node_id in move_request.node_ids]
@@ -1039,6 +1102,7 @@ def move_nodes(
 
 @router.get("/{node_id}/children", response_model=List[NodeOut])
 def get_node_children(
+    response: Response,
     node_id: UUID = Path(..., description="The ID of the parent structure_node"),  # noqa: E501
     node_service: NodeService = Depends(get_node_service_simple)
 ):
@@ -1047,6 +1111,8 @@ def get_node_children(
 
     Useful for building hierarchical views of the structure_node structure.
     """
+    response.headers['Deprecation'] = 'true'
+    response.headers['Sunset'] = 'Phase 3'
     try:
         children = node_service.get_node_children(str(node_id))
         return [to_node_out(child) for child in children]
@@ -1059,6 +1125,7 @@ def get_node_children(
 
 @router.get("/{node_id}/ancestors", response_model=List[NodeOut])
 def get_node_ancestors(
+    response: Response,
     node_id: UUID = Path(..., description="The ID of the structure_node"),
     node_service: NodeService = Depends(get_node_service_simple)
 ):
@@ -1068,6 +1135,8 @@ def get_node_ancestors(
     Returns the path from the root layer down to the specified structure_node's parent.  # noqa: E501
     Useful for breadcrumb navigation and understanding structure_node context.
     """
+    response.headers['Deprecation'] = 'true'
+    response.headers['Sunset'] = 'Phase 3'
     try:
         ancestors = node_service.get_node_ancestors(str(node_id))
         return [to_node_out(ancestor) for ancestor in ancestors]

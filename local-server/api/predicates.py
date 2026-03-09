@@ -4,7 +4,7 @@
 import datetime
 import json
 import time
-from fastapi import APIRouter, HTTPException, Query, Depends, BackgroundTasks
+from fastapi import APIRouter, HTTPException, Query, Depends, BackgroundTasks, Response
 from pydantic import BaseModel, Field, ConfigDict
 from typing import List, Optional, Dict, Any
 from uuid import UUID, uuid4
@@ -92,8 +92,10 @@ def to_predicate_out(predicate: models.Predicate) -> PredicateOut:
 
 
 @router.post("/", response_model=PredicateOut, status_code=201)
-def create_predicate(predicate: PredicateCreate, db: Session = Depends(get_db)):  # noqa: E501
+def create_predicate(response: Response, predicate: PredicateCreate, db: Session = Depends(get_db)):  # noqa: E501
     """Create a new predicate."""
+    response.headers['Deprecation'] = 'true'
+    response.headers['Sunset'] = 'Phase 3'
     if not predicate.title or not predicate.title.strip():
         raise HTTPException(status_code=400, detail="Predicate title must not be empty.")  # noqa: E501
 
@@ -141,12 +143,15 @@ def create_predicate(predicate: PredicateCreate, db: Session = Depends(get_db)):
 
 @router.get("/", response_model=PaginatedPredicatesResponse)
 def list_predicates(
+    response: Response,
     skip: int = Query(0, ge=0),
     limit: int = Query(50, ge=1, le=100),
     sortBy: str = Query("title", pattern="^(title|identifier|date_created)$"),
     db: Session = Depends(get_db)
 ):
     """List predicates with pagination and sorting."""
+    response.headers['Deprecation'] = 'true'
+    response.headers['Sunset'] = 'Phase 3'
     # Build base query
     query = db.query(models.Predicate)
 
@@ -177,15 +182,19 @@ def list_predicates(
 
 # ConceptNet Integration Endpoints
 @router.get("/conceptnet-relations", response_model=List[str])
-def get_conceptnet_relations():
+def get_conceptnet_relations(response: Response):
     """Get the list of ConceptNet relations configured in the system."""
+    response.headers['Deprecation'] = 'true'
+    response.headers['Sunset'] = 'Phase 3'
     settings = get_settings()
     return settings.concepcy_config["relations_of_interest"]
 
 
 @router.get("/conceptnet-mapping", response_model=Dict[str, str])
-def get_conceptnet_mapping(db: Session = Depends(get_db)):
+def get_conceptnet_mapping(response: Response, db: Session = Depends(get_db)):
     """Get a mapping of all predicate identifiers to their ConceptNet relations."""  # noqa: E501
+    response.headers['Deprecation'] = 'true'
+    response.headers['Sunset'] = 'Phase 3'
     predicates = db.query(models.Predicate).all()
     mapping = {}
 
@@ -198,8 +207,10 @@ def get_conceptnet_mapping(db: Session = Depends(get_db)):
 
 
 @router.get("/by-identifier/{identifier}", response_model=PredicateOut, responses={404: {"description": "Predicate not found"}})  # noqa: E501
-def get_predicate_by_identifier(identifier: str, db: Session = Depends(get_db)):  # noqa: E501
+def get_predicate_by_identifier(response: Response, identifier: str, db: Session = Depends(get_db)):  # noqa: E501
     """Get a predicate by its identifier."""
+    response.headers['Deprecation'] = 'true'
+    response.headers['Sunset'] = 'Phase 3'
     predicate = db.query(models.Predicate).filter_by(identifier=identifier).first()  # noqa: E501
     if not predicate:
         raise HTTPException(status_code=404, detail="Predicate not found.")
@@ -249,12 +260,14 @@ class PaginatedExternalPredicatesResponse(BaseModel):
 
 
 @router.get("/discover/{task_id}", response_model=PredicateDiscoveryStatus)
-def get_discovery_status(task_id: str):
+def get_discovery_status(response: Response, task_id: str):
     """
     Get the status of a predicate discovery task.
 
     Returns the current status and results (if completed) of the discovery task.  # noqa: E501
     """
+    response.headers['Deprecation'] = 'true'
+    response.headers['Sunset'] = 'Phase 3'
     if task_id not in _discovery_tasks:
         raise HTTPException(status_code=404, detail="Task not found")
 
@@ -263,6 +276,7 @@ def get_discovery_status(task_id: str):
 
 @router.get("/external", response_model=PaginatedExternalPredicatesResponse)
 def list_external_predicates(
+    response: Response,
     source: Optional[str] = Query(None, description="Filter by source (conceptnet, dbpedia, wikidata)"),  # noqa: E501
     skip: int = Query(0, ge=0),
     limit: int = Query(50, ge=1, le=1000),
@@ -272,6 +286,8 @@ def list_external_predicates(
 
     Returns predicates discovered from external knowledge sources with optional source filtering.  # noqa: E501
     """
+    response.headers['Deprecation'] = 'true'
+    response.headers['Sunset'] = 'Phase 3'
     from reference_db.dependencies import reference_manager_context
     from reference_db.config import ReferenceConfig
 
@@ -351,6 +367,7 @@ class ExternalPredicateSearchResponse(BaseModel):
 
 @router.get("/external/search", response_model=ExternalPredicateSearchResponse)
 def search_external_predicates(
+    response: Response,
     query: str = Query(..., min_length=1, description="Search query text"),
     source: Optional[str] = Query(None, description="Filter by source (conceptnet, dbpedia, wikidata, schema_org)"),  # noqa: E501
     limit: int = Query(20, ge=1, le=100),
@@ -371,6 +388,8 @@ def search_external_predicates(
     Returns:
         ExternalPredicateSearchResponse with ranked similarity results
     """
+    response.headers['Deprecation'] = 'true'
+    response.headers['Sunset'] = 'Phase 3'
     from reference_db.dependencies import reference_manager_context
     from reference_db.config import ReferenceConfig
 
@@ -425,8 +444,10 @@ def search_external_predicates(
 
 
 @router.get("/{id}", response_model=PredicateOut, responses={404: {"description": "Predicate not found"}})  # noqa: E501
-def get_predicate(id: str, db: Session = Depends(get_db)):
+def get_predicate(response: Response, id: str, db: Session = Depends(get_db)):
     """Get a predicate by ID."""
+    response.headers['Deprecation'] = 'true'
+    response.headers['Sunset'] = 'Phase 3'
     # Validate UUID format
     if not validate_uuid_format(id):
         raise HTTPException(status_code=400, detail="Invalid UUID format.")
@@ -440,6 +461,7 @@ def get_predicate(id: str, db: Session = Depends(get_db)):
 
 @router.put("/{id}", response_model=PredicateOut, responses={404: {"description": "Predicate not found"}})  # noqa: E501
 def update_predicate(
+    response: Response,
     id: str,
     predicate: PredicateUpdate,
     db: Session = Depends(get_db)
@@ -449,6 +471,8 @@ def update_predicate(
 
     This endpoint implements JSON schema validation for mappings.
     """
+    response.headers['Deprecation'] = 'true'
+    response.headers['Sunset'] = 'Phase 3'
     # Validate UUID format
     if not validate_uuid_format(id):
         raise HTTPException(status_code=400, detail="Invalid UUID format.")
@@ -539,8 +563,10 @@ def update_predicate(
 
 
 @router.delete("/{id}", status_code=200, responses={404: {"description": "Predicate not found"}})  # noqa: E501
-def delete_predicate(id: str, db: Session = Depends(get_db)):
+def delete_predicate(response: Response, id: str, db: Session = Depends(get_db)):
     """Delete a predicate."""
+    response.headers['Deprecation'] = 'true'
+    response.headers['Sunset'] = 'Phase 3'
     # Validate UUID format
     if not validate_uuid_format(id):
         raise HTTPException(status_code=400, detail="Invalid UUID format.")
@@ -567,10 +593,13 @@ def delete_predicate(id: str, db: Session = Depends(get_db)):
 
 @router.post("/import-from-conceptnet", response_model=List[PredicateOut])
 def import_predicates_from_conceptnet(
+    response: Response,
     relations: Optional[List[str]] = None,  # If None, import all configured relations  # noqa: E501
     db: Session = Depends(get_db)
 ):
     """Import predicates from ConceptNet relations."""
+    response.headers['Deprecation'] = 'true'
+    response.headers['Sunset'] = 'Phase 3'
     settings = get_settings()
     available_relations = settings.concepcy_config["relations_of_interest"]
 
@@ -602,8 +631,10 @@ def import_predicates_from_conceptnet(
 
 
 @router.get("/{id}/conceptnet-relation", response_model=Optional[str])
-def get_predicate_conceptnet_relation(id: str, db: Session = Depends(get_db)):
+def get_predicate_conceptnet_relation(response: Response, id: str, db: Session = Depends(get_db)):
     """Get the ConceptNet relation for a specific predicate."""
+    response.headers['Deprecation'] = 'true'
+    response.headers['Sunset'] = 'Phase 3'
     # Validate UUID format
     if not validate_uuid_format(id):
         raise HTTPException(status_code=400, detail="Invalid UUID format.")
@@ -699,6 +730,7 @@ async def _run_discovery_task(task_id: str, sources: Optional[List[str]] = None)
 
 @router.post("/discover", response_model=PredicateDiscoveryResponse)
 async def discover_external_predicates(
+    response: Response,
     background_tasks: BackgroundTasks,
     sources: Optional[List[str]] = Query(None, description="Sources to discover from (conceptnet, dbpedia, wikidata, schema_org)")  # noqa: E501
 ):
@@ -719,6 +751,8 @@ async def discover_external_predicates(
     - WikiData: <30s for 10K properties
     - Schema.org: <1s (reads from database)
     """
+    response.headers['Deprecation'] = 'true'
+    response.headers['Sunset'] = 'Phase 3'
     # Validate sources if provided
     valid_sources = ['conceptnet', 'dbpedia', 'wikidata', 'schema_org']
     if sources:
@@ -795,6 +829,7 @@ class ClusterPredicatesResponse(BaseModel):
 
 @router.post("/{id}/find-similar", response_model=FindSimilarResponse)
 def find_similar_predicates(
+    response: Response,
     id: str,
     source: Optional[str] = Query(None, description="Filter by source (conceptnet, dbpedia, wikidata)"),  # noqa: E501
     limit: int = Query(100, ge=1, le=100),
@@ -831,6 +866,8 @@ def find_similar_predicates(
     Returns:
         FindSimilarResponse with ranked similarity results
     """
+    response.headers['Deprecation'] = 'true'
+    response.headers['Sunset'] = 'Phase 3'
     from services.predicate_similarity import PredicateSimilarityService
     from reference_db.dependencies import reference_manager_context
     from reference_db.config import ReferenceConfig
@@ -934,6 +971,7 @@ def find_similar_predicates(
 
 @router.post("/cluster-predicates", response_model=ClusterPredicatesResponse)
 def cluster_predicates(
+    response: Response,
     predicate_ids: Optional[List[str]] = Query(None, description="Specific predicate IDs to cluster (if None, clusters all)"),  # noqa: E501
     min_similarity: float = Query(0.7, ge=0.0, le=1.0),
     min_cluster_size: int = Query(2, ge=2),
@@ -969,6 +1007,8 @@ def cluster_predicates(
     Returns:
         ClusterPredicatesResponse with clusters and statistics
     """
+    response.headers['Deprecation'] = 'true'
+    response.headers['Sunset'] = 'Phase 3'
     from services.predicate_similarity import PredicateSimilarityService
     from reference_db.dependencies import reference_manager_context
     from reference_db.config import ReferenceConfig
@@ -1099,7 +1139,7 @@ def cluster_predicates(
 
 
 @router.post("/invalidate-similarity-cache", status_code=200)
-def invalidate_similarity_cache():
+def invalidate_similarity_cache(response: Response):
     """
     Invalidate the similarity search cache.
 
@@ -1114,6 +1154,8 @@ def invalidate_similarity_cache():
     Returns:
         Success message with cache statistics
     """
+    response.headers['Deprecation'] = 'true'
+    response.headers['Sunset'] = 'Phase 3'
     from services.predicate_similarity import PredicateSimilarityService
     from reference_db.dependencies import reference_manager_context
     from reference_db.config import ReferenceConfig
