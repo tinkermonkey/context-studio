@@ -264,7 +264,7 @@ class EmbeddingRegenerationService:
 
         # Update the database
         update_query = text("""
-            UPDATE structure_nodes
+            UPDATE ontology_entities
             SET title_embedding = :title_embedding,
                 definition_embedding = :definition_embedding,
                 last_modified = CURRENT_TIMESTAMP

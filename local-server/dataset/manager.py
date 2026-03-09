@@ -742,10 +742,10 @@ class DatasetManager:
             )
 
             with temp_engine.connect() as conn:
-                # Check if we're using the new unified structure_nodes table (post-migration)
+                # Check if we're using the new unified ontology_entities table (post-migration)
                 result = conn.execute(
                     text(
-                        "SELECT name FROM sqlite_master WHERE type='table' AND name='structure_nodes'"
+                        "SELECT name FROM sqlite_master WHERE type='table' AND (name='structure_nodes' OR name='ontology_entities')"
                     )
                 )
                 has_nodes_table = result.fetchone() is not None

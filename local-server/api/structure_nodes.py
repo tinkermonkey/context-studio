@@ -316,7 +316,7 @@ def search_nodes(
             result = NodeSearchResult(
                 id=row.id,
                 node_type=row.node_type,
-                parent_node_id=row.parent_node_id,
+                parent_node_id=row.parent_entity_id,
                 title=row.title,
                 definition=row.definition,
                 structural_predicate_id=row.structural_predicate_id,

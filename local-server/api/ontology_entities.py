@@ -377,7 +377,7 @@ def search_entities(
                 node_type=EntityTypeEnum(
                     _db_type_to_entity_type(row.node_type)
                 ),  # noqa: E501
-                parent_entity_id=row.parent_node_id,
+                parent_entity_id=row.parent_entity_id,
                 title=row.title,
                 definition=row.definition,
                 structural_predicate_id=row.structural_predicate_id,
