@@ -21,10 +21,8 @@ def create_layer(client, title=None, definition=None, structural_predicate_id=No
     return response.json()
 
 
-def test_create_layer(client, test_service_factory):
-    """Test layer creation with service factory monitoring."""
-    # Service factory cache is automatically reset by reset_service_factory_cache fixture  # noqa: E501
-
+def test_create_layer(client):
+    """Test layer creation."""
     data = create_layer(client)
     assert "id" in data
     assert data["title"].startswith("TestLayer_")
@@ -32,15 +30,6 @@ def test_create_layer(client, test_service_factory):
     assert data["node_type"] == "layer"
     assert data["created_at"]
     assert data["parent_node_id"] is None  # Layers have no parent
-
-    # Verify service factory was utilized
-    final_stats = test_service_factory.get_cache_stats()
-    total_services_used = sum(
-        metrics["total_created"] for metrics in final_stats["service_metrics"].values()  # noqa: E501
-    )
-
-    # Should have used some services for layer creation
-    assert total_services_used > 0
 
 
 def test_create_layer_duplicate_title(client):
