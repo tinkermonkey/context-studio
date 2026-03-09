@@ -742,13 +742,14 @@ class DatasetManager:
             )
 
             with temp_engine.connect() as conn:
-                # Check if we're using the new unified ontology_entities table (post-migration)
+                # Check which table schema is in use: post-migration or pre-migration
                 result = conn.execute(
                     text(
                         "SELECT name FROM sqlite_master WHERE type='table' AND (name='structure_nodes' OR name='ontology_entities')"
                     )
                 )
-                has_nodes_table = result.fetchone() is not None
+                table_row = result.fetchone()
+                nodes_table_name = table_row[0] if table_row else None
 
                 # Also check if old tables exist for fallback
                 result = conn.execute(
@@ -758,8 +759,8 @@ class DatasetManager:
                 )
                 has_layers_table = result.fetchone() is not None
 
-                if has_nodes_table:
-                    # Use unified ontology_entities table (post-Great Normalization)
+                if nodes_table_name == 'ontology_entities':
+                    # Use unified ontology_entities table (post-migration 019)
                     layers_count = (
                         conn.execute(
                             text(
@@ -787,6 +788,38 @@ class DatasetManager:
                     relationships_count = (
                         conn.execute(
                             text("SELECT COUNT(*) FROM relationships")
+                        ).scalar()
+                        or 0
+                    )
+                elif nodes_table_name == 'structure_nodes':
+                    # Use pre-migration structure_nodes table with legacy enum values
+                    layers_count = (
+                        conn.execute(
+                            text(
+                                "SELECT COUNT(*) FROM structure_nodes WHERE node_type = 'layer'"
+                            )
+                        ).scalar()
+                        or 0
+                    )
+                    domains_count = (
+                        conn.execute(
+                            text(
+                                "SELECT COUNT(*) FROM structure_nodes WHERE node_type = 'domain'"
+                            )
+                        ).scalar()
+                        or 0
+                    )
+                    terms_count = (
+                        conn.execute(
+                            text(
+                                "SELECT COUNT(*) FROM structure_nodes WHERE node_type = 'term'"
+                            )
+                        ).scalar()
+                        or 0
+                    )
+                    relationships_count = (
+                        conn.execute(
+                            text("SELECT COUNT(*) FROM structure_node_links")
                         ).scalar()
                         or 0
                     )
