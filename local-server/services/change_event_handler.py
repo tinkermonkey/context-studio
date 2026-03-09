@@ -170,28 +170,47 @@ class ChangeEventHandler:
             new_data=None,
         )
 
-    # Convenience methods for specific record types
+    # Convenience methods for specific record types (using new primary names)
+    def fire_property_definition_created_event(
+        self, property_definition_id: str, property_definition_data: Dict[str, Any]
+    ) -> ChangeEvent:
+        """Convenience method for property definition creation events."""
+        return self.fire_created_event(
+            RecordType.PROPERTY_DEFINITION, property_definition_id, property_definition_data
+        )
+
+    def fire_ontology_entity_created_event(
+        self, entity_id: str, entity_data: Dict[str, Any]
+    ) -> ChangeEvent:
+        """Convenience method for ontology entity creation events."""
+        return self.fire_created_event(RecordType.ONTOLOGY_ENTITY, entity_id, entity_data)
+
+    def fire_relationship_created_event(
+        self, relationship_id: str, relationship_data: Dict[str, Any]
+    ) -> ChangeEvent:
+        """Convenience method for relationship creation events."""
+        return self.fire_created_event(
+            RecordType.RELATIONSHIP, relationship_id, relationship_data
+        )
+
+    # Deprecated convenience methods for backward compatibility
     def fire_predicate_created_event(
         self, predicate_id: str, predicate_data: Dict[str, Any]
     ) -> ChangeEvent:
-        """Convenience method for predicate creation events."""
-        return self.fire_created_event(
-            RecordType.PREDICATE, predicate_id, predicate_data
-        )
+        """Deprecated: use fire_property_definition_created_event() instead."""
+        return self.fire_property_definition_created_event(predicate_id, predicate_data)
 
     def fire_structure_node_created_event(
         self, node_id: str, node_data: Dict[str, Any]
     ) -> ChangeEvent:
-        """Convenience method for structure node creation events."""
-        return self.fire_created_event(RecordType.STRUCTURE_NODE, node_id, node_data)
+        """Deprecated: use fire_ontology_entity_created_event() instead."""
+        return self.fire_ontology_entity_created_event(node_id, node_data)
 
     def fire_structure_node_link_created_event(
         self, link_id: str, link_data: Dict[str, Any]
     ) -> ChangeEvent:
-        """Convenience method for structure node link creation events."""
-        return self.fire_created_event(
-            RecordType.STRUCTURE_NODE_LINK, link_id, link_data
-        )
+        """Deprecated: use fire_relationship_created_event() instead."""
+        return self.fire_relationship_created_event(link_id, link_data)
 
     def get_unprocessed_events(
         self, record_type: Optional[RecordType] = None, limit: int = 100

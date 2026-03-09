@@ -15,8 +15,10 @@ from dataclasses import dataclass, field
 from enum import Enum
 from fastapi import Depends
 
-from services.node_service import NodeService
-from services.node_link_service import NodeLinkService
+from services.ontology_entity_service import OntologyEntityService
+from services.relationship_service import RelationshipService
+from services.node_service import NodeService  # Re-exported from OntologyEntityService
+from services.node_link_service import NodeLinkService  # Re-exported from RelationshipService
 from services.version_manager import VersionManager
 from services.working_tree_manager import WorkingTreeManager
 from services.diff_generator import DiffGenerator
@@ -53,6 +55,10 @@ T = TypeVar("T")
 class ServiceType(Enum):
     """Enumeration of supported service types."""
 
+    # New primary names
+    ONTOLOGY_ENTITY_SERVICE = "ontology_entity_service"
+    RELATIONSHIP_SERVICE = "relationship_service"
+    # Deprecated aliases (kept for backward compatibility)
     NODE_SERVICE = "node_service"
     NODE_LINK_SERVICE = "node_link_service"
     VERSION_MANAGER = "version_manager"
@@ -185,15 +191,15 @@ class ServiceFactory:
             f"ServiceFactory [{self._factory_id}] initialized with {cache_ttl_seconds}s TTL"
         )
 
-    def create_node_service(
+    def create_ontology_entity_service(
         self,
         db: Session,
         graph_service: Optional[GraphService] = None,
         version_manager: Optional[VersionManager] = None,
         working_tree_manager: Optional[WorkingTreeManager] = None
-    ) -> NodeService:
+    ) -> OntologyEntityService:
         """
-        Create NodeService with optimized instantiation.
+        Create OntologyEntityService with optimized instantiation.
 
         Args:
             db: Database session for this request
@@ -202,7 +208,7 @@ class ServiceFactory:
             working_tree_manager: Optional working tree manager for state tracking
 
         Returns:
-            NodeService instance
+            OntologyEntityService instance
         """
         if version_manager is None:
             version_manager = self.create_version_manager(db)
@@ -211,20 +217,59 @@ class ServiceFactory:
             working_tree_manager = self.create_working_tree_manager(db, version_manager)
 
         return self._create_service(
-            ServiceType.NODE_SERVICE, NodeService, db, graph_service, version_manager, working_tree_manager
+            ServiceType.ONTOLOGY_ENTITY_SERVICE, OntologyEntityService, db, graph_service, version_manager, working_tree_manager
         )
 
-    def create_node_link_service(self, db: Session) -> NodeLinkService:
+    def create_relationship_service(self, db: Session) -> RelationshipService:
         """
-        Create NodeLinkService with optimized instantiation.
+        Create RelationshipService with optimized instantiation.
 
         Args:
             db: Database session for this request
 
         Returns:
-            NodeLinkService instance
+            RelationshipService instance
         """
-        return self._create_service(ServiceType.NODE_LINK_SERVICE, NodeLinkService, db)
+        return self._create_service(ServiceType.RELATIONSHIP_SERVICE, RelationshipService, db)
+
+    def create_node_service(
+        self,
+        db: Session,
+        graph_service: Optional[GraphService] = None,
+        version_manager: Optional[VersionManager] = None,
+        working_tree_manager: Optional[WorkingTreeManager] = None
+    ) -> NodeService:
+        """
+        DEPRECATED: Use create_ontology_entity_service() instead.
+
+        This method is kept for backward compatibility and delegates to
+        create_ontology_entity_service().
+
+        Args:
+            db: Database session for this request
+            graph_service: Optional graph service dependency
+            version_manager: Optional version manager for versioning
+            working_tree_manager: Optional working tree manager for state tracking
+
+        Returns:
+            NodeService instance (alias for OntologyEntityService)
+        """
+        return self.create_ontology_entity_service(db, graph_service, version_manager, working_tree_manager)  # type: ignore
+
+    def create_node_link_service(self, db: Session) -> NodeLinkService:
+        """
+        DEPRECATED: Use create_relationship_service() instead.
+
+        This method is kept for backward compatibility and delegates to
+        create_relationship_service().
+
+        Args:
+            db: Database session for this request
+
+        Returns:
+            NodeLinkService instance (alias for RelationshipService)
+        """
+        return self.create_relationship_service(db)  # type: ignore
 
     def create_version_manager(self, db: Session) -> VersionManager:
         """
