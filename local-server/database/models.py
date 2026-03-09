@@ -1,7 +1,6 @@
 from sqlalchemy import Column, String, Text, Integer, DateTime, ForeignKey, UniqueConstraint  # noqa: E501
 from sqlalchemy.dialects.sqlite import BLOB
 from sqlalchemy.orm import declarative_base, relationship, Mapped, synonym
-from sqlalchemy.ext.hybrid import hybrid_property
 from typing import Any, cast
 import uuid
 import datetime
@@ -15,8 +14,8 @@ Base: Any = declarative_base()
 # Enums for the new normalized schema (moved to database.enums to avoid circular imports)  # noqa: E501
 
 
-class PipelineFlavor(Base):
-    __tablename__ = "pipeline_flavors"
+class PipelineConfiguration(Base):
+    __tablename__ = "pipeline_configurations"
 
     id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
     pipeline = Column(String, nullable=False)
@@ -38,6 +37,10 @@ class PipelineFlavor(Base):
     __table_args__ = (UniqueConstraint("pipeline", "title", name="_pipeline_title_uc"),)  # noqa: E501
 
 
+# Legacy alias for backwards compatibility
+PipelineFlavor = PipelineConfiguration
+
+
 class PropertyDefinition(Base):
     __tablename__ = "property_definitions"
 
@@ -55,8 +58,8 @@ class PropertyDefinition(Base):
     )
 
     # Relationships for new unified schema
-    ontology_entities = relationship("OntologyEntity", back_populates="property_def")  # noqa: E501
-    relationships = relationship("Relationship", back_populates="property_def")  # noqa: E501
+    ontology_entities = relationship("OntologyEntity", back_populates="structural_predicate_ref")  # noqa: E501
+    relationships = relationship("Relationship", back_populates="predicate_ref")  # noqa: E501
 
 
 # Legacy alias for backwards compatibility
@@ -95,20 +98,17 @@ class OntologyEntity(Base):
     parent = relationship("OntologyEntity", remote_side=[id], lazy="noload")
 
     # Relationship to property definitions
-    property_def = relationship("PropertyDefinition", back_populates="ontology_entities", lazy="select")  # noqa: E501
+    structural_predicate_ref = relationship("PropertyDefinition", back_populates="ontology_entities", lazy="select")  # noqa: E501
 
     # Legacy aliases for backwards compatibility with old column names
     parent_node_id = synonym("parent_entity_id")
+    property_def = synonym("structural_predicate_ref")
 
     def __init__(self, **kwargs):
         """Handle legacy parameter names for backwards compatibility."""
         # Map old parameter names to new ones
         if "parent_node_id" in kwargs and "parent_entity_id" not in kwargs:
             kwargs["parent_entity_id"] = kwargs.pop("parent_node_id")
-        if "source_node_id" in kwargs and "source_entity_id" not in kwargs:
-            kwargs["source_entity_id"] = kwargs.pop("source_node_id")
-        if "target_node_id" in kwargs and "target_entity_id" not in kwargs:
-            kwargs["target_entity_id"] = kwargs.pop("target_node_id")
         super().__init__(**kwargs)
 
 
@@ -131,13 +131,14 @@ class Relationship(Base):
     # Relationships
     source_entity = relationship("OntologyEntity", foreign_keys=[source_entity_id], lazy="select")  # noqa: E501
     target_entity = relationship("OntologyEntity", foreign_keys=[target_entity_id], lazy="select")  # noqa: E501
-    property_def = relationship("PropertyDefinition", back_populates="relationships", lazy="select")  # noqa: E501
+    predicate_ref = relationship("PropertyDefinition", back_populates="relationships", lazy="select")  # noqa: E501
 
     __table_args__ = (UniqueConstraint("source_entity_id", "target_entity_id", "predicate", name="_relationship_uc"),)  # noqa: E501
 
     # Legacy aliases for backwards compatibility with old column names
     source_node_id = synonym("source_entity_id")
     target_node_id = synonym("target_entity_id")
+    property_def = synonym("predicate_ref")
 
     def __init__(self, **kwargs):
         """Handle legacy parameter names for backwards compatibility."""
