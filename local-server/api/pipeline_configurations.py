@@ -13,7 +13,7 @@ Endpoints:
 """
 
 from typing import Optional
-from fastapi import APIRouter, HTTPException, Depends, Query, Path, status
+from fastapi import APIRouter, HTTPException, Depends, Query, Path, status, Body
 
 from api.dependencies.llm_services import get_pipeline_flavor_service
 from llm.flavor_service import PipelineFlavorService
@@ -117,7 +117,7 @@ async def get_configuration(
 @router.put("/{configuration_id}", response_model=PipelineFlavor)
 async def update_configuration(
     configuration_id: str = Path(..., description="The ID of the configuration to update"),
-    request: UpdatePipelineFlavorRequest = ...,
+    request: UpdatePipelineFlavorRequest = Body(...),
     flavor_service: PipelineFlavorService = Depends(get_pipeline_flavor_service)
 ):
     """

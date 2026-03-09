@@ -17,7 +17,7 @@ Endpoints:
 - DELETE /api/ontology_entities/relationships/{rel_id} - Delete an entity relationship
 """
 
-from fastapi import APIRouter, HTTPException, Query, Depends, Path, Response
+from fastapi import APIRouter, HTTPException, Query, Depends, Path, Response, Body
 from typing import List, Optional
 from uuid import UUID
 
@@ -411,7 +411,7 @@ def list_relationships(
 @router.put("/relationships/{rel_id}", response_model=RelationshipOut)
 def update_relationship(
     rel_id: UUID = Path(..., description="The ID of the relationship to update"),
-    link_update: RelationshipCreate = ...,
+    link_update: RelationshipCreate = Body(...),
     link_service: NodeLinkService = Depends(get_node_link_service)
 ):
     """
@@ -503,7 +503,7 @@ def get_entity(
 @router.put("/{entity_id}", response_model=EntityOut)
 def update_entity(
     entity_id: UUID = Path(..., description="The ID of the entity to update"),
-    entity_update: EntityUpdate = ...,
+    entity_update: EntityUpdate = Body(...),
     node_service: NodeService = Depends(get_node_service)
 ):
     """
@@ -522,9 +522,9 @@ def update_entity(
         if entity_update.definition is not None:
             update_data["definition"] = entity_update.definition
         if entity_update.parent_entity_id is not None:
-            update_data["parent_node_id"] = uuid_to_str(entity_update.parent_entity_id)
+            update_data["parent_node_id"] = uuid_to_str(entity_update.parent_entity_id)  # type: ignore[assignment]
         if entity_update.structural_predicate_id is not None:
-            update_data["structural_predicate_id"] = uuid_to_str(entity_update.structural_predicate_id)
+            update_data["structural_predicate_id"] = uuid_to_str(entity_update.structural_predicate_id)  # type: ignore[assignment]
 
         updated_node = node_service.update_node(str(entity_id), update_data)
 

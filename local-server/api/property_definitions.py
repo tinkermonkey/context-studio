@@ -15,7 +15,7 @@ Endpoints:
 
 import datetime
 import json
-from fastapi import APIRouter, HTTPException, Query, Depends, Path
+from fastapi import APIRouter, HTTPException, Query, Depends, Path, Body
 from uuid import UUID, uuid4
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
@@ -40,16 +40,16 @@ def to_property_definition_out(predicate: models.Predicate) -> PropertyDefinitio
     mapping_dict = None
     if predicate.mapping:
         try:
-            mapping_dict = json.loads(predicate.mapping)
+            mapping_dict = json.loads(predicate.mapping)  # type: ignore[arg-type]
         except json.JSONDecodeError:
             logger.warning(f"Invalid JSON in predicate {predicate.id} mapping: {predicate.mapping}")  # noqa: E501
             mapping_dict = None
 
     return PropertyDefinitionOut(
-        id=predicate.id,
-        identifier=predicate.identifier,
-        title=predicate.title,
-        definition=predicate.definition,
+        id=predicate.id,  # type: ignore[arg-type]
+        identifier=predicate.identifier,  # type: ignore[arg-type]
+        title=predicate.title,  # type: ignore[arg-type]
+        definition=predicate.definition,  # type: ignore[arg-type]
         mapping=mapping_dict,
         date_created=predicate.date_created.isoformat(),
         date_modified=predicate.date_modified.isoformat()
@@ -187,7 +187,7 @@ def get_property_definition_by_identifier(
 @router.put("/{property_def_id}", response_model=PropertyDefinitionOut)
 def update_property_definition(
     property_def_id: UUID = Path(..., description="The ID of the property definition to update"),  # noqa: E501
-    property_def_update: PropertyDefinitionUpdate = ...,
+    property_def_update: PropertyDefinitionUpdate = Body(...),
     db: Session = Depends(get_db)
 ):
     """
@@ -206,25 +206,25 @@ def update_property_definition(
             if property_def_update.title != predicate.title:
                 if db.query(models.Predicate).filter_by(title=property_def_update.title).first():  # noqa: E501
                     raise HTTPException(status_code=409, detail=f"Property definition with title '{property_def_update.title}' already exists.")  # noqa: E501
-            predicate.title = property_def_update.title
+            predicate.title = property_def_update.title  # type: ignore[assignment]
 
         if property_def_update.definition is not None:
-            predicate.definition = property_def_update.definition
+            predicate.definition = property_def_update.definition  # type: ignore[assignment]
 
         if property_def_update.identifier is not None:
             # Validate identifier uniqueness if changed
             if property_def_update.identifier != predicate.identifier:
                 if not validate_predicate_identifier(property_def_update.identifier, str(property_def_id), db):  # noqa: E501
                     raise HTTPException(status_code=409, detail=f"Property definition with identifier '{property_def_update.identifier}' already exists.")  # noqa: E501
-            predicate.identifier = property_def_update.identifier
+            predicate.identifier = property_def_update.identifier  # type: ignore[assignment]
 
         if property_def_update.mapping is not None:
             try:
-                predicate.mapping = json.dumps(property_def_update.mapping)
+                predicate.mapping = json.dumps(property_def_update.mapping)  # type: ignore[assignment]
             except (TypeError, ValueError) as e:
                 raise HTTPException(status_code=400, detail=f"Invalid mapping format: {str(e)}")  # noqa: E501
 
-        predicate.date_modified = datetime.datetime.now(datetime.UTC)
+        predicate.date_modified = datetime.datetime.now(datetime.UTC)  # type: ignore[assignment]
         db.commit()
         db.refresh(predicate)
 
