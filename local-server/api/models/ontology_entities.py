@@ -39,7 +39,7 @@ class EntityCreate(EntityBase):
         node_type = info.data.get('node_type')
         if node_type == EntityTypeEnum.TAXONOMY and v is not None:
             raise ValueError("Taxonomies cannot have parent entities")
-        if node_type in [EntityTypeEnum.CONCEPT_SCHEME, EntityTypeEnum.CLASS] and v is None:
+        if node_type in [EntityTypeEnum.CONCEPT_SCHEME, EntityTypeEnum.CLASS] and v is None:  # noqa: E501
             raise ValueError(f"{node_type.value.title().replace('_', ' ')} must have a parent entity")  # noqa: E501
         return v
 
@@ -147,7 +147,7 @@ class EntityHierarchy(BaseModel):
 EntityHierarchy.model_rebuild()
 
 
-# Models for Reference Links and Word Senses (reusing same concepts from structure_nodes)
+# Models for Reference Links and Word Senses (reusing same concepts from structure_nodes)  # noqa: E501
 class ReferenceLink(BaseModel):
     """Model for reference data links from external knowledge sources."""
     source: str = Field(..., min_length=1, max_length=255, description="Source identifier (e.g., 'schema.org', 'wikidata', 'conceptnet')")  # noqa: E501

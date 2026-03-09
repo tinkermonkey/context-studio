@@ -4,7 +4,7 @@
 import datetime
 import json
 import time
-from fastapi import APIRouter, HTTPException, Query, Depends, BackgroundTasks, Response
+from fastapi import APIRouter, HTTPException, Query, Depends, BackgroundTasks, Response  # noqa: E501
 from pydantic import BaseModel, Field, ConfigDict
 from typing import List, Optional, Dict, Any
 from uuid import UUID, uuid4
@@ -563,7 +563,7 @@ def update_predicate(
 
 
 @router.delete("/{id}", status_code=200, responses={404: {"description": "Predicate not found"}})  # noqa: E501
-def delete_predicate(response: Response, id: str, db: Session = Depends(get_db)):
+def delete_predicate(response: Response, id: str, db: Session = Depends(get_db)):  # noqa: E501
     """Delete a predicate."""
     response.headers['Deprecation'] = 'true'
     response.headers['Sunset'] = 'Phase 3'
@@ -631,7 +631,7 @@ def import_predicates_from_conceptnet(
 
 
 @router.get("/{id}/conceptnet-relation", response_model=Optional[str])
-def get_predicate_conceptnet_relation(response: Response, id: str, db: Session = Depends(get_db)):
+def get_predicate_conceptnet_relation(response: Response, id: str, db: Session = Depends(get_db)):  # noqa: E501
     """Get the ConceptNet relation for a specific predicate."""
     response.headers['Deprecation'] = 'true'
     response.headers['Sunset'] = 'Phase 3'

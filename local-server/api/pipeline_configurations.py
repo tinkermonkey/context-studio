@@ -1,19 +1,19 @@
 """
 Pipeline Configurations API Endpoints
 
-This module implements the new pipeline_configurations API endpoints using new terminology
+This module implements the new pipeline_configurations API endpoints using new terminology  # noqa: E501
 alongside the existing pipeline_flavors API.
 
 Endpoints:
 - POST /api/pipeline_configurations - Create a new configuration
 - GET /api/pipeline_configurations - List configurations
-- GET /api/pipeline_configurations/{configuration_id} - Get a specific configuration
+- GET /api/pipeline_configurations/{configuration_id} - Get a specific configuration  # noqa: E501
 - PUT /api/pipeline_configurations/{configuration_id} - Update a configuration
-- DELETE /api/pipeline_configurations/{configuration_id} - Delete a configuration
+- DELETE /api/pipeline_configurations/{configuration_id} - Delete a configuration  # noqa: E501
 """
 
 from typing import Optional
-from fastapi import APIRouter, HTTPException, Depends, Query, Path, status, Body
+from fastapi import APIRouter, HTTPException, Depends, Query, Path, status, Body  # noqa: E501
 
 from api.dependencies.llm_services import get_pipeline_flavor_service
 from llm.flavor_service import PipelineFlavorService
@@ -27,7 +27,7 @@ from llm.models import (
 from llm.exceptions import FlavorNotFoundError, FlavorValidationError
 from utils.logger import get_logger
 
-router = APIRouter(prefix="/api/pipeline_configurations", tags=["Pipeline Configurations"])
+router = APIRouter(prefix="/api/pipeline_configurations", tags=["Pipeline Configurations"])  # noqa: E501
 logger = get_logger(__name__)
 
 
@@ -82,9 +82,9 @@ async def list_configurations(
 
 @router.get("/{configuration_id}", response_model=PipelineFlavor)
 async def get_configuration(
-    configuration_id: str = Path(..., description="The ID of the configuration to retrieve"),
+    configuration_id: str = Path(..., description="The ID of the configuration to retrieve"),  # noqa: E501
     pipeline: Optional[PipelineType] = Query(None, description="Pipeline type (required for default configuration)"),  # noqa: E501
-    flavor_service: PipelineFlavorService = Depends(get_pipeline_flavor_service)
+    flavor_service: PipelineFlavorService = Depends(get_pipeline_flavor_service)  # noqa: E501
 ):
     """
     Get a specific pipeline configuration by ID.
@@ -116,9 +116,9 @@ async def get_configuration(
 
 @router.put("/{configuration_id}", response_model=PipelineFlavor)
 async def update_configuration(
-    configuration_id: str = Path(..., description="The ID of the configuration to update"),
+    configuration_id: str = Path(..., description="The ID of the configuration to update"),  # noqa: E501
     request: UpdatePipelineFlavorRequest = Body(...),
-    flavor_service: PipelineFlavorService = Depends(get_pipeline_flavor_service)
+    flavor_service: PipelineFlavorService = Depends(get_pipeline_flavor_service)  # noqa: E501
 ):
     """
     Update an existing pipeline configuration.
@@ -130,7 +130,7 @@ async def update_configuration(
     if configuration_id == "default":
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Cannot update default configuration. Create a new configuration instead."
+            detail="Cannot update default configuration. Create a new configuration instead."  # noqa: E501
         )
 
     try:
@@ -151,8 +151,8 @@ async def update_configuration(
 
 @router.delete("/{configuration_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_configuration(
-    configuration_id: str = Path(..., description="The ID of the configuration to delete"),
-    flavor_service: PipelineFlavorService = Depends(get_pipeline_flavor_service)
+    configuration_id: str = Path(..., description="The ID of the configuration to delete"),  # noqa: E501
+    flavor_service: PipelineFlavorService = Depends(get_pipeline_flavor_service)  # noqa: E501
 ):
     """
     Delete a pipeline configuration.

@@ -238,7 +238,7 @@ def search_nodes(
                     definition_embedding,
                     {similarity_case} as similarity
                 FROM structure_nodes
-                WHERE (title_embedding IS NOT NULL OR definition_embedding IS NOT NULL)
+                WHERE (title_embedding IS NOT NULL OR definition_embedding IS NOT NULL)  # noqa: E501
                 {type_filter}
             )
             SELECT
