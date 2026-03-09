@@ -1556,13 +1556,21 @@ class OntologyEntityService:
                 )
 
     # Deprecated method wrappers for backward compatibility
-    def create_node(self, *args, **kwargs):
+    def create_node(self, node_data: Dict[str, Any]) -> OntologyEntity:
         """Deprecated: use create_entity() instead"""
-        return self.create_entity(*args, **kwargs)
+        # Translate old key names to new ones
+        translated_data = node_data.copy()
+        if "parent_node_id" in translated_data:
+            translated_data["parent_entity_id"] = translated_data.pop("parent_node_id")
+        return self.create_entity(translated_data)
 
-    def update_node(self, *args, **kwargs):
+    def update_node(self, node_id: str, node_data: Dict[str, Any]) -> OntologyEntity:
         """Deprecated: use update_entity() instead"""
-        return self.update_entity(*args, **kwargs)
+        # Translate old key names to new ones
+        translated_data = node_data.copy()
+        if "parent_node_id" in translated_data:
+            translated_data["parent_entity_id"] = translated_data.pop("parent_node_id")
+        return self.update_entity(node_id, translated_data)
 
     def delete_node(self, *args, **kwargs):
         """Deprecated: use delete_entity() instead"""
@@ -1574,6 +1582,9 @@ class OntologyEntityService:
 
     def list_nodes(self, *args, **kwargs):
         """Deprecated: use list_entities() instead"""
+        # Translate old kwarg names to new ones
+        if "parent_node_id" in kwargs:
+            kwargs["parent_entity_id"] = kwargs.pop("parent_node_id")
         return self.list_entities(*args, **kwargs)
 
     def get_nodes(self, *args, **kwargs):
@@ -1582,10 +1593,16 @@ class OntologyEntityService:
 
     def count_nodes(self, *args, **kwargs):
         """Deprecated: use count_entities() instead"""
+        # Translate old kwarg names to new ones
+        if "parent_node_id" in kwargs:
+            kwargs["parent_entity_id"] = kwargs.pop("parent_node_id")
         return self.count_entities(*args, **kwargs)
 
     def get_node_children(self, *args, **kwargs):
         """Deprecated: use get_entity_children() instead"""
+        # Translate old kwarg names to new ones
+        if "parent_node_id" in kwargs:
+            kwargs["parent_entity_id"] = kwargs.pop("parent_node_id")
         return self.get_entity_children(*args, **kwargs)
 
     def get_node_ancestors(self, *args, **kwargs):
@@ -1596,9 +1613,6 @@ class OntologyEntityService:
         """Deprecated: use set_entity_attributes() instead"""
         return self.set_entity_attributes(*args, **kwargs)
 
-    def get_local_attributes(self, *args, **kwargs):
-        """Deprecated: use get_local_attributes() instead (no rename for this one)"""
-        return self.get_local_attributes(*args, **kwargs)
 
     def resolve_node_attributes(self, *args, **kwargs):
         """Deprecated: use resolve_entity_attributes() instead"""

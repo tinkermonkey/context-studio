@@ -541,18 +541,99 @@ class RelationshipService:
         }
 
     # Deprecated method wrappers for backward compatibility
-    def create_link(self, *args, **kwargs):
+    def create_link(self, link_data: Dict[str, Any]) -> Relationship:
         """Deprecated: use create_relationship() instead"""
-        return self.create_relationship(*args, **kwargs)
+        # Translate old key names to new ones
+        translated_data = {
+            "source_entity_id": link_data.get("source_node_id") or link_data.get("source_entity_id"),
+            "target_entity_id": link_data.get("target_node_id") or link_data.get("target_entity_id"),
+            "predicate": link_data.get("predicate"),
+            "predicate_id": link_data.get("predicate_id"),
+        }
+        # Remove None values
+        translated_data = {k: v for k, v in translated_data.items() if v is not None}
+        return self.create_relationship(translated_data)
 
-    def update_link(self, *args, **kwargs):
+    def update_link(self, link_id: str, link_data: Dict[str, Any]) -> Relationship:
         """Deprecated: use update_relationship() instead"""
-        return self.update_relationship(*args, **kwargs)
+        # Translate old key names to new ones
+        translated_data = link_data.copy()
+        if "source_node_id" in translated_data:
+            translated_data["source_entity_id"] = translated_data.pop("source_node_id")
+        if "target_node_id" in translated_data:
+            translated_data["target_entity_id"] = translated_data.pop("target_node_id")
+        return self.update_relationship(link_id, translated_data)
 
     def delete_link(self, *args, **kwargs):
         """Deprecated: use delete_relationship() instead"""
         return self.delete_relationship(*args, **kwargs)
 
-    def _node_link_to_dict(self, *args, **kwargs):
+    def _node_link_to_dict(self, relationship: Relationship) -> Dict[str, Any]:
         """Deprecated: use _relationship_to_dict() instead"""
-        return self._relationship_to_dict(*args, **kwargs)
+        result = self._relationship_to_dict(relationship)
+        # Translate new keys back to old keys for backward compatibility
+        return {
+            "id": result["id"],
+            "source_node_id": result["source_entity_id"],
+            "target_node_id": result["target_entity_id"],
+            "predicate": result["predicate"],
+            "predicate_id": result["predicate_id"],
+            "created_at": result["created_at"],
+        }
+
+    def get_link(self, link_id: str) -> Optional[Relationship]:
+        """Deprecated: use get_relationship() instead"""
+        return self.get_relationship(link_id)
+
+    def list_links(
+        self,
+        source_node_id: Optional[str] = None,
+        target_node_id: Optional[str] = None,
+        predicate: Optional[str] = None,
+        skip: int = 0,
+        limit: int = 100,
+    ) -> List[Relationship]:
+        """Deprecated: use list_relationships() instead"""
+        # Translate old parameter names to new ones
+        return self.list_relationships(
+            source_entity_id=source_node_id,
+            target_entity_id=target_node_id,
+            predicate=predicate,
+            skip=skip,
+            limit=limit,
+        )
+
+    def count_links(
+        self,
+        source_node_id: Optional[str] = None,
+        target_node_id: Optional[str] = None,
+        predicate: Optional[str] = None,
+    ) -> int:
+        """Deprecated: use count_relationships() instead"""
+        # Translate old parameter names to new ones
+        return self.count_relationships(
+            source_entity_id=source_node_id,
+            target_entity_id=target_node_id,
+            predicate=predicate,
+        )
+
+    def get_node_links(
+        self, node_id: str, direction: str = "both"
+    ) -> List[Relationship]:
+        """Deprecated: use get_entity_relationships() instead"""
+        return self.get_entity_relationships(node_id, direction)
+
+    def get_linked_nodes(
+        self,
+        node_id: str,
+        direction: str = "both",
+        node_type: Optional[NodeType] = None,
+    ) -> List[OntologyEntity]:
+        """Deprecated: use get_related_entities() instead"""
+        return self.get_related_entities(node_id, direction, node_type)
+
+    def validate_link_compatibility(
+        self, source_node_id: str, target_node_id: str
+    ) -> bool:
+        """Deprecated: use validate_relationship_compatibility() instead"""
+        return self.validate_relationship_compatibility(source_node_id, target_node_id)

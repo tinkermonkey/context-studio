@@ -198,19 +198,25 @@ class ChangeEventHandler:
         self, predicate_id: str, predicate_data: Dict[str, Any]
     ) -> ChangeEvent:
         """Deprecated: use fire_property_definition_created_event() instead."""
-        return self.fire_property_definition_created_event(predicate_id, predicate_data)
+        return self.fire_created_event(
+            RecordType.PREDICATE, predicate_id, predicate_data
+        )
 
     def fire_structure_node_created_event(
         self, node_id: str, node_data: Dict[str, Any]
     ) -> ChangeEvent:
         """Deprecated: use fire_ontology_entity_created_event() instead."""
-        return self.fire_ontology_entity_created_event(node_id, node_data)
+        return self.fire_created_event(
+            RecordType.STRUCTURE_NODE, node_id, node_data
+        )
 
     def fire_structure_node_link_created_event(
         self, link_id: str, link_data: Dict[str, Any]
     ) -> ChangeEvent:
         """Deprecated: use fire_relationship_created_event() instead."""
-        return self.fire_relationship_created_event(link_id, link_data)
+        return self.fire_created_event(
+            RecordType.STRUCTURE_NODE_LINK, link_id, link_data
+        )
 
     def get_unprocessed_events(
         self, record_type: Optional[RecordType] = None, limit: int = 100
