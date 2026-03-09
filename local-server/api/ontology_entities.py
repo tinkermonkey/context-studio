@@ -30,7 +30,6 @@ from api.models.ontology_entities import (
     EntitySearchRequest, EntitySearchResult, PaginatedEntitiesResponse, PaginatedRelationshipsResponse, EntityTypeEnum,  # noqa: E501
 )
 from api.utils.node_conversion import (
-    to_node_out, to_node_link_out, nodes_to_paginated_response,
     uuid_to_str
 )
 from api.dependencies.structure_nodes import (
@@ -65,7 +64,6 @@ def _to_entity_out(node_orm_object) -> EntityOut:
     """
     Convert a Node ORM object to EntityOut response model using new terminology.
     """
-    from api.utils.node_conversion import uuid_to_str
 
     return EntityOut(
         id=UUID(str(node_orm_object.id)) if hasattr(node_orm_object.id, '__str__') else node_orm_object.id,  # noqa: E501

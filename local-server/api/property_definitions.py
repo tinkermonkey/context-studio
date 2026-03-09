@@ -16,7 +16,6 @@ Endpoints:
 import datetime
 import json
 from fastapi import APIRouter, HTTPException, Query, Depends, Path
-from typing import List, Optional
 from uuid import UUID, uuid4
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
