@@ -4,7 +4,14 @@
 import datetime
 import json
 import time
-from fastapi import APIRouter, HTTPException, Query, Depends, BackgroundTasks, Response  # noqa: E501
+from fastapi import (
+    APIRouter,
+    HTTPException,
+    Query,
+    Depends,
+    BackgroundTasks,
+    Response,
+)  # noqa: E501
 from pydantic import BaseModel, Field, ConfigDict
 from typing import List, Optional, Dict, Any
 from uuid import UUID, uuid4
@@ -13,7 +20,12 @@ from sqlalchemy.exc import IntegrityError
 
 from database import models
 from database.utils import get_db
-from database.predicate_utils import generate_identifier_from_title, import_conceptnet_predicates, get_conceptnet_relation_for_predicate, validate_predicate_identifier  # noqa: E501
+from database.predicate_utils import (
+    generate_identifier_from_title,
+    import_conceptnet_predicates,
+    get_conceptnet_relation_for_predicate,
+    validate_predicate_identifier,
+)  # noqa: E501
 from database.mapping_validation import validate_mapping
 from config import get_settings, get_config_manager
 from api.api_errors import bad_request_error_response
@@ -50,7 +62,9 @@ class PredicateUpdate(BaseModel):
     title: Optional[str] = None
     definition: Optional[str] = None
     mapping: Optional[dict] = None
-    identifier: Optional[str] = None  # Allow identifier updates with validation  # noqa: E501
+    identifier: Optional[str] = (
+        None  # Allow identifier updates with validation  # noqa: E501
+    )
     is_relevant: Optional[bool] = None  # For marking predicate relevance
 
 
@@ -77,7 +91,9 @@ def to_predicate_out(predicate: models.Predicate) -> PredicateOut:
         try:
             mapping_dict = json.loads(predicate.mapping)
         except json.JSONDecodeError:
-            logger.warning(f"Invalid JSON in predicate {predicate.id} mapping: {predicate.mapping}")  # noqa: E501
+            logger.warning(
+                f"Invalid JSON in predicate {predicate.id} mapping: {predicate.mapping}"
+            )  # noqa: E501
             mapping_dict = None
 
     return PredicateOut(
@@ -87,17 +103,21 @@ def to_predicate_out(predicate: models.Predicate) -> PredicateOut:
         definition=predicate.definition,
         mapping=mapping_dict,
         date_created=predicate.date_created.isoformat(),
-        date_modified=predicate.date_modified.isoformat()
+        date_modified=predicate.date_modified.isoformat(),
     )
 
 
 @router.post("/", response_model=PredicateOut, status_code=201)
-def create_predicate(response: Response, predicate: PredicateCreate, db: Session = Depends(get_db)):  # noqa: E501
+def create_predicate(
+    response: Response, predicate: PredicateCreate, db: Session = Depends(get_db)
+):  # noqa: E501
     """Create a new predicate."""
-    response.headers['Deprecation'] = 'true'
-    response.headers['Sunset'] = 'Phase 3'
+    response.headers["Deprecation"] = "true"
+    response.headers["Sunset"] = "Phase 3"
     if not predicate.title or not predicate.title.strip():
-        raise HTTPException(status_code=400, detail="Predicate title must not be empty.")  # noqa: E501
+        raise HTTPException(
+            status_code=400, detail="Predicate title must not be empty."
+        )  # noqa: E501
 
     # Generate identifier if not provided
     identifier = predicate.identifier
@@ -106,11 +126,17 @@ def create_predicate(response: Response, predicate: PredicateCreate, db: Session
 
     # Validate identifier uniqueness
     if not validate_predicate_identifier(identifier, None, db):
-        raise HTTPException(status_code=409, detail=f"Predicate with identifier '{identifier}' already exists.")  # noqa: E501
+        raise HTTPException(
+            status_code=409,
+            detail=f"Predicate with identifier '{identifier}' already exists.",
+        )  # noqa: E501
 
     # Validate title uniqueness
     if db.query(models.Predicate).filter_by(title=predicate.title).first():
-        raise HTTPException(status_code=409, detail=f"Predicate with title '{predicate.title}' already exists.")  # noqa: E501
+        raise HTTPException(
+            status_code=409,
+            detail=f"Predicate with title '{predicate.title}' already exists.",
+        )  # noqa: E501
 
     # Serialize mapping to JSON if provided
     mapping_json = None
@@ -118,7 +144,9 @@ def create_predicate(response: Response, predicate: PredicateCreate, db: Session
         try:
             mapping_json = json.dumps(predicate.mapping)
         except (TypeError, ValueError) as e:
-            raise HTTPException(status_code=400, detail=f"Invalid mapping format: {str(e)}")  # noqa: E501
+            raise HTTPException(
+                status_code=400, detail=f"Invalid mapping format: {str(e)}"
+            )  # noqa: E501
 
     try:
         db_predicate = models.Predicate(
@@ -128,7 +156,7 @@ def create_predicate(response: Response, predicate: PredicateCreate, db: Session
             definition=predicate.definition,
             mapping=mapping_json,
             date_created=datetime.datetime.now(datetime.UTC),
-            date_modified=datetime.datetime.now(datetime.UTC)
+            date_modified=datetime.datetime.now(datetime.UTC),
         )
         db.add(db_predicate)
         db.commit()
@@ -138,7 +166,10 @@ def create_predicate(response: Response, predicate: PredicateCreate, db: Session
 
     except IntegrityError:
         db.rollback()
-        raise HTTPException(status_code=409, detail="Predicate with this identifier or title already exists.")  # noqa: E501
+        raise HTTPException(
+            status_code=409,
+            detail="Predicate with this identifier or title already exists.",
+        )  # noqa: E501
 
 
 @router.get("/", response_model=PaginatedPredicatesResponse)
@@ -147,11 +178,11 @@ def list_predicates(
     skip: int = Query(0, ge=0),
     limit: int = Query(50, ge=1, le=100),
     sortBy: str = Query("title", pattern="^(title|identifier|date_created)$"),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
 ):
     """List predicates with pagination and sorting."""
-    response.headers['Deprecation'] = 'true'
-    response.headers['Sunset'] = 'Phase 3'
+    response.headers["Deprecation"] = "true"
+    response.headers["Sunset"] = "Phase 3"
     # Build base query
     query = db.query(models.Predicate)
 
@@ -172,20 +203,15 @@ def list_predicates(
     # Convert to response models
     result = [to_predicate_out(p) for p in predicates]
 
-    return PaginatedPredicatesResponse(
-        data=result,
-        total=total,
-        skip=skip,
-        limit=limit
-    )
+    return PaginatedPredicatesResponse(data=result, total=total, skip=skip, limit=limit)
 
 
 # ConceptNet Integration Endpoints
 @router.get("/conceptnet-relations", response_model=List[str])
 def get_conceptnet_relations(response: Response):
     """Get the list of ConceptNet relations configured in the system."""
-    response.headers['Deprecation'] = 'true'
-    response.headers['Sunset'] = 'Phase 3'
+    response.headers["Deprecation"] = "true"
+    response.headers["Sunset"] = "Phase 3"
     settings = get_settings()
     return settings.concepcy_config["relations_of_interest"]
 
@@ -193,8 +219,8 @@ def get_conceptnet_relations(response: Response):
 @router.get("/conceptnet-mapping", response_model=Dict[str, str])
 def get_conceptnet_mapping(response: Response, db: Session = Depends(get_db)):
     """Get a mapping of all predicate identifiers to their ConceptNet relations."""  # noqa: E501
-    response.headers['Deprecation'] = 'true'
-    response.headers['Sunset'] = 'Phase 3'
+    response.headers["Deprecation"] = "true"
+    response.headers["Sunset"] = "Phase 3"
     predicates = db.query(models.Predicate).all()
     mapping = {}
 
@@ -206,12 +232,20 @@ def get_conceptnet_mapping(response: Response, db: Session = Depends(get_db)):
     return mapping
 
 
-@router.get("/by-identifier/{identifier}", response_model=PredicateOut, responses={404: {"description": "Predicate not found"}})  # noqa: E501
-def get_predicate_by_identifier(response: Response, identifier: str, db: Session = Depends(get_db)):  # noqa: E501
+@router.get(
+    "/by-identifier/{identifier}",
+    response_model=PredicateOut,
+    responses={404: {"description": "Predicate not found"}},
+)  # noqa: E501
+def get_predicate_by_identifier(
+    response: Response, identifier: str, db: Session = Depends(get_db)
+):  # noqa: E501
     """Get a predicate by its identifier."""
-    response.headers['Deprecation'] = 'true'
-    response.headers['Sunset'] = 'Phase 3'
-    predicate = db.query(models.Predicate).filter_by(identifier=identifier).first()  # noqa: E501
+    response.headers["Deprecation"] = "true"
+    response.headers["Sunset"] = "Phase 3"
+    predicate = (
+        db.query(models.Predicate).filter_by(identifier=identifier).first()
+    )  # noqa: E501
     if not predicate:
         raise HTTPException(status_code=404, detail="Predicate not found.")
 
@@ -220,8 +254,10 @@ def get_predicate_by_identifier(response: Response, identifier: str, db: Session
 
 # External Predicate Discovery Endpoints (Phase 2)
 
+
 class PredicateDiscoveryResponse(BaseModel):
     """Response for predicate discovery requests."""
+
     task_id: str
     status: str = "started"
     message: str
@@ -229,6 +265,7 @@ class PredicateDiscoveryResponse(BaseModel):
 
 class PredicateDiscoveryStatus(BaseModel):
     """Status of a predicate discovery task."""
+
     task_id: str
     status: str  # "pending", "running", "completed", "failed"
     sources: Optional[List[str]] = None
@@ -240,6 +277,7 @@ class PredicateDiscoveryStatus(BaseModel):
 
 class ExternalPredicateOut(BaseModel):
     """Response model for external predicates."""
+
     id: str
     title: str
     definition: str
@@ -252,6 +290,7 @@ class ExternalPredicateOut(BaseModel):
 
 class PaginatedExternalPredicatesResponse(BaseModel):
     """Paginated response for external predicates."""
+
     data: List[ExternalPredicateOut]
     total: int
     skip: int
@@ -266,8 +305,8 @@ def get_discovery_status(response: Response, task_id: str):
 
     Returns the current status and results (if completed) of the discovery task.  # noqa: E501
     """
-    response.headers['Deprecation'] = 'true'
-    response.headers['Sunset'] = 'Phase 3'
+    response.headers["Deprecation"] = "true"
+    response.headers["Sunset"] = "Phase 3"
     if task_id not in _discovery_tasks:
         raise HTTPException(status_code=404, detail="Task not found")
 
@@ -277,7 +316,9 @@ def get_discovery_status(response: Response, task_id: str):
 @router.get("/external", response_model=PaginatedExternalPredicatesResponse)
 def list_external_predicates(
     response: Response,
-    source: Optional[str] = Query(None, description="Filter by source (conceptnet, dbpedia, wikidata)"),  # noqa: E501
+    source: Optional[str] = Query(
+        None, description="Filter by source (conceptnet, dbpedia, wikidata)"
+    ),  # noqa: E501
     skip: int = Query(0, ge=0),
     limit: int = Query(50, ge=1, le=1000),
 ):
@@ -286,8 +327,8 @@ def list_external_predicates(
 
     Returns predicates discovered from external knowledge sources with optional source filtering.  # noqa: E501
     """
-    response.headers['Deprecation'] = 'true'
-    response.headers['Sunset'] = 'Phase 3'
+    response.headers["Deprecation"] = "true"
+    response.headers["Sunset"] = "Phase 3"
     from reference_db.dependencies import reference_manager_context
     from reference_db.config import ReferenceConfig
 
@@ -296,6 +337,7 @@ def list_external_predicates(
         with reference_manager_context(config) as manager:
             # Get all predicates (we'll paginate in memory since we need the count anyway)  # noqa: E501
             from reference_db.models import ExternalPredicate
+
             query = manager.session.query(ExternalPredicate)
             if source:
                 query = query.filter_by(source=source)
@@ -305,7 +347,7 @@ def list_external_predicates(
             total = len(all_predicates)
 
             # Paginate in memory
-            paginated = all_predicates[skip:skip + limit]
+            paginated = all_predicates[skip : skip + limit]
 
             # Format response
             data = []
@@ -315,27 +357,26 @@ def list_external_predicates(
                 if predicate.attributes:
                     try:
                         import ast
+
                         attrs = ast.literal_eval(predicate.attributes)
                     except Exception:
                         attrs = {"raw": predicate.attributes}
 
-                data.append(ExternalPredicateOut(
-                    id=predicate.id,
-                    title=predicate.title,
-                    definition=predicate.definition,
-                    source=predicate.source,
-                    external_id=predicate.external_id,
-                    attributes=attrs,
-                    created_at=predicate.created_at,
-                    updated_at=predicate.updated_at
-                ))
+                data.append(
+                    ExternalPredicateOut(
+                        id=predicate.id,
+                        title=predicate.title,
+                        definition=predicate.definition,
+                        source=predicate.source,
+                        external_id=predicate.external_id,
+                        attributes=attrs,
+                        created_at=predicate.created_at,
+                        updated_at=predicate.updated_at,
+                    )
+                )
 
             return PaginatedExternalPredicatesResponse(
-                data=data,
-                total=total,
-                skip=skip,
-                limit=limit,
-                source=source
+                data=data, total=total, skip=skip, limit=limit, source=source
             )
 
     except Exception as e:
@@ -345,6 +386,7 @@ def list_external_predicates(
 
 class ExternalPredicateSearchResult(BaseModel):
     """Search result for external predicates with similarity score."""
+
     id: str
     title: str
     definition: str
@@ -358,6 +400,7 @@ class ExternalPredicateSearchResult(BaseModel):
 
 class ExternalPredicateSearchResponse(BaseModel):
     """Response for external predicate search."""
+
     data: List[ExternalPredicateSearchResult]
     total: int
     query: str
@@ -369,9 +412,13 @@ class ExternalPredicateSearchResponse(BaseModel):
 def search_external_predicates(
     response: Response,
     query: str = Query(..., min_length=1, description="Search query text"),
-    source: Optional[str] = Query(None, description="Filter by source (conceptnet, dbpedia, wikidata, schema_org)"),  # noqa: E501
+    source: Optional[str] = Query(
+        None, description="Filter by source (conceptnet, dbpedia, wikidata, schema_org)"
+    ),  # noqa: E501
     limit: int = Query(20, ge=1, le=100),
-    threshold: float = Query(0.6, ge=0.0, le=1.0, description="Minimum similarity threshold"),  # noqa: E501
+    threshold: float = Query(
+        0.6, ge=0.0, le=1.0, description="Minimum similarity threshold"
+    ),  # noqa: E501
 ):
     """
     Search external predicates using vector similarity.
@@ -388,8 +435,8 @@ def search_external_predicates(
     Returns:
         ExternalPredicateSearchResponse with ranked similarity results
     """
-    response.headers['Deprecation'] = 'true'
-    response.headers['Sunset'] = 'Phase 3'
+    response.headers["Deprecation"] = "true"
+    response.headers["Sunset"] = "Phase 3"
     from reference_db.dependencies import reference_manager_context
     from reference_db.config import ReferenceConfig
 
@@ -398,10 +445,7 @@ def search_external_predicates(
         with reference_manager_context(config) as manager:
             # Perform vector similarity search
             results = manager.search_external_predicates_by_similarity(
-                query_text=query,
-                source=source,
-                limit=limit,
-                threshold=threshold
+                query_text=query, source=source, limit=limit, threshold=threshold
             )
 
             # Format response
@@ -412,42 +456,51 @@ def search_external_predicates(
                 if predicate.attributes:
                     try:
                         import ast
+
                         attrs = ast.literal_eval(predicate.attributes)
                     except Exception:
                         attrs = {"raw": predicate.attributes}
 
-                data.append(ExternalPredicateSearchResult(
-                    id=predicate.id,
-                    title=predicate.title,
-                    definition=predicate.definition,
-                    source=predicate.source,
-                    external_id=predicate.external_id,
-                    attributes=attrs,
-                    created_at=predicate.created_at,
-                    updated_at=predicate.updated_at,
-                    similarity_score=similarity_score
-                ))
+                data.append(
+                    ExternalPredicateSearchResult(
+                        id=predicate.id,
+                        title=predicate.title,
+                        definition=predicate.definition,
+                        source=predicate.source,
+                        external_id=predicate.external_id,
+                        attributes=attrs,
+                        created_at=predicate.created_at,
+                        updated_at=predicate.updated_at,
+                        similarity_score=similarity_score,
+                    )
+                )
 
             return ExternalPredicateSearchResponse(
                 data=data,
                 total=len(data),
                 query=query,
                 source=source,
-                threshold=threshold
+                threshold=threshold,
             )
 
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
-        logger.error(f"Failed to search external predicates: {e}", exc_info=True)  # noqa: E501
+        logger.error(
+            f"Failed to search external predicates: {e}", exc_info=True
+        )  # noqa: E501
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.get("/{id}", response_model=PredicateOut, responses={404: {"description": "Predicate not found"}})  # noqa: E501
+@router.get(
+    "/{id}",
+    response_model=PredicateOut,
+    responses={404: {"description": "Predicate not found"}},
+)  # noqa: E501
 def get_predicate(response: Response, id: str, db: Session = Depends(get_db)):
     """Get a predicate by ID."""
-    response.headers['Deprecation'] = 'true'
-    response.headers['Sunset'] = 'Phase 3'
+    response.headers["Deprecation"] = "true"
+    response.headers["Sunset"] = "Phase 3"
     # Validate UUID format
     if not validate_uuid_format(id):
         raise HTTPException(status_code=400, detail="Invalid UUID format.")
@@ -459,20 +512,24 @@ def get_predicate(response: Response, id: str, db: Session = Depends(get_db)):
     return to_predicate_out(predicate)
 
 
-@router.put("/{id}", response_model=PredicateOut, responses={404: {"description": "Predicate not found"}})  # noqa: E501
+@router.put(
+    "/{id}",
+    response_model=PredicateOut,
+    responses={404: {"description": "Predicate not found"}},
+)  # noqa: E501
 def update_predicate(
     response: Response,
     id: str,
     predicate: PredicateUpdate,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
 ):
     """
     Update an existing predicate.
 
     This endpoint implements JSON schema validation for mappings.
     """
-    response.headers['Deprecation'] = 'true'
-    response.headers['Sunset'] = 'Phase 3'
+    response.headers["Deprecation"] = "true"
+    response.headers["Sunset"] = "Phase 3"
     # Validate UUID format
     if not validate_uuid_format(id):
         raise HTTPException(status_code=400, detail="Invalid UUID format.")
@@ -487,23 +544,37 @@ def update_predicate(
         if predicate.identifier is not None:
             if predicate.identifier != db_predicate.identifier:
                 # Validate identifier uniqueness
-                if not validate_predicate_identifier(predicate.identifier, id, db):  # noqa: E501
-                    raise HTTPException(status_code=409, detail=f"Predicate with identifier '{predicate.identifier}' already exists.")  # noqa: E501
+                if not validate_predicate_identifier(
+                    predicate.identifier, id, db
+                ):  # noqa: E501
+                    raise HTTPException(
+                        status_code=409,
+                        detail=f"Predicate with identifier '{predicate.identifier}' already exists.",
+                    )  # noqa: E501
                 db_predicate.identifier = predicate.identifier
 
         # Update title if provided
         if predicate.title is not None:
             if not predicate.title.strip():
-                raise HTTPException(status_code=400, detail="Predicate title must not be empty.")  # noqa: E501
+                raise HTTPException(
+                    status_code=400, detail="Predicate title must not be empty."
+                )  # noqa: E501
 
             # Check title uniqueness (excluding current predicate)
             if predicate.title != db_predicate.title:
-                existing = db.query(models.Predicate).filter(
-                    models.Predicate.title == predicate.title,
-                    models.Predicate.id != id
-                ).first()
+                existing = (
+                    db.query(models.Predicate)
+                    .filter(
+                        models.Predicate.title == predicate.title,
+                        models.Predicate.id != id,
+                    )
+                    .first()
+                )
                 if existing:
-                    raise HTTPException(status_code=409, detail=f"Predicate with title '{predicate.title}' already exists.")  # noqa: E501
+                    raise HTTPException(
+                        status_code=409,
+                        detail=f"Predicate with title '{predicate.title}' already exists.",
+                    )  # noqa: E501
 
             db_predicate.title = predicate.title
 
@@ -520,13 +591,17 @@ def update_predicate(
             # Validate mapping structure
             is_valid, error_msg = validate_mapping(predicate.mapping)
             if not is_valid:
-                raise HTTPException(status_code=400, detail=f"Invalid mapping structure: {error_msg}")  # noqa: E501
+                raise HTTPException(
+                    status_code=400, detail=f"Invalid mapping structure: {error_msg}"
+                )  # noqa: E501
 
             try:
                 mapping_json = json.dumps(predicate.mapping)
                 db_predicate.mapping = mapping_json
             except (TypeError, ValueError) as e:
-                raise HTTPException(status_code=400, detail=f"Invalid mapping format: {str(e)}")  # noqa: E501
+                raise HTTPException(
+                    status_code=400, detail=f"Invalid mapping format: {str(e)}"
+                )  # noqa: E501
 
         # Update modification timestamp
         db_predicate.date_modified = datetime.datetime.now(datetime.UTC)
@@ -539,16 +614,22 @@ def update_predicate(
             try:
                 from reference_db.dependencies import reference_manager_context
                 from reference_db.config import ReferenceConfig
-                from services.reference_filter_service import ReferenceFilterService  # noqa: E501
+                from services.reference_filter_service import (
+                    ReferenceFilterService,
+                )  # noqa: E501
 
                 ref_config = ReferenceConfig()
                 with reference_manager_context(ref_config) as manager:
                     filter_service = ReferenceFilterService(db, manager)
                     filter_service.invalidate_cache()
-                    logger.info(f"Invalidated reference filter cache after updating predicate {id} relevance")  # noqa: E501
+                    logger.info(
+                        f"Invalidated reference filter cache after updating predicate {id} relevance"
+                    )  # noqa: E501
             except Exception as cache_error:
                 # Log but don't fail the update if cache invalidation fails
-                logger.warning(f"Failed to invalidate reference filter cache: {cache_error}")  # noqa: E501
+                logger.warning(
+                    f"Failed to invalidate reference filter cache: {cache_error}"
+                )  # noqa: E501
 
         return to_predicate_out(db_predicate)
 
@@ -558,15 +639,23 @@ def update_predicate(
 
     except Exception as e:
         db.rollback()
-        logger.error(f"Unexpected error updating predicate {id}: {e}", exc_info=True)  # noqa: E501
-        raise HTTPException(status_code=500, detail=f"Failed to update predicate: {str(e)}")  # noqa: E501
+        logger.error(
+            f"Unexpected error updating predicate {id}: {e}", exc_info=True
+        )  # noqa: E501
+        raise HTTPException(
+            status_code=500, detail=f"Failed to update predicate: {str(e)}"
+        )  # noqa: E501
 
 
-@router.delete("/{id}", status_code=200, responses={404: {"description": "Predicate not found"}})  # noqa: E501
-def delete_predicate(response: Response, id: str, db: Session = Depends(get_db)):  # noqa: E501
+@router.delete(
+    "/{id}", status_code=200, responses={404: {"description": "Predicate not found"}}
+)  # noqa: E501
+def delete_predicate(
+    response: Response, id: str, db: Session = Depends(get_db)
+):  # noqa: E501
     """Delete a predicate."""
-    response.headers['Deprecation'] = 'true'
-    response.headers['Sunset'] = 'Phase 3'
+    response.headers["Deprecation"] = "true"
+    response.headers["Sunset"] = "Phase 3"
     # Validate UUID format
     if not validate_uuid_format(id):
         raise HTTPException(status_code=400, detail="Invalid UUID format.")
@@ -576,13 +665,17 @@ def delete_predicate(response: Response, id: str, db: Session = Depends(get_db))
         raise HTTPException(status_code=404, detail="Predicate not found.")
 
     # Check if predicate is being used in structure_nodes or structure_node_links  # noqa: E501
-    domain_usage = db.query(models.StructureNode).filter_by(structural_predicate_id=id).count()  # noqa: E501
-    relationship_usage = db.query(models.StructureNodeLink).filter_by(predicate_id=id).count()  # noqa: E501
+    domain_usage = (
+        db.query(models.StructureNode).filter_by(structural_predicate_id=id).count()
+    )  # noqa: E501
+    relationship_usage = (
+        db.query(models.StructureNodeLink).filter_by(predicate_id=id).count()
+    )  # noqa: E501
 
     if domain_usage > 0 or relationship_usage > 0:
         raise HTTPException(
             status_code=400,
-            detail=f"Cannot delete predicate: it is used in {domain_usage} structure_nodes and {relationship_usage} structure_node relationships."  # noqa: E501
+            detail=f"Cannot delete predicate: it is used in {domain_usage} structure_nodes and {relationship_usage} structure_node relationships.",  # noqa: E501
         )
 
     db.delete(db_predicate)
@@ -594,21 +687,27 @@ def delete_predicate(response: Response, id: str, db: Session = Depends(get_db))
 @router.post("/import-from-conceptnet", response_model=List[PredicateOut])
 def import_predicates_from_conceptnet(
     response: Response,
-    relations: Optional[List[str]] = None,  # If None, import all configured relations  # noqa: E501
-    db: Session = Depends(get_db)
+    relations: Optional[
+        List[str]
+    ] = None,  # If None, import all configured relations  # noqa: E501
+    db: Session = Depends(get_db),
 ):
     """Import predicates from ConceptNet relations."""
-    response.headers['Deprecation'] = 'true'
-    response.headers['Sunset'] = 'Phase 3'
+    response.headers["Deprecation"] = "true"
+    response.headers["Sunset"] = "Phase 3"
     settings = get_settings()
     available_relations = settings.concepcy_config["relations_of_interest"]
 
     # If specific relations are requested, validate and filter
     if relations:
         # Validate that all requested relations are available
-        invalid_relations = [r for r in relations if r not in available_relations]  # noqa: E501
+        invalid_relations = [
+            r for r in relations if r not in available_relations
+        ]  # noqa: E501
         if invalid_relations:
-            return bad_request_error_response(f"Invalid ConceptNet relations: {invalid_relations}")  # noqa: E501
+            return bad_request_error_response(
+                f"Invalid ConceptNet relations: {invalid_relations}"
+            )  # noqa: E501
 
         # Temporarily update the config to only import requested relations
         # We'll create a modified session for this specific import
@@ -619,7 +718,9 @@ def import_predicates_from_conceptnet(
             imported_predicates = import_conceptnet_predicates(db)
         finally:
             # Restore original configuration
-            settings.concepcy_config["relations_of_interest"] = original_relations  # noqa: E501
+            settings.concepcy_config["relations_of_interest"] = (
+                original_relations  # noqa: E501
+            )
     else:
         # Import all configured relations
         imported_predicates = import_conceptnet_predicates(db)
@@ -631,10 +732,12 @@ def import_predicates_from_conceptnet(
 
 
 @router.get("/{id}/conceptnet-relation", response_model=Optional[str])
-def get_predicate_conceptnet_relation(response: Response, id: str, db: Session = Depends(get_db)):  # noqa: E501
+def get_predicate_conceptnet_relation(
+    response: Response, id: str, db: Session = Depends(get_db)
+):  # noqa: E501
     """Get the ConceptNet relation for a specific predicate."""
-    response.headers['Deprecation'] = 'true'
-    response.headers['Sunset'] = 'Phase 3'
+    response.headers["Deprecation"] = "true"
+    response.headers["Sunset"] = "Phase 3"
     # Validate UUID format
     if not validate_uuid_format(id):
         raise HTTPException(status_code=400, detail="Invalid UUID format.")
@@ -647,13 +750,17 @@ def get_predicate_conceptnet_relation(response: Response, id: str, db: Session =
     return relation
 
 
-async def _run_discovery_task(task_id: str, sources: Optional[List[str]] = None):  # noqa: E501
+async def _run_discovery_task(
+    task_id: str, sources: Optional[List[str]] = None
+):  # noqa: E501
     """Background task to run predicate discovery."""
     from reference_db.predicate_discovery import PredicateDiscoveryService
     from reference_db.config import ReferenceConfig
 
     _discovery_tasks[task_id]["status"] = "running"
-    _discovery_tasks[task_id]["started_at"] = datetime.datetime.now(datetime.UTC).isoformat()  # noqa: E501
+    _discovery_tasks[task_id]["started_at"] = datetime.datetime.now(
+        datetime.UTC
+    ).isoformat()  # noqa: E501
 
     try:
         # Get configuration
@@ -662,15 +769,16 @@ async def _run_discovery_task(task_id: str, sources: Optional[List[str]] = None)
 
         # Prepare source configs - convert ReferenceSourceConfig to legacy SourceConfig format  # noqa: E501
         from config import SourceConfig
+
         source_configs = {}
 
         # Build source config mapping for all discovery sources
         # ConceptNet and Wikidata use direct configs
         # DBpedia discovery uses dbpedia_sparql endpoint
         source_mapping = {
-            'conceptnet': 'conceptnet',
-            'dbpedia': 'dbpedia_sparql',
-            'wikidata': 'wikidata'
+            "conceptnet": "conceptnet",
+            "dbpedia": "dbpedia_sparql",
+            "wikidata": "wikidata",
         }
 
         for source_name, config_name in source_mapping.items():
@@ -683,15 +791,21 @@ async def _run_discovery_task(task_id: str, sources: Optional[List[str]] = None)
                         use_proxy=ref_config.use_proxy,
                         timeout=ref_config.timeout,
                         max_retries=ref_config.max_retries,
-                        base_url=ref_config.upstream_url
+                        base_url=ref_config.upstream_url,
                     )
                     source_configs[source_name] = legacy_config
-                    logger.debug(f"Configured source {source_name} (from {config_name}): enabled={ref_config.enabled}")  # noqa: E501
+                    logger.debug(
+                        f"Configured source {source_name} (from {config_name}): enabled={ref_config.enabled}"
+                    )  # noqa: E501
                 else:
-                    logger.warning(f"Source {config_name} configuration is None")  # noqa: E501
+                    logger.warning(
+                        f"Source {config_name} configuration is None"
+                    )  # noqa: E501
             except ValueError as e:
                 # Source not configured
-                logger.error(f"Could not configure source {source_name} from {config_name}: {e}")  # noqa: E501
+                logger.error(
+                    f"Could not configure source {source_name} from {config_name}: {e}"
+                )  # noqa: E501
                 # Still create a disabled config so the service knows about it
                 source_configs[source_name] = SourceConfig(enabled=False)
 
@@ -712,12 +826,15 @@ async def _run_discovery_task(task_id: str, sources: Optional[List[str]] = None)
                 "updated": updated,
                 "error_count": total_errors,
                 "errors": truncated_errors,
-                "errors_truncated": total_errors > 10  # Indicate if errors were truncated  # noqa: E501
+                "errors_truncated": total_errors
+                > 10,  # Indicate if errors were truncated  # noqa: E501
             }
 
         _discovery_tasks[task_id]["status"] = "completed"
         _discovery_tasks[task_id]["results"] = formatted_results
-        _discovery_tasks[task_id]["completed_at"] = datetime.datetime.now(datetime.UTC).isoformat()  # noqa: E501
+        _discovery_tasks[task_id]["completed_at"] = datetime.datetime.now(
+            datetime.UTC
+        ).isoformat()  # noqa: E501
 
         logger.info(f"Discovery task {task_id} completed successfully")
 
@@ -725,14 +842,19 @@ async def _run_discovery_task(task_id: str, sources: Optional[List[str]] = None)
         logger.error(f"Discovery task {task_id} failed: {e}", exc_info=True)
         _discovery_tasks[task_id]["status"] = "failed"
         _discovery_tasks[task_id]["error"] = str(e)
-        _discovery_tasks[task_id]["completed_at"] = datetime.datetime.now(datetime.UTC).isoformat()  # noqa: E501
+        _discovery_tasks[task_id]["completed_at"] = datetime.datetime.now(
+            datetime.UTC
+        ).isoformat()  # noqa: E501
 
 
 @router.post("/discover", response_model=PredicateDiscoveryResponse)
 async def discover_external_predicates(
     response: Response,
     background_tasks: BackgroundTasks,
-    sources: Optional[List[str]] = Query(None, description="Sources to discover from (conceptnet, dbpedia, wikidata, schema_org)")  # noqa: E501
+    sources: Optional[List[str]] = Query(
+        None,
+        description="Sources to discover from (conceptnet, dbpedia, wikidata, schema_org)",
+    ),  # noqa: E501
 ):
     """
     Discover predicates from external knowledge sources.
@@ -751,16 +873,16 @@ async def discover_external_predicates(
     - WikiData: <30s for 10K properties
     - Schema.org: <1s (reads from database)
     """
-    response.headers['Deprecation'] = 'true'
-    response.headers['Sunset'] = 'Phase 3'
+    response.headers["Deprecation"] = "true"
+    response.headers["Sunset"] = "Phase 3"
     # Validate sources if provided
-    valid_sources = ['conceptnet', 'dbpedia', 'wikidata', 'schema_org']
+    valid_sources = ["conceptnet", "dbpedia", "wikidata", "schema_org"]
     if sources:
         invalid = [s for s in sources if s not in valid_sources]
         if invalid:
             raise HTTPException(
                 status_code=400,
-                detail=f"Invalid sources: {invalid}. Valid sources: {valid_sources}"  # noqa: E501
+                detail=f"Invalid sources: {invalid}. Valid sources: {valid_sources}",  # noqa: E501
             )
 
     # Generate task ID
@@ -774,7 +896,7 @@ async def discover_external_predicates(
         "results": None,
         "error": None,
         "started_at": None,
-        "completed_at": None
+        "completed_at": None,
     }
 
     # Start background task
@@ -783,14 +905,16 @@ async def discover_external_predicates(
     return PredicateDiscoveryResponse(
         task_id=task_id,
         status="started",
-        message=f"Discovery task started for sources: {sources or valid_sources}"  # noqa: E501
+        message=f"Discovery task started for sources: {sources or valid_sources}",  # noqa: E501
     )
 
 
 # Predicate Similarity Search Endpoints (Phase 3)
 
+
 class SimilarPredicateOut(BaseModel):
     """Response model for similar predicates."""
+
     predicate_id: str
     source: str
     source_id: str
@@ -802,6 +926,7 @@ class SimilarPredicateOut(BaseModel):
 
 class FindSimilarResponse(BaseModel):
     """Response for find-similar endpoint."""
+
     predicate_id: str
     predicate_title: str
     results: List[SimilarPredicateOut]
@@ -812,6 +937,7 @@ class FindSimilarResponse(BaseModel):
 
 class ClusterOut(BaseModel):
     """Response model for predicate clusters."""
+
     cluster_id: int
     predicate_ids: List[str]
     centroid_title: str
@@ -821,6 +947,7 @@ class ClusterOut(BaseModel):
 
 class ClusterPredicatesResponse(BaseModel):
     """Response for cluster-predicates endpoint."""
+
     clusters: List[ClusterOut]
     total_clusters: int
     total_predicates: int
@@ -831,11 +958,15 @@ class ClusterPredicatesResponse(BaseModel):
 def find_similar_predicates(
     response: Response,
     id: str,
-    source: Optional[str] = Query(None, description="Filter by source (conceptnet, dbpedia, wikidata)"),  # noqa: E501
+    source: Optional[str] = Query(
+        None, description="Filter by source (conceptnet, dbpedia, wikidata)"
+    ),  # noqa: E501
     limit: int = Query(100, ge=1, le=100),
     threshold: float = Query(0.7, ge=0.0, le=1.0),
-    use_cache: bool = Query(True, description="Use cached results if available"),  # noqa: E501
-    db: Session = Depends(get_db)
+    use_cache: bool = Query(
+        True, description="Use cached results if available"
+    ),  # noqa: E501
+    db: Session = Depends(get_db),
 ):
     """
     Find similar external predicates for a given predicate using vector similarity search.  # noqa: E501
@@ -866,8 +997,8 @@ def find_similar_predicates(
     Returns:
         FindSimilarResponse with ranked similarity results
     """
-    response.headers['Deprecation'] = 'true'
-    response.headers['Sunset'] = 'Phase 3'
+    response.headers["Deprecation"] = "true"
+    response.headers["Sunset"] = "Phase 3"
     from services.predicate_similarity import PredicateSimilarityService
     from reference_db.dependencies import reference_manager_context
     from reference_db.config import ReferenceConfig
@@ -879,7 +1010,7 @@ def find_similar_predicates(
     if not validate_uuid_format(id):
         raise HTTPException(
             status_code=400,
-            detail=f"Invalid UUID format for predicate ID: '{id}'. Expected format: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"  # noqa: E501
+            detail=f"Invalid UUID format for predicate ID: '{id}'. Expected format: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",  # noqa: E501
         )
 
     # Get the predicate with explicit session management
@@ -888,15 +1019,16 @@ def find_similar_predicates(
         if not predicate:
             raise HTTPException(
                 status_code=404,
-                detail=f"Predicate with ID '{id}' not found in database"
+                detail=f"Predicate with ID '{id}' not found in database",
             )
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Database error while fetching predicate {id}: {e}", exc_info=True)  # noqa: E501
+        logger.error(
+            f"Database error while fetching predicate {id}: {e}", exc_info=True
+        )  # noqa: E501
         raise HTTPException(
-            status_code=500,
-            detail=f"Database error while fetching predicate: {str(e)}"
+            status_code=500, detail=f"Database error while fetching predicate: {str(e)}"
         )
 
     try:
@@ -906,14 +1038,16 @@ def find_similar_predicates(
             similarity_service = PredicateSimilarityService(manager)
 
             # Find similar predicates (CACHING TEMPORARILY DISABLED FOR DEBUGGING)  # noqa: E501
-            logger.info(f"Finding similar predicates for: {predicate.title} (ID: {id})")  # noqa: E501
+            logger.info(
+                f"Finding similar predicates for: {predicate.title} (ID: {id})"
+            )  # noqa: E501
             results = similarity_service.find_similar_predicates(
                 predicate_title=predicate.title,
                 predicate_definition=predicate.definition,
                 source=source,
                 limit=limit,
                 threshold=threshold,
-                use_cache=False  # DISABLED: was use_cache
+                use_cache=False,  # DISABLED: was use_cache
             )
             logger.info(f"Found {len(results)} similar predicates")
 
@@ -923,15 +1057,17 @@ def find_similar_predicates(
             # Convert to response models
             similar_predicates = []
             for result in results:
-                similar_predicates.append(SimilarPredicateOut(
-                    predicate_id=result.predicate_id,
-                    source=result.source,
-                    source_id=result.source_id,
-                    title=result.title,
-                    definition=result.definition,
-                    similarity_score=result.similarity_score,
-                    confidence=result.confidence
-                ))
+                similar_predicates.append(
+                    SimilarPredicateOut(
+                        predicate_id=result.predicate_id,
+                        source=result.source,
+                        source_id=result.source_id,
+                        title=result.title,
+                        definition=result.definition,
+                        similarity_score=result.similarity_score,
+                        confidence=result.confidence,
+                    )
+                )
 
             search_time_ms = (time.perf_counter() - start_time) * 1000
 
@@ -941,43 +1077,46 @@ def find_similar_predicates(
                 results=similar_predicates,
                 total_results=len(similar_predicates),
                 search_time_ms=search_time_ms,
-                cached=cached
+                cached=cached,
             )
 
     except ValueError as e:
         # Handle validation errors from service
         logger.warning(f"Validation error in find_similar_predicates: {e}")
-        raise HTTPException(
-            status_code=400,
-            detail=f"Validation error: {str(e)}"
-        )
+        raise HTTPException(status_code=400, detail=f"Validation error: {str(e)}")
     except Exception as e:
         error_context = {
             "predicate_id": id,
             "predicate_title": predicate.title if predicate else "unknown",
             "source": source,
             "limit": limit,
-            "threshold": threshold
+            "threshold": threshold,
         }
         logger.error(
             f"Failed to find similar predicates: {e}. Context: {error_context}",  # noqa: E501
-            exc_info=True
+            exc_info=True,
         )
         raise HTTPException(
             status_code=500,
-            detail=f"Failed to find similar predicates: {str(e)}. Please check logs for details."  # noqa: E501
+            detail=f"Failed to find similar predicates: {str(e)}. Please check logs for details.",  # noqa: E501
         )
 
 
 @router.post("/cluster-predicates", response_model=ClusterPredicatesResponse)
 def cluster_predicates(
     response: Response,
-    predicate_ids: Optional[List[str]] = Query(None, description="Specific predicate IDs to cluster (if None, clusters all)"),  # noqa: E501
+    predicate_ids: Optional[List[str]] = Query(
+        None, description="Specific predicate IDs to cluster (if None, clusters all)"
+    ),  # noqa: E501
     min_similarity: float = Query(0.7, ge=0.0, le=1.0),
     min_cluster_size: int = Query(2, ge=2),
-    eps: float = Query(0.3, ge=0.1, le=1.0, description="DBSCAN epsilon (distance threshold)"),  # noqa: E501
-    max_predicates: int = Query(1000, ge=1, le=10000, description="Maximum predicates to process"),  # noqa: E501
-    db: Session = Depends(get_db)
+    eps: float = Query(
+        0.3, ge=0.1, le=1.0, description="DBSCAN epsilon (distance threshold)"
+    ),  # noqa: E501
+    max_predicates: int = Query(
+        1000, ge=1, le=10000, description="Maximum predicates to process"
+    ),  # noqa: E501
+    db: Session = Depends(get_db),
 ):
     """
     Cluster similar predicates using DBSCAN algorithm.
@@ -1007,8 +1146,8 @@ def cluster_predicates(
     Returns:
         ClusterPredicatesResponse with clusters and statistics
     """
-    response.headers['Deprecation'] = 'true'
-    response.headers['Sunset'] = 'Phase 3'
+    response.headers["Deprecation"] = "true"
+    response.headers["Sunset"] = "Phase 3"
     from services.predicate_similarity import PredicateSimilarityService
     from reference_db.dependencies import reference_manager_context
     from reference_db.config import ReferenceConfig
@@ -1023,19 +1162,23 @@ def cluster_predicates(
                 if not validate_uuid_format(pred_id):
                     raise HTTPException(
                         status_code=400,
-                        detail=f"Invalid UUID format for predicate ID: '{pred_id}'. Expected format: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"  # noqa: E501
+                        detail=f"Invalid UUID format for predicate ID: '{pred_id}'. Expected format: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",  # noqa: E501
                     )
 
             # Get specified predicates
             try:
-                predicates = db.query(models.Predicate).filter(
-                    models.Predicate.id.in_(predicate_ids)
-                ).all()
+                predicates = (
+                    db.query(models.Predicate)
+                    .filter(models.Predicate.id.in_(predicate_ids))
+                    .all()
+                )
             except Exception as e:
-                logger.error(f"Database error while fetching predicates: {e}", exc_info=True)  # noqa: E501
+                logger.error(
+                    f"Database error while fetching predicates: {e}", exc_info=True
+                )  # noqa: E501
                 raise HTTPException(
                     status_code=500,
-                    detail=f"Database error while fetching predicates: {str(e)}"  # noqa: E501
+                    detail=f"Database error while fetching predicates: {str(e)}",  # noqa: E501
                 )
 
             if len(predicates) != len(predicate_ids):
@@ -1043,37 +1186,38 @@ def cluster_predicates(
                 missing_ids = set(predicate_ids) - found_ids
                 raise HTTPException(
                     status_code=404,
-                    detail=f"Predicates not found with IDs: {list(missing_ids)[:10]}"  # Limit to 10 for readability  # noqa: E501
+                    detail=f"Predicates not found with IDs: {list(missing_ids)[:10]}",  # Limit to 10 for readability  # noqa: E501
                 )
         else:
             # Get all predicates (limit to max_predicates for safety)
             try:
-                predicates = db.query(models.Predicate).limit(max_predicates + 1).all()  # noqa: E501
+                predicates = (
+                    db.query(models.Predicate).limit(max_predicates + 1).all()
+                )  # noqa: E501
             except Exception as e:
-                logger.error(f"Database error while fetching all predicates: {e}", exc_info=True)  # noqa: E501
+                logger.error(
+                    f"Database error while fetching all predicates: {e}", exc_info=True
+                )  # noqa: E501
                 raise HTTPException(
                     status_code=500,
-                    detail=f"Database error while fetching predicates: {str(e)}"  # noqa: E501
+                    detail=f"Database error while fetching predicates: {str(e)}",  # noqa: E501
                 )
 
             if len(predicates) > max_predicates:
                 raise HTTPException(
                     status_code=400,
                     detail=f"Too many predicates to cluster: {len(predicates)} (max: {max_predicates}). "  # noqa: E501
-                           f"Please specify predicate_ids or increase max_predicates parameter."  # noqa: E501
+                    f"Please specify predicate_ids or increase max_predicates parameter.",  # noqa: E501
                 )
 
         if len(predicates) < min_cluster_size:
             raise HTTPException(
                 status_code=400,
-                detail=f"Not enough predicates for clustering. Need at least {min_cluster_size}, got {len(predicates)}"  # noqa: E501
+                detail=f"Not enough predicates for clustering. Need at least {min_cluster_size}, got {len(predicates)}",  # noqa: E501
             )
 
         # Prepare predicate data for clustering
-        predicate_data = [
-            (p.id, p.title, p.definition)
-            for p in predicates
-        ]
+        predicate_data = [(p.id, p.title, p.definition) for p in predicates]
 
         # Initialize services and perform clustering
         ref_config = ReferenceConfig()
@@ -1085,7 +1229,7 @@ def cluster_predicates(
                 min_similarity=min_similarity,
                 min_cluster_size=min_cluster_size,
                 eps=eps,
-                max_predicates=max_predicates
+                max_predicates=max_predicates,
             )
 
             # Convert to response models
@@ -1093,13 +1237,15 @@ def cluster_predicates(
             total_clustered_predicates = 0
 
             for cluster in cluster_results:
-                clusters.append(ClusterOut(
-                    cluster_id=cluster.cluster_id,
-                    predicate_ids=cluster.predicate_ids,
-                    centroid_title=cluster.centroid_title,
-                    avg_similarity=cluster.avg_similarity,
-                    size=cluster.size
-                ))
+                clusters.append(
+                    ClusterOut(
+                        cluster_id=cluster.cluster_id,
+                        predicate_ids=cluster.predicate_ids,
+                        centroid_title=cluster.centroid_title,
+                        avg_similarity=cluster.avg_similarity,
+                        size=cluster.size,
+                    )
+                )
                 total_clustered_predicates += cluster.size
 
             cluster_time_ms = (time.perf_counter() - start_time) * 1000
@@ -1108,7 +1254,7 @@ def cluster_predicates(
                 clusters=clusters,
                 total_clusters=len(clusters),
                 total_predicates=total_clustered_predicates,
-                cluster_time_ms=cluster_time_ms
+                cluster_time_ms=cluster_time_ms,
             )
 
     except HTTPException:
@@ -1116,25 +1262,22 @@ def cluster_predicates(
     except ValueError as e:
         # Handle validation errors from service
         logger.warning(f"Validation error in cluster_predicates: {e}")
-        raise HTTPException(
-            status_code=400,
-            detail=f"Validation error: {str(e)}"
-        )
+        raise HTTPException(status_code=400, detail=f"Validation error: {str(e)}")
     except Exception as e:
         error_context = {
             "predicate_count": len(predicate_ids) if predicate_ids else "all",
             "min_similarity": min_similarity,
             "min_cluster_size": min_cluster_size,
             "eps": eps,
-            "max_predicates": max_predicates
+            "max_predicates": max_predicates,
         }
         logger.error(
             f"Failed to cluster predicates: {e}. Context: {error_context}",
-            exc_info=True
+            exc_info=True,
         )
         raise HTTPException(
             status_code=500,
-            detail=f"Failed to cluster predicates: {str(e)}. Please check logs for details."  # noqa: E501
+            detail=f"Failed to cluster predicates: {str(e)}. Please check logs for details.",  # noqa: E501
         )
 
 
@@ -1154,8 +1297,8 @@ def invalidate_similarity_cache(response: Response):
     Returns:
         Success message with cache statistics
     """
-    response.headers['Deprecation'] = 'true'
-    response.headers['Sunset'] = 'Phase 3'
+    response.headers["Deprecation"] = "true"
+    response.headers["Sunset"] = "Phase 3"
     from services.predicate_similarity import PredicateSimilarityService
     from reference_db.dependencies import reference_manager_context
     from reference_db.config import ReferenceConfig
@@ -1174,12 +1317,11 @@ def invalidate_similarity_cache(response: Response):
             return {
                 "success": True,
                 "message": "Similarity search cache invalidated successfully",
-                "cache_entries_cleared": cache_stats_before["size"]
+                "cache_entries_cleared": cache_stats_before["size"],
             }
 
     except Exception as e:
         logger.error(f"Failed to invalidate cache: {e}", exc_info=True)
         raise HTTPException(
-            status_code=500,
-            detail=f"Failed to invalidate similarity cache: {str(e)}"
+            status_code=500, detail=f"Failed to invalidate similarity cache: {str(e)}"
         )
