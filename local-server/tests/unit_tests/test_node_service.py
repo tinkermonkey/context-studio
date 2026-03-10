@@ -309,7 +309,7 @@ class TestNodeServiceCRUD:
         """Test updating non-existent structure_node."""
         mock_db.query.return_value.filter.return_value.first.return_value = None
 
-        with pytest.raises(NotFoundError, match="StructureNode not found"):
+        with pytest.raises(NotFoundError, match="OntologyEntity not found"):
             node_service.update_node(str(uuid.uuid4()), {"title": "New Title"})
 
     def test_delete_node_success(self, node_service, mock_db):
@@ -351,7 +351,7 @@ class TestNodeServiceCRUD:
         """Test deleting non-existent structure_node."""
         mock_db.query.return_value.filter.return_value.first.return_value = None
 
-        with pytest.raises(NotFoundError, match="StructureNode not found"):
+        with pytest.raises(NotFoundError, match="OntologyEntity not found"):
             node_service.delete_node(str(uuid.uuid4()))
 
     def test_get_node(self, node_service, mock_db):

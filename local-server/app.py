@@ -106,7 +106,7 @@ os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
 # Dependency injection for testability
 def create_app(
-    dataset_id=None, engine=None, session_local=None, service_factory=None
+    dataset_id=None, engine=None, session_local=None, service_factory=None, testing=False
 ):  # noqa: E501
     logger.info("Creating FastAPI application...")
 
@@ -298,77 +298,83 @@ def create_app(
             else:
                 app.state.event_processor = None
 
-            # Skip warmup if dataset manager is not available (these services depend on it)  # noqa: E501
-            if dataset_manager is not None:
-                # Preload NLP pipeline to reduce API response times
-                logger.info("Preloading NLP pipeline...")
-                try:
-                    pipeline = get_pipeline()
-                    if pipeline.get_nlp() is not None:
-                        pipeline.process("Welcome")
-                        logger.info("NLP pipeline successfully preloaded")
-                    else:
-                        error_msg = pipeline.get_error()
-                        logger.warning(
-                            f"NLP pipeline preload failed: {error_msg}"
-                        )  # noqa: E501
-                except Exception as e:
-                    logger.error(f"Error preloading NLP pipeline: {e}")
+            # Skip all model warmup in testing mode — loading en_core_web_lg
+            # (~750MB) and SentenceTransformer at test startup adds minutes of
+            # latency and hundreds of MB of memory for no benefit in tests.
+            if not testing:
+                # Skip warmup if dataset manager is not available (these services depend on it)  # noqa: E501
+                if dataset_manager is not None:
+                    # Preload NLP pipeline to reduce API response times
+                    logger.info("Preloading NLP pipeline...")
+                    try:
+                        pipeline = get_pipeline()
+                        if pipeline.get_nlp() is not None:
+                            pipeline.process("Welcome")
+                            logger.info("NLP pipeline successfully preloaded")
+                        else:
+                            error_msg = pipeline.get_error()
+                            logger.warning(
+                                f"NLP pipeline preload failed: {error_msg}"
+                            )  # noqa: E501
+                    except Exception as e:
+                        logger.error(f"Error preloading NLP pipeline: {e}")
 
-                # Preload GraphService to eliminate first-request delay
-                logger.info("Warming up GraphService...")
-                try:
-                    graph_service = get_cached_graph_service()
-                    if graph_service:
+                    # Preload GraphService to eliminate first-request delay
+                    logger.info("Warming up GraphService...")
+                    try:
+                        graph_service = get_cached_graph_service()
+                        if graph_service:
+                            logger.info(
+                                "GraphService successfully warmed up and cached"
+                            )  # noqa: E501
+                        else:
+                            logger.warning("GraphService warmup returned None")
+                    except Exception as e:
+                        logger.error(f"Error warming up GraphService: {e}")
+                        # Continue startup even if GraphService fails to warm up
                         logger.info(
-                            "GraphService successfully warmed up and cached"
+                            "Continuing startup despite GraphService warmup failure"
                         )  # noqa: E501
-                    else:
-                        logger.warning("GraphService warmup returned None")
-                except Exception as e:
-                    logger.error(f"Error warming up GraphService: {e}")
-                    # Continue startup even if GraphService fails to warm up
+                else:
                     logger.info(
-                        "Continuing startup despite GraphService warmup failure"
+                        "Skipping NLP and GraphService warmup (dataset manager not available)"
+                    )  # noqa: E501
+
+                # Preload Reference Database Manager and Embedding Model
+                logger.info("Warming up Reference Database and Embedding Model...")
+                try:
+                    # Initialize singleton reference manager (creates engine/session)  # noqa: E501
+                    ref_config = ReferenceConfig()
+                    ref_manager = get_reference_manager(ref_config)
+
+                    # Warm up embedding model with a test query
+                    # This loads the SentenceTransformer model into memory (~1.5s first call)  # noqa: E501
+                    logger.info(
+                        "Loading embedding model (this may take a moment)..."
+                    )  # noqa: E501
+                    warmup_start = time.perf_counter()
+
+                    # Test search to warm up both embedding model and vector search
+                    ref_manager.search_external_predicates_by_similarity(
+                        query_text="test warmup query", limit=1, threshold=0.5
+                    )
+
+                    warmup_time = (time.perf_counter() - warmup_start) * 1000
+                    logger.info(
+                        f"Reference DB and Embedding Model warmed up successfully in {warmup_time:.0f}ms"
+                    )  # noqa: E501
+                    logger.info(
+                        "Subsequent embedding/search operations will be fast (~20-50ms)"
+                    )  # noqa: E501
+
+                except Exception as e:
+                    logger.error(f"Error warming up Reference DB/Embeddings: {e}")
+                    # Continue startup even if warmup fails
+                    logger.info(
+                        "Continuing startup despite Reference DB warmup failure"
                     )  # noqa: E501
             else:
-                logger.info(
-                    "Skipping NLP and GraphService warmup (dataset manager not available)"
-                )  # noqa: E501
-
-            # Preload Reference Database Manager and Embedding Model
-            logger.info("Warming up Reference Database and Embedding Model...")
-            try:
-                # Initialize singleton reference manager (creates engine/session)  # noqa: E501
-                ref_config = ReferenceConfig()
-                ref_manager = get_reference_manager(ref_config)
-
-                # Warm up embedding model with a test query
-                # This loads the SentenceTransformer model into memory (~1.5s first call)  # noqa: E501
-                logger.info(
-                    "Loading embedding model (this may take a moment)..."
-                )  # noqa: E501
-                warmup_start = time.perf_counter()
-
-                # Test search to warm up both embedding model and vector search
-                ref_manager.search_external_predicates_by_similarity(
-                    query_text="test warmup query", limit=1, threshold=0.5
-                )
-
-                warmup_time = (time.perf_counter() - warmup_start) * 1000
-                logger.info(
-                    f"Reference DB and Embedding Model warmed up successfully in {warmup_time:.0f}ms"
-                )  # noqa: E501
-                logger.info(
-                    "Subsequent embedding/search operations will be fast (~20-50ms)"
-                )  # noqa: E501
-
-            except Exception as e:
-                logger.error(f"Error warming up Reference DB/Embeddings: {e}")
-                # Continue startup even if warmup fails
-                logger.info(
-                    "Continuing startup despite Reference DB warmup failure"
-                )  # noqa: E501
+                logger.info("Skipping NLP/embedding warmup (testing=True)")
 
             # Phase 4: Initialize TaskManager for background task processing
             # This initializes the asyncio-based background task management system  # noqa: E501

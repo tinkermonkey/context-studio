@@ -99,6 +99,14 @@ class TestConfigurationManager:
                 "config_path": str(self.temp_dir / "test_datasets.json"),
                 "datasets_directory": str(test_datasets_dir),
             },
+            # Prevent NLP model downloads and use the smallest available model.
+            # en_core_web_lg (750MB, auto-download) is the production default; in tests
+            # we never want a 600s download attempt and we don't need linguistic quality.
+            "nlp": {
+                "model_name": "en_core_web_sm",  # 12MB vs 750MB
+                "auto_download_models": False,    # Never download during tests
+                "download_timeout": 30,           # Short safety timeout
+            },
             # Note: Database URLs are NOT overridden to maintain shared database performance  # noqa: E501
             # Tests that need database isolation should use utilities from test_db_utils.py  # noqa: E501
         }

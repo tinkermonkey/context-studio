@@ -3,6 +3,8 @@ import os
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import pytest  # noqa: E402
+
+pytestmark = pytest.mark.nlp
 from nlp.pipeline import get_pipeline  # noqa: E402
 from nlp.processors import extract_token_data  # noqa: E402
 

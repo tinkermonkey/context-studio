@@ -29,8 +29,12 @@ pytest.importorskip(
     "embeddings.generate_embeddings", reason="embeddings module not available"
 )
 
+# These tests call the real SentenceTransformer model and are excluded from the
+# default unit test run.  Run explicitly with: pytest -m slow
+pytestmark = pytest.mark.slow
 
-@pytest.fixture
+
+@pytest.fixture(scope="module")
 def test_manager():
     """Create a test ReferenceManager with sample data."""
     config = ReferenceConfig()

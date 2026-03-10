@@ -417,6 +417,7 @@ def shared_app(test_service_factory):
             engine=engine,
             session_local=session_local,
             service_factory=test_service_factory,
+            testing=True,
         )
         yield app, engine, session_local
     finally:

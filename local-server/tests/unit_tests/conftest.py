@@ -14,49 +14,6 @@ sys.path.append(
 
 
 @pytest.fixture(autouse=True)
-def clean_nlp_pipeline():
-    """
-    Automatically clean up the NLP pipeline singleton between tests.
-    This prevents component initialization errors when tests are run together.
-    """
-    from nlp import pipeline
-
-    yield
-
-    # Clean up after test
-    try:
-        if pipeline._pipeline_instance is not None:
-            pipeline._pipeline_instance.shutdown()
-    except Exception:
-        pass
-    finally:
-        # Reset to None to force reinitialization for next test
-        pipeline._pipeline_instance = None
-
-
-@pytest.fixture(autouse=True)
-def clean_service_factory():
-    """
-    Clean up service factory state between tests.
-    """
-    from services.service_factory import ServiceFactory
-
-    yield
-
-    # Clear all service factory instances
-    try:
-        # Get all active instances and clear them
-        for instance in ServiceFactory._instances.values():
-            try:
-                instance.clear_cache()
-            except Exception:
-                pass
-        ServiceFactory._instances.clear()
-    except Exception:
-        pass
-
-
-@pytest.fixture(autouse=True)
 def clean_performance_monitor():
     """
     Clean up performance monitor state between tests.
