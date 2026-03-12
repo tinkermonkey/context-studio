@@ -105,7 +105,7 @@ class TestConfigurationManager:
             "nlp": {
                 "model_name": "en_core_web_sm",  # 12MB vs 750MB
                 "auto_download_models": False,    # Never download during tests
-                "download_timeout": 30,           # Short safety timeout
+                "download_timeout": 60,           # Minimum valid timeout
             },
             # Note: Database URLs are NOT overridden to maintain shared database performance  # noqa: E501
             # Tests that need database isolation should use utilities from test_db_utils.py  # noqa: E501

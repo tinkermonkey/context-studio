@@ -84,6 +84,7 @@ class TestExternalPredicateModel:
         assert "ExternalPredicate" in repr_str
 
 
+@pytest.mark.slow
 class TestExternalPredicateManager:
     """
     Test suite for ReferenceManager external predicate operations.

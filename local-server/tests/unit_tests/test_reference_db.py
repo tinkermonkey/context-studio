@@ -461,6 +461,7 @@ class TestReferenceManagerCore:
                 os.unlink(db_path)
 
 
+@pytest.mark.slow
 class TestReferenceManagerVector:
     """
     Test suite for ReferenceManager vector operations.
