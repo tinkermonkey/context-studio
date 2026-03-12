@@ -340,39 +340,39 @@ def create_app(
                         "Skipping NLP and GraphService warmup (dataset manager not available)"
                     )  # noqa: E501
 
-            # Preload Reference Database Manager and Embedding Model
-            logger.info("Warming up Reference Database and Embedding Model...")
-            try:
-                # Initialize singleton reference manager (creates engine/session)  # noqa: E501
-                ref_config = ReferenceConfig()
-                ref_manager = get_reference_manager(ref_config)
+                # Preload Reference Database Manager and Embedding Model
+                logger.info("Warming up Reference Database and Embedding Model...")
+                try:
+                    # Initialize singleton reference manager (creates engine/session)  # noqa: E501
+                    ref_config = ReferenceConfig()
+                    ref_manager = get_reference_manager(ref_config)
 
-                # Warm up embedding model with a test query
-                # This loads the SentenceTransformer model into memory (~1.5s first call)  # noqa: E501
-                logger.info(
-                    "Loading embedding model (this may take a moment)..."
-                )  # noqa: E501
-                warmup_start = time.perf_counter()
+                    # Warm up embedding model with a test query
+                    # This loads the SentenceTransformer model into memory (~1.5s first call)  # noqa: E501
+                    logger.info(
+                        "Loading embedding model (this may take a moment)..."
+                    )  # noqa: E501
+                    warmup_start = time.perf_counter()
 
-                # Test search to warm up both embedding model and vector search
-                ref_manager.search_external_predicates_by_similarity(
-                    query_text="test warmup query", limit=1, threshold=0.5
-                )
+                    # Test search to warm up both embedding model and vector search
+                    ref_manager.search_external_predicates_by_similarity(
+                        query_text="test warmup query", limit=1, threshold=0.5
+                    )
 
-                warmup_time = (time.perf_counter() - warmup_start) * 1000
-                logger.info(
-                    f"Reference DB and Embedding Model warmed up successfully in {warmup_time:.0f}ms"
-                )  # noqa: E501
-                logger.info(
-                    "Subsequent embedding/search operations will be fast (~20-50ms)"
-                )  # noqa: E501
+                    warmup_time = (time.perf_counter() - warmup_start) * 1000
+                    logger.info(
+                        f"Reference DB and Embedding Model warmed up successfully in {warmup_time:.0f}ms"
+                    )  # noqa: E501
+                    logger.info(
+                        "Subsequent embedding/search operations will be fast (~20-50ms)"
+                    )  # noqa: E501
 
-            except Exception as e:
-                logger.error(f"Error warming up Reference DB/Embeddings: {e}")
-                # Continue startup even if warmup fails
-                logger.info(
-                    "Continuing startup despite Reference DB warmup failure"
-                )  # noqa: E501
+                except Exception as e:
+                    logger.error(f"Error warming up Reference DB/Embeddings: {e}")
+                    # Continue startup even if warmup fails
+                    logger.info(
+                        "Continuing startup despite Reference DB warmup failure"
+                    )  # noqa: E501
             else:
                 logger.info("Skipping NLP/embedding warmup (testing=True)")
 
