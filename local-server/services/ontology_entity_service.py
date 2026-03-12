@@ -1680,12 +1680,18 @@ class OntologyEntityService:
             kwargs["parent_entity_id"] = kwargs.pop("parent_node_id")
         return self.count_entities(*args, **kwargs)
 
-    def get_node_children(self, *args, **kwargs):
+    def get_node_children(self, entity_id: str = None, **kwargs):
         """Deprecated: use get_entity_children() instead"""
-        # Translate old kwarg names to new ones
+        # Handle old parameter name parent_node_id if provided in kwargs
         if "parent_node_id" in kwargs:
-            kwargs["parent_entity_id"] = kwargs.pop("parent_node_id")
-        return self.get_entity_children(*args, **kwargs)
+            if entity_id is None:
+                entity_id = kwargs.pop("parent_node_id")
+            else:
+                # If both provided, remove the old name from kwargs to avoid duplicate arg error
+                kwargs.pop("parent_node_id")
+        if entity_id is None:
+            raise ValueError("entity_id (or parent_node_id) is required")
+        return self.get_entity_children(entity_id, **kwargs)
 
     def get_node_ancestors(self, *args, **kwargs):
         """Deprecated: use get_entity_ancestors() instead"""

@@ -556,17 +556,27 @@ class RelationshipService:
     # Deprecated method wrappers for backward compatibility
     def create_link(self, link_data: Dict[str, Any]) -> Relationship:
         """Deprecated: use create_relationship() instead"""
-        # Translate old key names to new ones
-        translated_data = {
-            "source_entity_id": link_data.get("source_node_id")
-            or link_data.get("source_entity_id"),
-            "target_entity_id": link_data.get("target_node_id")
-            or link_data.get("target_entity_id"),
-            "predicate": link_data.get("predicate"),
-            "predicate_id": link_data.get("predicate_id"),
-        }
-        # Remove None values
-        translated_data = {k: v for k, v in translated_data.items() if v is not None}
+        # Translate old key names to new ones, preferring new names over old
+        translated_data = {}
+
+        # Handle source_entity_id (prefer new name, fall back to old name)
+        if "source_entity_id" in link_data:
+            translated_data["source_entity_id"] = link_data["source_entity_id"]
+        elif "source_node_id" in link_data:
+            translated_data["source_entity_id"] = link_data["source_node_id"]
+
+        # Handle target_entity_id (prefer new name, fall back to old name)
+        if "target_entity_id" in link_data:
+            translated_data["target_entity_id"] = link_data["target_entity_id"]
+        elif "target_node_id" in link_data:
+            translated_data["target_entity_id"] = link_data["target_node_id"]
+
+        # Add predicate and predicate_id if present
+        if "predicate" in link_data:
+            translated_data["predicate"] = link_data["predicate"]
+        if "predicate_id" in link_data:
+            translated_data["predicate_id"] = link_data["predicate_id"]
+
         return self.create_relationship(translated_data)
 
     def update_link(self, link_id: str, link_data: Dict[str, Any]) -> Relationship:
