@@ -175,9 +175,16 @@ def list_nodes(
         request_start = time.time()
 
         # Convert API node type to database node type
+        # Map legacy API terminology (layer, domain, term) to new database terminology
         db_node_type = None
         if node_type:
-            db_node_type = convert_api_node_type_to_db(node_type.value)
+            legacy_to_new_mapping = {
+                "layer": "taxonomy",
+                "domain": "concept_scheme",
+                "term": "class",
+            }
+            normalized_type = legacy_to_new_mapping.get(node_type.value, node_type.value)
+            db_node_type = convert_api_node_type_to_db(normalized_type)
 
         # Convert UUID to string for parent_node_id
         parent_node_id_str = str(parent_node_id) if parent_node_id else None
@@ -267,8 +274,17 @@ def search_nodes(
         }
 
         if search_request.node_type:
+            # Map legacy API terminology to new database terminology
+            legacy_to_new_mapping = {
+                "layer": "taxonomy",
+                "domain": "concept_scheme",
+                "term": "class",
+            }
+            normalized_type = legacy_to_new_mapping.get(
+                search_request.node_type.value, search_request.node_type.value
+            )
             db_node_type = convert_api_node_type_to_db(
-                search_request.node_type.value
+                normalized_type
             )  # noqa: E501
             type_filter = "AND node_type = :node_type"
             params["node_type"] = db_node_type

@@ -95,8 +95,8 @@ def to_node_out(
     return NodeOut(
         id=node_id,
         node_type=NodeTypeEnum(
-            structure_node.node_type.value
-        ),  # Convert to NodeTypeEnum  # noqa: E501
+            normalize_db_node_type_to_legacy(structure_node.node_type.value)
+        ),  # Convert to legacy NodeTypeEnum  # noqa: E501
         parent_node_id=(
             UUID(str(structure_node.parent_node_id))
             if structure_node.parent_node_id
@@ -178,6 +178,29 @@ def convert_api_node_type_to_db(api_node_type: str) -> NodeType:
         Database NodeType enum
     """
     return NodeType(api_node_type)
+
+
+def normalize_db_node_type_to_legacy(db_node_type: str) -> str:
+    """
+    Convert database node type (new terminology) to legacy API terminology.
+    Used by structure_nodes API to maintain backward compatibility.
+
+    Args:
+        db_node_type: Node type from database (e.g., "taxonomy", "concept_scheme", "class")
+
+    Returns:
+        Legacy API terminology (e.g., "layer", "domain", "term")
+    """
+    mapping = {
+        "taxonomy": "layer",
+        "concept_scheme": "domain",
+        "class": "term",
+        # Pass through legacy values as-is (in case database still has old values)
+        "layer": "layer",
+        "domain": "domain",
+        "term": "term",
+    }
+    return mapping.get(db_node_type, db_node_type)
 
 
 def uuid_to_str(uuid_val: Optional[UUID]) -> Optional[str]:

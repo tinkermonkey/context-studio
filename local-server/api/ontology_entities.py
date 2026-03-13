@@ -56,22 +56,61 @@ from api.api_errors import conflict_error_response
 router = APIRouter(prefix="/api/ontology_entities", tags=["ontology_entities"])
 
 
-def _entity_type_to_db_type(entity_type: str) -> str:
-    """Convert new ontology entity type to database node type."""
-    mapping = {"taxonomy": "layer", "concept_scheme": "domain", "class": "term"}
-    return mapping.get(entity_type, entity_type)
-
-
-def _db_type_to_entity_type(db_type: str) -> str:
-    """Convert database node type to new ontology entity type."""
+def _normalize_entity_type(entity_type: str) -> str:
+    """
+    Normalize entity type to new ontology terminology.
+    Accepts both old and new terminology, returns new terminology.
+    """
     mapping = {"layer": "taxonomy", "domain": "concept_scheme", "term": "class"}
-    return mapping.get(db_type, db_type)
+    return mapping.get(entity_type, entity_type)
 
 
 def _to_entity_out(node_orm_object) -> EntityOut:
     """
     Convert a Node ORM object to EntityOut response model using new terminology.  # noqa: E501
     """
+    import numpy as np
+    from utils.logger import get_logger
+
+    logger = get_logger(__name__)
+
+    # Convert embeddings from binary blob to list of floats if they exist
+    title_embedding = None
+    definition_embedding = None
+
+    if (
+        hasattr(node_orm_object, "title_embedding")
+        and node_orm_object.title_embedding
+    ):  # noqa: E501
+        try:
+            # Embeddings are stored as raw numpy float32 bytes via np.float32.tobytes()  # noqa: E501
+            title_embedding = np.frombuffer(
+                bytes(node_orm_object.title_embedding), dtype=np.float32
+            ).tolist()  # noqa: E501
+        except Exception as e:
+            logger.warning(
+                f"Failed to deserialize title embedding for entity {node_orm_object.id}: {e}. "  # noqa: E501
+                "Embedding will be excluded from response.",  # noqa: E501
+                exc_info=True,
+            )
+            title_embedding = None
+
+    if (
+        hasattr(node_orm_object, "definition_embedding")
+        and node_orm_object.definition_embedding
+    ):  # noqa: E501
+        try:
+            # Embeddings are stored as raw numpy float32 bytes via np.float32.tobytes()  # noqa: E501
+            definition_embedding = np.frombuffer(
+                bytes(node_orm_object.definition_embedding), dtype=np.float32
+            ).tolist()  # noqa: E501
+        except Exception as e:
+            logger.warning(
+                f"Failed to deserialize definition embedding for entity {node_orm_object.id}: {e}. "  # noqa: E501
+                "Embedding will be excluded from response.",  # noqa: E501
+                exc_info=True,
+            )
+            definition_embedding = None
 
     return EntityOut(
         id=(
@@ -80,7 +119,7 @@ def _to_entity_out(node_orm_object) -> EntityOut:
             else node_orm_object.id
         ),  # noqa: E501
         node_type=EntityTypeEnum(
-            _db_type_to_entity_type(node_orm_object.node_type)
+            _normalize_entity_type(node_orm_object.node_type)
         ),  # noqa: E501
         parent_entity_id=(
             UUID(str(node_orm_object.parent_node_id))
@@ -94,8 +133,8 @@ def _to_entity_out(node_orm_object) -> EntityOut:
             if node_orm_object.structural_predicate_id
             else None
         ),  # noqa: E501
-        title_embedding=node_orm_object.title_embedding,
-        definition_embedding=node_orm_object.definition_embedding,
+        title_embedding=title_embedding,
+        definition_embedding=definition_embedding,
         created_at=(
             node_orm_object.created_at.isoformat()
             if hasattr(node_orm_object.created_at, "isoformat")
@@ -165,9 +204,9 @@ def create_entity(
     logger = get_logger(__name__)
 
     try:
-        # Convert API model to service data using database terminology
+        # Convert API model to service data using new terminology
         node_data = {
-            "node_type": _entity_type_to_db_type(entity.node_type.value),
+            "node_type": _normalize_entity_type(entity.node_type.value),
             "parent_node_id": uuid_to_str(entity.parent_entity_id),
             "title": entity.title,
             "definition": entity.definition,
@@ -233,10 +272,10 @@ def list_entities(
         logger = get_logger(__name__)
         request_start = time.time()
 
-        # Convert API entity type to database node type
+        # Normalize API entity type to new terminology
         db_node_type = None
         if node_type:
-            db_node_type = _entity_type_to_db_type(node_type.value)
+            db_node_type = _normalize_entity_type(node_type.value)
 
         # Convert UUID to string for parent_entity_id
         parent_entity_id_str = (
@@ -326,7 +365,7 @@ def search_entities(
         }
 
         if search_request.node_type:
-            db_node_type = _entity_type_to_db_type(
+            db_node_type = _normalize_entity_type(
                 search_request.node_type.value
             )  # noqa: E501
             type_filter = "AND node_type = :node_type"
@@ -375,7 +414,7 @@ def search_entities(
             result = EntitySearchResult(
                 id=row.id,
                 node_type=EntityTypeEnum(
-                    _db_type_to_entity_type(row.node_type)
+                    _normalize_entity_type(row.node_type)
                 ),  # noqa: E501
                 parent_entity_id=row.parent_entity_id,
                 title=row.title,

@@ -317,7 +317,7 @@ class TestMigrationRollback:
 
         # Apply down() to migration 019
         try:
-            migration_mgr.downgrade_to("018")
+            migration_mgr.rollback_to_version(18)
 
             # After downgrade, verify old table names are being used
             with engine.connect() as conn:
@@ -348,7 +348,7 @@ class TestMigrationRollback:
 
         finally:
             # Re-apply up() to restore migration 019 (cleanup)
-            migration_mgr.upgrade_to("019")
+            migration_mgr.migrate_to_version(19)
 
             # Verify new table names are back
             with engine.connect() as conn:
@@ -477,7 +477,7 @@ class TestRenamedEnumValuesInQueries:
         # Query by new terminology (taxonomy)
         tax_query = e2e_client.get("/api/ontology_entities/?node_type=taxonomy")
         assert tax_query.status_code == 200
-        tax_results = tax_query.json()
+        tax_results = tax_query.json()["data"]
         tax_matching = [e for e in tax_results if e["id"] == taxonomy_id]
         assert (
             len(tax_matching) == 1
@@ -488,7 +488,7 @@ class TestRenamedEnumValuesInQueries:
             "/api/ontology_entities/?node_type=concept_scheme"
         )
         assert scheme_query.status_code == 200
-        scheme_results = scheme_query.json()
+        scheme_results = scheme_query.json()["data"]
         scheme_matching = [e for e in scheme_results if e["id"] == scheme_id]
         assert (
             len(scheme_matching) == 1
@@ -497,7 +497,7 @@ class TestRenamedEnumValuesInQueries:
         # Query by new terminology (class)
         class_query = e2e_client.get("/api/ontology_entities/?node_type=class")
         assert class_query.status_code == 200
-        class_results = class_query.json()
+        class_results = class_query.json()["data"]
         class_matching = [e for e in class_results if e["id"] == class_id]
         assert (
             len(class_matching) == 1
@@ -506,7 +506,7 @@ class TestRenamedEnumValuesInQueries:
         # Query by old terminology via old API (layer = taxonomy during transition)
         layer_query = e2e_client.get("/api/structure_nodes/?node_type=layer")
         assert layer_query.status_code == 200
-        layer_results = layer_query.json()
+        layer_results = layer_query.json()["data"]
         # The taxonomy we created should appear as layer in old API
         layer_matching = [e for e in layer_results if e["id"] == taxonomy_id]
         assert (

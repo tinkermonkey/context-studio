@@ -10,15 +10,31 @@ from enum import Enum
 
 class NodeType(str, Enum):
     """
-    Enumeration for structure_node types in the unified structure_nodes table.
+    Enumeration for ontology entity types in the database.
 
-    DEPRECATED: This enum represents the legacy naming convention (LAYER, DOMAIN, TERM).
-    A new NodeType enum exists in domain/ontology/value_objects.py with domain-driven
-    terminology (TAXONOMY, CONCEPT_SCHEME, CLASS, INDIVIDUAL).
+    This enum supports both new standard ontology terminology (primary) and legacy naming
+    (deprecated). During Phase 1-2, both terminologies are accepted and stored as new values.
+    In Phase 5, legacy values will be removed.
+
+    New terminology (primary, standard from Phase 1+):
+    - TAXONOMY: Top-level categorization system
+    - CONCEPT_SCHEME: Collection of related concepts
+    - CLASS: Concept or class definition
+
+    Legacy terminology (deprecated, accepted for backward compatibility):
+    - LAYER: Legacy name for TAXONOMY
+    - DOMAIN: Legacy name for CONCEPT_SCHEME
+    - TERM: Legacy name for CLASS
+
     See domain/ontology/compat.py for the migration path and mapping utilities.
-    Issue #270 tracks the consolidation of these duplicate enums.
+    Issue #270 tracks the consolidation of duplicate NodeType definitions.
     """
 
+    # New terminology (primary, from Phase 1+)
+    TAXONOMY = "taxonomy"
+    CONCEPT_SCHEME = "concept_scheme"
+    CLASS = "class"
+    # Legacy terminology (deprecated, for backward compatibility during transition)
     LAYER = "layer"
     DOMAIN = "domain"
     TERM = "term"
