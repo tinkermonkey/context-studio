@@ -78,7 +78,24 @@ def create_test_database_with_migrations():
 
     try:
         # Initialize database with base schema
-        engine = get_engine(db_url)
+        # Use NullPool with check_same_thread=False for testing
+        # Use default isolation level (not autocommit) for proper transaction handling
+        engine = get_engine(
+            db_url,
+            connect_args={
+                "check_same_thread": False,
+                "timeout": 30,
+                # Note: Don't set isolation_level here - let SQLAlchemy handle it
+            },
+        )
+
+        # Enable WAL mode to improve concurrency and visibility
+        from sqlalchemy import text
+        with engine.connect() as conn:
+            conn.execute(text("PRAGMA journal_mode=WAL"))
+            conn.execute(text("PRAGMA synchronous=NORMAL"))
+            conn.commit()
+
         session_local = get_session_local(engine)
         init_db(engine=engine)
 

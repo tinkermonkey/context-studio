@@ -100,8 +100,12 @@ def create_node(
 
     try:
         # Convert API model to service data
+        # Normalize legacy terminology to database terminology
+        api_node_type = structure_node.node_type.value
+        db_node_type = normalize_legacy_node_type_to_db(api_node_type)
+
         node_data = {
-            "node_type": structure_node.node_type.value,
+            "node_type": db_node_type,
             "parent_node_id": uuid_to_str(structure_node.parent_node_id),
             "title": structure_node.title,
             "definition": structure_node.definition,

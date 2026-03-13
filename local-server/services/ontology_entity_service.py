@@ -767,31 +767,34 @@ class OntologyEntityService:
         self, entity_data: Dict[str, Any], node_type: NodeType
     ):
         """Validate ontology_entity creation based on type-specific rules"""
-        if node_type == NodeType.LAYER:
+        # Support both old and new terminology
+        if node_type in (NodeType.LAYER, NodeType.TAXONOMY):
             self._validate_layer_creation(entity_data)
-        elif node_type == NodeType.DOMAIN:
+        elif node_type in (NodeType.DOMAIN, NodeType.CONCEPT_SCHEME):
             self._validate_domain_creation(entity_data)
-        elif node_type == NodeType.TERM:
+        elif node_type in (NodeType.TERM, NodeType.CLASS):
             self._validate_term_creation(entity_data)
 
     def _validate_entity_update(
         self, ontology_entity: OntologyEntity, entity_data: Dict[str, Any]
     ):
         """Validate ontology_entity update based on type-specific rules"""
-        if ontology_entity.node_type == NodeType.LAYER:
+        # Support both old and new terminology
+        if ontology_entity.node_type in (NodeType.LAYER, NodeType.TAXONOMY):
             self._validate_layer_update(ontology_entity, entity_data)
-        elif ontology_entity.node_type == NodeType.DOMAIN:
+        elif ontology_entity.node_type in (NodeType.DOMAIN, NodeType.CONCEPT_SCHEME):
             self._validate_domain_update(ontology_entity, entity_data)
-        elif ontology_entity.node_type == NodeType.TERM:
+        elif ontology_entity.node_type in (NodeType.TERM, NodeType.CLASS):
             self._validate_term_update(ontology_entity, entity_data)
 
     def _validate_layer_creation(self, entity_data: Dict[str, Any]):
         """Validate layer creation rules"""
         # Layer titles must be unique globally
+        # Support both old and new terminology
         existing = (
             self.db.query(OntologyEntity)
             .filter(
-                OntologyEntity.node_type == NodeType.LAYER,
+                OntologyEntity.node_type.in_([NodeType.LAYER, NodeType.TAXONOMY]),
                 OntologyEntity.title == entity_data["title"],
             )
             .first()
@@ -810,10 +813,11 @@ class OntologyEntityService:
         """Validate layer update rules"""
         # Check title uniqueness if title is being updated
         if "title" in entity_data and entity_data["title"] != ontology_entity.title:
+            # Support both old and new terminology
             existing = (
                 self.db.query(OntologyEntity)
                 .filter(
-                    OntologyEntity.node_type == NodeType.LAYER,
+                    OntologyEntity.node_type.in_([NodeType.LAYER, NodeType.TAXONOMY]),
                     OntologyEntity.title == entity_data["title"],
                     OntologyEntity.id != ontology_entity.id,
                 )
@@ -836,21 +840,21 @@ class OntologyEntityService:
         if not parent_id:
             raise InvalidHierarchyError("Domains must have a parent layer")
 
-        # Parent must be a layer
+        # Parent must be a layer (support both old and new terminology)
         parent = (
             self.db.query(OntologyEntity).filter(OntologyEntity.id == parent_id).first()
         )
-        if not parent or parent.node_type != NodeType.LAYER:
+        if not parent or parent.node_type not in (NodeType.LAYER, NodeType.TAXONOMY):
             raise InvalidHierarchyError("Domain parent must be a layer")
 
         # Validate structural predicate ID if provided
         self._validate_structural_predicate_id(entity_data.get("structural_predicate_id"))  # type: ignore
 
-        # Domain titles must be unique within the layer
+        # Domain titles must be unique within the layer (support both old and new terminology)
         existing = (
             self.db.query(OntologyEntity)
             .filter(
-                OntologyEntity.node_type == NodeType.DOMAIN,
+                OntologyEntity.node_type.in_([NodeType.DOMAIN, NodeType.CONCEPT_SCHEME]),
                 OntologyEntity.parent_entity_id == parent_id,
                 OntologyEntity.title == entity_data["title"],
             )
@@ -878,7 +882,8 @@ class OntologyEntityService:
                 .filter(OntologyEntity.id == parent_id)
                 .first()
             )
-            if not parent or parent.node_type != NodeType.LAYER:
+            # Support both old and new terminology
+            if not parent or parent.node_type not in (NodeType.LAYER, NodeType.TAXONOMY):
                 raise InvalidHierarchyError("Domain parent must be a layer")
 
         # Validate structural predicate ID if being updated
@@ -897,10 +902,11 @@ class OntologyEntityService:
 
         if check_title_uniqueness:
             title = entity_data.get("title", ontology_entity.title)
+            # Support both old and new terminology
             existing = (
                 self.db.query(OntologyEntity)
                 .filter(
-                    OntologyEntity.node_type == NodeType.DOMAIN,
+                    OntologyEntity.node_type.in_([NodeType.DOMAIN, NodeType.CONCEPT_SCHEME]),
                     OntologyEntity.parent_entity_id == parent_id,
                     OntologyEntity.title == title,
                     OntologyEntity.id != ontology_entity.id,
@@ -917,11 +923,13 @@ class OntologyEntityService:
         if not parent_id:
             raise InvalidHierarchyError("Terms must have a parent domain or term")
 
-        # Parent must be a domain or term
+        # Parent must be a domain or term (support both old and new terminology)
         parent = (
             self.db.query(OntologyEntity).filter(OntologyEntity.id == parent_id).first()
         )
-        if not parent or parent.node_type not in [NodeType.DOMAIN, NodeType.TERM]:
+        if not parent or parent.node_type not in [
+            NodeType.DOMAIN, NodeType.TERM, NodeType.CONCEPT_SCHEME, NodeType.CLASS
+        ]:
             raise InvalidHierarchyError("Term parent must be a domain or term")
 
         # Get the domain (either direct parent or ancestor)
@@ -951,7 +959,10 @@ class OntologyEntityService:
                 .filter(OntologyEntity.id == parent_id)
                 .first()
             )
-            if not parent or parent.node_type not in [NodeType.DOMAIN, NodeType.TERM]:
+            # Support both old and new terminology
+            if not parent or parent.node_type not in [
+                NodeType.DOMAIN, NodeType.TERM, NodeType.CONCEPT_SCHEME, NodeType.CLASS
+            ]:
                 raise InvalidHierarchyError("Term parent must be a domain or term")
 
         # Get the domain for uniqueness check
@@ -1009,10 +1020,11 @@ class OntologyEntityService:
     def _get_domain_ancestor(
         self, ontology_entity: OntologyEntity
     ) -> Optional[OntologyEntity]:
-        """Get the domain ancestor of an ontology_entity"""
+        """Get the domain ancestor of an ontology_entity (support both old and new terminology)"""
         current = ontology_entity
         while current:
-            if current.node_type == NodeType.DOMAIN:
+            # Support both old and new terminology
+            if current.node_type in (NodeType.DOMAIN, NodeType.CONCEPT_SCHEME):
                 return current
             if current.parent_entity_id:
                 current = (
@@ -1041,9 +1053,9 @@ class OntologyEntityService:
         # Get all terms in the domain tree
         domain_terms = self._get_all_terms_in_domain(domain_id)
 
-        # Check for title conflicts
+        # Check for title conflicts (support both old and new terminology)
         query = self.db.query(OntologyEntity).filter(
-            OntologyEntity.node_type == NodeType.TERM,
+            OntologyEntity.node_type.in_([NodeType.TERM, NodeType.CLASS]),
             OntologyEntity.id.in_(domain_terms),
             OntologyEntity.title == title,
         )
@@ -1064,11 +1076,11 @@ class OntologyEntityService:
         Returns:
             List of term IDs in the domain
         """
-        # Get direct terms under the domain
+        # Get direct terms under the domain (support both old and new terminology)
         direct_terms = (
             self.db.query(OntologyEntity.id)
             .filter(
-                OntologyEntity.node_type == NodeType.TERM,
+                OntologyEntity.node_type.in_([NodeType.TERM, NodeType.CLASS]),
                 OntologyEntity.parent_entity_id == domain_id,
             )
             .all()
@@ -1095,10 +1107,11 @@ class OntologyEntityService:
         Returns:
             List of descendant term IDs
         """
+        # Support both old and new terminology
         child_terms = (
             self.db.query(OntologyEntity.id)
             .filter(
-                OntologyEntity.node_type == NodeType.TERM,
+                OntologyEntity.node_type.in_([NodeType.TERM, NodeType.CLASS]),
                 OntologyEntity.parent_entity_id == term_id,
             )
             .all()
