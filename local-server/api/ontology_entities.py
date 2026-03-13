@@ -45,7 +45,7 @@ from api.models.ontology_entities import (
     PaginatedRelationshipsResponse,
     EntityTypeEnum,  # noqa: E501
 )
-from api.utils.node_conversion import uuid_to_str
+from api.utils.node_conversion import uuid_to_str, normalize_legacy_node_type_to_db
 from api.dependencies.structure_nodes import (
     get_node_service,
     get_node_service_simple,
@@ -61,57 +61,13 @@ def _normalize_entity_type(entity_type: str) -> str:
     Normalize entity type to new ontology terminology.
     Accepts both old and new terminology, returns new terminology.
     """
-    mapping = {"layer": "taxonomy", "domain": "concept_scheme", "term": "class"}
-    return mapping.get(entity_type, entity_type)
+    return normalize_legacy_node_type_to_db(entity_type)
 
 
 def _to_entity_out(node_orm_object) -> EntityOut:
     """
     Convert a Node ORM object to EntityOut response model using new terminology.  # noqa: E501
     """
-    import numpy as np
-    from utils.logger import get_logger
-
-    logger = get_logger(__name__)
-
-    # Convert embeddings from binary blob to list of floats if they exist
-    title_embedding = None
-    definition_embedding = None
-
-    if (
-        hasattr(node_orm_object, "title_embedding")
-        and node_orm_object.title_embedding
-    ):  # noqa: E501
-        try:
-            # Embeddings are stored as raw numpy float32 bytes via np.float32.tobytes()  # noqa: E501
-            title_embedding = np.frombuffer(
-                bytes(node_orm_object.title_embedding), dtype=np.float32
-            ).tolist()  # noqa: E501
-        except Exception as e:
-            logger.warning(
-                f"Failed to deserialize title embedding for entity {node_orm_object.id}: {e}. "  # noqa: E501
-                "Embedding will be excluded from response.",  # noqa: E501
-                exc_info=True,
-            )
-            title_embedding = None
-
-    if (
-        hasattr(node_orm_object, "definition_embedding")
-        and node_orm_object.definition_embedding
-    ):  # noqa: E501
-        try:
-            # Embeddings are stored as raw numpy float32 bytes via np.float32.tobytes()  # noqa: E501
-            definition_embedding = np.frombuffer(
-                bytes(node_orm_object.definition_embedding), dtype=np.float32
-            ).tolist()  # noqa: E501
-        except Exception as e:
-            logger.warning(
-                f"Failed to deserialize definition embedding for entity {node_orm_object.id}: {e}. "  # noqa: E501
-                "Embedding will be excluded from response.",  # noqa: E501
-                exc_info=True,
-            )
-            definition_embedding = None
-
     return EntityOut(
         id=(
             UUID(str(node_orm_object.id))
@@ -133,8 +89,6 @@ def _to_entity_out(node_orm_object) -> EntityOut:
             if node_orm_object.structural_predicate_id
             else None
         ),  # noqa: E501
-        title_embedding=title_embedding,
-        definition_embedding=definition_embedding,
         created_at=(
             node_orm_object.created_at.isoformat()
             if hasattr(node_orm_object.created_at, "isoformat")

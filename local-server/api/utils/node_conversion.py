@@ -203,6 +203,29 @@ def normalize_db_node_type_to_legacy(db_node_type: str) -> str:
     return mapping.get(db_node_type, db_node_type)
 
 
+def normalize_legacy_node_type_to_db(api_node_type: str) -> str:
+    """
+    Convert legacy API terminology to database node type (new terminology).
+    Used by ontology_entities and structure_nodes APIs to normalize incoming data.
+
+    Args:
+        api_node_type: Legacy API terminology (e.g., "layer", "domain", "term")
+
+    Returns:
+        Database node type (e.g., "taxonomy", "concept_scheme", "class")
+    """
+    mapping = {
+        "layer": "taxonomy",
+        "domain": "concept_scheme",
+        "term": "class",
+        # Pass through new terminology as-is
+        "taxonomy": "taxonomy",
+        "concept_scheme": "concept_scheme",
+        "class": "class",
+    }
+    return mapping.get(api_node_type, api_node_type)
+
+
 def uuid_to_str(uuid_val: Optional[UUID]) -> Optional[str]:
     """
     Convert UUID to string, handling None values.

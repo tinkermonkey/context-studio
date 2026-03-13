@@ -13,10 +13,9 @@ class NodeType(str, Enum):
     Enumeration for ontology entity types in the database.
 
     This enum supports both new standard ontology terminology (primary) and legacy naming
-    (deprecated). During Phase 1-2, both terminologies are accepted and stored as new values.
-    In Phase 5, legacy values will be removed.
+    (deprecated) for backward compatibility during migration.
 
-    New terminology (primary, standard from Phase 1+):
+    New terminology (primary):
     - TAXONOMY: Top-level categorization system
     - CONCEPT_SCHEME: Collection of related concepts
     - CLASS: Concept or class definition
@@ -25,16 +24,13 @@ class NodeType(str, Enum):
     - LAYER: Legacy name for TAXONOMY
     - DOMAIN: Legacy name for CONCEPT_SCHEME
     - TERM: Legacy name for CLASS
-
-    See domain/ontology/compat.py for the migration path and mapping utilities.
-    Issue #270 tracks the consolidation of duplicate NodeType definitions.
     """
 
-    # New terminology (primary, from Phase 1+)
+    # New terminology (primary)
     TAXONOMY = "taxonomy"
     CONCEPT_SCHEME = "concept_scheme"
     CLASS = "class"
-    # Legacy terminology (deprecated, for backward compatibility during transition)
+    # Legacy terminology (deprecated, for backward compatibility)
     LAYER = "layer"
     DOMAIN = "domain"
     TERM = "term"
@@ -49,7 +45,7 @@ class RecordType(str, Enum):
     - RELATIONSHIP: Represents relationships between ontology entities
     - PROPERTY_DEFINITION: Represents property/predicate definitions
 
-    Legacy naming (deprecated, will be removed in Phase 5):
+    Legacy naming (deprecated, for backward compatibility):
     - STRUCTURE_NODE: Legacy name for ONTOLOGY_ENTITY
     - STRUCTURE_NODE_LINK: Legacy name for RELATIONSHIP
     - PREDICATE: Legacy name for PROPERTY_DEFINITION
@@ -59,7 +55,7 @@ class RecordType(str, Enum):
     ONTOLOGY_ENTITY = "ontology_entity"
     RELATIONSHIP = "relationship"
     PROPERTY_DEFINITION = "property_definition"
-    # Legacy aliases — deprecated, will be removed in Phase 5
+    # Legacy aliases — deprecated, for backward compatibility
     STRUCTURE_NODE = "structure_node"  # For layers, domains, terms
     STRUCTURE_NODE_LINK = (
         "structure_node_link"  # For relationships between structure nodes  # noqa: E501
