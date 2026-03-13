@@ -2,7 +2,7 @@
 
 ## Module-Level Verification with Real Services
 
-**Date:** 2026-03-01
+**Date:** 2026-03-13
 **Companion Documents:** `architecture_design.md`, `transformation_roadmap.md`
 **Scope:** Back-end only. No UX. Real external services (LLM, NLP, reference APIs).
 

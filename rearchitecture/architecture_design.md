@@ -2,8 +2,8 @@
 
 ## Hexagonal Architecture with Domain-Driven Design
 
-**Date:** 2026-03-01
-**Status:** Proposed
+**Date:** 2026-03-13
+**Status:** Active — greenfield build
 **Scope:** Back-end (`/local-server`) re-architecture
 
 ---
@@ -240,11 +240,10 @@ The system decomposes into six bounded contexts. Each context owns its domain en
 
 ```
 local-server/
-├── app.py                          # FastAPI app setup, lifespan, adapter wiring
-├── config.py                       # Configuration loading (infrastructure concern)
-├── ports.py                        # Shared port interfaces (or per-context)
+├── app.py                          # FastAPI app setup, lifespan, adapter wiring (composition root)
+├── config.py                       # Configuration loading from config.json
 │
-├── domain/                         # THE CORE — no infrastructure imports
+├── domain/                         # THE CORE — zero infrastructure imports
 │   ├── __init__.py
 │   │
 │   ├── ontology/                   # Bounded context: Ontology Management
@@ -290,19 +289,16 @@ local-server/
 │   │
 │   ├── persistence/                # Driven: Database adapters
 │   │   ├── __init__.py
-│   │   ├── sqlite/
-│   │   │   ├── __init__.py
-│   │   │   ├── models.py           # SQLAlchemy ORM models
-│   │   │   ├── ontology_repo.py    # Implements OntologyRepository
-│   │   │   ├── change_repo.py      # Implements ChangeRepository
-│   │   │   ├── pipeline_repo.py    # Implements PipelineRepository
-│   │   │   ├── connection.py       # Connection management, pooling
-│   │   │   └── migrations/         # Schema migrations
-│   │   │       ├── manager.py
-│   │   │       └── versions/
-│   │   └── duckdb/
+│   │   └── sqlite/
 │   │       ├── __init__.py
-│   │       └── analytics_repo.py   # DuckDB-based analytics queries
+│   │       ├── models.py           # SQLAlchemy ORM models (source of truth for schema)
+│   │       ├── ontology_repo.py    # Implements OntologyRepository
+│   │       ├── change_repo.py      # Implements ChangeRepository
+│   │       ├── pipeline_repo.py    # Implements PipelineRepository
+│   │       ├── connection.py       # Connection management, engine factory
+│   │       ├── alembic.ini         # Alembic configuration
+│   │       ├── env.py              # Alembic env (points to models.py metadata)
+│   │       └── versions/           # Auto-generated Alembic migration scripts
 │   │
 │   ├── embedding/                  # Driven: Embedding generation
 │   │   ├── __init__.py
@@ -312,7 +308,7 @@ local-server/
 │   │   ├── __init__.py
 │   │   ├── openai_provider.py      # Implements LLMProvider for OpenAI
 │   │   ├── anthropic_provider.py   # Implements LLMProvider for Anthropic
-│   │   └── provider_router.py      # Routes to correct provider
+│   │   └── provider_router.py      # Routes to correct provider based on config
 │   │
 │   ├── nlp/                        # Driven: NLP processing
 │   │   ├── __init__.py
@@ -324,57 +320,48 @@ local-server/
 │   │   ├── dbpedia.py
 │   │   ├── wikidata.py
 │   │   ├── schema_org.py
-│   │   └── cache.py                # Reference API caching adapter
+│   │   └── cache.py                # SQLite caching adapter for reference API responses
 │   │
 │   ├── sync/                       # Driven: Synchronization
 │   │   ├── __init__.py
 │   │   ├── s3_sync.py              # Implements SyncTarget for S3
-│   │   └── parquet_sync.py         # DuckDB/Parquet sync
+│   │   └── duckdb_sync.py          # DuckDB/Parquet sync
 │   │
 │   └── web/                        # Driving: HTTP API adapters
 │       ├── __init__.py
-│       ├── ontology_routes.py      # FastAPI routes for ontology management
-│       ├── graph_routes.py         # FastAPI routes for graph analysis
-│       ├── extraction_routes.py    # FastAPI routes for knowledge extraction
-│       ├── pipeline_routes.py      # FastAPI routes for LLM pipelines
-│       ├── versioning_routes.py    # FastAPI routes for version control
-│       ├── admin_routes.py         # FastAPI routes for admin
-│       ├── schemas.py              # Pydantic request/response models
+│       ├── ontology_routes.py
+│       ├── graph_routes.py
+│       ├── extraction_routes.py
+│       ├── pipeline_routes.py
+│       ├── versioning_routes.py
+│       ├── admin_routes.py
+│       ├── schemas/                # Pydantic request/response models (per context)
 │       └── dependencies.py         # FastAPI dependency injection wiring
-│
-├── database/                       # (Transitional — migrates into adapters/persistence)
-├── services/                       # (Transitional — migrates into domain/)
-├── graph/                          # (Transitional — migrates into domain/graph + adapters)
-├── nlp/                            # (Transitional — migrates into adapters/nlp)
-├── llm/                            # (Transitional — migrates into adapters/llm + domain/pipeline)
-├── rag/                            # (Transitional — migrates into domain/extraction + adapters)
-├── reference_api/                  # (Transitional — migrates into adapters/reference)
-├── reference_db/                   # (Transitional — migrates into adapters/persistence)
-├── embeddings/                     # (Transitional — migrates into adapters/embedding)
 │
 ├── tests/
 │   ├── unit/                       # Pure domain logic tests (no DB, no network)
-│   │   ├── domain/
-│   │   │   ├── test_ontology_service.py
-│   │   │   ├── test_graph_service.py
-│   │   │   └── ...
-│   │   └── adapters/
-│   │       ├── test_sqlite_repo.py
+│   │   └── domain/
+│   │       ├── test_ontology_service.py
+│   │       ├── test_graph_service.py
 │   │       └── ...
-│   ├── integration/                # Tests with real adapters
+│   ├── integration/                # Tests with real SQLite adapters
 │   │   ├── test_ontology_api.py
+│   │   └── ...
+│   ├── e2e/                        # Full-stack tests with real external services
 │   │   └── ...
 │   └── performance/
 │       └── ...
 │
 ├── documentation/
-│   ├── requirements/
 │   ├── claudes_thoughts/
 │   └── openapi.json
 │
+├── scripts/
+│   ├── check_domain_imports.py     # Verify domain/ has no infrastructure imports
+│   └── update_api_specs.py
+│
 └── utils/
-    ├── logger.py
-    └── update_api_specs.py
+    └── logger.py
 ```
 
 ---
@@ -648,7 +635,39 @@ Swapping implementations requires only writing a new adapter that satisfies the 
 
 ---
 
-## 11. Design Decisions
+## 11. Persistence & Schema Management
+
+### Alembic for Migrations
+
+Schema management was the primary pain point in the legacy server. 19 hand-written migration scripts accumulated, each requiring careful SQL for both forward and rollback paths, and schema changes regularly caused test failures and integration issues.
+
+The new server uses **Alembic** with SQLAlchemy autogenerate:
+
+1. Edit the ORM model in `adapters/persistence/sqlite/models.py`
+2. Run `alembic revision --autogenerate -m "add xyz column"` — Alembic compares the model to the current schema and writes the migration
+3. Run `alembic upgrade head` to apply
+4. Run `alembic downgrade -1` to roll back
+
+The SQLAlchemy ORM model is the **single source of truth** for the schema. There is no separate schema definition or manual DDL.
+
+### Database Layout
+
+| Database | Alembic env | Contents |
+|---|---|---|
+| `local.db` | `adapters/persistence/sqlite/` | Ontology entities, relationships, change events |
+| `operations.db` | `adapters/persistence/sqlite/operations/` | Pipeline configs, execution logs, background tasks |
+| `reference_api_cache.db` | (managed directly, no migrations) | Reference API response cache |
+| `reference.db` | (managed directly, no migrations) | Imported reference data (ConceptNet, schema.org) |
+
+`local.db` and `operations.db` are migration-managed. The cache and reference databases are simple key-value or read-only stores that can be dropped and rebuilt without consequence.
+
+### No Backwards Compatibility
+
+There is no migration path from the legacy database. The new server starts with a clean schema. Any user data from the legacy server would require a manual export/import if needed, which is out of scope for the initial build.
+
+---
+
+## 12. Design Decisions
 
 ### Why Protocols over ABCs?
 Python `Protocol` (structural subtyping) is preferred because it doesn't require adapters to explicitly inherit from a base class. This reduces coupling and makes testing with simple fakes easier.
@@ -659,5 +678,5 @@ Domain entities should be minimal and framework-free. Pydantic is excellent for 
 ### Why bounded contexts, not just layers?
 A pure layered architecture (API → Service → Repository) still allows lateral coupling between features. Bounded contexts enforce vertical slices that can evolve independently and eventually be extracted into separate deployable units if needed.
 
-### Why keep the current service factory during transition?
-The existing `ServiceFactory` works. Ripping it out immediately would be a big-bang rewrite. Instead, the roadmap phases it out gradually by migrating services one context at a time into the new structure. The factory becomes thinner with each phase until it's replaced by the composition root in `app.py`.
+### Composition root in app.py
+There is no `ServiceFactory`. The `app.py` lifespan function is the composition root — it creates all adapters and injects them into domain services directly. This keeps wiring explicit and testable.

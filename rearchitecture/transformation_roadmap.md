@@ -1,370 +1,307 @@
 # Context Studio: Transformation Roadmap
 
-## From Organic Monolith to Hexagonal Architecture
+## Greenfield Build — Hexagonal Architecture
 
-**Date:** 2026-03-01
+**Date:** 2026-03-13
 **Companion Document:** `architecture_design.md`
-**Approach:** Strangler Fig — incremental migration with continuous deployability
+**Approach:** Greenfield build. The legacy server (`legacy-server/`) is frozen as a functional reference. The new server (`local-server/`) is built clean.
 
 ---
 
 ## Guiding Principles
 
-1. **Never break the running system.** Every phase ends with a working application. Old and new code coexist during transition.
-2. **Terminology migration is decoupled from structural migration.** Rename things first (low risk), restructure second.
-3. **One bounded context at a time.** Migrate the core ontology context first since everything depends on it, then fan out.
-4. **Tests gate each phase.** No phase is complete until the existing test suite passes against the new structure and new tests cover the migrated code.
-5. **Front-end remains stable.** The API contract (OpenAPI) is maintained throughout. Route paths can change with redirects, but request/response shapes stay compatible.
+1. **No backwards compatibility required.** The new server defines new API contracts. The front-end will be updated once the server reaches feature parity.
+2. **No database migration from legacy.** The new schema is designed right from the start. The legacy database is reference material only.
+3. **Domain first.** Write domain entities and services before any infrastructure. Tests prove business logic before a single database row exists.
+4. **One bounded context at a time.** Build the Ontology context to full working state, then fan out.
+5. **Tests gate each phase.** Domain unit tests must pass before moving to adapters. Adapter tests must pass before wiring routes.
 
 ---
 
-## Phase 0: Foundation (1–2 weeks)
+## Persistence Approach: Alembic + SQLAlchemy
 
-**Goal:** Establish the new directory structure and shared infrastructure without moving any existing code.
+Schema management was a persistent pain point in the legacy server. Hand-written migration scripts accumulated to 19 versions of complex, fragile SQL.
+
+The new server uses **Alembic** — the standard SQLAlchemy migration tool — with auto-generation:
+
+- Model changes are reflected in SQLAlchemy ORM models (`adapters/persistence/sqlite/models.py`)
+- Running `alembic revision --autogenerate -m "description"` generates the migration script
+- Running `alembic upgrade head` applies it
+- Rollback is `alembic downgrade -1`
+
+This eliminates hand-written SQL for schema changes. The ORM model *is* the source of truth for the schema.
+
+### Database Layout
+
+The new server retains the multi-database pattern from the legacy server, but with clean boundaries:
+
+| Database | Purpose |
+|---|---|
+| `local.db` | Primary workspace: ontology entities, relationships, change events |
+| `operations.db` | LLM pipeline configurations, execution logs, background tasks |
+| `reference_api_cache.db` | Cached responses from external knowledge sources |
+| `reference.db` | Imported reference knowledge (ConceptNet, DBpedia, schema.org) |
+
+Each database has its own Alembic environment under `adapters/persistence/sqlite/`.
+
+---
+
+## Phase 0: Project Setup (1 week)
+
+**Goal:** A running FastAPI server with correct structure, Alembic configured, and a health endpoint.
 
 ### Tasks
 
-**0.1 Create the skeleton directory structure**
-Create all directories from the target layout in `architecture_design.md`. Add `__init__.py` files. No code moves yet—just the scaffolding.
+**0.1 Directory scaffold**
+Create the full directory structure from `architecture_design.md`. All `__init__.py` files. No business logic yet.
 
+**0.2 Dependencies**
+Set up `requirements.txt` with:
+- `fastapi`, `uvicorn[standard]`
+- `sqlalchemy`, `alembic`
+- `pydantic`
+- `pytest`, `httpx` (for testing)
+
+Add dev dependencies (`requirements-dev.txt`): `black`, `ruff`, `mypy`.
+
+**0.3 Configuration**
+Port the config system from the legacy server's `config.py` / `config.json` pattern. Keep configuration managed through `config.json` — no environment variable overrides for app settings.
+
+**0.4 Alembic setup**
+Initialize Alembic for `local.db` and `operations.db`:
 ```
-local-server/
-├── domain/
-│   ├── ontology/
-│   ├── graph/
-│   ├── extraction/
-│   ├── pipeline/
-│   ├── versioning/
-│   └── admin/
-├── adapters/
-│   ├── persistence/sqlite/
-│   ├── persistence/duckdb/
-│   ├── embedding/
-│   ├── llm/
-│   ├── nlp/
-│   ├── reference/
-│   ├── sync/
-│   └── web/
+adapters/persistence/sqlite/
+├── alembic.ini
+├── env.py
+└── versions/
 ```
 
-**0.2 Define shared value objects and enums**
-Create `domain/ontology/value_objects.py` with the new `NodeType` enum (`TAXONOMY`, `CONCEPT_SCHEME`, `CLASS`, `INDIVIDUAL`) and shared value objects (`ExternalReference`, `LexicalSense`). These can be imported by both old and new code.
+**0.5 Health endpoint**
+A single `GET /api/health` route that returns server status. This is the first end-to-end slice: domain entity → adapter → route.
 
-**0.3 Create port interfaces**
-Write the `Protocol` classes for all driven ports in each bounded context's `ports.py`. These are just interface definitions—no implementations yet. This forces us to think through the contracts before writing code.
-
-**0.4 Set up import aliasing**
-Create compatibility aliases so that existing code can gradually switch:
-```python
-# domain/ontology/compat.py
-# Temporary bridge during migration
-from database.models import StructureNode as LegacyStructureNode
-```
+**0.6 Logging**
+Port the logger utility. All modules log at appropriate levels.
 
 ### Exit Criteria
-- New directory structure exists alongside old
-- Port interfaces are defined and documented
-- All existing tests still pass
-- No behavior changes
+- `python app.py` starts without errors
+- `GET /api/health` returns 200
+- `pytest tests/` finds and runs (even if there are no tests yet)
+- Alembic migrations run cleanly on a fresh database
 
 ---
 
-## Phase 1: Terminology Migration (2–3 weeks)
+## Phase 1: Domain Core — Ontology Context (1–2 weeks)
 
-**Goal:** Rename domain concepts throughout the codebase to use standard terminology. This is a refactoring phase—behavior stays identical.
-
-### Tasks
-
-**1.1 Database migration script**
-Create a new migration (version 019) that:
-- Renames `structure_nodes` → `ontology_entities` (or keeps the table name but updates the model mapping)
-- Renames `node_type` enum values: `layer` → `taxonomy`, `domain` → `concept_scheme`, `term` → `class`
-- Renames `structure_node_links` → `relationships`
-- Renames `predicates` → `property_definitions`
-- Renames `pipeline_flavors` → `pipeline_configurations`
-- Preserves all data with ALTER TABLE / UPDATE statements
-- Includes rollback capability
-
-**Important:** The `node_type` column value rename (`layer`→`taxonomy`, etc.) is the highest-risk change. The migration must update all rows and the enum handling code must accept both old and new values during the transition window.
-
-**1.2 Update SQLAlchemy models**
-Rename model classes and update column references:
-- `StructureNode` → `OntologyEntity` (intermediate name; will split later)
-- `StructureNodeLink` → `Relationship`
-- `Predicate` → `PropertyDefinition`
-- `PipelineFlavor` → `PipelineConfiguration`
-
-Keep old names as aliases for backwards compatibility:
-```python
-StructureNode = OntologyEntity  # Deprecated alias
-```
-
-**1.3 Update service layer terminology**
-Rename service classes:
-- `NodeService` → `OntologyEntityService` (intermediate)
-- `NodeLinkService` → `RelationshipService`
-- Rename methods: `create_node` → `create_entity`, etc.
-- Keep old method names as deprecated wrappers
-
-**1.4 Update API routes and schemas**
-- Rename Pydantic schemas: `NodeCreate` → `EntityCreate`, `NodeOut` → `EntityOut`, etc.
-- Add new route paths alongside old ones (e.g., `/api/classes/` alongside `/api/structure_nodes/`)
-- Mark old routes as deprecated in OpenAPI spec
-- Regenerate OpenAPI spec and front-end types
-
-**1.5 Update front-end types**
-- Run `npm run generate-types` to pick up new API types
-- Update hooks and services to use new type names (can be done incrementally)
-
-### Exit Criteria
-- All tests pass with new terminology
-- Old API routes still work (deprecated but functional)
-- New API routes available
-- Database migration tested forward and backward
-
----
-
-## Phase 2: Domain Core Extraction — Ontology Context (3–4 weeks)
-
-**Goal:** Extract the core ontology domain logic into the new `domain/ontology/` package with proper entity classes and services that depend only on port interfaces.
+**Goal:** The entire Ontology Management domain is implemented as pure Python with no infrastructure dependencies. All business rules are tested.
 
 ### Tasks
 
-**2.1 Create domain entities**
-Write pure Python dataclass entities in `domain/ontology/entities.py`:
-- `Taxonomy`, `ConceptScheme`, `Class` (split from unified `OntologyEntity`)
-- `Individual` (new, empty for now)
-- `Relationship`
-- `PropertyDefinition`
+**1.1 Value objects**
+Write `domain/ontology/value_objects.py`:
+- `NodeType` enum: `TAXONOMY`, `CONCEPT_SCHEME`, `CLASS`, `INDIVIDUAL`
+- `ExternalReference`, `LexicalSense`, `DataPropertyValue`, `OntologyMapping`, `SearchCriteria`
 
-Each entity carries its own validation logic (e.g., "a class cannot be its own parent").
+**1.2 Domain entities**
+Write `domain/ontology/entities.py`:
+- `Taxonomy`, `ConceptScheme`, `Class`, `Individual` (stub), `Relationship`, `PropertyDefinition`
+- Each entity enforces its own invariants (e.g., `Class` rejects self-referential `parent_class_id`)
 
-**2.2 Create domain service**
+**1.3 Domain events**
+Write `domain/ontology/events.py`:
+- `ClassCreated`, `ClassUpdated`, `ClassDeleted`, `ClassMoved`
+- `RelationshipCreated`, `RelationshipDeleted`
+- `PropertyDefinitionCreated`
+- `TaxonomyCreated`, `SchemeCreated`
+- `GraphInvalidated`
+
+**1.4 Port interfaces**
+Write `domain/ontology/ports.py`:
+- `OntologyRepository`, `EmbeddingService`, `EventPublisher`
+
+**1.5 Domain service**
 Write `domain/ontology/services.py` with `OntologyService`:
-- Depends on `OntologyRepository`, `EmbeddingService`, `EventPublisher` (ports)
-- Contains all business rules currently in `NodeService`:
-  - Type-specific validation
-  - Circular reference detection
-  - Embedding generation coordination
-  - Event emission
-- **No SQLAlchemy imports.** The service works with domain entities only.
+- Depends only on the port interfaces defined in 1.4
+- Contains all business rules: type-specific validation, circular reference detection, embedding coordination, event emission
+- Zero imports from `adapters/`, `database/`, or any framework
 
-**2.3 Implement SQLite adapter for OntologyRepository**
+**1.6 Unit tests**
+Write `tests/unit/domain/test_ontology_service.py` and `test_ontology_entities.py`:
+- Use fake in-memory implementations of ports
+- Cover all business rules and invariants
+- Target: domain unit tests run in under 5 seconds
+
+### Exit Criteria
+- `domain/ontology/` has zero infrastructure imports (verified by `scripts/check_domain_imports.py`)
+- All domain unit tests pass
+- No SQLAlchemy, FastAPI, or SQLite imports anywhere in `domain/`
+
+---
+
+## Phase 2: Persistence Adapter — Ontology Context (1–2 weeks)
+
+**Goal:** The SQLite persistence adapter for the Ontology context is complete and tested against a real database.
+
+### Tasks
+
+**2.1 SQLAlchemy models**
+Write `adapters/persistence/sqlite/models.py` with ORM models for:
+- `OntologyEntityORM` — unified table for taxonomies, concept schemes, and classes (discriminated by `node_type`)
+- `RelationshipORM`
+- `PropertyDefinitionORM`
+- `ChangeEventORM`
+
+**2.2 Initial Alembic migration**
+Run `alembic revision --autogenerate -m "initial_schema"` to generate the first migration from the models. Review and commit.
+
+**2.3 SQLite repository**
 Write `adapters/persistence/sqlite/ontology_repo.py`:
 - Implements `OntologyRepository` protocol
-- Maps between SQLAlchemy ORM models and domain entities
-- Contains all persistence logic currently scattered across `NodeService`
+- Maps between ORM models and domain entities
+- Handles the `node_type` discriminator for the unified entity table
 
-**2.4 Implement EmbeddingService adapter**
-Write `adapters/embedding/sentence_transformer.py`:
-- Wraps the existing singleton `SentenceTransformer` model
-- Implements the `EmbeddingService` port
-- Preserves the existing thread-safety and caching behavior
+**2.4 Adapter tests**
+Write `tests/integration/test_sqlite_ontology_repo.py`:
+- Use an in-memory SQLite database with migrations applied
+- Test all CRUD operations and search
+- Verify that domain entities round-trip correctly through the adapter
 
-**2.5 Create domain event infrastructure**
-Write a simple in-process event publisher:
-- `InProcessEventPublisher` implements `EventPublisher`
-- Replaces direct `ChangeEventHandler` calls
-- Domain events are translated to `ChangeEvent` persistence at the adapter level
+### Exit Criteria
+- `alembic upgrade head` creates a clean schema from scratch
+- All adapter integration tests pass against a real SQLite database
+- `OntologyService` works end-to-end with the SQLite adapter (wired manually in tests)
 
-**2.6 Wire new ontology service into FastAPI**
+---
+
+## Phase 3: Web Adapter — Ontology Context (1 week)
+
+**Goal:** The ontology management API is fully functional via HTTP.
+
+### Tasks
+
+**3.1 Pydantic schemas**
+Write `adapters/web/schemas/ontology.py` with request/response models for all ontology operations.
+
+**3.2 Routes**
 Write `adapters/web/ontology_routes.py`:
-- New route handlers that delegate to `OntologyService`
-- Pydantic schemas for request/response validation
-- Register alongside existing routes (both work during transition)
+- All CRUD routes for taxonomies, concept schemes, classes, relationships, property definitions
+- Delegate to `OntologyService` injected via FastAPI dependency
 
-**2.7 Update ServiceFactory**
-Remove ontology-related service creation from `ServiceFactory`. The composition root in `app.py` now creates `OntologyService` directly. `ServiceFactory` still manages other services.
+**3.3 Dependency wiring**
+Write `adapters/web/dependencies.py` with FastAPI dependency providers for all services.
+
+**3.4 Composition root**
+Wire everything together in `app.py`:
+- Create SQLite engine
+- Instantiate adapters
+- Instantiate domain services
+- Mount route routers
+
+**3.5 Route tests**
+Write `tests/integration/test_ontology_api.py`:
+- Use `httpx.AsyncClient` with the full app
+- Test all endpoints end-to-end through HTTP
+
+**3.6 Update OpenAPI spec**
+Run `utils/update_api_specs.py` to generate `documentation/openapi.json`.
 
 ### Exit Criteria
-- `domain/ontology/` has zero imports from `database/`, `services/`, or any adapter
-- Domain unit tests pass with fake/mock ports
-- Integration tests pass with SQLite adapter
-- Both old and new API routes work
-- Existing front-end works without changes
+- All ontology CRUD operations work through the HTTP API
+- OpenAPI spec is generated and accurate
+- Route integration tests pass
 
 ---
 
-## Phase 3: Domain Core Extraction — Graph & Extraction Contexts (3–4 weeks)
+## Phase 4: Remaining Domain Contexts (2–3 weeks)
 
-**Goal:** Extract graph analysis and knowledge extraction into their own bounded contexts.
+Build each remaining bounded context in the same order: domain entities → ports → service → adapter → routes.
 
-### Tasks
+**4.1 Graph Analysis context**
+- `domain/graph/` entities, ports, `GraphAnalysisService`
+- `adapters/persistence/sqlite/` read-side for graph data
+- `adapters/graph/networkx_engine.py` wrapping NetworkX
+- `adapters/graph/rdflib_engine.py` wrapping RDFLib
+- Routes for graph construction, path queries, SPARQL, network metrics
 
-**3.1 Graph Analysis context**
-- Create `domain/graph/entities.py` with `KnowledgeGraph`, `GraphMetrics`, `PathResult`
-- Create `domain/graph/services.py` with `GraphAnalysisService`
-- Define `GraphEngine` and `SemanticQueryEngine` ports
-- Implement `adapters/persistence/sqlite/` methods for graph data loading (reusing `OntologyRepository`)
-- Create `NetworkXGraphEngine` adapter wrapping existing `NetworkService`
-- Create `RDFLibQueryEngine` adapter wrapping existing `SPARQLService`
-- Wire into routes
+**4.2 Knowledge Extraction (RAG) context**
+- `domain/extraction/` entities, ports, `ExtractionService`
+- `adapters/llm/` (OpenRouter/OpenAI/Anthropic providers)
+- `adapters/nlp/spacy_processor.py`
+- `adapters/reference/` (ConceptNet, DBpedia, Wikidata, schema.org)
+- Routes for text analysis and entity extraction
 
-**3.2 Knowledge Extraction context**
-- Create `domain/extraction/entities.py` with `ExtractionResult`, `ExtractionLayer`
-- Create `domain/extraction/services.py` with `ExtractionService`
-- Define `LLMProvider`, `NLPProcessor`, `ReferenceSource` ports
-- Implement adapters:
-  - `adapters/llm/openai_provider.py` and `adapters/llm/anthropic_provider.py` (from existing `llm/service.py`)
-  - `adapters/nlp/spacy_processor.py` (from existing `nlp/pipeline.py`)
-  - `adapters/reference/conceptnet.py`, `dbpedia.py`, `wikidata.py` (from existing `reference_api/`)
-- Wire into routes
+**4.3 LLM Pipeline Management context**
+- `domain/pipeline/` entities, ports, `PipelineService`
+- `adapters/persistence/sqlite/` pipeline repo (in `operations.db`)
+- Alembic migration for `operations.db`
+- Routes for pipeline configuration CRUD and execution
+
+**4.4 Version Control & Collaboration context**
+- `domain/versioning/` entities, ports, `VersioningService`
+- Change event persistence, changeset management, proposal workflow, conflict resolution
+- DuckDB-based sync adapter
+
+**4.5 System Administration context**
+- `domain/admin/` health, background tasks, configuration
+- Routes for health, metrics, background task management
 
 ### Exit Criteria
-- Both contexts have zero infrastructure imports in their domain packages
-- Graph analysis works through new service layer
-- RAG extraction pipeline works through new service layer
-- All tests pass
+- All bounded contexts implemented with domain tests and adapter tests
+- All routes functional through HTTP
+- Full OpenAPI spec generated
 
 ---
 
-## Phase 4: Domain Core Extraction — Pipeline, Versioning, Admin (2–3 weeks)
+## Phase 5: Feature Parity & Front-End Integration (1–2 weeks)
 
-**Goal:** Migrate remaining bounded contexts.
-
-### Tasks
-
-**4.1 LLM Pipeline Management context**
-- Extract `PipelineConfiguration` and `Execution` entities
-- Create `PipelineService` depending on `PipelineRepository` and `LLMProvider` ports
-- Move pipeline CRUD and execution tracking behind the port boundary
-
-**4.2 Version Control & Collaboration context**
-- Extract `ChangeEvent`, `EntityVersion`, `Changeset`, `Proposal` entities
-- Create `VersioningService` and `ConflictResolver` domain services
-- Implement `ChangeRepository` and `SyncTarget` ports
-- Move `VersionManager`, `WorkingTreeManager`, `DiffGenerator`, `ChangesetManager`, `ProposalManager`, `CRDTMergeEngine`, `ConflictResolutionEngine`, `IncrementalSyncEngine` logic into domain services
-- Create persistence adapters for change tracking
-
-**4.3 System Administration context**
-- Extract health, metrics, config, and background task management
-- Create appropriate ports and adapters
-
-### Exit Criteria
-- All bounded contexts live in `domain/`
-- All infrastructure code lives in `adapters/`
-- `ServiceFactory` is eliminated, replaced by composition root
-
----
-
-## Phase 5: Cleanup & Consolidation (2–3 weeks)
-
-**Goal:** Remove all legacy code, consolidate the codebase, and ensure everything is clean.
+**Goal:** The new server covers all functionality present in the legacy server.
 
 ### Tasks
 
-**5.1 Remove deprecated routes and aliases**
-- Remove old API routes (e.g., `/api/structure_nodes/`)
-- Remove model aliases (`StructureNode = OntologyEntity`)
-- Remove compatibility shims
+**5.1 Feature audit**
+Walk through `legacy-server/api/` route by route and verify each capability is present in the new server. Track gaps.
 
-**5.2 Remove old directory structure**
-- Delete `services/` (all logic now in `domain/` or `adapters/`)
-- Delete `graph/`, `nlp/`, `llm/`, `rag/`, `reference_api/`, `reference_db/`, `embeddings/` (all in `adapters/`)
-- Delete `database/models.py` (now in `adapters/persistence/sqlite/models.py`)
-- Keep `database/migrations/` or move to `adapters/persistence/sqlite/migrations/`
+**5.2 Resolve gaps**
+Implement any missing functionality discovered in the audit.
 
-**5.3 Update OpenAPI spec generation**
-- Regenerate specs from new route structure
-- Run `npm run generate-types` for final front-end type update
-
-**5.4 Update CLAUDE.md**
-- Reflect new directory structure and conventions
-- Update code style guidelines for hexagonal architecture
-- Document bounded contexts and port/adapter pattern
-
-**5.5 Full test suite review**
-- Ensure test coverage meets or exceeds pre-migration levels
-- Add missing domain unit tests
-- Clean up test directory structure to match new layout
-
-**5.6 Front-end migration**
-- Update all API hooks to use new route paths
-- Remove references to old type names
+**5.3 Front-end update**
+- Run `npm run generate-types` in `/ux` to pick up new API types
+- Update all hooks and services to use new API contracts
 - Verify all UX workflows end-to-end
 
+**5.4 E2E tests**
+Run the full E2E test suite (per `e2e_test_strategy.md`) against the new server.
+
+**5.5 Update CLAUDE.md**
+Reflect new directory structure and conventions.
+
 ### Exit Criteria
-- No legacy code remains
-- Clean directory structure matching architecture design
-- All tests pass
-- Front-end fully functional against new API
-- CLAUDE.md updated
-
----
-
-## Phase 6: Enterprise Readiness (Future / Optional)
-
-**Goal:** Demonstrate the value of the hexagonal architecture by adding alternative adapters.
-
-### Tasks (not scoped in detail)
-- `PostgresOntologyRepository` adapter for enterprise persistence
-- Authentication adapter (OIDC/OAuth2)
-- `OpenAIEmbeddingAdapter` as alternative to local SentenceTransformer
-- Kafka/event streaming adapter for `SyncTarget`
-- Multi-tenant configuration adapter
+- Feature parity with legacy server confirmed by E2E tests
+- Front-end fully functional against new server
+- Legacy server decommissioned (can remain in `legacy-server/` for reference indefinitely)
 
 ---
 
 ## Timeline Summary
 
-| Phase | Duration | Risk | Key Deliverable |
-|---|---|---|---|
-| 0: Foundation | 1–2 weeks | Low | Skeleton structure, port interfaces |
-| 1: Terminology | 2–3 weeks | Medium | Renamed DB, models, services, routes |
-| 2: Ontology Core | 3–4 weeks | High | Pure domain core for ontology |
-| 3: Graph & Extraction | 3–4 weeks | Medium | Two more bounded contexts extracted |
-| 4: Pipeline, Versioning, Admin | 2–3 weeks | Medium | All contexts extracted |
-| 5: Cleanup | 2–3 weeks | Low | Legacy removed, consolidated |
-| **Total** | **~13–19 weeks** | | |
+| Phase | Duration | Deliverable |
+|---|---|---|
+| 0: Setup | 1 week | Running server skeleton with health endpoint |
+| 1: Ontology Domain | 1–2 weeks | Pure domain core with tests |
+| 2: Persistence Adapter | 1–2 weeks | SQLite adapter with Alembic migrations |
+| 3: Web Adapter | 1 week | Ontology API functional via HTTP |
+| 4: Remaining Contexts | 2–3 weeks | All bounded contexts implemented |
+| 5: Parity & Integration | 1–2 weeks | Front-end working, E2E green |
+| **Total** | **7–11 weeks** | |
 
 ---
 
-## Risk Mitigation
+## What Changes vs. the Legacy Approach
 
-### Phase Gate Decisions
-
-Each phase has a **go/no-go checkpoint** before the next phase begins:
-
-| After Phase | Gate Criteria |
-|---|---|
-| 0 → 1 | Port interfaces reviewed and approved. Skeleton structure committed. |
-| 1 → 2 | Database migration tested forward AND backward on a copy of real data. Dual-name support confirmed working. All tests pass with new terminology. |
-| 2 → 3 | `domain/ontology/` has zero infrastructure imports (verified by import linter). Old and new routes both serve identical responses (verified by API diff test). |
-| 3 → 4 | Graph and extraction contexts pass all existing integration tests through new service layer. |
-| 4 → 5 | All bounded contexts extracted. ServiceFactory is no longer imported by any domain code. |
-
-If a phase fails its gate, the team stops, resolves issues, and re-validates before proceeding. The strangler fig approach means the old code still works, so there is no urgency to push forward.
-
-### Note on Individual Entity
-
-The `Individual` entity (concrete instances of Classes) is defined in the domain model but **not implemented** in Phases 0–5. The `OntologyRepository` port includes stub method signatures for `get_individual`, `list_individuals`, etc. to future-proof the interface, but adapters should raise `NotImplementedError` until Individual support is actively developed (Phase 6 or later).
-
-### Highest Risk: Phase 1 Database Migration
-The terminology rename touches every row in the database. Mitigation:
-- Write and test the migration against a copy of production data
-- Include explicit rollback logic
-- Keep dual-name support (old enum values still accepted) for at least one full phase
-
-### Second Highest Risk: Phase 2 Domain Extraction
-Extracting business logic from `NodeService` into a pure domain service is the largest refactoring. Mitigation:
-- Write comprehensive characterization tests before touching `NodeService`
-- Extract one method at a time, verifying tests pass after each extraction
-- Keep `NodeService` as a thin wrapper delegating to `OntologyService` during transition
-
-### Ongoing Risk: Front-End Breakage
-API changes can break the UX. Mitigation:
-- Maintain old routes with deprecation warnings through Phase 4
-- Run front-end integration tests after each API change
-- Use OpenAPI spec diff to catch unintended contract changes
-
----
-
-## Success Metrics
-
-The migration is successful when:
-
-1. **Domain purity:** `domain/` packages have zero imports from `adapters/`, `database/`, or any framework code
-2. **Test speed:** Domain unit tests run in under 5 seconds total
-3. **Adapter swappability:** A new adapter (e.g., Postgres) can be added by implementing a port interface without modifying domain code
-4. **Terminology clarity:** A developer familiar with OWL/RDF/SKOS can navigate the codebase without a translation guide
-5. **No regression:** All existing functionality works identically from the user's perspective
+| Concern | Legacy (Strangler Fig) | New (Greenfield) |
+|---|---|---|
+| Migration strategy | Incremental in-place | Clean break |
+| DB compatibility | Backwards compatible | No constraint |
+| API compatibility | Old routes maintained | New contracts |
+| Test burden | Keep all old tests green | Write tests for new structure only |
+| Schema management | Hand-written SQL migration scripts | Alembic autogenerate |
+| Pace | ~100 min/issue due to compat overhead | Build forward without constraint |
