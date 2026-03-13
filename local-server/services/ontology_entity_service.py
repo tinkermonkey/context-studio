@@ -1391,25 +1391,25 @@ class OntologyEntityService:
         # Use target_type if provided, otherwise use current entity type
         entity_type = target_type if target_type else ontology_entity.node_type
 
-        # Layer moves
-        if entity_type == NodeType.LAYER:
+        # Taxonomy/Layer moves
+        if entity_type in [NodeType.LAYER, NodeType.TAXONOMY]:
             if target_parent is not None:
-                raise InvalidHierarchyError("Layers must be at root level (no parent)")
+                raise InvalidHierarchyError("Taxonomies must be at root level (no parent)")
 
-        # Domain moves
-        elif entity_type == NodeType.DOMAIN:
+        # Concept Scheme/Domain moves
+        elif entity_type in [NodeType.DOMAIN, NodeType.CONCEPT_SCHEME]:
             if target_parent is None:
-                raise InvalidHierarchyError("Domains must have a parent layer")
-            if target_parent.node_type != NodeType.LAYER:
-                raise InvalidHierarchyError("Domains can only be placed under layers")
+                raise InvalidHierarchyError("Concept schemes must have a parent taxonomy")
+            if target_parent.node_type not in [NodeType.LAYER, NodeType.TAXONOMY]:
+                raise InvalidHierarchyError("Concept schemes can only be placed under taxonomies")
 
-        # Term moves
-        elif entity_type == NodeType.TERM:
+        # Class/Term moves
+        elif entity_type in [NodeType.TERM, NodeType.CLASS]:
             if target_parent is None:
-                raise InvalidHierarchyError("Terms must have a parent")
-            if target_parent.node_type not in [NodeType.DOMAIN, NodeType.TERM]:
+                raise InvalidHierarchyError("Classes must have a parent")
+            if target_parent.node_type not in [NodeType.DOMAIN, NodeType.CONCEPT_SCHEME, NodeType.TERM, NodeType.CLASS]:
                 raise InvalidHierarchyError(
-                    "Terms can only be placed under domains or other terms"
+                    "Classes can only be placed under concept schemes or other classes"
                 )
 
         # Prevent circular references
@@ -1431,11 +1431,11 @@ class OntologyEntityService:
             NodeType appropriate for the parent level
         """
         if target_parent is None:
-            return NodeType.LAYER
-        elif target_parent.node_type == NodeType.LAYER:
-            return NodeType.DOMAIN
-        elif target_parent.node_type in [NodeType.DOMAIN, NodeType.TERM]:
-            return NodeType.TERM
+            return NodeType.TAXONOMY
+        elif target_parent.node_type in [NodeType.LAYER, NodeType.TAXONOMY]:
+            return NodeType.CONCEPT_SCHEME
+        elif target_parent.node_type in [NodeType.DOMAIN, NodeType.CONCEPT_SCHEME, NodeType.TERM, NodeType.CLASS]:
+            return NodeType.CLASS
         else:
             raise ValueError(f"Invalid parent type: {target_parent.node_type}")
 
@@ -1471,10 +1471,10 @@ class OntologyEntityService:
 
         for child in children:
             # Determine child's new type based on parent's new type
-            if new_type == NodeType.LAYER:
-                child_new_type = NodeType.DOMAIN
-            elif new_type in [NodeType.DOMAIN, NodeType.TERM]:
-                child_new_type = NodeType.TERM
+            if new_type in [NodeType.LAYER, NodeType.TAXONOMY]:
+                child_new_type = NodeType.CONCEPT_SCHEME
+            elif new_type in [NodeType.DOMAIN, NodeType.CONCEPT_SCHEME, NodeType.TERM, NodeType.CLASS]:
+                child_new_type = NodeType.CLASS
             else:
                 continue
 
@@ -1505,36 +1505,36 @@ class OntologyEntityService:
             ValueError: If handle_conflicts="error" and conflict found
         """
         # Check uniqueness based on TARGET type
-        if target_type == NodeType.LAYER:
-            # Layers must be globally unique
+        if target_type in [NodeType.LAYER, NodeType.TAXONOMY]:
+            # Taxonomies must be globally unique
             existing = (
                 self.db.query(OntologyEntity)
                 .filter(
                     OntologyEntity.title == ontology_entity.title,
-                    OntologyEntity.node_type == NodeType.LAYER,
+                    OntologyEntity.node_type.in_([NodeType.LAYER, NodeType.TAXONOMY]),
                     OntologyEntity.id != ontology_entity.id,
                 )
                 .first()
             )
-        elif target_type == NodeType.DOMAIN:
-            # Domains must be unique within layer
+        elif target_type in [NodeType.DOMAIN, NodeType.CONCEPT_SCHEME]:
+            # Concept schemes must be unique within taxonomy
             existing = (
                 self.db.query(OntologyEntity)
                 .filter(
                     OntologyEntity.title == ontology_entity.title,
-                    OntologyEntity.node_type == NodeType.DOMAIN,
+                    OntologyEntity.node_type.in_([NodeType.DOMAIN, NodeType.CONCEPT_SCHEME]),
                     OntologyEntity.parent_entity_id == target_parent_id,
                     OntologyEntity.id != ontology_entity.id,
                 )
                 .first()
             )
-        elif target_type == NodeType.TERM:
-            # Terms must be unique within parent (domain or term)
+        elif target_type in [NodeType.TERM, NodeType.CLASS]:
+            # Classes must be unique within parent (concept scheme or class)
             existing = (
                 self.db.query(OntologyEntity)
                 .filter(
                     OntologyEntity.title == ontology_entity.title,
-                    OntologyEntity.node_type == NodeType.TERM,
+                    OntologyEntity.node_type.in_([NodeType.TERM, NodeType.CLASS]),
                     OntologyEntity.parent_entity_id == target_parent_id,
                     OntologyEntity.id != ontology_entity.id,
                 )
@@ -1576,35 +1576,35 @@ class OntologyEntityService:
         exclude_id: str,
     ) -> bool:
         """Helper to check if a title exists at the target location."""
-        if target_type == NodeType.LAYER:
+        if target_type in [NodeType.LAYER, NodeType.TAXONOMY]:
             return (
                 self.db.query(OntologyEntity)
                 .filter(
                     OntologyEntity.title == title,
-                    OntologyEntity.node_type == NodeType.LAYER,
+                    OntologyEntity.node_type.in_([NodeType.LAYER, NodeType.TAXONOMY]),
                     OntologyEntity.id != exclude_id,
                 )
                 .first()
                 is not None
             )
-        elif target_type == NodeType.DOMAIN:
+        elif target_type in [NodeType.DOMAIN, NodeType.CONCEPT_SCHEME]:
             return (
                 self.db.query(OntologyEntity)
                 .filter(
                     OntologyEntity.title == title,
-                    OntologyEntity.node_type == NodeType.DOMAIN,
+                    OntologyEntity.node_type.in_([NodeType.DOMAIN, NodeType.CONCEPT_SCHEME]),
                     OntologyEntity.parent_entity_id == target_parent_id,
                     OntologyEntity.id != exclude_id,
                 )
                 .first()
                 is not None
             )
-        elif target_type == NodeType.TERM:
+        elif target_type in [NodeType.TERM, NodeType.CLASS]:
             return (
                 self.db.query(OntologyEntity)
                 .filter(
                     OntologyEntity.title == title,
-                    OntologyEntity.node_type == NodeType.TERM,
+                    OntologyEntity.node_type.in_([NodeType.TERM, NodeType.CLASS]),
                     OntologyEntity.parent_entity_id == target_parent_id,
                     OntologyEntity.id != exclude_id,
                 )

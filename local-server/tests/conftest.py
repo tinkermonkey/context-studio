@@ -78,10 +78,12 @@ def create_test_database_with_migrations():
 
     try:
         # Initialize database with base schema
-        # Use NullPool with check_same_thread=False for testing
-        # Use default isolation level (not autocommit) for proper transaction handling
+        # Use StaticPool for testing to ensure data visibility across sessions
+        # This fixes SQLite NullPool isolation issues where committed data from one
+        # session is not visible to subsequent sessions in the same test
         engine = get_engine(
             db_url,
+            use_static_pool=True,
             connect_args={
                 "check_same_thread": False,
                 "timeout": 30,
