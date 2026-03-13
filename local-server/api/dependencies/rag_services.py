@@ -33,8 +33,7 @@ def get_operations_db() -> Session:
 
 
 def get_rag_pipeline_service(
-    kg_db: Session = Depends(get_db),
-    ops_db: Session = Depends(get_operations_db)
+    kg_db: Session = Depends(get_db), ops_db: Session = Depends(get_operations_db)
 ) -> RAGPipelineService:
     """
     Dependency injection for RAGPipelineService.
@@ -47,6 +46,7 @@ def get_rag_pipeline_service(
         RAGPipelineService instance configured with database sessions and timeout settings  # noqa: E501
     """
     from config import get_settings
+
     settings = get_settings()
 
     # Get configuration from RAG pipeline settings
@@ -71,12 +71,12 @@ def get_rag_pipeline_service(
         timeout_layer_0=timeout_layer_0,
         timeout_layer_1=timeout_layer_1,
         timeout_layer_2=timeout_layer_2,
-        timeout_layer_3=timeout_layer_3
+        timeout_layer_3=timeout_layer_3,
     )
 
 
 def get_rag_observability_store(
-    ops_db: Session = Depends(get_operations_db)
+    ops_db: Session = Depends(get_operations_db),
 ) -> RAGObservabilityStore:
     """
     Dependency injection for RAGObservabilityStore.

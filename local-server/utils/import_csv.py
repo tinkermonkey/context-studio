@@ -6,15 +6,16 @@ import sys
 import uuid
 from sqlalchemy.orm import Session
 from database.utils import get_engine, get_session_local, init_db
+from database.models import Layer, Domain, Term
 from utils.logger import get_logger
 
 logger = get_logger("import_csv")
 
 
-def get_or_create_import_layer(session: Session) -> "Layer":  # noqa: F821
-    layer = session.query(Layer).filter_by(title="Import").first()  # noqa: F821, E501
+def get_or_create_import_layer(session: Session) -> Layer:
+    layer = session.query(Layer).filter_by(title="Import").first()
     if not layer:
-        layer = Layer(  # noqa: F821
+        layer = Layer(
             id=str(uuid.uuid4()),
             title="Import",
             definition="Imported layer for CSV import",
@@ -28,13 +29,13 @@ def get_or_create_import_layer(session: Session) -> "Layer":  # noqa: F821
 
 
 def read_csv_rows(file_path):
-    with open(file_path, newline='', encoding='utf-8') as csvfile:
+    with open(file_path, newline="", encoding="utf-8") as csvfile:
         reader = csv.DictReader(csvfile)
         rows = [dict(row) for row in reader]
     return rows
 
 
-def import_records(rows, session: Session, layer: "Layer"):  # noqa: F821
+def import_records(rows, session: Session, layer: Layer):
     # Track last seen Layer, Domain, and Term by depth for parent relationships
     last_layer = None
     last_domain = None
@@ -52,9 +53,11 @@ def import_records(rows, session: Session, layer: "Layer"):  # noqa: F821
             layer_id = row.get("ID") or str(uuid.uuid4())
             title = row.get("Title")
             definition = row.get("Definition")
-            lyr = session.query(Layer).filter_by(id=layer_id).first()  # noqa: F821, E501
+            lyr = (
+                session.query(Layer).filter_by(id=layer_id).first()
+            )
             if not lyr:
-                lyr = Layer(  # noqa: F821
+                lyr = Layer(
                     id=layer_id,
                     title=title,
                     definition=definition,
@@ -74,9 +77,11 @@ def import_records(rows, session: Session, layer: "Layer"):  # noqa: F821
             definition = row.get("Definition")
             # Use last_layer if present, else fallback to provided layer
             layer_id = last_layer.id if last_layer else layer.id
-            domain = session.query(Domain).filter_by(id=domain_id).first()  # noqa: F821, E501
+            domain = (
+                session.query(Domain).filter_by(id=domain_id).first()
+            )
             if not domain:
-                domain = Domain(  # noqa: F821
+                domain = Domain(
                     id=domain_id,
                     title=title,
                     definition=definition,
@@ -104,12 +109,16 @@ def import_records(rows, session: Session, layer: "Layer"):  # noqa: F821
             domain_id = last_domain.id if last_domain else None
             layer_id = last_layer.id if last_layer else layer.id
             if not domain_id:
-                logger.warning(f"No domain found for term {title} (ID: {term_id}), skipping.")  # noqa: E501
+                logger.warning(
+                    f"No domain found for term {title} (ID: {term_id}), skipping."
+                )
                 continue
             try:
-                term = session.query(Term).filter_by(id=term_id).first()  # noqa: F821, E501
+                term = (
+                    session.query(Term).filter_by(id=term_id).first()
+                )
                 if not term:
-                    term = Term(  # noqa: F821
+                    term = Term(
                         id=term_id,
                         title=title,
                         definition=definition,
@@ -130,17 +139,31 @@ def import_records(rows, session: Session, layer: "Layer"):  # noqa: F821
                 session.commit()
             except Exception as e:
                 session.rollback()
-                if 'UNIQUE constraint failed: terms.id' in str(e):
-                    logger.error(f"Skipped duplicate Term with id {term_id} (title: {title}). This term already exists in the database. If you want to update it, please remove the duplicate or update the CSV.")  # noqa: E501
+                if "UNIQUE constraint failed: terms.id" in str(e):
+                    logger.error(
+                        f"Skipped duplicate Term with id {term_id} (title: {title}). This term already exists in the database. If you want to update it, please remove the duplicate or update the CSV."
+                    )
                 else:
-                    logger.error(f"Error processing Term {title} (ID: {term_id}): {e}")  # noqa: E501
+                    logger.error(
+                        f"Error processing Term {title} (ID: {term_id}): {e}"
+                    )
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Import taxonomy data from CSV into database.")  # noqa: E501
-    parser.add_argument("-f", "--file", required=True, help="Path to the CSV file to import")  # noqa: E501
-    parser.add_argument("-d", "--debug", action="store_true", help="Enable debug logging")  # noqa: E501
-    parser.add_argument("--test", action="store_true", help="Import only the first 10 rows for smoke testing")  # noqa: E501
+    parser = argparse.ArgumentParser(
+        description="Import taxonomy data from CSV into database."
+    )
+    parser.add_argument(
+        "-f", "--file", required=True, help="Path to the CSV file to import"
+    )
+    parser.add_argument(
+        "-d", "--debug", action="store_true", help="Enable debug logging"
+    )
+    parser.add_argument(
+        "--test",
+        action="store_true",
+        help="Import only the first 10 rows for smoke testing",
+    )
     args = parser.parse_args()
 
     if args.debug:

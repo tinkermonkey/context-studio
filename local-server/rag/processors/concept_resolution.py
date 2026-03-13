@@ -5,6 +5,7 @@ Layer 3: Concept Resolution Processor
 This processor resolves unrecognized concepts through knowledge graph matching
 and strategic web search with rate limiting.
 """
+
 from typing import Dict, Optional
 from sqlalchemy.orm import Session
 from sqlalchemy import text
@@ -20,7 +21,7 @@ from rag.processors.models import (
     KGContextOutput,
     SpaCyGapOutput,
     ResolutionMethod,
-    LLMExtractionOutput
+    LLMExtractionOutput,
 )
 from rag.processors.web_search import RateLimitedWebSearchClient
 from embeddings.generate_embeddings import get_model
@@ -49,7 +50,7 @@ class ConceptResolutionProcessor:
         self,
         db_session: Session,
         web_search_client: Optional[RateLimitedWebSearchClient] = None,
-        similarity_threshold: float = 0.4
+        similarity_threshold: float = 0.4,
     ):
         """
         Initialize Concept Resolution Processor.
@@ -73,7 +74,7 @@ class ConceptResolutionProcessor:
         input_data: ProcessorInput,
         kg_context: KGContextOutput,
         llm_output: LLMExtractionOutput,
-        gap_output: SpaCyGapOutput
+        gap_output: SpaCyGapOutput,
     ) -> ConceptResolutionOutput:
         """
         Process gaps to resolve concepts.
@@ -106,11 +107,11 @@ class ConceptResolutionProcessor:
         phrase_kg_map = self._build_phrase_kg_map(kg_context, input_data.enable_trace)
 
         if input_data.enable_trace:
-            trace_data['domain_context'] = domain_context
-            trace_data['phrase_kg_map_size'] = len(phrase_kg_map)  # type: ignore
-            trace_data['phrase_kg_map_keys'] = list(phrase_kg_map.keys())  # type: ignore
-            trace_data['gaps_to_resolve'] = [g.text for g in gap_output.gaps]  # type: ignore
-            trace_data['resolutions'] = []  # type: ignore
+            trace_data["domain_context"] = domain_context
+            trace_data["phrase_kg_map_size"] = len(phrase_kg_map)  # type: ignore
+            trace_data["phrase_kg_map_keys"] = list(phrase_kg_map.keys())  # type: ignore
+            trace_data["gaps_to_resolve"] = [g.text for g in gap_output.gaps]  # type: ignore
+            trace_data["resolutions"] = []  # type: ignore
 
         logger.info(
             f"Starting gap resolution with {len(phrase_kg_map)} cached phrase mappings "
@@ -118,21 +119,25 @@ class ConceptResolutionProcessor:
         )
 
         for gap in gap_output.gaps:
-            logger.debug(f"Resolving gap: '{gap.text}' (priority: {gap.priority.value})")
+            logger.debug(
+                f"Resolving gap: '{gap.text}' (priority: {gap.priority.value})"
+            )
 
-            resolution_trace = {
-                'gap_text': gap.text,
-                'priority': gap.priority.value,
-                'attempts': []
-            } if input_data.enable_trace else None
+            resolution_trace = (
+                {"gap_text": gap.text, "priority": gap.priority.value, "attempts": []}
+                if input_data.enable_trace
+                else None
+            )
 
             # Try 1: Check if gap matches a phrase from Layer 0 using vector similarity
-            resolved = self._try_phrase_match(gap, phrase_kg_map, kg_context, resolution_trace)
+            resolved = self._try_phrase_match(
+                gap, phrase_kg_map, kg_context, resolution_trace
+            )
             if resolved:
                 resolved_concepts.append(resolved)
                 cached_kg_hits += 1
                 if resolution_trace:
-                    trace_data['resolutions'].append(resolution_trace)
+                    trace_data["resolutions"].append(resolution_trace)
                 continue
 
             # Try 2: Expand to full KG vector search
@@ -141,7 +146,7 @@ class ConceptResolutionProcessor:
                 resolved_concepts.append(resolved)
                 full_kg_hits += 1
                 if resolution_trace:
-                    trace_data['resolutions'].append(resolution_trace)
+                    trace_data["resolutions"].append(resolution_trace)
                 continue
 
             # Try 3: Strategic web search (only for high-priority gaps)
@@ -151,14 +156,14 @@ class ConceptResolutionProcessor:
                     resolved_concepts.append(resolved)
                     web_searches_performed += 1
                     if resolution_trace:
-                        trace_data['resolutions'].append(resolution_trace)
+                        trace_data["resolutions"].append(resolution_trace)
                     continue
 
             # Could not resolve
             unresolved_gaps.append(gap)
             if resolution_trace:
-                resolution_trace['result'] = 'unresolved'
-                trace_data['resolutions'].append(resolution_trace)
+                resolution_trace["result"] = "unresolved"
+                trace_data["resolutions"].append(resolution_trace)
 
         logger.info(
             f"Resolution complete: {len(resolved_concepts)} resolved, "
@@ -172,7 +177,7 @@ class ConceptResolutionProcessor:
             web_searches_performed=web_searches_performed,
             cached_kg_hits=cached_kg_hits,
             full_kg_hits=full_kg_hits,
-            trace_data=trace_data
+            trace_data=trace_data,
         )
 
     def _build_domain_context(self, llm_output: LLMExtractionOutput) -> str:
@@ -193,9 +198,7 @@ class ConceptResolutionProcessor:
         return ", ".join(entity_texts)
 
     def _build_phrase_kg_map(
-        self,
-        kg_context: KGContextOutput,
-        enable_trace: bool
+        self, kg_context: KGContextOutput, enable_trace: bool
     ) -> Dict[str, tuple]:
         """
         Build a mapping of phrase embeddings to their best-matching KG nodes from Layer 0.
@@ -227,13 +230,13 @@ class ConceptResolutionProcessor:
 
                     # Get the best match from Layer 0's results (already sorted by similarity)
                     best_match = matches[0]
-                    best_kg_node = kg_node_map.get(best_match['node_id'])
+                    best_kg_node = kg_node_map.get(best_match["node_id"])
 
                     if best_kg_node:
                         phrase_map[phrase_text] = (
                             phrase_emb_array,
                             best_kg_node,
-                            best_match['similarity']
+                            best_match["similarity"],
                         )
                         logger.debug(
                             f"Mapped phrase '{phrase_text}' -> KG '{best_kg_node.title}' "
@@ -241,13 +244,17 @@ class ConceptResolutionProcessor:
                         )
 
                 except Exception as e:
-                    logger.warning(f"Failed to process phrase '{phrase_text}' from Layer 0 mapping: {e}")
+                    logger.warning(
+                        f"Failed to process phrase '{phrase_text}' from Layer 0 mapping: {e}"
+                    )
                     continue
 
         else:
             # Fallback: Generate embeddings for phrases without KG matches
             # This happens when Layer 0 didn't provide the phrase_to_kg_map
-            logger.debug("phrase_to_kg_map not available from Layer 0, building phrase embeddings only")
+            logger.debug(
+                "phrase_to_kg_map not available from Layer 0, building phrase embeddings only"
+            )
 
             for phrase in kg_context.extracted_phrases:
                 try:
@@ -270,7 +277,7 @@ class ConceptResolutionProcessor:
         gap: GapConcept,
         phrase_kg_map: Dict[str, tuple],
         kg_context: KGContextOutput,
-        resolution_trace: Optional[Dict]
+        resolution_trace: Optional[Dict],
     ) -> Optional[ResolvedConcept]:
         """
         Try to resolve gap by matching it to Layer 0 phrases using vector similarity.
@@ -287,7 +294,9 @@ class ConceptResolutionProcessor:
             ResolvedConcept if matched, None otherwise
         """
         if resolution_trace:
-            resolution_trace['attempts'].append({'method': 'phrase_match', 'result': None})
+            resolution_trace["attempts"].append(
+                {"method": "phrase_match", "result": None}
+            )
 
         try:
             # Generate embedding for gap text
@@ -299,9 +308,15 @@ class ConceptResolutionProcessor:
             best_phrase_similarity = 0.0
             best_kg_node = None
 
-            logger.debug(f"Checking gap '{gap.text}' against {len(phrase_kg_map)} cached phrases")
+            logger.debug(
+                f"Checking gap '{gap.text}' against {len(phrase_kg_map)} cached phrases"
+            )
 
-            for phrase_text, (phrase_emb, kg_node, kg_similarity) in phrase_kg_map.items():
+            for phrase_text, (
+                phrase_emb,
+                kg_node,
+                kg_similarity,
+            ) in phrase_kg_map.items():
                 # Calculate cosine similarity between gap and phrase
                 phrase_similarity = self._cosine_similarity(gap_emb_array, phrase_emb)
 
@@ -311,7 +326,9 @@ class ConceptResolutionProcessor:
                 )
 
                 # If gap is very similar to a Layer 0 phrase, reuse that phrase's KG results
-                if phrase_similarity >= 0.85:  # High similarity threshold for phrase reuse
+                if (
+                    phrase_similarity >= 0.85
+                ):  # High similarity threshold for phrase reuse
                     if phrase_similarity > best_phrase_similarity:
                         best_phrase_similarity = phrase_similarity
                         best_phrase = phrase_text
@@ -321,17 +338,21 @@ class ConceptResolutionProcessor:
             if best_kg_node and best_phrase_similarity >= 0.85:
                 confidence = self._calculate_confidence(
                     ResolutionMethod.CACHED_KG,
-                    similarity=best_kg_node.similarity_score  # Use the KG similarity from Layer 0
+                    similarity=best_kg_node.similarity_score,  # Use the KG similarity from Layer 0
                 )
 
                 if resolution_trace:
-                    resolution_trace['attempts'][-1]['result'] = 'matched'
-                    resolution_trace['attempts'][-1]['matched_phrase'] = best_phrase
-                    resolution_trace['attempts'][-1]['phrase_similarity'] = best_phrase_similarity
-                    resolution_trace['attempts'][-1]['node_id'] = best_kg_node.node_id
-                    resolution_trace['attempts'][-1]['node_title'] = best_kg_node.title
-                    resolution_trace['attempts'][-1]['kg_similarity'] = best_kg_node.similarity_score
-                    resolution_trace['attempts'][-1]['confidence'] = confidence
+                    resolution_trace["attempts"][-1]["result"] = "matched"
+                    resolution_trace["attempts"][-1]["matched_phrase"] = best_phrase
+                    resolution_trace["attempts"][-1][
+                        "phrase_similarity"
+                    ] = best_phrase_similarity
+                    resolution_trace["attempts"][-1]["node_id"] = best_kg_node.node_id
+                    resolution_trace["attempts"][-1]["node_title"] = best_kg_node.title
+                    resolution_trace["attempts"][-1][
+                        "kg_similarity"
+                    ] = best_kg_node.similarity_score
+                    resolution_trace["attempts"][-1]["confidence"] = confidence
 
                 logger.debug(
                     f"Phrase match: '{gap.text}' -> phrase '{best_phrase}' ({best_phrase_similarity:.2f}) "
@@ -343,27 +364,27 @@ class ConceptResolutionProcessor:
                     resolution_method=ResolutionMethod.CACHED_KG,
                     matched_kg_node=best_kg_node,
                     web_definition=None,
-                    confidence=confidence
+                    confidence=confidence,
                 )
 
             if resolution_trace:
-                resolution_trace['attempts'][-1]['result'] = 'no_match'
+                resolution_trace["attempts"][-1]["result"] = "no_match"
                 if best_phrase:
-                    resolution_trace['attempts'][-1]['best_phrase'] = best_phrase
-                    resolution_trace['attempts'][-1]['best_phrase_similarity'] = best_phrase_similarity
+                    resolution_trace["attempts"][-1]["best_phrase"] = best_phrase
+                    resolution_trace["attempts"][-1][
+                        "best_phrase_similarity"
+                    ] = best_phrase_similarity
 
         except Exception as e:
             logger.warning(f"Phrase matching failed for gap '{gap.text}': {e}")
             if resolution_trace:
-                resolution_trace['attempts'][-1]['result'] = 'error'
-                resolution_trace['attempts'][-1]['error'] = str(e)
+                resolution_trace["attempts"][-1]["result"] = "error"
+                resolution_trace["attempts"][-1]["error"] = str(e)
 
         return None
 
     def _try_full_kg(
-        self,
-        gap: GapConcept,
-        resolution_trace: Optional[Dict]
+        self, gap: GapConcept, resolution_trace: Optional[Dict]
     ) -> Optional[ResolvedConcept]:
         """
         Try to resolve gap using full KG vector search with SQLite-vec.
@@ -376,7 +397,7 @@ class ConceptResolutionProcessor:
             ResolvedConcept if matched, None otherwise
         """
         if resolution_trace:
-            resolution_trace['attempts'].append({'method': 'full_kg', 'result': None})
+            resolution_trace["attempts"].append({"method": "full_kg", "result": None})
 
         try:
             # Generate embedding for gap text
@@ -396,7 +417,7 @@ class ConceptResolutionProcessor:
                         node_type,
                         definition,
                         {similarity_case} as similarity
-                    FROM structure_nodes
+                    FROM ontology_entities
                     WHERE (title_embedding IS NOT NULL OR definition_embedding IS NOT NULL)
                 )
                 SELECT id, title, node_type, definition, similarity
@@ -408,17 +429,13 @@ class ConceptResolutionProcessor:
 
             result = self.db_session.execute(
                 query,
-                {
-                    'query_vec': query_vec_bytes,
-                    'threshold': self.similarity_threshold
-                }
+                {"query_vec": query_vec_bytes, "threshold": self.similarity_threshold},
             ).fetchone()
 
             if result:
                 best_similarity = float(result.similarity)
                 confidence = self._calculate_confidence(
-                    ResolutionMethod.FULL_KG,
-                    similarity=best_similarity
+                    ResolutionMethod.FULL_KG, similarity=best_similarity
                 )
 
                 matched_kg_node = KGNode(
@@ -426,14 +443,14 @@ class ConceptResolutionProcessor:
                     title=result.title,
                     node_type=result.node_type,
                     similarity_score=best_similarity,
-                    definition=result.definition
+                    definition=result.definition,
                 )
 
                 if resolution_trace:
-                    resolution_trace['attempts'][-1]['result'] = 'matched'
-                    resolution_trace['attempts'][-1]['node_id'] = result.id
-                    resolution_trace['attempts'][-1]['similarity'] = best_similarity
-                    resolution_trace['attempts'][-1]['confidence'] = confidence
+                    resolution_trace["attempts"][-1]["result"] = "matched"
+                    resolution_trace["attempts"][-1]["node_id"] = result.id
+                    resolution_trace["attempts"][-1]["similarity"] = best_similarity
+                    resolution_trace["attempts"][-1]["confidence"] = confidence
 
                 logger.debug(
                     f"Full KG match: '{gap.text}' -> '{result.title}' "
@@ -445,17 +462,17 @@ class ConceptResolutionProcessor:
                     resolution_method=ResolutionMethod.FULL_KG,
                     matched_kg_node=matched_kg_node,
                     web_definition=None,
-                    confidence=confidence
+                    confidence=confidence,
                 )
 
             if resolution_trace:
-                resolution_trace['attempts'][-1]['result'] = 'no_match'
+                resolution_trace["attempts"][-1]["result"] = "no_match"
 
         except Exception as e:
             logger.warning(f"Full KG search failed for gap '{gap.text}': {e}")
             if resolution_trace:
-                resolution_trace['attempts'][-1]['result'] = 'error'
-                resolution_trace['attempts'][-1]['error'] = str(e)
+                resolution_trace["attempts"][-1]["result"] = "error"
+                resolution_trace["attempts"][-1]["error"] = str(e)
 
         return None
 
@@ -475,6 +492,7 @@ class ConceptResolutionProcessor:
 
         # Only search for critical and important priority gaps
         from rag.processors.models import GapPriority
+
         if gap.priority not in [GapPriority.CRITICAL, GapPriority.IMPORTANT]:
             return False
 
@@ -485,10 +503,7 @@ class ConceptResolutionProcessor:
         return True
 
     def _try_web_search(
-        self,
-        gap: GapConcept,
-        domain_context: str,
-        resolution_trace: Optional[Dict]
+        self, gap: GapConcept, domain_context: str, resolution_trace: Optional[Dict]
     ) -> Optional[ResolvedConcept]:
         """
         Try to resolve gap using web search.
@@ -502,36 +517,41 @@ class ConceptResolutionProcessor:
             ResolvedConcept if found, None otherwise
         """
         if resolution_trace:
-            resolution_trace['attempts'].append({
-                'method': 'web_search',
-                'result': None,
-                'input_query': gap.text,
-                'domain_context': domain_context,
-                'grammatical_context': gap.connected_verb
-            })
+            resolution_trace["attempts"].append(
+                {
+                    "method": "web_search",
+                    "result": None,
+                    "input_query": gap.text,
+                    "domain_context": domain_context,
+                    "grammatical_context": gap.connected_verb,
+                }
+            )
 
         # Perform web search
         search_result = self.web_search_client.search(
             query=gap.text,
             domain_context=domain_context,
-            grammatical_context=gap.connected_verb
+            grammatical_context=gap.connected_verb,
         )
 
         if search_result and search_result.snippet:
             confidence = self._calculate_confidence(
-                ResolutionMethod.WEB_SEARCH,
-                snippet_length=len(search_result.snippet)
+                ResolutionMethod.WEB_SEARCH, snippet_length=len(search_result.snippet)
             )
 
             if resolution_trace:
-                resolution_trace['attempts'][-1]['result'] = 'found'
-                resolution_trace['attempts'][-1]['enriched_query'] = search_result.query
-                resolution_trace['attempts'][-1]['title'] = search_result.title
-                resolution_trace['attempts'][-1]['snippet'] = search_result.snippet
-                resolution_trace['attempts'][-1]['url'] = search_result.url
-                resolution_trace['attempts'][-1]['snippet_length'] = len(search_result.snippet)
-                resolution_trace['attempts'][-1]['confidence'] = confidence
-                resolution_trace['attempts'][-1]['timestamp'] = search_result.timestamp.isoformat()
+                resolution_trace["attempts"][-1]["result"] = "found"
+                resolution_trace["attempts"][-1]["enriched_query"] = search_result.query
+                resolution_trace["attempts"][-1]["title"] = search_result.title
+                resolution_trace["attempts"][-1]["snippet"] = search_result.snippet
+                resolution_trace["attempts"][-1]["url"] = search_result.url
+                resolution_trace["attempts"][-1]["snippet_length"] = len(
+                    search_result.snippet
+                )
+                resolution_trace["attempts"][-1]["confidence"] = confidence
+                resolution_trace["attempts"][-1][
+                    "timestamp"
+                ] = search_result.timestamp.isoformat()
 
             logger.debug(
                 f"Web search match: '{gap.text}' -> definition found "
@@ -543,14 +563,14 @@ class ConceptResolutionProcessor:
                 resolution_method=ResolutionMethod.WEB_SEARCH,
                 matched_kg_node=None,
                 web_definition=search_result.snippet,
-                confidence=confidence
+                confidence=confidence,
             )
 
         if resolution_trace:
-            resolution_trace['attempts'][-1]['result'] = 'no_results'
+            resolution_trace["attempts"][-1]["result"] = "no_results"
             # Still capture the enriched query even if no results
             if search_result:
-                resolution_trace['attempts'][-1]['enriched_query'] = search_result.query
+                resolution_trace["attempts"][-1]["enriched_query"] = search_result.query
 
         return None
 
@@ -558,7 +578,7 @@ class ConceptResolutionProcessor:
         self,
         method: ResolutionMethod,
         similarity: Optional[float] = None,
-        snippet_length: Optional[int] = None
+        snippet_length: Optional[int] = None,
     ) -> float:
         """
         Calculate confidence score based on resolution method and quality indicators.

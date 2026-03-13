@@ -10,6 +10,7 @@ logger = logging.getLogger(__name__)
 
 class Migration013(Migration):
     """Add composite index for structure_nodes (node_type, title) to optimize pagination queries."""
+
     version = 13
     description = "Add composite index for structure_nodes (node_type, title) to optimize pagination queries."
 
@@ -19,13 +20,19 @@ class Migration013(Migration):
 
         # Add composite index for efficient filtering by node_type with ordering by title
         # This optimizes queries like: SELECT * FROM structure_nodes WHERE node_type = 'term' ORDER BY title LIMIT 100 OFFSET 100
-        connection.execute(text("CREATE INDEX IF NOT EXISTS idx_nodes_type_title ON structure_nodes(node_type, title);"))
+        connection.execute(
+            text(
+                "CREATE INDEX IF NOT EXISTS idx_nodes_type_title ON structure_nodes(node_type, title);"
+            )
+        )
 
         logger.info("Successfully added composite index idx_nodes_type_title")
 
     def down(self, connection: Connection) -> None:
         """Rollback the migration."""
-        logger.info("Removing composite index for structure_nodes (node_type, title)...")
+        logger.info(
+            "Removing composite index for structure_nodes (node_type, title)..."
+        )
 
         connection.execute(text("DROP INDEX IF EXISTS idx_nodes_type_title;"))
 

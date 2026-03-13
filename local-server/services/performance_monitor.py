@@ -505,7 +505,9 @@ class PerformanceMonitor:
 
         except ImportError as e:
             # Fallback if psutil is not available
-            logger.warning("System metrics collection not available - psutil not installed")
+            logger.warning(
+                "System metrics collection not available - psutil not installed"
+            )
             return {
                 "cpu_usage_percent": None,
                 "memory_usage_mb": None,

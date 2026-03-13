@@ -30,6 +30,7 @@ router = APIRouter(prefix="/api/conflicts", tags=["conflict_resolution"])
 
 class ConflictTypeEnum(str, Enum):
     """Enumeration of conflict types."""
+
     CONCURRENT_MODIFICATION = "concurrent_modification"
     STRUCTURAL_CONFLICT = "structural_conflict"
     DEPENDENCY_CONFLICT = "dependency_conflict"
@@ -38,6 +39,7 @@ class ConflictTypeEnum(str, Enum):
 
 class ConflictSeverityEnum(str, Enum):
     """Enumeration of conflict severity levels."""
+
     LOW = "low"
     MEDIUM = "medium"
     HIGH = "high"
@@ -45,6 +47,7 @@ class ConflictSeverityEnum(str, Enum):
 
 class ConflictDescriptorOut(BaseModel):
     """API model for conflict descriptor output."""
+
     conflict_id: str
     conflict_type: ConflictTypeEnum
     entity_type: str
@@ -56,12 +59,14 @@ class ConflictDescriptorOut(BaseModel):
 
 class ResolveConflictRequest(BaseModel):
     """API model for conflict resolution request."""
+
     resolution_choice: Dict[str, Any]
     resolved_by: str
 
 
 class DetectConflictsRequest(BaseModel):
     """API model for conflict detection request."""
+
     local_versions: List[Dict[str, Any]]
     remote_versions: List[Dict[str, Any]]
     entity_type: str
@@ -69,19 +74,24 @@ class DetectConflictsRequest(BaseModel):
 
 class BatchResolveRequest(BaseModel):
     """API model for batch conflict resolution."""
+
     conflict_ids: List[str] = Field(..., min_length=1)
     resolved_by: str
-    resolution_strategy: str = Field(..., description="Strategy: auto, manual, prefer_local, prefer_remote")  # noqa: E501
+    resolution_strategy: str = Field(
+        ..., description="Strategy: auto, manual, prefer_local, prefer_remote"
+    )  # noqa: E501
 
 
 class AutoResolveRequest(BaseModel):
     """API model for automatic conflict resolution."""
+
     confidence_threshold: float = Field(0.8, ge=0.0, le=1.0)
     max_attempts: int = Field(3, ge=1, le=10)
 
 
 class ResolutionSuggestionOut(BaseModel):
     """API model for conflict resolution suggestions."""
+
     suggestion_id: str
     resolution_type: str
     confidence_score: float
@@ -92,6 +102,7 @@ class ResolutionSuggestionOut(BaseModel):
 
 class ConflictAnalyticsOut(BaseModel):
     """API model for conflict analytics."""
+
     total_conflicts: int
     conflicts_by_type: Dict[str, int]
     conflicts_by_severity: Dict[str, int]
@@ -103,6 +114,7 @@ class ConflictAnalyticsOut(BaseModel):
 
 class ConflictHealthOut(BaseModel):
     """API model for conflict resolution system health."""
+
     status: str
     active_conflicts: int
     unresolved_high_severity: int
@@ -119,17 +131,28 @@ def get_conflict_resolution_engine(db: Session = Depends(get_db)):
 
 # Core Conflict Management Endpoints
 
+
 @router.get("/", response_model=List[ConflictDescriptorOut])
 def list_conflicts(
-    conflict_type: Optional[ConflictTypeEnum] = Query(None, description="Filter by conflict type"),  # noqa: E501
-    severity: Optional[ConflictSeverityEnum] = Query(None, description="Filter by severity"),  # noqa: E501
-    entity_type: Optional[str] = Query(None, description="Filter by entity type"),  # noqa: E501
+    conflict_type: Optional[ConflictTypeEnum] = Query(
+        None, description="Filter by conflict type"
+    ),  # noqa: E501
+    severity: Optional[ConflictSeverityEnum] = Query(
+        None, description="Filter by severity"
+    ),  # noqa: E501
+    entity_type: Optional[str] = Query(
+        None, description="Filter by entity type"
+    ),  # noqa: E501
     entity_id: Optional[str] = Query(None, description="Filter by entity ID"),
-    resolved: Optional[bool] = Query(None, description="Filter by resolution status"),  # noqa: E501
+    resolved: Optional[bool] = Query(
+        None, description="Filter by resolution status"
+    ),  # noqa: E501
     resolved_by: Optional[str] = Query(None, description="Filter by resolver"),
-    limit: int = Query(100, ge=1, le=1000, description="Maximum number of conflicts to return"),  # noqa: E501
+    limit: int = Query(
+        100, ge=1, le=1000, description="Maximum number of conflicts to return"
+    ),  # noqa: E501
     offset: int = Query(0, ge=0, description="Number of conflicts to skip"),
-    conflict_engine=Depends(get_conflict_resolution_engine)
+    conflict_engine=Depends(get_conflict_resolution_engine),
 ):
     """List conflicts with comprehensive filtering options."""
     try:
@@ -141,58 +164,75 @@ def list_conflicts(
             resolved=resolved,
             resolved_by=resolved_by,
             limit=limit,
-            offset=offset
+            offset=offset,
         )
-        return [ConflictDescriptorOut.model_validate(conflict) for conflict in conflicts]  # noqa: E501
+        return [
+            ConflictDescriptorOut.model_validate(conflict) for conflict in conflicts
+        ]  # noqa: E501
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to list conflicts: {str(e)}")  # noqa: E501
+        raise HTTPException(
+            status_code=500, detail=f"Failed to list conflicts: {str(e)}"
+        )  # noqa: E501
 
 
 @router.get("/{conflict_id}", response_model=ConflictDescriptorOut)
 def get_conflict(
     conflict_id: str = Path(..., description="Conflict ID"),
-    conflict_engine=Depends(get_conflict_resolution_engine)
+    conflict_engine=Depends(get_conflict_resolution_engine),
 ):
     """Get detailed information about a specific conflict."""
     try:
         conflict = conflict_engine.get_conflict(conflict_id)
         if not conflict:
-            raise HTTPException(status_code=404, detail=f"Conflict {conflict_id} not found")  # noqa: E501
+            raise HTTPException(
+                status_code=404, detail=f"Conflict {conflict_id} not found"
+            )  # noqa: E501
         return ConflictDescriptorOut.model_validate(conflict)
     except HTTPException:
         raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to get conflict: {str(e)}")  # noqa: E501
+        raise HTTPException(
+            status_code=500, detail=f"Failed to get conflict: {str(e)}"
+        )  # noqa: E501
 
 
 @router.post("/{conflict_id}/resolve")
 def resolve_conflict_manually(
     request: ResolveConflictRequest,
     conflict_id: str = Path(..., description="Conflict ID"),
-    conflict_engine=Depends(get_conflict_resolution_engine)
+    conflict_engine=Depends(get_conflict_resolution_engine),
 ):
     """Manually resolve a specific conflict with custom resolution choice."""
     try:
         success = conflict_engine.resolve_conflict_manually(
             conflict_id=conflict_id,
             resolved_by=request.resolved_by,
-            resolution_choice=request.resolution_choice
+            resolution_choice=request.resolution_choice,
         )
         if not success:
-            raise HTTPException(status_code=400, detail="Failed to resolve conflict")  # noqa: E501
-        return {"message": f"Conflict {conflict_id} resolved successfully", "resolution": "manual"}  # noqa: E501
+            raise HTTPException(
+                status_code=400, detail="Failed to resolve conflict"
+            )  # noqa: E501
+        return {
+            "message": f"Conflict {conflict_id} resolved successfully",
+            "resolution": "manual",
+        }  # noqa: E501
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to resolve conflict: {str(e)}")  # noqa: E501
+        raise HTTPException(
+            status_code=500, detail=f"Failed to resolve conflict: {str(e)}"
+        )  # noqa: E501
 
 
 @router.post("/{conflict_id}/auto-resolve")
 def auto_resolve_conflict(
     request: AutoResolveRequest,
     conflict_id: str = Path(..., description="Conflict ID"),
-    resolved_by: str = Query(..., description="User requesting auto-resolution"),  # noqa: E501
-    conflict_engine=Depends(get_conflict_resolution_engine)
+    resolved_by: str = Query(
+        ..., description="User requesting auto-resolution"
+    ),  # noqa: E501
+    conflict_engine=Depends(get_conflict_resolution_engine),
 ):
     """Attempt automatic resolution of a conflict using intelligent algorithms."""  # noqa: E501
     try:
@@ -200,7 +240,7 @@ def auto_resolve_conflict(
             conflict_id=conflict_id,
             resolved_by=resolved_by,
             confidence_threshold=request.confidence_threshold,
-            max_attempts=request.max_attempts
+            max_attempts=request.max_attempts,
         )
 
         if result.get("resolved", False):
@@ -208,67 +248,80 @@ def auto_resolve_conflict(
                 "message": f"Conflict {conflict_id} auto-resolved successfully",  # noqa: E501
                 "resolution": "automatic",
                 "confidence": result.get("confidence"),
-                "strategy": result.get("strategy")
+                "strategy": result.get("strategy"),
             }
         else:
             return {
                 "message": f"Auto-resolution failed for conflict {conflict_id}",  # noqa: E501
                 "reason": result.get("reason"),
-                "suggestions": result.get("suggestions", [])
+                "suggestions": result.get("suggestions", []),
             }
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to auto-resolve conflict: {str(e)}")  # noqa: E501
+        raise HTTPException(
+            status_code=500, detail=f"Failed to auto-resolve conflict: {str(e)}"
+        )  # noqa: E501
 
 
-@router.get("/entity/{entity_type}/{entity_id}", response_model=List[ConflictDescriptorOut])  # noqa: E501
+@router.get(
+    "/entity/{entity_type}/{entity_id}", response_model=List[ConflictDescriptorOut]
+)  # noqa: E501
 def get_entity_conflicts(
     entity_type: str = Path(..., description="Entity type"),
     entity_id: str = Path(..., description="Entity ID"),
-    resolved: Optional[bool] = Query(None, description="Filter by resolution status"),  # noqa: E501
-    conflict_engine=Depends(get_conflict_resolution_engine)
+    resolved: Optional[bool] = Query(
+        None, description="Filter by resolution status"
+    ),  # noqa: E501
+    conflict_engine=Depends(get_conflict_resolution_engine),
 ):
     """Get all conflicts associated with a specific entity."""
     try:
         conflicts = conflict_engine.get_entity_conflicts(
-            entity_type=entity_type,
-            entity_id=entity_id,
-            resolved=resolved
+            entity_type=entity_type, entity_id=entity_id, resolved=resolved
         )
-        return [ConflictDescriptorOut.model_validate(conflict) for conflict in conflicts]  # noqa: E501
+        return [
+            ConflictDescriptorOut.model_validate(conflict) for conflict in conflicts
+        ]  # noqa: E501
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to get entity conflicts: {str(e)}")  # noqa: E501
+        raise HTTPException(
+            status_code=500, detail=f"Failed to get entity conflicts: {str(e)}"
+        )  # noqa: E501
 
 
 # Conflict Detection and Batch Operations
 
+
 @router.post("/detect", response_model=List[ConflictDescriptorOut])
 def detect_conflicts(
     request: DetectConflictsRequest,
-    conflict_engine=Depends(get_conflict_resolution_engine)
+    conflict_engine=Depends(get_conflict_resolution_engine),
 ):
     """Detect conflicts between local and remote entity versions."""
     try:
         conflicts = conflict_engine.detect_conflicts_between_versions(
             local_versions=request.local_versions,
             remote_versions=request.remote_versions,
-            entity_type=request.entity_type
+            entity_type=request.entity_type,
         )
-        return [ConflictDescriptorOut.model_validate(conflict) for conflict in conflicts]  # noqa: E501
+        return [
+            ConflictDescriptorOut.model_validate(conflict) for conflict in conflicts
+        ]  # noqa: E501
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to detect conflicts: {str(e)}")  # noqa: E501
+        raise HTTPException(
+            status_code=500, detail=f"Failed to detect conflicts: {str(e)}"
+        )  # noqa: E501
 
 
 @router.post("/batch-resolve")
 def batch_resolve_conflicts(
     request: BatchResolveRequest,
-    conflict_engine=Depends(get_conflict_resolution_engine)
+    conflict_engine=Depends(get_conflict_resolution_engine),
 ):
     """Resolve multiple conflicts using a specified strategy."""
     try:
         results = conflict_engine.batch_resolve_conflicts(
             conflict_ids=request.conflict_ids,
             resolved_by=request.resolved_by,
-            resolution_strategy=request.resolution_strategy
+            resolution_strategy=request.resolution_strategy,
         )
 
         successful = len([r for r in results if r.get("success", False)])
@@ -278,148 +331,195 @@ def batch_resolve_conflicts(
             "message": f"Batch resolution completed: {successful} successful, {failed} failed",  # noqa: E501
             "successful_resolutions": successful,
             "failed_resolutions": failed,
-            "details": results
+            "details": results,
         }
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to batch resolve conflicts: {str(e)}")  # noqa: E501
+        raise HTTPException(
+            status_code=500, detail=f"Failed to batch resolve conflicts: {str(e)}"
+        )  # noqa: E501
 
 
 # Resolution Suggestions and Intelligence
 
-@router.get("/resolution-suggestions/{conflict_id}", response_model=List[ResolutionSuggestionOut])  # noqa: E501
+
+@router.get(
+    "/resolution-suggestions/{conflict_id}",
+    response_model=List[ResolutionSuggestionOut],
+)  # noqa: E501
 def get_resolution_suggestions(
     conflict_id: str = Path(..., description="Conflict ID"),
-    max_suggestions: int = Query(5, ge=1, le=10, description="Maximum number of suggestions"),  # noqa: E501
-    conflict_engine=Depends(get_conflict_resolution_engine)
+    max_suggestions: int = Query(
+        5, ge=1, le=10, description="Maximum number of suggestions"
+    ),  # noqa: E501
+    conflict_engine=Depends(get_conflict_resolution_engine),
 ):
     """Get intelligent resolution suggestions for a specific conflict."""
     try:
         suggestions = conflict_engine.get_resolution_suggestions(
-            conflict_id=conflict_id,
-            max_suggestions=max_suggestions
+            conflict_id=conflict_id, max_suggestions=max_suggestions
         )
-        return [ResolutionSuggestionOut.model_validate(suggestion) for suggestion in suggestions]  # noqa: E501
+        return [
+            ResolutionSuggestionOut.model_validate(suggestion)
+            for suggestion in suggestions
+        ]  # noqa: E501
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to get resolution suggestions: {str(e)}")  # noqa: E501
+        raise HTTPException(
+            status_code=500, detail=f"Failed to get resolution suggestions: {str(e)}"
+        )  # noqa: E501
 
 
 # Analytics and Monitoring
 
+
 @router.get("/analytics", response_model=ConflictAnalyticsOut)
 def get_conflict_analytics(
-    days: int = Query(30, ge=1, le=365, description="Number of days to analyze"),  # noqa: E501
-    entity_type: Optional[str] = Query(None, description="Filter analytics by entity type"),  # noqa: E501
-    conflict_engine=Depends(get_conflict_resolution_engine)
+    days: int = Query(
+        30, ge=1, le=365, description="Number of days to analyze"
+    ),  # noqa: E501
+    entity_type: Optional[str] = Query(
+        None, description="Filter analytics by entity type"
+    ),  # noqa: E501
+    conflict_engine=Depends(get_conflict_resolution_engine),
 ):
     """Get comprehensive conflict resolution analytics."""
     try:
         analytics = conflict_engine.get_conflict_analytics(
-            days=days,
-            entity_type=entity_type
+            days=days, entity_type=entity_type
         )
         return ConflictAnalyticsOut.model_validate(analytics)
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to get conflict analytics: {str(e)}")  # noqa: E501
+        raise HTTPException(
+            status_code=500, detail=f"Failed to get conflict analytics: {str(e)}"
+        )  # noqa: E501
 
 
 @router.get("/health", response_model=ConflictHealthOut)
 def get_conflict_resolution_health(
-    conflict_engine=Depends(get_conflict_resolution_engine)
+    conflict_engine=Depends(get_conflict_resolution_engine),
 ):
     """Get conflict resolution system health and performance metrics."""
     try:
         health = conflict_engine.get_system_health()
         return ConflictHealthOut.model_validate(health)
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to get system health: {str(e)}")  # noqa: E501
+        raise HTTPException(
+            status_code=500, detail=f"Failed to get system health: {str(e)}"
+        )  # noqa: E501
 
 
 # Advanced Conflict Resolution Features
 
+
 @router.post("/resolve-strategy/prefer-local")
 def resolve_conflicts_prefer_local(
-    conflict_ids: List[str] = Query(..., description="Conflict IDs to resolve"),  # noqa: E501
+    conflict_ids: List[str] = Query(
+        ..., description="Conflict IDs to resolve"
+    ),  # noqa: E501
     resolved_by: str = Query(..., description="User resolving conflicts"),
-    conflict_engine=Depends(get_conflict_resolution_engine)
+    conflict_engine=Depends(get_conflict_resolution_engine),
 ):
     """Resolve conflicts by preferring local versions."""
     try:
         results = conflict_engine.resolve_conflicts_prefer_local(
-            conflict_ids=conflict_ids,
-            resolved_by=resolved_by
+            conflict_ids=conflict_ids, resolved_by=resolved_by
         )
-        return {"message": "Conflicts resolved preferring local versions", "results": results}  # noqa: E501
+        return {
+            "message": "Conflicts resolved preferring local versions",
+            "results": results,
+        }  # noqa: E501
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to resolve conflicts: {str(e)}")  # noqa: E501
+        raise HTTPException(
+            status_code=500, detail=f"Failed to resolve conflicts: {str(e)}"
+        )  # noqa: E501
 
 
 @router.post("/resolve-strategy/prefer-remote")
 def resolve_conflicts_prefer_remote(
-    conflict_ids: List[str] = Query(..., description="Conflict IDs to resolve"),  # noqa: E501
+    conflict_ids: List[str] = Query(
+        ..., description="Conflict IDs to resolve"
+    ),  # noqa: E501
     resolved_by: str = Query(..., description="User resolving conflicts"),
-    conflict_engine=Depends(get_conflict_resolution_engine)
+    conflict_engine=Depends(get_conflict_resolution_engine),
 ):
     """Resolve conflicts by preferring remote versions."""
     try:
         results = conflict_engine.resolve_conflicts_prefer_remote(
-            conflict_ids=conflict_ids,
-            resolved_by=resolved_by
+            conflict_ids=conflict_ids, resolved_by=resolved_by
         )
-        return {"message": "Conflicts resolved preferring remote versions", "results": results}  # noqa: E501
+        return {
+            "message": "Conflicts resolved preferring remote versions",
+            "results": results,
+        }  # noqa: E501
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to resolve conflicts: {str(e)}")  # noqa: E501
+        raise HTTPException(
+            status_code=500, detail=f"Failed to resolve conflicts: {str(e)}"
+        )  # noqa: E501
 
 
 @router.post("/resolve-strategy/merge-intelligent")
 def resolve_conflicts_intelligent_merge(
-    conflict_ids: List[str] = Query(..., description="Conflict IDs to resolve"),  # noqa: E501
+    conflict_ids: List[str] = Query(
+        ..., description="Conflict IDs to resolve"
+    ),  # noqa: E501
     resolved_by: str = Query(..., description="User resolving conflicts"),
-    confidence_threshold: float = Query(0.8, ge=0.0, le=1.0, description="Minimum confidence for auto-merge"),  # noqa: E501
-    conflict_engine=Depends(get_conflict_resolution_engine)
+    confidence_threshold: float = Query(
+        0.8, ge=0.0, le=1.0, description="Minimum confidence for auto-merge"
+    ),  # noqa: E501
+    conflict_engine=Depends(get_conflict_resolution_engine),
 ):
     """Resolve conflicts using intelligent CRDT-based merging."""
     try:
         results = conflict_engine.resolve_conflicts_intelligent_merge(
             conflict_ids=conflict_ids,
             resolved_by=resolved_by,
-            confidence_threshold=confidence_threshold
+            confidence_threshold=confidence_threshold,
         )
-        return {"message": "Conflicts resolved using intelligent merging", "results": results}  # noqa: E501
+        return {
+            "message": "Conflicts resolved using intelligent merging",
+            "results": results,
+        }  # noqa: E501
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to resolve conflicts: {str(e)}")  # noqa: E501
+        raise HTTPException(
+            status_code=500, detail=f"Failed to resolve conflicts: {str(e)}"
+        )  # noqa: E501
 
 
 # Conflict Prevention and Early Warning
+
 
 @router.get("/risk-analysis/{entity_type}/{entity_id}")
 def get_conflict_risk_analysis(
     entity_type: str = Path(..., description="Entity type"),
     entity_id: str = Path(..., description="Entity ID"),
-    conflict_engine=Depends(get_conflict_resolution_engine)
+    conflict_engine=Depends(get_conflict_resolution_engine),
 ):
     """Get conflict risk analysis for an entity before modification."""
     try:
         risk_analysis = conflict_engine.analyze_conflict_risk(
-            entity_type=entity_type,
-            entity_id=entity_id
+            entity_type=entity_type, entity_id=entity_id
         )
         return risk_analysis
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to analyze conflict risk: {str(e)}")  # noqa: E501
+        raise HTTPException(
+            status_code=500, detail=f"Failed to analyze conflict risk: {str(e)}"
+        )  # noqa: E501
 
 
 @router.get("/hotspots")
 def get_conflict_hotspots(
-    days: int = Query(30, ge=1, le=365, description="Number of days to analyze"),  # noqa: E501
-    limit: int = Query(20, ge=1, le=100, description="Maximum number of hotspots to return"),  # noqa: E501
-    conflict_engine=Depends(get_conflict_resolution_engine)
+    days: int = Query(
+        30, ge=1, le=365, description="Number of days to analyze"
+    ),  # noqa: E501
+    limit: int = Query(
+        20, ge=1, le=100, description="Maximum number of hotspots to return"
+    ),  # noqa: E501
+    conflict_engine=Depends(get_conflict_resolution_engine),
 ):
     """Get entities with highest conflict rates (hotspots)."""
     try:
-        hotspots = conflict_engine.get_conflict_hotspots(
-            days=days,
-            limit=limit
-        )
+        hotspots = conflict_engine.get_conflict_hotspots(days=days, limit=limit)
         return {"hotspots": hotspots, "analysis_period_days": days}
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to get conflict hotspots: {str(e)}")  # noqa: E501
+        raise HTTPException(
+            status_code=500, detail=f"Failed to get conflict hotspots: {str(e)}"
+        )  # noqa: E501

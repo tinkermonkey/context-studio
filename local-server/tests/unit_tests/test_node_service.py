@@ -20,7 +20,11 @@ from services.node_service import NodeService  # noqa: E402
 from database.models import StructureNode  # noqa: E402
 from database.enums import NodeType  # noqa: E402
 from graph.graph_service import GraphService  # noqa: E402
-from services.exceptions import InvalidHierarchyError, CircularReferenceError, NotFoundError  # noqa: E402, E501
+from services.exceptions import (
+    InvalidHierarchyError,
+    CircularReferenceError,
+    NotFoundError,
+)  # noqa: E402, E501
 from api.models.structure_nodes import StructureNodeAttribute  # noqa: E402
 
 
@@ -111,7 +115,9 @@ class TestNodeServiceValidation:
         """Test domain validation rule: Domains must have a parent layer."""
         del sample_domain_data["parent_node_id"]
 
-        with pytest.raises(InvalidHierarchyError, match="Domains must have a parent layer"):
+        with pytest.raises(
+            InvalidHierarchyError, match="Domains must have a parent layer"
+        ):
             node_service.create_node(sample_domain_data)
 
     def test_domain_validation_parent_must_be_layer(
@@ -125,7 +131,9 @@ class TestNodeServiceValidation:
             parent_domain
         )
 
-        with pytest.raises(InvalidHierarchyError, match="Domain parent must be a layer"):
+        with pytest.raises(
+            InvalidHierarchyError, match="Domain parent must be a layer"
+        ):
             node_service.create_node(sample_domain_data)
 
     def test_domain_validation_unique_title_within_layer(
@@ -165,7 +173,9 @@ class TestNodeServiceValidation:
         """Test term validation rule: Terms must have a parent domain or term."""
         del sample_term_data["parent_node_id"]
 
-        with pytest.raises(InvalidHierarchyError, match="Terms must have a parent domain or term"):
+        with pytest.raises(
+            InvalidHierarchyError, match="Terms must have a parent domain or term"
+        ):
             node_service.create_node(sample_term_data)
 
     def test_term_validation_parent_must_be_domain_or_term(
@@ -177,7 +187,9 @@ class TestNodeServiceValidation:
         parent_layer.node_type = NodeType.LAYER
         mock_db.query.return_value.filter.return_value.first.return_value = parent_layer
 
-        with pytest.raises(InvalidHierarchyError, match="Term parent must be a domain or term"):
+        with pytest.raises(
+            InvalidHierarchyError, match="Term parent must be a domain or term"
+        ):
             node_service.create_node(sample_term_data)
 
 
@@ -188,7 +200,9 @@ class TestCircularReferenceValidation:
         """Test preventing direct circular reference: structure_node cannot be its own parent."""
         node_id = str(uuid.uuid4())
 
-        with pytest.raises(CircularReferenceError, match="StructureNode cannot be its own parent"):
+        with pytest.raises(
+            CircularReferenceError, match="StructureNode cannot be its own parent"
+        ):
             node_service._validate_no_circular_reference(node_id, node_id)
 
     def test_circular_reference_prevention_indirect(self, node_service, mock_db):
@@ -295,7 +309,7 @@ class TestNodeServiceCRUD:
         """Test updating non-existent structure_node."""
         mock_db.query.return_value.filter.return_value.first.return_value = None
 
-        with pytest.raises(NotFoundError, match="StructureNode not found"):
+        with pytest.raises(NotFoundError, match="OntologyEntity not found"):
             node_service.update_node(str(uuid.uuid4()), {"title": "New Title"})
 
     def test_delete_node_success(self, node_service, mock_db):
@@ -337,7 +351,7 @@ class TestNodeServiceCRUD:
         """Test deleting non-existent structure_node."""
         mock_db.query.return_value.filter.return_value.first.return_value = None
 
-        with pytest.raises(NotFoundError, match="StructureNode not found"):
+        with pytest.raises(NotFoundError, match="OntologyEntity not found"):
             node_service.delete_node(str(uuid.uuid4()))
 
     def test_get_node(self, node_service, mock_db):
@@ -849,11 +863,11 @@ class TestNodeAttributeParsing:
 
     def test_parse_attributes_json_multiple(self, node_service):
         """Test parsing multiple attributes from JSON."""
-        attributes_json = '''[
+        attributes_json = """[
             {"key":"category","title":"Category","value":"legal","value_type":"string"},
             {"key":"jurisdiction","title":"Jurisdiction","value":"US Federal","value_type":"string"},
             {"key":"version","title":"Version","value":1,"value_type":"number"}
-        ]'''
+        ]"""
         result = node_service._parse_attributes_json(attributes_json)
 
         assert len(result) == 3
@@ -904,8 +918,15 @@ class TestNodeAttributeOperations:
 
         # Create attributes
         attributes = [
-            StructureNodeAttribute(key="category", title="Category", value="legal", value_type="string"),
-            StructureNodeAttribute(key="jurisdiction", title="Jurisdiction", value="US Federal", value_type="string"),
+            StructureNodeAttribute(
+                key="category", title="Category", value="legal", value_type="string"
+            ),
+            StructureNodeAttribute(
+                key="jurisdiction",
+                title="Jurisdiction",
+                value="US Federal",
+                value_type="string",
+            ),
         ]
 
         # Set attributes
@@ -940,7 +961,11 @@ class TestNodeAttributeOperations:
         node_id = str(uuid.uuid4())
         node_service.get_node = Mock(return_value=None)
 
-        attributes = [StructureNodeAttribute(key="test", title="Test", value="value", value_type="string")]
+        attributes = [
+            StructureNodeAttribute(
+                key="test", title="Test", value="value", value_type="string"
+            )
+        ]
 
         with pytest.raises(ValueError, match="not found"):
             node_service.set_node_attributes(node_id, attributes)
@@ -1031,7 +1056,9 @@ class TestNodeAttributeOperations:
         node = Mock(spec=StructureNode)
         node.id = node_id
         node.version = 1
-        node.attributes = '[{"key":"test","title":"Test","value":"value","value_type":"string"}]'
+        node.attributes = (
+            '[{"key":"test","title":"Test","value":"value","value_type":"string"}]'
+        )
 
         node_service.get_node = Mock(return_value=node)
         mock_db.commit = Mock()
@@ -1128,7 +1155,9 @@ class TestNodeAttributeInheritance:
 
         layer = Mock(spec=StructureNode)
         layer.id = layer_id
-        layer.attributes = '[{"key":"level","title":"Level","value":"layer","value_type":"string"}]'
+        layer.attributes = (
+            '[{"key":"level","title":"Level","value":"layer","value_type":"string"}]'
+        )
 
         domain = Mock(spec=StructureNode)
         domain.id = domain_id
@@ -1147,14 +1176,22 @@ class TestNodeAttributeInheritance:
         term3.attributes = '[{"key":"term3_attr","title":"Term3 Attr","value":"term3_val","value_type":"string"}]'
 
         node_service.get_node = Mock(return_value=term3)
-        node_service.get_node_ancestors = Mock(return_value=[layer, domain, term1, term2])
+        node_service.get_node_ancestors = Mock(
+            return_value=[layer, domain, term1, term2]
+        )
 
         result = node_service.resolve_node_attributes(term3_id)
 
         # Should have all attributes
         assert len(result) == 5
         keys = {r.key for r in result}
-        assert keys == {"level", "domain_attr", "term1_attr", "term2_attr", "term3_attr"}
+        assert keys == {
+            "level",
+            "domain_attr",
+            "term1_attr",
+            "term2_attr",
+            "term3_attr",
+        }
         # All but last should be inherited
         term3_attr = [r for r in result if r.key == "term3_attr"][0]
         assert term3_attr.inherited is False
@@ -1170,7 +1207,9 @@ class TestNodeAttributeInheritance:
 
         child = Mock(spec=StructureNode)
         child.id = child_id
-        child.attributes = '[{"key":"attr3","title":"Attr 3","value":"child3","value_type":"string"}]'
+        child.attributes = (
+            '[{"key":"attr3","title":"Attr 3","value":"child3","value_type":"string"}]'
+        )
 
         node_service.get_node = Mock(return_value=child)
         node_service.get_node_ancestors = Mock(return_value=[parent])
@@ -1195,27 +1234,40 @@ class TestAttributeValueTypeValidation:
 
     def test_attribute_value_type_string(self, node_service):
         """Test string value type."""
-        attr = StructureNodeAttribute(key="title", title="Title", value="Test String", value_type="string")
+        attr = StructureNodeAttribute(
+            key="title", title="Title", value="Test String", value_type="string"
+        )
         assert attr.value_type == "string"
 
     def test_attribute_value_type_number(self, node_service):
         """Test number value type."""
-        attr = StructureNodeAttribute(key="count", title="Count", value=42, value_type="number")
+        attr = StructureNodeAttribute(
+            key="count", title="Count", value=42, value_type="number"
+        )
         assert attr.value_type == "number"
 
     def test_attribute_value_type_boolean(self, node_service):
         """Test boolean value type."""
-        attr = StructureNodeAttribute(key="active", title="Active", value=True, value_type="boolean")
+        attr = StructureNodeAttribute(
+            key="active", title="Active", value=True, value_type="boolean"
+        )
         assert attr.value_type == "boolean"
 
     def test_attribute_value_type_date(self, node_service):
         """Test date value type."""
-        attr = StructureNodeAttribute(key="created", title="Created", value="2025-01-15", value_type="date")
+        attr = StructureNodeAttribute(
+            key="created", title="Created", value="2025-01-15", value_type="date"
+        )
         assert attr.value_type == "date"
 
     def test_attribute_value_type_url(self, node_service):
         """Test URL value type."""
-        attr = StructureNodeAttribute(key="reference", title="Reference", value="https://example.com", value_type="url")
+        attr = StructureNodeAttribute(
+            key="reference",
+            title="Reference",
+            value="https://example.com",
+            value_type="url",
+        )
         assert attr.value_type == "url"
 
 
@@ -1255,7 +1307,7 @@ class TestLegalDomainHierarchyFixture:
         term2.id = term2_id
         term2.title = "Indemnification"
         term2.parent_node_id = domain_id
-        term2.attributes = '[]'
+        term2.attributes = "[]"
 
         # Test Force Majeure resolution (term with override)
         node_service.get_node = Mock(return_value=term1)
@@ -1323,7 +1375,7 @@ def test_create_node_version_management_failure(mock_db, mock_graph_service):
 
     def refresh_side_effect(obj):
         # Set ID on the object when refresh is called
-        if hasattr(obj, 'id'):
+        if hasattr(obj, "id"):
             obj.id = test_node_id
 
     mock_db.add = Mock()
@@ -1337,10 +1389,7 @@ def test_create_node_version_management_failure(mock_db, mock_graph_service):
 
     # Attempt to create node
     with pytest.raises(ValidationError) as exc_info:
-        node_service.create_node({
-            "node_type": "layer",
-            "title": "Unique Test Layer"
-        })
+        node_service.create_node({"node_type": "layer", "title": "Unique Test Layer"})
 
     # Verify the error message is specific and informative
     assert "Cannot create node" in str(exc_info.value)
@@ -1351,7 +1400,9 @@ def test_create_node_version_management_failure(mock_db, mock_graph_service):
     mock_db.rollback.assert_called()
 
 
-def test_create_node_version_management_failure_working_tree(mock_db, mock_graph_service):
+def test_create_node_version_management_failure_working_tree(
+    mock_db, mock_graph_service
+):
     """Test that node creation is aborted when working tree initialization fails.
 
     Similar to test_create_node_version_management_failure but tests the case where
@@ -1379,7 +1430,7 @@ def test_create_node_version_management_failure_working_tree(mock_db, mock_graph
 
     def refresh_side_effect(obj):
         # Set ID on the object when refresh is called
-        if hasattr(obj, 'id'):
+        if hasattr(obj, "id"):
             obj.id = test_node_id
 
     mock_db.add = Mock()
@@ -1398,10 +1449,9 @@ def test_create_node_version_management_failure_working_tree(mock_db, mock_graph
 
     # Attempt to create node
     with pytest.raises(ValidationError) as exc_info:
-        node_service.create_node({
-            "node_type": "layer",
-            "title": "Another Unique Layer"
-        })
+        node_service.create_node(
+            {"node_type": "layer", "title": "Another Unique Layer"}
+        )
 
     # Verify the error message is specific and informative
     assert "Cannot create node" in str(exc_info.value)

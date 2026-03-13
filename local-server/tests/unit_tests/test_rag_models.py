@@ -19,7 +19,7 @@ from rag.models import (  # noqa: E402
     RAGExtractionResponse,
     ExtractedEntity,
     LayerMetrics,
-    ProcessingMetrics
+    ProcessingMetrics,
 )
 
 
@@ -72,7 +72,7 @@ class TestExtractedEntity:
             type="PERSON",
             confidence=0.95,
             source_layer="nlp",
-            sentence_index=0
+            sentence_index=0,
         )
         assert entity.text == "John Doe"
         assert entity.type == "PERSON"
@@ -86,7 +86,7 @@ class TestExtractedEntity:
         metadata = {
             "kb_id": "Q12345",
             "relations": ["works_at", "lives_in"],
-            "context": "additional context"
+            "context": "additional context",
         }
         entity = ExtractedEntity(
             text="OpenAI",
@@ -94,7 +94,7 @@ class TestExtractedEntity:
             confidence=0.88,
             source_layer="kg",
             sentence_index=1,
-            metadata=metadata
+            metadata=metadata,
         )
         assert entity.metadata == metadata
         assert entity.metadata["kb_id"] == "Q12345"
@@ -109,7 +109,7 @@ class TestExtractedEntity:
                 type="TEST",
                 confidence=conf,
                 source_layer="nlp",
-                sentence_index=0
+                sentence_index=0,
             )
             assert entity.confidence == conf
 
@@ -122,7 +122,7 @@ class TestExtractedEntity:
                     type="TEST",
                     confidence=conf,
                     source_layer="nlp",
-                    sentence_index=0
+                    sentence_index=0,
                 )
 
     def test_entity_source_layer_validation(self):
@@ -135,7 +135,7 @@ class TestExtractedEntity:
                 type="TEST",
                 confidence=0.8,
                 source_layer=layer,
-                sentence_index=0
+                sentence_index=0,
             )
             assert entity.source_layer == layer
 
@@ -148,10 +148,13 @@ class TestExtractedEntity:
                     type="TEST",
                     confidence=0.8,
                     source_layer=layer,
-                    sentence_index=0
+                    sentence_index=0,
                 )
             error_message = str(exc_info.value)
-            assert "source_layer must be one of" in error_message or "Value error" in error_message
+            assert (
+                "source_layer must be one of" in error_message
+                or "Value error" in error_message
+            )
 
     def test_entity_sentence_index_validation(self):
         """Test sentence_index validation (must be >= 0)."""
@@ -163,7 +166,7 @@ class TestExtractedEntity:
                 type="TEST",
                 confidence=0.8,
                 source_layer="nlp",
-                sentence_index=idx
+                sentence_index=idx,
             )
             assert entity.sentence_index == idx
 
@@ -176,7 +179,7 @@ class TestExtractedEntity:
                     type="TEST",
                     confidence=0.8,
                     source_layer="nlp",
-                    sentence_index=idx
+                    sentence_index=idx,
                 )
 
     def test_entity_empty_text_validation(self):
@@ -187,7 +190,7 @@ class TestExtractedEntity:
                 type="TEST",
                 confidence=0.8,
                 source_layer="nlp",
-                sentence_index=0
+                sentence_index=0,
             )
         assert "String should have at least 1 character" in str(exc_info.value)
 
@@ -197,10 +200,7 @@ class TestLayerMetrics:
 
     def test_basic_layer_metrics(self):
         """Test creating basic layer metrics."""
-        metrics = LayerMetrics(
-            execution_time_ms=123.45,
-            entities_found=10
-        )
+        metrics = LayerMetrics(execution_time_ms=123.45, entities_found=10)
         assert metrics.execution_time_ms == 123.45
         assert metrics.entities_found == 10
         assert metrics.entities_deduplicated == 0  # Default
@@ -208,9 +208,7 @@ class TestLayerMetrics:
     def test_layer_metrics_with_deduplication(self):
         """Test layer metrics with deduplication count."""
         metrics = LayerMetrics(
-            execution_time_ms=200.0,
-            entities_found=15,
-            entities_deduplicated=3
+            execution_time_ms=200.0, entities_found=15, entities_deduplicated=3
         )
         assert metrics.entities_deduplicated == 3
 
@@ -218,24 +216,16 @@ class TestLayerMetrics:
         """Test field validation for layer metrics."""
         # Negative execution time should fail
         with pytest.raises(ValidationError):
-            LayerMetrics(
-                execution_time_ms=-10.0,
-                entities_found=5
-            )
+            LayerMetrics(execution_time_ms=-10.0, entities_found=5)
 
         # Negative entities_found should fail
         with pytest.raises(ValidationError):
-            LayerMetrics(
-                execution_time_ms=100.0,
-                entities_found=-1
-            )
+            LayerMetrics(execution_time_ms=100.0, entities_found=-1)
 
         # Negative entities_deduplicated should fail
         with pytest.raises(ValidationError):
             LayerMetrics(
-                execution_time_ms=100.0,
-                entities_found=5,
-                entities_deduplicated=-1
+                execution_time_ms=100.0, entities_found=5, entities_deduplicated=-1
             )
 
 
@@ -256,7 +246,7 @@ class TestProcessingMetrics:
             web_layer=web_metrics,
             total_execution_time_ms=500.0,
             total_entities=15,
-            total_sentences=3
+            total_sentences=3,
         )
 
         assert metrics.kg_layer.entities_found == 5
@@ -283,7 +273,7 @@ class TestProcessingMetrics:
                 web_layer=web_metrics,
                 total_execution_time_ms=-500.0,
                 total_entities=15,
-                total_sentences=3
+                total_sentences=3,
             )
 
         # Negative total_entities should fail
@@ -295,7 +285,7 @@ class TestProcessingMetrics:
                 web_layer=web_metrics,
                 total_execution_time_ms=500.0,
                 total_entities=-15,
-                total_sentences=3
+                total_sentences=3,
             )
 
         # Negative total_sentences should fail
@@ -307,7 +297,7 @@ class TestProcessingMetrics:
                 web_layer=web_metrics,
                 total_execution_time_ms=500.0,
                 total_entities=15,
-                total_sentences=-3
+                total_sentences=-3,
             )
 
 
@@ -328,7 +318,7 @@ class TestRAGExtractionResponse:
             web_layer=web_metrics,
             total_execution_time_ms=500.0,
             total_entities=15,
-            total_sentences=3
+            total_sentences=3,
         )
 
         response = RAGExtractionResponse(metrics=metrics)
@@ -346,14 +336,14 @@ class TestRAGExtractionResponse:
             type="PERSON",
             confidence=0.95,
             source_layer="nlp",
-            sentence_index=0
+            sentence_index=0,
         )
         entity2 = ExtractedEntity(
             text="OpenAI",
             type="ORG",
             confidence=0.88,
             source_layer="kg",
-            sentence_index=1
+            sentence_index=1,
         )
 
         kg_metrics = LayerMetrics(execution_time_ms=50.0, entities_found=2)
@@ -368,13 +358,11 @@ class TestRAGExtractionResponse:
             web_layer=web_metrics,
             total_execution_time_ms=500.0,
             total_entities=2,
-            total_sentences=2
+            total_sentences=2,
         )
 
         response = RAGExtractionResponse(
-            entities=[entity1, entity2],
-            metrics=metrics,
-            trace_available=True
+            entities=[entity1, entity2], metrics=metrics, trace_available=True
         )
 
         assert len(response.entities) == 2
@@ -396,24 +384,21 @@ class TestRAGExtractionResponse:
             web_layer=web_metrics,
             total_execution_time_ms=500.0,
             total_entities=0,
-            total_sentences=1
+            total_sentences=1,
         )
 
         # Invalid UUID should fail
         with pytest.raises(ValidationError) as exc_info:
-            RAGExtractionResponse(
-                request_id="not-a-uuid",
-                metrics=metrics
-            )
+            RAGExtractionResponse(request_id="not-a-uuid", metrics=metrics)
         error_message = str(exc_info.value)
-        assert "request_id must be a valid UUID string" in error_message or "Value error" in error_message
+        assert (
+            "request_id must be a valid UUID string" in error_message
+            or "Value error" in error_message
+        )
 
         # Valid UUID should work
         valid_uuid = "550e8400-e29b-41d4-a716-446655440000"
-        response = RAGExtractionResponse(
-            request_id=valid_uuid,
-            metrics=metrics
-        )
+        response = RAGExtractionResponse(request_id=valid_uuid, metrics=metrics)
         assert response.request_id == valid_uuid
 
     def test_response_auto_generated_request_id(self):
@@ -430,7 +415,7 @@ class TestRAGExtractionResponse:
             web_layer=web_metrics,
             total_execution_time_ms=500.0,
             total_entities=0,
-            total_sentences=1
+            total_sentences=1,
         )
 
         response1 = RAGExtractionResponse(metrics=metrics)
@@ -454,12 +439,14 @@ class TestModelDocstrings:
             RAGExtractionResponse,
             ExtractedEntity,
             LayerMetrics,
-            ProcessingMetrics
+            ProcessingMetrics,
         ]
 
         for model in models:
             assert model.__doc__ is not None, f"{model.__name__} has no docstring"
-            assert len(model.__doc__.strip()) > 0, f"{model.__name__} has empty docstring"
+            assert (
+                len(model.__doc__.strip()) > 0
+            ), f"{model.__name__} has empty docstring"
 
     def test_all_fields_have_descriptions(self):
         """Test that all fields have descriptions."""
@@ -468,15 +455,17 @@ class TestModelDocstrings:
             ExtractedEntity,
             LayerMetrics,
             ProcessingMetrics,
-            RAGExtractionResponse
+            RAGExtractionResponse,
         ]
 
         for model in models:
             for field_name, field_info in model.model_fields.items():
-                assert field_info.description is not None, \
-                    f"{model.__name__}.{field_name} has no description"
-                assert len(field_info.description) > 0, \
-                    f"{model.__name__}.{field_name} has empty description"
+                assert (
+                    field_info.description is not None
+                ), f"{model.__name__}.{field_name} has no description"
+                assert (
+                    len(field_info.description) > 0
+                ), f"{model.__name__}.{field_name} has empty description"
 
 
 if __name__ == "__main__":

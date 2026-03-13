@@ -5,7 +5,9 @@ import os
 
 # Add the project root to the path
 sys.path.append(
-    os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))  # noqa: E501
+    os.path.dirname(
+        os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    )  # noqa: E501
 )
 
 import pytest  # noqa: E402
@@ -227,7 +229,9 @@ class TestPredicateValidationAPI:
         response = client.put(
             f"/api/predicates/{predicate['id']}",
             json={
-                "identifier": predicate["identifier"],  # Same identifier from test_data  # noqa: E501
+                "identifier": predicate[
+                    "identifier"
+                ],  # Same identifier from test_data  # noqa: E501
                 "definition": "Updated definition",
             },
         )
@@ -242,7 +246,9 @@ class TestTermRelationshipValidationAPI:
     """Tests for term relationship predicate validation in API (now using structure_node_links)."""  # noqa: E501
 
     @pytest.mark.skip_suite
-    def test_create_relationship_same_domain_allowed_predicate(self, client, test_data):  # noqa: E501
+    def test_create_relationship_same_domain_allowed_predicate(
+        self, client, test_data
+    ):  # noqa: E501
         """Test creating relationship with allowed predicate in same domain."""
         term1 = test_data["terms"][0]  # Domain with predicates
         term2 = test_data["terms"][1]  # Same domain
@@ -269,7 +275,9 @@ class TestTermRelationshipValidationAPI:
         """Test creating relationship with disallowed predicate in same domain - may not apply in unified system."""  # noqa: E501
         term1 = test_data["terms"][0]  # Domain with predicates
         term2 = test_data["terms"][1]  # Same domain
-        predicate = test_data["predicates"]["antonym"]  # Not allowed in old system  # noqa: E501
+        predicate = test_data["predicates"][
+            "antonym"
+        ]  # Not allowed in old system  # noqa: E501
 
         response = client.post(
             "/api/structure_nodes/links",
@@ -310,7 +318,9 @@ class TestTermRelationshipValidationAPI:
         assert response.status_code == 201
 
     @pytest.mark.skip_suite
-    def test_update_relationship_same_domain_allowed_predicate(self, client, test_data):  # noqa: E501
+    def test_update_relationship_same_domain_allowed_predicate(
+        self, client, test_data
+    ):  # noqa: E501
         """Test updating relationship with allowed predicate in same domain."""
         # First create a relationship
         term1 = test_data["terms"][0]
@@ -384,7 +394,9 @@ class TestTermRelationshipValidationAPI:
         assert response.status_code == 200
 
     @pytest.mark.skip_suite
-    def test_create_relationship_no_domain_predicate_set(self, client, test_data):  # noqa: E501
+    def test_create_relationship_no_domain_predicate_set(
+        self, client, test_data
+    ):  # noqa: E501
         """Test creating relationship in domain without structural predicate allows any predicate."""  # noqa: E501
         # Create terms in domain without predicate set
         domain = test_data["domain_without_predicates"]

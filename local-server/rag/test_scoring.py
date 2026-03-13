@@ -18,6 +18,7 @@ logger = get_logger(__name__)
 @dataclass
 class AnnotationSpan:
     """Represents a ground truth annotation span."""
+
     start_char: int
     end_char: int
     structure_node_id: str
@@ -30,6 +31,7 @@ class AnnotationSpan:
 @dataclass
 class ExtractionSpan:
     """Represents an extracted entity span."""
+
     start_char: int
     end_char: int
     matched_kg_node: Optional[str] = None
@@ -42,6 +44,7 @@ class ExtractionSpan:
 @dataclass
 class ScoringResult:
     """Result of scoring a pipeline run against ground truth."""
+
     precision: float  # 0.0 to 1.0
     recall: float  # 0.0 to 1.0
     f1_score: float  # 0.0 to 1.0
@@ -59,7 +62,7 @@ class ScoringResult:
             "true_positives": self.true_positives,
             "false_positives": self.false_positives,
             "false_negatives": self.false_negatives,
-            "matches": self.matches
+            "matches": self.matches,
         }
 
 
@@ -81,13 +84,15 @@ class RAGTestScoringService:
             overlap_threshold: Minimum overlap ratio for partial matches (default: 0.8 = 80%)
         """
         self.overlap_threshold = overlap_threshold
-        logger.info(f"RAGTestScoringService initialized with overlap_threshold={overlap_threshold}")
+        logger.info(
+            f"RAGTestScoringService initialized with overlap_threshold={overlap_threshold}"
+        )
 
     def score_extraction(
         self,
         extracted_entities: List[ExtractedEntity],
         ground_truth_annotations: List[AnnotationSpan],
-        paragraph_text: str
+        paragraph_text: str,
     ) -> ScoringResult:
         """
         Score an extraction result against ground truth annotations.
@@ -110,8 +115,7 @@ class RAGTestScoringService:
 
         # Find matches using span overlap
         matches, unmatched_extractions, unmatched_annotations = self._match_spans(
-            extraction_spans,
-            ground_truth_annotations
+            extraction_spans, ground_truth_annotations
         )
 
         # Calculate metrics
@@ -125,10 +129,7 @@ class RAGTestScoringService:
 
         # Build match details
         match_details = self._build_match_details(
-            matches,
-            unmatched_extractions,
-            unmatched_annotations,
-            paragraph_text
+            matches, unmatched_extractions, unmatched_annotations, paragraph_text
         )
 
         result = ScoringResult(
@@ -138,7 +139,7 @@ class RAGTestScoringService:
             true_positives=true_positives,
             false_positives=false_positives,
             false_negatives=false_negatives,
-            matches=match_details
+            matches=match_details,
         )
 
         logger.info(
@@ -148,7 +149,9 @@ class RAGTestScoringService:
 
         return result
 
-    def _entities_to_spans(self, entities: List[ExtractedEntity]) -> List[ExtractionSpan]:
+    def _entities_to_spans(
+        self, entities: List[ExtractedEntity]
+    ) -> List[ExtractionSpan]:
         """Convert extracted entities to span objects."""
         spans = []
         for entity in entities:
@@ -160,7 +163,7 @@ class RAGTestScoringService:
                 start_char=char_range[0],
                 end_char=char_range[1],
                 matched_kg_node=matched_kg_node,
-                text=entity.text
+                text=entity.text,
             )
             spans.append(span)
 
@@ -169,8 +172,12 @@ class RAGTestScoringService:
     def _match_spans(
         self,
         extraction_spans: List[ExtractionSpan],
-        annotation_spans: List[AnnotationSpan]
-    ) -> Tuple[List[Tuple[ExtractionSpan, AnnotationSpan]], List[ExtractionSpan], List[AnnotationSpan]]:
+        annotation_spans: List[AnnotationSpan],
+    ) -> Tuple[
+        List[Tuple[ExtractionSpan, AnnotationSpan]],
+        List[ExtractionSpan],
+        List[AnnotationSpan],
+    ]:
         """
         Match extraction spans against annotation spans using overlap threshold.
 
@@ -187,7 +194,9 @@ class RAGTestScoringService:
         matched_annotation_indices = set()
 
         # Sort spans by start position for potential early exit optimization
-        sorted_extractions = sorted(enumerate(extraction_spans), key=lambda x: x[1].start_char)
+        sorted_extractions = sorted(
+            enumerate(extraction_spans), key=lambda x: x[1].start_char
+        )
 
         # For each annotation, find best matching extraction
         for ann_idx, annotation in enumerate(annotation_spans):
@@ -206,15 +215,15 @@ class RAGTestScoringService:
                 # Calculate overlap
                 overlap = self._calculate_overlap(
                     (extraction.start_char, extraction.end_char),
-                    (annotation.start_char, annotation.end_char)
+                    (annotation.start_char, annotation.end_char),
                 )
 
                 # Check if this is the best match so far
                 if overlap >= self.overlap_threshold and overlap > best_overlap:
                     # Also check if structure nodes match (when available)
                     nodes_match = (
-                        extraction.matched_kg_node is None or
-                        extraction.matched_kg_node == annotation.structure_node_id
+                        extraction.matched_kg_node is None
+                        or extraction.matched_kg_node == annotation.structure_node_id
                     )
 
                     if nodes_match:
@@ -230,20 +239,20 @@ class RAGTestScoringService:
 
         # Collect unmatched spans
         unmatched_extractions = [
-            span for idx, span in enumerate(extraction_spans)
+            span
+            for idx, span in enumerate(extraction_spans)
             if idx not in matched_extraction_indices
         ]
         unmatched_annotations = [
-            span for idx, span in enumerate(annotation_spans)
+            span
+            for idx, span in enumerate(annotation_spans)
             if idx not in matched_annotation_indices
         ]
 
         return matches, unmatched_extractions, unmatched_annotations
 
     def _calculate_overlap(
-        self,
-        span1: Tuple[int, int],
-        span2: Tuple[int, int]
+        self, span1: Tuple[int, int], span2: Tuple[int, int]
     ) -> float:
         """
         Calculate overlap ratio between two spans.
@@ -308,39 +317,49 @@ class RAGTestScoringService:
         matches: List[Tuple[ExtractionSpan, AnnotationSpan]],
         unmatched_extractions: List[ExtractionSpan],
         unmatched_annotations: List[AnnotationSpan],
-        paragraph_text: str
+        paragraph_text: str,
     ) -> List[Dict[str, Any]]:
         """Build detailed match information for debugging."""
         details = []
 
         # True positives
         for extraction, annotation in matches:
-            details.append({
-                "type": "true_positive",
-                "extraction_span": [extraction.start_char, extraction.end_char],
-                "extraction_text": extraction.text or paragraph_text[extraction.start_char:extraction.end_char],
-                "annotation_span": [annotation.start_char, annotation.end_char],
-                "annotation_text": annotation.text or paragraph_text[annotation.start_char:annotation.end_char],
-                "matched_node": extraction.matched_kg_node,
-                "expected_node": annotation.structure_node_id
-            })
+            details.append(
+                {
+                    "type": "true_positive",
+                    "extraction_span": [extraction.start_char, extraction.end_char],
+                    "extraction_text": extraction.text
+                    or paragraph_text[extraction.start_char : extraction.end_char],
+                    "annotation_span": [annotation.start_char, annotation.end_char],
+                    "annotation_text": annotation.text
+                    or paragraph_text[annotation.start_char : annotation.end_char],
+                    "matched_node": extraction.matched_kg_node,
+                    "expected_node": annotation.structure_node_id,
+                }
+            )
 
         # False positives
         for extraction in unmatched_extractions:
-            details.append({
-                "type": "false_positive",
-                "extraction_span": [extraction.start_char, extraction.end_char],
-                "extraction_text": extraction.text or paragraph_text[extraction.start_char:extraction.end_char],
-                "matched_node": extraction.matched_kg_node
-            })
+            details.append(
+                {
+                    "type": "false_positive",
+                    "extraction_span": [extraction.start_char, extraction.end_char],
+                    "extraction_text": extraction.text
+                    or paragraph_text[extraction.start_char : extraction.end_char],
+                    "matched_node": extraction.matched_kg_node,
+                }
+            )
 
         # False negatives
         for annotation in unmatched_annotations:
-            details.append({
-                "type": "false_negative",
-                "annotation_span": [annotation.start_char, annotation.end_char],
-                "annotation_text": annotation.text or paragraph_text[annotation.start_char:annotation.end_char],
-                "expected_node": annotation.structure_node_id
-            })
+            details.append(
+                {
+                    "type": "false_negative",
+                    "annotation_span": [annotation.start_char, annotation.end_char],
+                    "annotation_text": annotation.text
+                    or paragraph_text[annotation.start_char : annotation.end_char],
+                    "expected_node": annotation.structure_node_id,
+                }
+            )
 
         return details

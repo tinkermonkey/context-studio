@@ -47,26 +47,31 @@ SOURCE_NAME = "schema.org"
 
 class SchemaOrgImportError(Exception):
     """Base exception for Schema.org import errors."""
+
     pass
 
 
 class DownloadError(SchemaOrgImportError):
     """Error during Schema.org data download."""
+
     pass
 
 
 class ParseError(SchemaOrgImportError):
     """Error during JSON-LD parsing."""
+
     pass
 
 
 class EmbeddingError(SchemaOrgImportError):
     """Error during embedding generation."""
+
     pass
 
 
 class LockError(SchemaOrgImportError):
     """Error acquiring or managing lock file."""
+
     pass
 
 
@@ -88,7 +93,7 @@ class SchemaOrgImporter:
         self,
         config: ReferenceConfig,
         manager: ReferenceManager,
-        stale_lock_threshold: int = DEFAULT_STALE_LOCK_THRESHOLD
+        stale_lock_threshold: int = DEFAULT_STALE_LOCK_THRESHOLD,
     ):
         """
         Initialize the Schema.org importer.
@@ -106,6 +111,7 @@ class SchemaOrgImporter:
 
         # Setup signal handlers for graceful lock cleanup
         import signal
+
         signal.signal(signal.SIGTERM, self._signal_handler)
         signal.signal(signal.SIGINT, self._signal_handler)
 
@@ -159,20 +165,20 @@ class SchemaOrgImporter:
             json_data = self._download_with_retry()
             entities, properties = self._parse_jsonld(json_data)
 
-            logger.info(f"Parsed {len(entities)} entities (Classes) and {len(properties)} properties")
+            logger.info(
+                f"Parsed {len(entities)} entities (Classes) and {len(properties)} properties"
+            )
 
             # Step 2: Generate embeddings for entities
             logger.info("Step 2: Generating embeddings for entities")
             embedded_entities = self._generate_embeddings_batch(
-                entities,
-                batch_size=batch_size
+                entities, batch_size=batch_size
             )
 
             # Step 3: Generate embeddings for properties
             logger.info("Step 3: Generating embeddings for properties")
             embedded_properties = self._generate_embeddings_batch(
-                properties,
-                batch_size=batch_size
+                properties, batch_size=batch_size
             )
 
             # Step 4: Insert entities as ReferenceNodes with embeddings
@@ -202,10 +208,7 @@ class SchemaOrgImporter:
             # Step 7: Extract and insert metadata relationships
             logger.info("Step 7: Extracting and inserting metadata relationships")
             link_count = self._insert_relationships_transaction(
-                entities,
-                properties,
-                node_map,
-                predicate_map
+                entities, properties, node_map, predicate_map
             )
 
             result = {
@@ -213,7 +216,7 @@ class SchemaOrgImporter:
                 "entities_imported": len(node_map),
                 "properties_imported": len(predicate_map),
                 "links_imported": link_count,
-                "timestamp": datetime.now().isoformat()
+                "timestamp": datetime.now().isoformat(),
             }
 
             logger.info(f"Import complete: {result}")
@@ -265,11 +268,12 @@ class SchemaOrgImporter:
         # Create lock file atomically using 'x' mode (exclusive creation)
         # This prevents race conditions between check and creation
         try:
-            with open(self.lock_path, 'x') as f:
-                f.write(json.dumps({
-                    "pid": os.getpid(),
-                    "timestamp": datetime.now().isoformat()
-                }))
+            with open(self.lock_path, "x") as f:
+                f.write(
+                    json.dumps(
+                        {"pid": os.getpid(), "timestamp": datetime.now().isoformat()}
+                    )
+                )
             logger.info(f"Acquired import lock: {self.lock_path}")
         except FileExistsError:
             # Another process created the file between our check and creation attempt
@@ -307,8 +311,8 @@ class SchemaOrgImporter:
         # Exception: localhost/127.0.0.1 allowed for testing purposes
         # WARNING: Localhost exception could be exploited via DNS rebinding attacks
         # Mitigation: Ensure firewall rules prevent external access to localhost endpoints
-        if not url.startswith('https://'):
-            if not ('localhost' in url or '127.0.0.1' in url):
+        if not url.startswith("https://"):
+            if not ("localhost" in url or "127.0.0.1" in url):
                 raise DownloadError(
                     "Non-HTTPS URL rejected for security. "
                     "Only HTTPS URLs are allowed for remote sources."
@@ -322,7 +326,9 @@ class SchemaOrgImporter:
                 # Exponential backoff: 1s, 2s, 4s, ...
                 if attempt > 0:
                     delay = 2 ** (attempt - 1)
-                    logger.info(f"Retry attempt {attempt + 1}/{retry_count} after {delay}s delay")
+                    logger.info(
+                        f"Retry attempt {attempt + 1}/{retry_count} after {delay}s delay"
+                    )
                     time.sleep(delay)
 
                 response = requests.get(url, timeout=timeout)
@@ -330,20 +336,22 @@ class SchemaOrgImporter:
 
                 # Write to temporary file
                 tmp_file = tempfile.NamedTemporaryFile(
-                    mode='w',
-                    suffix='.jsonld',
-                    delete=False
+                    mode="w", suffix=".jsonld", delete=False
                 )
                 tmp_file.write(response.text)
                 tmp_file.close()
 
-                logger.debug(f"Downloaded {len(response.text)} bytes to {tmp_file.name}")
+                logger.debug(
+                    f"Downloaded {len(response.text)} bytes to {tmp_file.name}"
+                )
                 return tmp_file.name
 
             except requests.exceptions.Timeout as e:
                 last_error = e
                 # Log as debug on retryable attempts, warning on final failure
-                log_level = logger.debug if attempt < retry_count - 1 else logger.warning
+                log_level = (
+                    logger.debug if attempt < retry_count - 1 else logger.warning
+                )
                 log_level(
                     f"Download attempt {attempt + 1}/{retry_count} failed with timeout "
                     f"({timeout}s): {e}"
@@ -355,7 +363,9 @@ class SchemaOrgImporter:
             except requests.exceptions.RequestException as e:
                 last_error = e
                 # Log as debug on retryable attempts, warning on final failure
-                log_level = logger.debug if attempt < retry_count - 1 else logger.warning
+                log_level = (
+                    logger.debug if attempt < retry_count - 1 else logger.warning
+                )
                 log_level(
                     f"Download attempt {attempt + 1}/{retry_count} failed with network error: {e}"
                 )
@@ -366,10 +376,10 @@ class SchemaOrgImporter:
             except Exception as e:
                 last_error = e
                 # Log as debug on retryable attempts, warning on final failure
-                log_level = logger.debug if attempt < retry_count - 1 else logger.warning
-                log_level(
-                    f"Download attempt {attempt + 1}/{retry_count} failed: {e}"
+                log_level = (
+                    logger.debug if attempt < retry_count - 1 else logger.warning
                 )
+                log_level(f"Download attempt {attempt + 1}/{retry_count} failed: {e}")
                 if attempt == retry_count - 1:
                     raise DownloadError(
                         f"Failed to download after {retry_count} attempts: {e}"
@@ -392,7 +402,7 @@ class SchemaOrgImporter:
             ParseError: If parsing fails
         """
         try:
-            with open(file_path, 'r', encoding='utf-8') as f:
+            with open(file_path, "r", encoding="utf-8") as f:
                 data = json.load(f)
         except json.JSONDecodeError as e:
             raise ParseError(f"Invalid JSON-LD: {e}")
@@ -430,8 +440,15 @@ class SchemaOrgImporter:
                 properties.append(item)
             else:
                 # Heuristic: properties have domain/range
-                if any(k in item for k in ["domainIncludes", "rangeIncludes",
-                                           "schema:domainIncludes", "schema:rangeIncludes"]):
+                if any(
+                    k in item
+                    for k in [
+                        "domainIncludes",
+                        "rangeIncludes",
+                        "schema:domainIncludes",
+                        "schema:rangeIncludes",
+                    ]
+                ):
                     properties.append(item)
                 else:
                     entities.append(item)
@@ -440,9 +457,7 @@ class SchemaOrgImporter:
         return entities, properties
 
     def _generate_embeddings_batch(
-        self,
-        items: List[Dict],
-        batch_size: int = DEFAULT_BATCH_SIZE
+        self, items: List[Dict], batch_size: int = DEFAULT_BATCH_SIZE
     ) -> List[Dict[str, Any]]:
         """
         Generate embeddings for a list of Schema.org items.
@@ -466,8 +481,10 @@ class SchemaOrgImporter:
         items_processed = 0
 
         for i in range(0, len(items), batch_size):
-            batch = items[i:i + batch_size]
-            logger.info(f"Processing batch {i//batch_size + 1} ({i+1}-{i+len(batch)}/{len(items)})")
+            batch = items[i : i + batch_size]
+            logger.info(
+                f"Processing batch {i//batch_size + 1} ({i+1}-{i+len(batch)}/{len(items)})"
+            )
 
             for item in batch:
                 try:
@@ -476,33 +493,45 @@ class SchemaOrgImporter:
 
                     # Extract title - handle both string and JSON-LD object format
                     title_raw = (
-                        item.get("rdfs:label") or
-                        item.get("label") or
-                        item.get("name") or
-                        ""
+                        item.get("rdfs:label")
+                        or item.get("label")
+                        or item.get("name")
+                        or ""
                     )
                     if isinstance(title_raw, dict):
                         # JSON-LD object with @value
                         title = title_raw.get("@value", str(title_raw))
                     elif isinstance(title_raw, list):
                         # Multiple values - take the first string
-                        title = next((t.get("@value", t) if isinstance(t, dict) else t for t in title_raw), "")
+                        title = next(
+                            (
+                                t.get("@value", t) if isinstance(t, dict) else t
+                                for t in title_raw
+                            ),
+                            "",
+                        )
                     else:
                         title = str(title_raw) if title_raw else ""
 
                     # Extract definition - handle both string and JSON-LD object format
                     definition_raw = (
-                        item.get("rdfs:comment") or
-                        item.get("comment") or
-                        item.get("description") or
-                        ""
+                        item.get("rdfs:comment")
+                        or item.get("comment")
+                        or item.get("description")
+                        or ""
                     )
                     if isinstance(definition_raw, dict):
                         # JSON-LD object with @value
                         definition = definition_raw.get("@value", str(definition_raw))
                     elif isinstance(definition_raw, list):
                         # Multiple values - take the first string
-                        definition = next((d.get("@value", d) if isinstance(d, dict) else d for d in definition_raw), "")
+                        definition = next(
+                            (
+                                d.get("@value", d) if isinstance(d, dict) else d
+                                for d in definition_raw
+                            ),
+                            "",
+                        )
                     else:
                         definition = str(definition_raw) if definition_raw else ""
 
@@ -525,34 +554,40 @@ class SchemaOrgImporter:
                         definition_embedding = generate_embedding(definition)
                         # Validate embedding dimensions
                         if definition_embedding:
-                            actual_dims = len(definition_embedding) // 4  # float32 = 4 bytes
+                            actual_dims = (
+                                len(definition_embedding) // 4
+                            )  # float32 = 4 bytes
                             if actual_dims != DEFAULT_EMBEDDING_DIMS:
                                 raise EmbeddingError(
                                     f"Definition embedding dimension mismatch: expected {DEFAULT_EMBEDDING_DIMS}, "
                                     f"got {actual_dims} for '{definition[:50]}...'"
                                 )
 
-                    embedded_items.append({
-                        "external_id": external_id,
-                        "title": title,
-                        "definition": definition,
-                        "title_embedding": title_embedding,
-                        "definition_embedding": definition_embedding,
-                        "raw_data": item
-                    })
+                    embedded_items.append(
+                        {
+                            "external_id": external_id,
+                            "title": title,
+                            "definition": definition,
+                            "title_embedding": title_embedding,
+                            "definition_embedding": definition_embedding,
+                            "raw_data": item,
+                        }
+                    )
 
                     # Progress logging
                     items_processed += 1
                     if items_processed % PROGRESS_LOG_INTERVAL == 0:
-                        logger.info(f"Progress: {items_processed}/{len(items)} items processed")
+                        logger.info(
+                            f"Progress: {items_processed}/{len(items)} items processed"
+                        )
 
                 except Exception as e:
                     logger.error(
                         "Embedding generation failed",
                         extra={
                             "external_id": item.get("@id", "unknown"),
-                            "error": str(e)
-                        }
+                            "error": str(e),
+                        },
                     )
                     failed_items.append(item.get("@id", "unknown"))
 
@@ -560,10 +595,7 @@ class SchemaOrgImporter:
         if failed_items:
             logger.error(
                 "Embedding generation failed",
-                extra={
-                    "failed_count": len(failed_items),
-                    "failed_ids": failed_items
-                }
+                extra={"failed_count": len(failed_items), "failed_ids": failed_items},
             )
             raise EmbeddingError(
                 f"Embedding generation failed for {len(failed_items)} items: "
@@ -574,8 +606,7 @@ class SchemaOrgImporter:
         return embedded_items
 
     def _insert_nodes_transaction(
-        self,
-        embedded_nodes: List[Dict[str, Any]]
+        self, embedded_nodes: List[Dict[str, Any]]
     ) -> Dict[str, str]:
         """
         Insert Schema.org Classes as ReferenceNodes with embeddings in a single transaction.
@@ -597,7 +628,9 @@ class SchemaOrgImporter:
 
         try:
             # Clear any existing nodes from this source for idempotency
-            self.manager.session.query(ReferenceNode).filter_by(source=SOURCE_NAME).delete()
+            self.manager.session.query(ReferenceNode).filter_by(
+                source=SOURCE_NAME
+            ).delete()
             self.manager.session.commit()
 
             # Start transaction for new nodes
@@ -613,7 +646,7 @@ class SchemaOrgImporter:
                         title_embedding=node_data["title_embedding"],
                         definition_embedding=node_data["definition_embedding"],
                         created_at=datetime.now().isoformat(),
-                        updated_at=datetime.now().isoformat()
+                        updated_at=datetime.now().isoformat(),
                     )
 
                     self.manager.session.add(node)
@@ -622,7 +655,9 @@ class SchemaOrgImporter:
                     # Progress logging
                     nodes_inserted += 1
                     if nodes_inserted % PROGRESS_LOG_INTERVAL == 0:
-                        logger.info(f"Progress: {nodes_inserted}/{len(embedded_nodes)} nodes inserted")
+                        logger.info(
+                            f"Progress: {nodes_inserted}/{len(embedded_nodes)} nodes inserted"
+                        )
 
             # Commit transaction
             self.manager.session.commit()
@@ -636,8 +671,7 @@ class SchemaOrgImporter:
         return node_map
 
     def _insert_predicates_transaction(
-        self,
-        embedded_predicates: List[Dict[str, Any]]
+        self, embedded_predicates: List[Dict[str, Any]]
     ) -> Dict[str, str]:
         """
         Insert Schema.org Properties as ExternalPredicates with embeddings in a single transaction.
@@ -659,7 +693,9 @@ class SchemaOrgImporter:
 
         try:
             # Clear any existing predicates from this source for idempotency
-            self.manager.session.query(ExternalPredicate).filter_by(source=SOURCE_NAME).delete()
+            self.manager.session.query(ExternalPredicate).filter_by(
+                source=SOURCE_NAME
+            ).delete()
             self.manager.session.commit()
 
             # Start transaction for new predicates
@@ -675,7 +711,7 @@ class SchemaOrgImporter:
                         title_embedding=predicate_data["title_embedding"],
                         definition_embedding=predicate_data["definition_embedding"],
                         created_at=datetime.now().isoformat(),
-                        updated_at=datetime.now().isoformat()
+                        updated_at=datetime.now().isoformat(),
                     )
 
                     self.manager.session.add(predicate)
@@ -684,7 +720,9 @@ class SchemaOrgImporter:
                     # Progress logging
                     predicates_inserted += 1
                     if predicates_inserted % PROGRESS_LOG_INTERVAL == 0:
-                        logger.info(f"Progress: {predicates_inserted}/{len(embedded_predicates)} predicates inserted")
+                        logger.info(
+                            f"Progress: {predicates_inserted}/{len(embedded_predicates)} predicates inserted"
+                        )
 
             # Commit transaction
             self.manager.session.commit()
@@ -715,9 +753,7 @@ class SchemaOrgImporter:
         try:
             # Check if sqlite-vec extension is available
             try:
-                self.manager.session.execute(
-                    text("SELECT vec_version()")
-                ).fetchone()
+                self.manager.session.execute(text("SELECT vec_version()")).fetchone()
             except Exception:
                 logger.warning(
                     "sqlite-vec extension not available, skipping vec table creation. "
@@ -727,14 +763,12 @@ class SchemaOrgImporter:
                 return False
 
             # Determine embedding dimensions from first non-null embedding
-            result = self.manager.session.execute(
-                text("""
+            result = self.manager.session.execute(text("""
                     SELECT title_embedding
                     FROM reference_nodes
                     WHERE title_embedding IS NOT NULL
                     LIMIT 1
-                """)
-            ).fetchone()
+                """)).fetchone()
 
             if not result or not result[0]:
                 logger.warning("No embeddings found, skipping vec table creation")
@@ -755,16 +789,14 @@ class SchemaOrgImporter:
             # Create vec0 virtual table with two embedding columns
             # Column naming: title_embedding and definition_embedding maintain consistency
             # with the source table column names for semantic clarity
-            self.manager.session.execute(
-                text(f"""
+            self.manager.session.execute(text(f"""
                     CREATE VIRTUAL TABLE reference_nodes_vec
                     USING vec0(
                         id TEXT PRIMARY KEY,
                         title_embedding FLOAT[{dims}],
                         definition_embedding FLOAT[{dims}]
                     )
-                """)
-            )
+                """))
 
             # Populate vec table via INSERT...SELECT (atomic operation)
             self.manager.session.execute(
@@ -774,7 +806,7 @@ class SchemaOrgImporter:
                     FROM reference_nodes
                     WHERE source = :source
                 """),
-                {"source": SOURCE_NAME}
+                {"source": SOURCE_NAME},
             )
 
             self.manager.session.commit()
@@ -826,7 +858,7 @@ class SchemaOrgImporter:
         entities: List[Dict],
         properties: List[Dict],
         node_map: Dict[str, str],
-        predicate_map: Dict[str, str]
+        predicate_map: Dict[str, str],
     ) -> int:
         """
         Extract and insert Schema.org metadata relationships in separate transaction.
@@ -874,21 +906,31 @@ class SchemaOrgImporter:
                     for parent in subclass_of:
                         parent_id = self._extract_id(parent)
                         if parent_id and parent_id in node_map:
-                            links_to_insert.append({
-                                "subject": subject_id,
-                                "predicate": "subClassOf",
-                                "object": node_map[parent_id],
-                                "metadata": {"source": "schema.org", "type": "class_hierarchy"}
-                            })
+                            links_to_insert.append(
+                                {
+                                    "subject": subject_id,
+                                    "predicate": "subClassOf",
+                                    "object": node_map[parent_id],
+                                    "metadata": {
+                                        "source": "schema.org",
+                                        "type": "class_hierarchy",
+                                    },
+                                }
+                            )
                 else:
                     parent_id = self._extract_id(subclass_of)
                     if parent_id and parent_id in node_map:
-                        links_to_insert.append({
-                            "subject": subject_id,
-                            "predicate": "subClassOf",
-                            "object": node_map[parent_id],
-                            "metadata": {"source": "schema.org", "type": "class_hierarchy"}
-                        })
+                        links_to_insert.append(
+                            {
+                                "subject": subject_id,
+                                "predicate": "subClassOf",
+                                "object": node_map[parent_id],
+                                "metadata": {
+                                    "source": "schema.org",
+                                    "type": "class_hierarchy",
+                                },
+                            }
+                        )
 
         # Note: Property relationships (domainIncludes, rangeIncludes, inverseOf)
         # are already stored in the ExternalPredicate.attributes field as part of the raw_data.
@@ -908,7 +950,7 @@ class SchemaOrgImporter:
                         object_node=link_data["object"],
                         attributes=json.dumps(link_data["metadata"]),
                         created_at=datetime.now().isoformat(),
-                        updated_at=datetime.now().isoformat()
+                        updated_at=datetime.now().isoformat(),
                     )
                     self.manager.session.add(link)
 

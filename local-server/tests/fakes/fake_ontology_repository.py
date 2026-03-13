@@ -54,7 +54,9 @@ class InMemoryOntologyRepository:
 
     def list_schemes(self, taxonomy_id: str) -> Sequence[ConceptScheme]:
         """List all concept schemes in a taxonomy."""
-        return [s for s in self._schemes.values() if s.taxonomy_id == taxonomy_id]  # noqa: E501
+        return [
+            s for s in self._schemes.values() if s.taxonomy_id == taxonomy_id
+        ]  # noqa: E501
 
     def save_scheme(self, scheme: ConceptScheme) -> ConceptScheme:
         """Save or update a concept scheme."""
@@ -86,8 +88,10 @@ class InMemoryOntologyRepository:
         if criteria.query:
             q = criteria.query.lower()
             results = [
-                c for c in results
-                if q in (c.title or "").lower() or q in (c.definition or "").lower()  # noqa: E501
+                c
+                for c in results
+                if q in (c.title or "").lower()
+                or q in (c.definition or "").lower()  # noqa: E501
             ]
 
         # Filter by scheme_id
@@ -96,10 +100,12 @@ class InMemoryOntologyRepository:
 
         # Filter by taxonomy_id
         if criteria.taxonomy_id:
-            results = [c for c in results if c.taxonomy_id == criteria.taxonomy_id]  # noqa: E501
+            results = [
+                c for c in results if c.taxonomy_id == criteria.taxonomy_id
+            ]  # noqa: E501
 
         # Apply limit
-        return results[:criteria.limit]
+        return results[: criteria.limit]
 
     def save_class(self, cls: Class) -> Class:
         """Save or update a class."""
@@ -117,7 +123,9 @@ class InMemoryOntologyRepository:
 
     def list_relationships(self, source_id: str) -> Sequence[Relationship]:
         """List all relationships from a source entity."""
-        return [r for r in self._relationships.values() if r.source_id == source_id]  # noqa: E501
+        return [
+            r for r in self._relationships.values() if r.source_id == source_id
+        ]  # noqa: E501
 
     def save_relationship(self, rel: Relationship) -> Relationship:
         """Save or update a relationship."""
@@ -129,9 +137,7 @@ class InMemoryOntologyRepository:
         self._relationships.pop(relationship_id, None)
 
     # PropertyDefinition operations
-    def get_property_definition(
-        self, property_id: str
-    ) -> Optional[PropertyDefinition]:
+    def get_property_definition(self, property_id: str) -> Optional[PropertyDefinition]:
         """Retrieve a property definition by ID."""
         return self._property_definitions.get(property_id)
 
@@ -139,9 +145,7 @@ class InMemoryOntologyRepository:
         """List all property definitions."""
         return list(self._property_definitions.values())
 
-    def save_property_definition(
-        self, prop: PropertyDefinition
-    ) -> PropertyDefinition:
+    def save_property_definition(self, prop: PropertyDefinition) -> PropertyDefinition:
         """Save or update a property definition."""
         self._property_definitions[prop.id] = prop
         return prop
@@ -157,9 +161,7 @@ class InMemoryOntologyRepository:
         Raises:
             NotImplementedError: Always, as Individual support is not yet implemented.  # noqa: E501
         """
-        raise NotImplementedError(
-            "Individual support is deferred to a future phase"
-        )
+        raise NotImplementedError("Individual support is deferred to a future phase")
 
     def save_individual(self, individual: Individual) -> Individual:
         """Individual support is deferred to a future phase.
@@ -167,6 +169,4 @@ class InMemoryOntologyRepository:
         Raises:
             NotImplementedError: Always, as Individual support is not yet implemented.  # noqa: E501
         """
-        raise NotImplementedError(
-            "Individual support is deferred to a future phase"
-        )
+        raise NotImplementedError("Individual support is deferred to a future phase")

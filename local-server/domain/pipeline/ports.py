@@ -4,6 +4,7 @@ Port interfaces for the Pipeline bounded context.
 Ports define the contracts between the domain core and infrastructure adapters.
 They use typing.Protocol for structural subtyping and reference only domain entity types.
 """
+
 from typing import Protocol, Optional, Sequence
 
 from domain.pipeline.entities import PipelineConfiguration, Execution
@@ -16,7 +17,9 @@ class PipelineRepository(Protocol):
         """Retrieve a pipeline configuration by ID."""
         ...
 
-    def list_configs(self, pipeline: Optional[str] = None, enabled_only: bool = False) -> Sequence[PipelineConfiguration]:
+    def list_configs(
+        self, pipeline: Optional[str] = None, enabled_only: bool = False
+    ) -> Sequence[PipelineConfiguration]:
         """List pipeline configurations with optional filtering."""
         ...
 
@@ -32,6 +35,8 @@ class PipelineRepository(Protocol):
         """Record a pipeline execution."""
         ...
 
-    def get_executions(self, pipeline_config_id: str, limit: int = 50) -> Sequence[Execution]:
+    def get_executions(
+        self, pipeline_config_id: str, limit: int = 50
+    ) -> Sequence[Execution]:
         """Retrieve execution records for a pipeline configuration."""
         ...

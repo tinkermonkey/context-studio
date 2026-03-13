@@ -15,7 +15,11 @@ import pytest  # noqa: E402
 
 from services.version_manager import VersionManager  # noqa: E402
 from services.working_tree_manager import WorkingTreeManager  # noqa: E402
-from services.diff_generator import DiffGenerator, EntityDiff, DiffSummary  # noqa: E402, E501
+from services.diff_generator import (
+    DiffGenerator,
+    EntityDiff,
+    DiffSummary,
+)  # noqa: E402, E501
 
 
 class TestDiffGenerator:

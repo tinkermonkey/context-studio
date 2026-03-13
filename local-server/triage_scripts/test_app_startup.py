@@ -15,13 +15,14 @@ async def test_app_startup():
     try:
         print("Creating FastAPI application...")
         create_app()
-        
+
         print("Application created successfully!")
-        
+
         # Test dataset manager initialization
         from database.utils import get_dataset_manager
+
         manager = get_dataset_manager()
-        
+
         active_dataset = manager.get_active_dataset()
         if active_dataset:
             print(f"Active dataset: {active_dataset.title}")
@@ -30,18 +31,19 @@ async def test_app_startup():
             print(f"Metrics: {active_dataset.metrics}")
         else:
             print("No active dataset found")
-        
+
         # List all datasets
         datasets = manager.list_datasets()
         print(f"\nTotal datasets: {len(datasets)}")
         for dataset in datasets:
             print(f"- {dataset.title}: {dataset.filename}")
-        
+
         print("\nFastAPI application test completed successfully!")
-        
+
     except Exception as e:
         print(f"Test failed: {e}")
         import traceback
+
         traceback.print_exc()
 
 

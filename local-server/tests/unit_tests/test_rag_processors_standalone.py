@@ -4,11 +4,14 @@ Standalone unit tests for RAG processors.
 Tests each of the four processor layers with mocked dependencies.
 This file is self-contained and doesn't rely on conftest.py.
 """
+
 import sys
 import os
 
 # Add parent directory to path
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+sys.path.insert(
+    0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+)
 
 import pytest  # noqa: E402
 from unittest.mock import Mock  # noqa: E402
@@ -27,7 +30,7 @@ from rag.processors.models import (  # noqa: E402
     GapConcept,
     GapPriority,
     ResolvedConcept,
-    ResolutionMethod
+    ResolutionMethod,
 )
 
 
@@ -62,10 +65,7 @@ def test_processor_input_validation():
 def test_extracted_phrase_model():
     """Test ExtractedPhrase model"""
     phrase = ExtractedPhrase(
-        text="test phrase",
-        sentence_index=0,
-        start_char=0,
-        end_char=11
+        text="test phrase", sentence_index=0, start_char=0, end_char=11
     )
     assert phrase.text == "test phrase"
     assert phrase.sentence_index == 0
@@ -78,7 +78,7 @@ def test_kg_node_model():
         title="Test Node",
         node_type="term",
         similarity_score=0.85,
-        definition="A test node"
+        definition="A test node",
     )
     assert node.node_id == "node-123"
     assert node.similarity_score == 0.85
@@ -94,7 +94,7 @@ def test_extracted_entity_model():
         sentence_indices=[0, 1],
         matched_kg_node="node-123",
         start_char=0,
-        end_char=11
+        end_char=11,
     )
     assert entity.text == "test entity"
     assert entity.confidence == 0.95
@@ -112,7 +112,7 @@ def test_gap_concept_model():
         connected_verb="analyze",
         start_char=0,
         end_char=15,
-        tf_idf_score=0.5
+        tf_idf_score=0.5,
     )
     assert gap.text == "unknown concept"
     assert gap.priority == GapPriority.CRITICAL
@@ -129,7 +129,7 @@ def test_resolved_concept_model():
         head_word="test",
         connected_verb=None,
         start_char=0,
-        end_char=8
+        end_char=8,
     )
 
     resolved = ResolvedConcept(
@@ -137,7 +137,7 @@ def test_resolved_concept_model():
         resolution_method=ResolutionMethod.CACHED_KG,
         matched_kg_node=None,
         web_definition="Definition from web",
-        confidence=0.75
+        confidence=0.75,
     )
     assert resolved.resolution_method == ResolutionMethod.CACHED_KG
     assert resolved.confidence == 0.75
@@ -146,10 +146,7 @@ def test_resolved_concept_model():
 def test_kg_context_output_model():
     """Test KGContextOutput model"""
     output = KGContextOutput(
-        extracted_phrases=[],
-        kg_nodes=[],
-        total_sentences=5,
-        trace_data={}
+        extracted_phrases=[], kg_nodes=[], total_sentences=5, trace_data={}
     )
     assert output.total_sentences == 5
     assert isinstance(output.extracted_phrases, list)
@@ -161,20 +158,17 @@ def test_llm_extraction_output_model():
     output = LLMExtractionOutput(
         entities=[],
         kg_context_size=10,
-        token_usage={'input_tokens': 100, 'output_tokens': 50},
-        trace_data={}
+        token_usage={"input_tokens": 100, "output_tokens": 50},
+        trace_data={},
     )
     assert output.kg_context_size == 10
-    assert output.token_usage['input_tokens'] == 100
+    assert output.token_usage["input_tokens"] == 100
 
 
 def test_spacy_gap_output_model():
     """Test SpaCyGapOutput model"""
     output = SpaCyGapOutput(
-        gaps=[],
-        total_noun_phrases=25,
-        filtered_count=5,
-        trace_data={}
+        gaps=[], total_noun_phrases=25, filtered_count=5, trace_data={}
     )
     assert output.total_noun_phrases == 25
     assert output.filtered_count == 5
@@ -188,7 +182,7 @@ def test_concept_resolution_output_model():
         web_searches_performed=3,
         cached_kg_hits=5,
         full_kg_hits=2,
-        trace_data={}
+        trace_data={},
     )
     assert output.web_searches_performed == 3
     assert output.cached_kg_hits == 5
@@ -220,9 +214,7 @@ def test_web_search_client_initialization():
     from rag.processors.web_search import RateLimitedWebSearchClient
 
     client = RateLimitedWebSearchClient(
-        rate_limit_per_minute=10,
-        max_attempts_per_session=20,
-        timeout_seconds=5
+        rate_limit_per_minute=10, max_attempts_per_session=20, timeout_seconds=5
     )
     assert client.max_attempts_per_session == 20
     assert client.timeout_seconds == 5
@@ -319,7 +311,9 @@ def test_concept_resolution_confidence_calculation():
     assert 0.6 <= conf <= 0.75
 
     # Test web search confidence
-    conf = processor._calculate_confidence(ResolutionMethod.WEB_SEARCH, snippet_length=150)
+    conf = processor._calculate_confidence(
+        ResolutionMethod.WEB_SEARCH, snippet_length=150
+    )
     assert 0.5 <= conf <= 0.6
 
 
@@ -329,7 +323,7 @@ def test_processors_import():
         KGContextProcessor,
         LLMExtractionProcessor,
         SpaCyGapProcessor,
-        ConceptResolutionProcessor
+        ConceptResolutionProcessor,
     )
 
     assert KGContextProcessor is not None

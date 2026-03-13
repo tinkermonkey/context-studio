@@ -2,7 +2,10 @@
 
 import sys
 import os
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+
+sys.path.append(
+    os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+)
 
 import pytest  # noqa: E402
 from datetime import datetime, UTC  # noqa: E402
@@ -10,10 +13,21 @@ from unittest.mock import Mock  # noqa: E402
 
 from reference_api.normalizers import ResultNormalizer  # noqa: E402
 from reference_api.models import (  # noqa: E402
-    SourceType, DBpediaSearchResponse, DBpediaSearchResult, DBpediaResourceResponse, ConceptNetQueryResponse, ConceptNetConceptResponse, ConceptNetRelatedResponse,
-    WikidataSparqlResponse, WikidataEntityResponse,
-    SchemaOrgSearchResponse, SchemaOrgSearchResult, SchemaOrgEntityResponse, SchemaOrgEntity,
-    SchemaOrgPropertyResponse, SchemaOrgPropertyData
+    SourceType,
+    DBpediaSearchResponse,
+    DBpediaSearchResult,
+    DBpediaResourceResponse,
+    ConceptNetQueryResponse,
+    ConceptNetConceptResponse,
+    ConceptNetRelatedResponse,
+    WikidataSparqlResponse,
+    WikidataEntityResponse,
+    SchemaOrgSearchResponse,
+    SchemaOrgSearchResult,
+    SchemaOrgEntityResponse,
+    SchemaOrgEntity,
+    SchemaOrgPropertyResponse,
+    SchemaOrgPropertyData,
 )
 
 
@@ -41,15 +55,15 @@ class TestResultNormalizer:
                 label="Python (programming language)",
                 description="High-level programming language",
                 score=0.95,
-                types=["ProgrammingLanguage", "Language"]
+                types=["ProgrammingLanguage", "Language"],
             ),
             DBpediaSearchResult(
                 uri="http://dbpedia.org/resource/Python_(snake)",
                 label="Python",
                 description="Large family of snakes",
                 score=0.85,
-                types=["Animal", "Reptile"]
-            )
+                types=["Animal", "Reptile"],
+            ),
         ]
 
         response = DBpediaSearchResponse(
@@ -58,7 +72,7 @@ class TestResultNormalizer:
             retrieved_at=datetime.now(UTC),
             query="python",
             total_results=2,
-            results=results
+            results=results,
         )
 
         # Normalize
@@ -88,10 +102,12 @@ class TestResultNormalizer:
             retrieved_at=datetime.now(UTC),
             query="nonexistent",
             total_results=0,
-            results=[]
+            results=[],
         )
 
-        nodes, links = normalizer.normalize_dbpedia_search_response(response, "nonexistent")
+        nodes, links = normalizer.normalize_dbpedia_search_response(
+            response, "nonexistent"
+        )
 
         assert len(nodes) == 0
         assert len(links) == 0
@@ -103,7 +119,7 @@ class TestResultNormalizer:
             source=SourceType.DBPEDIA,
             retrieved_at=datetime.now(UTC),
             error="API error",
-            results=[]
+            results=[],
         )
 
         nodes, links = normalizer.normalize_dbpedia_search_response(response, "test")
@@ -125,11 +141,13 @@ class TestResultNormalizer:
                 ],
                 "http://dbpedia.org/ontology/abstract": [
                     {"value": "Python is a high-level programming language."}
-                ]
-            }
+                ],
+            },
         )
 
-        nodes, links = normalizer.normalize_dbpedia_resource_response(response, "python")
+        nodes, links = normalizer.normalize_dbpedia_resource_response(
+            response, "python"
+        )
 
         assert len(nodes) == 1
         assert len(links) == 0
@@ -152,7 +170,7 @@ class TestResultNormalizer:
                 "rel": {"@id": "/r/IsA", "label": "IsA"},
                 "end": {"@id": "/c/en/animal", "label": "animal"},
                 "weight": 0.8,
-                "sources": []
+                "sources": [],
             },
             {
                 "@id": "/e/test2",
@@ -160,15 +178,15 @@ class TestResultNormalizer:
                 "rel": {"@id": "/r/ExternalURL", "label": "ExternalURL"},
                 "end": {"@id": "http://dbpedia.org/resource/Dog"},
                 "weight": 1.0,
-                "sources": []
-            }
+                "sources": [],
+            },
         ]
 
         response = ConceptNetQueryResponse(
             success=True,
             source=SourceType.CONCEPTNET,
             retrieved_at=datetime.now(UTC),
-            edges=edges
+            edges=edges,
         )
 
         nodes, links = normalizer.normalize_conceptnet_query_response(response, "dog")
@@ -214,14 +232,16 @@ class TestResultNormalizer:
                             "item": {"value": "http://www.wikidata.org/entity/Q28865"},
                             "itemLabel": {"value": "Python"},
                             "itemDescription": {"value": "programming language"},
-                            "property": {"value": "http://www.wikidata.org/prop/direct/P31"},
+                            "property": {
+                                "value": "http://www.wikidata.org/prop/direct/P31"
+                            },
                             "propertyLabel": {"value": "instance of"},
                             "object": {"value": "http://www.wikidata.org/entity/Q9143"},
-                            "objectLabel": {"value": "programming language"}
+                            "objectLabel": {"value": "programming language"},
                         }
                     ]
                 }
-            }
+            },
         )
 
         nodes, links = normalizer.normalize_wikidata_sparql_response(response, "python")
@@ -257,15 +277,15 @@ class TestResultNormalizer:
                 identifier="Person",
                 title="Person",
                 definition="A person (alive, dead, undead, or fictional).",
-                relevance_score=0.95
+                relevance_score=0.95,
             ),
             SchemaOrgSearchResult(
                 type="property",
                 identifier="name",
                 title="name",
                 definition="The name of the item.",
-                relevance_score=0.85
-            )
+                relevance_score=0.85,
+            ),
         ]
 
         response = SchemaOrgSearchResponse(
@@ -275,10 +295,12 @@ class TestResultNormalizer:
             query="person",
             search_type="both",
             total_results=2,
-            results=results
+            results=results,
         )
 
-        nodes, links = normalizer.normalize_schema_org_search_response(response, "person")
+        nodes, links = normalizer.normalize_schema_org_search_response(
+            response, "person"
+        )
 
         assert len(nodes) == 2
         assert len(links) == 0  # Schema.org search doesn't provide relationship data
@@ -306,7 +328,7 @@ class TestResultNormalizer:
             definition="A person (alive, dead, undead, or fictional).",
             parent_identifier="Thing",
             properties=[],
-            children=[]
+            children=[],
         )
 
         response = SchemaOrgEntityResponse(
@@ -314,10 +336,12 @@ class TestResultNormalizer:
             source=SourceType.SCHEMA_ORG,
             retrieved_at=datetime.now(UTC),
             identifier="Person",
-            entity=entity
+            entity=entity,
         )
 
-        nodes, links = normalizer.normalize_schema_org_entity_response(response, "Person")
+        nodes, links = normalizer.normalize_schema_org_entity_response(
+            response, "Person"
+        )
 
         assert len(nodes) == 1
         assert len(links) == 0
@@ -337,10 +361,12 @@ class TestResultNormalizer:
             source=SourceType.CONCEPTNET,
             retrieved_at=datetime.now(UTC),
             concept="/c/en/dog",
-            data={"label": "dog", "additional_info": "test"}
+            data={"label": "dog", "additional_info": "test"},
         )
 
-        nodes, links = normalizer.normalize_conceptnet_concept_response(response, "/c/en/dog")
+        nodes, links = normalizer.normalize_conceptnet_concept_response(
+            response, "/c/en/dog"
+        )
 
         assert len(nodes) == 1
         assert len(links) == 0
@@ -357,7 +383,7 @@ class TestResultNormalizer:
         """Test successful ConceptNet related concepts response normalization."""
         related_concepts = [
             {"@id": "/c/en/animal", "label": "animal", "weight": 0.8},
-            {"@id": "/c/en/pet", "label": "pet", "weight": 0.7}
+            {"@id": "/c/en/pet", "label": "pet", "weight": 0.7},
         ]
 
         response = ConceptNetRelatedResponse(
@@ -365,10 +391,12 @@ class TestResultNormalizer:
             source=SourceType.CONCEPTNET,
             retrieved_at=datetime.now(UTC),
             concept="/c/en/dog",
-            related=related_concepts
+            related=related_concepts,
         )
 
-        nodes, links = normalizer.normalize_conceptnet_related_response(response, "/c/en/dog")
+        nodes, links = normalizer.normalize_conceptnet_related_response(
+            response, "/c/en/dog"
+        )
 
         assert len(nodes) == 2
         assert len(links) == 0
@@ -391,13 +419,9 @@ class TestResultNormalizer:
             entity_id="Q28865",
             entity_url="http://www.wikidata.org/entity/Q28865",
             data={
-                "labels": {
-                    "en": {"value": "Python"}
-                },
-                "descriptions": {
-                    "en": {"value": "programming language"}
-                }
-            }
+                "labels": {"en": {"value": "Python"}},
+                "descriptions": {"en": {"value": "programming language"}},
+            },
         )
 
         nodes, links = normalizer.normalize_wikidata_entity_response(response, "Q28865")
@@ -423,7 +447,7 @@ class TestResultNormalizer:
             domain_includes=["Thing"],
             range_includes=["Text"],
             inverse_of=[],
-            used_by_entities=[]
+            used_by_entities=[],
         )
 
         response = SchemaOrgPropertyResponse(
@@ -431,10 +455,12 @@ class TestResultNormalizer:
             source=SourceType.SCHEMA_ORG,
             retrieved_at=datetime.now(UTC),
             identifier="name",
-            property=property_data
+            property=property_data,
         )
 
-        nodes, links = normalizer.normalize_schema_org_property_response(response, "name")
+        nodes, links = normalizer.normalize_schema_org_property_response(
+            response, "name"
+        )
 
         assert len(nodes) == 1
         assert len(links) == 0
@@ -458,7 +484,7 @@ class TestResultNormalizer:
                 "rel": {"@id": "/r/IsA", "label": "IsA"},
                 "end": {"@id": "/c/es/animal", "label": "animal"},  # Spanish
                 "weight": 0.8,
-                "sources": []
+                "sources": [],
             },
             {
                 "@id": "/e/test2",
@@ -466,15 +492,15 @@ class TestResultNormalizer:
                 "rel": {"@id": "/r/IsA", "label": "IsA"},
                 "end": {"@id": "/c/en/animal", "label": "animal"},  # English
                 "weight": 0.8,
-                "sources": []
-            }
+                "sources": [],
+            },
         ]
 
         response = ConceptNetQueryResponse(
             success=True,
             source=SourceType.CONCEPTNET,
             retrieved_at=datetime.now(UTC),
-            edges=edges
+            edges=edges,
         )
 
         nodes, links = normalizer.normalize_conceptnet_query_response(response, "dog")
@@ -490,7 +516,7 @@ class TestResultNormalizer:
             success=True,
             source=SourceType.WIKIDATA,
             retrieved_at=datetime.now(UTC),
-            results={"malformed": "data"}  # Missing expected structure
+            results={"malformed": "data"},  # Missing expected structure
         )
 
         nodes, links = normalizer.normalize_wikidata_sparql_response(response, "test")

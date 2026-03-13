@@ -127,10 +127,10 @@ def add_skip_marker_to_test(file_path: Path, test_name: str) -> bool:
 
     # Pattern to find the test function definition
     # Matches: def test_name( or async def test_name( with any indentation
-    pattern = rf'([ ]*)(?:async )?def {test_name}\('
+    pattern = rf"([ ]*)(?:async )?def {test_name}\("
 
     # Check if marker already exists
-    check_pattern = rf'@pytest\.mark\.skip_suite\s*\n\s*(?:async )?def {test_name}\('
+    check_pattern = rf"@pytest\.mark\.skip_suite\s*\n\s*(?:async )?def {test_name}\("
     if re.search(check_pattern, content):
         print(f"  ✓ {test_name} already has skip marker")
         return False
@@ -146,8 +146,8 @@ def add_skip_marker_to_test(file_path: Path, test_name: str) -> bool:
     indent = match.group(1)
 
     # Add the marker before the function definition
-    replacement = f'{indent}@pytest.mark.skip_suite\n{match.group(0)}'
-    new_content = content[:match.start()] + replacement + content[match.end():]
+    replacement = f"{indent}@pytest.mark.skip_suite\n{match.group(0)}"
+    new_content = content[: match.start()] + replacement + content[match.end() :]
 
     file_path.write_text(new_content)
     print(f"  ✓ Added skip marker to {test_name}")
@@ -158,25 +158,31 @@ def ensure_pytest_import(file_path: Path) -> None:
     """Ensure pytest is imported at the top of the file."""
     content = file_path.read_text()
 
-    if 'import pytest' in content:
+    if "import pytest" in content:
         return
 
     # Add pytest import after the first import block
-    lines = content.split('\n')
+    lines = content.split("\n")
     for i, line in enumerate(lines):
-        if line.startswith('import ') or line.startswith('from '):
+        if line.startswith("import ") or line.startswith("from "):
             # Found first import, add pytest import here
-            if i == 0 or not (lines[i-1].startswith('import ') or lines[i-1].startswith('from ')):
-                lines.insert(i, 'import pytest')
+            if i == 0 or not (
+                lines[i - 1].startswith("import ") or lines[i - 1].startswith("from ")
+            ):
+                lines.insert(i, "import pytest")
                 break
     else:
         # No imports found, add at the top after docstring/comments
         for i, line in enumerate(lines):
-            if line.strip() and not line.strip().startswith('#') and not line.strip().startswith('"""'):
-                lines.insert(i, 'import pytest')
+            if (
+                line.strip()
+                and not line.strip().startswith("#")
+                and not line.strip().startswith('"""')
+            ):
+                lines.insert(i, "import pytest")
                 break
 
-    file_path.write_text('\n'.join(lines))
+    file_path.write_text("\n".join(lines))
     print("  ✓ Added pytest import")
 
 

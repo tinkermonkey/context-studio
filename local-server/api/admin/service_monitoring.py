@@ -24,7 +24,7 @@ def get_admin_service_factory() -> ServiceFactory:
 
 @router.get("/stats", summary="Get comprehensive service factory statistics")
 async def get_service_factory_stats(
-    factory: ServiceFactory = Depends(get_admin_service_factory)
+    factory: ServiceFactory = Depends(get_admin_service_factory),
 ) -> Dict[str, Any]:
     """
     Get comprehensive statistics about the service factory including:
@@ -35,16 +35,20 @@ async def get_service_factory_stats(
     """
     try:
         stats = factory.get_cache_stats()
-        logger.info(f"Service factory stats requested - {stats['total_cache_entries']} entries")  # noqa: E501
+        logger.info(
+            f"Service factory stats requested - {stats['total_cache_entries']} entries"
+        )  # noqa: E501
         return stats
     except Exception as e:
         logger.error(f"Error getting service factory stats: {e}")
-        raise HTTPException(status_code=500, detail=f"Failed to get service factory stats: {str(e)}")  # noqa: E501
+        raise HTTPException(
+            status_code=500, detail=f"Failed to get service factory stats: {str(e)}"
+        )  # noqa: E501
 
 
 @router.get("/performance", summary="Get performance summary")
 async def get_service_factory_performance(
-    factory: ServiceFactory = Depends(get_admin_service_factory)
+    factory: ServiceFactory = Depends(get_admin_service_factory),
 ) -> Dict[str, Any]:
     """
     Get a concise performance summary for quick monitoring:
@@ -54,8 +58,10 @@ async def get_service_factory_performance(
     """
     try:
         performance = factory.get_performance_summary()
-        hit_rate = performance['overall_cache_hit_rate_percent']
-        logger.debug(f"Service factory performance summary: {hit_rate:.1f}% hit rate")  # noqa: E501
+        hit_rate = performance["overall_cache_hit_rate_percent"]
+        logger.debug(
+            f"Service factory performance summary: {hit_rate:.1f}% hit rate"
+        )  # noqa: E501
         return performance
     except Exception as e:
         logger.error(f"Error getting service factory performance: {e}")
@@ -65,7 +71,7 @@ async def get_service_factory_performance(
 
 @router.get("/health", summary="Get service factory health status")
 async def get_service_factory_health(
-    factory: ServiceFactory = Depends(get_admin_service_factory)
+    factory: ServiceFactory = Depends(get_admin_service_factory),
 ) -> Dict[str, Any]:
     """
     Get health status of the service factory:
@@ -76,18 +82,22 @@ async def get_service_factory_health(
     try:
         health = factory.get_health_status()
 
-        if health['status'] != 'healthy':
-            logger.warning(f"Service factory health issues detected: {health['issues']}")  # noqa: E501
+        if health["status"] != "healthy":
+            logger.warning(
+                f"Service factory health issues detected: {health['issues']}"
+            )  # noqa: E501
 
         return health
     except Exception as e:
         logger.error(f"Error getting service factory health: {e}")
-        raise HTTPException(status_code=500, detail=f"Failed to get service factory health: {str(e)}")  # noqa: E501
+        raise HTTPException(
+            status_code=500, detail=f"Failed to get service factory health: {str(e)}"
+        )  # noqa: E501
 
 
 @router.post("/cache/clear", summary="Clear service factory cache")
 async def clear_service_factory_cache(
-    factory: ServiceFactory = Depends(get_admin_service_factory)
+    factory: ServiceFactory = Depends(get_admin_service_factory),
 ) -> Dict[str, Any]:
     """
     Clear all cached service entries and reset metrics.
@@ -95,26 +105,32 @@ async def clear_service_factory_cache(
     """
     try:
         stats_before = factory.get_cache_stats()
-        entries_before = stats_before['total_cache_entries']
+        entries_before = stats_before["total_cache_entries"]
 
         factory.clear_cache()
 
-        logger.info(f"Service factory cache cleared - removed {entries_before} entries")  # noqa: E501
+        logger.info(
+            f"Service factory cache cleared - removed {entries_before} entries"
+        )  # noqa: E501
 
         return {
             "status": "success",
             "message": f"Cache cleared successfully - removed {entries_before} entries",  # noqa: E501
             "entries_cleared": entries_before,
-            "cleared_at": datetime.utcnow().isoformat()
+            "cleared_at": datetime.utcnow().isoformat(),
         }
     except Exception as e:
         logger.error(f"Error clearing service factory cache: {e}")
-        raise HTTPException(status_code=500, detail=f"Failed to clear service factory cache: {str(e)}")  # noqa: E501
+        raise HTTPException(
+            status_code=500, detail=f"Failed to clear service factory cache: {str(e)}"
+        )  # noqa: E501
 
 
-@router.post("/cache/cleanup", summary="Force cleanup of expired cache entries")  # noqa: E501
+@router.post(
+    "/cache/cleanup", summary="Force cleanup of expired cache entries"
+)  # noqa: E501
 async def cleanup_service_factory_cache(
-    factory: ServiceFactory = Depends(get_admin_service_factory)
+    factory: ServiceFactory = Depends(get_admin_service_factory),
 ) -> Dict[str, Any]:
     """
     Force cleanup of expired cache entries.
@@ -123,23 +139,28 @@ async def cleanup_service_factory_cache(
     try:
         expired_count = factory.force_cleanup()
 
-        logger.info(f"Service factory cache cleanup completed - removed {expired_count} expired entries")  # noqa: E501
+        logger.info(
+            f"Service factory cache cleanup completed - removed {expired_count} expired entries"
+        )  # noqa: E501
 
         return {
             "status": "success",
             "message": "Cache cleanup completed",
             "expired_entries_removed": expired_count,
-            "cleaned_at": datetime.utcnow().isoformat()
+            "cleaned_at": datetime.utcnow().isoformat(),
         }
     except Exception as e:
         logger.error(f"Error during service factory cache cleanup: {e}")
-        raise HTTPException(status_code=500, detail=f"Failed to cleanup service factory cache: {str(e)}")  # noqa: E501
+        raise HTTPException(
+            status_code=500, detail=f"Failed to cleanup service factory cache: {str(e)}"
+        )  # noqa: E501
 
 
-@router.get("/metrics/{service_type}", summary="Get metrics for specific service type")  # noqa: E501
+@router.get(
+    "/metrics/{service_type}", summary="Get metrics for specific service type"
+)  # noqa: E501
 async def get_service_type_metrics(
-    service_type: str,
-    factory: ServiceFactory = Depends(get_admin_service_factory)
+    service_type: str, factory: ServiceFactory = Depends(get_admin_service_factory)
 ) -> Dict[str, Any]:
     """
     Get detailed metrics for a specific service type.
@@ -150,18 +171,19 @@ async def get_service_type_metrics(
     try:
         stats = factory.get_cache_stats()
 
-        if service_type not in stats['service_metrics']:
-            available = list(stats['service_metrics'].keys())
+        if service_type not in stats["service_metrics"]:
+            available = list(stats["service_metrics"].keys())
             raise HTTPException(
                 status_code=404,
-                detail=f"Service type '{service_type}' not found. Available types: {available}"  # noqa: E501
+                detail=f"Service type '{service_type}' not found. Available types: {available}",  # noqa: E501
             )
 
-        service_metrics = stats['service_metrics'][service_type]
+        service_metrics = stats["service_metrics"][service_type]
 
         # Add cache entry details for this service type
         cache_entries = {
-            key: entry for key, entry in stats['cache_entries'].items()
+            key: entry
+            for key, entry in stats["cache_entries"].items()
             if key.startswith(service_type) or key == service_type
         }
 
@@ -170,18 +192,22 @@ async def get_service_type_metrics(
             "metrics": service_metrics,
             "cache_entries": cache_entries,
             "cache_entry_count": len(cache_entries),
-            "retrieved_at": datetime.utcnow().isoformat()
+            "retrieved_at": datetime.utcnow().isoformat(),
         }
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Error getting metrics for service type {service_type}: {e}")  # noqa: E501
-        raise HTTPException(status_code=500, detail=f"Failed to get metrics for service type: {str(e)}")  # noqa: E501
+        logger.error(
+            f"Error getting metrics for service type {service_type}: {e}"
+        )  # noqa: E501
+        raise HTTPException(
+            status_code=500, detail=f"Failed to get metrics for service type: {str(e)}"
+        )  # noqa: E501
 
 
 @router.get("/dashboard", summary="Get monitoring dashboard data")
 async def get_service_factory_dashboard(
-    factory: ServiceFactory = Depends(get_admin_service_factory)
+    factory: ServiceFactory = Depends(get_admin_service_factory),
 ) -> Dict[str, Any]:
     """
     Get comprehensive dashboard data combining stats, performance, and health.
@@ -193,44 +219,49 @@ async def get_service_factory_dashboard(
         health = factory.get_health_status()
 
         # Calculate some additional dashboard metrics
-        service_metrics = stats['service_metrics']
+        service_metrics = stats["service_metrics"]
         total_requests = sum(
-            m['cache_hits'] + m['cache_misses']
-            for m in service_metrics.values()
+            m["cache_hits"] + m["cache_misses"] for m in service_metrics.values()
         )
 
         most_used_service = max(
             service_metrics.items(),
-            key=lambda x: x[1]['total_created'],
-            default=(None, {'total_created': 0})
+            key=lambda x: x[1]["total_created"],
+            default=(None, {"total_created": 0}),
         )
 
         return {
             "factory_info": {
-                "factory_id": stats['factory_id'],
-                "cache_ttl_seconds": stats['cache_ttl_seconds'],
-                "total_cache_entries": stats['total_cache_entries']
+                "factory_id": stats["factory_id"],
+                "cache_ttl_seconds": stats["cache_ttl_seconds"],
+                "total_cache_entries": stats["total_cache_entries"],
             },
             "performance": {
-                "overall_hit_rate_percent": performance['overall_cache_hit_rate_percent'],  # noqa: E501
-                "total_services_created": performance['total_services_created'],  # noqa: E501
-                "total_requests": total_requests
+                "overall_hit_rate_percent": performance[
+                    "overall_cache_hit_rate_percent"
+                ],  # noqa: E501
+                "total_services_created": performance[
+                    "total_services_created"
+                ],  # noqa: E501
+                "total_requests": total_requests,
             },
             "health": {
-                "status": health['status'],
-                "issues": health['issues'],
-                "cache_size": health['cache_size']
+                "status": health["status"],
+                "issues": health["issues"],
+                "cache_size": health["cache_size"],
             },
             "top_services": {
                 "most_used": {
                     "type": most_used_service[0],
-                    "created_count": most_used_service[1]['total_created']
+                    "created_count": most_used_service[1]["total_created"],
                 },
-                "best_performance": performance['best_performing_service'],
-                "worst_performance": performance['worst_performing_service']
+                "best_performance": performance["best_performing_service"],
+                "worst_performance": performance["worst_performing_service"],
             },
-            "generated_at": datetime.utcnow().isoformat()
+            "generated_at": datetime.utcnow().isoformat(),
         }
     except Exception as e:
         logger.error(f"Error generating service factory dashboard: {e}")
-        raise HTTPException(status_code=500, detail=f"Failed to generate dashboard data: {str(e)}")  # noqa: E501
+        raise HTTPException(
+            status_code=500, detail=f"Failed to generate dashboard data: {str(e)}"
+        )  # noqa: E501

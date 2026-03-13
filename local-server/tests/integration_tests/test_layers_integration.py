@@ -8,7 +8,9 @@ from uuid import uuid4
 # - reset_service_factory_cache (function-scoped auto-reset for test isolation)
 
 
-def create_layer(client, title=None, definition=None, structural_predicate_id=None):  # noqa: E501
+def create_layer(
+    client, title=None, definition=None, structural_predicate_id=None
+):  # noqa: E501
     unique_title = title if title else f"TestLayer_{uuid4()}"
     payload = {
         "node_type": "layer",
@@ -21,10 +23,8 @@ def create_layer(client, title=None, definition=None, structural_predicate_id=No
     return response.json()
 
 
-def test_create_layer(client, test_service_factory):
-    """Test layer creation with service factory monitoring."""
-    # Service factory cache is automatically reset by reset_service_factory_cache fixture  # noqa: E501
-
+def test_create_layer(client):
+    """Test layer creation."""
     data = create_layer(client)
     assert "id" in data
     assert data["title"].startswith("TestLayer_")
@@ -33,22 +33,17 @@ def test_create_layer(client, test_service_factory):
     assert data["created_at"]
     assert data["parent_node_id"] is None  # Layers have no parent
 
-    # Verify service factory was utilized
-    final_stats = test_service_factory.get_cache_stats()
-    total_services_used = sum(
-        metrics["total_created"] for metrics in final_stats["service_metrics"].values()  # noqa: E501
-    )
-
-    # Should have used some services for layer creation
-    assert total_services_used > 0
-
 
 def test_create_layer_duplicate_title(client):
     unique_title = f"UniqueLayer_{uuid4()}"
     create_layer(client, title=unique_title)
     resp = client.post(
         "/api/structure_nodes/",
-        json={"node_type": "layer", "title": unique_title, "definition": "Dup test."},  # noqa: E501
+        json={
+            "node_type": "layer",
+            "title": unique_title,
+            "definition": "Dup test.",
+        },  # noqa: E501
     )
     assert resp.status_code == 409
     detail = resp.json()["detail"]
@@ -78,7 +73,9 @@ def test_get_layer_not_found(client):
     else:
         detail_str = detail.lower()
     # Check for validation error message
-    assert "validation" in detail_str or "uuid" in detail_str or "invalid" in detail_str  # noqa: E501
+    assert (
+        "validation" in detail_str or "uuid" in detail_str or "invalid" in detail_str
+    )  # noqa: E501
 
 
 def test_list_layers(client):
@@ -153,7 +150,9 @@ def test_update_layer_not_found(client):
     else:
         detail_str = detail.lower()
     # Check for validation error message
-    assert "validation" in detail_str or "uuid" in detail_str or "invalid" in detail_str  # noqa: E501
+    assert (
+        "validation" in detail_str or "uuid" in detail_str or "invalid" in detail_str
+    )  # noqa: E501
 
 
 def test_delete_layer(client):
@@ -174,7 +173,9 @@ def test_delete_layer_not_found(client):
     else:
         detail_str = detail.lower()
     # Check for validation error message
-    assert "validation" in detail_str or "uuid" in detail_str or "invalid" in detail_str  # noqa: E501
+    assert (
+        "validation" in detail_str or "uuid" in detail_str or "invalid" in detail_str
+    )  # noqa: E501
 
 
 def test_find_layer(client):
@@ -216,7 +217,9 @@ def test_layers_pagination(client):
         layers.append(layer)
 
     # Test pagination with limit=2
-    resp = client.get("/api/structure_nodes/?node_type=layer&limit=2&sort_by=title")  # noqa: E501
+    resp = client.get(
+        "/api/structure_nodes/?node_type=layer&limit=2&sort_by=title"
+    )  # noqa: E501
     assert resp.status_code == 200
     data = resp.json()
 

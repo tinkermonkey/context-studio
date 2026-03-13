@@ -4,7 +4,13 @@ from fastapi import APIRouter, HTTPException, Query, status
 from typing import Dict, Any, Optional
 
 from llm.execution_tracker import ExecutionTracker
-from llm.models import RecordSelectionRequest, SelectionResponse, PipelineType, ExecutionHistoryResponse, FlavorAnalyticsResponse  # noqa: E501
+from llm.models import (
+    RecordSelectionRequest,
+    SelectionResponse,
+    PipelineType,
+    ExecutionHistoryResponse,
+    FlavorAnalyticsResponse,
+)  # noqa: E501
 from utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -22,27 +28,23 @@ async def record_selection(request: RecordSelectionRequest):
         return SelectionResponse(
             success=True,
             selection_id=selection_id,
-            message="Selection recorded successfully"
+            message="Selection recorded successfully",
         )
 
     except ValueError as e:
         logger.debug(f"Invalid selection request: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=str(e)
-        )
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
     except Exception as e:
         logger.error(f"Error recording selection: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to record selection"
+            detail="Failed to record selection",
         )
 
 
 @router.get("/execution-analytics")
 async def get_execution_analytics(
-    pipeline_type: Optional[PipelineType] = None,
-    days_back: int = 30
+    pipeline_type: Optional[PipelineType] = None, days_back: int = 30
 ) -> Dict[str, Any]:
     """Get analytics for LLM executions."""
 
@@ -54,16 +56,18 @@ async def get_execution_analytics(
             "success": True,
             "data": analytics,
             "filters": {
-                "pipeline_type": pipeline_type.value if pipeline_type else "all",  # noqa: E501
-                "days_back": days_back
-            }
+                "pipeline_type": (
+                    pipeline_type.value if pipeline_type else "all"
+                ),  # noqa: E501
+                "days_back": days_back,
+            },
         }
 
     except Exception as e:
         logger.error(f"Error getting execution analytics: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to get execution analytics"
+            detail="Failed to get execution analytics",
         )
 
 
@@ -78,13 +82,10 @@ async def get_execution_details(execution_id: str) -> Dict[str, Any]:
         if not details:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Execution {execution_id} not found"
+                detail=f"Execution {execution_id} not found",
             )
 
-        return {
-            "success": True,
-            "data": details
-        }
+        return {"success": True, "data": details}
 
     except HTTPException:
         raise
@@ -92,14 +93,18 @@ async def get_execution_details(execution_id: str) -> Dict[str, Any]:
         logger.error(f"Error getting execution details: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to get execution details"
+            detail="Failed to get execution details",
         )
 
 
 @router.get("/execution-history", response_model=ExecutionHistoryResponse)
 async def get_execution_history(
-    flavor_id: str = Query(..., description="Flavor ID to get execution history for"),  # noqa: E501
-    limit: int = Query(100, description="Maximum number of executions to return")  # noqa: E501
+    flavor_id: str = Query(
+        ..., description="Flavor ID to get execution history for"
+    ),  # noqa: E501
+    limit: int = Query(
+        100, description="Maximum number of executions to return"
+    ),  # noqa: E501
 ) -> ExecutionHistoryResponse:
     """Get execution history for a specific flavor."""
 
@@ -113,27 +118,26 @@ async def get_execution_history(
         return ExecutionHistoryResponse(
             executions=history["executions"],
             total_count=history["total_count"],
-            flavor_id=history["flavor_id"]
+            flavor_id=history["flavor_id"],
         )
 
     except ValueError as e:
         logger.debug(f"Invalid execution history request: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=str(e)
-        )
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
     except Exception as e:
         logger.error(f"Error getting execution history: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to get execution history"
+            detail="Failed to get execution history",
         )
 
 
-@router.get("/flavor-analytics/{flavor_id}", response_model=FlavorAnalyticsResponse)  # noqa: E501
+@router.get(
+    "/flavor-analytics/{flavor_id}", response_model=FlavorAnalyticsResponse
+)  # noqa: E501
 async def get_flavor_analytics(
     flavor_id: str,
-    days_back: int = Query(30, description="Number of days of data to include")
+    days_back: int = Query(30, description="Number of days of data to include"),
 ) -> FlavorAnalyticsResponse:
     """Get analytics for a specific flavor."""
 
@@ -147,20 +151,17 @@ async def get_flavor_analytics(
         return FlavorAnalyticsResponse(
             flavor_id=analytics_data["flavor_id"],
             analytics=analytics_data["analytics"],
-            time_range_days=analytics_data["time_range_days"]
+            time_range_days=analytics_data["time_range_days"],
         )
 
     except ValueError as e:
         logger.debug(f"Invalid flavor analytics request: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=str(e)
-        )
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
     except Exception as e:
         logger.error(f"Error getting flavor analytics: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to get flavor analytics"
+            detail="Failed to get flavor analytics",
         )
 
 
@@ -177,12 +178,12 @@ async def traceability_health() -> Dict[str, Any]:
             "status": "healthy",
             "service": "llm_traceability",
             "database_accessible": "error" not in analytics,
-            "timestamp": "2024-01-01T00:00:00Z"  # Would use actual timestamp in production  # noqa: E501
+            "timestamp": "2024-01-01T00:00:00Z",  # Would use actual timestamp in production  # noqa: E501
         }
 
     except Exception as e:
         logger.error(f"Traceability health check failed: {e}")
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail="LLM traceability service unhealthy"
+            detail="LLM traceability service unhealthy",
         )

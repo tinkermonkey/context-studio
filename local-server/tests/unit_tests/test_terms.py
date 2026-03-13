@@ -440,9 +440,7 @@ def test_move_terms_conflict_warning(shared_client):
     )
 
     # Create term with same title in target domain
-    create_term(
-        shared_client, target_domain_id, source_layer_id, title=term_title
-    )
+    create_term(shared_client, target_domain_id, source_layer_id, title=term_title)
 
     # Try to move source term to target domain (should generate warning)
     move_resp = shared_client.post(

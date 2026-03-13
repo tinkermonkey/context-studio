@@ -43,7 +43,9 @@ def get_node_service_simple(db: Session = Depends(get_db)) -> NodeService:
         NodeService instance with minimal dependencies
     """
     # Create NodeService directly without expensive dependencies
-    return NodeService(db, graph_service=None, version_manager=None, working_tree_manager=None)  # noqa: E501
+    return NodeService(
+        db, graph_service=None, version_manager=None, working_tree_manager=None
+    )  # noqa: E501
 
 
 def get_node_link_service(db: Session = Depends(get_db)) -> NodeLinkService:
@@ -60,7 +62,9 @@ def get_node_link_service(db: Session = Depends(get_db)) -> NodeLinkService:
     return factory.create_node_link_service(db)
 
 
-def get_reference_link_service(db: Session = Depends(get_db)) -> ReferenceLinkService:  # noqa: E501
+def get_reference_link_service(
+    db: Session = Depends(get_db),
+) -> ReferenceLinkService:  # noqa: E501
     """
     Dependency injection for ReferenceLinkService.
 

@@ -19,20 +19,22 @@ def get_dataset_manager_dependency() -> DatasetManager:
 
 
 def get_migration_manager(
-    dataset_manager: DatasetManager = Depends(get_dataset_manager_dependency)
+    dataset_manager: DatasetManager = Depends(get_dataset_manager_dependency),
 ) -> MigrationManager:
     """Get migration manager for current active dataset."""
     active_dataset = dataset_manager.get_active_dataset()
     if not active_dataset:
         raise HTTPException(status_code=400, detail="No active dataset")
 
-    dataset_path = dataset_manager.get_dataset_file_path(active_dataset.filename)  # noqa: E501
+    dataset_path = dataset_manager.get_dataset_file_path(
+        active_dataset.filename
+    )  # noqa: E501
     return MigrationManager(dataset_path)
 
 
 @router.get("/schema/status", response_model=MigrationStatus)
 async def get_schema_status(
-    migration_manager: MigrationManager = Depends(get_migration_manager)
+    migration_manager: MigrationManager = Depends(get_migration_manager),
 ):
     """Get current schema version and migration status."""
     try:
@@ -45,11 +47,13 @@ async def get_schema_status(
 @router.post("/schema/migrate")
 async def migrate_schema(
     skip_on_error: bool = False,
-    migration_manager: MigrationManager = Depends(get_migration_manager)
+    migration_manager: MigrationManager = Depends(get_migration_manager),
 ):
     """Apply pending migrations to current dataset."""
     try:
-        success = migration_manager.migrate_to_latest(skip_on_error=skip_on_error)  # noqa: E501
+        success = migration_manager.migrate_to_latest(
+            skip_on_error=skip_on_error
+        )  # noqa: E501
         if not success:
             raise HTTPException(status_code=500, detail="Migration failed")
 
@@ -57,7 +61,9 @@ async def migrate_schema(
         return {
             "message": "Migrations applied successfully",
             "current_version": status.current_version,
-            "applied_migrations": len(status.pending_migrations) if status.needs_migration else 0  # noqa: E501
+            "applied_migrations": (
+                len(status.pending_migrations) if status.needs_migration else 0
+            ),  # noqa: E501
         }
     except HTTPException:
         raise
@@ -68,7 +74,7 @@ async def migrate_schema(
 
 @router.get("/schema/history")
 async def get_migration_history(
-    dataset_manager: DatasetManager = Depends(get_dataset_manager_dependency)
+    dataset_manager: DatasetManager = Depends(get_dataset_manager_dependency),
 ):
     """Get migration history for current dataset."""
     try:
@@ -76,12 +82,17 @@ async def get_migration_history(
         if not active_dataset:
             raise HTTPException(status_code=400, detail="No active dataset")
 
-        dataset_path = dataset_manager.get_dataset_file_path(active_dataset.filename)  # noqa: E501
+        dataset_path = dataset_manager.get_dataset_file_path(
+            active_dataset.filename
+        )  # noqa: E501
 
         # Get migration history from database
         from sqlalchemy import create_engine, text
+
         database_url = f"sqlite:///{dataset_path}"
-        engine = create_engine(database_url, connect_args={"check_same_thread": False})  # noqa: E501
+        engine = create_engine(
+            database_url, connect_args={"check_same_thread": False}
+        )  # noqa: E501
 
         with engine.connect() as conn:
             result = conn.execute(text("""
@@ -97,7 +108,7 @@ async def get_migration_history(
                         "description": row[1],
                         "migration_file": row[2],
                         "applied_at": row[3],
-                        "execution_time_ms": row[4]
+                        "execution_time_ms": row[4],
                     }
                     for row in result
                 ]
@@ -113,7 +124,7 @@ async def get_migration_history(
 @router.post("/schema/rollback/{target_version}")
 async def rollback_schema(
     target_version: int,
-    migration_manager: MigrationManager = Depends(get_migration_manager)
+    migration_manager: MigrationManager = Depends(get_migration_manager),
 ):
     """Rollback schema to a specific version."""
     try:
@@ -124,7 +135,7 @@ async def rollback_schema(
         status = migration_manager.get_migration_status()
         return {
             "message": f"Schema rolled back to version {target_version}",
-            "current_version": status.current_version
+            "current_version": status.current_version,
         }
     except HTTPException:
         raise
@@ -136,7 +147,7 @@ async def rollback_schema(
 @router.post("/schema/generate-migration")
 async def generate_migration(
     description: str,
-    migration_manager: MigrationManager = Depends(get_migration_manager)
+    migration_manager: MigrationManager = Depends(get_migration_manager),
 ):
     """Generate a new migration file template."""
     try:
@@ -144,7 +155,7 @@ async def generate_migration(
         return {
             "message": "Migration file generated successfully",
             "filepath": filepath,
-            "description": description
+            "description": description,
         }
     except Exception as e:
         logger.error(f"Failed to generate migration: {e}")

@@ -42,12 +42,14 @@ class TestExternalPredicateModel:
             title_embedding=None,
             definition_embedding=None,
             created_at=date.today().isoformat(),
-            updated_at=date.today().isoformat()
+            updated_at=date.today().isoformat(),
         )
 
         assert predicate.id is not None
         assert predicate.title == "subClassOf"
-        assert predicate.definition == "Indicates that one class is a subclass of another"
+        assert (
+            predicate.definition == "Indicates that one class is a subclass of another"
+        )
         assert predicate.source == "schema.org"
         assert predicate.external_id == "subClassOf"
         assert predicate.attributes is None
@@ -72,7 +74,7 @@ class TestExternalPredicateModel:
             title_embedding=None,
             definition_embedding=None,
             created_at=date.today().isoformat(),
-            updated_at=date.today().isoformat()
+            updated_at=date.today().isoformat(),
         )
 
         repr_str = repr(predicate)
@@ -82,6 +84,7 @@ class TestExternalPredicateModel:
         assert "ExternalPredicate" in repr_str
 
 
+@pytest.mark.slow
 class TestExternalPredicateManager:
     """
     Test suite for ReferenceManager external predicate operations.
@@ -108,13 +111,13 @@ class TestExternalPredicateManager:
         """
         config = ReferenceConfig()
 
-        with tempfile.NamedTemporaryFile(suffix='.db', delete=False) as tf:
+        with tempfile.NamedTemporaryFile(suffix=".db", delete=False) as tf:
             db_path = tf.name
 
         try:
             with ReferenceManager(config, db_path=db_path) as manager:
                 # Create fake embedding (128 dimensions * 4 bytes = 512 bytes)
-                fake_embedding = b'\x00' * (EMBEDDING_DIMS_SMALL * BYTES_PER_FLOAT32)
+                fake_embedding = b"\x00" * (EMBEDDING_DIMS_SMALL * BYTES_PER_FLOAT32)
 
                 predicate = manager.add_external_predicate(
                     title="subClassOf",
@@ -123,7 +126,7 @@ class TestExternalPredicateManager:
                     external_id="subClassOf",
                     title_embedding=fake_embedding,
                     definition_embedding=fake_embedding,
-                    embedding_dims=EMBEDDING_DIMS_SMALL
+                    embedding_dims=EMBEDDING_DIMS_SMALL,
                 )
 
                 assert predicate.id is not None
@@ -136,7 +139,7 @@ class TestExternalPredicateManager:
                         title="subClassOf (duplicate)",
                         definition="Duplicate entry",
                         source="schema.org",
-                        external_id="subClassOf"
+                        external_id="subClassOf",
                     )
 
         finally:
@@ -153,7 +156,7 @@ class TestExternalPredicateManager:
         """
         config = ReferenceConfig()
 
-        with tempfile.NamedTemporaryFile(suffix='.db', delete=False) as tf:
+        with tempfile.NamedTemporaryFile(suffix=".db", delete=False) as tf:
             db_path = tf.name
 
         try:
@@ -162,7 +165,7 @@ class TestExternalPredicateManager:
                     title="relatedTo",
                     definition="Indicates a general relationship between entities",
                     source="schema.org",
-                    external_id="relatedTo"
+                    external_id="relatedTo",
                 )
 
                 assert predicate.id is not None
@@ -188,7 +191,7 @@ class TestExternalPredicateManager:
         """
         config = ReferenceConfig()
 
-        with tempfile.NamedTemporaryFile(suffix='.db', delete=False) as tf:
+        with tempfile.NamedTemporaryFile(suffix=".db", delete=False) as tf:
             db_path = tf.name
 
         try:
@@ -198,7 +201,7 @@ class TestExternalPredicateManager:
                     title="associatedWith",
                     definition="Indicates an association between entities",
                     source="schema.org",
-                    external_id="associatedWith"
+                    external_id="associatedWith",
                 )
 
                 # Retrieve by ID
@@ -225,7 +228,7 @@ class TestExternalPredicateManager:
         """
         config = ReferenceConfig()
 
-        with tempfile.NamedTemporaryFile(suffix='.db', delete=False) as tf:
+        with tempfile.NamedTemporaryFile(suffix=".db", delete=False) as tf:
             db_path = tf.name
 
         try:
@@ -235,18 +238,22 @@ class TestExternalPredicateManager:
                     title="partOf",
                     definition="Indicates that one thing is part of another",
                     source="schema.org",
-                    external_id="partOf"
+                    external_id="partOf",
                 )
 
                 # Retrieve by source and external_id
-                retrieved = manager.get_external_predicate_by_source("schema.org", "partOf")
+                retrieved = manager.get_external_predicate_by_source(
+                    "schema.org", "partOf"
+                )
                 assert retrieved is not None
                 assert retrieved.title == "partOf"
                 assert retrieved.source == "schema.org"
                 assert retrieved.external_id == "partOf"
 
                 # Try non-existent combination
-                not_found = manager.get_external_predicate_by_source("wikidata", "partOf")
+                not_found = manager.get_external_predicate_by_source(
+                    "wikidata", "partOf"
+                )
                 assert not_found is None
 
         finally:
@@ -264,7 +271,7 @@ class TestExternalPredicateManager:
         """
         config = ReferenceConfig()
 
-        with tempfile.NamedTemporaryFile(suffix='.db', delete=False) as tf:
+        with tempfile.NamedTemporaryFile(suffix=".db", delete=False) as tf:
             db_path = tf.name
 
         try:
@@ -274,19 +281,19 @@ class TestExternalPredicateManager:
                     title="pred1",
                     definition="First predicate",
                     source="schema.org",
-                    external_id="pred1"
+                    external_id="pred1",
                 )
                 manager.add_external_predicate(
                     title="pred2",
                     definition="Second predicate",
                     source="schema.org",
-                    external_id="pred2"
+                    external_id="pred2",
                 )
                 manager.add_external_predicate(
                     title="pred3",
                     definition="Third predicate",
                     source="wikidata",
-                    external_id="P1"
+                    external_id="P1",
                 )
 
                 # List all predicates
@@ -294,7 +301,9 @@ class TestExternalPredicateManager:
                 assert len(all_predicates) == 3
 
                 # Filter by source
-                schema_predicates = manager.list_external_predicates(source="schema.org")
+                schema_predicates = manager.list_external_predicates(
+                    source="schema.org"
+                )
                 assert len(schema_predicates) == 2
                 for p in schema_predicates:
                     assert p.source == "schema.org"
@@ -319,7 +328,7 @@ class TestExternalPredicateManager:
         """
         config = ReferenceConfig()
 
-        with tempfile.NamedTemporaryFile(suffix='.db', delete=False) as tf:
+        with tempfile.NamedTemporaryFile(suffix=".db", delete=False) as tf:
             db_path = tf.name
 
         try:
@@ -329,26 +338,26 @@ class TestExternalPredicateManager:
                     title="subClassOf",
                     definition="Indicates that one class is a subclass of another class",
                     source="schema.org",
-                    external_id="subClassOf"
+                    external_id="subClassOf",
                 )
                 manager.add_external_predicate(
                     title="parentClass",
                     definition="The parent class in a class hierarchy",
                     source="schema.org",
-                    external_id="parentClass"
+                    external_id="parentClass",
                 )
                 manager.add_external_predicate(
                     title="color",
                     definition="The color of an object",
                     source="schema.org",
-                    external_id="color"
+                    external_id="color",
                 )
 
                 # Search for "class hierarchy"
                 results = manager.search_external_predicates_by_similarity(
                     "class hierarchy",
                     threshold=0.3,  # Lower threshold to ensure we get results
-                    limit=10
+                    limit=10,
                 )
 
                 assert len(results) > 0
@@ -379,7 +388,7 @@ class TestExternalPredicateManager:
         """
         config = ReferenceConfig()
 
-        with tempfile.NamedTemporaryFile(suffix='.db', delete=False) as tf:
+        with tempfile.NamedTemporaryFile(suffix=".db", delete=False) as tf:
             db_path = tf.name
 
         try:
@@ -391,29 +400,25 @@ class TestExternalPredicateManager:
                 # Test invalid threshold (too high)
                 with pytest.raises(ValueError, match="threshold must be between"):
                     manager.search_external_predicates_by_similarity(
-                        "test",
-                        threshold=1.5
+                        "test", threshold=1.5
                     )
 
                 # Test invalid threshold (too low)
                 with pytest.raises(ValueError, match="threshold must be between"):
                     manager.search_external_predicates_by_similarity(
-                        "test",
-                        threshold=-1.5
+                        "test", threshold=-1.5
                     )
 
                 # Test invalid limit (non-positive)
-                with pytest.raises(ValueError, match="limit must be a positive integer"):
-                    manager.search_external_predicates_by_similarity(
-                        "test",
-                        limit=0
-                    )
+                with pytest.raises(
+                    ValueError, match="limit must be a positive integer"
+                ):
+                    manager.search_external_predicates_by_similarity("test", limit=0)
 
                 # Test invalid limit (too large)
                 with pytest.raises(ValueError, match="limit must not exceed"):
                     manager.search_external_predicates_by_similarity(
-                        "test",
-                        limit=20000
+                        "test", limit=20000
                     )
 
         finally:
@@ -431,13 +436,13 @@ class TestExternalPredicateManager:
         """
         config = ReferenceConfig()
 
-        with tempfile.NamedTemporaryFile(suffix='.db', delete=False) as tf:
+        with tempfile.NamedTemporaryFile(suffix=".db", delete=False) as tf:
             db_path = tf.name
 
         try:
             with ReferenceManager(config, db_path=db_path) as manager:
                 # Create embedding with wrong dimensions
-                wrong_size_embedding = b'\x00' * 256  # 64 dimensions instead of 128
+                wrong_size_embedding = b"\x00" * 256  # 64 dimensions instead of 128
 
                 with pytest.raises(ValueError) as exc_info:
                     manager.add_external_predicate(
@@ -446,7 +451,7 @@ class TestExternalPredicateManager:
                         source="schema.org",
                         external_id="testPredicate",
                         title_embedding=wrong_size_embedding,
-                        embedding_dims=EMBEDDING_DIMS_SMALL  # Expects 128 dims
+                        embedding_dims=EMBEDDING_DIMS_SMALL,  # Expects 128 dims
                     )
 
                 error = str(exc_info.value)
@@ -470,23 +475,28 @@ class TestExternalPredicateManager:
         """
         config = ReferenceConfig()
 
-        with tempfile.NamedTemporaryFile(suffix='.db', delete=False) as tf:
+        with tempfile.NamedTemporaryFile(suffix=".db", delete=False) as tf:
             db_path = tf.name
 
         try:
             from sqlalchemy import text
+
             with ReferenceManager(config, db_path=db_path) as manager:
                 # Query SQLite's index information
                 with manager.engine.connect() as conn:
                     result = conn.execute(
-                        text("SELECT name FROM sqlite_master WHERE type='index' AND tbl_name='external_predicates'")
+                        text(
+                            "SELECT name FROM sqlite_master WHERE type='index' AND tbl_name='external_predicates'"
+                        )
                     )
                     indexes = [row[0] for row in result]
 
                 # Check for expected indexes (SQLAlchemy auto-generates index names)
                 # The indexes should include columns: source, external_id, title,
                 # title_embedding, definition_embedding
-                assert len(indexes) >= 5, f"Expected at least 5 indexes, found {len(indexes)}: {indexes}"
+                assert (
+                    len(indexes) >= 5
+                ), f"Expected at least 5 indexes, found {len(indexes)}: {indexes}"
 
         finally:
             if os.path.exists(db_path):
@@ -503,7 +513,7 @@ class TestExternalPredicateManager:
         """
         config = ReferenceConfig()
 
-        with tempfile.NamedTemporaryFile(suffix='.db', delete=False) as tf:
+        with tempfile.NamedTemporaryFile(suffix=".db", delete=False) as tf:
             db_path = tf.name
 
         try:
@@ -513,7 +523,7 @@ class TestExternalPredicateManager:
                     title="testPredicate",
                     definition="Test predicate",
                     source="schema.org",
-                    external_id="test1"
+                    external_id="test1",
                 )
 
                 # Duplicate (source, external_id) should fail
@@ -522,7 +532,7 @@ class TestExternalPredicateManager:
                         title="duplicatePredicate",
                         definition="This should fail",
                         source="schema.org",
-                        external_id="test1"
+                        external_id="test1",
                     )
 
                 # Roll back the session after the integrity error
@@ -533,12 +543,16 @@ class TestExternalPredicateManager:
                     title="testPredicate",
                     definition="Test predicate from different source",
                     source="wikidata",
-                    external_id="test1"
+                    external_id="test1",
                 )
 
                 # Verify both exist
-                schema_pred = manager.get_external_predicate_by_source("schema.org", "test1")
-                wikidata_pred = manager.get_external_predicate_by_source("wikidata", "test1")
+                schema_pred = manager.get_external_predicate_by_source(
+                    "schema.org", "test1"
+                )
+                wikidata_pred = manager.get_external_predicate_by_source(
+                    "wikidata", "test1"
+                )
                 assert schema_pred is not None
                 assert wikidata_pred is not None
                 assert schema_pred.id != wikidata_pred.id
@@ -557,7 +571,7 @@ class TestExternalPredicateManager:
         """
         config = ReferenceConfig()
 
-        with tempfile.NamedTemporaryFile(suffix='.db', delete=False) as tf:
+        with tempfile.NamedTemporaryFile(suffix=".db", delete=False) as tf:
             db_path = tf.name
 
         try:
@@ -567,11 +581,13 @@ class TestExternalPredicateManager:
                     title="testThreadSafe",
                     definition="Testing thread-safe access",
                     source="schema.org",
-                    external_id="threadTest"
+                    external_id="threadTest",
                 )
 
                 # Query it back - should work without threading errors
-                predicate = manager.get_external_predicate_by_source("schema.org", "threadTest")
+                predicate = manager.get_external_predicate_by_source(
+                    "schema.org", "threadTest"
+                )
                 assert predicate is not None
                 assert predicate.title == "testThreadSafe"
 

@@ -40,7 +40,7 @@ class StandardRAGPipeline(BaseRAGPipeline):
         self,
         kg_db_session: Session,
         ops_db_session: Session,
-        config: Dict[str, Any] = None
+        config: Dict[str, Any] = None,
     ):
         """
         Initialize Standard RAG Pipeline.
@@ -59,20 +59,36 @@ class StandardRAGPipeline(BaseRAGPipeline):
         llm_flavor_id = self.config.get("llm_flavor_id", "default")
         kg_top_k = self.config.get("kg_top_k", 50)
         kg_vector_threshold = self.config.get("kg_vector_threshold", 0.6)
-        timeout_layer_0 = self.config.get("timeout_layer_0", RAGPipelineService.DEFAULT_TIMEOUT_LAYER_0)
-        timeout_layer_1 = self.config.get("timeout_layer_1", RAGPipelineService.DEFAULT_TIMEOUT_LAYER_1)
-        timeout_layer_2 = self.config.get("timeout_layer_2", RAGPipelineService.DEFAULT_TIMEOUT_LAYER_2)
-        timeout_layer_3 = self.config.get("timeout_layer_3", RAGPipelineService.DEFAULT_TIMEOUT_LAYER_3)
-        timeout_total = self.config.get("timeout_total", RAGPipelineService.DEFAULT_TIMEOUT_TOTAL)
+        timeout_layer_0 = self.config.get(
+            "timeout_layer_0", RAGPipelineService.DEFAULT_TIMEOUT_LAYER_0
+        )
+        timeout_layer_1 = self.config.get(
+            "timeout_layer_1", RAGPipelineService.DEFAULT_TIMEOUT_LAYER_1
+        )
+        timeout_layer_2 = self.config.get(
+            "timeout_layer_2", RAGPipelineService.DEFAULT_TIMEOUT_LAYER_2
+        )
+        timeout_layer_3 = self.config.get(
+            "timeout_layer_3", RAGPipelineService.DEFAULT_TIMEOUT_LAYER_3
+        )
+        timeout_total = self.config.get(
+            "timeout_total", RAGPipelineService.DEFAULT_TIMEOUT_TOTAL
+        )
         dedup_similarity_threshold = self.config.get(
             "dedup_similarity_threshold",
-            RAGPipelineService.DEFAULT_DEDUP_SIMILARITY_THRESHOLD
+            RAGPipelineService.DEFAULT_DEDUP_SIMILARITY_THRESHOLD,
         )
 
         # Validate configuration parameters
         self._validate_config(
-            kg_top_k, kg_vector_threshold, timeout_layer_0, timeout_layer_1,
-            timeout_layer_2, timeout_layer_3, timeout_total, dedup_similarity_threshold
+            kg_top_k,
+            kg_vector_threshold,
+            timeout_layer_0,
+            timeout_layer_1,
+            timeout_layer_2,
+            timeout_layer_3,
+            timeout_total,
+            dedup_similarity_threshold,
         )
 
         # Initialize the underlying RAGPipelineService
@@ -87,16 +103,13 @@ class StandardRAGPipeline(BaseRAGPipeline):
             timeout_layer_2=timeout_layer_2,
             timeout_layer_3=timeout_layer_3,
             timeout_total=timeout_total,
-            dedup_similarity_threshold=dedup_similarity_threshold
+            dedup_similarity_threshold=dedup_similarity_threshold,
         )
 
         logger.info(f"StandardRAGPipeline initialized with config: {self.get_config()}")
 
     async def extract_entities(
-        self,
-        text: str,
-        enable_trace: bool = False,
-        enable_llm_layer: bool = True
+        self, text: str, enable_trace: bool = False, enable_llm_layer: bool = True
     ) -> RAGExtractionResponse:
         """
         Extract entities from text using the standard RAG pipeline.
@@ -109,11 +122,11 @@ class StandardRAGPipeline(BaseRAGPipeline):
         Returns:
             RAGExtractionResponse with extracted entities, metrics, and trace info
         """
-        logger.debug(f"StandardRAGPipeline.extract_entities called with text length: {len(text)}")
+        logger.debug(
+            f"StandardRAGPipeline.extract_entities called with text length: {len(text)}"
+        )
         return await self.service.extract_entities(
-            text=text,
-            enable_trace=enable_trace,
-            enable_llm_layer=enable_llm_layer
+            text=text, enable_trace=enable_trace, enable_llm_layer=enable_llm_layer
         )
 
     def get_config(self) -> Dict[str, Any]:
@@ -128,15 +141,25 @@ class StandardRAGPipeline(BaseRAGPipeline):
             "llm_flavor_id": self.config.get("llm_flavor_id", "default"),
             "kg_top_k": self.config.get("kg_top_k", 50),
             "kg_vector_threshold": self.config.get("kg_vector_threshold", 0.6),
-            "timeout_layer_0": self.config.get("timeout_layer_0", RAGPipelineService.DEFAULT_TIMEOUT_LAYER_0),
-            "timeout_layer_1": self.config.get("timeout_layer_1", RAGPipelineService.DEFAULT_TIMEOUT_LAYER_1),
-            "timeout_layer_2": self.config.get("timeout_layer_2", RAGPipelineService.DEFAULT_TIMEOUT_LAYER_2),
-            "timeout_layer_3": self.config.get("timeout_layer_3", RAGPipelineService.DEFAULT_TIMEOUT_LAYER_3),
-            "timeout_total": self.config.get("timeout_total", RAGPipelineService.DEFAULT_TIMEOUT_TOTAL),
+            "timeout_layer_0": self.config.get(
+                "timeout_layer_0", RAGPipelineService.DEFAULT_TIMEOUT_LAYER_0
+            ),
+            "timeout_layer_1": self.config.get(
+                "timeout_layer_1", RAGPipelineService.DEFAULT_TIMEOUT_LAYER_1
+            ),
+            "timeout_layer_2": self.config.get(
+                "timeout_layer_2", RAGPipelineService.DEFAULT_TIMEOUT_LAYER_2
+            ),
+            "timeout_layer_3": self.config.get(
+                "timeout_layer_3", RAGPipelineService.DEFAULT_TIMEOUT_LAYER_3
+            ),
+            "timeout_total": self.config.get(
+                "timeout_total", RAGPipelineService.DEFAULT_TIMEOUT_TOTAL
+            ),
             "dedup_similarity_threshold": self.config.get(
                 "dedup_similarity_threshold",
-                RAGPipelineService.DEFAULT_DEDUP_SIMILARITY_THRESHOLD
-            )
+                RAGPipelineService.DEFAULT_DEDUP_SIMILARITY_THRESHOLD,
+            ),
         }
 
     def _validate_config(
@@ -148,7 +171,7 @@ class StandardRAGPipeline(BaseRAGPipeline):
         timeout_layer_2: float,
         timeout_layer_3: float,
         timeout_total: float,
-        dedup_similarity_threshold: float
+        dedup_similarity_threshold: float,
     ) -> None:
         """
         Validate configuration parameters.
@@ -170,7 +193,9 @@ class StandardRAGPipeline(BaseRAGPipeline):
             raise ValueError(f"kg_top_k must be positive, got {kg_top_k}")
 
         if not 0.0 <= kg_vector_threshold <= 1.0:
-            raise ValueError(f"kg_vector_threshold must be between 0 and 1, got {kg_vector_threshold}")
+            raise ValueError(
+                f"kg_vector_threshold must be between 0 and 1, got {kg_vector_threshold}"
+            )
 
         if timeout_layer_0 <= 0:
             raise ValueError(f"timeout_layer_0 must be positive, got {timeout_layer_0}")
@@ -188,4 +213,6 @@ class StandardRAGPipeline(BaseRAGPipeline):
             raise ValueError(f"timeout_total must be positive, got {timeout_total}")
 
         if not 0.0 <= dedup_similarity_threshold <= 1.0:
-            raise ValueError(f"dedup_similarity_threshold must be between 0 and 1, got {dedup_similarity_threshold}")
+            raise ValueError(
+                f"dedup_similarity_threshold must be between 0 and 1, got {dedup_similarity_threshold}"
+            )

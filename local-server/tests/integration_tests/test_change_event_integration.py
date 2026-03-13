@@ -175,8 +175,8 @@ def test_update_node_type_trigger(db_session):
         # Insert a structure_node directly
         conn.execute(
             text("""
-                INSERT INTO structure_nodes (id, node_type, title, definition)
-                VALUES (:node_id, 'term', 'Test Node', 'Test definition')
+                INSERT INTO ontology_entities (id, node_type, title, definition)
+                VALUES (:node_id, 'class', 'Test Node', 'Test definition')
             """),
             {"node_id": node_id},
         )
@@ -192,8 +192,8 @@ def test_update_node_type_trigger(db_session):
         # Update the node_type
         conn.execute(
             text("""
-                UPDATE structure_nodes
-                SET node_type = 'domain'
+                UPDATE ontology_entities
+                SET node_type = 'concept_scheme'
                 WHERE id = :node_id
             """),
             {"node_id": node_id},
@@ -212,16 +212,16 @@ def test_update_node_type_trigger(db_session):
 
         assert event is not None, "Expected update-type event not found"
         assert event[0] == "update-type"
-        assert event[1] == "structure_node"
+        assert event[1] == "ontology_entity"
         assert event[2] == node_id
 
         # Verify old_data has old node_type
         old_data = json.loads(event[3])
-        assert old_data["node_type"] == "term"
+        assert old_data["node_type"] == "class"
 
         # Verify new_data has new node_type
         new_data = json.loads(event[4])
-        assert new_data["node_type"] == "domain"
+        assert new_data["node_type"] == "concept_scheme"
 
         # Clean up
         conn.execute(
@@ -229,14 +229,14 @@ def test_update_node_type_trigger(db_session):
             {"node_id": node_id},
         )  # noqa: E501
         conn.execute(
-            text("DELETE FROM structure_nodes WHERE id = :node_id"),
+            text("DELETE FROM ontology_entities WHERE id = :node_id"),
             {"node_id": node_id},
         )  # noqa: E501
         conn.commit()
 
 
 def test_move_node_trigger(db_session):
-    """Test that moving a node (changing parent_node_id) generates a move event."""  # noqa: E501
+    """Test that moving a node (changing parent_entity_id) generates a move event."""  # noqa: E501
 
     # Generate unique IDs for this test
     node_id = f"move-node-{uuid4()}"
@@ -250,15 +250,15 @@ def test_move_node_trigger(db_session):
         # Create parent nodes
         conn.execute(
             text("""
-                INSERT INTO structure_nodes (id, node_type, title, definition)
-                VALUES (:parent_id, 'domain', 'Old Parent', 'Old parent definition')
+                INSERT INTO ontology_entities (id, node_type, title, definition)
+                VALUES (:parent_id, 'concept_scheme', 'Old Parent', 'Old parent definition')
             """),
             {"parent_id": old_parent_id},
         )
         conn.execute(
             text("""
-                INSERT INTO structure_nodes (id, node_type, title, definition)
-                VALUES (:parent_id, 'domain', 'New Parent', 'New parent definition')
+                INSERT INTO ontology_entities (id, node_type, title, definition)
+                VALUES (:parent_id, 'concept_scheme', 'New Parent', 'New parent definition')
             """),
             {"parent_id": new_parent_id},
         )
@@ -266,8 +266,8 @@ def test_move_node_trigger(db_session):
         # Insert a structure_node with old parent
         conn.execute(
             text("""
-                INSERT INTO structure_nodes (id, node_type, parent_node_id, title, definition)
-                VALUES (:node_id, 'term', :old_parent_id, 'Test Node', 'Test definition')
+                INSERT INTO ontology_entities (id, node_type, parent_entity_id, title, definition)
+                VALUES (:node_id, 'class', :old_parent_id, 'Test Node', 'Test definition')
             """),
             {"node_id": node_id, "old_parent_id": old_parent_id},
         )
@@ -289,8 +289,8 @@ def test_move_node_trigger(db_session):
         # Move the node to new parent
         conn.execute(
             text("""
-                UPDATE structure_nodes
-                SET parent_node_id = :new_parent_id
+                UPDATE ontology_entities
+                SET parent_entity_id = :new_parent_id
                 WHERE id = :node_id
             """),
             {"node_id": node_id, "new_parent_id": new_parent_id},
@@ -309,16 +309,16 @@ def test_move_node_trigger(db_session):
 
         assert event is not None, "Expected move event not found"
         assert event[0] == "move"
-        assert event[1] == "structure_node"
+        assert event[1] == "ontology_entity"
         assert event[2] == node_id
 
-        # Verify old_data has old parent_node_id
+        # Verify old_data has old parent_entity_id
         old_data = json.loads(event[3])
-        assert old_data["parent_node_id"] == old_parent_id
+        assert old_data["parent_entity_id"] == old_parent_id
 
-        # Verify new_data has new parent_node_id
+        # Verify new_data has new parent_entity_id
         new_data = json.loads(event[4])
-        assert new_data["parent_node_id"] == new_parent_id
+        assert new_data["parent_entity_id"] == new_parent_id
 
         # Clean up
         conn.execute(
@@ -333,7 +333,7 @@ def test_move_node_trigger(db_session):
         )  # noqa: E501, E128
         conn.execute(
             text(
-                "DELETE FROM structure_nodes WHERE id IN (:node_id, :old_parent_id, :new_parent_id)"
+                "DELETE FROM ontology_entities WHERE id IN (:node_id, :old_parent_id, :new_parent_id)"
             ),  # noqa: E501
             {
                 "node_id": node_id,

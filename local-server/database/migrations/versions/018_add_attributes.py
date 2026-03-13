@@ -75,7 +75,9 @@ class Migration018(Migration):
         connection.execute(text("DROP TABLE structure_nodes"))
 
         # Step 4: Rename the temp table to the original name
-        connection.execute(text("ALTER TABLE structure_nodes_temp RENAME TO structure_nodes"))
+        connection.execute(
+            text("ALTER TABLE structure_nodes_temp RENAME TO structure_nodes")
+        )
 
         # Step 5: Recreate indexes that existed on the original table
         # Check for existing indexes in migration 013

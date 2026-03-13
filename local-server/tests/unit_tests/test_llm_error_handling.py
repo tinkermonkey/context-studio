@@ -100,10 +100,7 @@ class TestLLMErrorHandling:
 
         # Test that template rendering works with valid context
         valid_template = "Template for {term} in {domain_title}"
-        valid_context = {
-            "term": "test term",
-            "domain_title": "Test Domain"
-        }
+        valid_context = {"term": "test term", "domain_title": "Test Domain"}
 
         result = service._render_user_prompt_generic(valid_template, valid_context)
 
@@ -136,11 +133,17 @@ class TestLLMErrorHandling:
         # Find execute_pipeline endpoint
         execute_pipeline_route = None
         for route in router.routes:
-            if hasattr(route, "path") and "/execute_pipeline" in route.path and "/stream" not in route.path:
+            if (
+                hasattr(route, "path")
+                and "/execute_pipeline" in route.path
+                and "/stream" not in route.path
+            ):
                 execute_pipeline_route = route
                 break
 
-        assert execute_pipeline_route is not None, "No LLM execute_pipeline endpoint found"
+        assert (
+            execute_pipeline_route is not None
+        ), "No LLM execute_pipeline endpoint found"
 
         # Verify endpoint has proper type annotations
         endpoint_func = execute_pipeline_route.endpoint

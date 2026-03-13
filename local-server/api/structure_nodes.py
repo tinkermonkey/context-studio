@@ -22,7 +22,7 @@ Endpoints:
 - GET /api/structure_nodes/{node_id}/word_senses - Get word senses for a structure_node  # noqa: E501
 """
 
-from fastapi import APIRouter, HTTPException, Query, Depends, Path
+from fastapi import APIRouter, HTTPException, Query, Depends, Path, Response
 from typing import List, Optional
 from uuid import UUID
 
@@ -31,20 +31,45 @@ from services.node_service import NodeService
 from services.node_link_service import NodeLinkService
 from services.reference_link_service import ReferenceLinkService
 from services.word_sense_service import WordSenseService
-from services.exceptions import NotFoundError, ValidationError, ConflictError, ReferenceNotFoundError  # noqa: E501
+from services.exceptions import (
+    NotFoundError,
+    ValidationError,
+    ConflictError,
+    ReferenceNotFoundError,
+)  # noqa: E501
 from api.models.structure_nodes import (
-    NodeCreate, NodeUpdate, NodeOut, NodeLinkCreate, NodeLinkOut,
-    NodeSearchRequest, NodeSearchResult, PaginatedNodesResponse, PaginatedNodeLinksResponse, NodeTypeEnum,  # noqa: E501
-    MoveNodesRequest, MoveNodesResponse, ReferenceLink, WordSense, SelectedWordSensesUpdate,  # noqa: E501
-    ResolvedAttribute, SetNodeAttributesRequest
+    NodeCreate,
+    NodeUpdate,
+    NodeOut,
+    NodeLinkCreate,
+    NodeLinkOut,
+    NodeSearchRequest,
+    NodeSearchResult,
+    PaginatedNodesResponse,
+    PaginatedNodeLinksResponse,
+    NodeTypeEnum,  # noqa: E501
+    MoveNodesRequest,
+    MoveNodesResponse,
+    ReferenceLink,
+    WordSense,
+    SelectedWordSensesUpdate,  # noqa: E501
+    ResolvedAttribute,
+    SetNodeAttributesRequest,
 )
 from api.utils.node_conversion import (
-    to_node_out, to_node_link_out, nodes_to_paginated_response,
-    convert_api_node_type_to_db, uuid_to_str
+    to_node_out,
+    to_node_link_out,
+    nodes_to_paginated_response,
+    convert_api_node_type_to_db,
+    uuid_to_str,
+    normalize_legacy_node_type_to_db,
 )
 from api.dependencies.structure_nodes import (
-    get_node_service, get_node_service_simple, get_node_link_service,
-    get_reference_link_service, get_word_sense_service
+    get_node_service,
+    get_node_service_simple,
+    get_node_link_service,
+    get_reference_link_service,
+    get_word_sense_service,
 )
 from api.api_errors import conflict_error_response
 
@@ -53,8 +78,9 @@ router = APIRouter(prefix="/api/structure_nodes", tags=["structure_nodes"])
 
 @router.post("/", response_model=NodeOut, status_code=201)
 def create_node(
+    response: Response,
     structure_node: NodeCreate,
-    node_service: NodeService = Depends(get_node_service)
+    node_service: NodeService = Depends(get_node_service),
 ):
     """
     Create a new structure_node.
@@ -65,18 +91,27 @@ def create_node(
     - Domains must have a layer parent
     - Terms must have a domain parent
     """
+    response.headers["Deprecation"] = "true"
+    response.headers["Sunset"] = "Phase 3"
     from utils.logger import get_logger
     from api.graph import invalidate_graph_cache
+
     logger = get_logger(__name__)
 
     try:
         # Convert API model to service data
+        # Normalize legacy terminology to database terminology
+        api_node_type = structure_node.node_type.value
+        db_node_type = normalize_legacy_node_type_to_db(api_node_type)
+
         node_data = {
-            "node_type": structure_node.node_type.value,
+            "node_type": db_node_type,
             "parent_node_id": uuid_to_str(structure_node.parent_node_id),
             "title": structure_node.title,
             "definition": structure_node.definition,
-            "structural_predicate_id": uuid_to_str(structure_node.structural_predicate_id)  # noqa: E501
+            "structural_predicate_id": uuid_to_str(
+                structure_node.structural_predicate_id
+            ),  # noqa: E501
         }
 
         created_node = node_service.create_node(node_data)
@@ -100,18 +135,34 @@ def create_node(
         else:
             raise HTTPException(status_code=400, detail=error_msg)
     except Exception as e:
-        logger.error(f"Unexpected error creating structure_node: {type(e).__name__}: {str(e)}", exc_info=True)  # noqa: E501
-        raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")  # noqa: E501
+        logger.error(
+            f"Unexpected error creating structure_node: {type(e).__name__}: {str(e)}",
+            exc_info=True,
+        )  # noqa: E501
+        raise HTTPException(
+            status_code=500, detail=f"Internal server error: {str(e)}"
+        )  # noqa: E501
 
 
 @router.get("/", response_model=PaginatedNodesResponse)
 def list_nodes(
-    node_type: Optional[NodeTypeEnum] = Query(None, description="Filter by structure_node type"),  # noqa: E501
-    parent_node_id: Optional[UUID] = Query(None, description="Filter by parent structure_node ID"),  # noqa: E501
-    skip: int = Query(0, ge=0, description="Number of structure_nodes to skip"),  # noqa: E501
-    limit: int = Query(50, ge=1, le=1000, description="Maximum number of structure_nodes to return"),  # noqa: E501
-    sort_by: str = Query("title", pattern="^(title|created_at)$", description="Sort field"),  # noqa: E501
-    node_service: NodeService = Depends(get_node_service_simple)
+    response: Response,
+    node_type: Optional[NodeTypeEnum] = Query(
+        None, description="Filter by structure_node type"
+    ),  # noqa: E501
+    parent_node_id: Optional[UUID] = Query(
+        None, description="Filter by parent structure_node ID"
+    ),  # noqa: E501
+    skip: int = Query(
+        0, ge=0, description="Number of structure_nodes to skip"
+    ),  # noqa: E501
+    limit: int = Query(
+        50, ge=1, le=1000, description="Maximum number of structure_nodes to return"
+    ),  # noqa: E501
+    sort_by: str = Query(
+        "title", pattern="^(title|created_at)$", description="Sort field"
+    ),  # noqa: E501
+    node_service: NodeService = Depends(get_node_service_simple),
 ):
     """
     List structure_nodes with filtering and pagination.
@@ -119,6 +170,8 @@ def list_nodes(
     Supports filtering by structure_node type and parent, with configurable pagination  # noqa: E501
     and sorting. This replaces the separate endpoints for layers, domains, and terms.  # noqa: E501
     """
+    response.headers["Deprecation"] = "true"
+    response.headers["Sunset"] = "Phase 3"
     try:
         import time
         from utils.logger import get_logger
@@ -127,9 +180,11 @@ def list_nodes(
         request_start = time.time()
 
         # Convert API node type to database node type
+        # Map legacy API terminology (layer, domain, term) to new database terminology
         db_node_type = None
         if node_type:
-            db_node_type = convert_api_node_type_to_db(node_type.value)
+            normalized_type = normalize_legacy_node_type_to_db(node_type.value)
+            db_node_type = convert_api_node_type_to_db(normalized_type)
 
         # Convert UUID to string for parent_node_id
         parent_node_id_str = str(parent_node_id) if parent_node_id else None
@@ -140,8 +195,7 @@ def list_nodes(
         # Get total count using NodeService
         count_start = time.time()
         total = node_service.count_nodes(
-            node_type=db_node_type,
-            parent_node_id=parent_node_id_str
+            node_type=db_node_type, parent_node_id=parent_node_id_str
         )
         count_time = time.time() - count_start
         logger.debug(f"Count query time: {count_time*1000:.2f}ms")
@@ -152,16 +206,20 @@ def list_nodes(
             node_type=db_node_type,
             parent_node_id=parent_node_id_str,
             skip=skip,
-            limit=limit
+            limit=limit,
         )
         list_time = time.time() - list_start
         logger.debug(f"List query time: {list_time*1000:.2f}ms")
 
         # Convert to response format
         serialization_start = time.time()
-        response_data = nodes_to_paginated_response(structure_nodes, total, skip, limit)  # noqa: E501
+        response_data = nodes_to_paginated_response(
+            structure_nodes, total, skip, limit
+        )  # noqa: E501
         serialization_time = time.time() - serialization_start
-        logger.debug(f"Response serialization time: {serialization_time*1000:.2f}ms")  # noqa: E501
+        logger.debug(
+            f"Response serialization time: {serialization_time*1000:.2f}ms"
+        )  # noqa: E501
 
         pydantic_start = time.time()
         result = PaginatedNodesResponse(**response_data)
@@ -169,18 +227,23 @@ def list_nodes(
         logger.debug(f"Pydantic model time: {pydantic_time*1000:.2f}ms")
 
         total_time = time.time() - request_start
-        logger.debug(f"Total API endpoint time: {total_time*1000:.2f}ms (skip={skip})")  # noqa: E501
+        logger.debug(
+            f"Total API endpoint time: {total_time*1000:.2f}ms (skip={skip})"
+        )  # noqa: E501
 
         return result
 
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")  # noqa: E501
+        raise HTTPException(
+            status_code=500, detail=f"Internal server error: {str(e)}"
+        )  # noqa: E501
 
 
 @router.post("/find", response_model=List[NodeSearchResult])
 def search_nodes(
+    response: Response,
     search_request: NodeSearchRequest,
-    node_service: NodeService = Depends(get_node_service)
+    node_service: NodeService = Depends(get_node_service),
 ):
     """
     Vector search across structure_nodes.
@@ -189,6 +252,8 @@ def search_nodes(
     Supports semantic search across structure_node titles and definitions with optional  # noqa: E501
     type filtering and configurable similarity thresholds.
     """
+    response.headers["Deprecation"] = "true"
+    response.headers["Sunset"] = "Phase 3"
     from utils.logger import get_logger
     from sqlalchemy import text
     from embeddings.generate_embeddings import generate_embedding
@@ -203,15 +268,21 @@ def search_nodes(
         # Build query with optional node_type filter
         type_filter = ""
         params = {
-            'query_vec': query_embedding,
-            'threshold': search_request.threshold,
-            'limit': search_request.limit
+            "query_vec": query_embedding,
+            "threshold": search_request.threshold,
+            "limit": search_request.limit,
         }
 
         if search_request.node_type:
-            db_node_type = convert_api_node_type_to_db(search_request.node_type.value)  # noqa: E501
+            # Map legacy API terminology to new database terminology
+            normalized_type = normalize_legacy_node_type_to_db(
+                search_request.node_type.value
+            )
+            db_node_type = convert_api_node_type_to_db(
+                normalized_type
+            )  # noqa: E501
             type_filter = "AND node_type = :node_type"
-            params['node_type'] = db_node_type
+            params["node_type"] = db_node_type
 
         similarity_case = build_max_similarity_case_when()
         query = text(f"""
@@ -221,15 +292,15 @@ def search_nodes(
                     title,
                     node_type,
                     definition,
-                    parent_node_id,
+                    parent_entity_id,
                     structural_predicate_id,
                     created_at,
                     last_modified,
                     title_embedding,
                     definition_embedding,
                     {similarity_case} as similarity
-                FROM structure_nodes
-                WHERE (title_embedding IS NOT NULL OR definition_embedding IS NOT NULL)
+                FROM ontology_entities
+                WHERE (title_embedding IS NOT NULL OR definition_embedding IS NOT NULL)  # noqa: E501
                 {type_filter}
             )
             SELECT
@@ -237,7 +308,7 @@ def search_nodes(
                 title,
                 node_type,
                 definition,
-                parent_node_id,
+                parent_entity_id,
                 structural_predicate_id,
                 created_at,
                 last_modified,
@@ -256,15 +327,26 @@ def search_nodes(
             result = NodeSearchResult(
                 id=row.id,
                 node_type=row.node_type,
-                parent_node_id=row.parent_node_id,
+                parent_node_id=row.parent_entity_id,
                 title=row.title,
                 definition=row.definition,
                 structural_predicate_id=row.structural_predicate_id,
-                created_at=row.created_at.isoformat() if hasattr(row.created_at, 'isoformat') else str(row.created_at),  # noqa: E501
+                created_at=(
+                    row.created_at.isoformat()
+                    if hasattr(row.created_at, "isoformat")
+                    else str(row.created_at)
+                ),  # noqa: E501
                 version=1,  # Use version 1 as placeholder for search results
-                last_modified=row.last_modified.isoformat() if hasattr(row.last_modified, 'isoformat') else str(row.last_modified),  # noqa: E501
+                last_modified=(
+                    row.last_modified.isoformat()
+                    if hasattr(row.last_modified, "isoformat")
+                    else str(row.last_modified)
+                ),  # noqa: E501
                 score=float(row.similarity),
-                distance=1.0 - float(row.similarity)  # distance is inverse of similarity  # noqa: E501
+                distance=1.0
+                - float(
+                    row.similarity
+                ),  # distance is inverse of similarity  # noqa: E501
             )
             search_results.append(result)
 
@@ -277,14 +359,17 @@ def search_nodes(
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
         logger.error(f"Vector search failed: {e}", exc_info=True)
-        raise HTTPException(status_code=500, detail=f"Vector search failed: {str(e)}")  # noqa: E501
+        raise HTTPException(
+            status_code=500, detail=f"Vector search failed: {str(e)}"
+        )  # noqa: E501
 
 
 # StructureNode Links endpoints
 @router.post("/links", response_model=NodeLinkOut, status_code=201)
 def create_node_link(
+    response: Response,
     link: NodeLinkCreate,
-    link_service: NodeLinkService = Depends(get_node_link_service)
+    link_service: NodeLinkService = Depends(get_node_link_service),
 ):
     """
     Create a new structure_node link.
@@ -292,6 +377,8 @@ def create_node_link(
     Links can only be created between structure_nodes of the same type (layers to layers,  # noqa: E501
     domains to domains, terms to terms) as per the Great Normalization requirements.  # noqa: E501
     """
+    response.headers["Deprecation"] = "true"
+    response.headers["Sunset"] = "Phase 3"
     from api.graph import invalidate_graph_cache
 
     try:
@@ -300,7 +387,7 @@ def create_node_link(
             "source_node_id": uuid_to_str(link.source_node_id),
             "target_node_id": uuid_to_str(link.target_node_id),
             "predicate": link.predicate,
-            "predicate_id": uuid_to_str(link.predicate_id)
+            "predicate_id": uuid_to_str(link.predicate_id),
         }
 
         created_link = link_service.create_link(link_data)
@@ -313,17 +400,26 @@ def create_node_link(
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")  # noqa: E501
+        raise HTTPException(
+            status_code=500, detail=f"Internal server error: {str(e)}"
+        )  # noqa: E501
 
 
 @router.get("/links", response_model=PaginatedNodeLinksResponse)
 def list_node_links(
-    source_node_id: Optional[UUID] = Query(None, description="Filter by source structure_node ID"),  # noqa: E501
-    target_node_id: Optional[UUID] = Query(None, description="Filter by target structure_node ID"),  # noqa: E501
+    response: Response,
+    source_node_id: Optional[UUID] = Query(
+        None, description="Filter by source structure_node ID"
+    ),  # noqa: E501
+    target_node_id: Optional[UUID] = Query(
+        None, description="Filter by target structure_node ID"
+    ),  # noqa: E501
     predicate: Optional[str] = Query(None, description="Filter by predicate"),
     skip: int = Query(0, ge=0, description="Number of links to skip"),
-    limit: int = Query(100, ge=1, le=500, description="Maximum number of links to return"),  # noqa: E501
-    link_service: NodeLinkService = Depends(get_node_link_service)
+    limit: int = Query(
+        100, ge=1, le=500, description="Maximum number of links to return"
+    ),  # noqa: E501
+    link_service: NodeLinkService = Depends(get_node_link_service),
 ):
     """
     List structure_node links with filtering and pagination.
@@ -331,6 +427,8 @@ def list_node_links(
     Supports filtering by source structure_node, target structure_node, and predicate.  # noqa: E501
     Returns all relationships in the unified structure_node graph with pagination metadata.  # noqa: E501
     """
+    response.headers["Deprecation"] = "true"
+    response.headers["Sunset"] = "Phase 3"
     try:
         # Convert UUID to string for filtering
         source_node_id_str = str(source_node_id) if source_node_id else None
@@ -340,7 +438,7 @@ def list_node_links(
         total = link_service.count_links(
             source_node_id=source_node_id_str,
             target_node_id=target_node_id_str,
-            predicate=predicate
+            predicate=predicate,
         )
 
         # Get links with pagination
@@ -349,7 +447,7 @@ def list_node_links(
             target_node_id=target_node_id_str,
             predicate=predicate,
             skip=skip,
-            limit=limit
+            limit=limit,
         )
 
         # Convert to response format
@@ -357,18 +455,21 @@ def list_node_links(
             data=[to_node_link_out(link) for link in links],
             total=total,
             skip=skip,
-            limit=limit
+            limit=limit,
         )
 
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")  # noqa: E501
+        raise HTTPException(
+            status_code=500, detail=f"Internal server error: {str(e)}"
+        )  # noqa: E501
 
 
 @router.put("/links/{link_id}", response_model=NodeLinkOut)
 def update_node_link(
+    response: Response,
     link_id: UUID = Path(..., description="The ID of the link to update"),
     link_update: NodeLinkCreate = ...,  # Reuse create model for updates
-    link_service: NodeLinkService = Depends(get_node_link_service)
+    link_service: NodeLinkService = Depends(get_node_link_service),
 ):
     """
     Update a structure_node link.
@@ -376,6 +477,8 @@ def update_node_link(
     Allows updating the predicate and predicate_id of an existing link.
     Source and target structure_nodes can also be updated if the new configuration is valid.  # noqa: E501
     """
+    response.headers["Deprecation"] = "true"
+    response.headers["Sunset"] = "Phase 3"
     from api.graph import invalidate_graph_cache
 
     try:
@@ -384,7 +487,7 @@ def update_node_link(
             "source_node_id": uuid_to_str(link_update.source_node_id),
             "target_node_id": uuid_to_str(link_update.target_node_id),
             "predicate": link_update.predicate,
-            "predicate_id": uuid_to_str(link_update.predicate_id)
+            "predicate_id": uuid_to_str(link_update.predicate_id),
         }
 
         updated_link = link_service.update_link(str(link_id), update_data)
@@ -397,19 +500,24 @@ def update_node_link(
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")  # noqa: E501
+        raise HTTPException(
+            status_code=500, detail=f"Internal server error: {str(e)}"
+        )  # noqa: E501
 
 
 @router.delete("/links/{link_id}", status_code=204)
 def delete_node_link(
+    response: Response,
     link_id: UUID = Path(..., description="The ID of the link to delete"),
-    link_service: NodeLinkService = Depends(get_node_link_service)
+    link_service: NodeLinkService = Depends(get_node_link_service),
 ):
     """
     Delete a structure_node link.
 
     Removes the relationship between two structure_nodes. This operation cannot be undone.  # noqa: E501
     """
+    response.headers["Deprecation"] = "true"
+    response.headers["Sunset"] = "Phase 3"
     from api.graph import invalidate_graph_cache
 
     try:
@@ -419,18 +527,25 @@ def delete_node_link(
             invalidate_graph_cache()
             return  # Return empty response with 204 status
         else:
-            raise HTTPException(status_code=404, detail="StructureNode link not found")  # noqa: E501
+            raise HTTPException(
+                status_code=404, detail="StructureNode link not found"
+            )  # noqa: E501
 
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")  # noqa: E501
+        raise HTTPException(
+            status_code=500, detail=f"Internal server error: {str(e)}"
+        )  # noqa: E501
 
 
 @router.get("/{node_id}", response_model=NodeOut)
 def get_node(
-    node_id: UUID = Path(..., description="The ID of the structure_node to retrieve"),  # noqa: E501
-    node_service: NodeService = Depends(get_node_service_simple)
+    response: Response,
+    node_id: UUID = Path(
+        ..., description="The ID of the structure_node to retrieve"
+    ),  # noqa: E501
+    node_service: NodeService = Depends(get_node_service_simple),
 ):
     """
     Get a specific structure_node by ID.
@@ -438,10 +553,14 @@ def get_node(
     Returns the complete structure_node information including embeddings,
     hierarchy information, and metadata.
     """
+    response.headers["Deprecation"] = "true"
+    response.headers["Sunset"] = "Phase 3"
     try:
         structure_node = node_service.get_node(str(node_id))
         if not structure_node:
-            raise HTTPException(status_code=404, detail="StructureNode not found")  # noqa: E501
+            raise HTTPException(
+                status_code=404, detail="StructureNode not found"
+            )  # noqa: E501
 
         return to_node_out(structure_node)
 
@@ -455,14 +574,19 @@ def get_node(
         # Re-raise HTTPException without catching it
         raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")  # noqa: E501
+        raise HTTPException(
+            status_code=500, detail=f"Internal server error: {str(e)}"
+        )  # noqa: E501
 
 
 @router.put("/{node_id}", response_model=NodeOut)
 def update_node(
-    node_id: UUID = Path(..., description="The ID of the structure_node to update"),  # noqa: E501
+    response: Response,
+    node_id: UUID = Path(
+        ..., description="The ID of the structure_node to update"
+    ),  # noqa: E501
     node_update: NodeUpdate = ...,
-    node_service: NodeService = Depends(get_node_service)
+    node_service: NodeService = Depends(get_node_service),
 ):
     """
     Update a structure_node.
@@ -470,6 +594,8 @@ def update_node(
     Supports updating title, definition, parent relationships, and structural predicates.  # noqa: E501
     Circular reference validation is automatically enforced.
     """
+    response.headers["Deprecation"] = "true"
+    response.headers["Sunset"] = "Phase 3"
     from api.graph import invalidate_graph_cache
 
     try:
@@ -480,9 +606,13 @@ def update_node(
         if node_update.definition is not None:
             update_data["definition"] = node_update.definition
         if node_update.parent_node_id is not None:
-            update_data["parent_node_id"] = uuid_to_str(node_update.parent_node_id)  # noqa: E501
+            update_data["parent_node_id"] = uuid_to_str(
+                node_update.parent_node_id
+            )  # noqa: E501
         if node_update.structural_predicate_id is not None:
-            update_data["structural_predicate_id"] = uuid_to_str(node_update.structural_predicate_id)  # noqa: E501
+            update_data["structural_predicate_id"] = uuid_to_str(
+                node_update.structural_predicate_id
+            )  # noqa: E501
 
         updated_node = node_service.update_node(str(node_id), update_data)
 
@@ -507,13 +637,18 @@ def update_node(
         # Re-raise HTTPException without catching it
         raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")  # noqa: E501
+        raise HTTPException(
+            status_code=500, detail=f"Internal server error: {str(e)}"
+        )  # noqa: E501
 
 
 @router.delete("/{node_id}", status_code=204)
 def delete_node(
-    node_id: UUID = Path(..., description="The ID of the structure_node to delete"),  # noqa: E501
-    node_service: NodeService = Depends(get_node_service)
+    response: Response,
+    node_id: UUID = Path(
+        ..., description="The ID of the structure_node to delete"
+    ),  # noqa: E501
+    node_service: NodeService = Depends(get_node_service),
 ):
     """
     Delete a structure_node and its children.
@@ -521,6 +656,8 @@ def delete_node(
     This operation cascades to all child structure_nodes and their relationships.  # noqa: E501
     Use with caution as this operation cannot be undone.
     """
+    response.headers["Deprecation"] = "true"
+    response.headers["Sunset"] = "Phase 3"
     from api.graph import invalidate_graph_cache
 
     try:
@@ -530,13 +667,18 @@ def delete_node(
             invalidate_graph_cache()
             return  # Return empty response with 204 status
         else:
-            raise HTTPException(status_code=404, detail="StructureNode not found")  # noqa: E501
+            raise HTTPException(
+                status_code=404, detail="StructureNode not found"
+            )  # noqa: E501
 
     except NotFoundError as e:
         raise HTTPException(status_code=404, detail=str(e))
     except ValueError as e:
         error_message = str(e)
-        if "unique" in error_message.lower() or "already exists" in error_message.lower():  # noqa: E501
+        if (
+            "unique" in error_message.lower()
+            or "already exists" in error_message.lower()
+        ):  # noqa: E501
             return conflict_error_response(error_message)
         else:
             raise HTTPException(status_code=400, detail=error_message)
@@ -544,14 +686,17 @@ def delete_node(
         # Re-raise HTTPException without catching it
         raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")  # noqa: E501
+        raise HTTPException(
+            status_code=500, detail=f"Internal server error: {str(e)}"
+        )  # noqa: E501
 
 
 # Attribute endpoints
 @router.get("/{node_id}/attributes", response_model=List[ResolvedAttribute])
 def get_node_attributes(
+    response: Response,
     node_id: UUID = Path(..., description="The ID of the structure node"),
-    node_service: NodeService = Depends(get_node_service)
+    node_service: NodeService = Depends(get_node_service),
 ):
     """
     Get resolved attributes for a node (local + inherited).
@@ -570,7 +715,10 @@ def get_node_attributes(
         404: If structure node not found
         500: If an unexpected error occurs
     """
+    response.headers["Deprecation"] = "true"
+    response.headers["Sunset"] = "Phase 3"
     from utils.logger import get_logger
+
     logger = get_logger(__name__)
 
     try:
@@ -578,15 +726,21 @@ def get_node_attributes(
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))
     except Exception as e:
-        logger.error(f"Unexpected error resolving attributes for node {node_id}: {type(e).__name__}: {e}", exc_info=True)  # noqa: E501
-        raise HTTPException(status_code=500, detail="Failed to retrieve attributes. Please try again.")  # noqa: E501
+        logger.error(
+            f"Unexpected error resolving attributes for node {node_id}: {type(e).__name__}: {e}",
+            exc_info=True,
+        )  # noqa: E501
+        raise HTTPException(
+            status_code=500, detail="Failed to retrieve attributes. Please try again."
+        )  # noqa: E501
 
 
 @router.post("/{node_id}/attributes", response_model=NodeOut)
 def set_node_attributes(
+    response: Response,
     node_id: UUID = Path(..., description="The ID of the structure node"),
     request: SetNodeAttributesRequest = ...,
-    node_service: NodeService = Depends(get_node_service)
+    node_service: NodeService = Depends(get_node_service),
 ):
     """
     Set local attributes on a node (replaces existing attributes).
@@ -614,14 +768,15 @@ def set_node_attributes(
         409: If expected_version is provided and doesn't match current version (conflict)  # noqa: E501
         500: If an unexpected error occurs
     """
+    response.headers["Deprecation"] = "true"
+    response.headers["Sunset"] = "Phase 3"
     from utils.logger import get_logger
+
     logger = get_logger(__name__)
 
     try:
         node = node_service.set_node_attributes(
-            node_id,
-            request.attributes,
-            expected_version=request.expected_version
+            node_id, request.attributes, expected_version=request.expected_version
         )
         return to_node_out(node)
     except ValueError as e:
@@ -631,15 +786,21 @@ def set_node_attributes(
     except ConflictError as e:
         return conflict_error_response(str(e))
     except Exception as e:
-        logger.error(f"Unexpected error setting attributes for node {node_id}: {type(e).__name__}: {e}", exc_info=True)  # noqa: E501
-        raise HTTPException(status_code=500, detail="Failed to set attributes. Please try again.")  # noqa: E501
+        logger.error(
+            f"Unexpected error setting attributes for node {node_id}: {type(e).__name__}: {e}",
+            exc_info=True,
+        )  # noqa: E501
+        raise HTTPException(
+            status_code=500, detail="Failed to set attributes. Please try again."
+        )  # noqa: E501
 
 
 @router.delete("/{node_id}/attributes/{key}", response_model=NodeOut)
 def remove_node_attribute(
+    response: Response,
     node_id: UUID = Path(..., description="The ID of the structure node"),
     key: str = Path(..., description="The attribute key to remove"),
-    node_service: NodeService = Depends(get_node_service)
+    node_service: NodeService = Depends(get_node_service),
 ):
     """
     Remove a specific attribute by key.
@@ -659,7 +820,10 @@ def remove_node_attribute(
         404: If structure node not found
         500: If an unexpected error occurs
     """
+    response.headers["Deprecation"] = "true"
+    response.headers["Sunset"] = "Phase 3"
     from utils.logger import get_logger
+
     logger = get_logger(__name__)
 
     try:
@@ -668,16 +832,26 @@ def remove_node_attribute(
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))
     except Exception as e:
-        logger.error(f"Unexpected error removing attribute {key} from node {node_id}: {type(e).__name__}: {e}", exc_info=True)  # noqa: E501
-        raise HTTPException(status_code=500, detail="Failed to remove attribute. Please try again.")  # noqa: E501
+        logger.error(
+            f"Unexpected error removing attribute {key} from node {node_id}: {type(e).__name__}: {e}",
+            exc_info=True,
+        )  # noqa: E501
+        raise HTTPException(
+            status_code=500, detail="Failed to remove attribute. Please try again."
+        )  # noqa: E501
 
 
 # Reference Links endpoints
-@router.post("/{node_id}/reference_links", response_model=List[ReferenceLink], status_code=200)  # noqa: E501
+@router.post(
+    "/{node_id}/reference_links", response_model=List[ReferenceLink], status_code=200
+)  # noqa: E501
 def add_reference_links(
+    response: Response,
     node_id: UUID = Path(..., description="The ID of the structure node"),
     links: List[ReferenceLink] = ...,
-    reference_link_service: ReferenceLinkService = Depends(get_reference_link_service)  # noqa: E501
+    reference_link_service: ReferenceLinkService = Depends(
+        get_reference_link_service
+    ),  # noqa: E501
 ):
     """
     Add reference links to a structure node.
@@ -698,11 +872,16 @@ def add_reference_links(
         404: If structure node not found
         500: If an unexpected error occurs
     """
+    response.headers["Deprecation"] = "true"
+    response.headers["Sunset"] = "Phase 3"
     from utils.logger import get_logger
+
     logger = get_logger(__name__)
 
     try:
-        result = reference_link_service.add_reference_links(str(node_id), links)  # noqa: E501
+        result = reference_link_service.add_reference_links(
+            str(node_id), links
+        )  # noqa: E501
         return result
 
     except NotFoundError as e:
@@ -714,15 +893,25 @@ def add_reference_links(
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Unexpected error adding reference links to node {node_id}: {e}", exc_info=True)  # noqa: E501
-        raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")  # noqa: E501
+        logger.error(
+            f"Unexpected error adding reference links to node {node_id}: {e}",
+            exc_info=True,
+        )  # noqa: E501
+        raise HTTPException(
+            status_code=500, detail=f"Internal server error: {str(e)}"
+        )  # noqa: E501
 
 
-@router.delete("/{node_id}/reference_links", response_model=List[ReferenceLink], status_code=200)  # noqa: E501
+@router.delete(
+    "/{node_id}/reference_links", response_model=List[ReferenceLink], status_code=200
+)  # noqa: E501
 def remove_reference_links(
+    response: Response,
     node_id: UUID = Path(..., description="The ID of the structure node"),
     links: List[ReferenceLink] = ...,
-    reference_link_service: ReferenceLinkService = Depends(get_reference_link_service)  # noqa: E501
+    reference_link_service: ReferenceLinkService = Depends(
+        get_reference_link_service
+    ),  # noqa: E501
 ):
     """
     Remove reference links from a structure node.
@@ -741,11 +930,16 @@ def remove_reference_links(
         404: If structure node not found
         500: If an unexpected error occurs
     """
+    response.headers["Deprecation"] = "true"
+    response.headers["Sunset"] = "Phase 3"
     from utils.logger import get_logger
+
     logger = get_logger(__name__)
 
     try:
-        result = reference_link_service.remove_reference_links(str(node_id), links)  # noqa: E501
+        result = reference_link_service.remove_reference_links(
+            str(node_id), links
+        )  # noqa: E501
         return result
 
     except NotFoundError as e:
@@ -755,14 +949,22 @@ def remove_reference_links(
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Unexpected error removing reference links from node {node_id}: {e}", exc_info=True)  # noqa: E501
-        raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")  # noqa: E501
+        logger.error(
+            f"Unexpected error removing reference links from node {node_id}: {e}",
+            exc_info=True,
+        )  # noqa: E501
+        raise HTTPException(
+            status_code=500, detail=f"Internal server error: {str(e)}"
+        )  # noqa: E501
 
 
 @router.get("/{node_id}/reference_links", response_model=List[ReferenceLink])
 def get_reference_links(
+    response: Response,
     node_id: UUID = Path(..., description="The ID of the structure node"),
-    reference_link_service: ReferenceLinkService = Depends(get_reference_link_service)  # noqa: E501
+    reference_link_service: ReferenceLinkService = Depends(
+        get_reference_link_service
+    ),  # noqa: E501
 ):
     """
     Get all reference links for a structure node.
@@ -780,7 +982,10 @@ def get_reference_links(
         404: If structure node not found
         500: If an unexpected error occurs
     """
+    response.headers["Deprecation"] = "true"
+    response.headers["Sunset"] = "Phase 3"
     from utils.logger import get_logger
+
     logger = get_logger(__name__)
 
     try:
@@ -792,14 +997,20 @@ def get_reference_links(
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Unexpected error getting reference links for node {node_id}: {e}", exc_info=True)  # noqa: E501
-        raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")  # noqa: E501
+        logger.error(
+            f"Unexpected error getting reference links for node {node_id}: {e}",
+            exc_info=True,
+        )  # noqa: E501
+        raise HTTPException(
+            status_code=500, detail=f"Internal server error: {str(e)}"
+        )  # noqa: E501
 
 
 @router.get("/{node_id}/word_senses", response_model=List[WordSense])
 def get_word_senses(
+    response: Response,
     node_id: UUID = Path(..., description="The ID of the structure node"),
-    word_sense_service: WordSenseService = Depends(get_word_sense_service)
+    word_sense_service: WordSenseService = Depends(get_word_sense_service),
 ):
     """
     Get all word senses for a structure node.
@@ -821,7 +1032,10 @@ def get_word_senses(
         404: If structure node not found
         500: If an unexpected error occurs
     """
+    response.headers["Deprecation"] = "true"
+    response.headers["Sunset"] = "Phase 3"
     from utils.logger import get_logger
+
     logger = get_logger(__name__)
 
     try:
@@ -837,15 +1051,21 @@ def get_word_senses(
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Unexpected error getting word senses for node {node_id}: {e}", exc_info=True)  # noqa: E501
-        raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")  # noqa: E501
+        logger.error(
+            f"Unexpected error getting word senses for node {node_id}: {e}",
+            exc_info=True,
+        )  # noqa: E501
+        raise HTTPException(
+            status_code=500, detail=f"Internal server error: {str(e)}"
+        )  # noqa: E501
 
 
 @router.put("/{node_id}/word_senses", response_model=List[WordSense])
 def update_word_senses(
+    response: Response,
     node_id: UUID = Path(..., description="The ID of the structure node"),
     update_request: SelectedWordSensesUpdate = ...,
-    word_sense_service: WordSenseService = Depends(get_word_sense_service)
+    word_sense_service: WordSenseService = Depends(get_word_sense_service),
 ):
     """
     Update selected word senses for a structure node.
@@ -869,13 +1089,15 @@ def update_word_senses(
         404: If structure node not found
         500: If an unexpected error occurs
     """
+    response.headers["Deprecation"] = "true"
+    response.headers["Sunset"] = "Phase 3"
     from utils.logger import get_logger
+
     logger = get_logger(__name__)
 
     try:
         result = word_sense_service.update_selected_senses(
-            str(node_id),
-            update_request.selected_senses
+            str(node_id), update_request.selected_senses
         )
         return result
 
@@ -888,17 +1110,31 @@ def update_word_senses(
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Unexpected error updating word senses for node {node_id}: {e}", exc_info=True)  # noqa: E501
-        raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")  # noqa: E501
+        logger.error(
+            f"Unexpected error updating word senses for node {node_id}: {e}",
+            exc_info=True,
+        )  # noqa: E501
+        raise HTTPException(
+            status_code=500, detail=f"Internal server error: {str(e)}"
+        )  # noqa: E501
 
 
 # Reference Link Validation endpoints
 @router.post("/reference_links/validate", response_model=dict)
 def validate_all_reference_links(
-    check_existence: bool = Query(True, description="Check if references exist in reference.db"),  # noqa: E501
-    limit: Optional[int] = Query(None, ge=1, le=1000, description="Limit number of nodes to validate"),  # noqa: E501
-    batch_size: int = Query(100, ge=10, le=1000, description="Number of nodes to process per batch"),  # noqa: E501
-    reference_link_service: ReferenceLinkService = Depends(get_reference_link_service)  # noqa: E501
+    response: Response,
+    check_existence: bool = Query(
+        True, description="Check if references exist in reference.db"
+    ),  # noqa: E501
+    limit: Optional[int] = Query(
+        None, ge=1, le=1000, description="Limit number of nodes to validate"
+    ),  # noqa: E501
+    batch_size: int = Query(
+        100, ge=10, le=1000, description="Number of nodes to process per batch"
+    ),  # noqa: E501
+    reference_link_service: ReferenceLinkService = Depends(
+        get_reference_link_service
+    ),  # noqa: E501
 ):
     """
     Validate all reference links across all structure nodes.
@@ -920,29 +1156,39 @@ def validate_all_reference_links(
     Returns:
         Validation results with statistics and list of problematic nodes
     """
+    response.headers["Deprecation"] = "true"
+    response.headers["Sunset"] = "Phase 3"
     from utils.logger import get_logger
+
     logger = get_logger(__name__)
 
     try:
-        logger.info(f"Starting bulk reference link validation (check_existence={check_existence}, limit={limit}, batch_size={batch_size})")  # noqa: E501
+        logger.info(
+            f"Starting bulk reference link validation (check_existence={check_existence}, limit={limit}, batch_size={batch_size})"
+        )  # noqa: E501
         result = reference_link_service.validate_all_reference_links(
-            check_existence=check_existence,
-            limit=limit,
-            batch_size=batch_size
+            check_existence=check_existence, limit=limit, batch_size=batch_size
         )
 
         return result
 
     except Exception as e:
         logger.error(f"Error during bulk validation: {e}", exc_info=True)
-        raise HTTPException(status_code=500, detail=f"Validation error: {str(e)}")  # noqa: E501
+        raise HTTPException(
+            status_code=500, detail=f"Validation error: {str(e)}"
+        )  # noqa: E501
 
 
 @router.post("/{node_id}/reference_links/validate", response_model=dict)
 def validate_node_reference_links(
+    response: Response,
     node_id: UUID = Path(..., description="The ID of the structure node"),
-    check_existence: bool = Query(True, description="Check if references exist in reference.db"),  # noqa: E501
-    reference_link_service: ReferenceLinkService = Depends(get_reference_link_service)  # noqa: E501
+    check_existence: bool = Query(
+        True, description="Check if references exist in reference.db"
+    ),  # noqa: E501
+    reference_link_service: ReferenceLinkService = Depends(
+        get_reference_link_service
+    ),  # noqa: E501
 ):
     """
     Validate reference links for a specific structure node.
@@ -963,13 +1209,15 @@ def validate_node_reference_links(
         404: If structure node not found
         500: If an unexpected error occurs
     """
+    response.headers["Deprecation"] = "true"
+    response.headers["Sunset"] = "Phase 3"
     from utils.logger import get_logger
+
     logger = get_logger(__name__)
 
     try:
         result = reference_link_service.validate_node_reference_links(
-            str(node_id),
-            check_existence=check_existence
+            str(node_id), check_existence=check_existence
         )
         return result
 
@@ -978,15 +1226,20 @@ def validate_node_reference_links(
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Error validating reference links for node {node_id}: {e}", exc_info=True)  # noqa: E501
-        raise HTTPException(status_code=500, detail=f"Validation error: {str(e)}")  # noqa: E501
+        logger.error(
+            f"Error validating reference links for node {node_id}: {e}", exc_info=True
+        )  # noqa: E501
+        raise HTTPException(
+            status_code=500, detail=f"Validation error: {str(e)}"
+        )  # noqa: E501
 
 
 # Additional utility endpoints
 @router.post("/move", response_model=MoveNodesResponse)
 def move_nodes(
+    response: Response,
     move_request: MoveNodesRequest,
-    node_service: NodeService = Depends(get_node_service)
+    node_service: NodeService = Depends(get_node_service),
 ):
     """
     Move structure_nodes to a new parent location with automatic type conversion.  # noqa: E501
@@ -1011,42 +1264,65 @@ def move_nodes(
     The move operation is atomic - either all structure_nodes are moved successfully,  # noqa: E501
     or the entire operation is rolled back.
     """
+    response.headers["Deprecation"] = "true"
+    response.headers["Sunset"] = "Phase 3"
     try:
         # Convert UUID objects to strings for service
         node_ids = [str(node_id) for node_id in move_request.node_ids]
-        target_parent_id = str(move_request.target_parent_id) if move_request.target_parent_id else None  # noqa: E501
+        target_parent_id = (
+            str(move_request.target_parent_id)
+            if move_request.target_parent_id
+            else None
+        )  # noqa: E501
 
         result = node_service.move_nodes(
             node_ids=node_ids,
             target_parent_id=target_parent_id,
             move_children=move_request.move_children,
-            handle_conflicts=move_request.handle_conflicts
+            handle_conflicts=move_request.handle_conflicts,
         )
 
         return MoveNodesResponse(
-            moved_nodes=[to_node_out(node) for node in result['moved_nodes']],
-            updated_children=[to_node_out(child) for child in result['updated_children']],  # noqa: E501
-            converted_nodes=[to_node_out(node) for node in result.get('converted_nodes', [])],  # noqa: E501
-            warnings=result['warnings'],
-            errors=result['errors']
+            moved_nodes=[
+                to_node_out(node)
+                for node in result.get("moved_nodes", result.get("moved_entities", []))
+            ],  # noqa: E501
+            updated_children=[
+                to_node_out(child) for child in result.get("updated_children", [])
+            ],  # noqa: E501
+            converted_nodes=[
+                to_node_out(node)
+                for node in result.get(
+                    "converted_nodes", result.get("converted_entities", [])
+                )
+            ],  # noqa: E501
+            warnings=result.get("warnings", []),
+            errors=result.get("errors", []),
         )
 
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")  # noqa: E501
+        raise HTTPException(
+            status_code=500, detail=f"Internal server error: {str(e)}"
+        )  # noqa: E501
 
 
 @router.get("/{node_id}/children", response_model=List[NodeOut])
 def get_node_children(
-    node_id: UUID = Path(..., description="The ID of the parent structure_node"),  # noqa: E501
-    node_service: NodeService = Depends(get_node_service_simple)
+    response: Response,
+    node_id: UUID = Path(
+        ..., description="The ID of the parent structure_node"
+    ),  # noqa: E501
+    node_service: NodeService = Depends(get_node_service_simple),
 ):
     """
     Get all direct children of a structure_node.
 
     Useful for building hierarchical views of the structure_node structure.
     """
+    response.headers["Deprecation"] = "true"
+    response.headers["Sunset"] = "Phase 3"
     try:
         children = node_service.get_node_children(str(node_id))
         return [to_node_out(child) for child in children]
@@ -1054,13 +1330,16 @@ def get_node_children(
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")  # noqa: E501
+        raise HTTPException(
+            status_code=500, detail=f"Internal server error: {str(e)}"
+        )  # noqa: E501
 
 
 @router.get("/{node_id}/ancestors", response_model=List[NodeOut])
 def get_node_ancestors(
+    response: Response,
     node_id: UUID = Path(..., description="The ID of the structure_node"),
-    node_service: NodeService = Depends(get_node_service_simple)
+    node_service: NodeService = Depends(get_node_service_simple),
 ):
     """
     Get all ancestors of a structure_node up to the root.
@@ -1068,6 +1347,8 @@ def get_node_ancestors(
     Returns the path from the root layer down to the specified structure_node's parent.  # noqa: E501
     Useful for breadcrumb navigation and understanding structure_node context.
     """
+    response.headers["Deprecation"] = "true"
+    response.headers["Sunset"] = "Phase 3"
     try:
         ancestors = node_service.get_node_ancestors(str(node_id))
         return [to_node_out(ancestor) for ancestor in ancestors]
@@ -1075,4 +1356,6 @@ def get_node_ancestors(
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")  # noqa: E501
+        raise HTTPException(
+            status_code=500, detail=f"Internal server error: {str(e)}"
+        )  # noqa: E501

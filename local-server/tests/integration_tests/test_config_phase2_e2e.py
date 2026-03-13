@@ -26,15 +26,15 @@ class TestFreshInstallationE2E:
         """Test complete workflow from config creation to database operations on fresh install."""  # noqa: E501
         with tempfile.TemporaryDirectory() as tmpdir:
             # Step 1: User creates config file for fresh installation
-            config_file = os.path.join(tmpdir, 'config.json')
-            datafiles_dir = os.path.join(tmpdir, 'datafiles')
+            config_file = os.path.join(tmpdir, "config.json")
+            datafiles_dir = os.path.join(tmpdir, "datafiles")
 
             config_data = {
-                'database': {
-                    'default_url': f'sqlite:///{datafiles_dir}/local.db',
-                    'reference_path': f'{datafiles_dir}/reference.db',
-                    'reference_cache_path': f'{datafiles_dir}/cache.db',
-                    'operations_path': f'{datafiles_dir}/operations.db'
+                "database": {
+                    "default_url": f"sqlite:///{datafiles_dir}/local.db",
+                    "reference_path": f"{datafiles_dir}/reference.db",
+                    "reference_cache_path": f"{datafiles_dir}/cache.db",
+                    "operations_path": f"{datafiles_dir}/operations.db",
                 }
             }
 
@@ -44,7 +44,9 @@ class TestFreshInstallationE2E:
             config_manager.save()
 
             # Step 2: Verify no datafiles directory exists (fresh install)
-            assert not os.path.exists(datafiles_dir), "Fresh install should have no datafiles directory"  # noqa: E501
+            assert not os.path.exists(
+                datafiles_dir
+            ), "Fresh install should have no datafiles directory"  # noqa: E501
 
             # Step 3: Application starts and initializes database managers
             from pipeline.manager import PipelineDatabaseManager
@@ -57,18 +59,23 @@ class TestFreshInstallationE2E:
             )
 
             # Step 4: Verify directory was created automatically
-            assert os.path.exists(datafiles_dir), "Datafiles directory should be created automatically"  # noqa: E501
+            assert os.path.exists(
+                datafiles_dir
+            ), "Datafiles directory should be created automatically"  # noqa: E501
 
             # Initialize reference manager
             ref_config = ReferenceConfig()
             ref_mgr = ReferenceManager(
-                ref_config,
-                db_path=config_manager.settings.database.reference_path
+                ref_config, db_path=config_manager.settings.database.reference_path
             )
 
             # Step 5: Verify all databases were created
-            assert os.path.exists(config_manager.settings.database.operations_path)  # noqa: E501
-            assert os.path.exists(config_manager.settings.database.reference_path)  # noqa: E501
+            assert os.path.exists(
+                config_manager.settings.database.operations_path
+            )  # noqa: E501
+            assert os.path.exists(
+                config_manager.settings.database.reference_path
+            )  # noqa: E501
 
             # Step 6: Verify databases are functional
             # Test operations database
@@ -76,8 +83,11 @@ class TestFreshInstallationE2E:
 
             # Test reference database - verify tables exist
             from sqlalchemy import text
+
             with ref_mgr.engine.connect() as ref_conn:
-                result = ref_conn.execute(text("SELECT name FROM sqlite_master WHERE type='table'"))  # noqa: E501
+                result = ref_conn.execute(
+                    text("SELECT name FROM sqlite_master WHERE type='table'")
+                )  # noqa: E501
                 tables = result.fetchall()
                 assert len(tables) > 0, "Reference database should have tables"
 
@@ -97,8 +107,8 @@ class TestFreshInstallationE2E:
     def test_fresh_install_with_all_database_managers(self):
         """Test fresh installation initializing all database managers."""
         with tempfile.TemporaryDirectory() as tmpdir:
-            datafiles_dir = os.path.join(tmpdir, 'datafiles')
-            datasets_dir = os.path.join(tmpdir, 'datasets')
+            datafiles_dir = os.path.join(tmpdir, "datafiles")
+            datasets_dir = os.path.join(tmpdir, "datasets")
 
             # Verify clean slate
             assert not os.path.exists(datafiles_dir)
@@ -111,16 +121,17 @@ class TestFreshInstallationE2E:
             from dataset.manager import DatasetManager
 
             # Create managers
-            operations_path = os.path.join(datafiles_dir, 'operations.db')
-            reference_path = os.path.join(datafiles_dir, 'reference.db')
-            config_path = os.path.join(tmpdir, 'datasets.json')
+            operations_path = os.path.join(datafiles_dir, "operations.db")
+            reference_path = os.path.join(datafiles_dir, "reference.db")
+            config_path = os.path.join(tmpdir, "datasets.json")
 
-            pipeline_mgr = PipelineDatabaseManager(operations_db_path=operations_path)  # noqa: E501
+            pipeline_mgr = PipelineDatabaseManager(
+                operations_db_path=operations_path
+            )  # noqa: E501
             ref_config = ReferenceConfig()
             ref_mgr = ReferenceManager(ref_config, db_path=reference_path)
             DatasetManager(
-                datasets_config_path=config_path,
-                datasets_directory=datasets_dir
+                datasets_config_path=config_path, datasets_directory=datasets_dir
             )
 
             # Verify all directories were created
@@ -142,8 +153,8 @@ class TestApplicationRestartE2E:
     def test_restart_with_existing_directories(self):
         """Test application restart when directories already exist."""
         with tempfile.TemporaryDirectory() as tmpdir:
-            datafiles_dir = os.path.join(tmpdir, 'datafiles')
-            operations_path = os.path.join(datafiles_dir, 'operations.db')
+            datafiles_dir = os.path.join(tmpdir, "datafiles")
+            operations_path = os.path.join(datafiles_dir, "operations.db")
 
             # First startup - creates directory
             from pipeline.manager import PipelineDatabaseManager
@@ -165,8 +176,8 @@ class TestApplicationRestartE2E:
     def test_restart_preserves_existing_data(self):
         """Test that application restart preserves existing database data."""
         with tempfile.TemporaryDirectory() as tmpdir:
-            datafiles_dir = os.path.join(tmpdir, 'datafiles')
-            operations_path = os.path.join(datafiles_dir, 'operations.db')
+            datafiles_dir = os.path.join(tmpdir, "datafiles")
+            operations_path = os.path.join(datafiles_dir, "operations.db")
 
             from pipeline.manager import PipelineDatabaseManager
 
@@ -190,27 +201,27 @@ class TestMigrationScenarioE2E:
     def test_migration_from_manual_directory_creation(self):
         """Test migration from manually created directories to automated creation."""  # noqa: E501
         with tempfile.TemporaryDirectory() as tmpdir:
-            datafiles_dir = os.path.join(tmpdir, 'datafiles')
+            datafiles_dir = os.path.join(tmpdir, "datafiles")
 
             # Simulate old scenario - user manually creates directory
             os.makedirs(datafiles_dir, exist_ok=True)
 
             # Place a marker file to verify directory existed before
-            marker_file = os.path.join(datafiles_dir, 'existing_file.txt')
-            with open(marker_file, 'w') as f:
-                f.write('I existed before automated creation')
+            marker_file = os.path.join(datafiles_dir, "existing_file.txt")
+            with open(marker_file, "w") as f:
+                f.write("I existed before automated creation")
 
             # Now use automated directory creation
             from pipeline.manager import PipelineDatabaseManager
 
-            operations_path = os.path.join(datafiles_dir, 'operations.db')
+            operations_path = os.path.join(datafiles_dir, "operations.db")
             mgr = PipelineDatabaseManager(operations_db_path=operations_path)
 
             # Verify existing files are preserved
             assert os.path.exists(marker_file)
-            with open(marker_file, 'r') as f:
+            with open(marker_file, "r") as f:
                 content = f.read()
-                assert content == 'I existed before automated creation'
+                assert content == "I existed before automated creation"
 
             # Verify new database was created
             assert os.path.exists(operations_path)
@@ -220,11 +231,11 @@ class TestMigrationScenarioE2E:
     def test_migration_with_partial_database_files(self):
         """Test migration when some database files exist but directory needs verification."""  # noqa: E501
         with tempfile.TemporaryDirectory() as tmpdir:
-            datafiles_dir = os.path.join(tmpdir, 'datafiles')
+            datafiles_dir = os.path.join(tmpdir, "datafiles")
             os.makedirs(datafiles_dir, exist_ok=True)
 
             # Create one database manually
-            operations_path = os.path.join(datafiles_dir, 'operations.db')
+            operations_path = os.path.join(datafiles_dir, "operations.db")
             conn = sqlite3.connect(operations_path)
             conn.execute("CREATE TABLE test (id INTEGER)")
             conn.commit()
@@ -236,11 +247,13 @@ class TestMigrationScenarioE2E:
             from reference_db.config import ReferenceConfig
 
             # Pipeline manager with existing DB
-            pipeline_mgr = PipelineDatabaseManager(operations_db_path=operations_path)  # noqa: E501
+            pipeline_mgr = PipelineDatabaseManager(
+                operations_db_path=operations_path
+            )  # noqa: E501
             assert pipeline_mgr.engine is not None
 
             # Reference manager creating new DB in same directory
-            reference_path = os.path.join(datafiles_dir, 'reference.db')
+            reference_path = os.path.join(datafiles_dir, "reference.db")
             ref_config = ReferenceConfig()
             ref_mgr = ReferenceManager(ref_config, db_path=reference_path)
 
@@ -260,21 +273,21 @@ class TestProductionDeploymentE2E:
         """Test deployment scenario similar to Docker container with clean filesystem."""  # noqa: E501
         with tempfile.TemporaryDirectory() as tmpdir:
             # Simulate Docker volume mount point
-            app_dir = os.path.join(tmpdir, 'app')
-            data_volume = os.path.join(tmpdir, 'data')
+            app_dir = os.path.join(tmpdir, "app")
+            data_volume = os.path.join(tmpdir, "data")
             os.makedirs(app_dir, exist_ok=True)
             os.makedirs(data_volume, exist_ok=True)
 
-            datafiles_dir = os.path.join(data_volume, 'datafiles')
+            datafiles_dir = os.path.join(data_volume, "datafiles")
 
             # Create config pointing to volume
-            config_file = os.path.join(app_dir, 'config.json')
+            config_file = os.path.join(app_dir, "config.json")
             config_data = {
-                'database': {
-                    'default_url': f'sqlite:///{datafiles_dir}/local.db',
-                    'reference_path': f'{datafiles_dir}/reference.db',
-                    'reference_cache_path': f'{datafiles_dir}/cache.db',
-                    'operations_path': f'{datafiles_dir}/operations.db'
+                "database": {
+                    "default_url": f"sqlite:///{datafiles_dir}/local.db",
+                    "reference_path": f"{datafiles_dir}/reference.db",
+                    "reference_cache_path": f"{datafiles_dir}/cache.db",
+                    "operations_path": f"{datafiles_dir}/operations.db",
                 }
             }
 
@@ -292,14 +305,17 @@ class TestProductionDeploymentE2E:
             )
             ref_config = ReferenceConfig()
             ref_mgr = ReferenceManager(
-                ref_config,
-                db_path=config_manager.settings.database.reference_path
+                ref_config, db_path=config_manager.settings.database.reference_path
             )
 
             # Verify databases created in volume
             assert os.path.exists(datafiles_dir)
-            assert os.path.exists(config_manager.settings.database.operations_path)  # noqa: E501
-            assert os.path.exists(config_manager.settings.database.reference_path)  # noqa: E501
+            assert os.path.exists(
+                config_manager.settings.database.operations_path
+            )  # noqa: E501
+            assert os.path.exists(
+                config_manager.settings.database.reference_path
+            )  # noqa: E501
 
             # Clean up
             pipeline_mgr.engine.dispose()
@@ -309,22 +325,22 @@ class TestProductionDeploymentE2E:
         """Test deployment with multiple instances sharing configuration."""
         with tempfile.TemporaryDirectory() as tmpdir:
             # Shared config directory
-            shared_config_dir = os.path.join(tmpdir, 'shared')
+            shared_config_dir = os.path.join(tmpdir, "shared")
             os.makedirs(shared_config_dir, exist_ok=True)
 
             # Instance-specific data directories
-            instance1_dir = os.path.join(tmpdir, 'instance1', 'datafiles')
-            instance2_dir = os.path.join(tmpdir, 'instance2', 'datafiles')
+            instance1_dir = os.path.join(tmpdir, "instance1", "datafiles")
+            instance2_dir = os.path.join(tmpdir, "instance2", "datafiles")
 
             from pipeline.manager import PipelineDatabaseManager
 
             # Instance 1
-            pipeline1_path = os.path.join(instance1_dir, 'operations.db')
+            pipeline1_path = os.path.join(instance1_dir, "operations.db")
             mgr1 = PipelineDatabaseManager(operations_db_path=pipeline1_path)
             assert os.path.exists(instance1_dir)
 
             # Instance 2
-            pipeline2_path = os.path.join(instance2_dir, 'operations.db')
+            pipeline2_path = os.path.join(instance2_dir, "operations.db")
             mgr2 = PipelineDatabaseManager(operations_db_path=pipeline2_path)
             assert os.path.exists(instance2_dir)
 
@@ -345,15 +361,15 @@ class TestRealWorldWorkflowsE2E:
         """Test complete workflow: install, configure, create nodes, query data."""  # noqa: E501
         with tempfile.TemporaryDirectory() as tmpdir:
             # Setup
-            datafiles_dir = os.path.join(tmpdir, 'datafiles')
-            config_file = os.path.join(tmpdir, 'config.json')
+            datafiles_dir = os.path.join(tmpdir, "datafiles")
+            config_file = os.path.join(tmpdir, "config.json")
 
             config_data = {
-                'database': {
-                    'default_url': f'sqlite:///{datafiles_dir}/local.db',
-                    'reference_path': f'{datafiles_dir}/reference.db',
-                    'reference_cache_path': f'{datafiles_dir}/cache.db',
-                    'operations_path': f'{datafiles_dir}/operations.db'
+                "database": {
+                    "default_url": f"sqlite:///{datafiles_dir}/local.db",
+                    "reference_path": f"{datafiles_dir}/reference.db",
+                    "reference_cache_path": f"{datafiles_dir}/cache.db",
+                    "operations_path": f"{datafiles_dir}/operations.db",
                 }
             }
 
@@ -392,14 +408,14 @@ class TestRealWorldWorkflowsE2E:
         """Test backup and recovery workflow with directory structure."""
         with tempfile.TemporaryDirectory() as tmpdir:
             # Original installation
-            original_dir = os.path.join(tmpdir, 'original', 'datafiles')
-            backup_dir = os.path.join(tmpdir, 'backup')
-            recovery_dir = os.path.join(tmpdir, 'recovery', 'datafiles')
+            original_dir = os.path.join(tmpdir, "original", "datafiles")
+            backup_dir = os.path.join(tmpdir, "backup")
+            recovery_dir = os.path.join(tmpdir, "recovery", "datafiles")
 
             from pipeline.manager import PipelineDatabaseManager
 
             # Create original database
-            original_path = os.path.join(original_dir, 'operations.db')
+            original_path = os.path.join(original_dir, "operations.db")
             mgr1 = PipelineDatabaseManager(operations_db_path=original_path)
             assert os.path.exists(original_path)
             mgr1.engine.dispose()
@@ -415,13 +431,13 @@ class TestRealWorldWorkflowsE2E:
             assert not os.path.exists(recovery_dir)
 
             # Initialize new instance (creates directory)
-            recovery_path = os.path.join(recovery_dir, 'operations.db')
+            recovery_path = os.path.join(recovery_dir, "operations.db")
             mgr2 = PipelineDatabaseManager(operations_db_path=recovery_path)
             mgr2.engine.dispose()
 
             # Restore from backup
-            restored_path = os.path.join(recovery_dir, 'operations.db')
-            backup_db_path = os.path.join(backup_dir, 'operations.db')
+            restored_path = os.path.join(recovery_dir, "operations.db")
+            backup_db_path = os.path.join(backup_dir, "operations.db")
             shutil.copy(backup_db_path, restored_path)
 
             # Verify recovery - database file exists
@@ -432,16 +448,16 @@ class TestRealWorldWorkflowsE2E:
     def test_configuration_change_workflow(self):
         """Test workflow when user changes database paths in configuration."""
         with tempfile.TemporaryDirectory() as tmpdir:
-            config_file = os.path.join(tmpdir, 'config.json')
+            config_file = os.path.join(tmpdir, "config.json")
 
             # Original configuration
-            old_datafiles = os.path.join(tmpdir, 'old_datafiles')
+            old_datafiles = os.path.join(tmpdir, "old_datafiles")
             config_data = {
-                'database': {
-                    'default_url': f'sqlite:///{old_datafiles}/local.db',
-                    'reference_path': f'{old_datafiles}/reference.db',
-                    'reference_cache_path': f'{old_datafiles}/cache.db',
-                    'operations_path': f'{old_datafiles}/operations.db'
+                "database": {
+                    "default_url": f"sqlite:///{old_datafiles}/local.db",
+                    "reference_path": f"{old_datafiles}/reference.db",
+                    "reference_cache_path": f"{old_datafiles}/cache.db",
+                    "operations_path": f"{old_datafiles}/operations.db",
                 }
             }
 
@@ -452,22 +468,32 @@ class TestRealWorldWorkflowsE2E:
             # Create initial database
             from pipeline.manager import PipelineDatabaseManager
 
-            old_operations_path = config_manager.settings.database.operations_path  # noqa: E501
-            mgr1 = PipelineDatabaseManager(operations_db_path=old_operations_path)  # noqa: E501
+            old_operations_path = (
+                config_manager.settings.database.operations_path
+            )  # noqa: E501
+            mgr1 = PipelineDatabaseManager(
+                operations_db_path=old_operations_path
+            )  # noqa: E501
             assert os.path.exists(old_datafiles)
             mgr1.engine.dispose()
 
             # User changes configuration to new path
-            new_datafiles = os.path.join(tmpdir, 'new_datafiles')
-            config_manager.settings.database.operations_path = f'{new_datafiles}/operations.db'  # noqa: E501
+            new_datafiles = os.path.join(tmpdir, "new_datafiles")
+            config_manager.settings.database.operations_path = (
+                f"{new_datafiles}/operations.db"  # noqa: E501
+            )
             config_manager.save()
 
             # Verify new directory doesn't exist yet
             assert not os.path.exists(new_datafiles)
 
             # Application restarts with new config
-            new_operations_path = config_manager.settings.database.operations_path  # noqa: E501
-            mgr2 = PipelineDatabaseManager(operations_db_path=new_operations_path)  # noqa: E501
+            new_operations_path = (
+                config_manager.settings.database.operations_path
+            )  # noqa: E501
+            mgr2 = PipelineDatabaseManager(
+                operations_db_path=new_operations_path
+            )  # noqa: E501
 
             # New directory should be created automatically
             assert os.path.exists(new_datafiles)

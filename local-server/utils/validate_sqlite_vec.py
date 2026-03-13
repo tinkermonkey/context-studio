@@ -20,14 +20,14 @@ def validate_sqlite_vec():
 
     arch = platform.machine()
     print(f"✓ System Architecture: {arch}")
-    if arch != 'aarch64':
+    if arch != "aarch64":
         print(f"⚠️  Warning: Expected aarch64, got {arch}")
     else:
         print("✓ ARM64/aarch64 architecture confirmed")
 
     print(f"✓ SQLite Version: {sqlite3.sqlite_version}")
 
-    with tempfile.NamedTemporaryFile(suffix='.db', delete=False) as tmp:
+    with tempfile.NamedTemporaryFile(suffix=".db", delete=False) as tmp:
         db_path = tmp.name
 
     try:
@@ -50,7 +50,9 @@ def validate_sqlite_vec():
 
         test_vector = [0.1, 0.2, 0.3, 0.4]
         serialized = sqlite_vec.serialize_float32(test_vector)
-        length = conn.execute("SELECT vec_length(?)", [serialized]).fetchone()[0]  # noqa: E501
+        length = conn.execute("SELECT vec_length(?)", [serialized]).fetchone()[
+            0
+        ]  # noqa: E501
 
         if length == 4:
             print("✓ Vector serialization and length calculation working")
@@ -70,14 +72,16 @@ def validate_sqlite_vec():
             ORDER BY distance LIMIT 1
         """).fetchone()
 
-        if result and result[0] == 'vec1' and result[1] == 0.0:
+        if result and result[0] == "vec1" and result[1] == 0.0:
             print("✓ Vector similarity search working")
         else:
             print(f"❌ Vector search failed: {result}")
             return False
 
         print("=" * 50)
-        print("🎉 All validations passed! sqlite-vec is properly installed for ARM64")  # noqa: E501
+        print(
+            "🎉 All validations passed! sqlite-vec is properly installed for ARM64"
+        )  # noqa: E501
         return True
 
     except Exception as e:
@@ -85,7 +89,7 @@ def validate_sqlite_vec():
         return False
 
     finally:
-        if 'conn' in locals():
+        if "conn" in locals():
             conn.close()
         if os.path.exists(db_path):
             os.unlink(db_path)

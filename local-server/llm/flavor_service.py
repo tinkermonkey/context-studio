@@ -8,11 +8,11 @@ from sqlalchemy import text
 import uuid
 
 from .models import (
-    PipelineFlavor, 
-    CreatePipelineFlavorRequest, 
+    PipelineFlavor,
+    CreatePipelineFlavorRequest,
     UpdatePipelineFlavorRequest,
     PipelineType,
-    LLMConfig
+    LLMConfig,
 )
 from .exceptions import FlavorNotFoundError, FlavorValidationError
 from .default_flavors import DefaultFlavorProvider
@@ -22,21 +22,21 @@ from utils.logger import get_logger
 
 class PipelineFlavorService:
     """Service for managing pipeline flavors"""
-    
+
     def __init__(self):
         self.logger = get_logger(__name__)
-    
+
     def create_flavor(self, request: CreatePipelineFlavorRequest) -> PipelineFlavor:
         """Create a new pipeline flavor"""
         with get_pipeline_session() as db:
             # Check for duplicate title within pipeline
-            existing = db.execute(text("""
+            existing = db.execute(
+                text("""
                 SELECT id FROM pipeline_flavors
                 WHERE pipeline = :pipeline AND title = :title
-            """), {
-                "pipeline": request.pipeline.value,
-                "title": request.title
-            }).fetchone()
+            """),
+                {"pipeline": request.pipeline.value, "title": request.title},
+            ).fetchone()
 
             if existing:
                 raise FlavorValidationError(
@@ -47,7 +47,8 @@ class PipelineFlavorService:
             flavor_id = str(uuid.uuid4())
             now = datetime.now(timezone.utc)
 
-            db.execute(text("""
+            db.execute(
+                text("""
                 INSERT INTO pipeline_flavors (
                     id, pipeline, title, llm_provider, llm_model, llm_config,
                     system_prompt, user_prompt, version, enabled, created_at, updated_at
@@ -55,39 +56,50 @@ class PipelineFlavorService:
                     :id, :pipeline, :title, :llm_provider, :llm_model, :llm_config,
                     :system_prompt, :user_prompt, :version, :enabled, :created_at, :updated_at
                 )
-            """), {
-                "id": flavor_id,
-                "pipeline": request.pipeline.value,
-                "title": request.title,
-                "llm_provider": request.llm_provider,
-                "llm_model": request.llm_model,
-                "llm_config": request.llm_config.model_dump_json(),
-                "system_prompt": request.system_prompt,
-                "user_prompt": request.user_prompt,
-                "version": 1,
-                "enabled": request.enabled,
-                "created_at": now,
-                "updated_at": now
-            })
+            """),
+                {
+                    "id": flavor_id,
+                    "pipeline": request.pipeline.value,
+                    "title": request.title,
+                    "llm_provider": request.llm_provider,
+                    "llm_model": request.llm_model,
+                    "llm_config": request.llm_config.model_dump_json(),
+                    "system_prompt": request.system_prompt,
+                    "user_prompt": request.user_prompt,
+                    "version": 1,
+                    "enabled": request.enabled,
+                    "created_at": now,
+                    "updated_at": now,
+                },
+            )
 
             db.commit()
 
             # Return the created flavor
             return self.get_flavor_by_id(flavor_id)
-    
-    def update_flavor(self, flavor_id: str, request: UpdatePipelineFlavorRequest) -> PipelineFlavor:
+
+    def update_flavor(
+        self, flavor_id: str, request: UpdatePipelineFlavorRequest
+    ) -> PipelineFlavor:
         """Update an existing pipeline flavor"""
         with get_pipeline_session() as db:
             # Get existing flavor
-            existing = db.execute(text("""
+            existing = db.execute(
+                text("""
                 SELECT * FROM pipeline_flavors WHERE id = :id
-            """), {"id": flavor_id}).fetchone()
+            """),
+                {"id": flavor_id},
+            ).fetchone()
 
             if not existing:
                 raise FlavorNotFoundError(f"Flavor with ID '{flavor_id}' not found")
 
             # Check if trying to rename Default flavor
-            if existing[2] == "Default" and request.title and request.title != "Default":
+            if (
+                existing[2] == "Default"
+                and request.title
+                and request.title != "Default"
+            ):
                 raise FlavorValidationError("Cannot rename the Default flavor")
 
             # Build update query dynamically
@@ -128,23 +140,29 @@ class PipelineFlavorService:
                 update_fields.append("version = version + 1")
                 params["updated_at"] = datetime.now(timezone.utc)  # type: ignore
 
-                db.execute(text(f"""
+                db.execute(
+                    text(f"""
                     UPDATE pipeline_flavors
                     SET {', '.join(update_fields)}
                     WHERE id = :id
-                """), params)
+                """),
+                    params,
+                )
 
                 db.commit()
 
             return self.get_flavor_by_id(flavor_id)
-    
+
     def delete_flavor(self, flavor_id: str) -> bool:
         """Delete a pipeline flavor"""
         with get_pipeline_session() as db:
             # Check if it's the Default flavor
-            existing = db.execute(text("""
+            existing = db.execute(
+                text("""
                 SELECT title FROM pipeline_flavors WHERE id = :id
-            """), {"id": flavor_id}).fetchone()
+            """),
+                {"id": flavor_id},
+            ).fetchone()
 
             if not existing:
                 raise FlavorNotFoundError(f"Flavor with ID '{flavor_id}' not found")
@@ -152,9 +170,12 @@ class PipelineFlavorService:
             if existing[0] == "Default":
                 raise FlavorValidationError("Cannot delete the Default flavor")
 
-            result = db.execute(text("""
+            result = db.execute(
+                text("""
                 DELETE FROM pipeline_flavors WHERE id = :id
-            """), {"id": flavor_id})
+            """),
+                {"id": flavor_id},
+            )
 
             db.commit()
             return cast(bool, result.rowcount > 0)
@@ -165,12 +186,17 @@ class PipelineFlavorService:
         if DefaultFlavorProvider.is_default_flavor(flavor_id):
             # Need to determine which pipeline - this is a limitation of the default approach
             # For now, we'll raise an error and require more specific lookup
-            raise FlavorNotFoundError("Default flavor ID requires pipeline specification. Use get_default_flavor() instead.")
+            raise FlavorNotFoundError(
+                "Default flavor ID requires pipeline specification. Use get_default_flavor() instead."
+            )
 
         with get_pipeline_session() as db:
-            row = db.execute(text("""
+            row = db.execute(
+                text("""
                 SELECT * FROM pipeline_flavors WHERE id = :id
-            """), {"id": flavor_id}).fetchone()
+            """),
+                {"id": flavor_id},
+            ).fetchone()
 
             if not row:
                 raise FlavorNotFoundError(f"Flavor with ID '{flavor_id}' not found")
@@ -184,13 +210,13 @@ class PipelineFlavorService:
             return DefaultFlavorProvider.get_default_flavor(pipeline)
 
         with get_pipeline_session() as db:
-            row = db.execute(text("""
+            row = db.execute(
+                text("""
                 SELECT * FROM pipeline_flavors
                 WHERE pipeline = :pipeline AND title = :title
-            """), {
-                "pipeline": pipeline.value,
-                "title": title
-            }).fetchone()
+            """),
+                {"pipeline": pipeline.value, "title": title},
+            ).fetchone()
 
             if not row:
                 raise FlavorNotFoundError(
@@ -199,7 +225,9 @@ class PipelineFlavorService:
 
             return self._row_to_flavor(row)
 
-    def list_flavors(self, pipeline: Optional[PipelineType] = None) -> List[PipelineFlavor]:
+    def list_flavors(
+        self, pipeline: Optional[PipelineType] = None
+    ) -> List[PipelineFlavor]:
         """List all flavors, optionally filtered by pipeline"""
         flavors = []
 
@@ -241,39 +269,47 @@ class PipelineFlavorService:
     def get_default_flavor(self, pipeline: PipelineType) -> PipelineFlavor:
         """Get the default flavor for a pipeline"""
         return DefaultFlavorProvider.get_default_flavor(pipeline)
-    
+
     def _row_to_flavor(self, row) -> PipelineFlavor:
         """Convert database row to PipelineFlavor model"""
         return PipelineFlavor(
-            id=row[0],                                          # id
-            pipeline=PipelineType(row[1]),                      # pipeline
-            title=row[2],                                       # title
-            llm_provider=row[3],                                # llm_provider
-            llm_model=row[4],                                   # llm_model
-            llm_config=LLMConfig.model_validate_json(row[5]),   # llm_config
-            system_prompt=row[6],                               # system_prompt
-            user_prompt=row[7],                                 # user_prompt
-            version=row[8],                                     # version
-            enabled=bool(row[9]),                               # enabled
-            created_at=row[10],                                 # created_at
-            updated_at=row[11]                                  # updated_at
+            id=row[0],  # id
+            pipeline=PipelineType(row[1]),  # pipeline
+            title=row[2],  # title
+            llm_provider=row[3],  # llm_provider
+            llm_model=row[4],  # llm_model
+            llm_config=LLMConfig.model_validate_json(row[5]),  # llm_config
+            system_prompt=row[6],  # system_prompt
+            user_prompt=row[7],  # user_prompt
+            version=row[8],  # version
+            enabled=bool(row[9]),  # enabled
+            created_at=row[10],  # created_at
+            updated_at=row[11],  # updated_at
         )
-    
-    def _get_user_flavors(self, pipeline: PipelineType, enabled_only: bool = False) -> List[PipelineFlavor]:
+
+    def _get_user_flavors(
+        self, pipeline: PipelineType, enabled_only: bool = False
+    ) -> List[PipelineFlavor]:
         """Get user-created flavors for a specific pipeline"""
         with get_pipeline_session() as db:
             if enabled_only:
-                rows = db.execute(text("""
+                rows = db.execute(
+                    text("""
                     SELECT * FROM pipeline_flavors
                     WHERE pipeline = :pipeline AND enabled = TRUE
                     ORDER BY title
-                """), {"pipeline": pipeline.value}).fetchall()
+                """),
+                    {"pipeline": pipeline.value},
+                ).fetchall()
             else:
-                rows = db.execute(text("""
+                rows = db.execute(
+                    text("""
                     SELECT * FROM pipeline_flavors
                     WHERE pipeline = :pipeline
                     ORDER BY title
-                """), {"pipeline": pipeline.value}).fetchall()
+                """),
+                    {"pipeline": pipeline.value},
+                ).fetchall()
 
             return [self._row_to_flavor(row) for row in rows]
 

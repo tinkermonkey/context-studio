@@ -7,6 +7,7 @@ from pydantic import BaseModel
 
 class DatasetMetrics(BaseModel):
     """Metrics for a dataset."""
+
     layers_count: int
     domains_count: int
     terms_count: int
@@ -15,6 +16,7 @@ class DatasetMetrics(BaseModel):
 
 class DatasetInfo(BaseModel):
     """Information about a dataset."""
+
     id: str
     title: str
     filename: str
@@ -26,23 +28,27 @@ class DatasetInfo(BaseModel):
 
 class CreateDatasetRequest(BaseModel):
     """Request to create a new dataset."""
+
     title: str
     filename: str
 
 
 class AddExistingDatasetRequest(BaseModel):
     """Request to add an existing dataset file."""
+
     title: str
     file_path: str
 
 
 class UpdateDatasetDirectoryRequest(BaseModel):
     """Request to update the datasets directory."""
+
     datasets_directory: str
 
 
 class MigrationStatus(BaseModel):
     """Status of database migrations."""
+
     current_version: int
     target_version: int
     pending_migrations: List[str]
@@ -51,6 +57,7 @@ class MigrationStatus(BaseModel):
 
 class DatasetResponse(BaseModel):
     """Response model for dataset operations."""
+
     id: str
     title: str
     filename: str
@@ -63,6 +70,7 @@ class DatasetResponse(BaseModel):
 
 class ActionLogEntry(BaseModel):
     """A single action log entry."""
+
     timestamp: datetime
     action: str
     dataset_id: str
@@ -72,5 +80,6 @@ class ActionLogEntry(BaseModel):
 
 class ActionLogResponse(BaseModel):
     """Response model for action log."""
+
     entries: List[ActionLogEntry]
     total_count: int

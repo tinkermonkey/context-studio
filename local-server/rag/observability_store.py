@@ -4,6 +4,7 @@ RAG Observability Store
 This module provides persistence for RAG pipeline observability data,
 including metrics and detailed trace information.
 """
+
 from typing import Dict, Any, Optional, List
 from datetime import datetime, timedelta, timezone
 from sqlalchemy.orm import Session
@@ -51,7 +52,7 @@ class RAGObservabilityStore:
         layer_2_count: int,
         layer_3_time_ms: float,
         layer_3_count: int,
-        input_text: str
+        input_text: str,
     ) -> str:
         """
         Save RAG processing metrics to database.
@@ -76,7 +77,8 @@ class RAGObservabilityStore:
 
         try:
             # Store input text in sentence_text column for reference
-            self.db_session.execute(text("""
+            self.db_session.execute(
+                text("""
                 INSERT INTO rag_processing_metrics (
                     id, request_id, sentence_text,
                     layer_0_time_ms, layer_0_count,
@@ -92,22 +94,26 @@ class RAGObservabilityStore:
                     :layer_3_time_ms, :layer_3_count,
                     :total_time_ms, :timestamp, :retention_days
                 )
-            """), {
-                "id": metrics_id,
-                "request_id": request_id,
-                "input_text": input_text[:500],  # Truncate to first 500 chars for storage efficiency
-                "layer_0_time_ms": int(layer_0_time_ms),
-                "layer_0_count": layer_0_count,
-                "layer_1_time_ms": int(layer_1_time_ms),
-                "layer_1_count": layer_1_count,
-                "layer_2_time_ms": int(layer_2_time_ms),
-                "layer_2_count": layer_2_count,
-                "layer_3_time_ms": int(layer_3_time_ms),
-                "layer_3_count": layer_3_count,
-                "total_time_ms": int(total_time_ms),
-                "timestamp": datetime.now(timezone.utc),
-                "retention_days": self.METRICS_RETENTION_DAYS
-            })
+            """),
+                {
+                    "id": metrics_id,
+                    "request_id": request_id,
+                    "input_text": input_text[
+                        :500
+                    ],  # Truncate to first 500 chars for storage efficiency
+                    "layer_0_time_ms": int(layer_0_time_ms),
+                    "layer_0_count": layer_0_count,
+                    "layer_1_time_ms": int(layer_1_time_ms),
+                    "layer_1_count": layer_1_count,
+                    "layer_2_time_ms": int(layer_2_time_ms),
+                    "layer_2_count": layer_2_count,
+                    "layer_3_time_ms": int(layer_3_time_ms),
+                    "layer_3_count": layer_3_count,
+                    "total_time_ms": int(total_time_ms),
+                    "timestamp": datetime.now(timezone.utc),
+                    "retention_days": self.METRICS_RETENTION_DAYS,
+                },
+            )
 
             self.db_session.commit()
             logger.debug(f"Saved metrics for request {request_id}: {metrics_id}")
@@ -115,7 +121,9 @@ class RAGObservabilityStore:
 
         except Exception as e:
             self.db_session.rollback()
-            logger.error(f"Failed to save metrics for request {request_id}: {e}", exc_info=True)
+            logger.error(
+                f"Failed to save metrics for request {request_id}: {e}", exc_info=True
+            )
             raise
 
     def save_trace(
@@ -124,7 +132,7 @@ class RAGObservabilityStore:
         sentence_index: int,
         layer_name: str,
         operation_type: str,
-        trace_data: Dict[str, Any]
+        trace_data: Dict[str, Any],
     ) -> str:
         """
         Save detailed trace data for a specific layer operation.
@@ -142,7 +150,8 @@ class RAGObservabilityStore:
         trace_id = str(uuid.uuid4())
 
         try:
-            self.db_session.execute(text("""
+            self.db_session.execute(
+                text("""
                 INSERT INTO rag_observability_trace (
                     id, request_id, sentence_index, layer_name, operation_type,
                     trace_data, timestamp, retention_days
@@ -150,26 +159,30 @@ class RAGObservabilityStore:
                     :id, :request_id, :sentence_index, :layer_name, :operation_type,
                     :trace_data, :timestamp, :retention_days
                 )
-            """), {
-                "id": trace_id,
-                "request_id": request_id,
-                "sentence_index": sentence_index,
-                "layer_name": layer_name,
-                "operation_type": operation_type,
-                "trace_data": json.dumps(trace_data),
-                "timestamp": datetime.now(timezone.utc),
-                "retention_days": self.TRACES_RETENTION_DAYS
-            })
+            """),
+                {
+                    "id": trace_id,
+                    "request_id": request_id,
+                    "sentence_index": sentence_index,
+                    "layer_name": layer_name,
+                    "operation_type": operation_type,
+                    "trace_data": json.dumps(trace_data),
+                    "timestamp": datetime.now(timezone.utc),
+                    "retention_days": self.TRACES_RETENTION_DAYS,
+                },
+            )
 
             self.db_session.commit()
-            logger.debug(f"Saved trace for request {request_id}, layer {layer_name}: {trace_id}")
+            logger.debug(
+                f"Saved trace for request {request_id}, layer {layer_name}: {trace_id}"
+            )
             return trace_id
 
         except Exception as e:
             self.db_session.rollback()
             logger.error(
                 f"Failed to save trace for request {request_id}, layer {layer_name}: {e}",
-                exc_info=True
+                exc_info=True,
             )
             raise
 
@@ -184,7 +197,8 @@ class RAGObservabilityStore:
             Dictionary containing metrics, or None if not found
         """
         try:
-            result = self.db_session.execute(text("""
+            result = self.db_session.execute(
+                text("""
                 SELECT
                     id, request_id, sentence_text,
                     layer_0_time_ms, layer_0_count,
@@ -194,7 +208,9 @@ class RAGObservabilityStore:
                     total_time_ms, timestamp
                 FROM rag_processing_metrics
                 WHERE request_id = :request_id
-            """), {"request_id": request_id}).fetchone()
+            """),
+                {"request_id": request_id},
+            ).fetchone()
 
             if not result:
                 return None
@@ -203,28 +219,19 @@ class RAGObservabilityStore:
                 "id": result[0],
                 "request_id": result[1],
                 "input_text": result[2],
-                "layer_0": {
-                    "time_ms": result[3],
-                    "count": result[4]
-                },
-                "layer_1": {
-                    "time_ms": result[5],
-                    "count": result[6]
-                },
-                "layer_2": {
-                    "time_ms": result[7],
-                    "count": result[8]
-                },
-                "layer_3": {
-                    "time_ms": result[9],
-                    "count": result[10]
-                },
+                "layer_0": {"time_ms": result[3], "count": result[4]},
+                "layer_1": {"time_ms": result[5], "count": result[6]},
+                "layer_2": {"time_ms": result[7], "count": result[8]},
+                "layer_3": {"time_ms": result[9], "count": result[10]},
                 "total_time_ms": result[11],
-                "timestamp": result[12]
+                "timestamp": result[12],
             }
 
         except Exception as e:
-            logger.error(f"Failed to retrieve metrics for request {request_id}: {e}", exc_info=True)
+            logger.error(
+                f"Failed to retrieve metrics for request {request_id}: {e}",
+                exc_info=True,
+            )
             return None
 
     def get_traces(self, request_id: str) -> List[Dict[str, Any]]:
@@ -238,31 +245,39 @@ class RAGObservabilityStore:
             List of trace dictionaries
         """
         try:
-            results = self.db_session.execute(text("""
+            results = self.db_session.execute(
+                text("""
                 SELECT
                     id, request_id, sentence_index, layer_name, operation_type,
                     trace_data, timestamp
                 FROM rag_observability_trace
                 WHERE request_id = :request_id
                 ORDER BY sentence_index, timestamp
-            """), {"request_id": request_id}).fetchall()
+            """),
+                {"request_id": request_id},
+            ).fetchall()
 
             traces: List[Dict[str, Any]] = []
             for row in results:
-                traces.append({
-                    "id": row[0],
-                    "request_id": row[1],
-                    "sentence_index": row[2],
-                    "layer_name": row[3],
-                    "operation_type": row[4],
-                    "trace_data": json.loads(row[5]),
-                    "timestamp": row[6]
-                })
+                traces.append(
+                    {
+                        "id": row[0],
+                        "request_id": row[1],
+                        "sentence_index": row[2],
+                        "layer_name": row[3],
+                        "operation_type": row[4],
+                        "trace_data": json.loads(row[5]),
+                        "timestamp": row[6],
+                    }
+                )
 
             return traces
 
         except Exception as e:
-            logger.error(f"Failed to retrieve traces for request {request_id}: {e}", exc_info=True)
+            logger.error(
+                f"Failed to retrieve traces for request {request_id}: {e}",
+                exc_info=True,
+            )
             return []
 
     def cleanup_old_data(self) -> Dict[str, int]:
@@ -274,22 +289,32 @@ class RAGObservabilityStore:
         """
         try:
             # Calculate cutoff timestamps
-            metrics_cutoff = datetime.now(timezone.utc) - timedelta(days=self.METRICS_RETENTION_DAYS)
-            traces_cutoff = datetime.now(timezone.utc) - timedelta(days=self.TRACES_RETENTION_DAYS)
+            metrics_cutoff = datetime.now(timezone.utc) - timedelta(
+                days=self.METRICS_RETENTION_DAYS
+            )
+            traces_cutoff = datetime.now(timezone.utc) - timedelta(
+                days=self.TRACES_RETENTION_DAYS
+            )
 
             # Delete old metrics
-            metrics_result = self.db_session.execute(text("""
+            metrics_result = self.db_session.execute(
+                text("""
                 DELETE FROM rag_processing_metrics
                 WHERE timestamp < :cutoff
-            """), {"cutoff": metrics_cutoff})
+            """),
+                {"cutoff": metrics_cutoff},
+            )
 
             metrics_deleted = metrics_result.rowcount  # type: ignore[attr-defined]
 
             # Delete old traces
-            traces_result = self.db_session.execute(text("""
+            traces_result = self.db_session.execute(
+                text("""
                 DELETE FROM rag_observability_trace
                 WHERE timestamp < :cutoff
-            """), {"cutoff": traces_cutoff})
+            """),
+                {"cutoff": traces_cutoff},
+            )
 
             traces_deleted = traces_result.rowcount  # type: ignore[attr-defined]
 
@@ -302,13 +327,12 @@ class RAGObservabilityStore:
 
             return {
                 "metrics_deleted": metrics_deleted,
-                "traces_deleted": traces_deleted
+                "traces_deleted": traces_deleted,
             }
 
         except Exception as e:
             self.db_session.rollback()
-            logger.error(f"Failed to cleanup old observability data: {e}", exc_info=True)
-            return {
-                "metrics_deleted": 0,
-                "traces_deleted": 0
-            }
+            logger.error(
+                f"Failed to cleanup old observability data: {e}", exc_info=True
+            )
+            return {"metrics_deleted": 0, "traces_deleted": 0}

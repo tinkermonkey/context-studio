@@ -5,11 +5,13 @@ from sqlalchemy import event, create_engine, text
 print("SQLite Version:", sqlite3.sqlite_version)
 print("SQLite File:", sqlite3.__file__)
 
+
 def main():
     print("Creating in-memory SQLite database...")
     engine = create_engine("sqlite:///:memory:")
 
     print("Registering event listener to load SQLite extensions...")
+
     @event.listens_for(engine, "connect")
     def receive_connect(connection, _):
         print("Enabling SQLite extensions...")
@@ -29,7 +31,7 @@ def main():
         """))
         print("Virtual table created successfully!")
 
-        vec_version, = connection.execute(text("select vec_version()")).fetchone()
+        (vec_version,) = connection.execute(text("select vec_version()")).fetchone()
         print(f"vec_version={vec_version}")
 
 

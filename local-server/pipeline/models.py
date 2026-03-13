@@ -33,7 +33,7 @@ class JSONEncodedDict(TypeDecorator):
 class LLMPipeline(Base):
     """Model for LLM pipeline configurations."""
 
-    __tablename__ = 'llm_pipelines'
+    __tablename__ = "llm_pipelines"
 
     id = Column(String, primary_key=True, default=lambda: str(uuid4()))
     name = Column(String, nullable=False, unique=True)

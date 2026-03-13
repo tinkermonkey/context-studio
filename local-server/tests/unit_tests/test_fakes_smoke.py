@@ -202,16 +202,12 @@ def test_in_memory_repository_search_classes_with_filters():
     repo.save_class(c2)
 
     # Filter by scheme_id
-    results = repo.search_classes(
-        SearchCriteria(query="test", scheme_id="s1")
-    )
+    results = repo.search_classes(SearchCriteria(query="test", scheme_id="s1"))
     assert len(results) == 1
     assert results[0].scheme_id == "s1"
 
     # Filter by taxonomy_id
-    results = repo.search_classes(
-        SearchCriteria(query="test", taxonomy_id="t2")
-    )
+    results = repo.search_classes(SearchCriteria(query="test", taxonomy_id="t2"))
     assert len(results) == 1
     assert results[0].taxonomy_id == "t2"
 
@@ -250,6 +246,7 @@ def test_in_memory_repository_individual_methods_raise_not_implemented():
 
     try:
         from domain.ontology.entities import Individual
+
         ind = Individual(
             id="i1",
             title="Test Individual",
@@ -342,9 +339,7 @@ def test_fake_event_publisher_subscription():
 
     pub.subscribe(ClassCreated, handler)
 
-    event = ClassCreated(
-        class_id="c1", title="Test", scheme_id="s1", taxonomy_id="t1"
-    )
+    event = ClassCreated(class_id="c1", title="Test", scheme_id="s1", taxonomy_id="t1")
     pub.publish(event)
 
     assert len(collected_events) == 1
@@ -357,9 +352,7 @@ def test_fake_event_publisher_get_events_of_type():
 
     from domain.ontology.events import ClassUpdated, ClassDeleted
 
-    event1 = ClassCreated(
-        class_id="c1", title="Test", scheme_id="s1", taxonomy_id="t1"
-    )
+    event1 = ClassCreated(class_id="c1", title="Test", scheme_id="s1", taxonomy_id="t1")
     event2 = ClassUpdated(class_id="c1", changed_fields=("title",))
     event3 = ClassDeleted(class_id="c1", title="Test")
 
@@ -380,9 +373,7 @@ def test_fake_event_publisher_clear():
     """Test clearing events from the publisher."""
     pub = FakeEventPublisher()
 
-    event = ClassCreated(
-        class_id="c1", title="Test", scheme_id="s1", taxonomy_id="t1"
-    )
+    event = ClassCreated(class_id="c1", title="Test", scheme_id="s1", taxonomy_id="t1")
     pub.publish(event)
 
     assert len(pub.get_events()) == 1

@@ -28,7 +28,7 @@ from rag.test_models import (
     PipelineRunDetailsResponse,
     ScoringDetailsResponse,
     PipelineComparisonItem,
-    PipelineComparisonSummary
+    PipelineComparisonSummary,
 )
 from utils.logger import get_logger
 
@@ -37,8 +37,7 @@ logger = get_logger(__name__)
 
 
 def get_test_service(
-    kg_db: Session = Depends(get_db),
-    ops_db: Session = Depends(get_operations_db)
+    kg_db: Session = Depends(get_db), ops_db: Session = Depends(get_operations_db)
 ) -> RAGTestManagementService:
     """
     Dependency injection for RAGTestManagementService.
@@ -55,10 +54,15 @@ def get_test_service(
 
 # ==================== Test Paragraph Endpoints ====================
 
-@router.post("/paragraphs", response_model=TestParagraphResponse, status_code=status.HTTP_201_CREATED)  # noqa: E501
+
+@router.post(
+    "/paragraphs",
+    response_model=TestParagraphResponse,
+    status_code=status.HTTP_201_CREATED,
+)  # noqa: E501
 async def create_test_paragraph(
     request: CreateTestParagraphRequest,
-    test_service: RAGTestManagementService = Depends(get_test_service)
+    test_service: RAGTestManagementService = Depends(get_test_service),
 ):
     """
     Create a new test paragraph.
@@ -67,10 +71,11 @@ async def create_test_paragraph(
     and used for pipeline testing.
     """
     try:
-        logger.info(f"Creating test paragraph with text length: {len(request.text)}")  # noqa: E501
+        logger.info(
+            f"Creating test paragraph with text length: {len(request.text)}"
+        )  # noqa: E501
         paragraph = test_service.create_test_paragraph(
-            text=request.text,
-            notes=request.notes
+            text=request.text, notes=request.notes
         )
 
         logger.info(f"Successfully created test paragraph: {paragraph.id}")
@@ -79,34 +84,39 @@ async def create_test_paragraph(
             text=paragraph.text,
             notes=paragraph.notes,
             created_at=paragraph.created_at,
-            annotations=[]
+            annotations=[],
         )
 
     except DatabaseError as e:
-        logger.error(f"Database error creating test paragraph: {e}", exc_info=True)  # noqa: E501
+        logger.error(
+            f"Database error creating test paragraph: {e}", exc_info=True
+        )  # noqa: E501
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Database error while creating test paragraph"
+            detail="Database error while creating test paragraph",
         )
     except ValueError as e:
-        logger.error(f"Validation error creating test paragraph: {e}", exc_info=True)  # noqa: E501
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=str(e)
-        )
+        logger.error(
+            f"Validation error creating test paragraph: {e}", exc_info=True
+        )  # noqa: E501
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
     except Exception as e:
-        logger.error(f"Unexpected error creating test paragraph: {e}", exc_info=True)  # noqa: E501
+        logger.error(
+            f"Unexpected error creating test paragraph: {e}", exc_info=True
+        )  # noqa: E501
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to create test paragraph"
+            detail="Failed to create test paragraph",
         )
 
 
 @router.get("/paragraphs", response_model=TestParagraphListResponse)
 async def list_test_paragraphs(
-    limit: int = Query(100, ge=1, le=500, description="Maximum number of paragraphs to return"),  # noqa: E501
+    limit: int = Query(
+        100, ge=1, le=500, description="Maximum number of paragraphs to return"
+    ),  # noqa: E501
     offset: int = Query(0, ge=0, description="Number of paragraphs to skip"),
-    test_service: RAGTestManagementService = Depends(get_test_service)
+    test_service: RAGTestManagementService = Depends(get_test_service),
 ):
     """
     List test paragraphs with pagination.
@@ -114,13 +124,19 @@ async def list_test_paragraphs(
     Returns a paginated list of test paragraphs, each with its annotations.
     """
     try:
-        logger.info(f"Listing test paragraphs with limit={limit}, offset={offset}")  # noqa: E501
-        paragraphs, total_count = test_service.list_test_paragraphs(limit=limit, offset=offset)  # noqa: E501
+        logger.info(
+            f"Listing test paragraphs with limit={limit}, offset={offset}"
+        )  # noqa: E501
+        paragraphs, total_count = test_service.list_test_paragraphs(
+            limit=limit, offset=offset
+        )  # noqa: E501
 
         # Build response with annotations
         paragraph_responses = []
         for paragraph in paragraphs:
-            annotations = test_service.get_annotations_for_paragraph(paragraph.id)  # noqa: E501
+            annotations = test_service.get_annotations_for_paragraph(
+                paragraph.id
+            )  # noqa: E501
             annotation_responses = [
                 AnnotationResponse(
                     id=ann.id,
@@ -128,8 +144,8 @@ async def list_test_paragraphs(
                     start_char=ann.start_char,
                     end_char=ann.end_char,
                     structure_node_id=ann.structure_node_id,
-                    text=paragraph.text[ann.start_char:ann.end_char],
-                    created_at=ann.created_at
+                    text=paragraph.text[ann.start_char : ann.end_char],
+                    created_at=ann.created_at,
                 )
                 for ann in annotations
             ]
@@ -140,36 +156,42 @@ async def list_test_paragraphs(
                     text=paragraph.text,
                     notes=paragraph.notes,
                     created_at=paragraph.created_at,
-                    annotations=annotation_responses
+                    annotations=annotation_responses,
                 )
             )
 
-        logger.info(f"Successfully retrieved {len(paragraph_responses)} of {total_count} test paragraphs")  # noqa: E501
+        logger.info(
+            f"Successfully retrieved {len(paragraph_responses)} of {total_count} test paragraphs"
+        )  # noqa: E501
         return TestParagraphListResponse(
             paragraphs=paragraph_responses,
             total_count=total_count,
             limit=limit,
-            offset=offset
+            offset=offset,
         )
 
     except DatabaseError as e:
-        logger.error(f"Database error listing test paragraphs: {e}", exc_info=True)  # noqa: E501
+        logger.error(
+            f"Database error listing test paragraphs: {e}", exc_info=True
+        )  # noqa: E501
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Database error while listing test paragraphs"
+            detail="Database error while listing test paragraphs",
         )
     except Exception as e:
-        logger.error(f"Unexpected error listing test paragraphs: {e}", exc_info=True)  # noqa: E501
+        logger.error(
+            f"Unexpected error listing test paragraphs: {e}", exc_info=True
+        )  # noqa: E501
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to list test paragraphs"
+            detail="Failed to list test paragraphs",
         )
 
 
 @router.get("/paragraphs/{paragraph_id}", response_model=TestParagraphResponse)
 async def get_test_paragraph(
     paragraph_id: str,
-    test_service: RAGTestManagementService = Depends(get_test_service)
+    test_service: RAGTestManagementService = Depends(get_test_service),
 ):
     """
     Get a specific test paragraph by ID.
@@ -184,7 +206,7 @@ async def get_test_paragraph(
             logger.warning(f"Test paragraph not found: {paragraph_id}")
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Test paragraph not found: {paragraph_id}"
+                detail=f"Test paragraph not found: {paragraph_id}",
             )
 
         # Get annotations
@@ -196,8 +218,8 @@ async def get_test_paragraph(
                 start_char=ann.start_char,
                 end_char=ann.end_char,
                 structure_node_id=ann.structure_node_id,
-                text=paragraph.text[ann.start_char:ann.end_char],
-                created_at=ann.created_at
+                text=paragraph.text[ann.start_char : ann.end_char],
+                created_at=ann.created_at,
             )
             for ann in annotations
         ]
@@ -207,16 +229,18 @@ async def get_test_paragraph(
             text=paragraph.text,
             notes=paragraph.notes,
             created_at=paragraph.created_at,
-            annotations=annotation_responses
+            annotations=annotation_responses,
         )
 
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Error getting test paragraph {paragraph_id}: {e}", exc_info=True)  # noqa: E501
+        logger.error(
+            f"Error getting test paragraph {paragraph_id}: {e}", exc_info=True
+        )  # noqa: E501
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to get test paragraph"
+            detail="Failed to get test paragraph",
         )
 
 
@@ -224,7 +248,7 @@ async def get_test_paragraph(
 async def update_test_paragraph(
     paragraph_id: str,
     request: UpdateTestParagraphRequest,
-    test_service: RAGTestManagementService = Depends(get_test_service)
+    test_service: RAGTestManagementService = Depends(get_test_service),
 ):
     """
     Update a test paragraph.
@@ -236,21 +260,19 @@ async def update_test_paragraph(
         if request.text is None and request.notes is None:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="At least one field (text or notes) must be provided"
+                detail="At least one field (text or notes) must be provided",
             )
 
         logger.info(f"Updating test paragraph: {paragraph_id}")
         paragraph = test_service.update_test_paragraph(
-            paragraph_id=paragraph_id,
-            text=request.text,
-            notes=request.notes
+            paragraph_id=paragraph_id, text=request.text, notes=request.notes
         )
 
         if not paragraph:
             logger.warning(f"Test paragraph not found: {paragraph_id}")
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Test paragraph not found: {paragraph_id}"
+                detail=f"Test paragraph not found: {paragraph_id}",
             )
 
         # Get annotations
@@ -262,8 +284,8 @@ async def update_test_paragraph(
                 start_char=ann.start_char,
                 end_char=ann.end_char,
                 structure_node_id=ann.structure_node_id,
-                text=paragraph.text[ann.start_char:ann.end_char],
-                created_at=ann.created_at
+                text=paragraph.text[ann.start_char : ann.end_char],
+                created_at=ann.created_at,
             )
             for ann in annotations
         ]
@@ -274,35 +296,42 @@ async def update_test_paragraph(
             text=paragraph.text,
             notes=paragraph.notes,
             created_at=paragraph.created_at,
-            annotations=annotation_responses
+            annotations=annotation_responses,
         )
 
     except HTTPException:
         raise
     except DatabaseError as e:
-        logger.error(f"Database error updating test paragraph {paragraph_id}: {e}", exc_info=True)  # noqa: E501
+        logger.error(
+            f"Database error updating test paragraph {paragraph_id}: {e}", exc_info=True
+        )  # noqa: E501
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Database error while updating test paragraph"
+            detail="Database error while updating test paragraph",
         )
     except ValueError as e:
-        logger.error(f"Validation error updating test paragraph {paragraph_id}: {e}", exc_info=True)  # noqa: E501
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=str(e)
-        )
+        logger.error(
+            f"Validation error updating test paragraph {paragraph_id}: {e}",
+            exc_info=True,
+        )  # noqa: E501
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
     except Exception as e:
-        logger.error(f"Unexpected error updating test paragraph {paragraph_id}: {e}", exc_info=True)  # noqa: E501
+        logger.error(
+            f"Unexpected error updating test paragraph {paragraph_id}: {e}",
+            exc_info=True,
+        )  # noqa: E501
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to update test paragraph"
+            detail="Failed to update test paragraph",
         )
 
 
-@router.delete("/paragraphs/{paragraph_id}", status_code=status.HTTP_204_NO_CONTENT)  # noqa: E501
+@router.delete(
+    "/paragraphs/{paragraph_id}", status_code=status.HTTP_204_NO_CONTENT
+)  # noqa: E501
 async def delete_test_paragraph(
     paragraph_id: str,
-    test_service: RAGTestManagementService = Depends(get_test_service)
+    test_service: RAGTestManagementService = Depends(get_test_service),
 ):
     """
     Delete a test paragraph.
@@ -318,7 +347,7 @@ async def delete_test_paragraph(
             logger.warning(f"Test paragraph not found: {paragraph_id}")
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Test paragraph not found: {paragraph_id}"
+                detail=f"Test paragraph not found: {paragraph_id}",
             )
 
         logger.info(f"Successfully deleted test paragraph: {paragraph_id}")
@@ -326,24 +355,27 @@ async def delete_test_paragraph(
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Error deleting test paragraph {paragraph_id}: {e}", exc_info=True)  # noqa: E501
+        logger.error(
+            f"Error deleting test paragraph {paragraph_id}: {e}", exc_info=True
+        )  # noqa: E501
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to delete test paragraph"
+            detail="Failed to delete test paragraph",
         )
 
 
 # ==================== Annotation Endpoints ====================
 
+
 @router.post(
     "/paragraphs/{paragraph_id}/annotations",
     response_model=AnnotationResponse,
-    status_code=status.HTTP_201_CREATED
+    status_code=status.HTTP_201_CREATED,
 )
 async def create_annotation(
     paragraph_id: str,
     request: CreateAnnotationRequest,
-    test_service: RAGTestManagementService = Depends(get_test_service)
+    test_service: RAGTestManagementService = Depends(get_test_service),
 ):
     """
     Create a new annotation for a test paragraph.
@@ -365,7 +397,7 @@ async def create_annotation(
             paragraph_id=paragraph_id,
             start_char=request.start_char,
             end_char=request.end_char,
-            structure_node_id=request.structure_node_id
+            structure_node_id=request.structure_node_id,
         )
 
         if not annotation:
@@ -375,7 +407,7 @@ async def create_annotation(
                 logger.warning(f"Paragraph not found: {paragraph_id}")
                 raise HTTPException(
                     status_code=status.HTTP_404_NOT_FOUND,
-                    detail=f"Test paragraph not found: {paragraph_id}"
+                    detail=f"Test paragraph not found: {paragraph_id}",
                 )
             else:
                 logger.error(
@@ -383,12 +415,12 @@ async def create_annotation(
                 )
                 raise HTTPException(
                     status_code=status.HTTP_400_BAD_REQUEST,
-                    detail="Invalid structure_node_id or character positions"
+                    detail="Invalid structure_node_id or character positions",
                 )
 
         # Get paragraph to extract text
         paragraph = test_service.get_test_paragraph(paragraph_id)
-        text = paragraph.text[annotation.start_char:annotation.end_char]
+        text = paragraph.text[annotation.start_char : annotation.end_char]
 
         logger.info(f"Successfully created annotation: {annotation.id}")
         return AnnotationResponse(
@@ -398,44 +430,44 @@ async def create_annotation(
             end_char=annotation.end_char,
             structure_node_id=annotation.structure_node_id,
             text=text,
-            created_at=annotation.created_at
+            created_at=annotation.created_at,
         )
 
     except HTTPException:
         raise
     except IntegrityError as e:
-        logger.error(f"Integrity error creating annotation: {e}", exc_info=True)  # noqa: E501
+        logger.error(
+            f"Integrity error creating annotation: {e}", exc_info=True
+        )  # noqa: E501
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Invalid structure_node_id or annotation violates database constraints"  # noqa: E501
+            detail="Invalid structure_node_id or annotation violates database constraints",  # noqa: E501
         )
     except DatabaseError as e:
         logger.error(f"Database error creating annotation: {e}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Database error while creating annotation"
+            detail="Database error while creating annotation",
         )
     except ValueError as e:
-        logger.error(f"Validation error creating annotation: {e}", exc_info=True)  # noqa: E501
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=str(e)
-        )
+        logger.error(
+            f"Validation error creating annotation: {e}", exc_info=True
+        )  # noqa: E501
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
     except Exception as e:
-        logger.error(f"Unexpected error creating annotation: {e}", exc_info=True)  # noqa: E501
+        logger.error(
+            f"Unexpected error creating annotation: {e}", exc_info=True
+        )  # noqa: E501
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to create annotation"
+            detail="Failed to create annotation",
         )
 
 
-@router.delete(
-    "/annotations/{annotation_id}",
-    status_code=status.HTTP_204_NO_CONTENT
-)
+@router.delete("/annotations/{annotation_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_annotation(
     annotation_id: str,
-    test_service: RAGTestManagementService = Depends(get_test_service)
+    test_service: RAGTestManagementService = Depends(get_test_service),
 ):
     """
     Delete a specific annotation.
@@ -448,7 +480,7 @@ async def delete_annotation(
             logger.warning(f"Annotation not found: {annotation_id}")
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Annotation not found: {annotation_id}"
+                detail=f"Annotation not found: {annotation_id}",
             )
 
         logger.info(f"Successfully deleted annotation: {annotation_id}")
@@ -456,19 +488,22 @@ async def delete_annotation(
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Error deleting annotation {annotation_id}: {e}", exc_info=True)  # noqa: E501
+        logger.error(
+            f"Error deleting annotation {annotation_id}: {e}", exc_info=True
+        )  # noqa: E501
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to delete annotation"
+            detail="Failed to delete annotation",
         )
 
 
 # ==================== Pipeline Execution Endpoints ====================
 
+
 @router.post("/run", response_model=RunPipelineTestResponse)
 async def run_pipeline_test(
     request: RunPipelineTestRequest,
-    test_service: RAGTestManagementService = Depends(get_test_service)
+    test_service: RAGTestManagementService = Depends(get_test_service),
 ):
     """
     Execute multiple pipelines against test paragraphs.
@@ -494,7 +529,9 @@ async def run_pipeline_test(
             # Validate paragraph exists
             paragraph = test_service.get_test_paragraph(paragraph_id)
             if not paragraph:
-                logger.warning(f"Skipping non-existent paragraph: {paragraph_id}")  # noqa: E501
+                logger.warning(
+                    f"Skipping non-existent paragraph: {paragraph_id}"
+                )  # noqa: E501
                 continue
 
             # Run pipelines
@@ -502,7 +539,7 @@ async def run_pipeline_test(
                 paragraph_id=paragraph_id,
                 pipeline_names=request.pipeline_names,
                 enable_trace=request.enable_trace,
-                enable_llm_layer=request.enable_llm_layer
+                enable_llm_layer=request.enable_llm_layer,
             )
 
             # Convert results to response models
@@ -516,7 +553,7 @@ async def run_pipeline_test(
                             paragraph_id=result["paragraph_id"],
                             executed_at=result["executed_at"],
                             error=result["error"],
-                            error_type=result.get("error_type")
+                            error_type=result.get("error_type"),
                         )
                     )
                 else:
@@ -534,10 +571,12 @@ async def run_pipeline_test(
                                 recall=scoring_data["recall"],
                                 f1_score=scoring_data["f1_score"],
                                 true_positives=scoring_data["true_positives"],
-                                false_positives=scoring_data["false_positives"],  # noqa: E501
-                                false_negatives=scoring_data["false_negatives"]
+                                false_positives=scoring_data[
+                                    "false_positives"
+                                ],  # noqa: E501
+                                false_negatives=scoring_data["false_negatives"],
                             ),
-                            executed_at=result["executed_at"]
+                            executed_at=result["executed_at"],
                         )
                     )
 
@@ -553,44 +592,52 @@ async def run_pipeline_test(
             results=all_results,
             total_runs=len(all_results),
             successful_runs=successful_runs,
-            failed_runs=failed_runs
+            failed_runs=failed_runs,
         )
 
     except HTTPException:
         raise
     except DatabaseError as e:
-        logger.error(f"Database error running pipeline test: {e}", exc_info=True)  # noqa: E501
+        logger.error(
+            f"Database error running pipeline test: {e}", exc_info=True
+        )  # noqa: E501
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Database error while running pipeline test"
+            detail="Database error while running pipeline test",
         )
     except ValueError as e:
-        logger.error(f"Validation error running pipeline test: {e}", exc_info=True)  # noqa: E501
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=str(e)
-        )
+        logger.error(
+            f"Validation error running pipeline test: {e}", exc_info=True
+        )  # noqa: E501
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
     except TimeoutError as e:
         logger.error(f"Pipeline execution timeout: {e}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_504_GATEWAY_TIMEOUT,
-            detail="Pipeline execution timed out"
+            detail="Pipeline execution timed out",
         )
     except Exception as e:
-        logger.error(f"Unexpected error running pipeline test: {e}", exc_info=True)  # noqa: E501
+        logger.error(
+            f"Unexpected error running pipeline test: {e}", exc_info=True
+        )  # noqa: E501
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to run pipeline test: {str(e)}"
+            detail=f"Failed to run pipeline test: {str(e)}",
         )
 
 
 # ==================== Results Query Endpoints ====================
 
-@router.get("/results/paragraphs/{paragraph_id}", response_model=PipelineComparisonResponse)  # noqa: E501
+
+@router.get(
+    "/results/paragraphs/{paragraph_id}", response_model=PipelineComparisonResponse
+)  # noqa: E501
 async def get_pipeline_comparison(
     paragraph_id: str,
-    pipeline_names: Optional[List[str]] = Query(None, description="Filter by pipeline names"),  # noqa: E501
-    test_service: RAGTestManagementService = Depends(get_test_service)
+    pipeline_names: Optional[List[str]] = Query(
+        None, description="Filter by pipeline names"
+    ),  # noqa: E501
+    test_service: RAGTestManagementService = Depends(get_test_service),
 ):
     """
     Compare pipeline results for a specific test paragraph.
@@ -599,7 +646,9 @@ async def get_pipeline_comparison(
     Optionally filter by specific pipeline names.
     """
     try:
-        logger.info(f"Getting pipeline comparison for paragraph: {paragraph_id}")  # noqa: E501
+        logger.info(
+            f"Getting pipeline comparison for paragraph: {paragraph_id}"
+        )  # noqa: E501
 
         # Validate paragraph exists
         paragraph = test_service.get_test_paragraph(paragraph_id)
@@ -607,13 +656,12 @@ async def get_pipeline_comparison(
             logger.warning(f"Test paragraph not found: {paragraph_id}")
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Test paragraph not found: {paragraph_id}"
+                detail=f"Test paragraph not found: {paragraph_id}",
             )
 
         # Get comparison results
         comparison = test_service.compare_pipeline_runs(
-            paragraph_id=paragraph_id,
-            pipeline_names=pipeline_names
+            paragraph_id=paragraph_id, pipeline_names=pipeline_names
         )
 
         # Convert to response model
@@ -626,7 +674,7 @@ async def get_pipeline_comparison(
                 recall_score=run["recall_score"],
                 entities_extracted=run["entities_extracted"],
                 execution_time_ms=run["execution_time_ms"],
-                executed_at=run["executed_at"]
+                executed_at=run["executed_at"],
             )
             for run in comparison["runs"]
         ]
@@ -634,14 +682,14 @@ async def get_pipeline_comparison(
         summary = PipelineComparisonSummary(
             total_pipelines=comparison["summary"]["total_pipelines"],
             best_pipeline=comparison["summary"]["best_pipeline"],
-            best_f1_score=comparison["summary"]["best_f1_score"]
+            best_f1_score=comparison["summary"]["best_f1_score"],
         )
 
-        logger.info(f"Successfully retrieved comparison for {len(runs)} pipelines")  # noqa: E501
+        logger.info(
+            f"Successfully retrieved comparison for {len(runs)} pipelines"
+        )  # noqa: E501
         return PipelineComparisonResponse(
-            paragraph_id=paragraph_id,
-            runs=runs,
-            summary=summary
+            paragraph_id=paragraph_id, runs=runs, summary=summary
         )
 
     except HTTPException:
@@ -650,14 +698,15 @@ async def get_pipeline_comparison(
         logger.error(f"Error getting pipeline comparison: {e}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to get pipeline comparison"
+            detail="Failed to get pipeline comparison",
         )
 
 
-@router.get("/results/runs/{run_id}", response_model=PipelineRunDetailsResponse)  # noqa: E501
+@router.get(
+    "/results/runs/{run_id}", response_model=PipelineRunDetailsResponse
+)  # noqa: E501
 async def get_pipeline_run_details(
-    run_id: str,
-    test_service: RAGTestManagementService = Depends(get_test_service)
+    run_id: str, test_service: RAGTestManagementService = Depends(get_test_service)
 ):
     """
     Get detailed results for a specific pipeline run.
@@ -672,7 +721,7 @@ async def get_pipeline_run_details(
             logger.warning(f"Pipeline run not found: {run_id}")
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Pipeline run not found: {run_id}"
+                detail=f"Pipeline run not found: {run_id}",
             )
 
         logger.info(f"Successfully retrieved run details: {run_id}")
@@ -686,7 +735,7 @@ async def get_pipeline_run_details(
             precision_score=details["precision_score"],
             recall_score=details["recall_score"],
             f1_score=details["f1_score"],
-            result_data=details["result_data"]
+            result_data=details["result_data"],
         )
 
     except HTTPException:
@@ -695,5 +744,5 @@ async def get_pipeline_run_details(
         logger.error(f"Error getting pipeline run details: {e}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to get pipeline run details"
+            detail="Failed to get pipeline run details",
         )

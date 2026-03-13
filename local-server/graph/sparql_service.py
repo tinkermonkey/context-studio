@@ -70,7 +70,9 @@ class SPARQLService:
         structure_nodes = self.db_session.query(StructureNode).all()
 
         for structure_node in structure_nodes:
-            node_uri = self.ENTITY[f"{structure_node.node_type.value}/{structure_node.id}"]
+            node_uri = self.ENTITY[
+                f"{structure_node.node_type.value}/{structure_node.id}"
+            ]
 
             # Add RDF type based on structure_node type
             if structure_node.node_type == NodeType.LAYER:
@@ -84,7 +86,9 @@ class SPARQLService:
             self.graph.add((node_uri, RDFS.label, Literal(structure_node.title)))
 
             if structure_node.definition:
-                self.graph.add((node_uri, RDFS.comment, Literal(structure_node.definition)))
+                self.graph.add(
+                    (node_uri, RDFS.comment, Literal(structure_node.definition))
+                )
 
             # Hierarchical relationships using parent_node_id
             if structure_node.parent_node_id:
@@ -94,12 +98,17 @@ class SPARQLService:
                     .first()
                 )
                 if parent_node:
-                    parent_uri = self.ENTITY[f"{parent_node.node_type.value}/{parent_node.id}"]
+                    parent_uri = self.ENTITY[
+                        f"{parent_node.node_type.value}/{parent_node.id}"
+                    ]
                     predicate = self._get_hierarchy_predicate(structure_node)
                     self.graph.add((node_uri, predicate, parent_uri))
 
                     # Add SKOS relationships for terms
-                    if structure_node.node_type == NodeType.TERM and parent_node.node_type == NodeType.TERM:
+                    if (
+                        structure_node.node_type == NodeType.TERM
+                        and parent_node.node_type == NodeType.TERM
+                    ):
                         self.graph.add((node_uri, SKOS.broader, parent_uri))
                         self.graph.add((parent_uri, SKOS.narrower, node_uri))
 
@@ -111,10 +120,14 @@ class SPARQLService:
 
             # Metadata
             if structure_node.created_at:
-                self.graph.add((node_uri, DCTERMS.created, Literal(structure_node.created_at)))
+                self.graph.add(
+                    (node_uri, DCTERMS.created, Literal(structure_node.created_at))
+                )
 
             if structure_node.last_modified:
-                self.graph.add((node_uri, DCTERMS.modified, Literal(structure_node.last_modified)))
+                self.graph.add(
+                    (node_uri, DCTERMS.modified, Literal(structure_node.last_modified))
+                )
 
             self.graph.add((node_uri, self.CS.version, Literal(structure_node.version)))
 
@@ -124,7 +137,9 @@ class SPARQLService:
                     (
                         node_uri,
                         self.CS.structuralPredicate,
-                        self.ENTITY[f"predicate/{structure_node.structural_predicate_id}"],
+                        self.ENTITY[
+                            f"predicate/{structure_node.structural_predicate_id}"
+                        ],
                     )
                 )
 
@@ -146,8 +161,12 @@ class SPARQLService:
             )
 
             if source_node and target_node:
-                source_uri = self.ENTITY[f"{source_node.node_type.value}/{source_node.id}"]
-                target_uri = self.ENTITY[f"{target_node.node_type.value}/{target_node.id}"]
+                source_uri = self.ENTITY[
+                    f"{source_node.node_type.value}/{source_node.id}"
+                ]
+                target_uri = self.ENTITY[
+                    f"{target_node.node_type.value}/{target_node.id}"
+                ]
 
                 # Create predicate URI from the relationship predicate
                 predicate_uri = self.CS[link.predicate]
@@ -174,11 +193,15 @@ class SPARQLService:
         if structure_node.structural_predicate_id:
             # Get the actual predicate title if available
             # For now, use a structured predicate URI
-            return cast(URIRef, self.CS[f"predicate_{structure_node.structural_predicate_id}"])
+            return cast(
+                URIRef, self.CS[f"predicate_{structure_node.structural_predicate_id}"]
+            )
 
         return cast(URIRef, self.CS["is_a"])  # Default predicate
 
-    def _get_layer_ancestor(self, structure_node: StructureNode) -> Optional[StructureNode]:
+    def _get_layer_ancestor(
+        self, structure_node: StructureNode
+    ) -> Optional[StructureNode]:
         """
         Get the layer ancestor of a structure_node by walking up the hierarchy.
 
@@ -195,14 +218,18 @@ class SPARQLService:
 
             if current.parent_node_id:
                 current = (
-                    self.db_session.query(StructureNode).filter(StructureNode.id == current.parent_node_id).first()
+                    self.db_session.query(StructureNode)
+                    .filter(StructureNode.id == current.parent_node_id)
+                    .first()
                 )
             else:
                 break
 
         return None
 
-    def query(self, sparql_query: str, initNs: Optional[Dict[str, Namespace]] = None) -> List[Dict[str, Any]]:
+    def query(
+        self, sparql_query: str, initNs: Optional[Dict[str, Namespace]] = None
+    ) -> List[Dict[str, Any]]:
         """
         Execute a SPARQL query against the RDF graph.
 
@@ -284,7 +311,9 @@ class SPARQLService:
         """
         return self.graph.serialize(format=format)
 
-    def find_terms_by_title(self, title: str, exact: bool = False) -> List[Dict[str, Any]]:
+    def find_terms_by_title(
+        self, title: str, exact: bool = False
+    ) -> List[Dict[str, Any]]:
         """
         Find terms by title using SPARQL.
 
@@ -322,7 +351,9 @@ class SPARQLService:
 
         return self.query(query)
 
-    def find_related_terms(self, term_id: str, max_depth: int = 2) -> List[Dict[str, Any]]:
+    def find_related_terms(
+        self, term_id: str, max_depth: int = 2
+    ) -> List[Dict[str, Any]]:
         """
         Find terms related to a given term using SPARQL property paths.
 
@@ -361,7 +392,9 @@ class SPARQLService:
 
         return self.query(query)
 
-    def get_domain_hierarchy(self, layer_id: Optional[str] = None) -> List[Dict[str, Any]]:
+    def get_domain_hierarchy(
+        self, layer_id: Optional[str] = None
+    ) -> List[Dict[str, Any]]:
         """
         Get the domain hierarchy for a layer or all layers.
 

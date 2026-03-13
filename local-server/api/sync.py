@@ -103,11 +103,15 @@ async def test_s3_connection(db: Session = Depends(get_db)) -> SyncResponse:
 
     except Exception as e:
         logger.error(f"S3 connection test error: {e}")
-        raise HTTPException(status_code=500, detail=f"Connection test failed: {str(e)}")  # noqa: E501
+        raise HTTPException(
+            status_code=500, detail=f"Connection test failed: {str(e)}"
+        )  # noqa: E501
 
 
 @router.get("/operations/{sync_id}")
-async def get_sync_operation(sync_id: str = Path(..., description="Sync operation ID")):  # noqa: E501
+async def get_sync_operation(
+    sync_id: str = Path(..., description="Sync operation ID")
+):  # noqa: E501
     """Get sync operation details."""
 
     try:
@@ -123,12 +127,14 @@ async def get_sync_operation(sync_id: str = Path(..., description="Sync operatio
             "synced_changes": 125,
             "new_entities": 25,
             "updated_entities": 100,
-            "errors": []
+            "errors": [],
         }
 
     except Exception as e:
         logger.error(f"Get sync operation error: {e}")
-        raise HTTPException(status_code=500, detail=f"Failed to get sync operation: {str(e)}")  # noqa: E501
+        raise HTTPException(
+            status_code=500, detail=f"Failed to get sync operation: {str(e)}"
+        )  # noqa: E501
 
 
 @router.get("/performance")
@@ -146,17 +152,21 @@ async def get_sync_performance(days: int = 7):
             "bottleneck_analysis": {
                 "s3_latency": "acceptable",
                 "batch_processing": "optimal",
-                "database_writes": "good"
-            }
+                "database_writes": "good",
+            },
         }
 
     except Exception as e:
         logger.error(f"Get sync performance error: {e}")
-        raise HTTPException(status_code=500, detail=f"Failed to get sync performance: {str(e)}")  # noqa: E501
+        raise HTTPException(
+            status_code=500, detail=f"Failed to get sync performance: {str(e)}"
+        )  # noqa: E501
 
 
 @router.post("/validate-data")
-async def validate_sync_data(sample_size: int = Query(default=1000, ge=100, le=10000)):  # noqa: E501
+async def validate_sync_data(
+    sample_size: int = Query(default=1000, ge=100, le=10000)
+):  # noqa: E501
     """Validate data integrity for sync operations."""
 
     try:
@@ -165,9 +175,11 @@ async def validate_sync_data(sample_size: int = Query(default=1000, ge=100, le=1
             "validation_status": "healthy",
             "integrity_score": 0.998,
             "sample_size": sample_size,
-            "issues_found": []
+            "issues_found": [],
         }
 
     except Exception as e:
         logger.error(f"Validate sync data error: {e}")
-        raise HTTPException(status_code=500, detail=f"Failed to validate sync data: {str(e)}")  # noqa: E501
+        raise HTTPException(
+            status_code=500, detail=f"Failed to validate sync data: {str(e)}"
+        )  # noqa: E501

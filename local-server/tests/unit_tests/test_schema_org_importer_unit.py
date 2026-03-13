@@ -15,7 +15,7 @@ from reference_db.schema_org_importer import (
     SchemaOrgImporter,
     DownloadError,
     EmbeddingError,
-    LockError
+    LockError,
 )
 
 
@@ -24,10 +24,7 @@ class TestExtractId:
 
     def test_extract_id_from_dict(self):
         """Test extracting @id from dictionary."""
-        importer = SchemaOrgImporter(
-            ReferenceConfig(),
-            Mock()
-        )
+        importer = SchemaOrgImporter(ReferenceConfig(), Mock())
 
         value = {"@id": "https://schema.org/Thing"}
         result = importer._extract_id(value)
@@ -35,10 +32,7 @@ class TestExtractId:
 
     def test_extract_id_from_string(self):
         """Test extracting @id from string."""
-        importer = SchemaOrgImporter(
-            ReferenceConfig(),
-            Mock()
-        )
+        importer = SchemaOrgImporter(ReferenceConfig(), Mock())
 
         value = "https://schema.org/Thing"
         result = importer._extract_id(value)
@@ -46,20 +40,14 @@ class TestExtractId:
 
     def test_extract_id_from_none(self):
         """Test extracting @id from None returns None."""
-        importer = SchemaOrgImporter(
-            ReferenceConfig(),
-            Mock()
-        )
+        importer = SchemaOrgImporter(ReferenceConfig(), Mock())
 
         result = importer._extract_id(None)
         assert result is None
 
     def test_extract_id_from_invalid_dict(self):
         """Test extracting @id from dict without @id key."""
-        importer = SchemaOrgImporter(
-            ReferenceConfig(),
-            Mock()
-        )
+        importer = SchemaOrgImporter(ReferenceConfig(), Mock())
 
         value = {"somekey": "value"}
         result = importer._extract_id(value)
@@ -81,7 +69,7 @@ class TestURLValidation:
         mock_response.text = "{}"
         mock_response.raise_for_status = Mock()
 
-        with patch('requests.get', return_value=mock_response):
+        with patch("requests.get", return_value=mock_response):
             try:
                 importer._download_with_retry()
             except Exception as e:
@@ -99,7 +87,7 @@ class TestURLValidation:
         mock_response.text = "{}"
         mock_response.raise_for_status = Mock()
 
-        with patch('requests.get', return_value=mock_response):
+        with patch("requests.get", return_value=mock_response):
             try:
                 importer._download_with_retry()
             except Exception as e:
@@ -116,7 +104,7 @@ class TestURLValidation:
         mock_response.text = "{}"
         mock_response.raise_for_status = Mock()
 
-        with patch('requests.get', return_value=mock_response):
+        with patch("requests.get", return_value=mock_response):
             try:
                 importer._download_with_retry()
             except Exception as e:
@@ -127,9 +115,7 @@ class TestURLValidation:
         from pydantic import ValidationError
 
         with pytest.raises(ValidationError) as exc_info:
-            ReferenceConfig(
-                schema_org_api_url="http://evil.com/schema.jsonld"
-            )
+            ReferenceConfig(schema_org_api_url="http://evil.com/schema.jsonld")
 
         error_msg = str(exc_info.value).lower()
         assert "security" in error_msg or "https" in error_msg
@@ -149,8 +135,8 @@ class TestRetryLogic:
             call_times.append(datetime.now())
             raise Exception("Network error")
 
-        with patch('requests.get', side_effect=mock_get):
-            with patch('time.sleep') as mock_sleep:
+        with patch("requests.get", side_effect=mock_get):
+            with patch("time.sleep") as mock_sleep:
                 with pytest.raises(DownloadError):
                     importer._download_with_retry()
 
@@ -164,8 +150,8 @@ class TestRetryLogic:
         config = ReferenceConfig(retry_count=5)
         importer = SchemaOrgImporter(config, Mock())
 
-        with patch('requests.get', side_effect=Exception("Network error")):
-            with patch('time.sleep'):
+        with patch("requests.get", side_effect=Exception("Network error")):
+            with patch("time.sleep"):
                 with pytest.raises(DownloadError) as exc_info:
                     importer._download_with_retry()
 
@@ -204,14 +190,16 @@ class TestBatchProcessing:
             {
                 "@id": f"https://schema.org/Item{i}",
                 "rdfs:label": f"Item{i}",
-                "rdfs:comment": f"Description {i}"
+                "rdfs:comment": f"Description {i}",
             }
             for i in range(5)
         ]
 
         # Mock embedding generation - patch where it's used, not where it's defined
-        with patch('reference_db.schema_org_importer.generate_embedding',
-                  return_value=b'\x00' * (384 * 4)):  # 384 dimensions * 4 bytes per float32, E128
+        with patch(
+            "reference_db.schema_org_importer.generate_embedding",
+            return_value=b"\x00" * (384 * 4),
+        ):  # 384 dimensions * 4 bytes per float32, E128
             result = importer._generate_embeddings_batch(items, batch_size=2)
 
             assert len(result) == 5
@@ -235,7 +223,7 @@ class TestEmbeddingFields:
             {
                 "@id": "https://schema.org/Thing",
                 "rdfs:label": "Thing",
-                "rdfs:comment": "The most generic type"
+                "rdfs:comment": "The most generic type",
             }
         ]
 
@@ -245,10 +233,12 @@ class TestEmbeddingFields:
             nonlocal call_count
             call_count += 1
             # Return proper sized embedding (384 dimensions * 4 bytes)
-            return b'\x00' * (384 * 4)
+            return b"\x00" * (384 * 4)
 
-        with patch('reference_db.schema_org_importer.generate_embedding',
-                  side_effect=mock_generate_embedding):  # noqa: E128
+        with patch(
+            "reference_db.schema_org_importer.generate_embedding",
+            side_effect=mock_generate_embedding,
+        ):  # noqa: E128
             result = importer._generate_embeddings_batch(items)
 
             assert len(result) == 1
@@ -272,8 +262,10 @@ class TestEmbeddingFields:
             }
         ]
 
-        with patch('reference_db.schema_org_importer.generate_embedding',
-                  return_value=b'\x00' * (384 * 4)) as mock_embed:  # noqa: E128, E501
+        with patch(
+            "reference_db.schema_org_importer.generate_embedding",
+            return_value=b"\x00" * (384 * 4),
+        ) as mock_embed:  # noqa: E128, E501
             result = importer._generate_embeddings_batch(items)
 
             assert len(result) == 1
@@ -290,7 +282,7 @@ class TestRelationshipExtraction:
         """Test extracting single subClassOf relationship."""
         item = {
             "@id": "https://schema.org/Person",
-            "rdfs:subClassOf": {"@id": "https://schema.org/Thing"}
+            "rdfs:subClassOf": {"@id": "https://schema.org/Thing"},
         }
 
         config = ReferenceConfig()
@@ -302,7 +294,7 @@ class TestRelationshipExtraction:
 
         node_map = {
             "https://schema.org/Person": "uuid-person",
-            "https://schema.org/Thing": "uuid-thing"
+            "https://schema.org/Thing": "uuid-thing",
         }
 
         # This would normally be called within _insert_relationships_transaction
@@ -319,8 +311,8 @@ class TestRelationshipExtraction:
             "@id": "https://schema.org/Person",
             "rdfs:subClassOf": [
                 {"@id": "https://schema.org/Thing"},
-                {"@id": "https://schema.org/Agent"}
-            ]
+                {"@id": "https://schema.org/Agent"},
+            ],
         }
 
         config = ReferenceConfig()
@@ -343,8 +335,8 @@ class TestRelationshipExtraction:
             "@id": "https://schema.org/name",
             "schema:domainIncludes": [
                 {"@id": "https://schema.org/Thing"},
-                {"@id": "https://schema.org/Person"}
-            ]
+                {"@id": "https://schema.org/Person"},
+            ],
         }
 
         config = ReferenceConfig()
@@ -363,7 +355,7 @@ class TestRelationshipExtraction:
         """Test extracting rangeIncludes relationships."""
         item = {
             "@id": "https://schema.org/name",
-            "schema:rangeIncludes": {"@id": "https://schema.org/Text"}
+            "schema:rangeIncludes": {"@id": "https://schema.org/Text"},
         }
 
         config = ReferenceConfig()
@@ -381,7 +373,7 @@ class TestRelationshipExtraction:
         """Test extracting inverseOf relationships."""
         item = {
             "@id": "https://schema.org/parent",
-            "schema:inverseOf": {"@id": "https://schema.org/children"}
+            "schema:inverseOf": {"@id": "https://schema.org/children"},
         }
 
         config = ReferenceConfig()
@@ -425,7 +417,7 @@ class TestLockFileManagement:
             try:
                 importer._acquire_lock()
 
-                with open(importer.lock_path, 'r') as f:
+                with open(importer.lock_path, "r") as f:
                     lock_data = json.load(f)
 
                 assert "pid" in lock_data
@@ -447,8 +439,8 @@ class TestErrorMessages:
 
         importer = SchemaOrgImporter(config, mock_manager)
 
-        with patch('requests.get', side_effect=Exception("Network timeout")):
-            with patch('time.sleep'):
+        with patch("requests.get", side_effect=Exception("Network timeout")):
+            with patch("time.sleep"):
                 with pytest.raises(DownloadError) as exc_info:
                     importer._download_with_retry()
 
@@ -465,11 +457,17 @@ class TestErrorMessages:
         importer = SchemaOrgImporter(config, mock_manager)
 
         items = [
-            {"@id": "https://schema.org/Thing", "rdfs:label": "Thing", "rdfs:comment": "Test"}
+            {
+                "@id": "https://schema.org/Thing",
+                "rdfs:label": "Thing",
+                "rdfs:comment": "Test",
+            }
         ]
 
-        with patch('reference_db.schema_org_importer.generate_embedding',
-                  side_effect=Exception("API error")):  # noqa: E128
+        with patch(
+            "reference_db.schema_org_importer.generate_embedding",
+            side_effect=Exception("API error"),
+        ):  # noqa: E128
             with pytest.raises(EmbeddingError) as exc_info:
                 importer._generate_embeddings_batch(items)
 

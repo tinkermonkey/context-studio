@@ -4,6 +4,7 @@ Test configuration management for isolated testing.
 This module provides test configuration isolation to prevent test data pollution  # noqa: E501
 in the global configuration files and ensure clean test environments.
 """
+
 # mypy: ignore-errors
 
 import json
@@ -41,7 +42,9 @@ class TestConfigurationManager:
             self._base_config = base_settings.model_dump()
         return self._base_config.copy()
 
-    def get_test_settings(self, overrides: Optional[Dict[str, Any]] = None) -> Settings:  # noqa: E501
+    def get_test_settings(
+        self, overrides: Optional[Dict[str, Any]] = None
+    ) -> Settings:  # noqa: E501
         """
         Get test settings with complete isolation.
 
@@ -82,25 +85,35 @@ class TestConfigurationManager:
             "logging": {
                 "file_path": str(test_logs_dir / "test_context_studio.log"),
                 "enable_console": False,  # Reduce test output noise
-                "enable_file": True
+                "enable_file": True,
             },
             "proxy_server": {
                 "database_path": str(self.temp_dir / "test_proxy_cache.db"),
-                "enabled": False  # Disable proxy for tests by default to avoid conflicts  # noqa: E501
+                "enabled": False,  # Disable proxy for tests by default to avoid conflicts  # noqa: E501
             },
             "server": {
                 "reload": False,  # Disable auto-reload in tests
-                "access_log": False  # Reduce noise in tests
+                "access_log": False,  # Reduce noise in tests
             },
             "dataset": {
                 "config_path": str(self.temp_dir / "test_datasets.json"),
-                "datasets_directory": str(test_datasets_dir)
-            }
+                "datasets_directory": str(test_datasets_dir),
+            },
+            # Prevent NLP model downloads and use the smallest available model.
+            # en_core_web_lg (750MB, auto-download) is the production default; in tests
+            # we never want a 600s download attempt and we don't need linguistic quality.
+            "nlp": {
+                "model_name": "en_core_web_sm",  # 12MB vs 750MB
+                "auto_download_models": False,    # Never download during tests
+                "download_timeout": 60,           # Minimum valid timeout
+            },
             # Note: Database URLs are NOT overridden to maintain shared database performance  # noqa: E501
             # Tests that need database isolation should use utilities from test_db_utils.py  # noqa: E501
         }
 
-    def _deep_update(self, base_dict: Dict[str, Any], update_dict: Dict[str, Any]) -> Dict[str, Any]:  # noqa: E501
+    def _deep_update(
+        self, base_dict: Dict[str, Any], update_dict: Dict[str, Any]
+    ) -> Dict[str, Any]:  # noqa: E501
         """
         Deep update dictionary, merging nested dictionaries.
 
@@ -114,7 +127,11 @@ class TestConfigurationManager:
         result = base_dict.copy()
 
         for key, value in update_dict.items():
-            if key in result and isinstance(result[key], dict) and isinstance(value, dict):  # noqa: E501
+            if (
+                key in result
+                and isinstance(result[key], dict)
+                and isinstance(value, dict)
+            ):  # noqa: E501
                 result[key] = self._deep_update(result[key], value)
             else:
                 result[key] = value
@@ -123,7 +140,7 @@ class TestConfigurationManager:
 
     def _save_temp_config(self, config_data: Dict[str, Any]) -> None:
         """Save configuration to temporary file."""
-        with open(self.temp_config_file, 'w') as f:
+        with open(self.temp_config_file, "w") as f:
             json.dump(config_data, f, indent=2)
 
     def cleanup(self) -> None:
@@ -145,7 +162,9 @@ class TestConfigurationManager:
         return str(self.temp_config_file)
 
 
-def create_test_settings(temp_dir: str, overrides: Optional[Dict[str, Any]] = None) -> Settings:  # noqa: E501
+def create_test_settings(
+    temp_dir: str, overrides: Optional[Dict[str, Any]] = None
+) -> Settings:  # noqa: E501
     """
     Convenience function to create isolated test settings.
 
@@ -160,7 +179,9 @@ def create_test_settings(temp_dir: str, overrides: Optional[Dict[str, Any]] = No
     return manager.get_test_settings(overrides)
 
 
-def patch_config_manager_for_tests(temp_dir: str, overrides: Optional[Dict[str, Any]] = None) -> TestConfigurationManager:  # noqa: E501
+def patch_config_manager_for_tests(
+    temp_dir: str, overrides: Optional[Dict[str, Any]] = None
+) -> TestConfigurationManager:  # noqa: E501
     """
     Create and configure a test configuration manager.
 

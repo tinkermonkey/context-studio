@@ -18,28 +18,30 @@ logger = get_logger(__name__)
 
 class ProviderType(str, Enum):
     """LLM provider routing types"""
-    NATIVE_OPENAI = "native_openai"        # Use LangChain OpenAI directly
+
+    NATIVE_OPENAI = "native_openai"  # Use LangChain OpenAI directly
     NATIVE_ANTHROPIC = "native_anthropic"  # Use LangChain Anthropic directly
-    NATIVE_GOOGLE = "native_google"        # Use LangChain Google directly
-    OPENROUTER = "openrouter"              # Route through OpenRouter
+    NATIVE_GOOGLE = "native_google"  # Use LangChain Google directly
+    OPENROUTER = "openrouter"  # Route through OpenRouter
 
 
 @dataclass
 class EnabledModelConfig:
     """Configuration for an enabled LLM model"""
-    model_name: str                        # The model identifier (e.g., "gpt-4", "claude-3-sonnet")
-    provider_type: ProviderType            # How to route this model
-    display_name: str                      # User-friendly name for UI
-    enabled: bool = True                   # Whether model is currently enabled
+
+    model_name: str  # The model identifier (e.g., "gpt-4", "claude-3-sonnet")
+    provider_type: ProviderType  # How to route this model
+    display_name: str  # User-friendly name for UI
+    enabled: bool = True  # Whether model is currently enabled
 
     # Provider-specific configuration
     api_key_env_var: Optional[str] = None  # Environment variable for API key
     custom_endpoint: Optional[str] = None  # Custom endpoint URL if needed
-    model_override: Optional[str] = None   # Override model name for provider
+    model_override: Optional[str] = None  # Override model name for provider
 
     # Additional metadata
-    description: Optional[str] = None      # Model description for UI
-    cost_tier: Optional[str] = None        # Cost indicator (low/medium/high)
+    description: Optional[str] = None  # Model description for UI
+    cost_tier: Optional[str] = None  # Cost indicator (low/medium/high)
     tags: List[str] = field(default_factory=list)  # Tags for filtering/grouping
 
     def to_dict(self) -> Dict[str, Any]:
@@ -47,11 +49,11 @@ class EnabledModelConfig:
         return asdict(self)
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> 'EnabledModelConfig':
+    def from_dict(cls, data: Dict[str, Any]) -> "EnabledModelConfig":
         """Create from dictionary"""
         # Handle enum conversion
-        if isinstance(data.get('provider_type'), str):
-            data['provider_type'] = ProviderType(data['provider_type'])
+        if isinstance(data.get("provider_type"), str):
+            data["provider_type"] = ProviderType(data["provider_type"])
         return cls(**data)
 
 
@@ -68,18 +70,22 @@ class EnabledModelsManager:
         """Load enabled models from config file"""
         try:
             if self.config_file.exists():
-                with open(self.config_file, 'r') as f:
+                with open(self.config_file, "r") as f:
                     data = json.load(f)
 
                 self._models = {}
-                for model_name, model_data in data.get('models', {}).items():
+                for model_name, model_data in data.get("models", {}).items():
                     try:
                         config = EnabledModelConfig.from_dict(model_data)
                         self._models[model_name] = config
                     except Exception as e:
-                        self.logger.warning(f"Failed to load model config for {model_name}: {e}")
+                        self.logger.warning(
+                            f"Failed to load model config for {model_name}: {e}"
+                        )
 
-                self.logger.info(f"Loaded {len(self._models)} enabled models from {self.config_file}")
+                self.logger.info(
+                    f"Loaded {len(self._models)} enabled models from {self.config_file}"
+                )
             else:
                 # Create default configuration
                 self._create_default_config()
@@ -98,20 +104,23 @@ class EnabledModelsManager:
             # Prepare data for serialization
             data = {
                 "models": {
-                    name: config.to_dict()
-                    for name, config in self._models.items()
+                    name: config.to_dict() for name, config in self._models.items()
                 },
                 "metadata": {
                     "version": "1.0",
-                    "last_updated": None  # Could add timestamp if needed
-                }
+                    "last_updated": None,  # Could add timestamp if needed
+                },
             }
 
             # Write to file
-            with open(self.config_file, 'w') as f:
-                json.dump(data, f, indent=2, default=str)  # default=str for enum serialization
+            with open(self.config_file, "w") as f:
+                json.dump(
+                    data, f, indent=2, default=str
+                )  # default=str for enum serialization
 
-            self.logger.info(f"Saved {len(self._models)} enabled models to {self.config_file}")
+            self.logger.info(
+                f"Saved {len(self._models)} enabled models to {self.config_file}"
+            )
             return True
 
         except Exception as e:
@@ -131,7 +140,7 @@ class EnabledModelsManager:
                 api_key_env_var="OPENAI_API_KEY",
                 description="Fast, cost-effective OpenAI model",
                 cost_tier="low",
-                tags=["openai", "fast", "cost-effective"]
+                tags=["openai", "fast", "cost-effective"],
             ),
             EnabledModelConfig(
                 model_name="gpt-4o-mini",
@@ -140,7 +149,7 @@ class EnabledModelsManager:
                 api_key_env_var="OPENAI_API_KEY",
                 description="Efficient GPT-4 class model with strong performance",
                 cost_tier="low",
-                tags=["openai", "fast", "cost-effective", "gpt4-class"]
+                tags=["openai", "fast", "cost-effective", "gpt4-class"],
             ),
             EnabledModelConfig(
                 model_name="gpt-4",
@@ -150,7 +159,7 @@ class EnabledModelsManager:
                 description="Advanced OpenAI model with high reasoning capability",
                 cost_tier="high",
                 tags=["openai", "advanced", "reasoning"],
-                enabled=False  # Disabled by default due to cost
+                enabled=False,  # Disabled by default due to cost
             ),
             EnabledModelConfig(
                 model_name="claude-3-haiku-20240307",
@@ -159,7 +168,7 @@ class EnabledModelsManager:
                 api_key_env_var="ANTHROPIC_API_KEY",
                 description="Fast, efficient Claude model",
                 cost_tier="low",
-                tags=["anthropic", "fast", "efficient"]
+                tags=["anthropic", "fast", "efficient"],
             ),
             EnabledModelConfig(
                 model_name="claude-3-sonnet-20240229",
@@ -169,8 +178,8 @@ class EnabledModelsManager:
                 description="Balanced Claude model with good performance",
                 cost_tier="medium",
                 tags=["anthropic", "balanced", "capable"],
-                enabled=False  # Disabled by default, user can enable
-            )
+                enabled=False,  # Disabled by default, user can enable
+            ),
         ]
 
         self._models = {model.model_name: model for model in default_models}
@@ -221,12 +230,16 @@ class EnabledModelsManager:
             return self.save()
         return False
 
-    def get_models_by_provider(self, provider_type: ProviderType, enabled_only: bool = True) -> List[EnabledModelConfig]:
+    def get_models_by_provider(
+        self, provider_type: ProviderType, enabled_only: bool = True
+    ) -> List[EnabledModelConfig]:
         """Get models filtered by provider type"""
         models = self.get_enabled_models() if enabled_only else self.get_all_models()
         return [model for model in models if model.provider_type == provider_type]
 
-    def get_models_by_tag(self, tag: str, enabled_only: bool = True) -> List[EnabledModelConfig]:
+    def get_models_by_tag(
+        self, tag: str, enabled_only: bool = True
+    ) -> List[EnabledModelConfig]:
         """Get models filtered by tag"""
         models = self.get_enabled_models() if enabled_only else self.get_all_models()
         return [model for model in models if tag in model.tags]

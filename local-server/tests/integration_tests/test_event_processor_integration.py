@@ -2,7 +2,10 @@ import sys
 import os
 
 sys.path.insert(
-    0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))  # noqa: E501
+    0,
+    os.path.dirname(
+        os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    ),  # noqa: E501
 )
 import sqlite3  # noqa: E402
 import time  # noqa: E402
@@ -25,8 +28,7 @@ def temp_db():
     os.close(fd)
     conn = sqlite3.connect(path)
     cur = conn.cursor()
-    cur.execute(
-        """
+    cur.execute("""
         CREATE TABLE change_events (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             event_type TEXT NOT NULL,
@@ -37,8 +39,7 @@ def temp_db():
             timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
             processed BOOLEAN DEFAULT 0
         );
-    """
-    )
+    """)
     conn.commit()
     conn.close()
 
@@ -52,7 +53,9 @@ def temp_db():
         try:
             db_manager._engines[engine_id].dispose()
         except Exception as e:
-            logger.exception(f"Error disposing engine {engine_id} during fixture setup: {e}")
+            logger.exception(
+                f"Error disposing engine {engine_id} during fixture setup: {e}"
+            )
         del db_manager._engines[engine_id]
         if engine_id in db_manager._session_locals:
             del db_manager._session_locals[engine_id]
@@ -75,7 +78,9 @@ def temp_db():
         logger.exception(f"Error removing temporary database file {path}: {e}")
 
 
-def insert_event(db_url, engine_id, record_type, event_type, processed=0, ts=None, record_id=None):  # noqa: E501
+def insert_event(
+    db_url, engine_id, record_type, event_type, processed=0, ts=None, record_id=None
+):  # noqa: E501
     from datetime import timezone
 
     if ts is None:
@@ -158,7 +163,10 @@ def test_integration_event_processor_end_to_end(temp_db, capsys):
     assert "Processing structure_node event: update" in log_contents
     assert "Processing structure_node event: delete" in log_contents
     assert "Processing structure_node_link event: create" in log_contents
-    assert "[EventProcessor] Event 5 has invalid record_type 'unknown_record_type'. Valid types: ['structure_node', 'structure_node_link', 'predicate']. This event will be skipped." in log_contents  # noqa: E501
+    assert (
+        "[EventProcessor] Event 5 has invalid record_type 'unknown_record_type'. Valid types: ['ontology_entity', 'relationship', 'property_definition', 'structure_node', 'structure_node_link', 'predicate']. This event will be skipped."
+        in log_contents
+    )  # noqa: E501
 
 
 def test_integration_event_processor_cleanup(temp_db, capsys):
@@ -169,8 +177,8 @@ def test_integration_event_processor_cleanup(temp_db, capsys):
     engine_id = temp_db["engine_id"]
 
     old_ts = (datetime.now(timezone.utc) - timedelta(hours=49)).isoformat()
-    insert_event(db_url, engine_id, "structure_nodes", "delete", processed=1, ts=old_ts)
-    insert_event(db_url, engine_id, "structure_nodes", "update", processed=1)
+    insert_event(db_url, engine_id, "structure_node", "delete", processed=1, ts=old_ts)
+    insert_event(db_url, engine_id, "structure_node", "update", processed=1)
 
     db_manager = get_database_manager()
 
@@ -197,7 +205,11 @@ def test_integration_event_processor_large_batch(temp_db, capsys):
     for i in range(50):
         record_type = record_types[i % len(record_types)]
         insert_event(
-            db_url, engine_id, record_type, "create", record_id=f"test-{record_type}-{i}"
+            db_url,
+            engine_id,
+            record_type,
+            "create",
+            record_id=f"test-{record_type}-{i}",
         )
 
     db_manager = get_database_manager()

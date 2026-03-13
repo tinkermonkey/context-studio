@@ -8,6 +8,7 @@ predicates and links).
 
 import sys
 import os
+
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import pytest  # noqa: E402
@@ -17,7 +18,12 @@ from sqlalchemy.orm import sessionmaker  # noqa: E402
 import json  # noqa: E402
 
 from database.models import Base, Predicate  # noqa: E402
-from reference_db.models import Base as ReferenceBase, ReferenceNode, ReferenceLink, ExternalPredicate  # noqa: E402, E501
+from reference_db.models import (
+    Base as ReferenceBase,
+    ReferenceNode,
+    ReferenceLink,
+    ExternalPredicate,
+)  # noqa: E402, E501
 from reference_db.manager import ReferenceManager  # noqa: E402
 from services.reference_filter_service import ReferenceFilterService  # noqa: E402, E501
 
@@ -53,12 +59,14 @@ def mock_ref_manager(ref_db_session):
 
     def list_external_predicates(source=None, limit=None):
         from reference_db.models import ExternalPredicate
+
         query = ref_db_session.query(ExternalPredicate)
         if source:
             query = query.filter_by(source=source)
         if limit:
             query = query.limit(limit)
         return query.all()
+
     manager.list_external_predicates = list_external_predicates
     return manager
 
@@ -69,7 +77,9 @@ def filter_service(local_db_session, mock_ref_manager):
     return ReferenceFilterService(local_db_session, mock_ref_manager)
 
 
-def test_filter_service_with_real_database_interaction(local_db_session, ref_db_session, mock_ref_manager):  # noqa: E501
+def test_filter_service_with_real_database_interaction(
+    local_db_session, ref_db_session, mock_ref_manager
+):  # noqa: E501
     """Test filter service with actual database reads."""
     # Create global predicate with mapping
     predicate = Predicate(
@@ -78,17 +88,20 @@ def test_filter_service_with_real_database_interaction(local_db_session, ref_db_
         title="Related To",
         definition="A general relationship",
         is_relevant=True,
-        mapping=json.dumps({
-            "external_predicates": [
-                {"source": "schema.org", "external_id": "relatedTo"}
-            ]
-        })
+        mapping=json.dumps(
+            {
+                "external_predicates": [
+                    {"source": "schema.org", "external_id": "relatedTo"}
+                ]
+            }
+        ),
     )
     local_db_session.add(predicate)
     local_db_session.commit()
 
     # Create external predicate in reference database
     from datetime import date
+
     ext_pred = ExternalPredicate(
         id="ext-pred-1",
         source="schema.org",
@@ -96,7 +109,7 @@ def test_filter_service_with_real_database_interaction(local_db_session, ref_db_
         title="Related To",
         definition="Schema.org related relationship",
         created_at=date.today().isoformat(),
-        updated_at=date.today().isoformat()
+        updated_at=date.today().isoformat(),
     )
     ref_db_session.add(ext_pred)
     ref_db_session.commit()
@@ -110,7 +123,7 @@ def test_filter_service_with_real_database_interaction(local_db_session, ref_db_
         source="schema.org",
         external_id="ConceptA",
         created_at=today,
-        updated_at=today
+        updated_at=today,
     )
     node2 = ReferenceNode(
         id="node-2",
@@ -119,7 +132,7 @@ def test_filter_service_with_real_database_interaction(local_db_session, ref_db_
         source="schema.org",
         external_id="ConceptB",
         created_at=today,
-        updated_at=today
+        updated_at=today,
     )
     link = ReferenceLink(
         id="link-1",
@@ -127,7 +140,7 @@ def test_filter_service_with_real_database_interaction(local_db_session, ref_db_
         predicate="relatedTo",
         object_node="node-2",
         created_at=today,
-        updated_at=today
+        updated_at=today,
     )
     ref_db_session.add_all([node1, node2, link])
     ref_db_session.commit()
@@ -144,7 +157,9 @@ def test_filter_service_with_real_database_interaction(local_db_session, ref_db_
     assert stats["filter_mode"] == "whitelist"
 
 
-def test_filter_service_handles_database_errors_gracefully(local_db_session, mock_ref_manager):  # noqa: E501
+def test_filter_service_handles_database_errors_gracefully(
+    local_db_session, mock_ref_manager
+):  # noqa: E501
     """Test that database errors are handled gracefully."""
     from unittest.mock import patch
 
@@ -155,7 +170,9 @@ def test_filter_service_handles_database_errors_gracefully(local_db_session, moc
     link.predicate = "testPred"
 
     # Mock the _build_relevance_sets method to raise an exception
-    with patch.object(service, '_build_relevance_sets', side_effect=Exception("Database error")):  # noqa: E501
+    with patch.object(
+        service, "_build_relevance_sets", side_effect=Exception("Database error")
+    ):  # noqa: E501
         # Should handle error and return unfiltered links
         filtered_links, stats = service.filter_links([link])
 
@@ -166,7 +183,9 @@ def test_filter_service_handles_database_errors_gracefully(local_db_session, moc
         assert stats["filtering_active"] is False
 
 
-def test_filter_statistics_with_real_predicates(local_db_session, mock_ref_manager):  # noqa: E501
+def test_filter_statistics_with_real_predicates(
+    local_db_session, mock_ref_manager
+):  # noqa: E501
     """Test filter statistics calculation with real database predicates."""
     # Create various predicates
     predicates = [
@@ -175,26 +194,34 @@ def test_filter_statistics_with_real_predicates(local_db_session, mock_ref_manag
             identifier="relevant-pred",
             title="Relevant Predicate",
             is_relevant=True,
-            mapping=json.dumps({"external_predicates": [
-                {"source": "schema.org", "external_id": "rel1"}
-            ]})
+            mapping=json.dumps(
+                {
+                    "external_predicates": [
+                        {"source": "schema.org", "external_id": "rel1"}
+                    ]
+                }
+            ),
         ),
         Predicate(
             id="pred-2",
             identifier="irrelevant-pred",
             title="Irrelevant Predicate",
             is_relevant=False,
-            mapping=json.dumps({"external_predicates": [
-                {"source": "dbpedia", "external_id": "irrel1"}
-            ]})
+            mapping=json.dumps(
+                {
+                    "external_predicates": [
+                        {"source": "dbpedia", "external_id": "irrel1"}
+                    ]
+                }
+            ),
         ),
         Predicate(
             id="pred-3",
             identifier="unmapped-pred",
             title="Unmapped Predicate",
             is_relevant=None,
-            mapping=None
-        )
+            mapping=None,
+        ),
     ]
 
     for pred in predicates:
@@ -212,7 +239,9 @@ def test_filter_statistics_with_real_predicates(local_db_session, mock_ref_manag
     assert "dbpedia:irrel1" in stats["irrelevant_external_predicates"]
 
 
-def test_cache_behavior_with_database_updates(local_db_session, mock_ref_manager):  # noqa: E501
+def test_cache_behavior_with_database_updates(
+    local_db_session, mock_ref_manager
+):  # noqa: E501
     """Test that cache is properly used and invalidated."""
     # Create initial predicate
     predicate = Predicate(
@@ -220,9 +249,9 @@ def test_cache_behavior_with_database_updates(local_db_session, mock_ref_manager
         identifier="cached-pred",
         title="Cached Predicate",
         is_relevant=True,
-        mapping=json.dumps({"external_predicates": [
-            {"source": "schema.org", "external_id": "cached"}
-        ]})
+        mapping=json.dumps(
+            {"external_predicates": [{"source": "schema.org", "external_id": "cached"}]}
+        ),
     )
     local_db_session.add(predicate)
     local_db_session.commit()
@@ -249,9 +278,12 @@ def test_cache_behavior_with_database_updates(local_db_session, mock_ref_manager
     assert "schema.org:cached" not in relevant3
 
 
-def test_batch_predicate_fetch_optimization(local_db_session, ref_db_session, mock_ref_manager):  # noqa: E501
+def test_batch_predicate_fetch_optimization(
+    local_db_session, ref_db_session, mock_ref_manager
+):  # noqa: E501
     """Test that batch fetching optimizes database queries."""
     from datetime import date
+
     # Create multiple external predicates
     for i in range(10):
         ext_pred = ExternalPredicate(
@@ -261,7 +293,7 @@ def test_batch_predicate_fetch_optimization(local_db_session, ref_db_session, mo
             title=f"Predicate {i}",
             definition=f"Test predicate {i}",
             created_at=date.today().isoformat(),
-            updated_at=date.today().isoformat()
+            updated_at=date.today().isoformat(),
         )
         ref_db_session.add(ext_pred)
     ref_db_session.commit()
@@ -307,7 +339,9 @@ def test_filter_mode_determination_logic(local_db_session, mock_ref_manager):
     assert mode == "whitelist"
 
 
-def test_filter_service_with_null_relevance_values(local_db_session, mock_ref_manager):  # noqa: E501
+def test_filter_service_with_null_relevance_values(
+    local_db_session, mock_ref_manager
+):  # noqa: E501
     """Test that predicates with null is_relevant values don't affect filtering."""  # noqa: E501
     # Create predicates with various relevance states
     predicates = [
@@ -316,19 +350,19 @@ def test_filter_service_with_null_relevance_values(local_db_session, mock_ref_ma
             identifier="null-pred",
             title="Null Predicate",
             is_relevant=None,  # Null should be ignored
-            mapping=json.dumps({"external_predicates": [
-                {"source": "test", "external_id": "null1"}
-            ]})
+            mapping=json.dumps(
+                {"external_predicates": [{"source": "test", "external_id": "null1"}]}
+            ),
         ),
         Predicate(
             id="pred-2",
             identifier="relevant-pred",
             title="Relevant Predicate",
             is_relevant=True,
-            mapping=json.dumps({"external_predicates": [
-                {"source": "test", "external_id": "rel1"}
-            ]})
-        )
+            mapping=json.dumps(
+                {"external_predicates": [{"source": "test", "external_id": "rel1"}]}
+            ),
+        ),
     ]
 
     for pred in predicates:

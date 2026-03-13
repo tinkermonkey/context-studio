@@ -19,9 +19,10 @@ from reference_db.manager import ReferenceManager
 from services.predicate_similarity import PredicateSimilarityService
 from embeddings.generate_embeddings import generate_embedding
 
-
 # Skip if embeddings not available
-pytest.importorskip("embeddings.generate_embeddings", reason="embeddings module not available")  # noqa: E501
+pytest.importorskip(
+    "embeddings.generate_embeddings", reason="embeddings module not available"
+)  # noqa: E501
 
 
 @pytest.fixture(scope="module")
@@ -41,7 +42,7 @@ def large_external_predicates_dataset():
     sources = {
         "conceptnet": 40,  # ConceptNet relations
         "dbpedia": 760,  # DBpedia properties
-        "wikidata": 9200  # WikiData properties
+        "wikidata": 9200,  # WikiData properties
     }
 
     predicate_count = 0
@@ -62,7 +63,7 @@ def large_external_predicates_dataset():
                 external_id=f"{source}:{i}",
                 title_embedding=title_emb,
                 definition_embedding=def_emb,
-                embedding_dims=384
+                embedding_dims=384,
             )
             predicate_count += 1
 
@@ -96,10 +97,7 @@ class TestClusteringPerformance:
         start_time = time.perf_counter()
 
         clusters = service.cluster_predicates(
-            predicates=test_predicates,
-            min_similarity=0.7,
-            min_cluster_size=2,
-            eps=0.3
+            predicates=test_predicates, min_similarity=0.7, min_cluster_size=2, eps=0.3
         )
 
         elapsed = (time.perf_counter() - start_time) * 1000
@@ -109,10 +107,13 @@ class TestClusteringPerformance:
         print(f"  Clusters: {len(clusters)}")
 
         # Clustering should complete in reasonable time
-        assert elapsed < 5000, \
-            f"Clustering 10 predicates took {elapsed:.2f}ms (should be <5000ms)"  # noqa: E501
+        assert (
+            elapsed < 5000
+        ), f"Clustering 10 predicates took {elapsed:.2f}ms (should be <5000ms)"  # noqa: E501
 
-    def test_clustering_100_predicates(self, large_external_predicates_dataset):  # noqa: E501
+    def test_clustering_100_predicates(
+        self, large_external_predicates_dataset
+    ):  # noqa: E501
         """
         Test clustering performance with 100 predicates.
 
@@ -125,19 +126,18 @@ class TestClusteringPerformance:
         test_predicates = []
         for i in range(100):
             category = i % 5  # Create 5 semantic categories
-            test_predicates.append((
-                f"pred_{i}",
-                f"Category_{category}_predicate_{i}",
-                f"A predicate in category {category} with index {i}"
-            ))
+            test_predicates.append(
+                (
+                    f"pred_{i}",
+                    f"Category_{category}_predicate_{i}",
+                    f"A predicate in category {category} with index {i}",
+                )
+            )
 
         start_time = time.perf_counter()
 
         clusters = service.cluster_predicates(
-            predicates=test_predicates,
-            min_similarity=0.7,
-            min_cluster_size=2,
-            eps=0.3
+            predicates=test_predicates, min_similarity=0.7, min_cluster_size=2, eps=0.3
         )
 
         elapsed = (time.perf_counter() - start_time) * 1000
@@ -148,5 +148,6 @@ class TestClusteringPerformance:
 
         # Clustering should complete in reasonable time
         # Allow more time for 100 predicates (10x the data)
-        assert elapsed < 30000, \
-            f"Clustering 100 predicates took {elapsed:.2f}ms (should be <30000ms)"  # noqa: E501
+        assert (
+            elapsed < 30000
+        ), f"Clustering 100 predicates took {elapsed:.2f}ms (should be <30000ms)"  # noqa: E501

@@ -39,7 +39,9 @@ class TestConfigDatabaseIntegration:
             }
         }
 
-        with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as f:  # noqa: E501
+        with tempfile.NamedTemporaryFile(
+            mode="w", suffix=".json", delete=False
+        ) as f:  # noqa: E501
             json.dump(config_data, f)
             temp_config = f.name
 
@@ -47,8 +49,12 @@ class TestConfigDatabaseIntegration:
             config_manager = ConfigurationManager(temp_config)
 
             # Verify configuration is correct (don't test db connection if db_utils not available)  # noqa: E501
-            assert config_manager.settings.database.default_url == "sqlite:///:memory:"  # noqa: E501
-            assert not hasattr(config_manager.settings.database, "schema_org_path")  # noqa: E501
+            assert (
+                config_manager.settings.database.default_url == "sqlite:///:memory:"
+            )  # noqa: E501
+            assert not hasattr(
+                config_manager.settings.database, "schema_org_path"
+            )  # noqa: E501
 
         finally:
             if os.path.exists(temp_config):
@@ -78,8 +84,12 @@ class TestConfigDatabaseIntegration:
                 config_manager = ConfigurationManager(temp_config)
 
                 # Verify reference path is set correctly
-                assert config_manager.settings.database.reference_path == ref_db_path  # noqa: E501
-                assert "schema_org_path" not in str(config_manager.settings.database)  # noqa: E501
+                assert (
+                    config_manager.settings.database.reference_path == ref_db_path
+                )  # noqa: E501
+                assert "schema_org_path" not in str(
+                    config_manager.settings.database
+                )  # noqa: E501
 
                 # Create the reference database
                 conn = sqlite3.connect(ref_db_path)
@@ -117,10 +127,14 @@ class TestConfigDatabaseIntegration:
             config_manager2 = ConfigurationManager(config_file)
 
             # Verify no schema_org_path
-            assert not hasattr(config_manager2.settings.database, "schema_org_path")  # noqa: E501
+            assert not hasattr(
+                config_manager2.settings.database, "schema_org_path"
+            )  # noqa: E501
 
             # Modify and save again
-            config_manager2.settings.database.default_url = "sqlite:///./modified.db"  # noqa: E501
+            config_manager2.settings.database.default_url = (
+                "sqlite:///./modified.db"  # noqa: E501
+            )
             assert config_manager2.save()
 
             # Load third time
@@ -131,7 +145,9 @@ class TestConfigDatabaseIntegration:
                 config_manager3.settings.database.default_url
                 == "sqlite:///./modified.db"
             )
-            assert not hasattr(config_manager3.settings.database, "schema_org_path")  # noqa: E501
+            assert not hasattr(
+                config_manager3.settings.database, "schema_org_path"
+            )  # noqa: E501
 
     def test_migration_from_old_config_file(self):
         """Test migration scenario from old config with schema_org_path"""
@@ -160,7 +176,9 @@ class TestConfigDatabaseIntegration:
             assert not errors
 
             # Verify deprecated field was ignored
-            assert not hasattr(config_manager.settings.database, "schema_org_path")  # noqa: E501
+            assert not hasattr(
+                config_manager.settings.database, "schema_org_path"
+            )  # noqa: E501
 
             # Save the config (should not include deprecated field)
             assert config_manager.save()
@@ -285,7 +303,9 @@ class TestConfigDatabaseIntegration:
             config_data = {
                 "database": {
                     "default_url": "sqlite:///./local.db",
-                    "reference_path": os.environ.get("TEST_DB_PATH", "./default.db"),  # noqa: E501
+                    "reference_path": os.environ.get(
+                        "TEST_DB_PATH", "./default.db"
+                    ),  # noqa: E501
                     "reference_cache_path": "./cache.db",
                     "operations_path": "./operations.db",
                 }
@@ -308,7 +328,9 @@ class TestConfigDatabaseIntegration:
         settings = Settings()
 
         # Test database defaults
-        assert settings.database.default_url == "sqlite:///./datafiles/local.db"  # noqa: E501
+        assert (
+            settings.database.default_url == "sqlite:///./datafiles/local.db"
+        )  # noqa: E501
         assert settings.database.reference_path == "./datafiles/reference.db"
         assert (
             settings.database.reference_cache_path
@@ -360,7 +382,9 @@ class TestConfigDatabaseIntegration:
             assert config_manager2.settings.llm.max_tokens == 2000
 
             # Verify no schema_org_path in database config
-            assert not hasattr(config_manager2.settings.database, "schema_org_path")  # noqa: E501
+            assert not hasattr(
+                config_manager2.settings.database, "schema_org_path"
+            )  # noqa: E501
 
     def test_validate_embedding_model_config(self):
         """Test validation of embedding model configuration"""
@@ -391,7 +415,9 @@ class TestConfigDatabaseIntegration:
             assert len(errors) == 0
 
             # Verify no schema_org_path
-            assert not hasattr(config_manager.settings.database, "schema_org_path")  # noqa: E501
+            assert not hasattr(
+                config_manager.settings.database, "schema_org_path"
+            )  # noqa: E501
 
     def test_feature_flags_toggle(self):
         """Test toggling feature flags like proxy server and reference sources"""  # noqa: E501
@@ -409,16 +435,28 @@ class TestConfigDatabaseIntegration:
             assert config_manager.settings.proxy_server.enabled
 
             # Test reference source toggles
-            assert config_manager.set("reference_sources.dbpedia_sparql.enabled", False)  # noqa: E501
-            assert not config_manager.settings.reference_sources.dbpedia_sparql.enabled  # noqa: E501
+            assert config_manager.set(
+                "reference_sources.dbpedia_sparql.enabled", False
+            )  # noqa: E501
+            assert (
+                not config_manager.settings.reference_sources.dbpedia_sparql.enabled
+            )  # noqa: E501
 
-            assert config_manager.set("reference_sources.conceptnet.enabled", False)  # noqa: E501
-            assert not config_manager.settings.reference_sources.conceptnet.enabled  # noqa: E501
+            assert config_manager.set(
+                "reference_sources.conceptnet.enabled", False
+            )  # noqa: E501
+            assert (
+                not config_manager.settings.reference_sources.conceptnet.enabled
+            )  # noqa: E501
 
             # Verify changes persist
             config_manager2 = ConfigurationManager(config_file)
-            assert not config_manager2.settings.reference_sources.dbpedia_sparql.enabled  # noqa: E501
-            assert not config_manager2.settings.reference_sources.conceptnet.enabled  # noqa: E501
+            assert (
+                not config_manager2.settings.reference_sources.dbpedia_sparql.enabled
+            )  # noqa: E501
+            assert (
+                not config_manager2.settings.reference_sources.conceptnet.enabled
+            )  # noqa: E501
 
             # Verify get_enabled_sources reflects changes
             enabled_sources = config_manager2.settings.get_enabled_sources()
@@ -426,4 +464,6 @@ class TestConfigDatabaseIntegration:
             assert "conceptnet" not in enabled_sources
 
             # Verify no schema_org_path in database config
-            assert not hasattr(config_manager2.settings.database, "schema_org_path")  # noqa: E501
+            assert not hasattr(
+                config_manager2.settings.database, "schema_org_path"
+            )  # noqa: E501

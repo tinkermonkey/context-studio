@@ -91,10 +91,14 @@ def test_throughput_performance(client):
     domains = []
     for i in range(num_domains):
         layer = layers[i % num_layers]
-        domain = create_domain(client, layer_id=layer["id"], title=f"PerfDomain_{i}")  # noqa: E501
+        domain = create_domain(
+            client, layer_id=layer["id"], title=f"PerfDomain_{i}"
+        )  # noqa: E501
         domains.append(domain)
         if (i + 1) % 10 == 0 or (i + 1) == num_domains:
-            logger.info(f"[THROUGHPUT] Created {i + 1}/{num_domains} domains...")  # noqa: E501
+            logger.info(
+                f"[THROUGHPUT] Created {i + 1}/{num_domains} domains..."
+            )  # noqa: E501
     timings["domains"] = time.time()
     print_mem_usage("After domains")
 
@@ -120,5 +124,7 @@ def test_throughput_performance(client):
     logger.info(
         f"  Terms creation:    {timings['terms'] - timings['domains']:.2f}s  ({1000*(timings['terms']-timings['domains'])/num_terms:.1f} ms/op)"  # noqa: E501
     )
-    logger.info(f"  Total:             {timings['terms'] - timings['start']:.2f}s\n")  # noqa: E501
+    logger.info(
+        f"  Total:             {timings['terms'] - timings['start']:.2f}s\n"
+    )  # noqa: E501
     logger.info("[THROUGHPUT] Throughput test completed.")

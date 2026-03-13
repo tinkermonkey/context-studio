@@ -13,17 +13,24 @@ from typing import Any
 
 def load_baseline(baseline_name: str) -> dict[str, Any]:
     """Load performance baseline from JSON file."""
-    baseline_path = Path(__file__).parent.parent / "performance" / "baselines" / f"{baseline_name}.json"  # noqa: E501
+    baseline_path = (
+        Path(__file__).parent.parent
+        / "performance"
+        / "baselines"
+        / f"{baseline_name}.json"
+    )  # noqa: E501
 
     if not baseline_path.exists():
         pytest.skip(f"Baseline file not found: {baseline_path}")
 
-    with open(baseline_path, 'r') as f:
+    with open(baseline_path, "r") as f:
         baseline: dict[str, Any] = json.load(f)
         return baseline
 
 
-def validate_metric(actual: float, baseline_data: dict, metric_name: str) -> None:  # noqa: E501
+def validate_metric(
+    actual: float, baseline_data: dict, metric_name: str
+) -> None:  # noqa: E501
     """
     Validate a metric against its baseline.
 
@@ -60,7 +67,9 @@ class TestVectorSearchBaselines:
         """Ensure baseline file exists and is valid JSON."""
         baseline = load_baseline("vector_search_baseline")
 
-        assert "baselines" in baseline, "Baseline file missing 'baselines' section"  # noqa: E501
+        assert (
+            "baselines" in baseline
+        ), "Baseline file missing 'baselines' section"  # noqa: E501
         assert "version" in baseline, "Baseline file missing 'version'"
         assert len(baseline["baselines"]) > 0, "No baselines defined"
 
@@ -69,13 +78,21 @@ class TestVectorSearchBaselines:
         baseline = load_baseline("vector_search_baseline")
 
         for metric_name, metric_data in baseline["baselines"].items():
-            assert "target" in metric_data, f"Metric {metric_name} missing 'target'"  # noqa: E501
-            assert "tolerance_pct" in metric_data, f"Metric {metric_name} missing 'tolerance_pct'"  # noqa: E501
-            assert "description" in metric_data, f"Metric {metric_name} missing 'description'"  # noqa: E501
+            assert (
+                "target" in metric_data
+            ), f"Metric {metric_name} missing 'target'"  # noqa: E501
+            assert (
+                "tolerance_pct" in metric_data
+            ), f"Metric {metric_name} missing 'tolerance_pct'"  # noqa: E501
+            assert (
+                "description" in metric_data
+            ), f"Metric {metric_name} missing 'description'"  # noqa: E501
 
     @pytest.mark.skipif(
-        not os.path.exists("/workspace/local-server/tests/performance_tests/test_vector_search_performance.py"),  # noqa: E501
-        reason="Vector search performance tests not available"
+        not os.path.exists(
+            "/workspace/local-server/tests/performance_tests/test_vector_search_performance.py"
+        ),  # noqa: E501
+        reason="Vector search performance tests not available",
     )
     def test_readme_documents_update_procedure(self):
         """Ensure fixtures README documents the update procedure."""
@@ -83,13 +100,17 @@ class TestVectorSearchBaselines:
 
         assert readme_path.exists(), "Fixtures README.md not found"
 
-        with open(readme_path, 'r') as f:
+        with open(readme_path, "r") as f:
             content = f.read()
 
         # Check for key sections
-        assert "Version Pinning" in content, "README missing Version Pinning section"  # noqa: E501
+        assert (
+            "Version Pinning" in content
+        ), "README missing Version Pinning section"  # noqa: E501
         assert "Updating" in content, "README missing update procedure"
-        assert "Schema.org" in content, "README missing Schema.org documentation"  # noqa: E501
+        assert (
+            "Schema.org" in content
+        ), "README missing Schema.org documentation"  # noqa: E501
 
 
 class TestPerformanceBaselineIntegration:
@@ -105,7 +126,9 @@ class TestPerformanceBaselineIntegration:
         latency_baseline = baseline["baselines"]["top_20_query_latency_ms"]
 
         # Validate against baseline
-        validate_metric(example_latency, latency_baseline, "top_20_query_latency_ms")  # noqa: E501
+        validate_metric(
+            example_latency, latency_baseline, "top_20_query_latency_ms"
+        )  # noqa: E501
 
     def test_example_throughput_validation(self):
         """Example: Validate a throughput metric against baseline."""
@@ -114,14 +137,22 @@ class TestPerformanceBaselineIntegration:
         # This would be replaced with actual measurements from performance tests  # noqa: E501
         example_qps = 12.0  # queries per second
 
-        throughput_baseline = baseline["baselines"]["concurrent_throughput_qps"]  # noqa: E501
+        throughput_baseline = baseline["baselines"][
+            "concurrent_throughput_qps"
+        ]  # noqa: E501
 
         # Validate against baseline
-        validate_metric(example_qps, throughput_baseline, "concurrent_throughput_qps")  # noqa: E501
+        validate_metric(
+            example_qps, throughput_baseline, "concurrent_throughput_qps"
+        )  # noqa: E501
 
 
-def update_baseline(baseline_name: str, metric_name: str, new_value: float,
-                    description: str | None = None) -> None:
+def update_baseline(
+    baseline_name: str,
+    metric_name: str,
+    new_value: float,
+    description: str | None = None,
+) -> None:
     """
     Update a baseline metric with a new measured value.
 
@@ -134,9 +165,14 @@ def update_baseline(baseline_name: str, metric_name: str, new_value: float,
         new_value: New measured value
         description: Optional description of the metric
     """
-    baseline_path = Path(__file__).parent.parent / "performance" / "baselines" / f"{baseline_name}.json"  # noqa: E501
+    baseline_path = (
+        Path(__file__).parent.parent
+        / "performance"
+        / "baselines"
+        / f"{baseline_name}.json"
+    )  # noqa: E501
 
-    with open(baseline_path, 'r') as f:
+    with open(baseline_path, "r") as f:
         baseline = json.load(f)
 
     if metric_name not in baseline["baselines"]:
@@ -144,7 +180,8 @@ def update_baseline(baseline_name: str, metric_name: str, new_value: float,
             "target": new_value,
             "actual": new_value,
             "tolerance_pct": 15,
-            "description": description or f"Performance baseline for {metric_name}"  # noqa: E501
+            "description": description
+            or f"Performance baseline for {metric_name}",  # noqa: E501
         }
     else:
         baseline["baselines"][metric_name]["actual"] = new_value
@@ -153,9 +190,10 @@ def update_baseline(baseline_name: str, metric_name: str, new_value: float,
 
     # Update last_updated timestamp
     from datetime import date
+
     baseline["last_updated"] = date.today().isoformat()
 
-    with open(baseline_path, 'w') as f:
+    with open(baseline_path, "w") as f:
         json.dump(baseline, f, indent=2)
 
     print(f"Updated baseline {baseline_name}.{metric_name} = {new_value}")

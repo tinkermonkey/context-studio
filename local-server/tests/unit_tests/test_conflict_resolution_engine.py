@@ -7,6 +7,7 @@ automatic resolution, and manual conflict resolution in Phase 4 implementation.
 
 import sys
 import os
+
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import pytest  # noqa: E402
@@ -15,7 +16,10 @@ from datetime import datetime, timezone  # noqa: E402
 from sqlalchemy.orm import Session  # noqa: E402
 
 from services.conflict_resolution_engine import (  # noqa: E402
-    ConflictResolutionEngine, IntelligentConflictDetector, ConflictDescriptor, ConflictType
+    ConflictResolutionEngine,
+    IntelligentConflictDetector,
+    ConflictDescriptor,
+    ConflictType,
 )
 
 
@@ -41,7 +45,11 @@ class TestConflictResolutionEngine:
     @pytest.fixture
     def conflict_engine(self, mock_db, mock_conflict_detector, mock_version_manager):
         """Create ConflictResolutionEngine instance with mocked dependencies."""
-        return ConflictResolutionEngine(db=mock_db, conflict_detector=mock_conflict_detector, version_manager=mock_version_manager)
+        return ConflictResolutionEngine(
+            db=mock_db,
+            conflict_detector=mock_conflict_detector,
+            version_manager=mock_version_manager,
+        )
 
     @pytest.fixture
     def sample_conflict(self):
@@ -59,7 +67,7 @@ class TestConflictResolutionEngine:
             parent_version_id=None,
             changeset_id="changeset-1",
             author_id="user-1",
-            created_at=datetime.now(timezone.utc)
+            created_at=datetime.now(timezone.utc),
         )
 
         mock_remote_version = EntityVersion(
@@ -72,7 +80,7 @@ class TestConflictResolutionEngine:
             parent_version_id=None,
             changeset_id="changeset-2",
             author_id="user-2",
-            created_at=datetime.now(timezone.utc)
+            created_at=datetime.now(timezone.utc),
         )
 
         return ConflictDescriptor(
@@ -85,40 +93,58 @@ class TestConflictResolutionEngine:
             conflict_details={
                 "field": "name",
                 "local_value": "Local Name",
-                "remote_value": "Remote Name"
+                "remote_value": "Remote Name",
             },
             resolution_suggestions=[
                 {"type": "prefer_local", "confidence": 0.6},
-                {"type": "prefer_remote", "confidence": 0.4}
+                {"type": "prefer_remote", "confidence": 0.4},
             ],
             severity="medium",
-            created_at=datetime.now(timezone.utc)
+            created_at=datetime.now(timezone.utc),
         )
 
-    def test_init_conflict_engine(self, mock_db, mock_conflict_detector, mock_version_manager):
+    def test_init_conflict_engine(
+        self, mock_db, mock_conflict_detector, mock_version_manager
+    ):
         """Test ConflictResolutionEngine initialization."""
-        engine = ConflictResolutionEngine(db=mock_db, conflict_detector=mock_conflict_detector, version_manager=mock_version_manager)
+        engine = ConflictResolutionEngine(
+            db=mock_db,
+            conflict_detector=mock_conflict_detector,
+            version_manager=mock_version_manager,
+        )
 
         assert engine.db == mock_db
         assert engine.conflict_detector == mock_conflict_detector
         assert engine.version_manager == mock_version_manager
 
-    @patch('services.conflict_resolution_engine.uuid.uuid4')
-    def test_detect_conflicts_between_versions_success(self, mock_uuid, conflict_engine, mock_db, sample_conflict):
+    @patch("services.conflict_resolution_engine.uuid.uuid4")
+    def test_detect_conflicts_between_versions_success(
+        self, mock_uuid, conflict_engine, mock_db, sample_conflict
+    ):
         """Test successful conflict detection between versions."""
         # Setup
         mock_uuid.return_value = MagicMock()
         mock_uuid.return_value.__str__ = Mock(return_value="conflict-123")
 
         local_versions = [
-            {"entity_id": "entity-1", "version_id": "v1-local", "data": {"name": "Local"}}
+            {
+                "entity_id": "entity-1",
+                "version_id": "v1-local",
+                "data": {"name": "Local"},
+            }
         ]
         remote_versions = [
-            {"entity_id": "entity-1", "version_id": "v1-remote", "data": {"name": "Remote"}}
+            {
+                "entity_id": "entity-1",
+                "version_id": "v1-remote",
+                "data": {"name": "Remote"},
+            }
         ]
 
         # Mock conflict detector to return iterable list of conflicts
-        conflict_engine.conflict_detector.detect_conflicts.return_value = [sample_conflict]
+        conflict_engine.conflict_detector.detect_conflicts.return_value = [
+            sample_conflict
+        ]
 
         # Mock database operations
         mock_db.execute.return_value.fetchone.return_value = ("v1-local", "v1-remote")
@@ -133,28 +159,35 @@ class TestConflictResolutionEngine:
         assert len(result) >= 0  # May detect conflicts based on logic
         mock_db.execute.assert_called()
 
-    def test_resolve_conflict_manually_success(self, conflict_engine, mock_db, sample_conflict):
+    def test_resolve_conflict_manually_success(
+        self, conflict_engine, mock_db, sample_conflict
+    ):
         """Test successful manual conflict resolution."""
         # Setup
         mock_db.execute.return_value.fetchone.return_value = (
-            sample_conflict.conflict_id, sample_conflict.conflict_type.value,
-            sample_conflict.entity_type, sample_conflict.entity_id,
-            sample_conflict.local_version_id, sample_conflict.remote_version_id,
-            '{"field": "name"}', '[]', sample_conflict.severity,
-            sample_conflict.created_at.isoformat(), None, None, None
+            sample_conflict.conflict_id,
+            sample_conflict.conflict_type.value,
+            sample_conflict.entity_type,
+            sample_conflict.entity_id,
+            sample_conflict.local_version_id,
+            sample_conflict.remote_version_id,
+            '{"field": "name"}',
+            "[]",
+            sample_conflict.severity,
+            sample_conflict.created_at.isoformat(),
+            None,
+            None,
+            None,
         )
         mock_db.commit = Mock()
 
-        resolution_choice = {
-            "strategy": "prefer_local",
-            "resolved_value": "Local Name"
-        }
+        resolution_choice = {"strategy": "prefer_local", "resolved_value": "Local Name"}
 
         # Execute
         result = conflict_engine.resolve_conflict_manually(
             conflict_id=sample_conflict.conflict_id,
             resolved_by="resolver@example.com",
-            resolution_choice=resolution_choice
+            resolution_choice=resolution_choice,
         )
 
         # Verify
@@ -172,20 +205,28 @@ class TestConflictResolutionEngine:
             conflict_engine.resolve_conflict_manually(
                 conflict_id="nonexistent",
                 resolved_by="resolver@example.com",
-                resolution_choice={"strategy": "prefer_local"}
+                resolution_choice={"strategy": "prefer_local"},
             )
 
-    def test_resolve_conflict_already_resolved(self, conflict_engine, mock_db, sample_conflict):
+    def test_resolve_conflict_already_resolved(
+        self, conflict_engine, mock_db, sample_conflict
+    ):
         """Test resolution of already resolved conflict."""
         # Setup - conflict already resolved
         mock_db.execute.return_value.fetchone.return_value = (
-            sample_conflict.conflict_id, sample_conflict.conflict_type.value,
-            sample_conflict.entity_type, sample_conflict.entity_id,
-            sample_conflict.local_version_id, sample_conflict.remote_version_id,
-            '{"field": "name"}', '[]', sample_conflict.severity,
+            sample_conflict.conflict_id,
+            sample_conflict.conflict_type.value,
+            sample_conflict.entity_type,
+            sample_conflict.entity_id,
+            sample_conflict.local_version_id,
+            sample_conflict.remote_version_id,
+            '{"field": "name"}',
+            "[]",
+            sample_conflict.severity,
             sample_conflict.created_at.isoformat(),
             datetime.now(timezone.utc).isoformat(),  # Already resolved
-            "previous@example.com", '{"strategy": "prefer_local"}'
+            "previous@example.com",
+            '{"strategy": "prefer_local"}',
         )
 
         # Execute & Verify
@@ -193,19 +234,28 @@ class TestConflictResolutionEngine:
             conflict_engine.resolve_conflict_manually(
                 conflict_id=sample_conflict.conflict_id,
                 resolved_by="resolver@example.com",
-                resolution_choice={"strategy": "prefer_remote"}
+                resolution_choice={"strategy": "prefer_remote"},
             )
 
-    def test_resolve_conflict_automatically_success(self, conflict_engine, mock_db, sample_conflict):
+    def test_resolve_conflict_automatically_success(
+        self, conflict_engine, mock_db, sample_conflict
+    ):
         """Test successful automatic conflict resolution."""
         # Setup
         mock_db.execute.return_value.fetchone.return_value = (
-            sample_conflict.conflict_id, sample_conflict.conflict_type.value,
-            sample_conflict.entity_type, sample_conflict.entity_id,
-            sample_conflict.local_version_id, sample_conflict.remote_version_id,
-            '{"field": "name"}', '[{"type": "prefer_local", "confidence": 0.9}]',
-            sample_conflict.severity, sample_conflict.created_at.isoformat(),
-            None, None, None
+            sample_conflict.conflict_id,
+            sample_conflict.conflict_type.value,
+            sample_conflict.entity_type,
+            sample_conflict.entity_id,
+            sample_conflict.local_version_id,
+            sample_conflict.remote_version_id,
+            '{"field": "name"}',
+            '[{"type": "prefer_local", "confidence": 0.9}]',
+            sample_conflict.severity,
+            sample_conflict.created_at.isoformat(),
+            None,
+            None,
+            None,
         )
         mock_db.commit = Mock()
 
@@ -214,7 +264,7 @@ class TestConflictResolutionEngine:
             conflict_id=sample_conflict.conflict_id,
             resolved_by="auto-resolver",
             confidence_threshold=0.8,
-            max_attempts=3
+            max_attempts=3,
         )
 
         # Verify
@@ -224,16 +274,25 @@ class TestConflictResolutionEngine:
         mock_db.execute.assert_called()
         mock_db.commit.assert_called_once()
 
-    def test_resolve_conflict_automatically_low_confidence(self, conflict_engine, mock_db, sample_conflict):
+    def test_resolve_conflict_automatically_low_confidence(
+        self, conflict_engine, mock_db, sample_conflict
+    ):
         """Test automatic resolution with low confidence."""
         # Setup
         mock_db.execute.return_value.fetchone.return_value = (
-            sample_conflict.conflict_id, sample_conflict.conflict_type.value,
-            sample_conflict.entity_type, sample_conflict.entity_id,
-            sample_conflict.local_version_id, sample_conflict.remote_version_id,
-            '{"field": "name"}', '[{"type": "prefer_local", "confidence": 0.5}]',
-            sample_conflict.severity, sample_conflict.created_at.isoformat(),
-            None, None, None
+            sample_conflict.conflict_id,
+            sample_conflict.conflict_type.value,
+            sample_conflict.entity_type,
+            sample_conflict.entity_id,
+            sample_conflict.local_version_id,
+            sample_conflict.remote_version_id,
+            '{"field": "name"}',
+            '[{"type": "prefer_local", "confidence": 0.5}]',
+            sample_conflict.severity,
+            sample_conflict.created_at.isoformat(),
+            None,
+            None,
+            None,
         )
 
         # Execute
@@ -241,7 +300,7 @@ class TestConflictResolutionEngine:
             conflict_id=sample_conflict.conflict_id,
             resolved_by="auto-resolver",
             confidence_threshold=0.8,
-            max_attempts=3
+            max_attempts=3,
         )
 
         # Verify
@@ -250,8 +309,10 @@ class TestConflictResolutionEngine:
         assert result["reason"] == "Confidence below threshold"
         assert "suggestions" in result
 
-    @patch('services.conflict_resolution_engine.ConflictResolutionEngine.get_conflict')
-    def test_batch_resolve_conflicts_success(self, mock_get_conflict, conflict_engine, mock_db):
+    @patch("services.conflict_resolution_engine.ConflictResolutionEngine.get_conflict")
+    def test_batch_resolve_conflicts_success(
+        self, mock_get_conflict, conflict_engine, mock_db
+    ):
         """Test successful batch conflict resolution."""
         # Setup
         conflict_ids = ["conflict-1", "conflict-2", "conflict-3"]
@@ -271,7 +332,7 @@ class TestConflictResolutionEngine:
                 "created_at": "2024-01-01T00:00:00Z",
                 "resolved_at": None,
                 "resolved_by": None,
-                "resolution_choice": None
+                "resolution_choice": None,
             },
             {
                 "conflict_id": "conflict-2",
@@ -286,7 +347,7 @@ class TestConflictResolutionEngine:
                 "created_at": "2024-01-01T00:00:00Z",
                 "resolved_at": None,
                 "resolved_by": None,
-                "resolution_choice": None
+                "resolution_choice": None,
             },
             {
                 "conflict_id": "conflict-3",
@@ -301,8 +362,8 @@ class TestConflictResolutionEngine:
                 "created_at": "2024-01-01T00:00:00Z",
                 "resolved_at": None,
                 "resolved_by": None,
-                "resolution_choice": None
-            }
+                "resolution_choice": None,
+            },
         ]
 
         mock_db.commit = Mock()
@@ -311,7 +372,7 @@ class TestConflictResolutionEngine:
         result = conflict_engine.batch_resolve_conflicts(
             conflict_ids=conflict_ids,
             resolved_by="batch-resolver",
-            resolution_strategy="prefer_local"
+            resolution_strategy="prefer_local",
         )
 
         # Verify
@@ -324,8 +385,21 @@ class TestConflictResolutionEngine:
         """Test listing conflicts with various filters."""
         # Setup
         mock_db.execute.return_value.fetchall.return_value = [
-            ("conflict-1", "concurrent_modification", "structure_node", "entity-1", "v1", "v2",
-             '{}', '[]', "medium", "2024-01-01T00:00:00Z", None, None, None)
+            (
+                "conflict-1",
+                "concurrent_modification",
+                "structure_node",
+                "entity-1",
+                "v1",
+                "v2",
+                "{}",
+                "[]",
+                "medium",
+                "2024-01-01T00:00:00Z",
+                None,
+                None,
+                None,
+            )
         ]
 
         # Execute
@@ -335,7 +409,7 @@ class TestConflictResolutionEngine:
             entity_type="structure_node",
             resolved=False,
             limit=10,
-            offset=0
+            offset=0,
         )
 
         # Verify
@@ -349,11 +423,19 @@ class TestConflictResolutionEngine:
         """Test successful conflict retrieval."""
         # Setup
         mock_db.execute.return_value.fetchone.return_value = (
-            sample_conflict.conflict_id, sample_conflict.conflict_type.value,
-            sample_conflict.entity_type, sample_conflict.entity_id,
-            sample_conflict.local_version_id, sample_conflict.remote_version_id,
-            '{"field": "name"}', '[]', sample_conflict.severity,
-            sample_conflict.created_at.isoformat(), None, None, None
+            sample_conflict.conflict_id,
+            sample_conflict.conflict_type.value,
+            sample_conflict.entity_type,
+            sample_conflict.entity_id,
+            sample_conflict.local_version_id,
+            sample_conflict.remote_version_id,
+            '{"field": "name"}',
+            "[]",
+            sample_conflict.severity,
+            sample_conflict.created_at.isoformat(),
+            None,
+            None,
+            None,
         )
 
         # Execute
@@ -382,17 +464,41 @@ class TestConflictResolutionEngine:
         """Test getting conflicts for specific entity."""
         # Setup
         mock_db.execute.return_value.fetchall.return_value = [
-            ("conflict-1", "concurrent_modification", "structure_node", "entity-1", "v1", "v2",
-             '{}', '[]', "medium", "2024-01-01T00:00:00Z", None, None, None),
-            ("conflict-2", "structural_conflict", "structure_node", "entity-1", "v3", "v4",
-             '{}', '[]', "low", "2024-01-01T00:00:00Z", None, None, None)
+            (
+                "conflict-1",
+                "concurrent_modification",
+                "structure_node",
+                "entity-1",
+                "v1",
+                "v2",
+                "{}",
+                "[]",
+                "medium",
+                "2024-01-01T00:00:00Z",
+                None,
+                None,
+                None,
+            ),
+            (
+                "conflict-2",
+                "structural_conflict",
+                "structure_node",
+                "entity-1",
+                "v3",
+                "v4",
+                "{}",
+                "[]",
+                "low",
+                "2024-01-01T00:00:00Z",
+                None,
+                None,
+                None,
+            ),
         ]
 
         # Execute
         result = conflict_engine.get_entity_conflicts(
-            entity_type="structure_node",
-            entity_id="entity-1",
-            resolved=False
+            entity_type="structure_node", entity_id="entity-1", resolved=False
         )
 
         # Verify
@@ -400,23 +506,30 @@ class TestConflictResolutionEngine:
         assert all(c["entity_id"] == "entity-1" for c in result)
         mock_db.execute.assert_called_once()
 
-    def test_get_resolution_suggestions(self, conflict_engine, mock_db, sample_conflict):
+    def test_get_resolution_suggestions(
+        self, conflict_engine, mock_db, sample_conflict
+    ):
         """Test getting resolution suggestions for conflict."""
         # Setup
         mock_db.execute.return_value.fetchone.return_value = (
-            sample_conflict.conflict_id, sample_conflict.conflict_type.value,
-            sample_conflict.entity_type, sample_conflict.entity_id,
-            sample_conflict.local_version_id, sample_conflict.remote_version_id,
+            sample_conflict.conflict_id,
+            sample_conflict.conflict_type.value,
+            sample_conflict.entity_type,
+            sample_conflict.entity_id,
+            sample_conflict.local_version_id,
+            sample_conflict.remote_version_id,
             '{"field": "name", "local_value": "Local", "remote_value": "Remote"}',
             '[{"type": "prefer_local", "confidence": 0.8}]',
-            sample_conflict.severity, sample_conflict.created_at.isoformat(),
-            None, None, None
+            sample_conflict.severity,
+            sample_conflict.created_at.isoformat(),
+            None,
+            None,
+            None,
         )
 
         # Execute
         result = conflict_engine.get_resolution_suggestions(
-            conflict_id=sample_conflict.conflict_id,
-            max_suggestions=5
+            conflict_id=sample_conflict.conflict_id, max_suggestions=5
         )
 
         # Verify
@@ -433,12 +546,12 @@ class TestConflictResolutionEngine:
         # Sequential calls: fetchone(), fetchall(), fetchall(), fetchone(), fetchall()
         mock_execute.fetchone.side_effect = [
             (25,),  # Total conflicts
-            (20, 5, 0.8, 2.5)  # Resolution rates
+            (20, 5, 0.8, 2.5),  # Resolution rates
         ]
         mock_execute.fetchall.side_effect = [
             [("concurrent_modification", 10), ("structural_conflict", 8)],  # By type
             [("high", 5), ("medium", 15), ("low", 5)],  # By severity
-            [("structure_node", "entity-1", 3)]  # Top conflict entities
+            [("structure_node", "entity-1", 3)],  # Top conflict entities
         ]
 
         # Execute
@@ -459,8 +572,8 @@ class TestConflictResolutionEngine:
         # Setup
         mock_db.execute.return_value.fetchone.side_effect = [
             (15,),  # Active conflicts
-            (3,),   # Unresolved high severity
-            (0.85,)  # Auto resolution success rate
+            (3,),  # Unresolved high severity
+            (0.85,),  # Auto resolution success rate
         ]
 
         # Execute
@@ -475,8 +588,10 @@ class TestConflictResolutionEngine:
 
         assert mock_db.execute.call_count == 3
 
-    @patch('services.conflict_resolution_engine.ConflictResolutionEngine.get_conflict')
-    def test_resolve_conflicts_prefer_local(self, mock_get_conflict, conflict_engine, mock_db):
+    @patch("services.conflict_resolution_engine.ConflictResolutionEngine.get_conflict")
+    def test_resolve_conflicts_prefer_local(
+        self, mock_get_conflict, conflict_engine, mock_db
+    ):
         """Test resolving conflicts with prefer local strategy."""
         # Setup
         conflict_ids = ["conflict-1", "conflict-2"]
@@ -496,7 +611,7 @@ class TestConflictResolutionEngine:
                 "created_at": "2024-01-01T00:00:00Z",
                 "resolved_at": None,
                 "resolved_by": None,
-                "resolution_choice": None
+                "resolution_choice": None,
             },
             {
                 "conflict_id": "conflict-2",
@@ -511,16 +626,15 @@ class TestConflictResolutionEngine:
                 "created_at": "2024-01-01T00:00:00Z",
                 "resolved_at": None,
                 "resolved_by": None,
-                "resolution_choice": None
-            }
+                "resolution_choice": None,
+            },
         ]
 
         mock_db.commit = Mock()
 
         # Execute
         result = conflict_engine.resolve_conflicts_prefer_local(
-            conflict_ids=conflict_ids,
-            resolved_by="resolver@example.com"
+            conflict_ids=conflict_ids, resolved_by="resolver@example.com"
         )
 
         # Verify
@@ -534,15 +648,14 @@ class TestConflictResolutionEngine:
         """Test conflict risk analysis for entity."""
         # Setup
         mock_db.execute.return_value.fetchone.side_effect = [
-            (5,),   # Historical conflicts
-            (2,),   # Active conflicts
-            (0.7,)  # Average resolution time
+            (5,),  # Historical conflicts
+            (2,),  # Active conflicts
+            (0.7,),  # Average resolution time
         ]
 
         # Execute
         result = conflict_engine.analyze_conflict_risk(
-            entity_type="structure_node",
-            entity_id="entity-1"
+            entity_type="structure_node", entity_id="entity-1"
         )
 
         # Verify
@@ -561,7 +674,7 @@ class TestConflictResolutionEngine:
         mock_db.execute.return_value.fetchall.return_value = [
             ("structure_node", "entity-1", 8, 0.4),
             ("structure_node", "entity-2", 6, 0.3),
-            ("structure_node", "entity-3", 5, 0.25)
+            ("structure_node", "entity-3", 5, 0.25),
         ]
 
         # Execute
@@ -603,7 +716,7 @@ class TestIntelligentConflictDetector:
             parent_version_id=None,
             changeset_id="changeset-1",
             author_id="user-1",
-            created_at=datetime.now(timezone.utc)
+            created_at=datetime.now(timezone.utc),
         )
 
         remote_version = EntityVersion(
@@ -616,7 +729,7 @@ class TestIntelligentConflictDetector:
             parent_version_id=None,
             changeset_id="changeset-2",
             author_id="user-2",
-            created_at=datetime.now(timezone.utc)
+            created_at=datetime.now(timezone.utc),
         )
 
         # Execute
@@ -653,7 +766,7 @@ class TestIntelligentConflictDetector:
             parent_version_id=None,
             changeset_id="changeset-1",
             author_id="user-1",
-            created_at=datetime.now(timezone.utc)
+            created_at=datetime.now(timezone.utc),
         )
 
         remote_version = EntityVersion(
@@ -666,14 +779,12 @@ class TestIntelligentConflictDetector:
             parent_version_id=None,
             changeset_id="changeset-2",
             author_id="user-2",
-            created_at=datetime.now(timezone.utc)
+            created_at=datetime.now(timezone.utc),
         )
 
         # Execute
         result = detector._generate_resolution_suggestions(
-            ConflictType.CONCURRENT_MODIFICATION,
-            local_version,
-            remote_version
+            ConflictType.CONCURRENT_MODIFICATION, local_version, remote_version
         )
 
         # Verify

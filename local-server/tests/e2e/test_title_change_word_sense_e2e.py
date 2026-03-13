@@ -68,12 +68,9 @@ def test_title_change_triggers_word_sense_update(shared_client):
 
     # Step 3: Update the node's title to something different
     new_title = "Database"
-    update_payload = {
-        "title": new_title
-    }
+    update_payload = {"title": new_title}
     update_resp = shared_client.put(
-        f"/api/structure_nodes/{domain_id}",
-        json=update_payload
+        f"/api/structure_nodes/{domain_id}", json=update_payload
     )
     assert update_resp.status_code == 200
     updated_node = update_resp.json()
@@ -84,7 +81,9 @@ def test_title_change_triggers_word_sense_update(shared_client):
     time.sleep(2)  # Allow time for async event processing
 
     # Step 5: Verify word senses have been updated
-    final_resp = shared_client.get(f"/api/structure_nodes/{domain_id}/word_senses")  # noqa: E501
+    final_resp = shared_client.get(
+        f"/api/structure_nodes/{domain_id}/word_senses"
+    )  # noqa: E501
     assert final_resp.status_code == 200
     final_word_senses = final_resp.json()
 
@@ -124,8 +123,7 @@ def test_title_change_event_recorded(shared_client):
     # Update the title
     new_title = f"Updated_{uuid4()}"
     update_resp = shared_client.put(
-        f"/api/structure_nodes/{domain_id}",
-        json={"title": new_title}
+        f"/api/structure_nodes/{domain_id}", json={"title": new_title}
     )
     assert update_resp.status_code == 200
 
@@ -143,7 +141,9 @@ def test_title_change_event_recorded(shared_client):
     time.sleep(1)
 
     # Word senses endpoint should work without errors
-    word_senses_resp = shared_client.get(f"/api/structure_nodes/{domain_id}/word_senses")  # noqa: E501
+    word_senses_resp = shared_client.get(
+        f"/api/structure_nodes/{domain_id}/word_senses"
+    )  # noqa: E501
     assert word_senses_resp.status_code == 200
     assert isinstance(word_senses_resp.json(), list)
 
@@ -163,8 +163,7 @@ def test_multiple_title_changes_handled_correctly(shared_client):
     titles = ["Title_2", "Title_3", "Title_4"]
     for new_title in titles:
         update_resp = shared_client.put(
-            f"/api/structure_nodes/{domain_id}",
-            json={"title": new_title}
+            f"/api/structure_nodes/{domain_id}", json={"title": new_title}
         )
         assert update_resp.status_code == 200
         # Small delay between updates
@@ -180,7 +179,9 @@ def test_multiple_title_changes_handled_correctly(shared_client):
     assert final_node["title"] == titles[-1]
 
     # Word senses should be accessible
-    word_senses_resp = shared_client.get(f"/api/structure_nodes/{domain_id}/word_senses")  # noqa: E501
+    word_senses_resp = shared_client.get(
+        f"/api/structure_nodes/{domain_id}/word_senses"
+    )  # noqa: E501
     assert word_senses_resp.status_code == 200
     word_senses = word_senses_resp.json()
     assert isinstance(word_senses, list)

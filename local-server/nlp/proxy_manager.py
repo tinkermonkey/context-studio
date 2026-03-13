@@ -50,7 +50,9 @@ class ReferenceAPIProxyManager:
                 active_mappings[domain_key] = {"upstream": domain_config["upstream"]}
 
                 # Get throttle limit for this domain
-                domain_limits = base_config.get("throttling", {}).get("domain_limits", {})
+                domain_limits = base_config.get("throttling", {}).get(
+                    "domain_limits", {}
+                )
                 throttle_limits[domain_key] = domain_limits.get(domain_key, 3600)
 
         # Return None if no APIs are enabled
@@ -83,7 +85,10 @@ class ReferenceAPIProxyManager:
             try:
                 # Ensure database directory exists before starting proxy
                 import os
-                db_path = config.get("cache", {}).get("database_path", "./datafiles/reference_api_cache.db")
+
+                db_path = config.get("cache", {}).get(
+                    "database_path", "./datafiles/reference_api_cache.db"
+                )
                 db_dir = os.path.dirname(db_path)
                 if db_dir:
                     os.makedirs(db_dir, exist_ok=True)
@@ -97,14 +102,18 @@ class ReferenceAPIProxyManager:
                 self.proxy = CachingProxy(config)
 
                 # Start proxy in background thread
-                self.proxy_thread = threading.Thread(target=self._run_proxy, daemon=True)
+                self.proxy_thread = threading.Thread(
+                    target=self._run_proxy, daemon=True
+                )
                 self.proxy_thread.start()
 
                 # Wait for proxy to start
                 self._wait_for_proxy_ready()
 
                 self.is_running = True
-                logger.info(f"Reference API proxy started on {config['server']['host']}:{config['server']['port']}")
+                logger.info(
+                    f"Reference API proxy started on {config['server']['host']}:{config['server']['port']}"
+                )
                 return True
 
             except Exception as e:
@@ -208,8 +217,12 @@ class ReferenceAPIProxyManager:
                 "cache": self._safe_get_stats(monitoring_manager.get_cache_stats),
                 "upstream": self._safe_get_stats(monitoring_manager.get_upstream_stats),
                 "database": self._safe_get_stats(monitoring_manager.get_database_stats),
-                "proxy_health": self._safe_get_stats(monitoring_manager.get_proxy_health),
-                "throttling": self._safe_get_stats(monitoring_manager.get_throttling_stats),
+                "proxy_health": self._safe_get_stats(
+                    monitoring_manager.get_proxy_health
+                ),
+                "throttling": self._safe_get_stats(
+                    monitoring_manager.get_throttling_stats
+                ),
                 "timestamp": time.time(),
             }
 
@@ -234,6 +247,7 @@ class ReferenceAPIProxyManager:
 
         try:
             import requests
+
             settings = get_settings()
             config = settings.get_reference_api_buddy_config()
             host = config["server"]["host"]
@@ -246,7 +260,7 @@ class ReferenceAPIProxyManager:
             else:
                 return {
                     "error": f"Config endpoint returned status {response.status_code}",
-                    "available": False
+                    "available": False,
                 }
 
         except ImportError:

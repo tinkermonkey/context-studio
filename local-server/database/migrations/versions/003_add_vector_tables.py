@@ -21,7 +21,9 @@ class Migration003(Migration):
             try:
                 import sqlite_vec
             except ImportError:
-                raise RuntimeError("sqlite-vec extension not available. Install with: pip install sqlite-vec")
+                raise RuntimeError(
+                    "sqlite-vec extension not available. Install with: pip install sqlite-vec"
+                )
 
             raw_connection = connection.connection
             raw_connection.enable_load_extension(True)
@@ -57,9 +59,12 @@ class Migration003(Migration):
             # Migration should fail if vector tables cannot be created
             # This ensures consistent state across all datasets
             import logging
+
             logger = logging.getLogger(__name__)
             logger.error(f"Failed to create vector tables: {e}")
-            logger.error("Migration 003 requires sqlite-vec extension. Install with: pip install sqlite-vec")
+            logger.error(
+                "Migration 003 requires sqlite-vec extension. Install with: pip install sqlite-vec"
+            )
             raise RuntimeError(f"Migration 003 failed: {e}") from e
 
     def down(self, connection: Connection) -> None:
@@ -72,6 +77,7 @@ class Migration003(Migration):
         except Exception as e:
             # Virtual tables might not exist if extension wasn't available during up()
             import logging
+
             logger = logging.getLogger(__name__)
             logger.warning(f"Could not drop vector tables during rollback: {e}")
             # Don't fail the rollback - the tables might not have been created

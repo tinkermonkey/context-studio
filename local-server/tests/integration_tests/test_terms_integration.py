@@ -31,7 +31,12 @@ def create_domain(client, layer_id, title=None):
 
 
 def create_term(
-    client, domain_id, layer_id, title=None, definition=None, parent_term_id=None  # noqa: E501
+    client,
+    domain_id,
+    layer_id,
+    title=None,
+    definition=None,
+    parent_term_id=None,  # noqa: E501
 ):
     unique_title = title if title else f"Test Term {uuid.uuid4()}"
     payload = {
@@ -120,7 +125,9 @@ def test_create_term_with_parent_and_circular_reference(client):
     layer_id = create_layer(client)
     domain_id = create_domain(client, layer_id)
     parent = create_term(client, domain_id, layer_id)
-    child = create_term(client, domain_id, layer_id, parent_term_id=parent["id"])  # noqa: E501
+    child = create_term(
+        client, domain_id, layer_id, parent_term_id=parent["id"]
+    )  # noqa: E501
 
     # Parent must exist and be in same domain
     client.post(
@@ -138,7 +145,8 @@ def test_create_term_with_parent_and_circular_reference(client):
 
     # Circular reference test - may not be applicable in current API
     client.put(
-        f"/api/structure_nodes/{parent['id']}", json={"parent_term_id": child["id"]}  # noqa: E501
+        f"/api/structure_nodes/{parent['id']}",
+        json={"parent_term_id": child["id"]},  # noqa: E501
     )
     # Note: This may succeed if parent_term_id is not validated
 
@@ -188,8 +196,12 @@ def test_update_term_duplicate_title(client):
 @pytest.mark.skip_suite
 def test_update_term_not_found(client):
     create_layer(client)
-    resp = client.put("/api/structure_nodes/nonexistent-id", json={"title": "Updated"})  # noqa: E501
-    assert resp.status_code == 422  # FastAPI returns 422 for invalid UUID format  # noqa: E501
+    resp = client.put(
+        "/api/structure_nodes/nonexistent-id", json={"title": "Updated"}
+    )  # noqa: E501
+    assert (
+        resp.status_code == 422
+    )  # FastAPI returns 422 for invalid UUID format  # noqa: E501
 
 
 @pytest.mark.skip_suite
@@ -209,7 +221,9 @@ def test_delete_term(client):
 
 def test_delete_term_not_found(client):
     resp = client.delete("/api/structure_nodes/nonexistent-id")
-    assert resp.status_code == 422  # FastAPI returns 422 for invalid UUID format  # noqa: E501
+    assert (
+        resp.status_code == 422
+    )  # FastAPI returns 422 for invalid UUID format  # noqa: E501
 
 
 @pytest.mark.skip_suite
@@ -250,7 +264,10 @@ def test_terms_pagination(client):
     terms = []
     for i in range(5):
         term = create_term(
-            client, domain_id, layer_id, title=f"Term {chr(65+i)} {unique_suffix}"  # noqa: E501
+            client,
+            domain_id,
+            layer_id,
+            title=f"Term {chr(65+i)} {unique_suffix}",  # noqa: E501
         )  # Term A, B, C, D, E with unique suffix
         terms.append(term)
 

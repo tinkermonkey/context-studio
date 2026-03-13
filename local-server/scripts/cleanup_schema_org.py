@@ -43,18 +43,33 @@ def cleanup_schema_org_data(db_path: str = None):
 
     try:
         # Count existing data
-        node_count = manager.session.query(ReferenceNode).filter_by(source=SOURCE_NAME).count()
-        predicate_count = manager.session.query(ExternalPredicate).filter_by(source=SOURCE_NAME).count()
+        node_count = (
+            manager.session.query(ReferenceNode).filter_by(source=SOURCE_NAME).count()
+        )
+        predicate_count = (
+            manager.session.query(ExternalPredicate)
+            .filter_by(source=SOURCE_NAME)
+            .count()
+        )
 
         # Note: ReferenceLinks don't have a source field, but we can identify Schema.org links
         # by checking if they reference Schema.org nodes
-        schema_node_ids = [n.id for n in manager.session.query(ReferenceNode.id).filter_by(source=SOURCE_NAME).all()]
+        schema_node_ids = [
+            n.id
+            for n in manager.session.query(ReferenceNode.id)
+            .filter_by(source=SOURCE_NAME)
+            .all()
+        ]
         link_count = 0
         if schema_node_ids:
-            link_count = manager.session.query(ReferenceLink).filter(
-                (ReferenceLink.subject_node.in_(schema_node_ids)) |
-                (ReferenceLink.object_node.in_(schema_node_ids))
-            ).count()
+            link_count = (
+                manager.session.query(ReferenceLink)
+                .filter(
+                    (ReferenceLink.subject_node.in_(schema_node_ids))
+                    | (ReferenceLink.object_node.in_(schema_node_ids))
+                )
+                .count()
+            )
 
         logger.info(f"Found {node_count} Schema.org nodes")
         logger.info(f"Found {predicate_count} Schema.org predicates")
@@ -68,8 +83,8 @@ def cleanup_schema_org_data(db_path: str = None):
         if link_count > 0:
             logger.info("Deleting Schema.org links...")
             manager.session.query(ReferenceLink).filter(
-                (ReferenceLink.subject_node.in_(schema_node_ids)) |
-                (ReferenceLink.object_node.in_(schema_node_ids))
+                (ReferenceLink.subject_node.in_(schema_node_ids))
+                | (ReferenceLink.object_node.in_(schema_node_ids))
             ).delete(synchronize_session=False)
             manager.session.commit()
             logger.info(f"Deleted {link_count} links")
@@ -84,7 +99,9 @@ def cleanup_schema_org_data(db_path: str = None):
         # Delete predicates
         if predicate_count > 0:
             logger.info("Deleting Schema.org predicates...")
-            manager.session.query(ExternalPredicate).filter_by(source=SOURCE_NAME).delete()
+            manager.session.query(ExternalPredicate).filter_by(
+                source=SOURCE_NAME
+            ).delete()
             manager.session.commit()
             logger.info(f"Deleted {predicate_count} predicates")
 
@@ -99,7 +116,9 @@ def cleanup_schema_org_data(db_path: str = None):
             manager.session.rollback()
 
         logger.info("✅ Schema.org data cleanup complete!")
-        logger.info("You can now run the Schema.org import with the refactored importer.")
+        logger.info(
+            "You can now run the Schema.org import with the refactored importer."
+        )
 
     except Exception as e:
         logger.error(f"Cleanup failed: {e}", exc_info=True)
@@ -116,13 +135,10 @@ if __name__ == "__main__":
     parser.add_argument(
         "--db-path",
         type=str,
-        help="Path to database file (optional, uses default if not provided)"
+        help="Path to database file (optional, uses default if not provided)",
     )
     parser.add_argument(
-        "--yes",
-        "-y",
-        action="store_true",
-        help="Skip confirmation prompt"
+        "--yes", "-y", action="store_true", help="Skip confirmation prompt"
     )
 
     args = parser.parse_args()

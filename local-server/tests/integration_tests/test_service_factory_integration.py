@@ -9,7 +9,9 @@ import sys
 import os
 
 sys.path.append(
-    os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))  # noqa: E501
+    os.path.dirname(
+        os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    )  # noqa: E501
 )
 
 import pytest  # noqa: E402
@@ -67,7 +69,9 @@ class TestServiceFactoryIntegration:
         assert delete_response.status_code == 204
 
     @pytest.mark.skip_suite
-    def test_service_caching_across_requests(self, shared_client, test_service_factory):  # noqa: E501
+    def test_service_caching_across_requests(
+        self, shared_client, test_service_factory
+    ):  # noqa: E501
         """
         Test that service factory caching works across multiple API requests.
         """
@@ -101,15 +105,21 @@ class TestServiceFactoryIntegration:
             cache_misses = node_service_metrics["cache_misses"]
 
             # Verify services were created (should be at least 1 per request type)  # noqa: E501
-            assert total_created > 0, "Expected at least some services to be created"  # noqa: E501
+            assert (
+                total_created > 0
+            ), "Expected at least some services to be created"  # noqa: E501
 
             # Verify that requests were processed (either hits or misses should occur)  # noqa: E501
             total_requests = cache_hits + cache_misses
-            assert total_requests > 0, "Expected cache hits or misses to be recorded"  # noqa: E501
+            assert (
+                total_requests > 0
+            ), "Expected cache hits or misses to be recorded"  # noqa: E501
 
         # Clean up
         for created_id in created_ids:
-            delete_response = client.delete(f"/api/structure_nodes/{created_id}")  # noqa: E501
+            delete_response = client.delete(
+                f"/api/structure_nodes/{created_id}"
+            )  # noqa: E501
             assert delete_response.status_code == 204
 
     def test_database_manager_with_service_factory(
@@ -200,7 +210,9 @@ class TestServiceFactoryIntegration:
         performance_summary = test_service_factory.get_performance_summary()
 
         # Should have reasonable cache hit rate after first operation
-        overall_hit_rate = performance_summary["overall_cache_hit_rate_percent"]  # noqa: E501
+        overall_hit_rate = performance_summary[
+            "overall_cache_hit_rate_percent"
+        ]  # noqa: E501
 
         # Log performance for analysis
         print(f"Total time for 5 operations: {total_time:.3f}s")
@@ -208,7 +220,9 @@ class TestServiceFactoryIntegration:
 
         # Clean up
         for created_id in created_ids:
-            delete_response = client.delete(f"/api/structure_nodes/{created_id}")  # noqa: E501
+            delete_response = client.delete(
+                f"/api/structure_nodes/{created_id}"
+            )  # noqa: E501
             assert delete_response.status_code == 204
 
 
@@ -228,7 +242,9 @@ class TestMigratedIntegrationTest:
 
     # AFTER (New pattern with service factory):
     @pytest.mark.skip_suite
-    def test_create_layer_new_pattern(self, shared_client, test_service_factory):  # noqa: E501
+    def test_create_layer_new_pattern(
+        self, shared_client, test_service_factory
+    ):  # noqa: E501
         """
         Migrated test that uses service factory and monitoring.
         """
@@ -245,7 +261,9 @@ class TestMigratedIntegrationTest:
         )
 
         # After clear_cache, initial count should be 0
-        assert initial_service_count == 0, "Expected initial service count to be 0 after clear_cache"  # noqa: E501
+        assert (
+            initial_service_count == 0
+        ), "Expected initial service count to be 0 after clear_cache"  # noqa: E501
 
         # Perform the actual test
         response = client.post(
@@ -269,10 +287,14 @@ class TestMigratedIntegrationTest:
         )
 
         # Should have created services for the request
-        assert final_service_count > 0, "Expected services to be created for the API request"  # noqa: E501
+        assert (
+            final_service_count > 0
+        ), "Expected services to be created for the API request"  # noqa: E501
 
         # Clean up
-        delete_response = client.delete(f"/api/structure_nodes/{layer_data['id']}")  # noqa: E501
+        delete_response = client.delete(
+            f"/api/structure_nodes/{layer_data['id']}"
+        )  # noqa: E501
         assert delete_response.status_code == 204
 
 

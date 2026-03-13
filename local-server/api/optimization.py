@@ -124,7 +124,9 @@ class ThreeWayDiffRequest(BaseModel):
     base: Dict[str, Any] = Field(..., description="Base version data")
     local: Dict[str, Any] = Field(..., description="Local version data")
     remote: Dict[str, Any] = Field(..., description="Remote version data")
-    enable_semantic_analysis: bool = Field(True, description="Enable semantic analysis")  # noqa: E501
+    enable_semantic_analysis: bool = Field(
+        True, description="Enable semantic analysis"
+    )  # noqa: E501
 
 
 class ThreeWayDiffOut(BaseModel):
@@ -140,7 +142,9 @@ class BatchOperationRequest(BaseModel):
     """API model for batch operation request."""
 
     operation_type: str = Field(..., description="Type of batch operation")
-    entity_data: List[Dict[str, Any]] = Field(..., description="Entity data to process")  # noqa: E501
+    entity_data: List[Dict[str, Any]] = Field(
+        ..., description="Entity data to process"
+    )  # noqa: E501
     author_id: str = Field(..., description="Author ID for the operation")
     options: Optional[Dict[str, Any]] = Field(
         None, description="Additional operation options"
@@ -199,9 +203,21 @@ def get_optimization_system_health(
         # Check actual service health from each service
         # Each service should implement a health check method
         services_health = {
-            "query_optimizer": query_optimizer.health_check() if hasattr(query_optimizer, "health_check") else None,  # noqa: E501
-            "storage_optimizer": storage_optimizer.health_check() if hasattr(storage_optimizer, "health_check") else None,  # noqa: E501
-            "performance_monitor": performance_monitor.health_check() if hasattr(performance_monitor, "health_check") else None,  # noqa: E501
+            "query_optimizer": (
+                query_optimizer.health_check()
+                if hasattr(query_optimizer, "health_check")
+                else None
+            ),  # noqa: E501
+            "storage_optimizer": (
+                storage_optimizer.health_check()
+                if hasattr(storage_optimizer, "health_check")
+                else None
+            ),  # noqa: E501
+            "performance_monitor": (
+                performance_monitor.health_check()
+                if hasattr(performance_monitor, "health_check")
+                else None
+            ),  # noqa: E501
             "diff_engine": None,  # Not yet available as dependency
             "batch_processor": None,  # Not yet available as dependency
         }
@@ -229,7 +245,9 @@ def get_optimization_system_health(
         if not optimization_enabled:
             issues.append("Automated optimization is disabled")
         if health_score < 0.7:
-            issues.append(f"Performance score below threshold: {performance_grade}")  # noqa: E501
+            issues.append(
+                f"Performance score below threshold: {performance_grade}"
+            )  # noqa: E501
 
         return SystemHealthOut(
             status=overall_status,
@@ -250,32 +268,40 @@ def get_optimization_system_health(
 
 
 @router.get("/performance/dashboard")
-def get_performance_dashboard(performance_monitor=Depends(get_performance_monitor)):  # noqa: E501
+def get_performance_dashboard(
+    performance_monitor=Depends(get_performance_monitor),
+):  # noqa: E501
     """Get comprehensive performance dashboard data."""
     try:
         dashboard = performance_monitor.get_performance_dashboard()
         return dashboard
     except Exception as e:
         raise HTTPException(
-            status_code=500, detail=f"Failed to get performance dashboard: {str(e)}"  # noqa: E501
+            status_code=500,
+            detail=f"Failed to get performance dashboard: {str(e)}",  # noqa: E501
         )
 
 
 @router.get("/performance/metrics", response_model=PerformanceMetricsOut)
-def get_performance_metrics(performance_monitor=Depends(get_performance_monitor)):  # noqa: E501
+def get_performance_metrics(
+    performance_monitor=Depends(get_performance_monitor),
+):  # noqa: E501
     """Get current comprehensive performance metrics."""
     try:
         metrics = performance_monitor.collect_performance_metrics()
         return PerformanceMetricsOut.model_validate(metrics)
     except Exception as e:
         raise HTTPException(
-            status_code=500, detail=f"Failed to get performance metrics: {str(e)}"  # noqa: E501
+            status_code=500,
+            detail=f"Failed to get performance metrics: {str(e)}",  # noqa: E501
         )
 
 
 @router.get("/performance/trends", response_model=PerformanceTrendsOut)
 def get_performance_trends(
-    window_hours: int = Query(24, ge=1, le=168, description="Analysis window in hours"),  # noqa: E501
+    window_hours: int = Query(
+        24, ge=1, le=168, description="Analysis window in hours"
+    ),  # noqa: E501
     performance_monitor=Depends(get_performance_monitor),
 ):
     """Get performance trend analysis and optimization recommendations."""
@@ -286,7 +312,8 @@ def get_performance_trends(
         return PerformanceTrendsOut.model_validate(trends)
     except Exception as e:
         raise HTTPException(
-            status_code=500, detail=f"Failed to get performance trends: {str(e)}"  # noqa: E501
+            status_code=500,
+            detail=f"Failed to get performance trends: {str(e)}",  # noqa: E501
         )
 
 
@@ -342,7 +369,8 @@ def get_query_optimization_stats(query_optimizer=Depends(get_query_analyzer)):
 
 @router.post("/query/optimize", response_model=QueryOptimizationOut)
 def optimize_query(
-    request: QueryOptimizationRequest, query_optimizer=Depends(get_query_analyzer)  # noqa: E501
+    request: QueryOptimizationRequest,
+    query_optimizer=Depends(get_query_analyzer),  # noqa: E501
 ):
     """Optimize a specific query using advanced optimization techniques."""
     try:
@@ -370,13 +398,16 @@ def optimize_query(
 
 @router.post("/query/materialized-view")
 def create_materialized_view(
-    request: MaterializedViewRequest, query_optimizer=Depends(get_query_analyzer)  # noqa: E501
+    request: MaterializedViewRequest,
+    query_optimizer=Depends(get_query_analyzer),  # noqa: E501
 ):
     """Create a materialized view for frequently accessed queries."""
     try:
         # Validate view definition first
         if not request.view_name or not request.query:
-            raise HTTPException(status_code=422, detail="Invalid view definition")  # noqa: E501
+            raise HTTPException(
+                status_code=422, detail="Invalid view definition"
+            )  # noqa: E501
 
         success = query_optimizer.create_materialized_view(
             request.view_name, request.query, request.refresh_strategy
@@ -399,7 +430,8 @@ def create_materialized_view(
         raise
     except Exception as e:
         raise HTTPException(
-            status_code=500, detail=f"Failed to create materialized view: {str(e)}"  # noqa: E501
+            status_code=500,
+            detail=f"Failed to create materialized view: {str(e)}",  # noqa: E501
         )
 
 
@@ -407,7 +439,9 @@ def create_materialized_view(
 
 
 @router.get("/storage/stats")
-def get_storage_optimization_stats(storage_optimizer=Depends(get_storage_manager)):  # noqa: E501
+def get_storage_optimization_stats(
+    storage_optimizer=Depends(get_storage_manager),
+):  # noqa: E501
     """Get storage optimization statistics and cost metrics."""
     try:
         stats = storage_optimizer.get_management_summary()
@@ -416,9 +450,13 @@ def get_storage_optimization_stats(storage_optimizer=Depends(get_storage_manager
             "optimization_summary": {  # Add this wrapper
                 "files_optimized": stats.get("files_optimized", 0),
                 "total_savings_bytes": stats.get("total_savings_bytes", 0),
-                "average_compression_ratio": stats.get("average_compression_ratio", 0),  # noqa: E501
+                "average_compression_ratio": stats.get(
+                    "average_compression_ratio", 0
+                ),  # noqa: E501
             },
-            "compression_algorithms_used": stats.get("compression_algorithms_used", {}),  # noqa: E501
+            "compression_algorithms_used": stats.get(
+                "compression_algorithms_used", {}
+            ),  # noqa: E501
             "total_optimizations": stats.get("total_optimizations", 0),
         }
         return response
@@ -430,7 +468,8 @@ def get_storage_optimization_stats(storage_optimizer=Depends(get_storage_manager
 
 @router.post("/storage/optimize", response_model=StorageOptimizationOut)
 def optimize_storage(
-    background_tasks: BackgroundTasks, storage_optimizer=Depends(get_storage_manager)  # noqa: E501
+    background_tasks: BackgroundTasks,
+    storage_optimizer=Depends(get_storage_manager),  # noqa: E501
 ):
     """Trigger comprehensive storage optimization including compression and lifecycle policies."""  # noqa: E501
     try:
@@ -492,7 +531,8 @@ def setup_lifecycle_policies(storage_optimizer=Depends(get_storage_manager)):
         raise
     except Exception as e:
         raise HTTPException(
-            status_code=500, detail=f"Failed to setup lifecycle policies: {str(e)}"  # noqa: E501
+            status_code=500,
+            detail=f"Failed to setup lifecycle policies: {str(e)}",  # noqa: E501
         )
 
 
@@ -529,7 +569,8 @@ def perform_three_way_diff(
         )
     except Exception as e:
         raise HTTPException(
-            status_code=500, detail=f"Failed to perform three-way diff: {str(e)}"  # noqa: E501
+            status_code=500,
+            detail=f"Failed to perform three-way diff: {str(e)}",  # noqa: E501
         )
 
 
@@ -583,7 +624,8 @@ def execute_batch_operation(
         raise
     except Exception as e:
         raise HTTPException(
-            status_code=500, detail=f"Failed to execute batch operation: {str(e)}"  # noqa: E501
+            status_code=500,
+            detail=f"Failed to execute batch operation: {str(e)}",  # noqa: E501
         )
 
 
@@ -628,6 +670,5 @@ def update_optimization_configuration(config: Dict[str, Any]):
     # Configuration update not yet implemented
     logger.warning("Optimization configuration update not yet implemented")
     raise HTTPException(
-        status_code=501,
-        detail="Configuration update not yet implemented"
+        status_code=501, detail="Configuration update not yet implemented"
     )

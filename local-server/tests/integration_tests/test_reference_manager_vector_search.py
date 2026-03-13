@@ -92,6 +92,7 @@ def test_reference_nodes_max_similarity_both_embeddings(
 
     # Create a custom embedding generator that returns our test embedding
     test_embedding = create_embedding(0.8)
+
     def mock_embedding_generator(text: str) -> bytes:
         return test_embedding
 
@@ -122,6 +123,7 @@ def test_reference_nodes_max_similarity_title_only(reference_manager_with_embedd
     manager = reference_manager_with_embeddings
 
     test_embedding = create_embedding(0.65)
+
     def mock_embedding_generator(text: str) -> bytes:
         return test_embedding
 
@@ -158,6 +160,7 @@ def test_reference_nodes_max_similarity_definition_only(
     manager = reference_manager_with_embeddings
 
     test_embedding = create_embedding(0.55)
+
     def mock_embedding_generator(text: str) -> bytes:
         return test_embedding
 
@@ -193,6 +196,7 @@ def test_reference_nodes_no_embeddings_filtered(reference_manager_with_embedding
     manager = reference_manager_with_embeddings
 
     test_embedding = create_embedding(0.7)
+
     def mock_embedding_generator(text: str) -> bytes:
         return test_embedding
 
@@ -216,6 +220,7 @@ def test_reference_nodes_threshold_filtering(reference_manager_with_embeddings):
     manager = reference_manager_with_embeddings
 
     test_embedding = create_embedding(0.7)
+
     def mock_embedding_generator(text: str) -> bytes:
         return test_embedding
 
@@ -252,6 +257,7 @@ def test_reference_nodes_result_ordering(reference_manager_with_embeddings):
     manager = reference_manager_with_embeddings
 
     test_embedding = create_embedding(0.7)
+
     def mock_embedding_generator(text: str) -> bytes:
         return test_embedding
 
@@ -276,6 +282,7 @@ def test_reference_nodes_limit_respected(reference_manager_with_embeddings):
     manager = reference_manager_with_embeddings
 
     test_embedding = create_embedding(0.7)
+
     def mock_embedding_generator(text: str) -> bytes:
         return test_embedding
 
@@ -320,38 +327,44 @@ def reference_manager_with_external_predicates():
     cursor = conn.cursor()
 
     title_only_id = str(uuid4())
-    cursor.execute("""
+    cursor.execute(
+        """
         INSERT INTO external_predicates
         (id, title, definition, source, external_id, title_embedding, definition_embedding, created_at, updated_at)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-    """, (
-        title_only_id,
-        "Title Only Predicate",
-        "Predicate with only title embedding",
-        "test-source",
-        "pred_title_001",
-        create_embedding(0.65),  # title embedding
-        None,  # definition embedding is NULL
-        date.today().isoformat(),
-        date.today().isoformat()
-    ))
+    """,
+        (
+            title_only_id,
+            "Title Only Predicate",
+            "Predicate with only title embedding",
+            "test-source",
+            "pred_title_001",
+            create_embedding(0.65),  # title embedding
+            None,  # definition embedding is NULL
+            date.today().isoformat(),
+            date.today().isoformat(),
+        ),
+    )
 
     definition_only_id = str(uuid4())
-    cursor.execute("""
+    cursor.execute(
+        """
         INSERT INTO external_predicates
         (id, title, definition, source, external_id, title_embedding, definition_embedding, created_at, updated_at)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-    """, (
-        definition_only_id,
-        "Definition Only Predicate",
-        "Predicate with only definition embedding",
-        "test-source",
-        "pred_def_001",
-        None,  # title embedding is NULL
-        create_embedding(0.55),  # definition embedding
-        date.today().isoformat(),
-        date.today().isoformat()
-    ))
+    """,
+        (
+            definition_only_id,
+            "Definition Only Predicate",
+            "Predicate with only definition embedding",
+            "test-source",
+            "pred_def_001",
+            None,  # title embedding is NULL
+            create_embedding(0.55),  # definition embedding
+            date.today().isoformat(),
+            date.today().isoformat(),
+        ),
+    )
 
     conn.commit()
     conn.close()
@@ -386,6 +399,7 @@ def test_external_predicates_max_similarity_both_embeddings(
     manager = reference_manager_with_external_predicates
 
     test_embedding = create_embedding(0.8)
+
     def mock_embedding_generator(text: str) -> bytes:
         return test_embedding
 
@@ -419,6 +433,7 @@ def test_external_predicates_max_similarity_title_only(
     manager = reference_manager_with_external_predicates
 
     test_embedding = create_embedding(0.65)
+
     def mock_embedding_generator(text: str) -> bytes:
         return test_embedding
 
@@ -457,6 +472,7 @@ def test_external_predicates_max_similarity_definition_only(
     manager = reference_manager_with_external_predicates
 
     test_embedding = create_embedding(0.55)
+
     def mock_embedding_generator(text: str) -> bytes:
         return test_embedding
 
@@ -472,7 +488,9 @@ def test_external_predicates_max_similarity_definition_only(
 
     # Find the definition-only result
     def_only_results = [
-        (pred, sim) for pred, sim in results if pred.title == "Definition Only Predicate"
+        (pred, sim)
+        for pred, sim in results
+        if pred.title == "Definition Only Predicate"
     ]
     assert len(def_only_results) > 0
 
@@ -508,6 +526,7 @@ def test_external_predicates_auto_generates_embeddings(
 
     # Search should find this predicate
     test_embedding = create_embedding(0.7)
+
     def mock_embedding_generator(text: str) -> bytes:
         return test_embedding
 
@@ -532,6 +551,7 @@ def test_external_predicates_threshold_filtering(
     manager = reference_manager_with_external_predicates
 
     test_embedding = create_embedding(0.7)
+
     def mock_embedding_generator(text: str) -> bytes:
         return test_embedding
 
@@ -569,6 +589,7 @@ def test_external_predicates_source_filtering(
     manager = reference_manager_with_external_predicates
 
     test_embedding = create_embedding(0.85)
+
     def mock_embedding_generator(text: str) -> bytes:
         return test_embedding
 
@@ -601,6 +622,7 @@ def test_external_predicates_result_ordering(
     manager = reference_manager_with_external_predicates
 
     test_embedding = create_embedding(0.7)
+
     def mock_embedding_generator(text: str) -> bytes:
         return test_embedding
 
@@ -627,6 +649,7 @@ def test_external_predicates_limit_respected(
     manager = reference_manager_with_external_predicates
 
     test_embedding = create_embedding(0.7)
+
     def mock_embedding_generator(text: str) -> bytes:
         return test_embedding
 

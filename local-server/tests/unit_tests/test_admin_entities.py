@@ -7,7 +7,10 @@ system health, background task, and application configuration entities.
 
 import sys
 import os
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+
+sys.path.insert(
+    0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+)
 
 import types
 import pytest
@@ -17,7 +20,7 @@ from domain.admin.enums import (
     SystemHealthStatus,
     BackgroundTaskStatus,
     BackgroundTaskType,
-    LogLevel
+    LogLevel,
 )
 
 
@@ -76,7 +79,7 @@ class TestSystemHealth:
             status=SystemHealthStatus.HEALTHY,
             database_ok=True,
             embedding_service_ok=True,
-            details=types.MappingProxyType({"uptime": "99.9%"})
+            details=types.MappingProxyType({"uptime": "99.9%"}),
         )
         assert health.status == SystemHealthStatus.HEALTHY
         assert health.database_ok is True
@@ -88,7 +91,7 @@ class TestSystemHealth:
             status=SystemHealthStatus.DEGRADED,
             database_ok=True,
             embedding_service_ok=False,
-            details=types.MappingProxyType({"issue": "embedding service slow"})
+            details=types.MappingProxyType({"issue": "embedding service slow"}),
         )
         assert health.status == SystemHealthStatus.DEGRADED
         assert health.embedding_service_ok is False
@@ -100,7 +103,7 @@ class TestSystemHealth:
                 status=SystemHealthStatus.HEALTHY,
                 database_ok=True,
                 embedding_service_ok=True,
-                details={"uptime": "99.9%"}
+                details={"uptime": "99.9%"},
             )
 
     def test_system_health_details_immutable(self):
@@ -109,7 +112,7 @@ class TestSystemHealth:
             status=SystemHealthStatus.HEALTHY,
             database_ok=True,
             embedding_service_ok=True,
-            details=types.MappingProxyType({"uptime": "99.9%"})
+            details=types.MappingProxyType({"uptime": "99.9%"}),
         )
         with pytest.raises(TypeError):
             health.details["uptime"] = "99.5%"
@@ -120,7 +123,7 @@ class TestSystemHealth:
             SystemHealth(
                 status="healthy",  # String instead of enum
                 database_ok=True,
-                embedding_service_ok=True
+                embedding_service_ok=True,
             )
 
     def test_system_health_invalid_database_ok(self):
@@ -129,7 +132,7 @@ class TestSystemHealth:
             SystemHealth(
                 status=SystemHealthStatus.HEALTHY,
                 database_ok="true",  # String instead of boolean
-                embedding_service_ok=True
+                embedding_service_ok=True,
             )
 
     def test_system_health_invalid_embedding_service_ok(self):
@@ -138,7 +141,7 @@ class TestSystemHealth:
             SystemHealth(
                 status=SystemHealthStatus.HEALTHY,
                 database_ok=True,
-                embedding_service_ok=1  # Integer instead of boolean
+                embedding_service_ok=1,  # Integer instead of boolean
             )
 
 
@@ -154,7 +157,7 @@ class TestBackgroundTask:
             progress=0.0,
             created_at="2025-03-06T00:00:00Z",
             completed_at=None,
-            error=None
+            error=None,
         )
         assert task.id == "task-1"
         assert task.task_type == BackgroundTaskType.SYNC
@@ -170,7 +173,7 @@ class TestBackgroundTask:
             progress=0.5,
             created_at="2025-03-06T00:00:00Z",
             completed_at=None,
-            error=None
+            error=None,
         )
         assert task.task_type == BackgroundTaskType.EMBEDDING
         assert task.progress == 0.5
@@ -184,7 +187,7 @@ class TestBackgroundTask:
             progress=1.0,
             created_at="2025-03-06T00:00:00Z",
             completed_at="2025-03-06T00:05:00Z",
-            error=None
+            error=None,
         )
         assert task.status == BackgroundTaskStatus.COMPLETED
         assert task.progress == 1.0
@@ -199,7 +202,7 @@ class TestBackgroundTask:
             progress=0.3,
             created_at="2025-03-06T00:00:00Z",
             completed_at="2025-03-06T00:01:00Z",
-            error="Import file not found"
+            error="Import file not found",
         )
         assert task.status == BackgroundTaskStatus.FAILED
         assert task.error == "Import file not found"
@@ -212,7 +215,7 @@ class TestBackgroundTask:
             task_type=BackgroundTaskType.SYNC,
             status=BackgroundTaskStatus.PENDING,
             progress=0.0,
-            created_at="2025-03-06T00:00:00Z"
+            created_at="2025-03-06T00:00:00Z",
         )
         assert task.progress == 0.0
 
@@ -222,82 +225,97 @@ class TestBackgroundTask:
             task_type=BackgroundTaskType.SYNC,
             status=BackgroundTaskStatus.COMPLETED,
             progress=1.0,
-            created_at="2025-03-06T00:00:00Z"
+            created_at="2025-03-06T00:00:00Z",
         )
         assert task.progress == 1.0
 
         # Invalid: > 1.0
-        with pytest.raises(ValueError, match="progress must be a number between 0.0 and 1.0"):
+        with pytest.raises(
+            ValueError, match="progress must be a number between 0.0 and 1.0"
+        ):
             BackgroundTask(
                 id="task-1",
                 task_type=BackgroundTaskType.SYNC,
                 status=BackgroundTaskStatus.RUNNING,
                 progress=1.5,
-                created_at="2025-03-06T00:00:00Z"
+                created_at="2025-03-06T00:00:00Z",
             )
 
         # Invalid: < 0.0
-        with pytest.raises(ValueError, match="progress must be a number between 0.0 and 1.0"):
+        with pytest.raises(
+            ValueError, match="progress must be a number between 0.0 and 1.0"
+        ):
             BackgroundTask(
                 id="task-1",
                 task_type=BackgroundTaskType.SYNC,
                 status=BackgroundTaskStatus.PENDING,
                 progress=-0.1,
-                created_at="2025-03-06T00:00:00Z"
+                created_at="2025-03-06T00:00:00Z",
             )
 
         # Invalid: bool (even though bool is subclass of int)
-        with pytest.raises(ValueError, match="progress must be a number between 0.0 and 1.0"):
+        with pytest.raises(
+            ValueError, match="progress must be a number between 0.0 and 1.0"
+        ):
             BackgroundTask(
                 id="task-1",
                 task_type=BackgroundTaskType.SYNC,
                 status=BackgroundTaskStatus.PENDING,
                 progress=True,
-                created_at="2025-03-06T00:00:00Z"
+                created_at="2025-03-06T00:00:00Z",
             )
 
     def test_background_task_invalid_id(self):
         """Test that empty id raises ValueError."""
-        with pytest.raises(ValueError, match="BackgroundTask id must be a non-empty string"):
+        with pytest.raises(
+            ValueError, match="BackgroundTask id must be a non-empty string"
+        ):
             BackgroundTask(
                 id="",
                 task_type=BackgroundTaskType.SYNC,
                 status=BackgroundTaskStatus.PENDING,
                 progress=0.0,
-                created_at="2025-03-06T00:00:00Z"
+                created_at="2025-03-06T00:00:00Z",
             )
 
     def test_background_task_invalid_task_type(self):
         """Test that non-enum task_type raises TypeError."""
-        with pytest.raises(TypeError, match="task_type must be a BackgroundTaskType enum"):
+        with pytest.raises(
+            TypeError, match="task_type must be a BackgroundTaskType enum"
+        ):
             BackgroundTask(
                 id="task-1",
                 task_type="sync",  # String instead of enum
                 status=BackgroundTaskStatus.PENDING,
                 progress=0.0,
-                created_at="2025-03-06T00:00:00Z"
+                created_at="2025-03-06T00:00:00Z",
             )
 
     def test_background_task_invalid_status(self):
         """Test that non-enum status raises TypeError."""
-        with pytest.raises(TypeError, match="status must be a BackgroundTaskStatus enum"):
+        with pytest.raises(
+            TypeError, match="status must be a BackgroundTaskStatus enum"
+        ):
             BackgroundTask(
                 id="task-1",
                 task_type=BackgroundTaskType.SYNC,
                 status="pending",  # String instead of enum
                 progress=0.0,
-                created_at="2025-03-06T00:00:00Z"
+                created_at="2025-03-06T00:00:00Z",
             )
 
     def test_background_task_invalid_created_at(self):
         """Test that empty created_at raises ValueError."""
-        with pytest.raises(ValueError, match="BackgroundTask created_at must be a non-empty timestamp string"):
+        with pytest.raises(
+            ValueError,
+            match="BackgroundTask created_at must be a non-empty timestamp string",
+        ):
             BackgroundTask(
                 id="task-1",
                 task_type=BackgroundTaskType.SYNC,
                 status=BackgroundTaskStatus.PENDING,
                 progress=0.0,
-                created_at=""
+                created_at="",
             )
 
 
@@ -311,7 +329,7 @@ class TestAppConfiguration:
             embedding_model="text-embedding-3-small",
             database_path="/path/to/local.db",
             log_level=LogLevel.INFO,
-            extra=types.MappingProxyType({"timeout": 30})
+            extra=types.MappingProxyType({"timeout": 30}),
         )
         assert config.llm_provider == "openai"
         assert config.embedding_model == "text-embedding-3-small"
@@ -325,7 +343,7 @@ class TestAppConfiguration:
                 llm_provider="anthropic",
                 embedding_model="claude-embeddings",
                 database_path="/db",
-                log_level=log_level
+                log_level=log_level,
             )
             assert config.log_level == log_level
 
@@ -337,7 +355,7 @@ class TestAppConfiguration:
                 embedding_model="text-embedding-3-small",
                 database_path="/path/to/local.db",
                 log_level=LogLevel.DEBUG,
-                extra={"timeout": 30, "retries": 3}
+                extra={"timeout": 30, "retries": 3},
             )
 
     def test_app_configuration_extra_immutable(self):
@@ -347,7 +365,7 @@ class TestAppConfiguration:
             embedding_model="text-embedding-3-small",
             database_path="/path/to/local.db",
             log_level=LogLevel.INFO,
-            extra=types.MappingProxyType({"timeout": 30})
+            extra=types.MappingProxyType({"timeout": 30}),
         )
         with pytest.raises(TypeError):
             config.extra["timeout"] = 60
@@ -359,27 +377,31 @@ class TestAppConfiguration:
                 llm_provider="",
                 embedding_model="text-embedding-3-small",
                 database_path="/path/to/local.db",
-                log_level=LogLevel.INFO
+                log_level=LogLevel.INFO,
             )
 
     def test_app_configuration_invalid_embedding_model(self):
         """Test that empty embedding_model raises ValueError."""
-        with pytest.raises(ValueError, match="embedding_model must be a non-empty string"):
+        with pytest.raises(
+            ValueError, match="embedding_model must be a non-empty string"
+        ):
             AppConfiguration(
                 llm_provider="openai",
                 embedding_model="",
                 database_path="/path/to/local.db",
-                log_level=LogLevel.INFO
+                log_level=LogLevel.INFO,
             )
 
     def test_app_configuration_invalid_database_path(self):
         """Test that empty database_path raises ValueError."""
-        with pytest.raises(ValueError, match="database_path must be a non-empty string"):
+        with pytest.raises(
+            ValueError, match="database_path must be a non-empty string"
+        ):
             AppConfiguration(
                 llm_provider="openai",
                 embedding_model="text-embedding-3-small",
                 database_path="",
-                log_level=LogLevel.INFO
+                log_level=LogLevel.INFO,
             )
 
     def test_app_configuration_invalid_log_level(self):
@@ -389,5 +411,5 @@ class TestAppConfiguration:
                 llm_provider="openai",
                 embedding_model="text-embedding-3-small",
                 database_path="/path/to/local.db",
-                log_level="info"  # String instead of enum
+                log_level="info",  # String instead of enum
             )

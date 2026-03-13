@@ -38,7 +38,7 @@
           "structure_nodes"
         ],
         "summary": "Create Node",
-        "description": "Create a new structure_node.\n\nThis endpoint handles creation of layers, domains, and terms through\nthe unified structure_nodes interface. Type-specific validation is enforced:\n- Layers cannot have parent structure_nodes\n- Domains must have a layer parent\n- Terms must have a domain parent",
+        "description": "Create a new structure_node.\n\nThis endpoint handles creation of layers, domains, and terms through\nthe unified structure_nodes interface. Type-specific validation is enforced:  # noqa: E501\n- Layers cannot have parent structure_nodes\n- Domains must have a layer parent\n- Terms must have a domain parent",
         "operationId": "create_node_api_structure_nodes__post",
         "parameters": [
           {
@@ -89,7 +89,7 @@
           "structure_nodes"
         ],
         "summary": "List Nodes",
-        "description": "List structure_nodes with filtering and pagination.\n\nSupports filtering by structure_node type and parent, with configurable pagination\nand sorting. This replaces the separate endpoints for layers, domains, and terms.",
+        "description": "List structure_nodes with filtering and pagination.\n\nSupports filtering by structure_node type and parent, with configurable pagination  # noqa: E501\nand sorting. This replaces the separate endpoints for layers, domains, and terms.  # noqa: E501",
         "operationId": "list_nodes_api_structure_nodes__get",
         "parameters": [
           {
@@ -209,7 +209,7 @@
           "structure_nodes"
         ],
         "summary": "Search Nodes",
-        "description": "Vector search across structure_nodes.\n\nThis endpoint replaces the separate find endpoints for layers, domains, and terms.\nSupports semantic search across structure_node titles and definitions with optional\ntype filtering and configurable similarity thresholds.",
+        "description": "Vector search across structure_nodes.\n\nThis endpoint replaces the separate find endpoints for layers, domains, and terms.  # noqa: E501\nSupports semantic search across structure_node titles and definitions with optional  # noqa: E501\ntype filtering and configurable similarity thresholds.",
         "operationId": "search_nodes_api_structure_nodes_find_post",
         "parameters": [
           {
@@ -266,7 +266,7 @@
           "structure_nodes"
         ],
         "summary": "Create Node Link",
-        "description": "Create a new structure_node link.\n\nLinks can only be created between structure_nodes of the same type (layers to layers,\ndomains to domains, terms to terms) as per the Great Normalization requirements.",
+        "description": "Create a new structure_node link.\n\nLinks can only be created between structure_nodes of the same type (layers to layers,  # noqa: E501\ndomains to domains, terms to terms) as per the Great Normalization requirements.  # noqa: E501",
         "operationId": "create_node_link_api_structure_nodes_links_post",
         "parameters": [
           {
@@ -317,7 +317,7 @@
           "structure_nodes"
         ],
         "summary": "List Node Links",
-        "description": "List structure_node links with filtering and pagination.\n\nSupports filtering by source structure_node, target structure_node, and predicate.\nReturns all relationships in the unified structure_node graph with pagination metadata.",
+        "description": "List structure_node links with filtering and pagination.\n\nSupports filtering by source structure_node, target structure_node, and predicate.  # noqa: E501\nReturns all relationships in the unified structure_node graph with pagination metadata.  # noqa: E501",
         "operationId": "list_node_links_api_structure_nodes_links_get",
         "parameters": [
           {
@@ -443,7 +443,7 @@
           "structure_nodes"
         ],
         "summary": "Update Node Link",
-        "description": "Update a structure_node link.\n\nAllows updating the predicate and predicate_id of an existing link.\nSource and target structure_nodes can also be updated if the new configuration is valid.",
+        "description": "Update a structure_node link.\n\nAllows updating the predicate and predicate_id of an existing link.\nSource and target structure_nodes can also be updated if the new configuration is valid.  # noqa: E501",
         "operationId": "update_node_link_api_structure_nodes_links__link_id__put",
         "parameters": [
           {
@@ -506,7 +506,7 @@
           "structure_nodes"
         ],
         "summary": "Delete Node Link",
-        "description": "Delete a structure_node link.\n\nRemoves the relationship between two structure_nodes. This operation cannot be undone.",
+        "description": "Delete a structure_node link.\n\nRemoves the relationship between two structure_nodes. This operation cannot be undone.  # noqa: E501",
         "operationId": "delete_node_link_api_structure_nodes_links__link_id__delete",
         "parameters": [
           {
@@ -607,7 +607,7 @@
           "structure_nodes"
         ],
         "summary": "Update Node",
-        "description": "Update a structure_node.\n\nSupports updating title, definition, parent relationships, and structural predicates.\nCircular reference validation is automatically enforced.",
+        "description": "Update a structure_node.\n\nSupports updating title, definition, parent relationships, and structural predicates.  # noqa: E501\nCircular reference validation is automatically enforced.",
         "operationId": "update_node_api_structure_nodes__node_id__put",
         "parameters": [
           {
@@ -670,7 +670,7 @@
           "structure_nodes"
         ],
         "summary": "Delete Node",
-        "description": "Delete a structure_node and its children.\n\nThis operation cascades to all child structure_nodes and their relationships.\nUse with caution as this operation cannot be undone.",
+        "description": "Delete a structure_node and its children.\n\nThis operation cascades to all child structure_nodes and their relationships.  # noqa: E501\nUse with caution as this operation cannot be undone.",
         "operationId": "delete_node_api_structure_nodes__node_id__delete",
         "parameters": [
           {
@@ -718,7 +718,7 @@
           "structure_nodes"
         ],
         "summary": "Get Node Attributes",
-        "description": "Get resolved attributes for a node (local + inherited).\n\nReturns all attributes for this node, including those inherited from ancestors.\nEach resolved attribute includes an `inherited` flag and `source_node_id` indicating\nwhere the attribute was defined in the hierarchy.\n\nArgs:\n    node_id: UUID of the structure node\n\nReturns:\n    List of resolved attributes with inheritance information\n\nRaises:\n    404: If structure node not found\n    500: If an unexpected error occurs",
+        "description": "Get resolved attributes for a node (local + inherited).\n\nReturns all attributes for this node, including those inherited from ancestors.  # noqa: E501\nEach resolved attribute includes an `inherited` flag and `source_node_id` indicating  # noqa: E501\nwhere the attribute was defined in the hierarchy.\n\nArgs:\n    node_id: UUID of the structure node\n\nReturns:\n    List of resolved attributes with inheritance information\n\nRaises:\n    404: If structure node not found\n    500: If an unexpected error occurs",
         "operationId": "get_node_attributes_api_structure_nodes__node_id__attributes_get",
         "parameters": [
           {
@@ -775,7 +775,7 @@
           "structure_nodes"
         ],
         "summary": "Set Node Attributes",
-        "description": "Set local attributes on a node (replaces existing attributes).\n\nReplaces all local attributes on this node with the provided list.\nInherited attributes from ancestors are not affected. This operation\nincrements the node's version number.\n\nSupports optimistic locking via the expected_version field. If provided,\nthe update will only succeed if the current node version matches. This prevents\nlost updates in concurrent modification scenarios.\n\nArgs:\n    node_id: UUID of the structure node\n    request: SetNodeAttributesRequest containing:\n        - attributes: List of StructureNodeAttribute instances to set\n        - expected_version: Optional version for optimistic locking\n\nReturns:\n    Updated structure node\n\nRaises:\n    400: If validation fails on attribute values or types\n    404: If structure node not found\n    409: If expected_version is provided and doesn't match current version (conflict)\n    500: If an unexpected error occurs",
+        "description": "Set local attributes on a node (replaces existing attributes).\n\nReplaces all local attributes on this node with the provided list.\nInherited attributes from ancestors are not affected. This operation\nincrements the node's version number.\n\nSupports optimistic locking via the expected_version field. If provided,\nthe update will only succeed if the current node version matches. This prevents  # noqa: E501\nlost updates in concurrent modification scenarios.\n\nArgs:\n    node_id: UUID of the structure node\n    request: SetNodeAttributesRequest containing:\n        - attributes: List of StructureNodeAttribute instances to set\n        - expected_version: Optional version for optimistic locking\n\nReturns:\n    Updated structure node\n\nRaises:\n    400: If validation fails on attribute values or types\n    404: If structure node not found\n    409: If expected_version is provided and doesn't match current version (conflict)  # noqa: E501\n    500: If an unexpected error occurs",
         "operationId": "set_node_attributes_api_structure_nodes__node_id__attributes_post",
         "parameters": [
           {
@@ -840,7 +840,7 @@
           "structure_nodes"
         ],
         "summary": "Remove Node Attribute",
-        "description": "Remove a specific attribute by key.\n\nRemoves a single attribute from the node's local attributes by its key.\nHas no effect if the key doesn't exist. Inherited attributes are not affected.\nThis operation increments the node's version number.\n\nArgs:\n    node_id: UUID of the structure node\n    key: Attribute key to remove\n\nReturns:\n    Updated structure node\n\nRaises:\n    404: If structure node not found\n    500: If an unexpected error occurs",
+        "description": "Remove a specific attribute by key.\n\nRemoves a single attribute from the node's local attributes by its key.\nHas no effect if the key doesn't exist. Inherited attributes are not affected.  # noqa: E501\nThis operation increments the node's version number.\n\nArgs:\n    node_id: UUID of the structure node\n    key: Attribute key to remove\n\nReturns:\n    Updated structure node\n\nRaises:\n    404: If structure node not found\n    500: If an unexpected error occurs",
         "operationId": "remove_node_attribute_api_structure_nodes__node_id__attributes__key__delete",
         "parameters": [
           {
@@ -906,7 +906,7 @@
           "structure_nodes"
         ],
         "summary": "Add Reference Links",
-        "description": "Add reference links to a structure node.\n\nLinks the structure node to external knowledge sources such as schema.org,\nWikidata, or ConceptNet. Each link is validated against the reference database\nbefore being added. Duplicate links are ignored.\n\nArgs:\n    node_id: UUID of the structure node\n    links: List of reference links to add (source + external_id pairs)\n\nReturns:\n    List of all reference links after addition (including pre-existing ones)\n\nRaises:\n    400: If validation fails or reference doesn't exist in reference.db\n    404: If structure node not found\n    500: If an unexpected error occurs",
+        "description": "Add reference links to a structure node.\n\nLinks the structure node to external knowledge sources such as schema.org,\nWikidata, or ConceptNet. Each link is validated against the reference database  # noqa: E501\nbefore being added. Duplicate links are ignored.\n\nArgs:\n    node_id: UUID of the structure node\n    links: List of reference links to add (source + external_id pairs)\n\nReturns:\n    List of all reference links after addition (including pre-existing ones)  # noqa: E501\n\nRaises:\n    400: If validation fails or reference doesn't exist in reference.db\n    404: If structure node not found\n    500: If an unexpected error occurs",
         "operationId": "add_reference_links_api_structure_nodes__node_id__reference_links_post",
         "parameters": [
           {
@@ -1048,7 +1048,7 @@
           "structure_nodes"
         ],
         "summary": "Get Reference Links",
-        "description": "Get all reference links for a structure node.\n\nReturns all external knowledge source links associated with this structure node.\nReturns an empty list if no links exist.\n\nArgs:\n    node_id: UUID of the structure node\n\nReturns:\n    List of reference links (may be empty)\n\nRaises:\n    404: If structure node not found\n    500: If an unexpected error occurs",
+        "description": "Get all reference links for a structure node.\n\nReturns all external knowledge source links associated with this structure node.  # noqa: E501\nReturns an empty list if no links exist.\n\nArgs:\n    node_id: UUID of the structure node\n\nReturns:\n    List of reference links (may be empty)\n\nRaises:\n    404: If structure node not found\n    500: If an unexpected error occurs",
         "operationId": "get_reference_links_api_structure_nodes__node_id__reference_links_get",
         "parameters": [
           {
@@ -1107,7 +1107,7 @@
           "structure_nodes"
         ],
         "summary": "Get Word Senses",
-        "description": "Get all word senses for a structure node.\n\nReturns word sense identifiers from NLP analysis (e.g., WordNet synsets) that\nhave been associated with this structure node through title analysis.\nReturns an empty list if no word senses exist.\n\nWord senses are automatically updated when the structure node's title changes,\nvia the event processor system.\n\nArgs:\n    node_id: UUID of the structure node\n\nReturns:\n    List of word senses (may be empty)\n\nRaises:\n    404: If structure node not found\n    500: If an unexpected error occurs",
+        "description": "Get all word senses for a structure node.\n\nReturns word sense identifiers from NLP analysis (e.g., WordNet synsets) that  # noqa: E501\nhave been associated with this structure node through title analysis.\nReturns an empty list if no word senses exist.\n\nWord senses are automatically updated when the structure node's title changes,  # noqa: E501\nvia the event processor system.\n\nArgs:\n    node_id: UUID of the structure node\n\nReturns:\n    List of word senses (may be empty)\n\nRaises:\n    404: If structure node not found\n    500: If an unexpected error occurs",
         "operationId": "get_word_senses_api_structure_nodes__node_id__word_senses_get",
         "parameters": [
           {
@@ -1164,7 +1164,7 @@
           "structure_nodes"
         ],
         "summary": "Update Word Senses",
-        "description": "Update selected word senses for a structure node.\n\nAllows user to persist their selected word senses from NLP analysis.\nUses a conservative merge strategy: preserves existing word senses for words\nnot included in this update, while replacing senses for words that are included.\n\nFor example, if a node has existing senses for words \"bank\" and \"account\", and\nyou update only \"bank\", the existing \"account\" senses will be preserved.\n\nArgs:\n    node_id: UUID of the structure node\n    update_request: Selected word senses to persist\n\nReturns:\n    List of all word senses after update (including preserved senses)\n\nRaises:\n    400: If validation fails (invalid sense_id format)\n    404: If structure node not found\n    500: If an unexpected error occurs",
+        "description": "Update selected word senses for a structure node.\n\nAllows user to persist their selected word senses from NLP analysis.\nUses a conservative merge strategy: preserves existing word senses for words  # noqa: E501\nnot included in this update, while replacing senses for words that are included.  # noqa: E501\n\nFor example, if a node has existing senses for words \"bank\" and \"account\", and  # noqa: E501\nyou update only \"bank\", the existing \"account\" senses will be preserved.\n\nArgs:\n    node_id: UUID of the structure node\n    update_request: Selected word senses to persist\n\nReturns:\n    List of all word senses after update (including preserved senses)\n\nRaises:\n    400: If validation fails (invalid sense_id format)\n    404: If structure node not found\n    500: If an unexpected error occurs",
         "operationId": "update_word_senses_api_structure_nodes__node_id__word_senses_put",
         "parameters": [
           {
@@ -1233,7 +1233,7 @@
           "structure_nodes"
         ],
         "summary": "Validate All Reference Links",
-        "description": "Validate all reference links across all structure nodes.\n\nPerforms bulk validation of reference links to identify:\n- Orphaned links (references that no longer exist in reference.db)\n- Malformed links (invalid JSON or missing required fields)\n- Nodes with problematic links\n\nUses batching to efficiently handle large datasets without loading all nodes into memory.\nThis endpoint is useful for maintenance and data integrity checking.\nGracefully degrades if reference.db is unavailable.\n\nArgs:\n    check_existence: If True, validates each link exists in reference.db\n    limit: Optional limit on number of nodes to check\n    batch_size: Number of nodes to process per batch (default: 100, min: 10, max: 1000)\n\nReturns:\n    Validation results with statistics and list of problematic nodes",
+        "description": "Validate all reference links across all structure nodes.\n\nPerforms bulk validation of reference links to identify:\n- Orphaned links (references that no longer exist in reference.db)\n- Malformed links (invalid JSON or missing required fields)\n- Nodes with problematic links\n\nUses batching to efficiently handle large datasets without loading all nodes into memory.  # noqa: E501\nThis endpoint is useful for maintenance and data integrity checking.\nGracefully degrades if reference.db is unavailable.\n\nArgs:\n    check_existence: If True, validates each link exists in reference.db\n    limit: Optional limit on number of nodes to check\n    batch_size: Number of nodes to process per batch (default: 100, min: 10, max: 1000)  # noqa: E501\n\nReturns:\n    Validation results with statistics and list of problematic nodes",
         "operationId": "validate_all_reference_links_api_structure_nodes_reference_links_validate_post",
         "parameters": [
           {
@@ -1393,7 +1393,7 @@
           "structure_nodes"
         ],
         "summary": "Move Nodes",
-        "description": "Move structure_nodes to a new parent location with automatic type conversion.\n\n**Type Conversion Rules:**\n- Moving to root (null parent) \u2192 becomes Layer\n- Moving under Layer \u2192 becomes Domain\n- Moving under Domain or Term \u2192 becomes Term\n\n**Recursive Conversion:**\nWhen a node's type changes, all descendants are recursively converted:\n- Layer's children become Domains\n- Domain's/Term's children become Terms\n\nThis endpoint supports:\n- Moving multiple structure_nodes at once\n- Automatic type conversion based on target parent\n- Moving all child structure_nodes along with parents\n- Handling title conflicts through warnings, renaming, or errors\n- Maintaining referential integrity throughout the operation\n\nThe move operation is atomic - either all structure_nodes are moved successfully,\nor the entire operation is rolled back.",
+        "description": "Move structure_nodes to a new parent location with automatic type conversion.  # noqa: E501\n\n**Type Conversion Rules:**\n- Moving to root (null parent) \u2192 becomes Layer\n- Moving under Layer \u2192 becomes Domain\n- Moving under Domain or Term \u2192 becomes Term\n\n**Recursive Conversion:**\nWhen a node's type changes, all descendants are recursively converted:\n- Layer's children become Domains\n- Domain's/Term's children become Terms\n\nThis endpoint supports:\n- Moving multiple structure_nodes at once\n- Automatic type conversion based on target parent\n- Moving all child structure_nodes along with parents\n- Handling title conflicts through warnings, renaming, or errors\n- Maintaining referential integrity throughout the operation\n\nThe move operation is atomic - either all structure_nodes are moved successfully,  # noqa: E501\nor the entire operation is rolled back.",
         "operationId": "move_nodes_api_structure_nodes_move_post",
         "parameters": [
           {
@@ -1505,7 +1505,7 @@
           "structure_nodes"
         ],
         "summary": "Get Node Ancestors",
-        "description": "Get all ancestors of a structure_node up to the root.\n\nReturns the path from the root layer down to the specified structure_node's parent.\nUseful for breadcrumb navigation and understanding structure_node context.",
+        "description": "Get all ancestors of a structure_node up to the root.\n\nReturns the path from the root layer down to the specified structure_node's parent.  # noqa: E501\nUseful for breadcrumb navigation and understanding structure_node context.",
         "operationId": "get_node_ancestors_api_structure_nodes__node_id__ancestors_get",
         "parameters": [
           {
@@ -1815,7 +1815,7 @@
           "predicates"
         ],
         "summary": "Get Discovery Status",
-        "description": "Get the status of a predicate discovery task.\n\nReturns the current status and results (if completed) of the discovery task.",
+        "description": "Get the status of a predicate discovery task.\n\nReturns the current status and results (if completed) of the discovery task.  # noqa: E501",
         "operationId": "get_discovery_status_api_predicates_discover__task_id__get",
         "parameters": [
           {
@@ -1858,7 +1858,7 @@
           "predicates"
         ],
         "summary": "List External Predicates",
-        "description": "List external predicates with pagination.\n\nReturns predicates discovered from external knowledge sources with optional source filtering.",
+        "description": "List external predicates with pagination.\n\nReturns predicates discovered from external knowledge sources with optional source filtering.  # noqa: E501",
         "operationId": "list_external_predicates_api_predicates_external_get",
         "parameters": [
           {
@@ -1933,7 +1933,7 @@
           "predicates"
         ],
         "summary": "Search External Predicates",
-        "description": "Search external predicates using vector similarity.\n\nThis endpoint performs semantic search across external predicates using embeddings.\nReturns predicates ranked by similarity to the query text.\n\nArgs:\n    query: Search query text (required, min 1 character)\n    source: Optional source filter (conceptnet, dbpedia, wikidata, schema_org)\n    limit: Maximum number of results (default: 20, max: 100)\n    threshold: Minimum similarity threshold (default: 0.6, range: 0.0-1.0)\n\nReturns:\n    ExternalPredicateSearchResponse with ranked similarity results",
+        "description": "Search external predicates using vector similarity.\n\nThis endpoint performs semantic search across external predicates using embeddings.  # noqa: E501\nReturns predicates ranked by similarity to the query text.\n\nArgs:\n    query: Search query text (required, min 1 character)\n    source: Optional source filter (conceptnet, dbpedia, wikidata, schema_org)  # noqa: E501\n    limit: Maximum number of results (default: 20, max: 100)\n    threshold: Minimum similarity threshold (default: 0.6, range: 0.0-1.0)\n\nReturns:\n    ExternalPredicateSearchResponse with ranked similarity results",
         "operationId": "search_external_predicates_api_predicates_external_search_get",
         "parameters": [
           {
@@ -2314,7 +2314,7 @@
           "predicates"
         ],
         "summary": "Discover External Predicates",
-        "description": "Discover predicates from external knowledge sources.\n\nThis endpoint starts a background task to fetch predicate metadata from:\n- ConceptNet (40 relations)\n- DBpedia (760 properties via SPARQL)\n- WikiData (10K properties via SPARQL)\n- Schema.org (properties from imported data)\n\nReturns a task_id that can be used to check the status of the discovery process.\n\n**Performance targets:**\n- ConceptNet: <2s for 40 relations\n- DBpedia: <10s for 760 properties\n- WikiData: <30s for 10K properties\n- Schema.org: <1s (reads from database)",
+        "description": "Discover predicates from external knowledge sources.\n\nThis endpoint starts a background task to fetch predicate metadata from:\n- ConceptNet (40 relations)\n- DBpedia (760 properties via SPARQL)\n- WikiData (10K properties via SPARQL)\n- Schema.org (properties from imported data)\n\nReturns a task_id that can be used to check the status of the discovery process.  # noqa: E501\n\n**Performance targets:**\n- ConceptNet: <2s for 40 relations\n- DBpedia: <10s for 760 properties\n- WikiData: <30s for 10K properties\n- Schema.org: <1s (reads from database)",
         "operationId": "discover_external_predicates_api_predicates_discover_post",
         "parameters": [
           {
@@ -2369,7 +2369,7 @@
           "predicates"
         ],
         "summary": "Find Similar Predicates",
-        "description": "Find similar external predicates for a given predicate using vector similarity search.\n\nThis endpoint:\n1. Retrieves the predicate by ID\n2. Performs vector similarity search against external predicates\n3. Returns ranked results with confidence scores\n4. Caches results for 1 hour (TTL-based)\n\n**Performance targets:**\n- <200ms p95 for 10K-50K predicates (PT-VS-001, PT-VS-002)\n- <50ms p95 for cached searches (PT-VS-006)\n\n**Confidence scores:**\n- High: similarity >= 0.85\n- Medium: similarity >= 0.70\n- Low: similarity >= 0.60\n- Results below 0.60 are rejected\n\nArgs:\n    id: UUID of the predicate to find similar predicates for\n    source: Optional source filter\n    limit: Maximum number of results (default: 100, max: 100)\n    threshold: Minimum similarity threshold (default: 0.7)\n    use_cache: Whether to use cached results (default: True)\n\nReturns:\n    FindSimilarResponse with ranked similarity results",
+        "description": "Find similar external predicates for a given predicate using vector similarity search.  # noqa: E501\n\nThis endpoint:\n1. Retrieves the predicate by ID\n2. Performs vector similarity search against external predicates\n3. Returns ranked results with confidence scores\n4. Caches results for 1 hour (TTL-based)\n\n**Performance targets:**\n- <200ms p95 for 10K-50K predicates (PT-VS-001, PT-VS-002)\n- <50ms p95 for cached searches (PT-VS-006)\n\n**Confidence scores:**\n- High: similarity >= 0.85\n- Medium: similarity >= 0.70\n- Low: similarity >= 0.60\n- Results below 0.60 are rejected\n\nArgs:\n    id: UUID of the predicate to find similar predicates for\n    source: Optional source filter\n    limit: Maximum number of results (default: 100, max: 100)\n    threshold: Minimum similarity threshold (default: 0.7)\n    use_cache: Whether to use cached results (default: True)\n\nReturns:\n    FindSimilarResponse with ranked similarity results",
         "operationId": "find_similar_predicates_api_predicates__id__find_similar_post",
         "parameters": [
           {
@@ -2474,7 +2474,7 @@
           "predicates"
         ],
         "summary": "Cluster Predicates",
-        "description": "Cluster similar predicates using DBSCAN algorithm.\n\nThis endpoint:\n1. Retrieves predicates (all or specified IDs)\n2. Generates embeddings for each predicate\n3. Performs density-based clustering (DBSCAN)\n4. Returns clusters with automatic count determination\n\n**Algorithm:** DBSCAN (Density-Based Spatial Clustering of Applications with Noise)\n- Automatically determines number of clusters\n- Handles noise points (outliers)\n- Does not require specifying cluster count in advance\n\n**Resource limits:**\n- Default max_predicates: 1000 (to prevent resource exhaustion)\n- For larger datasets, process in batches or increase max_predicates\n\nArgs:\n    predicate_ids: Optional list of specific predicate IDs to cluster\n    min_similarity: Minimum similarity for cluster membership (default: 0.7)\n    min_cluster_size: Minimum predicates per cluster (default: 2)\n    eps: DBSCAN epsilon parameter - lower values create tighter clusters (default: 0.3)\n    max_predicates: Maximum predicates to process (default: 1000, max: 10000)\n\nReturns:\n    ClusterPredicatesResponse with clusters and statistics",
+        "description": "Cluster similar predicates using DBSCAN algorithm.\n\nThis endpoint:\n1. Retrieves predicates (all or specified IDs)\n2. Generates embeddings for each predicate\n3. Performs density-based clustering (DBSCAN)\n4. Returns clusters with automatic count determination\n\n**Algorithm:** DBSCAN (Density-Based Spatial Clustering of Applications with Noise)  # noqa: E501\n- Automatically determines number of clusters\n- Handles noise points (outliers)\n- Does not require specifying cluster count in advance\n\n**Resource limits:**\n- Default max_predicates: 1000 (to prevent resource exhaustion)\n- For larger datasets, process in batches or increase max_predicates\n\nArgs:\n    predicate_ids: Optional list of specific predicate IDs to cluster\n    min_similarity: Minimum similarity for cluster membership (default: 0.7)  # noqa: E501\n    min_cluster_size: Minimum predicates per cluster (default: 2)\n    eps: DBSCAN epsilon parameter - lower values create tighter clusters (default: 0.3)  # noqa: E501\n    max_predicates: Maximum predicates to process (default: 1000, max: 10000)  # noqa: E501\n\nReturns:\n    ClusterPredicatesResponse with clusters and statistics",
         "operationId": "cluster_predicates_api_predicates_cluster_predicates_post",
         "parameters": [
           {
@@ -2596,6 +2596,1281 @@
             "content": {
               "application/json": {
                 "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/ontology_entities/": {
+      "post": {
+        "tags": [
+          "ontology_entities",
+          "ontology_entities"
+        ],
+        "summary": "Create Entity",
+        "description": "Create a new ontology entity.\n\nThis endpoint handles creation of taxonomies, concept_schemes, and classes through\nthe unified ontology_entities interface. Type-specific validation is enforced:\n- Taxonomies cannot have parent entities\n- Concept schemes must have a taxonomy parent\n- Classes must have a concept_scheme parent",
+        "operationId": "create_entity_api_ontology_entities__post",
+        "parameters": [
+          {
+            "name": "SessionLocal",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "title": "Sessionlocal"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EntityCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EntityOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "ontology_entities",
+          "ontology_entities"
+        ],
+        "summary": "List Entities",
+        "description": "List ontology entities with filtering and pagination.\n\nSupports filtering by entity type and parent, with configurable pagination\nand sorting.",
+        "operationId": "list_entities_api_ontology_entities__get",
+        "parameters": [
+          {
+            "name": "node_type",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/api__models__ontology_entities__EntityTypeEnum"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by entity type",
+              "title": "Node Type"
+            },
+            "description": "Filter by entity type"
+          },
+          {
+            "name": "parent_entity_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by parent entity ID",
+              "title": "Parent Entity Id"
+            },
+            "description": "Filter by parent entity ID"
+          },
+          {
+            "name": "skip",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "Number of entities to skip",
+              "default": 0,
+              "title": "Skip"
+            },
+            "description": "Number of entities to skip"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 1000,
+              "minimum": 1,
+              "description": "Maximum number of entities to return",
+              "default": 50,
+              "title": "Limit"
+            },
+            "description": "Maximum number of entities to return"
+          },
+          {
+            "name": "sort_by",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "pattern": "^(title|created_at)$",
+              "description": "Sort field",
+              "default": "title",
+              "title": "Sort By"
+            },
+            "description": "Sort field"
+          },
+          {
+            "name": "SessionLocal",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "title": "Sessionlocal"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaginatedEntitiesResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/ontology_entities/find": {
+      "post": {
+        "tags": [
+          "ontology_entities",
+          "ontology_entities"
+        ],
+        "summary": "Search Entities",
+        "description": "Vector search across ontology entities.\n\nSupports semantic search across entity titles and definitions with optional\ntype filtering and configurable similarity thresholds.",
+        "operationId": "search_entities_api_ontology_entities_find_post",
+        "parameters": [
+          {
+            "name": "SessionLocal",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "title": "Sessionlocal"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EntitySearchRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/EntitySearchResult"
+                  },
+                  "title": "Response Search Entities Api Ontology Entities Find Post"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/ontology_entities/relationships": {
+      "post": {
+        "tags": [
+          "ontology_entities",
+          "ontology_entities"
+        ],
+        "summary": "Create Relationship",
+        "description": "Create a new entity relationship.\n\nLinks can only be created between entities of the same type (taxonomies to taxonomies,\nconcept_schemes to concept_schemes, classes to classes).",
+        "operationId": "create_relationship_api_ontology_entities_relationships_post",
+        "parameters": [
+          {
+            "name": "SessionLocal",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "title": "Sessionlocal"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RelationshipCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RelationshipOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "ontology_entities",
+          "ontology_entities"
+        ],
+        "summary": "List Relationships",
+        "description": "List entity relationships with filtering and pagination.\n\nSupports filtering by source entity, target entity, and predicate.\nReturns all relationships in the unified entity graph with pagination metadata.",
+        "operationId": "list_relationships_api_ontology_entities_relationships_get",
+        "parameters": [
+          {
+            "name": "source_entity_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by source entity ID",
+              "title": "Source Entity Id"
+            },
+            "description": "Filter by source entity ID"
+          },
+          {
+            "name": "target_entity_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by target entity ID",
+              "title": "Target Entity Id"
+            },
+            "description": "Filter by target entity ID"
+          },
+          {
+            "name": "predicate",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by predicate",
+              "title": "Predicate"
+            },
+            "description": "Filter by predicate"
+          },
+          {
+            "name": "skip",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "Number of relationships to skip",
+              "default": 0,
+              "title": "Skip"
+            },
+            "description": "Number of relationships to skip"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 500,
+              "minimum": 1,
+              "description": "Maximum number of relationships to return",
+              "default": 100,
+              "title": "Limit"
+            },
+            "description": "Maximum number of relationships to return"
+          },
+          {
+            "name": "SessionLocal",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "title": "Sessionlocal"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaginatedRelationshipsResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/ontology_entities/relationships/{rel_id}": {
+      "put": {
+        "tags": [
+          "ontology_entities",
+          "ontology_entities"
+        ],
+        "summary": "Update Relationship",
+        "description": "Update an entity relationship.\n\nAllows updating the predicate and predicate_id of an existing relationship.\nSource and target entities can also be updated if the new configuration is valid.",
+        "operationId": "update_relationship_api_ontology_entities_relationships__rel_id__put",
+        "parameters": [
+          {
+            "name": "rel_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "The ID of the relationship to update",
+              "title": "Rel Id"
+            },
+            "description": "The ID of the relationship to update"
+          },
+          {
+            "name": "SessionLocal",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "title": "Sessionlocal"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RelationshipCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RelationshipOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "ontology_entities",
+          "ontology_entities"
+        ],
+        "summary": "Delete Relationship",
+        "description": "Delete an entity relationship.\n\nRemoves the relationship between two entities.",
+        "operationId": "delete_relationship_api_ontology_entities_relationships__rel_id__delete",
+        "parameters": [
+          {
+            "name": "rel_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "The ID of the relationship to delete",
+              "title": "Rel Id"
+            },
+            "description": "The ID of the relationship to delete"
+          },
+          {
+            "name": "SessionLocal",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "title": "Sessionlocal"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/ontology_entities/{entity_id}": {
+      "get": {
+        "tags": [
+          "ontology_entities",
+          "ontology_entities"
+        ],
+        "summary": "Get Entity",
+        "description": "Get a specific ontology entity by ID.\n\nReturns the complete entity information including embeddings,\nhierarchy information, and metadata.",
+        "operationId": "get_entity_api_ontology_entities__entity_id__get",
+        "parameters": [
+          {
+            "name": "entity_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "The ID of the entity to retrieve",
+              "title": "Entity Id"
+            },
+            "description": "The ID of the entity to retrieve"
+          },
+          {
+            "name": "SessionLocal",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "title": "Sessionlocal"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EntityOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "ontology_entities",
+          "ontology_entities"
+        ],
+        "summary": "Update Entity",
+        "description": "Update an ontology entity.\n\nSupports updating title, definition, parent relationships, and structural predicates.\nCircular reference validation is automatically enforced.",
+        "operationId": "update_entity_api_ontology_entities__entity_id__put",
+        "parameters": [
+          {
+            "name": "entity_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "The ID of the entity to update",
+              "title": "Entity Id"
+            },
+            "description": "The ID of the entity to update"
+          },
+          {
+            "name": "SessionLocal",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "title": "Sessionlocal"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EntityUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EntityOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "ontology_entities",
+          "ontology_entities"
+        ],
+        "summary": "Delete Entity",
+        "description": "Delete an ontology entity and its children.\n\nThis operation cascades to all child entities and their relationships.\nUse with caution as this operation cannot be undone.",
+        "operationId": "delete_entity_api_ontology_entities__entity_id__delete",
+        "parameters": [
+          {
+            "name": "entity_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "The ID of the entity to delete",
+              "title": "Entity Id"
+            },
+            "description": "The ID of the entity to delete"
+          },
+          {
+            "name": "SessionLocal",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "title": "Sessionlocal"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/property_definitions/": {
+      "post": {
+        "tags": [
+          "property_definitions",
+          "property_definitions"
+        ],
+        "summary": "Create Property Definition",
+        "description": "Create a new property definition.\n\nThis endpoint creates a predicate using new terminology (property_definitions).",
+        "operationId": "create_property_definition_api_property_definitions__post",
+        "parameters": [
+          {
+            "name": "SessionLocal",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "title": "Sessionlocal"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PropertyDefinitionCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PropertyDefinitionOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "property_definitions",
+          "property_definitions"
+        ],
+        "summary": "List Property Definitions",
+        "description": "List property definitions with pagination and sorting.\n\nThis endpoint lists predicates using new terminology (property_definitions).",
+        "operationId": "list_property_definitions_api_property_definitions__get",
+        "parameters": [
+          {
+            "name": "skip",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 0,
+              "title": "Skip"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "default": 50,
+              "title": "Limit"
+            }
+          },
+          {
+            "name": "sortBy",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "pattern": "^(title|identifier|date_created)$",
+              "default": "title",
+              "title": "Sortby"
+            }
+          },
+          {
+            "name": "SessionLocal",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "title": "Sessionlocal"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaginatedPropertyDefinitionsResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/property_definitions/{property_def_id}": {
+      "get": {
+        "tags": [
+          "property_definitions",
+          "property_definitions"
+        ],
+        "summary": "Get Property Definition",
+        "description": "Get a specific property definition by ID.\n\nReturns the complete property definition information.",
+        "operationId": "get_property_definition_api_property_definitions__property_def_id__get",
+        "parameters": [
+          {
+            "name": "property_def_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "The ID of the property definition to retrieve",
+              "title": "Property Def Id"
+            },
+            "description": "The ID of the property definition to retrieve"
+          },
+          {
+            "name": "SessionLocal",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "title": "Sessionlocal"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PropertyDefinitionOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "property_definitions",
+          "property_definitions"
+        ],
+        "summary": "Update Property Definition",
+        "description": "Update a property definition.\n\nAllows updating title, definition, identifier, and mapping.",
+        "operationId": "update_property_definition_api_property_definitions__property_def_id__put",
+        "parameters": [
+          {
+            "name": "property_def_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "The ID of the property definition to update",
+              "title": "Property Def Id"
+            },
+            "description": "The ID of the property definition to update"
+          },
+          {
+            "name": "SessionLocal",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "title": "Sessionlocal"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PropertyDefinitionUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PropertyDefinitionOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "property_definitions",
+          "property_definitions"
+        ],
+        "summary": "Delete Property Definition",
+        "description": "Delete a property definition.\n\nRemoves the property definition from the system.",
+        "operationId": "delete_property_definition_api_property_definitions__property_def_id__delete",
+        "parameters": [
+          {
+            "name": "property_def_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "The ID of the property definition to delete",
+              "title": "Property Def Id"
+            },
+            "description": "The ID of the property definition to delete"
+          },
+          {
+            "name": "SessionLocal",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "title": "Sessionlocal"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/property_definitions/by-identifier/{identifier}": {
+      "get": {
+        "tags": [
+          "property_definitions",
+          "property_definitions"
+        ],
+        "summary": "Get Property Definition By Identifier",
+        "description": "Get a property definition by its identifier.\n\nReturns the complete property definition information.",
+        "operationId": "get_property_definition_by_identifier_api_property_definitions_by_identifier__identifier__get",
+        "parameters": [
+          {
+            "name": "identifier",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "The identifier of the property definition",
+              "title": "Identifier"
+            },
+            "description": "The identifier of the property definition"
+          },
+          {
+            "name": "SessionLocal",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "title": "Sessionlocal"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PropertyDefinitionOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/pipeline_configurations": {
+      "post": {
+        "tags": [
+          "pipeline_configurations",
+          "Pipeline Configurations"
+        ],
+        "summary": "Create Configuration",
+        "description": "Create a new pipeline configuration.\n\nThis endpoint creates a pipeline configuration using new terminology\nalongside the pipeline_flavors API.",
+        "operationId": "create_configuration_api_pipeline_configurations_post",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreatePipelineFlavorRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PipelineFlavor"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "pipeline_configurations",
+          "Pipeline Configurations"
+        ],
+        "summary": "List Configurations",
+        "description": "List all pipeline configurations, optionally filtered by pipeline type.\n\nThis endpoint lists pipeline configurations using new terminology\nalongside the pipeline_flavors API.",
+        "operationId": "list_configurations_api_pipeline_configurations_get",
+        "parameters": [
+          {
+            "name": "pipeline",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/PipelineType"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by pipeline type",
+              "title": "Pipeline"
+            },
+            "description": "Filter by pipeline type"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PipelineFlavorListResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/pipeline_configurations/{configuration_id}": {
+      "get": {
+        "tags": [
+          "pipeline_configurations",
+          "Pipeline Configurations"
+        ],
+        "summary": "Get Configuration",
+        "description": "Get a specific pipeline configuration by ID.\n\nHandles the special case of \"default\" configuration which requires\na pipeline parameter.",
+        "operationId": "get_configuration_api_pipeline_configurations__configuration_id__get",
+        "parameters": [
+          {
+            "name": "configuration_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "The ID of the configuration to retrieve",
+              "title": "Configuration Id"
+            },
+            "description": "The ID of the configuration to retrieve"
+          },
+          {
+            "name": "pipeline",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/PipelineType"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Pipeline type (required for default configuration)",
+              "title": "Pipeline"
+            },
+            "description": "Pipeline type (required for default configuration)"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PipelineFlavor"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "pipeline_configurations",
+          "Pipeline Configurations"
+        ],
+        "summary": "Update Configuration",
+        "description": "Update an existing pipeline configuration.\n\nPrevents updating default configurations. Create a new configuration\ninstead if you need different settings.",
+        "operationId": "update_configuration_api_pipeline_configurations__configuration_id__put",
+        "parameters": [
+          {
+            "name": "configuration_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "The ID of the configuration to update",
+              "title": "Configuration Id"
+            },
+            "description": "The ID of the configuration to update"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdatePipelineFlavorRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PipelineFlavor"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "pipeline_configurations",
+          "Pipeline Configurations"
+        ],
+        "summary": "Delete Configuration",
+        "description": "Delete a pipeline configuration.\n\nPrevents deleting default configurations.",
+        "operationId": "delete_configuration_api_pipeline_configurations__configuration_id__delete",
+        "parameters": [
+          {
+            "name": "configuration_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "The ID of the configuration to delete",
+              "title": "Configuration Id"
+            },
+            "description": "The ID of the configuration to delete"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
               }
             }
           }
@@ -2875,7 +4150,7 @@
             "in": "path",
             "required": true,
             "schema": {
-              "$ref": "#/components/schemas/EntityTypeEnum",
+              "$ref": "#/components/schemas/api__models__version_management__EntityTypeEnum",
               "description": "Entity type"
             },
             "description": "Entity type"
@@ -2944,7 +4219,7 @@
             "in": "path",
             "required": true,
             "schema": {
-              "$ref": "#/components/schemas/EntityTypeEnum",
+              "$ref": "#/components/schemas/api__models__version_management__EntityTypeEnum",
               "description": "Entity type"
             },
             "description": "Entity type"
@@ -3021,7 +4296,7 @@
             "in": "path",
             "required": true,
             "schema": {
-              "$ref": "#/components/schemas/EntityTypeEnum",
+              "$ref": "#/components/schemas/api__models__version_management__EntityTypeEnum",
               "description": "Entity type"
             },
             "description": "Entity type"
@@ -3086,7 +4361,7 @@
           "version_management"
         ],
         "summary": "Get Working Diff",
-        "description": "Get diff between working and canonical versions.\n\nShows what changes exist in the working version compared to the last committed version.",
+        "description": "Get diff between working and canonical versions.\n\nShows what changes exist in the working version compared to the last committed version.  # noqa: E501",
         "operationId": "get_working_diff_api_versions_entities__entity_type___entity_id__diff_get",
         "parameters": [
           {
@@ -3094,7 +4369,7 @@
             "in": "path",
             "required": true,
             "schema": {
-              "$ref": "#/components/schemas/EntityTypeEnum",
+              "$ref": "#/components/schemas/api__models__version_management__EntityTypeEnum",
               "description": "Entity type"
             },
             "description": "Entity type"
@@ -3160,7 +4435,7 @@
           "version_management"
         ],
         "summary": "Get Working Tree Status",
-        "description": "Get working tree status.\n\nReturns summary of all entities in the working tree including staged/unstaged counts.",
+        "description": "Get working tree status.\n\nReturns summary of all entities in the working tree including staged/unstaged counts.  # noqa: E501",
         "operationId": "get_working_tree_status_api_versions_working_tree_status_get",
         "parameters": [
           {
@@ -3203,7 +4478,7 @@
           "version_management"
         ],
         "summary": "Get Working Changes",
-        "description": "Get all entities with working changes.\n\nReturns entities where the working version differs from the canonical version.",
+        "description": "Get all entities with working changes.\n\nReturns entities where the working version differs from the canonical version.  # noqa: E501",
         "operationId": "get_working_changes_api_versions_working_tree_changes_get",
         "parameters": [
           {
@@ -3250,7 +4525,7 @@
           "version_management"
         ],
         "summary": "Stage Entity",
-        "description": "Stage an entity for commit.\n\nMarks the entity as staged, meaning its changes will be included in the next commit.\nReturns success even if there are no changes (idempotent operation).",
+        "description": "Stage an entity for commit.\n\nMarks the entity as staged, meaning its changes will be included in the next commit.  # noqa: E501\nReturns success even if there are no changes (idempotent operation).",
         "operationId": "stage_entity_api_versions_working_tree_stage_post",
         "parameters": [
           {
@@ -3352,7 +4627,7 @@
           "version_management"
         ],
         "summary": "Commit Staged Changes",
-        "description": "Commit all staged changes.\n\nUpdates canonical versions for all staged entities and marks them as merged.\nReturns 400 if there are no staged changes to commit.",
+        "description": "Commit all staged changes.\n\nUpdates canonical versions for all staged entities and marks them as merged.  # noqa: E501\nReturns 400 if there are no staged changes to commit.",
         "operationId": "commit_staged_changes_api_versions_working_tree_commit_post",
         "parameters": [
           {
@@ -3403,7 +4678,7 @@
           "version_management"
         ],
         "summary": "Get Commit Preview",
-        "description": "Preview what would be committed.\n\nReturns diffs for all staged entities showing what changes would be committed.",
+        "description": "Preview what would be committed.\n\nReturns diffs for all staged entities showing what changes would be committed.  # noqa: E501",
         "operationId": "get_commit_preview_api_versions_working_tree_preview_get",
         "parameters": [
           {
@@ -3497,7 +4772,7 @@
           "version_management"
         ],
         "summary": "Compare Versions",
-        "description": "Compare two specific versions of an entity.\n\nGenerates a structured diff between the specified before and after versions.",
+        "description": "Compare two specific versions of an entity.\n\nGenerates a structured diff between the specified before and after versions.  # noqa: E501",
         "operationId": "compare_versions_api_versions_diffs_compare_post",
         "parameters": [
           {
@@ -8076,7 +9351,7 @@
           "reference"
         ],
         "summary": "Multi Source Search",
-        "description": "Search across multiple reference sources\n\nSearches across specified sources (or all enabled sources if none specified)\nand returns aggregated results without deduplication or ranking.",
+        "description": "Search across multiple reference sources\n\nSearches across specified sources (or all enabled sources if none specified)  # noqa: E501\nand returns aggregated results without deduplication or ranking.",
         "operationId": "multi_source_search_api_reference_search_post",
         "requestBody": {
           "required": true,
@@ -8209,7 +9484,7 @@
           "reference"
         ],
         "summary": "Reference Db Search",
-        "description": "Search reference database using semantic vector similarity.\n\nThis endpoint uses vector embeddings for semantic search and returns results\nranked by similarity score.",
+        "description": "Search reference database using semantic vector similarity.\n\nThis endpoint uses vector embeddings for semantic search and returns results  # noqa: E501\nranked by similarity score.",
         "operationId": "reference_db_search_api_reference_ref_db_search_get",
         "parameters": [
           {
@@ -8298,7 +9573,7 @@
           "reference"
         ],
         "summary": "Reference Db Search Post",
-        "description": "Search reference database using semantic vector similarity (POST version).\n\nThis endpoint uses vector embeddings for semantic search and returns results\nranked by similarity score. Accepts a JSON body with search parameters.",
+        "description": "Search reference database using semantic vector similarity (POST version).\n\nThis endpoint uses vector embeddings for semantic search and returns results  # noqa: E501\nranked by similarity score. Accepts a JSON body with search parameters.",
         "operationId": "reference_db_search_post_api_reference_ref_db_search_post",
         "requestBody": {
           "required": true,
@@ -8493,7 +9768,7 @@
           "reference"
         ],
         "summary": "Get Predicate Examples",
-        "description": "Get example uses of a predicate from the reference database or external APIs.\n\nReturns example links that use this predicate, including information about\nthe subject and object nodes. This helps users understand how the predicate\nis used in the knowledge graph.\n\nNote: The external_id parameter accepts paths with slashes (e.g., '/r/RelatedTo' for ConceptNet).\nFor DBpedia, uses SPARQL queries to fetch live examples from the public endpoint.",
+        "description": "Get example uses of a predicate from the reference database or external APIs.  # noqa: E501\n\nReturns example links that use this predicate, including information about\nthe subject and object nodes. This helps users understand how the predicate\nis used in the knowledge graph.\n\nNote: The external_id parameter accepts paths with slashes (e.g., '/r/RelatedTo' for ConceptNet).  # noqa: E501\nFor DBpedia, uses SPARQL queries to fetch live examples from the public endpoint.  # noqa: E501",
         "operationId": "get_predicate_examples_api_reference_ref_db_predicates__source___external_id__examples_get",
         "parameters": [
           {
@@ -8562,7 +9837,7 @@
           "reference"
         ],
         "summary": "Get Node Links",
-        "description": "Retrieve links connected to a reference node.\n\nReturns links ordered by created_at (descending).\n\nWhen apply_relevance_filter=True, filters links based on predicate relevance\nmappings from the global predicates table. If not specified, uses the\nenable_relevance_filtering setting from configuration.",
+        "description": "Retrieve links connected to a reference node.\n\nReturns links ordered by created_at (descending).\n\nWhen apply_relevance_filter=True, filters links based on predicate relevance  # noqa: E501\nmappings from the global predicates table. If not specified, uses the\nenable_relevance_filtering setting from configuration.",
         "operationId": "get_node_links_api_reference_ref_db_nodes__node_id__links_get",
         "parameters": [
           {
@@ -9167,7 +10442,7 @@
           "Service Administration"
         ],
         "summary": "Get metrics for specific service type",
-        "description": "Get detailed metrics for a specific service type.\n\nArgs:\n    service_type: The service type to get metrics for (e.g., 'node_service', 'llm_service')",
+        "description": "Get detailed metrics for a specific service type.\n\nArgs:\n    service_type: The service type to get metrics for (e.g., 'node_service', 'llm_service')  # noqa: E501",
         "operationId": "get_service_type_metrics_admin_services_metrics__service_type__get",
         "parameters": [
           {
@@ -9238,7 +10513,7 @@
           "changeset_management"
         ],
         "summary": "Create Changeset",
-        "description": "Create a new changeset from staged or working changes.\n\nArgs:\n    request: Changeset creation request\n    changeset_manager: ChangesetManager dependency\n    \nReturns:\n    Created changeset details\n    \nRaises:\n    HTTPException: If no changes available or creation fails",
+        "description": "Create a new changeset from staged or working changes.\n\nArgs:\n    request: Changeset creation request\n    changeset_manager: ChangesetManager dependency\n\nReturns:\n    Created changeset details\n\nRaises:\n    HTTPException: If no changes available or creation fails",
         "operationId": "create_changeset_api_changesets_post",
         "parameters": [
           {
@@ -9309,7 +10584,7 @@
           "changeset_management"
         ],
         "summary": "List Changesets",
-        "description": "List changesets with optional filtering.\n\nArgs:\n    author_id: Optional author ID filter\n    state: Optional changeset state filter\n    limit: Maximum number of results\n    changeset_manager: ChangesetManager dependency\n    \nReturns:\n    List of changesets matching filters\n    \nRaises:\n    HTTPException: If invalid state provided",
+        "description": "List changesets with optional filtering.\n\nArgs:\n    author_id: Optional author ID filter\n    state: Optional changeset state filter\n    limit: Maximum number of results\n    changeset_manager: ChangesetManager dependency\n\nReturns:\n    List of changesets matching filters\n\nRaises:\n    HTTPException: If invalid state provided or query fails",
         "operationId": "list_changesets_api_changesets_get",
         "parameters": [
           {
@@ -9421,7 +10696,7 @@
           "changeset_management"
         ],
         "summary": "Get Changeset",
-        "description": "Get changeset details by ID.\n\nArgs:\n    changeset_id: Changeset identifier\n    changeset_manager: ChangesetManager dependency\n    \nReturns:\n    Changeset details\n    \nRaises:\n    HTTPException: If changeset not found",
+        "description": "Get changeset details by ID.\n\nArgs:\n    changeset_id: Changeset identifier\n    changeset_manager: ChangesetManager dependency\n\nReturns:\n    Changeset details\n\nRaises:\n    HTTPException: If changeset not found or retrieval fails",
         "operationId": "get_changeset_api_changesets__changeset_id__get",
         "parameters": [
           {
@@ -9493,7 +10768,7 @@
           "changeset_management"
         ],
         "summary": "Update Changeset",
-        "description": "Update changeset metadata.\n\nArgs:\n    changeset_id: Changeset identifier\n    request: Update request with new values\n    changeset_manager: ChangesetManager dependency\n    \nReturns:\n    Updated changeset details\n    \nRaises:\n    HTTPException: If changeset not found or update fails",
+        "description": "Update changeset metadata.\n\nArgs:\n    changeset_id: Changeset identifier\n    request: Update request with new values\n    changeset_manager: ChangesetManager dependency\n\nReturns:\n    Updated changeset details\n\nRaises:\n    HTTPException: If changeset not found or update fails",
         "operationId": "update_changeset_api_changesets__changeset_id__put",
         "parameters": [
           {
@@ -9575,7 +10850,7 @@
           "changeset_management"
         ],
         "summary": "Delete Changeset",
-        "description": "Delete a changeset.\n\nArgs:\n    changeset_id: Changeset identifier\n    changeset_manager: ChangesetManager dependency\n    \nReturns:\n    Success message\n    \nRaises:\n    HTTPException: If changeset not found or deletion fails",
+        "description": "Delete a changeset.\n\nArgs:\n    changeset_id: Changeset identifier\n    changeset_manager: ChangesetManager dependency\n\nReturns:\n    Success message\n\nRaises:\n    HTTPException: If changeset not found or deletion fails",
         "operationId": "delete_changeset_api_changesets__changeset_id__delete",
         "parameters": [
           {
@@ -9647,7 +10922,7 @@
           "changeset_management"
         ],
         "summary": "Push Changeset To S3",
-        "description": "Push changeset to S3 for collaboration.\n\nArgs:\n    changeset_id: Changeset identifier\n    changeset_manager: ChangesetManager dependency\n    \nReturns:\n    Success message\n    \nRaises:\n    HTTPException: If changeset not found or push fails",
+        "description": "Push changeset to S3 for collaboration.\n\nArgs:\n    changeset_id: Changeset identifier\n    changeset_manager: ChangesetManager dependency\n\nReturns:\n    Success message\n\nRaises:\n    HTTPException: If changeset not found or push fails",
         "operationId": "push_changeset_to_s3_api_changesets__changeset_id__push_post",
         "parameters": [
           {
@@ -9719,7 +10994,7 @@
           "changeset_management"
         ],
         "summary": "Get Changeset Versions",
-        "description": "Get version details for a changeset.\n\nArgs:\n    changeset_id: Changeset identifier\n    changeset_manager: ChangesetManager dependency\n    \nReturns:\n    Changeset version details\n    \nRaises:\n    HTTPException: If changeset not found",
+        "description": "Get version details for a changeset.\n\nArgs:\n    changeset_id: Changeset identifier\n    changeset_manager: ChangesetManager dependency\n\nReturns:\n    Changeset version details\n\nRaises:\n    HTTPException: If changeset not found or query fails",
         "operationId": "get_changeset_versions_api_changesets__changeset_id__versions_get",
         "parameters": [
           {
@@ -9793,7 +11068,7 @@
           "proposal_management"
         ],
         "summary": "Create Proposal",
-        "description": "Create a new proposal for changeset review.\n\nArgs:\n    request: Proposal creation request\n    proposal_manager: ProposalManager dependency\n    \nReturns:\n    Created proposal details\n    \nRaises:\n    HTTPException: If validation fails or creation fails",
+        "description": "Create a new proposal for changeset review.\n\nArgs:\n    request: Proposal creation request\n    proposal_manager: ProposalManager dependency\n\nReturns:\n    Created proposal details\n\nRaises:\n    HTTPException: If validation fails or creation fails",
         "operationId": "create_proposal_api_proposals_post",
         "parameters": [
           {
@@ -9864,7 +11139,7 @@
           "proposal_management"
         ],
         "summary": "List Proposals",
-        "description": "List proposals with optional filtering.\n\nArgs:\n    status: Optional proposal status filter\n    created_by: Optional creator ID filter\n    changeset_id: Optional changeset ID filter\n    limit: Maximum number of results\n    proposal_manager: ProposalManager dependency\n    \nReturns:\n    List of proposals matching filters\n    \nRaises:\n    HTTPException: If invalid status provided",
+        "description": "List proposals with optional filtering.\n\nArgs:\n    status: Optional proposal status filter\n    created_by: Optional creator ID filter\n    changeset_id: Optional changeset ID filter\n    limit: Maximum number of results\n    proposal_manager: ProposalManager dependency\n\nReturns:\n    List of proposals matching filters\n\nRaises:\n    HTTPException: If invalid status provided",
         "operationId": "list_proposals_api_proposals_get",
         "parameters": [
           {
@@ -9994,7 +11269,7 @@
           "proposal_management"
         ],
         "summary": "Get Proposal",
-        "description": "Get proposal details by ID.\n\nArgs:\n    proposal_id: Proposal identifier\n    proposal_manager: ProposalManager dependency\n    \nReturns:\n    Proposal details\n    \nRaises:\n    HTTPException: If proposal not found",
+        "description": "Get proposal details by ID.\n\nArgs:\n    proposal_id: Proposal identifier\n    proposal_manager: ProposalManager dependency\n\nReturns:\n    Proposal details\n\nRaises:\n    HTTPException: If proposal not found",
         "operationId": "get_proposal_api_proposals__proposal_id__get",
         "parameters": [
           {
@@ -10068,7 +11343,7 @@
           "proposal_management"
         ],
         "summary": "Vote On Proposal",
-        "description": "Cast vote on a proposal.\n\nArgs:\n    proposal_id: Proposal identifier\n    request: Vote request with vote and optional comment\n    user_id: User ID of the voter\n    proposal_manager: ProposalManager dependency\n    \nReturns:\n    Vote details\n    \nRaises:\n    HTTPException: If proposal not found or vote invalid",
+        "description": "Cast vote on a proposal.\n\nArgs:\n    proposal_id: Proposal identifier\n    request: Vote request with vote and optional comment\n    user_id: User ID of the voter\n    proposal_manager: ProposalManager dependency\n\nReturns:\n    Vote details\n\nRaises:\n    HTTPException: If proposal not found or vote invalid",
         "operationId": "vote_on_proposal_api_proposals__proposal_id__vote_post",
         "parameters": [
           {
@@ -10163,7 +11438,7 @@
           "proposal_management"
         ],
         "summary": "Get Proposal Votes",
-        "description": "Get all votes for a proposal.\n\nArgs:\n    proposal_id: Proposal identifier\n    proposal_manager: ProposalManager dependency\n    \nReturns:\n    List of votes for the proposal\n    \nRaises:\n    HTTPException: If proposal not found",
+        "description": "Get all votes for a proposal.\n\nArgs:\n    proposal_id: Proposal identifier\n    proposal_manager: ProposalManager dependency\n\nReturns:\n    List of votes for the proposal\n\nRaises:\n    HTTPException: If proposal not found",
         "operationId": "get_proposal_votes_api_proposals__proposal_id__votes_get",
         "parameters": [
           {
@@ -10237,7 +11512,7 @@
           "proposal_management"
         ],
         "summary": "Get Vote Summary",
-        "description": "Get vote summary for a proposal.\n\nArgs:\n    proposal_id: Proposal identifier\n    proposal_manager: ProposalManager dependency\n    \nReturns:\n    Vote summary with counts\n    \nRaises:\n    HTTPException: If proposal not found",
+        "description": "Get vote summary for a proposal.\n\nArgs:\n    proposal_id: Proposal identifier\n    proposal_manager: ProposalManager dependency\n\nReturns:\n    Vote summary with counts\n\nRaises:\n    HTTPException: If proposal not found",
         "operationId": "get_vote_summary_api_proposals__proposal_id__summary_get",
         "parameters": [
           {
@@ -10311,7 +11586,7 @@
           "identity_management"
         ],
         "summary": "Register User",
-        "description": "Register a new user with email-based identity.\n\nArgs:\n    request: User registration request\n    identity_manager: IdentityManager dependency\n    \nReturns:\n    User identity and verification code\n    \nRaises:\n    HTTPException: If validation fails or registration fails",
+        "description": "Register a new user with email-based identity.\n\nArgs:\n    request: User registration request\n    identity_manager: IdentityManager dependency\n\nReturns:\n    User identity and verification code\n\nRaises:\n    HTTPException: If validation fails or registration fails",
         "operationId": "register_user_api_identity_register_post",
         "parameters": [
           {
@@ -10384,7 +11659,7 @@
           "identity_management"
         ],
         "summary": "Verify Email",
-        "description": "Verify user email with verification code.\n\nArgs:\n    request: Email verification request\n    identity_manager: IdentityManager dependency\n    \nReturns:\n    Success message\n    \nRaises:\n    HTTPException: If verification fails",
+        "description": "Verify user email with verification code.\n\nArgs:\n    request: Email verification request\n    identity_manager: IdentityManager dependency\n\nReturns:\n    Success message\n\nRaises:\n    HTTPException: If verification fails",
         "operationId": "verify_email_api_identity_verify_post",
         "parameters": [
           {
@@ -10455,7 +11730,7 @@
           "identity_management"
         ],
         "summary": "Trust User",
-        "description": "Establish trust relationship between users.\n\nArgs:\n    request: Trust relationship request\n    identity_manager: IdentityManager dependency\n    \nReturns:\n    Success message\n    \nRaises:\n    HTTPException: If trust establishment fails",
+        "description": "Establish trust relationship between users.\n\nArgs:\n    request: Trust relationship request\n    identity_manager: IdentityManager dependency\n\nReturns:\n    Success message\n\nRaises:\n    HTTPException: If trust establishment fails",
         "operationId": "trust_user_api_identity_trust_post",
         "parameters": [
           {
@@ -10526,7 +11801,7 @@
           "identity_management"
         ],
         "summary": "Get User",
-        "description": "Get user identity by ID.\n\nArgs:\n    user_id: User identifier\n    identity_manager: IdentityManager dependency\n    \nReturns:\n    User identity details\n    \nRaises:\n    HTTPException: If user not found",
+        "description": "Get user identity by ID.\n\nArgs:\n    user_id: User identifier\n    identity_manager: IdentityManager dependency\n\nReturns:\n    User identity details\n\nRaises:\n    HTTPException: If user not found",
         "operationId": "get_user_api_identity_users__user_id__get",
         "parameters": [
           {
@@ -10600,7 +11875,7 @@
           "identity_management"
         ],
         "summary": "Get User By Email",
-        "description": "Get user identity by email address.\n\nArgs:\n    email: Email address\n    identity_manager: IdentityManager dependency\n    \nReturns:\n    User identity details\n    \nRaises:\n    HTTPException: If user not found",
+        "description": "Get user identity by email address.\n\nArgs:\n    email: Email address\n    identity_manager: IdentityManager dependency\n\nReturns:\n    User identity details\n\nRaises:\n    HTTPException: If user not found",
         "operationId": "get_user_by_email_api_identity_users_email__email__get",
         "parameters": [
           {
@@ -10674,7 +11949,7 @@
           "identity_management"
         ],
         "summary": "List Users",
-        "description": "List users with optional filtering.\n\nArgs:\n    verified_only: Only return verified users\n    min_trust_level: Minimum trust level filter\n    limit: Maximum number of results\n    identity_manager: IdentityManager dependency\n    \nReturns:\n    List of user identities",
+        "description": "List users with optional filtering.\n\nArgs:\n    verified_only: Only return verified users\n    min_trust_level: Minimum trust level filter\n    limit: Maximum number of results\n    identity_manager: IdentityManager dependency\n\nReturns:\n    List of user identities",
         "operationId": "list_users_api_identity_users_get",
         "parameters": [
           {
@@ -10776,7 +12051,7 @@
           "identity_management"
         ],
         "summary": "Get Trust Network",
-        "description": "Get trust network information for a user.\n\nArgs:\n    user_id: User identifier\n    identity_manager: IdentityManager dependency\n    \nReturns:\n    Trust network details\n    \nRaises:\n    HTTPException: If user not found",
+        "description": "Get trust network information for a user.\n\nArgs:\n    user_id: User identifier\n    identity_manager: IdentityManager dependency\n\nReturns:\n    Trust network details\n\nRaises:\n    HTTPException: If user not found",
         "operationId": "get_trust_network_api_identity_users__user_id__trust_network_get",
         "parameters": [
           {
@@ -10945,7 +12220,7 @@
           "database-monitoring"
         ],
         "summary": "Optimize Database for Workload",
-        "description": "Optimize database configuration for specific workload types.\n\nSupported workload types:\n- mixed: General purpose workload\n- read_heavy: Optimized for read operations\n- write_heavy: Optimized for write operations  \n- analytics: Optimized for analytical queries",
+        "description": "Optimize database configuration for specific workload types.\n\nSupported workload types:\n- mixed: General purpose workload\n- read_heavy: Optimized for read operations\n- write_heavy: Optimized for write operations\n- analytics: Optimized for analytical queries",
         "operationId": "optimize_database_for_workload_admin_database_optimize_post",
         "parameters": [
           {
@@ -11062,9 +12337,9 @@
         "tags": [
           "database-monitoring"
         ],
-        "summary": "Create Optimized Engine",
-        "description": "Create a new optimized database engine with specified configuration.",
-        "operationId": "create_optimized_database_engine_admin_database_create_engine_post",
+        "summary": "Create Database Engine",
+        "description": "Create a new database engine with specified configuration.",
+        "operationId": "create_database_engine_admin_database_create_engine_post",
         "parameters": [
           {
             "name": "engine_id",
@@ -11100,7 +12375,7 @@
                 "schema": {
                   "type": "object",
                   "additionalProperties": true,
-                  "title": "Response Create Optimized Database Engine Admin Database Create Engine Post"
+                  "title": "Response Create Database Engine Admin Database Create Engine Post"
                 }
               }
             }
@@ -13980,7 +15255,7 @@
           "background-tasks"
         ],
         "summary": "List Tasks",
-        "description": "List all background tasks with optional filtering.\n\nArgs:\n    status_filter: Optional status filter (pending, running, completed, failed, cancelled)\n    task_type: Optional task type filter\n\nReturns:\n    List of tasks matching the filters",
+        "description": "List all background tasks with optional filtering.\n\nArgs:\n    status_filter: Optional status filter (pending, running, completed, failed, cancelled)  # noqa: E501\n    task_type: Optional task type filter\n\nReturns:\n    List of tasks matching the filters",
         "operationId": "list_tasks_api_tasks_get",
         "parameters": [
           {
@@ -14927,7 +16202,7 @@
           "rag-pipeline"
         ],
         "summary": "Delete Trace",
-        "description": "Manually delete trace data for a specific RAG extraction request.\n\nThis is useful for immediate cleanup of sensitive data or testing purposes.\nNote that trace data is automatically cleaned up after the retention period.\n\nArgs:\n    request_id: Unique identifier for the extraction request\n    observability_store: Injected observability store\n\nReturns:\n    Success message with deletion confirmation\n\nRaises:\n    HTTPException 404: If request_id has no trace data\n    HTTPException 500: If deletion fails",
+        "description": "Manually delete trace data for a specific RAG extraction request.\n\nThis is useful for immediate cleanup of sensitive data or testing purposes.\nNote that trace data is automatically cleaned up after the retention period.  # noqa: E501\n\nArgs:\n    request_id: Unique identifier for the extraction request\n    observability_store: Injected observability store\n\nReturns:\n    Success message with deletion confirmation\n\nRaises:\n    HTTPException 404: If request_id has no trace data\n    HTTPException 500: If deletion fails",
         "operationId": "delete_trace_api_rag_trace__request_id__delete",
         "parameters": [
           {
@@ -14974,7 +16249,7 @@
           "rag-pipeline"
         ],
         "summary": "Get Trace By Layer",
-        "description": "Retrieve trace entries for a specific layer of a RAG extraction request.\n\nArgs:\n    request_id: Unique identifier for the extraction request\n    layer_name: Name of the layer (kg_context, llm_extraction, spacy_gap, concept_resolution)\n    observability_store: Injected observability store\n\nReturns:\n    List of trace entries for the specified layer\n\nRaises:\n    HTTPException 404: If request_id or layer has no trace data\n    HTTPException 500: If trace retrieval fails",
+        "description": "Retrieve trace entries for a specific layer of a RAG extraction request.\n\nArgs:\n    request_id: Unique identifier for the extraction request\n    layer_name: Name of the layer (kg_context, llm_extraction, spacy_gap, concept_resolution)  # noqa: E501\n    observability_store: Injected observability store\n\nReturns:\n    List of trace entries for the specified layer\n\nRaises:\n    HTTPException 404: If request_id or layer has no trace data\n    HTTPException 500: If trace retrieval fails",
         "operationId": "get_trace_by_layer_api_rag_trace__request_id__layer__layer_name__get",
         "parameters": [
           {
@@ -15030,7 +16305,7 @@
           "rag-pipeline"
         ],
         "summary": "Update Config",
-        "description": "Update RAG pipeline configuration settings.\n\nAccepts partial updates to pipeline configuration, including:\n- timeout_layer_0: Timeout for Layer 0 (KG context) in seconds\n- timeout_layer_1: Timeout for Layer 1 (LLM extraction) in seconds\n- timeout_layer_2: Timeout for Layer 2 (spaCy gap) in seconds\n- timeout_layer_3: Timeout for Layer 3 (concept resolution) in seconds\n- timeout_total: Total pipeline timeout in seconds\n- dedup_similarity_threshold: Entity deduplication similarity threshold (0.0-1.0)\n- kg_top_k: Number of top KG nodes to retrieve\n\nArgs:\n    config_updates: Dictionary of configuration parameters to update\n    pipeline_service: Injected RAG pipeline service\n\nReturns:\n    Updated configuration values\n\nRaises:\n    HTTPException 400: If configuration parameters are invalid\n    HTTPException 500: If configuration update fails",
+        "description": "Update RAG pipeline configuration settings.\n\nAccepts partial updates to pipeline configuration, including:\n- timeout_layer_0: Timeout for Layer 0 (KG context) in seconds\n- timeout_layer_1: Timeout for Layer 1 (LLM extraction) in seconds\n- timeout_layer_2: Timeout for Layer 2 (spaCy gap) in seconds\n- timeout_layer_3: Timeout for Layer 3 (concept resolution) in seconds\n- timeout_total: Total pipeline timeout in seconds\n- dedup_similarity_threshold: Entity deduplication similarity threshold (0.0-1.0)  # noqa: E501\n- kg_top_k: Number of top KG nodes to retrieve\n\nArgs:\n    config_updates: Dictionary of configuration parameters to update\n    pipeline_service: Injected RAG pipeline service\n\nReturns:\n    Updated configuration values\n\nRaises:\n    HTTPException 400: If configuration parameters are invalid\n    HTTPException 500: If configuration update fails",
         "operationId": "update_config_api_rag_config_update_post",
         "parameters": [
           {
@@ -15260,7 +16535,7 @@
           "RAG Experiments"
         ],
         "summary": "Update Test Paragraph",
-        "description": "Update a test paragraph.\n\nCan update the text content and/or notes. At least one field must be provided.",
+        "description": "Update a test paragraph.\n\nCan update the text content and/or notes. At least one field must be provided.  # noqa: E501",
         "operationId": "update_test_paragraph_api_rag_experiments_paragraphs__paragraph_id__put",
         "parameters": [
           {
@@ -16740,11 +18015,25 @@
       "ConcepcyRelation": {
         "properties": {
           "subject": {
-            "$ref": "#/components/schemas/ConcepcyNode",
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ConcepcyNode"
+              },
+              {
+                "type": "null"
+              }
+            ],
             "description": "The 'start' of the concepcy relation."
           },
           "object": {
-            "$ref": "#/components/schemas/ConcepcyNode",
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ConcepcyNode"
+              },
+              {
+                "type": "null"
+              }
+            ],
             "description": "The 'end' of the concepcy relation."
           },
           "relation": {
@@ -17414,7 +18703,7 @@
       "DiffRequest": {
         "properties": {
           "entity_type": {
-            "$ref": "#/components/schemas/EntityTypeEnum"
+            "$ref": "#/components/schemas/api__models__version_management__EntityTypeEnum"
           },
           "entity_id": {
             "type": "string",
@@ -17602,6 +18891,61 @@
         "title": "EnabledModelsListResponse",
         "description": "Response model for list of enabled models"
       },
+      "EntityCreate": {
+        "properties": {
+          "node_type": {
+            "$ref": "#/components/schemas/api__models__ontology_entities__EntityTypeEnum"
+          },
+          "parent_entity_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Parent Entity Id"
+          },
+          "title": {
+            "type": "string",
+            "maxLength": 255,
+            "minLength": 2,
+            "title": "Title"
+          },
+          "definition": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Definition"
+          },
+          "structural_predicate_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Structural Predicate Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "node_type",
+          "title"
+        ],
+        "title": "EntityCreate",
+        "description": "Model for creating a new ontology entity."
+      },
       "EntityData": {
         "properties": {
           "text": {
@@ -17655,7 +18999,7 @@
       "EntityDiffOut": {
         "properties": {
           "entity_type": {
-            "$ref": "#/components/schemas/EntityTypeEnum"
+            "$ref": "#/components/schemas/api__models__version_management__EntityTypeEnum"
           },
           "entity_id": {
             "type": "string",
@@ -17746,19 +19090,353 @@
         "title": "EntityHotspotOut",
         "description": "API model for entity hotspot output."
       },
-      "EntityTypeEnum": {
-        "type": "string",
-        "enum": [
-          "structure_node",
-          "structure_node_link"
+      "EntityOut": {
+        "properties": {
+          "node_type": {
+            "$ref": "#/components/schemas/api__models__ontology_entities__EntityTypeEnum"
+          },
+          "parent_entity_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Parent Entity Id"
+          },
+          "title": {
+            "type": "string",
+            "maxLength": 255,
+            "minLength": 2,
+            "title": "Title"
+          },
+          "definition": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Definition"
+          },
+          "structural_predicate_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Structural Predicate Id"
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "title_embedding": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "number"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title Embedding"
+          },
+          "definition_embedding": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "number"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Definition Embedding"
+          },
+          "created_at": {
+            "type": "string",
+            "title": "Created At"
+          },
+          "version": {
+            "type": "integer",
+            "title": "Version"
+          },
+          "last_modified": {
+            "type": "string",
+            "title": "Last Modified"
+          }
+        },
+        "type": "object",
+        "required": [
+          "node_type",
+          "title",
+          "id",
+          "created_at",
+          "version",
+          "last_modified"
         ],
-        "title": "EntityTypeEnum",
-        "description": "API enum for entity types that support versioning."
+        "title": "EntityOut",
+        "description": "Model for ontology entity output/response."
+      },
+      "EntitySearchRequest": {
+        "properties": {
+          "query": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Query",
+            "description": "Search query text"
+          },
+          "node_type": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/api__models__ontology_entities__EntityTypeEnum"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Filter by entity type"
+          },
+          "parent_entity_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Parent Entity Id",
+            "description": "Filter by parent entity"
+          },
+          "threshold": {
+            "anyOf": [
+              {
+                "type": "number",
+                "maximum": 1.0,
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Threshold",
+            "description": "Minimum similarity score",
+            "default": 0.0
+          },
+          "limit": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 100.0,
+                "minimum": 1.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Limit",
+            "description": "Maximum number of results",
+            "default": 20
+          }
+        },
+        "type": "object",
+        "required": [
+          "query"
+        ],
+        "title": "EntitySearchRequest",
+        "description": "Model for ontology entity search requests."
+      },
+      "EntitySearchResult": {
+        "properties": {
+          "node_type": {
+            "$ref": "#/components/schemas/api__models__ontology_entities__EntityTypeEnum"
+          },
+          "parent_entity_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Parent Entity Id"
+          },
+          "title": {
+            "type": "string",
+            "maxLength": 255,
+            "minLength": 2,
+            "title": "Title"
+          },
+          "definition": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Definition"
+          },
+          "structural_predicate_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Structural Predicate Id"
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "title_embedding": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "number"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title Embedding"
+          },
+          "definition_embedding": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "number"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Definition Embedding"
+          },
+          "created_at": {
+            "type": "string",
+            "title": "Created At"
+          },
+          "version": {
+            "type": "integer",
+            "title": "Version"
+          },
+          "last_modified": {
+            "type": "string",
+            "title": "Last Modified"
+          },
+          "score": {
+            "type": "number",
+            "title": "Score"
+          },
+          "distance": {
+            "type": "number",
+            "title": "Distance"
+          }
+        },
+        "type": "object",
+        "required": [
+          "node_type",
+          "title",
+          "id",
+          "created_at",
+          "version",
+          "last_modified",
+          "score",
+          "distance"
+        ],
+        "title": "EntitySearchResult",
+        "description": "Model for ontology entity search results."
+      },
+      "EntityUpdate": {
+        "properties": {
+          "title": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 255,
+                "minLength": 2
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title"
+          },
+          "definition": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Definition"
+          },
+          "parent_entity_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Parent Entity Id"
+          },
+          "structural_predicate_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Structural Predicate Id"
+          }
+        },
+        "type": "object",
+        "title": "EntityUpdate",
+        "description": "Model for updating an existing ontology entity."
       },
       "EntityVersionOut": {
         "properties": {
           "entity_type": {
-            "$ref": "#/components/schemas/EntityTypeEnum"
+            "$ref": "#/components/schemas/api__models__version_management__EntityTypeEnum"
           },
           "entity_id": {
             "type": "string",
@@ -17853,7 +19531,7 @@
             "title": "Id"
           },
           "entity_type": {
-            "$ref": "#/components/schemas/EntityTypeEnum"
+            "$ref": "#/components/schemas/api__models__version_management__EntityTypeEnum"
           },
           "entity_id": {
             "type": "string",
@@ -19533,6 +21211,38 @@
         "title": "OptimizationResultOut",
         "description": "API model for optimization result."
       },
+      "PaginatedEntitiesResponse": {
+        "properties": {
+          "data": {
+            "items": {
+              "$ref": "#/components/schemas/EntityOut"
+            },
+            "type": "array",
+            "title": "Data"
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          },
+          "skip": {
+            "type": "integer",
+            "title": "Skip"
+          },
+          "limit": {
+            "type": "integer",
+            "title": "Limit"
+          }
+        },
+        "type": "object",
+        "required": [
+          "data",
+          "total",
+          "skip",
+          "limit"
+        ],
+        "title": "PaginatedEntitiesResponse",
+        "description": "Model for paginated ontology entity responses."
+      },
       "PaginatedExternalPredicatesResponse": {
         "properties": {
           "data": {
@@ -19670,6 +21380,69 @@
           "limit"
         ],
         "title": "PaginatedPredicatesResponse"
+      },
+      "PaginatedPropertyDefinitionsResponse": {
+        "properties": {
+          "data": {
+            "items": {
+              "$ref": "#/components/schemas/PropertyDefinitionOut"
+            },
+            "type": "array",
+            "title": "Data"
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          },
+          "skip": {
+            "type": "integer",
+            "title": "Skip"
+          },
+          "limit": {
+            "type": "integer",
+            "title": "Limit"
+          }
+        },
+        "type": "object",
+        "required": [
+          "data",
+          "total",
+          "skip",
+          "limit"
+        ],
+        "title": "PaginatedPropertyDefinitionsResponse"
+      },
+      "PaginatedRelationshipsResponse": {
+        "properties": {
+          "data": {
+            "items": {
+              "$ref": "#/components/schemas/RelationshipOut"
+            },
+            "type": "array",
+            "title": "Data"
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          },
+          "skip": {
+            "type": "integer",
+            "title": "Skip"
+          },
+          "limit": {
+            "type": "integer",
+            "title": "Limit"
+          }
+        },
+        "type": "object",
+        "required": [
+          "data",
+          "total",
+          "skip",
+          "limit"
+        ],
+        "title": "PaginatedRelationshipsResponse",
+        "description": "Model for paginated entity relationship responses."
       },
       "PathRequest": {
         "properties": {
@@ -20617,6 +22390,164 @@
         "title": "ProcessingMetrics",
         "description": "Comprehensive metrics for RAG pipeline execution.\n\nCaptures timing and entity counts for all four layers of the pipeline,\nplus overall execution metrics."
       },
+      "PropertyDefinitionCreate": {
+        "properties": {
+          "title": {
+            "type": "string",
+            "maxLength": 255,
+            "minLength": 1,
+            "title": "Title"
+          },
+          "definition": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Definition"
+          },
+          "mapping": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mapping"
+          },
+          "identifier": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Identifier"
+          }
+        },
+        "type": "object",
+        "required": [
+          "title"
+        ],
+        "title": "PropertyDefinitionCreate"
+      },
+      "PropertyDefinitionOut": {
+        "properties": {
+          "title": {
+            "type": "string",
+            "maxLength": 255,
+            "minLength": 1,
+            "title": "Title"
+          },
+          "definition": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Definition"
+          },
+          "mapping": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mapping"
+          },
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "identifier": {
+            "type": "string",
+            "title": "Identifier"
+          },
+          "date_created": {
+            "type": "string",
+            "title": "Date Created"
+          },
+          "date_modified": {
+            "type": "string",
+            "title": "Date Modified"
+          }
+        },
+        "type": "object",
+        "required": [
+          "title",
+          "id",
+          "identifier",
+          "date_created",
+          "date_modified"
+        ],
+        "title": "PropertyDefinitionOut"
+      },
+      "PropertyDefinitionUpdate": {
+        "properties": {
+          "title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title"
+          },
+          "definition": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Definition"
+          },
+          "mapping": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mapping"
+          },
+          "identifier": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Identifier"
+          }
+        },
+        "type": "object",
+        "title": "PropertyDefinitionUpdate"
+      },
       "ProposalListResponse": {
         "properties": {
           "proposals": {
@@ -21123,6 +23054,93 @@
         ],
         "title": "RegisterUserResponse",
         "description": "Response model for user registration."
+      },
+      "RelationshipCreate": {
+        "properties": {
+          "source_entity_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Source Entity Id"
+          },
+          "target_entity_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Target Entity Id"
+          },
+          "predicate": {
+            "type": "string",
+            "title": "Predicate"
+          },
+          "predicate_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Predicate Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "source_entity_id",
+          "target_entity_id",
+          "predicate"
+        ],
+        "title": "RelationshipCreate",
+        "description": "Model for creating a new entity relationship."
+      },
+      "RelationshipOut": {
+        "properties": {
+          "source_entity_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Source Entity Id"
+          },
+          "target_entity_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Target Entity Id"
+          },
+          "predicate": {
+            "type": "string",
+            "title": "Predicate"
+          },
+          "predicate_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Predicate Id"
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "created_at": {
+            "type": "string",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "source_entity_id",
+          "target_entity_id",
+          "predicate",
+          "id",
+          "created_at"
+        ],
+        "title": "RelationshipOut",
+        "description": "Model for entity relationship output/response."
       },
       "ResolutionSuggestionOut": {
         "properties": {
@@ -21733,7 +23751,7 @@
       "StageRequest": {
         "properties": {
           "entity_type": {
-            "$ref": "#/components/schemas/EntityTypeEnum"
+            "$ref": "#/components/schemas/api__models__version_management__EntityTypeEnum"
           },
           "entity_id": {
             "type": "string",
@@ -23692,7 +25710,7 @@
       "WorkingTreeEntryOut": {
         "properties": {
           "entity_type": {
-            "$ref": "#/components/schemas/EntityTypeEnum"
+            "$ref": "#/components/schemas/api__models__version_management__EntityTypeEnum"
           },
           "entity_id": {
             "type": "string",
@@ -23797,6 +25815,25 @@
         ],
         "title": "PerformanceMetricsOut",
         "description": "API model for performance metrics output."
+      },
+      "api__models__ontology_entities__EntityTypeEnum": {
+        "type": "string",
+        "enum": [
+          "taxonomy",
+          "concept_scheme",
+          "class"
+        ],
+        "title": "EntityTypeEnum",
+        "description": "API enum for ontology entity types (new terminology)."
+      },
+      "api__models__version_management__EntityTypeEnum": {
+        "type": "string",
+        "enum": [
+          "structure_node",
+          "structure_node_link"
+        ],
+        "title": "EntityTypeEnum",
+        "description": "API enum for entity types that support versioning."
       },
       "api__optimization__PerformanceMetricsOut": {
         "properties": {

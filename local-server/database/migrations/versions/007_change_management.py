@@ -118,7 +118,9 @@ class Migration007(Migration):
 
         # Add version_id column
         try:
-            connection.execute(text("ALTER TABLE change_events ADD COLUMN version_id TEXT;"))
+            connection.execute(
+                text("ALTER TABLE change_events ADD COLUMN version_id TEXT;")
+            )
             logger.info("Added version_id column to change_events")
         except Exception as e:
             if "duplicate column name" not in str(e).lower():
@@ -142,22 +144,70 @@ class Migration007(Migration):
         logger.info("Creating indexes...")
 
         # Entity versions indexes
-        connection.execute(text("CREATE INDEX IF NOT EXISTS idx_entity_versions_entity ON entity_versions(entity_type, entity_id);"))
-        connection.execute(text("CREATE INDEX IF NOT EXISTS idx_entity_versions_state ON entity_versions(state);"))
-        connection.execute(text("CREATE INDEX IF NOT EXISTS idx_entity_versions_created ON entity_versions(created_at);"))
-        connection.execute(text("CREATE INDEX IF NOT EXISTS idx_entity_versions_parent ON entity_versions(parent_version_id);"))
-        connection.execute(text("CREATE INDEX IF NOT EXISTS idx_entity_versions_author ON entity_versions(author_id);"))
+        connection.execute(
+            text(
+                "CREATE INDEX IF NOT EXISTS idx_entity_versions_entity ON entity_versions(entity_type, entity_id);"
+            )
+        )
+        connection.execute(
+            text(
+                "CREATE INDEX IF NOT EXISTS idx_entity_versions_state ON entity_versions(state);"
+            )
+        )
+        connection.execute(
+            text(
+                "CREATE INDEX IF NOT EXISTS idx_entity_versions_created ON entity_versions(created_at);"
+            )
+        )
+        connection.execute(
+            text(
+                "CREATE INDEX IF NOT EXISTS idx_entity_versions_parent ON entity_versions(parent_version_id);"
+            )
+        )
+        connection.execute(
+            text(
+                "CREATE INDEX IF NOT EXISTS idx_entity_versions_author ON entity_versions(author_id);"
+            )
+        )
 
         # Working tree indexes
-        connection.execute(text("CREATE INDEX IF NOT EXISTS idx_working_tree_staged ON working_tree(staged);"))
-        connection.execute(text("CREATE INDEX IF NOT EXISTS idx_working_tree_modified ON working_tree(modified_at);"))
-        connection.execute(text("CREATE INDEX IF NOT EXISTS idx_working_tree_current ON working_tree(current_version_id);"))
-        connection.execute(text("CREATE INDEX IF NOT EXISTS idx_working_tree_canonical ON working_tree(canonical_version_id);"))
+        connection.execute(
+            text(
+                "CREATE INDEX IF NOT EXISTS idx_working_tree_staged ON working_tree(staged);"
+            )
+        )
+        connection.execute(
+            text(
+                "CREATE INDEX IF NOT EXISTS idx_working_tree_modified ON working_tree(modified_at);"
+            )
+        )
+        connection.execute(
+            text(
+                "CREATE INDEX IF NOT EXISTS idx_working_tree_current ON working_tree(current_version_id);"
+            )
+        )
+        connection.execute(
+            text(
+                "CREATE INDEX IF NOT EXISTS idx_working_tree_canonical ON working_tree(canonical_version_id);"
+            )
+        )
 
         # Change events indexes for new columns
-        connection.execute(text("CREATE INDEX IF NOT EXISTS idx_change_events_version ON change_events(version_id);"))
-        connection.execute(text("CREATE INDEX IF NOT EXISTS idx_change_events_state ON change_events(change_state);"))
-        connection.execute(text("CREATE INDEX IF NOT EXISTS idx_change_events_version_state ON change_events(version_id, change_state);"))
+        connection.execute(
+            text(
+                "CREATE INDEX IF NOT EXISTS idx_change_events_version ON change_events(version_id);"
+            )
+        )
+        connection.execute(
+            text(
+                "CREATE INDEX IF NOT EXISTS idx_change_events_state ON change_events(change_state);"
+            )
+        )
+        connection.execute(
+            text(
+                "CREATE INDEX IF NOT EXISTS idx_change_events_version_state ON change_events(version_id, change_state);"
+            )
+        )
 
         logger.info("Successfully created all indexes")
 
@@ -188,10 +238,10 @@ class Migration007(Migration):
 
         column_names = [col[1] for col in change_events_columns]
 
-        if 'version_id' not in column_names:
+        if "version_id" not in column_names:
             raise Exception("version_id column not added to change_events table")
 
-        if 'change_state' not in column_names:
+        if "change_state" not in column_names:
             raise Exception("change_state column not added to change_events table")
 
         # Validate indexes exist
@@ -244,9 +294,25 @@ class Migration007(Migration):
         connection.execute(text("DROP TABLE change_events_backup;"))
 
         # Recreate original indexes
-        connection.execute(text("CREATE INDEX IF NOT EXISTS idx_change_events_processed ON change_events(processed);"))
-        connection.execute(text("CREATE INDEX IF NOT EXISTS idx_change_events_record_id ON change_events(record_id);"))
-        connection.execute(text("CREATE INDEX IF NOT EXISTS idx_change_events_record_type ON change_events(record_type);"))
-        connection.execute(text("CREATE INDEX IF NOT EXISTS idx_change_events_type_processed ON change_events(record_type, processed);"))
+        connection.execute(
+            text(
+                "CREATE INDEX IF NOT EXISTS idx_change_events_processed ON change_events(processed);"
+            )
+        )
+        connection.execute(
+            text(
+                "CREATE INDEX IF NOT EXISTS idx_change_events_record_id ON change_events(record_id);"
+            )
+        )
+        connection.execute(
+            text(
+                "CREATE INDEX IF NOT EXISTS idx_change_events_record_type ON change_events(record_type);"
+            )
+        )
+        connection.execute(
+            text(
+                "CREATE INDEX IF NOT EXISTS idx_change_events_type_processed ON change_events(record_type, processed);"
+            )
+        )
 
         logger.info("Successfully rolled back change_events table")

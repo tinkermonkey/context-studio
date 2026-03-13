@@ -15,13 +15,13 @@ from .prompts import DefinitionPromptTemplate
 
 class DefaultFlavorProvider:
     """Provides default pipeline flavor configurations"""
-    
+
     @staticmethod
     def get_default_flavor(pipeline: PipelineType) -> PipelineFlavor:
         """Get the default flavor for a specific pipeline type"""
         template = DefinitionPromptTemplate()
         now = datetime.now(timezone.utc)
-        
+
         # Get prompts based on pipeline type
         if pipeline == PipelineType.SUGGEST_TERM_DEFINITION:
             system_prompt = template.get_term_definition_system_prompt()
@@ -37,7 +37,7 @@ class DefaultFlavorProvider:
             user_prompt = template.get_entity_extraction_user_prompt_template()
         else:
             raise ValueError(f"Unknown pipeline type: {pipeline}")
-        
+
         # Create default flavor object
         return PipelineFlavor(
             id="default",  # Special ID for default flavors
@@ -51,9 +51,9 @@ class DefaultFlavorProvider:
             version=1,
             enabled=True,
             created_at=now,
-            updated_at=now
+            updated_at=now,
         )
-    
+
     @staticmethod
     def get_all_default_flavors() -> Dict[PipelineType, PipelineFlavor]:
         """Get all default flavors as a dictionary"""
@@ -61,9 +61,8 @@ class DefaultFlavorProvider:
             pipeline_type: DefaultFlavorProvider.get_default_flavor(pipeline_type)
             for pipeline_type in PipelineType
         }
-    
+
     @staticmethod
     def is_default_flavor(flavor_id: str) -> bool:
         """Check if a flavor ID represents a default flavor"""
         return flavor_id == "default"
-

@@ -11,6 +11,7 @@ from enum import Enum
 
 class EventTypeEnum(str, Enum):
     """Event types for change events."""
+
     CREATE = "create"
     UPDATE = "update"
     DELETE = "delete"
@@ -18,6 +19,7 @@ class EventTypeEnum(str, Enum):
 
 class RecordTypeEnum(str, Enum):
     """Record types for change events."""
+
     STRUCTURE_NODE = "structure_node"
     STRUCTURE_NODE_LINK = "structure_node_link"
     PREDICATE = "predicate"
@@ -25,6 +27,7 @@ class RecordTypeEnum(str, Enum):
 
 class ChangeEventOut(BaseModel):
     """Model for change event output/response."""
+
     id: int
     event_type: str
     record_type: str
@@ -39,4 +42,5 @@ class ChangeEventOut(BaseModel):
 
 class ChangeEventUpdate(BaseModel):
     """Model for updating a change event."""
+
     processed: bool = Field(..., description="Mark event as processed")

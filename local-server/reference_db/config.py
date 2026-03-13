@@ -7,7 +7,6 @@ including Schema.org API access, embedding models, and operational parameters.
 
 from pydantic import BaseModel, Field, field_validator
 
-
 # Schema version for the reference database structure
 # Increment this when making breaking changes to the database schema
 # Version 1.1.0: Added external_predicates table for predicate mapping (Phase 1)
@@ -48,33 +47,32 @@ class ReferenceConfig(BaseModel):
     # Schema.org API configuration
     schema_org_api_url: str = Field(
         default="https://schema.org/version/latest/schemaorg-current-https.jsonld",
-        description="URL to the Schema.org JSON-LD API endpoint"
+        description="URL to the Schema.org JSON-LD API endpoint",
     )
 
     # Operational parameters
     similarity_threshold: float = Field(
         default=0.7,
-        description="Minimum cosine similarity score for reference matching (0.0-1.0)"
+        description="Minimum cosine similarity score for reference matching (0.0-1.0)",
     )
 
     batch_size: int = Field(
         default=100,
-        description="Number of reference nodes to process in a single batch operation"
+        description="Number of reference nodes to process in a single batch operation",
     )
 
     retry_count: int = Field(
-        default=5,
-        description="Number of retry attempts for failed API requests"
+        default=5, description="Number of retry attempts for failed API requests"
     )
 
     request_timeout: int = Field(
         default=30,
         ge=1,
         le=300,
-        description="Timeout in seconds for external API requests"
+        description="Timeout in seconds for external API requests",
     )
 
-    @field_validator('schema_org_api_url')
+    @field_validator("schema_org_api_url")
     @classmethod
     def validate_schema_org_api_url(cls, v: str) -> str:
         """
@@ -109,8 +107,8 @@ class ReferenceConfig(BaseModel):
             raise ValueError("Schema.org API URL cannot be empty")
 
         # Allow HTTP for localhost and 127.0.0.1 (development/testing)
-        if v.startswith('http://'):
-            if not ('localhost' in v or '127.0.0.1' in v):
+        if v.startswith("http://"):
+            if not ("localhost" in v or "127.0.0.1" in v):
                 raise ValueError(
                     "Schema.org API URL must use HTTPS for security. "
                     "HTTP is only allowed for localhost/127.0.0.1."
@@ -118,7 +116,7 @@ class ReferenceConfig(BaseModel):
 
         return v
 
-    @field_validator('similarity_threshold')
+    @field_validator("similarity_threshold")
     @classmethod
     def validate_similarity_threshold(cls, v: float) -> float:
         """
@@ -148,7 +146,7 @@ class ReferenceConfig(BaseModel):
             )
         return v
 
-    @field_validator('batch_size')
+    @field_validator("batch_size")
     @classmethod
     def validate_batch_size(cls, v: int) -> int:
         """
@@ -173,12 +171,10 @@ class ReferenceConfig(BaseModel):
             ValueError: Batch size must be between 1 and 1000
         """
         if not (1 <= v <= 1000):
-            raise ValueError(
-                f"Batch size must be between 1 and 1000, got {v}"
-            )
+            raise ValueError(f"Batch size must be between 1 and 1000, got {v}")
         return v
 
-    @field_validator('retry_count', mode='after')
+    @field_validator("retry_count", mode="after")
     @classmethod
     def validate_retry_count(cls, v: int) -> int:
         """
@@ -203,7 +199,5 @@ class ReferenceConfig(BaseModel):
             ValueError: Retry count must be between 0 and 10
         """
         if not (0 <= v <= 10):
-            raise ValueError(
-                f"Retry count must be between 0 and 10, got {v}"
-            )
+            raise ValueError(f"Retry count must be between 0 and 10, got {v}")
         return v

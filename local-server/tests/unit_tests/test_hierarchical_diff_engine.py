@@ -8,12 +8,17 @@ import sys
 import os
 import time
 
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+sys.path.append(
+    os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+)
 
 import pytest  # noqa: E402
 from unittest.mock import Mock, patch  # noqa: E402
 
-from services.hierarchical_diff_engine import HierarchicalDiffEngine, ConflictDescriptor  # noqa: E402, E501
+from services.hierarchical_diff_engine import (
+    HierarchicalDiffEngine,
+    ConflictDescriptor,
+)  # noqa: E402, E501
 
 
 class TestHierarchicalDiffEngine:
@@ -46,12 +51,20 @@ class TestHierarchicalDiffEngine:
 
     def test_compute_basic_diff(self, diff_engine):
         """Test basic hierarchical diff computation."""
-        old_data = {"id": "entity_1", "name": "Original Name", "properties": {"type": "document", "status": "draft"}}
+        old_data = {
+            "id": "entity_1",
+            "name": "Original Name",
+            "properties": {"type": "document", "status": "draft"},
+        }
 
         new_data = {
             "id": "entity_1",
             "name": "Updated Name",
-            "properties": {"type": "document", "status": "published", "tags": ["important"]},
+            "properties": {
+                "type": "document",
+                "status": "published",
+                "tags": ["important"],
+            },
         }
 
         diff_result = diff_engine.compute_hierarchical_diff(old_data, new_data)
@@ -83,7 +96,12 @@ class TestHierarchicalDiffEngine:
 
     def test_compute_three_way_diff(self, diff_engine):
         """Test three-way diff computation with conflict detection."""
-        base = {"id": "entity_1", "name": "Base Name", "description": "Base description", "properties": {"version": 1}}
+        base = {
+            "id": "entity_1",
+            "name": "Base Name",
+            "description": "Base description",
+            "properties": {"version": 1},
+        }
 
         local = {
             "id": "entity_1",
@@ -130,7 +148,10 @@ class TestHierarchicalDiffEngine:
 
         # These are semantically similar but textually different
         conflict = diff_engine._analyze_semantic_conflict(
-            path="description", base_value=base_text, local_value=local_text, remote_value=remote_text
+            path="description",
+            base_value=base_text,
+            local_value=local_text,
+            remote_value=remote_text,
         )
 
         assert conflict is not None
@@ -140,7 +161,10 @@ class TestHierarchicalDiffEngine:
 
     def test_structural_diff_detection(self, diff_engine):
         """Test structural change detection."""
-        old_structure = {"type": "object", "fields": {"name": {"type": "string"}, "age": {"type": "integer"}}}
+        old_structure = {
+            "type": "object",
+            "fields": {"name": {"type": "string"}, "age": {"type": "integer"}},
+        }
 
         new_structure = {
             "type": "object",
@@ -151,7 +175,9 @@ class TestHierarchicalDiffEngine:
             },
         }
 
-        diff_result = diff_engine.compute_hierarchical_diff(old_structure, new_structure)
+        diff_result = diff_engine.compute_hierarchical_diff(
+            old_structure, new_structure
+        )
 
         operations = diff_result["operations"]
 
@@ -165,9 +191,15 @@ class TestHierarchicalDiffEngine:
     def test_performance_optimized_diff(self, diff_engine):
         """Test performance optimization for large data structures."""
         # Create large nested structures
-        large_old = {"data": {f"item_{i}": {"value": i, "status": "active"} for i in range(1000)}}
+        large_old = {
+            "data": {f"item_{i}": {"value": i, "status": "active"} for i in range(1000)}
+        }
 
-        large_new = {"data": {f"item_{i}": {"value": i + 1, "status": "active"} for i in range(1000)}}
+        large_new = {
+            "data": {
+                f"item_{i}": {"value": i + 1, "status": "active"} for i in range(1000)
+            }
+        }
         # Add one new item
         large_new["data"]["item_1000"] = {"value": 1000, "status": "new"}
 
@@ -321,7 +353,11 @@ class TestHierarchicalDiffEngine:
     def test_get_performance_statistics(self, diff_engine):
         """Test performance statistics aggregation."""
         # Generate some test diffs to create metrics
-        test_cases = [({"a": 1}, {"a": 2}), ({"b": "old"}, {"b": "new"}), ({"c": [1, 2]}, {"c": [1, 2, 3]})]
+        test_cases = [
+            ({"a": 1}, {"a": 2}),
+            ({"b": "old"}, {"b": "new"}),
+            ({"c": [1, 2]}, {"c": [1, 2, 3]}),
+        ]
 
         for old, new in test_cases:
             diff_engine.compute_hierarchical_diff(old, new)

@@ -57,7 +57,9 @@ class ChangeExtractor:
             change = ChangeRecord(
                 change_id=str(event.id),
                 event_type=str(event.event_type),
-                record_type=str(event.record_type),  # RecordType enum requires explicit conversion to string
+                record_type=str(
+                    event.record_type
+                ),  # RecordType enum requires explicit conversion to string
                 record_id=str(event.record_id or ""),
                 old_data=event.old_data,  # type: ignore
                 new_data=event.new_data,  # type: ignore

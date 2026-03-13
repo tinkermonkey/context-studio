@@ -33,6 +33,7 @@ logger = logging.getLogger(__name__)
 EMBEDDING_DIMENSION = 384  # Dimension for sentence-transformers/all-MiniLM-L6-v2
 EMBEDDING_MODEL_VERSION = "all-MiniLM-L6-v2"  # Current embedding model version
 
+
 class ReferenceManager:
     """
     Manager for reference database operations.
@@ -132,6 +133,7 @@ class ReferenceManager:
         """
         # This will be overridden by the application config
         from config import get_settings
+
         app_config = get_settings()
         return app_config.database.reference_path
 
@@ -169,13 +171,13 @@ class ReferenceManager:
                     "isolation_level": None,
                 },
                 poolclass=NullPool,
-                echo=False
+                echo=False,
             )
             # Initialize database with sqlite-vec extension loading
             self.engine = init_db(self.engine, db_url)
         except Exception as e:
             error_msg = str(e)
-            if 'sqlite-vec' in error_msg or 'vec0' in error_msg:
+            if "sqlite-vec" in error_msg or "vec0" in error_msg:
                 raise RuntimeError(
                     "Vector search dependencies missing. Install sqlite-vec: pip install sqlite-vec"
                 ) from e
@@ -253,7 +255,7 @@ class ReferenceManager:
 
         except OperationalError as e:
             # Expected error when table doesn't exist
-            if 'no such table' in str(e).lower():
+            if "no such table" in str(e).lower():
                 logger.debug("Schema version table does not exist (new database)")
                 return "missing"
             # Re-raise other operational errors (e.g., database locked, corrupted)
@@ -352,7 +354,7 @@ class ReferenceManager:
                     "isolation_level": None,
                 },
                 poolclass=NullPool,
-                echo=False
+                echo=False,
             )
             # Initialize database with sqlite-vec extension loading
             self.engine = init_db(self.engine, db_url)
@@ -379,8 +381,8 @@ class ReferenceManager:
                     """),
                     {
                         "schema_ver": REFERENCE_SCHEMA_VERSION,
-                        "created_at": date.today().isoformat()
-                    }
+                        "created_at": date.today().isoformat(),
+                    },
                 )
 
             logger.info(
@@ -400,7 +402,9 @@ class ReferenceManager:
                 os.remove(lock_path)
                 logger.info(f"Released rebuild lock: {lock_path}")
 
-    def _validate_embedding_dimensions(self, embedding: bytes, expected_dims: int) -> bool:
+    def _validate_embedding_dimensions(
+        self, embedding: bytes, expected_dims: int
+    ) -> bool:
         """
         Validate that an embedding has the expected number of dimensions.
 
@@ -450,7 +454,7 @@ class ReferenceManager:
         attributes: Dict[str, Any] | None = None,
         title_embedding: bytes | None = None,
         definition_embedding: bytes | None = None,
-        embedding_dims: int = EMBEDDING_DIMENSION  # Use constant from config
+        embedding_dims: int = EMBEDDING_DIMENSION,  # Use constant from config
     ) -> ReferenceNode:
         """
         Add a new reference node to the database.
@@ -508,7 +512,7 @@ class ReferenceManager:
             title_embedding=title_embedding,
             definition_embedding=definition_embedding,
             created_at=date.today().isoformat(),
-            updated_at=date.today().isoformat()
+            updated_at=date.today().isoformat(),
         )
         self.session.add(node)
         self.session.commit()
@@ -523,7 +527,7 @@ class ReferenceManager:
         subject_node: str,
         predicate: str,
         object_node: str,
-        attributes: Dict[str, Any] | None = None
+        attributes: Dict[str, Any] | None = None,
     ) -> ReferenceLink:
         """
         Add a new reference link to the database.
@@ -555,7 +559,7 @@ class ReferenceManager:
             object_node=object_node,
             attributes=str(attributes) if attributes is not None else None,
             created_at=date.today().isoformat(),
-            updated_at=date.today().isoformat()
+            updated_at=date.today().isoformat(),
         )
         self.session.add(link)
         self.session.commit()
@@ -580,7 +584,9 @@ class ReferenceManager:
         """
         return self.session.query(ReferenceNode).filter_by(id=node_id).first()
 
-    def get_reference_node_by_source(self, source: str, external_id: str) -> ReferenceNode | None:
+    def get_reference_node_by_source(
+        self, source: str, external_id: str
+    ) -> ReferenceNode | None:
         """
         Retrieve a reference node by source and external ID.
 
@@ -594,15 +600,14 @@ class ReferenceManager:
         Examples:
             >>> node = manager.get_reference_node_by_source("schema.org", "Person")
         """
-        return self.session.query(ReferenceNode).filter_by(
-            source=source,
-            external_id=external_id
-        ).first()
+        return (
+            self.session.query(ReferenceNode)
+            .filter_by(source=source, external_id=external_id)
+            .first()
+        )
 
     def list_reference_nodes(
-        self,
-        source: str | None = None,
-        limit: int | None = None
+        self, source: str | None = None, limit: int | None = None
     ) -> List[ReferenceNode]:
         """
         List reference nodes, optionally filtered by source.
@@ -661,7 +666,7 @@ class ReferenceManager:
         node_type: str | None = None,
         limit: int = 20,
         threshold: float = 0.7,
-        embedding_generator = None
+        embedding_generator=None,
     ) -> List[tuple[ReferenceNode, float]]:
         """
         Search for reference nodes by semantic similarity.
@@ -729,6 +734,7 @@ class ReferenceManager:
 
             # Convert embedding to the format expected by sqlite-vec
             import numpy as np
+
             if isinstance(query_embedding, bytes):
                 query_vec = np.frombuffer(query_embedding, dtype=np.float32)
             else:
@@ -736,12 +742,15 @@ class ReferenceManager:
 
             # Serialize to JSON array format for sqlite-vec
             import json
+
             query_vec_json = json.dumps(query_vec.tolist())
 
             # Build the vector search query using parameterized SQL to prevent injection
             # We compute similarity as (1.0 - cosine_distance) for both title and definition
             # and take the maximum similarity value for ranking
-            similarity_case = build_max_similarity_case_when("rn.title_embedding", "rn.definition_embedding")
+            similarity_case = build_max_similarity_case_when(
+                "rn.title_embedding", "rn.definition_embedding"
+            )
             sql_query = f"""
             WITH similarities AS (
                 SELECT
@@ -774,16 +783,16 @@ class ReferenceManager:
 
             # Build parameters dictionary
             params = {
-                'query_vec': query_vec_json,
-                'threshold': threshold,
-                'limit': limit
+                "query_vec": query_vec_json,
+                "threshold": threshold,
+                "limit": limit,
             }
 
             if source:
-                params['source'] = source
+                params["source"] = source
 
             if node_type:
-                params['node_type_pattern'] = f'%"@type": "{node_type}"%'
+                params["node_type_pattern"] = f'%"@type": "{node_type}"%'
 
             # Execute the query with explicit connection management
             with self.engine.connect() as conn:
@@ -802,7 +811,7 @@ class ReferenceManager:
                         title_embedding=None,  # Don't load embeddings in results
                         definition_embedding=None,
                         created_at=row.created_at,
-                        updated_at=row.updated_at
+                        updated_at=row.updated_at,
                     )
                     similarity = float(row.max_similarity)
                     results.append((node, similarity))
@@ -824,7 +833,7 @@ class ReferenceManager:
         node_id: str,
         direction: Literal["inbound", "outbound", "both"] = "both",
         predicate: str | None = None,
-        limit: int | None = None
+        limit: int | None = None,
     ) -> List[ReferenceLink]:
         """
         Retrieve links connected to a reference node.
@@ -854,7 +863,9 @@ class ReferenceManager:
         """
         # Validate direction parameter
         if direction not in ["inbound", "outbound", "both"]:
-            raise ValueError(f"Invalid direction: '{direction}'. Must be 'inbound', 'outbound', or 'both'")
+            raise ValueError(
+                f"Invalid direction: '{direction}'. Must be 'inbound', 'outbound', or 'both'"
+            )
 
         query = self.session.query(ReferenceLink)
 
@@ -865,8 +876,8 @@ class ReferenceManager:
             query = query.filter(ReferenceLink.subject_node == node_id)
         else:  # both
             query = query.filter(
-                (ReferenceLink.subject_node == node_id) |
-                (ReferenceLink.object_node == node_id)
+                (ReferenceLink.subject_node == node_id)
+                | (ReferenceLink.object_node == node_id)
             )
 
         # Apply predicate filter if provided
@@ -891,7 +902,7 @@ class ReferenceManager:
         attributes: Dict[str, Any] | None = None,
         title_embedding: bytes | None = None,
         definition_embedding: bytes | None = None,
-        embedding_dims: int = EMBEDDING_DIMENSION
+        embedding_dims: int = EMBEDDING_DIMENSION,
     ) -> ExternalPredicate:
         """
         Add a new external predicate to the database.
@@ -949,7 +960,7 @@ class ReferenceManager:
             title_embedding=title_embedding,
             definition_embedding=definition_embedding,
             created_at=date.today().isoformat(),
-            updated_at=date.today().isoformat()
+            updated_at=date.today().isoformat(),
         )
         self.session.add(predicate)
         self.session.commit()
@@ -990,15 +1001,14 @@ class ReferenceManager:
         Examples:
             >>> predicate = manager.get_external_predicate_by_source("schema.org", "subClassOf")
         """
-        return self.session.query(ExternalPredicate).filter_by(
-            source=source,
-            external_id=external_id
-        ).first()
+        return (
+            self.session.query(ExternalPredicate)
+            .filter_by(source=source, external_id=external_id)
+            .first()
+        )
 
     def list_external_predicates(
-        self,
-        source: str | None = None,
-        limit: int | None = None
+        self, source: str | None = None, limit: int | None = None
     ) -> List[ExternalPredicate]:
         """
         List external predicates, optionally filtered by source.
@@ -1029,7 +1039,7 @@ class ReferenceManager:
         source: str | None = None,
         limit: int = 20,
         threshold: float = 0.7,
-        embedding_generator = None
+        embedding_generator=None,
     ) -> List[tuple[ExternalPredicate, float]]:
         """
         Search for external predicates by semantic similarity.
@@ -1089,6 +1099,7 @@ class ReferenceManager:
 
         # Performance tracking
         import time
+
         total_start = time.perf_counter()
 
         try:
@@ -1096,7 +1107,9 @@ class ReferenceManager:
             embedding_start = time.perf_counter()
             query_embedding = embedding_generator(query_text)
             embedding_time = (time.perf_counter() - embedding_start) * 1000
-            logger.info(f"Embedding generation: {embedding_time:.2f}ms for query '{query_text[:50]}'")
+            logger.info(
+                f"Embedding generation: {embedding_time:.2f}ms for query '{query_text[:50]}'"
+            )
 
             if not query_embedding or len(query_embedding) == 0:
                 raise ValueError("embedding_generator returned empty embedding")
@@ -1104,6 +1117,7 @@ class ReferenceManager:
             # Convert embedding to the format expected by sqlite-vec
             prep_start = time.perf_counter()
             import numpy as np
+
             if isinstance(query_embedding, bytes):
                 query_vec = np.frombuffer(query_embedding, dtype=np.float32)
             else:
@@ -1111,13 +1125,16 @@ class ReferenceManager:
 
             # Serialize to JSON array format for sqlite-vec
             import json
+
             query_vec_json = json.dumps(query_vec.tolist())
             prep_time = (time.perf_counter() - prep_start) * 1000
             logger.debug(f"Embedding prep: {prep_time:.2f}ms")
 
             # Build the vector search query using parameterized SQL to prevent injection
             query_start = time.perf_counter()
-            similarity_case = build_max_similarity_case_when("ep.title_embedding", "ep.definition_embedding")
+            similarity_case = build_max_similarity_case_when(
+                "ep.title_embedding", "ep.definition_embedding"
+            )
             sql_query = f"""
             WITH similarities AS (
                 SELECT
@@ -1146,13 +1163,13 @@ class ReferenceManager:
 
             # Build parameters dictionary
             params = {
-                'query_vec': query_vec_json,
-                'threshold': threshold,
-                'limit': limit
+                "query_vec": query_vec_json,
+                "threshold": threshold,
+                "limit": limit,
             }
 
             if source:
-                params['source'] = source
+                params["source"] = source
 
             # Execute the query with explicit connection management
             with self.engine.connect() as conn:
@@ -1173,13 +1190,15 @@ class ReferenceManager:
                         title_embedding=None,  # Don't load embeddings in results
                         definition_embedding=None,
                         created_at=row.created_at,
-                        updated_at=row.updated_at
+                        updated_at=row.updated_at,
                     )
                     similarity = float(row.max_similarity)
                     results.append((predicate, similarity))
 
             total_time = (time.perf_counter() - total_start) * 1000
-            logger.info(f"Total search time: {total_time:.2f}ms, found {len(results)} results")
+            logger.info(
+                f"Total search time: {total_time:.2f}ms, found {len(results)} results"
+            )
 
             return results
 
@@ -1239,12 +1258,14 @@ class ReferenceManager:
             "database_size": 0,
             "database_path": self.db_path,
             "connection_healthy": False,
-            "checked_at": datetime.now(UTC).isoformat()
+            "checked_at": datetime.now(UTC).isoformat(),
         }
 
         # Check if database file exists
         if not os.path.exists(self.db_path):
-            status["remediation"] = "Database file does not exist. Run import pipeline to create it."
+            status["remediation"] = (
+                "Database file does not exist. Run import pipeline to create it."
+            )
             logger.debug(f"Database file does not exist: {self.db_path}")
             return status
 
@@ -1270,7 +1291,9 @@ class ReferenceManager:
                 # Get schema version information
                 try:
                     version_result = conn.execute(
-                        text("SELECT schema_version, created_at FROM schema_version LIMIT 1")
+                        text(
+                            "SELECT schema_version, created_at FROM schema_version LIMIT 1"
+                        )
                     ).first()
 
                     if version_result:
@@ -1281,7 +1304,9 @@ class ReferenceManager:
                     logger.debug(f"Could not get schema version: {e}")
                     status["status"] = "degraded"
                     status["degraded_reason"] = "schema_version_table_missing"
-                    status["remediation"] = "Run database migration to create schema_version table."
+                    status["remediation"] = (
+                        "Run database migration to create schema_version table."
+                    )
 
                 # Get node count
                 try:
@@ -1293,17 +1318,17 @@ class ReferenceManager:
                     logger.warning(f"Could not get node count: {e}")
                     status["status"] = "error"
                     status["error"] = f"Unable to query reference_nodes: {str(e)}"
-                    status["remediation"] = "Verify database schema integrity. May need to rebuild database."
+                    status["remediation"] = (
+                        "Verify database schema integrity. May need to rebuild database."
+                    )
                     return status
 
                 # Get vector count (nodes with embeddings)
                 try:
-                    vec_count_result = conn.execute(
-                        text("""
+                    vec_count_result = conn.execute(text("""
                             SELECT COUNT(*) FROM reference_nodes
                             WHERE title_embedding IS NOT NULL OR definition_embedding IS NOT NULL
-                        """)
-                    ).scalar()
+                        """)).scalar()
                     status["vec_count"] = int(vec_count_result or 0)
                 except Exception as e:
                     logger.warning(f"Could not get vector count: {e}")
@@ -1316,7 +1341,9 @@ class ReferenceManager:
                 # Determine health status
                 if status["node_count"] == 0:
                     status["status"] = "missing"
-                    status["remediation"] = "No reference nodes found. Run import pipeline to populate database."
+                    status["remediation"] = (
+                        "No reference nodes found. Run import pipeline to populate database."
+                    )
                 elif status["node_count"] == status["vec_count"]:
                     # Check if versions match expected
                     if status["schema_version"] == EXPECTED_SCHEMA_VERSION:
@@ -1332,7 +1359,11 @@ class ReferenceManager:
                 else:
                     status["status"] = "degraded"
                     status["degraded_reason"] = "embedding_count_mismatch"
-                    embedding_pct = (status["vec_count"] / status["node_count"] * 100) if status["node_count"] > 0 else 0
+                    embedding_pct = (
+                        (status["vec_count"] / status["node_count"] * 100)
+                        if status["node_count"] > 0
+                        else 0
+                    )
                     status["embedding_coverage_pct"] = round(embedding_pct, 2)
                     status["remediation"] = (
                         f"Only {status['vec_count']}/{status['node_count']} nodes have embeddings "
@@ -1343,7 +1374,9 @@ class ReferenceManager:
             logger.error(f"Error getting database status: {e}", exc_info=True)
             status["status"] = "error"
             status["error"] = "Database connection or query failed"
-            status["remediation"] = "Check database file integrity and connection pool. May need to restart application."
+            status["remediation"] = (
+                "Check database file integrity and connection pool. May need to restart application."
+            )
             status["connection_healthy"] = False
 
         return status
@@ -1354,8 +1387,9 @@ _reference_manager_instance: Optional[ReferenceManager] = None
 _reference_manager_lock = threading.Lock()
 
 
-def get_reference_manager(config: Optional[ReferenceConfig] = None,
-                         force_new: bool = False) -> ReferenceManager:
+def get_reference_manager(
+    config: Optional[ReferenceConfig] = None, force_new: bool = False
+) -> ReferenceManager:
     """
     Get or create a singleton ReferenceManager instance.
 

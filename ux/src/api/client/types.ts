@@ -44,8 +44,8 @@ export interface paths {
      * List Nodes
      * @description List structure_nodes with filtering and pagination.
      *
-     *     Supports filtering by structure_node type and parent, with configurable pagination
-     *     and sorting. This replaces the separate endpoints for layers, domains, and terms.
+     *     Supports filtering by structure_node type and parent, with configurable pagination  # noqa: E501
+     *     and sorting. This replaces the separate endpoints for layers, domains, and terms.  # noqa: E501
      */
     get: operations["list_nodes_api_structure_nodes__get"];
     put?: never;
@@ -54,7 +54,7 @@ export interface paths {
      * @description Create a new structure_node.
      *
      *     This endpoint handles creation of layers, domains, and terms through
-     *     the unified structure_nodes interface. Type-specific validation is enforced:
+     *     the unified structure_nodes interface. Type-specific validation is enforced:  # noqa: E501
      *     - Layers cannot have parent structure_nodes
      *     - Domains must have a layer parent
      *     - Terms must have a domain parent
@@ -79,8 +79,8 @@ export interface paths {
      * Search Nodes
      * @description Vector search across structure_nodes.
      *
-     *     This endpoint replaces the separate find endpoints for layers, domains, and terms.
-     *     Supports semantic search across structure_node titles and definitions with optional
+     *     This endpoint replaces the separate find endpoints for layers, domains, and terms.  # noqa: E501
+     *     Supports semantic search across structure_node titles and definitions with optional  # noqa: E501
      *     type filtering and configurable similarity thresholds.
      */
     post: operations["search_nodes_api_structure_nodes_find_post"];
@@ -101,8 +101,8 @@ export interface paths {
      * List Node Links
      * @description List structure_node links with filtering and pagination.
      *
-     *     Supports filtering by source structure_node, target structure_node, and predicate.
-     *     Returns all relationships in the unified structure_node graph with pagination metadata.
+     *     Supports filtering by source structure_node, target structure_node, and predicate.  # noqa: E501
+     *     Returns all relationships in the unified structure_node graph with pagination metadata.  # noqa: E501
      */
     get: operations["list_node_links_api_structure_nodes_links_get"];
     put?: never;
@@ -110,8 +110,8 @@ export interface paths {
      * Create Node Link
      * @description Create a new structure_node link.
      *
-     *     Links can only be created between structure_nodes of the same type (layers to layers,
-     *     domains to domains, terms to terms) as per the Great Normalization requirements.
+     *     Links can only be created between structure_nodes of the same type (layers to layers,  # noqa: E501
+     *     domains to domains, terms to terms) as per the Great Normalization requirements.  # noqa: E501
      */
     post: operations["create_node_link_api_structure_nodes_links_post"];
     delete?: never;
@@ -133,7 +133,7 @@ export interface paths {
      * @description Update a structure_node link.
      *
      *     Allows updating the predicate and predicate_id of an existing link.
-     *     Source and target structure_nodes can also be updated if the new configuration is valid.
+     *     Source and target structure_nodes can also be updated if the new configuration is valid.  # noqa: E501
      */
     put: operations["update_node_link_api_structure_nodes_links__link_id__put"];
     post?: never;
@@ -141,7 +141,7 @@ export interface paths {
      * Delete Node Link
      * @description Delete a structure_node link.
      *
-     *     Removes the relationship between two structure_nodes. This operation cannot be undone.
+     *     Removes the relationship between two structure_nodes. This operation cannot be undone.  # noqa: E501
      */
     delete: operations["delete_node_link_api_structure_nodes_links__link_id__delete"];
     options?: never;
@@ -168,7 +168,7 @@ export interface paths {
      * Update Node
      * @description Update a structure_node.
      *
-     *     Supports updating title, definition, parent relationships, and structural predicates.
+     *     Supports updating title, definition, parent relationships, and structural predicates.  # noqa: E501
      *     Circular reference validation is automatically enforced.
      */
     put: operations["update_node_api_structure_nodes__node_id__put"];
@@ -177,7 +177,7 @@ export interface paths {
      * Delete Node
      * @description Delete a structure_node and its children.
      *
-     *     This operation cascades to all child structure_nodes and their relationships.
+     *     This operation cascades to all child structure_nodes and their relationships.  # noqa: E501
      *     Use with caution as this operation cannot be undone.
      */
     delete: operations["delete_node_api_structure_nodes__node_id__delete"];
@@ -197,8 +197,8 @@ export interface paths {
      * Get Node Attributes
      * @description Get resolved attributes for a node (local + inherited).
      *
-     *     Returns all attributes for this node, including those inherited from ancestors.
-     *     Each resolved attribute includes an `inherited` flag and `source_node_id` indicating
+     *     Returns all attributes for this node, including those inherited from ancestors.  # noqa: E501
+     *     Each resolved attribute includes an `inherited` flag and `source_node_id` indicating  # noqa: E501
      *     where the attribute was defined in the hierarchy.
      *
      *     Args:
@@ -222,7 +222,7 @@ export interface paths {
      *     increments the node's version number.
      *
      *     Supports optimistic locking via the expected_version field. If provided,
-     *     the update will only succeed if the current node version matches. This prevents
+     *     the update will only succeed if the current node version matches. This prevents  # noqa: E501
      *     lost updates in concurrent modification scenarios.
      *
      *     Args:
@@ -237,7 +237,7 @@ export interface paths {
      *     Raises:
      *         400: If validation fails on attribute values or types
      *         404: If structure node not found
-     *         409: If expected_version is provided and doesn't match current version (conflict)
+     *         409: If expected_version is provided and doesn't match current version (conflict)  # noqa: E501
      *         500: If an unexpected error occurs
      */
     post: operations["set_node_attributes_api_structure_nodes__node_id__attributes_post"];
@@ -262,7 +262,7 @@ export interface paths {
      * @description Remove a specific attribute by key.
      *
      *     Removes a single attribute from the node's local attributes by its key.
-     *     Has no effect if the key doesn't exist. Inherited attributes are not affected.
+     *     Has no effect if the key doesn't exist. Inherited attributes are not affected.  # noqa: E501
      *     This operation increments the node's version number.
      *
      *     Args:
@@ -293,7 +293,7 @@ export interface paths {
      * Get Reference Links
      * @description Get all reference links for a structure node.
      *
-     *     Returns all external knowledge source links associated with this structure node.
+     *     Returns all external knowledge source links associated with this structure node.  # noqa: E501
      *     Returns an empty list if no links exist.
      *
      *     Args:
@@ -313,7 +313,7 @@ export interface paths {
      * @description Add reference links to a structure node.
      *
      *     Links the structure node to external knowledge sources such as schema.org,
-     *     Wikidata, or ConceptNet. Each link is validated against the reference database
+     *     Wikidata, or ConceptNet. Each link is validated against the reference database  # noqa: E501
      *     before being added. Duplicate links are ignored.
      *
      *     Args:
@@ -321,7 +321,7 @@ export interface paths {
      *         links: List of reference links to add (source + external_id pairs)
      *
      *     Returns:
-     *         List of all reference links after addition (including pre-existing ones)
+     *         List of all reference links after addition (including pre-existing ones)  # noqa: E501
      *
      *     Raises:
      *         400: If validation fails or reference doesn't exist in reference.db
@@ -364,11 +364,11 @@ export interface paths {
      * Get Word Senses
      * @description Get all word senses for a structure node.
      *
-     *     Returns word sense identifiers from NLP analysis (e.g., WordNet synsets) that
+     *     Returns word sense identifiers from NLP analysis (e.g., WordNet synsets) that  # noqa: E501
      *     have been associated with this structure node through title analysis.
      *     Returns an empty list if no word senses exist.
      *
-     *     Word senses are automatically updated when the structure node's title changes,
+     *     Word senses are automatically updated when the structure node's title changes,  # noqa: E501
      *     via the event processor system.
      *
      *     Args:
@@ -387,10 +387,10 @@ export interface paths {
      * @description Update selected word senses for a structure node.
      *
      *     Allows user to persist their selected word senses from NLP analysis.
-     *     Uses a conservative merge strategy: preserves existing word senses for words
-     *     not included in this update, while replacing senses for words that are included.
+     *     Uses a conservative merge strategy: preserves existing word senses for words  # noqa: E501
+     *     not included in this update, while replacing senses for words that are included.  # noqa: E501
      *
-     *     For example, if a node has existing senses for words "bank" and "account", and
+     *     For example, if a node has existing senses for words "bank" and "account", and  # noqa: E501
      *     you update only "bank", the existing "account" senses will be preserved.
      *
      *     Args:
@@ -431,14 +431,14 @@ export interface paths {
      *     - Malformed links (invalid JSON or missing required fields)
      *     - Nodes with problematic links
      *
-     *     Uses batching to efficiently handle large datasets without loading all nodes into memory.
+     *     Uses batching to efficiently handle large datasets without loading all nodes into memory.  # noqa: E501
      *     This endpoint is useful for maintenance and data integrity checking.
      *     Gracefully degrades if reference.db is unavailable.
      *
      *     Args:
      *         check_existence: If True, validates each link exists in reference.db
      *         limit: Optional limit on number of nodes to check
-     *         batch_size: Number of nodes to process per batch (default: 100, min: 10, max: 1000)
+     *         batch_size: Number of nodes to process per batch (default: 100, min: 10, max: 1000)  # noqa: E501
      *
      *     Returns:
      *         Validation results with statistics and list of problematic nodes
@@ -497,7 +497,7 @@ export interface paths {
     put?: never;
     /**
      * Move Nodes
-     * @description Move structure_nodes to a new parent location with automatic type conversion.
+     * @description Move structure_nodes to a new parent location with automatic type conversion.  # noqa: E501
      *
      *     **Type Conversion Rules:**
      *     - Moving to root (null parent) → becomes Layer
@@ -516,7 +516,7 @@ export interface paths {
      *     - Handling title conflicts through warnings, renaming, or errors
      *     - Maintaining referential integrity throughout the operation
      *
-     *     The move operation is atomic - either all structure_nodes are moved successfully,
+     *     The move operation is atomic - either all structure_nodes are moved successfully,  # noqa: E501
      *     or the entire operation is rolled back.
      */
     post: operations["move_nodes_api_structure_nodes_move_post"];
@@ -559,7 +559,7 @@ export interface paths {
      * Get Node Ancestors
      * @description Get all ancestors of a structure_node up to the root.
      *
-     *     Returns the path from the root layer down to the specified structure_node's parent.
+     *     Returns the path from the root layer down to the specified structure_node's parent.  # noqa: E501
      *     Useful for breadcrumb navigation and understanding structure_node context.
      */
     get: operations["get_node_ancestors_api_structure_nodes__node_id__ancestors_get"];
@@ -666,7 +666,7 @@ export interface paths {
      * Get Discovery Status
      * @description Get the status of a predicate discovery task.
      *
-     *     Returns the current status and results (if completed) of the discovery task.
+     *     Returns the current status and results (if completed) of the discovery task.  # noqa: E501
      */
     get: operations["get_discovery_status_api_predicates_discover__task_id__get"];
     put?: never;
@@ -688,7 +688,7 @@ export interface paths {
      * List External Predicates
      * @description List external predicates with pagination.
      *
-     *     Returns predicates discovered from external knowledge sources with optional source filtering.
+     *     Returns predicates discovered from external knowledge sources with optional source filtering.  # noqa: E501
      */
     get: operations["list_external_predicates_api_predicates_external_get"];
     put?: never;
@@ -710,12 +710,12 @@ export interface paths {
      * Search External Predicates
      * @description Search external predicates using vector similarity.
      *
-     *     This endpoint performs semantic search across external predicates using embeddings.
+     *     This endpoint performs semantic search across external predicates using embeddings.  # noqa: E501
      *     Returns predicates ranked by similarity to the query text.
      *
      *     Args:
      *         query: Search query text (required, min 1 character)
-     *         source: Optional source filter (conceptnet, dbpedia, wikidata, schema_org)
+     *         source: Optional source filter (conceptnet, dbpedia, wikidata, schema_org)  # noqa: E501
      *         limit: Maximum number of results (default: 20, max: 100)
      *         threshold: Minimum similarity threshold (default: 0.6, range: 0.0-1.0)
      *
@@ -820,7 +820,7 @@ export interface paths {
      *     - WikiData (10K properties via SPARQL)
      *     - Schema.org (properties from imported data)
      *
-     *     Returns a task_id that can be used to check the status of the discovery process.
+     *     Returns a task_id that can be used to check the status of the discovery process.  # noqa: E501
      *
      *     **Performance targets:**
      *     - ConceptNet: <2s for 40 relations
@@ -846,7 +846,7 @@ export interface paths {
     put?: never;
     /**
      * Find Similar Predicates
-     * @description Find similar external predicates for a given predicate using vector similarity search.
+     * @description Find similar external predicates for a given predicate using vector similarity search.  # noqa: E501
      *
      *     This endpoint:
      *     1. Retrieves the predicate by ID
@@ -900,7 +900,7 @@ export interface paths {
      *     3. Performs density-based clustering (DBSCAN)
      *     4. Returns clusters with automatic count determination
      *
-     *     **Algorithm:** DBSCAN (Density-Based Spatial Clustering of Applications with Noise)
+     *     **Algorithm:** DBSCAN (Density-Based Spatial Clustering of Applications with Noise)  # noqa: E501
      *     - Automatically determines number of clusters
      *     - Handles noise points (outliers)
      *     - Does not require specifying cluster count in advance
@@ -911,10 +911,10 @@ export interface paths {
      *
      *     Args:
      *         predicate_ids: Optional list of specific predicate IDs to cluster
-     *         min_similarity: Minimum similarity for cluster membership (default: 0.7)
+     *         min_similarity: Minimum similarity for cluster membership (default: 0.7)  # noqa: E501
      *         min_cluster_size: Minimum predicates per cluster (default: 2)
-     *         eps: DBSCAN epsilon parameter - lower values create tighter clusters (default: 0.3)
-     *         max_predicates: Maximum predicates to process (default: 1000, max: 10000)
+     *         eps: DBSCAN epsilon parameter - lower values create tighter clusters (default: 0.3)  # noqa: E501
+     *         max_predicates: Maximum predicates to process (default: 1000, max: 10000)  # noqa: E501
      *
      *     Returns:
      *         ClusterPredicatesResponse with clusters and statistics
@@ -952,6 +952,308 @@ export interface paths {
      */
     post: operations["invalidate_similarity_cache_api_predicates_invalidate_similarity_cache_post"];
     delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/ontology_entities/": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * List Entities
+     * @description List ontology entities with filtering and pagination.
+     *
+     *     Supports filtering by entity type and parent, with configurable pagination
+     *     and sorting.
+     */
+    get: operations["list_entities_api_ontology_entities__get"];
+    put?: never;
+    /**
+     * Create Entity
+     * @description Create a new ontology entity.
+     *
+     *     This endpoint handles creation of taxonomies, concept_schemes, and classes through
+     *     the unified ontology_entities interface. Type-specific validation is enforced:
+     *     - Taxonomies cannot have parent entities
+     *     - Concept schemes must have a taxonomy parent
+     *     - Classes must have a concept_scheme parent
+     */
+    post: operations["create_entity_api_ontology_entities__post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/ontology_entities/find": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Search Entities
+     * @description Vector search across ontology entities.
+     *
+     *     Supports semantic search across entity titles and definitions with optional
+     *     type filtering and configurable similarity thresholds.
+     */
+    post: operations["search_entities_api_ontology_entities_find_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/ontology_entities/relationships": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * List Relationships
+     * @description List entity relationships with filtering and pagination.
+     *
+     *     Supports filtering by source entity, target entity, and predicate.
+     *     Returns all relationships in the unified entity graph with pagination metadata.
+     */
+    get: operations["list_relationships_api_ontology_entities_relationships_get"];
+    put?: never;
+    /**
+     * Create Relationship
+     * @description Create a new entity relationship.
+     *
+     *     Links can only be created between entities of the same type (taxonomies to taxonomies,
+     *     concept_schemes to concept_schemes, classes to classes).
+     */
+    post: operations["create_relationship_api_ontology_entities_relationships_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/ontology_entities/relationships/{rel_id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    /**
+     * Update Relationship
+     * @description Update an entity relationship.
+     *
+     *     Allows updating the predicate and predicate_id of an existing relationship.
+     *     Source and target entities can also be updated if the new configuration is valid.
+     */
+    put: operations["update_relationship_api_ontology_entities_relationships__rel_id__put"];
+    post?: never;
+    /**
+     * Delete Relationship
+     * @description Delete an entity relationship.
+     *
+     *     Removes the relationship between two entities.
+     */
+    delete: operations["delete_relationship_api_ontology_entities_relationships__rel_id__delete"];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/ontology_entities/{entity_id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get Entity
+     * @description Get a specific ontology entity by ID.
+     *
+     *     Returns the complete entity information including embeddings,
+     *     hierarchy information, and metadata.
+     */
+    get: operations["get_entity_api_ontology_entities__entity_id__get"];
+    /**
+     * Update Entity
+     * @description Update an ontology entity.
+     *
+     *     Supports updating title, definition, parent relationships, and structural predicates.
+     *     Circular reference validation is automatically enforced.
+     */
+    put: operations["update_entity_api_ontology_entities__entity_id__put"];
+    post?: never;
+    /**
+     * Delete Entity
+     * @description Delete an ontology entity and its children.
+     *
+     *     This operation cascades to all child entities and their relationships.
+     *     Use with caution as this operation cannot be undone.
+     */
+    delete: operations["delete_entity_api_ontology_entities__entity_id__delete"];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/property_definitions/": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * List Property Definitions
+     * @description List property definitions with pagination and sorting.
+     *
+     *     This endpoint lists predicates using new terminology (property_definitions).
+     */
+    get: operations["list_property_definitions_api_property_definitions__get"];
+    put?: never;
+    /**
+     * Create Property Definition
+     * @description Create a new property definition.
+     *
+     *     This endpoint creates a predicate using new terminology (property_definitions).
+     */
+    post: operations["create_property_definition_api_property_definitions__post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/property_definitions/{property_def_id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get Property Definition
+     * @description Get a specific property definition by ID.
+     *
+     *     Returns the complete property definition information.
+     */
+    get: operations["get_property_definition_api_property_definitions__property_def_id__get"];
+    /**
+     * Update Property Definition
+     * @description Update a property definition.
+     *
+     *     Allows updating title, definition, identifier, and mapping.
+     */
+    put: operations["update_property_definition_api_property_definitions__property_def_id__put"];
+    post?: never;
+    /**
+     * Delete Property Definition
+     * @description Delete a property definition.
+     *
+     *     Removes the property definition from the system.
+     */
+    delete: operations["delete_property_definition_api_property_definitions__property_def_id__delete"];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/property_definitions/by-identifier/{identifier}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get Property Definition By Identifier
+     * @description Get a property definition by its identifier.
+     *
+     *     Returns the complete property definition information.
+     */
+    get: operations["get_property_definition_by_identifier_api_property_definitions_by_identifier__identifier__get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/pipeline_configurations": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * List Configurations
+     * @description List all pipeline configurations, optionally filtered by pipeline type.
+     *
+     *     This endpoint lists pipeline configurations using new terminology
+     *     alongside the pipeline_flavors API.
+     */
+    get: operations["list_configurations_api_pipeline_configurations_get"];
+    put?: never;
+    /**
+     * Create Configuration
+     * @description Create a new pipeline configuration.
+     *
+     *     This endpoint creates a pipeline configuration using new terminology
+     *     alongside the pipeline_flavors API.
+     */
+    post: operations["create_configuration_api_pipeline_configurations_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/pipeline_configurations/{configuration_id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get Configuration
+     * @description Get a specific pipeline configuration by ID.
+     *
+     *     Handles the special case of "default" configuration which requires
+     *     a pipeline parameter.
+     */
+    get: operations["get_configuration_api_pipeline_configurations__configuration_id__get"];
+    /**
+     * Update Configuration
+     * @description Update an existing pipeline configuration.
+     *
+     *     Prevents updating default configurations. Create a new configuration
+     *     instead if you need different settings.
+     */
+    put: operations["update_configuration_api_pipeline_configurations__configuration_id__put"];
+    post?: never;
+    /**
+     * Delete Configuration
+     * @description Delete a pipeline configuration.
+     *
+     *     Prevents deleting default configurations.
+     */
+    delete: operations["delete_configuration_api_pipeline_configurations__configuration_id__delete"];
     options?: never;
     head?: never;
     patch?: never;
@@ -1082,7 +1384,7 @@ export interface paths {
      * Get Working Diff
      * @description Get diff between working and canonical versions.
      *
-     *     Shows what changes exist in the working version compared to the last committed version.
+     *     Shows what changes exist in the working version compared to the last committed version.  # noqa: E501
      */
     get: operations["get_working_diff_api_versions_entities__entity_type___entity_id__diff_get"];
     put?: never;
@@ -1104,7 +1406,7 @@ export interface paths {
      * Get Working Tree Status
      * @description Get working tree status.
      *
-     *     Returns summary of all entities in the working tree including staged/unstaged counts.
+     *     Returns summary of all entities in the working tree including staged/unstaged counts.  # noqa: E501
      */
     get: operations["get_working_tree_status_api_versions_working_tree_status_get"];
     put?: never;
@@ -1126,7 +1428,7 @@ export interface paths {
      * Get Working Changes
      * @description Get all entities with working changes.
      *
-     *     Returns entities where the working version differs from the canonical version.
+     *     Returns entities where the working version differs from the canonical version.  # noqa: E501
      */
     get: operations["get_working_changes_api_versions_working_tree_changes_get"];
     put?: never;
@@ -1150,7 +1452,7 @@ export interface paths {
      * Stage Entity
      * @description Stage an entity for commit.
      *
-     *     Marks the entity as staged, meaning its changes will be included in the next commit.
+     *     Marks the entity as staged, meaning its changes will be included in the next commit.  # noqa: E501
      *     Returns success even if there are no changes (idempotent operation).
      */
     post: operations["stage_entity_api_versions_working_tree_stage_post"];
@@ -1195,7 +1497,7 @@ export interface paths {
      * Commit Staged Changes
      * @description Commit all staged changes.
      *
-     *     Updates canonical versions for all staged entities and marks them as merged.
+     *     Updates canonical versions for all staged entities and marks them as merged.  # noqa: E501
      *     Returns 400 if there are no staged changes to commit.
      */
     post: operations["commit_staged_changes_api_versions_working_tree_commit_post"];
@@ -1216,7 +1518,7 @@ export interface paths {
      * Get Commit Preview
      * @description Preview what would be committed.
      *
-     *     Returns diffs for all staged entities showing what changes would be committed.
+     *     Returns diffs for all staged entities showing what changes would be committed.  # noqa: E501
      */
     get: operations["get_commit_preview_api_versions_working_tree_preview_get"];
     put?: never;
@@ -1262,7 +1564,7 @@ export interface paths {
      * Compare Versions
      * @description Compare two specific versions of an entity.
      *
-     *     Generates a structured diff between the specified before and after versions.
+     *     Generates a structured diff between the specified before and after versions.  # noqa: E501
      */
     post: operations["compare_versions_api_versions_diffs_compare_post"];
     delete?: never;
@@ -3020,7 +3322,7 @@ export interface paths {
      * Multi Source Search
      * @description Search across multiple reference sources
      *
-     *     Searches across specified sources (or all enabled sources if none specified)
+     *     Searches across specified sources (or all enabled sources if none specified)  # noqa: E501
      *     and returns aggregated results without deduplication or ranking.
      */
     post: operations["multi_source_search_api_reference_search_post"];
@@ -3041,7 +3343,7 @@ export interface paths {
      * Reference Db Search
      * @description Search reference database using semantic vector similarity.
      *
-     *     This endpoint uses vector embeddings for semantic search and returns results
+     *     This endpoint uses vector embeddings for semantic search and returns results  # noqa: E501
      *     ranked by similarity score.
      */
     get: operations["reference_db_search_api_reference_ref_db_search_get"];
@@ -3050,7 +3352,7 @@ export interface paths {
      * Reference Db Search Post
      * @description Search reference database using semantic vector similarity (POST version).
      *
-     *     This endpoint uses vector embeddings for semantic search and returns results
+     *     This endpoint uses vector embeddings for semantic search and returns results  # noqa: E501
      *     ranked by similarity score. Accepts a JSON body with search parameters.
      */
     post: operations["reference_db_search_post_api_reference_ref_db_search_post"];
@@ -3136,14 +3438,14 @@ export interface paths {
     };
     /**
      * Get Predicate Examples
-     * @description Get example uses of a predicate from the reference database or external APIs.
+     * @description Get example uses of a predicate from the reference database or external APIs.  # noqa: E501
      *
      *     Returns example links that use this predicate, including information about
      *     the subject and object nodes. This helps users understand how the predicate
      *     is used in the knowledge graph.
      *
-     *     Note: The external_id parameter accepts paths with slashes (e.g., '/r/RelatedTo' for ConceptNet).
-     *     For DBpedia, uses SPARQL queries to fetch live examples from the public endpoint.
+     *     Note: The external_id parameter accepts paths with slashes (e.g., '/r/RelatedTo' for ConceptNet).  # noqa: E501
+     *     For DBpedia, uses SPARQL queries to fetch live examples from the public endpoint.  # noqa: E501
      */
     get: operations["get_predicate_examples_api_reference_ref_db_predicates__source___external_id__examples_get"];
     put?: never;
@@ -3167,7 +3469,7 @@ export interface paths {
      *
      *     Returns links ordered by created_at (descending).
      *
-     *     When apply_relevance_filter=True, filters links based on predicate relevance
+     *     When apply_relevance_filter=True, filters links based on predicate relevance  # noqa: E501
      *     mappings from the global predicates table. If not specified, uses the
      *     enable_relevance_filtering setting from configuration.
      */
@@ -3505,7 +3807,7 @@ export interface paths {
      * @description Get detailed metrics for a specific service type.
      *
      *     Args:
-     *         service_type: The service type to get metrics for (e.g., 'node_service', 'llm_service')
+     *         service_type: The service type to get metrics for (e.g., 'node_service', 'llm_service')  # noqa: E501
      */
     get: operations["get_service_type_metrics_admin_services_metrics__service_type__get"];
     put?: never;
@@ -3558,7 +3860,7 @@ export interface paths {
      *         List of changesets matching filters
      *
      *     Raises:
-     *         HTTPException: If invalid state provided
+     *         HTTPException: If invalid state provided or query fails
      */
     get: operations["list_changesets_api_changesets_get"];
     put?: never;
@@ -3602,7 +3904,7 @@ export interface paths {
      *         Changeset details
      *
      *     Raises:
-     *         HTTPException: If changeset not found
+     *         HTTPException: If changeset not found or retrieval fails
      */
     get: operations["get_changeset_api_changesets__changeset_id__get"];
     /**
@@ -3691,7 +3993,7 @@ export interface paths {
      *         Changeset version details
      *
      *     Raises:
-     *         HTTPException: If changeset not found
+     *         HTTPException: If changeset not found or query fails
      */
     get: operations["get_changeset_versions_api_changesets__changeset_id__versions_get"];
     put?: never;
@@ -4256,10 +4558,10 @@ export interface paths {
     get?: never;
     put?: never;
     /**
-     * Create Optimized Engine
-     * @description Create a new optimized database engine with specified configuration.
+     * Create Database Engine
+     * @description Create a new database engine with specified configuration.
      */
-    post: operations["create_optimized_database_engine_admin_database_create_engine_post"];
+    post: operations["create_database_engine_admin_database_create_engine_post"];
     delete?: never;
     options?: never;
     head?: never;
@@ -5338,7 +5640,7 @@ export interface paths {
      * @description List all background tasks with optional filtering.
      *
      *     Args:
-     *         status_filter: Optional status filter (pending, running, completed, failed, cancelled)
+     *         status_filter: Optional status filter (pending, running, completed, failed, cancelled)  # noqa: E501
      *         task_type: Optional task type filter
      *
      *     Returns:
@@ -5915,7 +6217,7 @@ export interface paths {
      * @description Manually delete trace data for a specific RAG extraction request.
      *
      *     This is useful for immediate cleanup of sensitive data or testing purposes.
-     *     Note that trace data is automatically cleaned up after the retention period.
+     *     Note that trace data is automatically cleaned up after the retention period.  # noqa: E501
      *
      *     Args:
      *         request_id: Unique identifier for the extraction request
@@ -5947,7 +6249,7 @@ export interface paths {
      *
      *     Args:
      *         request_id: Unique identifier for the extraction request
-     *         layer_name: Name of the layer (kg_context, llm_extraction, spacy_gap, concept_resolution)
+     *         layer_name: Name of the layer (kg_context, llm_extraction, spacy_gap, concept_resolution)  # noqa: E501
      *         observability_store: Injected observability store
      *
      *     Returns:
@@ -5985,7 +6287,7 @@ export interface paths {
      *     - timeout_layer_2: Timeout for Layer 2 (spaCy gap) in seconds
      *     - timeout_layer_3: Timeout for Layer 3 (concept resolution) in seconds
      *     - timeout_total: Total pipeline timeout in seconds
-     *     - dedup_similarity_threshold: Entity deduplication similarity threshold (0.0-1.0)
+     *     - dedup_similarity_threshold: Entity deduplication similarity threshold (0.0-1.0)  # noqa: E501
      *     - kg_top_k: Number of top KG nodes to retrieve
      *
      *     Args:
@@ -6053,7 +6355,7 @@ export interface paths {
      * Update Test Paragraph
      * @description Update a test paragraph.
      *
-     *     Can update the text content and/or notes. At least one field must be provided.
+     *     Can update the text content and/or notes. At least one field must be provided.  # noqa: E501
      */
     put: operations["update_test_paragraph_api_rag_experiments_paragraphs__paragraph_id__put"];
     post?: never;
@@ -6696,9 +6998,9 @@ export interface components {
      */
     ConcepcyRelation: {
       /** @description The 'start' of the concepcy relation. */
-      subject?: components["schemas"]["ConcepcyNode"];
+      subject?: components["schemas"]["ConcepcyNode"] | null;
       /** @description The 'end' of the concepcy relation. */
-      object?: components["schemas"]["ConcepcyNode"];
+      object?: components["schemas"]["ConcepcyNode"] | null;
       /**
        * Relation
        * @description The type of the concepcy relation.
@@ -7066,7 +7368,7 @@ export interface components {
      * @description Model for requesting diffs.
      */
     DiffRequest: {
-      entity_type: components["schemas"]["EntityTypeEnum"];
+      entity_type: components["schemas"]["api__models__version_management__EntityTypeEnum"];
       /**
        * Entity Id
        * Format: uuid
@@ -7154,6 +7456,21 @@ export interface components {
       total_count: number;
     };
     /**
+     * EntityCreate
+     * @description Model for creating a new ontology entity.
+     */
+    EntityCreate: {
+      node_type: components["schemas"]["api__models__ontology_entities__EntityTypeEnum"];
+      /** Parent Entity Id */
+      parent_entity_id?: string | null;
+      /** Title */
+      title: string;
+      /** Definition */
+      definition?: string | null;
+      /** Structural Predicate Id */
+      structural_predicate_id?: string | null;
+    };
+    /**
      * EntityData
      * @description Data for a named entity in the analyzed text.
      */
@@ -7181,7 +7498,7 @@ export interface components {
      * @description Model for entity diff output/response.
      */
     EntityDiffOut: {
-      entity_type: components["schemas"]["EntityTypeEnum"];
+      entity_type: components["schemas"]["api__models__version_management__EntityTypeEnum"];
       /**
        * Entity Id
        * Format: uuid
@@ -7224,17 +7541,121 @@ export interface components {
       modification_rate: number;
     };
     /**
-     * EntityTypeEnum
-     * @description API enum for entity types that support versioning.
-     * @enum {string}
+     * EntityOut
+     * @description Model for ontology entity output/response.
      */
-    EntityTypeEnum: "structure_node" | "structure_node_link";
+    EntityOut: {
+      node_type: components["schemas"]["api__models__ontology_entities__EntityTypeEnum"];
+      /** Parent Entity Id */
+      parent_entity_id?: string | null;
+      /** Title */
+      title: string;
+      /** Definition */
+      definition?: string | null;
+      /** Structural Predicate Id */
+      structural_predicate_id?: string | null;
+      /**
+       * Id
+       * Format: uuid
+       */
+      id: string;
+      /** Title Embedding */
+      title_embedding?: number[] | null;
+      /** Definition Embedding */
+      definition_embedding?: number[] | null;
+      /** Created At */
+      created_at: string;
+      /** Version */
+      version: number;
+      /** Last Modified */
+      last_modified: string;
+    };
+    /**
+     * EntitySearchRequest
+     * @description Model for ontology entity search requests.
+     */
+    EntitySearchRequest: {
+      /**
+       * Query
+       * @description Search query text
+       */
+      query: string;
+      /** @description Filter by entity type */
+      node_type?:
+        | components["schemas"]["api__models__ontology_entities__EntityTypeEnum"]
+        | null;
+      /**
+       * Parent Entity Id
+       * @description Filter by parent entity
+       */
+      parent_entity_id?: string | null;
+      /**
+       * Threshold
+       * @description Minimum similarity score
+       * @default 0
+       */
+      threshold: number | null;
+      /**
+       * Limit
+       * @description Maximum number of results
+       * @default 20
+       */
+      limit: number | null;
+    };
+    /**
+     * EntitySearchResult
+     * @description Model for ontology entity search results.
+     */
+    EntitySearchResult: {
+      node_type: components["schemas"]["api__models__ontology_entities__EntityTypeEnum"];
+      /** Parent Entity Id */
+      parent_entity_id?: string | null;
+      /** Title */
+      title: string;
+      /** Definition */
+      definition?: string | null;
+      /** Structural Predicate Id */
+      structural_predicate_id?: string | null;
+      /**
+       * Id
+       * Format: uuid
+       */
+      id: string;
+      /** Title Embedding */
+      title_embedding?: number[] | null;
+      /** Definition Embedding */
+      definition_embedding?: number[] | null;
+      /** Created At */
+      created_at: string;
+      /** Version */
+      version: number;
+      /** Last Modified */
+      last_modified: string;
+      /** Score */
+      score: number;
+      /** Distance */
+      distance: number;
+    };
+    /**
+     * EntityUpdate
+     * @description Model for updating an existing ontology entity.
+     */
+    EntityUpdate: {
+      /** Title */
+      title?: string | null;
+      /** Definition */
+      definition?: string | null;
+      /** Parent Entity Id */
+      parent_entity_id?: string | null;
+      /** Structural Predicate Id */
+      structural_predicate_id?: string | null;
+    };
     /**
      * EntityVersionOut
      * @description Model for entity version output/response.
      */
     EntityVersionOut: {
-      entity_type: components["schemas"]["EntityTypeEnum"];
+      entity_type: components["schemas"]["api__models__version_management__EntityTypeEnum"];
       /**
        * Entity Id
        * Format: uuid
@@ -7282,7 +7703,7 @@ export interface components {
        * Format: uuid
        */
       id: string;
-      entity_type: components["schemas"]["EntityTypeEnum"];
+      entity_type: components["schemas"]["api__models__version_management__EntityTypeEnum"];
       /**
        * Entity Id
        * Format: uuid
@@ -8151,6 +8572,20 @@ export interface components {
       applied_changes: string[];
     };
     /**
+     * PaginatedEntitiesResponse
+     * @description Model for paginated ontology entity responses.
+     */
+    PaginatedEntitiesResponse: {
+      /** Data */
+      data: components["schemas"]["EntityOut"][];
+      /** Total */
+      total: number;
+      /** Skip */
+      skip: number;
+      /** Limit */
+      limit: number;
+    };
+    /**
      * PaginatedExternalPredicatesResponse
      * @description Paginated response for external predicates.
      */
@@ -8198,6 +8633,31 @@ export interface components {
     PaginatedPredicatesResponse: {
       /** Data */
       data: components["schemas"]["PredicateOut"][];
+      /** Total */
+      total: number;
+      /** Skip */
+      skip: number;
+      /** Limit */
+      limit: number;
+    };
+    /** PaginatedPropertyDefinitionsResponse */
+    PaginatedPropertyDefinitionsResponse: {
+      /** Data */
+      data: components["schemas"]["PropertyDefinitionOut"][];
+      /** Total */
+      total: number;
+      /** Skip */
+      skip: number;
+      /** Limit */
+      limit: number;
+    };
+    /**
+     * PaginatedRelationshipsResponse
+     * @description Model for paginated entity relationship responses.
+     */
+    PaginatedRelationshipsResponse: {
+      /** Data */
+      data: components["schemas"]["RelationshipOut"][];
       /** Total */
       total: number;
       /** Skip */
@@ -8704,6 +9164,51 @@ export interface components {
        */
       total_sentences: number;
     };
+    /** PropertyDefinitionCreate */
+    PropertyDefinitionCreate: {
+      /** Title */
+      title: string;
+      /** Definition */
+      definition?: string | null;
+      /** Mapping */
+      mapping?: {
+        [key: string]: unknown;
+      } | null;
+      /** Identifier */
+      identifier?: string | null;
+    };
+    /** PropertyDefinitionOut */
+    PropertyDefinitionOut: {
+      /** Title */
+      title: string;
+      /** Definition */
+      definition?: string | null;
+      /** Mapping */
+      mapping?: {
+        [key: string]: unknown;
+      } | null;
+      /** Id */
+      id: string;
+      /** Identifier */
+      identifier: string;
+      /** Date Created */
+      date_created: string;
+      /** Date Modified */
+      date_modified: string;
+    };
+    /** PropertyDefinitionUpdate */
+    PropertyDefinitionUpdate: {
+      /** Title */
+      title?: string | null;
+      /** Definition */
+      definition?: string | null;
+      /** Mapping */
+      mapping?: {
+        [key: string]: unknown;
+      } | null;
+      /** Identifier */
+      identifier?: string | null;
+    };
     /**
      * ProposalListResponse
      * @description Response model for proposal list.
@@ -8991,6 +9496,53 @@ export interface components {
       verification_code: string;
       /** Message */
       message: string;
+    };
+    /**
+     * RelationshipCreate
+     * @description Model for creating a new entity relationship.
+     */
+    RelationshipCreate: {
+      /**
+       * Source Entity Id
+       * Format: uuid
+       */
+      source_entity_id: string;
+      /**
+       * Target Entity Id
+       * Format: uuid
+       */
+      target_entity_id: string;
+      /** Predicate */
+      predicate: string;
+      /** Predicate Id */
+      predicate_id?: string | null;
+    };
+    /**
+     * RelationshipOut
+     * @description Model for entity relationship output/response.
+     */
+    RelationshipOut: {
+      /**
+       * Source Entity Id
+       * Format: uuid
+       */
+      source_entity_id: string;
+      /**
+       * Target Entity Id
+       * Format: uuid
+       */
+      target_entity_id: string;
+      /** Predicate */
+      predicate: string;
+      /** Predicate Id */
+      predicate_id?: string | null;
+      /**
+       * Id
+       * Format: uuid
+       */
+      id: string;
+      /** Created At */
+      created_at: string;
     };
     /**
      * ResolutionSuggestionOut
@@ -9350,7 +9902,7 @@ export interface components {
      * @description Model for staging/unstaging entities.
      */
     StageRequest: {
-      entity_type: components["schemas"]["EntityTypeEnum"];
+      entity_type: components["schemas"]["api__models__version_management__EntityTypeEnum"];
       /**
        * Entity Id
        * Format: uuid
@@ -10224,7 +10776,7 @@ export interface components {
      * @description Model for working tree entry output/response.
      */
     WorkingTreeEntryOut: {
-      entity_type: components["schemas"]["EntityTypeEnum"];
+      entity_type: components["schemas"]["api__models__version_management__EntityTypeEnum"];
       /**
        * Entity Id
        * Format: uuid
@@ -10283,6 +10835,23 @@ export interface components {
         [key: string]: unknown;
       }[];
     };
+    /**
+     * EntityTypeEnum
+     * @description API enum for ontology entity types (new terminology).
+     * @enum {string}
+     */
+    api__models__ontology_entities__EntityTypeEnum:
+      | "taxonomy"
+      | "concept_scheme"
+      | "class";
+    /**
+     * EntityTypeEnum
+     * @description API enum for entity types that support versioning.
+     * @enum {string}
+     */
+    api__models__version_management__EntityTypeEnum:
+      | "structure_node"
+      | "structure_node_link";
     /**
      * PerformanceMetricsOut
      * @description API model for performance metrics output.
@@ -11763,6 +12332,742 @@ export interface operations {
       };
     };
   };
+  list_entities_api_ontology_entities__get: {
+    parameters: {
+      query?: {
+        /** @description Filter by entity type */
+        node_type?:
+          | components["schemas"]["api__models__ontology_entities__EntityTypeEnum"]
+          | null;
+        /** @description Filter by parent entity ID */
+        parent_entity_id?: string | null;
+        /** @description Number of entities to skip */
+        skip?: number;
+        /** @description Maximum number of entities to return */
+        limit?: number;
+        /** @description Sort field */
+        sort_by?: string;
+        SessionLocal?: unknown;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["PaginatedEntitiesResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  create_entity_api_ontology_entities__post: {
+    parameters: {
+      query?: {
+        SessionLocal?: unknown;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["EntityCreate"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["EntityOut"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  search_entities_api_ontology_entities_find_post: {
+    parameters: {
+      query?: {
+        SessionLocal?: unknown;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["EntitySearchRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["EntitySearchResult"][];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  list_relationships_api_ontology_entities_relationships_get: {
+    parameters: {
+      query?: {
+        /** @description Filter by source entity ID */
+        source_entity_id?: string | null;
+        /** @description Filter by target entity ID */
+        target_entity_id?: string | null;
+        /** @description Filter by predicate */
+        predicate?: string | null;
+        /** @description Number of relationships to skip */
+        skip?: number;
+        /** @description Maximum number of relationships to return */
+        limit?: number;
+        SessionLocal?: unknown;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["PaginatedRelationshipsResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  create_relationship_api_ontology_entities_relationships_post: {
+    parameters: {
+      query?: {
+        SessionLocal?: unknown;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["RelationshipCreate"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["RelationshipOut"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  update_relationship_api_ontology_entities_relationships__rel_id__put: {
+    parameters: {
+      query?: {
+        SessionLocal?: unknown;
+      };
+      header?: never;
+      path: {
+        /** @description The ID of the relationship to update */
+        rel_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["RelationshipCreate"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["RelationshipOut"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  delete_relationship_api_ontology_entities_relationships__rel_id__delete: {
+    parameters: {
+      query?: {
+        SessionLocal?: unknown;
+      };
+      header?: never;
+      path: {
+        /** @description The ID of the relationship to delete */
+        rel_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  get_entity_api_ontology_entities__entity_id__get: {
+    parameters: {
+      query?: {
+        SessionLocal?: unknown;
+      };
+      header?: never;
+      path: {
+        /** @description The ID of the entity to retrieve */
+        entity_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["EntityOut"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  update_entity_api_ontology_entities__entity_id__put: {
+    parameters: {
+      query?: {
+        SessionLocal?: unknown;
+      };
+      header?: never;
+      path: {
+        /** @description The ID of the entity to update */
+        entity_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["EntityUpdate"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["EntityOut"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  delete_entity_api_ontology_entities__entity_id__delete: {
+    parameters: {
+      query?: {
+        SessionLocal?: unknown;
+      };
+      header?: never;
+      path: {
+        /** @description The ID of the entity to delete */
+        entity_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  list_property_definitions_api_property_definitions__get: {
+    parameters: {
+      query?: {
+        skip?: number;
+        limit?: number;
+        sortBy?: string;
+        SessionLocal?: unknown;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["PaginatedPropertyDefinitionsResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  create_property_definition_api_property_definitions__post: {
+    parameters: {
+      query?: {
+        SessionLocal?: unknown;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["PropertyDefinitionCreate"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["PropertyDefinitionOut"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  get_property_definition_api_property_definitions__property_def_id__get: {
+    parameters: {
+      query?: {
+        SessionLocal?: unknown;
+      };
+      header?: never;
+      path: {
+        /** @description The ID of the property definition to retrieve */
+        property_def_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["PropertyDefinitionOut"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  update_property_definition_api_property_definitions__property_def_id__put: {
+    parameters: {
+      query?: {
+        SessionLocal?: unknown;
+      };
+      header?: never;
+      path: {
+        /** @description The ID of the property definition to update */
+        property_def_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["PropertyDefinitionUpdate"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["PropertyDefinitionOut"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  delete_property_definition_api_property_definitions__property_def_id__delete: {
+    parameters: {
+      query?: {
+        SessionLocal?: unknown;
+      };
+      header?: never;
+      path: {
+        /** @description The ID of the property definition to delete */
+        property_def_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  get_property_definition_by_identifier_api_property_definitions_by_identifier__identifier__get: {
+    parameters: {
+      query?: {
+        SessionLocal?: unknown;
+      };
+      header?: never;
+      path: {
+        /** @description The identifier of the property definition */
+        identifier: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["PropertyDefinitionOut"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  list_configurations_api_pipeline_configurations_get: {
+    parameters: {
+      query?: {
+        /** @description Filter by pipeline type */
+        pipeline?: components["schemas"]["PipelineType"] | null;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["PipelineFlavorListResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  create_configuration_api_pipeline_configurations_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["CreatePipelineFlavorRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["PipelineFlavor"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  get_configuration_api_pipeline_configurations__configuration_id__get: {
+    parameters: {
+      query?: {
+        /** @description Pipeline type (required for default configuration) */
+        pipeline?: components["schemas"]["PipelineType"] | null;
+      };
+      header?: never;
+      path: {
+        /** @description The ID of the configuration to retrieve */
+        configuration_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["PipelineFlavor"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  update_configuration_api_pipeline_configurations__configuration_id__put: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description The ID of the configuration to update */
+        configuration_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["UpdatePipelineFlavorRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["PipelineFlavor"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  delete_configuration_api_pipeline_configurations__configuration_id__delete: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description The ID of the configuration to delete */
+        configuration_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
   list_change_events_api_change_events__get: {
     parameters: {
       query?: {
@@ -11884,7 +13189,7 @@ export interface operations {
       header?: never;
       path: {
         /** @description Entity type */
-        entity_type: components["schemas"]["EntityTypeEnum"];
+        entity_type: components["schemas"]["api__models__version_management__EntityTypeEnum"];
         /** @description Entity ID */
         entity_id: string;
       };
@@ -11920,7 +13225,7 @@ export interface operations {
       header?: never;
       path: {
         /** @description Entity type */
-        entity_type: components["schemas"]["EntityTypeEnum"];
+        entity_type: components["schemas"]["api__models__version_management__EntityTypeEnum"];
         /** @description Entity ID */
         entity_id: string;
         /** @description Version number */
@@ -11958,7 +13263,7 @@ export interface operations {
       header?: never;
       path: {
         /** @description Entity type */
-        entity_type: components["schemas"]["EntityTypeEnum"];
+        entity_type: components["schemas"]["api__models__version_management__EntityTypeEnum"];
         /** @description Entity ID */
         entity_id: string;
       };
@@ -12000,7 +13305,7 @@ export interface operations {
       header?: never;
       path: {
         /** @description Entity type */
-        entity_type: components["schemas"]["EntityTypeEnum"];
+        entity_type: components["schemas"]["api__models__version_management__EntityTypeEnum"];
         /** @description Entity ID */
         entity_id: string;
       };
@@ -16920,7 +18225,7 @@ export interface operations {
       };
     };
   };
-  create_optimized_database_engine_admin_database_create_engine_post: {
+  create_database_engine_admin_database_create_engine_post: {
     parameters: {
       query: {
         engine_id: string;

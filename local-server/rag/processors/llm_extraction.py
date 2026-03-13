@@ -5,6 +5,7 @@ Layer 1: LLM Extraction Processor
 This processor performs LLM-based entity extraction enhanced by knowledge graph context.
 It uses the pipeline_flavors system to extract entities with confidence scores.
 """
+
 from typing import List, Dict
 import json
 
@@ -12,7 +13,7 @@ from rag.processors.models import (
     ProcessorInput,
     LLMExtractionOutput,
     ExtractedEntity,
-    KGContextOutput
+    KGContextOutput,
 )
 from llm.service import LLMService
 from llm.models import PipelineType, PipelineExecutionRequest
@@ -45,9 +46,7 @@ class LLMExtractionProcessor:
         logger.info(f"LLMExtractionProcessor initialized with flavor_id={flavor_id}")
 
     def process(
-        self,
-        input_data: ProcessorInput,
-        kg_context: KGContextOutput
+        self, input_data: ProcessorInput, kg_context: KGContextOutput
     ) -> LLMExtractionOutput:
         """
         Process input text with KG context to extract entities.
@@ -68,10 +67,10 @@ class LLMExtractionProcessor:
 
             # Build extraction prompt
             prompt_context = {
-                'text': input_data.text,
-                'kg_context': kg_context_text,
-                'kg_node_count': len(kg_context.kg_nodes),
-                'format_instructions': '''Return a JSON object with this structure:
+                "text": input_data.text,
+                "kg_context": kg_context_text,
+                "kg_node_count": len(kg_context.kg_nodes),
+                "format_instructions": """Return a JSON object with this structure:
 {
   "entities": [
     {
@@ -82,18 +81,18 @@ class LLMExtractionProcessor:
       "matched_kg_node": "node_id_if_matched"
     }
   ]
-}'''
+}""",
             }
 
             if input_data.enable_trace:
-                trace_data['prompt_context'] = prompt_context
+                trace_data["prompt_context"] = prompt_context
 
             # Execute LLM extraction
             # Create execution request
             execution_request = PipelineExecutionRequest(
                 flavor_id=self.flavor_id,
                 pipeline_type=PipelineType.EXTRACT_ENTITIES,
-                context_data=prompt_context
+                context_data=prompt_context,
             )
 
             # Execute pipeline synchronously - LLMService handles async internally
@@ -101,17 +100,15 @@ class LLMExtractionProcessor:
 
             # Parse entities from response
             entities = self._parse_entities_from_response(
-                response.response_content,
-                input_data.text,
-                kg_context
+                response.response_content, input_data.text, kg_context
             )
 
             if input_data.enable_trace:
-                trace_data['llm_response'] = response.response_content
-                trace_data['execution_id'] = response.execution_id
-                trace_data['entities_extracted'] = len(entities)
+                trace_data["llm_response"] = response.response_content
+                trace_data["execution_id"] = response.execution_id
+                trace_data["entities_extracted"] = len(entities)
                 if response.token_usage:
-                    trace_data['token_usage'] = response.token_usage
+                    trace_data["token_usage"] = response.token_usage
 
             logger.info(f"Extracted {len(entities)} entities via LLM")
 
@@ -119,7 +116,7 @@ class LLMExtractionProcessor:
                 entities=entities,
                 kg_context_size=len(kg_context.kg_nodes),
                 token_usage=response.token_usage,
-                trace_data=trace_data
+                trace_data=trace_data,
             )
 
         except Exception as e:
@@ -129,7 +126,7 @@ class LLMExtractionProcessor:
                 entities=[],
                 kg_context_size=len(kg_context.kg_nodes),
                 token_usage=None,
-                trace_data=trace_data
+                trace_data=trace_data,
             )
 
     def _format_kg_context(self, kg_context: KGContextOutput) -> str:
@@ -166,10 +163,7 @@ class LLMExtractionProcessor:
         return "\n".join(context_parts)
 
     def _parse_entities_from_response(
-        self,
-        response_content: str,
-        original_text: str,
-        kg_context: KGContextOutput
+        self, response_content: str, original_text: str, kg_context: KGContextOutput
     ) -> List[ExtractedEntity]:
         """
         Parse entities from LLM response content using structured JSON output.
@@ -185,7 +179,7 @@ class LLMExtractionProcessor:
         entities = []
 
         # Split text into sentences for sentence indexing
-        sentences = [s.strip() for s in original_text.split('.') if s.strip()]
+        sentences = [s.strip() for s in original_text.split(".") if s.strip()]
 
         try:
             # Try to parse as JSON first (structured output)
@@ -193,8 +187,8 @@ class LLMExtractionProcessor:
             content_to_parse = response_content.strip()
 
             # If response starts with "Entities:", extract the list
-            if content_to_parse.startswith('Entities:'):
-                content_to_parse = content_to_parse[len('Entities:'):].strip()
+            if content_to_parse.startswith("Entities:"):
+                content_to_parse = content_to_parse[len("Entities:") :].strip()
                 # Wrap in JSON object format
                 content_to_parse = f'{{"entities": {content_to_parse}}}'
                 # Replace single quotes with double quotes for valid JSON
@@ -202,28 +196,34 @@ class LLMExtractionProcessor:
 
             response_json = json.loads(content_to_parse)
 
-            if 'entities' in response_json and isinstance(response_json['entities'], list):
-                for entity_data in response_json['entities']:
+            if "entities" in response_json and isinstance(
+                response_json["entities"], list
+            ):
+                for entity_data in response_json["entities"]:
                     try:
                         # Validate required fields
-                        if 'text' not in entity_data:
-                            logger.warning(f"Entity missing 'text' field: {entity_data}")
+                        if "text" not in entity_data:
+                            logger.warning(
+                                f"Entity missing 'text' field: {entity_data}"
+                            )
                             continue
 
-                        entity_text = entity_data['text']
+                        entity_text = entity_data["text"]
 
                         # Find entity in original text for character positions
                         start_char = original_text.lower().find(entity_text.lower())
                         if start_char == -1:
-                            logger.debug(f"Entity '{entity_text}' not found in original text")
+                            logger.debug(
+                                f"Entity '{entity_text}' not found in original text"
+                            )
                             continue
 
                         end_char = start_char + len(entity_text)
 
                         # Determine sentence index
                         sentence_indices = []
-                        if 'sentence_index' in entity_data:
-                            sentence_indices = [entity_data['sentence_index']]
+                        if "sentence_index" in entity_data:
+                            sentence_indices = [entity_data["sentence_index"]]
                         else:
                             # Find which sentence contains the entity
                             for sent_idx, sentence in enumerate(sentences):
@@ -231,43 +231,55 @@ class LLMExtractionProcessor:
                                     sentence_indices.append(sent_idx)
 
                         # Check for matched KG node
-                        matched_kg_node = entity_data.get('matched_kg_node')
+                        matched_kg_node = entity_data.get("matched_kg_node")
                         if not matched_kg_node:
                             # Try to match against KG context
                             for node in kg_context.kg_nodes:
-                                if entity_text.lower() == node.title.lower() or \
-                                   entity_text.lower() in node.title.lower() or \
-                                   node.title.lower() in entity_text.lower():
+                                if (
+                                    entity_text.lower() == node.title.lower()
+                                    or entity_text.lower() in node.title.lower()
+                                    or node.title.lower() in entity_text.lower()
+                                ):
                                     matched_kg_node = node.node_id
                                     break
 
                         # Get confidence (explicit mentions: 0.9-1.0)
-                        confidence = float(entity_data.get('confidence', 0.95))
-                        confidence = max(0.9, min(1.0, confidence))  # Clamp to [0.9, 1.0]
+                        confidence = float(entity_data.get("confidence", 0.95))
+                        confidence = max(
+                            0.9, min(1.0, confidence)
+                        )  # Clamp to [0.9, 1.0]
 
                         entity = ExtractedEntity(
                             text=entity_text,
-                            entity_type=entity_data.get('entity_type', 'CONCEPT'),
+                            entity_type=entity_data.get("entity_type", "CONCEPT"),
                             confidence=confidence,
                             sentence_indices=sentence_indices,
                             matched_kg_node=matched_kg_node,
                             start_char=start_char,
-                            end_char=end_char
+                            end_char=end_char,
                         )
                         entities.append(entity)
 
                     except (ValueError, TypeError) as e:
-                        logger.warning(f"Failed to parse entity data: {entity_data}, error: {e}")
+                        logger.warning(
+                            f"Failed to parse entity data: {entity_data}, error: {e}"
+                        )
                         continue
 
-                logger.info(f"Parsed {len(entities)} entities from structured JSON response")
+                logger.info(
+                    f"Parsed {len(entities)} entities from structured JSON response"
+                )
                 return entities
 
         except json.JSONDecodeError:
-            logger.debug("Response is not valid JSON, falling back to heuristic parsing")
+            logger.debug(
+                "Response is not valid JSON, falling back to heuristic parsing"
+            )
 
         # Fallback: Use heuristic parsing if JSON parsing fails
-        entities = self._fallback_parse_entities(response_content, original_text, sentences, kg_context)
+        entities = self._fallback_parse_entities(
+            response_content, original_text, sentences, kg_context
+        )
 
         return entities
 
@@ -276,7 +288,7 @@ class LLMExtractionProcessor:
         response_content: str,
         original_text: str,
         sentences: List[str],
-        kg_context: KGContextOutput
+        kg_context: KGContextOutput,
     ) -> List[ExtractedEntity]:
         """
         Fallback heuristic parser for non-JSON responses.
@@ -302,7 +314,7 @@ class LLMExtractionProcessor:
                     continue
 
                 # Extract the actual text from the original document (preserves case)
-                actual_text = original_text[start_char:start_char + len(node.title)]
+                actual_text = original_text[start_char : start_char + len(node.title)]
                 end_char = start_char + len(actual_text)
 
                 # Find sentence index
@@ -318,7 +330,7 @@ class LLMExtractionProcessor:
                     sentence_indices=sent_indices if sent_indices else [0],
                     matched_kg_node=node.node_id,
                     start_char=start_char,
-                    end_char=end_char
+                    end_char=end_char,
                 )
                 entities.append(entity)
 

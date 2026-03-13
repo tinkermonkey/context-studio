@@ -1,4 +1,5 @@
 """Shared helper for triage scripts that need database setup with migrations."""
+
 import sys
 import os
 import tempfile
@@ -17,22 +18,22 @@ def create_test_app_with_migrations():
     # Create temporary database
     test_db_fd, test_db_path = tempfile.mkstemp(suffix=".db")
     database_url = f"sqlite:///{test_db_path}"
-    
+
     try:
         # Initialize database with base schema
         engine = get_engine(database_url)
         session_local = get_session_local(engine)
         init_db(engine=engine)
-        
+
         # Apply migrations to get vector tables
         migration_manager = MigrationManager(test_db_path)
         success = migration_manager.migrate_to_latest()
         if not success:
             raise RuntimeError("Failed to apply migrations to test database")
-        
+
         # Create FastAPI app
         app = create_app(engine=engine, session_local=session_local)
-        
+
         return app, test_db_fd, test_db_path, engine, session_local
     except Exception:
         # Cleanup on failure

@@ -108,11 +108,9 @@ class VersionManager:
         # Validate parent version exists if specified
         if parent_version_id:
             parent_exists = self.db.execute(
-                text(
-                    """
+                text("""
                 SELECT 1 FROM entity_versions WHERE id = :parent_id
-            """
-                ),
+            """),
                 {"parent_id": parent_version_id},
             ).scalar()
 
@@ -129,8 +127,7 @@ class VersionManager:
         try:
             # Insert version record
             self.db.execute(
-                text(
-                    """
+                text("""
                 INSERT INTO entity_versions (
                     id, entity_type, entity_id, version_number, content, state,
                     parent_version_id, changeset_id, author_id, created_at, metadata
@@ -138,8 +135,7 @@ class VersionManager:
                     :id, :entity_type, :entity_id, :version_number, :content, :state,
                     :parent_version_id, :changeset_id, :author_id, :created_at, :metadata
                 )
-            """
-                ),
+            """),
                 {
                     "id": version_id,
                     "entity_type": entity_type,
@@ -197,15 +193,13 @@ class VersionManager:
 
         try:
             results = self.db.execute(
-                text(
-                    """
+                text("""
                 SELECT id, entity_type, entity_id, version_number, content, state,
                        parent_version_id, changeset_id, author_id, created_at, metadata
                 FROM entity_versions
                 WHERE entity_type = :entity_type AND entity_id = :entity_id
                 ORDER BY version_number ASC
-            """
-                ),
+            """),
                 {"entity_type": entity_type, "entity_id": entity_id},
             ).fetchall()
 
@@ -244,15 +238,13 @@ class VersionManager:
 
         try:
             result = self.db.execute(
-                text(
-                    """
+                text("""
                 SELECT id, entity_type, entity_id, version_number, content, state,
                        parent_version_id, changeset_id, author_id, created_at, metadata
                 FROM entity_versions
                 WHERE entity_type = :entity_type AND entity_id = :entity_id
                   AND version_number = :version_number
-            """
-                ),
+            """),
                 {
                     "entity_type": entity_type,
                     "entity_id": entity_id,
@@ -291,16 +283,14 @@ class VersionManager:
 
         try:
             result = self.db.execute(
-                text(
-                    """
+                text("""
                 SELECT id, entity_type, entity_id, version_number, content, state,
                        parent_version_id, changeset_id, author_id, created_at, metadata
                 FROM entity_versions
                 WHERE entity_type = :entity_type AND entity_id = :entity_id
                 ORDER BY version_number DESC
                 LIMIT 1
-            """
-                ),
+            """),
                 {"entity_type": entity_type, "entity_id": entity_id},
             ).fetchone()
 
@@ -390,13 +380,11 @@ class VersionManager:
             result = cast(
                 CursorResult,
                 self.db.execute(
-                    text(
-                        """
+                    text("""
                 UPDATE entity_versions
                 SET state = :new_state
                 WHERE id = :version_id
-            """
-                    ),
+            """),
                     {"new_state": new_state.value, "version_id": version_id},
                 ),
             )
@@ -428,15 +416,13 @@ class VersionManager:
 
         try:
             results = self.db.execute(
-                text(
-                    """
+                text("""
                 SELECT id, entity_type, entity_id, version_number, content, state,
                        parent_version_id, changeset_id, author_id, created_at, metadata
                 FROM entity_versions
                 WHERE state = :state
                 ORDER BY created_at DESC
-            """
-                ),
+            """),
                 {"state": state.value},
             ).fetchall()
 
@@ -454,12 +440,10 @@ class VersionManager:
     def _get_next_version_number(self, entity_type: str, entity_id: str) -> int:
         """Get the next version number for an entity."""
         result = self.db.execute(
-            text(
-                """
+            text("""
             SELECT MAX(version_number) FROM entity_versions
             WHERE entity_type = :entity_type AND entity_id = :entity_id
-        """
-            ),
+        """),
             {"entity_type": entity_type, "entity_id": entity_id},
         ).scalar()
 

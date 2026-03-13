@@ -9,7 +9,7 @@ from pydantic import BaseModel
 from llm.enabled_models import (
     EnabledModelConfig,
     ProviderType,
-    get_enabled_models_manager
+    get_enabled_models_manager,
 )
 from utils.logger import get_logger
 
@@ -19,6 +19,7 @@ logger = get_logger(__name__)
 
 class EnabledModelResponse(BaseModel):
     """Response model for enabled model configuration"""
+
     model_name: str
     provider_type: ProviderType
     display_name: str
@@ -33,12 +34,14 @@ class EnabledModelResponse(BaseModel):
 
 class EnabledModelsListResponse(BaseModel):
     """Response model for list of enabled models"""
+
     models: List[EnabledModelResponse]
     total_count: int
 
 
 class AddModelRequest(BaseModel):
     """Request model for adding a new enabled model"""
+
     model_name: str
     provider_type: ProviderType
     display_name: str
@@ -53,6 +56,7 @@ class AddModelRequest(BaseModel):
 
 class UpdateModelRequest(BaseModel):
     """Request model for updating enabled model configuration"""
+
     provider_type: Optional[ProviderType] = None
     display_name: Optional[str] = None
     enabled: Optional[bool] = None
@@ -76,15 +80,17 @@ def _config_to_response(config: EnabledModelConfig) -> EnabledModelResponse:
         model_override=config.model_override,
         description=config.description,
         cost_tier=config.cost_tier,
-        tags=config.tags
+        tags=config.tags,
     )
 
 
 @router.get("", response_model=EnabledModelsListResponse)
 async def list_enabled_models(
     enabled_only: bool = Query(True, description="Only return enabled models"),
-    provider_type: Optional[ProviderType] = Query(None, description="Filter by provider type"),  # noqa: E501
-    tag: Optional[str] = Query(None, description="Filter by tag")
+    provider_type: Optional[ProviderType] = Query(
+        None, description="Filter by provider type"
+    ),  # noqa: E501
+    tag: Optional[str] = Query(None, description="Filter by tag"),
 ):
     """List configured models with optional filtering"""
     try:
@@ -104,20 +110,21 @@ async def list_enabled_models(
         if tag:
             models = [m for m in models if tag in m.tags]
 
-        logger.info(f"Listed {len(models)} models (enabled_only={enabled_only}, provider={provider_type}, tag={tag})")  # noqa: E501
+        logger.info(
+            f"Listed {len(models)} models (enabled_only={enabled_only}, provider={provider_type}, tag={tag})"
+        )  # noqa: E501
 
         response_models = [_config_to_response(config) for config in models]
 
         return EnabledModelsListResponse(
-            models=response_models,
-            total_count=len(response_models)
+            models=response_models, total_count=len(response_models)
         )
 
     except Exception as e:
         logger.error(f"Error listing enabled models: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Internal server error"
+            detail="Internal server error",
         )
 
 
@@ -131,7 +138,7 @@ async def get_enabled_model(model_name: str):
         if not config:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Model '{model_name}' not found"
+                detail=f"Model '{model_name}' not found",
             )
 
         logger.info(f"Retrieved configuration for model: {model_name}")
@@ -143,7 +150,7 @@ async def get_enabled_model(model_name: str):
         logger.error(f"Error getting model {model_name}: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Internal server error"
+            detail="Internal server error",
         )
 
 
@@ -157,7 +164,7 @@ async def add_enabled_model(request: AddModelRequest):
         if manager.get_model_config(request.model_name):
             raise HTTPException(
                 status_code=status.HTTP_409_CONFLICT,
-                detail=f"Model '{request.model_name}' already exists"
+                detail=f"Model '{request.model_name}' already exists",
             )
 
         # Create configuration
@@ -171,7 +178,7 @@ async def add_enabled_model(request: AddModelRequest):
             model_override=request.model_override,
             description=request.description,
             cost_tier=request.cost_tier,
-            tags=request.tags
+            tags=request.tags,
         )
 
         # Add to manager
@@ -179,7 +186,7 @@ async def add_enabled_model(request: AddModelRequest):
         if not success:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="Failed to save model configuration"
+                detail="Failed to save model configuration",
             )
 
         logger.info(f"Added new enabled model: {request.model_name}")
@@ -191,7 +198,7 @@ async def add_enabled_model(request: AddModelRequest):
         logger.error(f"Error adding model {request.model_name}: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Internal server error"
+            detail="Internal server error",
         )
 
 
@@ -206,7 +213,7 @@ async def update_enabled_model(model_name: str, request: UpdateModelRequest):
         if not config:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Model '{model_name}' not found"
+                detail=f"Model '{model_name}' not found",
             )
 
         # Update fields that were provided
@@ -234,7 +241,7 @@ async def update_enabled_model(model_name: str, request: UpdateModelRequest):
         if not success:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="Failed to save updated model configuration"
+                detail="Failed to save updated model configuration",
             )
 
         logger.info(f"Updated enabled model: {model_name}")
@@ -246,7 +253,7 @@ async def update_enabled_model(model_name: str, request: UpdateModelRequest):
         logger.error(f"Error updating model {model_name}: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Internal server error"
+            detail="Internal server error",
         )
 
 
@@ -260,7 +267,7 @@ async def delete_enabled_model(model_name: str):
         if not manager.get_model_config(model_name):
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Model '{model_name}' not found"
+                detail=f"Model '{model_name}' not found",
             )
 
         # Remove model
@@ -268,7 +275,7 @@ async def delete_enabled_model(model_name: str):
         if not success:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="Failed to remove model configuration"
+                detail="Failed to remove model configuration",
             )
 
         logger.info(f"Removed enabled model: {model_name}")
@@ -280,7 +287,7 @@ async def delete_enabled_model(model_name: str):
         logger.error(f"Error removing model {model_name}: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Internal server error"
+            detail="Internal server error",
         )
 
 
@@ -294,7 +301,7 @@ async def enable_model(model_name: str):
         if not manager.get_model_config(model_name):
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Model '{model_name}' not found"
+                detail=f"Model '{model_name}' not found",
             )
 
         # Enable model
@@ -302,7 +309,7 @@ async def enable_model(model_name: str):
         if not success:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="Failed to enable model"
+                detail="Failed to enable model",
             )
 
         logger.info(f"Enabled model: {model_name}")
@@ -314,7 +321,7 @@ async def enable_model(model_name: str):
         logger.error(f"Error enabling model {model_name}: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Internal server error"
+            detail="Internal server error",
         )
 
 
@@ -328,7 +335,7 @@ async def disable_model(model_name: str):
         if not manager.get_model_config(model_name):
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Model '{model_name}' not found"
+                detail=f"Model '{model_name}' not found",
             )
 
         # Disable model
@@ -336,7 +343,7 @@ async def disable_model(model_name: str):
         if not success:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="Failed to disable model"
+                detail="Failed to disable model",
             )
 
         logger.info(f"Disabled model: {model_name}")
@@ -348,7 +355,7 @@ async def disable_model(model_name: str):
         logger.error(f"Error disabling model {model_name}: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Internal server error"
+            detail="Internal server error",
         )
 
 
@@ -362,13 +369,15 @@ async def get_provider_summary():
         # Group by provider
         provider_summary = {}
         for provider_type in ProviderType:
-            models = [m for m in all_models if m.provider_type == provider_type]  # noqa: E501
+            models = [
+                m for m in all_models if m.provider_type == provider_type
+            ]  # noqa: E501
             enabled_count = len([m for m in models if m.enabled])
 
             provider_summary[provider_type.value] = {
                 "total_models": len(models),
                 "enabled_models": enabled_count,
-                "models": [m.model_name for m in models]
+                "models": [m.model_name for m in models],
             }
 
         logger.info("Generated provider summary")
@@ -378,5 +387,5 @@ async def get_provider_summary():
         logger.error(f"Error generating provider summary: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Internal server error"
+            detail="Internal server error",
         )

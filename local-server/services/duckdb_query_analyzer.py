@@ -152,9 +152,7 @@ class DuckDBQueryAnalyzer:
         self.performance_metrics: list[QueryPerformanceMetrics] = []
 
         self._setup_analysis_settings()
-        logger.info(
-            "DuckDBQueryAnalyzer initialized with advanced analysis features"
-        )
+        logger.info("DuckDBQueryAnalyzer initialized with advanced analysis features")
 
     def _setup_analysis_settings(self):
         """Configure DuckDB for analysis performance."""
@@ -170,7 +168,7 @@ class DuckDBQueryAnalyzer:
                 f"Failed to configure critical DuckDB settings: {e}. "
                 f"Query performance will be severely degraded. "
                 f"This indicates a configuration problem with DuckDB or system resources (memory, threads).",
-                exc_info=True
+                exc_info=True,
             )
             raise RuntimeError(
                 f"Cannot initialize DuckDBQueryAnalyzer without critical settings: {e}"
@@ -183,7 +181,7 @@ class DuckDBQueryAnalyzer:
             logger.warning(
                 f"Failed to configure temp directory for DuckDB: {e}. "
                 f"Continuing with system default temp directory.",
-                exc_info=True
+                exc_info=True,
             )
 
         try:
@@ -193,7 +191,7 @@ class DuckDBQueryAnalyzer:
             logger.warning(
                 f"Failed to configure profiling output for DuckDB: {e}. "
                 f"Query profiling will be disabled.",
-                exc_info=True
+                exc_info=True,
             )
 
         # S3 analysis settings if configured
@@ -206,7 +204,7 @@ class DuckDBQueryAnalyzer:
                 logger.warning(
                     f"Failed to configure S3 settings for DuckDB: {e}. "
                     f"S3 operations will continue with default settings.",
-                    exc_info=True
+                    exc_info=True,
                 )
 
     def analyze_query(
@@ -243,9 +241,7 @@ class DuckDBQueryAnalyzer:
 
         return analyzed_query, metrics
 
-    def _apply_analysis_strategies(
-        self, query: str, context: Dict[str, Any]
-    ) -> str:
+    def _apply_analysis_strategies(self, query: str, context: Dict[str, Any]) -> str:
         """Apply various analysis strategies to the query."""
 
         analyzed = query
@@ -288,9 +284,7 @@ class DuckDBQueryAnalyzer:
             entity_types = context["entity_types"]
             if entity_types:
                 # Escape single quotes in entity type values
-                escaped_types = [
-                    str(t).replace("'", "''") for t in entity_types
-                ]
+                escaped_types = [str(t).replace("'", "''") for t in entity_types]
                 entity_types_clause = ", ".join(f"'{t}'" for t in escaped_types)
                 if "WHERE" in query.upper():
                     query = query.replace(
@@ -312,16 +306,12 @@ class DuckDBQueryAnalyzer:
             for key, value in context["partition_filter"].items():
                 # Validate key is a valid identifier (alphanumeric, underscore)
                 if not self._is_valid_identifier(key):
-                    logger.warning(
-                        f"Skipping invalid partition filter key: {key}"
-                    )
+                    logger.warning(f"Skipping invalid partition filter key: {key}")
                     continue
 
                 if isinstance(value, list):
                     # Sanitize list values - convert to strings and escape
-                    escaped_values = [
-                        self._escape_sql_value(v) for v in value
-                    ]
+                    escaped_values = [self._escape_sql_value(v) for v in value]
                     partition_conditions.append(
                         f"{key} IN ({', '.join(escaped_values)})"
                     )
@@ -365,9 +355,7 @@ class DuckDBQueryAnalyzer:
         # This is a simplified implementation
         return query
 
-    def _analyze_aggregation_pushdown(
-        self, query: str, context: Dict[str, Any]
-    ) -> str:
+    def _analyze_aggregation_pushdown(self, query: str, context: Dict[str, Any]) -> str:
         """Push aggregations down to reduce data movement."""
 
         # Basic aggregation analysis
@@ -401,7 +389,7 @@ class DuckDBQueryAnalyzer:
     def _is_valid_date_string(self, date_str: str) -> bool:
         """Validate that date string is well-formed (YYYY-MM-DD format)."""
         # Match YYYY-MM-DD format (does not validate day/month ranges)
-        pattern = r'^\d{4}-\d{2}-\d{2}$'
+        pattern = r"^\d{4}-\d{2}-\d{2}$"
         return bool(re.match(pattern, date_str))
 
     def _generate_partitioned_pattern(self, start_date: str, end_date: str) -> str:

@@ -72,7 +72,9 @@ def import_conceptnet_predicates(db: Session) -> List[Predicate]:
     return predicates
 
 
-def get_conceptnet_relation_for_predicate(predicate: Predicate) -> Optional[str]:  # noqa: E501
+def get_conceptnet_relation_for_predicate(
+    predicate: Predicate,
+) -> Optional[str]:  # noqa: E501
     """
     Extract ConceptNet relation from predicate mapping.
     """
@@ -81,13 +83,18 @@ def get_conceptnet_relation_for_predicate(predicate: Predicate) -> Optional[str]
 
     try:
         mapping = json.loads(predicate.mapping)  # type: ignore
-        return cast(Optional[str], mapping.get("conceptnet", {}).get("relation"))  # noqa: E501
+        return cast(
+            Optional[str], mapping.get("conceptnet", {}).get("relation")
+        )  # noqa: E501
     except (json.JSONDecodeError, KeyError):
         return None
 
 
 def validate_term_relationship_predicate(
-    subject_domain_id: str, object_domain_id: str, predicate_id: str, db: Session  # noqa: E501
+    subject_domain_id: str,
+    object_domain_id: str,
+    predicate_id: str,
+    db: Session,  # noqa: E501
 ) -> bool:
     """
     Validate predicate usage for term relationships based on domain predicate sets.  # noqa: E501
@@ -108,7 +115,9 @@ def validate_term_relationship_predicate(
     return True
 
 
-def validate_predicate_identifier(identifier: str, predicate_id: Optional[str], db: Session) -> bool:  # noqa: E501
+def validate_predicate_identifier(
+    identifier: str, predicate_id: Optional[str], db: Session
+) -> bool:  # noqa: E501
     """
     Validate that a predicate identifier is unique.
 

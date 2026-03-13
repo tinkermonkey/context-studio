@@ -67,7 +67,9 @@ class ReferenceService:
             if source_type == SourceType.DBPEDIA:
                 self._sources[source_type] = DBpediaSource(source_type, source_config)
             elif source_type == SourceType.CONCEPTNET:
-                self._sources[source_type] = ConceptNetSource(source_type, source_config)
+                self._sources[source_type] = ConceptNetSource(
+                    source_type, source_config
+                )
             elif source_type == SourceType.WIKIDATA:
                 self._sources[source_type] = WikidataSource(source_type, source_config)
             elif source_type == SourceType.SCHEMA_ORG:
@@ -78,18 +80,29 @@ class ReferenceService:
         return self._sources[source_type]
 
     # DBpedia methods - now return MultiSourceSearchResponse
-    async def dbpedia_get_resource(self, request: DBpediaResourceRequest) -> MultiSourceSearchResponse:
+    async def dbpedia_get_resource(
+        self, request: DBpediaResourceRequest
+    ) -> MultiSourceSearchResponse:
         """Get DBpedia resource data"""
         start_time = time.time()
         try:
             source = self._get_source(SourceType.DBPEDIA)
             async with source:
-                response = await source.get_resource_data(request.resource_url, request.format.value)
-                nodes, links = self.normalizer.normalize_dbpedia_resource_response(response, request.resource_url)
+                response = await source.get_resource_data(
+                    request.resource_url, request.format.value
+                )
+                nodes, links = self.normalizer.normalize_dbpedia_resource_response(
+                    response, request.resource_url
+                )
                 search_time_ms = (time.time() - start_time) * 1000
                 return self.response_builder.build_single_source_response(
-                    SourceType.DBPEDIA, request.resource_url, nodes, links,
-                    limit=1, offset=0, search_time_ms=search_time_ms
+                    SourceType.DBPEDIA,
+                    request.resource_url,
+                    nodes,
+                    links,
+                    limit=1,
+                    offset=0,
+                    search_time_ms=search_time_ms,
                 )
         except Exception as e:
             search_time_ms = (time.time() - start_time) * 1000
@@ -98,18 +111,29 @@ class ReferenceService:
                 request.resource_url, str(e), SourceType.DBPEDIA
             )
 
-    async def dbpedia_search(self, request: DBpediaSearchRequest) -> MultiSourceSearchResponse:
+    async def dbpedia_search(
+        self, request: DBpediaSearchRequest
+    ) -> MultiSourceSearchResponse:
         """Search DBpedia"""
         start_time = time.time()
         try:
             source = self._get_source(SourceType.DBPEDIA)
             async with source:
-                response = await source.search(request.query, request.limit, request.offset, request.format.value)
-                nodes, links = self.normalizer.normalize_dbpedia_search_response(response, request.query)
+                response = await source.search(
+                    request.query, request.limit, request.offset, request.format.value
+                )
+                nodes, links = self.normalizer.normalize_dbpedia_search_response(
+                    response, request.query
+                )
                 search_time_ms = (time.time() - start_time) * 1000
                 return self.response_builder.build_single_source_response(
-                    SourceType.DBPEDIA, request.query, nodes, links,
-                    limit=request.limit, offset=request.offset, search_time_ms=search_time_ms
+                    SourceType.DBPEDIA,
+                    request.query,
+                    nodes,
+                    links,
+                    limit=request.limit,
+                    offset=request.offset,
+                    search_time_ms=search_time_ms,
                 )
         except Exception as e:
             search_time_ms = (time.time() - start_time) * 1000
@@ -118,18 +142,29 @@ class ReferenceService:
                 request.query, str(e), SourceType.DBPEDIA, request.limit, request.offset
             )
 
-    async def dbpedia_sparql(self, request: DBpediaSparqlRequest) -> MultiSourceSearchResponse:
+    async def dbpedia_sparql(
+        self, request: DBpediaSparqlRequest
+    ) -> MultiSourceSearchResponse:
         """Execute DBpedia SPARQL query"""
         start_time = time.time()
         try:
             source = self._get_source(SourceType.DBPEDIA)
             async with source:
-                response = await source.sparql_query(request.query, request.format.value)
-                nodes, links = self.normalizer.normalize_dbpedia_sparql_response(response, request.query)
+                response = await source.sparql_query(
+                    request.query, request.format.value
+                )
+                nodes, links = self.normalizer.normalize_dbpedia_sparql_response(
+                    response, request.query
+                )
                 search_time_ms = (time.time() - start_time) * 1000
                 return self.response_builder.build_single_source_response(
-                    SourceType.DBPEDIA, request.query, nodes, links,
-                    limit=20, offset=0, search_time_ms=search_time_ms
+                    SourceType.DBPEDIA,
+                    request.query,
+                    nodes,
+                    links,
+                    limit=20,
+                    offset=0,
+                    search_time_ms=search_time_ms,
                 )
         except Exception as e:
             search_time_ms = (time.time() - start_time) * 1000
@@ -139,7 +174,9 @@ class ReferenceService:
             )
 
     # ConceptNet methods - now return MultiSourceSearchResponse
-    async def conceptnet_query(self, request: ConceptNetQueryRequest) -> MultiSourceSearchResponse:
+    async def conceptnet_query(
+        self, request: ConceptNetQueryRequest
+    ) -> MultiSourceSearchResponse:
         """Query ConceptNet"""
         start_time = time.time()
         try:
@@ -154,11 +191,18 @@ class ReferenceService:
                     offset=request.offset,
                 )
                 query_str = request.node or request.start or request.end or "query"
-                nodes, links = self.normalizer.normalize_conceptnet_query_response(response, query_str)
+                nodes, links = self.normalizer.normalize_conceptnet_query_response(
+                    response, query_str
+                )
                 search_time_ms = (time.time() - start_time) * 1000
                 return self.response_builder.build_single_source_response(
-                    SourceType.CONCEPTNET, query_str, nodes, links,
-                    limit=request.limit, offset=request.offset, search_time_ms=search_time_ms
+                    SourceType.CONCEPTNET,
+                    query_str,
+                    nodes,
+                    links,
+                    limit=request.limit,
+                    offset=request.offset,
+                    search_time_ms=search_time_ms,
                 )
         except Exception as e:
             search_time_ms = (time.time() - start_time) * 1000
@@ -168,18 +212,27 @@ class ReferenceService:
                 query_str, str(e), SourceType.CONCEPTNET, request.limit, request.offset
             )
 
-    async def conceptnet_get_concept(self, concept_path: str) -> MultiSourceSearchResponse:
+    async def conceptnet_get_concept(
+        self, concept_path: str
+    ) -> MultiSourceSearchResponse:
         """Get ConceptNet concept"""
         start_time = time.time()
         try:
             source = self._get_source(SourceType.CONCEPTNET)
             async with source:
                 response = await source.get_concept(concept_path)
-                nodes, links = self.normalizer.normalize_conceptnet_concept_response(response, concept_path)
+                nodes, links = self.normalizer.normalize_conceptnet_concept_response(
+                    response, concept_path
+                )
                 search_time_ms = (time.time() - start_time) * 1000
                 return self.response_builder.build_single_source_response(
-                    SourceType.CONCEPTNET, concept_path, nodes, links,
-                    limit=1, offset=0, search_time_ms=search_time_ms
+                    SourceType.CONCEPTNET,
+                    concept_path,
+                    nodes,
+                    links,
+                    limit=1,
+                    offset=0,
+                    search_time_ms=search_time_ms,
                 )
         except Exception as e:
             search_time_ms = (time.time() - start_time) * 1000
@@ -188,18 +241,27 @@ class ReferenceService:
                 concept_path, str(e), SourceType.CONCEPTNET
             )
 
-    async def conceptnet_get_related(self, concept_path: str, filter: Optional[str] = None, limit: int = 20) -> MultiSourceSearchResponse:
+    async def conceptnet_get_related(
+        self, concept_path: str, filter: Optional[str] = None, limit: int = 20
+    ) -> MultiSourceSearchResponse:
         """Get ConceptNet related concepts"""
         start_time = time.time()
         try:
             source = self._get_source(SourceType.CONCEPTNET)
             async with source:
                 response = await source.get_related(concept_path, filter, limit)
-                nodes, links = self.normalizer.normalize_conceptnet_related_response(response, concept_path)
+                nodes, links = self.normalizer.normalize_conceptnet_related_response(
+                    response, concept_path
+                )
                 search_time_ms = (time.time() - start_time) * 1000
                 return self.response_builder.build_single_source_response(
-                    SourceType.CONCEPTNET, concept_path, nodes, links,
-                    limit=limit, offset=0, search_time_ms=search_time_ms
+                    SourceType.CONCEPTNET,
+                    concept_path,
+                    nodes,
+                    links,
+                    limit=limit,
+                    offset=0,
+                    search_time_ms=search_time_ms,
                 )
         except Exception as e:
             search_time_ms = (time.time() - start_time) * 1000
@@ -209,18 +271,29 @@ class ReferenceService:
             )
 
     # Wikidata methods - now return MultiSourceSearchResponse
-    async def wikidata_sparql(self, request: WikidataSparqlRequest) -> MultiSourceSearchResponse:
+    async def wikidata_sparql(
+        self, request: WikidataSparqlRequest
+    ) -> MultiSourceSearchResponse:
         """Execute Wikidata SPARQL query"""
         start_time = time.time()
         try:
             source = self._get_source(SourceType.WIKIDATA)
             async with source:
-                response = await source.sparql_query(request.query, request.format.value)
-                nodes, links = self.normalizer.normalize_wikidata_sparql_response(response, request.query)
+                response = await source.sparql_query(
+                    request.query, request.format.value
+                )
+                nodes, links = self.normalizer.normalize_wikidata_sparql_response(
+                    response, request.query
+                )
                 search_time_ms = (time.time() - start_time) * 1000
                 return self.response_builder.build_single_source_response(
-                    SourceType.WIKIDATA, request.query, nodes, links,
-                    limit=20, offset=0, search_time_ms=search_time_ms
+                    SourceType.WIKIDATA,
+                    request.query,
+                    nodes,
+                    links,
+                    limit=20,
+                    offset=0,
+                    search_time_ms=search_time_ms,
                 )
         except Exception as e:
             search_time_ms = (time.time() - start_time) * 1000
@@ -229,18 +302,29 @@ class ReferenceService:
                 request.query, str(e), SourceType.WIKIDATA
             )
 
-    async def wikidata_get_entity(self, request: WikidataEntityRequest) -> MultiSourceSearchResponse:
+    async def wikidata_get_entity(
+        self, request: WikidataEntityRequest
+    ) -> MultiSourceSearchResponse:
         """Get Wikidata entity data"""
         start_time = time.time()
         try:
             source = self._get_source(SourceType.WIKIDATA)
             async with source:
-                response = await source.get_entity_data(request.entity_url, request.properties, request.format.value)
-                nodes, links = self.normalizer.normalize_wikidata_entity_response(response, request.entity_url)
+                response = await source.get_entity_data(
+                    request.entity_url, request.properties, request.format.value
+                )
+                nodes, links = self.normalizer.normalize_wikidata_entity_response(
+                    response, request.entity_url
+                )
                 search_time_ms = (time.time() - start_time) * 1000
                 return self.response_builder.build_single_source_response(
-                    SourceType.WIKIDATA, request.entity_url, nodes, links,
-                    limit=1, offset=0, search_time_ms=search_time_ms
+                    SourceType.WIKIDATA,
+                    request.entity_url,
+                    nodes,
+                    links,
+                    limit=1,
+                    offset=0,
+                    search_time_ms=search_time_ms,
                 )
         except Exception as e:
             logger.error(f"Wikidata entity request failed: {e}")
@@ -248,12 +332,16 @@ class ReferenceService:
                 request.entity_url, str(e), SourceType.WIKIDATA
             )
 
-    async def wikidata_search(self, request: WikidataSearchRequest) -> MultiSourceSearchResponse:
+    async def wikidata_search(
+        self, request: WikidataSearchRequest
+    ) -> MultiSourceSearchResponse:
         """Search Wikidata entities"""
         try:
             # For backwards compatibility, we need to implement this method to use SPARQL
             # since the existing logic in _search_single_source uses SPARQL for search
-            escaped_query = request.query.replace('"', '\\"').replace('\n', ' ').replace('\r', ' ')
+            escaped_query = (
+                request.query.replace('"', '\\"').replace("\n", " ").replace("\r", " ")
+            )
             default_language = self.settings.reference_sources.default_language
 
             sparql_query = f"""
@@ -275,22 +363,39 @@ class ReferenceService:
         except Exception as e:
             logger.error(f"Wikidata search failed: {e}")
             return self.response_builder.build_error_response(
-                request.query, str(e), SourceType.WIKIDATA, request.limit, request.offset
+                request.query,
+                str(e),
+                SourceType.WIKIDATA,
+                request.limit,
+                request.offset,
             )
 
     # Schema.org methods - now return MultiSourceSearchResponse
-    async def schema_org_get_entity(self, request: SchemaOrgEntityRequest) -> MultiSourceSearchResponse:
+    async def schema_org_get_entity(
+        self, request: SchemaOrgEntityRequest
+    ) -> MultiSourceSearchResponse:
         """Get Schema.org entity"""
         start_time = time.time()
         try:
             source = self._get_source(SourceType.SCHEMA_ORG)
             async with source:
-                response = await source.get_entity(request.identifier, request.include_inherited, request.include_children)
-                nodes, links = self.normalizer.normalize_schema_org_entity_response(response, request.identifier)
+                response = await source.get_entity(
+                    request.identifier,
+                    request.include_inherited,
+                    request.include_children,
+                )
+                nodes, links = self.normalizer.normalize_schema_org_entity_response(
+                    response, request.identifier
+                )
                 search_time_ms = (time.time() - start_time) * 1000
                 return self.response_builder.build_single_source_response(
-                    SourceType.SCHEMA_ORG, request.identifier, nodes, links,
-                    limit=1, offset=0, search_time_ms=search_time_ms
+                    SourceType.SCHEMA_ORG,
+                    request.identifier,
+                    nodes,
+                    links,
+                    limit=1,
+                    offset=0,
+                    search_time_ms=search_time_ms,
                 )
         except Exception as e:
             search_time_ms = (time.time() - start_time) * 1000
@@ -299,18 +404,29 @@ class ReferenceService:
                 request.identifier, str(e), SourceType.SCHEMA_ORG
             )
 
-    async def schema_org_get_property(self, request: SchemaOrgPropertyRequest) -> MultiSourceSearchResponse:
+    async def schema_org_get_property(
+        self, request: SchemaOrgPropertyRequest
+    ) -> MultiSourceSearchResponse:
         """Get Schema.org property"""
         start_time = time.time()
         try:
             source = self._get_source(SourceType.SCHEMA_ORG)
             async with source:
-                response = await source.get_property(request.identifier, request.include_usage)
-                nodes, links = self.normalizer.normalize_schema_org_property_response(response, request.identifier)
+                response = await source.get_property(
+                    request.identifier, request.include_usage
+                )
+                nodes, links = self.normalizer.normalize_schema_org_property_response(
+                    response, request.identifier
+                )
                 search_time_ms = (time.time() - start_time) * 1000
                 return self.response_builder.build_single_source_response(
-                    SourceType.SCHEMA_ORG, request.identifier, nodes, links,
-                    limit=1, offset=0, search_time_ms=search_time_ms
+                    SourceType.SCHEMA_ORG,
+                    request.identifier,
+                    nodes,
+                    links,
+                    limit=1,
+                    offset=0,
+                    search_time_ms=search_time_ms,
                 )
         except Exception as e:
             search_time_ms = (time.time() - start_time) * 1000
@@ -319,7 +435,9 @@ class ReferenceService:
                 request.identifier, str(e), SourceType.SCHEMA_ORG
             )
 
-    async def schema_org_search(self, request: SchemaOrgSearchRequest) -> MultiSourceSearchResponse:
+    async def schema_org_search(
+        self, request: SchemaOrgSearchRequest
+    ) -> MultiSourceSearchResponse:
         """Search Schema.org entities and properties"""
         start_time = time.time()
         try:
@@ -332,21 +450,34 @@ class ReferenceService:
                     offset=request.offset,
                     similarity_threshold=request.similarity_threshold,
                 )
-                nodes, links = self.normalizer.normalize_schema_org_search_response(response, request.query)
+                nodes, links = self.normalizer.normalize_schema_org_search_response(
+                    response, request.query
+                )
                 search_time_ms = (time.time() - start_time) * 1000
                 return self.response_builder.build_single_source_response(
-                    SourceType.SCHEMA_ORG, request.query, nodes, links,
-                    limit=request.limit, offset=request.offset, search_time_ms=search_time_ms
+                    SourceType.SCHEMA_ORG,
+                    request.query,
+                    nodes,
+                    links,
+                    limit=request.limit,
+                    offset=request.offset,
+                    search_time_ms=search_time_ms,
                 )
         except Exception as e:
             search_time_ms = (time.time() - start_time) * 1000
             logger.error(f"Schema.org search failed: {e}")
             return self.response_builder.build_error_response(
-                request.query, str(e), SourceType.SCHEMA_ORG, request.limit, request.offset
+                request.query,
+                str(e),
+                SourceType.SCHEMA_ORG,
+                request.limit,
+                request.offset,
             )
 
     # Multi-source search method - simplified using new architecture
-    async def search(self, request: MultiSourceSearchRequest) -> MultiSourceSearchResponse:
+    async def search(
+        self, request: MultiSourceSearchRequest
+    ) -> MultiSourceSearchResponse:
         """
         Search across multiple reference sources
 
@@ -364,7 +495,7 @@ class ReferenceService:
             SourceType.DBPEDIA,
             SourceType.CONCEPTNET,
             SourceType.WIKIDATA,
-            SourceType.SCHEMA_ORG
+            SourceType.SCHEMA_ORG,
         ]
 
         # Filter to only enabled sources
@@ -381,16 +512,22 @@ class ReferenceService:
                 logger.warning(f"Error checking source {source_type.value}: {e}")
 
         search_timeout = self.settings.reference_sources.search_timeout
-        logger.info(f"Querying {len(enabled_sources)} enabled sources: {[s.value for s in enabled_sources]} (timeout: {search_timeout}s)")
+        logger.info(
+            f"Querying {len(enabled_sources)} enabled sources: {[s.value for s in enabled_sources]} (timeout: {search_timeout}s)"
+        )
 
         # Search each source in parallel
         search_tasks = []
         for source_type in enabled_sources:
-            task = self._search_single_source_normalized(source_type, request.query, request.limit, request.offset)
+            task = self._search_single_source_normalized(
+                source_type, request.query, request.limit, request.offset
+            )
             search_tasks.append((source_type, task))
 
         # Execute all searches in parallel
-        results = await self._gather_search_results_normalized(search_tasks, search_timeout)
+        results = await self._gather_search_results_normalized(
+            search_tasks, search_timeout
+        )
 
         # Use aggregator to combine results
         search_time_ms = (time.time() - start_time) * 1000
@@ -398,10 +535,14 @@ class ReferenceService:
             results, request.query, request.limit, request.offset, search_time_ms, {}
         )
 
-        logger.info(f"Multi-source search completed: '{request.query}' returned {response.total_results} nodes, {response.total_links} links in {search_time_ms:.2f}ms")
+        logger.info(
+            f"Multi-source search completed: '{request.query}' returned {response.total_results} nodes, {response.total_links} links in {search_time_ms:.2f}ms"
+        )
         return response
 
-    async def _search_single_source_normalized(self, source_type: SourceType, query: str, limit: int, offset: int) -> Tuple[List[SearchNode], List[SearchLink]]:
+    async def _search_single_source_normalized(
+        self, source_type: SourceType, query: str, limit: int, offset: int
+    ) -> Tuple[List[SearchNode], List[SearchLink]]:
         """Search a single source using new normalized architecture"""
         try:
             logger.debug(f"Searching {source_type.value} for '{query}'")
@@ -410,7 +551,9 @@ class ReferenceService:
                 # Note: DBpedia Lookup API currently only supports English
                 default_language = self.settings.reference_sources.default_language
                 if default_language != "en":
-                    logger.warning(f"DBpedia Lookup API only supports English, but configured language is '{default_language}'")
+                    logger.warning(
+                        f"DBpedia Lookup API only supports English, but configured language is '{default_language}'"
+                    )
 
                 request = DBpediaSearchRequest(query=query, limit=limit, offset=offset)
                 response = await self.dbpedia_search(request)
@@ -418,9 +561,15 @@ class ReferenceService:
 
             elif source_type == SourceType.CONCEPTNET:
                 # Use higher limit to capture ExternalURL relations in single request
-                extended_limit = min(max(limit * 3, 50), 100)  # Increase limit but respect ConceptNet's max of 100
+                extended_limit = min(
+                    max(limit * 3, 50), 100
+                )  # Increase limit but respect ConceptNet's max of 100
                 default_language = self.settings.reference_sources.default_language
-                request = ConceptNetQueryRequest(node=f"/c/{default_language}/{query.lower().replace(' ', '_')}", limit=extended_limit, offset=offset)
+                request = ConceptNetQueryRequest(
+                    node=f"/c/{default_language}/{query.lower().replace(' ', '_')}",
+                    limit=extended_limit,
+                    offset=offset,
+                )
                 response = await self.conceptnet_query(request)
                 return response.results, response.links
 
@@ -430,7 +579,9 @@ class ReferenceService:
                 return response.results, response.links
 
             elif source_type == SourceType.SCHEMA_ORG:
-                request = SchemaOrgSearchRequest(query=query, limit=limit, offset=offset)
+                request = SchemaOrgSearchRequest(
+                    query=query, limit=limit, offset=offset
+                )
                 response = await self.schema_org_search(request)
                 return response.results, response.links
 
@@ -442,7 +593,9 @@ class ReferenceService:
             logger.error(f"Error searching {source_type.value}: {e}")
             raise e
 
-    async def _gather_search_results_normalized(self, search_tasks: List[tuple], search_timeout: int) -> List[Tuple[SourceType, Tuple[List[SearchNode], List[SearchLink]]]]:
+    async def _gather_search_results_normalized(
+        self, search_tasks: List[tuple], search_timeout: int
+    ) -> List[Tuple[SourceType, Tuple[List[SearchNode], List[SearchLink]]]]:
         """Execute search tasks in parallel and gather normalized results"""
         results = []
 
@@ -454,7 +607,7 @@ class ReferenceService:
             # Run all tasks in parallel with configurable timeout
             completed_results = await asyncio.wait_for(
                 asyncio.gather(*task_coroutines, return_exceptions=True),
-                timeout=search_timeout
+                timeout=search_timeout,
             )
 
             # Pair results back with sources
@@ -477,7 +630,9 @@ class ReferenceService:
 
         return results
 
-    async def _gather_search_results(self, search_tasks: List[tuple], search_timeout: int) -> List[tuple]:
+    async def _gather_search_results(
+        self, search_tasks: List[tuple], search_timeout: int
+    ) -> List[tuple]:
         """Execute search tasks in parallel and gather results"""
         results = []
 
@@ -489,7 +644,7 @@ class ReferenceService:
             # Run all tasks in parallel with configurable timeout
             completed_results = await asyncio.wait_for(
                 asyncio.gather(*task_coroutines, return_exceptions=True),
-                timeout=search_timeout
+                timeout=search_timeout,
             )
 
             # Pair results back with sources
@@ -555,24 +710,30 @@ class ReferenceService:
                 for node1 in nodes1[:1]:  # Take best match from each source
                     for node2 in nodes2[:1]:
                         # Calculate confidence based on title similarity
-                        confidence = self._calculate_title_similarity(node1.title, node2.title)
+                        confidence = self._calculate_title_similarity(
+                            node1.title, node2.title
+                        )
 
-                        if confidence >= 0.8:  # High confidence threshold for cross-references
-                            cross_links.append(SearchLink(
-                                id=f"cross_ref:{node1.source.value}:{node2.source.value}:{hash(node1.id + node2.id)}",
-                                source=SourceType.CONCEPTNET,  # Use ConceptNet as the source for cross-references
-                                subject=node1.id,
-                                predicate="sameAs",
-                                object=node2.id,
-                                weight=confidence,
-                                attributes={
-                                    "link_type": "cross_reference",
-                                    "confidence": confidence,
-                                    "matching_title": normalized_title,
-                                    "source1": node1.source.value,
-                                    "source2": node2.source.value
-                                }
-                            ))
+                        if (
+                            confidence >= 0.8
+                        ):  # High confidence threshold for cross-references
+                            cross_links.append(
+                                SearchLink(
+                                    id=f"cross_ref:{node1.source.value}:{node2.source.value}:{hash(node1.id + node2.id)}",
+                                    source=SourceType.CONCEPTNET,  # Use ConceptNet as the source for cross-references
+                                    subject=node1.id,
+                                    predicate="sameAs",
+                                    object=node2.id,
+                                    weight=confidence,
+                                    attributes={
+                                        "link_type": "cross_reference",
+                                        "confidence": confidence,
+                                        "matching_title": normalized_title,
+                                        "source1": node1.source.value,
+                                        "source2": node2.source.value,
+                                    },
+                                )
+                            )
 
         return cross_links
 
@@ -593,7 +754,8 @@ class ReferenceService:
 
         # Remove parenthetical content that might differ between sources
         import re
-        normalized = re.sub(r'\([^)]*\)', '', normalized).strip()
+
+        normalized = re.sub(r"\([^)]*\)", "", normalized).strip()
 
         return normalized
 
@@ -617,12 +779,17 @@ class ReferenceService:
             return 1.0 if shorter == 0 else 0.0
 
         # Count matching characters
-        matches = sum(1 for i in range(min(len(title1_norm), len(title2_norm)))
-                     if title1_norm[i] == title2_norm[i])
+        matches = sum(
+            1
+            for i in range(min(len(title1_norm), len(title2_norm)))
+            if title1_norm[i] == title2_norm[i]
+        )
 
         return matches / longer
 
-    async def _fetch_conceptnet_external_urls(self, concept_ids: set) -> List[SearchLink]:
+    async def _fetch_conceptnet_external_urls(
+        self, concept_ids: set
+    ) -> List[SearchLink]:
         """
         Fetch external URL relations from ConceptNet for the given concept IDs.
         Creates links to DBpedia, Wikidata, WordNet, and other external knowledge bases.
@@ -639,31 +806,40 @@ class ReferenceService:
                 async with source:
                     # Use the direct ConceptNet API to get external URLs
                     import aiohttp
+
                     url = "https://api.conceptnet.io/query"
-                    params = {
-                        "rel": "/r/ExternalURL",
-                        "start": concept_id,
-                        "limit": 10
-                    }
+                    params = {"rel": "/r/ExternalURL", "start": concept_id, "limit": 10}
 
                     async with aiohttp.ClientSession() as session:
                         async with session.get(url, params=params) as response:
                             if response.status == 200:
                                 data = await response.json()
 
-                                for edge in data.get('edges', []):
-                                    end_url = edge.get('end', {}).get('@id', '')
+                                for edge in data.get("edges", []):
+                                    end_url = edge.get("end", {}).get("@id", "")
 
-                                    if end_url and any(domain in end_url for domain in ['dbpedia.org', 'wikidata.org', 'wordnet']):
+                                    if end_url and any(
+                                        domain in end_url
+                                        for domain in [
+                                            "dbpedia.org",
+                                            "wikidata.org",
+                                            "wordnet",
+                                        ]
+                                    ):
                                         # Determine the target source type
-                                        if 'dbpedia.org' in end_url:
+                                        if "dbpedia.org" in end_url:
                                             target_source = SourceType.DBPEDIA
                                             target_id = f"dbpedia:{end_url}"
-                                        elif 'wikidata.org' in end_url or 'wikidata.dbpedia.org' in end_url:
+                                        elif (
+                                            "wikidata.org" in end_url
+                                            or "wikidata.dbpedia.org" in end_url
+                                        ):
                                             target_source = SourceType.WIKIDATA
                                             # Extract Wikidata Q-ID
-                                            if '/Q' in end_url:
-                                                q_id = end_url.split('/Q')[-1].rstrip('/')
+                                            if "/Q" in end_url:
+                                                q_id = end_url.split("/Q")[-1].rstrip(
+                                                    "/"
+                                                )
                                                 target_id = f"wikidata:http://www.wikidata.org/entity/Q{q_id}"
                                             else:
                                                 target_id = f"wikidata:{end_url}"
@@ -671,20 +847,24 @@ class ReferenceService:
                                             continue  # Skip WordNet and others for now
 
                                         # Create external reference link
-                                        external_links.append(SearchLink(
-                                            id=f"conceptnet_external:{concept_id}:{end_url}",
-                                            source=SourceType.CONCEPTNET,
-                                            subject=f"conceptnet:{concept_id}",
-                                            predicate="externalURL",
-                                            object=target_id,
-                                            weight=1.0,
-                                            attributes={
-                                                "link_type": "external_reference",
-                                                "external_url": end_url,
-                                                "target_source": target_source.value,
-                                                "source_dataset": edge.get('dataset', '')
-                                            }
-                                        ))
+                                        external_links.append(
+                                            SearchLink(
+                                                id=f"conceptnet_external:{concept_id}:{end_url}",
+                                                source=SourceType.CONCEPTNET,
+                                                subject=f"conceptnet:{concept_id}",
+                                                predicate="externalURL",
+                                                object=target_id,
+                                                weight=1.0,
+                                                attributes={
+                                                    "link_type": "external_reference",
+                                                    "external_url": end_url,
+                                                    "target_source": target_source.value,
+                                                    "source_dataset": edge.get(
+                                                        "dataset", ""
+                                                    ),
+                                                },
+                                            )
+                                        )
 
             except Exception as e:
                 logger.warning(f"Error fetching external URLs for {concept_id}: {e}")
@@ -693,9 +873,13 @@ class ReferenceService:
         return external_links
 
     # Keep the old methods for backward compatibility
-    async def _search_single_source(self, source_type: SourceType, query: str, limit: int, offset: int) -> Tuple[List[SearchNode], List[SearchLink]]:
+    async def _search_single_source(
+        self, source_type: SourceType, query: str, limit: int, offset: int
+    ) -> Tuple[List[SearchNode], List[SearchLink]]:
         """Legacy method for backward compatibility - delegates to normalized version"""
-        return await self._search_single_source_normalized(source_type, query, limit, offset)
+        return await self._search_single_source_normalized(
+            source_type, query, limit, offset
+        )
 
     def _discover_cross_references(self, nodes: List[SearchNode]) -> List[SearchLink]:
         """Legacy method for backward compatibility - delegates to aggregator"""
@@ -717,7 +901,7 @@ class ReferenceService:
             "timestamp": datetime.now(UTC),
             "language_config": {
                 "default_language": self.settings.reference_sources.default_language
-            }
+            },
         }
 
         for source_type in SourceType:
@@ -726,24 +910,34 @@ class ReferenceService:
                 try:
                     source = self._get_source(source_type)
                     # Special-case schema_org: use manager status (synchronous) instead of HTTP HEAD
-                    if source_type == SourceType.SCHEMA_ORG and hasattr(source, 'manager'):
+                    if source_type == SourceType.SCHEMA_ORG and hasattr(
+                        source, "manager"
+                    ):
                         # run manager.get_status in threadpool to avoid blocking
                         loop = asyncio.get_event_loop()
-                        status = await loop.run_in_executor(None, source.manager.get_status)
+                        status = await loop.run_in_executor(
+                            None, source.manager.get_status
+                        )
                         # consider healthy if populated or no errors
-                        if status and status.get('is_populated'):
-                            health_status['sources'][source_type.value] = 'healthy'
+                        if status and status.get("is_populated"):
+                            health_status["sources"][source_type.value] = "healthy"
                         else:
-                            health_status['sources'][source_type.value] = f"unhealthy: {status}"
-                            health_status['overall'] = 'degraded'
+                            health_status["sources"][
+                                source_type.value
+                            ] = f"unhealthy: {status}"
+                            health_status["overall"] = "degraded"
                     else:
                         async with source:
                             # For Wikidata, include a User-Agent header to avoid 403 responses
                             headers = {}
                             if source_type == SourceType.WIKIDATA:
-                                headers['User-Agent'] = 'ContextStudio/LocalServer (contact: devnull@example.com)'
+                                headers["User-Agent"] = (
+                                    "ContextStudio/LocalServer (contact: devnull@example.com)"
+                                )
                             # Perform a simple health check request
-                            await source._make_request("HEAD", source._get_base_url(), headers=headers)
+                            await source._make_request(
+                                "HEAD", source._get_base_url(), headers=headers
+                            )
                     health_status["sources"][source_type.value] = "healthy"
                 except Exception as e:
                     health_status["sources"][source_type.value] = f"unhealthy: {str(e)}"
@@ -756,49 +950,75 @@ class ReferenceService:
     def get_enabled_sources(self) -> List[str]:
         """Get list of enabled reference sources"""
         enabled_sources = []
-        sources = ["conceptnet", "dbpedia", "dbpedia_spotlight", "wikidata", "schema_org"]
-        
+        sources = [
+            "conceptnet",
+            "dbpedia",
+            "dbpedia_spotlight",
+            "wikidata",
+            "schema_org",
+        ]
+
         for source_name in sources:
             config = getattr(self.settings.reference_sources, source_name)
             if config.enabled:
                 enabled_sources.append(source_name)
-                
+
         return enabled_sources
-        
+
     async def get_source_status(self) -> Dict[str, Dict[str, Any]]:
         """Get status of all reference sources"""
         status = {}
-        for source_name in ["conceptnet", "dbpedia_lookup", "dbpedia_sparql", "dbpedia_spotlight", "wikidata", "duckduckgo", "schema_org"]:
+        for source_name in [
+            "conceptnet",
+            "dbpedia_lookup",
+            "dbpedia_sparql",
+            "dbpedia_spotlight",
+            "wikidata",
+            "duckduckgo",
+            "schema_org",
+        ]:
             config = getattr(self.settings.reference_sources, source_name)
             status[source_name] = {
                 "enabled": config.enabled,
                 "use_proxy": config.use_proxy,
                 "upstream_url": config.upstream_url,
                 "timeout": config.timeout,
-                "rate_limit": config.rate_limit.requests_per_hour
+                "rate_limit": config.rate_limit.requests_per_hour,
             }
         return status
 
     # Legacy wrapper methods for backward compatibility
-    async def dbpedia_get_resource_legacy(self, request: DBpediaResourceRequest) -> DBpediaResourceResponse:
+    async def dbpedia_get_resource_legacy(
+        self, request: DBpediaResourceRequest
+    ) -> DBpediaResourceResponse:
         """Legacy method that returns original response format"""
         source = self._get_source(SourceType.DBPEDIA)
         async with source:
-            return await source.get_resource_data(request.resource_url, request.format.value)
+            return await source.get_resource_data(
+                request.resource_url, request.format.value
+            )
 
-    async def dbpedia_search_legacy(self, request: DBpediaSearchRequest) -> DBpediaSearchResponse:
+    async def dbpedia_search_legacy(
+        self, request: DBpediaSearchRequest
+    ) -> DBpediaSearchResponse:
         """Legacy method that returns original response format"""
         source = self._get_source(SourceType.DBPEDIA)
         async with source:
-            return await source.search(request.query, request.limit, request.offset, request.format.value)
+            return await source.search(
+                request.query, request.limit, request.offset, request.format.value
+            )
 
-    async def dbpedia_sparql_legacy(self, request: DBpediaSparqlRequest) -> DBpediaSparqlResponse:
+    async def dbpedia_sparql_legacy(
+        self, request: DBpediaSparqlRequest
+    ) -> DBpediaSparqlResponse:
         """Legacy method that returns original response format"""
         source = self._get_source(SourceType.DBPEDIA)
         async with source:
             return await source.sparql_query(request.query, request.format.value)
 
-    async def conceptnet_query_legacy(self, request: ConceptNetQueryRequest) -> ConceptNetQueryResponse:
+    async def conceptnet_query_legacy(
+        self, request: ConceptNetQueryRequest
+    ) -> ConceptNetQueryResponse:
         """Legacy method that returns original response format"""
         source = self._get_source(SourceType.CONCEPTNET)
         async with source:
@@ -811,49 +1031,71 @@ class ReferenceService:
                 offset=request.offset,
             )
 
-    async def conceptnet_get_concept_legacy(self, concept_path: str) -> ConceptNetConceptResponse:
+    async def conceptnet_get_concept_legacy(
+        self, concept_path: str
+    ) -> ConceptNetConceptResponse:
         """Legacy method that returns original response format"""
         source = self._get_source(SourceType.CONCEPTNET)
         async with source:
             return await source.get_concept(concept_path)
 
-    async def conceptnet_get_related_legacy(self, concept_path: str, filter: Optional[str] = None, limit: int = 20) -> ConceptNetRelatedResponse:
+    async def conceptnet_get_related_legacy(
+        self, concept_path: str, filter: Optional[str] = None, limit: int = 20
+    ) -> ConceptNetRelatedResponse:
         """Legacy method that returns original response format"""
         source = self._get_source(SourceType.CONCEPTNET)
         async with source:
             return await source.get_related(concept_path, filter, limit)
 
-    async def wikidata_sparql_legacy(self, request: WikidataSparqlRequest) -> WikidataSparqlResponse:
+    async def wikidata_sparql_legacy(
+        self, request: WikidataSparqlRequest
+    ) -> WikidataSparqlResponse:
         """Legacy method that returns original response format"""
         source = self._get_source(SourceType.WIKIDATA)
         async with source:
             return await source.sparql_query(request.query, request.format.value)
 
-    async def wikidata_get_entity_legacy(self, request: WikidataEntityRequest) -> WikidataEntityResponse:
+    async def wikidata_get_entity_legacy(
+        self, request: WikidataEntityRequest
+    ) -> WikidataEntityResponse:
         """Legacy method that returns original response format"""
         source = self._get_source(SourceType.WIKIDATA)
         async with source:
-            return await source.get_entity_data(request.entity_url, request.properties, request.format.value)
+            return await source.get_entity_data(
+                request.entity_url, request.properties, request.format.value
+            )
 
-    async def wikidata_search_legacy(self, request: WikidataSearchRequest) -> WikidataSearchResponse:
+    async def wikidata_search_legacy(
+        self, request: WikidataSearchRequest
+    ) -> WikidataSearchResponse:
         """Legacy method that returns original response format"""
         source = self._get_source(SourceType.WIKIDATA)
         async with source:
-            return await source.search(request.query, request.limit, request.offset, request.format.value)
+            return await source.search(
+                request.query, request.limit, request.offset, request.format.value
+            )
 
-    async def schema_org_get_entity_legacy(self, request: SchemaOrgEntityRequest) -> SchemaOrgEntityResponse:
+    async def schema_org_get_entity_legacy(
+        self, request: SchemaOrgEntityRequest
+    ) -> SchemaOrgEntityResponse:
         """Legacy method that returns original response format"""
         source = self._get_source(SourceType.SCHEMA_ORG)
         async with source:
-            return await source.get_entity(request.identifier, request.include_inherited, request.include_children)
+            return await source.get_entity(
+                request.identifier, request.include_inherited, request.include_children
+            )
 
-    async def schema_org_get_property_legacy(self, request: SchemaOrgPropertyRequest) -> SchemaOrgPropertyResponse:
+    async def schema_org_get_property_legacy(
+        self, request: SchemaOrgPropertyRequest
+    ) -> SchemaOrgPropertyResponse:
         """Legacy method that returns original response format"""
         source = self._get_source(SourceType.SCHEMA_ORG)
         async with source:
             return await source.get_property(request.identifier, request.include_usage)
 
-    async def schema_org_search_legacy(self, request: SchemaOrgSearchRequest) -> SchemaOrgSearchResponse:
+    async def schema_org_search_legacy(
+        self, request: SchemaOrgSearchRequest
+    ) -> SchemaOrgSearchResponse:
         """Legacy method that returns original response format"""
         source = self._get_source(SourceType.SCHEMA_ORG)
         async with source:

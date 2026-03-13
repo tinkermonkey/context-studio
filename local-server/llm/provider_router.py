@@ -333,7 +333,10 @@ class ProviderRouter:
 
     def get_provider_for_model(self, model_name: str) -> Optional[ProviderType]:
         """Get the provider type for a model"""
-        return cast(Optional[ProviderType], self.models_manager.get_provider_for_model(model_name))
+        return cast(
+            Optional[ProviderType],
+            self.models_manager.get_provider_for_model(model_name),
+        )
 
 
 # Global instance

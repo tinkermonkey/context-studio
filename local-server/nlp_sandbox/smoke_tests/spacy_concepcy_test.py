@@ -5,12 +5,13 @@ Simple test to verify concepCy can be imported and used
 
 import spacy
 
+
 def main():
     print("✅ concepCy imported successfully!")
-    
+
     # Create a new spaCy pipeline
     nlp = spacy.load("en_core_web_sm")
-    
+
     predicates = [
         "RelatedTo",
         "FormOf",
@@ -45,15 +46,17 @@ def main():
         "CausesDesire",
         "MadeOf",
         "ReceivesAction",
-        "ExternalURL"
+        "ExternalURL",
     ]
 
-    nlp.add_pipe("concepcy",
-                 config={
-        "relations_of_interest": predicates,
-        "filter_missing_text": True,
-        "filter_edge_weight": 2,
-    })
+    nlp.add_pipe(
+        "concepcy",
+        config={
+            "relations_of_interest": predicates,
+            "filter_missing_text": True,
+            "filter_edge_weight": 2,
+        },
+    )
 
     doc = nlp("email")
 
@@ -77,12 +80,13 @@ def main():
             print(getattr(doc._, attr))
 
     # dbpedia_raw_result
-    if hasattr(doc._, 'dbpedia_raw_result') and doc._.dbpedia_raw_result:
+    if hasattr(doc._, "dbpedia_raw_result") and doc._.dbpedia_raw_result:
         print(f"DBpedia raw result: {doc._.dbpedia_raw_result}")
-    
+
     # instanceof
-    if hasattr(doc._, 'instanceof') and doc._.instanceof:
+    if hasattr(doc._, "instanceof") and doc._.instanceof:
         print(f"Instanceof: {doc._.instanceof}")
+
 
 if __name__ == "__main__":
     main()

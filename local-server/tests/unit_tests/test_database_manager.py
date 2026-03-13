@@ -70,9 +70,7 @@ class TestDatabaseManager:
         assert strategy == PoolStrategy.STATIC_POOL
 
         # PostgreSQL should use QUEUE_POOL
-        strategy = database_manager.get_pool_strategy(
-            "postgresql://user:pass@host/db"
-        )
+        strategy = database_manager.get_pool_strategy("postgresql://user:pass@host/db")
         assert strategy == PoolStrategy.QUEUE_POOL
 
     def test_get_pool_configuration(self, database_manager):
@@ -113,13 +111,9 @@ class TestDatabaseManager:
         # Cleanup
         engine.dispose()
 
-    def test_create_managed_engine_sqlite_memory(
-        self, database_manager, memory_db_url
-    ):
+    def test_create_managed_engine_sqlite_memory(self, database_manager, memory_db_url):
         """Test optimized engine creation for SQLite in-memory database."""
-        engine = database_manager.create_managed_engine(
-            memory_db_url, "memory_engine"
-        )
+        engine = database_manager.create_managed_engine(memory_db_url, "memory_engine")
 
         assert engine is not None
         assert "memory_engine" in database_manager._engines
@@ -173,9 +167,7 @@ class TestDatabaseManager:
         # Cleanup
         database_manager._engines[engine_id].dispose()
 
-    def test_get_session_auto_create_engine(
-        self, database_manager, test_db_url
-    ):
+    def test_get_session_auto_create_engine(self, database_manager, test_db_url):
         """Test auto-creation of engine when not found."""
         engine_id = "auto_create_test"
 

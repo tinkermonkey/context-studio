@@ -4,8 +4,10 @@ Integration tests for RAG Experiments API endpoints.
 These tests verify end-to-end functionality for managing test paragraphs,
 annotations, and executing parallel pipeline tests with scoring.
 """
+
 import sys
 import os
+
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import pytest  # noqa: E402
@@ -42,21 +44,21 @@ def test_kg_db():
                 node_type=NodeType.TERM,
                 title="Apple Inc.",
                 definition="Technology company",
-                parent_node_id=None
+                parent_node_id=None,
             ),
             StructureNode(
                 id=str(uuid4()),
                 node_type=NodeType.TERM,
                 title="Steve Jobs",
                 definition="Co-founder of Apple",
-                parent_node_id=None
+                parent_node_id=None,
             ),
             StructureNode(
                 id=str(uuid4()),
                 node_type=NodeType.TERM,
                 title="iPhone",
                 definition="Smartphone product",
-                parent_node_id=None
+                parent_node_id=None,
             ),
         ]
 
@@ -106,7 +108,9 @@ def test_client(test_kg_db, test_ops_db):
     mock_model = Mock()
     mock_model.encode.return_value = [[0.1] * 384]  # Mock embedding vector
 
-    with patch('embeddings.generate_embeddings.get_model', return_value=mock_model):  # noqa: E501
+    with patch(
+        "embeddings.generate_embeddings.get_model", return_value=mock_model
+    ):  # noqa: E501
         # Create app with test database sessions
         app = create_app(session_local=kg_session_maker)
 
@@ -137,15 +141,17 @@ class TestParagraphCRUD:
             "/api/rag-experiments/paragraphs",
             json={
                 "text": "Apple is a technology company founded by Steve Jobs.",
-                "notes": "Test paragraph for entity extraction"
-            }
+                "notes": "Test paragraph for entity extraction",
+            },
         )
 
         assert response.status_code == 201
         data = response.json()
 
         assert "id" in data
-        assert data["text"] == "Apple is a technology company founded by Steve Jobs."  # noqa: E501
+        assert (
+            data["text"] == "Apple is a technology company founded by Steve Jobs."
+        )  # noqa: E501
         assert data["notes"] == "Test paragraph for entity extraction"
         assert "created_at" in data
         assert data["annotations"] == []
@@ -154,9 +160,7 @@ class TestParagraphCRUD:
         """Test creating a paragraph without optional notes."""
         response = test_client.post(
             "/api/rag-experiments/paragraphs",
-            json={
-                "text": "iPhone is a popular smartphone product."
-            }
+            json={"text": "iPhone is a popular smartphone product."},
         )
 
         assert response.status_code == 201
@@ -167,11 +171,7 @@ class TestParagraphCRUD:
     def test_create_paragraph_empty_text(self, test_client):
         """Test creating a paragraph with empty text fails validation."""
         response = test_client.post(
-            "/api/rag-experiments/paragraphs",
-            json={
-                "text": "",
-                "notes": "Empty text"
-            }
+            "/api/rag-experiments/paragraphs", json={"text": "", "notes": "Empty text"}
         )
 
         assert response.status_code == 422  # Validation error
@@ -192,13 +192,11 @@ class TestParagraphCRUD:
         """Test listing paragraphs after creating some."""
         # Create test paragraphs
         paragraph_1 = test_client.post(
-            "/api/rag-experiments/paragraphs",
-            json={"text": "First test paragraph."}
+            "/api/rag-experiments/paragraphs", json={"text": "First test paragraph."}
         ).json()
 
         paragraph_2 = test_client.post(
-            "/api/rag-experiments/paragraphs",
-            json={"text": "Second test paragraph."}
+            "/api/rag-experiments/paragraphs", json={"text": "Second test paragraph."}
         ).json()
 
         # List paragraphs
@@ -219,8 +217,7 @@ class TestParagraphCRUD:
         # Create 5 test paragraphs
         for i in range(5):
             test_client.post(
-                "/api/rag-experiments/paragraphs",
-                json={"text": f"Test paragraph {i}"}
+                "/api/rag-experiments/paragraphs", json={"text": f"Test paragraph {i}"}
             )
 
         # Test limit
@@ -238,7 +235,9 @@ class TestParagraphCRUD:
         assert data["total_count"] == 5
 
         # Test limit + offset
-        response = test_client.get("/api/rag-experiments/paragraphs?limit=2&offset=2")  # noqa: E501
+        response = test_client.get(
+            "/api/rag-experiments/paragraphs?limit=2&offset=2"
+        )  # noqa: E501
         assert response.status_code == 200
         data = response.json()
         assert len(data["paragraphs"]) == 2
@@ -249,12 +248,14 @@ class TestParagraphCRUD:
         # Create paragraph
         create_response = test_client.post(
             "/api/rag-experiments/paragraphs",
-            json={"text": "Test paragraph for retrieval."}
+            json={"text": "Test paragraph for retrieval."},
         )
         paragraph_id = create_response.json()["id"]
 
         # Get paragraph
-        response = test_client.get(f"/api/rag-experiments/paragraphs/{paragraph_id}")  # noqa: E501
+        response = test_client.get(
+            f"/api/rag-experiments/paragraphs/{paragraph_id}"
+        )  # noqa: E501
 
         assert response.status_code == 200
         data = response.json()
@@ -264,7 +265,9 @@ class TestParagraphCRUD:
     def test_get_paragraph_not_found(self, test_client):
         """Test getting a non-existent paragraph returns 404."""
         fake_id = str(uuid4())
-        response = test_client.get(f"/api/rag-experiments/paragraphs/{fake_id}")  # noqa: E501
+        response = test_client.get(
+            f"/api/rag-experiments/paragraphs/{fake_id}"
+        )  # noqa: E501
 
         assert response.status_code == 404
         assert "not found" in response.json()["detail"].lower()
@@ -273,15 +276,14 @@ class TestParagraphCRUD:
         """Test PUT /api/rag-experiments/paragraphs/{id} to update text."""
         # Create paragraph
         create_response = test_client.post(
-            "/api/rag-experiments/paragraphs",
-            json={"text": "Original text."}
+            "/api/rag-experiments/paragraphs", json={"text": "Original text."}
         )
         paragraph_id = create_response.json()["id"]
 
         # Update text
         response = test_client.put(
             f"/api/rag-experiments/paragraphs/{paragraph_id}",
-            json={"text": "Updated text."}
+            json={"text": "Updated text."},
         )
 
         assert response.status_code == 200
@@ -291,14 +293,13 @@ class TestParagraphCRUD:
     def test_update_paragraph_notes(self, test_client):
         """Test updating only the notes field."""
         create_response = test_client.post(
-            "/api/rag-experiments/paragraphs",
-            json={"text": "Test text."}
+            "/api/rag-experiments/paragraphs", json={"text": "Test text."}
         )
         paragraph_id = create_response.json()["id"]
 
         response = test_client.put(
             f"/api/rag-experiments/paragraphs/{paragraph_id}",
-            json={"notes": "New notes"}
+            json={"notes": "New notes"},
         )
 
         assert response.status_code == 200
@@ -307,14 +308,12 @@ class TestParagraphCRUD:
     def test_update_paragraph_no_fields(self, test_client):
         """Test updating with no fields fails."""
         create_response = test_client.post(
-            "/api/rag-experiments/paragraphs",
-            json={"text": "Test text."}
+            "/api/rag-experiments/paragraphs", json={"text": "Test text."}
         )
         paragraph_id = create_response.json()["id"]
 
         response = test_client.put(
-            f"/api/rag-experiments/paragraphs/{paragraph_id}",
-            json={}
+            f"/api/rag-experiments/paragraphs/{paragraph_id}", json={}
         )
 
         assert response.status_code == 400
@@ -324,23 +323,28 @@ class TestParagraphCRUD:
         """Test DELETE /api/rag-experiments/paragraphs/{id}."""
         # Create paragraph
         create_response = test_client.post(
-            "/api/rag-experiments/paragraphs",
-            json={"text": "To be deleted."}
+            "/api/rag-experiments/paragraphs", json={"text": "To be deleted."}
         )
         paragraph_id = create_response.json()["id"]
 
         # Delete paragraph
-        response = test_client.delete(f"/api/rag-experiments/paragraphs/{paragraph_id}")  # noqa: E501
+        response = test_client.delete(
+            f"/api/rag-experiments/paragraphs/{paragraph_id}"
+        )  # noqa: E501
         assert response.status_code == 204
 
         # Verify deleted
-        get_response = test_client.get(f"/api/rag-experiments/paragraphs/{paragraph_id}")  # noqa: E501
+        get_response = test_client.get(
+            f"/api/rag-experiments/paragraphs/{paragraph_id}"
+        )  # noqa: E501
         assert get_response.status_code == 404
 
     def test_delete_paragraph_not_found(self, test_client):
         """Test deleting a non-existent paragraph returns 404."""
         fake_id = str(uuid4())
-        response = test_client.delete(f"/api/rag-experiments/paragraphs/{fake_id}")  # noqa: E501
+        response = test_client.delete(
+            f"/api/rag-experiments/paragraphs/{fake_id}"
+        )  # noqa: E501
 
         assert response.status_code == 404
 
@@ -353,7 +357,7 @@ class TestAnnotationCRUD:
         # Create paragraph
         paragraph_response = test_client.post(
             "/api/rag-experiments/paragraphs",
-            json={"text": "Apple is a technology company."}
+            json={"text": "Apple is a technology company."},
         )
         paragraph_id = paragraph_response.json()["id"]
 
@@ -366,8 +370,8 @@ class TestAnnotationCRUD:
             json={
                 "start_char": 0,
                 "end_char": 5,
-                "structure_node_id": structure_node_id
-            }
+                "structure_node_id": structure_node_id,
+            },
         )
 
         assert response.status_code == 201
@@ -383,8 +387,7 @@ class TestAnnotationCRUD:
     def test_create_annotation_invalid_structure_node(self, test_client):
         """Test creating annotation with non-existent structure_node_id fails."""  # noqa: E501
         paragraph_response = test_client.post(
-            "/api/rag-experiments/paragraphs",
-            json={"text": "Test text."}
+            "/api/rag-experiments/paragraphs", json={"text": "Test text."}
         )
         paragraph_id = paragraph_response.json()["id"]
 
@@ -392,11 +395,7 @@ class TestAnnotationCRUD:
 
         response = test_client.post(
             f"/api/rag-experiments/paragraphs/{paragraph_id}/annotations",
-            json={
-                "start_char": 0,
-                "end_char": 4,
-                "structure_node_id": fake_node_id
-            }
+            json={"start_char": 0, "end_char": 4, "structure_node_id": fake_node_id},
         )
 
         assert response.status_code == 400
@@ -405,8 +404,7 @@ class TestAnnotationCRUD:
     def test_create_annotation_invalid_char_positions(self, test_client):
         """Test creating annotation with invalid character positions fails."""
         paragraph_response = test_client.post(
-            "/api/rag-experiments/paragraphs",
-            json={"text": "Short text."}
+            "/api/rag-experiments/paragraphs", json={"text": "Short text."}
         )
         paragraph_id = paragraph_response.json()["id"]
         structure_node_id = test_client.node_ids[0]
@@ -417,8 +415,8 @@ class TestAnnotationCRUD:
             json={
                 "start_char": 0,
                 "end_char": 1000,
-                "structure_node_id": structure_node_id
-            }
+                "structure_node_id": structure_node_id,
+            },
         )
 
         assert response.status_code == 400
@@ -426,8 +424,7 @@ class TestAnnotationCRUD:
     def test_create_annotation_end_before_start(self, test_client):
         """Test that end_char must be after start_char."""
         paragraph_response = test_client.post(
-            "/api/rag-experiments/paragraphs",
-            json={"text": "Test text."}
+            "/api/rag-experiments/paragraphs", json={"text": "Test text."}
         )
         paragraph_id = paragraph_response.json()["id"]
         structure_node_id = test_client.node_ids[0]
@@ -437,8 +434,8 @@ class TestAnnotationCRUD:
             json={
                 "start_char": 5,
                 "end_char": 2,  # Before start
-                "structure_node_id": structure_node_id
-            }
+                "structure_node_id": structure_node_id,
+            },
         )
 
         assert response.status_code == 422  # Validation error
@@ -453,8 +450,8 @@ class TestAnnotationCRUD:
             json={
                 "start_char": 0,
                 "end_char": 5,
-                "structure_node_id": structure_node_id
-            }
+                "structure_node_id": structure_node_id,
+            },
         )
 
         assert response.status_code == 404
@@ -464,7 +461,7 @@ class TestAnnotationCRUD:
         # Create paragraph
         paragraph_response = test_client.post(
             "/api/rag-experiments/paragraphs",
-            json={"text": "Apple and iPhone are products."}
+            json={"text": "Apple and iPhone are products."},
         )
         paragraph_id = paragraph_response.json()["id"]
 
@@ -474,8 +471,8 @@ class TestAnnotationCRUD:
             json={
                 "start_char": 0,
                 "end_char": 5,
-                "structure_node_id": test_client.node_ids[0]
-            }
+                "structure_node_id": test_client.node_ids[0],
+            },
         )
 
         test_client.post(
@@ -483,8 +480,8 @@ class TestAnnotationCRUD:
             json={
                 "start_char": 10,
                 "end_char": 16,
-                "structure_node_id": test_client.node_ids[2]
-            }
+                "structure_node_id": test_client.node_ids[2],
+            },
         )
 
         # List paragraphs
@@ -499,8 +496,7 @@ class TestAnnotationCRUD:
         """Test DELETE /api/rag-experiments/annotations/{id}."""
         # Create paragraph with annotation
         paragraph_response = test_client.post(
-            "/api/rag-experiments/paragraphs",
-            json={"text": "Test text for deletion."}
+            "/api/rag-experiments/paragraphs", json={"text": "Test text for deletion."}
         )
         paragraph_id = paragraph_response.json()["id"]
 
@@ -509,36 +505,42 @@ class TestAnnotationCRUD:
             json={
                 "start_char": 0,
                 "end_char": 4,
-                "structure_node_id": test_client.node_ids[0]
-            }
+                "structure_node_id": test_client.node_ids[0],
+            },
         )
         annotation_id = annotation_response.json()["id"]
 
         # Delete annotation
-        response = test_client.delete(f"/api/rag-experiments/annotations/{annotation_id}")  # noqa: E501
+        response = test_client.delete(
+            f"/api/rag-experiments/annotations/{annotation_id}"
+        )  # noqa: E501
         assert response.status_code == 204
 
         # Verify annotation deleted
-        paragraph = test_client.get(f"/api/rag-experiments/paragraphs/{paragraph_id}").json()  # noqa: E501
+        paragraph = test_client.get(
+            f"/api/rag-experiments/paragraphs/{paragraph_id}"
+        ).json()  # noqa: E501
         assert len(paragraph["annotations"]) == 0
 
     def test_delete_annotation_not_found(self, test_client):
         """Test deleting non-existent annotation returns 404."""
         fake_id = str(uuid4())
-        response = test_client.delete(f"/api/rag-experiments/annotations/{fake_id}")  # noqa: E501
+        response = test_client.delete(
+            f"/api/rag-experiments/annotations/{fake_id}"
+        )  # noqa: E501
         assert response.status_code == 404
 
 
 class TestPipelineExecution:
     """Integration tests for pipeline execution and scoring."""
 
-    @patch('rag.test_service.RAGTestManagementService.run_pipeline_test')
+    @patch("rag.test_service.RAGTestManagementService.run_pipeline_test")
     def test_run_pipeline_test_success(self, mock_run, test_client):
         """Test POST /api/rag-experiments/run executes pipelines."""
         # Create paragraph with annotation
         paragraph_response = test_client.post(
             "/api/rag-experiments/paragraphs",
-            json={"text": "Apple is a technology company."}
+            json={"text": "Apple is a technology company."},
         )
         paragraph_id = paragraph_response.json()["id"]
 
@@ -547,8 +549,8 @@ class TestPipelineExecution:
             json={
                 "start_char": 0,
                 "end_char": 5,
-                "structure_node_id": test_client.node_ids[0]
-            }
+                "structure_node_id": test_client.node_ids[0],
+            },
         )
 
         # Mock pipeline results (async)
@@ -566,16 +568,18 @@ class TestPipelineExecution:
                         "f1_score": 0.87,
                         "true_positives": 1,
                         "false_positives": 0,
-                        "false_negatives": 0
+                        "false_negatives": 0,
                     },
-                    "executed_at": "2025-01-15T10:00:00Z"
+                    "executed_at": "2025-01-15T10:00:00Z",
                 }
             ]
 
         mock_run.return_value = asyncio.run(mock_async_result())
 
         # Mock the pipeline registry validation
-        with patch('rag.pipeline_registry.get_pipeline_registry') as mock_get_registry:  # noqa: E501
+        with patch(
+            "rag.pipeline_registry.get_pipeline_registry"
+        ) as mock_get_registry:  # noqa: E501
             mock_registry = Mock()
             mock_registry.list_pipelines.return_value = ["StandardRAGPipeline"]
             mock_get_registry.return_value = mock_registry
@@ -587,8 +591,8 @@ class TestPipelineExecution:
                     "paragraph_ids": [paragraph_id],
                     "pipeline_names": ["StandardRAGPipeline"],
                     "enable_trace": False,
-                    "enable_llm_layer": True
-                }
+                    "enable_llm_layer": True,
+                },
             )
 
         assert response.status_code == 200
@@ -607,13 +611,14 @@ class TestPipelineExecution:
     def test_run_pipeline_test_invalid_pipeline(self, test_client):
         """Test running with invalid pipeline name fails validation."""
         paragraph_response = test_client.post(
-            "/api/rag-experiments/paragraphs",
-            json={"text": "Test text."}
+            "/api/rag-experiments/paragraphs", json={"text": "Test text."}
         )
         paragraph_id = paragraph_response.json()["id"]
 
         # Mock the pipeline registry validation to return empty list
-        with patch('rag.pipeline_registry.get_pipeline_registry') as mock_get_registry:  # noqa: E501
+        with patch(
+            "rag.pipeline_registry.get_pipeline_registry"
+        ) as mock_get_registry:  # noqa: E501
             mock_registry = Mock()
             mock_registry.list_pipelines.return_value = []
             mock_get_registry.return_value = mock_registry
@@ -624,8 +629,8 @@ class TestPipelineExecution:
                     "paragraph_ids": [paragraph_id],
                     "pipeline_names": ["NonExistentPipeline"],
                     "enable_trace": False,
-                    "enable_llm_layer": True
-                }
+                    "enable_llm_layer": True,
+                },
             )
 
         assert response.status_code == 422  # Validation error
@@ -638,8 +643,7 @@ class TestResultsQuery:
     def test_get_pipeline_comparison_empty(self, test_client):
         """Test GET /api/rag-experiments/results/paragraphs/{id} with no runs."""  # noqa: E501
         paragraph_response = test_client.post(
-            "/api/rag-experiments/paragraphs",
-            json={"text": "Test paragraph."}
+            "/api/rag-experiments/paragraphs", json={"text": "Test paragraph."}
         )
         paragraph_id = paragraph_response.json()["id"]
 
@@ -658,18 +662,14 @@ class TestResultsQuery:
     def test_get_pipeline_comparison_not_found(self, test_client):
         """Test comparison for non-existent paragraph returns 404."""
         fake_id = str(uuid4())
-        response = test_client.get(
-            f"/api/rag-experiments/results/paragraphs/{fake_id}"
-        )
+        response = test_client.get(f"/api/rag-experiments/results/paragraphs/{fake_id}")
 
         assert response.status_code == 404
 
     def test_get_pipeline_run_details_not_found(self, test_client):
         """Test GET /api/rag-experiments/results/runs/{id} for non-existent run."""  # noqa: E501
         fake_run_id = str(uuid4())
-        response = test_client.get(
-            f"/api/rag-experiments/results/runs/{fake_run_id}"
-        )
+        response = test_client.get(f"/api/rag-experiments/results/runs/{fake_run_id}")
 
         assert response.status_code == 404
 
@@ -681,8 +681,7 @@ class TestCascadeDelete:
         """Test that deleting a paragraph deletes its annotations."""
         # Create paragraph with annotations
         paragraph_response = test_client.post(
-            "/api/rag-experiments/paragraphs",
-            json={"text": "Apple iPhone test."}
+            "/api/rag-experiments/paragraphs", json={"text": "Apple iPhone test."}
         )
         paragraph_id = paragraph_response.json()["id"]
 
@@ -691,8 +690,8 @@ class TestCascadeDelete:
             json={
                 "start_char": 0,
                 "end_char": 5,
-                "structure_node_id": test_client.node_ids[0]
-            }
+                "structure_node_id": test_client.node_ids[0],
+            },
         )
         annotation_id = annotation_response.json()["id"]
 

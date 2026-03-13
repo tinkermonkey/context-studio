@@ -7,6 +7,7 @@ including edge cases like no matches, partial overlaps, and multiple entities.
 
 import sys
 import os
+
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import pytest  # noqa: E402
@@ -71,7 +72,9 @@ class TestRAGScoringService:
 
     def test_perfect_precision(self, scoring_service):
         """Test precision with no false positives."""
-        precision = scoring_service._calculate_precision(true_positives=10, false_positives=0)
+        precision = scoring_service._calculate_precision(
+            true_positives=10, false_positives=0
+        )
         assert precision == 1.0
 
     def test_perfect_recall(self, scoring_service):
@@ -81,7 +84,9 @@ class TestRAGScoringService:
 
     def test_zero_precision(self, scoring_service):
         """Test precision when there are no true positives."""
-        precision = scoring_service._calculate_precision(true_positives=0, false_positives=10)
+        precision = scoring_service._calculate_precision(
+            true_positives=0, false_positives=10
+        )
         assert precision == 0.0
 
     def test_zero_recall(self, scoring_service):
@@ -122,10 +127,7 @@ class TestRAGScoringService:
                 confidence=0.95,
                 source_layer="llm",
                 sentence_index=0,
-                metadata={
-                    "char_range": [0, 6],
-                    "matched_kg_node": "node_123"
-                }
+                metadata={"char_range": [0, 6], "matched_kg_node": "node_123"},
             ),
             ExtractedEntity(
                 text="programming",
@@ -133,10 +135,8 @@ class TestRAGScoringService:
                 confidence=0.85,
                 source_layer="kg",
                 sentence_index=0,
-                metadata={
-                    "char_range": [7, 18]
-                }
-            )
+                metadata={"char_range": [7, 18]},
+            ),
         ]
 
         spans = scoring_service._entities_to_spans(entities)
@@ -163,16 +163,13 @@ class TestRAGScoringService:
                 confidence=0.95,
                 source_layer="llm",
                 sentence_index=0,
-                metadata={"char_range": [0, 6], "matched_kg_node": "node_python"}
+                metadata={"char_range": [0, 6], "matched_kg_node": "node_python"},
             )
         ]
 
         ground_truth = [
             AnnotationSpan(
-                start_char=0,
-                end_char=6,
-                structure_node_id="node_python",
-                text="Python"
+                start_char=0, end_char=6, structure_node_id="node_python", text="Python"
             )
         ]
 
@@ -195,17 +192,14 @@ class TestRAGScoringService:
 
         ground_truth = [
             AnnotationSpan(
-                start_char=0,
-                end_char=6,
-                structure_node_id="node_python",
-                text="Python"
+                start_char=0, end_char=6, structure_node_id="node_python", text="Python"
             ),
             AnnotationSpan(
                 start_char=12,
                 end_char=23,
                 structure_node_id="node_programming",
-                text="programming"
-            )
+                text="programming",
+            ),
         ]
 
         result = scoring_service.score_extraction(
@@ -230,7 +224,7 @@ class TestRAGScoringService:
                 confidence=0.95,
                 source_layer="llm",
                 sentence_index=0,
-                metadata={"char_range": [0, 6]}
+                metadata={"char_range": [0, 6]},
             ),
             ExtractedEntity(
                 text="programming",
@@ -238,8 +232,8 @@ class TestRAGScoringService:
                 confidence=0.85,
                 source_layer="kg",
                 sentence_index=0,
-                metadata={"char_range": [12, 23]}
-            )
+                metadata={"char_range": [12, 23]},
+            ),
         ]
 
         ground_truth = []
@@ -267,16 +261,13 @@ class TestRAGScoringService:
                 confidence=0.95,
                 source_layer="llm",
                 sentence_index=0,
-                metadata={"char_range": [0, 7], "matched_kg_node": "node_python"}
+                metadata={"char_range": [0, 7], "matched_kg_node": "node_python"},
             )
         ]
 
         ground_truth = [
             AnnotationSpan(
-                start_char=0,
-                end_char=6,
-                structure_node_id="node_python",
-                text="Python"
+                start_char=0, end_char=6, structure_node_id="node_python", text="Python"
             )
         ]
 
@@ -302,16 +293,13 @@ class TestRAGScoringService:
                 confidence=0.95,
                 source_layer="llm",
                 sentence_index=0,
-                metadata={"char_range": [0, 7], "matched_kg_node": "node_python"}
+                metadata={"char_range": [0, 7], "matched_kg_node": "node_python"},
             )
         ]
 
         ground_truth = [
             AnnotationSpan(
-                start_char=0,
-                end_char=6,
-                structure_node_id="node_python",
-                text="Python"
+                start_char=0, end_char=6, structure_node_id="node_python", text="Python"
             )
         ]
 
@@ -336,7 +324,7 @@ class TestRAGScoringService:
                 confidence=0.95,
                 source_layer="llm",
                 sentence_index=0,
-                metadata={"char_range": [0, 6], "matched_kg_node": "node_python"}
+                metadata={"char_range": [0, 6], "matched_kg_node": "node_python"},
             ),
             # False positive - not in ground truth
             ExtractedEntity(
@@ -345,24 +333,18 @@ class TestRAGScoringService:
                 confidence=0.70,
                 source_layer="nlp",
                 sentence_index=0,
-                metadata={"char_range": [24, 32]}
-            )
+                metadata={"char_range": [24, 32]},
+            ),
             # Missing: "Guido" (false negative)
         ]
 
         ground_truth = [
             AnnotationSpan(
-                start_char=0,
-                end_char=6,
-                structure_node_id="node_python",
-                text="Python"
+                start_char=0, end_char=6, structure_node_id="node_python", text="Python"
             ),
             AnnotationSpan(
-                start_char=47,
-                end_char=52,
-                structure_node_id="node_guido",
-                text="Guido"
-            )
+                start_char=47, end_char=52, structure_node_id="node_guido", text="Guido"
+            ),
         ]
 
         result = scoring_service.score_extraction(
@@ -387,16 +369,13 @@ class TestRAGScoringService:
                 confidence=0.95,
                 source_layer="llm",
                 sentence_index=0,
-                metadata={"char_range": [0, 6], "matched_kg_node": "node_wrong"}
+                metadata={"char_range": [0, 6], "matched_kg_node": "node_wrong"},
             )
         ]
 
         ground_truth = [
             AnnotationSpan(
-                start_char=0,
-                end_char=6,
-                structure_node_id="node_python",
-                text="Python"
+                start_char=0, end_char=6, structure_node_id="node_python", text="Python"
             )
         ]
 
@@ -420,16 +399,13 @@ class TestRAGScoringService:
                 confidence=0.95,
                 source_layer="llm",
                 sentence_index=0,
-                metadata={"char_range": [0, 6]}  # No matched_kg_node
+                metadata={"char_range": [0, 6]},  # No matched_kg_node
             )
         ]
 
         ground_truth = [
             AnnotationSpan(
-                start_char=0,
-                end_char=6,
-                structure_node_id="node_python",
-                text="Python"
+                start_char=0, end_char=6, structure_node_id="node_python", text="Python"
             )
         ]
 
@@ -453,16 +429,13 @@ class TestRAGScoringService:
                 confidence=0.95,
                 source_layer="llm",
                 sentence_index=0,
-                metadata={"char_range": [0, 6], "matched_kg_node": "node_python"}
+                metadata={"char_range": [0, 6], "matched_kg_node": "node_python"},
             )
         ]
 
         ground_truth = [
             AnnotationSpan(
-                start_char=0,
-                end_char=6,
-                structure_node_id="node_python",
-                text="Python"
+                start_char=0, end_char=6, structure_node_id="node_python", text="Python"
             )
         ]
 
@@ -493,7 +466,7 @@ class TestRAGScoringService:
                 confidence=0.95,
                 source_layer="llm",
                 sentence_index=0,
-                metadata={"char_range": [0, 6], "matched_kg_node": "node_python"}
+                metadata={"char_range": [0, 6], "matched_kg_node": "node_python"},
             ),
             ExtractedEntity(
                 text="Java",
@@ -501,23 +474,20 @@ class TestRAGScoringService:
                 confidence=0.90,
                 source_layer="llm",
                 sentence_index=0,
-                metadata={"char_range": [100, 104]}  # False positive
-            )
+                metadata={"char_range": [100, 104]},  # False positive
+            ),
         ]
 
         ground_truth = [
             AnnotationSpan(
-                start_char=0,
-                end_char=6,
-                structure_node_id="node_python",
-                text="Python"
+                start_char=0, end_char=6, structure_node_id="node_python", text="Python"
             ),
             AnnotationSpan(
                 start_char=12,
                 end_char=23,
                 structure_node_id="node_programming",
-                text="programming"
-            )
+                text="programming",
+            ),
         ]
 
         result = scoring_service.score_extraction(

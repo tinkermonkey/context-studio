@@ -1,6 +1,7 @@
 # mypy: ignore-errors
 from nltk.corpus import wordnet
-synsets = wordnet.synsets('truck')
+
+synsets = wordnet.synsets("truck")
 
 for synset in synsets:
     print(f"Synset: {synset.name()}")

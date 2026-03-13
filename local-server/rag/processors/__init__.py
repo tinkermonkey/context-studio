@@ -7,6 +7,7 @@ This module implements the four-layer RAG processing pipeline:
 - Layer 2: spaCy Gap Detection
 - Layer 3: Concept Resolution
 """
+
 from rag.processors.kg_context import KGContextProcessor
 from rag.processors.llm_extraction import LLMExtractionProcessor
 from rag.processors.spacy_gap import SpaCyGapProcessor
@@ -21,22 +22,22 @@ from rag.processors.models import (
     ExtractedPhrase,
     ExtractedEntity,
     GapConcept,
-    ResolvedConcept
+    ResolvedConcept,
 )
 
 __all__ = [
-    'KGContextProcessor',
-    'LLMExtractionProcessor',
-    'SpaCyGapProcessor',
-    'ConceptResolutionProcessor',
-    'ProcessorInput',
-    'ProcessorOutput',
-    'KGContextOutput',
-    'LLMExtractionOutput',
-    'SpaCyGapOutput',
-    'ConceptResolutionOutput',
-    'ExtractedPhrase',
-    'ExtractedEntity',
-    'GapConcept',
-    'ResolvedConcept'
+    "KGContextProcessor",
+    "LLMExtractionProcessor",
+    "SpaCyGapProcessor",
+    "ConceptResolutionProcessor",
+    "ProcessorInput",
+    "ProcessorOutput",
+    "KGContextOutput",
+    "LLMExtractionOutput",
+    "SpaCyGapOutput",
+    "ConceptResolutionOutput",
+    "ExtractedPhrase",
+    "ExtractedEntity",
+    "GapConcept",
+    "ResolvedConcept",
 ]

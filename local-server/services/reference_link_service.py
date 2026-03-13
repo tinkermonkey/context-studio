@@ -195,11 +195,11 @@ class ReferenceLinkService:
                 except Exception as e:
                     # Extract validation details if possible
                     error_msg = str(e)
-                    if hasattr(e, 'errors'):
+                    if hasattr(e, "errors"):
                         # Pydantic ValidationError - extract field names
                         missing_fields = []
                         for error in e.errors():
-                            missing_fields.append(error.get('loc', ['unknown'])[0])
+                            missing_fields.append(error.get("loc", ["unknown"])[0])
                         error_msg = f"Missing/invalid fields: {', '.join(map(str, missing_fields))}"
 
                     logger.warning(
@@ -287,18 +287,22 @@ class ReferenceLinkService:
         # SQL injection safe: Uses parameterized query with .params() - values are not interpolated
         from sqlalchemy import text
 
-        query = self.db.query(StructureNode).filter(
-            StructureNode.reference_links.isnot(None),
-            StructureNode.reference_links != "",
-            StructureNode.reference_links != "[]",
-            text(
-                "EXISTS ("
-                "  SELECT 1 FROM json_each(reference_links) "
-                "  WHERE json_extract(value, '$.source') = :source "
-                "  AND json_extract(value, '$.external_id') = :external_id"
-                ")"
+        query = (
+            self.db.query(StructureNode)
+            .filter(
+                StructureNode.reference_links.isnot(None),
+                StructureNode.reference_links != "",
+                StructureNode.reference_links != "[]",
+                text(
+                    "EXISTS ("
+                    "  SELECT 1 FROM json_each(reference_links) "
+                    "  WHERE json_extract(value, '$.source') = :source "
+                    "  AND json_extract(value, '$.external_id') = :external_id"
+                    ")"
+                ),
             )
-        ).params(source=source, external_id=external_id)
+            .params(source=source, external_id=external_id)
+        )
 
         if limit:
             query = query.limit(limit)
@@ -312,7 +316,9 @@ class ReferenceLinkService:
 
         return matching_nodes
 
-    def _parse_reference_links_json(self, node_id: str, reference_links_json: str) -> List[dict]:
+    def _parse_reference_links_json(
+        self, node_id: str, reference_links_json: str
+    ) -> List[dict]:
         """
         Parse reference links JSON string into list of dictionaries.
 
@@ -366,22 +372,28 @@ class ReferenceLinkService:
                         return (True, None)
                     else:
                         # Orphaned link
-                        return (False, {
-                            "source": link.source,
-                            "external_id": link.external_id,
-                            "reason": "Reference not found in reference.db"
-                        })
+                        return (
+                            False,
+                            {
+                                "source": link.source,
+                                "external_id": link.external_id,
+                                "reason": "Reference not found in reference.db",
+                            },
+                        )
 
                 except Exception as e:
                     # Error checking reference.db (e.g., database unavailable)
                     logger.warning(
                         f"Error validating reference link for node {node_id}: {e}"
                     )
-                    return (False, {
-                        "source": link.source,
-                        "external_id": link.external_id,
-                        "reason": f"Validation error: {str(e)}"
-                    })
+                    return (
+                        False,
+                        {
+                            "source": link.source,
+                            "external_id": link.external_id,
+                            "reason": f"Validation error: {str(e)}",
+                        },
+                    )
             else:
                 # Just count as valid if we're not checking existence
                 return (True, None)
@@ -389,22 +401,21 @@ class ReferenceLinkService:
         except Exception as e:
             # Malformed link data - extract validation details if possible
             error_msg = str(e)
-            if hasattr(e, 'errors'):
+            if hasattr(e, "errors"):
                 # Pydantic ValidationError - extract field names
                 missing_fields = []
                 for error in e.errors():
-                    missing_fields.append(error.get('loc', ['unknown'])[0])
-                error_msg = f"Missing/invalid fields: {', '.join(map(str, missing_fields))}"
+                    missing_fields.append(error.get("loc", ["unknown"])[0])
+                error_msg = (
+                    f"Missing/invalid fields: {', '.join(map(str, missing_fields))}"
+                )
 
             logger.warning(
                 f"Failed to parse reference link for node {node_id}: {error_msg}. "
                 f"ReferenceLink requires 'source' and 'external_id' fields. "
                 f"Invalid data: {link_dict}"
             )
-            return (False, {
-                "data": link_dict,
-                "reason": f"Parse error: {error_msg}"
-            })
+            return (False, {"data": link_dict, "reason": f"Parse error: {error_msg}"})
 
     def validate_node_reference_links(
         self, node_id: str, check_existence: bool = True
@@ -436,7 +447,7 @@ class ReferenceLinkService:
             "total_links": 0,
             "valid_links": 0,
             "orphaned_links": [],
-            "malformed_links": []
+            "malformed_links": [],
         }
 
         # Get the node
@@ -454,7 +465,9 @@ class ReferenceLinkService:
         try:
             links_data = self._parse_reference_links_json(node_id, node.reference_links)
         except json.JSONDecodeError as e:
-            logger.error(f"Failed to parse reference_links JSON for node {node_id}: {e}")
+            logger.error(
+                f"Failed to parse reference_links JSON for node {node_id}: {e}"
+            )
             result["error"] = f"JSON decode error: {str(e)}"
             return result
         except ValueError as e:
@@ -462,7 +475,9 @@ class ReferenceLinkService:
             result["error"] = str(e)
             return result
         except Exception as e:
-            logger.error(f"Unexpected error parsing reference links for node {node_id}: {e}")
+            logger.error(
+                f"Unexpected error parsing reference links for node {node_id}: {e}"
+            )
             result["error"] = f"Unexpected error: {str(e)}"
             return result
 
@@ -470,7 +485,9 @@ class ReferenceLinkService:
 
         # Validate each link
         for link_dict in links_data:
-            is_valid, error_entry = self._validate_single_link(link_dict, node_id, check_existence)
+            is_valid, error_entry = self._validate_single_link(
+                link_dict, node_id, check_existence
+            )
 
             if is_valid:
                 result["valid_links"] += 1
@@ -491,7 +508,10 @@ class ReferenceLinkService:
         return result
 
     def validate_all_reference_links(
-        self, check_existence: bool = True, limit: Optional[int] = None, batch_size: int = 100
+        self,
+        check_existence: bool = True,
+        limit: Optional[int] = None,
+        batch_size: int = 100,
     ) -> dict:
         """
         Validate reference links across all structure nodes.
@@ -517,7 +537,9 @@ class ReferenceLinkService:
                 "reference_db_available": bool
             }
         """
-        logger.info(f"Starting bulk validation of reference links (limit={limit}, batch_size={batch_size})")
+        logger.info(
+            f"Starting bulk validation of reference links (limit={limit}, batch_size={batch_size})"
+        )
 
         result = {
             "total_nodes_checked": 0,
@@ -527,7 +549,7 @@ class ReferenceLinkService:
             "orphaned_links": 0,
             "malformed_links": 0,
             "problematic_nodes": [],
-            "reference_db_available": True
+            "reference_db_available": True,
         }
 
         try:
@@ -548,7 +570,7 @@ class ReferenceLinkService:
             query = self.db.query(StructureNode).filter(
                 StructureNode.reference_links.isnot(None),
                 StructureNode.reference_links != "",
-                StructureNode.reference_links != "[]"
+                StructureNode.reference_links != "[]",
             )
 
             if limit:
@@ -575,7 +597,9 @@ class ReferenceLinkService:
                 result["malformed_links"] += len(node_result.get("malformed_links", []))
 
                 # Track problematic nodes
-                if node_result.get("orphaned_links") or node_result.get("malformed_links"):
+                if node_result.get("orphaned_links") or node_result.get(
+                    "malformed_links"
+                ):
                     problematic_node = {
                         "node_id": str(node.id),
                         "node_title": node.title,
@@ -583,7 +607,7 @@ class ReferenceLinkService:
                         "total_links": node_result.get("total_links", 0),
                         "valid_links": node_result.get("valid_links", 0),
                         "orphaned_links": node_result.get("orphaned_links", []),
-                        "malformed_links": node_result.get("malformed_links", [])
+                        "malformed_links": node_result.get("malformed_links", []),
                     }
                     result["problematic_nodes"].append(problematic_node)
 

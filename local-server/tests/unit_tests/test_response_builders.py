@@ -2,13 +2,19 @@
 
 import sys
 import os
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+
+sys.path.append(
+    os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+)
 
 import pytest  # noqa: E402
 
 from reference_api.response_builders import ResponseBuilder  # noqa: E402
 from reference_api.models import (  # noqa: E402
-    SourceType, SearchNode, SearchLink, MultiSourceSearchResponse
+    SourceType,
+    SearchNode,
+    SearchLink,
+    MultiSourceSearchResponse,
 )
 
 
@@ -31,7 +37,7 @@ class TestResponseBuilder:
                 definition="High-level programming language",
                 attributes={"uri": "http://dbpedia.org/resource/Python"},
                 source_url="http://dbpedia.org/resource/Python",
-                relevance_score=0.95
+                relevance_score=0.95,
             ),
             SearchNode(
                 id="wikidata:http://www.wikidata.org/entity/Q28865",
@@ -40,8 +46,8 @@ class TestResponseBuilder:
                 definition="programming language",
                 attributes={"uri": "http://www.wikidata.org/entity/Q28865"},
                 source_url="http://www.wikidata.org/entity/Q28865",
-                relevance_score=0.90
-            )
+                relevance_score=0.90,
+            ),
         ]
 
     @pytest.fixture
@@ -55,7 +61,7 @@ class TestResponseBuilder:
                 predicate="IsA",
                 object="conceptnet:/c/en/programming_language",
                 weight=0.8,
-                attributes={"relation_uri": "/r/IsA"}
+                attributes={"relation_uri": "/r/IsA"},
             ),
             SearchLink(
                 id="link2",
@@ -64,11 +70,13 @@ class TestResponseBuilder:
                 predicate="instance of",
                 object="wikidata:http://www.wikidata.org/entity/Q9143",
                 weight=1.0,
-                attributes={"property_id": "P31"}
-            )
+                attributes={"property_id": "P31"},
+            ),
         ]
 
-    def test_build_single_source_response_success(self, builder, sample_nodes, sample_links):
+    def test_build_single_source_response_success(
+        self, builder, sample_nodes, sample_links
+    ):
         """Test successful single source response building."""
         response = builder.build_single_source_response(
             source=SourceType.DBPEDIA,
@@ -77,7 +85,7 @@ class TestResponseBuilder:
             links=sample_links,
             limit=10,
             offset=0,
-            search_time_ms=150.5
+            search_time_ms=150.5,
         )
 
         # Verify response structure
@@ -103,7 +111,7 @@ class TestResponseBuilder:
             limit=5,
             offset=10,
             search_time_ms=None,  # Should default to 0.0
-            error="Connection timeout"
+            error="Connection timeout",
         )
 
         assert response.query == "test"
@@ -120,10 +128,7 @@ class TestResponseBuilder:
     def test_build_single_source_response_defaults(self, builder):
         """Test single source response building with default values."""
         response = builder.build_single_source_response(
-            source=SourceType.CONCEPTNET,
-            query="test query",
-            nodes=[],
-            links=[]
+            source=SourceType.CONCEPTNET, query="test query", nodes=[], links=[]
         )
 
         # Check default values
@@ -132,7 +137,9 @@ class TestResponseBuilder:
         assert response.search_time_ms == 0.0
         assert response.source_errors == {}
 
-    def test_build_multi_source_response_success(self, builder, sample_nodes, sample_links):
+    def test_build_multi_source_response_success(
+        self, builder, sample_nodes, sample_links
+    ):
         """Test successful multi-source response building."""
         response = builder.build_multi_source_response(
             query="python programming",
@@ -142,7 +149,7 @@ class TestResponseBuilder:
             source_errors={"conceptnet": "rate limit exceeded"},
             limit=15,
             offset=5,
-            search_time_ms=250.75
+            search_time_ms=250.75,
         )
 
         assert response.query == "python programming"
@@ -163,7 +170,7 @@ class TestResponseBuilder:
             all_nodes=[],
             all_links=[],
             sources_queried=[],
-            source_errors={}
+            source_errors={},
         )
 
         assert response.query == "empty query"
@@ -174,7 +181,7 @@ class TestResponseBuilder:
         assert len(response.sources_queried) == 0
         assert response.source_errors == {}
         assert response.limit == 20  # Default value
-        assert response.offset == 0   # Default value
+        assert response.offset == 0  # Default value
         assert response.search_time_ms == 0.0  # Default value
 
     def test_build_empty_response_with_source(self, builder):
@@ -184,7 +191,7 @@ class TestResponseBuilder:
             source=SourceType.SCHEMA_ORG,
             error="No results found",
             limit=25,
-            offset=10
+            offset=10,
         )
 
         assert response.query == "empty search"
@@ -201,9 +208,7 @@ class TestResponseBuilder:
     def test_build_empty_response_without_source(self, builder):
         """Test building empty response without source information."""
         response = builder.build_empty_response(
-            query="generic empty",
-            source=None,
-            error=None
+            query="generic empty", source=None, error=None
         )
 
         assert response.query == "generic empty"
@@ -211,7 +216,7 @@ class TestResponseBuilder:
         assert len(response.sources_queried) == 0
         assert response.source_errors == {}
         assert response.limit == 20  # Default
-        assert response.offset == 0   # Default
+        assert response.offset == 0  # Default
 
     def test_build_error_response_with_source(self, builder):
         """Test building error response with source information."""
@@ -220,7 +225,7 @@ class TestResponseBuilder:
             error="Database connection failed",
             source=SourceType.DBPEDIA,
             limit=30,
-            offset=20
+            offset=20,
         )
 
         assert response.query == "failed search"
@@ -237,9 +242,7 @@ class TestResponseBuilder:
     def test_build_error_response_without_source(self, builder):
         """Test building error response without specific source."""
         response = builder.build_error_response(
-            query="general error",
-            error="System error occurred",
-            source=None
+            query="general error", error="System error occurred", source=None
         )
 
         assert response.query == "general error"
@@ -258,7 +261,7 @@ class TestResponseBuilder:
                     definition="First test node",
                     attributes={},
                     source_url="http://example.com/1",
-                    relevance_score=0.9
+                    relevance_score=0.9,
                 )
             ],
             links=[
@@ -269,7 +272,7 @@ class TestResponseBuilder:
                     predicate="test",
                     object="node2",
                     weight=0.8,
-                    attributes={}
+                    attributes={},
                 )
             ],
             total_results=1,
@@ -278,7 +281,7 @@ class TestResponseBuilder:
             source_errors={},
             offset=0,
             limit=10,
-            search_time_ms=100.0
+            search_time_ms=100.0,
         )
 
         response2 = MultiSourceSearchResponse(
@@ -291,7 +294,7 @@ class TestResponseBuilder:
                     definition="Second test node",
                     attributes={},
                     source_url="http://example.com/2",
-                    relevance_score=0.8
+                    relevance_score=0.8,
                 )
             ],
             links=[],
@@ -301,7 +304,7 @@ class TestResponseBuilder:
             source_errors={"wikidata": "partial results"},
             offset=0,
             limit=10,
-            search_time_ms=150.0
+            search_time_ms=150.0,
         )
 
         merged = builder.merge_responses([response1, response2])
@@ -343,7 +346,7 @@ class TestResponseBuilder:
             source_errors={},
             offset=0,
             limit=10,
-            search_time_ms=100.0
+            search_time_ms=100.0,
         )
 
         response2 = MultiSourceSearchResponse(
@@ -356,7 +359,7 @@ class TestResponseBuilder:
             source_errors={},
             offset=0,
             limit=10,
-            search_time_ms=150.0
+            search_time_ms=150.0,
         )
 
         merged = builder.merge_responses([response1, response2])
@@ -376,7 +379,7 @@ class TestResponseBuilder:
             source_errors={"dbpedia": "timeout"},
             offset=0,
             limit=10,
-            search_time_ms=100.0
+            search_time_ms=100.0,
         )
 
         response2 = MultiSourceSearchResponse(
@@ -386,10 +389,12 @@ class TestResponseBuilder:
             total_results=0,
             total_links=0,
             sources_queried=["dbpedia"],
-            source_errors={"dbpedia": "connection error"},  # Different error for same source
+            source_errors={
+                "dbpedia": "connection error"
+            },  # Different error for same source
             offset=0,
             limit=10,
-            search_time_ms=150.0
+            search_time_ms=150.0,
         )
 
         merged = builder.merge_responses([response1, response2])
@@ -409,7 +414,7 @@ class TestResponseBuilder:
             source_errors={},
             offset=5,
             limit=15,
-            search_time_ms=100.0
+            search_time_ms=100.0,
         )
 
         additional_response = MultiSourceSearchResponse(
@@ -421,8 +426,8 @@ class TestResponseBuilder:
             sources_queried=["wikidata"],
             source_errors={},
             offset=10,  # Should be ignored
-            limit=20,   # Should be ignored
-            search_time_ms=200.0
+            limit=20,  # Should be ignored
+            search_time_ms=200.0,
         )
 
         merged = builder.merge_responses([base_response, additional_response])
@@ -440,7 +445,7 @@ class TestResponseBuilder:
             source=SourceType.DBPEDIA,
             query="test",
             nodes=sample_nodes[:1],
-            links=sample_links[:1]
+            links=sample_links[:1],
         )
 
         multi_source = builder.build_multi_source_response(
@@ -448,7 +453,7 @@ class TestResponseBuilder:
             all_nodes=sample_nodes[:1],
             all_links=sample_links[:1],
             sources_queried=["dbpedia"],
-            source_errors={}
+            source_errors={},
         )
 
         # Both should have same structure and content
@@ -477,11 +482,11 @@ class TestResponseBuilder:
                 source_errors={},
                 offset=0,
                 limit=10,
-                search_time_ms=0.0  # Will be updated by wrapper
+                search_time_ms=0.0,  # Will be updated by wrapper
             )
 
         # Note: This is testing the concept, but the actual wrapper implementation
         # would need to be properly implemented as a real decorator
         # For now, we just verify the method exists and has the right signature
-        assert hasattr(ResponseBuilder, 'create_timing_wrapper')
+        assert hasattr(ResponseBuilder, "create_timing_wrapper")
         assert callable(ResponseBuilder.create_timing_wrapper)

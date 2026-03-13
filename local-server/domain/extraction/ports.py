@@ -5,6 +5,7 @@ Ports define the contracts between the domain core and infrastructure adapters.
 They use typing.Protocol for structural subtyping and reference only domain entity types.
 Response dataclasses are defined in this file alongside their corresponding ports.
 """
+
 from dataclasses import dataclass, field
 from typing import Protocol, Optional, List
 

@@ -6,6 +6,7 @@ Tests word sense extraction, filtering, validation, and error handling.
 
 import sys
 import os
+
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import pytest  # noqa: E402
@@ -58,7 +59,7 @@ class TestWordSenseService:
                         "lemmas": ["bank"],
                         "pos": "n",
                         "offset": 12345,
-                        "domain": "noun.group"
+                        "domain": "noun.group",
                     },
                     {
                         "name": "bank.n.02",
@@ -66,17 +67,13 @@ class TestWordSenseService:
                         "lemmas": ["bank"],
                         "pos": "n",
                         "offset": 12346,
-                        "domain": "noun.object"
-                    }
+                        "domain": "noun.object",
+                    },
                 ]
-            )
+            ),
         )
 
-        return NLPAnalysisResponse(
-            text="bank",
-            tokens=[token1],
-            entities=[]
-        )
+        return NLPAnalysisResponse(text="bank", tokens=[token1], entities=[])
 
     @pytest.fixture
     def sample_word_senses(self):
@@ -87,15 +84,15 @@ class TestWordSenseService:
                 sense_type="wordnet",
                 sense_id="bank.n.01",
                 definition="financial institution",
-                domain="noun.group"
+                domain="noun.group",
             ),
             WordSense(
                 term="bank",
                 sense_type="wordnet",
                 sense_id="bank.n.02",
                 definition="sloping land beside water",
-                domain="noun.object"
-            )
+                domain="noun.object",
+            ),
         ]
 
     def test_extract_word_senses_success(self, service, sample_nlp_response):
@@ -120,10 +117,10 @@ class TestWordSenseService:
                     {
                         "name": "bank.n.01",
                         "definition": "financial institution",
-                        "domain": "noun.group"
+                        "domain": "noun.group",
                     }
                 ]
-            )
+            ),
         )
         token2 = TokenData(
             text="river",
@@ -132,16 +129,14 @@ class TestWordSenseService:
                     {
                         "name": "river.n.01",
                         "definition": "large natural stream of water",
-                        "domain": "noun.object"
+                        "domain": "noun.object",
                     }
                 ]
-            )
+            ),
         )
 
         nlp_response = NLPAnalysisResponse(
-            text="bank river",
-            tokens=[token1, token2],
-            entities=[]
+            text="bank river", tokens=[token1, token2], entities=[]
         )
 
         # Execute - filter for "bank" only
@@ -156,11 +151,7 @@ class TestWordSenseService:
         # Create token without wordnet data
         token = TokenData(text="the")
 
-        nlp_response = NLPAnalysisResponse(
-            text="the",
-            tokens=[token],
-            entities=[]
-        )
+        nlp_response = NLPAnalysisResponse(text="the", tokens=[token], entities=[])
 
         # Execute
         result = service.extract_word_senses(nlp_response)
@@ -177,16 +168,12 @@ class TestWordSenseService:
                 synsets=[
                     {"name": "test.n.01"},  # Missing definition
                     {"definition": "test definition"},  # Missing name
-                    {"name": "test.n.02", "definition": "valid synset"}  # Valid
+                    {"name": "test.n.02", "definition": "valid synset"},  # Valid
                 ]
-            )
+            ),
         )
 
-        nlp_response = NLPAnalysisResponse(
-            text="test",
-            tokens=[token],
-            entities=[]
-        )
+        nlp_response = NLPAnalysisResponse(text="test", tokens=[token], entities=[])
 
         # Execute
         result = service.extract_word_senses(nlp_response)
@@ -195,7 +182,9 @@ class TestWordSenseService:
         assert len(result) == 1
         assert result[0].sense_id == "test.n.02"
 
-    def test_update_word_senses_conservative_mode(self, service, mock_db, sample_node, sample_word_senses):
+    def test_update_word_senses_conservative_mode(
+        self, service, mock_db, sample_node, sample_word_senses
+    ):
         """Test conservative update preserves matching senses."""
         # Setup - node has existing senses
         existing_senses = [
@@ -204,15 +193,15 @@ class TestWordSenseService:
                 sense_type="wordnet",
                 sense_id="bank.n.01",
                 definition="financial institution",
-                domain="noun.group"
+                domain="noun.group",
             ),
             WordSense(
                 term="bank",
                 sense_type="wordnet",
                 sense_id="bank.n.03",
                 definition="building housing a bank",
-                domain="noun.artifact"
-            )
+                domain="noun.artifact",
+            ),
         ]
         sample_node.word_senses = json.dumps([s.model_dump() for s in existing_senses])
 
@@ -225,19 +214,21 @@ class TestWordSenseService:
                 sense_type="wordnet",
                 sense_id="bank.n.01",
                 definition="financial institution",
-                domain="noun.group"
+                domain="noun.group",
             ),
             WordSense(
                 term="bank",
                 sense_type="wordnet",
                 sense_id="bank.n.02",
                 definition="sloping land beside water",
-                domain="noun.object"
-            )
+                domain="noun.object",
+            ),
         ]
 
         # Execute
-        result = service.update_word_senses("test-node-123", new_senses, conservative=True)
+        result = service.update_word_senses(
+            "test-node-123", new_senses, conservative=True
+        )
 
         # Assert
         # Should preserve bank.n.01, add bank.n.02, remove bank.n.03
@@ -248,7 +239,9 @@ class TestWordSenseService:
         assert "bank.n.03" not in sense_ids  # Removed
         assert sample_node.version == 2
 
-    def test_update_word_senses_non_conservative_mode(self, service, mock_db, sample_node, sample_word_senses):
+    def test_update_word_senses_non_conservative_mode(
+        self, service, mock_db, sample_node, sample_word_senses
+    ):
         """Test non-conservative update replaces all senses."""
         # Setup - node has existing senses
         existing_senses = [
@@ -257,7 +250,7 @@ class TestWordSenseService:
                 sense_type="wordnet",
                 sense_id="bank.n.03",
                 definition="building housing a bank",
-                domain="noun.artifact"
+                domain="noun.artifact",
             )
         ]
         sample_node.word_senses = json.dumps([s.model_dump() for s in existing_senses])
@@ -265,7 +258,9 @@ class TestWordSenseService:
         mock_db.query.return_value.filter.return_value.first.return_value = sample_node
 
         # Execute
-        result = service.update_word_senses("test-node-123", sample_word_senses, conservative=False)
+        result = service.update_word_senses(
+            "test-node-123", sample_word_senses, conservative=False
+        )
 
         # Assert - should completely replace with new senses
         assert len(result) == 2
@@ -274,7 +269,9 @@ class TestWordSenseService:
         assert "bank.n.02" in sense_ids
         assert "bank.n.03" not in sense_ids
 
-    def test_update_word_senses_node_not_found(self, service, mock_db, sample_word_senses):
+    def test_update_word_senses_node_not_found(
+        self, service, mock_db, sample_word_senses
+    ):
         """Test updating senses when node doesn't exist."""
         # Setup
         mock_db.query.return_value.filter.return_value.first.return_value = None
@@ -283,10 +280,14 @@ class TestWordSenseService:
         with pytest.raises(ValueError, match="StructureNode not found"):
             service.update_word_senses("nonexistent-node", sample_word_senses)
 
-    def test_get_word_senses_success(self, service, mock_db, sample_node, sample_word_senses):
+    def test_get_word_senses_success(
+        self, service, mock_db, sample_node, sample_word_senses
+    ):
         """Test successfully retrieving word senses."""
         # Setup
-        sample_node.word_senses = json.dumps([s.model_dump() for s in sample_word_senses])
+        sample_node.word_senses = json.dumps(
+            [s.model_dump() for s in sample_word_senses]
+        )
 
         mock_db.query.return_value.filter.return_value.first.return_value = sample_node
 
@@ -303,7 +304,7 @@ class TestWordSenseService:
         # Test various empty states
         test_cases = [
             None,  # NULL
-            "",    # Empty string
+            "",  # Empty string
             "[]",  # Empty JSON array
         ]
 
@@ -345,26 +346,34 @@ class TestWordSenseService:
     def test_get_word_senses_invalid_sense_data(self, service, mock_db, sample_node):
         """Test handling when sense data is invalid - should raise ValidationError."""
         # Setup - one valid sense, one invalid
-        sample_node.word_senses = json.dumps([
-            {
-                "term": "bank",
-                "sense_type": "wordnet",
-                "sense_id": "bank.n.01",
-                "definition": "financial institution"
-            },  # Valid
-            {"invalid": "data"},  # Invalid - missing required fields
-        ])
+        sample_node.word_senses = json.dumps(
+            [
+                {
+                    "term": "bank",
+                    "sense_type": "wordnet",
+                    "sense_id": "bank.n.01",
+                    "definition": "financial institution",
+                },  # Valid
+                {"invalid": "data"},  # Invalid - missing required fields
+            ]
+        )
 
         mock_db.query.return_value.filter.return_value.first.return_value = sample_node
 
         # Execute & Assert - should raise ValidationError for partially corrupted data
-        with pytest.raises(ValidationError, match="Word sense data is partially corrupted"):
+        with pytest.raises(
+            ValidationError, match="Word sense data is partially corrupted"
+        ):
             service.get_word_senses("test-node-123")
 
-    def test_remove_word_senses_success(self, service, mock_db, sample_node, sample_word_senses):
+    def test_remove_word_senses_success(
+        self, service, mock_db, sample_node, sample_word_senses
+    ):
         """Test successfully removing word senses."""
         # Setup
-        sample_node.word_senses = json.dumps([s.model_dump() for s in sample_word_senses])
+        sample_node.word_senses = json.dumps(
+            [s.model_dump() for s in sample_word_senses]
+        )
 
         mock_db.query.return_value.filter.return_value.first.return_value = sample_node
 
@@ -386,7 +395,7 @@ class TestWordSenseService:
             term="bank",
             sense_type="wordnet",
             sense_id="bank.n.01",
-            definition="financial institution"
+            definition="financial institution",
         )
         sample_node.word_senses = json.dumps([sense.model_dump()])
 
@@ -463,36 +472,42 @@ class TestWordSenseService:
         # Setup
         node1 = Mock(spec=StructureNode)
         node1.id = "node-1"
-        node1.word_senses = json.dumps([
-            {
-                "term": "bank",
-                "sense_type": "wordnet",
-                "sense_id": "bank.n.01",
-                "definition": "financial institution"
-            }
-        ])
+        node1.word_senses = json.dumps(
+            [
+                {
+                    "term": "bank",
+                    "sense_type": "wordnet",
+                    "sense_id": "bank.n.01",
+                    "definition": "financial institution",
+                }
+            ]
+        )
 
         node2 = Mock(spec=StructureNode)
         node2.id = "node-2"
-        node2.word_senses = json.dumps([
-            {
-                "term": "bank",
-                "sense_type": "wordnet",
-                "sense_id": "bank.n.02",
-                "definition": "sloping land"
-            }
-        ])
+        node2.word_senses = json.dumps(
+            [
+                {
+                    "term": "bank",
+                    "sense_type": "wordnet",
+                    "sense_id": "bank.n.02",
+                    "definition": "sloping land",
+                }
+            ]
+        )
 
         node3 = Mock(spec=StructureNode)
         node3.id = "node-3"
-        node3.word_senses = json.dumps([
-            {
-                "term": "bank",
-                "sense_type": "wordnet",
-                "sense_id": "bank.n.01",
-                "definition": "financial institution"
-            }
-        ])
+        node3.word_senses = json.dumps(
+            [
+                {
+                    "term": "bank",
+                    "sense_type": "wordnet",
+                    "sense_id": "bank.n.01",
+                    "definition": "financial institution",
+                }
+            ]
+        )
 
         # Setup query mock that returns itself for chaining
         query_mock = Mock()
@@ -516,14 +531,16 @@ class TestWordSenseService:
         for i in range(5):
             node = Mock(spec=StructureNode)
             node.id = f"node-{i}"
-            node.word_senses = json.dumps([
-                {
-                    "term": "test",
-                    "sense_type": "wordnet",
-                    "sense_id": "test.n.01",
-                    "definition": "test definition"
-                }
-            ])
+            node.word_senses = json.dumps(
+                [
+                    {
+                        "term": "test",
+                        "sense_type": "wordnet",
+                        "sense_id": "test.n.01",
+                        "definition": "test definition",
+                    }
+                ]
+            )
             nodes.append(node)
 
         # Setup query mock that returns itself for chaining, including limit()
@@ -540,7 +557,9 @@ class TestWordSenseService:
         # Assert
         assert len(result) == 3
 
-    def test_commit_failure_rollback(self, service, mock_db, sample_node, sample_word_senses):
+    def test_commit_failure_rollback(
+        self, service, mock_db, sample_node, sample_word_senses
+    ):
         """Test that database rollback occurs on commit failure."""
         # Setup
         mock_db.query.return_value.filter.return_value.first.return_value = sample_node
@@ -566,7 +585,7 @@ class TestWordSenseService:
                 sense_type="wordnet",
                 sense_id="bank.n.01",
                 definition="financial institution",
-                domain="noun.group"
+                domain="noun.group",
             )
         ]
 
@@ -580,7 +599,9 @@ class TestWordSenseService:
         assert sample_node.version == 2
         mock_db.commit.assert_called_once()
 
-    def test_update_selected_senses_conservative_merge(self, service, mock_db, sample_node):
+    def test_update_selected_senses_conservative_merge(
+        self, service, mock_db, sample_node
+    ):
         """Test conservative merge preserves senses for other words."""
         # Setup - node has existing senses for two different words
         existing_senses = [
@@ -589,15 +610,15 @@ class TestWordSenseService:
                 sense_type="wordnet",
                 sense_id="bank.n.02",
                 definition="sloping land beside water",
-                domain="noun.object"
+                domain="noun.object",
             ),
             WordSense(
                 term="account",
                 sense_type="wordnet",
                 sense_id="account.n.01",
                 definition="a record or narrative description",
-                domain="noun.communication"
-            )
+                domain="noun.communication",
+            ),
         ]
         sample_node.word_senses = json.dumps([s.model_dump() for s in existing_senses])
         mock_db.query.return_value.filter.return_value.first.return_value = sample_node
@@ -609,7 +630,7 @@ class TestWordSenseService:
                 sense_type="wordnet",
                 sense_id="bank.n.01",
                 definition="financial institution",
-                domain="noun.group"
+                domain="noun.group",
             )
         ]
 
@@ -639,15 +660,15 @@ class TestWordSenseService:
                 sense_type="wordnet",
                 sense_id="bank.n.01",
                 definition="financial institution",
-                domain="noun.group"
+                domain="noun.group",
             ),
             WordSense(
                 term="bank",
                 sense_type="wordnet",
                 sense_id="bank.n.02",
                 definition="sloping land beside water",
-                domain="noun.object"
-            )
+                domain="noun.object",
+            ),
         ]
         sample_node.word_senses = json.dumps([s.model_dump() for s in existing_senses])
         mock_db.query.return_value.filter.return_value.first.return_value = sample_node
@@ -659,7 +680,7 @@ class TestWordSenseService:
                 sense_type="wordnet",
                 sense_id="bank.n.03",
                 definition="building housing a bank",
-                domain="noun.artifact"
+                domain="noun.artifact",
             )
         ]
 
@@ -683,15 +704,15 @@ class TestWordSenseService:
                 sense_type="wordnet",
                 sense_id="bank.n.01",
                 definition="financial institution",
-                domain="noun.group"
+                domain="noun.group",
             ),
             WordSense(
                 term="account",
                 sense_type="wordnet",
                 sense_id="account.n.02",
                 definition="a formal contractual relationship",
-                domain="noun.state"
-            )
+                domain="noun.state",
+            ),
         ]
 
         # Execute
@@ -703,7 +724,9 @@ class TestWordSenseService:
         assert "bank.n.01" in sense_ids
         assert "account.n.02" in sense_ids
 
-    def test_update_selected_senses_invalid_sense_id(self, service, mock_db, sample_node):
+    def test_update_selected_senses_invalid_sense_id(
+        self, service, mock_db, sample_node
+    ):
         """Test validation rejects invalid sense IDs."""
         # Setup
         mock_db.query.return_value.filter.return_value.first.return_value = sample_node
@@ -714,7 +737,7 @@ class TestWordSenseService:
                 term="bank",
                 sense_type="wordnet",
                 sense_id="invalid-format",  # Invalid WordNet format
-                definition="test definition"
+                definition="test definition",
             )
         ]
 
@@ -735,7 +758,7 @@ class TestWordSenseService:
                 term="bank",
                 sense_type="wordnet",
                 sense_id="bank.n.01",
-                definition="financial institution"
+                definition="financial institution",
             )
         ]
 
@@ -743,7 +766,9 @@ class TestWordSenseService:
         with pytest.raises(ValueError, match="StructureNode not found"):
             service.update_selected_senses("nonexistent-node", selected_senses)
 
-    def test_update_selected_senses_case_insensitive_term_matching(self, service, mock_db, sample_node):
+    def test_update_selected_senses_case_insensitive_term_matching(
+        self, service, mock_db, sample_node
+    ):
         """Test that term matching is case-insensitive."""
         # Setup - existing sense with lowercase term
         existing_senses = [
@@ -752,7 +777,7 @@ class TestWordSenseService:
                 sense_type="wordnet",
                 sense_id="bank.n.01",
                 definition="financial institution",
-                domain="noun.group"
+                domain="noun.group",
             )
         ]
         sample_node.word_senses = json.dumps([s.model_dump() for s in existing_senses])
@@ -765,7 +790,7 @@ class TestWordSenseService:
                 sense_type="wordnet",
                 sense_id="bank.n.02",
                 definition="sloping land beside water",
-                domain="noun.object"
+                domain="noun.object",
             )
         ]
 
@@ -788,7 +813,7 @@ class TestWordSenseService:
                 term="bank",
                 sense_type="wordnet",
                 sense_id="bank.n.01",
-                definition="financial institution"
+                definition="financial institution",
             )
         ]
 

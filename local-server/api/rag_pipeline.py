@@ -16,7 +16,10 @@ from typing import Dict, Any
 from rag.models import RAGExtractionRequest, RAGExtractionResponse
 from rag.rag_pipeline_service import RAGPipelineService
 from rag.observability_store import RAGObservabilityStore
-from api.dependencies.rag_services import get_rag_pipeline_service, get_rag_observability_store  # noqa: E501
+from api.dependencies.rag_services import (
+    get_rag_pipeline_service,
+    get_rag_observability_store,
+)  # noqa: E501
 from utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -30,12 +33,12 @@ router = APIRouter()
     status_code=status.HTTP_200_OK,
     responses={
         400: {"description": "Invalid request parameters"},
-        500: {"description": "Pipeline execution failed"}
-    }
+        500: {"description": "Pipeline execution failed"},
+    },
 )
 async def extract_entities(
     request: RAGExtractionRequest,
-    pipeline_service: RAGPipelineService = Depends(get_rag_pipeline_service)
+    pipeline_service: RAGPipelineService = Depends(get_rag_pipeline_service),
 ):
     """
     Extract entities from text using the RAG pipeline.
@@ -60,16 +63,23 @@ async def extract_entities(
     try:
         # Determine if LLM layer should be enabled (request overrides config default)  # noqa: E501
         from config import get_settings
-        settings = get_settings()
-        enable_llm_layer = request.enable_llm_layer if request.enable_llm_layer is not None else settings.rag_pipeline.enable_llm_layer  # noqa: E501
 
-        logger.info(f"Received RAG extraction request, text_length={len(request.text)}, enable_trace={request.enable_trace}, enable_llm_layer={enable_llm_layer}")  # noqa: E501
+        settings = get_settings()
+        enable_llm_layer = (
+            request.enable_llm_layer
+            if request.enable_llm_layer is not None
+            else settings.rag_pipeline.enable_llm_layer
+        )  # noqa: E501
+
+        logger.info(
+            f"Received RAG extraction request, text_length={len(request.text)}, enable_trace={request.enable_trace}, enable_llm_layer={enable_llm_layer}"
+        )  # noqa: E501
 
         # Execute pipeline
         response = await pipeline_service.extract_entities(
             text=request.text,
             enable_trace=request.enable_trace,
-            enable_llm_layer=enable_llm_layer
+            enable_llm_layer=enable_llm_layer,
         )
 
         logger.info(
@@ -84,13 +94,13 @@ async def extract_entities(
         logger.warning(f"Invalid request parameters: {ve}")
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Invalid request: {str(ve)}"
+            detail=f"Invalid request: {str(ve)}",
         )
     except Exception as e:
         logger.error(f"RAG pipeline execution failed: {e}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Pipeline execution failed: {str(e)}"
+            detail=f"Pipeline execution failed: {str(e)}",
         )
 
 
@@ -99,12 +109,14 @@ async def extract_entities(
     status_code=status.HTTP_200_OK,
     responses={
         404: {"description": "Request ID not found"},
-        500: {"description": "Failed to retrieve metrics"}
-    }
+        500: {"description": "Failed to retrieve metrics"},
+    },
 )
 async def get_metrics(
     request_id: str,
-    observability_store: RAGObservabilityStore = Depends(get_rag_observability_store)  # noqa: E501
+    observability_store: RAGObservabilityStore = Depends(
+        get_rag_observability_store
+    ),  # noqa: E501
 ):
     """
     Retrieve processing metrics for a specific RAG extraction request.
@@ -131,7 +143,7 @@ async def get_metrics(
             logger.warning(f"Metrics not found for request_id={request_id}")
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"No metrics found for request ID: {request_id}"
+                detail=f"No metrics found for request ID: {request_id}",
             )
 
         logger.info(f"Retrieved metrics for request_id={request_id}")
@@ -141,10 +153,13 @@ async def get_metrics(
         # Re-raise HTTP exceptions
         raise
     except Exception as e:
-        logger.error(f"Failed to retrieve metrics for request_id={request_id}: {e}", exc_info=True)  # noqa: E501
+        logger.error(
+            f"Failed to retrieve metrics for request_id={request_id}: {e}",
+            exc_info=True,
+        )  # noqa: E501
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to retrieve metrics: {str(e)}"
+            detail=f"Failed to retrieve metrics: {str(e)}",
         )
 
 
@@ -153,12 +168,14 @@ async def get_metrics(
     status_code=status.HTTP_200_OK,
     responses={
         404: {"description": "Request ID not found or trace not enabled"},
-        500: {"description": "Failed to retrieve trace data"}
-    }
+        500: {"description": "Failed to retrieve trace data"},
+    },
 )
 async def get_trace(
     request_id: str,
-    observability_store: RAGObservabilityStore = Depends(get_rag_observability_store)  # noqa: E501
+    observability_store: RAGObservabilityStore = Depends(
+        get_rag_observability_store
+    ),  # noqa: E501
 ):
     """
     Retrieve all trace entries for a specific RAG extraction request.
@@ -186,20 +203,25 @@ async def get_trace(
             logger.warning(f"No trace data found for request_id={request_id}")
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"No trace data found for request ID: {request_id}. Ensure enable_trace was set to true."  # noqa: E501
+                detail=f"No trace data found for request ID: {request_id}. Ensure enable_trace was set to true.",  # noqa: E501
             )
 
-        logger.info(f"Retrieved {len(traces)} trace entries for request_id={request_id}")  # noqa: E501
+        logger.info(
+            f"Retrieved {len(traces)} trace entries for request_id={request_id}"
+        )  # noqa: E501
         return {"request_id": request_id, "traces": traces}
 
     except HTTPException:
         # Re-raise HTTP exceptions
         raise
     except Exception as e:
-        logger.error(f"Failed to retrieve trace data for request_id={request_id}: {e}", exc_info=True)  # noqa: E501
+        logger.error(
+            f"Failed to retrieve trace data for request_id={request_id}: {e}",
+            exc_info=True,
+        )  # noqa: E501
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to retrieve trace data: {str(e)}"
+            detail=f"Failed to retrieve trace data: {str(e)}",
         )
 
 
@@ -208,13 +230,15 @@ async def get_trace(
     status_code=status.HTTP_200_OK,
     responses={
         404: {"description": "Request ID or layer not found"},
-        500: {"description": "Failed to retrieve trace data"}
-    }
+        500: {"description": "Failed to retrieve trace data"},
+    },
 )
 async def get_trace_by_layer(
     request_id: str,
     layer_name: str,
-    observability_store: RAGObservabilityStore = Depends(get_rag_observability_store)  # noqa: E501
+    observability_store: RAGObservabilityStore = Depends(
+        get_rag_observability_store
+    ),  # noqa: E501
 ):
     """
     Retrieve trace entries for a specific layer of a RAG extraction request.
@@ -232,15 +256,22 @@ async def get_trace_by_layer(
         HTTPException 500: If trace retrieval fails
     """
     try:
-        logger.info(f"Retrieving trace data for request_id={request_id}, layer={layer_name}")  # noqa: E501
+        logger.info(
+            f"Retrieving trace data for request_id={request_id}, layer={layer_name}"
+        )  # noqa: E501
 
         # Validate layer name
-        valid_layers = {"kg_context", "llm_extraction", "spacy_gap", "concept_resolution"}  # noqa: E501
+        valid_layers = {
+            "kg_context",
+            "llm_extraction",
+            "spacy_gap",
+            "concept_resolution",
+        }  # noqa: E501
         if layer_name not in valid_layers:
             logger.warning(f"Invalid layer name: {layer_name}")
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Invalid layer name. Must be one of: {', '.join(valid_layers)}"  # noqa: E501
+                detail=f"Invalid layer name. Must be one of: {', '.join(valid_layers)}",  # noqa: E501
             )
 
         # Get all traces and filter by layer
@@ -250,24 +281,30 @@ async def get_trace_by_layer(
             logger.warning(f"No trace data found for request_id={request_id}")
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"No trace data found for request ID: {request_id}"
+                detail=f"No trace data found for request ID: {request_id}",
             )
 
         # Filter traces by layer name
-        layer_traces = [trace for trace in all_traces if trace["layer_name"] == layer_name]  # noqa: E501
+        layer_traces = [
+            trace for trace in all_traces if trace["layer_name"] == layer_name
+        ]  # noqa: E501
 
         if not layer_traces:
-            logger.warning(f"No trace data found for request_id={request_id}, layer={layer_name}")  # noqa: E501
+            logger.warning(
+                f"No trace data found for request_id={request_id}, layer={layer_name}"
+            )  # noqa: E501
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"No trace data found for layer: {layer_name}"
+                detail=f"No trace data found for layer: {layer_name}",
             )
 
-        logger.info(f"Retrieved {len(layer_traces)} trace entries for request_id={request_id}, layer={layer_name}")  # noqa: E501
+        logger.info(
+            f"Retrieved {len(layer_traces)} trace entries for request_id={request_id}, layer={layer_name}"
+        )  # noqa: E501
         return {
             "request_id": request_id,
             "layer_name": layer_name,
-            "traces": layer_traces
+            "traces": layer_traces,
         }
 
     except HTTPException:
@@ -276,11 +313,11 @@ async def get_trace_by_layer(
     except Exception as e:
         logger.error(
             f"Failed to retrieve trace data for request_id={request_id}, layer={layer_name}: {e}",  # noqa: E501
-            exc_info=True
+            exc_info=True,
         )
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to retrieve trace data: {str(e)}"
+            detail=f"Failed to retrieve trace data: {str(e)}",
         )
 
 
@@ -289,12 +326,14 @@ async def get_trace_by_layer(
     status_code=status.HTTP_200_OK,
     responses={
         404: {"description": "Request ID not found"},
-        500: {"description": "Failed to delete trace data"}
-    }
+        500: {"description": "Failed to delete trace data"},
+    },
 )
 async def delete_trace(
     request_id: str,
-    observability_store: RAGObservabilityStore = Depends(get_rag_observability_store)  # noqa: E501
+    observability_store: RAGObservabilityStore = Depends(
+        get_rag_observability_store
+    ),  # noqa: E501
 ):
     """
     Manually delete trace data for a specific RAG extraction request.
@@ -322,24 +361,29 @@ async def delete_trace(
             logger.warning(f"No trace data found for request_id={request_id}")
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"No trace data found for request ID: {request_id}"
+                detail=f"No trace data found for request ID: {request_id}",
             )
 
         # Delete traces using raw SQL
         from sqlalchemy import text
+
         result = observability_store.db_session.execute(
-            text("DELETE FROM rag_observability_trace WHERE request_id = :request_id"),  # noqa: E501
-            {"request_id": request_id}
+            text(
+                "DELETE FROM rag_observability_trace WHERE request_id = :request_id"
+            ),  # noqa: E501
+            {"request_id": request_id},
         )
         observability_store.db_session.commit()
 
         deleted_count = result.rowcount
-        logger.info(f"Deleted {deleted_count} trace entries for request_id={request_id}")  # noqa: E501
+        logger.info(
+            f"Deleted {deleted_count} trace entries for request_id={request_id}"
+        )  # noqa: E501
 
         return {
             "message": "Trace data deleted successfully",
             "request_id": request_id,
-            "traces_deleted": deleted_count
+            "traces_deleted": deleted_count,
         }
 
     except HTTPException:
@@ -347,10 +391,13 @@ async def delete_trace(
         raise
     except Exception as e:
         observability_store.db_session.rollback()
-        logger.error(f"Failed to delete trace data for request_id={request_id}: {e}", exc_info=True)  # noqa: E501
+        logger.error(
+            f"Failed to delete trace data for request_id={request_id}: {e}",
+            exc_info=True,
+        )  # noqa: E501
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to delete trace data: {str(e)}"
+            detail=f"Failed to delete trace data: {str(e)}",
         )
 
 
@@ -359,12 +406,12 @@ async def delete_trace(
     status_code=status.HTTP_200_OK,
     responses={
         400: {"description": "Invalid configuration parameters"},
-        500: {"description": "Failed to update configuration"}
-    }
+        500: {"description": "Failed to update configuration"},
+    },
 )
 async def update_config(
     config_updates: Dict[str, Any],
-    pipeline_service: RAGPipelineService = Depends(get_rag_pipeline_service)
+    pipeline_service: RAGPipelineService = Depends(get_rag_pipeline_service),
 ):
     """
     Update RAG pipeline configuration settings.
@@ -397,8 +444,13 @@ async def update_config(
 
         # Valid configuration keys
         valid_keys = {
-            "timeout_layer_0", "timeout_layer_1", "timeout_layer_2", "timeout_layer_3",  # noqa: E501
-            "timeout_total", "dedup_similarity_threshold", "kg_top_k"
+            "timeout_layer_0",
+            "timeout_layer_1",
+            "timeout_layer_2",
+            "timeout_layer_3",  # noqa: E501
+            "timeout_total",
+            "dedup_similarity_threshold",
+            "kg_top_k",
         }
 
         # Check for invalid keys
@@ -407,17 +459,23 @@ async def update_config(
             logger.warning(f"Invalid configuration keys: {invalid_keys}")
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Invalid configuration keys: {', '.join(invalid_keys)}. Valid keys: {', '.join(valid_keys)}"  # noqa: E501
+                detail=f"Invalid configuration keys: {', '.join(invalid_keys)}. Valid keys: {', '.join(valid_keys)}",  # noqa: E501
             )
 
         # Apply timeout updates
-        for timeout_key in ["timeout_layer_0", "timeout_layer_1", "timeout_layer_2", "timeout_layer_3", "timeout_total"]:  # noqa: E501
+        for timeout_key in [
+            "timeout_layer_0",
+            "timeout_layer_1",
+            "timeout_layer_2",
+            "timeout_layer_3",
+            "timeout_total",
+        ]:  # noqa: E501
             if timeout_key in config_updates:
                 value = config_updates[timeout_key]
                 if not isinstance(value, (int, float)) or value <= 0:
                     raise HTTPException(
                         status_code=status.HTTP_400_BAD_REQUEST,
-                        detail=f"{timeout_key} must be a positive number"
+                        detail=f"{timeout_key} must be a positive number",
                     )
                 setattr(pipeline_service, timeout_key.upper(), float(value))
                 updated_config[timeout_key] = float(value)
@@ -425,10 +483,12 @@ async def update_config(
         # Apply deduplication threshold update
         if "dedup_similarity_threshold" in config_updates:
             value = config_updates["dedup_similarity_threshold"]
-            if not isinstance(value, (int, float)) or not (0.0 <= value <= 1.0):  # noqa: E501
+            if not isinstance(value, (int, float)) or not (
+                0.0 <= value <= 1.0
+            ):  # noqa: E501
                 raise HTTPException(
                     status_code=status.HTTP_400_BAD_REQUEST,
-                    detail="dedup_similarity_threshold must be a number between 0.0 and 1.0"  # noqa: E501
+                    detail="dedup_similarity_threshold must be a number between 0.0 and 1.0",  # noqa: E501
                 )
             pipeline_service.DEDUP_SIMILARITY_THRESHOLD = float(value)
             updated_config["dedup_similarity_threshold"] = float(value)
@@ -439,7 +499,7 @@ async def update_config(
             if not isinstance(value, int) or value <= 0:
                 raise HTTPException(
                     status_code=status.HTTP_400_BAD_REQUEST,
-                    detail="kg_top_k must be a positive integer"
+                    detail="kg_top_k must be a positive integer",
                 )
             pipeline_service.kg_processor.top_k = value
             updated_config["kg_top_k"] = value
@@ -456,8 +516,8 @@ async def update_config(
                 "timeout_layer_3": pipeline_service.TIMEOUT_LAYER_3,
                 "timeout_total": pipeline_service.TIMEOUT_TOTAL,
                 "dedup_similarity_threshold": pipeline_service.DEDUP_SIMILARITY_THRESHOLD,  # noqa: E501
-                "kg_top_k": pipeline_service.kg_processor.top_k
-            }
+                "kg_top_k": pipeline_service.kg_processor.top_k,
+            },
         }
 
     except HTTPException:
@@ -467,5 +527,5 @@ async def update_config(
         logger.error(f"Failed to update configuration: {e}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to update configuration: {str(e)}"
+            detail=f"Failed to update configuration: {str(e)}",
         )

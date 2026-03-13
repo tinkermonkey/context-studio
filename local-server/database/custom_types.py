@@ -7,6 +7,7 @@ special data type conversions and constraints.
 
 from sqlalchemy.types import TypeDecorator, String
 from database.enums import NodeType, RecordType
+from typing import Optional
 
 
 class NodeTypeColumn(TypeDecorator):
@@ -40,19 +41,44 @@ class NodeTypeColumn(TypeDecorator):
             return value.value
         return value
 
-    def process_result_value(self, value, dialect):
+    def process_result_value(self, value: Optional[str], dialect) -> Optional[NodeType]:
         """
         Convert database string value to Python enum.
 
+        Accepts both legacy values (layer, domain, term) and new values (taxonomy, concept_scheme, class)
+        during the terminology transition window. Maps new values to legacy enum instances for
+        backward compatibility with existing code.
+
         Args:
-            value: String value from database
+            value: String value from database (old or new terminology)
             dialect: SQLAlchemy dialect
 
         Returns:
             NodeType enum instance or None
+
+        Raises:
+            ValueError: If the value is not a recognized enum value
         """
         if value is not None:
-            return NodeType(value)
+            try:
+                # Try legacy enum first (layer, domain, term)
+                return NodeType(value)
+            except ValueError:
+                # Map new terminology to legacy enum for backward compatibility
+                new_to_legacy = {
+                    "taxonomy": NodeType.LAYER,
+                    "concept_scheme": NodeType.DOMAIN,
+                    "class": NodeType.TERM,
+                    "individual": NodeType.TERM,
+                }
+                mapped_value = new_to_legacy.get(value)
+                if mapped_value is not None:
+                    return mapped_value
+                # Re-raise if no mapping exists
+                raise ValueError(
+                    f"Unknown node type: {value!r}. "
+                    f"Expected one of: layer, domain, term, taxonomy, concept_scheme, class, individual"
+                )
         return value
 
     def __repr__(self):
@@ -90,19 +116,45 @@ class RecordTypeColumn(TypeDecorator):
             return value.value
         return value
 
-    def process_result_value(self, value, dialect):
+    def process_result_value(
+        self, value: Optional[str], dialect
+    ) -> Optional[RecordType]:
         """
         Convert database string value to Python enum.
 
+        Accepts both legacy record type values (structure_node, structure_node_link, predicate) and
+        new record type values (ontology_entity, relationship, property_definition) during the
+        terminology transition window.
+
         Args:
-            value: String value from database
+            value: String value from database (old or new terminology)
             dialect: SQLAlchemy dialect
 
         Returns:
             RecordType enum instance or None
+
+        Raises:
+            ValueError: If the value is not a recognized enum value
         """
         if value is not None:
-            return RecordType(value)
+            try:
+                return RecordType(value)
+            except ValueError:
+                # Map new terminology back to legacy RecordType for backward compatibility
+                new_to_legacy = {
+                    "ontology_entity": RecordType.STRUCTURE_NODE,
+                    "relationship": RecordType.STRUCTURE_NODE_LINK,
+                    "property_definition": RecordType.PREDICATE,
+                }
+                mapped_value = new_to_legacy.get(value)
+                if mapped_value is not None:
+                    return mapped_value
+                # Re-raise the original ValueError if no mapping exists
+                raise ValueError(
+                    f"Unknown record type: {value!r}. "
+                    f"Expected one of: structure_node, structure_node_link, predicate, "
+                    f"ontology_entity, relationship, property_definition"
+                )
         return value
 
     def __repr__(self):

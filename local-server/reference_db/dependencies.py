@@ -44,7 +44,9 @@ def get_reference_db_session() -> Generator[Session, None, None]:
 
 
 @contextmanager
-def reference_manager_context(config: ReferenceConfig = None) -> Generator[ReferenceManager, None, None]:
+def reference_manager_context(
+    config: ReferenceConfig = None,
+) -> Generator[ReferenceManager, None, None]:
     """
     Context manager for accessing the singleton ReferenceManager.
 

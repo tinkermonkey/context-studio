@@ -58,7 +58,9 @@ class TestDatabaseManagerDirectoryIntegration:
             from pipeline.manager import OperationsDatabaseManager
 
             operations_path = config_manager.settings.database.operations_path
-            manager = OperationsDatabaseManager(operations_db_path=operations_path)  # noqa: E501
+            manager = OperationsDatabaseManager(
+                operations_db_path=operations_path
+            )  # noqa: E501
 
             # Verify directory was created
             assert os.path.exists(datafiles_dir)
@@ -145,7 +147,9 @@ class TestDatabaseManagerDirectoryIntegration:
 
             # Initialize reference manager (directory already exists)
             ref_config = ReferenceConfig()
-            reference_mgr = ReferenceManager(ref_config, db_path=reference_path)  # noqa: E501
+            reference_mgr = ReferenceManager(
+                ref_config, db_path=reference_path
+            )  # noqa: E501
 
             # Verify both databases exist
             assert os.path.exists(operations_path)
@@ -178,10 +182,16 @@ class TestDatabaseManagerDirectoryIntegration:
 
             mock_settings = MagicMock()
             mock_settings.ENABLE_CACHING_PROXY = {"test": True}
-            mock_settings.get_reference_api_buddy_config.return_value = mock_config  # noqa: E501
+            mock_settings.get_reference_api_buddy_config.return_value = (
+                mock_config  # noqa: E501
+            )
 
-            with patch("nlp.proxy_manager.get_settings", return_value=mock_settings):  # noqa: E501
-                with patch("nlp.proxy_manager.CachingProxy") as mock_proxy_class:  # noqa: E501
+            with patch(
+                "nlp.proxy_manager.get_settings", return_value=mock_settings
+            ):  # noqa: E501
+                with patch(
+                    "nlp.proxy_manager.CachingProxy"
+                ) as mock_proxy_class:  # noqa: E501
                     mock_proxy_instance = MagicMock()
                     mock_proxy_class.return_value = mock_proxy_instance
 
@@ -236,7 +246,9 @@ class TestDirectoryCreationWithFileSystemOperations:
 
                 from pipeline.manager import OperationsDatabaseManager
 
-                manager = OperationsDatabaseManager(operations_db_path=relative_path)  # noqa: E501
+                manager = OperationsDatabaseManager(
+                    operations_db_path=relative_path
+                )  # noqa: E501
 
                 # Verify directory was created in current directory
                 assert os.path.exists("./datafiles")
@@ -294,7 +306,9 @@ class TestDirectoryCreationWithFileSystemOperations:
 
             # Create multiple threads that try to create the directory
             threads = [
-                threading.Thread(target=create_manager, args=(f"operations_{i}.db",))  # noqa: E501
+                threading.Thread(
+                    target=create_manager, args=(f"operations_{i}.db",)
+                )  # noqa: E501
                 for i in range(5)
             ]
 
@@ -346,11 +360,14 @@ class TestManagerInitializationSequencing:
 
             with patch("os.makedirs", side_effect=tracked_makedirs):
                 with patch(
-                    "pipeline.manager.create_engine", side_effect=tracked_create_engine  # noqa: E501
+                    "pipeline.manager.create_engine",
+                    side_effect=tracked_create_engine,  # noqa: E501
                 ):
                     from pipeline.manager import OperationsDatabaseManager
 
-                    manager = OperationsDatabaseManager(operations_db_path=db_path)  # noqa: E501
+                    manager = OperationsDatabaseManager(
+                        operations_db_path=db_path
+                    )  # noqa: E501
 
                     # Verify makedirs was called before create_engine
                     if (
@@ -430,12 +447,17 @@ class TestFreshInstallationScenarios:
             # Start reference manager
             ref_config = ReferenceConfig()
             ref_mgr = ReferenceManager(
-                ref_config, db_path=config_manager.settings.database.reference_path  # noqa: E501
+                ref_config,
+                db_path=config_manager.settings.database.reference_path,  # noqa: E501
             )
 
             # Verify all databases exist
-            assert os.path.exists(config_manager.settings.database.operations_path)  # noqa: E501
-            assert os.path.exists(config_manager.settings.database.reference_path)  # noqa: E501
+            assert os.path.exists(
+                config_manager.settings.database.operations_path
+            )  # noqa: E501
+            assert os.path.exists(
+                config_manager.settings.database.reference_path
+            )  # noqa: E501
 
             # Verify managers are functional
             assert operations_mgr.engine is not None
@@ -473,7 +495,9 @@ class TestFreshInstallationScenarios:
                 "SELECT name FROM sqlite_master WHERE type='table'"
             )
             operations_tables = operations_cursor.fetchall()
-            assert len(operations_tables) > 0, "Operations database should have tables"  # noqa: E501
+            assert (
+                len(operations_tables) > 0
+            ), "Operations database should have tables"  # noqa: E501
             operations_conn.close()
 
             # Check reference database
@@ -483,7 +507,9 @@ class TestFreshInstallationScenarios:
                 "SELECT name FROM sqlite_master WHERE type='table'"
             )
             reference_tables = reference_cursor.fetchall()
-            assert len(reference_tables) > 0, "Reference database should have tables"  # noqa: E501
+            assert (
+                len(reference_tables) > 0
+            ), "Reference database should have tables"  # noqa: E501
             reference_conn.close()
 
             # Clean up
@@ -494,7 +520,9 @@ class TestFreshInstallationScenarios:
         """Test fresh installation with custom directory structure."""
         with tempfile.TemporaryDirectory() as tmpdir:
             # Use custom directory structure
-            custom_dir = os.path.join(tmpdir, "my_app", "databases", "datafiles")  # noqa: E501
+            custom_dir = os.path.join(
+                tmpdir, "my_app", "databases", "datafiles"
+            )  # noqa: E501
 
             config_data = {
                 "database": {
@@ -522,7 +550,9 @@ class TestFreshInstallationScenarios:
 
             # Verify entire path was created
             assert os.path.exists(custom_dir)
-            assert os.path.exists(config_manager.settings.database.operations_path)  # noqa: E501
+            assert os.path.exists(
+                config_manager.settings.database.operations_path
+            )  # noqa: E501
 
             # Clean up
             operations_mgr.engine.dispose()
@@ -543,7 +573,8 @@ class TestDatasetManagerDirectoryIntegration:
             from dataset.manager import DatasetManager
 
             _ = DatasetManager(
-                datasets_config_path=config_path, datasets_directory=datasets_dir  # noqa: E501
+                datasets_config_path=config_path,
+                datasets_directory=datasets_dir,  # noqa: E501
             )
 
             # Verify directory was created
@@ -562,7 +593,8 @@ class TestDatasetManagerDirectoryIntegration:
             from dataset.manager import DatasetManager
 
             _ = DatasetManager(
-                datasets_config_path=config_path, datasets_directory=datasets_dir  # noqa: E501
+                datasets_config_path=config_path,
+                datasets_directory=datasets_dir,  # noqa: E501
             )
 
             # Verify full path was created
@@ -585,7 +617,8 @@ class TestDatasetManagerDirectoryIntegration:
                 operations_db_path=operations_path
             )
             _ = DatasetManager(
-                datasets_config_path=config_path, datasets_directory=datasets_dir  # noqa: E501
+                datasets_config_path=config_path,
+                datasets_directory=datasets_dir,  # noqa: E501
             )
 
             # Verify both directories were created

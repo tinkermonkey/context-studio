@@ -21,9 +21,11 @@ logger = get_logger(__name__)
 class DatasetManager:
     """Manages multiple datasets and database switching."""
 
-    def __init__(self,
-                 datasets_config_path: str = "./datasets.json",
-                 datasets_directory: Optional[str] = None):
+    def __init__(
+        self,
+        datasets_config_path: str = "./datasets.json",
+        datasets_directory: Optional[str] = None,
+    ):
         self.config_path = datasets_config_path
         # If datasets_directory is provided, use it. Otherwise try to get from config.
         # If config doesn't have it or it doesn't exist, use default.
@@ -47,27 +49,34 @@ class DatasetManager:
 
         # Initialize with most recent dataset by default
         existing_datasets = []
-        for dataset_id, dataset_data in self.datasets_config.get("datasets", {}).items():
+        for dataset_id, dataset_data in self.datasets_config.get(
+            "datasets", {}
+        ).items():
             dataset_path = self.get_dataset_file_path(dataset_data["filename"])
             if os.path.exists(dataset_path):
                 existing_datasets.append((dataset_id, dataset_data))
 
         if existing_datasets:
             # Find most recently accessed dataset
-            most_recent_id = max(existing_datasets,
-                               key=lambda x: datetime.fromisoformat(x[1]["last_accessed"]))[0]
+            most_recent_id = max(
+                existing_datasets,
+                key=lambda x: datetime.fromisoformat(x[1]["last_accessed"]),
+            )[0]
             success = self._load_dataset(most_recent_id)
             if not success:
                 logger.warning(f"Failed to load most recent dataset: {most_recent_id}")
         else:
             logger.info("No existing datasets found during initialization")
 
-        logger.info(f"DatasetManager initialized with datasets directory: {self.datasets_directory}")
+        logger.info(
+            f"DatasetManager initialized with datasets directory: {self.datasets_directory}"
+        )
 
     def _get_datasets_directory_from_config(self) -> str:
         """Get datasets directory from configuration, with fallback to defaults."""
         try:
             from config import get_settings
+
             settings = get_settings()
 
             if settings.database.datasets_directory:
@@ -84,7 +93,7 @@ class DatasetManager:
     def _get_default_datasets_directory(self) -> str:
         """Get platform-specific default datasets directory."""
         # Check environment variable first
-        env_dir = os.getenv('DATASETS_DIRECTORY')
+        env_dir = os.getenv("DATASETS_DIRECTORY")
         if env_dir:
             return env_dir
 
@@ -99,15 +108,17 @@ class DatasetManager:
     def _load_datasets_config(self) -> Dict:
         """Load datasets configuration from JSON file."""
         if not os.path.exists(self.config_path):
-            logger.info(f"No datasets config found at {self.config_path}, creating new one")
+            logger.info(
+                f"No datasets config found at {self.config_path}, creating new one"
+            )
             return {
                 "active_dataset_id": None,
                 "datasets_directory": self.datasets_directory,
-                "datasets": {}
+                "datasets": {},
             }
 
         try:
-            with open(self.config_path, 'r') as f:
+            with open(self.config_path, "r") as f:
                 config = json.load(f)
 
             # Update datasets_directory if provided in constructor
@@ -121,14 +132,14 @@ class DatasetManager:
             return {
                 "active_dataset_id": None,
                 "datasets_directory": self.datasets_directory,
-                "datasets": {}
+                "datasets": {},
             }
 
     def _save_datasets_config(self, config: Dict = None) -> None:
         """Save datasets configuration to JSON file."""
         config = config or self.datasets_config
         try:
-            with open(self.config_path, 'w') as f:
+            with open(self.config_path, "w") as f:
                 json.dump(config, f, indent=2, default=str)
         except Exception as e:
             logger.error(f"Failed to save datasets config: {e}")
@@ -140,10 +151,18 @@ class DatasetManager:
                 os.makedirs(self.datasets_directory, exist_ok=True)
                 logger.info(f"Created datasets directory: {self.datasets_directory}")
             except Exception as e:
-                logger.error(f"Failed to create datasets directory {self.datasets_directory}: {e}")
+                logger.error(
+                    f"Failed to create datasets directory {self.datasets_directory}: {e}"
+                )
                 raise
 
-    def _log_action(self, action: str, dataset_id: str, dataset_title: Optional[str] = None, details: Dict = None) -> None:
+    def _log_action(
+        self,
+        action: str,
+        dataset_id: str,
+        dataset_title: Optional[str] = None,
+        details: Dict = None,
+    ) -> None:
         """Log a dataset action to the action log file."""
         try:
             # Load existing log
@@ -155,14 +174,14 @@ class DatasetManager:
                 "action": action,
                 "dataset_id": dataset_id,
                 "dataset_title": dataset_title,
-                "details": details or {}
+                "details": details or {},
             }
 
             # Add to log
             action_log.append(log_entry)
 
             # Save log
-            with open(self.action_log_path, 'w') as f:
+            with open(self.action_log_path, "w") as f:
                 json.dump(action_log, f, indent=2, default=str)
 
         except Exception as e:
@@ -174,7 +193,7 @@ class DatasetManager:
             return []
 
         try:
-            with open(self.action_log_path, 'r') as f:
+            with open(self.action_log_path, "r") as f:
                 return json.load(f)
         except Exception as e:
             logger.error(f"Failed to load action log: {e}")
@@ -188,15 +207,18 @@ class DatasetManager:
 
             # Filter out old entries
             filtered_log = [
-                entry for entry in action_log
+                entry
+                for entry in action_log
                 if datetime.fromisoformat(entry["timestamp"]) > cutoff_date
             ]
 
             # Save filtered log if any entries were removed
             if len(filtered_log) != len(action_log):
-                with open(self.action_log_path, 'w') as f:
+                with open(self.action_log_path, "w") as f:
                     json.dump(filtered_log, f, indent=2, default=str)
-                logger.info(f"Cleaned up {len(action_log) - len(filtered_log)} old log entries")
+                logger.info(
+                    f"Cleaned up {len(action_log) - len(filtered_log)} old log entries"
+                )
 
         except Exception as e:
             logger.error(f"Failed to cleanup old log entries: {e}")
@@ -209,7 +231,8 @@ class DatasetManager:
 
             # Filter entries within the specified timeframe
             filtered_log = [
-                entry for entry in action_log
+                entry
+                for entry in action_log
                 if datetime.fromisoformat(entry["timestamp"]) > cutoff_date
             ]
 
@@ -229,21 +252,27 @@ class DatasetManager:
     def list_datasets(self) -> List[DatasetInfo]:
         """List all known datasets with metrics."""
         datasets = []
-        for dataset_id, dataset_data in self.datasets_config.get("datasets", {}).items():
+        for dataset_id, dataset_data in self.datasets_config.get(
+            "datasets", {}
+        ).items():
             try:
                 # Get current metrics and schema version from database
                 metrics = self.get_dataset_metrics(dataset_id)
                 schema_version = self.get_dataset_schema_version(dataset_id)
 
-                datasets.append(DatasetInfo(
-                    id=dataset_id,
-                    title=dataset_data["title"],
-                    filename=dataset_data["filename"],
-                    created_at=datetime.fromisoformat(dataset_data["created_at"]),
-                    last_accessed=datetime.fromisoformat(dataset_data["last_accessed"]),
-                    schema_version=schema_version,
-                    metrics=metrics
-                ))
+                datasets.append(
+                    DatasetInfo(
+                        id=dataset_id,
+                        title=dataset_data["title"],
+                        filename=dataset_data["filename"],
+                        created_at=datetime.fromisoformat(dataset_data["created_at"]),
+                        last_accessed=datetime.fromisoformat(
+                            dataset_data["last_accessed"]
+                        ),
+                        schema_version=schema_version,
+                        metrics=metrics,
+                    )
+                )
             except Exception as e:
                 logger.warning(f"Failed to load dataset {dataset_id}: {e}")
                 continue
@@ -252,10 +281,12 @@ class DatasetManager:
 
     def create_dataset(self, title: str, filename: str) -> DatasetInfo:
         """Create a new dataset."""
-        logger.info(f"Creating new dataset with title '{title}' and filename '{filename}'")
+        logger.info(
+            f"Creating new dataset with title '{title}' and filename '{filename}'"
+        )
 
         # Ensure filename ends with .db
-        if not filename.endswith('.db'):
+        if not filename.endswith(".db"):
             filename = f"{filename}.db"
 
         # Check if dataset with this title or filename already exists
@@ -289,7 +320,7 @@ class DatasetManager:
             "filename": filename,
             "created_at": now.isoformat(),
             "last_accessed": now.isoformat(),
-            "schema_version": 1  # Starting version
+            "schema_version": 1,  # Starting version
         }
 
         self.datasets_config["datasets"][dataset_id] = dataset_info
@@ -314,11 +345,8 @@ class DatasetManager:
             last_accessed=now,
             schema_version=self.get_dataset_schema_version(dataset_id),
             metrics=DatasetMetrics(
-                layers_count=0,
-                domains_count=0,
-                terms_count=0,
-                relationships_count=0
-            )
+                layers_count=0, domains_count=0, terms_count=0, relationships_count=0
+            ),
         )
 
     def _load_dataset(self, dataset_id: str) -> bool:
@@ -358,7 +386,9 @@ class DatasetManager:
             dataset_data["last_accessed"] = datetime.now(timezone.utc).isoformat()
             self._save_datasets_config()
 
-            logger.info(f"Loaded dataset: {dataset_data['title']} ({dataset_id}) from {dataset_path}")
+            logger.info(
+                f"Loaded dataset: {dataset_data['title']} ({dataset_id}) from {dataset_path}"
+            )
             return True
 
         except Exception as e:
@@ -408,7 +438,7 @@ class DatasetManager:
 
             # Only log the switch action if this is an actual switch to a different dataset
             if is_actual_switch:
-                self._log_action("switch", dataset_id, dataset_data['title'])
+                self._log_action("switch", dataset_id, dataset_data["title"])
 
             logger.info(f"Switched to dataset: {dataset_data['title']} ({dataset_id})")
             return True
@@ -419,7 +449,10 @@ class DatasetManager:
 
     def get_active_dataset(self) -> Optional[DatasetInfo]:
         """Get currently active dataset information."""
-        if not self.active_dataset_id or self.active_dataset_id not in self.datasets_config.get("datasets", {}):
+        if (
+            not self.active_dataset_id
+            or self.active_dataset_id not in self.datasets_config.get("datasets", {})
+        ):
             return None
 
         dataset_data = self.datasets_config["datasets"][self.active_dataset_id]
@@ -433,7 +466,7 @@ class DatasetManager:
             created_at=datetime.fromisoformat(dataset_data["created_at"]),
             last_accessed=datetime.fromisoformat(dataset_data["last_accessed"]),
             schema_version=schema_version,
-            metrics=metrics
+            metrics=metrics,
         )
 
     def delete_dataset(self, dataset_id: str) -> bool:
@@ -466,7 +499,12 @@ class DatasetManager:
             self._save_datasets_config()
 
             # Log the deletion action
-            self._log_action("delete", dataset_id, dataset_data['title'], {"filename": dataset_data['filename']})
+            self._log_action(
+                "delete",
+                dataset_id,
+                dataset_data["title"],
+                {"filename": dataset_data["filename"]},
+            )
 
             logger.info(f"Deleted dataset: {dataset_data['title']} ({dataset_id})")
             return True
@@ -477,7 +515,9 @@ class DatasetManager:
 
     def add_existing_dataset(self, title: str, file_path: str) -> DatasetInfo:
         """Add an existing dataset file to the inventory."""
-        logger.info(f"Adding existing dataset with title '{title}' from file '{file_path}'")
+        logger.info(
+            f"Adding existing dataset with title '{title}' from file '{file_path}'"
+        )
         # Validate file exists
         if not os.path.exists(file_path):
             raise ValueError(f"Dataset file does not exist: {file_path}")
@@ -505,15 +545,24 @@ class DatasetManager:
         # Validate it's a valid SQLite database
         try:
             database_url = f"sqlite:///{file_path}"
-            engine = create_engine(database_url, connect_args={"check_same_thread": False})
+            engine = create_engine(
+                database_url, connect_args={"check_same_thread": False}
+            )
 
             # Test connection and basic validation
             with engine.connect() as conn:
                 try:
                     # Check if this looks like our schema (either old or new format)
-                    result = conn.execute(text("SELECT name FROM sqlite_master WHERE type='table' AND (name='layers' OR name='structure_nodes')"))
+                    # Support both old table names (layers, structure_nodes) and new names (ontology_entities)
+                    result = conn.execute(
+                        text(
+                            "SELECT name FROM sqlite_master WHERE type='table' AND (name='layers' OR name='structure_nodes' OR name='ontology_entities')"
+                        )
+                    )
                     if not result.fetchone():
-                        raise ValueError("File does not appear to be a valid Context Studio dataset")
+                        raise ValueError(
+                            "File does not appear to be a valid Context Studio dataset"
+                        )
 
                 except Exception as e:
                     raise ValueError(f"Invalid dataset file: {e}")
@@ -522,7 +571,10 @@ class DatasetManager:
 
         except Exception as e:
             # Clean up copied file if validation fails
-            if os.path.abspath(file_path) == os.path.abspath(expected_path) and file_path != file_path:
+            if (
+                os.path.abspath(file_path) == os.path.abspath(expected_path)
+                and file_path != file_path
+            ):
                 try:
                     os.remove(expected_path)
                 except Exception:
@@ -538,7 +590,7 @@ class DatasetManager:
             "filename": filename,
             "created_at": now.isoformat(),
             "last_accessed": now.isoformat(),
-            "schema_version": 1  # Will be read from database when needed
+            "schema_version": 1,  # Will be read from database when needed
         }
 
         self.datasets_config["datasets"][dataset_id] = dataset_info
@@ -551,7 +603,9 @@ class DatasetManager:
         self._save_datasets_config()
 
         # Log the add action
-        self._log_action("add", dataset_id, title, {"filename": filename, "source_path": file_path})
+        self._log_action(
+            "add", dataset_id, title, {"filename": filename, "source_path": file_path}
+        )
 
         logger.info(f"Added existing dataset: {title} ({dataset_id}) from {file_path}")
         return DatasetInfo(
@@ -561,7 +615,7 @@ class DatasetManager:
             created_at=now,
             last_accessed=now,
             schema_version=self.get_dataset_schema_version(dataset_id),
-            metrics=self.get_dataset_metrics(dataset_id)
+            metrics=self.get_dataset_metrics(dataset_id),
         )
 
     def forget_dataset(self, dataset_id: str) -> bool:
@@ -588,9 +642,16 @@ class DatasetManager:
             self._save_datasets_config()
 
             # Log the forget action
-            self._log_action("forget", dataset_id, dataset_data['title'], {"filename": dataset_data['filename']})
+            self._log_action(
+                "forget",
+                dataset_id,
+                dataset_data["title"],
+                {"filename": dataset_data["filename"]},
+            )
 
-            logger.info(f"Forgot dataset: {dataset_data['title']} ({dataset_id}) - file preserved")
+            logger.info(
+                f"Forgot dataset: {dataset_data['title']} ({dataset_id}) - file preserved"
+            )
             return True
 
         except Exception as e:
@@ -605,7 +666,7 @@ class DatasetManager:
             return {
                 "behavior": "create_default",
                 "description": "No datasets exist - will create 'Default Dataset'",
-                "dataset": None
+                "dataset": None,
             }
         else:
             # Default behavior: load most recent dataset
@@ -613,7 +674,7 @@ class DatasetManager:
             return {
                 "behavior": "load_most_recent",
                 "description": f"Will load most recent dataset: {most_recent.title}",
-                "dataset": most_recent
+                "dataset": most_recent,
             }
 
     def get_dataset_schema_version(self, dataset_id: str) -> int:
@@ -631,19 +692,23 @@ class DatasetManager:
         try:
             # Create temporary connection to get schema version from database
             database_url = f"sqlite:///{dataset_path}"
-            temp_engine = create_engine(database_url, connect_args={"check_same_thread": False})
+            temp_engine = create_engine(
+                database_url, connect_args={"check_same_thread": False}
+            )
 
             with temp_engine.connect() as conn:
                 # Check if schema_history table exists
-                result = conn.execute(text(
-                    "SELECT name FROM sqlite_master WHERE type='table' AND name='schema_history'"
-                )).fetchone()
+                result = conn.execute(
+                    text(
+                        "SELECT name FROM sqlite_master WHERE type='table' AND name='schema_history'"
+                    )
+                ).fetchone()
 
                 if result:
                     # Get the latest version from schema_history
-                    version_result = conn.execute(text(
-                        "SELECT MAX(version) FROM schema_history"
-                    )).scalar()
+                    version_result = conn.execute(
+                        text("SELECT MAX(version) FROM schema_history")
+                    ).scalar()
                     schema_version = version_result or 1
                 else:
                     # No schema_history table, assume version 1
@@ -666,38 +731,115 @@ class DatasetManager:
         if not os.path.exists(dataset_path):
             logger.warning(f"Dataset file not found: {dataset_path}")
             return DatasetMetrics(
-                layers_count=0,
-                domains_count=0,
-                terms_count=0,
-                relationships_count=0
+                layers_count=0, domains_count=0, terms_count=0, relationships_count=0
             )
 
         try:
             # Create temporary connection to get metrics
             database_url = f"sqlite:///{dataset_path}"
-            temp_engine = create_engine(database_url, connect_args={"check_same_thread": False})
+            temp_engine = create_engine(
+                database_url, connect_args={"check_same_thread": False}
+            )
 
             with temp_engine.connect() as conn:
-                # Check if we're using the new unified structure_nodes table (post-migration)
-                result = conn.execute(text("SELECT name FROM sqlite_master WHERE type='table' AND name='structure_nodes'"))
-                has_nodes_table = result.fetchone() is not None
+                # Check which table schema is in use: post-migration or pre-migration
+                result = conn.execute(
+                    text(
+                        "SELECT name FROM sqlite_master WHERE type='table' AND (name='structure_nodes' OR name='ontology_entities')"
+                    )
+                )
+                table_row = result.fetchone()
+                nodes_table_name = table_row[0] if table_row else None
 
                 # Also check if old tables exist for fallback
-                result = conn.execute(text("SELECT name FROM sqlite_master WHERE type='table' AND name='layers'"))
+                result = conn.execute(
+                    text(
+                        "SELECT name FROM sqlite_master WHERE type='table' AND name='layers'"
+                    )
+                )
                 has_layers_table = result.fetchone() is not None
 
-                if has_nodes_table:
-                    # Use unified structure_nodes table (post-Great Normalization)
-                    layers_count = conn.execute(text("SELECT COUNT(*) FROM structure_nodes WHERE node_type = 'layer'")).scalar() or 0
-                    domains_count = conn.execute(text("SELECT COUNT(*) FROM structure_nodes WHERE node_type = 'domain'")).scalar() or 0
-                    terms_count = conn.execute(text("SELECT COUNT(*) FROM structure_nodes WHERE node_type = 'term'")).scalar() or 0
-                    relationships_count = conn.execute(text("SELECT COUNT(*) FROM structure_node_links")).scalar() or 0
+                if nodes_table_name == 'ontology_entities':
+                    # Use unified ontology_entities table (post-migration 019)
+                    layers_count = (
+                        conn.execute(
+                            text(
+                                "SELECT COUNT(*) FROM ontology_entities WHERE node_type = 'taxonomy'"
+                            )
+                        ).scalar()
+                        or 0
+                    )
+                    domains_count = (
+                        conn.execute(
+                            text(
+                                "SELECT COUNT(*) FROM ontology_entities WHERE node_type = 'concept_scheme'"
+                            )
+                        ).scalar()
+                        or 0
+                    )
+                    terms_count = (
+                        conn.execute(
+                            text(
+                                "SELECT COUNT(*) FROM ontology_entities WHERE node_type = 'class'"
+                            )
+                        ).scalar()
+                        or 0
+                    )
+                    relationships_count = (
+                        conn.execute(
+                            text("SELECT COUNT(*) FROM relationships")
+                        ).scalar()
+                        or 0
+                    )
+                elif nodes_table_name == 'structure_nodes':
+                    # Use pre-migration structure_nodes table with legacy enum values
+                    layers_count = (
+                        conn.execute(
+                            text(
+                                "SELECT COUNT(*) FROM structure_nodes WHERE node_type = 'layer'"
+                            )
+                        ).scalar()
+                        or 0
+                    )
+                    domains_count = (
+                        conn.execute(
+                            text(
+                                "SELECT COUNT(*) FROM structure_nodes WHERE node_type = 'domain'"
+                            )
+                        ).scalar()
+                        or 0
+                    )
+                    terms_count = (
+                        conn.execute(
+                            text(
+                                "SELECT COUNT(*) FROM structure_nodes WHERE node_type = 'term'"
+                            )
+                        ).scalar()
+                        or 0
+                    )
+                    relationships_count = (
+                        conn.execute(
+                            text("SELECT COUNT(*) FROM structure_node_links")
+                        ).scalar()
+                        or 0
+                    )
                 elif has_layers_table:
                     # Fall back to old tables (pre-migration)
-                    layers_count = conn.execute(text("SELECT COUNT(*) FROM layers")).scalar() or 0
-                    domains_count = conn.execute(text("SELECT COUNT(*) FROM domains")).scalar() or 0
-                    terms_count = conn.execute(text("SELECT COUNT(*) FROM terms")).scalar() or 0
-                    relationships_count = conn.execute(text("SELECT COUNT(*) FROM term_relationships")).scalar() or 0
+                    layers_count = (
+                        conn.execute(text("SELECT COUNT(*) FROM layers")).scalar() or 0
+                    )
+                    domains_count = (
+                        conn.execute(text("SELECT COUNT(*) FROM domains")).scalar() or 0
+                    )
+                    terms_count = (
+                        conn.execute(text("SELECT COUNT(*) FROM terms")).scalar() or 0
+                    )
+                    relationships_count = (
+                        conn.execute(
+                            text("SELECT COUNT(*) FROM term_relationships")
+                        ).scalar()
+                        or 0
+                    )
                 else:
                     # No tables found - database might be empty or in transition
                     layers_count = domains_count = terms_count = relationships_count = 0
@@ -708,16 +850,13 @@ class DatasetManager:
                 layers_count=layers_count,
                 domains_count=domains_count,
                 terms_count=terms_count,
-                relationships_count=relationships_count
+                relationships_count=relationships_count,
             )
 
         except Exception as e:
             logger.error(f"Failed to get metrics for dataset {dataset_id}: {e}")
             return DatasetMetrics(
-                layers_count=0,
-                domains_count=0,
-                terms_count=0,
-                relationships_count=0
+                layers_count=0, domains_count=0, terms_count=0, relationships_count=0
             )
 
     def update_datasets_directory(self, new_directory: str) -> bool:
@@ -736,12 +875,16 @@ class DatasetManager:
             self._save_datasets_config()
 
             # Log the directory update action
-            self._log_action("update_directory", "system", "System", {
-                "old_directory": old_directory,
-                "new_directory": new_directory
-            })
+            self._log_action(
+                "update_directory",
+                "system",
+                "System",
+                {"old_directory": old_directory, "new_directory": new_directory},
+            )
 
-            logger.info(f"Updated datasets directory from {old_directory} to {new_directory}")
+            logger.info(
+                f"Updated datasets directory from {old_directory} to {new_directory}"
+            )
             return True
 
         except Exception as e:

@@ -3,8 +3,10 @@ Integration tests for RAG Pipeline API endpoints.
 
 These tests verify all RAG API endpoints with the FastAPI test client.
 """
+
 import sys
 import os
+
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import pytest  # noqa: E402
@@ -35,13 +37,23 @@ def test_kg_db():
     try:
         # Create embedding model to generate test embeddings
         from embeddings.generate_embeddings import get_model
+
         model = get_model()
 
         # Add test terms with embeddings
         terms_data = [
-            ("Machine Learning", "A field of artificial intelligence focused on algorithms that learn from data"),  # noqa: E501
-            ("Neural Networks", "Computing systems inspired by biological neural networks"),  # noqa: E501
-            ("Artificial Intelligence", "The simulation of human intelligence by machines"),  # noqa: E501
+            (
+                "Machine Learning",
+                "A field of artificial intelligence focused on algorithms that learn from data",
+            ),  # noqa: E501
+            (
+                "Neural Networks",
+                "Computing systems inspired by biological neural networks",
+            ),  # noqa: E501
+            (
+                "Artificial Intelligence",
+                "The simulation of human intelligence by machines",
+            ),  # noqa: E501
         ]
 
         for title, definition in terms_data:
@@ -54,7 +66,7 @@ def test_kg_db():
                 title=title,
                 definition=definition,
                 title_embedding=embedding_blob,
-                parent_node_id=None
+                parent_node_id=None,
             )
             session.add(node)
 
@@ -154,8 +166,8 @@ class TestRAGPipelineAPIEndpoints:
             "/api/rag/extract",
             json={
                 "text": "Machine learning and neural networks are key technologies.",  # noqa: E501
-                "enable_trace": False
-            }
+                "enable_trace": False,
+            },
         )
 
         assert response.status_code == 200
@@ -186,8 +198,8 @@ class TestRAGPipelineAPIEndpoints:
             "/api/rag/extract",
             json={
                 "text": "Artificial intelligence is transforming technology.",
-                "enable_trace": True
-            }
+                "enable_trace": True,
+            },
         )
 
         assert response.status_code == 200
@@ -200,11 +212,7 @@ class TestRAGPipelineAPIEndpoints:
     def test_extract_entities_empty_text(self, test_client):
         """Test POST /api/rag/extract with empty text."""
         response = test_client.post(
-            "/api/rag/extract",
-            json={
-                "text": "",
-                "enable_trace": False
-            }
+            "/api/rag/extract", json={"text": "", "enable_trace": False}
         )
 
         # Should return 400 or validation error (422)
@@ -213,11 +221,7 @@ class TestRAGPipelineAPIEndpoints:
     def test_extract_entities_whitespace_only(self, test_client):
         """Test POST /api/rag/extract with whitespace-only text."""
         response = test_client.post(
-            "/api/rag/extract",
-            json={
-                "text": "   \n\t  ",
-                "enable_trace": False
-            }
+            "/api/rag/extract", json={"text": "   \n\t  ", "enable_trace": False}
         )
 
         # Should return validation error
@@ -225,12 +229,7 @@ class TestRAGPipelineAPIEndpoints:
 
     def test_extract_entities_missing_text(self, test_client):
         """Test POST /api/rag/extract without text field."""
-        response = test_client.post(
-            "/api/rag/extract",
-            json={
-                "enable_trace": False
-            }
-        )
+        response = test_client.post("/api/rag/extract", json={"enable_trace": False})
 
         # Should return validation error
         assert response.status_code == 422
@@ -242,8 +241,8 @@ class TestRAGPipelineAPIEndpoints:
             "/api/rag/extract",
             json={
                 "text": "Neural networks enable deep learning.",
-                "enable_trace": False
-            }
+                "enable_trace": False,
+            },
         )
         assert extract_response.status_code == 200
         request_id = extract_response.json()["request_id"]
@@ -279,8 +278,8 @@ class TestRAGPipelineAPIEndpoints:
             "/api/rag/extract",
             json={
                 "text": "Machine learning algorithms process data efficiently.",  # noqa: E501
-                "enable_trace": True
-            }
+                "enable_trace": True,
+            },
         )
         assert extract_response.status_code == 200
         request_id = extract_response.json()["request_id"]
@@ -303,8 +302,8 @@ class TestRAGPipelineAPIEndpoints:
             "/api/rag/extract",
             json={
                 "text": "Artificial intelligence transforms industries.",
-                "enable_trace": False
-            }
+                "enable_trace": False,
+            },
         )
         assert extract_response.status_code == 200
         request_id = extract_response.json()["request_id"]
@@ -322,8 +321,8 @@ class TestRAGPipelineAPIEndpoints:
             "/api/rag/extract",
             json={
                 "text": "Deep learning uses neural network architectures.",
-                "enable_trace": True
-            }
+                "enable_trace": True,
+            },
         )
         assert extract_response.status_code == 200
         request_id = extract_response.json()["request_id"]
@@ -331,7 +330,9 @@ class TestRAGPipelineAPIEndpoints:
         # Get trace for specific layer - using concept_resolution which reliably completes  # noqa: E501
         # (kg_context may timeout in test environment due to embedding model loading)  # noqa: E501
         layer_name = "concept_resolution"
-        trace_response = test_client.get(f"/api/rag/trace/{request_id}/layer/{layer_name}")  # noqa: E501
+        trace_response = test_client.get(
+            f"/api/rag/trace/{request_id}/layer/{layer_name}"
+        )  # noqa: E501
 
         assert trace_response.status_code == 200
         trace_data = trace_response.json()
@@ -348,15 +349,17 @@ class TestRAGPipelineAPIEndpoints:
             "/api/rag/extract",
             json={
                 "text": "AI systems use machine learning techniques.",
-                "enable_trace": True
-            }
+                "enable_trace": True,
+            },
         )
         assert extract_response.status_code == 200
         request_id = extract_response.json()["request_id"]
 
         # Try to get trace for invalid layer
         invalid_layer = "invalid_layer_name"
-        trace_response = test_client.get(f"/api/rag/trace/{request_id}/layer/{invalid_layer}")  # noqa: E501
+        trace_response = test_client.get(
+            f"/api/rag/trace/{request_id}/layer/{invalid_layer}"
+        )  # noqa: E501
 
         assert trace_response.status_code == 400
         assert "invalid layer name" in trace_response.json()["detail"].lower()
@@ -368,8 +371,8 @@ class TestRAGPipelineAPIEndpoints:
             "/api/rag/extract",
             json={
                 "text": "Machine learning enables predictive analytics.",
-                "enable_trace": True
-            }
+                "enable_trace": True,
+            },
         )
         assert extract_response.status_code == 200
         request_id = extract_response.json()["request_id"]
@@ -407,8 +410,8 @@ class TestRAGPipelineAPIEndpoints:
             json={
                 "timeout_layer_0": 1.0,
                 "timeout_layer_1": 40.0,
-                "timeout_layer_2": 1.5
-            }
+                "timeout_layer_2": 1.5,
+            },
         )
 
         assert response.status_code == 200
@@ -427,10 +430,7 @@ class TestRAGPipelineAPIEndpoints:
     def test_update_config_dedup_threshold(self, test_client):
         """Test POST /api/rag/config/update to modify deduplication threshold."""  # noqa: E501
         response = test_client.post(
-            "/api/rag/config/update",
-            json={
-                "dedup_similarity_threshold": 0.85
-            }
+            "/api/rag/config/update", json={"dedup_similarity_threshold": 0.85}
         )
 
         assert response.status_code == 200
@@ -441,12 +441,7 @@ class TestRAGPipelineAPIEndpoints:
 
     def test_update_config_kg_top_k(self, test_client):
         """Test POST /api/rag/config/update to modify KG top-k parameter."""
-        response = test_client.post(
-            "/api/rag/config/update",
-            json={
-                "kg_top_k": 100
-            }
-        )
+        response = test_client.post("/api/rag/config/update", json={"kg_top_k": 100})
 
         assert response.status_code == 200
         data = response.json()
@@ -458,9 +453,7 @@ class TestRAGPipelineAPIEndpoints:
         """Test POST /api/rag/config/update with invalid timeout value."""
         response = test_client.post(
             "/api/rag/config/update",
-            json={
-                "timeout_layer_0": -1.0  # Invalid: negative timeout
-            }
+            json={"timeout_layer_0": -1.0},  # Invalid: negative timeout
         )
 
         assert response.status_code == 400
@@ -470,9 +463,7 @@ class TestRAGPipelineAPIEndpoints:
         """Test POST /api/rag/config/update with out-of-range dedup threshold."""  # noqa: E501
         response = test_client.post(
             "/api/rag/config/update",
-            json={
-                "dedup_similarity_threshold": 1.5  # Invalid: > 1.0
-            }
+            json={"dedup_similarity_threshold": 1.5},  # Invalid: > 1.0
         )
 
         assert response.status_code == 400
@@ -481,14 +472,13 @@ class TestRAGPipelineAPIEndpoints:
     def test_update_config_invalid_key(self, test_client):
         """Test POST /api/rag/config/update with invalid configuration key."""
         response = test_client.post(
-            "/api/rag/config/update",
-            json={
-                "invalid_config_key": 123
-            }
+            "/api/rag/config/update", json={"invalid_config_key": 123}
         )
 
         assert response.status_code == 400
-        assert "invalid configuration keys" in response.json()["detail"].lower()  # noqa: E501
+        assert (
+            "invalid configuration keys" in response.json()["detail"].lower()
+        )  # noqa: E501
 
     def test_update_config_multiple_settings(self, test_client):
         """Test POST /api/rag/config/update with multiple settings at once."""
@@ -497,8 +487,8 @@ class TestRAGPipelineAPIEndpoints:
             json={
                 "timeout_layer_1": 50.0,
                 "dedup_similarity_threshold": 0.95,
-                "kg_top_k": 75
-            }
+                "kg_top_k": 75,
+            },
         )
 
         assert response.status_code == 200

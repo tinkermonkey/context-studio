@@ -5,6 +5,7 @@ Ports define the contracts between the domain core and infrastructure adapters.
 They use typing.Protocol for structural subtyping and reference only domain entity types.
 Response dataclasses are defined in this file alongside their corresponding ports.
 """
+
 from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Protocol, Optional, Sequence
@@ -83,7 +84,9 @@ class ChangeRepository(Protocol):
 class SyncTarget(Protocol):
     """Target for remote synchronization of changes."""
 
-    def push_changes(self, changes: Sequence[ChangeEvent], metadata: dict) -> SyncResult:
+    def push_changes(
+        self, changes: Sequence[ChangeEvent], metadata: dict
+    ) -> SyncResult:
         """Push local change events to remote."""
         ...
 

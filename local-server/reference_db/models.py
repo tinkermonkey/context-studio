@@ -35,7 +35,7 @@ class ReferenceNode(Base):
         UNIQUE(source, external_id): Prevents duplicate entries from the same source
     """
 
-    __tablename__ = 'reference_nodes'
+    __tablename__ = "reference_nodes"
 
     id = Column(String, primary_key=True)
     title = Column(String, nullable=False, index=True)
@@ -50,21 +50,21 @@ class ReferenceNode(Base):
 
     # Relationships
     subject_links = relationship(
-        'ReferenceLink',
-        foreign_keys='ReferenceLink.subject_node',
-        back_populates='subject',
-        cascade='all, delete-orphan'
+        "ReferenceLink",
+        foreign_keys="ReferenceLink.subject_node",
+        back_populates="subject",
+        cascade="all, delete-orphan",
     )
     object_links = relationship(
-        'ReferenceLink',
-        foreign_keys='ReferenceLink.object_node',
-        back_populates='object',
-        cascade='all, delete-orphan'
+        "ReferenceLink",
+        foreign_keys="ReferenceLink.object_node",
+        back_populates="object",
+        cascade="all, delete-orphan",
     )
 
     # UNIQUE constraint on (source, external_id)
     __table_args__ = (
-        UniqueConstraint('source', 'external_id', name='uq_source_external_id'),
+        UniqueConstraint("source", "external_id", name="uq_source_external_id"),
     )
 
     def __repr__(self) -> str:
@@ -96,19 +96,33 @@ class ReferenceLink(Base):
         object: Foreign key relationship to object ReferenceNode (CASCADE delete)
     """
 
-    __tablename__ = 'reference_links'
+    __tablename__ = "reference_links"
 
     id = Column(String, primary_key=True)
-    subject_node = Column(String, ForeignKey('reference_nodes.id', ondelete='CASCADE'), nullable=False, index=True)
+    subject_node = Column(
+        String,
+        ForeignKey("reference_nodes.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
     predicate = Column(String, nullable=False, index=True)
-    object_node = Column(String, ForeignKey('reference_nodes.id', ondelete='CASCADE'), nullable=False, index=True)
+    object_node = Column(
+        String,
+        ForeignKey("reference_nodes.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
     attributes = Column(Text, nullable=True)  # JSON-serialized Dict[str, Any]
     created_at = Column(String, nullable=False)
     updated_at = Column(String, nullable=False)
 
     # Relationships
-    subject = relationship('ReferenceNode', foreign_keys=[subject_node], back_populates='subject_links')
-    object = relationship('ReferenceNode', foreign_keys=[object_node], back_populates='object_links')
+    subject = relationship(
+        "ReferenceNode", foreign_keys=[subject_node], back_populates="subject_links"
+    )
+    object = relationship(
+        "ReferenceNode", foreign_keys=[object_node], back_populates="object_links"
+    )
 
     def __repr__(self) -> str:
         """Return a readable string representation of the reference link."""
@@ -150,7 +164,7 @@ class ExternalPredicate(Base):
         - definition_embedding: For vector similarity searches
     """
 
-    __tablename__ = 'external_predicates'
+    __tablename__ = "external_predicates"
 
     id = Column(String, primary_key=True)
     title = Column(String, nullable=False, index=True)
@@ -158,14 +172,20 @@ class ExternalPredicate(Base):
     source = Column(String, nullable=False, index=True)
     external_id = Column(String, nullable=False, index=True)
     attributes = Column(Text, nullable=True)  # JSON-serialized Dict[str, Any]
-    title_embedding = Column(LargeBinary, nullable=True, index=True)  # BLOB for vector data
-    definition_embedding = Column(LargeBinary, nullable=True, index=True)  # BLOB for vector data
+    title_embedding = Column(
+        LargeBinary, nullable=True, index=True
+    )  # BLOB for vector data
+    definition_embedding = Column(
+        LargeBinary, nullable=True, index=True
+    )  # BLOB for vector data
     created_at = Column(String, nullable=False)
     updated_at = Column(String, nullable=False)
 
     # UNIQUE constraint on (source, external_id)
     __table_args__ = (
-        UniqueConstraint('source', 'external_id', name='uq_external_predicate_source_external_id'),
+        UniqueConstraint(
+            "source", "external_id", name="uq_external_predicate_source_external_id"
+        ),
     )
 
     def __repr__(self) -> str:

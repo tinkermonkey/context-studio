@@ -89,12 +89,14 @@ class ExternalReference:
     uri: str
     label: str
     confidence: float
-    metadata: types.MappingProxyType = field(default_factory=lambda: types.MappingProxyType({}))
+    metadata: types.MappingProxyType = field(
+        default_factory=lambda: types.MappingProxyType({})
+    )
 
     def __post_init__(self) -> None:
         """Wrap mutable dict in a read-only proxy to preserve immutability."""
         if not isinstance(self.metadata, types.MappingProxyType):
-            object.__setattr__(self, 'metadata', types.MappingProxyType(self.metadata))
+            object.__setattr__(self, "metadata", types.MappingProxyType(self.metadata))
 
 
 @dataclass(frozen=True)

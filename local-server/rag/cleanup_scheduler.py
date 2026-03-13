@@ -4,6 +4,7 @@ RAG Observability Data Cleanup Scheduler
 This module provides scheduled cleanup of old RAG observability data
 based on retention policies (30 days for metrics, 7 days for traces).
 """
+
 import asyncio
 import sys
 from datetime import datetime
@@ -22,7 +23,9 @@ PYTHON_VERSION = sys.version_info
 HAS_ASYNCIO_TO_THREAD = PYTHON_VERSION >= (3, 9)
 
 # Thread pool executor for Python < 3.9 compatibility
-_thread_pool_executor = None if HAS_ASYNCIO_TO_THREAD else ThreadPoolExecutor(max_workers=2)
+_thread_pool_executor = (
+    None if HAS_ASYNCIO_TO_THREAD else ThreadPoolExecutor(max_workers=2)
+)
 
 T = TypeVar("T")
 
@@ -47,11 +50,7 @@ class RAGCleanupScheduler:
     Runs cleanup task at configured intervals to remove data exceeding retention periods.
     """
 
-    def __init__(
-        self,
-        ops_db_session: Session,
-        cleanup_interval_hours: int = 24
-    ):
+    def __init__(self, ops_db_session: Session, cleanup_interval_hours: int = 24):
         """
         Initialize RAG Cleanup Scheduler.
 
@@ -64,7 +63,9 @@ class RAGCleanupScheduler:
         self.observability_store = RAGObservabilityStore(ops_db_session)
         self._task: Optional[asyncio.Task] = None
         self._running = False
-        logger.info(f"RAGCleanupScheduler initialized with interval={cleanup_interval_hours}h")
+        logger.info(
+            f"RAGCleanupScheduler initialized with interval={cleanup_interval_hours}h"
+        )
 
     def start(self):
         """Start the cleanup scheduler."""
@@ -91,9 +92,13 @@ class RAGCleanupScheduler:
                 # Expected when task is cancelled
                 pass
             except asyncio.TimeoutError:
-                logger.warning("Cleanup task did not complete within timeout, forcing termination")
+                logger.warning(
+                    "Cleanup task did not complete within timeout, forcing termination"
+                )
             except Exception as e:
-                logger.error(f"Error while stopping cleanup scheduler: {e}", exc_info=True)
+                logger.error(
+                    f"Error while stopping cleanup scheduler: {e}", exc_info=True
+                )
         logger.info("RAG cleanup scheduler stopped")
 
     async def _cleanup_loop(self):

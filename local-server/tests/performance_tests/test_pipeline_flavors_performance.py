@@ -59,7 +59,9 @@ class TestPipelineFlavorPerformance:
         duration = end_time - start_time
 
         # Should create 10 flavors in under 5 seconds
-        assert duration < 5.0, f"Flavor creation took {duration:.2f}s, expected < 5.0s"  # noqa: E501
+        assert (
+            duration < 5.0
+        ), f"Flavor creation took {duration:.2f}s, expected < 5.0s"  # noqa: E501
 
         # Average time per flavor should be reasonable
         avg_time_per_flavor = duration / num_flavors
@@ -82,7 +84,9 @@ class TestPipelineFlavorPerformance:
         duration = end_time - start_time
 
         # Should handle 20 list requests in under 2 seconds
-        assert duration < 2.0, f"Flavor listing took {duration:.2f}s, expected < 2.0s"  # noqa: E501
+        assert (
+            duration < 2.0
+        ), f"Flavor listing took {duration:.2f}s, expected < 2.0s"  # noqa: E501
 
         # Average time per request should be fast
         avg_time_per_request = duration / num_requests
@@ -100,7 +104,9 @@ class TestPipelineFlavorPerformance:
 
         def create_flavor(flavor_id):
             flavor_data = sample_flavor_data.copy()
-            flavor_data["title"] = f"Concurrent Test Flavor {test_id}-{flavor_id}"  # noqa: E501
+            flavor_data["title"] = (
+                f"Concurrent Test Flavor {test_id}-{flavor_id}"  # noqa: E501
+            )
             response = client.post("/api/pipeline-flavors", json=flavor_data)
             return response.status_code == 201
 
@@ -109,7 +115,9 @@ class TestPipelineFlavorPerformance:
         # Run concurrent flavor creation
         num_concurrent = 5
         with ThreadPoolExecutor(max_workers=num_concurrent) as executor:
-            futures = [executor.submit(create_flavor, i) for i in range(num_concurrent)]  # noqa: E501
+            futures = [
+                executor.submit(create_flavor, i) for i in range(num_concurrent)
+            ]  # noqa: E501
             results = [future.result() for future in as_completed(futures)]
 
         end_time = time.time()
@@ -166,10 +174,14 @@ class TestDatabasePerformance:
         duration = end_time - start_time
 
         # Should handle 50 individual queries quickly
-        assert duration < 2.0, f"Database queries took {duration:.2f}s, expected < 2.0s"  # noqa: E501
+        assert (
+            duration < 2.0
+        ), f"Database queries took {duration:.2f}s, expected < 2.0s"  # noqa: E501
 
         avg_query_time = duration / num_queries
-        assert avg_query_time < 0.04, f"Average query time: {avg_query_time:.3f}s"  # noqa: E501
+        assert (
+            avg_query_time < 0.04
+        ), f"Average query time: {avg_query_time:.3f}s"  # noqa: E501
 
     @pytest.mark.performance
     def test_filtered_query_performance(self, client):
@@ -193,7 +205,9 @@ class TestDatabasePerformance:
         duration = end_time - start_time
 
         # Should handle filtered queries efficiently
-        assert duration < 1.5, f"Filtered queries took {duration:.2f}s, expected < 1.5s"  # noqa: E501
+        assert (
+            duration < 1.5
+        ), f"Filtered queries took {duration:.2f}s, expected < 1.5s"  # noqa: E501
 
 
 class TestLoadTesting:
@@ -226,7 +240,9 @@ class TestLoadTesting:
                     if i % 3 == 0:
                         # List flavors
                         response = client.get("/api/pipeline-flavors")
-                        results_queue.put(("list", response.status_code == 200))  # noqa: E501
+                        results_queue.put(
+                            ("list", response.status_code == 200)
+                        )  # noqa: E501
                     elif i % 3 == 1:
                         # Get specific flavor (try first in list)
                         list_response = client.get("/api/pipeline-flavors")
@@ -237,7 +253,9 @@ class TestLoadTesting:
                                 response = client.get(
                                     f"/api/pipeline-flavors/{flavor_id}"
                                 )
-                                results_queue.put(("get", response.status_code == 200))  # noqa: E501
+                                results_queue.put(
+                                    ("get", response.status_code == 200)
+                                )  # noqa: E501
                             else:
                                 # No flavors available, this is ok in empty database  # noqa: E501
                                 results_queue.put(("get", True))
@@ -264,7 +282,10 @@ class TestLoadTesting:
                                 f"/api/pipeline-flavors/{flavor_id}"
                             )
                             results_queue.put(
-                                ("create_delete", delete_response.status_code == 204)  # noqa: E501
+                                (
+                                    "create_delete",
+                                    delete_response.status_code == 204,
+                                )  # noqa: E501
                             )
                         else:
                             results_queue.put(("create_delete", False))
@@ -295,16 +316,22 @@ class TestLoadTesting:
         # Analyze results
         success_count = sum(1 for op, success in results if success)
         total_operations = len(results)
-        success_rate = success_count / total_operations if total_operations > 0 else 0  # noqa: E501
+        success_rate = (
+            success_count / total_operations if total_operations > 0 else 0
+        )  # noqa: E501
 
         # Load test should complete in reasonable time
-        assert duration < 15.0, f"Load test took {duration:.2f}s, expected < 15.0s"  # noqa: E501
+        assert (
+            duration < 15.0
+        ), f"Load test took {duration:.2f}s, expected < 15.0s"  # noqa: E501
 
         # Most operations should succeed (relaxed threshold for isolated test environment)  # noqa: E501
         # In a real environment with pre-existing data, we would expect >80%
         # In isolated testing with empty database, 60% is acceptable since get operations  # noqa: E501
         # will fail when no flavors exist
-        assert success_rate > 0.5, f"Success rate: {success_rate:.2%}, expected > 50%"  # noqa: E501
+        assert (
+            success_rate > 0.5
+        ), f"Success rate: {success_rate:.2%}, expected > 50%"  # noqa: E501
 
         # Should handle the expected number of operations
         expected_operations = num_threads * requests_per_thread

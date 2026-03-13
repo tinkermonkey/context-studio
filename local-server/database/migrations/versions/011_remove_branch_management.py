@@ -44,7 +44,9 @@ class Migration011(Migration):
 
     def down(self, connection: Connection) -> None:
         """Rollback migration 011 - recreate branch management tables."""
-        logger.warning(f"Rolling back migration {self.version} - this will recreate empty branch tables")
+        logger.warning(
+            f"Rolling back migration {self.version} - this will recreate empty branch tables"
+        )
 
         try:
             # Enable foreign keys
@@ -101,12 +103,36 @@ class Migration011(Migration):
             """))
 
             # Recreate indexes
-            connection.execute(text("CREATE INDEX idx_branches_type_created ON branches(branch_type, created_at DESC)"))
-            connection.execute(text("CREATE INDEX idx_branches_created_by ON branches(created_by, created_at DESC)"))
-            connection.execute(text("CREATE INDEX idx_branches_base_branch ON branches(base_branch_id)"))
-            connection.execute(text("CREATE INDEX idx_merge_requests_status ON branch_merge_requests(status, created_at DESC)"))
-            connection.execute(text("CREATE INDEX idx_merge_requests_created_by ON branch_merge_requests(created_by, created_at DESC)"))
-            connection.execute(text("CREATE INDEX idx_merge_requests_branches ON branch_merge_requests(source_branch_id, target_branch_id)"))
+            connection.execute(
+                text(
+                    "CREATE INDEX idx_branches_type_created ON branches(branch_type, created_at DESC)"
+                )
+            )
+            connection.execute(
+                text(
+                    "CREATE INDEX idx_branches_created_by ON branches(created_by, created_at DESC)"
+                )
+            )
+            connection.execute(
+                text(
+                    "CREATE INDEX idx_branches_base_branch ON branches(base_branch_id)"
+                )
+            )
+            connection.execute(
+                text(
+                    "CREATE INDEX idx_merge_requests_status ON branch_merge_requests(status, created_at DESC)"
+                )
+            )
+            connection.execute(
+                text(
+                    "CREATE INDEX idx_merge_requests_created_by ON branch_merge_requests(created_by, created_at DESC)"
+                )
+            )
+            connection.execute(
+                text(
+                    "CREATE INDEX idx_merge_requests_branches ON branch_merge_requests(source_branch_id, target_branch_id)"
+                )
+            )
 
             # Recreate views
             connection.execute(text("""

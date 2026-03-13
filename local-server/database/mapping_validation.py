@@ -25,36 +25,32 @@ MAPPING_SCHEMA = {
                 "properties": {
                     "source": {
                         "type": "string",
-                        "enum": ["conceptnet", "dbpedia", "wikidata", "schema_org", "manual"]  # noqa: E501
+                        "enum": [
+                            "conceptnet",
+                            "dbpedia",
+                            "wikidata",
+                            "schema_org",
+                            "manual",
+                        ],  # noqa: E501
                     },
-                    "source_id": {
-                        "type": "string",
-                        "minLength": 1
-                    },
-                    "title": {
-                        "type": "string",
-                        "minLength": 1
-                    },
-                    "confidence": {
-                        "type": "number",
-                        "minimum": 0.0,
-                        "maximum": 1.0
-                    }
+                    "source_id": {"type": "string", "minLength": 1},
+                    "title": {"type": "string", "minLength": 1},
+                    "confidence": {"type": "number", "minimum": 0.0, "maximum": 1.0},
                 },
                 "required": ["source", "source_id", "title", "confidence"],
-                "additionalProperties": True  # Allow extra fields for source-specific data  # noqa: E501
-            }
+                "additionalProperties": True,  # Allow extra fields for source-specific data  # noqa: E501
+            },
         },
         "auto_validated": {
             "type": "boolean",
-            "description": "True if confidence >= 0.95 and auto-approved"
+            "description": "True if confidence >= 0.95 and auto-approved",
         },
         "manual_notes": {
             "type": "string",
-            "description": "Optional notes from manual validation"
-        }
+            "description": "Optional notes from manual validation",
+        },
     },
-    "additionalProperties": True  # Allow additional fields for future extensions  # noqa: E501
+    "additionalProperties": True,  # Allow additional fields for future extensions  # noqa: E501
 }
 
 
@@ -101,7 +97,10 @@ def validate_mapping(mapping: Dict[str, Any]) -> tuple[bool, Optional[str]]:
                 conf = ref_pred.get("confidence")
                 if conf is not None:
                     if not (0.0 <= conf <= 1.0):
-                        return False, f"reference_predicates[{i}].confidence must be between 0.0 and 1.0, got {conf}"  # noqa: E501
+                        return (
+                            False,
+                            f"reference_predicates[{i}].confidence must be between 0.0 and 1.0, got {conf}",
+                        )  # noqa: E501
 
         return True, None
 
@@ -159,10 +158,16 @@ def validate_confidence_score(confidence: float) -> tuple[bool, Optional[str]]:
         >>> assert is_valid
     """
     if not isinstance(confidence, (int, float)):
-        return False, f"Confidence must be a number, got {type(confidence).__name__}"  # noqa: E501
+        return (
+            False,
+            f"Confidence must be a number, got {type(confidence).__name__}",
+        )  # noqa: E501
 
     if not (0.0 <= confidence <= 1.0):
-        return False, f"Confidence must be between 0.0 and 1.0, got {confidence}"  # noqa: E501
+        return (
+            False,
+            f"Confidence must be between 0.0 and 1.0, got {confidence}",
+        )  # noqa: E501
 
     return True, None
 
@@ -197,10 +202,7 @@ def should_auto_validate(mapping: Dict[str, Any]) -> bool:
         return False
 
     # Check if all confidence scores are >= 0.95
-    return all(
-        ref_pred.get("confidence", 0.0) >= 0.95
-        for ref_pred in ref_preds
-    )
+    return all(ref_pred.get("confidence", 0.0) >= 0.95 for ref_pred in ref_preds)
 
 
 def add_reference_predicate(
@@ -209,7 +211,7 @@ def add_reference_predicate(
     source_id: str,
     title: str,
     confidence: float,
-    **extra_fields
+    **extra_fields,
 ) -> Dict[str, Any]:
     """
     Add a reference predicate to a mapping.
@@ -252,7 +254,7 @@ def add_reference_predicate(
         "source_id": source_id,
         "title": title,
         "confidence": confidence,
-        **extra_fields
+        **extra_fields,
     }
 
     mapping["reference_predicates"].append(ref_pred)
@@ -274,13 +276,12 @@ def create_empty_mapping() -> Dict[str, Any]:
         >>> mapping = create_empty_mapping()
         >>> assert "reference_predicates" in mapping
     """
-    return {
-        "reference_predicates": [],
-        "auto_validated": False
-    }
+    return {"reference_predicates": [], "auto_validated": False}
 
 
-def create_manual_mapping(title: str, notes: Optional[str] = None) -> Dict[str, Any]:  # noqa: E501
+def create_manual_mapping(
+    title: str, notes: Optional[str] = None
+) -> Dict[str, Any]:  # noqa: E501
     """
     Create a manual mapping (confidence = 1.0).
 
@@ -296,14 +297,11 @@ def create_manual_mapping(title: str, notes: Optional[str] = None) -> Dict[str, 
     """
     mapping = create_empty_mapping()
     mapping["reference_predicates"] = [
-        {
-            "source": "manual",
-            "source_id": "manual",
-            "title": title,
-            "confidence": 1.0
-        }
+        {"source": "manual", "source_id": "manual", "title": title, "confidence": 1.0}
     ]
-    mapping["auto_validated"] = True  # Manual mappings are automatically validated  # noqa: E501
+    mapping["auto_validated"] = (
+        True  # Manual mappings are automatically validated  # noqa: E501
+    )
 
     if notes:
         mapping["manual_notes"] = notes

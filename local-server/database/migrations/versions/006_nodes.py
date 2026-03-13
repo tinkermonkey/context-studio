@@ -11,6 +11,7 @@ logger = logging.getLogger(__name__)
 
 class Migration006(Migration):
     """Normalize layers, domains, and terms into a single structure_nodes table."""
+
     version = 6
     description = "The Structure Nodes - Normalize layers, domains, terms into structure_nodes table."
 
@@ -72,7 +73,9 @@ class Migration006(Migration):
 
         logger.info("The Structure Nodes migration rollback completed!")
 
-    def _create_structure_nodes_table_if_not_exists(self, connection: Connection) -> None:
+    def _create_structure_nodes_table_if_not_exists(
+        self, connection: Connection
+    ) -> None:
         """Create the new structure_nodes table if it doesn't exist."""
         # Check if table exists
         result = connection.execute(text("""
@@ -85,7 +88,9 @@ class Migration006(Migration):
 
         self._create_structure_nodes_table(connection)
 
-    def _create_structure_node_links_table_if_not_exists(self, connection: Connection) -> None:
+    def _create_structure_node_links_table_if_not_exists(
+        self, connection: Connection
+    ) -> None:
         """Create the new structure_node_links table if it doesn't exist."""
         # Check if table exists
         result = connection.execute(text("""
@@ -135,12 +140,26 @@ class Migration006(Migration):
         """))
 
         # Create indexes for performance
-        connection.execute(text("CREATE INDEX idx_nodes_node_type ON structure_nodes(node_type);"))
-        connection.execute(text("CREATE INDEX idx_nodes_parent_node_id ON structure_nodes(parent_node_id);"))
-        connection.execute(text("CREATE INDEX idx_nodes_type_parent ON structure_nodes(node_type, parent_node_id);"))
+        connection.execute(
+            text("CREATE INDEX idx_nodes_node_type ON structure_nodes(node_type);")
+        )
+        connection.execute(
+            text(
+                "CREATE INDEX idx_nodes_parent_node_id ON structure_nodes(parent_node_id);"
+            )
+        )
+        connection.execute(
+            text(
+                "CREATE INDEX idx_nodes_type_parent ON structure_nodes(node_type, parent_node_id);"
+            )
+        )
 
         # Verify table was created
-        result = connection.execute(text("SELECT name FROM sqlite_master WHERE type='table' AND name='structure_nodes'")).fetchone()
+        result = connection.execute(
+            text(
+                "SELECT name FROM sqlite_master WHERE type='table' AND name='structure_nodes'"
+            )
+        ).fetchone()
         if result:
             logger.info("Successfully created structure_nodes table")
         else:
@@ -168,8 +187,16 @@ class Migration006(Migration):
         """))
 
         # Create indexes for performance
-        connection.execute(text("CREATE INDEX idx_node_links_source ON structure_node_links(source_node_id);"))
-        connection.execute(text("CREATE INDEX idx_node_links_target ON structure_node_links(target_node_id);"))
+        connection.execute(
+            text(
+                "CREATE INDEX idx_node_links_source ON structure_node_links(source_node_id);"
+            )
+        )
+        connection.execute(
+            text(
+                "CREATE INDEX idx_node_links_target ON structure_node_links(target_node_id);"
+            )
+        )
 
     def _create_change_events_table(self, connection: Connection) -> None:
         """Create the new change_events table."""
@@ -189,10 +216,26 @@ class Migration006(Migration):
         """))
 
         # Create indexes for performance
-        connection.execute(text("CREATE INDEX idx_change_events_processed ON change_events(processed);"))
-        connection.execute(text("CREATE INDEX idx_change_events_record_id ON change_events(record_id);"))
-        connection.execute(text("CREATE INDEX idx_change_events_record_type ON change_events(record_type);"))
-        connection.execute(text("CREATE INDEX idx_change_events_type_processed ON change_events(record_type, processed);"))
+        connection.execute(
+            text(
+                "CREATE INDEX idx_change_events_processed ON change_events(processed);"
+            )
+        )
+        connection.execute(
+            text(
+                "CREATE INDEX idx_change_events_record_id ON change_events(record_id);"
+            )
+        )
+        connection.execute(
+            text(
+                "CREATE INDEX idx_change_events_record_type ON change_events(record_type);"
+            )
+        )
+        connection.execute(
+            text(
+                "CREATE INDEX idx_change_events_type_processed ON change_events(record_type, processed);"
+            )
+        )
 
     def _create_structure_nodes_vec_table(self, connection: Connection) -> None:
         """Create vector embeddings virtual table for structure_nodes."""
@@ -203,7 +246,9 @@ class Migration006(Migration):
             try:
                 import sqlite_vec
             except ImportError:
-                logger.error("sqlite-vec extension not available. Skipping structure_nodes vector table creation.")
+                logger.error(
+                    "sqlite-vec extension not available. Skipping structure_nodes vector table creation."
+                )
                 return
 
             raw_connection = connection.connection
@@ -402,18 +447,25 @@ class Migration006(Migration):
 
             for structure_node in nodes_with_embeddings:
                 try:
-                    connection.execute(text("""
+                    connection.execute(
+                        text("""
                         INSERT INTO structure_nodes_vec (node_id, title_embedding, definition_embedding)  
                         VALUES (:node_id, :title_embedding, :definition_embedding)  
-                    """), {
-                        "node_id": structure_node[0],
-                        "title_embedding": structure_node[1],
-                        "definition_embedding": structure_node[2]
-                    })
+                    """),
+                        {
+                            "node_id": structure_node[0],
+                            "title_embedding": structure_node[1],
+                            "definition_embedding": structure_node[2],
+                        },
+                    )
                 except Exception as e:
-                    logger.warning(f"Could not insert vector embedding for structure_node {structure_node[0]}: {e}")
+                    logger.warning(
+                        f"Could not insert vector embedding for structure_node {structure_node[0]}: {e}"
+                    )
 
-            logger.info(f"Populated vector embeddings for {len(nodes_with_embeddings)} structure_nodes")
+            logger.info(
+                f"Populated vector embeddings for {len(nodes_with_embeddings)} structure_nodes"
+            )
 
         except Exception as e:
             logger.warning(f"Could not populate vector embeddings: {e}")
@@ -533,7 +585,9 @@ class Migration006(Migration):
         """)).scalar()
         logger.info(f"Migrated {migrated_count} terms to structure_nodes")
 
-    def _migrate_term_relationships_to_structure_node_links(self, connection: Connection) -> None:
+    def _migrate_term_relationships_to_structure_node_links(
+        self, connection: Connection
+    ) -> None:
         """Migrate term_relationships records to structure_node_links table."""
         logger.info("Migrating term_relationships to structure_node_links...")
 
@@ -580,12 +634,16 @@ class Migration006(Migration):
 
         # Count validation for structure_nodes - handle case where original tables don't exist
         try:
-            layer_count = connection.execute(text("SELECT COUNT(*) FROM layers")).scalar()
+            layer_count = connection.execute(
+                text("SELECT COUNT(*) FROM layers")
+            ).scalar()
         except Exception:
             layer_count = 0
 
         try:
-            domain_count = connection.execute(text("SELECT COUNT(*) FROM domains")).scalar()
+            domain_count = connection.execute(
+                text("SELECT COUNT(*) FROM domains")
+            ).scalar()
         except Exception:
             domain_count = 0
 
@@ -597,38 +655,54 @@ class Migration006(Migration):
         total_original = layer_count + domain_count + term_count
 
         # Ensure structure_nodes table exists
-        structure_node_count = connection.execute(text("SELECT COUNT(*) FROM structure_nodes")).scalar()
+        structure_node_count = connection.execute(
+            text("SELECT COUNT(*) FROM structure_nodes")
+        ).scalar()
 
         if structure_node_count != total_original:
-            raise Exception(f"Record count mismatch: {structure_node_count} structure_nodes vs {total_original} original records")
+            raise Exception(
+                f"Record count mismatch: {structure_node_count} structure_nodes vs {total_original} original records"
+            )
 
         # Count validation for structure_node_links - handle case where original tables don't exist
         try:
-            term_relationships_count = connection.execute(text("SELECT COUNT(*) FROM term_relationships")).scalar()
+            term_relationships_count = connection.execute(
+                text("SELECT COUNT(*) FROM term_relationships")
+            ).scalar()
         except Exception:
             term_relationships_count = 0
 
         try:
-            structure_node_links_count = connection.execute(text("SELECT COUNT(*) FROM structure_node_links")).scalar()
+            structure_node_links_count = connection.execute(
+                text("SELECT COUNT(*) FROM structure_node_links")
+            ).scalar()
         except Exception:
             structure_node_links_count = 0
 
         if structure_node_links_count != term_relationships_count:
-            raise Exception(f"Link count mismatch: {structure_node_links_count} structure_node_links vs {term_relationships_count} term_relationships")
+            raise Exception(
+                f"Link count mismatch: {structure_node_links_count} structure_node_links vs {term_relationships_count} term_relationships"
+            )
 
         # Count validation for change_events - handle case where original tables don't exist
         try:
-            graph_events_count = connection.execute(text("SELECT COUNT(*) FROM graph_events")).scalar()
+            graph_events_count = connection.execute(
+                text("SELECT COUNT(*) FROM graph_events")
+            ).scalar()
         except Exception:
             graph_events_count = 0
 
         try:
-            change_events_count = connection.execute(text("SELECT COUNT(*) FROM change_events")).scalar()
+            change_events_count = connection.execute(
+                text("SELECT COUNT(*) FROM change_events")
+            ).scalar()
         except Exception:
             change_events_count = 0
 
         if change_events_count != graph_events_count:
-            raise Exception(f"Event count mismatch: {change_events_count} change_events vs {graph_events_count} graph_events")
+            raise Exception(
+                f"Event count mismatch: {change_events_count} change_events vs {graph_events_count} graph_events"
+            )
 
         # Parent integrity validation
         invalid_parents = connection.execute(text("""
@@ -638,22 +712,30 @@ class Migration006(Migration):
         """)).scalar()
 
         if invalid_parents > 0:
-            raise Exception(f"Found {invalid_parents} structure_nodes with invalid parent references")
+            raise Exception(
+                f"Found {invalid_parents} structure_nodes with invalid parent references"
+            )
 
         # Validate vector embeddings virtual table is populated if it exists
         try:
-            nodes_vec_count = connection.execute(text("SELECT COUNT(*) FROM structure_nodes_vec")).scalar()
+            nodes_vec_count = connection.execute(
+                text("SELECT COUNT(*) FROM structure_nodes_vec")
+            ).scalar()
             nodes_with_embeddings_count = connection.execute(text("""
                 SELECT COUNT(*) FROM structure_nodes
                 WHERE title_embedding IS NOT NULL OR definition_embedding IS NOT NULL  
             """)).scalar()
 
             if nodes_vec_count != nodes_with_embeddings_count:
-                logger.warning(f"Vector table count mismatch: {nodes_vec_count} vs {nodes_with_embeddings_count} structure_nodes with embeddings")
+                logger.warning(
+                    f"Vector table count mismatch: {nodes_vec_count} vs {nodes_with_embeddings_count} structure_nodes with embeddings"
+                )
         except Exception as e:
             logger.info(f"Vector table validation skipped: {e}")
 
-        logger.info(f"Migration validation passed: {structure_node_count} structure_nodes, {structure_node_links_count} links, {change_events_count} events")
+        logger.info(
+            f"Migration validation passed: {structure_node_count} structure_nodes, {structure_node_links_count} links, {change_events_count} events"
+        )
 
     def _drop_old_tables(self, connection: Connection) -> None:
         """Drop old tables after successful migration."""
@@ -754,7 +836,9 @@ class Migration006(Migration):
             );
         """))
 
-    def _migrate_structure_nodes_back_to_original_tables(self, connection: Connection) -> None:
+    def _migrate_structure_nodes_back_to_original_tables(
+        self, connection: Connection
+    ) -> None:
         """Migrate data back from structure_nodes to original tables for rollback."""
         logger.info("Migrating data back to original tables...")
 
@@ -766,16 +850,24 @@ class Migration006(Migration):
         """)).fetchall()
 
         for layer in layers:
-            connection.execute(text("""
+            connection.execute(
+                text("""
                 INSERT INTO layers (id, title, definition, title_embedding, definition_embedding,  
                                   created_at, version, last_modified)
                 VALUES (:id, :title, :definition, :title_embedding, :definition_embedding,  
                        :created_at, :version, :last_modified)
-            """), {
-                "id": layer[0], "title": layer[1], "definition": layer[2],
-                "title_embedding": layer[3], "definition_embedding": layer[4],
-                "created_at": layer[5], "version": layer[6], "last_modified": layer[7]
-            })
+            """),
+                {
+                    "id": layer[0],
+                    "title": layer[1],
+                    "definition": layer[2],
+                    "title_embedding": layer[3],
+                    "definition_embedding": layer[4],
+                    "created_at": layer[5],
+                    "version": layer[6],
+                    "last_modified": layer[7],
+                },
+            )
 
         # Migrate domains back
         domains = connection.execute(text("""
@@ -785,17 +877,28 @@ class Migration006(Migration):
         """)).fetchall()
 
         for domain in domains:
-            connection.execute(text("""
+            connection.execute(
+                text("""
                 INSERT INTO domains (id, layer_id, title, definition, title_embedding, definition_embedding,  
                                    created_at, version, last_modified, primary_predicate, primary_predicate_id, predicate_set)  
                 VALUES (:id, :layer_id, :title, :definition, :title_embedding, :definition_embedding,  
                        :created_at, :version, :last_modified, :primary_predicate, :primary_predicate_id, :predicate_set)  
-            """), {
-                "id": domain[0], "layer_id": domain[1], "title": domain[2], "definition": domain[3],
-                "title_embedding": domain[4], "definition_embedding": domain[5],
-                "created_at": domain[6], "version": domain[7], "last_modified": domain[8],
-                "primary_predicate": None, "primary_predicate_id": domain[9], "predicate_set": None
-            })
+            """),
+                {
+                    "id": domain[0],
+                    "layer_id": domain[1],
+                    "title": domain[2],
+                    "definition": domain[3],
+                    "title_embedding": domain[4],
+                    "definition_embedding": domain[5],
+                    "created_at": domain[6],
+                    "version": domain[7],
+                    "last_modified": domain[8],
+                    "primary_predicate": None,
+                    "primary_predicate_id": domain[9],
+                    "predicate_set": None,
+                },
+            )
 
         # Migrate terms back
         terms = connection.execute(text("""
@@ -816,69 +919,106 @@ class Migration006(Migration):
 
         for term in terms:
             # parent_term_id is set if parent is also a term, otherwise NULL
-            parent_term_id = term[8] if term[8] and connection.execute(text("""
+            parent_term_id = (
+                term[8]
+                if term[8]
+                and connection.execute(
+                    text("""
                 SELECT node_type FROM structure_nodes WHERE id = :id
-            """), {"id": term[8]}).scalar() == 'term' else None
+            """),
+                    {"id": term[8]},
+                ).scalar()
+                == "term"
+                else None
+            )
 
-            connection.execute(text("""
+            connection.execute(
+                text("""
                 INSERT INTO terms (id, domain_id, layer_id, title, definition, title_embedding,  
                                  definition_embedding, created_at, version, last_modified, parent_term_id)  
                 VALUES (:id, :domain_id, :layer_id, :title, :definition, :title_embedding,  
                        :definition_embedding, :created_at, :version, :last_modified, :parent_term_id)  
-            """), {
-                "id": term[0], "domain_id": term[9], "layer_id": term[10],
-                "title": term[1], "definition": term[2], "title_embedding": term[3],
-                "definition_embedding": term[4], "created_at": term[5],
-                "version": term[6], "last_modified": term[7], "parent_term_id": parent_term_id
-            })
+            """),
+                {
+                    "id": term[0],
+                    "domain_id": term[9],
+                    "layer_id": term[10],
+                    "title": term[1],
+                    "definition": term[2],
+                    "title_embedding": term[3],
+                    "definition_embedding": term[4],
+                    "created_at": term[5],
+                    "version": term[6],
+                    "last_modified": term[7],
+                    "parent_term_id": parent_term_id,
+                },
+            )
 
         # Migrate structure_node_links back to term_relationships
-        links = connection.execute(text("SELECT * FROM structure_node_links")).fetchall()
+        links = connection.execute(
+            text("SELECT * FROM structure_node_links")
+        ).fetchall()
         for link in links:
-            connection.execute(text("""
+            connection.execute(
+                text("""
                 INSERT INTO term_relationships (id, source_term_id, target_term_id, predicate, predicate_id, created_at)  
                 VALUES (:id, :source_term_id, :target_term_id, :predicate, :predicate_id, :created_at)  
-            """), {
-                "id": link[0], "source_term_id": link[1], "target_term_id": link[2],
-                "predicate": link[3], "predicate_id": link[4], "created_at": link[5]
-            })
+            """),
+                {
+                    "id": link[0],
+                    "source_term_id": link[1],
+                    "target_term_id": link[2],
+                    "predicate": link[3],
+                    "predicate_id": link[4],
+                    "created_at": link[5],
+                },
+            )
 
         # Migrate change_events back to graph_events
         events = connection.execute(text("SELECT * FROM change_events")).fetchall()
         for event in events:
             # Map record_type back to entity_type
             record_type = event[2]
-            if record_type == 'structure_node_link':
-                entity_type = 'term_relationship'
-            elif record_type == 'structure_node':
+            if record_type == "structure_node_link":
+                entity_type = "term_relationship"
+            elif record_type == "structure_node":
                 # Try to extract node_type from JSON data for backwards compatibility
-                entity_type = 'term'  # Default fallback
+                entity_type = "term"  # Default fallback
                 if event[4]:  # new_data
                     try:
                         import json
+
                         data = json.loads(event[4])
-                        if 'node_type' in data:
-                            entity_type = data['node_type']
+                        if "node_type" in data:
+                            entity_type = data["node_type"]
                     except Exception:
                         pass
                 elif event[3]:  # old_data
                     try:
                         import json
+
                         data = json.loads(event[3])
-                        if 'node_type' in data:
-                            entity_type = data['node_type']
+                        if "node_type" in data:
+                            entity_type = data["node_type"]
                     except Exception:
                         pass
             else:
                 entity_type = record_type
 
-            connection.execute(text("""
+            connection.execute(
+                text("""
                 INSERT INTO graph_events (event_type, entity_type, old_data, new_data, timestamp, processed)  
                 VALUES (:event_type, :entity_type, :old_data, :new_data, :timestamp, :processed)  
-            """), {
-                "event_type": event[1], "entity_type": entity_type, "old_data": event[4],
-                "new_data": event[5], "timestamp": event[6], "processed": event[7]
-            })
+            """),
+                {
+                    "event_type": event[1],
+                    "entity_type": entity_type,
+                    "old_data": event[4],
+                    "new_data": event[5],
+                    "timestamp": event[6],
+                    "processed": event[7],
+                },
+            )
 
     def _drop_structure_nodes_vec_table_if_exists(self, connection: Connection) -> None:
         """Drop the structure_nodes_vec virtual table if it exists, handling sqlite-vec extension properly."""
@@ -896,6 +1036,7 @@ class Migration006(Migration):
             # Try to load the sqlite-vec extension before dropping
             try:
                 import sqlite_vec
+
                 raw_connection = connection.connection
                 raw_connection.enable_load_extension(True)
                 sqlite_vec.load(raw_connection)
@@ -906,12 +1047,18 @@ class Migration006(Migration):
                 logger.info("Successfully dropped structure_nodes_vec virtual table")
 
             except ImportError:
-                logger.info("sqlite-vec extension not available during rollback, table may not have been created")
+                logger.info(
+                    "sqlite-vec extension not available during rollback, table may not have been created"
+                )
             except Exception as e:
-                logger.warning(f"Could not properly drop structure_nodes_vec table: {e}")
+                logger.warning(
+                    f"Could not properly drop structure_nodes_vec table: {e}"
+                )
                 # Try to drop anyway in case it's a regular table
                 try:
-                    connection.execute(text("DROP TABLE IF EXISTS structure_nodes_vec;"))
+                    connection.execute(
+                        text("DROP TABLE IF EXISTS structure_nodes_vec;")
+                    )
                 except Exception:
                     logger.info("structure_nodes_vec table cleanup skipped")
 

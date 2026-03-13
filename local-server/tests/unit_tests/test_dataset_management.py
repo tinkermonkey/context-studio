@@ -41,8 +41,9 @@ class TestDatasetManager:
         # Verify schema version matches the target version from migration manager
         dataset_path = self.manager.get_dataset_file_path("test.db")
         migration_manager = MigrationManager(dataset_path)
-        assert dataset.schema_version == migration_manager.target_version, \
-            f"Expected schema version {migration_manager.target_version}, got {dataset.schema_version}"
+        assert (
+            dataset.schema_version == migration_manager.target_version
+        ), f"Expected schema version {migration_manager.target_version}, got {dataset.schema_version}"
 
         assert isinstance(dataset.metrics, DatasetMetrics)
 

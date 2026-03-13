@@ -79,32 +79,26 @@ class MigrationTestHarness:
 
         try:
             # Create a layer
-            cursor.execute(
-                """
+            cursor.execute("""
                 INSERT INTO structure_nodes (id, node_type, title, definition, created_at, version, last_modified)
                 VALUES
                     ('node-1', 'layer', 'Test Layer', 'Test layer definition', '2023-01-01 10:00:00', 1, '2023-01-01 10:00:00')
-            """
-            )
+            """)
 
             # Create a domain
-            cursor.execute(
-                """
+            cursor.execute("""
                 INSERT INTO structure_nodes (id, node_type, parent_node_id, title, definition, created_at, version, last_modified)
                 VALUES
                     ('node-2', 'domain', 'node-1', 'Test Domain', 'Test domain definition', '2023-01-02 10:00:00', 1, '2023-01-02 10:00:00')
-            """
-            )
+            """)
 
             # Create terms
-            cursor.execute(
-                """
+            cursor.execute("""
                 INSERT INTO structure_nodes (id, node_type, parent_node_id, title, definition, created_at, version, last_modified)
                 VALUES
                     ('node-3', 'term', 'node-2', 'Bank', 'Financial institution', '2023-01-03 10:00:00', 1, '2023-01-03 10:00:00'),
                     ('node-4', 'term', 'node-2', 'River Bank', 'Edge of a river', '2023-01-04 10:00:00', 1, '2023-01-04 10:00:00')
-            """
-            )
+            """)
 
             conn.commit()
 
@@ -155,12 +149,10 @@ class MigrationTestHarness:
 
                 # Record in schema history
                 conn.execute(
-                    text(
-                        """
+                    text("""
                     INSERT INTO schema_history (version, description, migration_file, checksum, execution_time_ms)
                     VALUES (:version, :description, :migration_file, :checksum, :execution_time_ms)
-                """
-                    ),
+                """),
                     {
                         "version": migration_017.version,
                         "description": migration_017.description,
@@ -190,7 +182,9 @@ class MigrationTestHarness:
         # Update current version
         self.migration_manager.current_version = 16
 
-    def insert_node_with_new_columns(self, node_id: str, reference_links: List[Dict], word_senses: List[Dict]):
+    def insert_node_with_new_columns(
+        self, node_id: str, reference_links: List[Dict], word_senses: List[Dict]
+    ):
         """Insert a structure_node with reference_links and word_senses."""
         conn = self.get_connection()
         cursor = conn.cursor()
@@ -204,12 +198,12 @@ class MigrationTestHarness:
             """,
                 (
                     node_id,
-                    'term',
-                    'Test Node',
-                    'Test definition',
+                    "term",
+                    "Test Node",
+                    "Test definition",
                     json.dumps(reference_links),
-                    json.dumps(word_senses)
-                )
+                    json.dumps(word_senses),
+                ),
             )
             conn.commit()
         except Exception as e:
@@ -218,7 +212,12 @@ class MigrationTestHarness:
         finally:
             cursor.close()
 
-    def update_node_columns(self, node_id: str, reference_links: List[Dict] = None, word_senses: List[Dict] = None):
+    def update_node_columns(
+        self,
+        node_id: str,
+        reference_links: List[Dict] = None,
+        word_senses: List[Dict] = None,
+    ):
         """Update reference_links and/or word_senses for a structure_node."""
         conn = self.get_connection()
         cursor = conn.cursor()
@@ -239,7 +238,7 @@ class MigrationTestHarness:
                 params.append(node_id)
                 cursor.execute(
                     f"UPDATE structure_nodes SET {', '.join(updates)} WHERE id = ?",
-                    params
+                    params,
                 )
                 conn.commit()
         except Exception as e:
@@ -256,13 +255,13 @@ class MigrationTestHarness:
         try:
             cursor.execute(
                 "SELECT reference_links, word_senses FROM structure_nodes WHERE id = ?",
-                (node_id,)
+                (node_id,),
             )
             row = cursor.fetchone()
             if row:
                 return {
-                    'reference_links': json.loads(row[0]) if row[0] else None,
-                    'word_senses': json.loads(row[1]) if row[1] else None
+                    "reference_links": json.loads(row[0]) if row[0] else None,
+                    "word_senses": json.loads(row[1]) if row[1] else None,
                 }
             return None
         finally:
@@ -304,18 +303,24 @@ class TestMigration017SchemaChanges:
     def test_migration_adds_reference_links_column(self, migration_harness):
         """Test that migration adds reference_links column."""
         # Verify column doesn't exist before migration
-        assert not migration_harness.verify_column_exists("structure_nodes", "reference_links")
+        assert not migration_harness.verify_column_exists(
+            "structure_nodes", "reference_links"
+        )
 
         # Run migration
         migration_harness.run_migration_017()
 
         # Verify column exists after migration
-        assert migration_harness.verify_column_exists("structure_nodes", "reference_links")
+        assert migration_harness.verify_column_exists(
+            "structure_nodes", "reference_links"
+        )
 
     def test_migration_adds_word_senses_column(self, migration_harness):
         """Test that migration adds word_senses column."""
         # Verify column doesn't exist before migration
-        assert not migration_harness.verify_column_exists("structure_nodes", "word_senses")
+        assert not migration_harness.verify_column_exists(
+            "structure_nodes", "word_senses"
+        )
 
         # Run migration
         migration_harness.run_migration_017()
@@ -329,7 +334,9 @@ class TestMigration017SchemaChanges:
         migration_harness.run_migration_017()
 
         # Verify column type is TEXT
-        column_type = migration_harness.get_column_type("structure_nodes", "reference_links")
+        column_type = migration_harness.get_column_type(
+            "structure_nodes", "reference_links"
+        )
         assert column_type == "TEXT"
 
     def test_word_senses_column_type(self, migration_harness):
@@ -338,7 +345,9 @@ class TestMigration017SchemaChanges:
         migration_harness.run_migration_017()
 
         # Verify column type is TEXT
-        column_type = migration_harness.get_column_type("structure_nodes", "word_senses")
+        column_type = migration_harness.get_column_type(
+            "structure_nodes", "word_senses"
+        )
         assert column_type == "TEXT"
 
 
@@ -420,14 +429,16 @@ class TestMigration017NewColumnFunctionality:
         # Insert node with reference_links
         reference_links = [
             {"source": "schema.org", "external_id": "Person"},
-            {"source": "wikidata", "external_id": "Q5"}
+            {"source": "wikidata", "external_id": "Q5"},
         ]
-        migration_harness.insert_node_with_new_columns("test-node-1", reference_links, [])
+        migration_harness.insert_node_with_new_columns(
+            "test-node-1", reference_links, []
+        )
 
         # Verify data was stored correctly
         result = migration_harness.get_node_columns("test-node-1")
         assert result is not None
-        assert result['reference_links'] == reference_links
+        assert result["reference_links"] == reference_links
 
     def test_insert_node_with_word_senses(self, migration_harness):
         """Test inserting a node with word_senses data."""
@@ -441,22 +452,22 @@ class TestMigration017NewColumnFunctionality:
                 "sense_type": "wordnet",
                 "sense_id": "bank.n.01",
                 "definition": "financial institution",
-                "domain": "noun.group"
+                "domain": "noun.group",
             },
             {
                 "term": "bank",
                 "sense_type": "wordnet",
                 "sense_id": "bank.n.02",
                 "definition": "sloping land beside water",
-                "domain": "noun.object"
-            }
+                "domain": "noun.object",
+            },
         ]
         migration_harness.insert_node_with_new_columns("test-node-2", [], word_senses)
 
         # Verify data was stored correctly
         result = migration_harness.get_node_columns("test-node-2")
         assert result is not None
-        assert result['word_senses'] == word_senses
+        assert result["word_senses"] == word_senses
 
     def test_update_existing_node_with_new_columns(self, migration_harness):
         """Test updating existing nodes with new column data."""
@@ -474,7 +485,7 @@ class TestMigration017NewColumnFunctionality:
                 "sense_type": "wordnet",
                 "sense_id": "bank.n.01",
                 "definition": "financial institution",
-                "domain": "noun.group"
+                "domain": "noun.group",
             }
         ]
         migration_harness.update_node_columns("node-3", reference_links, word_senses)
@@ -482,8 +493,8 @@ class TestMigration017NewColumnFunctionality:
         # Verify updates
         result = migration_harness.get_node_columns("node-3")
         assert result is not None
-        assert result['reference_links'] == reference_links
-        assert result['word_senses'] == word_senses
+        assert result["reference_links"] == reference_links
+        assert result["word_senses"] == word_senses
 
     def test_null_values_allowed(self, migration_harness):
         """Test that NULL values are allowed for new columns."""
@@ -496,8 +507,8 @@ class TestMigration017NewColumnFunctionality:
         # Verify NULL values
         result = migration_harness.get_node_columns("test-node-null")
         assert result is not None
-        assert result['reference_links'] is None
-        assert result['word_senses'] is None
+        assert result["reference_links"] is None
+        assert result["word_senses"] is None
 
 
 class TestMigration017Rollback:
@@ -507,13 +518,17 @@ class TestMigration017Rollback:
         """Test that rollback removes reference_links column."""
         # Run migration
         migration_harness.run_migration_017()
-        assert migration_harness.verify_column_exists("structure_nodes", "reference_links")
+        assert migration_harness.verify_column_exists(
+            "structure_nodes", "reference_links"
+        )
 
         # Rollback migration
         migration_harness.rollback_migration_017()
 
         # Verify column is removed
-        assert not migration_harness.verify_column_exists("structure_nodes", "reference_links")
+        assert not migration_harness.verify_column_exists(
+            "structure_nodes", "reference_links"
+        )
 
     def test_rollback_removes_word_senses_column(self, migration_harness):
         """Test that rollback removes word_senses column."""
@@ -525,7 +540,9 @@ class TestMigration017Rollback:
         migration_harness.rollback_migration_017()
 
         # Verify column is removed
-        assert not migration_harness.verify_column_exists("structure_nodes", "word_senses")
+        assert not migration_harness.verify_column_exists(
+            "structure_nodes", "word_senses"
+        )
 
     def test_rollback_preserves_existing_data(self, migration_harness):
         """Test that rollback preserves all original data."""
@@ -581,17 +598,19 @@ class TestMigration017Rollback:
         cursor = conn.cursor()
 
         try:
-            cursor.execute(
-                "SELECT id, title FROM structure_nodes WHERE id = 'node-3'"
-            )
+            cursor.execute("SELECT id, title FROM structure_nodes WHERE id = 'node-3'")
             node = cursor.fetchone()
             assert node is not None
             assert node[0] == "node-3"
             assert node[1] == "Bank"
 
             # Verify new columns don't exist
-            assert not migration_harness.verify_column_exists("structure_nodes", "reference_links")
-            assert not migration_harness.verify_column_exists("structure_nodes", "word_senses")
+            assert not migration_harness.verify_column_exists(
+                "structure_nodes", "reference_links"
+            )
+            assert not migration_harness.verify_column_exists(
+                "structure_nodes", "word_senses"
+            )
         finally:
             cursor.close()
 
@@ -609,7 +628,9 @@ class TestMigration017EdgeCases:
         migration_harness.run_migration_017()
 
         # Verify migration succeeded
-        assert migration_harness.verify_column_exists("structure_nodes", "reference_links")
+        assert migration_harness.verify_column_exists(
+            "structure_nodes", "reference_links"
+        )
         assert migration_harness.verify_column_exists("structure_nodes", "word_senses")
 
         # Verify count is still 0
@@ -625,7 +646,7 @@ class TestMigration017EdgeCases:
         reference_links = [
             {"source": "schema.org", "external_id": "Person"},
             {"source": "wikidata", "external_id": "Q5"},
-            {"source": "conceptnet", "external_id": "/c/en/person"}
+            {"source": "conceptnet", "external_id": "/c/en/person"},
         ]
         word_senses = [
             {
@@ -633,18 +654,20 @@ class TestMigration017EdgeCases:
                 "sense_type": "wordnet",
                 "sense_id": "person.n.01",
                 "definition": "a human being",
-                "domain": "noun.Tops"
+                "domain": "noun.Tops",
             }
         ]
-        migration_harness.insert_node_with_new_columns("test-json", reference_links, word_senses)
+        migration_harness.insert_node_with_new_columns(
+            "test-json", reference_links, word_senses
+        )
 
         # Verify JSON arrays are stored and retrieved correctly
         result = migration_harness.get_node_columns("test-json")
         assert result is not None
-        assert len(result['reference_links']) == 3
-        assert len(result['word_senses']) == 1
-        assert result['reference_links'][0]['source'] == "schema.org"
-        assert result['word_senses'][0]['term'] == "person"
+        assert len(result["reference_links"]) == 3
+        assert len(result["word_senses"]) == 1
+        assert result["reference_links"][0]["source"] == "schema.org"
+        assert result["word_senses"][0]["term"] == "person"
 
     def test_empty_json_arrays(self, migration_harness):
         """Test that empty JSON arrays are handled correctly."""
@@ -657,8 +680,8 @@ class TestMigration017EdgeCases:
         # Verify empty arrays are stored correctly
         result = migration_harness.get_node_columns("test-empty")
         assert result is not None
-        assert result['reference_links'] == []
-        assert result['word_senses'] == []
+        assert result["reference_links"] == []
+        assert result["word_senses"] == []
 
 
 if __name__ == "__main__":

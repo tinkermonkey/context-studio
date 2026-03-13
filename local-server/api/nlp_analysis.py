@@ -16,16 +16,18 @@ logger = get_logger("nlp_analysis")
 
 router = APIRouter()
 
-settings = {
-    "NLP_MAX_TEXT_LENGTH": 512
-}
+settings = {"NLP_MAX_TEXT_LENGTH": 512}
 
 
-@router.post("/nlp_analysis", response_model=NLPSuccessResponse, responses={
-    400: {"model": NLPErrorResponse},
-    422: {"model": NLPErrorResponse},
-    500: {"model": NLPErrorResponse},
-})
+@router.post(
+    "/nlp_analysis",
+    response_model=NLPSuccessResponse,
+    responses={
+        400: {"model": NLPErrorResponse},
+        422: {"model": NLPErrorResponse},
+        500: {"model": NLPErrorResponse},
+    },
+)
 async def nlp_analysis(request: Request):
     """
     Analyze text using NLP pipeline and return structured response.
@@ -35,32 +37,43 @@ async def nlp_analysis(request: Request):
         req = NLPAnalysisRequest(**body)
     except ValidationError as ve:
         logger.error(f"Validation error: {ve}")
-        return JSONResponse(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, content={  # noqa: E501
-            "success": False,
-            "error": "Invalid request format.",
-            "details": ve.errors()
-        })
+        return JSONResponse(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            content={  # noqa: E501
+                "success": False,
+                "error": "Invalid request format.",
+                "details": ve.errors(),
+            },
+        )
     except Exception as e:
         logger.error(f"Malformed request: {e}")
-        return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={
-            "success": False,
-            "error": "Malformed request.",
-            "details": str(e)
-        })
+        return JSONResponse(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            content={
+                "success": False,
+                "error": "Malformed request.",
+                "details": str(e),
+            },
+        )
 
     text = req.text
     if not text or len(text) == 0:
         logger.warning("Empty text submitted to NLP endpoint.")
-        return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={
-            "success": False,
-            "error": "Text cannot be empty."
-        })
+        return JSONResponse(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            content={"success": False, "error": "Text cannot be empty."},
+        )
     if len(text) > settings["NLP_MAX_TEXT_LENGTH"]:
-        logger.warning(f"Text length {len(text)} exceeds max allowed {settings['NLP_MAX_TEXT_LENGTH']}.")  # noqa: E501
-        return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={
-            "success": False,
-            "error": f"Text exceeds maximum length of {settings['NLP_MAX_TEXT_LENGTH']} characters."  # noqa: E501
-        })
+        logger.warning(
+            f"Text length {len(text)} exceeds max allowed {settings['NLP_MAX_TEXT_LENGTH']}."
+        )  # noqa: E501
+        return JSONResponse(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            content={
+                "success": False,
+                "error": f"Text exceeds maximum length of {settings['NLP_MAX_TEXT_LENGTH']} characters.",  # noqa: E501
+            },
+        )
 
     try:
         pipeline = get_pipeline().get_nlp()
@@ -71,11 +84,14 @@ async def nlp_analysis(request: Request):
         return NLPSuccessResponse(success=True, data=response_data)
     except Exception as e:
         logger.error(f"NLP pipeline error: {e}")
-        return JSONResponse(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, content={  # noqa: E501
-            "success": False,
-            "error": "Internal server error during NLP analysis.",
-            "details": str(e)
-        })
+        return JSONResponse(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            content={  # noqa: E501
+                "success": False,
+                "error": "Internal server error during NLP analysis.",
+                "details": str(e),
+            },
+        )
 
 
 @router.post("/nlp_analysis/proxy/configure")
@@ -92,12 +108,15 @@ async def configure_proxy(request: Request):
             if api not in valid_apis:
                 return JSONResponse(
                     status_code=400,
-                    content={"success": False, "error": f"Invalid API: {api}"}
+                    content={"success": False, "error": f"Invalid API: {api}"},
                 )
             if not isinstance(enabled, bool):
                 return JSONResponse(
                     status_code=400,
-                    content={"success": False, "error": f"Value for {api} must be boolean"}  # noqa: E501
+                    content={
+                        "success": False,
+                        "error": f"Value for {api} must be boolean",
+                    },  # noqa: E501
                 )
 
         # Update settings
@@ -111,21 +130,22 @@ async def configure_proxy(request: Request):
                 status_code=500,
                 content={
                     "success": False,
-                    "error": "Failed to reload pipeline with new configuration"
-                }
+                    "error": "Failed to reload pipeline with new configuration",
+                },
             )
 
-        return JSONResponse(content={
-            "success": True,
-            "message": "Proxy configuration updated",
-            "configuration": settings.ENABLE_CACHING_PROXY
-        })
+        return JSONResponse(
+            content={
+                "success": True,
+                "message": "Proxy configuration updated",
+                "configuration": settings.ENABLE_CACHING_PROXY,
+            }
+        )
 
     except Exception as e:
         logger.error(f"Error updating proxy configuration: {e}")
         return JSONResponse(
-            status_code=500,
-            content={"success": False, "error": str(e)}
+            status_code=500, content={"success": False, "error": str(e)}
         )
 
 
@@ -138,22 +158,27 @@ async def get_proxy_status():
         settings = get_settings()
         proxy_manager = get_proxy_manager()
 
-        return JSONResponse(content={
-            "success": True,
-            "proxy_enabled": proxy_manager.is_proxy_enabled(),
-            "proxy_running": proxy_manager.is_running,
-            "configuration": settings.ENABLE_CACHING_PROXY,
-            "proxy_config": {
-                "host": settings.get_reference_api_buddy_config()["server"]["host"],  # noqa: E501
-                "port": settings.get_reference_api_buddy_config()["server"]["port"]  # noqa: E501
+        return JSONResponse(
+            content={
+                "success": True,
+                "proxy_enabled": proxy_manager.is_proxy_enabled(),
+                "proxy_running": proxy_manager.is_running,
+                "configuration": settings.ENABLE_CACHING_PROXY,
+                "proxy_config": {
+                    "host": settings.get_reference_api_buddy_config()["server"][
+                        "host"
+                    ],  # noqa: E501
+                    "port": settings.get_reference_api_buddy_config()["server"][
+                        "port"
+                    ],  # noqa: E501
+                },
             }
-        })
+        )
 
     except Exception as e:
         logger.error(f"Error getting proxy status: {e}")
         return JSONResponse(
-            status_code=500,
-            content={"success": False, "error": str(e)}
+            status_code=500, content={"success": False, "error": str(e)}
         )
 
 
@@ -169,34 +194,35 @@ async def get_proxy_monitoring():
         proxy_manager = get_proxy_manager()
 
         if not proxy_manager.is_running:
-            return JSONResponse(content={
-                "success": True,
-                "proxy_running": False,
-                "message": "Proxy is not currently running",
-                "stats": None
-            })
+            return JSONResponse(
+                content={
+                    "success": True,
+                    "proxy_running": False,
+                    "message": "Proxy is not currently running",
+                    "stats": None,
+                }
+            )
 
         stats = proxy_manager.get_monitoring_stats()
 
         if stats is None:
-            return JSONResponse(content={
-                "success": True,
-                "proxy_running": True,
-                "message": "Monitoring data not available",
-                "stats": None
-            })
+            return JSONResponse(
+                content={
+                    "success": True,
+                    "proxy_running": True,
+                    "message": "Monitoring data not available",
+                    "stats": None,
+                }
+            )
 
-        return JSONResponse(content={
-            "success": True,
-            "proxy_running": True,
-            "stats": stats
-        })
+        return JSONResponse(
+            content={"success": True, "proxy_running": True, "stats": stats}
+        )
 
     except Exception as e:
         logger.error(f"Error getting proxy monitoring data: {e}")
         return JSONResponse(
-            status_code=500,
-            content={"success": False, "error": str(e)}
+            status_code=500, content={"success": False, "error": str(e)}
         )
 
 
@@ -213,32 +239,37 @@ async def get_proxy_debug_config():
         proxy_manager = get_proxy_manager()
 
         if not proxy_manager.is_running:
-            return JSONResponse(content={
-                "success": True,
-                "proxy_running": False,
-                "message": "Proxy is not currently running",
-                "debug_config": None
-            })
+            return JSONResponse(
+                content={
+                    "success": True,
+                    "proxy_running": False,
+                    "message": "Proxy is not currently running",
+                    "debug_config": None,
+                }
+            )
 
         debug_config = proxy_manager.get_debug_config()
 
         if debug_config is None:
-            return JSONResponse(content={
+            return JSONResponse(
+                content={
+                    "success": True,
+                    "proxy_running": True,
+                    "message": "Debug configuration not available",
+                    "debug_config": None,
+                }
+            )
+
+        return JSONResponse(
+            content={
                 "success": True,
                 "proxy_running": True,
-                "message": "Debug configuration not available",
-                "debug_config": None
-            })
-
-        return JSONResponse(content={
-            "success": True,
-            "proxy_running": True,
-            "debug_config": debug_config
-        })
+                "debug_config": debug_config,
+            }
+        )
 
     except Exception as e:
         logger.error(f"Error getting proxy debug configuration: {e}")
         return JSONResponse(
-            status_code=500,
-            content={"success": False, "error": str(e)}
+            status_code=500, content={"success": False, "error": str(e)}
         )
