@@ -13,12 +13,15 @@ Context Studio is local-first, designed to be packaged as a desktop app and run 
 ## Repository Structure
 
 ```
+/app                # Tauri desktop app shell — future packaging of /ux as a native app (not yet active)
 /documentation      # Product documentation
 /legacy-server      # REFERENCE ONLY — the previous back-end implementation (frozen)
 /local-server       # Python back-end for the desktop app (active greenfield build)
 /rearchitecture     # Architecture design documents for the new back-end
 /ux                 # React front-end for the desktop app (Vite build)
 ```
+
+`/app` is a Tauri v2 scaffold intended to eventually package `/ux` as a native desktop application. It is not yet wired to `/ux` and contains only the default Tauri starter. Do not develop in `/app` until that integration work is scoped.
 
 ### Important: `legacy-server/` is reference only
 
