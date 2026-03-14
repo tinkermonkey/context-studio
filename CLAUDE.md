@@ -157,6 +157,21 @@ To make a schema change:
     └── logger.py
 ```
 
+### Setup & Running
+
+All Python work — virtual environment, dependency installation, running the server, and running tests — happens inside `/local-server/`. Never run Python commands from the repo root.
+
+```bash
+cd local-server
+python -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+python app.py
+```
+
+- The `.venv` directory lives at `local-server/.venv` and is gitignored
+- Server logs are at `local-server/logs/context_studio.log`
+
 ### Dependency Rule
 
 All imports point inward. `domain/` has **zero imports** from `adapters/`, `database/`, FastAPI, SQLAlchemy, or any other infrastructure. Verify with `scripts/check_domain_imports.py`.
@@ -176,7 +191,7 @@ All imports point inward. `domain/` has **zero imports** from `adapters/`, `data
 - **Code Quality**: Follow PEP 8 style guide for Python code
 - **Testing**: Write domain unit tests first (using fake port implementations), then adapter tests, then route tests
 - **Environment Variables**: Use `.env` files for sensitive configurations and secrets
-- **Virtual Environment**: Use the `.venv` virtual environment when executing Python commands
+- **Virtual Environment**: Always use `local-server/.venv` — activate it before running any Python command
 
 ### Common Pitfalls
 
