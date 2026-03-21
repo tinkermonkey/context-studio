@@ -8,14 +8,26 @@ Context Studio is local-first, designed to be packaged as a desktop app and run 
 
 - **Back End:** Python, FastAPI, SQLite with SQLiteVector, configurable LLM pipelines, remote sync via duckdb & parquet
 - **Front End:** React, Vite, Flowbite-React, TanStack Router/Query/Tables/Forms, Tailwind CSS
+- **Architecture Pattern:** Hexagonal (ports & adapters) with bounded contexts — see `rearchitecture/` for full design
 
 ## Repository Structure
 
 ```
+/app                # Tauri desktop app shell — future packaging of /ux as a native app (not yet active)
 /documentation      # Product documentation
-/local-server       # Python back-end for the desktop app
+/legacy-server      # REFERENCE ONLY — the previous back-end implementation (frozen)
+/local-server       # Python back-end for the desktop app (active greenfield build)
+/rearchitecture     # Architecture design documents for the new back-end
 /ux                 # React front-end for the desktop app (Vite build)
 ```
+
+`/app` is a Tauri v2 scaffold intended to eventually package `/ux` as a native desktop application. It is not yet wired to `/ux` and contains only the default Tauri starter. Do not develop in `/app` until that integration work is scoped.
+
+### Important: `legacy-server/` is reference only
+
+**Do not run tests in `legacy-server/`.** Do not modify code there. It exists solely as a functional reference for what the new server needs to implement. Its tests are useful as a reference for expected behavior, but are not part of the active test suite.
+
+**There is no backwards compatibility requirement.** The new server defines new API contracts and a new database schema. Nothing in `legacy-server/` constrains the design of `local-server/`.
 
 ---
 
@@ -44,13 +56,13 @@ Context Studio is local-first, designed to be packaged as a desktop app and run 
 
 ## Change Management & API Updates
 
-Typically functionality is built in the back-end first, tested and validated, and then the UX for that functionality is built.
+Functionality is built in the back-end first, tested and validated, then the UX is built.
 
 ### API Update Workflow
 
 When back-end APIs are added/updated/removed:
 
-1. **Update OpenAPI specs**: Run `/local-server/utils/update_api_specs.py` to update the `openapi.json` file for both back-end and front-end
+1. **Update OpenAPI specs**: Run `/local-server/scripts/update_api_specs.py` to update the `openapi.json` file for both back-end and front-end
 2. **Generate front-end types**: Run `npm run generate-types` in the UX directory to update the digested view of the APIs and types
 3. **Update hooks and services**: Update the API hooks and services to use the new types
 4. **Build UX workflows**: Only after hooks/services are complete, build out user experience and workflows
@@ -59,79 +71,113 @@ When back-end APIs are added/updated/removed:
 
 ## Back-End Development (`/local-server`)
 
+The new back-end uses a **hexagonal (ports & adapters) architecture** organized around bounded contexts. See `rearchitecture/architecture_design.md` for the full design.
+
 ### Technology Stack
 
 - **Language**: Python 3.x
 - **Web Server**: uvicorn
 - **API Framework**: FastAPI
 - **Database**: SQLite with SQLiteVector for vector storage
-- **Data Validation**: Pydantic
+- **Schema Migrations**: Alembic (autogenerate from SQLAlchemy models)
+- **Data Validation**: Pydantic (in adapter layer only — domain entities use dataclasses)
 - **Test Framework**: pytest
+
+### Bounded Contexts
+
+The back-end is organized into six bounded contexts, each owning its domain entities, ports, and use cases:
+
+1. **Ontology Management** — taxonomies, concept schemes, classes, relationships, property definitions
+2. **Graph Analysis** — in-memory graph construction, traversal, SPARQL, network metrics
+3. **Knowledge Extraction** — RAG pipeline, NLP processing, external knowledge enrichment
+4. **LLM Pipeline Management** — pipeline configurations and execution tracking
+5. **Version Control & Collaboration** — change events, changesets, proposals, conflict resolution, sync
+6. **System Administration** — health, background tasks, configuration
 
 ### Database Files
 
-Context Studio uses multiple SQLite database files for different purposes:
+- **`local.db`**: Primary workspace database (Alembic-managed)
+  - `ontology_entities` — unified table for taxonomies, concept schemes, and classes (discriminated by `node_type`)
+  - `relationships` — typed, directed edges between ontology entities
+  - `property_definitions` — defined relationship types (object properties)
+  - `change_events` — audit trail of all entity changes
 
-- **`local.db`** (default): Primary user workspace database containing:
-  - `structure_nodes` - Unified table for layers, domains, and terms in knowledge graphs
-  - `structure_node_links` - Relationships between structure nodes with predicates
-  - `predicates` - Semantic predicate definitions with optional mappings to external ontologies
-  - `change_events` - Audit trail of all database changes across record types
-
-- **`reference.db`**: Multi-source knowledge graph database containing consolidated reference data from external sources like ConceptNet, DBpedia, and Wikidata
-
-- **`reference_api_cache.db`**: Caches API responses from external reference sources to improve performance and reduce API calls
-
-- **`operations.db`**: Operational database for:
-  - `pipeline_flavors` - LLM pipeline configurations for different processing tasks
-  - `pipeline_flavor_executions` - Execution records and LLM traceability logs
+- **`operations.db`**: Operational database (Alembic-managed)
+  - `pipeline_configurations` — LLM pipeline configurations
+  - `pipeline_executions` — execution records and LLM traceability logs
   - Background task management
-  - System audit logs
-  - Administrative operations tracking
 
-All databases use SQLite with the SQLiteVector extension for embedding storage and semantic search capabilities.
+- **`reference_api_cache.db`**: Cached responses from external knowledge sources (no migrations — can be dropped and rebuilt)
 
-### Setup & Running
+- **`reference.db`**: Imported reference data from ConceptNet, DBpedia, schema.org (no migrations — can be dropped and rebuilt)
 
-- Set up a Python virtual environment: `python -m venv .venv`
-- Activate the environment: `source .venv/bin/activate`
-- Install dependencies: `pip install -r requirements.txt`
-- Run the server: `python app.py`
-- Server logs are available at `./logs/context_studio.log`
+All databases use SQLite with the SQLiteVector extension for embedding storage and semantic search.
+
+### Schema Management
+
+Schema changes are managed with **Alembic**. The SQLAlchemy ORM models in `adapters/persistence/sqlite/models.py` are the source of truth for the schema.
+
+To make a schema change:
+1. Edit the ORM model in `adapters/persistence/sqlite/models.py`
+2. Run `alembic revision --autogenerate -m "description of change"` — Alembic generates the migration
+3. Review the generated script, then run `alembic upgrade head`
+4. To roll back: `alembic downgrade -1`
+
+**Never write migration SQL by hand.** Always use autogenerate.
 
 ### Code Structure
 
 ```text
 /local-server/
-├── .env                                    # Dev environment variables (not in git)
-├── api/                                    # API endpoints
-├── app.py                                  # Main application file
-├── config.py                               # Configuration settings
-├── database/                               # Database models and utilities
-│   ├── migrations/                         # Database migrations
-│   │   ├── migration_manager.py            # Migration management script
-│   │   └── versions/                       # Migration version scripts
-│   ├── models.py                           # Database models
-│   └── utils.py                            # Database utilities
-├── documentation/                          # API and data model documentation
-│   ├── requirements.md                     # High level requirements
-│   ├── api.md                              # API documentation
-│   ├── data_model.md                       # Data model documentation
-│   └── claudes_thoughts/                   # Claude's thoughts and insights
-├── embeddings/                             # Embedding generation utilities
-├── graph/                                  # Graph data structure and utilities
-├── nlp/                                    # Natural Language Processing utilities
-├── nlp_sandbox/                            # Experimental NLP POCs
-├── requirements.txt                        # Python dependencies
-├── tests/                                  # Unit tests
-│   ├── unit_tests/                         # Unit tests for individual components
-│   ├── integration_tests/                  # Integration tests for API endpoints
-│   └── performance_tests/                  # Performance tests for APIs
-├── triage_scripts/                         # Scripts for triaging fundamental issues
-└── utils/                                  # Utility functions
-    ├── logger.py                           # Logging utilities
-    └── update_api_specs.py                 # OpenAPI spec update utility
+├── app.py                          # FastAPI app, lifespan, composition root (adapter wiring)
+├── config.py                       # Configuration loading from config.json
+├── domain/                         # THE CORE — zero infrastructure imports
+│   ├── ontology/                   # entities.py, value_objects.py, services.py, events.py, ports.py
+│   ├── graph/                      # entities.py, services.py, ports.py
+│   ├── extraction/                 # entities.py, services.py, ports.py
+│   ├── pipeline/                   # entities.py, services.py, ports.py
+│   ├── versioning/                 # entities.py, services.py, ports.py
+│   └── admin/                      # entities.py, services.py, ports.py
+├── adapters/
+│   ├── persistence/sqlite/         # SQLAlchemy models, repository implementations, Alembic
+│   ├── embedding/                  # SentenceTransformer adapter
+│   ├── llm/                        # OpenAI, Anthropic, provider router
+│   ├── nlp/                        # spaCy processor adapter
+│   ├── reference/                  # ConceptNet, DBpedia, Wikidata, schema.org adapters
+│   ├── sync/                       # S3 and DuckDB sync adapters
+│   └── web/                        # FastAPI routes and Pydantic schemas (per context)
+├── tests/
+│   ├── unit/                       # Domain logic tests — no I/O, no DB, run in seconds
+│   ├── integration/                # Adapter tests with real SQLite
+│   ├── e2e/                        # Full-stack tests with real external services
+│   └── performance/
+├── documentation/
+│   └── claudes_thoughts/           # Claude's notes and analysis
+├── scripts/
+│   ├── check_domain_imports.py     # Verify domain/ has no infrastructure imports
+│   └── update_api_specs.py
+└── utils/
+    └── logger.py
 ```
+
+### Setup & Running
+
+All Python work — virtual environment, dependency installation, running the server, and running tests — happens inside `/local-server/`. Never run Python commands from the repo root.
+
+```bash
+cd local-server
+python -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+python app.py
+```
+
+- The `.venv` directory lives at `local-server/.venv` and is gitignored
+- Server logs are at `local-server/logs/context_studio.log`
+
+### Dependency Rule
+
+All imports point inward. `domain/` has **zero imports** from `adapters/`, `database/`, FastAPI, SQLAlchemy, or any other infrastructure. Verify with `scripts/check_domain_imports.py`.
 
 ### Code Style
 
@@ -143,16 +189,18 @@ All databases use SQLite with the SQLiteVector extension for embedding storage a
 
 ### Best Practices
 
-- **Schema Management**: Use the migration manager for database migrations. Always create a migration script when modifying the database schema
+- **Schema Management**: Use Alembic autogenerate — never hand-write migration SQL
+- **Domain purity**: Domain entities use Python dataclasses, not Pydantic or SQLAlchemy. Pydantic lives in `adapters/web/schemas/` only
 - **Code Quality**: Follow PEP 8 style guide for Python code
-- **Documentation**: Maintain clear and concise documentation for APIs and data models
-- **Testing**: Write unit tests for all critical functionalities using pytest. Write integration tests for API endpoints
+- **Testing**: Write domain unit tests first (using fake port implementations), then adapter tests, then route tests
 - **Environment Variables**: Use `.env` files for sensitive configurations and secrets
-- **Virtual Environment**: Use the `.venv` virtual environment when executing Python commands
+- **Virtual Environment**: Always use `local-server/.venv` — activate it before running any Python command
 
 ### Common Pitfalls
 
 - When comparing UUID values, always cast them to strings, as SQLite stores UUIDs as text
+- Do not import from `legacy-server/` — use it as a reading reference only
+- Do not add backwards compatibility shims for the legacy API or database schema
 
 ### Testing
 

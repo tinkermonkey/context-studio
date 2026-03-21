@@ -2,7 +2,7 @@
 
 ## Detailed Entity, Value Object, and Relationship Specifications
 
-**Date:** 2026-03-01
+**Date:** 2026-03-13
 **Companion Documents:** `architecture_design.md`, `transformation_roadmap.md`
 
 ---
@@ -56,8 +56,6 @@ class Taxonomy:
 - `title` must be non-empty and unique across taxonomies
 - A taxonomy has no parent (it is a root-level entity)
 
-**Mapping from current model:**
-- `StructureNode` where `node_type = 'layer'` and `parent_node_id IS NULL`
 
 ---
 
@@ -82,9 +80,6 @@ class ConceptScheme:
 - `taxonomy_id` must reference an existing Taxonomy
 - A concept scheme cannot exist without a taxonomy
 
-**Mapping from current model:**
-- `StructureNode` where `node_type = 'domain'`
-- `parent_node_id` maps to `taxonomy_id`
 
 ---
 
@@ -120,14 +115,7 @@ class Class:
 - `parent_class_id` cannot equal `id` (self-reference check)
 - `structural_property_id`, if set, must reference a valid PropertyDefinition
 
-**Mapping from current model:**
-- `StructureNode` where `node_type = 'term'`
-- `parent_node_id` maps to `parent_class_id` (for term→term subclass) or `concept_scheme_id` (for term→domain membership)
-- `reference_links` (JSON) maps to `external_references`
-- `word_senses` (JSON) maps to `lexical_senses`
-- `attributes` (JSON) maps to `data_properties`
-
-**Note on parent_node_id disambiguation:** In the current model, `parent_node_id` serves double duty—it can point to either a domain (scheme membership) or another term (subclass hierarchy). The new model separates these into `concept_scheme_id` (always set, defining where the class lives) and `parent_class_id` (optional, defining the subclass hierarchy). The migration will need to inspect the `node_type` of the referenced parent to determine which field to populate.
+**Note on parent disambiguation:** `concept_scheme_id` (always set) defines where the class lives in the hierarchy. `parent_class_id` (optional) defines the subclass relationship within that scheme. These were conflated in the legacy model's `parent_node_id` column.
 
 ---
 
@@ -178,10 +166,6 @@ class Relationship:
 - The triple `(source_id, target_id, property_definition_id)` must be unique
 - `source_id` != `target_id` (no self-loops, enforced at domain level)
 
-**Mapping from current model:**
-- `StructureNodeLink` maps directly
-- `predicate` (string) maps to `property_label`
-- `predicate_id` maps to `property_definition_id`
 
 ---
 
@@ -207,9 +191,6 @@ class PropertyDefinition:
 - `title` must be unique
 - `identifier` should follow a consistent naming convention (snake_case)
 
-**Mapping from current model:**
-- `Predicate` maps directly
-- `mapping` (JSON string) maps to `ontology_mapping` (typed value object)
 
 ---
 
@@ -227,7 +208,6 @@ class NodeType(str, Enum):
     INDIVIDUAL = "individual"
 ```
 
-**Migration from current:** `layer` → `taxonomy`, `domain` → `concept_scheme`, `term` → `class`
 
 ---
 
@@ -245,7 +225,6 @@ class ExternalReference:
     metadata: Optional[dict] = None     # source-specific metadata
 ```
 
-**Mapping from current:** Parsed from `reference_links` JSON column.
 
 ---
 
@@ -263,7 +242,6 @@ class LexicalSense:
     source: str = "wordnet"
 ```
 
-**Mapping from current:** Parsed from `word_senses` JSON column.
 
 ---
 
@@ -279,7 +257,6 @@ class DataPropertyValue:
     datatype: Optional[str] = None  # optional type hint (e.g., "xsd:string", "xsd:integer")
 ```
 
-**Mapping from current:** Parsed from `attributes` JSON column.
 
 ---
 
@@ -296,7 +273,6 @@ class OntologyMapping:
     exact_match: bool = False   # whether this is an exact semantic match
 ```
 
-**Mapping from current:** Parsed from `mapping` JSON string on Predicate.
 
 ---
 
@@ -514,9 +490,7 @@ class ChangeState(str, Enum):
 
 ## 6. Persistence Mapping Strategy
 
-The SQLAlchemy ORM models in `adapters/persistence/sqlite/models.py` will mirror the current database schema (possibly with renamed tables/columns per Phase 1) but remain **completely separate** from domain entities.
-
-Each repository adapter contains mapper methods:
+The SQLAlchemy ORM models in `adapters/persistence/sqlite/models.py` are the **source of truth for the database schema**. They remain completely separate from domain entities. Each repository adapter contains mapper methods to translate between the two representations.
 
 ```python
 # adapters/persistence/sqlite/ontology_repo.py
@@ -525,13 +499,13 @@ class SQLiteOntologyRepository:
     """Implements OntologyRepository port using SQLAlchemy + SQLite."""
 
     def _to_domain(self, orm_entity: OntologyEntityORM) -> Class:
-        """Map from SQLAlchemy model to domain entity."""
+        """Map from ORM model to domain entity."""
         return Class(
             id=orm_entity.id,
             title=orm_entity.title,
             definition=orm_entity.definition,
-            concept_scheme_id=orm_entity.parent_node_id,  # depends on migration
-            parent_class_id=...,  # resolved based on parent's node_type
+            concept_scheme_id=orm_entity.concept_scheme_id,
+            parent_class_id=orm_entity.parent_class_id,
             external_references=self._parse_references(orm_entity.reference_links),
             lexical_senses=self._parse_senses(orm_entity.word_senses),
             data_properties=self._parse_attributes(orm_entity.attributes),
@@ -543,13 +517,14 @@ class SQLiteOntologyRepository:
         )
 
     def _to_orm(self, cls: Class) -> OntologyEntityORM:
-        """Map from domain entity to SQLAlchemy model."""
+        """Map from domain entity to ORM model."""
         return OntologyEntityORM(
             id=cls.id,
             node_type=NodeType.CLASS.value,
             title=cls.title,
             definition=cls.definition,
-            parent_node_id=cls.parent_class_id or cls.concept_scheme_id,
+            concept_scheme_id=cls.concept_scheme_id,
+            parent_class_id=cls.parent_class_id,
             reference_links=json.dumps([asdict(r) for r in cls.external_references]),
             word_senses=json.dumps([asdict(s) for s in cls.lexical_senses]),
             attributes=json.dumps([asdict(a) for a in cls.data_properties]),
@@ -559,17 +534,11 @@ class SQLiteOntologyRepository:
         )
 ```
 
-### Database Schema Options
+### Database Schema Decision: Unified Table
 
-There are two approaches for the database schema during migration:
+A single `ontology_entities` table with a `node_type` discriminator column stores taxonomies, concept schemes, and classes. The adapter maps rows to the correct domain entity type at runtime.
 
-**Option A: Keep unified table, map in adapter (recommended)**
-Keep the single `ontology_entities` table with `node_type` discriminator. The adapter maps rows to the correct domain entity type based on `node_type`. This is simpler, preserves backwards compatibility, and avoids a complex table split migration.
-
-**Option B: Split into separate tables**
-Create `taxonomies`, `concept_schemes`, `classes`, and `individuals` tables. Cleaner from a relational perspective but requires a more complex migration and loses the simplicity of a single-table hierarchy query.
-
-**Recommendation:** Option A for the initial migration. The adapter handles the mapping complexity, keeping the database migration minimal. Option B can be evaluated later if query patterns justify it.
+This keeps the hierarchy query simple (a single join on `concept_scheme_id` or `parent_class_id`) while the domain layer presents distinct types. `individuals` will be added as a separate table when that feature is built.
 
 ---
 
