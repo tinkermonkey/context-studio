@@ -1,0 +1,40 @@
+apm.span.api-request-span:
+  id: c1023d0c-f7b9-4902-8af1-bf40e880054d
+  path: apm.span.api-request-span
+  spec_node_id: apm.span
+  type: span
+  layer_id: apm
+  name: API Request Span
+  description: Trace span representing the full duration of a single HTTP API
+    request, from receipt to response
+  attributes:
+    traceId: ""
+    spanId: ""
+    traceState: ""
+    parentSpanId: ""
+    spanKind: SERVER
+    startTimeUnixNano: "0"
+    endTimeUnixNano: "0"
+    droppedAttributesCount: "0"
+    droppedEventsCount: "0"
+    droppedLinksCount: "0"
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: utils/access_log_middleware.py
+  metadata:
+    created_at: 2026-03-23T12:34:04.571Z
+    updated_at: 2026-03-23T12:34:04.571Z
+    version: 1
+apm.span.database-query-span:
+  id: 435cdf13-1b34-4f3b-8fe8-fe37eb8b3c63
+  path: apm.span.database-query-span
+  spec_node_id: apm.span
+  type: span
+  layer_id: apm
+  name: Database Query Span
+  description: OpenTelemetry span covering SQLAlchemy database query execution
+  metadata:
+    created_at: 2026-03-23T19:27:46.297Z
+    updated_at: 2026-03-23T19:27:46.297Z
+    version: 1

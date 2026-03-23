@@ -1,0 +1,21 @@
+ux.dataconfig.entity-list-data-config:
+  id: 3f6a34ae-be9b-464e-8d11-633ceb5257e6
+  path: ux.dataconfig.entity-list-data-config
+  spec_node_id: ux.dataconfig
+  type: dataconfig
+  layer_id: ux
+  name: Entity List Data Config
+  description: Data binding configuration wiring the TanStack Query API hooks to
+    the entity list table component
+  attributes:
+    source: api
+    target: node-table
+    path: /api/ontology_entities
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ../../ux/src/api/hooks
+  metadata:
+    created_at: 2026-03-23T12:30:20.667Z
+    updated_at: 2026-03-23T12:30:20.667Z
+    version: 1

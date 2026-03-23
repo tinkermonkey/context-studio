@@ -1,0 +1,149 @@
+ux.view.layers-view:
+  id: d14b6b99-70d7-4642-a5b5-157d4ea3c57a
+  path: ux.view.layers-view
+  spec_node_id: ux.view
+  type: view
+  layer_id: ux
+  name: Layers View
+  description: Page view for managing taxonomy (layer) entities — list, create,
+    edit, and delete taxonomies
+  attributes:
+    type: page
+    title: Layers
+    routable: true
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ../../ux/src/routes/app/layers.tsx
+  metadata:
+    created_at: 2026-03-23T12:29:36.613Z
+    updated_at: 2026-03-23T12:29:36.613Z
+    version: 1
+ux.view.domains-view:
+  id: 5ecd8a3d-8e25-49bf-b56e-34891f5835fc
+  path: ux.view.domains-view
+  spec_node_id: ux.view
+  type: view
+  layer_id: ux
+  name: Domains View
+  description: Page view for managing concept scheme (domain) entities within a taxonomy
+  attributes:
+    type: page
+    title: Domains
+    routable: true
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ../../ux/src/routes/app/domains.tsx
+  metadata:
+    created_at: 2026-03-23T12:29:37.035Z
+    updated_at: 2026-03-23T12:29:37.035Z
+    version: 1
+ux.view.terms-view:
+  id: 8d494aa7-1d27-45f8-a1ba-98549c09fa6d
+  path: ux.view.terms-view
+  spec_node_id: ux.view
+  type: view
+  layer_id: ux
+  name: Terms View
+  description: Page view for managing class (term) entities within a concept
+    scheme, including relationship editing
+  attributes:
+    type: page
+    title: Terms
+    routable: true
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ../../ux/src/routes/app/terms.tsx
+  metadata:
+    created_at: 2026-03-23T12:29:37.459Z
+    updated_at: 2026-03-23T12:29:37.459Z
+    version: 1
+ux.view.datasets-view:
+  id: 3f4f0c73-2517-4f50-b7df-a1127094f41d
+  path: ux.view.datasets-view
+  spec_node_id: ux.view
+  type: view
+  layer_id: ux
+  name: Datasets View
+  description: Page view for dataset workspace management — list, create,
+    activate, and switch between SQLite dataset files
+  attributes:
+    type: page
+    title: Datasets
+    routable: true
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ../../ux/src/routes/app/datasets.tsx
+  metadata:
+    created_at: 2026-03-23T12:29:43.190Z
+    updated_at: 2026-03-23T12:29:43.190Z
+    version: 1
+ux.view.predicates-view:
+  id: feb404a2-0055-4a80-9672-84a5451e3621
+  path: ux.view.predicates-view
+  spec_node_id: ux.view
+  type: view
+  layer_id: ux
+  name: Predicates View
+  description: Page view for managing property definitions
+    (predicates/relationship types) in the ontology
+  attributes:
+    type: page
+    title: Predicates
+    routable: true
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ../../ux/src/routes/app/predicates.tsx
+  metadata:
+    created_at: 2026-03-23T12:29:43.633Z
+    updated_at: 2026-03-23T12:29:43.633Z
+    version: 1
+ux.view.configuration-view:
+  id: d4565d2b-6fc8-43e0-8a22-859ad43187e0
+  path: ux.view.configuration-view
+  spec_node_id: ux.view
+  type: view
+  layer_id: ux
+  name: Configuration View
+  description: Page view for server configuration management and LLM pipeline settings
+  attributes:
+    type: page
+    title: Configuration
+    routable: true
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ../../ux/src/routes/app/config.tsx
+  metadata:
+    created_at: 2026-03-23T12:29:44.081Z
+    updated_at: 2026-03-23T12:29:44.081Z
+    version: 1
+ux.view.rag-experiments-view:
+  id: 91ddf2c1-1f12-4900-bfaf-4b5e917a3308
+  path: ux.view.rag-experiments-view
+  spec_node_id: ux.view
+  type: view
+  layer_id: ux
+  name: RAG Experiments View
+  description: View for managing RAG test paragraphs, running experiments, and
+    comparing pipeline results
+  metadata:
+    created_at: 2026-03-23T19:27:32.030Z
+    updated_at: 2026-03-23T19:27:32.030Z
+    version: 1
+ux.view.admin-view:
+  id: 92fc54e5-98fb-4272-b392-9c240b300102
+  path: ux.view.admin-view
+  spec_node_id: ux.view
+  type: view
+  layer_id: ux
+  name: Admin View
+  description: Administrative view for system health, task management, and schema migration
+  metadata:
+    created_at: 2026-03-23T19:27:32.577Z
+    updated_at: 2026-03-23T19:27:32.577Z
+    version: 1

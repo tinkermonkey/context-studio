@@ -1,0 +1,22 @@
+security.authenticationconfig.local-api-key-authentication:
+  id: 99d2ea18-d31d-4268-90aa-0c26114dc9d4
+  path: security.authenticationconfig.local-api-key-authentication
+  spec_node_id: security.authenticationconfig
+  type: authenticationconfig
+  layer_id: security
+  name: Local API Key Authentication
+  description: Optional API key authentication — require_secure_key toggle in
+    config.json, X-API-Key header, no session/JWT
+  attributes:
+    provider: local
+    sessionTimeout: 0
+    verificationLevel: ial1
+    mfaRequired: false
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: config.json
+  metadata:
+    created_at: 2026-03-23T12:38:29.101Z
+    updated_at: 2026-03-23T12:38:29.101Z
+    version: 1

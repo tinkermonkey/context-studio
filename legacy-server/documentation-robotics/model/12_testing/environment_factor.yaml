@@ -1,0 +1,22 @@
+testing.environmentfactor.sqlite-in-memory-database:
+  id: 845aff50-dc56-4200-a697-7c22b4aebd4c
+  path: testing.environmentfactor.sqlite-in-memory-database
+  spec_node_id: testing.environmentfactor
+  type: environmentfactor
+  layer_id: testing
+  name: SQLite In-Memory Database
+  description: "Test environment factor: unit and integration tests use SQLite
+    in-memory databases to avoid file system side-effects"
+  attributes:
+    factorType: dependency-version
+    value: "sqlite:///:memory:"
+    description: In-memory SQLite for test isolation
+    testImpact: isolation
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: tests/conftest.py
+  metadata:
+    created_at: 2026-03-23T12:36:31.078Z
+    updated_at: 2026-03-23T12:36:31.078Z
+    version: 1

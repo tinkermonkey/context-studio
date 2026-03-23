@@ -1,0 +1,10 @@
+id: changeset-1774269054706-faoznayem
+name: extract-navigation-layer
+created: 2026-03-23T12:30:54.717Z
+modified: 2026-03-23T12:33:04.024Z
+status: committed
+baseSnapshot: sha256:30bd955e1d6763aadbbb3b0c753a00e6a4ecd946d9ff58ca3149281757d0fd01
+stats:
+  additions: 15
+  modifications: 0
+  deletions: 0

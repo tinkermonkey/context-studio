@@ -1,0 +1,10 @@
+id: changeset-1774269192533-7n0gegtkk
+name: extract-apm-layer
+created: 2026-03-23T12:33:12.542Z
+modified: 2026-03-23T12:35:03.630Z
+status: committed
+baseSnapshot: sha256:4e5ab442cf9e45e9d7263cb01fe97ff0dab9f6bce0fbbb6352809ea697688ce7
+stats:
+  additions: 17
+  modifications: 0
+  deletions: 0

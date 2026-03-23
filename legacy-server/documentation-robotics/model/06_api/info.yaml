@@ -1,0 +1,21 @@
+api.info.context-studio-legacy-server-api:
+  id: 0cb7742c-f79f-43c8-b4ed-0bbfe96a3587
+  path: api.info.context-studio-legacy-server-api
+  spec_node_id: api.info
+  type: info
+  layer_id: api
+  name: Context Studio Legacy Server API
+  description: REST API for the Context Studio legacy server — knowledge graph
+    management, NLP processing, LLM enrichment, and collaborative versioning
+  attributes:
+    title: Context Studio Legacy Server API
+    version: 1.0.0
+    description: Knowledge graph management, NLP, LLM, and collaborative versioning API
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: app.py
+  metadata:
+    created_at: 2026-03-23T12:23:49.166Z
+    updated_at: 2026-03-23T12:23:49.166Z
+    version: 1

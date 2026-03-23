@@ -1,0 +1,4609 @@
+- type: add
+  elementId: api.tag.predicates
+  layerName: api
+  after:
+    id: 3a4428a7-985f-414c-aa57-48a96a23cc95
+    path: api.tag.predicates
+    spec_node_id: api.tag
+    type: tag
+    layer_id: api
+    name: predicates
+    description: Predicate (property definition) management operations
+    metadata:
+      created_at: 2026-03-23T19:24:32.293Z
+      updated_at: 2026-03-23T19:24:32.293Z
+      version: 1
+  timestamp: 2026-03-23T19:24:32.314Z
+  sequenceNumber: 0
+- type: add
+  elementId: api.tag.property-definitions
+  layerName: api
+  after:
+    id: 7eb7cb37-cdaf-4f6d-902c-6527849c1646
+    path: api.tag.property-definitions
+    spec_node_id: api.tag
+    type: tag
+    layer_id: api
+    name: property-definitions
+    description: Property definition CRUD operations
+    metadata:
+      created_at: 2026-03-23T19:24:32.700Z
+      updated_at: 2026-03-23T19:24:32.700Z
+      version: 1
+  timestamp: 2026-03-23T19:24:32.721Z
+  sequenceNumber: 1
+- type: add
+  elementId: api.tag.structure-nodes
+  layerName: api
+  after:
+    id: 61ae5688-b675-47e7-b995-81c01e701cb6
+    path: api.tag.structure-nodes
+    spec_node_id: api.tag
+    type: tag
+    layer_id: api
+    name: structure-nodes
+    description: Structure node hierarchy management operations
+    metadata:
+      created_at: 2026-03-23T19:24:33.102Z
+      updated_at: 2026-03-23T19:24:33.102Z
+      version: 1
+  timestamp: 2026-03-23T19:24:33.123Z
+  sequenceNumber: 2
+- type: add
+  elementId: api.tag.config
+  layerName: api
+  after:
+    id: 0d2813eb-5154-473f-ade5-7da190a92385
+    path: api.tag.config
+    spec_node_id: api.tag
+    type: tag
+    layer_id: api
+    name: config
+    description: Application configuration read and update operations
+    metadata:
+      created_at: 2026-03-23T19:24:33.501Z
+      updated_at: 2026-03-23T19:24:33.501Z
+      version: 1
+  timestamp: 2026-03-23T19:24:33.524Z
+  sequenceNumber: 3
+- type: add
+  elementId: api.tag.background-tasks
+  layerName: api
+  after:
+    id: 1d06f815-dd6b-49f8-b520-4faca618aa3f
+    path: api.tag.background-tasks
+    spec_node_id: api.tag
+    type: tag
+    layer_id: api
+    name: background-tasks
+    description: Background task status and management operations
+    metadata:
+      created_at: 2026-03-23T19:24:37.760Z
+      updated_at: 2026-03-23T19:24:37.760Z
+      version: 1
+  timestamp: 2026-03-23T19:24:37.782Z
+  sequenceNumber: 4
+- type: add
+  elementId: api.tag.change-events
+  layerName: api
+  after:
+    id: 201dd338-6ff0-4fd2-a6b0-0618243a4453
+    path: api.tag.change-events
+    spec_node_id: api.tag
+    type: tag
+    layer_id: api
+    name: change-events
+    description: Change event audit log query operations
+    metadata:
+      created_at: 2026-03-23T19:24:38.155Z
+      updated_at: 2026-03-23T19:24:38.155Z
+      version: 1
+  timestamp: 2026-03-23T19:24:38.177Z
+  sequenceNumber: 5
+- type: add
+  elementId: api.tag.llm-traceability
+  layerName: api
+  after:
+    id: d3c56f8b-acf4-4bf3-9dc1-e74f7a42186f
+    path: api.tag.llm-traceability
+    spec_node_id: api.tag
+    type: tag
+    layer_id: api
+    name: llm-traceability
+    description: LLM execution selection recording and analytics
+    metadata:
+      created_at: 2026-03-23T19:24:38.562Z
+      updated_at: 2026-03-23T19:24:38.562Z
+      version: 1
+  timestamp: 2026-03-23T19:24:38.585Z
+  sequenceNumber: 6
+- type: add
+  elementId: api.tag.enabled-models
+  layerName: api
+  after:
+    id: 57f45d38-ef3c-459a-b8bd-5c2363788f57
+    path: api.tag.enabled-models
+    spec_node_id: api.tag
+    type: tag
+    layer_id: api
+    name: enabled-models
+    description: Enabled LLM model registry management
+    metadata:
+      created_at: 2026-03-23T19:24:38.965Z
+      updated_at: 2026-03-23T19:24:38.965Z
+      version: 1
+  timestamp: 2026-03-23T19:24:38.989Z
+  sequenceNumber: 7
+- type: add
+  elementId: api.tag.model-capabilities
+  layerName: api
+  after:
+    id: 4fd8aec0-7384-4838-8812-408d915ea2e6
+    path: api.tag.model-capabilities
+    spec_node_id: api.tag
+    type: tag
+    layer_id: api
+    name: model-capabilities
+    description: LLM model capability discovery operations
+    metadata:
+      created_at: 2026-03-23T19:24:42.453Z
+      updated_at: 2026-03-23T19:24:42.453Z
+      version: 1
+  timestamp: 2026-03-23T19:24:42.477Z
+  sequenceNumber: 8
+- type: add
+  elementId: api.tag.pipeline-flavors
+  layerName: api
+  after:
+    id: 80c8b1b3-ba79-4e31-ae17-bb42456080b5
+    path: api.tag.pipeline-flavors
+    spec_node_id: api.tag
+    type: tag
+    layer_id: api
+    name: pipeline-flavors
+    description: Pipeline flavor template CRUD operations
+    metadata:
+      created_at: 2026-03-23T19:24:42.854Z
+      updated_at: 2026-03-23T19:24:42.854Z
+      version: 1
+  timestamp: 2026-03-23T19:24:42.879Z
+  sequenceNumber: 9
+- type: add
+  elementId: api.tag.pipeline-configurations
+  layerName: api
+  after:
+    id: 3e76e804-b1ff-4b3e-b5c0-a74038313b3e
+    path: api.tag.pipeline-configurations
+    spec_node_id: api.tag
+    type: tag
+    layer_id: api
+    name: pipeline-configurations
+    description: Pipeline configuration CRUD operations
+    metadata:
+      created_at: 2026-03-23T19:24:43.283Z
+      updated_at: 2026-03-23T19:24:43.283Z
+      version: 1
+  timestamp: 2026-03-23T19:24:43.309Z
+  sequenceNumber: 10
+- type: add
+  elementId: api.tag.optimization
+  layerName: api
+  after:
+    id: 583799b1-b19c-43d0-b1f1-fdd34b586313
+    path: api.tag.optimization
+    spec_node_id: api.tag
+    type: tag
+    layer_id: api
+    name: optimization
+    description: Performance optimization, query stats, batch operations
+    metadata:
+      created_at: 2026-03-23T19:24:43.702Z
+      updated_at: 2026-03-23T19:24:43.702Z
+      version: 1
+  timestamp: 2026-03-23T19:24:43.728Z
+  sequenceNumber: 11
+- type: add
+  elementId: api.tag.rag-experiments
+  layerName: api
+  after:
+    id: 170e69c8-64d2-47d8-8ecd-87b4f2cc77e3
+    path: api.tag.rag-experiments
+    spec_node_id: api.tag
+    type: tag
+    layer_id: api
+    name: rag-experiments
+    description: RAG pipeline test paragraph and annotation management
+    metadata:
+      created_at: 2026-03-23T19:24:47.266Z
+      updated_at: 2026-03-23T19:24:47.266Z
+      version: 1
+  timestamp: 2026-03-23T19:24:47.307Z
+  sequenceNumber: 12
+- type: add
+  elementId: api.tag.schema
+  layerName: api
+  after:
+    id: 9d4db57b-c8f2-4067-9090-a72f76f22df8
+    path: api.tag.schema
+    spec_node_id: api.tag
+    type: tag
+    layer_id: api
+    name: schema
+    description: Database schema migration status and control operations
+    metadata:
+      created_at: 2026-03-23T19:24:47.697Z
+      updated_at: 2026-03-23T19:24:47.697Z
+      version: 1
+  timestamp: 2026-03-23T19:24:47.723Z
+  sequenceNumber: 13
+- type: add
+  elementId: api.tag.admin
+  layerName: api
+  after:
+    id: 6ccbbc9d-afc5-4e7b-a137-d076caeac451
+    path: api.tag.admin
+    spec_node_id: api.tag
+    type: tag
+    layer_id: api
+    name: admin
+    description: "Administrative monitoring: database, event processor, services"
+    metadata:
+      created_at: 2026-03-23T19:24:48.113Z
+      updated_at: 2026-03-23T19:24:48.113Z
+      version: 1
+  timestamp: 2026-03-23T19:24:48.139Z
+  sequenceNumber: 14
+- type: add
+  elementId: api.operation.list-predicates
+  layerName: api
+  after:
+    id: 7fedb1c4-f03c-4dff-9d10-0fe186eab6f5
+    path: api.operation.list-predicates
+    spec_node_id: api.operation
+    type: operation
+    layer_id: api
+    name: List Predicates
+    description: Paginated listing of property definitions (predicates) with filtering
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: api/predicates.py
+          symbol: router.get /
+    metadata:
+      created_at: 2026-03-23T19:24:54.563Z
+      updated_at: 2026-03-23T19:24:54.563Z
+      version: 1
+  timestamp: 2026-03-23T19:24:54.591Z
+  sequenceNumber: 15
+- type: add
+  elementId: api.operation.create-predicate
+  layerName: api
+  after:
+    id: ca8f3539-1c64-4e09-96c3-caf309d34fd8
+    path: api.operation.create-predicate
+    spec_node_id: api.operation
+    type: operation
+    layer_id: api
+    name: Create Predicate
+    description: Create a new predicate (property definition)
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: api/predicates.py
+          symbol: router.post /
+    metadata:
+      created_at: 2026-03-23T19:24:55.024Z
+      updated_at: 2026-03-23T19:24:55.024Z
+      version: 1
+  timestamp: 2026-03-23T19:24:55.051Z
+  sequenceNumber: 16
+- type: add
+  elementId: api.operation.get-predicate
+  layerName: api
+  after:
+    id: 31560f3a-7072-45a3-a025-12a69cdaad2f
+    path: api.operation.get-predicate
+    spec_node_id: api.operation
+    type: operation
+    layer_id: api
+    name: Get Predicate
+    description: Retrieve a single predicate by ID
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: api/predicates.py
+          symbol: router.get /{id}
+    metadata:
+      created_at: 2026-03-23T19:24:55.450Z
+      updated_at: 2026-03-23T19:24:55.450Z
+      version: 1
+  timestamp: 2026-03-23T19:24:55.478Z
+  sequenceNumber: 17
+- type: add
+  elementId: api.operation.update-predicate
+  layerName: api
+  after:
+    id: 0fd8578c-44a0-4824-bc6f-8f12510fdad4
+    path: api.operation.update-predicate
+    spec_node_id: api.operation
+    type: operation
+    layer_id: api
+    name: Update Predicate
+    description: Update an existing predicate
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: api/predicates.py
+          symbol: router.put /{id}
+    metadata:
+      created_at: 2026-03-23T19:24:55.893Z
+      updated_at: 2026-03-23T19:24:55.893Z
+      version: 1
+  timestamp: 2026-03-23T19:24:55.919Z
+  sequenceNumber: 18
+- type: add
+  elementId: api.operation.delete-predicate
+  layerName: api
+  after:
+    id: 6c938f6c-970a-40f5-a39f-1c36ed3dc419
+    path: api.operation.delete-predicate
+    spec_node_id: api.operation
+    type: operation
+    layer_id: api
+    name: Delete Predicate
+    description: Delete a predicate by ID
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: api/predicates.py
+          symbol: router.delete /{id}
+    metadata:
+      created_at: 2026-03-23T19:25:01.972Z
+      updated_at: 2026-03-23T19:25:01.972Z
+      version: 1
+  timestamp: 2026-03-23T19:25:01.999Z
+  sequenceNumber: 19
+- type: add
+  elementId: api.operation.discover-predicates
+  layerName: api
+  after:
+    id: c8bbd125-d737-42fa-802f-f3797971a19b
+    path: api.operation.discover-predicates
+    spec_node_id: api.operation
+    type: operation
+    layer_id: api
+    name: Discover Predicates
+    description: Trigger async predicate discovery from ontology content
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: api/predicates.py
+          symbol: router.post /discover
+    metadata:
+      created_at: 2026-03-23T19:25:02.410Z
+      updated_at: 2026-03-23T19:25:02.410Z
+      version: 1
+  timestamp: 2026-03-23T19:25:02.437Z
+  sequenceNumber: 20
+- type: add
+  elementId: api.operation.find-similar-predicates
+  layerName: api
+  after:
+    id: e17423de-9a22-4232-ae16-cb45208b9c84
+    path: api.operation.find-similar-predicates
+    spec_node_id: api.operation
+    type: operation
+    layer_id: api
+    name: Find Similar Predicates
+    description: Find semantically similar predicates using embedding similarity
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: api/predicates.py
+          symbol: router.post /{id}/find-similar
+    metadata:
+      created_at: 2026-03-23T19:25:02.840Z
+      updated_at: 2026-03-23T19:25:02.840Z
+      version: 1
+  timestamp: 2026-03-23T19:25:02.866Z
+  sequenceNumber: 21
+- type: add
+  elementId: api.operation.import-predicates-from-concept-net
+  layerName: api
+  after:
+    id: 6f04f70e-6a06-4112-a0db-5778d6a6e8e5
+    path: api.operation.import-predicates-from-concept-net
+    spec_node_id: api.operation
+    type: operation
+    layer_id: api
+    name: Import Predicates From ConceptNet
+    description: Batch import predicates from ConceptNet relation types
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: api/predicates.py
+          symbol: router.post /import-from-conceptnet
+    metadata:
+      created_at: 2026-03-23T19:25:03.271Z
+      updated_at: 2026-03-23T19:25:03.271Z
+      version: 1
+  timestamp: 2026-03-23T19:25:03.299Z
+  sequenceNumber: 22
+- type: add
+  elementId: api.operation.list-structure-nodes
+  layerName: api
+  after:
+    id: 55219308-660a-415d-b130-be6c4727cc72
+    path: api.operation.list-structure-nodes
+    spec_node_id: api.operation
+    type: operation
+    layer_id: api
+    name: List Structure Nodes
+    description: Paginated listing of structure nodes (layers, domains, terms) with
+      filtering
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: api/structure_nodes.py
+          symbol: router.get /
+    metadata:
+      created_at: 2026-03-23T19:25:08.260Z
+      updated_at: 2026-03-23T19:25:08.260Z
+      version: 1
+  timestamp: 2026-03-23T19:25:08.286Z
+  sequenceNumber: 23
+- type: add
+  elementId: api.operation.create-structure-node
+  layerName: api
+  after:
+    id: 7fe4d007-c8cd-4b84-9ab8-34b0bbbd78c0
+    path: api.operation.create-structure-node
+    spec_node_id: api.operation
+    type: operation
+    layer_id: api
+    name: Create Structure Node
+    description: Create a new structure node (taxonomy, concept scheme, or class)
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: api/structure_nodes.py
+          symbol: router.post /
+    metadata:
+      created_at: 2026-03-23T19:25:08.701Z
+      updated_at: 2026-03-23T19:25:08.701Z
+      version: 1
+  timestamp: 2026-03-23T19:25:08.727Z
+  sequenceNumber: 24
+- type: add
+  elementId: api.operation.get-structure-node
+  layerName: api
+  after:
+    id: dd6269a9-429d-4430-8dac-772135df5111
+    path: api.operation.get-structure-node
+    spec_node_id: api.operation
+    type: operation
+    layer_id: api
+    name: Get Structure Node
+    description: Retrieve a single structure node by ID
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: api/structure_nodes.py
+          symbol: router.get /{node_id}
+    metadata:
+      created_at: 2026-03-23T19:25:09.125Z
+      updated_at: 2026-03-23T19:25:09.125Z
+      version: 1
+  timestamp: 2026-03-23T19:25:09.153Z
+  sequenceNumber: 25
+- type: add
+  elementId: api.operation.update-structure-node
+  layerName: api
+  after:
+    id: 935cd4e1-646e-4368-bd76-d8a59b8e1078
+    path: api.operation.update-structure-node
+    spec_node_id: api.operation
+    type: operation
+    layer_id: api
+    name: Update Structure Node
+    description: Update an existing structure node
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: api/structure_nodes.py
+          symbol: router.put /{node_id}
+    metadata:
+      created_at: 2026-03-23T19:25:09.560Z
+      updated_at: 2026-03-23T19:25:09.560Z
+      version: 1
+  timestamp: 2026-03-23T19:25:09.591Z
+  sequenceNumber: 26
+- type: add
+  elementId: api.operation.delete-structure-node
+  layerName: api
+  after:
+    id: 96462197-25dc-48b4-afc8-6d1a9ad57915
+    path: api.operation.delete-structure-node
+    spec_node_id: api.operation
+    type: operation
+    layer_id: api
+    name: Delete Structure Node
+    description: Delete a structure node by ID
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: api/structure_nodes.py
+          symbol: router.delete /{node_id}
+    metadata:
+      created_at: 2026-03-23T19:25:15.680Z
+      updated_at: 2026-03-23T19:25:15.680Z
+      version: 1
+  timestamp: 2026-03-23T19:25:15.709Z
+  sequenceNumber: 27
+- type: add
+  elementId: api.operation.get-node-children
+  layerName: api
+  after:
+    id: b7b954c8-c171-403c-a6f5-f70749540c00
+    path: api.operation.get-node-children
+    spec_node_id: api.operation
+    type: operation
+    layer_id: api
+    name: Get Node Children
+    description: Get direct children of a structure node
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: api/structure_nodes.py
+          symbol: router.get /{node_id}/children
+    metadata:
+      created_at: 2026-03-23T19:25:16.114Z
+      updated_at: 2026-03-23T19:25:16.114Z
+      version: 1
+  timestamp: 2026-03-23T19:25:16.143Z
+  sequenceNumber: 28
+- type: add
+  elementId: api.operation.get-node-ancestors
+  layerName: api
+  after:
+    id: 10180d6b-a755-4f54-b06e-a71fdaa4b400
+    path: api.operation.get-node-ancestors
+    spec_node_id: api.operation
+    type: operation
+    layer_id: api
+    name: Get Node Ancestors
+    description: Get ancestor chain for a structure node
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: api/structure_nodes.py
+          symbol: router.get /{node_id}/ancestors
+    metadata:
+      created_at: 2026-03-23T19:25:16.544Z
+      updated_at: 2026-03-23T19:25:16.544Z
+      version: 1
+  timestamp: 2026-03-23T19:25:16.575Z
+  sequenceNumber: 29
+- type: add
+  elementId: api.operation.move-structure-nodes
+  layerName: api
+  after:
+    id: c123adb2-6acf-49e5-a621-cf99b3c9564d
+    path: api.operation.move-structure-nodes
+    spec_node_id: api.operation
+    type: operation
+    layer_id: api
+    name: Move Structure Nodes
+    description: Move one or more structure nodes to a new parent
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: api/structure_nodes.py
+          symbol: router.post /move
+    metadata:
+      created_at: 2026-03-23T19:25:16.978Z
+      updated_at: 2026-03-23T19:25:16.978Z
+      version: 1
+  timestamp: 2026-03-23T19:25:17.010Z
+  sequenceNumber: 30
+- type: add
+  elementId: api.operation.create-node-link
+  layerName: api
+  after:
+    id: 42bec5a1-90ad-4ee5-ae36-afa15ee36d76
+    path: api.operation.create-node-link
+    spec_node_id: api.operation
+    type: operation
+    layer_id: api
+    name: Create Node Link
+    description: Create a typed directed link between two structure nodes
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: api/structure_nodes.py
+          symbol: router.post /links
+    metadata:
+      created_at: 2026-03-23T19:25:23.110Z
+      updated_at: 2026-03-23T19:25:23.110Z
+      version: 1
+  timestamp: 2026-03-23T19:25:23.142Z
+  sequenceNumber: 31
+- type: add
+  elementId: api.operation.list-node-links
+  layerName: api
+  after:
+    id: 970e428c-2eb5-401b-9176-206e01402ad2
+    path: api.operation.list-node-links
+    spec_node_id: api.operation
+    type: operation
+    layer_id: api
+    name: List Node Links
+    description: List node-to-node links with filtering
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: api/structure_nodes.py
+          symbol: router.get /links
+    metadata:
+      created_at: 2026-03-23T19:25:23.555Z
+      updated_at: 2026-03-23T19:25:23.555Z
+      version: 1
+  timestamp: 2026-03-23T19:25:23.587Z
+  sequenceNumber: 32
+- type: add
+  elementId: api.operation.get-node-word-senses
+  layerName: api
+  after:
+    id: 8d323313-bb38-4880-8ee9-5d07c22c5c48
+    path: api.operation.get-node-word-senses
+    spec_node_id: api.operation
+    type: operation
+    layer_id: api
+    name: Get Node Word Senses
+    description: Retrieve lexical word senses attached to a structure node
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: api/structure_nodes.py
+          symbol: router.get /{node_id}/word_senses
+    metadata:
+      created_at: 2026-03-23T19:25:24.023Z
+      updated_at: 2026-03-23T19:25:24.023Z
+      version: 1
+  timestamp: 2026-03-23T19:25:24.055Z
+  sequenceNumber: 33
+- type: add
+  elementId: api.operation.get-node-reference-links
+  layerName: api
+  after:
+    id: 59ed8fb3-1693-4f04-a052-2e894e293555
+    path: api.operation.get-node-reference-links
+    spec_node_id: api.operation
+    type: operation
+    layer_id: api
+    name: Get Node Reference Links
+    description: Get external reference links for a structure node
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: api/structure_nodes.py
+          symbol: router.get /{node_id}/reference_links
+    metadata:
+      created_at: 2026-03-23T19:25:24.481Z
+      updated_at: 2026-03-23T19:25:24.481Z
+      version: 1
+  timestamp: 2026-03-23T19:25:24.511Z
+  sequenceNumber: 34
+- type: add
+  elementId: api.operation.list-property-definitions
+  layerName: api
+  after:
+    id: 6f56b86e-054d-4067-a61b-def8b2a24970
+    path: api.operation.list-property-definitions
+    spec_node_id: api.operation
+    type: operation
+    layer_id: api
+    name: List Property Definitions
+    description: Paginated listing of ontology property definitions
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: api/property_definitions.py
+          symbol: router.get /
+    metadata:
+      created_at: 2026-03-23T19:25:29.618Z
+      updated_at: 2026-03-23T19:25:29.618Z
+      version: 1
+  timestamp: 2026-03-23T19:25:29.647Z
+  sequenceNumber: 35
+- type: add
+  elementId: api.operation.create-property-definition
+  layerName: api
+  after:
+    id: 0820f26e-0454-418c-99cf-2763705ff984
+    path: api.operation.create-property-definition
+    spec_node_id: api.operation
+    type: operation
+    layer_id: api
+    name: Create Property Definition
+    description: Create a new ontology property definition
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: api/property_definitions.py
+          symbol: router.post /
+    metadata:
+      created_at: 2026-03-23T19:25:30.067Z
+      updated_at: 2026-03-23T19:25:30.067Z
+      version: 1
+  timestamp: 2026-03-23T19:25:30.101Z
+  sequenceNumber: 36
+- type: add
+  elementId: api.operation.get-config
+  layerName: api
+  after:
+    id: d0ee8e02-d204-43f9-973b-939b7202fa26
+    path: api.operation.get-config
+    spec_node_id: api.operation
+    type: operation
+    layer_id: api
+    name: Get Config
+    description: Retrieve current application configuration
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: api/config.py
+          symbol: router.get /
+    metadata:
+      created_at: 2026-03-23T19:25:30.527Z
+      updated_at: 2026-03-23T19:25:30.527Z
+      version: 1
+  timestamp: 2026-03-23T19:25:30.558Z
+  sequenceNumber: 37
+- type: add
+  elementId: api.operation.update-config
+  layerName: api
+  after:
+    id: 2ad1170f-30c2-4f78-aa9f-e5b9255bbeca
+    path: api.operation.update-config
+    spec_node_id: api.operation
+    type: operation
+    layer_id: api
+    name: Update Config
+    description: Patch application configuration values
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: api/config.py
+          symbol: router.patch /
+    metadata:
+      created_at: 2026-03-23T19:25:31.001Z
+      updated_at: 2026-03-23T19:25:31.001Z
+      version: 1
+  timestamp: 2026-03-23T19:25:31.030Z
+  sequenceNumber: 38
+- type: add
+  elementId: api.operation.list-background-tasks
+  layerName: api
+  after:
+    id: d0568690-3272-46c9-be89-933d4643209f
+    path: api.operation.list-background-tasks
+    spec_node_id: api.operation
+    type: operation
+    layer_id: api
+    name: List Background Tasks
+    description: List background tasks with status filtering
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: api/background_tasks.py
+          symbol: router.get /
+    metadata:
+      created_at: 2026-03-23T19:25:35.919Z
+      updated_at: 2026-03-23T19:25:35.919Z
+      version: 1
+  timestamp: 2026-03-23T19:25:35.951Z
+  sequenceNumber: 39
+- type: add
+  elementId: api.operation.get-background-task-status
+  layerName: api
+  after:
+    id: 77021e6d-14f4-44e0-8d36-509b74a2ee6b
+    path: api.operation.get-background-task-status
+    spec_node_id: api.operation
+    type: operation
+    layer_id: api
+    name: Get Background Task Status
+    description: Get status of a specific background task by ID
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: api/background_tasks.py
+          symbol: router.get /{task_id}
+    metadata:
+      created_at: 2026-03-23T19:25:36.399Z
+      updated_at: 2026-03-23T19:25:36.399Z
+      version: 1
+  timestamp: 2026-03-23T19:25:36.431Z
+  sequenceNumber: 40
+- type: add
+  elementId: api.operation.cancel-background-task
+  layerName: api
+  after:
+    id: 926bc588-92c8-460f-9464-8f335354ea8f
+    path: api.operation.cancel-background-task
+    spec_node_id: api.operation
+    type: operation
+    layer_id: api
+    name: Cancel Background Task
+    description: Cancel a running background task
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: api/background_tasks.py
+          symbol: router.delete /{task_id}
+    metadata:
+      created_at: 2026-03-23T19:25:36.908Z
+      updated_at: 2026-03-23T19:25:36.908Z
+      version: 1
+  timestamp: 2026-03-23T19:25:36.940Z
+  sequenceNumber: 41
+- type: add
+  elementId: api.operation.list-change-events
+  layerName: api
+  after:
+    id: c8bd61e8-e184-420a-8e21-b1af7ee3880e
+    path: api.operation.list-change-events
+    spec_node_id: api.operation
+    type: operation
+    layer_id: api
+    name: List Change Events
+    description: Query change event audit log with filters
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: api/change_events.py
+          symbol: router.get /
+    metadata:
+      created_at: 2026-03-23T19:25:37.373Z
+      updated_at: 2026-03-23T19:25:37.373Z
+      version: 1
+  timestamp: 2026-03-23T19:25:37.404Z
+  sequenceNumber: 42
+- type: add
+  elementId: api.operation.record-llm-selection
+  layerName: api
+  after:
+    id: 918f7d9a-ccc3-4d5e-a0b3-6a199c6483dd
+    path: api.operation.record-llm-selection
+    spec_node_id: api.operation
+    type: operation
+    layer_id: api
+    name: Record LLM Selection
+    description: Record a user's LLM pipeline selection for traceability
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: api/llm_traceability.py
+          symbol: router.post /record-selection
+    metadata:
+      created_at: 2026-03-23T19:25:42.842Z
+      updated_at: 2026-03-23T19:25:42.842Z
+      version: 1
+  timestamp: 2026-03-23T19:25:42.880Z
+  sequenceNumber: 43
+- type: add
+  elementId: api.operation.get-llm-execution-analytics
+  layerName: api
+  after:
+    id: ae280906-3d59-4a25-ac83-92566203def3
+    path: api.operation.get-llm-execution-analytics
+    spec_node_id: api.operation
+    type: operation
+    layer_id: api
+    name: Get LLM Execution Analytics
+    description: Retrieve aggregated LLM execution analytics
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: api/llm_traceability.py
+          symbol: router.get /execution-analytics
+    metadata:
+      created_at: 2026-03-23T19:25:43.376Z
+      updated_at: 2026-03-23T19:25:43.376Z
+      version: 1
+  timestamp: 2026-03-23T19:25:43.412Z
+  sequenceNumber: 44
+- type: add
+  elementId: api.operation.list-enabled-models
+  layerName: api
+  after:
+    id: f8e4b5ca-388b-4b44-ade7-507955580b35
+    path: api.operation.list-enabled-models
+    spec_node_id: api.operation
+    type: operation
+    layer_id: api
+    name: List Enabled Models
+    description: List all enabled LLM model configurations
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: api/enabled_models.py
+          symbol: router.get /
+    metadata:
+      created_at: 2026-03-23T19:25:43.882Z
+      updated_at: 2026-03-23T19:25:43.882Z
+      version: 1
+  timestamp: 2026-03-23T19:25:43.915Z
+  sequenceNumber: 45
+- type: add
+  elementId: api.operation.enable-model
+  layerName: api
+  after:
+    id: 3a8ee06d-f9d2-4183-ae30-7c8d61c1e733
+    path: api.operation.enable-model
+    spec_node_id: api.operation
+    type: operation
+    layer_id: api
+    name: Enable Model
+    description: Enable a specific LLM model for use
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: api/enabled_models.py
+          symbol: router.post /{model_name}/enable
+    metadata:
+      created_at: 2026-03-23T19:25:44.394Z
+      updated_at: 2026-03-23T19:25:44.394Z
+      version: 1
+  timestamp: 2026-03-23T19:25:44.426Z
+  sequenceNumber: 46
+- type: add
+  elementId: api.operation.list-model-capabilities
+  layerName: api
+  after:
+    id: 6f66565f-6a66-44d2-9a06-3da96b73a0ab
+    path: api.operation.list-model-capabilities
+    spec_node_id: api.operation
+    type: operation
+    layer_id: api
+    name: List Model Capabilities
+    description: List supported LLM models and their capability metadata
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: api/model_capabilities.py
+          symbol: router.get /
+    metadata:
+      created_at: 2026-03-23T19:25:49.770Z
+      updated_at: 2026-03-23T19:25:49.770Z
+      version: 1
+  timestamp: 2026-03-23T19:25:49.803Z
+  sequenceNumber: 47
+- type: add
+  elementId: api.operation.discover-open-router-models
+  layerName: api
+  after:
+    id: 13f5258d-cbb1-4658-ad91-40b21388de3a
+    path: api.operation.discover-open-router-models
+    spec_node_id: api.operation
+    type: operation
+    layer_id: api
+    name: Discover OpenRouter Models
+    description: Discover available models from OpenRouter API
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: api/model_capabilities.py
+          symbol: router.get /openrouter/discover
+    metadata:
+      created_at: 2026-03-23T19:25:50.254Z
+      updated_at: 2026-03-23T19:25:50.254Z
+      version: 1
+  timestamp: 2026-03-23T19:25:50.284Z
+  sequenceNumber: 48
+- type: add
+  elementId: api.operation.list-pipeline-flavors
+  layerName: api
+  after:
+    id: ba689f27-4735-4a24-af0e-9220600f037f
+    path: api.operation.list-pipeline-flavors
+    spec_node_id: api.operation
+    type: operation
+    layer_id: api
+    name: List Pipeline Flavors
+    description: List available pipeline flavor templates
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: api/pipeline_flavors.py
+          symbol: router.get /
+    metadata:
+      created_at: 2026-03-23T19:25:50.735Z
+      updated_at: 2026-03-23T19:25:50.735Z
+      version: 1
+  timestamp: 2026-03-23T19:25:50.771Z
+  sequenceNumber: 49
+- type: add
+  elementId: api.operation.create-pipeline-flavor
+  layerName: api
+  after:
+    id: 7ad76f67-c4a3-471b-9d5f-e518aa700f99
+    path: api.operation.create-pipeline-flavor
+    spec_node_id: api.operation
+    type: operation
+    layer_id: api
+    name: Create Pipeline Flavor
+    description: Create a new pipeline flavor template
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: api/pipeline_flavors.py
+          symbol: router.post /
+    metadata:
+      created_at: 2026-03-23T19:25:51.220Z
+      updated_at: 2026-03-23T19:25:51.220Z
+      version: 1
+  timestamp: 2026-03-23T19:25:51.252Z
+  sequenceNumber: 50
+- type: add
+  elementId: api.operation.list-pipeline-configurations
+  layerName: api
+  after:
+    id: eceb4b31-6519-4b8f-acd4-5d51279f72a2
+    path: api.operation.list-pipeline-configurations
+    spec_node_id: api.operation
+    type: operation
+    layer_id: api
+    name: List Pipeline Configurations
+    description: List saved pipeline configurations
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: api/pipeline_configurations.py
+          symbol: router.get /
+    metadata:
+      created_at: 2026-03-23T19:25:56.502Z
+      updated_at: 2026-03-23T19:25:56.502Z
+      version: 1
+  timestamp: 2026-03-23T19:25:56.533Z
+  sequenceNumber: 51
+- type: add
+  elementId: api.operation.create-pipeline-configuration
+  layerName: api
+  after:
+    id: 4bc9e553-7fa9-4d15-b7cf-59b76273d25d
+    path: api.operation.create-pipeline-configuration
+    spec_node_id: api.operation
+    type: operation
+    layer_id: api
+    name: Create Pipeline Configuration
+    description: Create a new saved pipeline configuration
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: api/pipeline_configurations.py
+          symbol: router.post /
+    metadata:
+      created_at: 2026-03-23T19:25:56.983Z
+      updated_at: 2026-03-23T19:25:56.983Z
+      version: 1
+  timestamp: 2026-03-23T19:25:57.017Z
+  sequenceNumber: 52
+- type: add
+  elementId: api.operation.get-performance-metrics
+  layerName: api
+  after:
+    id: a5b6fcc2-53c7-429b-b5d0-4f22963c2e24
+    path: api.operation.get-performance-metrics
+    spec_node_id: api.operation
+    type: operation
+    layer_id: api
+    name: Get Performance Metrics
+    description: Retrieve system-wide performance metrics dashboard
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: api/optimization.py
+          symbol: router.get /performance/metrics
+    metadata:
+      created_at: 2026-03-23T19:25:57.488Z
+      updated_at: 2026-03-23T19:25:57.488Z
+      version: 1
+  timestamp: 2026-03-23T19:25:57.522Z
+  sequenceNumber: 53
+- type: add
+  elementId: api.operation.batch-process-entities
+  layerName: api
+  after:
+    id: 019253dc-90de-43d5-8a6e-c382287440f3
+    path: api.operation.batch-process-entities
+    spec_node_id: api.operation
+    type: operation
+    layer_id: api
+    name: Batch Process Entities
+    description: Batch process multiple entity operations
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: api/optimization.py
+          symbol: router.post /batch/process
+    metadata:
+      created_at: 2026-03-23T19:25:58.001Z
+      updated_at: 2026-03-23T19:25:58.001Z
+      version: 1
+  timestamp: 2026-03-23T19:25:58.035Z
+  sequenceNumber: 54
+- type: add
+  elementId: api.operation.get-schema-migration-status
+  layerName: api
+  after:
+    id: d6d47c28-7e4c-49a0-9476-d1b0ede1bd4e
+    path: api.operation.get-schema-migration-status
+    spec_node_id: api.operation
+    type: operation
+    layer_id: api
+    name: Get Schema Migration Status
+    description: Get current database schema migration status
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: api/schema.py
+          symbol: router.get /schema/status
+    metadata:
+      created_at: 2026-03-23T19:26:03.500Z
+      updated_at: 2026-03-23T19:26:03.500Z
+      version: 1
+  timestamp: 2026-03-23T19:26:03.531Z
+  sequenceNumber: 55
+- type: add
+  elementId: api.operation.run-schema-migration
+  layerName: api
+  after:
+    id: 584e6621-ee22-43b9-a337-226a6c860eb4
+    path: api.operation.run-schema-migration
+    spec_node_id: api.operation
+    type: operation
+    layer_id: api
+    name: Run Schema Migration
+    description: Apply pending database schema migrations
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: api/schema.py
+          symbol: router.post /schema/migrate
+    metadata:
+      created_at: 2026-03-23T19:26:03.984Z
+      updated_at: 2026-03-23T19:26:03.984Z
+      version: 1
+  timestamp: 2026-03-23T19:26:04.020Z
+  sequenceNumber: 56
+- type: add
+  elementId: api.operation.run-rag-experiment
+  layerName: api
+  after:
+    id: ee6e1200-dba7-48b6-aa36-3ba975053102
+    path: api.operation.run-rag-experiment
+    spec_node_id: api.operation
+    type: operation
+    layer_id: api
+    name: Run RAG Experiment
+    description: Execute a RAG pipeline test against test paragraphs
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: api/rag_experiments.py
+          symbol: router.post /run
+    metadata:
+      created_at: 2026-03-23T19:26:04.467Z
+      updated_at: 2026-03-23T19:26:04.467Z
+      version: 1
+  timestamp: 2026-03-23T19:26:04.499Z
+  sequenceNumber: 57
+- type: add
+  elementId: api.operation.list-test-paragraphs
+  layerName: api
+  after:
+    id: 7b357f83-c992-46d8-b28f-f778de03ead7
+    path: api.operation.list-test-paragraphs
+    spec_node_id: api.operation
+    type: operation
+    layer_id: api
+    name: List Test Paragraphs
+    description: List RAG test paragraphs for experiment management
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: api/rag_experiments.py
+          symbol: router.get /paragraphs
+    metadata:
+      created_at: 2026-03-23T19:26:04.946Z
+      updated_at: 2026-03-23T19:26:04.946Z
+      version: 1
+  timestamp: 2026-03-23T19:26:04.979Z
+  sequenceNumber: 58
+- type: add
+  elementId: api.operation.get-admin-database-health
+  layerName: api
+  after:
+    id: f1e13469-8e56-4d07-98ca-fe59755c1fbf
+    path: api.operation.get-admin-database-health
+    spec_node_id: api.operation
+    type: operation
+    layer_id: api
+    name: Get Admin Database Health
+    description: Admin endpoint for detailed database connection health
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: api/admin/database_monitoring.py
+          symbol: router.get /admin/database/health
+    metadata:
+      created_at: 2026-03-23T19:26:10.089Z
+      updated_at: 2026-03-23T19:26:10.089Z
+      version: 1
+  timestamp: 2026-03-23T19:26:10.127Z
+  sequenceNumber: 59
+- type: add
+  elementId: api.operation.get-admin-event-processor-health
+  layerName: api
+  after:
+    id: 949d3ac9-3a13-4a3b-813b-e0fdf5aa9dc2
+    path: api.operation.get-admin-event-processor-health
+    spec_node_id: api.operation
+    type: operation
+    layer_id: api
+    name: Get Admin Event Processor Health
+    description: Admin endpoint for event processor subsystem health
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: api/admin/event_processor_monitoring.py
+          symbol: router.get /admin/events/health
+    metadata:
+      created_at: 2026-03-23T19:26:10.588Z
+      updated_at: 2026-03-23T19:26:10.588Z
+      version: 1
+  timestamp: 2026-03-23T19:26:10.622Z
+  sequenceNumber: 60
+- type: add
+  elementId: api.operation.get-admin-service-monitoring-stats
+  layerName: api
+  after:
+    id: 81bb9473-bb21-4951-8c69-459dada46d1f
+    path: api.operation.get-admin-service-monitoring-stats
+    spec_node_id: api.operation
+    type: operation
+    layer_id: api
+    name: Get Admin Service Monitoring Stats
+    description: Admin endpoint for service factory statistics and performance
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: api/admin/service_monitoring.py
+          symbol: router.get /stats
+    metadata:
+      created_at: 2026-03-23T19:26:11.081Z
+      updated_at: 2026-03-23T19:26:11.081Z
+      version: 1
+  timestamp: 2026-03-23T19:26:11.115Z
+  sequenceNumber: 61
+- type: add
+  elementId: application.applicationservice.node-service
+  layerName: application
+  after:
+    id: ee93d781-ab69-4438-81f8-76edb67735f8
+    path: application.applicationservice.node-service
+    spec_node_id: application.applicationservice
+    type: applicationservice
+    layer_id: application
+    name: Node Service
+    description: Core CRUD operations for structure nodes (taxonomies, concept
+      schemes, classes)
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: services/node_service.py
+          symbol: NodeService
+    metadata:
+      created_at: 2026-03-23T19:26:22.271Z
+      updated_at: 2026-03-23T19:26:22.271Z
+      version: 1
+  timestamp: 2026-03-23T19:26:22.308Z
+  sequenceNumber: 62
+- type: add
+  elementId: application.applicationservice.node-link-service
+  layerName: application
+  after:
+    id: ea15e7ba-3deb-4e80-88c7-a731268b6af7
+    path: application.applicationservice.node-link-service
+    spec_node_id: application.applicationservice
+    type: applicationservice
+    layer_id: application
+    name: Node Link Service
+    description: Manages typed directed links between structure nodes
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: services/node_link_service.py
+          symbol: ReferenceLinkService
+    metadata:
+      created_at: 2026-03-23T19:26:22.771Z
+      updated_at: 2026-03-23T19:26:22.771Z
+      version: 1
+  timestamp: 2026-03-23T19:26:22.805Z
+  sequenceNumber: 63
+- type: add
+  elementId: application.applicationservice.word-sense-service
+  layerName: application
+  after:
+    id: 9f2caffe-c543-4b18-af21-d631370b8c4a
+    path: application.applicationservice.word-sense-service
+    spec_node_id: application.applicationservice
+    type: applicationservice
+    layer_id: application
+    name: Word Sense Service
+    description: Manages lexical word senses attached to ontology nodes
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: services/word_sense_service.py
+          symbol: WordSenseService
+    metadata:
+      created_at: 2026-03-23T19:26:23.264Z
+      updated_at: 2026-03-23T19:26:23.264Z
+      version: 1
+  timestamp: 2026-03-23T19:26:23.300Z
+  sequenceNumber: 64
+- type: add
+  elementId: application.applicationservice.predicate-similarity-service
+  layerName: application
+  after:
+    id: d0c9dcb1-c409-4a5f-8bb6-416b4695af37
+    path: application.applicationservice.predicate-similarity-service
+    spec_node_id: application.applicationservice
+    type: applicationservice
+    layer_id: application
+    name: Predicate Similarity Service
+    description: Embedding-based predicate similarity and clustering operations
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: services/predicate_similarity.py
+          symbol: PredicateSimilarityService
+    metadata:
+      created_at: 2026-03-23T19:26:23.800Z
+      updated_at: 2026-03-23T19:26:23.800Z
+      version: 1
+  timestamp: 2026-03-23T19:26:23.838Z
+  sequenceNumber: 65
+- type: add
+  elementId: application.applicationservice.task-manager
+  layerName: application
+  after:
+    id: e4384f7e-8e9e-4e4e-9cb3-de331cfefd48
+    path: application.applicationservice.task-manager
+    spec_node_id: application.applicationservice
+    type: applicationservice
+    layer_id: application
+    name: Task Manager
+    description: Background task lifecycle management with status tracking and
+      dead-letter queue
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: services/task_manager.py
+          symbol: TaskManager
+    metadata:
+      created_at: 2026-03-23T19:26:29.309Z
+      updated_at: 2026-03-23T19:26:29.309Z
+      version: 1
+  timestamp: 2026-03-23T19:26:29.344Z
+  sequenceNumber: 66
+- type: add
+  elementId: application.applicationservice.hierarchical-diff-engine
+  layerName: application
+  after:
+    id: f0f2adf4-aa5f-4376-9006-0dfc66fd0c23
+    path: application.applicationservice.hierarchical-diff-engine
+    spec_node_id: application.applicationservice
+    type: applicationservice
+    layer_id: application
+    name: Hierarchical Diff Engine
+    description: Three-way hierarchical diff computation for ontology structures
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: services/hierarchical_diff_engine.py
+          symbol: HierarchicalDiffEngine
+    metadata:
+      created_at: 2026-03-23T19:26:29.805Z
+      updated_at: 2026-03-23T19:26:29.805Z
+      version: 1
+  timestamp: 2026-03-23T19:26:29.838Z
+  sequenceNumber: 67
+- type: add
+  elementId: application.applicationservice.change-extractor
+  layerName: application
+  after:
+    id: 9c64da15-1156-4a2b-8cf0-45582e5bab9c
+    path: application.applicationservice.change-extractor
+    spec_node_id: application.applicationservice
+    type: applicationservice
+    layer_id: application
+    name: Change Extractor
+    description: Extracts structured change records from entity mutation operations
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: services/change_extractor.py
+          symbol: ChangeExtractor
+    metadata:
+      created_at: 2026-03-23T19:26:30.306Z
+      updated_at: 2026-03-23T19:26:30.306Z
+      version: 1
+  timestamp: 2026-03-23T19:26:30.341Z
+  sequenceNumber: 68
+- type: add
+  elementId: application.applicationservice.change-event-handler
+  layerName: application
+  after:
+    id: f983fff3-ae8f-47b0-9b33-b6e175d6d4e6
+    path: application.applicationservice.change-event-handler
+    spec_node_id: application.applicationservice
+    type: applicationservice
+    layer_id: application
+    name: Change Event Handler
+    description: Handles domain change events and routes them to appropriate processors
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: services/change_event_handler.py
+          symbol: ChangeEventHandler
+    metadata:
+      created_at: 2026-03-23T19:26:30.797Z
+      updated_at: 2026-03-23T19:26:30.797Z
+      version: 1
+  timestamp: 2026-03-23T19:26:30.831Z
+  sequenceNumber: 69
+- type: add
+  elementId: application.applicationservice.duck-db-service
+  layerName: application
+  after:
+    id: 899a3c32-3a0f-45e2-9771-bf5a6a68ad39
+    path: application.applicationservice.duck-db-service
+    spec_node_id: application.applicationservice
+    type: applicationservice
+    layer_id: application
+    name: DuckDB Service
+    description: DuckDB-based analytics engine for change event querying and reporting
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: services/duckdb_service.py
+          symbol: DuckDBService
+    metadata:
+      created_at: 2026-03-23T19:26:37.224Z
+      updated_at: 2026-03-23T19:26:37.224Z
+      version: 1
+  timestamp: 2026-03-23T19:26:37.261Z
+  sequenceNumber: 70
+- type: add
+  elementId: application.applicationservice.change-analytics-engine
+  layerName: application
+  after:
+    id: 96a12858-fc0b-4ab2-bcd9-0c3a51410a60
+    path: application.applicationservice.change-analytics-engine
+    spec_node_id: application.applicationservice
+    type: applicationservice
+    layer_id: application
+    name: Change Analytics Engine
+    description: Analytics computations over change event history using DuckDB
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: services/duckdb_service.py
+          symbol: ChangeAnalyticsEngine
+    metadata:
+      created_at: 2026-03-23T19:26:37.728Z
+      updated_at: 2026-03-23T19:26:37.728Z
+      version: 1
+  timestamp: 2026-03-23T19:26:37.764Z
+  sequenceNumber: 71
+- type: add
+  elementId: application.applicationservice.rag-test-management-service
+  layerName: application
+  after:
+    id: 47d84182-0801-40c7-91cc-b11f8f15e95a
+    path: application.applicationservice.rag-test-management-service
+    spec_node_id: application.applicationservice
+    type: applicationservice
+    layer_id: application
+    name: RAG Test Management Service
+    description: Manages RAG experiment test paragraphs, annotations, and pipeline
+      run comparisons
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: rag/test_service.py
+          symbol: RAGTestManagementService
+    metadata:
+      created_at: 2026-03-23T19:26:38.268Z
+      updated_at: 2026-03-23T19:26:38.268Z
+      version: 1
+  timestamp: 2026-03-23T19:26:38.306Z
+  sequenceNumber: 72
+- type: add
+  elementId: application.applicationservice.llm-flavor-service
+  layerName: application
+  after:
+    id: c3b92a72-8c9f-4a78-86c5-9c44c3c29e8b
+    path: application.applicationservice.llm-flavor-service
+    spec_node_id: application.applicationservice
+    type: applicationservice
+    layer_id: application
+    name: LLM Flavor Service
+    description: Manages pipeline flavor templates including defaults and custom
+      configurations
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: llm/flavor_service.py
+          symbol: PipelineFlavorService
+    metadata:
+      created_at: 2026-03-23T19:26:38.791Z
+      updated_at: 2026-03-23T19:26:38.791Z
+      version: 1
+  timestamp: 2026-03-23T19:26:38.827Z
+  sequenceNumber: 73
+- type: add
+  elementId: application.applicationservice.enabled-models-manager
+  layerName: application
+  after:
+    id: 5d45861c-6e90-4db8-8626-2997a30411ea
+    path: application.applicationservice.enabled-models-manager
+    spec_node_id: application.applicationservice
+    type: applicationservice
+    layer_id: application
+    name: Enabled Models Manager
+    description: Manages the registry of enabled LLM model configurations per provider
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: llm/enabled_models.py
+          symbol: EnabledModelsManager
+    metadata:
+      created_at: 2026-03-23T19:26:45.749Z
+      updated_at: 2026-03-23T19:26:45.749Z
+      version: 1
+  timestamp: 2026-03-23T19:26:45.786Z
+  sequenceNumber: 74
+- type: add
+  elementId: application.applicationservice.open-router-discovery-service
+  layerName: application
+  after:
+    id: 50442888-e680-4c96-91b7-6612ec7d4fc5
+    path: application.applicationservice.open-router-discovery-service
+    spec_node_id: application.applicationservice
+    type: applicationservice
+    layer_id: application
+    name: OpenRouter Discovery Service
+    description: Discovers and syncs available models from OpenRouter API
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: llm/openrouter_discovery.py
+          symbol: OpenRouterDiscoveryService
+    metadata:
+      created_at: 2026-03-23T19:26:46.314Z
+      updated_at: 2026-03-23T19:26:46.314Z
+      version: 1
+  timestamp: 2026-03-23T19:26:46.351Z
+  sequenceNumber: 75
+- type: add
+  elementId: application.applicationcomponent.rag-pipeline-registry
+  layerName: application
+  after:
+    id: 46438636-118c-4da9-8cbb-fed794401b7c
+    path: application.applicationcomponent.rag-pipeline-registry
+    spec_node_id: application.applicationcomponent
+    type: applicationcomponent
+    layer_id: application
+    name: RAG Pipeline Registry
+    description: Registry of available RAG pipeline implementations (standard,
+      custom flavors)
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: rag/pipeline_registry.py
+          symbol: pipeline_registry
+    metadata:
+      created_at: 2026-03-23T19:26:46.828Z
+      updated_at: 2026-03-23T19:26:46.828Z
+      version: 1
+  timestamp: 2026-03-23T19:26:46.863Z
+  sequenceNumber: 76
+- type: add
+  elementId: application.applicationservice.reference-api-aggregator
+  layerName: application
+  after:
+    id: 05bf7f4e-3c42-4dc7-9f43-eb0bde49e8bd
+    path: application.applicationservice.reference-api-aggregator
+    spec_node_id: application.applicationservice
+    type: applicationservice
+    layer_id: application
+    name: Reference API Aggregator
+    description: Aggregates and normalizes results from multiple external reference
+      API sources
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: reference_api/aggregators.py
+          symbol: ResultAggregator
+    metadata:
+      created_at: 2026-03-23T19:26:47.358Z
+      updated_at: 2026-03-23T19:26:47.358Z
+      version: 1
+  timestamp: 2026-03-23T19:26:47.401Z
+  sequenceNumber: 77
+- type: add
+  elementId: data-model.schemadefinition.pipeline-flavor-execution
+  layerName: data-model
+  after:
+    id: 3216d7de-57fa-4609-88b0-554473b7fc26
+    path: data-model.schemadefinition.pipeline-flavor-execution
+    spec_node_id: data-model.schemadefinition
+    type: schemadefinition
+    layer_id: data-model
+    name: PipelineFlavorExecution
+    description: ORM model tracking individual LLM pipeline flavor execution records
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: operations/models.py
+          symbol: PipelineFlavorExecution
+    metadata:
+      created_at: 2026-03-23T19:26:54.641Z
+      updated_at: 2026-03-23T19:26:54.641Z
+      version: 1
+  timestamp: 2026-03-23T19:26:54.686Z
+  sequenceNumber: 78
+- type: add
+  elementId: data-model.schemadefinition.ragobservability-trace
+  layerName: data-model
+  after:
+    id: 4b5f7fa5-75b0-48e1-950e-670fa7e8b8bb
+    path: data-model.schemadefinition.ragobservability-trace
+    spec_node_id: data-model.schemadefinition
+    type: schemadefinition
+    layer_id: data-model
+    name: RAGObservabilityTrace
+    description: Trace record for end-to-end RAG pipeline observability
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: operations/models.py
+          symbol: RAGObservabilityTrace
+    metadata:
+      created_at: 2026-03-23T19:26:55.204Z
+      updated_at: 2026-03-23T19:26:55.204Z
+      version: 1
+  timestamp: 2026-03-23T19:26:55.251Z
+  sequenceNumber: 79
+- type: add
+  elementId: data-model.schemadefinition.ragprocessing-metrics
+  layerName: data-model
+  after:
+    id: 91d33641-d00f-42a5-9d81-891d95bf48e2
+    path: data-model.schemadefinition.ragprocessing-metrics
+    spec_node_id: data-model.schemadefinition
+    type: schemadefinition
+    layer_id: data-model
+    name: RAGProcessingMetrics
+    description: Per-layer processing time metrics for RAG pipeline runs
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: operations/models.py
+          symbol: RAGProcessingMetrics
+    metadata:
+      created_at: 2026-03-23T19:26:55.793Z
+      updated_at: 2026-03-23T19:26:55.793Z
+      version: 1
+  timestamp: 2026-03-23T19:26:55.839Z
+  sequenceNumber: 80
+- type: add
+  elementId: data-model.schemadefinition.test-paragraph
+  layerName: data-model
+  after:
+    id: 24a9515f-da27-4b04-8410-4c859ba8f235
+    path: data-model.schemadefinition.test-paragraph
+    spec_node_id: data-model.schemadefinition
+    type: schemadefinition
+    layer_id: data-model
+    name: TestParagraph
+    description: Test paragraph entity used in RAG experiment harness
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: operations/models.py
+          symbol: TestParagraph
+    metadata:
+      created_at: 2026-03-23T19:26:56.343Z
+      updated_at: 2026-03-23T19:26:56.343Z
+      version: 1
+  timestamp: 2026-03-23T19:26:56.386Z
+  sequenceNumber: 81
+- type: add
+  elementId: data-model.schemadefinition.test-annotation
+  layerName: data-model
+  after:
+    id: 5091ce22-5265-4ca6-85b5-1460c5fca1d0
+    path: data-model.schemadefinition.test-annotation
+    spec_node_id: data-model.schemadefinition
+    type: schemadefinition
+    layer_id: data-model
+    name: TestAnnotation
+    description: Annotation entity for marking expected entities in test paragraphs
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: operations/models.py
+          symbol: TestAnnotation
+    metadata:
+      created_at: 2026-03-23T19:27:02.786Z
+      updated_at: 2026-03-23T19:27:02.786Z
+      version: 1
+  timestamp: 2026-03-23T19:27:02.830Z
+  sequenceNumber: 82
+- type: add
+  elementId: data-model.schemadefinition.ragpipeline-run
+  layerName: data-model
+  after:
+    id: 8d89389c-221c-47dd-b607-72c311de814a
+    path: data-model.schemadefinition.ragpipeline-run
+    spec_node_id: data-model.schemadefinition
+    type: schemadefinition
+    layer_id: data-model
+    name: RAGPipelineRun
+    description: Aggregate run record grouping multiple flavor executions for a test
+      paragraph
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: operations/models.py
+          symbol: RAGPipelineRun
+    metadata:
+      created_at: 2026-03-23T19:27:03.324Z
+      updated_at: 2026-03-23T19:27:03.324Z
+      version: 1
+  timestamp: 2026-03-23T19:27:03.371Z
+  sequenceNumber: 83
+- type: add
+  elementId: data-model.schemadefinition.node
+  layerName: data-model
+  after:
+    id: d85b0d46-8fdf-4f43-835e-67dcca92fe7b
+    path: data-model.schemadefinition.node
+    spec_node_id: data-model.schemadefinition
+    type: schemadefinition
+    layer_id: data-model
+    name: Node
+    description: Structure node entity (Taxonomy, ConceptScheme, or Class) unified
+      under node_type discriminator
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: domain/ontology/entities.py
+          symbol: Taxonomy,ConceptScheme,Class
+    metadata:
+      created_at: 2026-03-23T19:27:03.880Z
+      updated_at: 2026-03-23T19:27:03.880Z
+      version: 1
+  timestamp: 2026-03-23T19:27:03.922Z
+  sequenceNumber: 84
+- type: add
+  elementId: data-model.schemadefinition.node-link
+  layerName: data-model
+  after:
+    id: b44c613c-b6db-4237-996b-0117923eb8ca
+    path: data-model.schemadefinition.node-link
+    spec_node_id: data-model.schemadefinition
+    type: schemadefinition
+    layer_id: data-model
+    name: NodeLink
+    description: Typed directed link between two structure nodes
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: services/node_link_service.py
+          symbol: ReferenceLinkService
+    metadata:
+      created_at: 2026-03-23T19:27:04.445Z
+      updated_at: 2026-03-23T19:27:04.445Z
+      version: 1
+  timestamp: 2026-03-23T19:27:04.489Z
+  sequenceNumber: 85
+- type: add
+  elementId: data-store.collection.pipeline-flavor-executions
+  layerName: data-store
+  after:
+    id: 5371aac0-d2c7-4dd0-b6c7-c6f2f3975674
+    path: data-store.collection.pipeline-flavor-executions
+    spec_node_id: data-store.collection
+    type: collection
+    layer_id: data-store
+    name: pipeline_flavor_executions
+    description: Operations DB table for individual LLM pipeline flavor execution records
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: operations/models.py
+          symbol: PipelineFlavorExecution
+    metadata:
+      created_at: 2026-03-23T19:27:11.659Z
+      updated_at: 2026-03-23T19:27:11.659Z
+      version: 1
+  timestamp: 2026-03-23T19:27:11.701Z
+  sequenceNumber: 86
+- type: add
+  elementId: data-store.collection.rag-observability-traces
+  layerName: data-store
+  after:
+    id: 6acebffa-e8fb-4f39-9270-995edf978477
+    path: data-store.collection.rag-observability-traces
+    spec_node_id: data-store.collection
+    type: collection
+    layer_id: data-store
+    name: rag_observability_traces
+    description: Operations DB table for RAG pipeline end-to-end trace records
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: operations/models.py
+          symbol: RAGObservabilityTrace
+    metadata:
+      created_at: 2026-03-23T19:27:12.204Z
+      updated_at: 2026-03-23T19:27:12.204Z
+      version: 1
+  timestamp: 2026-03-23T19:27:12.244Z
+  sequenceNumber: 87
+- type: add
+  elementId: data-store.collection.test-paragraphs
+  layerName: data-store
+  after:
+    id: c90121cc-920e-4841-8c06-9e22dd4578cc
+    path: data-store.collection.test-paragraphs
+    spec_node_id: data-store.collection
+    type: collection
+    layer_id: data-store
+    name: test_paragraphs
+    description: Operations DB table for RAG experiment test paragraphs
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: operations/models.py
+          symbol: TestParagraph
+    metadata:
+      created_at: 2026-03-23T19:27:12.765Z
+      updated_at: 2026-03-23T19:27:12.765Z
+      version: 1
+  timestamp: 2026-03-23T19:27:12.806Z
+  sequenceNumber: 88
+- type: add
+  elementId: data-store.collection.test-annotations
+  layerName: data-store
+  after:
+    id: 794cf518-f89c-4901-8b6f-c1632901709b
+    path: data-store.collection.test-annotations
+    spec_node_id: data-store.collection
+    type: collection
+    layer_id: data-store
+    name: test_annotations
+    description: Operations DB table for expected entity annotations on test paragraphs
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: operations/models.py
+          symbol: TestAnnotation
+    metadata:
+      created_at: 2026-03-23T19:27:13.314Z
+      updated_at: 2026-03-23T19:27:13.314Z
+      version: 1
+  timestamp: 2026-03-23T19:27:13.357Z
+  sequenceNumber: 89
+- type: add
+  elementId: data-store.collection.rag-pipeline-runs
+  layerName: data-store
+  after:
+    id: 1ce11fe9-6950-4a91-8eaf-0be344bbb6c8
+    path: data-store.collection.rag-pipeline-runs
+    spec_node_id: data-store.collection
+    type: collection
+    layer_id: data-store
+    name: rag_pipeline_runs
+    description: Operations DB table for aggregate RAG pipeline test run records
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: operations/models.py
+          symbol: RAGPipelineRun
+    metadata:
+      created_at: 2026-03-23T19:27:17.898Z
+      updated_at: 2026-03-23T19:27:17.898Z
+      version: 1
+  timestamp: 2026-03-23T19:27:17.939Z
+  sequenceNumber: 90
+- type: add
+  elementId: data-store.collection.nodes
+  layerName: data-store
+  after:
+    id: 1fb48518-ca39-4749-a969-b7bfd4daedc7
+    path: data-store.collection.nodes
+    spec_node_id: data-store.collection
+    type: collection
+    layer_id: data-store
+    name: nodes
+    description: Workspace DB table for structure nodes (taxonomies, concept
+      schemes, classes)
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: database/models.py
+          symbol: OntologyEntity
+    metadata:
+      created_at: 2026-03-23T19:27:18.458Z
+      updated_at: 2026-03-23T19:27:18.458Z
+      version: 1
+  timestamp: 2026-03-23T19:27:18.498Z
+  sequenceNumber: 91
+- type: add
+  elementId: data-store.collection.node-links
+  layerName: data-store
+  after:
+    id: c51b5f92-6829-4453-9773-9ae8677224e0
+    path: data-store.collection.node-links
+    spec_node_id: data-store.collection
+    type: collection
+    layer_id: data-store
+    name: node_links
+    description: Workspace DB table for typed directed links between structure nodes
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: services/node_link_service.py
+          symbol: ReferenceLinkService
+    metadata:
+      created_at: 2026-03-23T19:27:18.986Z
+      updated_at: 2026-03-23T19:27:18.986Z
+      version: 1
+  timestamp: 2026-03-23T19:27:19.026Z
+  sequenceNumber: 92
+- type: add
+  elementId: business.businessservice.predicate-management
+  layerName: business
+  after:
+    id: e741941b-ded4-4d8d-84a4-667aefe8a34e
+    path: business.businessservice.predicate-management
+    spec_node_id: business.businessservice
+    type: businessservice
+    layer_id: business
+    name: Predicate Management
+    description: Business service for managing typed relationship predicates and
+      their enrichment from external sources
+    metadata:
+      created_at: 2026-03-23T19:27:25.193Z
+      updated_at: 2026-03-23T19:27:25.193Z
+      version: 1
+  timestamp: 2026-03-23T19:27:25.234Z
+  sequenceNumber: 93
+- type: add
+  elementId: business.businessservice.reference-knowledge-integration
+  layerName: business
+  after:
+    id: 294e207b-e240-4c30-b748-32964948c6a6
+    path: business.businessservice.reference-knowledge-integration
+    spec_node_id: business.businessservice
+    type: businessservice
+    layer_id: business
+    name: Reference Knowledge Integration
+    description: Business service for querying and normalizing knowledge from
+      external reference sources (ConceptNet, DBpedia, Wikidata, schema.org)
+    metadata:
+      created_at: 2026-03-23T19:27:25.715Z
+      updated_at: 2026-03-23T19:27:25.715Z
+      version: 1
+  timestamp: 2026-03-23T19:27:25.754Z
+  sequenceNumber: 94
+- type: add
+  elementId: business.businessservice.rag-experimentation
+  layerName: business
+  after:
+    id: d7d70b64-131c-4050-abe6-4d087eb15688
+    path: business.businessservice.rag-experimentation
+    spec_node_id: business.businessservice
+    type: businessservice
+    layer_id: business
+    name: RAG Experimentation
+    description: Business service for running, comparing, and annotating RAG
+      pipeline experiments
+    metadata:
+      created_at: 2026-03-23T19:27:26.262Z
+      updated_at: 2026-03-23T19:27:26.262Z
+      version: 1
+  timestamp: 2026-03-23T19:27:26.303Z
+  sequenceNumber: 95
+- type: add
+  elementId: business.businessservice.system-administration
+  layerName: business
+  after:
+    id: 83d051f1-b782-4d5d-aaed-b959d5126547
+    path: business.businessservice.system-administration
+    spec_node_id: business.businessservice
+    type: businessservice
+    layer_id: business
+    name: System Administration
+    description: Business service covering configuration management, schema
+      migration, and operational monitoring
+    metadata:
+      created_at: 2026-03-23T19:27:26.794Z
+      updated_at: 2026-03-23T19:27:26.794Z
+      version: 1
+  timestamp: 2026-03-23T19:27:26.834Z
+  sequenceNumber: 96
+- type: add
+  elementId: ux.view.rag-experiments-view
+  layerName: ux
+  after:
+    id: 91ddf2c1-1f12-4900-bfaf-4b5e917a3308
+    path: ux.view.rag-experiments-view
+    spec_node_id: ux.view
+    type: view
+    layer_id: ux
+    name: RAG Experiments View
+    description: View for managing RAG test paragraphs, running experiments, and
+      comparing pipeline results
+    metadata:
+      created_at: 2026-03-23T19:27:32.030Z
+      updated_at: 2026-03-23T19:27:32.030Z
+      version: 1
+  timestamp: 2026-03-23T19:27:32.071Z
+  sequenceNumber: 97
+- type: add
+  elementId: ux.view.admin-view
+  layerName: ux
+  after:
+    id: 92fc54e5-98fb-4272-b392-9c240b300102
+    path: ux.view.admin-view
+    spec_node_id: ux.view
+    type: view
+    layer_id: ux
+    name: Admin View
+    description: Administrative view for system health, task management, and schema
+      migration
+    metadata:
+      created_at: 2026-03-23T19:27:32.577Z
+      updated_at: 2026-03-23T19:27:32.577Z
+      version: 1
+  timestamp: 2026-03-23T19:27:32.626Z
+  sequenceNumber: 98
+- type: add
+  elementId: ux.librarycomponent.predicate-discovery-panel
+  layerName: ux
+  after:
+    id: cd937df1-8c8a-49d4-a5c9-0ac9e2fb16c0
+    path: ux.librarycomponent.predicate-discovery-panel
+    spec_node_id: ux.librarycomponent
+    type: librarycomponent
+    layer_id: ux
+    name: Predicate Discovery Panel
+    description: Component for triggering and viewing predicate discovery results
+    metadata:
+      created_at: 2026-03-23T19:27:33.138Z
+      updated_at: 2026-03-23T19:27:33.138Z
+      version: 1
+  timestamp: 2026-03-23T19:27:33.184Z
+  sequenceNumber: 99
+- type: add
+  elementId: navigation.route.rag-experiments-route
+  layerName: navigation
+  after:
+    id: 3a5cb6f5-1f3c-4b0e-b9f2-488345d418e5
+    path: navigation.route.rag-experiments-route
+    spec_node_id: navigation.route
+    type: route
+    layer_id: navigation
+    name: rag-experiments-route
+    description: Route serving the RAG experiments and pipeline testing view
+    metadata:
+      created_at: 2026-03-23T19:27:37.146Z
+      updated_at: 2026-03-23T19:27:37.146Z
+      version: 1
+  timestamp: 2026-03-23T19:27:37.188Z
+  sequenceNumber: 100
+- type: add
+  elementId: navigation.route.configuration-route
+  layerName: navigation
+  after:
+    id: 347a76d7-9e49-41f3-a43c-7a5493e2dca9
+    path: navigation.route.configuration-route
+    spec_node_id: navigation.route
+    type: route
+    layer_id: navigation
+    name: configuration-route
+    description: Route serving the application configuration view
+    metadata:
+      created_at: 2026-03-23T19:27:37.710Z
+      updated_at: 2026-03-23T19:27:37.710Z
+      version: 1
+  timestamp: 2026-03-23T19:27:37.752Z
+  sequenceNumber: 101
+- type: add
+  elementId: navigation.route.admin-route
+  layerName: navigation
+  after:
+    id: 94bde929-239d-4abf-bfcb-08545e28d963
+    path: navigation.route.admin-route
+    spec_node_id: navigation.route
+    type: route
+    layer_id: navigation
+    name: admin-route
+    description: Route serving the administrative monitoring view
+    metadata:
+      created_at: 2026-03-23T19:27:38.286Z
+      updated_at: 2026-03-23T19:27:38.286Z
+      version: 1
+  timestamp: 2026-03-23T19:27:38.327Z
+  sequenceNumber: 102
+- type: add
+  elementId: apm.metricinstrument.predicate-similarity-processing-time
+  layerName: apm
+  after:
+    id: 0fc5edef-9aa8-461e-a84f-8b3cd8e3c4bf
+    path: apm.metricinstrument.predicate-similarity-processing-time
+    spec_node_id: apm.metricinstrument
+    type: metricinstrument
+    layer_id: apm
+    name: Predicate Similarity Processing Time
+    description: Measures elapsed time for embedding-based predicate similarity computations
+    metadata:
+      created_at: 2026-03-23T19:27:44.602Z
+      updated_at: 2026-03-23T19:27:44.602Z
+      version: 1
+  timestamp: 2026-03-23T19:27:44.651Z
+  sequenceNumber: 103
+- type: add
+  elementId: apm.metricinstrument.background-task-queue-depth
+  layerName: apm
+  after:
+    id: 5dbf44b8-d49d-47ce-b3f3-92091244db23
+    path: apm.metricinstrument.background-task-queue-depth
+    spec_node_id: apm.metricinstrument
+    type: metricinstrument
+    layer_id: apm
+    name: Background Task Queue Depth
+    description: Monitors number of pending and running background tasks
+    metadata:
+      created_at: 2026-03-23T19:27:45.169Z
+      updated_at: 2026-03-23T19:27:45.169Z
+      version: 1
+  timestamp: 2026-03-23T19:27:45.215Z
+  sequenceNumber: 104
+- type: add
+  elementId: apm.alert.background-task-dead-letter-alert
+  layerName: apm
+  after:
+    id: 02bd00be-5997-4948-91e5-5e3eecdad29b
+    path: apm.alert.background-task-dead-letter-alert
+    spec_node_id: apm.alert
+    type: alert
+    layer_id: apm
+    name: Background Task Dead Letter Alert
+    description: Alert triggered when tasks accumulate in the dead-letter queue
+    metadata:
+      created_at: 2026-03-23T19:27:45.727Z
+      updated_at: 2026-03-23T19:27:45.727Z
+      version: 1
+  timestamp: 2026-03-23T19:27:45.774Z
+  sequenceNumber: 105
+- type: add
+  elementId: apm.span.database-query-span
+  layerName: apm
+  after:
+    id: 435cdf13-1b34-4f3b-8fe8-fe37eb8b3c63
+    path: apm.span.database-query-span
+    spec_node_id: apm.span
+    type: span
+    layer_id: apm
+    name: Database Query Span
+    description: OpenTelemetry span covering SQLAlchemy database query execution
+    metadata:
+      created_at: 2026-03-23T19:27:46.297Z
+      updated_at: 2026-03-23T19:27:46.297Z
+      version: 1
+  timestamp: 2026-03-23T19:27:46.346Z
+  sequenceNumber: 106
+- type: add
+  elementId: testing.testcoveragetarget.predicate-crud-and-similarity
+  layerName: testing
+  after:
+    id: 2d650200-86a3-463d-8827-1fc62521598f
+    path: testing.testcoveragetarget.predicate-crud-and-similarity
+    spec_node_id: testing.testcoveragetarget
+    type: testcoveragetarget
+    layer_id: testing
+    name: Predicate CRUD and Similarity
+    description: Test coverage target for predicate management including discovery,
+      similarity search, and ConceptNet import
+    metadata:
+      created_at: 2026-03-23T19:27:52.608Z
+      updated_at: 2026-03-23T19:27:52.608Z
+      version: 1
+  timestamp: 2026-03-23T19:27:52.656Z
+  sequenceNumber: 107
+- type: add
+  elementId: testing.testcoveragetarget.structure-node-hierarchy-operations
+  layerName: testing
+  after:
+    id: 44357a86-0ddb-4faa-805b-e74040c5697a
+    path: testing.testcoveragetarget.structure-node-hierarchy-operations
+    spec_node_id: testing.testcoveragetarget
+    type: testcoveragetarget
+    layer_id: testing
+    name: Structure Node Hierarchy Operations
+    description: Test coverage target for node creation, hierarchy traversal, move,
+      and link operations
+    metadata:
+      created_at: 2026-03-23T19:27:53.172Z
+      updated_at: 2026-03-23T19:27:53.172Z
+      version: 1
+  timestamp: 2026-03-23T19:27:53.221Z
+  sequenceNumber: 108
+- type: add
+  elementId: testing.testcoveragetarget.rag-experiment-pipeline-comparison
+  layerName: testing
+  after:
+    id: 8b347dbd-4602-48c7-8e0c-6006fde5aa15
+    path: testing.testcoveragetarget.rag-experiment-pipeline-comparison
+    spec_node_id: testing.testcoveragetarget
+    type: testcoveragetarget
+    layer_id: testing
+    name: RAG Experiment Pipeline Comparison
+    description: "Test coverage target for RAG experiment harness: paragraph
+      management, annotation, and pipeline run comparison"
+    metadata:
+      created_at: 2026-03-23T19:27:53.762Z
+      updated_at: 2026-03-23T19:27:53.762Z
+      version: 1
+  timestamp: 2026-03-23T19:27:53.806Z
+  sequenceNumber: 109
+- type: add
+  elementId: testing.testcasesketch.test-predicate-discovery
+  layerName: testing
+  after:
+    id: 3cf3a153-0b05-4976-81e1-9b934706b323
+    path: testing.testcasesketch.test-predicate-discovery
+    spec_node_id: testing.testcasesketch
+    type: testcasesketch
+    layer_id: testing
+    name: Test Predicate Discovery
+    description: Test that predicate discovery correctly extracts relationships from
+      ontology content via embedding similarity
+    metadata:
+      created_at: 2026-03-23T19:27:54.368Z
+      updated_at: 2026-03-23T19:27:54.368Z
+      version: 1
+  timestamp: 2026-03-23T19:27:54.416Z
+  sequenceNumber: 110
+- type: relationship-add
+  elementId: api.tag.predicates::aggregates::api.operation.list-predicates
+  layerName: api
+  after:
+    source: api.tag.predicates
+    target: api.operation.list-predicates
+    predicate: aggregates
+    layer: api
+    category: structural
+  timestamp: 2026-03-23T19:27:59.967Z
+  sequenceNumber: 111
+- type: relationship-add
+  elementId: api.tag.predicates::aggregates::api.operation.create-predicate
+  layerName: api
+  after:
+    source: api.tag.predicates
+    target: api.operation.create-predicate
+    predicate: aggregates
+    layer: api
+    category: structural
+  timestamp: 2026-03-23T19:28:00.621Z
+  sequenceNumber: 112
+- type: relationship-add
+  elementId: api.tag.predicates::aggregates::api.operation.discover-predicates
+  layerName: api
+  after:
+    source: api.tag.predicates
+    target: api.operation.discover-predicates
+    predicate: aggregates
+    layer: api
+    category: structural
+  timestamp: 2026-03-23T19:28:01.267Z
+  sequenceNumber: 113
+- type: relationship-add
+  elementId: api.tag.predicates::aggregates::api.operation.find-similar-predicates
+  layerName: api
+  after:
+    source: api.tag.predicates
+    target: api.operation.find-similar-predicates
+    predicate: aggregates
+    layer: api
+    category: structural
+  timestamp: 2026-03-23T19:28:01.906Z
+  sequenceNumber: 114
+- type: relationship-add
+  elementId: api.tag.predicates::aggregates::api.operation.import-predicates-from-concept-net
+  layerName: api
+  after:
+    source: api.tag.predicates
+    target: api.operation.import-predicates-from-concept-net
+    predicate: aggregates
+    layer: api
+    category: structural
+  timestamp: 2026-03-23T19:28:05.695Z
+  sequenceNumber: 115
+- type: relationship-add
+  elementId: api.tag.structure-nodes::aggregates::api.operation.list-structure-nodes
+  layerName: api
+  after:
+    source: api.tag.structure-nodes
+    target: api.operation.list-structure-nodes
+    predicate: aggregates
+    layer: api
+    category: structural
+  timestamp: 2026-03-23T19:28:06.370Z
+  sequenceNumber: 116
+- type: relationship-add
+  elementId: api.tag.structure-nodes::aggregates::api.operation.create-structure-node
+  layerName: api
+  after:
+    source: api.tag.structure-nodes
+    target: api.operation.create-structure-node
+    predicate: aggregates
+    layer: api
+    category: structural
+  timestamp: 2026-03-23T19:28:07.032Z
+  sequenceNumber: 117
+- type: relationship-add
+  elementId: api.tag.structure-nodes::aggregates::api.operation.move-structure-nodes
+  layerName: api
+  after:
+    source: api.tag.structure-nodes
+    target: api.operation.move-structure-nodes
+    predicate: aggregates
+    layer: api
+    category: structural
+  timestamp: 2026-03-23T19:28:07.684Z
+  sequenceNumber: 118
+- type: relationship-add
+  elementId: api.tag.structure-nodes::aggregates::api.operation.get-node-children
+  layerName: api
+  after:
+    source: api.tag.structure-nodes
+    target: api.operation.get-node-children
+    predicate: aggregates
+    layer: api
+    category: structural
+  timestamp: 2026-03-23T19:28:11.563Z
+  sequenceNumber: 119
+- type: relationship-add
+  elementId: api.tag.structure-nodes::aggregates::api.operation.create-node-link
+  layerName: api
+  after:
+    source: api.tag.structure-nodes
+    target: api.operation.create-node-link
+    predicate: aggregates
+    layer: api
+    category: structural
+  timestamp: 2026-03-23T19:28:12.205Z
+  sequenceNumber: 120
+- type: relationship-add
+  elementId: api.tag.property-definitions::aggregates::api.operation.list-property-definitions
+  layerName: api
+  after:
+    source: api.tag.property-definitions
+    target: api.operation.list-property-definitions
+    predicate: aggregates
+    layer: api
+    category: structural
+  timestamp: 2026-03-23T19:28:12.879Z
+  sequenceNumber: 121
+- type: relationship-add
+  elementId: api.tag.property-definitions::aggregates::api.operation.create-property-definition
+  layerName: api
+  after:
+    source: api.tag.property-definitions
+    target: api.operation.create-property-definition
+    predicate: aggregates
+    layer: api
+    category: structural
+  timestamp: 2026-03-23T19:28:13.535Z
+  sequenceNumber: 122
+- type: relationship-add
+  elementId: api.tag.config::aggregates::api.operation.get-config
+  layerName: api
+  after:
+    source: api.tag.config
+    target: api.operation.get-config
+    predicate: aggregates
+    layer: api
+    category: structural
+  timestamp: 2026-03-23T19:28:17.542Z
+  sequenceNumber: 123
+- type: relationship-add
+  elementId: api.tag.config::aggregates::api.operation.update-config
+  layerName: api
+  after:
+    source: api.tag.config
+    target: api.operation.update-config
+    predicate: aggregates
+    layer: api
+    category: structural
+  timestamp: 2026-03-23T19:28:18.216Z
+  sequenceNumber: 124
+- type: relationship-add
+  elementId: api.tag.background-tasks::aggregates::api.operation.list-background-tasks
+  layerName: api
+  after:
+    source: api.tag.background-tasks
+    target: api.operation.list-background-tasks
+    predicate: aggregates
+    layer: api
+    category: structural
+  timestamp: 2026-03-23T19:28:18.923Z
+  sequenceNumber: 125
+- type: relationship-add
+  elementId: api.tag.background-tasks::aggregates::api.operation.get-background-task-status
+  layerName: api
+  after:
+    source: api.tag.background-tasks
+    target: api.operation.get-background-task-status
+    predicate: aggregates
+    layer: api
+    category: structural
+  timestamp: 2026-03-23T19:28:19.591Z
+  sequenceNumber: 126
+- type: relationship-add
+  elementId: api.tag.background-tasks::aggregates::api.operation.cancel-background-task
+  layerName: api
+  after:
+    source: api.tag.background-tasks
+    target: api.operation.cancel-background-task
+    predicate: aggregates
+    layer: api
+    category: structural
+  timestamp: 2026-03-23T19:28:23.502Z
+  sequenceNumber: 127
+- type: relationship-add
+  elementId: api.tag.change-events::aggregates::api.operation.list-change-events
+  layerName: api
+  after:
+    source: api.tag.change-events
+    target: api.operation.list-change-events
+    predicate: aggregates
+    layer: api
+    category: structural
+  timestamp: 2026-03-23T19:28:24.165Z
+  sequenceNumber: 128
+- type: relationship-add
+  elementId: api.tag.llm-traceability::aggregates::api.operation.record-llm-selection
+  layerName: api
+  after:
+    source: api.tag.llm-traceability
+    target: api.operation.record-llm-selection
+    predicate: aggregates
+    layer: api
+    category: structural
+  timestamp: 2026-03-23T19:28:24.816Z
+  sequenceNumber: 129
+- type: relationship-add
+  elementId: api.tag.llm-traceability::aggregates::api.operation.get-llm-execution-analytics
+  layerName: api
+  after:
+    source: api.tag.llm-traceability
+    target: api.operation.get-llm-execution-analytics
+    predicate: aggregates
+    layer: api
+    category: structural
+  timestamp: 2026-03-23T19:28:25.489Z
+  sequenceNumber: 130
+- type: relationship-add
+  elementId: api.tag.enabled-models::aggregates::api.operation.list-enabled-models
+  layerName: api
+  after:
+    source: api.tag.enabled-models
+    target: api.operation.list-enabled-models
+    predicate: aggregates
+    layer: api
+    category: structural
+  timestamp: 2026-03-23T19:28:29.655Z
+  sequenceNumber: 131
+- type: relationship-add
+  elementId: api.tag.enabled-models::aggregates::api.operation.enable-model
+  layerName: api
+  after:
+    source: api.tag.enabled-models
+    target: api.operation.enable-model
+    predicate: aggregates
+    layer: api
+    category: structural
+  timestamp: 2026-03-23T19:28:30.328Z
+  sequenceNumber: 132
+- type: relationship-add
+  elementId: api.tag.model-capabilities::aggregates::api.operation.list-model-capabilities
+  layerName: api
+  after:
+    source: api.tag.model-capabilities
+    target: api.operation.list-model-capabilities
+    predicate: aggregates
+    layer: api
+    category: structural
+  timestamp: 2026-03-23T19:28:31.028Z
+  sequenceNumber: 133
+- type: relationship-add
+  elementId: api.tag.model-capabilities::aggregates::api.operation.discover-open-router-models
+  layerName: api
+  after:
+    source: api.tag.model-capabilities
+    target: api.operation.discover-open-router-models
+    predicate: aggregates
+    layer: api
+    category: structural
+  timestamp: 2026-03-23T19:28:31.705Z
+  sequenceNumber: 134
+- type: relationship-add
+  elementId: api.tag.pipeline-flavors::aggregates::api.operation.list-pipeline-flavors
+  layerName: api
+  after:
+    source: api.tag.pipeline-flavors
+    target: api.operation.list-pipeline-flavors
+    predicate: aggregates
+    layer: api
+    category: structural
+  timestamp: 2026-03-23T19:28:35.448Z
+  sequenceNumber: 135
+- type: relationship-add
+  elementId: api.tag.pipeline-flavors::aggregates::api.operation.create-pipeline-flavor
+  layerName: api
+  after:
+    source: api.tag.pipeline-flavors
+    target: api.operation.create-pipeline-flavor
+    predicate: aggregates
+    layer: api
+    category: structural
+  timestamp: 2026-03-23T19:28:36.161Z
+  sequenceNumber: 136
+- type: relationship-add
+  elementId: api.tag.pipeline-configurations::aggregates::api.operation.list-pipeline-configurations
+  layerName: api
+  after:
+    source: api.tag.pipeline-configurations
+    target: api.operation.list-pipeline-configurations
+    predicate: aggregates
+    layer: api
+    category: structural
+  timestamp: 2026-03-23T19:28:36.891Z
+  sequenceNumber: 137
+- type: relationship-add
+  elementId: api.tag.pipeline-configurations::aggregates::api.operation.create-pipeline-configuration
+  layerName: api
+  after:
+    source: api.tag.pipeline-configurations
+    target: api.operation.create-pipeline-configuration
+    predicate: aggregates
+    layer: api
+    category: structural
+  timestamp: 2026-03-23T19:28:37.572Z
+  sequenceNumber: 138
+- type: relationship-add
+  elementId: api.tag.optimization::aggregates::api.operation.get-performance-metrics
+  layerName: api
+  after:
+    source: api.tag.optimization
+    target: api.operation.get-performance-metrics
+    predicate: aggregates
+    layer: api
+    category: structural
+  timestamp: 2026-03-23T19:28:41.744Z
+  sequenceNumber: 139
+- type: relationship-add
+  elementId: api.tag.optimization::aggregates::api.operation.batch-process-entities
+  layerName: api
+  after:
+    source: api.tag.optimization
+    target: api.operation.batch-process-entities
+    predicate: aggregates
+    layer: api
+    category: structural
+  timestamp: 2026-03-23T19:28:42.420Z
+  sequenceNumber: 140
+- type: relationship-add
+  elementId: api.tag.schema::aggregates::api.operation.get-schema-migration-status
+  layerName: api
+  after:
+    source: api.tag.schema
+    target: api.operation.get-schema-migration-status
+    predicate: aggregates
+    layer: api
+    category: structural
+  timestamp: 2026-03-23T19:28:43.080Z
+  sequenceNumber: 141
+- type: relationship-add
+  elementId: api.tag.schema::aggregates::api.operation.run-schema-migration
+  layerName: api
+  after:
+    source: api.tag.schema
+    target: api.operation.run-schema-migration
+    predicate: aggregates
+    layer: api
+    category: structural
+  timestamp: 2026-03-23T19:28:43.751Z
+  sequenceNumber: 142
+- type: relationship-add
+  elementId: api.tag.rag-experiments::aggregates::api.operation.run-rag-experiment
+  layerName: api
+  after:
+    source: api.tag.rag-experiments
+    target: api.operation.run-rag-experiment
+    predicate: aggregates
+    layer: api
+    category: structural
+  timestamp: 2026-03-23T19:28:48.610Z
+  sequenceNumber: 143
+- type: relationship-add
+  elementId: api.tag.rag-experiments::aggregates::api.operation.list-test-paragraphs
+  layerName: api
+  after:
+    source: api.tag.rag-experiments
+    target: api.operation.list-test-paragraphs
+    predicate: aggregates
+    layer: api
+    category: structural
+  timestamp: 2026-03-23T19:28:49.323Z
+  sequenceNumber: 144
+- type: relationship-add
+  elementId: api.tag.admin::aggregates::api.operation.get-admin-database-health
+  layerName: api
+  after:
+    source: api.tag.admin
+    target: api.operation.get-admin-database-health
+    predicate: aggregates
+    layer: api
+    category: structural
+  timestamp: 2026-03-23T19:28:49.995Z
+  sequenceNumber: 145
+- type: relationship-add
+  elementId: api.tag.admin::aggregates::api.operation.get-admin-event-processor-health
+  layerName: api
+  after:
+    source: api.tag.admin
+    target: api.operation.get-admin-event-processor-health
+    predicate: aggregates
+    layer: api
+    category: structural
+  timestamp: 2026-03-23T19:28:50.700Z
+  sequenceNumber: 146
+- type: relationship-add
+  elementId: api.tag.admin::aggregates::api.operation.get-admin-service-monitoring-stats
+  layerName: api
+  after:
+    source: api.tag.admin
+    target: api.operation.get-admin-service-monitoring-stats
+    predicate: aggregates
+    layer: api
+    category: structural
+  timestamp: 2026-03-23T19:28:53.769Z
+  sequenceNumber: 147
+- type: add
+  elementId: business.businessprocess.predicate-discovery-and-enrichment-process
+  layerName: business
+  after:
+    id: 0090d742-2baa-4b5f-9392-763e5c0b08c5
+    path: business.businessprocess.predicate-discovery-and-enrichment-process
+    spec_node_id: business.businessprocess
+    type: businessprocess
+    layer_id: business
+    name: Predicate Discovery and Enrichment Process
+    description: Process for discovering, classifying, and enriching predicates from
+      ontology content and external sources
+    metadata:
+      created_at: 2026-03-23T19:29:14.542Z
+      updated_at: 2026-03-23T19:29:14.542Z
+      version: 1
+  timestamp: 2026-03-23T19:29:14.594Z
+  sequenceNumber: 148
+- type: add
+  elementId: business.businessprocess.reference-knowledge-lookup-process
+  layerName: business
+  after:
+    id: bfbc4cfb-132e-4c25-953a-08d027401792
+    path: business.businessprocess.reference-knowledge-lookup-process
+    spec_node_id: business.businessprocess
+    type: businessprocess
+    layer_id: business
+    name: Reference Knowledge Lookup Process
+    description: Process for querying external knowledge sources and enriching
+      ontology entities with reference data
+    metadata:
+      created_at: 2026-03-23T19:29:15.149Z
+      updated_at: 2026-03-23T19:29:15.149Z
+      version: 1
+  timestamp: 2026-03-23T19:29:15.198Z
+  sequenceNumber: 149
+- type: add
+  elementId: business.businessprocess.system-administration-process
+  layerName: business
+  after:
+    id: dfaa60ba-1bb9-4a0f-9fc2-2b755ab44b2c
+    path: business.businessprocess.system-administration-process
+    spec_node_id: business.businessprocess
+    type: businessprocess
+    layer_id: business
+    name: System Administration Process
+    description: Process for configuration management, schema migration, and
+      operational health monitoring
+    metadata:
+      created_at: 2026-03-23T19:29:15.747Z
+      updated_at: 2026-03-23T19:29:15.747Z
+      version: 1
+  timestamp: 2026-03-23T19:29:15.795Z
+  sequenceNumber: 150
+- type: add
+  elementId: business.businessprocess.rag-pipeline-experimentation-process
+  layerName: business
+  after:
+    id: d5fc5322-e882-47af-9b3b-aaa8a6aa2b43
+    path: business.businessprocess.rag-pipeline-experimentation-process
+    spec_node_id: business.businessprocess
+    type: businessprocess
+    layer_id: business
+    name: RAG Pipeline Experimentation Process
+    description: Process for creating test paragraphs, annotating expected entities,
+      and running comparative RAG pipeline tests
+    metadata:
+      created_at: 2026-03-23T19:29:16.359Z
+      updated_at: 2026-03-23T19:29:16.359Z
+      version: 1
+  timestamp: 2026-03-23T19:29:16.408Z
+  sequenceNumber: 151
+- type: relationship-add
+  elementId: api.operation.discover-predicates::realizes::business.businessprocess.predicate-discovery-and-enrichment-process
+  layerName: api
+  after:
+    source: api.operation.discover-predicates
+    target: business.businessprocess.predicate-discovery-and-enrichment-process
+    predicate: realizes
+    layer: api
+    targetLayer: business
+    category: structural
+  timestamp: 2026-03-23T19:29:20.827Z
+  sequenceNumber: 152
+- type: relationship-add
+  elementId: api.operation.find-similar-predicates::realizes::business.businessprocess.predicate-discovery-and-enrichment-process
+  layerName: api
+  after:
+    source: api.operation.find-similar-predicates
+    target: business.businessprocess.predicate-discovery-and-enrichment-process
+    predicate: realizes
+    layer: api
+    targetLayer: business
+    category: structural
+  timestamp: 2026-03-23T19:29:21.525Z
+  sequenceNumber: 153
+- type: relationship-add
+  elementId: api.operation.import-predicates-from-concept-net::realizes::business.businessprocess.predicate-discovery-and-enrichment-process
+  layerName: api
+  after:
+    source: api.operation.import-predicates-from-concept-net
+    target: business.businessprocess.predicate-discovery-and-enrichment-process
+    predicate: realizes
+    layer: api
+    targetLayer: business
+    category: structural
+  timestamp: 2026-03-23T19:29:22.226Z
+  sequenceNumber: 154
+- type: relationship-add
+  elementId: api.operation.reference-multi-source-search::realizes::business.businessprocess.reference-knowledge-lookup-process
+  layerName: api
+  after:
+    source: api.operation.reference-multi-source-search
+    target: business.businessprocess.reference-knowledge-lookup-process
+    predicate: realizes
+    layer: api
+    targetLayer: business
+    category: structural
+  timestamp: 2026-03-23T19:29:22.917Z
+  sequenceNumber: 155
+- type: relationship-add
+  elementId: api.operation.run-rag-experiment::realizes::business.businessprocess.rag-pipeline-experimentation-process
+  layerName: api
+  after:
+    source: api.operation.run-rag-experiment
+    target: business.businessprocess.rag-pipeline-experimentation-process
+    predicate: realizes
+    layer: api
+    targetLayer: business
+    category: structural
+  timestamp: 2026-03-23T19:29:28.232Z
+  sequenceNumber: 156
+- type: relationship-add
+  elementId: api.operation.get-config::realizes::business.businessprocess.system-administration-process
+  layerName: api
+  after:
+    source: api.operation.get-config
+    target: business.businessprocess.system-administration-process
+    predicate: realizes
+    layer: api
+    targetLayer: business
+    category: structural
+  timestamp: 2026-03-23T19:29:28.944Z
+  sequenceNumber: 157
+- type: relationship-add
+  elementId: api.operation.update-config::realizes::business.businessprocess.system-administration-process
+  layerName: api
+  after:
+    source: api.operation.update-config
+    target: business.businessprocess.system-administration-process
+    predicate: realizes
+    layer: api
+    targetLayer: business
+    category: structural
+  timestamp: 2026-03-23T19:29:29.650Z
+  sequenceNumber: 158
+- type: relationship-add
+  elementId: api.operation.run-schema-migration::realizes::business.businessprocess.system-administration-process
+  layerName: api
+  after:
+    source: api.operation.run-schema-migration
+    target: business.businessprocess.system-administration-process
+    predicate: realizes
+    layer: api
+    targetLayer: business
+    category: structural
+  timestamp: 2026-03-23T19:29:30.377Z
+  sequenceNumber: 159
+- type: relationship-add
+  elementId: api.operation.get-admin-database-health::realizes::business.businessprocess.system-administration-process
+  layerName: api
+  after:
+    source: api.operation.get-admin-database-health
+    target: business.businessprocess.system-administration-process
+    predicate: realizes
+    layer: api
+    targetLayer: business
+    category: structural
+  timestamp: 2026-03-23T19:29:34.670Z
+  sequenceNumber: 160
+- type: relationship-add
+  elementId: api.operation.list-structure-nodes::realizes::business.businessprocess.ontology-authoring-process
+  layerName: api
+  after:
+    source: api.operation.list-structure-nodes
+    target: business.businessprocess.ontology-authoring-process
+    predicate: realizes
+    layer: api
+    targetLayer: business
+    category: structural
+  timestamp: 2026-03-23T19:29:35.420Z
+  sequenceNumber: 161
+- type: relationship-add
+  elementId: api.operation.create-structure-node::realizes::business.businessprocess.ontology-authoring-process
+  layerName: api
+  after:
+    source: api.operation.create-structure-node
+    target: business.businessprocess.ontology-authoring-process
+    predicate: realizes
+    layer: api
+    targetLayer: business
+    category: structural
+  timestamp: 2026-03-23T19:29:36.149Z
+  sequenceNumber: 162
+- type: relationship-add
+  elementId: api.operation.move-structure-nodes::realizes::business.businessprocess.ontology-authoring-process
+  layerName: api
+  after:
+    source: api.operation.move-structure-nodes
+    target: business.businessprocess.ontology-authoring-process
+    predicate: realizes
+    layer: api
+    targetLayer: business
+    category: structural
+  timestamp: 2026-03-23T19:29:36.907Z
+  sequenceNumber: 163
+- type: relationship-add
+  elementId: business.businessprocess.predicate-discovery-and-enrichment-process::realizes::business.businessservice.predicate-management
+  layerName: business
+  after:
+    source: business.businessprocess.predicate-discovery-and-enrichment-process
+    target: business.businessservice.predicate-management
+    predicate: realizes
+    layer: business
+    category: structural
+  timestamp: 2026-03-23T19:29:42.141Z
+  sequenceNumber: 164
+- type: relationship-add
+  elementId: business.businessprocess.reference-knowledge-lookup-process::realizes::business.businessservice.reference-knowledge-integration
+  layerName: business
+  after:
+    source: business.businessprocess.reference-knowledge-lookup-process
+    target: business.businessservice.reference-knowledge-integration
+    predicate: realizes
+    layer: business
+    category: structural
+  timestamp: 2026-03-23T19:29:42.728Z
+  sequenceNumber: 165
+- type: relationship-add
+  elementId: business.businessprocess.rag-pipeline-experimentation-process::realizes::business.businessservice.rag-experimentation
+  layerName: business
+  after:
+    source: business.businessprocess.rag-pipeline-experimentation-process
+    target: business.businessservice.rag-experimentation
+    predicate: realizes
+    layer: business
+    category: structural
+  timestamp: 2026-03-23T19:29:43.299Z
+  sequenceNumber: 166
+- type: relationship-add
+  elementId: business.businessprocess.system-administration-process::realizes::business.businessservice.system-administration
+  layerName: business
+  after:
+    source: business.businessprocess.system-administration-process
+    target: business.businessservice.system-administration
+    predicate: realizes
+    layer: business
+    category: structural
+  timestamp: 2026-03-23T19:29:43.879Z
+  sequenceNumber: 167
+- type: relationship-add
+  elementId: business.businessservice.predicate-management::realizes::motivation.goal.enable-structured-knowledge-graph-authoring
+  layerName: business
+  after:
+    source: business.businessservice.predicate-management
+    target: motivation.goal.enable-structured-knowledge-graph-authoring
+    predicate: realizes
+    layer: business
+    targetLayer: motivation
+    category: structural
+  timestamp: 2026-03-23T19:29:48.514Z
+  sequenceNumber: 168
+- type: relationship-add
+  elementId: business.businessservice.reference-knowledge-integration::realizes::motivation.goal.automate-knowledge-enrichment
+  layerName: business
+  after:
+    source: business.businessservice.reference-knowledge-integration
+    target: motivation.goal.automate-knowledge-enrichment
+    predicate: realizes
+    layer: business
+    targetLayer: motivation
+    category: structural
+  timestamp: 2026-03-23T19:29:49.092Z
+  sequenceNumber: 169
+- type: relationship-add
+  elementId: business.businessservice.rag-experimentation::realizes::motivation.goal.serve-as-rag-knowledge-source
+  layerName: business
+  after:
+    source: business.businessservice.rag-experimentation
+    target: motivation.goal.serve-as-rag-knowledge-source
+    predicate: realizes
+    layer: business
+    targetLayer: motivation
+    category: structural
+  timestamp: 2026-03-23T19:29:49.670Z
+  sequenceNumber: 170
+- type: relationship-add
+  elementId: business.businessservice.system-administration::realizes::motivation.goal.maintain-full-audit-traceability
+  layerName: business
+  after:
+    source: business.businessservice.system-administration
+    target: motivation.goal.maintain-full-audit-traceability
+    predicate: realizes
+    layer: business
+    targetLayer: motivation
+    category: structural
+  timestamp: 2026-03-23T19:29:50.259Z
+  sequenceNumber: 171
+- type: relationship-add
+  elementId: application.applicationservice.node-service::realizes::business.businessservice.ontology-management
+  layerName: application
+  after:
+    source: application.applicationservice.node-service
+    target: business.businessservice.ontology-management
+    predicate: realizes
+    layer: application
+    targetLayer: business
+    category: structural
+  timestamp: 2026-03-23T19:29:55.026Z
+  sequenceNumber: 172
+- type: relationship-add
+  elementId: application.applicationservice.node-link-service::realizes::business.businessservice.ontology-management
+  layerName: application
+  after:
+    source: application.applicationservice.node-link-service
+    target: business.businessservice.ontology-management
+    predicate: realizes
+    layer: application
+    targetLayer: business
+    category: structural
+  timestamp: 2026-03-23T19:29:55.662Z
+  sequenceNumber: 173
+- type: relationship-add
+  elementId: application.applicationservice.word-sense-service::realizes::business.businessservice.ontology-management
+  layerName: application
+  after:
+    source: application.applicationservice.word-sense-service
+    target: business.businessservice.ontology-management
+    predicate: realizes
+    layer: application
+    targetLayer: business
+    category: structural
+  timestamp: 2026-03-23T19:29:56.314Z
+  sequenceNumber: 174
+- type: relationship-add
+  elementId: application.applicationservice.predicate-similarity-service::realizes::business.businessservice.predicate-management
+  layerName: application
+  after:
+    source: application.applicationservice.predicate-similarity-service
+    target: business.businessservice.predicate-management
+    predicate: realizes
+    layer: application
+    targetLayer: business
+    category: structural
+  timestamp: 2026-03-23T19:29:56.975Z
+  sequenceNumber: 175
+- type: relationship-add
+  elementId: application.applicationservice.task-manager::realizes::business.businessservice.system-administration
+  layerName: application
+  after:
+    source: application.applicationservice.task-manager
+    target: business.businessservice.system-administration
+    predicate: realizes
+    layer: application
+    targetLayer: business
+    category: structural
+  timestamp: 2026-03-23T19:30:01.190Z
+  sequenceNumber: 176
+- type: relationship-add
+  elementId: application.applicationservice.hierarchical-diff-engine::realizes::business.businessservice.collaborative-version-control
+  layerName: application
+  after:
+    source: application.applicationservice.hierarchical-diff-engine
+    target: business.businessservice.collaborative-version-control
+    predicate: realizes
+    layer: application
+    targetLayer: business
+    category: structural
+  timestamp: 2026-03-23T19:30:01.847Z
+  sequenceNumber: 177
+- type: relationship-add
+  elementId: application.applicationservice.change-extractor::realizes::business.businessservice.collaborative-version-control
+  layerName: application
+  after:
+    source: application.applicationservice.change-extractor
+    target: business.businessservice.collaborative-version-control
+    predicate: realizes
+    layer: application
+    targetLayer: business
+    category: structural
+  timestamp: 2026-03-23T19:30:02.523Z
+  sequenceNumber: 178
+- type: relationship-add
+  elementId: application.applicationservice.change-event-handler::realizes::business.businessservice.ontology-management
+  layerName: application
+  after:
+    source: application.applicationservice.change-event-handler
+    target: business.businessservice.ontology-management
+    predicate: realizes
+    layer: application
+    targetLayer: business
+    category: structural
+  timestamp: 2026-03-23T19:30:03.227Z
+  sequenceNumber: 179
+- type: relationship-add
+  elementId: application.applicationservice.duck-db-service::realizes::business.businessservice.graph-analytics
+  layerName: application
+  after:
+    source: application.applicationservice.duck-db-service
+    target: business.businessservice.graph-analytics
+    predicate: realizes
+    layer: application
+    targetLayer: business
+    category: structural
+  timestamp: 2026-03-23T19:30:07.373Z
+  sequenceNumber: 180
+- type: relationship-add
+  elementId: application.applicationservice.change-analytics-engine::realizes::business.businessservice.graph-analytics
+  layerName: application
+  after:
+    source: application.applicationservice.change-analytics-engine
+    target: business.businessservice.graph-analytics
+    predicate: realizes
+    layer: application
+    targetLayer: business
+    category: structural
+  timestamp: 2026-03-23T19:30:08.017Z
+  sequenceNumber: 181
+- type: relationship-add
+  elementId: application.applicationservice.rag-test-management-service::realizes::business.businessservice.rag-experimentation
+  layerName: application
+  after:
+    source: application.applicationservice.rag-test-management-service
+    target: business.businessservice.rag-experimentation
+    predicate: realizes
+    layer: application
+    targetLayer: business
+    category: structural
+  timestamp: 2026-03-23T19:30:08.684Z
+  sequenceNumber: 182
+- type: relationship-add
+  elementId: application.applicationservice.llm-flavor-service::realizes::business.businessservice.llm-pipeline-execution
+  layerName: application
+  after:
+    source: application.applicationservice.llm-flavor-service
+    target: business.businessservice.llm-pipeline-execution
+    predicate: realizes
+    layer: application
+    targetLayer: business
+    category: structural
+  timestamp: 2026-03-23T19:30:09.333Z
+  sequenceNumber: 183
+- type: relationship-add
+  elementId: application.applicationservice.enabled-models-manager::realizes::business.businessservice.llm-pipeline-execution
+  layerName: application
+  after:
+    source: application.applicationservice.enabled-models-manager
+    target: business.businessservice.llm-pipeline-execution
+    predicate: realizes
+    layer: application
+    targetLayer: business
+    category: structural
+  timestamp: 2026-03-23T19:30:13.612Z
+  sequenceNumber: 184
+- type: relationship-add
+  elementId: application.applicationservice.open-router-discovery-service::realizes::business.businessservice.llm-pipeline-execution
+  layerName: application
+  after:
+    source: application.applicationservice.open-router-discovery-service
+    target: business.businessservice.llm-pipeline-execution
+    predicate: realizes
+    layer: application
+    targetLayer: business
+    category: structural
+  timestamp: 2026-03-23T19:30:14.277Z
+  sequenceNumber: 185
+- type: relationship-add
+  elementId: application.applicationservice.reference-api-aggregator::realizes::business.businessservice.reference-knowledge-integration
+  layerName: application
+  after:
+    source: application.applicationservice.reference-api-aggregator
+    target: business.businessservice.reference-knowledge-integration
+    predicate: realizes
+    layer: application
+    targetLayer: business
+    category: structural
+  timestamp: 2026-03-23T19:30:14.949Z
+  sequenceNumber: 186
+- type: relationship-add
+  elementId: data-store.database.operationsdb::composes::data-store.collection.pipeline-flavor-executions
+  layerName: data-store
+  after:
+    source: data-store.database.operationsdb
+    target: data-store.collection.pipeline-flavor-executions
+    predicate: composes
+    layer: data-store
+    category: structural
+  timestamp: 2026-03-23T19:30:21.474Z
+  sequenceNumber: 187
+- type: relationship-add
+  elementId: data-store.database.operationsdb::composes::data-store.collection.rag-observability-traces
+  layerName: data-store
+  after:
+    source: data-store.database.operationsdb
+    target: data-store.collection.rag-observability-traces
+    predicate: composes
+    layer: data-store
+    category: structural
+  timestamp: 2026-03-23T19:30:22.289Z
+  sequenceNumber: 188
+- type: relationship-add
+  elementId: data-store.database.operationsdb::composes::data-store.collection.test-paragraphs
+  layerName: data-store
+  after:
+    source: data-store.database.operationsdb
+    target: data-store.collection.test-paragraphs
+    predicate: composes
+    layer: data-store
+    category: structural
+  timestamp: 2026-03-23T19:30:23.113Z
+  sequenceNumber: 189
+- type: relationship-add
+  elementId: data-store.database.operationsdb::composes::data-store.collection.test-annotations
+  layerName: data-store
+  after:
+    source: data-store.database.operationsdb
+    target: data-store.collection.test-annotations
+    predicate: composes
+    layer: data-store
+    category: structural
+  timestamp: 2026-03-23T19:30:29.676Z
+  sequenceNumber: 190
+- type: relationship-add
+  elementId: data-store.database.operationsdb::composes::data-store.collection.rag-pipeline-runs
+  layerName: data-store
+  after:
+    source: data-store.database.operationsdb
+    target: data-store.collection.rag-pipeline-runs
+    predicate: composes
+    layer: data-store
+    category: structural
+  timestamp: 2026-03-23T19:30:30.497Z
+  sequenceNumber: 191
+- type: relationship-add
+  elementId: data-store.database.localdb-workspace::composes::data-store.collection.nodes
+  layerName: data-store
+  after:
+    source: data-store.database.localdb-workspace
+    target: data-store.collection.nodes
+    predicate: composes
+    layer: data-store
+    category: structural
+  timestamp: 2026-03-23T19:30:31.329Z
+  sequenceNumber: 192
+- type: relationship-add
+  elementId: data-store.database.localdb-workspace::composes::data-store.collection.node-links
+  layerName: data-store
+  after:
+    source: data-store.database.localdb-workspace
+    target: data-store.collection.node-links
+    predicate: composes
+    layer: data-store
+    category: structural
+  timestamp: 2026-03-23T19:30:32.160Z
+  sequenceNumber: 193
+- type: relationship-add
+  elementId: data-store.collection.pipeline-flavor-executions::serves::application.applicationcomponent.database-manager
+  layerName: data-store
+  after:
+    source: data-store.collection.pipeline-flavor-executions
+    target: application.applicationcomponent.database-manager
+    predicate: serves
+    layer: data-store
+    targetLayer: application
+    category: structural
+  timestamp: 2026-03-23T19:30:44.136Z
+  sequenceNumber: 194
+- type: relationship-add
+  elementId: data-store.collection.rag-observability-traces::serves::application.applicationcomponent.database-manager
+  layerName: data-store
+  after:
+    source: data-store.collection.rag-observability-traces
+    target: application.applicationcomponent.database-manager
+    predicate: serves
+    layer: data-store
+    targetLayer: application
+    category: structural
+  timestamp: 2026-03-23T19:30:44.956Z
+  sequenceNumber: 195
+- type: relationship-add
+  elementId: data-store.collection.test-paragraphs::serves::application.applicationcomponent.database-manager
+  layerName: data-store
+  after:
+    source: data-store.collection.test-paragraphs
+    target: application.applicationcomponent.database-manager
+    predicate: serves
+    layer: data-store
+    targetLayer: application
+    category: structural
+  timestamp: 2026-03-23T19:30:45.772Z
+  sequenceNumber: 196
+- type: relationship-add
+  elementId: data-store.collection.rag-pipeline-runs::serves::application.applicationcomponent.database-manager
+  layerName: data-store
+  after:
+    source: data-store.collection.rag-pipeline-runs
+    target: application.applicationcomponent.database-manager
+    predicate: serves
+    layer: data-store
+    targetLayer: application
+    category: structural
+  timestamp: 2026-03-23T19:30:46.617Z
+  sequenceNumber: 197
+- type: relationship-add
+  elementId: data-model.schemadefinition.ragprocessing-metrics::specializes::data-model.schemadefinition.ragobservability-trace
+  layerName: data-model
+  after:
+    source: data-model.schemadefinition.ragprocessing-metrics
+    target: data-model.schemadefinition.ragobservability-trace
+    predicate: specializes
+    layer: data-model
+    category: structural
+  timestamp: 2026-03-23T19:31:31.777Z
+  sequenceNumber: 198
+- type: relationship-add
+  elementId: data-model.schemadefinition.test-annotation::specializes::data-model.schemadefinition.test-paragraph
+  layerName: data-model
+  after:
+    source: data-model.schemadefinition.test-annotation
+    target: data-model.schemadefinition.test-paragraph
+    predicate: specializes
+    layer: data-model
+    category: structural
+  timestamp: 2026-03-23T19:31:36.686Z
+  sequenceNumber: 199
+- type: relationship-add
+  elementId: data-model.schemadefinition.ragpipeline-run::specializes::data-model.schemadefinition.ragobservability-trace
+  layerName: data-model
+  after:
+    source: data-model.schemadefinition.ragpipeline-run
+    target: data-model.schemadefinition.ragobservability-trace
+    predicate: specializes
+    layer: data-model
+    category: structural
+  timestamp: 2026-03-23T19:31:37.504Z
+  sequenceNumber: 200
+- type: relationship-add
+  elementId: data-model.schemadefinition.pipeline-flavor-execution::specializes::data-model.schemadefinition.pipeline-flavor-execution
+  layerName: data-model
+  after:
+    source: data-model.schemadefinition.pipeline-flavor-execution
+    target: data-model.schemadefinition.pipeline-flavor-execution
+    predicate: specializes
+    layer: data-model
+    category: structural
+  timestamp: 2026-03-23T19:31:38.293Z
+  sequenceNumber: 201
+- type: relationship-add
+  elementId: data-model.schemadefinition.conflict::specializes::data-model.schemadefinition.changeset
+  layerName: data-model
+  after:
+    source: data-model.schemadefinition.conflict
+    target: data-model.schemadefinition.changeset
+    predicate: specializes
+    layer: data-model
+    category: structural
+  timestamp: 2026-03-23T19:31:43.324Z
+  sequenceNumber: 202
+- type: relationship-add
+  elementId: data-model.schemadefinition.entity-version::specializes::data-model.schemadefinition.ontology-entity
+  layerName: data-model
+  after:
+    source: data-model.schemadefinition.entity-version
+    target: data-model.schemadefinition.ontology-entity
+    predicate: specializes
+    layer: data-model
+    category: structural
+  timestamp: 2026-03-23T19:31:44.123Z
+  sequenceNumber: 203
+- type: relationship-add
+  elementId: data-model.schemadefinition.ontology-mapping::specializes::data-model.schemadefinition.external-reference
+  layerName: data-model
+  after:
+    source: data-model.schemadefinition.ontology-mapping
+    target: data-model.schemadefinition.external-reference
+    predicate: specializes
+    layer: data-model
+    category: structural
+  timestamp: 2026-03-23T19:31:44.933Z
+  sequenceNumber: 204
+- type: relationship-add
+  elementId: navigation.route.rag-experiments-route::maps-to::ux.view.rag-experiments-view
+  layerName: navigation
+  after:
+    source: navigation.route.rag-experiments-route
+    target: ux.view.rag-experiments-view
+    predicate: maps-to
+    layer: navigation
+    targetLayer: ux
+    category: structural
+  timestamp: 2026-03-23T19:31:50.699Z
+  sequenceNumber: 205
+- type: relationship-add
+  elementId: navigation.route.configuration-route::maps-to::ux.view.configuration-view
+  layerName: navigation
+  after:
+    source: navigation.route.configuration-route
+    target: ux.view.configuration-view
+    predicate: maps-to
+    layer: navigation
+    targetLayer: ux
+    category: structural
+  timestamp: 2026-03-23T19:31:51.595Z
+  sequenceNumber: 206
+- type: relationship-add
+  elementId: navigation.route.admin-route::maps-to::ux.view.admin-view
+  layerName: navigation
+  after:
+    source: navigation.route.admin-route
+    target: ux.view.admin-view
+    predicate: maps-to
+    layer: navigation
+    targetLayer: ux
+    category: structural
+  timestamp: 2026-03-23T19:31:52.493Z
+  sequenceNumber: 207
+- type: relationship-add
+  elementId: ux.view.rag-experiments-view::accesses::api.operation.run-rag-experiment
+  layerName: ux
+  after:
+    source: ux.view.rag-experiments-view
+    target: api.operation.run-rag-experiment
+    predicate: accesses
+    layer: ux
+    targetLayer: api
+    category: structural
+  timestamp: 2026-03-23T19:31:53.370Z
+  sequenceNumber: 208
+- type: relationship-add
+  elementId: ux.view.predicates-view::accesses::api.operation.list-predicates
+  layerName: ux
+  after:
+    source: ux.view.predicates-view
+    target: api.operation.list-predicates
+    predicate: accesses
+    layer: ux
+    targetLayer: api
+    category: structural
+  timestamp: 2026-03-23T19:31:57.977Z
+  sequenceNumber: 209
+- type: relationship-add
+  elementId: ux.view.configuration-view::accesses::api.operation.get-config
+  layerName: ux
+  after:
+    source: ux.view.configuration-view
+    target: api.operation.get-config
+    predicate: accesses
+    layer: ux
+    targetLayer: api
+    category: structural
+  timestamp: 2026-03-23T19:31:58.861Z
+  sequenceNumber: 210
+- type: relationship-add
+  elementId: ux.view.domains-view::accesses::api.operation.list-ontology-entities
+  layerName: ux
+  after:
+    source: ux.view.domains-view
+    target: api.operation.list-ontology-entities
+    predicate: accesses
+    layer: ux
+    targetLayer: api
+    category: structural
+  timestamp: 2026-03-23T19:31:59.768Z
+  sequenceNumber: 211
+- type: relationship-add
+  elementId: ux.view.layers-view::accesses::api.operation.list-structure-nodes
+  layerName: ux
+  after:
+    source: ux.view.layers-view
+    target: api.operation.list-structure-nodes
+    predicate: accesses
+    layer: ux
+    targetLayer: api
+    category: structural
+  timestamp: 2026-03-23T19:32:00.696Z
+  sequenceNumber: 212
+- type: relationship-add
+  elementId: apm.metricinstrument.predicate-similarity-processing-time::monitors::application.applicationservice.predicate-similarity-service
+  layerName: apm
+  after:
+    source: apm.metricinstrument.predicate-similarity-processing-time
+    target: application.applicationservice.predicate-similarity-service
+    predicate: monitors
+    layer: apm
+    targetLayer: application
+    category: structural
+  timestamp: 2026-03-23T19:32:07.032Z
+  sequenceNumber: 213
+- type: relationship-add
+  elementId: apm.metricinstrument.background-task-queue-depth::monitors::application.applicationservice.task-manager
+  layerName: apm
+  after:
+    source: apm.metricinstrument.background-task-queue-depth
+    target: application.applicationservice.task-manager
+    predicate: monitors
+    layer: apm
+    targetLayer: application
+    category: structural
+  timestamp: 2026-03-23T19:32:08.004Z
+  sequenceNumber: 214
+- type: relationship-add
+  elementId: apm.alert.background-task-dead-letter-alert::monitors::apm.metricinstrument.background-task-queue-depth
+  layerName: apm
+  after:
+    source: apm.alert.background-task-dead-letter-alert
+    target: apm.metricinstrument.background-task-queue-depth
+    predicate: monitors
+    layer: apm
+    category: structural
+  timestamp: 2026-03-23T19:32:09.016Z
+  sequenceNumber: 215
+- type: relationship-add
+  elementId: apm.span.database-query-span::monitors::application.applicationcomponent.database-manager
+  layerName: apm
+  after:
+    source: apm.span.database-query-span
+    target: application.applicationcomponent.database-manager
+    predicate: monitors
+    layer: apm
+    targetLayer: application
+    category: structural
+  timestamp: 2026-03-23T19:32:09.977Z
+  sequenceNumber: 216
+- type: relationship-add
+  elementId: testing.testcoveragetarget.predicate-crud-and-similarity::tests::api.operation.create-predicate
+  layerName: testing
+  after:
+    source: testing.testcoveragetarget.predicate-crud-and-similarity
+    target: api.operation.create-predicate
+    predicate: tests
+    layer: testing
+    targetLayer: api
+    category: structural
+  timestamp: 2026-03-23T19:32:15.469Z
+  sequenceNumber: 217
+- type: relationship-add
+  elementId: testing.testcoveragetarget.predicate-crud-and-similarity::tests::api.operation.discover-predicates
+  layerName: testing
+  after:
+    source: testing.testcoveragetarget.predicate-crud-and-similarity
+    target: api.operation.discover-predicates
+    predicate: tests
+    layer: testing
+    targetLayer: api
+    category: structural
+  timestamp: 2026-03-23T19:32:16.460Z
+  sequenceNumber: 218
+- type: relationship-add
+  elementId: testing.testcoveragetarget.structure-node-hierarchy-operations::tests::api.operation.create-structure-node
+  layerName: testing
+  after:
+    source: testing.testcoveragetarget.structure-node-hierarchy-operations
+    target: api.operation.create-structure-node
+    predicate: tests
+    layer: testing
+    targetLayer: api
+    category: structural
+  timestamp: 2026-03-23T19:32:17.450Z
+  sequenceNumber: 219
+- type: relationship-add
+  elementId: testing.testcoveragetarget.rag-experiment-pipeline-comparison::tests::api.operation.run-rag-experiment
+  layerName: testing
+  after:
+    source: testing.testcoveragetarget.rag-experiment-pipeline-comparison
+    target: api.operation.run-rag-experiment
+    predicate: tests
+    layer: testing
+    targetLayer: api
+    category: structural
+  timestamp: 2026-03-23T19:32:18.446Z
+  sequenceNumber: 220
+- type: relationship-add
+  elementId: testing.testcasesketch.test-predicate-discovery::tests::api.operation.discover-predicates
+  layerName: testing
+  after:
+    source: testing.testcasesketch.test-predicate-discovery
+    target: api.operation.discover-predicates
+    predicate: tests
+    layer: testing
+    targetLayer: api
+    category: structural
+  timestamp: 2026-03-23T19:32:22.378Z
+  sequenceNumber: 221
+- type: relationship-add
+  elementId: application.applicationcomponent.service-factory::realizes::application.applicationservice.node-service
+  layerName: application
+  after:
+    source: application.applicationcomponent.service-factory
+    target: application.applicationservice.node-service
+    predicate: realizes
+    layer: application
+    category: structural
+  timestamp: 2026-03-23T19:32:51.881Z
+  sequenceNumber: 222
+- type: relationship-add
+  elementId: application.applicationcomponent.service-factory::realizes::application.applicationservice.node-link-service
+  layerName: application
+  after:
+    source: application.applicationcomponent.service-factory
+    target: application.applicationservice.node-link-service
+    predicate: realizes
+    layer: application
+    category: structural
+  timestamp: 2026-03-23T19:32:52.576Z
+  sequenceNumber: 223
+- type: relationship-add
+  elementId: application.applicationcomponent.service-factory::realizes::application.applicationservice.word-sense-service
+  layerName: application
+  after:
+    source: application.applicationcomponent.service-factory
+    target: application.applicationservice.word-sense-service
+    predicate: realizes
+    layer: application
+    category: structural
+  timestamp: 2026-03-23T19:32:53.309Z
+  sequenceNumber: 224
+- type: relationship-add
+  elementId: application.applicationcomponent.service-factory::realizes::application.applicationservice.predicate-similarity-service
+  layerName: application
+  after:
+    source: application.applicationcomponent.service-factory
+    target: application.applicationservice.predicate-similarity-service
+    predicate: realizes
+    layer: application
+    category: structural
+  timestamp: 2026-03-23T19:32:53.996Z
+  sequenceNumber: 225
+- type: relationship-add
+  elementId: application.applicationcomponent.service-factory::realizes::application.applicationservice.task-manager
+  layerName: application
+  after:
+    source: application.applicationcomponent.service-factory
+    target: application.applicationservice.task-manager
+    predicate: realizes
+    layer: application
+    category: structural
+  timestamp: 2026-03-23T19:32:57.703Z
+  sequenceNumber: 226
+- type: relationship-add
+  elementId: application.applicationcomponent.service-factory::realizes::application.applicationservice.change-event-handler
+  layerName: application
+  after:
+    source: application.applicationcomponent.service-factory
+    target: application.applicationservice.change-event-handler
+    predicate: realizes
+    layer: application
+    category: structural
+  timestamp: 2026-03-23T19:32:58.407Z
+  sequenceNumber: 227
+- type: relationship-add
+  elementId: application.applicationcomponent.service-factory::realizes::application.applicationservice.change-extractor
+  layerName: application
+  after:
+    source: application.applicationcomponent.service-factory
+    target: application.applicationservice.change-extractor
+    predicate: realizes
+    layer: application
+    category: structural
+  timestamp: 2026-03-23T19:32:59.109Z
+  sequenceNumber: 228
+- type: relationship-add
+  elementId: application.applicationcomponent.service-factory::realizes::application.applicationservice.hierarchical-diff-engine
+  layerName: application
+  after:
+    source: application.applicationcomponent.service-factory
+    target: application.applicationservice.hierarchical-diff-engine
+    predicate: realizes
+    layer: application
+    category: structural
+  timestamp: 2026-03-23T19:32:59.832Z
+  sequenceNumber: 229
+- type: relationship-add
+  elementId: application.applicationcomponent.service-factory::realizes::application.applicationservice.duck-db-service
+  layerName: application
+  after:
+    source: application.applicationcomponent.service-factory
+    target: application.applicationservice.duck-db-service
+    predicate: realizes
+    layer: application
+    category: structural
+  timestamp: 2026-03-23T19:33:03.741Z
+  sequenceNumber: 230
+- type: relationship-add
+  elementId: application.applicationcomponent.service-factory::realizes::application.applicationservice.change-analytics-engine
+  layerName: application
+  after:
+    source: application.applicationcomponent.service-factory
+    target: application.applicationservice.change-analytics-engine
+    predicate: realizes
+    layer: application
+    category: structural
+  timestamp: 2026-03-23T19:33:04.451Z
+  sequenceNumber: 231
+- type: relationship-add
+  elementId: application.applicationcomponent.service-factory::realizes::application.applicationservice.llm-flavor-service
+  layerName: application
+  after:
+    source: application.applicationcomponent.service-factory
+    target: application.applicationservice.llm-flavor-service
+    predicate: realizes
+    layer: application
+    category: structural
+  timestamp: 2026-03-23T19:33:05.170Z
+  sequenceNumber: 232
+- type: relationship-add
+  elementId: application.applicationcomponent.service-factory::realizes::application.applicationservice.enabled-models-manager
+  layerName: application
+  after:
+    source: application.applicationcomponent.service-factory
+    target: application.applicationservice.enabled-models-manager
+    predicate: realizes
+    layer: application
+    category: structural
+  timestamp: 2026-03-23T19:33:05.865Z
+  sequenceNumber: 233
+- type: relationship-add
+  elementId: application.applicationcomponent.rag-pipeline-registry::realizes::application.applicationservice.rag-pipeline-service
+  layerName: application
+  after:
+    source: application.applicationcomponent.rag-pipeline-registry
+    target: application.applicationservice.rag-pipeline-service
+    predicate: realizes
+    layer: application
+    category: structural
+  timestamp: 2026-03-23T19:33:10.464Z
+  sequenceNumber: 234
+- type: relationship-add
+  elementId: application.applicationcomponent.rag-pipeline-registry::realizes::application.applicationservice.rag-test-management-service
+  layerName: application
+  after:
+    source: application.applicationcomponent.rag-pipeline-registry
+    target: application.applicationservice.rag-test-management-service
+    predicate: realizes
+    layer: application
+    category: structural
+  timestamp: 2026-03-23T19:33:11.171Z
+  sequenceNumber: 235
+- type: relationship-add
+  elementId: application.applicationcomponent.service-factory::realizes::application.applicationservice.open-router-discovery-service
+  layerName: application
+  after:
+    source: application.applicationcomponent.service-factory
+    target: application.applicationservice.open-router-discovery-service
+    predicate: realizes
+    layer: application
+    category: structural
+  timestamp: 2026-03-23T19:33:11.896Z
+  sequenceNumber: 236
+- type: relationship-add
+  elementId: application.applicationcomponent.service-factory::realizes::application.applicationservice.reference-api-aggregator
+  layerName: application
+  after:
+    source: application.applicationcomponent.service-factory
+    target: application.applicationservice.reference-api-aggregator
+    predicate: realizes
+    layer: application
+    category: structural
+  timestamp: 2026-03-23T19:33:12.609Z
+  sequenceNumber: 237
+- type: add
+  elementId: technology.technologyservice.word-net-api
+  layerName: technology
+  after:
+    id: 9747883f-0145-4f1b-acd1-58ac7d926fd6
+    path: technology.technologyservice.word-net-api
+    spec_node_id: technology.technologyservice
+    type: technologyservice
+    layer_id: technology
+    name: WordNet API
+    description: WordNet lexical database used as a reference source for word senses
+      and synonyms
+    metadata:
+      created_at: 2026-03-23T19:33:18.079Z
+      updated_at: 2026-03-23T19:33:18.079Z
+      version: 1
+  timestamp: 2026-03-23T19:33:18.147Z
+  sequenceNumber: 238
+- type: relationship-add
+  elementId: technology.technologyservice.word-net-api::serves::application.applicationservice.word-sense-service
+  layerName: technology
+  after:
+    source: technology.technologyservice.word-net-api
+    target: application.applicationservice.word-sense-service
+    predicate: serves
+    layer: technology
+    targetLayer: application
+    category: structural
+  timestamp: 2026-03-23T19:33:19.000Z
+  sequenceNumber: 239
+- type: relationship-add
+  elementId: security.securitypolicy.api-key-authentication-policy::governs::business.businessservice.predicate-management
+  layerName: security
+  after:
+    source: security.securitypolicy.api-key-authentication-policy
+    target: business.businessservice.predicate-management
+    predicate: governs
+    layer: security
+    targetLayer: business
+    category: structural
+  timestamp: 2026-03-23T19:33:28.746Z
+  sequenceNumber: 240
+- type: relationship-add
+  elementId: security.securitypolicy.api-key-authentication-policy::governs::business.businessservice.reference-knowledge-integration
+  layerName: security
+  after:
+    source: security.securitypolicy.api-key-authentication-policy
+    target: business.businessservice.reference-knowledge-integration
+    predicate: governs
+    layer: security
+    targetLayer: business
+    category: structural
+  timestamp: 2026-03-23T19:33:29.448Z
+  sequenceNumber: 241
+- type: relationship-add
+  elementId: security.securitypolicy.api-key-authentication-policy::governs::business.businessservice.rag-experimentation
+  layerName: security
+  after:
+    source: security.securitypolicy.api-key-authentication-policy
+    target: business.businessservice.rag-experimentation
+    predicate: governs
+    layer: security
+    targetLayer: business
+    category: structural
+  timestamp: 2026-03-23T19:33:30.123Z
+  sequenceNumber: 242
+- type: relationship-add
+  elementId: security.securitypolicy.api-key-authentication-policy::governs::business.businessservice.system-administration
+  layerName: security
+  after:
+    source: security.securitypolicy.api-key-authentication-policy
+    target: business.businessservice.system-administration
+    predicate: governs
+    layer: security
+    targetLayer: business
+    category: structural
+  timestamp: 2026-03-23T19:33:30.818Z
+  sequenceNumber: 243
+- type: relationship-add
+  elementId: api.tag.ontology-entities::aggregates::api.operation.get-ontology-entity
+  layerName: api
+  after:
+    source: api.tag.ontology-entities
+    target: api.operation.get-ontology-entity
+    predicate: aggregates
+    layer: api
+    category: structural
+  timestamp: 2026-03-23T19:33:37.578Z
+  sequenceNumber: 244
+- type: relationship-add
+  elementId: api.tag.ontology-entities::aggregates::api.operation.update-ontology-entity
+  layerName: api
+  after:
+    source: api.tag.ontology-entities
+    target: api.operation.update-ontology-entity
+    predicate: aggregates
+    layer: api
+    category: structural
+  timestamp: 2026-03-23T19:33:38.396Z
+  sequenceNumber: 245
+- type: relationship-add
+  elementId: api.tag.ontology-entities::aggregates::api.operation.delete-ontology-entity
+  layerName: api
+  after:
+    source: api.tag.ontology-entities
+    target: api.operation.delete-ontology-entity
+    predicate: aggregates
+    layer: api
+    category: structural
+  timestamp: 2026-03-23T19:33:39.213Z
+  sequenceNumber: 246
+- type: relationship-add
+  elementId: api.tag.graph::aggregates::api.operation.graph-search-terms
+  layerName: api
+  after:
+    source: api.tag.graph
+    target: api.operation.graph-search-terms
+    predicate: aggregates
+    layer: api
+    category: structural
+  timestamp: 2026-03-23T19:33:40.030Z
+  sequenceNumber: 247
+- type: relationship-add
+  elementId: api.tag.version-management::aggregates::api.operation.commit-working-tree
+  layerName: api
+  after:
+    source: api.tag.version-management
+    target: api.operation.commit-working-tree
+    predicate: aggregates
+    layer: api
+    category: structural
+  timestamp: 2026-03-23T19:33:44.937Z
+  sequenceNumber: 248
+- type: relationship-add
+  elementId: api.tag.version-management::aggregates::api.operation.get-entity-version-history
+  layerName: api
+  after:
+    source: api.tag.version-management
+    target: api.operation.get-entity-version-history
+    predicate: aggregates
+    layer: api
+    category: structural
+  timestamp: 2026-03-23T19:33:45.750Z
+  sequenceNumber: 249
+- type: relationship-add
+  elementId: api.tag.sync::aggregates::api.operation.sync-pull
+  layerName: api
+  after:
+    source: api.tag.sync
+    target: api.operation.sync-pull
+    predicate: aggregates
+    layer: api
+    category: structural
+  timestamp: 2026-03-23T19:33:46.557Z
+  sequenceNumber: 250
+- type: relationship-add
+  elementId: api.tag.conflicts::aggregates::api.operation.detect-conflicts
+  layerName: api
+  after:
+    source: api.tag.conflicts
+    target: api.operation.detect-conflicts
+    predicate: aggregates
+    layer: api
+    category: structural
+  timestamp: 2026-03-23T19:33:47.380Z
+  sequenceNumber: 251
+- type: relationship-add
+  elementId: api.tag.conflicts::aggregates::api.operation.resolve-conflict
+  layerName: api
+  after:
+    source: api.tag.conflicts
+    target: api.operation.resolve-conflict
+    predicate: aggregates
+    layer: api
+    category: structural
+  timestamp: 2026-03-23T19:33:51.645Z
+  sequenceNumber: 252
+- type: relationship-add
+  elementId: api.tag.proposals::aggregates::api.operation.list-proposals
+  layerName: api
+  after:
+    source: api.tag.proposals
+    target: api.operation.list-proposals
+    predicate: aggregates
+    layer: api
+    category: structural
+  timestamp: 2026-03-23T19:33:52.456Z
+  sequenceNumber: 253
+- type: relationship-add
+  elementId: api.tag.proposals::aggregates::api.operation.vote-on-proposal
+  layerName: api
+  after:
+    source: api.tag.proposals
+    target: api.operation.vote-on-proposal
+    predicate: aggregates
+    layer: api
+    category: structural
+  timestamp: 2026-03-23T19:33:53.274Z
+  sequenceNumber: 254
+- type: relationship-add
+  elementId: api.tag.ontology-entities::aggregates::api.operation.list-relationships
+  layerName: api
+  after:
+    source: api.tag.ontology-entities
+    target: api.operation.list-relationships
+    predicate: aggregates
+    layer: api
+    category: structural
+  timestamp: 2026-03-23T19:33:54.082Z
+  sequenceNumber: 255
+- type: relationship-add
+  elementId: api.tag.ontology-entities::aggregates::api.operation.delete-relationship
+  layerName: api
+  after:
+    source: api.tag.ontology-entities
+    target: api.operation.delete-relationship
+    predicate: aggregates
+    layer: api
+    category: structural
+  timestamp: 2026-03-23T19:33:58.009Z
+  sequenceNumber: 256
+- type: add
+  elementId: api.tag.incremental-sync
+  layerName: api
+  after:
+    id: 1f0c3ffb-220e-4d57-92f4-480b92bea9ab
+    path: api.tag.incremental-sync
+    spec_node_id: api.tag
+    type: tag
+    layer_id: api
+    name: incremental-sync
+    description: Incremental synchronization start and monitoring operations
+    metadata:
+      created_at: 2026-03-23T19:34:04.523Z
+      updated_at: 2026-03-23T19:34:04.523Z
+      version: 1
+  timestamp: 2026-03-23T19:34:04.593Z
+  sequenceNumber: 257
+- type: relationship-add
+  elementId: api.tag.incremental-sync::aggregates::api.operation.start-incremental-sync
+  layerName: api
+  after:
+    source: api.tag.incremental-sync
+    target: api.operation.start-incremental-sync
+    predicate: aggregates
+    layer: api
+    category: structural
+  timestamp: 2026-03-23T19:34:05.546Z
+  sequenceNumber: 258
+- type: relationship-delete
+  elementId: api.tag.sync::aggregates::api.operation.sync-pull
+  layerName: api
+  before:
+    source: api.tag.sync
+    target: api.operation.sync-pull
+    predicate: aggregates
+    layer: api
+  timestamp: 2026-03-23T19:34:58.085Z
+  sequenceNumber: 259
+- type: relationship-delete
+  elementId: api.tag.proposals::aggregates::api.operation.list-proposals
+  layerName: api
+  before:
+    source: api.tag.proposals
+    target: api.operation.list-proposals
+    predicate: aggregates
+    layer: api
+  timestamp: 2026-03-23T19:34:58.902Z
+  sequenceNumber: 260
+- type: relationship-delete
+  elementId: api.tag.proposals::aggregates::api.operation.vote-on-proposal
+  layerName: api
+  before:
+    source: api.tag.proposals
+    target: api.operation.vote-on-proposal
+    predicate: aggregates
+    layer: api
+  timestamp: 2026-03-23T19:34:59.734Z
+  sequenceNumber: 261
+- type: relationship-delete
+  elementId: api.tag.conflicts::aggregates::api.operation.detect-conflicts
+  layerName: api
+  before:
+    source: api.tag.conflicts
+    target: api.operation.detect-conflicts
+    predicate: aggregates
+    layer: api
+  timestamp: 2026-03-23T19:35:00.616Z
+  sequenceNumber: 262
+- type: relationship-delete
+  elementId: api.tag.conflicts::aggregates::api.operation.resolve-conflict
+  layerName: api
+  before:
+    source: api.tag.conflicts
+    target: api.operation.resolve-conflict
+    predicate: aggregates
+    layer: api
+  timestamp: 2026-03-23T19:35:04.593Z
+  sequenceNumber: 263
+- type: relationship-delete
+  elementId: api.tag.ontology-entities::aggregates::api.operation.get-ontology-entity
+  layerName: api
+  before:
+    source: api.tag.ontology-entities
+    target: api.operation.get-ontology-entity
+    predicate: aggregates
+    layer: api
+  timestamp: 2026-03-23T19:35:05.428Z
+  sequenceNumber: 264
+- type: relationship-delete
+  elementId: api.tag.ontology-entities::aggregates::api.operation.update-ontology-entity
+  layerName: api
+  before:
+    source: api.tag.ontology-entities
+    target: api.operation.update-ontology-entity
+    predicate: aggregates
+    layer: api
+  timestamp: 2026-03-23T19:35:06.256Z
+  sequenceNumber: 265
+- type: relationship-delete
+  elementId: api.tag.ontology-entities::aggregates::api.operation.delete-ontology-entity
+  layerName: api
+  before:
+    source: api.tag.ontology-entities
+    target: api.operation.delete-ontology-entity
+    predicate: aggregates
+    layer: api
+  timestamp: 2026-03-23T19:35:07.109Z
+  sequenceNumber: 266
+- type: relationship-delete
+  elementId: api.tag.graph::aggregates::api.operation.graph-search-terms
+  layerName: api
+  before:
+    source: api.tag.graph
+    target: api.operation.graph-search-terms
+    predicate: aggregates
+    layer: api
+  timestamp: 2026-03-23T19:35:11.208Z
+  sequenceNumber: 267
+- type: relationship-delete
+  elementId: api.tag.version-management::aggregates::api.operation.commit-working-tree
+  layerName: api
+  before:
+    source: api.tag.version-management
+    target: api.operation.commit-working-tree
+    predicate: aggregates
+    layer: api
+  timestamp: 2026-03-23T19:35:12.049Z
+  sequenceNumber: 268
+- type: relationship-delete
+  elementId: api.tag.version-management::aggregates::api.operation.get-entity-version-history
+  layerName: api
+  before:
+    source: api.tag.version-management
+    target: api.operation.get-entity-version-history
+    predicate: aggregates
+    layer: api
+  timestamp: 2026-03-23T19:35:12.950Z
+  sequenceNumber: 269
+- type: relationship-delete
+  elementId: api.tag.ontology-entities::aggregates::api.operation.list-relationships
+  layerName: api
+  before:
+    source: api.tag.ontology-entities
+    target: api.operation.list-relationships
+    predicate: aggregates
+    layer: api
+  timestamp: 2026-03-23T19:35:13.815Z
+  sequenceNumber: 270
+- type: relationship-delete
+  elementId: api.tag.ontology-entities::aggregates::api.operation.delete-relationship
+  layerName: api
+  before:
+    source: api.tag.ontology-entities
+    target: api.operation.delete-relationship
+    predicate: aggregates
+    layer: api
+  timestamp: 2026-03-23T19:35:17.988Z
+  sequenceNumber: 271
+- type: relationship-delete
+  elementId: api.operation.reference-multi-source-search::realizes::business.businessprocess.reference-knowledge-lookup-process
+  layerName: api
+  before:
+    source: api.operation.reference-multi-source-search
+    target: business.businessprocess.reference-knowledge-lookup-process
+    predicate: realizes
+    layer: api
+    targetLayer: business
+  timestamp: 2026-03-23T19:35:18.844Z
+  sequenceNumber: 272
+- type: relationship-delete
+  elementId: application.applicationcomponent.service-factory::realizes::application.applicationservice.node-service
+  layerName: application
+  before:
+    source: application.applicationcomponent.service-factory
+    target: application.applicationservice.node-service
+    predicate: realizes
+    layer: application
+  timestamp: 2026-03-23T19:35:30.573Z
+  sequenceNumber: 273
+- type: relationship-delete
+  elementId: application.applicationcomponent.service-factory::realizes::application.applicationservice.node-link-service
+  layerName: application
+  before:
+    source: application.applicationcomponent.service-factory
+    target: application.applicationservice.node-link-service
+    predicate: realizes
+    layer: application
+  timestamp: 2026-03-23T19:35:31.343Z
+  sequenceNumber: 274
+- type: relationship-delete
+  elementId: application.applicationcomponent.service-factory::realizes::application.applicationservice.word-sense-service
+  layerName: application
+  before:
+    source: application.applicationcomponent.service-factory
+    target: application.applicationservice.word-sense-service
+    predicate: realizes
+    layer: application
+  timestamp: 2026-03-23T19:35:32.145Z
+  sequenceNumber: 275
+- type: relationship-delete
+  elementId: application.applicationcomponent.service-factory::realizes::application.applicationservice.predicate-similarity-service
+  layerName: application
+  before:
+    source: application.applicationcomponent.service-factory
+    target: application.applicationservice.predicate-similarity-service
+    predicate: realizes
+    layer: application
+  timestamp: 2026-03-23T19:35:32.919Z
+  sequenceNumber: 276
+- type: relationship-delete
+  elementId: application.applicationcomponent.service-factory::realizes::application.applicationservice.task-manager
+  layerName: application
+  before:
+    source: application.applicationcomponent.service-factory
+    target: application.applicationservice.task-manager
+    predicate: realizes
+    layer: application
+  timestamp: 2026-03-23T19:35:37.031Z
+  sequenceNumber: 277
+- type: relationship-delete
+  elementId: application.applicationcomponent.service-factory::realizes::application.applicationservice.change-event-handler
+  layerName: application
+  before:
+    source: application.applicationcomponent.service-factory
+    target: application.applicationservice.change-event-handler
+    predicate: realizes
+    layer: application
+  timestamp: 2026-03-23T19:35:37.795Z
+  sequenceNumber: 278
+- type: relationship-delete
+  elementId: application.applicationcomponent.service-factory::realizes::application.applicationservice.change-extractor
+  layerName: application
+  before:
+    source: application.applicationcomponent.service-factory
+    target: application.applicationservice.change-extractor
+    predicate: realizes
+    layer: application
+  timestamp: 2026-03-23T19:35:38.578Z
+  sequenceNumber: 279
+- type: relationship-delete
+  elementId: application.applicationcomponent.service-factory::realizes::application.applicationservice.hierarchical-diff-engine
+  layerName: application
+  before:
+    source: application.applicationcomponent.service-factory
+    target: application.applicationservice.hierarchical-diff-engine
+    predicate: realizes
+    layer: application
+  timestamp: 2026-03-23T19:35:39.355Z
+  sequenceNumber: 280
+- type: relationship-delete
+  elementId: application.applicationcomponent.service-factory::realizes::application.applicationservice.duck-db-service
+  layerName: application
+  before:
+    source: application.applicationcomponent.service-factory
+    target: application.applicationservice.duck-db-service
+    predicate: realizes
+    layer: application
+  timestamp: 2026-03-23T19:35:43.869Z
+  sequenceNumber: 281
+- type: relationship-delete
+  elementId: application.applicationcomponent.service-factory::realizes::application.applicationservice.change-analytics-engine
+  layerName: application
+  before:
+    source: application.applicationcomponent.service-factory
+    target: application.applicationservice.change-analytics-engine
+    predicate: realizes
+    layer: application
+  timestamp: 2026-03-23T19:35:44.648Z
+  sequenceNumber: 282
+- type: relationship-delete
+  elementId: application.applicationcomponent.service-factory::realizes::application.applicationservice.llm-flavor-service
+  layerName: application
+  before:
+    source: application.applicationcomponent.service-factory
+    target: application.applicationservice.llm-flavor-service
+    predicate: realizes
+    layer: application
+  timestamp: 2026-03-23T19:35:45.414Z
+  sequenceNumber: 283
+- type: relationship-delete
+  elementId: application.applicationcomponent.service-factory::realizes::application.applicationservice.enabled-models-manager
+  layerName: application
+  before:
+    source: application.applicationcomponent.service-factory
+    target: application.applicationservice.enabled-models-manager
+    predicate: realizes
+    layer: application
+  timestamp: 2026-03-23T19:35:46.194Z
+  sequenceNumber: 284
+- type: relationship-delete
+  elementId: application.applicationcomponent.service-factory::realizes::application.applicationservice.open-router-discovery-service
+  layerName: application
+  before:
+    source: application.applicationcomponent.service-factory
+    target: application.applicationservice.open-router-discovery-service
+    predicate: realizes
+    layer: application
+  timestamp: 2026-03-23T19:35:50.951Z
+  sequenceNumber: 285
+- type: relationship-delete
+  elementId: application.applicationcomponent.service-factory::realizes::application.applicationservice.reference-api-aggregator
+  layerName: application
+  before:
+    source: application.applicationcomponent.service-factory
+    target: application.applicationservice.reference-api-aggregator
+    predicate: realizes
+    layer: application
+  timestamp: 2026-03-23T19:35:51.729Z
+  sequenceNumber: 286
+- type: relationship-delete
+  elementId: application.applicationcomponent.rag-pipeline-registry::realizes::application.applicationservice.rag-pipeline-service
+  layerName: application
+  before:
+    source: application.applicationcomponent.rag-pipeline-registry
+    target: application.applicationservice.rag-pipeline-service
+    predicate: realizes
+    layer: application
+  timestamp: 2026-03-23T19:35:52.532Z
+  sequenceNumber: 287
+- type: relationship-delete
+  elementId: application.applicationcomponent.rag-pipeline-registry::realizes::application.applicationservice.rag-test-management-service
+  layerName: application
+  before:
+    source: application.applicationcomponent.rag-pipeline-registry
+    target: application.applicationservice.rag-test-management-service
+    predicate: realizes
+    layer: application
+  timestamp: 2026-03-23T19:35:53.322Z
+  sequenceNumber: 288
+- type: relationship-delete
+  elementId: security.securitypolicy.api-key-authentication-policy::governs::business.businessservice.predicate-management
+  layerName: security
+  before:
+    source: security.securitypolicy.api-key-authentication-policy
+    target: business.businessservice.predicate-management
+    predicate: governs
+    layer: security
+    targetLayer: business
+  timestamp: 2026-03-23T19:36:23.768Z
+  sequenceNumber: 289
+- type: relationship-delete
+  elementId: security.securitypolicy.api-key-authentication-policy::governs::business.businessservice.reference-knowledge-integration
+  layerName: security
+  before:
+    source: security.securitypolicy.api-key-authentication-policy
+    target: business.businessservice.reference-knowledge-integration
+    predicate: governs
+    layer: security
+    targetLayer: business
+  timestamp: 2026-03-23T19:36:24.479Z
+  sequenceNumber: 290
+- type: relationship-delete
+  elementId: security.securitypolicy.api-key-authentication-policy::governs::business.businessservice.rag-experimentation
+  layerName: security
+  before:
+    source: security.securitypolicy.api-key-authentication-policy
+    target: business.businessservice.rag-experimentation
+    predicate: governs
+    layer: security
+    targetLayer: business
+  timestamp: 2026-03-23T19:36:25.201Z
+  sequenceNumber: 291
+- type: relationship-delete
+  elementId: security.securitypolicy.api-key-authentication-policy::governs::business.businessservice.system-administration
+  layerName: security
+  before:
+    source: security.securitypolicy.api-key-authentication-policy
+    target: business.businessservice.system-administration
+    predicate: governs
+    layer: security
+    targetLayer: business
+  timestamp: 2026-03-23T19:36:25.905Z
+  sequenceNumber: 292
+- type: relationship-delete
+  elementId: ux.view.layers-view::accesses::api.operation.list-structure-nodes
+  layerName: ux
+  before:
+    source: ux.view.layers-view
+    target: api.operation.list-structure-nodes
+    predicate: accesses
+    layer: ux
+    targetLayer: api
+  timestamp: 2026-03-23T19:36:29.974Z
+  sequenceNumber: 293
+- type: relationship-delete
+  elementId: api.tag.predicates::aggregates::api.operation.create-predicate
+  layerName: api
+  before:
+    source: api.tag.predicates
+    target: api.operation.create-predicate
+    predicate: aggregates
+    layer: api
+  timestamp: 2026-03-23T19:36:35.595Z
+  sequenceNumber: 294
+- type: relationship-delete
+  elementId: api.tag.predicates::aggregates::api.operation.discover-predicates
+  layerName: api
+  before:
+    source: api.tag.predicates
+    target: api.operation.discover-predicates
+    predicate: aggregates
+    layer: api
+  timestamp: 2026-03-23T19:36:36.521Z
+  sequenceNumber: 295
+- type: relationship-delete
+  elementId: api.tag.predicates::aggregates::api.operation.find-similar-predicates
+  layerName: api
+  before:
+    source: api.tag.predicates
+    target: api.operation.find-similar-predicates
+    predicate: aggregates
+    layer: api
+  timestamp: 2026-03-23T19:36:37.416Z
+  sequenceNumber: 296
+- type: relationship-delete
+  elementId: api.tag.predicates::aggregates::api.operation.import-predicates-from-concept-net
+  layerName: api
+  before:
+    source: api.tag.predicates
+    target: api.operation.import-predicates-from-concept-net
+    predicate: aggregates
+    layer: api
+  timestamp: 2026-03-23T19:36:38.295Z
+  sequenceNumber: 297
+- type: relationship-delete
+  elementId: api.tag.structure-nodes::aggregates::api.operation.create-structure-node
+  layerName: api
+  before:
+    source: api.tag.structure-nodes
+    target: api.operation.create-structure-node
+    predicate: aggregates
+    layer: api
+  timestamp: 2026-03-23T19:36:43.061Z
+  sequenceNumber: 298
+- type: relationship-delete
+  elementId: api.tag.structure-nodes::aggregates::api.operation.move-structure-nodes
+  layerName: api
+  before:
+    source: api.tag.structure-nodes
+    target: api.operation.move-structure-nodes
+    predicate: aggregates
+    layer: api
+  timestamp: 2026-03-23T19:36:43.933Z
+  sequenceNumber: 299
+- type: relationship-delete
+  elementId: api.tag.structure-nodes::aggregates::api.operation.get-node-children
+  layerName: api
+  before:
+    source: api.tag.structure-nodes
+    target: api.operation.get-node-children
+    predicate: aggregates
+    layer: api
+  timestamp: 2026-03-23T19:36:44.781Z
+  sequenceNumber: 300
+- type: relationship-delete
+  elementId: api.tag.structure-nodes::aggregates::api.operation.create-node-link
+  layerName: api
+  before:
+    source: api.tag.structure-nodes
+    target: api.operation.create-node-link
+    predicate: aggregates
+    layer: api
+  timestamp: 2026-03-23T19:36:45.644Z
+  sequenceNumber: 301
+- type: relationship-delete
+  elementId: api.tag.config::aggregates::api.operation.update-config
+  layerName: api
+  before:
+    source: api.tag.config
+    target: api.operation.update-config
+    predicate: aggregates
+    layer: api
+  timestamp: 2026-03-23T19:36:50.468Z
+  sequenceNumber: 302
+- type: relationship-delete
+  elementId: api.tag.background-tasks::aggregates::api.operation.get-background-task-status
+  layerName: api
+  before:
+    source: api.tag.background-tasks
+    target: api.operation.get-background-task-status
+    predicate: aggregates
+    layer: api
+  timestamp: 2026-03-23T19:36:51.397Z
+  sequenceNumber: 303
+- type: relationship-delete
+  elementId: api.tag.background-tasks::aggregates::api.operation.cancel-background-task
+  layerName: api
+  before:
+    source: api.tag.background-tasks
+    target: api.operation.cancel-background-task
+    predicate: aggregates
+    layer: api
+  timestamp: 2026-03-23T19:36:52.252Z
+  sequenceNumber: 304
+- type: relationship-delete
+  elementId: api.tag.llm-traceability::aggregates::api.operation.get-llm-execution-analytics
+  layerName: api
+  before:
+    source: api.tag.llm-traceability
+    target: api.operation.get-llm-execution-analytics
+    predicate: aggregates
+    layer: api
+  timestamp: 2026-03-23T19:36:53.142Z
+  sequenceNumber: 305
+- type: relationship-delete
+  elementId: api.tag.enabled-models::aggregates::api.operation.enable-model
+  layerName: api
+  before:
+    source: api.tag.enabled-models
+    target: api.operation.enable-model
+    predicate: aggregates
+    layer: api
+  timestamp: 2026-03-23T19:36:57.501Z
+  sequenceNumber: 306
+- type: relationship-delete
+  elementId: api.tag.model-capabilities::aggregates::api.operation.discover-open-router-models
+  layerName: api
+  before:
+    source: api.tag.model-capabilities
+    target: api.operation.discover-open-router-models
+    predicate: aggregates
+    layer: api
+  timestamp: 2026-03-23T19:36:58.427Z
+  sequenceNumber: 307
+- type: relationship-delete
+  elementId: api.tag.pipeline-flavors::aggregates::api.operation.create-pipeline-flavor
+  layerName: api
+  before:
+    source: api.tag.pipeline-flavors
+    target: api.operation.create-pipeline-flavor
+    predicate: aggregates
+    layer: api
+  timestamp: 2026-03-23T19:36:59.295Z
+  sequenceNumber: 308
+- type: relationship-delete
+  elementId: api.tag.pipeline-configurations::aggregates::api.operation.create-pipeline-configuration
+  layerName: api
+  before:
+    source: api.tag.pipeline-configurations
+    target: api.operation.create-pipeline-configuration
+    predicate: aggregates
+    layer: api
+  timestamp: 2026-03-23T19:37:00.172Z
+  sequenceNumber: 309
+- type: relationship-delete
+  elementId: api.tag.optimization::aggregates::api.operation.batch-process-entities
+  layerName: api
+  before:
+    source: api.tag.optimization
+    target: api.operation.batch-process-entities
+    predicate: aggregates
+    layer: api
+  timestamp: 2026-03-23T19:37:04.702Z
+  sequenceNumber: 310
+- type: relationship-delete
+  elementId: api.tag.schema::aggregates::api.operation.run-schema-migration
+  layerName: api
+  before:
+    source: api.tag.schema
+    target: api.operation.run-schema-migration
+    predicate: aggregates
+    layer: api
+  timestamp: 2026-03-23T19:37:05.607Z
+  sequenceNumber: 311
+- type: relationship-delete
+  elementId: api.tag.rag-experiments::aggregates::api.operation.list-test-paragraphs
+  layerName: api
+  before:
+    source: api.tag.rag-experiments
+    target: api.operation.list-test-paragraphs
+    predicate: aggregates
+    layer: api
+  timestamp: 2026-03-23T19:37:06.505Z
+  sequenceNumber: 312
+- type: relationship-delete
+  elementId: api.tag.admin::aggregates::api.operation.get-admin-event-processor-health
+  layerName: api
+  before:
+    source: api.tag.admin
+    target: api.operation.get-admin-event-processor-health
+    predicate: aggregates
+    layer: api
+  timestamp: 2026-03-23T19:37:07.411Z
+  sequenceNumber: 313
+- type: relationship-delete
+  elementId: api.tag.admin::aggregates::api.operation.get-admin-service-monitoring-stats
+  layerName: api
+  before:
+    source: api.tag.admin
+    target: api.operation.get-admin-service-monitoring-stats
+    predicate: aggregates
+    layer: api
+  timestamp: 2026-03-23T19:37:13.395Z
+  sequenceNumber: 314
+- type: relationship-delete
+  elementId: api.tag.property-definitions::aggregates::api.operation.create-property-definition
+  layerName: api
+  before:
+    source: api.tag.property-definitions
+    target: api.operation.create-property-definition
+    predicate: aggregates
+    layer: api
+  timestamp: 2026-03-23T19:37:14.266Z
+  sequenceNumber: 315
+- type: relationship-delete
+  elementId: testing.testcoveragetarget.predicate-crud-and-similarity::tests::api.operation.discover-predicates
+  layerName: testing
+  before:
+    source: testing.testcoveragetarget.predicate-crud-and-similarity
+    target: api.operation.discover-predicates
+    predicate: tests
+    layer: testing
+    targetLayer: api
+  timestamp: 2026-03-23T19:37:15.380Z
+  sequenceNumber: 316

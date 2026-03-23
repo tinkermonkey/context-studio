@@ -1,0 +1,171 @@
+business.businessservice.ontology-management:
+  id: d78a4da2-81c5-4117-87f6-cf44f116fceb
+  path: business.businessservice.ontology-management
+  spec_node_id: business.businessservice
+  type: businessservice
+  layer_id: business
+  name: Ontology Management
+  description: "Business service: Create, organize, and maintain a hierarchical
+    knowledge graph of taxonomies, concept schemes, and classes with external
+    reference links"
+  attributes:
+    documentation: Inferred from OntologyEntityService and /api/ontology_entities API grouping
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: services/ontology_entity_service.py
+  metadata:
+    created_at: 2026-03-23T12:39:30.258Z
+    updated_at: 2026-03-23T12:39:30.258Z
+    version: 1
+business.businessservice.knowledge-enrichment:
+  id: bfa64d22-bc93-4c14-9386-d9f3b72ac748
+  path: business.businessservice.knowledge-enrichment
+  spec_node_id: business.businessservice
+  type: businessservice
+  layer_id: business
+  name: Knowledge Enrichment
+  description: "Business service: Automatically enrich ontology entities from
+    ConceptNet, DBpedia, Wikidata, and schema.org"
+  attributes:
+    documentation: Inferred from ReferenceService, NLPPipeline, and /api/reference,
+      /api/nlp API groupings
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: reference_api/service.py
+  metadata:
+    created_at: 2026-03-23T12:39:30.705Z
+    updated_at: 2026-03-23T12:39:30.705Z
+    version: 1
+business.businessservice.llm-pipeline-execution:
+  id: 95a2080b-46e1-4f27-836c-37b7883fb0cf
+  path: business.businessservice.llm-pipeline-execution
+  spec_node_id: business.businessservice
+  type: businessservice
+  layer_id: business
+  name: LLM Pipeline Execution
+  description: "Business service: Configure and execute LLM inference pipelines
+    for automated ontology entity enrichment and RAG extraction"
+  attributes:
+    documentation: Inferred from LLMService, PipelineConfiguration, and /api/llm,
+      /api/rag API groupings
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: llm/service.py
+  metadata:
+    created_at: 2026-03-23T12:39:31.176Z
+    updated_at: 2026-03-23T12:39:31.176Z
+    version: 1
+business.businessservice.collaborative-version-control:
+  id: 84e25799-f8de-42b2-8d81-3bb28e294468
+  path: business.businessservice.collaborative-version-control
+  spec_node_id: business.businessservice
+  type: businessservice
+  layer_id: business
+  name: Collaborative Version Control
+  description: "Business service: Track changes, maintain version history, manage
+    collaborative changesets, and resolve conflicts in a shared knowledge graph"
+  attributes:
+    documentation: Inferred from VersionManager, ChangesetManager, and
+      /api/version-management, /api/changeset-management API groupings
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: services/version_manager.py
+  metadata:
+    created_at: 2026-03-23T12:39:40.176Z
+    updated_at: 2026-03-23T12:39:40.176Z
+    version: 1
+business.businessservice.dataset-management:
+  id: 1f59260d-5857-42bb-92ba-4597bc812bcf
+  path: business.businessservice.dataset-management
+  spec_node_id: business.businessservice
+  type: businessservice
+  layer_id: business
+  name: Dataset Management
+  description: "Business service: Create and switch between isolated SQLite
+    dataset workspaces for managing separate knowledge graph projects"
+  attributes:
+    documentation: Inferred from DatasetManagementProcess and /api/datasets API grouping
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: database/utils.py
+  metadata:
+    created_at: 2026-03-23T12:39:40.674Z
+    updated_at: 2026-03-23T12:39:40.674Z
+    version: 1
+business.businessservice.graph-analytics:
+  id: 3bf081a4-f5b3-4dea-a1d9-78a736dbef92
+  path: business.businessservice.graph-analytics
+  spec_node_id: business.businessservice
+  type: businessservice
+  layer_id: business
+  name: Graph Analytics
+  description: "Business service: Compute graph metrics, run SPARQL queries, find
+    paths, and analyze the structural properties of the ontology"
+  attributes:
+    documentation: Inferred from GraphService, NetworkService, SPARQLService, and
+      /api/graph API grouping
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: graph/graph_service.py
+  metadata:
+    created_at: 2026-03-23T12:39:41.151Z
+    updated_at: 2026-03-23T12:39:41.151Z
+    version: 1
+business.businessservice.predicate-management:
+  id: e741941b-ded4-4d8d-84a4-667aefe8a34e
+  path: business.businessservice.predicate-management
+  spec_node_id: business.businessservice
+  type: businessservice
+  layer_id: business
+  name: Predicate Management
+  description: Business service for managing typed relationship predicates and
+    their enrichment from external sources
+  metadata:
+    created_at: 2026-03-23T19:27:25.193Z
+    updated_at: 2026-03-23T19:27:25.193Z
+    version: 1
+business.businessservice.reference-knowledge-integration:
+  id: 294e207b-e240-4c30-b748-32964948c6a6
+  path: business.businessservice.reference-knowledge-integration
+  spec_node_id: business.businessservice
+  type: businessservice
+  layer_id: business
+  name: Reference Knowledge Integration
+  description: Business service for querying and normalizing knowledge from
+    external reference sources (ConceptNet, DBpedia, Wikidata, schema.org)
+  metadata:
+    created_at: 2026-03-23T19:27:25.715Z
+    updated_at: 2026-03-23T19:27:25.715Z
+    version: 1
+business.businessservice.rag-experimentation:
+  id: d7d70b64-131c-4050-abe6-4d087eb15688
+  path: business.businessservice.rag-experimentation
+  spec_node_id: business.businessservice
+  type: businessservice
+  layer_id: business
+  name: RAG Experimentation
+  description: Business service for running, comparing, and annotating RAG
+    pipeline experiments
+  metadata:
+    created_at: 2026-03-23T19:27:26.262Z
+    updated_at: 2026-03-23T19:27:26.262Z
+    version: 1
+business.businessservice.system-administration:
+  id: 83d051f1-b782-4d5d-aaed-b959d5126547
+  path: business.businessservice.system-administration
+  spec_node_id: business.businessservice
+  type: businessservice
+  layer_id: business
+  name: System Administration
+  description: Business service covering configuration management, schema
+    migration, and operational monitoring
+  metadata:
+    created_at: 2026-03-23T19:27:26.794Z
+    updated_at: 2026-03-23T19:27:26.794Z
+    version: 1

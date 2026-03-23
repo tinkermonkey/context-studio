@@ -1,0 +1,297 @@
+data-store.collection.ontology-entities:
+  id: 016d7d54-04cd-41f9-8a3c-8e085747885c
+  path: data-store.collection.ontology-entities
+  spec_node_id: data-store.collection
+  type: collection
+  layer_id: data-store
+  name: ontology_entities
+  description: Primary table for all ontology entities (taxonomies, concept
+    schemes, classes) with vector embeddings, discriminated by node_type
+  attributes:
+    collectionType: TABLE
+    partitionKey: id
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: database/models.py
+        symbol: OntologyEntity
+  metadata:
+    created_at: 2026-03-23T12:27:49.253Z
+    updated_at: 2026-03-23T12:27:49.253Z
+    version: 1
+data-store.collection.relationships:
+  id: 357df59c-ef53-4cb5-93df-690a9f52b97b
+  path: data-store.collection.relationships
+  spec_node_id: data-store.collection
+  type: collection
+  layer_id: data-store
+  name: relationships
+  description: Table storing typed directed edges between ontology entities with
+    predicate label and optional predicate_id foreign key
+  attributes:
+    collectionType: TABLE
+    partitionKey: id
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: database/models.py
+        symbol: Relationship
+  metadata:
+    created_at: 2026-03-23T12:27:49.676Z
+    updated_at: 2026-03-23T12:27:49.676Z
+    version: 1
+data-store.collection.property-definitions:
+  id: 5afa41c8-a976-47cd-9eaa-1f99d15fc201
+  path: data-store.collection.property-definitions
+  spec_node_id: data-store.collection
+  type: collection
+  layer_id: data-store
+  name: property_definitions
+  description: Table defining reusable property/predicate types with identifier,
+    title, definition, and relevance flag
+  attributes:
+    collectionType: TABLE
+    partitionKey: id
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: database/models.py
+        symbol: PropertyDefinition
+  metadata:
+    created_at: 2026-03-23T12:27:56.953Z
+    updated_at: 2026-03-23T12:27:56.953Z
+    version: 1
+data-store.collection.change-events:
+  id: 60ed6ecc-02d6-4382-b214-301ddf7a9bcb
+  path: data-store.collection.change-events
+  spec_node_id: data-store.collection
+  type: collection
+  layer_id: data-store
+  name: change_events
+  description: Audit log table recording all create/update/delete events on
+    ontology entities with old_data/new_data JSON and processed flag
+  attributes:
+    collectionType: TABLE
+    partitionKey: id
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: database/models.py
+        symbol: ChangeEvent
+  metadata:
+    created_at: 2026-03-23T12:27:57.374Z
+    updated_at: 2026-03-23T12:27:57.374Z
+    version: 1
+data-store.collection.pipeline-configurations:
+  id: ea4661a2-98b0-42b8-9c96-9c70d5b3c80f
+  path: data-store.collection.pipeline-configurations
+  spec_node_id: data-store.collection
+  type: collection
+  layer_id: data-store
+  name: pipeline_configurations
+  description: Table in operations.db storing LLM pipeline configurations with
+    provider, model, prompts, and version
+  attributes:
+    collectionType: TABLE
+    partitionKey: id
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: database/models.py
+        symbol: PipelineConfiguration
+  metadata:
+    created_at: 2026-03-23T12:27:57.790Z
+    updated_at: 2026-03-23T12:27:57.790Z
+    version: 1
+data-store.collection.entity-versions:
+  id: 59816970-aa10-4b3a-84cf-3d4d1b6d02de
+  path: data-store.collection.entity-versions
+  spec_node_id: data-store.collection
+  type: collection
+  layer_id: data-store
+  name: entity_versions
+  description: Stores all EntityVersion snapshots with state machine column;
+    supports lineage via parent_version_id FK and changeset_id association
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: services/version_manager.py
+        symbol: VersionManager
+  metadata:
+    created_at: 2026-03-23T19:02:55.278Z
+    updated_at: 2026-03-23T19:02:55.278Z
+    version: 1
+data-store.collection.changesets:
+  id: 12a9a10b-a2e8-40b1-ad6a-d219e2a95ac2
+  path: data-store.collection.changesets
+  spec_node_id: data-store.collection
+  type: collection
+  layer_id: data-store
+  name: changesets
+  description: Stores Changeset records with state, branch_name,
+    parent_changeset_id, and author_id; linked to entity_versions via
+    changeset_id FK
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: services/changeset_manager.py
+        symbol: ChangesetManager
+  metadata:
+    created_at: 2026-03-23T19:03:00.945Z
+    updated_at: 2026-03-23T19:03:00.945Z
+    version: 1
+data-store.collection.proposals:
+  id: 61e288ef-9c29-4f32-82b9-f805390d3080
+  path: data-store.collection.proposals
+  spec_node_id: data-store.collection
+  type: collection
+  layer_id: data-store
+  name: proposals
+  description: Stores Proposal records and ProposalVote records for collaborative
+    approval workflows
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: services/proposal_manager.py
+        symbol: ProposalManager
+  metadata:
+    created_at: 2026-03-23T19:03:01.436Z
+    updated_at: 2026-03-23T19:03:01.436Z
+    version: 1
+data-store.collection.users:
+  id: f80d3647-dbbe-45ba-8d18-15087efa5146
+  path: data-store.collection.users
+  spec_node_id: data-store.collection
+  type: collection
+  layer_id: data-store
+  name: users
+  description: Stores User records and trust-network edges for collaborative
+    identity and peer-trust management
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: services/identity_manager.py
+        symbol: IdentityManager
+  metadata:
+    created_at: 2026-03-23T19:03:01.931Z
+    updated_at: 2026-03-23T19:03:01.931Z
+    version: 1
+data-store.collection.pipeline-flavor-executions:
+  id: 5371aac0-d2c7-4dd0-b6c7-c6f2f3975674
+  path: data-store.collection.pipeline-flavor-executions
+  spec_node_id: data-store.collection
+  type: collection
+  layer_id: data-store
+  name: pipeline_flavor_executions
+  description: Operations DB table for individual LLM pipeline flavor execution records
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: operations/models.py
+        symbol: PipelineFlavorExecution
+  metadata:
+    created_at: 2026-03-23T19:27:11.659Z
+    updated_at: 2026-03-23T19:27:11.659Z
+    version: 1
+data-store.collection.rag-observability-traces:
+  id: 6acebffa-e8fb-4f39-9270-995edf978477
+  path: data-store.collection.rag-observability-traces
+  spec_node_id: data-store.collection
+  type: collection
+  layer_id: data-store
+  name: rag_observability_traces
+  description: Operations DB table for RAG pipeline end-to-end trace records
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: operations/models.py
+        symbol: RAGObservabilityTrace
+  metadata:
+    created_at: 2026-03-23T19:27:12.204Z
+    updated_at: 2026-03-23T19:27:12.204Z
+    version: 1
+data-store.collection.test-paragraphs:
+  id: c90121cc-920e-4841-8c06-9e22dd4578cc
+  path: data-store.collection.test-paragraphs
+  spec_node_id: data-store.collection
+  type: collection
+  layer_id: data-store
+  name: test_paragraphs
+  description: Operations DB table for RAG experiment test paragraphs
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: operations/models.py
+        symbol: TestParagraph
+  metadata:
+    created_at: 2026-03-23T19:27:12.765Z
+    updated_at: 2026-03-23T19:27:12.765Z
+    version: 1
+data-store.collection.test-annotations:
+  id: 794cf518-f89c-4901-8b6f-c1632901709b
+  path: data-store.collection.test-annotations
+  spec_node_id: data-store.collection
+  type: collection
+  layer_id: data-store
+  name: test_annotations
+  description: Operations DB table for expected entity annotations on test paragraphs
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: operations/models.py
+        symbol: TestAnnotation
+  metadata:
+    created_at: 2026-03-23T19:27:13.314Z
+    updated_at: 2026-03-23T19:27:13.314Z
+    version: 1
+data-store.collection.rag-pipeline-runs:
+  id: 1ce11fe9-6950-4a91-8eaf-0be344bbb6c8
+  path: data-store.collection.rag-pipeline-runs
+  spec_node_id: data-store.collection
+  type: collection
+  layer_id: data-store
+  name: rag_pipeline_runs
+  description: Operations DB table for aggregate RAG pipeline test run records
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: operations/models.py
+        symbol: RAGPipelineRun
+  metadata:
+    created_at: 2026-03-23T19:27:17.898Z
+    updated_at: 2026-03-23T19:27:17.898Z
+    version: 1
+data-store.collection.nodes:
+  id: 1fb48518-ca39-4749-a969-b7bfd4daedc7
+  path: data-store.collection.nodes
+  spec_node_id: data-store.collection
+  type: collection
+  layer_id: data-store
+  name: nodes
+  description: Workspace DB table for structure nodes (taxonomies, concept schemes, classes)
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: database/models.py
+        symbol: OntologyEntity
+  metadata:
+    created_at: 2026-03-23T19:27:18.458Z
+    updated_at: 2026-03-23T19:27:18.458Z
+    version: 1
+data-store.collection.node-links:
+  id: c51b5f92-6829-4453-9773-9ae8677224e0
+  path: data-store.collection.node-links
+  spec_node_id: data-store.collection
+  type: collection
+  layer_id: data-store
+  name: node_links
+  description: Workspace DB table for typed directed links between structure nodes
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: services/node_link_service.py
+        symbol: ReferenceLinkService
+  metadata:
+    created_at: 2026-03-23T19:27:18.986Z
+    updated_at: 2026-03-23T19:27:18.986Z
+    version: 1

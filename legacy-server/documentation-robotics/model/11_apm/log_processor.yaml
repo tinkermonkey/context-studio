@@ -1,0 +1,22 @@
+apm.logprocessor.access-log-middleware:
+  id: bc20c45d-0d44-43a0-b5dd-cb65aefcaa95
+  path: apm.logprocessor.access-log-middleware
+  spec_node_id: apm.logprocessor
+  type: logprocessor
+  layer_id: apm
+  name: Access Log Middleware
+  description: ASGI middleware (AccessLogMiddleware) processing HTTP access logs
+    for all incoming requests, logging method, path, status code, and duration
+  attributes:
+    type: batch
+    order: 1
+    enabled: true
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: utils/access_log_middleware.py
+        symbol: AccessLogMiddleware
+  metadata:
+    created_at: 2026-03-23T12:33:28.773Z
+    updated_at: 2026-03-23T12:33:28.773Z
+    version: 1

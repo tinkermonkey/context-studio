@@ -1,0 +1,10 @@
+id: changeset-1774268746990-0ld46jnvt
+name: extract-data-model-layer
+created: 2026-03-23T12:25:47.001Z
+modified: 2026-03-23T12:27:07.396Z
+status: committed
+baseSnapshot: sha256:8327b52668344126e9354a179c9ee0e47f310d809ffaef138f86e59f0bbe08b9
+stats:
+  additions: 21
+  modifications: 0
+  deletions: 0

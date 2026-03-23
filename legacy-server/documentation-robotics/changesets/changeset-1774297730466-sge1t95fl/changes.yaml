@@ -1,0 +1,1003 @@
+- type: relationship-add
+  elementId: application.applicationservice.conflict-resolution-engine::depends-on::application.applicationservice.version-manager
+  layerName: application
+  after:
+    source: application.applicationservice.conflict-resolution-engine
+    target: application.applicationservice.version-manager
+    predicate: depends-on
+    layer: application
+    category: structural
+  timestamp: 2026-03-23T20:29:23.139Z
+  sequenceNumber: 0
+- type: relationship-add
+  elementId: application.applicationservice.incremental-sync-engine::depends-on::application.applicationservice.duck-db-service
+  layerName: application
+  after:
+    source: application.applicationservice.incremental-sync-engine
+    target: application.applicationservice.duck-db-service
+    predicate: depends-on
+    layer: application
+    category: structural
+  timestamp: 2026-03-23T20:29:26.927Z
+  sequenceNumber: 1
+- type: relationship-add
+  elementId: application.applicationservice.proposal-manager::depends-on::application.applicationservice.changeset-manager
+  layerName: application
+  after:
+    source: application.applicationservice.proposal-manager
+    target: application.applicationservice.changeset-manager
+    predicate: depends-on
+    layer: application
+    category: structural
+  timestamp: 2026-03-23T20:29:32.202Z
+  sequenceNumber: 2
+- type: relationship-add
+  elementId: application.applicationservice.change-analytics-engine::depends-on::application.applicationservice.duck-db-service
+  layerName: application
+  after:
+    source: application.applicationservice.change-analytics-engine
+    target: application.applicationservice.duck-db-service
+    predicate: depends-on
+    layer: application
+    category: structural
+  timestamp: 2026-03-23T20:29:35.602Z
+  sequenceNumber: 3
+- type: relationship-add
+  elementId: application.applicationservice.rag-test-management-service::depends-on::application.applicationservice.rag-pipeline-service
+  layerName: application
+  after:
+    source: application.applicationservice.rag-test-management-service
+    target: application.applicationservice.rag-pipeline-service
+    predicate: depends-on
+    layer: application
+    category: structural
+  timestamp: 2026-03-23T20:29:36.160Z
+  sequenceNumber: 4
+- type: relationship-add
+  elementId: application.applicationservice.changeset-manager::depends-on::application.applicationservice.version-manager
+  layerName: application
+  after:
+    source: application.applicationservice.changeset-manager
+    target: application.applicationservice.version-manager
+    predicate: depends-on
+    layer: application
+    category: structural
+  timestamp: 2026-03-23T20:29:40.849Z
+  sequenceNumber: 5
+- type: relationship-add
+  elementId: application.applicationservice.diff-generator::depends-on::application.applicationservice.version-manager
+  layerName: application
+  after:
+    source: application.applicationservice.diff-generator
+    target: application.applicationservice.version-manager
+    predicate: depends-on
+    layer: application
+    category: structural
+  timestamp: 2026-03-23T20:29:45.111Z
+  sequenceNumber: 6
+- type: relationship-add
+  elementId: application.applicationservice.working-tree-manager::depends-on::application.applicationservice.version-manager
+  layerName: application
+  after:
+    source: application.applicationservice.working-tree-manager
+    target: application.applicationservice.version-manager
+    predicate: depends-on
+    layer: application
+    category: structural
+  timestamp: 2026-03-23T20:29:46.273Z
+  sequenceNumber: 7
+- type: relationship-add
+  elementId: application.applicationservice.crdt-merge-engine::depends-on::application.applicationservice.version-manager
+  layerName: application
+  after:
+    source: application.applicationservice.crdt-merge-engine
+    target: application.applicationservice.version-manager
+    predicate: depends-on
+    layer: application
+    category: structural
+  timestamp: 2026-03-23T20:29:51.016Z
+  sequenceNumber: 8
+- type: relationship-add
+  elementId: application.applicationservice.identity-manager::depends-on::application.applicationservice.s3-sync-manager
+  layerName: application
+  after:
+    source: application.applicationservice.identity-manager
+    target: application.applicationservice.s3-sync-manager
+    predicate: depends-on
+    layer: application
+    category: structural
+  timestamp: 2026-03-23T20:29:52.167Z
+  sequenceNumber: 9
+- type: relationship-add
+  elementId: api.tag.ontology-entities::aggregates::api.operation.list-ontology-entities
+  layerName: api
+  after:
+    source: api.tag.ontology-entities
+    target: api.operation.list-ontology-entities
+    predicate: aggregates
+    layer: api
+    category: structural
+  timestamp: 2026-03-23T20:32:43.737Z
+  sequenceNumber: 10
+- type: relationship-add
+  elementId: api.tag.ontology-entities::aggregates::api.operation.get-ontology-entity
+  layerName: api
+  after:
+    source: api.tag.ontology-entities
+    target: api.operation.get-ontology-entity
+    predicate: aggregates
+    layer: api
+    category: structural
+  timestamp: 2026-03-23T20:32:44.307Z
+  sequenceNumber: 11
+- type: relationship-add
+  elementId: api.tag.ontology-entities::aggregates::api.operation.update-ontology-entity
+  layerName: api
+  after:
+    source: api.tag.ontology-entities
+    target: api.operation.update-ontology-entity
+    predicate: aggregates
+    layer: api
+    category: structural
+  timestamp: 2026-03-23T20:32:44.909Z
+  sequenceNumber: 12
+- type: relationship-add
+  elementId: api.tag.ontology-entities::aggregates::api.operation.delete-ontology-entity
+  layerName: api
+  after:
+    source: api.tag.ontology-entities
+    target: api.operation.delete-ontology-entity
+    predicate: aggregates
+    layer: api
+    category: structural
+  timestamp: 2026-03-23T20:32:45.478Z
+  sequenceNumber: 13
+- type: relationship-add
+  elementId: api.tag.ontology-entities::aggregates::api.operation.vector-search-entities
+  layerName: api
+  after:
+    source: api.tag.ontology-entities
+    target: api.operation.vector-search-entities
+    predicate: aggregates
+    layer: api
+    category: structural
+  timestamp: 2026-03-23T20:32:46.061Z
+  sequenceNumber: 14
+- type: relationship-add
+  elementId: api.tag.ontology-entities::aggregates::api.operation.create-relationship
+  layerName: api
+  after:
+    source: api.tag.ontology-entities
+    target: api.operation.create-relationship
+    predicate: aggregates
+    layer: api
+    category: structural
+  timestamp: 2026-03-23T20:32:46.649Z
+  sequenceNumber: 15
+- type: relationship-add
+  elementId: api.tag.ontology-entities::aggregates::api.operation.list-relationships
+  layerName: api
+  after:
+    source: api.tag.ontology-entities
+    target: api.operation.list-relationships
+    predicate: aggregates
+    layer: api
+    category: structural
+  timestamp: 2026-03-23T20:32:47.235Z
+  sequenceNumber: 16
+- type: relationship-add
+  elementId: api.tag.ontology-entities::aggregates::api.operation.delete-relationship
+  layerName: api
+  after:
+    source: api.tag.ontology-entities
+    target: api.operation.delete-relationship
+    predicate: aggregates
+    layer: api
+    category: structural
+  timestamp: 2026-03-23T20:32:47.802Z
+  sequenceNumber: 17
+- type: relationship-add
+  elementId: api.tag.graph::aggregates::api.operation.graph-analytics-centrality
+  layerName: api
+  after:
+    source: api.tag.graph
+    target: api.operation.graph-analytics-centrality
+    predicate: aggregates
+    layer: api
+    category: structural
+  timestamp: 2026-03-23T20:32:52.923Z
+  sequenceNumber: 18
+- type: relationship-add
+  elementId: api.tag.graph::aggregates::api.operation.graph-search-terms
+  layerName: api
+  after:
+    source: api.tag.graph
+    target: api.operation.graph-search-terms
+    predicate: aggregates
+    layer: api
+    category: structural
+  timestamp: 2026-03-23T20:32:53.497Z
+  sequenceNumber: 19
+- type: relationship-add
+  elementId: api.tag.version-management::aggregates::api.operation.commit-working-tree
+  layerName: api
+  after:
+    source: api.tag.version-management
+    target: api.operation.commit-working-tree
+    predicate: aggregates
+    layer: api
+    category: structural
+  timestamp: 2026-03-23T20:32:56.863Z
+  sequenceNumber: 20
+- type: relationship-add
+  elementId: api.tag.version-management::aggregates::api.operation.get-entity-version-history
+  layerName: api
+  after:
+    source: api.tag.version-management
+    target: api.operation.get-entity-version-history
+    predicate: aggregates
+    layer: api
+    category: structural
+  timestamp: 2026-03-23T20:32:57.438Z
+  sequenceNumber: 21
+- type: relationship-add
+  elementId: api.tag.conflicts::aggregates::api.operation.resolve-conflict
+  layerName: api
+  after:
+    source: api.tag.conflicts
+    target: api.operation.resolve-conflict
+    predicate: aggregates
+    layer: api
+    category: structural
+  timestamp: 2026-03-23T20:32:59.916Z
+  sequenceNumber: 22
+- type: relationship-add
+  elementId: api.tag.conflicts::aggregates::api.operation.detect-conflicts
+  layerName: api
+  after:
+    source: api.tag.conflicts
+    target: api.operation.detect-conflicts
+    predicate: aggregates
+    layer: api
+    category: structural
+  timestamp: 2026-03-23T20:33:00.517Z
+  sequenceNumber: 23
+- type: relationship-add
+  elementId: api.tag.proposals::aggregates::api.operation.vote-on-proposal
+  layerName: api
+  after:
+    source: api.tag.proposals
+    target: api.operation.vote-on-proposal
+    predicate: aggregates
+    layer: api
+    category: structural
+  timestamp: 2026-03-23T20:33:03.004Z
+  sequenceNumber: 24
+- type: relationship-add
+  elementId: api.tag.proposals::aggregates::api.operation.list-proposals
+  layerName: api
+  after:
+    source: api.tag.proposals
+    target: api.operation.list-proposals
+    predicate: aggregates
+    layer: api
+    category: structural
+  timestamp: 2026-03-23T20:33:03.587Z
+  sequenceNumber: 25
+- type: relationship-add
+  elementId: api.tag.sync::aggregates::api.operation.sync-pull
+  layerName: api
+  after:
+    source: api.tag.sync
+    target: api.operation.sync-pull
+    predicate: aggregates
+    layer: api
+    category: structural
+  timestamp: 2026-03-23T20:33:06.127Z
+  sequenceNumber: 26
+- type: relationship-add
+  elementId: api.tag.predicates::aggregates::api.operation.create-predicate
+  layerName: api
+  after:
+    source: api.tag.predicates
+    target: api.operation.create-predicate
+    predicate: aggregates
+    layer: api
+    category: structural
+  timestamp: 2026-03-23T20:33:10.089Z
+  sequenceNumber: 27
+- type: relationship-add
+  elementId: api.tag.predicates::aggregates::api.operation.get-predicate
+  layerName: api
+  after:
+    source: api.tag.predicates
+    target: api.operation.get-predicate
+    predicate: aggregates
+    layer: api
+    category: structural
+  timestamp: 2026-03-23T20:33:10.671Z
+  sequenceNumber: 28
+- type: relationship-add
+  elementId: api.tag.predicates::aggregates::api.operation.update-predicate
+  layerName: api
+  after:
+    source: api.tag.predicates
+    target: api.operation.update-predicate
+    predicate: aggregates
+    layer: api
+    category: structural
+  timestamp: 2026-03-23T20:33:11.263Z
+  sequenceNumber: 29
+- type: relationship-add
+  elementId: api.tag.predicates::aggregates::api.operation.delete-predicate
+  layerName: api
+  after:
+    source: api.tag.predicates
+    target: api.operation.delete-predicate
+    predicate: aggregates
+    layer: api
+    category: structural
+  timestamp: 2026-03-23T20:33:11.870Z
+  sequenceNumber: 30
+- type: relationship-add
+  elementId: api.tag.predicates::aggregates::api.operation.discover-predicates
+  layerName: api
+  after:
+    source: api.tag.predicates
+    target: api.operation.discover-predicates
+    predicate: aggregates
+    layer: api
+    category: structural
+  timestamp: 2026-03-23T20:33:12.465Z
+  sequenceNumber: 31
+- type: relationship-add
+  elementId: api.tag.predicates::aggregates::api.operation.find-similar-predicates
+  layerName: api
+  after:
+    source: api.tag.predicates
+    target: api.operation.find-similar-predicates
+    predicate: aggregates
+    layer: api
+    category: structural
+  timestamp: 2026-03-23T20:33:13.069Z
+  sequenceNumber: 32
+- type: relationship-add
+  elementId: api.tag.predicates::aggregates::api.operation.import-predicates-from-concept-net
+  layerName: api
+  after:
+    source: api.tag.predicates
+    target: api.operation.import-predicates-from-concept-net
+    predicate: aggregates
+    layer: api
+    category: structural
+  timestamp: 2026-03-23T20:33:13.679Z
+  sequenceNumber: 33
+- type: relationship-add
+  elementId: api.tag.structure-nodes::aggregates::api.operation.create-structure-node
+  layerName: api
+  after:
+    source: api.tag.structure-nodes
+    target: api.operation.create-structure-node
+    predicate: aggregates
+    layer: api
+    category: structural
+  timestamp: 2026-03-23T20:33:18.986Z
+  sequenceNumber: 34
+- type: relationship-add
+  elementId: api.tag.structure-nodes::aggregates::api.operation.get-structure-node
+  layerName: api
+  after:
+    source: api.tag.structure-nodes
+    target: api.operation.get-structure-node
+    predicate: aggregates
+    layer: api
+    category: structural
+  timestamp: 2026-03-23T20:33:19.586Z
+  sequenceNumber: 35
+- type: relationship-add
+  elementId: api.tag.structure-nodes::aggregates::api.operation.update-structure-node
+  layerName: api
+  after:
+    source: api.tag.structure-nodes
+    target: api.operation.update-structure-node
+    predicate: aggregates
+    layer: api
+    category: structural
+  timestamp: 2026-03-23T20:33:20.173Z
+  sequenceNumber: 36
+- type: relationship-add
+  elementId: api.tag.structure-nodes::aggregates::api.operation.delete-structure-node
+  layerName: api
+  after:
+    source: api.tag.structure-nodes
+    target: api.operation.delete-structure-node
+    predicate: aggregates
+    layer: api
+    category: structural
+  timestamp: 2026-03-23T20:33:20.792Z
+  sequenceNumber: 37
+- type: relationship-add
+  elementId: api.tag.structure-nodes::aggregates::api.operation.get-node-children
+  layerName: api
+  after:
+    source: api.tag.structure-nodes
+    target: api.operation.get-node-children
+    predicate: aggregates
+    layer: api
+    category: structural
+  timestamp: 2026-03-23T20:33:21.389Z
+  sequenceNumber: 38
+- type: relationship-add
+  elementId: api.tag.structure-nodes::aggregates::api.operation.get-node-ancestors
+  layerName: api
+  after:
+    source: api.tag.structure-nodes
+    target: api.operation.get-node-ancestors
+    predicate: aggregates
+    layer: api
+    category: structural
+  timestamp: 2026-03-23T20:33:21.975Z
+  sequenceNumber: 39
+- type: relationship-add
+  elementId: api.tag.structure-nodes::aggregates::api.operation.move-structure-nodes
+  layerName: api
+  after:
+    source: api.tag.structure-nodes
+    target: api.operation.move-structure-nodes
+    predicate: aggregates
+    layer: api
+    category: structural
+  timestamp: 2026-03-23T20:33:22.564Z
+  sequenceNumber: 40
+- type: relationship-add
+  elementId: api.tag.structure-nodes::aggregates::api.operation.create-node-link
+  layerName: api
+  after:
+    source: api.tag.structure-nodes
+    target: api.operation.create-node-link
+    predicate: aggregates
+    layer: api
+    category: structural
+  timestamp: 2026-03-23T20:33:23.172Z
+  sequenceNumber: 41
+- type: relationship-add
+  elementId: api.tag.structure-nodes::aggregates::api.operation.list-node-links
+  layerName: api
+  after:
+    source: api.tag.structure-nodes
+    target: api.operation.list-node-links
+    predicate: aggregates
+    layer: api
+    category: structural
+  timestamp: 2026-03-23T20:33:23.780Z
+  sequenceNumber: 42
+- type: relationship-add
+  elementId: api.tag.structure-nodes::aggregates::api.operation.get-node-word-senses
+  layerName: api
+  after:
+    source: api.tag.structure-nodes
+    target: api.operation.get-node-word-senses
+    predicate: aggregates
+    layer: api
+    category: structural
+  timestamp: 2026-03-23T20:33:24.366Z
+  sequenceNumber: 43
+- type: relationship-add
+  elementId: api.tag.structure-nodes::aggregates::api.operation.get-node-reference-links
+  layerName: api
+  after:
+    source: api.tag.structure-nodes
+    target: api.operation.get-node-reference-links
+    predicate: aggregates
+    layer: api
+    category: structural
+  timestamp: 2026-03-23T20:33:24.977Z
+  sequenceNumber: 44
+- type: relationship-add
+  elementId: api.tag.config::aggregates::api.operation.update-config
+  layerName: api
+  after:
+    source: api.tag.config
+    target: api.operation.update-config
+    predicate: aggregates
+    layer: api
+    category: structural
+  timestamp: 2026-03-23T20:33:29.695Z
+  sequenceNumber: 45
+- type: relationship-add
+  elementId: api.tag.background-tasks::aggregates::api.operation.get-background-task-status
+  layerName: api
+  after:
+    source: api.tag.background-tasks
+    target: api.operation.get-background-task-status
+    predicate: aggregates
+    layer: api
+    category: structural
+  timestamp: 2026-03-23T20:33:30.329Z
+  sequenceNumber: 46
+- type: relationship-add
+  elementId: api.tag.background-tasks::aggregates::api.operation.cancel-background-task
+  layerName: api
+  after:
+    source: api.tag.background-tasks
+    target: api.operation.cancel-background-task
+    predicate: aggregates
+    layer: api
+    category: structural
+  timestamp: 2026-03-23T20:33:30.944Z
+  sequenceNumber: 47
+- type: relationship-add
+  elementId: api.tag.property-definitions::aggregates::api.operation.create-property-definition
+  layerName: api
+  after:
+    source: api.tag.property-definitions
+    target: api.operation.create-property-definition
+    predicate: aggregates
+    layer: api
+    category: structural
+  timestamp: 2026-03-23T20:33:31.564Z
+  sequenceNumber: 48
+- type: relationship-add
+  elementId: api.tag.llm-traceability::aggregates::api.operation.get-llm-execution-analytics
+  layerName: api
+  after:
+    source: api.tag.llm-traceability
+    target: api.operation.get-llm-execution-analytics
+    predicate: aggregates
+    layer: api
+    category: structural
+  timestamp: 2026-03-23T20:33:35.724Z
+  sequenceNumber: 49
+- type: relationship-add
+  elementId: api.tag.enabled-models::aggregates::api.operation.enable-model
+  layerName: api
+  after:
+    source: api.tag.enabled-models
+    target: api.operation.enable-model
+    predicate: aggregates
+    layer: api
+    category: structural
+  timestamp: 2026-03-23T20:33:36.330Z
+  sequenceNumber: 50
+- type: relationship-add
+  elementId: api.tag.model-capabilities::aggregates::api.operation.discover-open-router-models
+  layerName: api
+  after:
+    source: api.tag.model-capabilities
+    target: api.operation.discover-open-router-models
+    predicate: aggregates
+    layer: api
+    category: structural
+  timestamp: 2026-03-23T20:33:36.952Z
+  sequenceNumber: 51
+- type: relationship-add
+  elementId: api.tag.pipeline-flavors::aggregates::api.operation.create-pipeline-flavor
+  layerName: api
+  after:
+    source: api.tag.pipeline-flavors
+    target: api.operation.create-pipeline-flavor
+    predicate: aggregates
+    layer: api
+    category: structural
+  timestamp: 2026-03-23T20:33:41.419Z
+  sequenceNumber: 52
+- type: relationship-add
+  elementId: api.tag.pipeline-configurations::aggregates::api.operation.create-pipeline-configuration
+  layerName: api
+  after:
+    source: api.tag.pipeline-configurations
+    target: api.operation.create-pipeline-configuration
+    predicate: aggregates
+    layer: api
+    category: structural
+  timestamp: 2026-03-23T20:33:42.029Z
+  sequenceNumber: 53
+- type: relationship-add
+  elementId: api.tag.optimization::aggregates::api.operation.batch-process-entities
+  layerName: api
+  after:
+    source: api.tag.optimization
+    target: api.operation.batch-process-entities
+    predicate: aggregates
+    layer: api
+    category: structural
+  timestamp: 2026-03-23T20:33:42.696Z
+  sequenceNumber: 54
+- type: relationship-add
+  elementId: api.tag.schema::aggregates::api.operation.run-schema-migration
+  layerName: api
+  after:
+    source: api.tag.schema
+    target: api.operation.run-schema-migration
+    predicate: aggregates
+    layer: api
+    category: structural
+  timestamp: 2026-03-23T20:33:43.341Z
+  sequenceNumber: 55
+- type: relationship-add
+  elementId: api.tag.rag-experiments::aggregates::api.operation.list-test-paragraphs
+  layerName: api
+  after:
+    source: api.tag.rag-experiments
+    target: api.operation.list-test-paragraphs
+    predicate: aggregates
+    layer: api
+    category: structural
+  timestamp: 2026-03-23T20:33:47.286Z
+  sequenceNumber: 56
+- type: relationship-add
+  elementId: api.tag.admin::aggregates::api.operation.get-admin-event-processor-health
+  layerName: api
+  after:
+    source: api.tag.admin
+    target: api.operation.get-admin-event-processor-health
+    predicate: aggregates
+    layer: api
+    category: structural
+  timestamp: 2026-03-23T20:33:47.890Z
+  sequenceNumber: 57
+- type: relationship-add
+  elementId: api.tag.admin::aggregates::api.operation.get-admin-service-monitoring-stats
+  layerName: api
+  after:
+    source: api.tag.admin
+    target: api.operation.get-admin-service-monitoring-stats
+    predicate: aggregates
+    layer: api
+    category: structural
+  timestamp: 2026-03-23T20:33:48.533Z
+  sequenceNumber: 58
+- type: add
+  elementId: security.secureresource.ontology-api-endpoints
+  layerName: security
+  after:
+    id: 44cdee13-01e1-4357-b272-72632cf7a934
+    path: security.secureresource.ontology-api-endpoints
+    spec_node_id: security.secureresource
+    type: secureresource
+    layer_id: security
+    name: Ontology API Endpoints
+    description: Secure resource representing all ontology entity, relationship, and
+      graph API endpoints
+    source_reference:
+      provenance: inferred
+      locations:
+        - file: api/ontology_entities.py
+          symbol: router
+    metadata:
+      created_at: 2026-03-23T20:34:28.958Z
+      updated_at: 2026-03-23T20:34:28.958Z
+      version: 1
+  timestamp: 2026-03-23T20:34:28.995Z
+  sequenceNumber: 59
+- type: add
+  elementId: security.secureresource.sync-api-endpoints
+  layerName: security
+  after:
+    id: bd6cc218-7800-4357-bd21-288603cb3250
+    path: security.secureresource.sync-api-endpoints
+    spec_node_id: security.secureresource
+    type: secureresource
+    layer_id: security
+    name: Sync API Endpoints
+    description: Secure resource representing all data synchronization and
+      incremental sync API endpoints
+    source_reference:
+      provenance: inferred
+      locations:
+        - file: api/sync.py
+          symbol: router
+    metadata:
+      created_at: 2026-03-23T20:34:29.594Z
+      updated_at: 2026-03-23T20:34:29.594Z
+      version: 1
+  timestamp: 2026-03-23T20:34:29.625Z
+  sequenceNumber: 60
+- type: add
+  elementId: security.secureresource.admin-api-endpoints
+  layerName: security
+  after:
+    id: d13d678d-7a01-4096-900a-4d85ffcaa088
+    path: security.secureresource.admin-api-endpoints
+    spec_node_id: security.secureresource
+    type: secureresource
+    layer_id: security
+    name: Admin API Endpoints
+    description: Secure resource representing all administrative, health, and
+      configuration API endpoints
+    source_reference:
+      provenance: inferred
+      locations:
+        - file: api/admin
+          symbol: router
+    metadata:
+      created_at: 2026-03-23T20:34:30.244Z
+      updated_at: 2026-03-23T20:34:30.244Z
+      version: 1
+  timestamp: 2026-03-23T20:34:30.275Z
+  sequenceNumber: 61
+- type: relationship-add
+  elementId: security.securitypolicy.api-key-authentication-policy::governs::security.secureresource.ontology-api-endpoints
+  layerName: security
+  after:
+    source: security.securitypolicy.api-key-authentication-policy
+    target: security.secureresource.ontology-api-endpoints
+    predicate: governs
+    layer: security
+    category: structural
+  timestamp: 2026-03-23T20:34:35.063Z
+  sequenceNumber: 62
+- type: relationship-add
+  elementId: security.securitypolicy.cors-policy::governs::security.secureresource.ontology-api-endpoints
+  layerName: security
+  after:
+    source: security.securitypolicy.cors-policy
+    target: security.secureresource.ontology-api-endpoints
+    predicate: governs
+    layer: security
+    category: structural
+  timestamp: 2026-03-23T20:34:35.665Z
+  sequenceNumber: 63
+- type: relationship-add
+  elementId: security.securitypolicy.error-message-sanitization-policy::governs::security.secureresource.ontology-api-endpoints
+  layerName: security
+  after:
+    source: security.securitypolicy.error-message-sanitization-policy
+    target: security.secureresource.ontology-api-endpoints
+    predicate: governs
+    layer: security
+    category: structural
+  timestamp: 2026-03-23T20:34:36.270Z
+  sequenceNumber: 64
+- type: relationship-add
+  elementId: security.securitypolicy.api-key-authentication-policy::governs::security.secureresource.sync-api-endpoints
+  layerName: security
+  after:
+    source: security.securitypolicy.api-key-authentication-policy
+    target: security.secureresource.sync-api-endpoints
+    predicate: governs
+    layer: security
+    category: structural
+  timestamp: 2026-03-23T20:34:39.712Z
+  sequenceNumber: 65
+- type: relationship-add
+  elementId: security.securitypolicy.cors-policy::governs::security.secureresource.sync-api-endpoints
+  layerName: security
+  after:
+    source: security.securitypolicy.cors-policy
+    target: security.secureresource.sync-api-endpoints
+    predicate: governs
+    layer: security
+    category: structural
+  timestamp: 2026-03-23T20:34:40.325Z
+  sequenceNumber: 66
+- type: relationship-add
+  elementId: security.securitypolicy.error-message-sanitization-policy::governs::security.secureresource.sync-api-endpoints
+  layerName: security
+  after:
+    source: security.securitypolicy.error-message-sanitization-policy
+    target: security.secureresource.sync-api-endpoints
+    predicate: governs
+    layer: security
+    category: structural
+  timestamp: 2026-03-23T20:34:40.952Z
+  sequenceNumber: 67
+- type: relationship-add
+  elementId: security.securitypolicy.api-key-authentication-policy::governs::security.secureresource.admin-api-endpoints
+  layerName: security
+  after:
+    source: security.securitypolicy.api-key-authentication-policy
+    target: security.secureresource.admin-api-endpoints
+    predicate: governs
+    layer: security
+    category: structural
+  timestamp: 2026-03-23T20:34:45.718Z
+  sequenceNumber: 68
+- type: relationship-add
+  elementId: security.securitypolicy.cors-policy::governs::security.secureresource.admin-api-endpoints
+  layerName: security
+  after:
+    source: security.securitypolicy.cors-policy
+    target: security.secureresource.admin-api-endpoints
+    predicate: governs
+    layer: security
+    category: structural
+  timestamp: 2026-03-23T20:34:46.340Z
+  sequenceNumber: 69
+- type: relationship-add
+  elementId: security.securitypolicy.error-message-sanitization-policy::governs::security.secureresource.admin-api-endpoints
+  layerName: security
+  after:
+    source: security.securitypolicy.error-message-sanitization-policy
+    target: security.secureresource.admin-api-endpoints
+    predicate: governs
+    layer: security
+    category: structural
+  timestamp: 2026-03-23T20:34:46.943Z
+  sequenceNumber: 70
+- type: relationship-add
+  elementId: data-model.schemadefinition.pipeline-flavor-execution::references::data-model.schemadefinition.pipeline-configuration
+  layerName: data-model
+  after:
+    source: data-model.schemadefinition.pipeline-flavor-execution
+    target: data-model.schemadefinition.pipeline-configuration
+    predicate: references
+    layer: data-model
+    category: structural
+  timestamp: 2026-03-23T20:34:54.904Z
+  sequenceNumber: 71
+- type: relationship-add
+  elementId: data-model.schemadefinition.ragpipeline-run::references::data-model.schemadefinition.ragobservability-trace
+  layerName: data-model
+  after:
+    source: data-model.schemadefinition.ragpipeline-run
+    target: data-model.schemadefinition.ragobservability-trace
+    predicate: references
+    layer: data-model
+    category: structural
+  timestamp: 2026-03-23T20:35:07.543Z
+  sequenceNumber: 72
+- type: relationship-add
+  elementId: data-model.schemadefinition.entity-version::references::data-model.schemadefinition.ontology-entity
+  layerName: data-model
+  after:
+    source: data-model.schemadefinition.entity-version
+    target: data-model.schemadefinition.ontology-entity
+    predicate: references
+    layer: data-model
+    category: structural
+  timestamp: 2026-03-23T20:35:11.326Z
+  sequenceNumber: 73
+- type: relationship-add
+  elementId: data-model.schemadefinition.conflict::references::data-model.schemadefinition.changeset
+  layerName: data-model
+  after:
+    source: data-model.schemadefinition.conflict
+    target: data-model.schemadefinition.changeset
+    predicate: references
+    layer: data-model
+    category: structural
+  timestamp: 2026-03-23T20:35:12.010Z
+  sequenceNumber: 74
+- type: relationship-add
+  elementId: data-model.schemadefinition.ontology-mapping::references::data-model.schemadefinition.external-reference
+  layerName: data-model
+  after:
+    source: data-model.schemadefinition.ontology-mapping
+    target: data-model.schemadefinition.external-reference
+    predicate: references
+    layer: data-model
+    category: structural
+  timestamp: 2026-03-23T20:35:12.664Z
+  sequenceNumber: 75
+- type: relationship-delete
+  elementId: data-model.schemadefinition.ragpipeline-run::specializes::data-model.schemadefinition.ragobservability-trace
+  layerName: data-model
+  before:
+    source: data-model.schemadefinition.ragpipeline-run
+    target: data-model.schemadefinition.ragobservability-trace
+    predicate: specializes
+    layer: data-model
+  timestamp: 2026-03-23T20:35:29.602Z
+  sequenceNumber: 76
+- type: relationship-delete
+  elementId: data-model.schemadefinition.pipeline-flavor-execution::specializes::data-model.schemadefinition.pipeline-flavor-execution
+  layerName: data-model
+  before:
+    source: data-model.schemadefinition.pipeline-flavor-execution
+    target: data-model.schemadefinition.pipeline-flavor-execution
+    predicate: specializes
+    layer: data-model
+  timestamp: 2026-03-23T20:35:33.588Z
+  sequenceNumber: 77
+- type: relationship-delete
+  elementId: data-model.schemadefinition.conflict::specializes::data-model.schemadefinition.changeset
+  layerName: data-model
+  before:
+    source: data-model.schemadefinition.conflict
+    target: data-model.schemadefinition.changeset
+    predicate: specializes
+    layer: data-model
+  timestamp: 2026-03-23T20:35:34.248Z
+  sequenceNumber: 78
+- type: relationship-delete
+  elementId: data-model.schemadefinition.entity-version::specializes::data-model.schemadefinition.ontology-entity
+  layerName: data-model
+  before:
+    source: data-model.schemadefinition.entity-version
+    target: data-model.schemadefinition.ontology-entity
+    predicate: specializes
+    layer: data-model
+  timestamp: 2026-03-23T20:35:34.919Z
+  sequenceNumber: 79
+- type: relationship-delete
+  elementId: data-model.schemadefinition.ontology-mapping::specializes::data-model.schemadefinition.external-reference
+  layerName: data-model
+  before:
+    source: data-model.schemadefinition.ontology-mapping
+    target: data-model.schemadefinition.external-reference
+    predicate: specializes
+    layer: data-model
+  timestamp: 2026-03-23T20:35:35.591Z
+  sequenceNumber: 80
+- type: relationship-add
+  elementId: application.applicationcomponent.service-factory::realizes::application.applicationservice.ontology-entity-service
+  layerName: application
+  after:
+    source: application.applicationcomponent.service-factory
+    target: application.applicationservice.ontology-entity-service
+    predicate: realizes
+    layer: application
+    category: structural
+  timestamp: 2026-03-23T20:35:47.729Z
+  sequenceNumber: 81
+- type: relationship-add
+  elementId: application.applicationcomponent.service-factory::realizes::application.applicationservice.graph-service
+  layerName: application
+  after:
+    source: application.applicationcomponent.service-factory
+    target: application.applicationservice.graph-service
+    predicate: realizes
+    layer: application
+    category: structural
+  timestamp: 2026-03-23T20:35:50.855Z
+  sequenceNumber: 82
+- type: relationship-delete
+  elementId: application.applicationcomponent.service-factory::realizes::application.applicationservice.ontology-entity-service
+  layerName: application
+  before:
+    source: application.applicationcomponent.service-factory
+    target: application.applicationservice.ontology-entity-service
+    predicate: realizes
+    layer: application
+  timestamp: 2026-03-23T20:36:15.583Z
+  sequenceNumber: 83
+- type: relationship-delete
+  elementId: application.applicationcomponent.service-factory::realizes::application.applicationservice.graph-service
+  layerName: application
+  before:
+    source: application.applicationcomponent.service-factory
+    target: application.applicationservice.graph-service
+    predicate: realizes
+    layer: application
+  timestamp: 2026-03-23T20:36:16.197Z
+  sequenceNumber: 84
+- type: update
+  elementId: ux.dataconfig.entity-list-data-config
+  layerName: ux
+  before:
+    id: 3f6a34ae-be9b-464e-8d11-633ceb5257e6
+    path: ux.dataconfig.entity-list-data-config
+    spec_node_id: ux.dataconfig
+    type: dataconfig
+    layer_id: ux
+    name: Entity List Data Config
+    description: Data binding configuration wiring the TanStack Query API hooks to
+      the entity list table component
+    attributes:
+      target: node-table
+      path: /api/ontology_entities
+    source_reference: &a1
+      provenance: extracted
+      locations:
+        - file: ../../ux/src/api/hooks
+    metadata: &a2
+      created_at: 2026-03-23T12:30:20.667Z
+      updated_at: 2026-03-23T12:30:20.667Z
+      version: 1
+  after:
+    id: 3f6a34ae-be9b-464e-8d11-633ceb5257e6
+    path: ux.dataconfig.entity-list-data-config
+    spec_node_id: ux.dataconfig
+    type: dataconfig
+    layer_id: ux
+    name: Entity List Data Config
+    description: Data binding configuration wiring the TanStack Query API hooks to
+      the entity list table component
+    attributes:
+      source: api
+      target: entities
+    source_reference: *a1
+    metadata: *a2
+  timestamp: 2026-03-23T20:36:38.991Z
+  sequenceNumber: 85

@@ -1,0 +1,44 @@
+data-model.schemaproperty.node-type-enum:
+  id: dbc31ea1-bcc6-4bf9-9d7d-c76fb5e454aa
+  path: data-model.schemaproperty.node-type-enum
+  spec_node_id: data-model.schemaproperty
+  type: schemaproperty
+  layer_id: data-model
+  name: node_type enum
+  description: "Discriminator property on OntologyEntity: taxonomy |
+    concept_scheme | class | individual"
+  attributes:
+    type: string
+    enum: taxonomy,concept_scheme,class,individual
+    description: Entity node type discriminator
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: domain/ontology/value_objects.py
+        symbol: NodeType
+  metadata:
+    created_at: 2026-03-23T12:26:32.889Z
+    updated_at: 2026-03-23T12:26:32.889Z
+    version: 1
+data-model.schemaproperty.title-embedding-blob:
+  id: 53fee10a-7585-44eb-86e4-2c5eb114d53c
+  path: data-model.schemaproperty.title-embedding-blob
+  spec_node_id: data-model.schemaproperty
+  type: schemaproperty
+  layer_id: data-model
+  name: title_embedding blob
+  description: Binary blob storing the SentenceTransformer vector embedding of the
+    entity title for similarity search
+  attributes:
+    type: string
+    format: binary
+    description: Vector embedding of entity title
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: database/models.py
+        symbol: OntologyEntity.title_embedding
+  metadata:
+    created_at: 2026-03-23T12:26:33.346Z
+    updated_at: 2026-03-23T12:26:33.346Z
+    version: 1

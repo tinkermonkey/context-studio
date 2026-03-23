@@ -1,0 +1,23 @@
+security.auditconfig.change-event-audit-configuration:
+  id: c12b1451-9cb0-4f23-b51a-5395feaf8218
+  path: security.auditconfig.change-event-audit-configuration
+  spec_node_id: security.auditconfig
+  type: auditconfig
+  layer_id: security
+  name: Change Event Audit Configuration
+  description: "Audit configuration: all ontology entity create/update/delete
+    operations are logged to change_events with old/new data JSON"
+  attributes:
+    level: detailed
+    sanitizeFields: "[]"
+    enabled: true
+    includePayload: true
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: database/models.py
+        symbol: ChangeEvent
+  metadata:
+    created_at: 2026-03-23T12:38:28.612Z
+    updated_at: 2026-03-23T12:38:28.612Z
+    version: 1

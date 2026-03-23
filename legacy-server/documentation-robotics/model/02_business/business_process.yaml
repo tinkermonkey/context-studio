@@ -1,0 +1,105 @@
+business.businessprocess.ontology-authoring-process:
+  id: 93fdc223-5856-43e8-9e5b-baef96d95b04
+  path: business.businessprocess.ontology-authoring-process
+  spec_node_id: business.businessprocess
+  type: businessprocess
+  layer_id: business
+  name: Ontology Authoring Process
+  description: "Business process for creating and editing the knowledge graph
+    hierarchy: create taxonomy -> add concept schemes -> define classes -> link
+    relationships"
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: api/ontology_entities.py
+  metadata:
+    created_at: 2026-03-23T12:39:55.676Z
+    updated_at: 2026-03-23T12:39:55.676Z
+    version: 1
+business.businessprocess.knowledge-extraction-process:
+  id: 9f72ff3e-1029-4c5d-b347-b0143f1c99ef
+  path: business.businessprocess.knowledge-extraction-process
+  spec_node_id: business.businessprocess
+  type: businessprocess
+  layer_id: business
+  name: Knowledge Extraction Process
+  description: "Business process for extracting ontology entities from text: input
+    text -> NLP analysis -> candidate extraction -> LLM enrichment -> entity
+    creation"
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: rag/rag_pipeline_service.py
+  metadata:
+    created_at: 2026-03-23T12:39:56.161Z
+    updated_at: 2026-03-23T12:39:56.161Z
+    version: 1
+business.businessprocess.changeset-review-and-merge-process:
+  id: dfabf396-ff2c-429c-bf0f-9a4f1253fa40
+  path: business.businessprocess.changeset-review-and-merge-process
+  spec_node_id: business.businessprocess
+  type: businessprocess
+  layer_id: business
+  name: Changeset Review and Merge Process
+  description: "Collaborative business process: author creates changeset -> makes
+    edits -> pushes changeset -> reviewers approve -> changeset merged via CRDT"
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: services/changeset_manager.py
+  metadata:
+    created_at: 2026-03-23T12:39:56.646Z
+    updated_at: 2026-03-23T12:39:56.646Z
+    version: 1
+business.businessprocess.predicate-discovery-and-enrichment-process:
+  id: 0090d742-2baa-4b5f-9392-763e5c0b08c5
+  path: business.businessprocess.predicate-discovery-and-enrichment-process
+  spec_node_id: business.businessprocess
+  type: businessprocess
+  layer_id: business
+  name: Predicate Discovery and Enrichment Process
+  description: Process for discovering, classifying, and enriching predicates from
+    ontology content and external sources
+  metadata:
+    created_at: 2026-03-23T19:29:14.542Z
+    updated_at: 2026-03-23T19:29:14.542Z
+    version: 1
+business.businessprocess.reference-knowledge-lookup-process:
+  id: bfbc4cfb-132e-4c25-953a-08d027401792
+  path: business.businessprocess.reference-knowledge-lookup-process
+  spec_node_id: business.businessprocess
+  type: businessprocess
+  layer_id: business
+  name: Reference Knowledge Lookup Process
+  description: Process for querying external knowledge sources and enriching
+    ontology entities with reference data
+  metadata:
+    created_at: 2026-03-23T19:29:15.149Z
+    updated_at: 2026-03-23T19:29:15.149Z
+    version: 1
+business.businessprocess.system-administration-process:
+  id: dfaa60ba-1bb9-4a0f-9fc2-2b755ab44b2c
+  path: business.businessprocess.system-administration-process
+  spec_node_id: business.businessprocess
+  type: businessprocess
+  layer_id: business
+  name: System Administration Process
+  description: Process for configuration management, schema migration, and
+    operational health monitoring
+  metadata:
+    created_at: 2026-03-23T19:29:15.747Z
+    updated_at: 2026-03-23T19:29:15.747Z
+    version: 1
+business.businessprocess.rag-pipeline-experimentation-process:
+  id: d5fc5322-e882-47af-9b3b-aaa8a6aa2b43
+  path: business.businessprocess.rag-pipeline-experimentation-process
+  spec_node_id: business.businessprocess
+  type: businessprocess
+  layer_id: business
+  name: RAG Pipeline Experimentation Process
+  description: Process for creating test paragraphs, annotating expected entities,
+    and running comparative RAG pipeline tests
+  metadata:
+    created_at: 2026-03-23T19:29:16.359Z
+    updated_at: 2026-03-23T19:29:16.359Z
+    version: 1

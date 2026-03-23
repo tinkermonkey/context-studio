@@ -1,0 +1,22 @@
+testing.coveragerequirement.each-partition-must-have-at-least-one-test:
+  id: 784b2daa-a159-4f6b-b030-d10e519db0a0
+  path: testing.coveragerequirement.each-partition-must-have-at-least-one-test
+  spec_node_id: testing.coveragerequirement
+  type: coveragerequirement
+  layer_id: testing
+  name: Each Partition Must Have At Least One Test
+  description: "Coverage requirement applying each-choice criterion: each input
+    partition (node_type, embedding presence, parent presence) must be exercised
+    by at least one test case"
+  attributes:
+    coverageCriteria: each-choice
+    priority: critical
+    description: Each valid/invalid partition class must have at least one test
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: tests/unit_tests
+  metadata:
+    created_at: 2026-03-23T12:36:23.974Z
+    updated_at: 2026-03-23T12:36:23.974Z
+    version: 1

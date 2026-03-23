@@ -1,0 +1,591 @@
+- type: add
+  elementId: business.businessservice.ontology-management
+  layerName: business
+  after:
+    id: d78a4da2-81c5-4117-87f6-cf44f116fceb
+    path: business.businessservice.ontology-management
+    spec_node_id: business.businessservice
+    type: businessservice
+    layer_id: business
+    name: Ontology Management
+    description: "Business service: Create, organize, and maintain a hierarchical
+      knowledge graph of taxonomies, concept schemes, and classes with external
+      reference links"
+    attributes:
+      documentation: Inferred from OntologyEntityService and /api/ontology_entities
+        API grouping
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: services/ontology_entity_service.py
+    metadata:
+      created_at: 2026-03-23T12:39:30.258Z
+      updated_at: 2026-03-23T12:39:30.258Z
+      version: 1
+  timestamp: 2026-03-23T12:39:30.279Z
+  sequenceNumber: 0
+- type: add
+  elementId: business.businessservice.knowledge-enrichment
+  layerName: business
+  after:
+    id: bfa64d22-bc93-4c14-9386-d9f3b72ac748
+    path: business.businessservice.knowledge-enrichment
+    spec_node_id: business.businessservice
+    type: businessservice
+    layer_id: business
+    name: Knowledge Enrichment
+    description: "Business service: Automatically enrich ontology entities from
+      ConceptNet, DBpedia, Wikidata, and schema.org"
+    attributes:
+      documentation: Inferred from ReferenceService, NLPPipeline, and /api/reference,
+        /api/nlp API groupings
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: reference_api/service.py
+    metadata:
+      created_at: 2026-03-23T12:39:30.705Z
+      updated_at: 2026-03-23T12:39:30.705Z
+      version: 1
+  timestamp: 2026-03-23T12:39:30.727Z
+  sequenceNumber: 1
+- type: add
+  elementId: business.businessservice.llm-pipeline-execution
+  layerName: business
+  after:
+    id: 95a2080b-46e1-4f27-836c-37b7883fb0cf
+    path: business.businessservice.llm-pipeline-execution
+    spec_node_id: business.businessservice
+    type: businessservice
+    layer_id: business
+    name: LLM Pipeline Execution
+    description: "Business service: Configure and execute LLM inference pipelines
+      for automated ontology entity enrichment and RAG extraction"
+    attributes:
+      documentation: Inferred from LLMService, PipelineConfiguration, and /api/llm,
+        /api/rag API groupings
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: llm/service.py
+    metadata:
+      created_at: 2026-03-23T12:39:31.176Z
+      updated_at: 2026-03-23T12:39:31.176Z
+      version: 1
+  timestamp: 2026-03-23T12:39:31.197Z
+  sequenceNumber: 2
+- type: add
+  elementId: business.businessservice.collaborative-version-control
+  layerName: business
+  after:
+    id: 84e25799-f8de-42b2-8d81-3bb28e294468
+    path: business.businessservice.collaborative-version-control
+    spec_node_id: business.businessservice
+    type: businessservice
+    layer_id: business
+    name: Collaborative Version Control
+    description: "Business service: Track changes, maintain version history, manage
+      collaborative changesets, and resolve conflicts in a shared knowledge
+      graph"
+    attributes:
+      documentation: Inferred from VersionManager, ChangesetManager, and
+        /api/version-management, /api/changeset-management API groupings
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: services/version_manager.py
+    metadata:
+      created_at: 2026-03-23T12:39:40.176Z
+      updated_at: 2026-03-23T12:39:40.176Z
+      version: 1
+  timestamp: 2026-03-23T12:39:40.212Z
+  sequenceNumber: 3
+- type: add
+  elementId: business.businessservice.dataset-management
+  layerName: business
+  after:
+    id: 1f59260d-5857-42bb-92ba-4597bc812bcf
+    path: business.businessservice.dataset-management
+    spec_node_id: business.businessservice
+    type: businessservice
+    layer_id: business
+    name: Dataset Management
+    description: "Business service: Create and switch between isolated SQLite
+      dataset workspaces for managing separate knowledge graph projects"
+    attributes:
+      documentation: Inferred from DatasetManagementProcess and /api/datasets API grouping
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: database/utils.py
+    metadata:
+      created_at: 2026-03-23T12:39:40.674Z
+      updated_at: 2026-03-23T12:39:40.674Z
+      version: 1
+  timestamp: 2026-03-23T12:39:40.695Z
+  sequenceNumber: 4
+- type: add
+  elementId: business.businessservice.graph-analytics
+  layerName: business
+  after:
+    id: 3bf081a4-f5b3-4dea-a1d9-78a736dbef92
+    path: business.businessservice.graph-analytics
+    spec_node_id: business.businessservice
+    type: businessservice
+    layer_id: business
+    name: Graph Analytics
+    description: "Business service: Compute graph metrics, run SPARQL queries, find
+      paths, and analyze the structural properties of the ontology"
+    attributes:
+      documentation: Inferred from GraphService, NetworkService, SPARQLService, and
+        /api/graph API grouping
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: graph/graph_service.py
+    metadata:
+      created_at: 2026-03-23T12:39:41.151Z
+      updated_at: 2026-03-23T12:39:41.151Z
+      version: 1
+  timestamp: 2026-03-23T12:39:41.175Z
+  sequenceNumber: 5
+- type: add
+  elementId: business.businessactor.knowledge-manager
+  layerName: business
+  after:
+    id: 3f613eb8-395c-44e0-9911-830c82abea6c
+    path: business.businessactor.knowledge-manager
+    spec_node_id: business.businessactor
+    type: businessactor
+    layer_id: business
+    name: Knowledge Manager
+    description: "Business actor: the person creating and curating the ontology
+      knowledge graph using Context Studio"
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: app.py
+    metadata:
+      created_at: 2026-03-23T12:39:47.504Z
+      updated_at: 2026-03-23T12:39:47.504Z
+      version: 1
+  timestamp: 2026-03-23T12:39:47.527Z
+  sequenceNumber: 6
+- type: add
+  elementId: business.businessactor.ai-agent
+  layerName: business
+  after:
+    id: 4afb2d49-e3f7-44ca-8daf-70ed52d2cfd4
+    path: business.businessactor.ai-agent
+    spec_node_id: business.businessactor
+    type: businessactor
+    layer_id: business
+    name: AI Agent
+    description: "Business actor: an automated AI agent or pipeline consuming the
+      knowledge graph via the REST API for RAG or reasoning tasks"
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: api/rag_pipeline.py
+    metadata:
+      created_at: 2026-03-23T12:39:47.988Z
+      updated_at: 2026-03-23T12:39:47.988Z
+      version: 1
+  timestamp: 2026-03-23T12:39:48.011Z
+  sequenceNumber: 7
+- type: add
+  elementId: business.businessrole.ontology-author
+  layerName: business
+  after:
+    id: e4a1fffd-6b05-4051-a870-4105176bc35c
+    path: business.businessrole.ontology-author
+    spec_node_id: business.businessrole
+    type: businessrole
+    layer_id: business
+    name: Ontology Author
+    description: Business role for actors authorized to create, edit, and delete
+      ontology entities and manage relationships
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: config.json
+    metadata:
+      created_at: 2026-03-23T12:39:48.477Z
+      updated_at: 2026-03-23T12:39:48.477Z
+      version: 1
+  timestamp: 2026-03-23T12:39:48.500Z
+  sequenceNumber: 8
+- type: add
+  elementId: business.businessprocess.ontology-authoring-process
+  layerName: business
+  after:
+    id: 93fdc223-5856-43e8-9e5b-baef96d95b04
+    path: business.businessprocess.ontology-authoring-process
+    spec_node_id: business.businessprocess
+    type: businessprocess
+    layer_id: business
+    name: Ontology Authoring Process
+    description: "Business process for creating and editing the knowledge graph
+      hierarchy: create taxonomy -> add concept schemes -> define classes ->
+      link relationships"
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: api/ontology_entities.py
+    metadata:
+      created_at: 2026-03-23T12:39:55.676Z
+      updated_at: 2026-03-23T12:39:55.676Z
+      version: 1
+  timestamp: 2026-03-23T12:39:55.702Z
+  sequenceNumber: 9
+- type: add
+  elementId: business.businessprocess.knowledge-extraction-process
+  layerName: business
+  after:
+    id: 9f72ff3e-1029-4c5d-b347-b0143f1c99ef
+    path: business.businessprocess.knowledge-extraction-process
+    spec_node_id: business.businessprocess
+    type: businessprocess
+    layer_id: business
+    name: Knowledge Extraction Process
+    description: "Business process for extracting ontology entities from text: input
+      text -> NLP analysis -> candidate extraction -> LLM enrichment -> entity
+      creation"
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: rag/rag_pipeline_service.py
+    metadata:
+      created_at: 2026-03-23T12:39:56.161Z
+      updated_at: 2026-03-23T12:39:56.161Z
+      version: 1
+  timestamp: 2026-03-23T12:39:56.185Z
+  sequenceNumber: 10
+- type: add
+  elementId: business.businessprocess.changeset-review-and-merge-process
+  layerName: business
+  after:
+    id: dfabf396-ff2c-429c-bf0f-9a4f1253fa40
+    path: business.businessprocess.changeset-review-and-merge-process
+    spec_node_id: business.businessprocess
+    type: businessprocess
+    layer_id: business
+    name: Changeset Review and Merge Process
+    description: "Collaborative business process: author creates changeset -> makes
+      edits -> pushes changeset -> reviewers approve -> changeset merged via
+      CRDT"
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: services/changeset_manager.py
+    metadata:
+      created_at: 2026-03-23T12:39:56.646Z
+      updated_at: 2026-03-23T12:39:56.646Z
+      version: 1
+  timestamp: 2026-03-23T12:39:56.669Z
+  sequenceNumber: 11
+- type: add
+  elementId: business.businessobject.knowledge-graph
+  layerName: business
+  after:
+    id: ce605338-d197-4558-8843-a7ad38a4768f
+    path: business.businessobject.knowledge-graph
+    spec_node_id: business.businessobject
+    type: businessobject
+    layer_id: business
+    name: Knowledge Graph
+    description: "Primary business object: the structured ontology knowledge graph
+      composed of taxonomies, concept schemes, classes, and typed relationships"
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: domain/ontology/entities.py
+    metadata:
+      created_at: 2026-03-23T12:40:03.382Z
+      updated_at: 2026-03-23T12:40:03.382Z
+      version: 1
+  timestamp: 2026-03-23T12:40:03.408Z
+  sequenceNumber: 12
+- type: add
+  elementId: business.businessobject.pipeline-configuration
+  layerName: business
+  after:
+    id: 2c557bad-8fd6-439b-bea2-50379da3c109
+    path: business.businessobject.pipeline-configuration
+    spec_node_id: business.businessobject
+    type: businessobject
+    layer_id: business
+    name: Pipeline Configuration
+    description: Business object representing a reusable LLM pipeline configuration
+      with provider, model, and prompt templates
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: domain/pipeline/entities.py
+    metadata:
+      created_at: 2026-03-23T12:40:03.875Z
+      updated_at: 2026-03-23T12:40:03.875Z
+      version: 1
+  timestamp: 2026-03-23T12:40:03.900Z
+  sequenceNumber: 13
+- type: add
+  elementId: business.product.context-studio
+  layerName: business
+  after:
+    id: 68e50a0d-67bc-47e7-81b3-c64e937179e5
+    path: business.product.context-studio
+    spec_node_id: business.product
+    type: product
+    layer_id: business
+    name: Context Studio
+    description: "Product: local-first knowledge graph management application
+      enabling ontology authoring, enrichment, and RAG for humans and agents"
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: app.py
+    metadata:
+      created_at: 2026-03-23T12:40:04.404Z
+      updated_at: 2026-03-23T12:40:04.404Z
+      version: 1
+  timestamp: 2026-03-23T12:40:04.429Z
+  sequenceNumber: 14
+- type: add
+  elementId: business.businessfunction.entity-enrichment
+  layerName: business
+  after:
+    id: 8a2009f9-c67a-4aa4-902c-1d36fbd91c84
+    path: business.businessfunction.entity-enrichment
+    spec_node_id: business.businessfunction
+    type: businessfunction
+    layer_id: business
+    name: Entity Enrichment
+    description: "Core business function: automatically enrich ontology entities
+      with definitions, synonyms, and cross-references from external knowledge
+      bases"
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: reference_api/service.py
+          symbol: enrich_entity
+    metadata:
+      created_at: 2026-03-23T12:42:12.251Z
+      updated_at: 2026-03-23T12:42:12.251Z
+      version: 1
+  timestamp: 2026-03-23T12:42:12.275Z
+  sequenceNumber: 15
+- type: add
+  elementId: business.businessfunction.semantic-search
+  layerName: business
+  after:
+    id: c3669ecb-868a-4ee4-9323-9f7a0fdfae78
+    path: business.businessfunction.semantic-search
+    spec_node_id: business.businessfunction
+    type: businessfunction
+    layer_id: business
+    name: Semantic Search
+    description: "Core business function: vector-based similarity search across
+      ontology entities using sentence transformer embeddings"
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: services/ontology_entity_service.py
+          symbol: search_by_similarity
+    metadata:
+      created_at: 2026-03-23T12:42:12.750Z
+      updated_at: 2026-03-23T12:42:12.750Z
+      version: 1
+  timestamp: 2026-03-23T12:42:12.774Z
+  sequenceNumber: 16
+- type: add
+  elementId: business.businessfunction.conflict-resolution
+  layerName: business
+  after:
+    id: bd2171ba-9d9c-4d93-9399-a2aa7bd8ee5e
+    path: business.businessfunction.conflict-resolution
+    spec_node_id: business.businessfunction
+    type: businessfunction
+    layer_id: business
+    name: Conflict Resolution
+    description: "Core business function: detect and resolve merge conflicts in
+      collaborative changeset operations using CRDT strategies"
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: services/crdt_merge_engine.py
+          symbol: CRDTMergeEngine
+    metadata:
+      created_at: 2026-03-23T12:42:17.895Z
+      updated_at: 2026-03-23T12:42:17.895Z
+      version: 1
+  timestamp: 2026-03-23T12:42:17.920Z
+  sequenceNumber: 17
+- type: add
+  elementId: business.businessinterface.rest-api-interface
+  layerName: business
+  after:
+    id: fedcdd2e-a379-4d3b-8384-4e685b6dd49d
+    path: business.businessinterface.rest-api-interface
+    spec_node_id: business.businessinterface
+    type: businessinterface
+    layer_id: business
+    name: REST API Interface
+    description: "Business interface: the HTTP/JSON REST API surface through which
+      external actors and agents interact with the knowledge graph"
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: app.py
+          symbol: create_app
+    metadata:
+      created_at: 2026-03-23T12:42:18.402Z
+      updated_at: 2026-03-23T12:42:18.402Z
+      version: 1
+  timestamp: 2026-03-23T12:42:18.429Z
+  sequenceNumber: 18
+- type: add
+  elementId: business.businesscollaboration.knowledge-graph-collaboration
+  layerName: business
+  after:
+    id: 2aedec6d-384e-4c1b-917d-a7f11da4ae7b
+    path: business.businesscollaboration.knowledge-graph-collaboration
+    spec_node_id: business.businesscollaboration
+    type: businesscollaboration
+    layer_id: business
+    name: Knowledge Graph Collaboration
+    description: Business collaboration between Knowledge Managers sharing a
+      knowledge graph through changeset-based editing and CRDT-based merging
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: services/changeset_manager.py
+          symbol: ChangesetManager
+    metadata:
+      created_at: 2026-03-23T12:42:23.940Z
+      updated_at: 2026-03-23T12:42:23.940Z
+      version: 1
+  timestamp: 2026-03-23T12:42:23.965Z
+  sequenceNumber: 19
+- type: add
+  elementId: business.businessinteraction.rag-knowledge-retrieval
+  layerName: business
+  after:
+    id: 7bc5da09-9883-4d73-bfe8-a15798c1e473
+    path: business.businessinteraction.rag-knowledge-retrieval
+    spec_node_id: business.businessinteraction
+    type: businessinteraction
+    layer_id: business
+    name: RAG Knowledge Retrieval
+    description: "Business interaction: AI agents query the knowledge graph via
+      vector similarity search to retrieve contextually relevant entities for
+      RAG pipelines"
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: rag/rag_pipeline_service.py
+          symbol: RAGPipelineService
+    metadata:
+      created_at: 2026-03-23T12:42:24.452Z
+      updated_at: 2026-03-23T12:42:24.452Z
+      version: 1
+  timestamp: 2026-03-23T12:42:24.482Z
+  sequenceNumber: 20
+- type: add
+  elementId: business.businessevent.entity-changed-event
+  layerName: business
+  after:
+    id: 29b3459f-d485-472a-88a5-d00eb8af99ca
+    path: business.businessevent.entity-changed-event
+    spec_node_id: business.businessevent
+    type: businessevent
+    layer_id: business
+    name: Entity Changed Event
+    description: Business event triggered when an ontology entity is created,
+      updated, or deleted; recorded in the change_events audit trail
+    attributes:
+      type: internal
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: domain/ontology/events.py
+          symbol: OntologyEntityChanged
+    metadata:
+      created_at: 2026-03-23T12:42:33.481Z
+      updated_at: 2026-03-23T12:42:33.481Z
+      version: 1
+  timestamp: 2026-03-23T12:42:33.506Z
+  sequenceNumber: 21
+- type: add
+  elementId: business.businessevent.sync-completed-event
+  layerName: business
+  after:
+    id: 8c514784-46bc-4391-a6ce-3f6a4f92974b
+    path: business.businessevent.sync-completed-event
+    spec_node_id: business.businessevent
+    type: businessevent
+    layer_id: business
+    name: Sync Completed Event
+    description: Business event signalling successful synchronisation of the local
+      knowledge graph to remote S3 storage
+    attributes:
+      type: external
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: sync/s3_sync_manager.py
+          symbol: S3SyncManager
+    metadata:
+      created_at: 2026-03-23T12:42:33.975Z
+      updated_at: 2026-03-23T12:42:33.975Z
+      version: 1
+  timestamp: 2026-03-23T12:42:34.000Z
+  sequenceNumber: 22
+- type: add
+  elementId: business.contract.open-api-contract
+  layerName: business
+  after:
+    id: 81155120-9a04-4f32-a6c4-c8cb49c0c7d2
+    path: business.contract.open-api-contract
+    spec_node_id: business.contract
+    type: contract
+    layer_id: business
+    name: OpenAPI Contract
+    description: "Business contract defining the REST API surface for Context
+      Studio: endpoint signatures, request/response schemas, and versioning
+      commitments"
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: api/ontology_entities.py
+          symbol: router
+    metadata:
+      created_at: 2026-03-23T12:42:41.527Z
+      updated_at: 2026-03-23T12:42:41.527Z
+      version: 1
+  timestamp: 2026-03-23T12:42:41.553Z
+  sequenceNumber: 23
+- type: add
+  elementId: business.representation.json-knowledge-graph-export
+  layerName: business
+  after:
+    id: 8d1221dd-0bab-41fd-b093-f85c80d897b2
+    path: business.representation.json-knowledge-graph-export
+    spec_node_id: business.representation
+    type: representation
+    layer_id: business
+    name: JSON Knowledge Graph Export
+    description: Representation of the knowledge graph as a structured JSON document
+      for interoperability and agent consumption
+    attributes:
+      format: json
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: api/ontology_entities.py
+          symbol: get_ontology_entities
+    metadata:
+      created_at: 2026-03-23T12:42:42.029Z
+      updated_at: 2026-03-23T12:42:42.029Z
+      version: 1
+  timestamp: 2026-03-23T12:42:42.055Z
+  sequenceNumber: 24

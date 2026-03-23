@@ -1,0 +1,55 @@
+business.businessfunction.entity-enrichment:
+  id: 8a2009f9-c67a-4aa4-902c-1d36fbd91c84
+  path: business.businessfunction.entity-enrichment
+  spec_node_id: business.businessfunction
+  type: businessfunction
+  layer_id: business
+  name: Entity Enrichment
+  description: "Core business function: automatically enrich ontology entities
+    with definitions, synonyms, and cross-references from external knowledge
+    bases"
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: reference_api/service.py
+        symbol: enrich_entity
+  metadata:
+    created_at: 2026-03-23T12:42:12.251Z
+    updated_at: 2026-03-23T12:42:12.251Z
+    version: 1
+business.businessfunction.semantic-search:
+  id: c3669ecb-868a-4ee4-9323-9f7a0fdfae78
+  path: business.businessfunction.semantic-search
+  spec_node_id: business.businessfunction
+  type: businessfunction
+  layer_id: business
+  name: Semantic Search
+  description: "Core business function: vector-based similarity search across
+    ontology entities using sentence transformer embeddings"
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: services/ontology_entity_service.py
+        symbol: search_by_similarity
+  metadata:
+    created_at: 2026-03-23T12:42:12.750Z
+    updated_at: 2026-03-23T12:42:12.750Z
+    version: 1
+business.businessfunction.conflict-resolution:
+  id: bd2171ba-9d9c-4d93-9399-a2aa7bd8ee5e
+  path: business.businessfunction.conflict-resolution
+  spec_node_id: business.businessfunction
+  type: businessfunction
+  layer_id: business
+  name: Conflict Resolution
+  description: "Core business function: detect and resolve merge conflicts in
+    collaborative changeset operations using CRDT strategies"
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: services/crdt_merge_engine.py
+        symbol: CRDTMergeEngine
+  metadata:
+    created_at: 2026-03-23T12:42:17.895Z
+    updated_at: 2026-03-23T12:42:17.895Z
+    version: 1

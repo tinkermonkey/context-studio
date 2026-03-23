@@ -1,0 +1,20 @@
+apm.dashboard.context-studio-monitoring-dashboard:
+  id: eaf5a1fc-2b55-4fae-9cc5-8db47ef2cea3
+  path: apm.dashboard.context-studio-monitoring-dashboard
+  spec_node_id: apm.dashboard
+  type: dashboard
+  layer_id: apm
+  name: Context Studio Monitoring Dashboard
+  description: Admin monitoring dashboard exposed via /api/admin endpoints for
+    service health, database stats, and event processor status
+  attributes:
+    tool: custom
+    description: Admin API dashboard for service health and performance monitoring
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: api/admin
+  metadata:
+    created_at: 2026-03-23T12:34:46.832Z
+    updated_at: 2026-03-23T12:34:46.832Z
+    version: 1

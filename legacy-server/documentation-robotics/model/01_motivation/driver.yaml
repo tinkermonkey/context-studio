@@ -1,0 +1,63 @@
+motivation.driver.growing-need-for-structured-ai-context:
+  id: 4f0974ea-e709-43cb-ba91-353a5db7d2d4
+  path: motivation.driver.growing-need-for-structured-ai-context
+  spec_node_id: motivation.driver
+  type: driver
+  layer_id: motivation
+  name: Growing Need for Structured AI Context
+  description: LLMs produce better outputs when grounded in structured, curated
+    domain knowledge; organisations need tooling to build and maintain that
+    knowledge
+  attributes:
+    category: market
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: rag/rag_pipeline_service.py
+        symbol: RAGPipelineService
+  metadata:
+    created_at: 2026-03-23T12:44:48.633Z
+    updated_at: 2026-03-23T12:44:48.633Z
+    version: 1
+motivation.driver.knowledge-fragmentation-across-tools:
+  id: c1874851-fb3f-41fb-9754-32c8e7a2391b
+  path: motivation.driver.knowledge-fragmentation-across-tools
+  spec_node_id: motivation.driver
+  type: driver
+  layer_id: motivation
+  name: Knowledge Fragmentation Across Tools
+  description: Domain knowledge is scattered across wikis, spreadsheets, and
+    documents; a structured local graph consolidates it into a machine-readable,
+    queryable form
+  attributes:
+    category: operational
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: app.py
+        symbol: create_app
+  metadata:
+    created_at: 2026-03-23T12:44:49.162Z
+    updated_at: 2026-03-23T12:44:49.162Z
+    version: 1
+motivation.driver.data-privacy-concerns-with-cloud-only-tools:
+  id: 9afa8d4c-c3c5-4dc2-bd60-68fe146f3e5b
+  path: motivation.driver.data-privacy-concerns-with-cloud-only-tools
+  spec_node_id: motivation.driver
+  type: driver
+  layer_id: motivation
+  name: Data Privacy Concerns with Cloud-Only Tools
+  description: Users with sensitive domain knowledge cannot use cloud-hosted
+    tools; a local-first application removes the privacy barrier to structured
+    knowledge management
+  attributes:
+    category: strategic
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: config.json
+        symbol: server.host
+  metadata:
+    created_at: 2026-03-23T12:44:58.293Z
+    updated_at: 2026-03-23T12:44:58.293Z
+    version: 1

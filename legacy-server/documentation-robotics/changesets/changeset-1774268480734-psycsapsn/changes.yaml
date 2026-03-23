@@ -1,0 +1,733 @@
+- type: add
+  elementId: technology.systemsoftware.fast-api
+  layerName: technology
+  after:
+    id: 65be91d0-c3af-40d3-a72e-279ec59004d0
+    path: technology.systemsoftware.fast-api
+    spec_node_id: technology.systemsoftware
+    type: systemsoftware
+    layer_id: technology
+    name: FastAPI
+    description: ASGI web framework for building the REST API (v0.116.0)
+    attributes:
+      softwareType: middleware
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: requirements.txt
+    metadata:
+      created_at: 2026-03-23T12:21:28.042Z
+      updated_at: 2026-03-23T12:21:28.042Z
+      version: 1
+  timestamp: 2026-03-23T12:21:28.066Z
+  sequenceNumber: 0
+- type: add
+  elementId: technology.systemsoftware.uvicorn
+  layerName: technology
+  after:
+    id: eabb665f-45b3-4394-94a0-5032913c5568
+    path: technology.systemsoftware.uvicorn
+    spec_node_id: technology.systemsoftware
+    type: systemsoftware
+    layer_id: technology
+    name: Uvicorn
+    description: ASGI server running the FastAPI application (v0.35.0)
+    attributes:
+      softwareType: middleware
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: requirements.txt
+    metadata:
+      created_at: 2026-03-23T12:21:28.444Z
+      updated_at: 2026-03-23T12:21:28.444Z
+      version: 1
+  timestamp: 2026-03-23T12:21:28.468Z
+  sequenceNumber: 1
+- type: add
+  elementId: technology.systemsoftware.python-3
+  layerName: technology
+  after:
+    id: a29393eb-7fee-4029-8136-311b7cbd8c8e
+    path: technology.systemsoftware.python-3
+    spec_node_id: technology.systemsoftware
+    type: systemsoftware
+    layer_id: technology
+    name: Python 3
+    description: Python 3 runtime — primary execution environment for the back-end server
+    attributes:
+      softwareType: middleware
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: requirements.txt
+    metadata:
+      created_at: 2026-03-23T12:21:34.080Z
+      updated_at: 2026-03-23T12:21:34.080Z
+      version: 1
+  timestamp: 2026-03-23T12:21:34.104Z
+  sequenceNumber: 2
+- type: add
+  elementId: technology.systemsoftware.sqlite
+  layerName: technology
+  after:
+    id: 49b5dd28-ca1d-4730-beb9-9d9247fbac68
+    path: technology.systemsoftware.sqlite
+    spec_node_id: technology.systemsoftware
+    type: systemsoftware
+    layer_id: technology
+    name: SQLite
+    description: Embedded relational database engine used for local.db (ontology),
+      operations.db (pipelines), reference.db, and reference_api_cache.db
+    attributes:
+      softwareType: dbms
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: config.json
+    metadata:
+      created_at: 2026-03-23T12:21:34.459Z
+      updated_at: 2026-03-23T12:21:34.459Z
+      version: 1
+  timestamp: 2026-03-23T12:21:34.483Z
+  sequenceNumber: 3
+- type: add
+  elementId: technology.systemsoftware.sqlite-vector
+  layerName: technology
+  after:
+    id: d1b06786-aebd-4108-95df-d5932b29d744
+    path: technology.systemsoftware.sqlite-vector
+    spec_node_id: technology.systemsoftware
+    type: systemsoftware
+    layer_id: technology
+    name: SQLiteVector
+    description: SQLite extension (sqlite-vec v0.1.6) enabling vector similarity
+      search over binary embeddings
+    attributes:
+      softwareType: dbms
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: requirements.txt
+    metadata:
+      created_at: 2026-03-23T12:21:34.847Z
+      updated_at: 2026-03-23T12:21:34.847Z
+      version: 1
+  timestamp: 2026-03-23T12:21:34.869Z
+  sequenceNumber: 4
+- type: add
+  elementId: technology.systemsoftware.sqlalchemy
+  layerName: technology
+  after:
+    id: 4f10139a-4da2-4289-a879-b6dffcc92933
+    path: technology.systemsoftware.sqlalchemy
+    spec_node_id: technology.systemsoftware
+    type: systemsoftware
+    layer_id: technology
+    name: SQLAlchemy
+    description: ORM and SQL toolkit (v2.0.41) providing the persistence adapter and
+      schema definition
+    attributes:
+      softwareType: middleware
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: requirements.txt
+    metadata:
+      created_at: 2026-03-23T12:21:40.611Z
+      updated_at: 2026-03-23T12:21:40.611Z
+      version: 1
+  timestamp: 2026-03-23T12:21:40.634Z
+  sequenceNumber: 5
+- type: add
+  elementId: technology.systemsoftware.lang-chain
+  layerName: technology
+  after:
+    id: cadbca34-c55e-431d-baaf-2faf811e4e47
+    path: technology.systemsoftware.lang-chain
+    spec_node_id: technology.systemsoftware
+    type: systemsoftware
+    layer_id: technology
+    name: LangChain
+    description: LLM orchestration framework (langchain + langchain-openai +
+      langchain-community) for LLM pipeline management and SQLite caching
+    attributes:
+      softwareType: middleware
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: requirements.txt
+    metadata:
+      created_at: 2026-03-23T12:21:41.035Z
+      updated_at: 2026-03-23T12:21:41.035Z
+      version: 1
+  timestamp: 2026-03-23T12:21:41.058Z
+  sequenceNumber: 6
+- type: add
+  elementId: technology.systemsoftware.duck-db
+  layerName: technology
+  after:
+    id: 9b958bfa-85e2-4b9b-bdba-ff71d06ae9d3
+    path: technology.systemsoftware.duck-db
+    spec_node_id: technology.systemsoftware
+    type: systemsoftware
+    layer_id: technology
+    name: DuckDB
+    description: Analytical SQL engine (v1.1+) used for sync analytics and changeset
+      analysis
+    attributes:
+      softwareType: dbms
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: requirements.txt
+    metadata:
+      created_at: 2026-03-23T12:21:41.428Z
+      updated_at: 2026-03-23T12:21:41.428Z
+      version: 1
+  timestamp: 2026-03-23T12:21:41.451Z
+  sequenceNumber: 7
+- type: add
+  elementId: technology.technologyservice.open-ai-api
+  layerName: technology
+  after:
+    id: b88bd2f7-6e0f-426f-a08e-367362ae9daf
+    path: technology.technologyservice.open-ai-api
+    spec_node_id: technology.technologyservice
+    type: technologyservice
+    layer_id: technology
+    name: OpenAI API
+    description: External LLM inference service (OpenAI) for entity enrichment and
+      RAG pipelines
+    attributes:
+      serviceType: compute
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: config.json
+    metadata:
+      created_at: 2026-03-23T12:21:52.212Z
+      updated_at: 2026-03-23T12:21:52.212Z
+      version: 1
+  timestamp: 2026-03-23T12:21:52.238Z
+  sequenceNumber: 8
+- type: add
+  elementId: technology.technologyservice.anthropic-api
+  layerName: technology
+  after:
+    id: 020a5015-29ea-42bd-b765-8e2d6a8c7c68
+    path: technology.technologyservice.anthropic-api
+    spec_node_id: technology.technologyservice
+    type: technologyservice
+    layer_id: technology
+    name: Anthropic API
+    description: External LLM inference service (Anthropic Claude) for entity
+      enrichment and RAG pipelines
+    attributes:
+      serviceType: compute
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: config.json
+    metadata:
+      created_at: 2026-03-23T12:21:52.619Z
+      updated_at: 2026-03-23T12:21:52.619Z
+      version: 1
+  timestamp: 2026-03-23T12:21:52.646Z
+  sequenceNumber: 9
+- type: add
+  elementId: technology.technologyservice.concept-net-api
+  layerName: technology
+  after:
+    id: acded5d7-e4e5-4bb6-bcca-2a8539b873ad
+    path: technology.technologyservice.concept-net-api
+    spec_node_id: technology.technologyservice
+    type: technologyservice
+    layer_id: technology
+    name: ConceptNet API
+    description: External knowledge graph service providing semantic relationships
+      for ontology enrichment
+    attributes:
+      serviceType: database
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: config.json
+    metadata:
+      created_at: 2026-03-23T12:21:53.032Z
+      updated_at: 2026-03-23T12:21:53.032Z
+      version: 1
+  timestamp: 2026-03-23T12:21:53.057Z
+  sequenceNumber: 10
+- type: add
+  elementId: technology.technologyservice.dbpedia-api
+  layerName: technology
+  after:
+    id: bd22c75a-6b15-49ca-becb-984a1fafbff9
+    path: technology.technologyservice.dbpedia-api
+    spec_node_id: technology.technologyservice
+    type: technologyservice
+    layer_id: technology
+    name: DBpedia API
+    description: External linked-data service (DBpedia lookup, SPARQL, and
+      Spotlight) for ontology enrichment
+    attributes:
+      serviceType: database
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: config.json
+    metadata:
+      created_at: 2026-03-23T12:21:58.765Z
+      updated_at: 2026-03-23T12:21:58.765Z
+      version: 1
+  timestamp: 2026-03-23T12:21:58.790Z
+  sequenceNumber: 11
+- type: add
+  elementId: technology.technologyservice.wikidata-api
+  layerName: technology
+  after:
+    id: 9861e210-c1e5-4ff3-ae9e-fc65f75e56bb
+    path: technology.technologyservice.wikidata-api
+    spec_node_id: technology.technologyservice
+    type: technologyservice
+    layer_id: technology
+    name: Wikidata API
+    description: External knowledge base SPARQL endpoint for ontology enrichment and
+      entity linking
+    attributes:
+      serviceType: database
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: config.json
+    metadata:
+      created_at: 2026-03-23T12:21:59.175Z
+      updated_at: 2026-03-23T12:21:59.175Z
+      version: 1
+  timestamp: 2026-03-23T12:21:59.201Z
+  sequenceNumber: 12
+- type: add
+  elementId: technology.technologyservice.aws-s3
+  layerName: technology
+  after:
+    id: d4791395-b51e-4402-a86b-af30caae8252
+    path: technology.technologyservice.aws-s3
+    spec_node_id: technology.technologyservice
+    type: technologyservice
+    layer_id: technology
+    name: AWS S3
+    description: Object storage service used for remote sync of datasets via DuckDB/Parquet
+    attributes:
+      serviceType: storage
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: config.json
+    metadata:
+      created_at: 2026-03-23T12:21:59.598Z
+      updated_at: 2026-03-23T12:21:59.598Z
+      version: 1
+  timestamp: 2026-03-23T12:21:59.624Z
+  sequenceNumber: 13
+- type: add
+  elementId: technology.artifact.localdb
+  layerName: technology
+  after:
+    id: 6aadad10-a02c-4bf0-93a0-bd72f1d24316
+    path: technology.artifact.localdb
+    spec_node_id: technology.artifact
+    type: artifact
+    layer_id: technology
+    name: local.db
+    description: Primary SQLite workspace database storing ontology_entities,
+      relationships, property_definitions, and change_events
+    attributes:
+      artifactType: file
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: config.json
+    metadata:
+      created_at: 2026-03-23T12:22:10.056Z
+      updated_at: 2026-03-23T12:22:10.056Z
+      version: 1
+  timestamp: 2026-03-23T12:22:10.085Z
+  sequenceNumber: 14
+- type: add
+  elementId: technology.artifact.operationsdb
+  layerName: technology
+  after:
+    id: 94a4e889-a21b-48c7-86d2-2d6bfa23a1c5
+    path: technology.artifact.operationsdb
+    spec_node_id: technology.artifact
+    type: artifact
+    layer_id: technology
+    name: operations.db
+    description: Operational SQLite database storing pipeline configurations,
+      executions, and background task management
+    attributes:
+      artifactType: file
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: config.json
+    metadata:
+      created_at: 2026-03-23T12:22:10.474Z
+      updated_at: 2026-03-23T12:22:10.474Z
+      version: 1
+  timestamp: 2026-03-23T12:22:10.503Z
+  sequenceNumber: 15
+- type: add
+  elementId: technology.artifact.referencedb
+  layerName: technology
+  after:
+    id: eea0bb0e-444c-4f0f-97de-c7da7a1818d4
+    path: technology.artifact.referencedb
+    spec_node_id: technology.artifact
+    type: artifact
+    layer_id: technology
+    name: reference.db
+    description: SQLite reference database storing imported knowledge from
+      ConceptNet, DBpedia, and schema.org
+    attributes:
+      artifactType: file
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: config.json
+    metadata:
+      created_at: 2026-03-23T12:22:10.905Z
+      updated_at: 2026-03-23T12:22:10.905Z
+      version: 1
+  timestamp: 2026-03-23T12:22:10.934Z
+  sequenceNumber: 16
+- type: add
+  elementId: technology.artifact.configjson
+  layerName: technology
+  after:
+    id: 80ff08ed-56de-4c38-8242-aea5de97420e
+    path: technology.artifact.configjson
+    spec_node_id: technology.artifact
+    type: artifact
+    layer_id: technology
+    name: config.json
+    description: Application configuration file managing server, database, LLM, NLP,
+      reference sources, proxy, logging, and security settings
+    attributes:
+      artifactType: configuration
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: config.json
+    metadata:
+      created_at: 2026-03-23T12:22:18.308Z
+      updated_at: 2026-03-23T12:22:18.308Z
+      version: 1
+  timestamp: 2026-03-23T12:22:18.341Z
+  sequenceNumber: 17
+- type: add
+  elementId: technology.systemsoftware.spa-cy
+  layerName: technology
+  after:
+    id: 2a4a021e-a920-4aba-807c-e557b3bc3dc3
+    path: technology.systemsoftware.spa-cy
+    spec_node_id: technology.systemsoftware
+    type: systemsoftware
+    layer_id: technology
+    name: spaCy
+    description: NLP library (v3.8.11) with en_core_web_lg model for named entity
+      recognition, dependency parsing, and text processing
+    attributes:
+      softwareType: middleware
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: requirements.txt
+    metadata:
+      created_at: 2026-03-23T12:22:18.745Z
+      updated_at: 2026-03-23T12:22:18.745Z
+      version: 1
+  timestamp: 2026-03-23T12:22:18.774Z
+  sequenceNumber: 18
+- type: add
+  elementId: technology.systemsoftware.sentence-transformers
+  layerName: technology
+  after:
+    id: d7a1d50a-c904-423e-a498-13cdfb1d7ab2
+    path: technology.systemsoftware.sentence-transformers
+    spec_node_id: technology.systemsoftware
+    type: systemsoftware
+    layer_id: technology
+    name: SentenceTransformers
+    description: Semantic embedding library (v5.0.0) generating vector embeddings
+      for ontology entity similarity search
+    attributes:
+      softwareType: middleware
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: requirements.txt
+    metadata:
+      created_at: 2026-03-23T12:22:19.175Z
+      updated_at: 2026-03-23T12:22:19.175Z
+      version: 1
+  timestamp: 2026-03-23T12:22:19.203Z
+  sequenceNumber: 19
+- type: add
+  elementId: technology.systemsoftware.network-x
+  layerName: technology
+  after:
+    id: 94f1a42c-c31d-49ba-a8a9-cf42dfab516d
+    path: technology.systemsoftware.network-x
+    spec_node_id: technology.systemsoftware
+    type: systemsoftware
+    layer_id: technology
+    name: NetworkX
+    description: Graph analysis library (v3.5) for computing network metrics,
+      centrality, and community detection over the ontology graph
+    attributes:
+      softwareType: middleware
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: requirements.txt
+    metadata:
+      created_at: 2026-03-23T12:22:25.158Z
+      updated_at: 2026-03-23T12:22:25.158Z
+      version: 1
+  timestamp: 2026-03-23T12:22:25.190Z
+  sequenceNumber: 20
+- type: add
+  elementId: technology.systemsoftware.rdflib
+  layerName: technology
+  after:
+    id: 83ab9d46-20fc-4d3b-b8bc-b10c23224fcf
+    path: technology.systemsoftware.rdflib
+    spec_node_id: technology.systemsoftware
+    type: systemsoftware
+    layer_id: technology
+    name: RDFLib
+    description: RDF graph library (v7.1.4) enabling SPARQL query execution over
+      ontology data
+    attributes:
+      softwareType: middleware
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: requirements.txt
+    metadata:
+      created_at: 2026-03-23T12:22:25.601Z
+      updated_at: 2026-03-23T12:22:25.601Z
+      version: 1
+  timestamp: 2026-03-23T12:22:25.633Z
+  sequenceNumber: 21
+- type: add
+  elementId: technology.technologyinterface.http-rest-interface
+  layerName: technology
+  after:
+    id: 9ff89347-c23e-4b33-943b-1f43e1ec8857
+    path: technology.technologyinterface.http-rest-interface
+    spec_node_id: technology.technologyinterface
+    type: technologyinterface
+    layer_id: technology
+    name: HTTP REST Interface
+    description: HTTP/JSON interface exposed by the FastAPI server on port 8100 for
+      all API consumers
+    attributes:
+      protocol: http
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: config.json
+    metadata:
+      created_at: 2026-03-23T12:22:32.550Z
+      updated_at: 2026-03-23T12:22:32.550Z
+      version: 1
+  timestamp: 2026-03-23T12:22:32.582Z
+  sequenceNumber: 22
+- type: add
+  elementId: technology.technologyfunction.reference-api-proxy
+  layerName: technology
+  after:
+    id: 69dbc33e-b1ac-48df-86fa-c380ba29a9f0
+    path: technology.technologyfunction.reference-api-proxy
+    spec_node_id: technology.technologyfunction
+    type: technologyfunction
+    layer_id: technology
+    name: Reference API Proxy
+    description: HTTP caching proxy (reference-api-buddy v0.5.0) that rate-limits
+      and caches external knowledge source requests
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: config.json
+    metadata:
+      created_at: 2026-03-23T12:22:33.396Z
+      updated_at: 2026-03-23T12:22:33.396Z
+      version: 1
+  timestamp: 2026-03-23T12:22:33.434Z
+  sequenceNumber: 23
+- type: add
+  elementId: technology.node.local-workstation
+  layerName: technology
+  after:
+    id: 9a906aea-166d-4570-95ef-300a3637e003
+    path: technology.node.local-workstation
+    spec_node_id: technology.node
+    type: node
+    layer_id: technology
+    name: Local Workstation
+    description: End-user local workstation running the Context Studio server and
+      SQLite databases (desktop-first deployment model)
+    attributes:
+      nodeType: bare-metal
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: config.json
+    metadata:
+      created_at: 2026-03-23T12:22:39.206Z
+      updated_at: 2026-03-23T12:22:39.206Z
+      version: 1
+  timestamp: 2026-03-23T12:22:39.236Z
+  sequenceNumber: 24
+- type: add
+  elementId: technology.technologyprocess.database-migration-process
+  layerName: technology
+  after:
+    id: 52c1ee3c-fd13-42dd-b7c1-4a9eae62e33b
+    path: technology.technologyprocess.database-migration-process
+    spec_node_id: technology.technologyprocess
+    type: technologyprocess
+    layer_id: technology
+    name: Database Migration Process
+    description: Alembic migration runner applying schema migrations to SQLite
+      databases at startup via MigrationManager
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: database/migrations/migration_manager.py
+    metadata:
+      created_at: 2026-03-23T12:22:39.658Z
+      updated_at: 2026-03-23T12:22:39.658Z
+      version: 1
+  timestamp: 2026-03-23T12:22:39.692Z
+  sequenceNumber: 25
+- type: add
+  elementId: technology.communicationnetwork.local-network
+  layerName: technology
+  after:
+    id: 0e91fbb4-bc6d-4037-acfe-bc78a8954664
+    path: technology.communicationnetwork.local-network
+    spec_node_id: technology.communicationnetwork
+    type: communicationnetwork
+    layer_id: technology
+    name: Local Network
+    description: Localhost network (127.0.0.1) over which the FastAPI server and
+      proxy communicate
+    attributes:
+      networkType: lan
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: config.json
+    metadata:
+      created_at: 2026-03-23T12:22:40.110Z
+      updated_at: 2026-03-23T12:22:40.110Z
+      version: 1
+  timestamp: 2026-03-23T12:22:40.145Z
+  sequenceNumber: 26
+- type: add
+  elementId: technology.technologycollaboration.external-knowledge-integration
+  layerName: technology
+  after:
+    id: 54d1d6b7-52e3-47f1-a6e2-3dafce867608
+    path: technology.technologycollaboration.external-knowledge-integration
+    spec_node_id: technology.technologycollaboration
+    type: technologycollaboration
+    layer_id: technology
+    name: External Knowledge Integration
+    description: Technology collaboration between the reference proxy, ConceptNet,
+      DBpedia, Wikidata, and schema.org for external knowledge retrieval
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: config.json
+    metadata:
+      created_at: 2026-03-23T12:22:46.681Z
+      updated_at: 2026-03-23T12:22:46.681Z
+      version: 1
+  timestamp: 2026-03-23T12:22:46.713Z
+  sequenceNumber: 27
+- type: add
+  elementId: technology.technologyinteraction.s3-sync-interaction
+  layerName: technology
+  after:
+    id: cc39af14-38d5-4b48-87ca-b7593fbaa76d
+    path: technology.technologyinteraction.s3-sync-interaction
+    spec_node_id: technology.technologyinteraction
+    type: technologyinteraction
+    layer_id: technology
+    name: S3 Sync Interaction
+    description: boto3-based technology interaction for reading and writing
+      Parquet-formatted dataset snapshots to AWS S3
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: services/s3_sync_manager.py
+    metadata:
+      created_at: 2026-03-23T12:22:47.126Z
+      updated_at: 2026-03-23T12:22:47.126Z
+      version: 1
+  timestamp: 2026-03-23T12:22:47.155Z
+  sequenceNumber: 28
+- type: add
+  elementId: technology.technologyevent.rate-limit-threshold-event
+  layerName: technology
+  after:
+    id: a116020b-21e6-4c4a-8b66-de8e7121eab4
+    path: technology.technologyevent.rate-limit-threshold-event
+    spec_node_id: technology.technologyevent
+    type: technologyevent
+    layer_id: technology
+    name: Rate Limit Threshold Event
+    description: Threshold-breach event triggered by the reference proxy when
+      external API rate limits are approached, causing progressive backoff
+      delays
+    attributes:
+      eventType: threshold-breach
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: config.json
+    metadata:
+      created_at: 2026-03-23T12:22:56.120Z
+      updated_at: 2026-03-23T12:22:56.120Z
+      version: 1
+  timestamp: 2026-03-23T12:22:56.151Z
+  sequenceNumber: 29
+- type: add
+  elementId: technology.path.server-to-database-path
+  layerName: technology
+  after:
+    id: 9e0606df-db9d-43b8-9beb-cc892dccd60f
+    path: technology.path.server-to-database-path
+    spec_node_id: technology.path
+    type: path
+    layer_id: technology
+    name: Server to Database Path
+    description: Point-to-point communication path between the FastAPI server
+      process and the SQLite databases on the local filesystem
+    attributes:
+      pathType: point-to-point
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: config.json
+    metadata:
+      created_at: 2026-03-23T12:23:00.323Z
+      updated_at: 2026-03-23T12:23:00.323Z
+      version: 1
+  timestamp: 2026-03-23T12:23:00.353Z
+  sequenceNumber: 30

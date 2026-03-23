@@ -1,0 +1,18 @@
+application.applicationcollaboration.version-control-collaboration:
+  id: e9683ff6-c922-4c0a-bf2f-5fb1800994da
+  path: application.applicationcollaboration.version-control-collaboration
+  spec_node_id: application.applicationcollaboration
+  type: applicationcollaboration
+  layer_id: application
+  name: Version Control Collaboration
+  description: "Collaborative version control subsystem: VersionManager,
+    WorkingTreeManager, ChangesetManager, and ProposalManager working together
+    to enable multi-user knowledge graph editing"
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: services/version_manager.py
+  metadata:
+    created_at: 2026-03-23T12:20:58.147Z
+    updated_at: 2026-03-23T12:20:58.147Z
+    version: 1

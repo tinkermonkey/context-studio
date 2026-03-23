@@ -1,0 +1,17 @@
+technology.technologyprocess.database-migration-process:
+  id: 52c1ee3c-fd13-42dd-b7c1-4a9eae62e33b
+  path: technology.technologyprocess.database-migration-process
+  spec_node_id: technology.technologyprocess
+  type: technologyprocess
+  layer_id: technology
+  name: Database Migration Process
+  description: Alembic migration runner applying schema migrations to SQLite
+    databases at startup via MigrationManager
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: database/migrations/migration_manager.py
+  metadata:
+    created_at: 2026-03-23T12:22:39.658Z
+    updated_at: 2026-03-23T12:22:39.658Z
+    version: 1

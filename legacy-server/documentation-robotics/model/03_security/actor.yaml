@@ -1,0 +1,42 @@
+security.actor.local-user:
+  id: c532acc0-87fe-4d2c-9b5a-372a863104b6
+  path: security.actor.local-user
+  spec_node_id: security.actor
+  type: actor
+  layer_id: security
+  name: Local User
+  description: "Primary actor: end user running Context Studio locally with full
+    access to all operations"
+  attributes:
+    type: human
+    trustLevel: full
+    description: Local workstation user with full access
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: config.json
+  metadata:
+    created_at: 2026-03-23T12:37:19.081Z
+    updated_at: 2026-03-23T12:37:19.081Z
+    version: 1
+security.actor.api-client:
+  id: 49ceb470-f43f-42fa-869e-2a8cb649431b
+  path: security.actor.api-client
+  spec_node_id: security.actor
+  type: actor
+  layer_id: security
+  name: API Client
+  description: External API client (browser, scripted tool) accessing the REST API
+    over HTTP, optionally authenticated with an API key
+  attributes:
+    type: system
+    trustLevel: medium
+    description: External REST API consumer
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: config.json
+  metadata:
+    created_at: 2026-03-23T12:37:19.546Z
+    updated_at: 2026-03-23T12:37:19.546Z
+    version: 1

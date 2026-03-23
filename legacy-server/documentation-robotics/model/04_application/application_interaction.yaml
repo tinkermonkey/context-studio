@@ -1,0 +1,20 @@
+application.applicationinteraction.crdt-merge-interaction:
+  id: e846641d-e2a7-415f-9593-892b06f4fdb2
+  path: application.applicationinteraction.crdt-merge-interaction
+  spec_node_id: application.applicationinteraction
+  type: applicationinteraction
+  layer_id: application
+  name: CRDT Merge Interaction
+  description: CRDT-based merge protocol coordinating conflict-free data type
+    merging between diverged changesets
+  attributes:
+    pattern: publish-subscribe
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: services/crdt_merge_engine.py
+        symbol: CRDTMergeEngine
+  metadata:
+    created_at: 2026-03-23T12:20:58.984Z
+    updated_at: 2026-03-23T12:20:58.984Z
+    version: 1

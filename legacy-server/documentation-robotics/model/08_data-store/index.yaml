@@ -1,0 +1,41 @@
+data-store.index.ontology-entities-title-idx:
+  id: a578d0ed-ae42-4425-9d2a-d1813a483793
+  path: data-store.index.ontology-entities-title-idx
+  spec_node_id: data-store.index
+  type: index
+  layer_id: data-store
+  name: ontology_entities_title_idx
+  description: Index on ontology_entities.title for efficient full-text title
+    lookup across all entity types
+  attributes:
+    fields: title
+    unique: false
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: database/migrations/versions/013_add_structure_nodes_title_index.py
+  metadata:
+    created_at: 2026-03-23T12:28:07.732Z
+    updated_at: 2026-03-23T12:28:07.732Z
+    version: 1
+data-store.index.relationship-uniqueness-idx:
+  id: 10477804-3c4e-4951-87d5-9563d90a97bb
+  path: data-store.index.relationship-uniqueness-idx
+  spec_node_id: data-store.index
+  type: index
+  layer_id: data-store
+  name: relationship_uniqueness_idx
+  description: Unique constraint index on (source_entity_id, target_entity_id,
+    predicate) preventing duplicate relationships
+  attributes:
+    fields: source_entity_id,target_entity_id,predicate
+    unique: true
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: database/models.py
+        symbol: Relationship.__table_args__
+  metadata:
+    created_at: 2026-03-23T12:28:08.166Z
+    updated_at: 2026-03-23T12:28:08.166Z
+    version: 1

@@ -1,0 +1,62 @@
+data-model.objectschema.ontology-entity-schema:
+  id: ee52a685-a6c2-4e36-9212-829f218d2159
+  path: data-model.objectschema.ontology-entity-schema
+  spec_node_id: data-model.objectschema
+  type: objectschema
+  layer_id: data-model
+  name: OntologyEntity Schema
+  description: Object schema for ontology entities with id, node_type, title,
+    definition, parent_entity_id, embeddings, and reference links
+  attributes:
+    type: object
+    required: id,node_type,title
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: database/models.py
+        symbol: OntologyEntity
+  metadata:
+    created_at: 2026-03-23T12:26:24.179Z
+    updated_at: 2026-03-23T12:26:24.179Z
+    version: 1
+data-model.objectschema.relationship-schema:
+  id: 0b1aa4ac-ffd3-45cf-9bbd-35737eca419f
+  path: data-model.objectschema.relationship-schema
+  spec_node_id: data-model.objectschema
+  type: objectschema
+  layer_id: data-model
+  name: Relationship Schema
+  description: Object schema for typed directed relationships between ontology entities
+  attributes:
+    type: object
+    required: id,source_entity_id,target_entity_id,predicate
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: database/models.py
+        symbol: Relationship
+  metadata:
+    created_at: 2026-03-23T12:26:24.601Z
+    updated_at: 2026-03-23T12:26:24.601Z
+    version: 1
+data-model.objectschema.change-event-schema:
+  id: 103cd59d-c45c-4c9d-bef5-05405d877065
+  path: data-model.objectschema.change-event-schema
+  spec_node_id: data-model.objectschema
+  type: objectschema
+  layer_id: data-model
+  name: ChangeEvent Schema
+  description: Object schema for the audit log capturing event_type, record_type,
+    record_id, old_data, new_data, and timestamp
+  attributes:
+    type: object
+    required: id,event_type,record_type,timestamp
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: database/models.py
+        symbol: ChangeEvent
+  metadata:
+    created_at: 2026-03-23T12:26:25.019Z
+    updated_at: 2026-03-23T12:26:25.019Z
+    version: 1

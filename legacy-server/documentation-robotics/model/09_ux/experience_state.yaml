@@ -1,0 +1,19 @@
+ux.experiencestate.entity-selected-state:
+  id: 8f9e1dfc-cff6-4268-a7c7-1a05d04ef31c
+  path: ux.experiencestate.entity-selected-state
+  spec_node_id: ux.experiencestate
+  type: experiencestate
+  layer_id: ux
+  name: Entity Selected State
+  description: UI state when a specific ontology entity is selected — activates
+    the detail panel and relationship editor
+  attributes:
+    description: Entity selected, detail panel visible and editable
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ../../ux/src/stores
+  metadata:
+    created_at: 2026-03-23T12:30:09.109Z
+    updated_at: 2026-03-23T12:30:09.109Z
+    version: 1

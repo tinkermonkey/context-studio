@@ -1,0 +1,20 @@
+data-model.reference.ontology-entity-to-external-reference:
+  id: de20939f-24e4-4917-bb90-baa5dde11dfa
+  path: data-model.reference.ontology-entity-to-external-reference
+  spec_node_id: data-model.reference
+  type: reference
+  layer_id: data-model
+  name: OntologyEntity to ExternalReference
+  description: Schema reference linking OntologyEntity reference_links array to
+    the ExternalReference schema definition
+  attributes:
+    $ref: "#/definitions/ExternalReference"
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: domain/ontology/entities.py
+        symbol: Class.external_references
+  metadata:
+    created_at: 2026-03-23T12:26:56.760Z
+    updated_at: 2026-03-23T12:26:56.760Z
+    version: 1

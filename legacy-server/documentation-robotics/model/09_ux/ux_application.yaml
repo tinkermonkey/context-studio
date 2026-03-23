@@ -1,0 +1,21 @@
+ux.uxapplication.context-studio:
+  id: caa05407-126a-4c46-a09a-6c7d11a857df
+  path: ux.uxapplication.context-studio
+  spec_node_id: ux.uxapplication
+  type: uxapplication
+  layer_id: ux
+  name: Context Studio
+  description: React single-page application for knowledge graph management — the
+    front end for the legacy server API
+  attributes:
+    channel: web
+    version: 1.0.0
+    description: Local-first knowledge graph editor and RAG tool
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ../../ux/src/main.tsx
+  metadata:
+    created_at: 2026-03-23T12:29:30.429Z
+    updated_at: 2026-03-23T12:29:30.429Z
+    version: 1

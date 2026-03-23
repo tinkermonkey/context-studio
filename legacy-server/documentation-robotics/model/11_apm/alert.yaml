@@ -1,0 +1,56 @@
+apm.alert.llm-pipeline-failure-alert:
+  id: b09fa9b4-cbca-4a9e-9681-d70a9da54188
+  path: apm.alert.llm-pipeline-failure-alert
+  spec_node_id: apm.alert
+  type: alert
+  layer_id: apm
+  name: LLM Pipeline Failure Alert
+  description: Alert triggered when LLM pipeline execution fails or times out,
+    logged at ERROR level with exc_info for debugging
+  attributes:
+    severity: critical
+    condition: pipeline_execution.status == failed
+    evaluationInterval: PT1M
+    description: LLM pipeline execution failure alert
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: llm/service.py
+  metadata:
+    created_at: 2026-03-23T12:34:25.875Z
+    updated_at: 2026-03-23T12:34:25.875Z
+    version: 1
+apm.alert.rate-limit-breach-alert:
+  id: cb9f6664-9607-4f7c-9c9a-2fc4d21b7b8b
+  path: apm.alert.rate-limit-breach-alert
+  spec_node_id: apm.alert
+  type: alert
+  layer_id: apm
+  name: Rate Limit Breach Alert
+  description: Warning alert when external API rate limits are approached,
+    triggering progressive backoff in the reference proxy
+  attributes:
+    severity: warning
+    condition: external_api_request_rate > rate_limit_threshold
+    evaluationInterval: PT1M
+    description: External API rate limit approaching
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: config.json
+  metadata:
+    created_at: 2026-03-23T12:34:34.372Z
+    updated_at: 2026-03-23T12:34:34.372Z
+    version: 1
+apm.alert.background-task-dead-letter-alert:
+  id: 02bd00be-5997-4948-91e5-5e3eecdad29b
+  path: apm.alert.background-task-dead-letter-alert
+  spec_node_id: apm.alert
+  type: alert
+  layer_id: apm
+  name: Background Task Dead Letter Alert
+  description: Alert triggered when tasks accumulate in the dead-letter queue
+  metadata:
+    created_at: 2026-03-23T19:27:45.727Z
+    updated_at: 2026-03-23T19:27:45.727Z
+    version: 1

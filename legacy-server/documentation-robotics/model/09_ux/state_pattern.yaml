@@ -1,0 +1,20 @@
+ux.statepattern.crud-entity-pattern:
+  id: 28d65b3d-e63a-4231-831b-e6cfc3dd9775
+  path: ux.statepattern.crud-entity-pattern
+  spec_node_id: ux.statepattern
+  type: statepattern
+  layer_id: ux
+  name: CRUD Entity Pattern
+  description: "State pattern for create/read/update/delete operations on ontology
+    entities: idle -> form open -> submitting -> success/error"
+  attributes:
+    description: Standard CRUD state machine for ontology entity operations
+    category: form
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ../../ux/src/components/node_tables
+  metadata:
+    created_at: 2026-03-23T12:30:27.001Z
+    updated_at: 2026-03-23T12:30:27.001Z
+    version: 1

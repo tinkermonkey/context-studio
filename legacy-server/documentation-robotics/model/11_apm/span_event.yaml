@@ -1,0 +1,20 @@
+apm.spanevent.llm-cache-hit-event:
+  id: fe59c56e-3a03-4854-8858-c1771cacf016
+  path: apm.spanevent.llm-cache-hit-event
+  spec_node_id: apm.spanevent
+  type: spanevent
+  layer_id: apm
+  name: LLM Cache Hit Event
+  description: Span event recorded when the LangChain SQLite LLM cache serves a
+    cached response, avoiding an external API call
+  attributes:
+    timeUnixNano: "0"
+    droppedAttributesCount: "0"
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: app.py
+  metadata:
+    created_at: 2026-03-23T12:34:47.817Z
+    updated_at: 2026-03-23T12:34:47.817Z
+    version: 1

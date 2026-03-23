@@ -1,0 +1,20 @@
+apm.logconfiguration.application-log-configuration:
+  id: 8caf7790-7d8d-4c1c-8202-ef282a9ef053
+  path: apm.logconfiguration.application-log-configuration
+  spec_node_id: apm.logconfiguration
+  type: logconfiguration
+  layer_id: apm
+  name: Application Log Configuration
+  description: Rotating file logger configuration (loguru) writing to
+    logs/context_studio.log at INFO level with 10MB max size and 5 backup files
+  attributes:
+    serviceName: context-studio-legacy-server
+    minimumSeverity: INFO
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: utils/logger.py
+  metadata:
+    created_at: 2026-03-23T12:33:21.652Z
+    updated_at: 2026-03-23T12:33:21.652Z
+    version: 1

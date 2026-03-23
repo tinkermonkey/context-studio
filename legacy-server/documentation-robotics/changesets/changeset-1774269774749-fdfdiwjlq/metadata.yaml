@@ -1,0 +1,10 @@
+id: changeset-1774269774749-fdfdiwjlq
+name: extract-motivation-layer
+created: 2026-03-23T12:42:54.759Z
+modified: 2026-03-23T12:45:24.959Z
+status: committed
+baseSnapshot: sha256:f2e411b03f08e4a9e406c308c7a6f7212d27f5e4a56c1b318b41db7a2d8c34a8
+stats:
+  additions: 37
+  modifications: 0
+  deletions: 0

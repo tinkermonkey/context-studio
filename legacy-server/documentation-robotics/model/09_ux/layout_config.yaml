@@ -1,0 +1,20 @@
+ux.layoutconfig.app-shell-layout:
+  id: d24735ff-d71b-4f5a-8a03-2d1e3cca99f4
+  path: ux.layoutconfig.app-shell-layout
+  spec_node_id: ux.layoutconfig
+  type: layoutconfig
+  layer_id: ux
+  name: App Shell Layout
+  description: "Root layout configuration: sidebar navigation with main content
+    area, responsive two-column grid"
+  attributes:
+    type: grid
+    columns: 2
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ../../ux/src/components/layout
+  metadata:
+    created_at: 2026-03-23T12:30:10.044Z
+    updated_at: 2026-03-23T12:30:10.044Z
+    version: 1

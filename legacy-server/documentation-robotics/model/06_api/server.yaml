@@ -1,0 +1,19 @@
+api.server.local-development-server:
+  id: dced05ab-0a73-4745-b162-1d2bf7064bb0
+  path: api.server.local-development-server
+  spec_node_id: api.server
+  type: server
+  layer_id: api
+  name: Local Development Server
+  description: Local server running on http://localhost:8100
+  attributes:
+    url: http://localhost:8100
+    description: Local development server
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: config.json
+  metadata:
+    created_at: 2026-03-23T12:23:49.571Z
+    updated_at: 2026-03-23T12:23:49.571Z
+    version: 1

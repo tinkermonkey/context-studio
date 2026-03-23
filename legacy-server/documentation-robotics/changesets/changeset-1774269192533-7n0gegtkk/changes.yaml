@@ -1,0 +1,461 @@
+- type: add
+  elementId: apm.resource.context-studio-legacy-server
+  layerName: apm
+  after:
+    id: 011f7694-65c8-49e8-bedd-18a9cef619c5
+    path: apm.resource.context-studio-legacy-server
+    spec_node_id: apm.resource
+    type: resource
+    layer_id: apm
+    name: Context Studio Legacy Server
+    description: OpenTelemetry resource representing the Context Studio legacy
+      server process
+    attributes:
+      droppedAttributesCount: 0
+      serviceName: context-studio-legacy-server
+      serviceVersion: 1.0.0
+      deploymentEnvironment: development
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: utils/logger.py
+    metadata:
+      created_at: 2026-03-23T12:33:21.219Z
+      updated_at: 2026-03-23T12:33:21.219Z
+      version: 1
+  timestamp: 2026-03-23T12:33:21.241Z
+  sequenceNumber: 0
+- type: add
+  elementId: apm.logconfiguration.application-log-configuration
+  layerName: apm
+  after:
+    id: 8caf7790-7d8d-4c1c-8202-ef282a9ef053
+    path: apm.logconfiguration.application-log-configuration
+    spec_node_id: apm.logconfiguration
+    type: logconfiguration
+    layer_id: apm
+    name: Application Log Configuration
+    description: Rotating file logger configuration (loguru) writing to
+      logs/context_studio.log at INFO level with 10MB max size and 5 backup
+      files
+    attributes:
+      serviceName: context-studio-legacy-server
+      minimumSeverity: INFO
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: utils/logger.py
+    metadata:
+      created_at: 2026-03-23T12:33:21.652Z
+      updated_at: 2026-03-23T12:33:21.652Z
+      version: 1
+  timestamp: 2026-03-23T12:33:21.674Z
+  sequenceNumber: 1
+- type: add
+  elementId: apm.logprocessor.access-log-middleware
+  layerName: apm
+  after:
+    id: bc20c45d-0d44-43a0-b5dd-cb65aefcaa95
+    path: apm.logprocessor.access-log-middleware
+    spec_node_id: apm.logprocessor
+    type: logprocessor
+    layer_id: apm
+    name: Access Log Middleware
+    description: ASGI middleware (AccessLogMiddleware) processing HTTP access logs
+      for all incoming requests, logging method, path, status code, and duration
+    attributes:
+      type: batch
+      order: 1
+      enabled: true
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: utils/access_log_middleware.py
+          symbol: AccessLogMiddleware
+    metadata:
+      created_at: 2026-03-23T12:33:28.773Z
+      updated_at: 2026-03-23T12:33:28.773Z
+      version: 1
+  timestamp: 2026-03-23T12:33:28.796Z
+  sequenceNumber: 2
+- type: add
+  elementId: apm.logrecord.http-access-log-record
+  layerName: apm
+  after:
+    id: 0d1d3283-78af-4e47-82b9-406788c58dc1
+    path: apm.logrecord.http-access-log-record
+    spec_node_id: apm.logrecord
+    type: logrecord
+    layer_id: apm
+    name: HTTP Access Log Record
+    description: "Structured log record for each HTTP request: method, path, status
+      code, response time in milliseconds"
+    attributes:
+      timeUnixNano: "0"
+      observedTimeUnixNano: "0"
+      severityNumber: "9"
+      body: HTTP request log
+      flags: "0"
+      droppedAttributesCount: "0"
+      severityText: INFO
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: utils/access_log_middleware.py
+    metadata:
+      created_at: 2026-03-23T12:33:39.862Z
+      updated_at: 2026-03-23T12:33:39.862Z
+      version: 1
+  timestamp: 2026-03-23T12:33:39.885Z
+  sequenceNumber: 3
+- type: add
+  elementId: apm.metricconfiguration.rag-pipeline-metrics-configuration
+  layerName: apm
+  after:
+    id: cf5de1ae-a700-4558-a7e4-8af7d4c88cea
+    path: apm.metricconfiguration.rag-pipeline-metrics-configuration
+    spec_node_id: apm.metricconfiguration
+    type: metricconfiguration
+    layer_id: apm
+    name: RAG Pipeline Metrics Configuration
+    description: Metrics configuration for the RAG pipeline observability store —
+      collecting per-layer timing and entity count metrics
+    attributes:
+      serviceName: context-studio-legacy-server
+      exportIntervalMillis: 60000
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: rag/observability_store.py
+          symbol: RAGObservabilityStore
+    metadata:
+      created_at: 2026-03-23T12:33:40.314Z
+      updated_at: 2026-03-23T12:33:40.314Z
+      version: 1
+  timestamp: 2026-03-23T12:33:40.338Z
+  sequenceNumber: 4
+- type: add
+  elementId: apm.metricinstrument.rag-layer-processing-time
+  layerName: apm
+  after:
+    id: b08d7649-93e8-4909-89de-0df5f41992b7
+    path: apm.metricinstrument.rag-layer-processing-time
+    spec_node_id: apm.metricinstrument
+    type: metricinstrument
+    layer_id: apm
+    name: RAG Layer Processing Time
+    description: Histogram instrument measuring processing time in milliseconds for
+      each RAG pipeline layer
+    attributes:
+      type: Histogram
+      unit: ms
+      description: RAG pipeline layer processing duration
+      enabled: true
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: rag/observability_store.py
+          symbol: RAGObservabilityStore.save_metrics
+    metadata:
+      created_at: 2026-03-23T12:33:52.843Z
+      updated_at: 2026-03-23T12:33:52.843Z
+      version: 1
+  timestamp: 2026-03-23T12:33:52.870Z
+  sequenceNumber: 5
+- type: add
+  elementId: apm.metricinstrument.llm-execution-tracker
+  layerName: apm
+  after:
+    id: 9b807d64-baea-4e3e-9379-67b2681085a9
+    path: apm.metricinstrument.llm-execution-tracker
+    spec_node_id: apm.metricinstrument
+    type: metricinstrument
+    layer_id: apm
+    name: LLM Execution Tracker
+    description: Counter instrument tracking LLM API call counts, token usage,
+      latency, and errors per pipeline execution
+    attributes:
+      type: Counter
+      unit: calls
+      description: LLM API call tracking per execution
+      enabled: true
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: llm/execution_tracker.py
+          symbol: ExecutionTracker
+    metadata:
+      created_at: 2026-03-23T12:33:53.311Z
+      updated_at: 2026-03-23T12:33:53.311Z
+      version: 1
+  timestamp: 2026-03-23T12:33:53.334Z
+  sequenceNumber: 6
+- type: add
+  elementId: apm.span.api-request-span
+  layerName: apm
+  after:
+    id: c1023d0c-f7b9-4902-8af1-bf40e880054d
+    path: apm.span.api-request-span
+    spec_node_id: apm.span
+    type: span
+    layer_id: apm
+    name: API Request Span
+    description: Trace span representing the full duration of a single HTTP API
+      request, from receipt to response
+    attributes:
+      traceId: ""
+      spanId: ""
+      traceState: ""
+      parentSpanId: ""
+      spanKind: SERVER
+      startTimeUnixNano: "0"
+      endTimeUnixNano: "0"
+      droppedAttributesCount: "0"
+      droppedEventsCount: "0"
+      droppedLinksCount: "0"
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: utils/access_log_middleware.py
+    metadata:
+      created_at: 2026-03-23T12:34:04.571Z
+      updated_at: 2026-03-23T12:34:04.571Z
+      version: 1
+  timestamp: 2026-03-23T12:34:04.597Z
+  sequenceNumber: 7
+- type: add
+  elementId: apm.traceconfiguration.application-trace-configuration
+  layerName: apm
+  after:
+    id: f3b8e4ce-351f-4ce1-b92d-bc2005b8a63e
+    path: apm.traceconfiguration.application-trace-configuration
+    spec_node_id: apm.traceconfiguration
+    type: traceconfiguration
+    layer_id: apm
+    name: Application Trace Configuration
+    description: Distributed trace configuration — currently using Python logging as
+      the trace substrate; no external exporter configured
+    attributes:
+      samplerType: parent_based_always_on
+      propagators:
+        - tracecontext
+        - baggage
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: utils/logger.py
+    metadata:
+      created_at: 2026-03-23T12:34:10.487Z
+      updated_at: 2026-03-23T12:34:10.487Z
+      version: 1
+  timestamp: 2026-03-23T12:34:10.511Z
+  sequenceNumber: 8
+- type: add
+  elementId: apm.instrumentationconfig.fast-api-auto-instrumentation
+  layerName: apm
+  after:
+    id: 5470c6fc-20ed-4e7d-bb8a-3ed52e35f050
+    path: apm.instrumentationconfig.fast-api-auto-instrumentation
+    spec_node_id: apm.instrumentationconfig
+    type: instrumentationconfig
+    layer_id: apm
+    name: FastAPI Auto-Instrumentation
+    description: Application-level instrumentation configuration for capturing HTTP
+      request/response metrics via the access log middleware
+    attributes:
+      type: http
+      libraryName: AccessLogMiddleware
+      enabled: true
+      instrumentationType: manual
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: utils/access_log_middleware.py
+    metadata:
+      created_at: 2026-03-23T12:34:10.953Z
+      updated_at: 2026-03-23T12:34:10.953Z
+      version: 1
+  timestamp: 2026-03-23T12:34:10.978Z
+  sequenceNumber: 9
+- type: add
+  elementId: apm.instrumentationscope.rag-pipeline-observability-scope
+  layerName: apm
+  after:
+    id: 6604b92e-fcdb-404c-bd57-9a7f3cdb9a99
+    path: apm.instrumentationscope.rag-pipeline-observability-scope
+    spec_node_id: apm.instrumentationscope
+    type: instrumentationscope
+    layer_id: apm
+    name: RAG Pipeline Observability Scope
+    description: Instrumentation scope for the RAG pipeline observability store,
+      capturing per-pipeline-run metrics and traces in operations.db
+    attributes:
+      droppedAttributesCount: "0"
+      version: "1.0"
+      schemaUrl: ""
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: rag/observability_store.py
+    metadata:
+      created_at: 2026-03-23T12:34:25.389Z
+      updated_at: 2026-03-23T12:34:25.389Z
+      version: 1
+  timestamp: 2026-03-23T12:34:25.414Z
+  sequenceNumber: 10
+- type: add
+  elementId: apm.alert.llm-pipeline-failure-alert
+  layerName: apm
+  after:
+    id: b09fa9b4-cbca-4a9e-9681-d70a9da54188
+    path: apm.alert.llm-pipeline-failure-alert
+    spec_node_id: apm.alert
+    type: alert
+    layer_id: apm
+    name: LLM Pipeline Failure Alert
+    description: Alert triggered when LLM pipeline execution fails or times out,
+      logged at ERROR level with exc_info for debugging
+    attributes:
+      severity: critical
+      condition: pipeline_execution.status == failed
+      evaluationInterval: PT1M
+      description: LLM pipeline execution failure alert
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: llm/service.py
+    metadata:
+      created_at: 2026-03-23T12:34:25.875Z
+      updated_at: 2026-03-23T12:34:25.875Z
+      version: 1
+  timestamp: 2026-03-23T12:34:25.900Z
+  sequenceNumber: 11
+- type: add
+  elementId: apm.alert.rate-limit-breach-alert
+  layerName: apm
+  after:
+    id: cb9f6664-9607-4f7c-9c9a-2fc4d21b7b8b
+    path: apm.alert.rate-limit-breach-alert
+    spec_node_id: apm.alert
+    type: alert
+    layer_id: apm
+    name: Rate Limit Breach Alert
+    description: Warning alert when external API rate limits are approached,
+      triggering progressive backoff in the reference proxy
+    attributes:
+      severity: warning
+      condition: external_api_request_rate > rate_limit_threshold
+      evaluationInterval: PT1M
+      description: External API rate limit approaching
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: config.json
+    metadata:
+      created_at: 2026-03-23T12:34:34.372Z
+      updated_at: 2026-03-23T12:34:34.372Z
+      version: 1
+  timestamp: 2026-03-23T12:34:34.397Z
+  sequenceNumber: 12
+- type: add
+  elementId: apm.dashboard.context-studio-monitoring-dashboard
+  layerName: apm
+  after:
+    id: eaf5a1fc-2b55-4fae-9cc5-8db47ef2cea3
+    path: apm.dashboard.context-studio-monitoring-dashboard
+    spec_node_id: apm.dashboard
+    type: dashboard
+    layer_id: apm
+    name: Context Studio Monitoring Dashboard
+    description: Admin monitoring dashboard exposed via /api/admin endpoints for
+      service health, database stats, and event processor status
+    attributes:
+      tool: custom
+      description: Admin API dashboard for service health and performance monitoring
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: api/admin
+    metadata:
+      created_at: 2026-03-23T12:34:46.832Z
+      updated_at: 2026-03-23T12:34:46.832Z
+      version: 1
+  timestamp: 2026-03-23T12:34:46.857Z
+  sequenceNumber: 13
+- type: add
+  elementId: apm.exporterconfig.file-log-exporter
+  layerName: apm
+  after:
+    id: 18e2426a-3d38-4dc0-970f-bb7abe2b9dfd
+    path: apm.exporterconfig.file-log-exporter
+    spec_node_id: apm.exporterconfig
+    type: exporterconfig
+    layer_id: apm
+    name: File Log Exporter
+    description: Log exporter writing structured logs to logs/context_studio.log
+      file with rotation (loguru)
+    attributes:
+      type: logging
+      endpoint: ./logs/context_studio.log
+      enabled: true
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: utils/logger.py
+    metadata:
+      created_at: 2026-03-23T12:34:47.329Z
+      updated_at: 2026-03-23T12:34:47.329Z
+      version: 1
+  timestamp: 2026-03-23T12:34:47.356Z
+  sequenceNumber: 14
+- type: add
+  elementId: apm.spanevent.llm-cache-hit-event
+  layerName: apm
+  after:
+    id: fe59c56e-3a03-4854-8858-c1771cacf016
+    path: apm.spanevent.llm-cache-hit-event
+    spec_node_id: apm.spanevent
+    type: spanevent
+    layer_id: apm
+    name: LLM Cache Hit Event
+    description: Span event recorded when the LangChain SQLite LLM cache serves a
+      cached response, avoiding an external API call
+    attributes:
+      timeUnixNano: "0"
+      droppedAttributesCount: "0"
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: app.py
+    metadata:
+      created_at: 2026-03-23T12:34:47.817Z
+      updated_at: 2026-03-23T12:34:47.817Z
+      version: 1
+  timestamp: 2026-03-23T12:34:47.843Z
+  sequenceNumber: 15
+- type: add
+  elementId: apm.spanlink.rag-trace-to-llm-span-link
+  layerName: apm
+  after:
+    id: 1d86ce23-f0f2-4d03-8799-d2bdfc6f391e
+    path: apm.spanlink.rag-trace-to-llm-span-link
+    spec_node_id: apm.spanlink
+    type: spanlink
+    layer_id: apm
+    name: RAG Trace to LLM Span Link
+    description: Span link connecting a RAG pipeline execution span to the
+      downstream LLM API call span for end-to-end traceability
+    attributes:
+      traceId: ""
+      spanId: ""
+      droppedAttributesCount: "0"
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: rag/rag_pipeline_service.py
+    metadata:
+      created_at: 2026-03-23T12:34:56.159Z
+      updated_at: 2026-03-23T12:34:56.159Z
+      version: 1
+  timestamp: 2026-03-23T12:34:56.187Z
+  sequenceNumber: 16

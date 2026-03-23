@@ -1,0 +1,92 @@
+application.applicationfunction.embedding-generation:
+  id: 84693f76-dbf4-428d-b2dc-f5cf9b649d5e
+  path: application.applicationfunction.embedding-generation
+  spec_node_id: application.applicationfunction
+  type: applicationfunction
+  layer_id: application
+  name: Embedding Generation
+  description: SentenceTransformer embedding generation for ontology entity titles
+    and definitions, used for vector similarity search
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: embeddings/generate_embeddings.py
+        symbol: generate_embedding
+  metadata:
+    created_at: 2026-03-23T12:20:49.981Z
+    updated_at: 2026-03-23T12:20:49.981Z
+    version: 1
+application.applicationfunction.sparql-query-function:
+  id: 93f74c87-4217-40cc-9eeb-41896133bc65
+  path: application.applicationfunction.sparql-query-function
+  spec_node_id: application.applicationfunction
+  type: applicationfunction
+  layer_id: application
+  name: SPARQL Query Function
+  description: SPARQL query execution over the in-memory RDF graph built from
+    ontology entities
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: graph/sparql_service.py
+        symbol: SPARQLService
+  metadata:
+    created_at: 2026-03-23T12:20:50.395Z
+    updated_at: 2026-03-23T12:20:50.395Z
+    version: 1
+application.applicationfunction.network-metrics-function:
+  id: 729770c9-eb4a-4230-8b96-f45d92375e87
+  path: application.applicationfunction.network-metrics-function
+  spec_node_id: application.applicationfunction
+  type: applicationfunction
+  layer_id: application
+  name: Network Metrics Function
+  description: Graph network analysis computing centrality, clustering, and
+    community metrics via networkx
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: graph/network_service.py
+        symbol: NetworkService
+  metadata:
+    created_at: 2026-03-23T12:20:50.806Z
+    updated_at: 2026-03-23T12:20:50.806Z
+    version: 1
+application.applicationfunction.provider-routing:
+  id: a0db7d06-e57a-4ae5-9708-386118ffce46
+  path: application.applicationfunction.provider-routing
+  spec_node_id: application.applicationfunction
+  type: applicationfunction
+  layer_id: application
+  name: Provider Routing
+  description: Routes LLM requests to the correct provider (native LangChain vs
+    OpenRouter) based on enabled_models.json configuration; caches initialized
+    LLM instances
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: llm/provider_router.py
+        symbol: ProviderRouter
+  metadata:
+    created_at: 2026-03-23T19:01:14.990Z
+    updated_at: 2026-03-23T19:01:14.990Z
+    version: 1
+application.applicationfunction.llm-response-caching:
+  id: 98c16177-04f3-4e19-884b-45b339855bf9
+  path: application.applicationfunction.llm-response-caching
+  spec_node_id: application.applicationfunction
+  type: applicationfunction
+  layer_id: application
+  name: LLM Response Caching
+  description: SQLite-backed LangChain response cache stored in
+    operations_llm_cache.db, reducing redundant LLM API calls at application
+    startup
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: app.py
+        symbol: set_llm_cache
+  metadata:
+    created_at: 2026-03-23T19:01:15.422Z
+    updated_at: 2026-03-23T19:01:15.422Z
+    version: 1

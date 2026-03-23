@@ -1,0 +1,41 @@
+motivation.outcome.curated-domain-ontology:
+  id: d4e40c28-66ee-4208-acea-11f236e1bf43
+  path: motivation.outcome.curated-domain-ontology
+  spec_node_id: motivation.outcome
+  type: outcome
+  layer_id: motivation
+  name: Curated Domain Ontology
+  description: "The primary deliverable: a version-controlled, semantically
+    enriched knowledge graph ready for use in RAG pipelines, documentation, and
+    agent reasoning"
+  attributes:
+    status: in-progress
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: domain/ontology/entities.py
+        symbol: Taxonomy
+  metadata:
+    created_at: 2026-03-23T12:45:05.266Z
+    updated_at: 2026-03-23T12:45:05.266Z
+    version: 1
+motivation.outcome.improved-ai-inference-quality:
+  id: 99601976-886c-4c8a-8bf5-593451de6374
+  path: motivation.outcome.improved-ai-inference-quality
+  spec_node_id: motivation.outcome
+  type: outcome
+  layer_id: motivation
+  name: Improved AI Inference Quality
+  description: By grounding LLM calls in a curated ontology, the expected outcome
+    is measurably higher accuracy and relevance in RAG pipeline outputs
+  attributes:
+    status: planned
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: rag/rag_pipeline_service.py
+        symbol: RAGPipelineService
+  metadata:
+    created_at: 2026-03-23T12:45:11.750Z
+    updated_at: 2026-03-23T12:45:11.750Z
+    version: 1

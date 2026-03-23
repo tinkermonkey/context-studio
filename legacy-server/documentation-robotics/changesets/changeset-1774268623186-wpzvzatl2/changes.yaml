@@ -1,0 +1,760 @@
+- type: add
+  elementId: api.info.context-studio-legacy-server-api
+  layerName: api
+  after:
+    id: 0cb7742c-f79f-43c8-b4ed-0bbfe96a3587
+    path: api.info.context-studio-legacy-server-api
+    spec_node_id: api.info
+    type: info
+    layer_id: api
+    name: Context Studio Legacy Server API
+    description: REST API for the Context Studio legacy server — knowledge graph
+      management, NLP processing, LLM enrichment, and collaborative versioning
+    attributes:
+      title: Context Studio Legacy Server API
+      version: 1.0.0
+      description: Knowledge graph management, NLP, LLM, and collaborative versioning API
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: app.py
+    metadata:
+      created_at: 2026-03-23T12:23:49.166Z
+      updated_at: 2026-03-23T12:23:49.166Z
+      version: 1
+  timestamp: 2026-03-23T12:23:49.187Z
+  sequenceNumber: 0
+- type: add
+  elementId: api.server.local-development-server
+  layerName: api
+  after:
+    id: dced05ab-0a73-4745-b162-1d2bf7064bb0
+    path: api.server.local-development-server
+    spec_node_id: api.server
+    type: server
+    layer_id: api
+    name: Local Development Server
+    description: Local server running on http://localhost:8100
+    attributes:
+      url: http://localhost:8100
+      description: Local development server
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: config.json
+    metadata:
+      created_at: 2026-03-23T12:23:49.571Z
+      updated_at: 2026-03-23T12:23:49.571Z
+      version: 1
+  timestamp: 2026-03-23T12:23:49.594Z
+  sequenceNumber: 1
+- type: add
+  elementId: api.tag.ontology-entities
+  layerName: api
+  after:
+    id: 2202fe16-cb91-4679-8862-9a2de19d0e17
+    path: api.tag.ontology-entities
+    spec_node_id: api.tag
+    type: tag
+    layer_id: api
+    name: ontology-entities
+    description: CRUD and vector search operations for taxonomy, concept scheme, and
+      class entities
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: api/ontology_entities.py
+    metadata:
+      created_at: 2026-03-23T12:23:55.119Z
+      updated_at: 2026-03-23T12:23:55.119Z
+      version: 1
+  timestamp: 2026-03-23T12:23:55.141Z
+  sequenceNumber: 2
+- type: add
+  elementId: api.tag.graph
+  layerName: api
+  after:
+    id: 5144fceb-b91f-4d18-ae05-c654ca0aed96
+    path: api.tag.graph
+    spec_node_id: api.tag
+    type: tag
+    layer_id: api
+    name: graph
+    description: Graph analytics, SPARQL queries, network metrics, and path
+      operations over the ontology graph
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: api/graph.py
+    metadata:
+      created_at: 2026-03-23T12:23:55.508Z
+      updated_at: 2026-03-23T12:23:55.508Z
+      version: 1
+  timestamp: 2026-03-23T12:23:55.532Z
+  sequenceNumber: 3
+- type: add
+  elementId: api.tag.version-management
+  layerName: api
+  after:
+    id: b05c6857-25a5-4347-844c-e73f76fead93
+    path: api.tag.version-management
+    spec_node_id: api.tag
+    type: tag
+    layer_id: api
+    name: version-management
+    description: Working tree, entity versioning, diff computation, and rollback operations
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: api/version_management.py
+    metadata:
+      created_at: 2026-03-23T12:23:55.906Z
+      updated_at: 2026-03-23T12:23:55.906Z
+      version: 1
+  timestamp: 2026-03-23T12:23:55.930Z
+  sequenceNumber: 4
+- type: add
+  elementId: api.tag.changeset-management
+  layerName: api
+  after:
+    id: 4f9fc937-ddfd-4c47-b074-d326080cc816
+    path: api.tag.changeset-management
+    spec_node_id: api.tag
+    type: tag
+    layer_id: api
+    name: changeset-management
+    description: "Collaborative changeset lifecycle operations: create, list, get,
+      update, delete, and push changesets"
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: api/changeset_management.py
+    metadata:
+      created_at: 2026-03-23T12:24:02.248Z
+      updated_at: 2026-03-23T12:24:02.248Z
+      version: 1
+  timestamp: 2026-03-23T12:24:02.273Z
+  sequenceNumber: 5
+- type: add
+  elementId: api.tag.datasets
+  layerName: api
+  after:
+    id: 019d2670-69aa-42d5-97e6-0ee14c0cb3b6
+    path: api.tag.datasets
+    spec_node_id: api.tag
+    type: tag
+    layer_id: api
+    name: datasets
+    description: Dataset file management — list, create, activate, switch, and
+      delete SQLite dataset workspaces
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: api/datasets.py
+    metadata:
+      created_at: 2026-03-23T12:24:02.676Z
+      updated_at: 2026-03-23T12:24:02.676Z
+      version: 1
+  timestamp: 2026-03-23T12:24:02.702Z
+  sequenceNumber: 6
+- type: add
+  elementId: api.tag.rag-pipeline
+  layerName: api
+  after:
+    id: 7f014540-359f-4d31-896d-b1086014d58a
+    path: api.tag.rag-pipeline
+    spec_node_id: api.tag
+    type: tag
+    layer_id: api
+    name: rag-pipeline
+    description: RAG pipeline execution for automated ontology entity extraction from text
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: api/rag_pipeline.py
+    metadata:
+      created_at: 2026-03-23T12:24:03.133Z
+      updated_at: 2026-03-23T12:24:03.133Z
+      version: 1
+  timestamp: 2026-03-23T12:24:03.158Z
+  sequenceNumber: 7
+- type: add
+  elementId: api.tag.llm
+  layerName: api
+  after:
+    id: 9c26bb41-5cc4-4b1b-8b45-7c3a8fef4b84
+    path: api.tag.llm
+    spec_node_id: api.tag
+    type: tag
+    layer_id: api
+    name: llm
+    description: LLM pipeline execution and health endpoints
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: api/llm.py
+    metadata:
+      created_at: 2026-03-23T12:24:07.456Z
+      updated_at: 2026-03-23T12:24:07.456Z
+      version: 1
+  timestamp: 2026-03-23T12:24:07.481Z
+  sequenceNumber: 8
+- type: add
+  elementId: api.tag.nlp
+  layerName: api
+  after:
+    id: 54c33dcd-e71a-4295-b003-e0ddf7ef5c18
+    path: api.tag.nlp
+    spec_node_id: api.tag
+    type: tag
+    layer_id: api
+    name: nlp
+    description: NLP text analysis endpoints using spaCy
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: api/nlp_analysis.py
+    metadata:
+      created_at: 2026-03-23T12:24:07.862Z
+      updated_at: 2026-03-23T12:24:07.862Z
+      version: 1
+  timestamp: 2026-03-23T12:24:07.888Z
+  sequenceNumber: 9
+- type: add
+  elementId: api.tag.health
+  layerName: api
+  after:
+    id: bff48c2d-47df-48bf-8f66-2f2976477259
+    path: api.tag.health
+    spec_node_id: api.tag
+    type: tag
+    layer_id: api
+    name: health
+    description: System health check endpoint
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: api/health.py
+    metadata:
+      created_at: 2026-03-23T12:24:08.272Z
+      updated_at: 2026-03-23T12:24:08.272Z
+      version: 1
+  timestamp: 2026-03-23T12:24:08.296Z
+  sequenceNumber: 10
+- type: add
+  elementId: api.operation.create-ontology-entity
+  layerName: api
+  after:
+    id: f6e56d84-4fe0-4156-aae0-7d00512223e9
+    path: api.operation.create-ontology-entity
+    spec_node_id: api.operation
+    type: operation
+    layer_id: api
+    name: Create Ontology Entity
+    description: POST /api/ontology_entities/ — Create a new taxonomy, concept
+      scheme, or class entity
+    attributes:
+      operationId: createOntologyEntity
+      summary: Create a new ontology entity
+      tags: ontology-entities
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: api/ontology_entities.py
+          symbol: create_entity
+    metadata:
+      created_at: 2026-03-23T12:24:27.195Z
+      updated_at: 2026-03-23T12:24:27.195Z
+      version: 1
+  timestamp: 2026-03-23T12:24:27.223Z
+  sequenceNumber: 11
+- type: add
+  elementId: api.operation.list-ontology-entities
+  layerName: api
+  after:
+    id: cd292074-eb97-465b-a1bd-cd9370108d80
+    path: api.operation.list-ontology-entities
+    spec_node_id: api.operation
+    type: operation
+    layer_id: api
+    name: List Ontology Entities
+    description: GET /api/ontology_entities/ — List entities with filtering by type,
+      parent, and pagination
+    attributes:
+      operationId: listOntologyEntities
+      summary: List ontology entities with filtering
+      tags: ontology-entities
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: api/ontology_entities.py
+    metadata:
+      created_at: 2026-03-23T12:24:27.637Z
+      updated_at: 2026-03-23T12:24:27.637Z
+      version: 1
+  timestamp: 2026-03-23T12:24:27.663Z
+  sequenceNumber: 12
+- type: add
+  elementId: api.operation.get-ontology-entity
+  layerName: api
+  after:
+    id: aff00dd0-43bc-4217-be4f-8f49b8359dda
+    path: api.operation.get-ontology-entity
+    spec_node_id: api.operation
+    type: operation
+    layer_id: api
+    name: Get Ontology Entity
+    description: GET /api/ontology_entities/{entity_id} — Retrieve a specific entity by ID
+    attributes:
+      operationId: getOntologyEntity
+      summary: Get a specific ontology entity
+      tags: ontology-entities
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: api/ontology_entities.py
+    metadata:
+      created_at: 2026-03-23T12:24:28.056Z
+      updated_at: 2026-03-23T12:24:28.056Z
+      version: 1
+  timestamp: 2026-03-23T12:24:28.082Z
+  sequenceNumber: 13
+- type: add
+  elementId: api.operation.update-ontology-entity
+  layerName: api
+  after:
+    id: 31dfc951-7b1c-46da-80b6-c77e18d08731
+    path: api.operation.update-ontology-entity
+    spec_node_id: api.operation
+    type: operation
+    layer_id: api
+    name: Update Ontology Entity
+    description: PUT /api/ontology_entities/{entity_id} — Update an ontology
+      entity's title, definition, or attributes
+    attributes:
+      operationId: updateOntologyEntity
+      summary: Update an ontology entity
+      tags: ontology-entities
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: api/ontology_entities.py
+    metadata:
+      created_at: 2026-03-23T12:24:33.862Z
+      updated_at: 2026-03-23T12:24:33.862Z
+      version: 1
+  timestamp: 2026-03-23T12:24:33.888Z
+  sequenceNumber: 14
+- type: add
+  elementId: api.operation.delete-ontology-entity
+  layerName: api
+  after:
+    id: 27a7e5e5-09fd-4e2e-953c-f257a33eaad2
+    path: api.operation.delete-ontology-entity
+    spec_node_id: api.operation
+    type: operation
+    layer_id: api
+    name: Delete Ontology Entity
+    description: DELETE /api/ontology_entities/{entity_id} — Delete an entity and
+      cascade to all child entities
+    attributes:
+      operationId: deleteOntologyEntity
+      summary: Delete an ontology entity
+      tags: ontology-entities
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: api/ontology_entities.py
+    metadata:
+      created_at: 2026-03-23T12:24:34.289Z
+      updated_at: 2026-03-23T12:24:34.289Z
+      version: 1
+  timestamp: 2026-03-23T12:24:34.314Z
+  sequenceNumber: 15
+- type: add
+  elementId: api.operation.vector-search-entities
+  layerName: api
+  after:
+    id: 224feafd-9d75-4eee-85ef-fc481a8a35be
+    path: api.operation.vector-search-entities
+    spec_node_id: api.operation
+    type: operation
+    layer_id: api
+    name: Vector Search Entities
+    description: POST /api/ontology_entities/find — Semantic vector similarity
+      search across ontology entities using embeddings
+    attributes:
+      operationId: vectorSearchEntities
+      summary: Vector search across ontology entities
+      tags: ontology-entities
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: api/ontology_entities.py
+    metadata:
+      created_at: 2026-03-23T12:24:34.721Z
+      updated_at: 2026-03-23T12:24:34.721Z
+      version: 1
+  timestamp: 2026-03-23T12:24:34.748Z
+  sequenceNumber: 16
+- type: add
+  elementId: api.operation.sparql-query
+  layerName: api
+  after:
+    id: c6e9b988-2fd3-4c82-b95c-ae59a2a63237
+    path: api.operation.sparql-query
+    spec_node_id: api.operation
+    type: operation
+    layer_id: api
+    name: SPARQL Query
+    description: POST /api/sparql/query — Execute a SPARQL query over the in-memory
+      RDF ontology graph
+    attributes:
+      operationId: sparqlQuery
+      summary: Execute SPARQL query over ontology graph
+      tags: graph
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: api/graph.py
+    metadata:
+      created_at: 2026-03-23T12:24:40.993Z
+      updated_at: 2026-03-23T12:24:40.993Z
+      version: 1
+  timestamp: 2026-03-23T12:24:41.021Z
+  sequenceNumber: 17
+- type: add
+  elementId: api.operation.graph-analytics-centrality
+  layerName: api
+  after:
+    id: 5d7ebf96-19d3-4884-ab16-17e2d8860a5b
+    path: api.operation.graph-analytics-centrality
+    spec_node_id: api.operation
+    type: operation
+    layer_id: api
+    name: Graph Analytics Centrality
+    description: POST /api/analytics/centrality — Compute node centrality metrics
+      (degree, betweenness, closeness) in the ontology graph
+    attributes:
+      operationId: graphCentrality
+      summary: Compute graph centrality metrics
+      tags: graph
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: api/graph.py
+    metadata:
+      created_at: 2026-03-23T12:24:41.427Z
+      updated_at: 2026-03-23T12:24:41.427Z
+      version: 1
+  timestamp: 2026-03-23T12:24:41.457Z
+  sequenceNumber: 18
+- type: add
+  elementId: api.operation.graph-search-terms
+  layerName: api
+  after:
+    id: 2da726c3-439c-46c5-82fa-5736f83ae14e
+    path: api.operation.graph-search-terms
+    spec_node_id: api.operation
+    type: operation
+    layer_id: api
+    name: Graph Search Terms
+    description: GET /api/search/terms — Full-text and semantic search over ontology
+      graph terms
+    attributes:
+      operationId: graphSearchTerms
+      summary: Search ontology graph terms
+      tags: graph
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: api/graph.py
+    metadata:
+      created_at: 2026-03-23T12:24:41.852Z
+      updated_at: 2026-03-23T12:24:41.852Z
+      version: 1
+  timestamp: 2026-03-23T12:24:41.879Z
+  sequenceNumber: 19
+- type: add
+  elementId: api.operation.get-working-tree-status
+  layerName: api
+  after:
+    id: 198a0345-9926-4027-9d71-57465339571a
+    path: api.operation.get-working-tree-status
+    spec_node_id: api.operation
+    type: operation
+    layer_id: api
+    name: Get Working Tree Status
+    description: GET /working-tree/status — Retrieve current working tree status
+      showing staged and unstaged ontology changes
+    attributes:
+      operationId: getWorkingTreeStatus
+      summary: Get working tree status
+      tags: version-management
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: api/version_management.py
+    metadata:
+      created_at: 2026-03-23T12:24:48.905Z
+      updated_at: 2026-03-23T12:24:48.905Z
+      version: 1
+  timestamp: 2026-03-23T12:24:48.931Z
+  sequenceNumber: 20
+- type: add
+  elementId: api.operation.commit-working-tree
+  layerName: api
+  after:
+    id: 5de3ea47-c50d-4c8b-a8b2-0095f9f12886
+    path: api.operation.commit-working-tree
+    spec_node_id: api.operation
+    type: operation
+    layer_id: api
+    name: Commit Working Tree
+    description: POST /working-tree/commit — Commit staged changes in the working
+      tree to create a new version snapshot
+    attributes:
+      operationId: commitWorkingTree
+      summary: Commit staged working tree changes
+      tags: version-management
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: api/version_management.py
+    metadata:
+      created_at: 2026-03-23T12:24:49.331Z
+      updated_at: 2026-03-23T12:24:49.331Z
+      version: 1
+  timestamp: 2026-03-23T12:24:49.357Z
+  sequenceNumber: 21
+- type: add
+  elementId: api.operation.create-changeset
+  layerName: api
+  after:
+    id: e875f5a9-1bd9-4689-9a92-0b0b82b3f9c7
+    path: api.operation.create-changeset
+    spec_node_id: api.operation
+    type: operation
+    layer_id: api
+    name: Create Changeset
+    description: POST /changesets — Create a new collaborative changeset for
+      grouping ontology entity changes
+    attributes:
+      operationId: createChangeset
+      summary: Create a new changeset
+      tags: changeset-management
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: api/changeset_management.py
+    metadata:
+      created_at: 2026-03-23T12:24:49.762Z
+      updated_at: 2026-03-23T12:24:49.762Z
+      version: 1
+  timestamp: 2026-03-23T12:24:49.789Z
+  sequenceNumber: 22
+- type: add
+  elementId: api.operation.list-datasets
+  layerName: api
+  after:
+    id: 092e69ea-c0e1-4ad4-818f-58d579821be8
+    path: api.operation.list-datasets
+    spec_node_id: api.operation
+    type: operation
+    layer_id: api
+    name: List Datasets
+    description: GET /api/datasets — List all available SQLite dataset workspaces
+    attributes:
+      operationId: listDatasets
+      summary: List all dataset workspaces
+      tags: datasets
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: api/datasets.py
+    metadata:
+      created_at: 2026-03-23T12:24:57.108Z
+      updated_at: 2026-03-23T12:24:57.108Z
+      version: 1
+  timestamp: 2026-03-23T12:24:57.137Z
+  sequenceNumber: 23
+- type: add
+  elementId: api.operation.activate-dataset
+  layerName: api
+  after:
+    id: a65169bc-96eb-45c6-8e9f-f0e5f8693f75
+    path: api.operation.activate-dataset
+    spec_node_id: api.operation
+    type: operation
+    layer_id: api
+    name: Activate Dataset
+    description: POST /api/datasets/{dataset_id}/activate — Switch the active
+      dataset workspace
+    attributes:
+      operationId: activateDataset
+      summary: Activate a dataset workspace
+      tags: datasets
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: api/datasets.py
+    metadata:
+      created_at: 2026-03-23T12:24:57.555Z
+      updated_at: 2026-03-23T12:24:57.555Z
+      version: 1
+  timestamp: 2026-03-23T12:24:57.585Z
+  sequenceNumber: 24
+- type: add
+  elementId: api.operation.execute-llm-pipeline
+  layerName: api
+  after:
+    id: 42fb3086-cfd5-4b6d-9ef9-10cccd1efde8
+    path: api.operation.execute-llm-pipeline
+    spec_node_id: api.operation
+    type: operation
+    layer_id: api
+    name: Execute LLM Pipeline
+    description: POST /api/llm/execute_pipeline — Execute a configured LLM pipeline
+      for ontology entity enrichment
+    attributes:
+      operationId: executeLLMPipeline
+      summary: Execute LLM enrichment pipeline
+      tags: llm
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: api/llm.py
+    metadata:
+      created_at: 2026-03-23T12:24:58.010Z
+      updated_at: 2026-03-23T12:24:58.010Z
+      version: 1
+  timestamp: 2026-03-23T12:24:58.037Z
+  sequenceNumber: 25
+- type: add
+  elementId: api.operation.execute-rag-pipeline
+  layerName: api
+  after:
+    id: 23c8d153-3b88-40ac-a981-2f179fe4a93a
+    path: api.operation.execute-rag-pipeline
+    spec_node_id: api.operation
+    type: operation
+    layer_id: api
+    name: Execute RAG Pipeline
+    description: POST /api/rag/pipeline — Execute the RAG pipeline to extract
+      ontology entities from a provided text corpus
+    attributes:
+      operationId: executeRAGPipeline
+      summary: Execute RAG extraction pipeline
+      tags: rag-pipeline
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: api/rag_pipeline.py
+    metadata:
+      created_at: 2026-03-23T12:25:07.069Z
+      updated_at: 2026-03-23T12:25:07.069Z
+      version: 1
+  timestamp: 2026-03-23T12:25:07.100Z
+  sequenceNumber: 26
+- type: add
+  elementId: api.operation.nlp-analyze-text
+  layerName: api
+  after:
+    id: f386f337-7c7b-4144-b708-a0fe2dbbb06e
+    path: api.operation.nlp-analyze-text
+    spec_node_id: api.operation
+    type: operation
+    layer_id: api
+    name: NLP Analyze Text
+    description: POST /api/nlp/analyze — Run spaCy NLP analysis on text, returning
+      entities, tokens, and dependency parse
+    attributes:
+      operationId: analyzeText
+      summary: Analyze text with NLP pipeline
+      tags: nlp
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: api/nlp_analysis.py
+    metadata:
+      created_at: 2026-03-23T12:25:07.525Z
+      updated_at: 2026-03-23T12:25:07.525Z
+      version: 1
+  timestamp: 2026-03-23T12:25:07.554Z
+  sequenceNumber: 27
+- type: add
+  elementId: api.operation.health-check
+  layerName: api
+  after:
+    id: 8e8578f7-6c30-4bc4-8b26-be12bc484e86
+    path: api.operation.health-check
+    spec_node_id: api.operation
+    type: operation
+    layer_id: api
+    name: Health Check
+    description: GET /health — Return server health status
+    attributes:
+      operationId: healthCheck
+      summary: Server health check
+      tags: health
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: api/health.py
+    metadata:
+      created_at: 2026-03-23T12:25:07.976Z
+      updated_at: 2026-03-23T12:25:07.976Z
+      version: 1
+  timestamp: 2026-03-23T12:25:08.004Z
+  sequenceNumber: 28
+- type: add
+  elementId: api.securityscheme.api-key-authentication
+  layerName: api
+  after:
+    id: 77e2bd8e-a968-42cd-9617-44aed88b4be3
+    path: api.securityscheme.api-key-authentication
+    spec_node_id: api.securityscheme
+    type: securityscheme
+    layer_id: api
+    name: API Key Authentication
+    description: Optional API key authentication via X-API-Key header
+      (require_secure_key configurable in config.json)
+    attributes:
+      type: apiKey
+      in: header
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: config.json
+    metadata:
+      created_at: 2026-03-23T12:25:14.398Z
+      updated_at: 2026-03-23T12:25:14.398Z
+      version: 1
+  timestamp: 2026-03-23T12:25:14.429Z
+  sequenceNumber: 29
+- type: add
+  elementId: api.ratelimit.external-api-rate-limit
+  layerName: api
+  after:
+    id: 54141281-3140-4445-8c91-8559978edbdf
+    path: api.ratelimit.external-api-rate-limit
+    spec_node_id: api.ratelimit
+    type: ratelimit
+    layer_id: api
+    name: External API Rate Limit
+    description: Per-source rate limits enforced by the reference-api-buddy proxy
+      for ConceptNet, DBpedia, Wikidata, and other external knowledge APIs
+    attributes:
+      requests: 60
+      window: 1m
+      keyBy: source
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: config.json
+    metadata:
+      created_at: 2026-03-23T12:25:21.906Z
+      updated_at: 2026-03-23T12:25:21.906Z
+      version: 1
+  timestamp: 2026-03-23T12:25:21.937Z
+  sequenceNumber: 30

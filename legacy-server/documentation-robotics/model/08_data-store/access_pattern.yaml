@@ -1,0 +1,44 @@
+data-store.accesspattern.entity-by-parent:
+  id: 5d888023-8146-492d-8c50-e5dabcc93553
+  path: data-store.accesspattern.entity-by-parent
+  spec_node_id: data-store.accesspattern
+  type: accesspattern
+  layer_id: data-store
+  name: entity_by_parent
+  description: Access pattern for listing child entities by parent_entity_id —
+    used by all list/filter operations requiring hierarchical traversal
+  attributes:
+    patternType: RANGE_SCAN
+    targetCollection: ontology_entities
+    keyCondition: parent_entity_id
+    expectedFrequency: FREQUENT
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: database/models.py
+        symbol: OntologyEntity.parent_entity_id
+  metadata:
+    created_at: 2026-03-23T12:28:46.818Z
+    updated_at: 2026-03-23T12:28:46.818Z
+    version: 1
+data-store.accesspattern.vector-similarity-search:
+  id: c8d86c2c-8f2a-4f70-b47b-21c0b74e6102
+  path: data-store.accesspattern.vector-similarity-search
+  spec_node_id: data-store.accesspattern
+  type: accesspattern
+  layer_id: data-store
+  name: vector_similarity_search
+  description: Semantic vector similarity search over ontology_entities using
+    sqlite-vec cosine distance on title_embedding and definition_embedding
+  attributes:
+    patternType: VECTOR_SIMILARITY
+    targetCollection: ontology_entities
+    expectedFrequency: FREQUENT
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: database/sql_builders.py
+  metadata:
+    created_at: 2026-03-23T12:28:47.281Z
+    updated_at: 2026-03-23T12:28:47.281Z
+    version: 1

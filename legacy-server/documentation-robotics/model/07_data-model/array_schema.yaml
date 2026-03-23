@@ -1,0 +1,18 @@
+data-model.arrayschema.reference-links-array:
+  id: e5f25c67-a2fc-46eb-8122-4b07bae1fc1a
+  path: data-model.arrayschema.reference-links-array
+  spec_node_id: data-model.arrayschema
+  type: arrayschema
+  layer_id: data-model
+  name: Reference Links Array
+  description: JSON array of ExternalReference objects stored on each
+    OntologyEntity for external knowledge source links
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: database/models.py
+        symbol: OntologyEntity.reference_links
+  metadata:
+    created_at: 2026-03-23T12:26:48.352Z
+    updated_at: 2026-03-23T12:26:48.352Z
+    version: 1

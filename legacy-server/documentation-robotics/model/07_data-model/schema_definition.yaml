@@ -1,0 +1,485 @@
+data-model.schemadefinition.ontology-entity:
+  id: b43851dd-50f0-4bd2-adfe-ddb92a4b55d1
+  path: data-model.schemadefinition.ontology-entity
+  spec_node_id: data-model.schemadefinition
+  type: schemadefinition
+  layer_id: data-model
+  name: OntologyEntity
+  description: Unified domain entity representing a taxonomy, concept scheme,
+    class, or individual — the primary knowledge graph node type
+  attributes:
+    title: OntologyEntity
+    type: object
+    description: "Ontology entity: taxonomy, concept scheme, class, or individual"
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: domain/ontology/entities.py
+        symbol: Taxonomy,ConceptScheme,Class
+  metadata:
+    created_at: 2026-03-23T12:25:55.889Z
+    updated_at: 2026-03-23T12:25:55.889Z
+    version: 1
+data-model.schemadefinition.relationship:
+  id: 4933eafa-9f25-4ff7-9503-9b4b157ece36
+  path: data-model.schemadefinition.relationship
+  spec_node_id: data-model.schemadefinition
+  type: schemadefinition
+  layer_id: data-model
+  name: Relationship
+  description: Typed, directed edge connecting two ontology entities with a
+    predicate label and optional weight
+  attributes:
+    title: Relationship
+    type: object
+    description: Directed relationship between two ontology entities
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: domain/ontology/entities.py
+        symbol: Relationship
+  metadata:
+    created_at: 2026-03-23T12:25:56.310Z
+    updated_at: 2026-03-23T12:25:56.310Z
+    version: 1
+data-model.schemadefinition.property-definition:
+  id: a4b0ec6e-5a41-49be-bc92-102b289258c7
+  path: data-model.schemadefinition.property-definition
+  spec_node_id: data-model.schemadefinition
+  type: schemadefinition
+  layer_id: data-model
+  name: PropertyDefinition
+  description: Reusable predicate/property type that can be asserted on entities
+    and used as a relationship label
+  attributes:
+    title: PropertyDefinition
+    type: object
+    description: Reusable property type for entity relationships
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: domain/ontology/entities.py
+        symbol: PropertyDefinition
+  metadata:
+    created_at: 2026-03-23T12:25:56.762Z
+    updated_at: 2026-03-23T12:25:56.762Z
+    version: 1
+data-model.schemadefinition.change-event:
+  id: 7aa521ad-a61f-4895-977f-9fc2ff7aa691
+  path: data-model.schemadefinition.change-event
+  spec_node_id: data-model.schemadefinition
+  type: schemadefinition
+  layer_id: data-model
+  name: ChangeEvent
+  description: Audit trail record for create/update/delete operations on ontology
+    entities, relationships, and predicates
+  attributes:
+    title: ChangeEvent
+    type: object
+    description: Audit log entry for entity changes with sync state
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: domain/versioning/entities.py
+        symbol: ChangeEvent
+  metadata:
+    created_at: 2026-03-23T12:26:03.337Z
+    updated_at: 2026-03-23T12:26:03.337Z
+    version: 1
+data-model.schemadefinition.pipeline-configuration:
+  id: 8abad9ed-c804-42ec-bf50-a222e830bc84
+  path: data-model.schemadefinition.pipeline-configuration
+  spec_node_id: data-model.schemadefinition
+  type: schemadefinition
+  layer_id: data-model
+  name: PipelineConfiguration
+  description: Reusable LLM pipeline configuration with provider, model, prompt
+    templates, and execution parameters
+  attributes:
+    title: PipelineConfiguration
+    type: object
+    description: LLM pipeline configuration for ontology enrichment
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: domain/pipeline/entities.py
+        symbol: PipelineConfiguration
+  metadata:
+    created_at: 2026-03-23T12:26:03.755Z
+    updated_at: 2026-03-23T12:26:03.755Z
+    version: 1
+data-model.schemadefinition.entity-version:
+  id: e7a08910-1307-4320-8ba2-6955a67c9c5a
+  path: data-model.schemadefinition.entity-version
+  spec_node_id: data-model.schemadefinition
+  type: schemadefinition
+  layer_id: data-model
+  name: EntityVersion
+  description: Point-in-time snapshot of an ontology entity for version history and rollback
+  attributes:
+    title: EntityVersion
+    type: object
+    description: Versioned snapshot of an ontology entity
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: domain/versioning/entities.py
+        symbol: EntityVersion
+  metadata:
+    created_at: 2026-03-23T12:26:04.175Z
+    updated_at: 2026-03-23T12:26:04.175Z
+    version: 1
+data-model.schemadefinition.external-reference:
+  id: fc064528-47da-4565-a974-ba3dae907e53
+  path: data-model.schemadefinition.external-reference
+  spec_node_id: data-model.schemadefinition
+  type: schemadefinition
+  layer_id: data-model
+  name: ExternalReference
+  description: Immutable reference linking an ontology entity to an external
+    knowledge base (Wikidata, DBpedia, ConceptNet)
+  attributes:
+    title: ExternalReference
+    type: object
+    description: Reference to external ontology or knowledge base URI
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: domain/ontology/value_objects.py
+        symbol: ExternalReference
+  metadata:
+    created_at: 2026-03-23T12:26:33.777Z
+    updated_at: 2026-03-23T12:26:33.777Z
+    version: 1
+data-model.schemadefinition.lexical-sense:
+  id: d0f6f8b9-b6f6-4522-8e7e-35a75d320bc6
+  path: data-model.schemadefinition.lexical-sense
+  spec_node_id: data-model.schemadefinition
+  type: schemadefinition
+  layer_id: data-model
+  name: LexicalSense
+  description: Immutable lexical sense with synset_id, definition, lemma, and
+    confidence linking entities to WordNet and similar lexicons
+  attributes:
+    title: LexicalSense
+    type: object
+    description: Lexical sense definition from WordNet or similar lexicon
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: domain/ontology/value_objects.py
+        symbol: LexicalSense
+  metadata:
+    created_at: 2026-03-23T12:26:40.681Z
+    updated_at: 2026-03-23T12:26:40.681Z
+    version: 1
+data-model.schemadefinition.ontology-mapping:
+  id: eb48db8d-36e9-4b77-a362-75d4aa57c08f
+  path: data-model.schemadefinition.ontology-mapping
+  spec_node_id: data-model.schemadefinition
+  type: schemadefinition
+  layer_id: data-model
+  name: OntologyMapping
+  description: Immutable mapping assertion linking ontology entities to external
+    ontologies (rdfs, skos, owl) via URI
+  attributes:
+    title: OntologyMapping
+    type: object
+    description: Mapping to external ontology URI
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: domain/ontology/value_objects.py
+        symbol: OntologyMapping
+  metadata:
+    created_at: 2026-03-23T12:26:41.110Z
+    updated_at: 2026-03-23T12:26:41.110Z
+    version: 1
+data-model.schemadefinition.conflict:
+  id: 20c05e48-7e45-4b5f-b81c-1c3d74892ceb
+  path: data-model.schemadefinition.conflict
+  spec_node_id: data-model.schemadefinition
+  type: schemadefinition
+  layer_id: data-model
+  name: Conflict
+  description: Represents a detected conflict between local and remote entity
+    versions during a sync operation
+  attributes:
+    title: Conflict
+    type: object
+    description: Conflict between local and remote entity versions
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: domain/versioning/entities.py
+        symbol: Conflict
+  metadata:
+    created_at: 2026-03-23T12:26:41.542Z
+    updated_at: 2026-03-23T12:26:41.542Z
+    version: 1
+data-model.schemadefinition.changeset:
+  id: a4e7f7b6-8c2e-4e47-a3c4-4e69704adad5
+  path: data-model.schemadefinition.changeset
+  spec_node_id: data-model.schemadefinition
+  type: schemadefinition
+  layer_id: data-model
+  name: Changeset
+  description: Named bundle of staged entity versions with state
+    (draft/open/merged), author, branch_name, parent_changeset_id, and optional
+    S3 push metadata
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: services/changeset_manager.py
+        symbol: ChangesetManager
+  metadata:
+    created_at: 2026-03-23T19:02:32.456Z
+    updated_at: 2026-03-23T19:02:32.456Z
+    version: 1
+data-model.schemadefinition.proposal:
+  id: 8b9ac1fb-2d46-494f-ae94-1a7a26d9549f
+  path: data-model.schemadefinition.proposal
+  spec_node_id: data-model.schemadefinition
+  type: schemadefinition
+  layer_id: data-model
+  name: Proposal
+  description: Review proposal for a changeset with required_approvals threshold,
+    approval/rejection voting, and computed status based on vote aggregation
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: services/proposal_manager.py
+        symbol: ProposalManager
+  metadata:
+    created_at: 2026-03-23T19:02:32.953Z
+    updated_at: 2026-03-23T19:02:32.953Z
+    version: 1
+data-model.schemadefinition.user:
+  id: 06d5e081-7e3b-4200-bf22-34deaa94caef
+  path: data-model.schemadefinition.user
+  spec_node_id: data-model.schemadefinition
+  type: schemadefinition
+  layer_id: data-model
+  name: User
+  description: Collaborative user identity with email, display_name, email
+    verification status, and peer-trust network edges
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: services/identity_manager.py
+        symbol: IdentityManager
+  metadata:
+    created_at: 2026-03-23T19:02:39.862Z
+    updated_at: 2026-03-23T19:02:39.862Z
+    version: 1
+data-model.schemadefinition.conflict-descriptor:
+  id: e069a336-7cd1-4de7-82bf-5b737c706f3e
+  path: data-model.schemadefinition.conflict-descriptor
+  spec_node_id: data-model.schemadefinition
+  type: schemadefinition
+  layer_id: data-model
+  name: ConflictDescriptor
+  description: "Describes a detected merge conflict: type
+    (concurrent_modification/structural/dependency/semantic), severity, entity
+    reference, and resolution suggestions"
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: services/conflict_resolution_engine.py
+        symbol: ConflictResolutionEngine
+  metadata:
+    created_at: 2026-03-23T19:02:40.333Z
+    updated_at: 2026-03-23T19:02:40.333Z
+    version: 1
+data-model.schemadefinition.sync-operation:
+  id: 0b9d5450-7cb8-4a30-b1c2-6ef6d4a6b983
+  path: data-model.schemadefinition.sync-operation
+  spec_node_id: data-model.schemadefinition
+  type: schemadefinition
+  layer_id: data-model
+  name: SyncOperation
+  description: "Tracks an incremental sync run: time window, entity types, batch
+    size, parallel workers, status, and performance metrics"
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: services/incremental_sync_engine.py
+        symbol: IncrementalSyncEngine
+  metadata:
+    created_at: 2026-03-23T19:02:40.805Z
+    updated_at: 2026-03-23T19:02:40.805Z
+    version: 1
+data-model.schemadefinition.ragextraction-request:
+  id: b6b0d78c-3660-4e0d-881b-62475818ff5c
+  path: data-model.schemadefinition.ragextraction-request
+  spec_node_id: data-model.schemadefinition
+  type: schemadefinition
+  layer_id: data-model
+  name: RAGExtractionRequest
+  description: "Input to the four-layer RAG pipeline: text content plus optional
+    trace-enable flag that activates per-layer observability recording"
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: rag/models.py
+        symbol: RAGExtractionRequest
+  metadata:
+    created_at: 2026-03-23T19:02:47.002Z
+    updated_at: 2026-03-23T19:02:47.002Z
+    version: 1
+data-model.schemadefinition.ragextraction-response:
+  id: 753b780e-2890-428f-809c-d8afa6b85063
+  path: data-model.schemadefinition.ragextraction-response
+  spec_node_id: data-model.schemadefinition
+  type: schemadefinition
+  layer_id: data-model
+  name: RAGExtractionResponse
+  description: "Output of the RAG pipeline: extracted entities list, per-layer
+    metrics (LayerMetrics), overall processing metrics, and a unique request_id
+    for trace retrieval"
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: rag/models.py
+        symbol: RAGExtractionResponse
+  metadata:
+    created_at: 2026-03-23T19:02:47.488Z
+    updated_at: 2026-03-23T19:02:47.488Z
+    version: 1
+data-model.schemadefinition.pipeline-flavor-execution:
+  id: 3216d7de-57fa-4609-88b0-554473b7fc26
+  path: data-model.schemadefinition.pipeline-flavor-execution
+  spec_node_id: data-model.schemadefinition
+  type: schemadefinition
+  layer_id: data-model
+  name: PipelineFlavorExecution
+  description: ORM model tracking individual LLM pipeline flavor execution records
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: operations/models.py
+        symbol: PipelineFlavorExecution
+  metadata:
+    created_at: 2026-03-23T19:26:54.641Z
+    updated_at: 2026-03-23T19:26:54.641Z
+    version: 1
+data-model.schemadefinition.ragobservability-trace:
+  id: 4b5f7fa5-75b0-48e1-950e-670fa7e8b8bb
+  path: data-model.schemadefinition.ragobservability-trace
+  spec_node_id: data-model.schemadefinition
+  type: schemadefinition
+  layer_id: data-model
+  name: RAGObservabilityTrace
+  description: Trace record for end-to-end RAG pipeline observability
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: operations/models.py
+        symbol: RAGObservabilityTrace
+  metadata:
+    created_at: 2026-03-23T19:26:55.204Z
+    updated_at: 2026-03-23T19:26:55.204Z
+    version: 1
+data-model.schemadefinition.ragprocessing-metrics:
+  id: 91d33641-d00f-42a5-9d81-891d95bf48e2
+  path: data-model.schemadefinition.ragprocessing-metrics
+  spec_node_id: data-model.schemadefinition
+  type: schemadefinition
+  layer_id: data-model
+  name: RAGProcessingMetrics
+  description: Per-layer processing time metrics for RAG pipeline runs
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: operations/models.py
+        symbol: RAGProcessingMetrics
+  metadata:
+    created_at: 2026-03-23T19:26:55.793Z
+    updated_at: 2026-03-23T19:26:55.793Z
+    version: 1
+data-model.schemadefinition.test-paragraph:
+  id: 24a9515f-da27-4b04-8410-4c859ba8f235
+  path: data-model.schemadefinition.test-paragraph
+  spec_node_id: data-model.schemadefinition
+  type: schemadefinition
+  layer_id: data-model
+  name: TestParagraph
+  description: Test paragraph entity used in RAG experiment harness
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: operations/models.py
+        symbol: TestParagraph
+  metadata:
+    created_at: 2026-03-23T19:26:56.343Z
+    updated_at: 2026-03-23T19:26:56.343Z
+    version: 1
+data-model.schemadefinition.test-annotation:
+  id: 5091ce22-5265-4ca6-85b5-1460c5fca1d0
+  path: data-model.schemadefinition.test-annotation
+  spec_node_id: data-model.schemadefinition
+  type: schemadefinition
+  layer_id: data-model
+  name: TestAnnotation
+  description: Annotation entity for marking expected entities in test paragraphs
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: operations/models.py
+        symbol: TestAnnotation
+  metadata:
+    created_at: 2026-03-23T19:27:02.786Z
+    updated_at: 2026-03-23T19:27:02.786Z
+    version: 1
+data-model.schemadefinition.ragpipeline-run:
+  id: 8d89389c-221c-47dd-b607-72c311de814a
+  path: data-model.schemadefinition.ragpipeline-run
+  spec_node_id: data-model.schemadefinition
+  type: schemadefinition
+  layer_id: data-model
+  name: RAGPipelineRun
+  description: Aggregate run record grouping multiple flavor executions for a test paragraph
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: operations/models.py
+        symbol: RAGPipelineRun
+  metadata:
+    created_at: 2026-03-23T19:27:03.324Z
+    updated_at: 2026-03-23T19:27:03.324Z
+    version: 1
+data-model.schemadefinition.node:
+  id: d85b0d46-8fdf-4f43-835e-67dcca92fe7b
+  path: data-model.schemadefinition.node
+  spec_node_id: data-model.schemadefinition
+  type: schemadefinition
+  layer_id: data-model
+  name: Node
+  description: Structure node entity (Taxonomy, ConceptScheme, or Class) unified
+    under node_type discriminator
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: domain/ontology/entities.py
+        symbol: Taxonomy,ConceptScheme,Class
+  metadata:
+    created_at: 2026-03-23T19:27:03.880Z
+    updated_at: 2026-03-23T19:27:03.880Z
+    version: 1
+data-model.schemadefinition.node-link:
+  id: b44c613c-b6db-4237-996b-0117923eb8ca
+  path: data-model.schemadefinition.node-link
+  spec_node_id: data-model.schemadefinition
+  type: schemadefinition
+  layer_id: data-model
+  name: NodeLink
+  description: Typed directed link between two structure nodes
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: services/node_link_service.py
+        symbol: ReferenceLinkService
+  metadata:
+    created_at: 2026-03-23T19:27:04.445Z
+    updated_at: 2026-03-23T19:27:04.445Z
+    version: 1

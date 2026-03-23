@@ -1,0 +1,19 @@
+application.applicationinterface.rest-api-interface:
+  id: 4561be58-2d20-46ae-9a14-7f66b8f26ffc
+  path: application.applicationinterface.rest-api-interface
+  spec_node_id: application.applicationinterface
+  type: applicationinterface
+  layer_id: application
+  name: REST API Interface
+  description: HTTP/JSON REST API exposed by FastAPI for all client interactions
+  attributes:
+    protocol: HTTP
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: app.py
+        symbol: app
+  metadata:
+    created_at: 2026-03-23T12:20:37.077Z
+    updated_at: 2026-03-23T12:20:37.077Z
+    version: 1

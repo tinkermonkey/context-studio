@@ -1,0 +1,18 @@
+business.businessinterface.rest-api-interface:
+  id: fedcdd2e-a379-4d3b-8384-4e685b6dd49d
+  path: business.businessinterface.rest-api-interface
+  spec_node_id: business.businessinterface
+  type: businessinterface
+  layer_id: business
+  name: REST API Interface
+  description: "Business interface: the HTTP/JSON REST API surface through which
+    external actors and agents interact with the knowledge graph"
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: app.py
+        symbol: create_app
+  metadata:
+    created_at: 2026-03-23T12:42:18.402Z
+    updated_at: 2026-03-23T12:42:18.402Z
+    version: 1

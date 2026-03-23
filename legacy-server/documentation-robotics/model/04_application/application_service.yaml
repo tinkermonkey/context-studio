@@ -1,0 +1,656 @@
+application.applicationservice.ontology-entity-service:
+  id: 78db0447-9249-4fbf-bf73-ce8da3f4c154
+  path: application.applicationservice.ontology-entity-service
+  spec_node_id: application.applicationservice
+  type: applicationservice
+  layer_id: application
+  name: Ontology Entity Service
+  description: Core CRUD and business logic for ontology entities (taxonomies,
+    concept schemes, classes, relationships)
+  attributes:
+    serviceType: synchronous
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: services/ontology_entity_service.py
+        symbol: OntologyEntityService
+  metadata:
+    created_at: 2026-03-23T12:20:04.085Z
+    updated_at: 2026-03-23T12:20:04.085Z
+    version: 1
+application.applicationservice.graph-service:
+  id: 3ccf6308-b41d-446d-a8cf-2c3b694ead65
+  path: application.applicationservice.graph-service
+  spec_node_id: application.applicationservice
+  type: applicationservice
+  layer_id: application
+  name: Graph Service
+  description: In-memory graph construction, traversal, and cached graph analysis
+    over ontology entities
+  attributes:
+    serviceType: synchronous
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: graph/graph_service.py
+        symbol: GraphService
+  metadata:
+    created_at: 2026-03-23T12:20:04.455Z
+    updated_at: 2026-03-23T12:20:04.455Z
+    version: 1
+application.applicationservice.llm-service:
+  id: c3e9311f-4683-4fee-a928-877d8353a033
+  path: application.applicationservice.llm-service
+  spec_node_id: application.applicationservice
+  type: applicationservice
+  layer_id: application
+  name: LLM Service
+  description: LLM provider routing and inference for ontology enrichment and RAG pipelines
+  attributes:
+    serviceType: asynchronous
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: llm/service.py
+        symbol: LLMService
+  metadata:
+    created_at: 2026-03-23T12:20:04.824Z
+    updated_at: 2026-03-23T12:20:04.824Z
+    version: 1
+application.applicationservice.rag-pipeline-service:
+  id: ca7a9272-ee6d-46db-8919-9773a07903c5
+  path: application.applicationservice.rag-pipeline-service
+  spec_node_id: application.applicationservice
+  type: applicationservice
+  layer_id: application
+  name: RAG Pipeline Service
+  description: Retrieval-Augmented Generation pipeline orchestrating NLP
+    extraction, embedding, and LLM enrichment for ontology entities
+  attributes:
+    serviceType: batch
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: rag/rag_pipeline_service.py
+        symbol: RAGPipelineService
+  metadata:
+    created_at: 2026-03-23T12:20:11.864Z
+    updated_at: 2026-03-23T12:20:11.864Z
+    version: 1
+application.applicationservice.reference-service:
+  id: 8caf0838-506b-46f9-8557-392a8dc7fc60
+  path: application.applicationservice.reference-service
+  spec_node_id: application.applicationservice
+  type: applicationservice
+  layer_id: application
+  name: Reference Service
+  description: External knowledge lookup and predicate discovery from ConceptNet,
+    DBpedia, Wikidata, and schema.org
+  attributes:
+    serviceType: synchronous
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: reference_api/service.py
+        symbol: ReferenceService
+  metadata:
+    created_at: 2026-03-23T12:20:12.244Z
+    updated_at: 2026-03-23T12:20:12.244Z
+    version: 1
+application.applicationservice.version-manager:
+  id: da837553-4c15-4c14-8cbc-0e1104f8e89a
+  path: application.applicationservice.version-manager
+  spec_node_id: application.applicationservice
+  type: applicationservice
+  layer_id: application
+  name: Version Manager
+  description: Version control and change tracking for ontology entities,
+    changesets, and working tree state
+  attributes:
+    serviceType: synchronous
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: services/version_manager.py
+        symbol: VersionManager
+  metadata:
+    created_at: 2026-03-23T12:20:12.631Z
+    updated_at: 2026-03-23T12:20:12.631Z
+    version: 1
+application.applicationservice.changeset-manager:
+  id: ef3619f0-d822-42b4-8475-4d0f5bb32b82
+  path: application.applicationservice.changeset-manager
+  spec_node_id: application.applicationservice
+  type: applicationservice
+  layer_id: application
+  name: Changeset Manager
+  description: Manages collaborative changesets including creation, proposal,
+    conflict detection, and CRDT-based merging
+  attributes:
+    serviceType: synchronous
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: services/changeset_manager.py
+        symbol: ChangesetManager
+  metadata:
+    created_at: 2026-03-23T12:20:18.216Z
+    updated_at: 2026-03-23T12:20:18.216Z
+    version: 1
+application.applicationservice.relationship-service:
+  id: f5eaebd0-1272-4221-a65e-98ab6f6b56ed
+  path: application.applicationservice.relationship-service
+  spec_node_id: application.applicationservice
+  type: applicationservice
+  layer_id: application
+  name: Relationship Service
+  description: CRUD operations and business logic for typed, directed
+    relationships between ontology entities
+  attributes:
+    serviceType: synchronous
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: services/relationship_service.py
+        symbol: RelationshipService
+  metadata:
+    created_at: 2026-03-23T12:20:18.609Z
+    updated_at: 2026-03-23T12:20:18.609Z
+    version: 1
+application.applicationservice.nlp-pipeline:
+  id: 33054010-71dc-41b6-b85b-632500e4e76e
+  path: application.applicationservice.nlp-pipeline
+  spec_node_id: application.applicationservice
+  type: applicationservice
+  layer_id: application
+  name: NLP Pipeline
+  description: spaCy-based NLP text processing pipeline for entity and predicate extraction
+  attributes:
+    serviceType: synchronous
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: nlp/pipeline.py
+        symbol: get_pipeline
+  metadata:
+    created_at: 2026-03-23T12:20:19.004Z
+    updated_at: 2026-03-23T12:20:19.004Z
+    version: 1
+application.applicationservice.working-tree-manager:
+  id: 4e67e833-3c15-4810-9b2d-1d7f943fa10f
+  path: application.applicationservice.working-tree-manager
+  spec_node_id: application.applicationservice
+  type: applicationservice
+  layer_id: application
+  name: Working Tree Manager
+  description: Tracks staged vs unstaged entity changes in the working tree,
+    providing git-like staging area semantics for ontology edits
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: services/working_tree_manager.py
+        symbol: WorkingTreeManager
+  metadata:
+    created_at: 2026-03-23T19:00:34.228Z
+    updated_at: 2026-03-23T19:00:34.228Z
+    version: 1
+application.applicationservice.diff-generator:
+  id: ac13488d-3f08-4028-a3c9-202aa01eb498
+  path: application.applicationservice.diff-generator
+  spec_node_id: application.applicationservice
+  type: applicationservice
+  layer_id: application
+  name: Diff Generator
+  description: Generates structured diffs between entity versions, supporting
+    per-field change comparison and working diff previews
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: services/diff_generator.py
+        symbol: DiffGenerator
+  metadata:
+    created_at: 2026-03-23T19:00:34.624Z
+    updated_at: 2026-03-23T19:00:34.624Z
+    version: 1
+application.applicationservice.s3-sync-manager:
+  id: afc279c7-dce7-45aa-9837-e5815c086935
+  path: application.applicationservice.s3-sync-manager
+  spec_node_id: application.applicationservice
+  type: applicationservice
+  layer_id: application
+  name: S3 Sync Manager
+  description: Pushes local change events to AWS S3 as Parquet files partitioned
+    by date, using DuckDB for export; pulls remote changes back via incremental
+    queries
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: services/s3_sync_manager.py
+        symbol: S3SyncManager
+  metadata:
+    created_at: 2026-03-23T19:00:40.700Z
+    updated_at: 2026-03-23T19:00:40.700Z
+    version: 1
+application.applicationservice.crdt-merge-engine:
+  id: 6753b0d4-86cb-45b7-9414-e8450c2ab0a3
+  path: application.applicationservice.crdt-merge-engine
+  spec_node_id: application.applicationservice
+  type: applicationservice
+  layer_id: application
+  name: CRDT Merge Engine
+  description: Merges approved changesets using CRDT semantics with configurable
+    merge strategies (last-writer-wins, merge-both, author-priority, manual)
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: services/crdt_merge_engine.py
+        symbol: CRDTMergeEngine
+  metadata:
+    created_at: 2026-03-23T19:00:41.114Z
+    updated_at: 2026-03-23T19:00:41.114Z
+    version: 1
+application.applicationservice.conflict-resolution-engine:
+  id: 7771e206-f814-40ba-b3ec-7b1c303a1048
+  path: application.applicationservice.conflict-resolution-engine
+  spec_node_id: application.applicationservice
+  type: applicationservice
+  layer_id: application
+  name: Conflict Resolution Engine
+  description: Detects and resolves merge conflicts across concurrent entity
+    modifications, supporting auto-resolution and manual suggestion workflows
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: services/conflict_resolution_engine.py
+        symbol: ConflictResolutionEngine
+  metadata:
+    created_at: 2026-03-23T19:00:45.893Z
+    updated_at: 2026-03-23T19:00:45.893Z
+    version: 1
+application.applicationservice.proposal-manager:
+  id: c61baf5c-73e3-40c2-bf7d-3eb166d080b0
+  path: application.applicationservice.proposal-manager
+  spec_node_id: application.applicationservice
+  type: applicationservice
+  layer_id: application
+  name: Proposal Manager
+  description: Manages changeset review proposals with voting
+    (approve/reject/abstain), required-approval thresholds, and vote-summary
+    aggregation
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: services/proposal_manager.py
+        symbol: ProposalManager
+  metadata:
+    created_at: 2026-03-23T19:00:46.280Z
+    updated_at: 2026-03-23T19:00:46.280Z
+    version: 1
+application.applicationservice.identity-manager:
+  id: d6feaed8-5a5f-434a-8a29-fed070e35559
+  path: application.applicationservice.identity-manager
+  spec_node_id: application.applicationservice
+  type: applicationservice
+  layer_id: application
+  name: Identity Manager
+  description: Handles user registration, email verification, and peer-trust
+    network establishment for collaborative workflows
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: services/identity_manager.py
+        symbol: IdentityManager
+  metadata:
+    created_at: 2026-03-23T19:00:51.699Z
+    updated_at: 2026-03-23T19:00:51.699Z
+    version: 1
+application.applicationservice.incremental-sync-engine:
+  id: 402ea99b-afcf-4846-b1a5-bfc6392035a2
+  path: application.applicationservice.incremental-sync-engine
+  spec_node_id: application.applicationservice
+  type: applicationservice
+  layer_id: application
+  name: Incremental Sync Engine
+  description: Performs time-partitioned incremental data synchronization with
+    configurable parallel/sequential strategies and batch-size controls
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: services/incremental_sync_engine.py
+        symbol: IncrementalSyncEngine
+  metadata:
+    created_at: 2026-03-23T19:00:52.124Z
+    updated_at: 2026-03-23T19:00:52.124Z
+    version: 1
+application.applicationservice.performance-monitor:
+  id: 06e774ae-0dae-44bc-9c58-9d9494f7c91f
+  path: application.applicationservice.performance-monitor
+  spec_node_id: application.applicationservice
+  type: applicationservice
+  layer_id: application
+  name: Performance Monitor
+  description: Collects real-time performance metrics across optimization
+    services; provides dashboards, trends, and auto-optimization triggers
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: services/performance_monitor.py
+        symbol: PerformanceMonitor
+  metadata:
+    created_at: 2026-03-23T19:00:56.547Z
+    updated_at: 2026-03-23T19:00:56.547Z
+    version: 1
+application.applicationservice.batch-operation-processor:
+  id: 077d4e44-ace6-4a10-a497-f9e0eb95aeb0
+  path: application.applicationservice.batch-operation-processor
+  spec_node_id: application.applicationservice
+  type: applicationservice
+  layer_id: application
+  name: Batch Operation Processor
+  description: Executes bulk ontology mutations with optimized batching, progress
+    tracking, and partial-failure recovery
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: services/batch_operation_processor.py
+        symbol: BatchOperationProcessor
+  metadata:
+    created_at: 2026-03-23T19:00:56.952Z
+    updated_at: 2026-03-23T19:00:56.952Z
+    version: 1
+application.applicationservice.rag-observability-store:
+  id: 58aea170-2c0a-47c7-a82d-73e386f9c090
+  path: application.applicationservice.rag-observability-store
+  spec_node_id: application.applicationservice
+  type: applicationservice
+  layer_id: application
+  name: RAG Observability Store
+  description: Stores per-request RAG pipeline traces, layer-level metrics, and
+    timing data for debugging and performance analysis
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: rag/observability_store.py
+        symbol: RAGObservabilityStore
+  metadata:
+    created_at: 2026-03-23T19:01:02.006Z
+    updated_at: 2026-03-23T19:01:02.006Z
+    version: 1
+application.applicationservice.embedding-regeneration-service:
+  id: 0dd58b8e-be7a-4f18-a49a-2c148c294577
+  path: application.applicationservice.embedding-regeneration-service
+  spec_node_id: application.applicationservice
+  type: applicationservice
+  layer_id: application
+  name: Embedding Regeneration Service
+  description: Regenerates title embeddings for all structure_nodes via a
+    WebSocket endpoint that streams real-time progress updates to the client
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: services/embedding_regeneration_service.py
+        symbol: EmbeddingRegenerationService
+  metadata:
+    created_at: 2026-03-23T19:01:02.400Z
+    updated_at: 2026-03-23T19:01:02.400Z
+    version: 1
+application.applicationservice.node-service:
+  id: ee93d781-ab69-4438-81f8-76edb67735f8
+  path: application.applicationservice.node-service
+  spec_node_id: application.applicationservice
+  type: applicationservice
+  layer_id: application
+  name: Node Service
+  description: Core CRUD operations for structure nodes (taxonomies, concept
+    schemes, classes)
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: services/node_service.py
+        symbol: NodeService
+  metadata:
+    created_at: 2026-03-23T19:26:22.271Z
+    updated_at: 2026-03-23T19:26:22.271Z
+    version: 1
+application.applicationservice.node-link-service:
+  id: ea15e7ba-3deb-4e80-88c7-a731268b6af7
+  path: application.applicationservice.node-link-service
+  spec_node_id: application.applicationservice
+  type: applicationservice
+  layer_id: application
+  name: Node Link Service
+  description: Manages typed directed links between structure nodes
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: services/node_link_service.py
+        symbol: ReferenceLinkService
+  metadata:
+    created_at: 2026-03-23T19:26:22.771Z
+    updated_at: 2026-03-23T19:26:22.771Z
+    version: 1
+application.applicationservice.word-sense-service:
+  id: 9f2caffe-c543-4b18-af21-d631370b8c4a
+  path: application.applicationservice.word-sense-service
+  spec_node_id: application.applicationservice
+  type: applicationservice
+  layer_id: application
+  name: Word Sense Service
+  description: Manages lexical word senses attached to ontology nodes
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: services/word_sense_service.py
+        symbol: WordSenseService
+  metadata:
+    created_at: 2026-03-23T19:26:23.264Z
+    updated_at: 2026-03-23T19:26:23.264Z
+    version: 1
+application.applicationservice.predicate-similarity-service:
+  id: d0c9dcb1-c409-4a5f-8bb6-416b4695af37
+  path: application.applicationservice.predicate-similarity-service
+  spec_node_id: application.applicationservice
+  type: applicationservice
+  layer_id: application
+  name: Predicate Similarity Service
+  description: Embedding-based predicate similarity and clustering operations
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: services/predicate_similarity.py
+        symbol: PredicateSimilarityService
+  metadata:
+    created_at: 2026-03-23T19:26:23.800Z
+    updated_at: 2026-03-23T19:26:23.800Z
+    version: 1
+application.applicationservice.task-manager:
+  id: e4384f7e-8e9e-4e4e-9cb3-de331cfefd48
+  path: application.applicationservice.task-manager
+  spec_node_id: application.applicationservice
+  type: applicationservice
+  layer_id: application
+  name: Task Manager
+  description: Background task lifecycle management with status tracking and
+    dead-letter queue
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: services/task_manager.py
+        symbol: TaskManager
+  metadata:
+    created_at: 2026-03-23T19:26:29.309Z
+    updated_at: 2026-03-23T19:26:29.309Z
+    version: 1
+application.applicationservice.hierarchical-diff-engine:
+  id: f0f2adf4-aa5f-4376-9006-0dfc66fd0c23
+  path: application.applicationservice.hierarchical-diff-engine
+  spec_node_id: application.applicationservice
+  type: applicationservice
+  layer_id: application
+  name: Hierarchical Diff Engine
+  description: Three-way hierarchical diff computation for ontology structures
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: services/hierarchical_diff_engine.py
+        symbol: HierarchicalDiffEngine
+  metadata:
+    created_at: 2026-03-23T19:26:29.805Z
+    updated_at: 2026-03-23T19:26:29.805Z
+    version: 1
+application.applicationservice.change-extractor:
+  id: 9c64da15-1156-4a2b-8cf0-45582e5bab9c
+  path: application.applicationservice.change-extractor
+  spec_node_id: application.applicationservice
+  type: applicationservice
+  layer_id: application
+  name: Change Extractor
+  description: Extracts structured change records from entity mutation operations
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: services/change_extractor.py
+        symbol: ChangeExtractor
+  metadata:
+    created_at: 2026-03-23T19:26:30.306Z
+    updated_at: 2026-03-23T19:26:30.306Z
+    version: 1
+application.applicationservice.change-event-handler:
+  id: f983fff3-ae8f-47b0-9b33-b6e175d6d4e6
+  path: application.applicationservice.change-event-handler
+  spec_node_id: application.applicationservice
+  type: applicationservice
+  layer_id: application
+  name: Change Event Handler
+  description: Handles domain change events and routes them to appropriate processors
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: services/change_event_handler.py
+        symbol: ChangeEventHandler
+  metadata:
+    created_at: 2026-03-23T19:26:30.797Z
+    updated_at: 2026-03-23T19:26:30.797Z
+    version: 1
+application.applicationservice.duck-db-service:
+  id: 899a3c32-3a0f-45e2-9771-bf5a6a68ad39
+  path: application.applicationservice.duck-db-service
+  spec_node_id: application.applicationservice
+  type: applicationservice
+  layer_id: application
+  name: DuckDB Service
+  description: DuckDB-based analytics engine for change event querying and reporting
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: services/duckdb_service.py
+        symbol: DuckDBService
+  metadata:
+    created_at: 2026-03-23T19:26:37.224Z
+    updated_at: 2026-03-23T19:26:37.224Z
+    version: 1
+application.applicationservice.change-analytics-engine:
+  id: 96a12858-fc0b-4ab2-bcd9-0c3a51410a60
+  path: application.applicationservice.change-analytics-engine
+  spec_node_id: application.applicationservice
+  type: applicationservice
+  layer_id: application
+  name: Change Analytics Engine
+  description: Analytics computations over change event history using DuckDB
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: services/duckdb_service.py
+        symbol: ChangeAnalyticsEngine
+  metadata:
+    created_at: 2026-03-23T19:26:37.728Z
+    updated_at: 2026-03-23T19:26:37.728Z
+    version: 1
+application.applicationservice.rag-test-management-service:
+  id: 47d84182-0801-40c7-91cc-b11f8f15e95a
+  path: application.applicationservice.rag-test-management-service
+  spec_node_id: application.applicationservice
+  type: applicationservice
+  layer_id: application
+  name: RAG Test Management Service
+  description: Manages RAG experiment test paragraphs, annotations, and pipeline
+    run comparisons
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: rag/test_service.py
+        symbol: RAGTestManagementService
+  metadata:
+    created_at: 2026-03-23T19:26:38.268Z
+    updated_at: 2026-03-23T19:26:38.268Z
+    version: 1
+application.applicationservice.llm-flavor-service:
+  id: c3b92a72-8c9f-4a78-86c5-9c44c3c29e8b
+  path: application.applicationservice.llm-flavor-service
+  spec_node_id: application.applicationservice
+  type: applicationservice
+  layer_id: application
+  name: LLM Flavor Service
+  description: Manages pipeline flavor templates including defaults and custom
+    configurations
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: llm/flavor_service.py
+        symbol: PipelineFlavorService
+  metadata:
+    created_at: 2026-03-23T19:26:38.791Z
+    updated_at: 2026-03-23T19:26:38.791Z
+    version: 1
+application.applicationservice.enabled-models-manager:
+  id: 5d45861c-6e90-4db8-8626-2997a30411ea
+  path: application.applicationservice.enabled-models-manager
+  spec_node_id: application.applicationservice
+  type: applicationservice
+  layer_id: application
+  name: Enabled Models Manager
+  description: Manages the registry of enabled LLM model configurations per provider
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: llm/enabled_models.py
+        symbol: EnabledModelsManager
+  metadata:
+    created_at: 2026-03-23T19:26:45.749Z
+    updated_at: 2026-03-23T19:26:45.749Z
+    version: 1
+application.applicationservice.open-router-discovery-service:
+  id: 50442888-e680-4c96-91b7-6612ec7d4fc5
+  path: application.applicationservice.open-router-discovery-service
+  spec_node_id: application.applicationservice
+  type: applicationservice
+  layer_id: application
+  name: OpenRouter Discovery Service
+  description: Discovers and syncs available models from OpenRouter API
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: llm/openrouter_discovery.py
+        symbol: OpenRouterDiscoveryService
+  metadata:
+    created_at: 2026-03-23T19:26:46.314Z
+    updated_at: 2026-03-23T19:26:46.314Z
+    version: 1
+application.applicationservice.reference-api-aggregator:
+  id: 05bf7f4e-3c42-4dc7-9f43-eb0bde49e8bd
+  path: application.applicationservice.reference-api-aggregator
+  spec_node_id: application.applicationservice
+  type: applicationservice
+  layer_id: application
+  name: Reference API Aggregator
+  description: Aggregates and normalizes results from multiple external reference
+    API sources
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: reference_api/aggregators.py
+        symbol: ResultAggregator
+  metadata:
+    created_at: 2026-03-23T19:26:47.358Z
+    updated_at: 2026-03-23T19:26:47.358Z
+    version: 1

@@ -1,0 +1,22 @@
+apm.instrumentationconfig.fast-api-auto-instrumentation:
+  id: 5470c6fc-20ed-4e7d-bb8a-3ed52e35f050
+  path: apm.instrumentationconfig.fast-api-auto-instrumentation
+  spec_node_id: apm.instrumentationconfig
+  type: instrumentationconfig
+  layer_id: apm
+  name: FastAPI Auto-Instrumentation
+  description: Application-level instrumentation configuration for capturing HTTP
+    request/response metrics via the access log middleware
+  attributes:
+    type: http
+    libraryName: AccessLogMiddleware
+    enabled: true
+    instrumentationType: manual
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: utils/access_log_middleware.py
+  metadata:
+    created_at: 2026-03-23T12:34:10.953Z
+    updated_at: 2026-03-23T12:34:10.953Z
+    version: 1

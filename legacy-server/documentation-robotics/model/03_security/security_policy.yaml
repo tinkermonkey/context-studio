@@ -1,0 +1,70 @@
+security.securitypolicy.api-key-authentication-policy:
+  id: 655a6db1-7e8b-4815-a994-8a7d9ecd0540
+  path: security.securitypolicy.api-key-authentication-policy
+  spec_node_id: security.securitypolicy
+  type: securitypolicy
+  layer_id: security
+  name: API Key Authentication Policy
+  description: "Optional API key authentication policy: when
+    require_secure_key=true, all requests must include X-API-Key header"
+  attributes:
+    priority: 1
+    target: endpoint
+    description: Optional API key enforcement via X-API-Key header
+    enabled: false
+    requirementLevel: optional
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: config.json
+  metadata:
+    created_at: 2026-03-23T12:37:35.911Z
+    updated_at: 2026-03-23T12:37:35.911Z
+    version: 1
+security.securitypolicy.cors-policy:
+  id: 887fa49d-ba37-4038-8ef8-d8ffe2c20b89
+  path: security.securitypolicy.cors-policy
+  spec_node_id: security.securitypolicy
+  type: securitypolicy
+  layer_id: security
+  name: CORS Policy
+  description: CORS policy allowing configurable origins (default *) for
+    cross-origin API access from the React front end
+  attributes:
+    priority: 2
+    target: endpoint
+    description: CORS origin control via CORSMiddleware
+    enabled: true
+    requirementLevel: mandatory
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: app.py
+  metadata:
+    created_at: 2026-03-23T12:37:36.441Z
+    updated_at: 2026-03-23T12:37:36.441Z
+    version: 1
+security.securitypolicy.error-message-sanitization-policy:
+  id: 8ba85728-9151-46c9-b76a-596a85ed2563
+  path: security.securitypolicy.error-message-sanitization-policy
+  spec_node_id: security.securitypolicy
+  type: securitypolicy
+  layer_id: security
+  name: Error Message Sanitization Policy
+  description: Policy sanitizing file paths and internal information from error
+    responses to prevent information disclosure (TC-SEC004)
+  attributes:
+    priority: 3
+    target: endpoint
+    description: Redact file paths from error responses
+    enabled: true
+    requirementLevel: mandatory
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: app.py
+        symbol: global_exception_handler
+  metadata:
+    created_at: 2026-03-23T12:37:36.943Z
+    updated_at: 2026-03-23T12:37:36.943Z
+    version: 1

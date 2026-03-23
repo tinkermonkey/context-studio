@@ -1,0 +1,1482 @@
+api.operation.create-ontology-entity:
+  id: f6e56d84-4fe0-4156-aae0-7d00512223e9
+  path: api.operation.create-ontology-entity
+  spec_node_id: api.operation
+  type: operation
+  layer_id: api
+  name: Create Ontology Entity
+  description: POST /api/ontology_entities/ — Create a new taxonomy, concept
+    scheme, or class entity
+  attributes:
+    operationId: createOntologyEntity
+    summary: Create a new ontology entity
+    tags: ontology-entities
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: api/ontology_entities.py
+        symbol: create_entity
+  metadata:
+    created_at: 2026-03-23T12:24:27.195Z
+    updated_at: 2026-03-23T12:24:27.195Z
+    version: 1
+api.operation.list-ontology-entities:
+  id: cd292074-eb97-465b-a1bd-cd9370108d80
+  path: api.operation.list-ontology-entities
+  spec_node_id: api.operation
+  type: operation
+  layer_id: api
+  name: List Ontology Entities
+  description: GET /api/ontology_entities/ — List entities with filtering by type,
+    parent, and pagination
+  attributes:
+    operationId: listOntologyEntities
+    summary: List ontology entities with filtering
+    tags: ontology-entities
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: api/ontology_entities.py
+  metadata:
+    created_at: 2026-03-23T12:24:27.637Z
+    updated_at: 2026-03-23T12:24:27.637Z
+    version: 1
+api.operation.get-ontology-entity:
+  id: aff00dd0-43bc-4217-be4f-8f49b8359dda
+  path: api.operation.get-ontology-entity
+  spec_node_id: api.operation
+  type: operation
+  layer_id: api
+  name: Get Ontology Entity
+  description: GET /api/ontology_entities/{entity_id} — Retrieve a specific entity by ID
+  attributes:
+    operationId: getOntologyEntity
+    summary: Get a specific ontology entity
+    tags: ontology-entities
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: api/ontology_entities.py
+  metadata:
+    created_at: 2026-03-23T12:24:28.056Z
+    updated_at: 2026-03-23T12:24:28.056Z
+    version: 1
+api.operation.update-ontology-entity:
+  id: 31dfc951-7b1c-46da-80b6-c77e18d08731
+  path: api.operation.update-ontology-entity
+  spec_node_id: api.operation
+  type: operation
+  layer_id: api
+  name: Update Ontology Entity
+  description: PUT /api/ontology_entities/{entity_id} — Update an ontology
+    entity's title, definition, or attributes
+  attributes:
+    operationId: updateOntologyEntity
+    summary: Update an ontology entity
+    tags: ontology-entities
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: api/ontology_entities.py
+  metadata:
+    created_at: 2026-03-23T12:24:33.862Z
+    updated_at: 2026-03-23T12:24:33.862Z
+    version: 1
+api.operation.delete-ontology-entity:
+  id: 27a7e5e5-09fd-4e2e-953c-f257a33eaad2
+  path: api.operation.delete-ontology-entity
+  spec_node_id: api.operation
+  type: operation
+  layer_id: api
+  name: Delete Ontology Entity
+  description: DELETE /api/ontology_entities/{entity_id} — Delete an entity and
+    cascade to all child entities
+  attributes:
+    operationId: deleteOntologyEntity
+    summary: Delete an ontology entity
+    tags: ontology-entities
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: api/ontology_entities.py
+  metadata:
+    created_at: 2026-03-23T12:24:34.289Z
+    updated_at: 2026-03-23T12:24:34.289Z
+    version: 1
+api.operation.vector-search-entities:
+  id: 224feafd-9d75-4eee-85ef-fc481a8a35be
+  path: api.operation.vector-search-entities
+  spec_node_id: api.operation
+  type: operation
+  layer_id: api
+  name: Vector Search Entities
+  description: POST /api/ontology_entities/find — Semantic vector similarity
+    search across ontology entities using embeddings
+  attributes:
+    operationId: vectorSearchEntities
+    summary: Vector search across ontology entities
+    tags: ontology-entities
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: api/ontology_entities.py
+  metadata:
+    created_at: 2026-03-23T12:24:34.721Z
+    updated_at: 2026-03-23T12:24:34.721Z
+    version: 1
+api.operation.sparql-query:
+  id: c6e9b988-2fd3-4c82-b95c-ae59a2a63237
+  path: api.operation.sparql-query
+  spec_node_id: api.operation
+  type: operation
+  layer_id: api
+  name: SPARQL Query
+  description: POST /api/sparql/query — Execute a SPARQL query over the in-memory
+    RDF ontology graph
+  attributes:
+    operationId: sparqlQuery
+    summary: Execute SPARQL query over ontology graph
+    tags: graph
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: api/graph.py
+  metadata:
+    created_at: 2026-03-23T12:24:40.993Z
+    updated_at: 2026-03-23T12:24:40.993Z
+    version: 1
+api.operation.graph-analytics-centrality:
+  id: 5d7ebf96-19d3-4884-ab16-17e2d8860a5b
+  path: api.operation.graph-analytics-centrality
+  spec_node_id: api.operation
+  type: operation
+  layer_id: api
+  name: Graph Analytics Centrality
+  description: POST /api/analytics/centrality — Compute node centrality metrics
+    (degree, betweenness, closeness) in the ontology graph
+  attributes:
+    operationId: graphCentrality
+    summary: Compute graph centrality metrics
+    tags: graph
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: api/graph.py
+  metadata:
+    created_at: 2026-03-23T12:24:41.427Z
+    updated_at: 2026-03-23T12:24:41.427Z
+    version: 1
+api.operation.graph-search-terms:
+  id: 2da726c3-439c-46c5-82fa-5736f83ae14e
+  path: api.operation.graph-search-terms
+  spec_node_id: api.operation
+  type: operation
+  layer_id: api
+  name: Graph Search Terms
+  description: GET /api/search/terms — Full-text and semantic search over ontology
+    graph terms
+  attributes:
+    operationId: graphSearchTerms
+    summary: Search ontology graph terms
+    tags: graph
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: api/graph.py
+  metadata:
+    created_at: 2026-03-23T12:24:41.852Z
+    updated_at: 2026-03-23T12:24:41.852Z
+    version: 1
+api.operation.get-working-tree-status:
+  id: 198a0345-9926-4027-9d71-57465339571a
+  path: api.operation.get-working-tree-status
+  spec_node_id: api.operation
+  type: operation
+  layer_id: api
+  name: Get Working Tree Status
+  description: GET /working-tree/status — Retrieve current working tree status
+    showing staged and unstaged ontology changes
+  attributes:
+    operationId: getWorkingTreeStatus
+    summary: Get working tree status
+    tags: version-management
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: api/version_management.py
+  metadata:
+    created_at: 2026-03-23T12:24:48.905Z
+    updated_at: 2026-03-23T12:24:48.905Z
+    version: 1
+api.operation.commit-working-tree:
+  id: 5de3ea47-c50d-4c8b-a8b2-0095f9f12886
+  path: api.operation.commit-working-tree
+  spec_node_id: api.operation
+  type: operation
+  layer_id: api
+  name: Commit Working Tree
+  description: POST /working-tree/commit — Commit staged changes in the working
+    tree to create a new version snapshot
+  attributes:
+    operationId: commitWorkingTree
+    summary: Commit staged working tree changes
+    tags: version-management
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: api/version_management.py
+  metadata:
+    created_at: 2026-03-23T12:24:49.331Z
+    updated_at: 2026-03-23T12:24:49.331Z
+    version: 1
+api.operation.create-changeset:
+  id: e875f5a9-1bd9-4689-9a92-0b0b82b3f9c7
+  path: api.operation.create-changeset
+  spec_node_id: api.operation
+  type: operation
+  layer_id: api
+  name: Create Changeset
+  description: POST /changesets — Create a new collaborative changeset for
+    grouping ontology entity changes
+  attributes:
+    operationId: createChangeset
+    summary: Create a new changeset
+    tags: changeset-management
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: api/changeset_management.py
+  metadata:
+    created_at: 2026-03-23T12:24:49.762Z
+    updated_at: 2026-03-23T12:24:49.762Z
+    version: 1
+api.operation.list-datasets:
+  id: 092e69ea-c0e1-4ad4-818f-58d579821be8
+  path: api.operation.list-datasets
+  spec_node_id: api.operation
+  type: operation
+  layer_id: api
+  name: List Datasets
+  description: GET /api/datasets — List all available SQLite dataset workspaces
+  attributes:
+    operationId: listDatasets
+    summary: List all dataset workspaces
+    tags: datasets
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: api/datasets.py
+  metadata:
+    created_at: 2026-03-23T12:24:57.108Z
+    updated_at: 2026-03-23T12:24:57.108Z
+    version: 1
+api.operation.activate-dataset:
+  id: a65169bc-96eb-45c6-8e9f-f0e5f8693f75
+  path: api.operation.activate-dataset
+  spec_node_id: api.operation
+  type: operation
+  layer_id: api
+  name: Activate Dataset
+  description: POST /api/datasets/{dataset_id}/activate — Switch the active
+    dataset workspace
+  attributes:
+    operationId: activateDataset
+    summary: Activate a dataset workspace
+    tags: datasets
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: api/datasets.py
+  metadata:
+    created_at: 2026-03-23T12:24:57.555Z
+    updated_at: 2026-03-23T12:24:57.555Z
+    version: 1
+api.operation.execute-llm-pipeline:
+  id: 42fb3086-cfd5-4b6d-9ef9-10cccd1efde8
+  path: api.operation.execute-llm-pipeline
+  spec_node_id: api.operation
+  type: operation
+  layer_id: api
+  name: Execute LLM Pipeline
+  description: POST /api/llm/execute_pipeline — Execute a configured LLM pipeline
+    for ontology entity enrichment
+  attributes:
+    operationId: executeLLMPipeline
+    summary: Execute LLM enrichment pipeline
+    tags: llm
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: api/llm.py
+  metadata:
+    created_at: 2026-03-23T12:24:58.010Z
+    updated_at: 2026-03-23T12:24:58.010Z
+    version: 1
+api.operation.execute-rag-pipeline:
+  id: 23c8d153-3b88-40ac-a981-2f179fe4a93a
+  path: api.operation.execute-rag-pipeline
+  spec_node_id: api.operation
+  type: operation
+  layer_id: api
+  name: Execute RAG Pipeline
+  description: POST /api/rag/pipeline — Execute the RAG pipeline to extract
+    ontology entities from a provided text corpus
+  attributes:
+    operationId: executeRAGPipeline
+    summary: Execute RAG extraction pipeline
+    tags: rag-pipeline
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: api/rag_pipeline.py
+  metadata:
+    created_at: 2026-03-23T12:25:07.069Z
+    updated_at: 2026-03-23T12:25:07.069Z
+    version: 1
+api.operation.nlp-analyze-text:
+  id: f386f337-7c7b-4144-b708-a0fe2dbbb06e
+  path: api.operation.nlp-analyze-text
+  spec_node_id: api.operation
+  type: operation
+  layer_id: api
+  name: NLP Analyze Text
+  description: POST /api/nlp/analyze — Run spaCy NLP analysis on text, returning
+    entities, tokens, and dependency parse
+  attributes:
+    operationId: analyzeText
+    summary: Analyze text with NLP pipeline
+    tags: nlp
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: api/nlp_analysis.py
+  metadata:
+    created_at: 2026-03-23T12:25:07.525Z
+    updated_at: 2026-03-23T12:25:07.525Z
+    version: 1
+api.operation.health-check:
+  id: 8e8578f7-6c30-4bc4-8b26-be12bc484e86
+  path: api.operation.health-check
+  spec_node_id: api.operation
+  type: operation
+  layer_id: api
+  name: Health Check
+  description: GET /health — Return server health status
+  attributes:
+    operationId: healthCheck
+    summary: Server health check
+    tags: health
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: api/health.py
+  metadata:
+    created_at: 2026-03-23T12:25:07.976Z
+    updated_at: 2026-03-23T12:25:07.976Z
+    version: 1
+api.operation.create-relationship:
+  id: d6358060-a361-40ea-92c5-bb4e6b000cbb
+  path: api.operation.create-relationship
+  spec_node_id: api.operation
+  type: operation
+  layer_id: api
+  name: Create Relationship
+  description: POST /api/ontology_entities/relationships — creates a typed
+    directed relationship between two ontology entities with optional
+    predicate_id
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: api/ontology_entities.py
+        symbol: router.post /relationships
+  metadata:
+    created_at: 2026-03-23T19:01:26.778Z
+    updated_at: 2026-03-23T19:01:26.778Z
+    version: 1
+api.operation.list-relationships:
+  id: 90ed7260-73b4-4909-9c2f-eff2c67ea540
+  path: api.operation.list-relationships
+  spec_node_id: api.operation
+  type: operation
+  layer_id: api
+  name: List Relationships
+  description: GET /api/ontology_entities/relationships — lists all entity
+    relationships with optional filtering
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: api/ontology_entities.py
+        symbol: router.get /relationships
+  metadata:
+    created_at: 2026-03-23T19:01:27.199Z
+    updated_at: 2026-03-23T19:01:27.199Z
+    version: 1
+api.operation.delete-relationship:
+  id: 4017ac79-5251-48f0-988d-c00ecf5e715f
+  path: api.operation.delete-relationship
+  spec_node_id: api.operation
+  type: operation
+  layer_id: api
+  name: Delete Relationship
+  description: DELETE /api/ontology_entities/relationships/{rel_id} — removes a
+    specific entity relationship
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: api/ontology_entities.py
+        symbol: router.delete /relationships/{rel_id}
+  metadata:
+    created_at: 2026-03-23T19:01:27.623Z
+    updated_at: 2026-03-23T19:01:27.623Z
+    version: 1
+api.operation.sync-push:
+  id: 0be7f3f5-5c16-410a-a379-e12f7c3025ee
+  path: api.operation.sync-push
+  spec_node_id: api.operation
+  type: operation
+  layer_id: api
+  name: Sync Push
+  description: POST /api/sync/push — pushes pending local change events to S3 as
+    date-partitioned Parquet files via DuckDB
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: api/sync.py
+        symbol: push_changes
+  metadata:
+    created_at: 2026-03-23T19:01:33.469Z
+    updated_at: 2026-03-23T19:01:33.469Z
+    version: 1
+api.operation.sync-pull:
+  id: 7710f4d4-451e-45a0-b146-ebe910506e57
+  path: api.operation.sync-pull
+  spec_node_id: api.operation
+  type: operation
+  layer_id: api
+  name: Sync Pull
+  description: POST /api/sync/pull — pulls remote changes from S3 since an
+    optional timestamp; returns merged change records
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: api/sync.py
+        symbol: pull_changes
+  metadata:
+    created_at: 2026-03-23T19:01:33.901Z
+    updated_at: 2026-03-23T19:01:33.901Z
+    version: 1
+api.operation.start-incremental-sync:
+  id: 5b345525-2f3b-422a-812a-492ecf1b70ac
+  path: api.operation.start-incremental-sync
+  spec_node_id: api.operation
+  type: operation
+  layer_id: api
+  name: Start Incremental Sync
+  description: POST /api/sync/incremental — starts a time-bounded incremental sync
+    with configurable batch size and parallel workers
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: api/incremental_sync.py
+        symbol: router.post /incremental
+  metadata:
+    created_at: 2026-03-23T19:01:34.345Z
+    updated_at: 2026-03-23T19:01:34.345Z
+    version: 1
+api.operation.create-proposal:
+  id: cc5547eb-d3ce-47e3-be08-58f4a56a89e0
+  path: api.operation.create-proposal
+  spec_node_id: api.operation
+  type: operation
+  layer_id: api
+  name: Create Proposal
+  description: POST /api/proposals — creates a review proposal for a changeset
+    with required-approval threshold
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: api/proposal_management.py
+        symbol: router.post /
+  metadata:
+    created_at: 2026-03-23T19:01:39.690Z
+    updated_at: 2026-03-23T19:01:39.690Z
+    version: 1
+api.operation.vote-on-proposal:
+  id: ef812e1a-2d46-4479-a0ec-f4379a2b398a
+  path: api.operation.vote-on-proposal
+  spec_node_id: api.operation
+  type: operation
+  layer_id: api
+  name: Vote on Proposal
+  description: POST /api/proposals/{proposal_id}/vote — casts
+    approve/reject/abstain vote with optional comment
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: api/proposal_management.py
+        symbol: router.post /{proposal_id}/vote
+  metadata:
+    created_at: 2026-03-23T19:01:40.136Z
+    updated_at: 2026-03-23T19:01:40.136Z
+    version: 1
+api.operation.list-proposals:
+  id: 1b2352d3-1726-4d11-824d-d379faf8c6e8
+  path: api.operation.list-proposals
+  spec_node_id: api.operation
+  type: operation
+  layer_id: api
+  name: List Proposals
+  description: GET /api/proposals — lists proposals with optional state filtering
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: api/proposal_management.py
+        symbol: router.get /
+  metadata:
+    created_at: 2026-03-23T19:01:40.564Z
+    updated_at: 2026-03-23T19:01:40.564Z
+    version: 1
+api.operation.list-conflicts:
+  id: 41d4e731-f462-44f9-ab1a-ecc56b18ca18
+  path: api.operation.list-conflicts
+  spec_node_id: api.operation
+  type: operation
+  layer_id: api
+  name: List Conflicts
+  description: GET /api/conflicts — lists detected conflicts with type and
+    severity filtering
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: api/conflict_resolution.py
+        symbol: router.get /
+  metadata:
+    created_at: 2026-03-23T19:01:45.952Z
+    updated_at: 2026-03-23T19:01:45.952Z
+    version: 1
+api.operation.resolve-conflict:
+  id: bf2de123-9c02-4791-a9df-1176e1bb290a
+  path: api.operation.resolve-conflict
+  spec_node_id: api.operation
+  type: operation
+  layer_id: api
+  name: Resolve Conflict
+  description: POST /api/conflicts/{conflict_id}/resolve — manually resolves a
+    conflict using a chosen resolution strategy
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: api/conflict_resolution.py
+        symbol: router.post /{conflict_id}/resolve
+  metadata:
+    created_at: 2026-03-23T19:01:46.418Z
+    updated_at: 2026-03-23T19:01:46.418Z
+    version: 1
+api.operation.detect-conflicts:
+  id: b1899cda-cd93-458c-9d30-c6709b7b3898
+  path: api.operation.detect-conflicts
+  spec_node_id: api.operation
+  type: operation
+  layer_id: api
+  name: Detect Conflicts
+  description: POST /api/conflicts/detect — detects conflicts between two specific
+    entity versions
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: api/conflict_resolution.py
+        symbol: router.post /detect
+  metadata:
+    created_at: 2026-03-23T19:01:46.894Z
+    updated_at: 2026-03-23T19:01:46.894Z
+    version: 1
+api.operation.register-identity:
+  id: 0fa33d4f-37df-43c8-b90f-0484b7a73de9
+  path: api.operation.register-identity
+  spec_node_id: api.operation
+  type: operation
+  layer_id: api
+  name: Register Identity
+  description: POST /api/identity/register — registers a user with email and
+    display name for collaborative workflows
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: api/identity_management.py
+        symbol: router.post /register
+  metadata:
+    created_at: 2026-03-23T19:01:53.164Z
+    updated_at: 2026-03-23T19:01:53.164Z
+    version: 1
+api.operation.get-change-analytics-summary:
+  id: 0fb2254f-71c6-4ead-a3b4-70c65434fbce
+  path: api.operation.get-change-analytics-summary
+  spec_node_id: api.operation
+  type: operation
+  layer_id: api
+  name: Get Change Analytics Summary
+  description: GET /api/analytics/summary — returns change counts, active users,
+    and changeset totals for a time period using DuckDB analytics
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: api/analytics.py
+        symbol: router.get /summary
+  metadata:
+    created_at: 2026-03-23T19:01:53.617Z
+    updated_at: 2026-03-23T19:01:53.617Z
+    version: 1
+api.operation.regenerate-embeddings:
+  id: 41969117-9b63-4a13-8d8a-97ac5a860fe3
+  path: api.operation.regenerate-embeddings
+  spec_node_id: api.operation
+  type: operation
+  layer_id: api
+  name: Regenerate Embeddings
+  description: WS /api/embeddings/regenerate — WebSocket endpoint that streams
+    real-time embedding regeneration progress for all structure_nodes
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: api/embeddings.py
+        symbol: websocket_regenerate_embeddings
+  metadata:
+    created_at: 2026-03-23T19:01:54.067Z
+    updated_at: 2026-03-23T19:01:54.067Z
+    version: 1
+api.operation.reference-multi-source-search:
+  id: 3133ebba-db95-461c-b8b8-99d6e35a4f9b
+  path: api.operation.reference-multi-source-search
+  spec_node_id: api.operation
+  type: operation
+  layer_id: api
+  name: Reference Multi-Source Search
+  description: POST /api/reference/search/multi — searches across ConceptNet,
+    DBpedia, Wikidata, and schema.org simultaneously with similarity-threshold
+    filtering
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: api/reference.py
+        symbol: router — MultiSourceSearchRequest
+  metadata:
+    created_at: 2026-03-23T19:02:01.705Z
+    updated_at: 2026-03-23T19:02:01.705Z
+    version: 1
+api.operation.get-entity-version-history:
+  id: 48e84e25-d6dd-4104-abc0-94db9dc43b19
+  path: api.operation.get-entity-version-history
+  spec_node_id: api.operation
+  type: operation
+  layer_id: api
+  name: Get Entity Version History
+  description: GET /api/versions/entities/{entity_type}/{entity_id}/versions —
+    retrieves full version history list for an entity
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: api/version_management.py
+        symbol: router.get /entities/{entity_type}/{entity_id}/versions
+  metadata:
+    created_at: 2026-03-23T19:02:02.161Z
+    updated_at: 2026-03-23T19:02:02.161Z
+    version: 1
+api.operation.list-predicates:
+  id: 7fedb1c4-f03c-4dff-9d10-0fe186eab6f5
+  path: api.operation.list-predicates
+  spec_node_id: api.operation
+  type: operation
+  layer_id: api
+  name: List Predicates
+  description: Paginated listing of property definitions (predicates) with filtering
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: api/predicates.py
+        symbol: router.get /
+  metadata:
+    created_at: 2026-03-23T19:24:54.563Z
+    updated_at: 2026-03-23T19:24:54.563Z
+    version: 1
+api.operation.create-predicate:
+  id: ca8f3539-1c64-4e09-96c3-caf309d34fd8
+  path: api.operation.create-predicate
+  spec_node_id: api.operation
+  type: operation
+  layer_id: api
+  name: Create Predicate
+  description: Create a new predicate (property definition)
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: api/predicates.py
+        symbol: router.post /
+  metadata:
+    created_at: 2026-03-23T19:24:55.024Z
+    updated_at: 2026-03-23T19:24:55.024Z
+    version: 1
+api.operation.get-predicate:
+  id: 31560f3a-7072-45a3-a025-12a69cdaad2f
+  path: api.operation.get-predicate
+  spec_node_id: api.operation
+  type: operation
+  layer_id: api
+  name: Get Predicate
+  description: Retrieve a single predicate by ID
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: api/predicates.py
+        symbol: router.get /{id}
+  metadata:
+    created_at: 2026-03-23T19:24:55.450Z
+    updated_at: 2026-03-23T19:24:55.450Z
+    version: 1
+api.operation.update-predicate:
+  id: 0fd8578c-44a0-4824-bc6f-8f12510fdad4
+  path: api.operation.update-predicate
+  spec_node_id: api.operation
+  type: operation
+  layer_id: api
+  name: Update Predicate
+  description: Update an existing predicate
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: api/predicates.py
+        symbol: router.put /{id}
+  metadata:
+    created_at: 2026-03-23T19:24:55.893Z
+    updated_at: 2026-03-23T19:24:55.893Z
+    version: 1
+api.operation.delete-predicate:
+  id: 6c938f6c-970a-40f5-a39f-1c36ed3dc419
+  path: api.operation.delete-predicate
+  spec_node_id: api.operation
+  type: operation
+  layer_id: api
+  name: Delete Predicate
+  description: Delete a predicate by ID
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: api/predicates.py
+        symbol: router.delete /{id}
+  metadata:
+    created_at: 2026-03-23T19:25:01.972Z
+    updated_at: 2026-03-23T19:25:01.972Z
+    version: 1
+api.operation.discover-predicates:
+  id: c8bbd125-d737-42fa-802f-f3797971a19b
+  path: api.operation.discover-predicates
+  spec_node_id: api.operation
+  type: operation
+  layer_id: api
+  name: Discover Predicates
+  description: Trigger async predicate discovery from ontology content
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: api/predicates.py
+        symbol: router.post /discover
+  metadata:
+    created_at: 2026-03-23T19:25:02.410Z
+    updated_at: 2026-03-23T19:25:02.410Z
+    version: 1
+api.operation.find-similar-predicates:
+  id: e17423de-9a22-4232-ae16-cb45208b9c84
+  path: api.operation.find-similar-predicates
+  spec_node_id: api.operation
+  type: operation
+  layer_id: api
+  name: Find Similar Predicates
+  description: Find semantically similar predicates using embedding similarity
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: api/predicates.py
+        symbol: router.post /{id}/find-similar
+  metadata:
+    created_at: 2026-03-23T19:25:02.840Z
+    updated_at: 2026-03-23T19:25:02.840Z
+    version: 1
+api.operation.import-predicates-from-concept-net:
+  id: 6f04f70e-6a06-4112-a0db-5778d6a6e8e5
+  path: api.operation.import-predicates-from-concept-net
+  spec_node_id: api.operation
+  type: operation
+  layer_id: api
+  name: Import Predicates From ConceptNet
+  description: Batch import predicates from ConceptNet relation types
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: api/predicates.py
+        symbol: router.post /import-from-conceptnet
+  metadata:
+    created_at: 2026-03-23T19:25:03.271Z
+    updated_at: 2026-03-23T19:25:03.271Z
+    version: 1
+api.operation.list-structure-nodes:
+  id: 55219308-660a-415d-b130-be6c4727cc72
+  path: api.operation.list-structure-nodes
+  spec_node_id: api.operation
+  type: operation
+  layer_id: api
+  name: List Structure Nodes
+  description: Paginated listing of structure nodes (layers, domains, terms) with filtering
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: api/structure_nodes.py
+        symbol: router.get /
+  metadata:
+    created_at: 2026-03-23T19:25:08.260Z
+    updated_at: 2026-03-23T19:25:08.260Z
+    version: 1
+api.operation.create-structure-node:
+  id: 7fe4d007-c8cd-4b84-9ab8-34b0bbbd78c0
+  path: api.operation.create-structure-node
+  spec_node_id: api.operation
+  type: operation
+  layer_id: api
+  name: Create Structure Node
+  description: Create a new structure node (taxonomy, concept scheme, or class)
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: api/structure_nodes.py
+        symbol: router.post /
+  metadata:
+    created_at: 2026-03-23T19:25:08.701Z
+    updated_at: 2026-03-23T19:25:08.701Z
+    version: 1
+api.operation.get-structure-node:
+  id: dd6269a9-429d-4430-8dac-772135df5111
+  path: api.operation.get-structure-node
+  spec_node_id: api.operation
+  type: operation
+  layer_id: api
+  name: Get Structure Node
+  description: Retrieve a single structure node by ID
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: api/structure_nodes.py
+        symbol: router.get /{node_id}
+  metadata:
+    created_at: 2026-03-23T19:25:09.125Z
+    updated_at: 2026-03-23T19:25:09.125Z
+    version: 1
+api.operation.update-structure-node:
+  id: 935cd4e1-646e-4368-bd76-d8a59b8e1078
+  path: api.operation.update-structure-node
+  spec_node_id: api.operation
+  type: operation
+  layer_id: api
+  name: Update Structure Node
+  description: Update an existing structure node
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: api/structure_nodes.py
+        symbol: router.put /{node_id}
+  metadata:
+    created_at: 2026-03-23T19:25:09.560Z
+    updated_at: 2026-03-23T19:25:09.560Z
+    version: 1
+api.operation.delete-structure-node:
+  id: 96462197-25dc-48b4-afc8-6d1a9ad57915
+  path: api.operation.delete-structure-node
+  spec_node_id: api.operation
+  type: operation
+  layer_id: api
+  name: Delete Structure Node
+  description: Delete a structure node by ID
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: api/structure_nodes.py
+        symbol: router.delete /{node_id}
+  metadata:
+    created_at: 2026-03-23T19:25:15.680Z
+    updated_at: 2026-03-23T19:25:15.680Z
+    version: 1
+api.operation.get-node-children:
+  id: b7b954c8-c171-403c-a6f5-f70749540c00
+  path: api.operation.get-node-children
+  spec_node_id: api.operation
+  type: operation
+  layer_id: api
+  name: Get Node Children
+  description: Get direct children of a structure node
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: api/structure_nodes.py
+        symbol: router.get /{node_id}/children
+  metadata:
+    created_at: 2026-03-23T19:25:16.114Z
+    updated_at: 2026-03-23T19:25:16.114Z
+    version: 1
+api.operation.get-node-ancestors:
+  id: 10180d6b-a755-4f54-b06e-a71fdaa4b400
+  path: api.operation.get-node-ancestors
+  spec_node_id: api.operation
+  type: operation
+  layer_id: api
+  name: Get Node Ancestors
+  description: Get ancestor chain for a structure node
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: api/structure_nodes.py
+        symbol: router.get /{node_id}/ancestors
+  metadata:
+    created_at: 2026-03-23T19:25:16.544Z
+    updated_at: 2026-03-23T19:25:16.544Z
+    version: 1
+api.operation.move-structure-nodes:
+  id: c123adb2-6acf-49e5-a621-cf99b3c9564d
+  path: api.operation.move-structure-nodes
+  spec_node_id: api.operation
+  type: operation
+  layer_id: api
+  name: Move Structure Nodes
+  description: Move one or more structure nodes to a new parent
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: api/structure_nodes.py
+        symbol: router.post /move
+  metadata:
+    created_at: 2026-03-23T19:25:16.978Z
+    updated_at: 2026-03-23T19:25:16.978Z
+    version: 1
+api.operation.create-node-link:
+  id: 42bec5a1-90ad-4ee5-ae36-afa15ee36d76
+  path: api.operation.create-node-link
+  spec_node_id: api.operation
+  type: operation
+  layer_id: api
+  name: Create Node Link
+  description: Create a typed directed link between two structure nodes
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: api/structure_nodes.py
+        symbol: router.post /links
+  metadata:
+    created_at: 2026-03-23T19:25:23.110Z
+    updated_at: 2026-03-23T19:25:23.110Z
+    version: 1
+api.operation.list-node-links:
+  id: 970e428c-2eb5-401b-9176-206e01402ad2
+  path: api.operation.list-node-links
+  spec_node_id: api.operation
+  type: operation
+  layer_id: api
+  name: List Node Links
+  description: List node-to-node links with filtering
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: api/structure_nodes.py
+        symbol: router.get /links
+  metadata:
+    created_at: 2026-03-23T19:25:23.555Z
+    updated_at: 2026-03-23T19:25:23.555Z
+    version: 1
+api.operation.get-node-word-senses:
+  id: 8d323313-bb38-4880-8ee9-5d07c22c5c48
+  path: api.operation.get-node-word-senses
+  spec_node_id: api.operation
+  type: operation
+  layer_id: api
+  name: Get Node Word Senses
+  description: Retrieve lexical word senses attached to a structure node
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: api/structure_nodes.py
+        symbol: router.get /{node_id}/word_senses
+  metadata:
+    created_at: 2026-03-23T19:25:24.023Z
+    updated_at: 2026-03-23T19:25:24.023Z
+    version: 1
+api.operation.get-node-reference-links:
+  id: 59ed8fb3-1693-4f04-a052-2e894e293555
+  path: api.operation.get-node-reference-links
+  spec_node_id: api.operation
+  type: operation
+  layer_id: api
+  name: Get Node Reference Links
+  description: Get external reference links for a structure node
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: api/structure_nodes.py
+        symbol: router.get /{node_id}/reference_links
+  metadata:
+    created_at: 2026-03-23T19:25:24.481Z
+    updated_at: 2026-03-23T19:25:24.481Z
+    version: 1
+api.operation.list-property-definitions:
+  id: 6f56b86e-054d-4067-a61b-def8b2a24970
+  path: api.operation.list-property-definitions
+  spec_node_id: api.operation
+  type: operation
+  layer_id: api
+  name: List Property Definitions
+  description: Paginated listing of ontology property definitions
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: api/property_definitions.py
+        symbol: router.get /
+  metadata:
+    created_at: 2026-03-23T19:25:29.618Z
+    updated_at: 2026-03-23T19:25:29.618Z
+    version: 1
+api.operation.create-property-definition:
+  id: 0820f26e-0454-418c-99cf-2763705ff984
+  path: api.operation.create-property-definition
+  spec_node_id: api.operation
+  type: operation
+  layer_id: api
+  name: Create Property Definition
+  description: Create a new ontology property definition
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: api/property_definitions.py
+        symbol: router.post /
+  metadata:
+    created_at: 2026-03-23T19:25:30.067Z
+    updated_at: 2026-03-23T19:25:30.067Z
+    version: 1
+api.operation.get-config:
+  id: d0ee8e02-d204-43f9-973b-939b7202fa26
+  path: api.operation.get-config
+  spec_node_id: api.operation
+  type: operation
+  layer_id: api
+  name: Get Config
+  description: Retrieve current application configuration
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: api/config.py
+        symbol: router.get /
+  metadata:
+    created_at: 2026-03-23T19:25:30.527Z
+    updated_at: 2026-03-23T19:25:30.527Z
+    version: 1
+api.operation.update-config:
+  id: 2ad1170f-30c2-4f78-aa9f-e5b9255bbeca
+  path: api.operation.update-config
+  spec_node_id: api.operation
+  type: operation
+  layer_id: api
+  name: Update Config
+  description: Patch application configuration values
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: api/config.py
+        symbol: router.patch /
+  metadata:
+    created_at: 2026-03-23T19:25:31.001Z
+    updated_at: 2026-03-23T19:25:31.001Z
+    version: 1
+api.operation.list-background-tasks:
+  id: d0568690-3272-46c9-be89-933d4643209f
+  path: api.operation.list-background-tasks
+  spec_node_id: api.operation
+  type: operation
+  layer_id: api
+  name: List Background Tasks
+  description: List background tasks with status filtering
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: api/background_tasks.py
+        symbol: router.get /
+  metadata:
+    created_at: 2026-03-23T19:25:35.919Z
+    updated_at: 2026-03-23T19:25:35.919Z
+    version: 1
+api.operation.get-background-task-status:
+  id: 77021e6d-14f4-44e0-8d36-509b74a2ee6b
+  path: api.operation.get-background-task-status
+  spec_node_id: api.operation
+  type: operation
+  layer_id: api
+  name: Get Background Task Status
+  description: Get status of a specific background task by ID
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: api/background_tasks.py
+        symbol: router.get /{task_id}
+  metadata:
+    created_at: 2026-03-23T19:25:36.399Z
+    updated_at: 2026-03-23T19:25:36.399Z
+    version: 1
+api.operation.cancel-background-task:
+  id: 926bc588-92c8-460f-9464-8f335354ea8f
+  path: api.operation.cancel-background-task
+  spec_node_id: api.operation
+  type: operation
+  layer_id: api
+  name: Cancel Background Task
+  description: Cancel a running background task
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: api/background_tasks.py
+        symbol: router.delete /{task_id}
+  metadata:
+    created_at: 2026-03-23T19:25:36.908Z
+    updated_at: 2026-03-23T19:25:36.908Z
+    version: 1
+api.operation.list-change-events:
+  id: c8bd61e8-e184-420a-8e21-b1af7ee3880e
+  path: api.operation.list-change-events
+  spec_node_id: api.operation
+  type: operation
+  layer_id: api
+  name: List Change Events
+  description: Query change event audit log with filters
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: api/change_events.py
+        symbol: router.get /
+  metadata:
+    created_at: 2026-03-23T19:25:37.373Z
+    updated_at: 2026-03-23T19:25:37.373Z
+    version: 1
+api.operation.record-llm-selection:
+  id: 918f7d9a-ccc3-4d5e-a0b3-6a199c6483dd
+  path: api.operation.record-llm-selection
+  spec_node_id: api.operation
+  type: operation
+  layer_id: api
+  name: Record LLM Selection
+  description: Record a user's LLM pipeline selection for traceability
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: api/llm_traceability.py
+        symbol: router.post /record-selection
+  metadata:
+    created_at: 2026-03-23T19:25:42.842Z
+    updated_at: 2026-03-23T19:25:42.842Z
+    version: 1
+api.operation.get-llm-execution-analytics:
+  id: ae280906-3d59-4a25-ac83-92566203def3
+  path: api.operation.get-llm-execution-analytics
+  spec_node_id: api.operation
+  type: operation
+  layer_id: api
+  name: Get LLM Execution Analytics
+  description: Retrieve aggregated LLM execution analytics
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: api/llm_traceability.py
+        symbol: router.get /execution-analytics
+  metadata:
+    created_at: 2026-03-23T19:25:43.376Z
+    updated_at: 2026-03-23T19:25:43.376Z
+    version: 1
+api.operation.list-enabled-models:
+  id: f8e4b5ca-388b-4b44-ade7-507955580b35
+  path: api.operation.list-enabled-models
+  spec_node_id: api.operation
+  type: operation
+  layer_id: api
+  name: List Enabled Models
+  description: List all enabled LLM model configurations
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: api/enabled_models.py
+        symbol: router.get /
+  metadata:
+    created_at: 2026-03-23T19:25:43.882Z
+    updated_at: 2026-03-23T19:25:43.882Z
+    version: 1
+api.operation.enable-model:
+  id: 3a8ee06d-f9d2-4183-ae30-7c8d61c1e733
+  path: api.operation.enable-model
+  spec_node_id: api.operation
+  type: operation
+  layer_id: api
+  name: Enable Model
+  description: Enable a specific LLM model for use
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: api/enabled_models.py
+        symbol: router.post /{model_name}/enable
+  metadata:
+    created_at: 2026-03-23T19:25:44.394Z
+    updated_at: 2026-03-23T19:25:44.394Z
+    version: 1
+api.operation.list-model-capabilities:
+  id: 6f66565f-6a66-44d2-9a06-3da96b73a0ab
+  path: api.operation.list-model-capabilities
+  spec_node_id: api.operation
+  type: operation
+  layer_id: api
+  name: List Model Capabilities
+  description: List supported LLM models and their capability metadata
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: api/model_capabilities.py
+        symbol: router.get /
+  metadata:
+    created_at: 2026-03-23T19:25:49.770Z
+    updated_at: 2026-03-23T19:25:49.770Z
+    version: 1
+api.operation.discover-open-router-models:
+  id: 13f5258d-cbb1-4658-ad91-40b21388de3a
+  path: api.operation.discover-open-router-models
+  spec_node_id: api.operation
+  type: operation
+  layer_id: api
+  name: Discover OpenRouter Models
+  description: Discover available models from OpenRouter API
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: api/model_capabilities.py
+        symbol: router.get /openrouter/discover
+  metadata:
+    created_at: 2026-03-23T19:25:50.254Z
+    updated_at: 2026-03-23T19:25:50.254Z
+    version: 1
+api.operation.list-pipeline-flavors:
+  id: ba689f27-4735-4a24-af0e-9220600f037f
+  path: api.operation.list-pipeline-flavors
+  spec_node_id: api.operation
+  type: operation
+  layer_id: api
+  name: List Pipeline Flavors
+  description: List available pipeline flavor templates
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: api/pipeline_flavors.py
+        symbol: router.get /
+  metadata:
+    created_at: 2026-03-23T19:25:50.735Z
+    updated_at: 2026-03-23T19:25:50.735Z
+    version: 1
+api.operation.create-pipeline-flavor:
+  id: 7ad76f67-c4a3-471b-9d5f-e518aa700f99
+  path: api.operation.create-pipeline-flavor
+  spec_node_id: api.operation
+  type: operation
+  layer_id: api
+  name: Create Pipeline Flavor
+  description: Create a new pipeline flavor template
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: api/pipeline_flavors.py
+        symbol: router.post /
+  metadata:
+    created_at: 2026-03-23T19:25:51.220Z
+    updated_at: 2026-03-23T19:25:51.220Z
+    version: 1
+api.operation.list-pipeline-configurations:
+  id: eceb4b31-6519-4b8f-acd4-5d51279f72a2
+  path: api.operation.list-pipeline-configurations
+  spec_node_id: api.operation
+  type: operation
+  layer_id: api
+  name: List Pipeline Configurations
+  description: List saved pipeline configurations
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: api/pipeline_configurations.py
+        symbol: router.get /
+  metadata:
+    created_at: 2026-03-23T19:25:56.502Z
+    updated_at: 2026-03-23T19:25:56.502Z
+    version: 1
+api.operation.create-pipeline-configuration:
+  id: 4bc9e553-7fa9-4d15-b7cf-59b76273d25d
+  path: api.operation.create-pipeline-configuration
+  spec_node_id: api.operation
+  type: operation
+  layer_id: api
+  name: Create Pipeline Configuration
+  description: Create a new saved pipeline configuration
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: api/pipeline_configurations.py
+        symbol: router.post /
+  metadata:
+    created_at: 2026-03-23T19:25:56.983Z
+    updated_at: 2026-03-23T19:25:56.983Z
+    version: 1
+api.operation.get-performance-metrics:
+  id: a5b6fcc2-53c7-429b-b5d0-4f22963c2e24
+  path: api.operation.get-performance-metrics
+  spec_node_id: api.operation
+  type: operation
+  layer_id: api
+  name: Get Performance Metrics
+  description: Retrieve system-wide performance metrics dashboard
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: api/optimization.py
+        symbol: router.get /performance/metrics
+  metadata:
+    created_at: 2026-03-23T19:25:57.488Z
+    updated_at: 2026-03-23T19:25:57.488Z
+    version: 1
+api.operation.batch-process-entities:
+  id: 019253dc-90de-43d5-8a6e-c382287440f3
+  path: api.operation.batch-process-entities
+  spec_node_id: api.operation
+  type: operation
+  layer_id: api
+  name: Batch Process Entities
+  description: Batch process multiple entity operations
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: api/optimization.py
+        symbol: router.post /batch/process
+  metadata:
+    created_at: 2026-03-23T19:25:58.001Z
+    updated_at: 2026-03-23T19:25:58.001Z
+    version: 1
+api.operation.get-schema-migration-status:
+  id: d6d47c28-7e4c-49a0-9476-d1b0ede1bd4e
+  path: api.operation.get-schema-migration-status
+  spec_node_id: api.operation
+  type: operation
+  layer_id: api
+  name: Get Schema Migration Status
+  description: Get current database schema migration status
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: api/schema.py
+        symbol: router.get /schema/status
+  metadata:
+    created_at: 2026-03-23T19:26:03.500Z
+    updated_at: 2026-03-23T19:26:03.500Z
+    version: 1
+api.operation.run-schema-migration:
+  id: 584e6621-ee22-43b9-a337-226a6c860eb4
+  path: api.operation.run-schema-migration
+  spec_node_id: api.operation
+  type: operation
+  layer_id: api
+  name: Run Schema Migration
+  description: Apply pending database schema migrations
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: api/schema.py
+        symbol: router.post /schema/migrate
+  metadata:
+    created_at: 2026-03-23T19:26:03.984Z
+    updated_at: 2026-03-23T19:26:03.984Z
+    version: 1
+api.operation.run-rag-experiment:
+  id: ee6e1200-dba7-48b6-aa36-3ba975053102
+  path: api.operation.run-rag-experiment
+  spec_node_id: api.operation
+  type: operation
+  layer_id: api
+  name: Run RAG Experiment
+  description: Execute a RAG pipeline test against test paragraphs
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: api/rag_experiments.py
+        symbol: router.post /run
+  metadata:
+    created_at: 2026-03-23T19:26:04.467Z
+    updated_at: 2026-03-23T19:26:04.467Z
+    version: 1
+api.operation.list-test-paragraphs:
+  id: 7b357f83-c992-46d8-b28f-f778de03ead7
+  path: api.operation.list-test-paragraphs
+  spec_node_id: api.operation
+  type: operation
+  layer_id: api
+  name: List Test Paragraphs
+  description: List RAG test paragraphs for experiment management
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: api/rag_experiments.py
+        symbol: router.get /paragraphs
+  metadata:
+    created_at: 2026-03-23T19:26:04.946Z
+    updated_at: 2026-03-23T19:26:04.946Z
+    version: 1
+api.operation.get-admin-database-health:
+  id: f1e13469-8e56-4d07-98ca-fe59755c1fbf
+  path: api.operation.get-admin-database-health
+  spec_node_id: api.operation
+  type: operation
+  layer_id: api
+  name: Get Admin Database Health
+  description: Admin endpoint for detailed database connection health
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: api/admin/database_monitoring.py
+        symbol: router.get /admin/database/health
+  metadata:
+    created_at: 2026-03-23T19:26:10.089Z
+    updated_at: 2026-03-23T19:26:10.089Z
+    version: 1
+api.operation.get-admin-event-processor-health:
+  id: 949d3ac9-3a13-4a3b-813b-e0fdf5aa9dc2
+  path: api.operation.get-admin-event-processor-health
+  spec_node_id: api.operation
+  type: operation
+  layer_id: api
+  name: Get Admin Event Processor Health
+  description: Admin endpoint for event processor subsystem health
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: api/admin/event_processor_monitoring.py
+        symbol: router.get /admin/events/health
+  metadata:
+    created_at: 2026-03-23T19:26:10.588Z
+    updated_at: 2026-03-23T19:26:10.588Z
+    version: 1
+api.operation.get-admin-service-monitoring-stats:
+  id: 81bb9473-bb21-4951-8c69-459dada46d1f
+  path: api.operation.get-admin-service-monitoring-stats
+  spec_node_id: api.operation
+  type: operation
+  layer_id: api
+  name: Get Admin Service Monitoring Stats
+  description: Admin endpoint for service factory statistics and performance
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: api/admin/service_monitoring.py
+        symbol: router.get /stats
+  metadata:
+    created_at: 2026-03-23T19:26:11.081Z
+    updated_at: 2026-03-23T19:26:11.081Z
+    version: 1

@@ -1,0 +1,22 @@
+security.role.administrator:
+  id: 3901796a-313b-473b-ac4d-2a36c5c78be9
+  path: security.role.administrator
+  spec_node_id: security.role
+  type: role
+  layer_id: security
+  name: Administrator
+  description: Full administrator role — has unrestricted access to all ontology
+    entities, datasets, pipelines, and configuration
+  attributes:
+    displayName: Administrator
+    level: 1
+    inheritsFrom: ""
+    description: Full system access
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: config.json
+  metadata:
+    created_at: 2026-03-23T12:37:27.783Z
+    updated_at: 2026-03-23T12:37:27.783Z
+    version: 1

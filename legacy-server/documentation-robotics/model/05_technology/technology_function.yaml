@@ -1,0 +1,17 @@
+technology.technologyfunction.reference-api-proxy:
+  id: 69dbc33e-b1ac-48df-86fa-c380ba29a9f0
+  path: technology.technologyfunction.reference-api-proxy
+  spec_node_id: technology.technologyfunction
+  type: technologyfunction
+  layer_id: technology
+  name: Reference API Proxy
+  description: HTTP caching proxy (reference-api-buddy v0.5.0) that rate-limits
+    and caches external knowledge source requests
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: config.json
+  metadata:
+    created_at: 2026-03-23T12:22:33.396Z
+    updated_at: 2026-03-23T12:22:33.396Z
+    version: 1

@@ -1,0 +1,163 @@
+technology.technologyservice.open-ai-api:
+  id: b88bd2f7-6e0f-426f-a08e-367362ae9daf
+  path: technology.technologyservice.open-ai-api
+  spec_node_id: technology.technologyservice
+  type: technologyservice
+  layer_id: technology
+  name: OpenAI API
+  description: External LLM inference service (OpenAI) for entity enrichment and
+    RAG pipelines
+  attributes:
+    serviceType: compute
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: config.json
+  metadata:
+    created_at: 2026-03-23T12:21:52.212Z
+    updated_at: 2026-03-23T12:21:52.212Z
+    version: 1
+technology.technologyservice.anthropic-api:
+  id: 020a5015-29ea-42bd-b765-8e2d6a8c7c68
+  path: technology.technologyservice.anthropic-api
+  spec_node_id: technology.technologyservice
+  type: technologyservice
+  layer_id: technology
+  name: Anthropic API
+  description: External LLM inference service (Anthropic Claude) for entity
+    enrichment and RAG pipelines
+  attributes:
+    serviceType: compute
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: config.json
+  metadata:
+    created_at: 2026-03-23T12:21:52.619Z
+    updated_at: 2026-03-23T12:21:52.619Z
+    version: 1
+technology.technologyservice.concept-net-api:
+  id: acded5d7-e4e5-4bb6-bcca-2a8539b873ad
+  path: technology.technologyservice.concept-net-api
+  spec_node_id: technology.technologyservice
+  type: technologyservice
+  layer_id: technology
+  name: ConceptNet API
+  description: External knowledge graph service providing semantic relationships
+    for ontology enrichment
+  attributes:
+    serviceType: database
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: config.json
+  metadata:
+    created_at: 2026-03-23T12:21:53.032Z
+    updated_at: 2026-03-23T12:21:53.032Z
+    version: 1
+technology.technologyservice.dbpedia-api:
+  id: bd22c75a-6b15-49ca-becb-984a1fafbff9
+  path: technology.technologyservice.dbpedia-api
+  spec_node_id: technology.technologyservice
+  type: technologyservice
+  layer_id: technology
+  name: DBpedia API
+  description: External linked-data service (DBpedia lookup, SPARQL, and
+    Spotlight) for ontology enrichment
+  attributes:
+    serviceType: database
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: config.json
+  metadata:
+    created_at: 2026-03-23T12:21:58.765Z
+    updated_at: 2026-03-23T12:21:58.765Z
+    version: 1
+technology.technologyservice.wikidata-api:
+  id: 9861e210-c1e5-4ff3-ae9e-fc65f75e56bb
+  path: technology.technologyservice.wikidata-api
+  spec_node_id: technology.technologyservice
+  type: technologyservice
+  layer_id: technology
+  name: Wikidata API
+  description: External knowledge base SPARQL endpoint for ontology enrichment and
+    entity linking
+  attributes:
+    serviceType: database
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: config.json
+  metadata:
+    created_at: 2026-03-23T12:21:59.175Z
+    updated_at: 2026-03-23T12:21:59.175Z
+    version: 1
+technology.technologyservice.aws-s3:
+  id: d4791395-b51e-4402-a86b-af30caae8252
+  path: technology.technologyservice.aws-s3
+  spec_node_id: technology.technologyservice
+  type: technologyservice
+  layer_id: technology
+  name: AWS S3
+  description: Object storage service used for remote sync of datasets via DuckDB/Parquet
+  attributes:
+    serviceType: storage
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: config.json
+  metadata:
+    created_at: 2026-03-23T12:21:59.598Z
+    updated_at: 2026-03-23T12:21:59.598Z
+    version: 1
+technology.technologyservice.open-router-api:
+  id: 21723979-ef81-4217-aefb-89ae10c08511
+  path: technology.technologyservice.open-router-api
+  spec_node_id: technology.technologyservice
+  type: technologyservice
+  layer_id: technology
+  name: OpenRouter API
+  description: Third-party LLM routing API that provides access to multiple model
+    providers via a unified OpenAI-compatible interface; used as fallback when
+    native provider APIs are not configured
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: llm/provider_router.py
+        symbol: ProviderType
+  metadata:
+    created_at: 2026-03-23T19:03:08.716Z
+    updated_at: 2026-03-23T19:03:08.716Z
+    version: 1
+technology.technologyservice.schemaorg-api:
+  id: 26df6b61-0a12-41db-a30e-f4947ceb4b78
+  path: technology.technologyservice.schemaorg-api
+  spec_node_id: technology.technologyservice
+  type: technologyservice
+  layer_id: technology
+  name: schema.org API
+  description: Schema.org vocabulary API used as a reference source for structured
+    data types and property definitions in knowledge enrichment
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: api/reference.py
+        symbol: SchemaOrgEntityRequest
+  metadata:
+    created_at: 2026-03-23T19:03:17.663Z
+    updated_at: 2026-03-23T19:03:17.663Z
+    version: 1
+technology.technologyservice.word-net-api:
+  id: 9747883f-0145-4f1b-acd1-58ac7d926fd6
+  path: technology.technologyservice.word-net-api
+  spec_node_id: technology.technologyservice
+  type: technologyservice
+  layer_id: technology
+  name: WordNet API
+  description: WordNet lexical database used as a reference source for word senses
+    and synonyms
+  metadata:
+    created_at: 2026-03-23T19:33:18.079Z
+    updated_at: 2026-03-23T19:33:18.079Z
+    version: 1

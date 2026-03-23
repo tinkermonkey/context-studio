@@ -1,0 +1,20 @@
+ux.uxlibrary.flowbite-react-component-library:
+  id: ddd7428c-a94d-4e63-acac-b8ceaa550254
+  path: ux.uxlibrary.flowbite-react-component-library
+  spec_node_id: ux.uxlibrary
+  type: uxlibrary
+  layer_id: ux
+  name: Flowbite React Component Library
+  description: Primary UI component library (Flowbite React + Tailwind CSS)
+    providing form controls, tables, modals, and layout primitives
+  attributes:
+    version: latest
+    description: Flowbite React component library with Tailwind CSS
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ../../ux/src/components/ui
+  metadata:
+    created_at: 2026-03-23T12:29:30.853Z
+    updated_at: 2026-03-23T12:29:30.853Z
+    version: 1

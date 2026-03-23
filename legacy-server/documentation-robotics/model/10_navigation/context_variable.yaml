@@ -1,0 +1,41 @@
+navigation.contextvariable.active-dataset-id:
+  id: a7317fe4-11a5-42b3-baf6-603a4b95f30a
+  path: navigation.contextvariable.active-dataset-id
+  spec_node_id: navigation.contextvariable
+  type: contextvariable
+  layer_id: navigation
+  name: Active Dataset ID
+  description: Session context variable holding the currently active SQLite dataset ID
+  attributes:
+    schemaRef: "#/definitions/UUID"
+    scope: session
+    persistedIn: sessionStorage
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ../../ux/src/stores
+  metadata:
+    created_at: 2026-03-23T12:31:47.781Z
+    updated_at: 2026-03-23T12:31:47.781Z
+    version: 1
+navigation.contextvariable.selected-entity-id:
+  id: 0b94d69c-59f7-4e5a-aa12-85bd88f1e9c6
+  path: navigation.contextvariable.selected-entity-id
+  spec_node_id: navigation.contextvariable
+  type: contextvariable
+  layer_id: navigation
+  name: Selected Entity ID
+  description: Page-level context variable tracking the currently selected
+    ontology entity for the detail panel
+  attributes:
+    schemaRef: "#/definitions/UUID"
+    scope: step
+    persistedIn: url-param
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ../../ux/src/stores
+  metadata:
+    created_at: 2026-03-23T12:31:48.268Z
+    updated_at: 2026-03-23T12:31:48.268Z
+    version: 1

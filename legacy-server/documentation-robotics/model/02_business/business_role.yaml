@@ -1,0 +1,17 @@
+business.businessrole.ontology-author:
+  id: e4a1fffd-6b05-4051-a870-4105176bc35c
+  path: business.businessrole.ontology-author
+  spec_node_id: business.businessrole
+  type: businessrole
+  layer_id: business
+  name: Ontology Author
+  description: Business role for actors authorized to create, edit, and delete
+    ontology entities and manage relationships
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: config.json
+  metadata:
+    created_at: 2026-03-23T12:39:48.477Z
+    updated_at: 2026-03-23T12:39:48.477Z
+    version: 1

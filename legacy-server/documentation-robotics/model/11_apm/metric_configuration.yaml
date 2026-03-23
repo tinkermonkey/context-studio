@@ -1,0 +1,21 @@
+apm.metricconfiguration.rag-pipeline-metrics-configuration:
+  id: cf5de1ae-a700-4558-a7e4-8af7d4c88cea
+  path: apm.metricconfiguration.rag-pipeline-metrics-configuration
+  spec_node_id: apm.metricconfiguration
+  type: metricconfiguration
+  layer_id: apm
+  name: RAG Pipeline Metrics Configuration
+  description: Metrics configuration for the RAG pipeline observability store —
+    collecting per-layer timing and entity count metrics
+  attributes:
+    serviceName: context-studio-legacy-server
+    exportIntervalMillis: 60000
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: rag/observability_store.py
+        symbol: RAGObservabilityStore
+  metadata:
+    created_at: 2026-03-23T12:33:40.314Z
+    updated_at: 2026-03-23T12:33:40.314Z
+    version: 1

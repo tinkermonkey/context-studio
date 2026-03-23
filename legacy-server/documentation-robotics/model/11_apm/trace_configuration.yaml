@@ -1,0 +1,22 @@
+apm.traceconfiguration.application-trace-configuration:
+  id: f3b8e4ce-351f-4ce1-b92d-bc2005b8a63e
+  path: apm.traceconfiguration.application-trace-configuration
+  spec_node_id: apm.traceconfiguration
+  type: traceconfiguration
+  layer_id: apm
+  name: Application Trace Configuration
+  description: Distributed trace configuration — currently using Python logging as
+    the trace substrate; no external exporter configured
+  attributes:
+    samplerType: parent_based_always_on
+    propagators:
+      - tracecontext
+      - baggage
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: utils/logger.py
+  metadata:
+    created_at: 2026-03-23T12:34:10.487Z
+    updated_at: 2026-03-23T12:34:10.487Z
+    version: 1

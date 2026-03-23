@@ -1,0 +1,462 @@
+api.tag.ontology-entities:
+  id: 2202fe16-cb91-4679-8862-9a2de19d0e17
+  path: api.tag.ontology-entities
+  spec_node_id: api.tag
+  type: tag
+  layer_id: api
+  name: ontology-entities
+  description: CRUD and vector search operations for taxonomy, concept scheme, and
+    class entities
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: api/ontology_entities.py
+  metadata:
+    created_at: 2026-03-23T12:23:55.119Z
+    updated_at: 2026-03-23T12:23:55.119Z
+    version: 1
+api.tag.graph:
+  id: 5144fceb-b91f-4d18-ae05-c654ca0aed96
+  path: api.tag.graph
+  spec_node_id: api.tag
+  type: tag
+  layer_id: api
+  name: graph
+  description: Graph analytics, SPARQL queries, network metrics, and path
+    operations over the ontology graph
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: api/graph.py
+  metadata:
+    created_at: 2026-03-23T12:23:55.508Z
+    updated_at: 2026-03-23T12:23:55.508Z
+    version: 1
+api.tag.version-management:
+  id: b05c6857-25a5-4347-844c-e73f76fead93
+  path: api.tag.version-management
+  spec_node_id: api.tag
+  type: tag
+  layer_id: api
+  name: version-management
+  description: Working tree, entity versioning, diff computation, and rollback operations
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: api/version_management.py
+  metadata:
+    created_at: 2026-03-23T12:23:55.906Z
+    updated_at: 2026-03-23T12:23:55.906Z
+    version: 1
+api.tag.changeset-management:
+  id: 4f9fc937-ddfd-4c47-b074-d326080cc816
+  path: api.tag.changeset-management
+  spec_node_id: api.tag
+  type: tag
+  layer_id: api
+  name: changeset-management
+  description: "Collaborative changeset lifecycle operations: create, list, get,
+    update, delete, and push changesets"
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: api/changeset_management.py
+  metadata:
+    created_at: 2026-03-23T12:24:02.248Z
+    updated_at: 2026-03-23T12:24:02.248Z
+    version: 1
+api.tag.datasets:
+  id: 019d2670-69aa-42d5-97e6-0ee14c0cb3b6
+  path: api.tag.datasets
+  spec_node_id: api.tag
+  type: tag
+  layer_id: api
+  name: datasets
+  description: Dataset file management — list, create, activate, switch, and
+    delete SQLite dataset workspaces
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: api/datasets.py
+  metadata:
+    created_at: 2026-03-23T12:24:02.676Z
+    updated_at: 2026-03-23T12:24:02.676Z
+    version: 1
+api.tag.rag-pipeline:
+  id: 7f014540-359f-4d31-896d-b1086014d58a
+  path: api.tag.rag-pipeline
+  spec_node_id: api.tag
+  type: tag
+  layer_id: api
+  name: rag-pipeline
+  description: RAG pipeline execution for automated ontology entity extraction from text
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: api/rag_pipeline.py
+  metadata:
+    created_at: 2026-03-23T12:24:03.133Z
+    updated_at: 2026-03-23T12:24:03.133Z
+    version: 1
+api.tag.llm:
+  id: 9c26bb41-5cc4-4b1b-8b45-7c3a8fef4b84
+  path: api.tag.llm
+  spec_node_id: api.tag
+  type: tag
+  layer_id: api
+  name: llm
+  description: LLM pipeline execution and health endpoints
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: api/llm.py
+  metadata:
+    created_at: 2026-03-23T12:24:07.456Z
+    updated_at: 2026-03-23T12:24:07.456Z
+    version: 1
+api.tag.nlp:
+  id: 54c33dcd-e71a-4295-b003-e0ddf7ef5c18
+  path: api.tag.nlp
+  spec_node_id: api.tag
+  type: tag
+  layer_id: api
+  name: nlp
+  description: NLP text analysis endpoints using spaCy
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: api/nlp_analysis.py
+  metadata:
+    created_at: 2026-03-23T12:24:07.862Z
+    updated_at: 2026-03-23T12:24:07.862Z
+    version: 1
+api.tag.health:
+  id: bff48c2d-47df-48bf-8f66-2f2976477259
+  path: api.tag.health
+  spec_node_id: api.tag
+  type: tag
+  layer_id: api
+  name: health
+  description: System health check endpoint
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: api/health.py
+  metadata:
+    created_at: 2026-03-23T12:24:08.272Z
+    updated_at: 2026-03-23T12:24:08.272Z
+    version: 1
+api.tag.sync:
+  id: 646cba72-ceda-4ee8-8187-622679855f53
+  path: api.tag.sync
+  spec_node_id: api.tag
+  type: tag
+  layer_id: api
+  name: sync
+  description: API tag grouping sync push, pull, and incremental sync operations
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: api/sync.py
+        symbol: router
+  metadata:
+    created_at: 2026-03-23T19:02:13.830Z
+    updated_at: 2026-03-23T19:02:13.830Z
+    version: 1
+api.tag.proposals:
+  id: 4d5b7050-f3d1-41b8-86a8-71d93c11224c
+  path: api.tag.proposals
+  spec_node_id: api.tag
+  type: tag
+  layer_id: api
+  name: proposals
+  description: API tag grouping proposal creation and voting operations
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: api/proposal_management.py
+        symbol: router
+  metadata:
+    created_at: 2026-03-23T19:02:14.282Z
+    updated_at: 2026-03-23T19:02:14.282Z
+    version: 1
+api.tag.conflicts:
+  id: 627284c8-0e49-49d1-b270-6033a4daac09
+  path: api.tag.conflicts
+  spec_node_id: api.tag
+  type: tag
+  layer_id: api
+  name: conflicts
+  description: API tag grouping conflict detection and resolution operations
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: api/conflict_resolution.py
+        symbol: router
+  metadata:
+    created_at: 2026-03-23T19:02:14.720Z
+    updated_at: 2026-03-23T19:02:14.720Z
+    version: 1
+api.tag.reference:
+  id: f821ec09-fb15-4a62-b094-806671234b70
+  path: api.tag.reference
+  spec_node_id: api.tag
+  type: tag
+  layer_id: api
+  name: reference
+  description: API tag grouping external knowledge source (ConceptNet, DBpedia,
+    Wikidata, schema.org) query operations
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: api/reference.py
+        symbol: router
+  metadata:
+    created_at: 2026-03-23T19:02:22.224Z
+    updated_at: 2026-03-23T19:02:22.224Z
+    version: 1
+api.tag.analytics:
+  id: d8846929-aa26-4d8f-887c-439bcb41162f
+  path: api.tag.analytics
+  spec_node_id: api.tag
+  type: tag
+  layer_id: api
+  name: analytics
+  description: API tag grouping DuckDB-backed change analytics, user activity, and
+    collaboration metrics operations
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: api/analytics.py
+        symbol: router
+  metadata:
+    created_at: 2026-03-23T19:02:22.692Z
+    updated_at: 2026-03-23T19:02:22.692Z
+    version: 1
+api.tag.identity:
+  id: a58831a5-395e-4abe-ac0f-68c7fe09746b
+  path: api.tag.identity
+  spec_node_id: api.tag
+  type: tag
+  layer_id: api
+  name: identity
+  description: API tag grouping user registration, email verification, and
+    peer-trust operations
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: api/identity_management.py
+        symbol: router
+  metadata:
+    created_at: 2026-03-23T19:02:23.159Z
+    updated_at: 2026-03-23T19:02:23.159Z
+    version: 1
+api.tag.embeddings:
+  id: 50f04402-49c2-4b13-9d7d-f9840661dfcf
+  path: api.tag.embeddings
+  spec_node_id: api.tag
+  type: tag
+  layer_id: api
+  name: embeddings
+  description: API tag grouping WebSocket embedding regeneration operations
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: api/embeddings.py
+        symbol: router
+  metadata:
+    created_at: 2026-03-23T19:02:23.615Z
+    updated_at: 2026-03-23T19:02:23.615Z
+    version: 1
+api.tag.predicates:
+  id: 3a4428a7-985f-414c-aa57-48a96a23cc95
+  path: api.tag.predicates
+  spec_node_id: api.tag
+  type: tag
+  layer_id: api
+  name: predicates
+  description: Predicate (property definition) management operations
+  metadata:
+    created_at: 2026-03-23T19:24:32.293Z
+    updated_at: 2026-03-23T19:24:32.293Z
+    version: 1
+api.tag.property-definitions:
+  id: 7eb7cb37-cdaf-4f6d-902c-6527849c1646
+  path: api.tag.property-definitions
+  spec_node_id: api.tag
+  type: tag
+  layer_id: api
+  name: property-definitions
+  description: Property definition CRUD operations
+  metadata:
+    created_at: 2026-03-23T19:24:32.700Z
+    updated_at: 2026-03-23T19:24:32.700Z
+    version: 1
+api.tag.structure-nodes:
+  id: 61ae5688-b675-47e7-b995-81c01e701cb6
+  path: api.tag.structure-nodes
+  spec_node_id: api.tag
+  type: tag
+  layer_id: api
+  name: structure-nodes
+  description: Structure node hierarchy management operations
+  metadata:
+    created_at: 2026-03-23T19:24:33.102Z
+    updated_at: 2026-03-23T19:24:33.102Z
+    version: 1
+api.tag.config:
+  id: 0d2813eb-5154-473f-ade5-7da190a92385
+  path: api.tag.config
+  spec_node_id: api.tag
+  type: tag
+  layer_id: api
+  name: config
+  description: Application configuration read and update operations
+  metadata:
+    created_at: 2026-03-23T19:24:33.501Z
+    updated_at: 2026-03-23T19:24:33.501Z
+    version: 1
+api.tag.background-tasks:
+  id: 1d06f815-dd6b-49f8-b520-4faca618aa3f
+  path: api.tag.background-tasks
+  spec_node_id: api.tag
+  type: tag
+  layer_id: api
+  name: background-tasks
+  description: Background task status and management operations
+  metadata:
+    created_at: 2026-03-23T19:24:37.760Z
+    updated_at: 2026-03-23T19:24:37.760Z
+    version: 1
+api.tag.change-events:
+  id: 201dd338-6ff0-4fd2-a6b0-0618243a4453
+  path: api.tag.change-events
+  spec_node_id: api.tag
+  type: tag
+  layer_id: api
+  name: change-events
+  description: Change event audit log query operations
+  metadata:
+    created_at: 2026-03-23T19:24:38.155Z
+    updated_at: 2026-03-23T19:24:38.155Z
+    version: 1
+api.tag.llm-traceability:
+  id: d3c56f8b-acf4-4bf3-9dc1-e74f7a42186f
+  path: api.tag.llm-traceability
+  spec_node_id: api.tag
+  type: tag
+  layer_id: api
+  name: llm-traceability
+  description: LLM execution selection recording and analytics
+  metadata:
+    created_at: 2026-03-23T19:24:38.562Z
+    updated_at: 2026-03-23T19:24:38.562Z
+    version: 1
+api.tag.enabled-models:
+  id: 57f45d38-ef3c-459a-b8bd-5c2363788f57
+  path: api.tag.enabled-models
+  spec_node_id: api.tag
+  type: tag
+  layer_id: api
+  name: enabled-models
+  description: Enabled LLM model registry management
+  metadata:
+    created_at: 2026-03-23T19:24:38.965Z
+    updated_at: 2026-03-23T19:24:38.965Z
+    version: 1
+api.tag.model-capabilities:
+  id: 4fd8aec0-7384-4838-8812-408d915ea2e6
+  path: api.tag.model-capabilities
+  spec_node_id: api.tag
+  type: tag
+  layer_id: api
+  name: model-capabilities
+  description: LLM model capability discovery operations
+  metadata:
+    created_at: 2026-03-23T19:24:42.453Z
+    updated_at: 2026-03-23T19:24:42.453Z
+    version: 1
+api.tag.pipeline-flavors:
+  id: 80c8b1b3-ba79-4e31-ae17-bb42456080b5
+  path: api.tag.pipeline-flavors
+  spec_node_id: api.tag
+  type: tag
+  layer_id: api
+  name: pipeline-flavors
+  description: Pipeline flavor template CRUD operations
+  metadata:
+    created_at: 2026-03-23T19:24:42.854Z
+    updated_at: 2026-03-23T19:24:42.854Z
+    version: 1
+api.tag.pipeline-configurations:
+  id: 3e76e804-b1ff-4b3e-b5c0-a74038313b3e
+  path: api.tag.pipeline-configurations
+  spec_node_id: api.tag
+  type: tag
+  layer_id: api
+  name: pipeline-configurations
+  description: Pipeline configuration CRUD operations
+  metadata:
+    created_at: 2026-03-23T19:24:43.283Z
+    updated_at: 2026-03-23T19:24:43.283Z
+    version: 1
+api.tag.optimization:
+  id: 583799b1-b19c-43d0-b1f1-fdd34b586313
+  path: api.tag.optimization
+  spec_node_id: api.tag
+  type: tag
+  layer_id: api
+  name: optimization
+  description: Performance optimization, query stats, batch operations
+  metadata:
+    created_at: 2026-03-23T19:24:43.702Z
+    updated_at: 2026-03-23T19:24:43.702Z
+    version: 1
+api.tag.rag-experiments:
+  id: 170e69c8-64d2-47d8-8ecd-87b4f2cc77e3
+  path: api.tag.rag-experiments
+  spec_node_id: api.tag
+  type: tag
+  layer_id: api
+  name: rag-experiments
+  description: RAG pipeline test paragraph and annotation management
+  metadata:
+    created_at: 2026-03-23T19:24:47.266Z
+    updated_at: 2026-03-23T19:24:47.266Z
+    version: 1
+api.tag.schema:
+  id: 9d4db57b-c8f2-4067-9090-a72f76f22df8
+  path: api.tag.schema
+  spec_node_id: api.tag
+  type: tag
+  layer_id: api
+  name: schema
+  description: Database schema migration status and control operations
+  metadata:
+    created_at: 2026-03-23T19:24:47.697Z
+    updated_at: 2026-03-23T19:24:47.697Z
+    version: 1
+api.tag.admin:
+  id: 6ccbbc9d-afc5-4e7b-a137-d076caeac451
+  path: api.tag.admin
+  spec_node_id: api.tag
+  type: tag
+  layer_id: api
+  name: admin
+  description: "Administrative monitoring: database, event processor, services"
+  metadata:
+    created_at: 2026-03-23T19:24:48.113Z
+    updated_at: 2026-03-23T19:24:48.113Z
+    version: 1
+api.tag.incremental-sync:
+  id: 1f0c3ffb-220e-4d57-92f4-480b92bea9ab
+  path: api.tag.incremental-sync
+  spec_node_id: api.tag
+  type: tag
+  layer_id: api
+  name: incremental-sync
+  description: Incremental synchronization start and monitoring operations
+  metadata:
+    created_at: 2026-03-23T19:34:04.523Z
+    updated_at: 2026-03-23T19:34:04.523Z
+    version: 1

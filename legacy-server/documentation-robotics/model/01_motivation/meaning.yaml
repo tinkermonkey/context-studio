@@ -1,0 +1,19 @@
+motivation.meaning.knowledge-as-infrastructure:
+  id: 964f976d-67c7-4de4-b96e-c85ec527f6e3
+  path: motivation.meaning.knowledge-as-infrastructure
+  spec_node_id: motivation.meaning
+  type: meaning
+  layer_id: motivation
+  name: Knowledge as Infrastructure
+  description: "The deeper purpose of Context Studio: treat curated, structured
+    knowledge as infrastructure that both humans and AI systems can rely on —
+    not as a one-off deliverable"
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: app.py
+        symbol: create_app
+  metadata:
+    created_at: 2026-03-23T12:45:16.208Z
+    updated_at: 2026-03-23T12:45:16.208Z
+    version: 1

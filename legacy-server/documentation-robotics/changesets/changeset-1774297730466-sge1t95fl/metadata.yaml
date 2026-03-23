@@ -1,0 +1,10 @@
+id: changeset-1774297730466-sge1t95fl
+name: schema-update-fixes
+created: 2026-03-23T20:28:50.481Z
+modified: 2026-03-23T20:37:36.559Z
+status: committed
+baseSnapshot: sha256:c506d2d77fd6ff86aaa06145de63d50c1ac97a6555bc9ae1bcc7f177cd320f9a
+stats:
+  additions: 78
+  modifications: 1
+  deletions: 7

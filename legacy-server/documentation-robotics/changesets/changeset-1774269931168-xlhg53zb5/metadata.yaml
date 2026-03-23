@@ -1,0 +1,10 @@
+id: changeset-1774269931168-xlhg53zb5
+name: cross-layer-relationships
+created: 2026-03-23T12:45:31.178Z
+modified: 2026-03-23T12:55:37.168Z
+status: committed
+baseSnapshot: sha256:45d7ab777c39eb7a19bdddca24f443cfbf67bc79bed515145fbc901caded1b45
+stats:
+  additions: 119
+  modifications: 0
+  deletions: 14

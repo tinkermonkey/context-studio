@@ -1,0 +1,76 @@
+testing.testcasesketch.test-create-taxonomy:
+  id: 2d369e87-f4b1-4a1d-8392-80370f59c5a8
+  path: testing.testcasesketch.test-create-taxonomy
+  spec_node_id: testing.testcasesketch
+  type: testcasesketch
+  layer_id: testing
+  name: Test Create Taxonomy
+  description: POST /api/ontology_entities/ with node_type=taxonomy creates a new
+    taxonomy and returns 201 with the entity
+  attributes:
+    status: implemented
+    description: Verify taxonomy creation via API
+    implementationFormat: automated
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: tests/unit_tests/test_node_service.py
+  metadata:
+    created_at: 2026-03-23T12:35:54.007Z
+    updated_at: 2026-03-23T12:35:54.007Z
+    version: 1
+testing.testcasesketch.test-vector-similarity-search:
+  id: 852e53e5-99e5-4d89-8282-641ad71d523a
+  path: testing.testcasesketch.test-vector-similarity-search
+  spec_node_id: testing.testcasesketch
+  type: testcasesketch
+  layer_id: testing
+  name: Test Vector Similarity Search
+  description: POST /api/ontology_entities/find returns entities ranked by cosine
+    similarity of title embeddings
+  attributes:
+    status: implemented
+    description: Vector search returns semantically similar entities
+    implementationFormat: automated
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: tests/integration_tests/test_vector_search_api.py
+  metadata:
+    created_at: 2026-03-23T12:35:54.503Z
+    updated_at: 2026-03-23T12:35:54.503Z
+    version: 1
+testing.testcasesketch.test-crdt-conflict-resolution:
+  id: cf7d5a93-d55c-4887-98f3-1862ea897633
+  path: testing.testcasesketch.test-crdt-conflict-resolution
+  spec_node_id: testing.testcasesketch
+  type: testcasesketch
+  layer_id: testing
+  name: Test CRDT Conflict Resolution
+  description: Two diverged changesets with conflicting field updates are merged
+    using CRDT merge engine without data loss
+  attributes:
+    status: implemented
+    description: CRDT merge resolves conflicts between diverged changesets
+    implementationFormat: automated
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: tests/unit_tests/test_crdt_merge_engine.py
+  metadata:
+    created_at: 2026-03-23T12:35:54.973Z
+    updated_at: 2026-03-23T12:35:54.973Z
+    version: 1
+testing.testcasesketch.test-predicate-discovery:
+  id: 3cf3a153-0b05-4976-81e1-9b934706b323
+  path: testing.testcasesketch.test-predicate-discovery
+  spec_node_id: testing.testcasesketch
+  type: testcasesketch
+  layer_id: testing
+  name: Test Predicate Discovery
+  description: Test that predicate discovery correctly extracts relationships from
+    ontology content via embedding similarity
+  metadata:
+    created_at: 2026-03-23T19:27:54.368Z
+    updated_at: 2026-03-23T19:27:54.368Z
+    version: 1

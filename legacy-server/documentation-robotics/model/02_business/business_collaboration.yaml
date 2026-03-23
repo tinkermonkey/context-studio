@@ -1,0 +1,18 @@
+business.businesscollaboration.knowledge-graph-collaboration:
+  id: 2aedec6d-384e-4c1b-917d-a7f11da4ae7b
+  path: business.businesscollaboration.knowledge-graph-collaboration
+  spec_node_id: business.businesscollaboration
+  type: businesscollaboration
+  layer_id: business
+  name: Knowledge Graph Collaboration
+  description: Business collaboration between Knowledge Managers sharing a
+    knowledge graph through changeset-based editing and CRDT-based merging
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: services/changeset_manager.py
+        symbol: ChangesetManager
+  metadata:
+    created_at: 2026-03-23T12:42:23.940Z
+    updated_at: 2026-03-23T12:42:23.940Z
+    version: 1

@@ -1,0 +1,82 @@
+motivation.constraint.sqlite-only-persistence:
+  id: f74fb8c3-6870-4994-9dfd-0574d1af4bfc
+  path: motivation.constraint.sqlite-only-persistence
+  spec_node_id: motivation.constraint
+  type: constraint
+  layer_id: motivation
+  name: SQLite-Only Persistence
+  description: The primary data store must be SQLite; no other RDBMS or cloud
+    database is used for the core workspace to maintain the local-first,
+    zero-config guarantee
+  attributes:
+    constraintType: technical
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: database/models.py
+        symbol: engine
+  metadata:
+    created_at: 2026-03-23T12:44:33.393Z
+    updated_at: 2026-03-23T12:44:33.393Z
+    version: 1
+motivation.constraint.python-3x-runtime:
+  id: 13616e5a-bb31-423a-b519-7ae56e24a1c1
+  path: motivation.constraint.python-3x-runtime
+  spec_node_id: motivation.constraint
+  type: constraint
+  layer_id: motivation
+  name: Python 3.x Runtime
+  description: All server-side code runs on Python 3.x; no other server languages
+    are in scope for the back-end
+  attributes:
+    constraintType: technical
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: requirements.txt
+        symbol: fastapi
+  metadata:
+    created_at: 2026-03-23T12:44:33.917Z
+    updated_at: 2026-03-23T12:44:33.917Z
+    version: 1
+motivation.constraint.external-reference-source-rate-limits:
+  id: 9ed761af-f96d-4b94-b3a4-e1b39772ddf0
+  path: motivation.constraint.external-reference-source-rate-limits
+  spec_node_id: motivation.constraint
+  type: constraint
+  layer_id: motivation
+  name: External Reference Source Rate Limits
+  description: All calls to external knowledge sources (ConceptNet, DBpedia,
+    Wikidata, schema.org) are constrained by per-source rate limits defined in
+    config.json
+  attributes:
+    constraintType: external
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: config.json
+        symbol: reference_sources
+  metadata:
+    created_at: 2026-03-23T12:44:40.468Z
+    updated_at: 2026-03-23T12:44:40.468Z
+    version: 1
+motivation.constraint.no-back-end-persistence-of-user-credentials:
+  id: 8f49a7d8-8d20-42a1-bb61-326bbd4d5a52
+  path: motivation.constraint.no-back-end-persistence-of-user-credentials
+  spec_node_id: motivation.constraint
+  type: constraint
+  layer_id: motivation
+  name: No Back-End Persistence of User Credentials
+  description: The application must never store user passwords or access tokens;
+    authentication is a single API key held in config.json
+  attributes:
+    constraintType: regulatory
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: config.json
+        symbol: security
+  metadata:
+    created_at: 2026-03-23T12:44:40.984Z
+    updated_at: 2026-03-23T12:44:40.984Z
+    version: 1

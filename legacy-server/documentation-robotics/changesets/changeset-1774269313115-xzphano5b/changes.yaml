@@ -1,0 +1,524 @@
+- type: add
+  elementId: testing.testcoveragemodel.context-studio-test-coverage-model
+  layerName: testing
+  after:
+    id: 09f3b4b5-40f7-4478-bf43-4732280e47a4
+    path: testing.testcoveragemodel.context-studio-test-coverage-model
+    spec_node_id: testing.testcoveragemodel
+    type: testcoveragemodel
+    layer_id: testing
+    name: Context Studio Test Coverage Model
+    description: ISP-based test coverage model for the Context Studio legacy server,
+      organizing coverage targets across domain logic, API routes, and
+      integration surfaces
+    attributes:
+      version: "1.0"
+      application: context-studio-legacy-server
+      description: Test coverage model for the legacy server
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: tests/pytest.ini
+    metadata:
+      created_at: 2026-03-23T12:35:21.795Z
+      updated_at: 2026-03-23T12:35:21.795Z
+      version: 1
+  timestamp: 2026-03-23T12:35:21.815Z
+  sequenceNumber: 0
+- type: add
+  elementId: testing.testcoveragetarget.ontology-entity-crud
+  layerName: testing
+  after:
+    id: 4090ddb2-c1eb-4802-bbff-6bb98a4c0333
+    path: testing.testcoveragetarget.ontology-entity-crud
+    spec_node_id: testing.testcoveragetarget
+    type: testcoveragetarget
+    layer_id: testing
+    name: Ontology Entity CRUD
+    description: Coverage target for the full CRUD lifecycle of ontology entities
+      via the OntologyEntityService and REST API
+    attributes:
+      targetType: api-endpoint
+      priority: critical
+      description: OntologyEntityService CRUD operations
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: tests/unit_tests/test_node_service.py
+    metadata:
+      created_at: 2026-03-23T12:35:28.708Z
+      updated_at: 2026-03-23T12:35:28.709Z
+      version: 1
+  timestamp: 2026-03-23T12:35:28.730Z
+  sequenceNumber: 1
+- type: add
+  elementId: testing.testcoveragetarget.relationship-service-operations
+  layerName: testing
+  after:
+    id: 3403bb51-9b15-48d7-ad53-46c7899cb588
+    path: testing.testcoveragetarget.relationship-service-operations
+    spec_node_id: testing.testcoveragetarget
+    type: testcoveragetarget
+    layer_id: testing
+    name: Relationship Service Operations
+    description: Coverage target for creating, listing, updating, and deleting typed
+      relationships between ontology entities
+    attributes:
+      targetType: api-endpoint
+      priority: critical
+      description: RelationshipService operations
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: tests/unit_tests/test_ontology_entities.py
+    metadata:
+      created_at: 2026-03-23T12:35:29.155Z
+      updated_at: 2026-03-23T12:35:29.155Z
+      version: 1
+  timestamp: 2026-03-23T12:35:29.177Z
+  sequenceNumber: 2
+- type: add
+  elementId: testing.testcoveragetarget.version-management-workflow
+  layerName: testing
+  after:
+    id: f7c41e78-bc33-4e32-88f2-75c4e55aca6e
+    path: testing.testcoveragetarget.version-management-workflow
+    spec_node_id: testing.testcoveragetarget
+    type: testcoveragetarget
+    layer_id: testing
+    name: Version Management Workflow
+    description: "Coverage target for the complete version control workflow: stage,
+      commit, diff, rollback, and working tree management"
+    attributes:
+      targetType: business-workflow
+      priority: critical
+      description: Entity versioning and working tree management
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: tests/unit_tests/test_version_manager.py
+    metadata:
+      created_at: 2026-03-23T12:35:29.611Z
+      updated_at: 2026-03-23T12:35:29.611Z
+      version: 1
+  timestamp: 2026-03-23T12:35:29.632Z
+  sequenceNumber: 3
+- type: add
+  elementId: testing.testcoveragetarget.changeset-collaboration-workflow
+  layerName: testing
+  after:
+    id: 1a0761e5-c313-4daa-b83c-49d4f97b6f19
+    path: testing.testcoveragetarget.changeset-collaboration-workflow
+    spec_node_id: testing.testcoveragetarget
+    type: testcoveragetarget
+    layer_id: testing
+    name: Changeset Collaboration Workflow
+    description: Coverage target for changeset create/push/merge with conflict
+      detection and CRDT resolution
+    attributes:
+      targetType: business-workflow
+      priority: critical
+      description: Collaborative changeset lifecycle
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: tests/unit_tests/test_changeset_manager.py
+    metadata:
+      created_at: 2026-03-23T12:35:37.657Z
+      updated_at: 2026-03-23T12:35:37.657Z
+      version: 1
+  timestamp: 2026-03-23T12:35:37.678Z
+  sequenceNumber: 4
+- type: add
+  elementId: testing.testcoveragetarget.rag-pipeline-execution
+  layerName: testing
+  after:
+    id: c443c290-9a7d-4b83-af45-ae7d66286412
+    path: testing.testcoveragetarget.rag-pipeline-execution
+    spec_node_id: testing.testcoveragetarget
+    type: testcoveragetarget
+    layer_id: testing
+    name: RAG Pipeline Execution
+    description: "Coverage target for end-to-end RAG pipeline: text input -> NLP
+      extraction -> embedding -> LLM enrichment -> entity output"
+    attributes:
+      targetType: business-workflow
+      priority: high
+      description: RAG pipeline end-to-end execution
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: tests/unit_tests/test_rag_pipeline_service.py
+    metadata:
+      created_at: 2026-03-23T12:35:38.108Z
+      updated_at: 2026-03-23T12:35:38.108Z
+      version: 1
+  timestamp: 2026-03-23T12:35:38.133Z
+  sequenceNumber: 5
+- type: add
+  elementId: testing.testcoveragetarget.dataset-management-api
+  layerName: testing
+  after:
+    id: 0ca4c6fb-2514-4465-ab97-e92e2897c8d2
+    path: testing.testcoveragetarget.dataset-management-api
+    spec_node_id: testing.testcoveragetarget
+    type: testcoveragetarget
+    layer_id: testing
+    name: Dataset Management API
+    description: "Coverage target for dataset file lifecycle: create, activate,
+      list, switch, and delete dataset workspaces"
+    attributes:
+      targetType: api-endpoint
+      priority: high
+      description: Dataset workspace management API
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: tests/integration_tests/test_nodes_api_integration.py
+    metadata:
+      created_at: 2026-03-23T12:35:38.567Z
+      updated_at: 2026-03-23T12:35:38.567Z
+      version: 1
+  timestamp: 2026-03-23T12:35:38.589Z
+  sequenceNumber: 6
+- type: add
+  elementId: testing.testcasesketch.test-create-taxonomy
+  layerName: testing
+  after:
+    id: 2d369e87-f4b1-4a1d-8392-80370f59c5a8
+    path: testing.testcasesketch.test-create-taxonomy
+    spec_node_id: testing.testcasesketch
+    type: testcasesketch
+    layer_id: testing
+    name: Test Create Taxonomy
+    description: POST /api/ontology_entities/ with node_type=taxonomy creates a new
+      taxonomy and returns 201 with the entity
+    attributes:
+      status: implemented
+      description: Verify taxonomy creation via API
+      implementationFormat: automated
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: tests/unit_tests/test_node_service.py
+    metadata:
+      created_at: 2026-03-23T12:35:54.007Z
+      updated_at: 2026-03-23T12:35:54.007Z
+      version: 1
+  timestamp: 2026-03-23T12:35:54.030Z
+  sequenceNumber: 7
+- type: add
+  elementId: testing.testcasesketch.test-vector-similarity-search
+  layerName: testing
+  after:
+    id: 852e53e5-99e5-4d89-8282-641ad71d523a
+    path: testing.testcasesketch.test-vector-similarity-search
+    spec_node_id: testing.testcasesketch
+    type: testcasesketch
+    layer_id: testing
+    name: Test Vector Similarity Search
+    description: POST /api/ontology_entities/find returns entities ranked by cosine
+      similarity of title embeddings
+    attributes:
+      status: implemented
+      description: Vector search returns semantically similar entities
+      implementationFormat: automated
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: tests/integration_tests/test_vector_search_api.py
+    metadata:
+      created_at: 2026-03-23T12:35:54.503Z
+      updated_at: 2026-03-23T12:35:54.503Z
+      version: 1
+  timestamp: 2026-03-23T12:35:54.525Z
+  sequenceNumber: 8
+- type: add
+  elementId: testing.testcasesketch.test-crdt-conflict-resolution
+  layerName: testing
+  after:
+    id: cf7d5a93-d55c-4887-98f3-1862ea897633
+    path: testing.testcasesketch.test-crdt-conflict-resolution
+    spec_node_id: testing.testcasesketch
+    type: testcasesketch
+    layer_id: testing
+    name: Test CRDT Conflict Resolution
+    description: Two diverged changesets with conflicting field updates are merged
+      using CRDT merge engine without data loss
+    attributes:
+      status: implemented
+      description: CRDT merge resolves conflicts between diverged changesets
+      implementationFormat: automated
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: tests/unit_tests/test_crdt_merge_engine.py
+    metadata:
+      created_at: 2026-03-23T12:35:54.973Z
+      updated_at: 2026-03-23T12:35:54.973Z
+      version: 1
+  timestamp: 2026-03-23T12:35:54.997Z
+  sequenceNumber: 9
+- type: add
+  elementId: testing.inputspacepartition.entity-node-type-partition
+  layerName: testing
+  after:
+    id: 3f31021c-e784-469b-8ae6-9b0ba71582d0
+    path: testing.inputspacepartition.entity-node-type-partition
+    spec_node_id: testing.inputspacepartition
+    type: inputspacepartition
+    layer_id: testing
+    name: Entity node_type Partition
+    description: "Input space partition for node_type field: covers taxonomy,
+      concept_scheme, class, individual (valid), and invalid/empty values"
+    attributes:
+      fieldRef: OntologyEntity.node_type
+      presenceRule: required
+      description: Node type discriminator partition
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: tests/unit_tests/test_value_objects.py
+    metadata:
+      created_at: 2026-03-23T12:36:03.681Z
+      updated_at: 2026-03-23T12:36:03.681Z
+      version: 1
+  timestamp: 2026-03-23T12:36:03.710Z
+  sequenceNumber: 10
+- type: add
+  elementId: testing.outcomecategory.entity-creation-success
+  layerName: testing
+  after:
+    id: 42eb3fb1-f30a-4a6f-8164-a02ca3e52790
+    path: testing.outcomecategory.entity-creation-success
+    spec_node_id: testing.outcomecategory
+    type: outcomecategory
+    layer_id: testing
+    name: Entity Creation Success
+    description: "Expected outcome category: entity created with correct node_type,
+      title, and parent assignment, returned with UUID"
+    attributes:
+      outcomeType: success
+      description: Entity successfully created and returned
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: tests/unit_tests/test_node_service.py
+    metadata:
+      created_at: 2026-03-23T12:36:04.198Z
+      updated_at: 2026-03-23T12:36:04.198Z
+      version: 1
+  timestamp: 2026-03-23T12:36:04.227Z
+  sequenceNumber: 11
+- type: add
+  elementId: testing.coveragesummary.legacy-server-coverage-summary
+  layerName: testing
+  after:
+    id: 3160ac65-711e-4e7b-881b-fc2c43347607
+    path: testing.coveragesummary.legacy-server-coverage-summary
+    spec_node_id: testing.coveragesummary
+    type: coveragesummary
+    layer_id: testing
+    name: Legacy Server Coverage Summary
+    description: "Coverage summary for the legacy server: 80+ unit tests, 80+
+      integration tests across all bounded contexts"
+    attributes:
+      totalTargets: 6
+      totalRequirements: 12
+      totalSketches: 3
+      generatedAt: 2026-03-23
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: tests
+    metadata:
+      created_at: 2026-03-23T12:36:11.164Z
+      updated_at: 2026-03-23T12:36:11.164Z
+      version: 1
+  timestamp: 2026-03-23T12:36:11.189Z
+  sequenceNumber: 12
+- type: add
+  elementId: testing.outcomecategory.validation-error
+  layerName: testing
+  after:
+    id: 7ead05d7-bd3b-4d09-b6b7-50097cb2ad4b
+    path: testing.outcomecategory.validation-error
+    spec_node_id: testing.outcomecategory
+    type: outcomecategory
+    layer_id: testing
+    name: Validation Error
+    description: "Expected outcome for invalid inputs: missing required fields,
+      duplicate titles, or circular parent references"
+    attributes:
+      outcomeType: validation-error
+      description: Validation failure with descriptive error message
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: tests/unit_tests/test_validation.py
+    metadata:
+      created_at: 2026-03-23T12:36:17.118Z
+      updated_at: 2026-03-23T12:36:17.118Z
+      version: 1
+  timestamp: 2026-03-23T12:36:17.144Z
+  sequenceNumber: 13
+- type: add
+  elementId: testing.coveragerequirement.each-partition-must-have-at-least-one-test
+  layerName: testing
+  after:
+    id: 784b2daa-a159-4f6b-b030-d10e519db0a0
+    path: testing.coveragerequirement.each-partition-must-have-at-least-one-test
+    spec_node_id: testing.coveragerequirement
+    type: coveragerequirement
+    layer_id: testing
+    name: Each Partition Must Have At Least One Test
+    description: "Coverage requirement applying each-choice criterion: each input
+      partition (node_type, embedding presence, parent presence) must be
+      exercised by at least one test case"
+    attributes:
+      coverageCriteria: each-choice
+      priority: critical
+      description: Each valid/invalid partition class must have at least one test
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: tests/unit_tests
+    metadata:
+      created_at: 2026-03-23T12:36:23.974Z
+      updated_at: 2026-03-23T12:36:23.974Z
+      version: 1
+  timestamp: 2026-03-23T12:36:24.000Z
+  sequenceNumber: 14
+- type: add
+  elementId: testing.environmentfactor.sqlite-in-memory-database
+  layerName: testing
+  after:
+    id: 845aff50-dc56-4200-a697-7c22b4aebd4c
+    path: testing.environmentfactor.sqlite-in-memory-database
+    spec_node_id: testing.environmentfactor
+    type: environmentfactor
+    layer_id: testing
+    name: SQLite In-Memory Database
+    description: "Test environment factor: unit and integration tests use SQLite
+      in-memory databases to avoid file system side-effects"
+    attributes:
+      factorType: dependency-version
+      value: "sqlite:///:memory:"
+      description: In-memory SQLite for test isolation
+      testImpact: isolation
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: tests/conftest.py
+    metadata:
+      created_at: 2026-03-23T12:36:31.078Z
+      updated_at: 2026-03-23T12:36:31.078Z
+      version: 1
+  timestamp: 2026-03-23T12:36:31.105Z
+  sequenceNumber: 15
+- type: add
+  elementId: testing.coveragegap.no-e2e-tests-for-s3-sync
+  layerName: testing
+  after:
+    id: c236a876-1ecf-427e-aab3-a8797762da06
+    path: testing.coveragegap.no-e2e-tests-for-s3-sync
+    spec_node_id: testing.coveragegap
+    type: coveragegap
+    layer_id: testing
+    name: No E2E Tests for S3 Sync
+    description: "Coverage gap: S3 sync operations are not covered by automated E2E
+      tests due to external AWS dependency — manual verification required"
+    attributes:
+      severity: medium
+      affectedRequirements: s3-sync-workflow
+      remediationStatus: deferred
+      description: S3 sync E2E testing requires AWS credentials and live bucket
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: tests
+    metadata:
+      created_at: 2026-03-23T12:36:31.559Z
+      updated_at: 2026-03-23T12:36:31.559Z
+      version: 1
+  timestamp: 2026-03-23T12:36:31.584Z
+  sequenceNumber: 16
+- type: add
+  elementId: testing.coverageexclusion.llm-api-live-call-tests
+  layerName: testing
+  after:
+    id: 204f68b4-73c2-476d-b937-10d0ec52181d
+    path: testing.coverageexclusion.llm-api-live-call-tests
+    spec_node_id: testing.coverageexclusion
+    type: coverageexclusion
+    layer_id: testing
+    name: LLM API Live Call Tests
+    description: "Coverage exclusion: tests requiring live LLM API calls to
+      OpenAI/Anthropic are excluded from the CI test suite to avoid costs and
+      flakiness"
+    attributes:
+      reason: External dependency on paid LLM APIs makes these tests unreliable and
+        costly in CI
+      riskAccepted: true
+      approvedBy: team
+      description: Live LLM API tests excluded from automated CI
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: tests/e2e
+    metadata:
+      created_at: 2026-03-23T12:36:40.547Z
+      updated_at: 2026-03-23T12:36:40.547Z
+      version: 1
+  timestamp: 2026-03-23T12:36:40.574Z
+  sequenceNumber: 17
+- type: add
+  elementId: testing.contextvariation.unit-test-context
+  layerName: testing
+  after:
+    id: 29dcb218-08a0-47ec-ad8d-27046d926b22
+    path: testing.contextvariation.unit-test-context
+    spec_node_id: testing.contextvariation
+    type: contextvariation
+    layer_id: testing
+    name: Unit Test Context
+    description: "Context variation for unit tests: pure Python, no DB, no network,
+      using fake/mock port implementations from tests/fakes/"
+    attributes:
+      contextType: functional
+      description: Isolated unit tests with fake ports, no I/O
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: tests/fakes
+    metadata:
+      created_at: 2026-03-23T12:36:46.940Z
+      updated_at: 2026-03-23T12:36:46.940Z
+      version: 1
+  timestamp: 2026-03-23T12:36:46.967Z
+  sequenceNumber: 18
+- type: add
+  elementId: testing.contextvariation.integration-test-context
+  layerName: testing
+  after:
+    id: f8cb191b-50ef-4b5a-8d3a-a15eb59d88ad
+    path: testing.contextvariation.integration-test-context
+    spec_node_id: testing.contextvariation
+    type: contextvariation
+    layer_id: testing
+    name: Integration Test Context
+    description: "Context variation for integration tests: real SQLite in-memory
+      database, real services, TestClient HTTP calls"
+    attributes:
+      contextType: functional
+      description: Integration tests with real SQLite and TestClient HTTP
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: tests/integration_tests/conftest.py
+    metadata:
+      created_at: 2026-03-23T12:36:47.441Z
+      updated_at: 2026-03-23T12:36:47.441Z
+      version: 1
+  timestamp: 2026-03-23T12:36:47.467Z
+  sequenceNumber: 19

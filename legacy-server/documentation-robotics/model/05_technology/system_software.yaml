@@ -1,0 +1,241 @@
+technology.systemsoftware.fast-api:
+  id: 65be91d0-c3af-40d3-a72e-279ec59004d0
+  path: technology.systemsoftware.fast-api
+  spec_node_id: technology.systemsoftware
+  type: systemsoftware
+  layer_id: technology
+  name: FastAPI
+  description: ASGI web framework for building the REST API (v0.116.0)
+  attributes:
+    softwareType: middleware
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: requirements.txt
+  metadata:
+    created_at: 2026-03-23T12:21:28.042Z
+    updated_at: 2026-03-23T12:21:28.042Z
+    version: 1
+technology.systemsoftware.uvicorn:
+  id: eabb665f-45b3-4394-94a0-5032913c5568
+  path: technology.systemsoftware.uvicorn
+  spec_node_id: technology.systemsoftware
+  type: systemsoftware
+  layer_id: technology
+  name: Uvicorn
+  description: ASGI server running the FastAPI application (v0.35.0)
+  attributes:
+    softwareType: middleware
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: requirements.txt
+  metadata:
+    created_at: 2026-03-23T12:21:28.444Z
+    updated_at: 2026-03-23T12:21:28.444Z
+    version: 1
+technology.systemsoftware.python-3:
+  id: a29393eb-7fee-4029-8136-311b7cbd8c8e
+  path: technology.systemsoftware.python-3
+  spec_node_id: technology.systemsoftware
+  type: systemsoftware
+  layer_id: technology
+  name: Python 3
+  description: Python 3 runtime — primary execution environment for the back-end server
+  attributes:
+    softwareType: middleware
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: requirements.txt
+  metadata:
+    created_at: 2026-03-23T12:21:34.080Z
+    updated_at: 2026-03-23T12:21:34.080Z
+    version: 1
+technology.systemsoftware.sqlite:
+  id: 49b5dd28-ca1d-4730-beb9-9d9247fbac68
+  path: technology.systemsoftware.sqlite
+  spec_node_id: technology.systemsoftware
+  type: systemsoftware
+  layer_id: technology
+  name: SQLite
+  description: Embedded relational database engine used for local.db (ontology),
+    operations.db (pipelines), reference.db, and reference_api_cache.db
+  attributes:
+    softwareType: dbms
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: config.json
+  metadata:
+    created_at: 2026-03-23T12:21:34.459Z
+    updated_at: 2026-03-23T12:21:34.459Z
+    version: 1
+technology.systemsoftware.sqlite-vector:
+  id: d1b06786-aebd-4108-95df-d5932b29d744
+  path: technology.systemsoftware.sqlite-vector
+  spec_node_id: technology.systemsoftware
+  type: systemsoftware
+  layer_id: technology
+  name: SQLiteVector
+  description: SQLite extension (sqlite-vec v0.1.6) enabling vector similarity
+    search over binary embeddings
+  attributes:
+    softwareType: dbms
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: requirements.txt
+  metadata:
+    created_at: 2026-03-23T12:21:34.847Z
+    updated_at: 2026-03-23T12:21:34.847Z
+    version: 1
+technology.systemsoftware.sqlalchemy:
+  id: 4f10139a-4da2-4289-a879-b6dffcc92933
+  path: technology.systemsoftware.sqlalchemy
+  spec_node_id: technology.systemsoftware
+  type: systemsoftware
+  layer_id: technology
+  name: SQLAlchemy
+  description: ORM and SQL toolkit (v2.0.41) providing the persistence adapter and
+    schema definition
+  attributes:
+    softwareType: middleware
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: requirements.txt
+  metadata:
+    created_at: 2026-03-23T12:21:40.611Z
+    updated_at: 2026-03-23T12:21:40.611Z
+    version: 1
+technology.systemsoftware.lang-chain:
+  id: cadbca34-c55e-431d-baaf-2faf811e4e47
+  path: technology.systemsoftware.lang-chain
+  spec_node_id: technology.systemsoftware
+  type: systemsoftware
+  layer_id: technology
+  name: LangChain
+  description: LLM orchestration framework (langchain + langchain-openai +
+    langchain-community) for LLM pipeline management and SQLite caching
+  attributes:
+    softwareType: middleware
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: requirements.txt
+  metadata:
+    created_at: 2026-03-23T12:21:41.035Z
+    updated_at: 2026-03-23T12:21:41.035Z
+    version: 1
+technology.systemsoftware.duck-db:
+  id: 9b958bfa-85e2-4b9b-bdba-ff71d06ae9d3
+  path: technology.systemsoftware.duck-db
+  spec_node_id: technology.systemsoftware
+  type: systemsoftware
+  layer_id: technology
+  name: DuckDB
+  description: Analytical SQL engine (v1.1+) used for sync analytics and changeset analysis
+  attributes:
+    softwareType: dbms
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: requirements.txt
+  metadata:
+    created_at: 2026-03-23T12:21:41.428Z
+    updated_at: 2026-03-23T12:21:41.428Z
+    version: 1
+technology.systemsoftware.spa-cy:
+  id: 2a4a021e-a920-4aba-807c-e557b3bc3dc3
+  path: technology.systemsoftware.spa-cy
+  spec_node_id: technology.systemsoftware
+  type: systemsoftware
+  layer_id: technology
+  name: spaCy
+  description: NLP library (v3.8.11) with en_core_web_lg model for named entity
+    recognition, dependency parsing, and text processing
+  attributes:
+    softwareType: middleware
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: requirements.txt
+  metadata:
+    created_at: 2026-03-23T12:22:18.745Z
+    updated_at: 2026-03-23T12:22:18.745Z
+    version: 1
+technology.systemsoftware.sentence-transformers:
+  id: d7a1d50a-c904-423e-a498-13cdfb1d7ab2
+  path: technology.systemsoftware.sentence-transformers
+  spec_node_id: technology.systemsoftware
+  type: systemsoftware
+  layer_id: technology
+  name: SentenceTransformers
+  description: Semantic embedding library (v5.0.0) generating vector embeddings
+    for ontology entity similarity search
+  attributes:
+    softwareType: middleware
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: requirements.txt
+  metadata:
+    created_at: 2026-03-23T12:22:19.175Z
+    updated_at: 2026-03-23T12:22:19.175Z
+    version: 1
+technology.systemsoftware.network-x:
+  id: 94f1a42c-c31d-49ba-a8a9-cf42dfab516d
+  path: technology.systemsoftware.network-x
+  spec_node_id: technology.systemsoftware
+  type: systemsoftware
+  layer_id: technology
+  name: NetworkX
+  description: Graph analysis library (v3.5) for computing network metrics,
+    centrality, and community detection over the ontology graph
+  attributes:
+    softwareType: middleware
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: requirements.txt
+  metadata:
+    created_at: 2026-03-23T12:22:25.158Z
+    updated_at: 2026-03-23T12:22:25.158Z
+    version: 1
+technology.systemsoftware.rdflib:
+  id: 83ab9d46-20fc-4d3b-b8bc-b10c23224fcf
+  path: technology.systemsoftware.rdflib
+  spec_node_id: technology.systemsoftware
+  type: systemsoftware
+  layer_id: technology
+  name: RDFLib
+  description: RDF graph library (v7.1.4) enabling SPARQL query execution over ontology data
+  attributes:
+    softwareType: middleware
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: requirements.txt
+  metadata:
+    created_at: 2026-03-23T12:22:25.601Z
+    updated_at: 2026-03-23T12:22:25.601Z
+    version: 1
+technology.systemsoftware.alembic:
+  id: 1c944974-8749-4240-ade6-f651bae49bf6
+  path: technology.systemsoftware.alembic
+  spec_node_id: technology.systemsoftware
+  type: systemsoftware
+  layer_id: technology
+  name: Alembic
+  description: SQLAlchemy migration tool managing schema evolution for local.db
+    and operations.db; autogenerates migration scripts from ORM model changes
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: database/migrations/migration_manager.py
+        symbol: MigrationManager
+  metadata:
+    created_at: 2026-03-23T19:03:09.217Z
+    updated_at: 2026-03-23T19:03:09.217Z
+    version: 1

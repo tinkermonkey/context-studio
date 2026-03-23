@@ -1,0 +1,21 @@
+ux.tablecolumn.entity-title-column:
+  id: 70f9a776-d260-4d04-a0cd-f8f040b8d4e8
+  path: ux.tablecolumn.entity-title-column
+  spec_node_id: ux.tablecolumn
+  type: tablecolumn
+  layer_id: ux
+  name: Entity Title Column
+  description: Table column displaying the title of an ontology entity in the
+    entity list table, sortable and filterable
+  attributes:
+    header: Title
+    field: title
+    filterType: contains
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ../../ux/src/components/node_tables
+  metadata:
+    created_at: 2026-03-23T12:30:40.167Z
+    updated_at: 2026-03-23T12:30:40.167Z
+    version: 1

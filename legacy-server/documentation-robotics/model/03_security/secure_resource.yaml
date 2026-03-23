@@ -1,0 +1,75 @@
+security.secureresource.rest-api-endpoints:
+  id: 76ad6fe6-9088-4c51-b86b-7d1537e3b5fb
+  path: security.secureresource.rest-api-endpoints
+  spec_node_id: security.secureresource
+  type: secureresource
+  layer_id: security
+  name: REST API Endpoints
+  description: The full set of HTTP REST API endpoints exposed by the FastAPI
+    server — primary access surface requiring policy enforcement
+  attributes:
+    resource: /api/**
+    type: api
+    description: All REST API routes
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: app.py
+  metadata:
+    created_at: 2026-03-23T12:38:43.231Z
+    updated_at: 2026-03-23T12:38:43.231Z
+    version: 1
+security.secureresource.ontology-api-endpoints:
+  id: 44cdee13-01e1-4357-b272-72632cf7a934
+  path: security.secureresource.ontology-api-endpoints
+  spec_node_id: security.secureresource
+  type: secureresource
+  layer_id: security
+  name: Ontology API Endpoints
+  description: Secure resource representing all ontology entity, relationship, and
+    graph API endpoints
+  source_reference:
+    provenance: inferred
+    locations:
+      - file: api/ontology_entities.py
+        symbol: router
+  metadata:
+    created_at: 2026-03-23T20:34:28.958Z
+    updated_at: 2026-03-23T20:34:28.958Z
+    version: 1
+security.secureresource.sync-api-endpoints:
+  id: bd6cc218-7800-4357-bd21-288603cb3250
+  path: security.secureresource.sync-api-endpoints
+  spec_node_id: security.secureresource
+  type: secureresource
+  layer_id: security
+  name: Sync API Endpoints
+  description: Secure resource representing all data synchronization and
+    incremental sync API endpoints
+  source_reference:
+    provenance: inferred
+    locations:
+      - file: api/sync.py
+        symbol: router
+  metadata:
+    created_at: 2026-03-23T20:34:29.594Z
+    updated_at: 2026-03-23T20:34:29.594Z
+    version: 1
+security.secureresource.admin-api-endpoints:
+  id: d13d678d-7a01-4096-900a-4d85ffcaa088
+  path: security.secureresource.admin-api-endpoints
+  spec_node_id: security.secureresource
+  type: secureresource
+  layer_id: security
+  name: Admin API Endpoints
+  description: Secure resource representing all administrative, health, and
+    configuration API endpoints
+  source_reference:
+    provenance: inferred
+    locations:
+      - file: api/admin
+        symbol: router
+  metadata:
+    created_at: 2026-03-23T20:34:30.244Z
+    updated_at: 2026-03-23T20:34:30.244Z
+    version: 1

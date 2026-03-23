@@ -1,0 +1,502 @@
+- type: add
+  elementId: data-store.database.localdb-workspace
+  layerName: data-store
+  after:
+    id: 1306e18c-bd63-4a96-a10c-f33998c0b2f5
+    path: data-store.database.localdb-workspace
+    spec_node_id: data-store.database
+    type: database
+    layer_id: data-store
+    name: local.db (Workspace)
+    description: Primary SQLite workspace database storing ontology entities,
+      relationships, predicates, and change events — one per dataset
+    attributes:
+      engine: SQLite
+      paradigm: RELATIONAL
+      deploymentModel: EMBEDDED
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: config.json
+    metadata:
+      created_at: 2026-03-23T12:27:40.019Z
+      updated_at: 2026-03-23T12:27:40.019Z
+      version: 1
+  timestamp: 2026-03-23T12:27:40.041Z
+  sequenceNumber: 0
+- type: add
+  elementId: data-store.database.operationsdb
+  layerName: data-store
+  after:
+    id: 8c3aa038-cd64-478e-89ee-cf0483f7d271
+    path: data-store.database.operationsdb
+    spec_node_id: data-store.database
+    type: database
+    layer_id: data-store
+    name: operations.db
+    description: Operational SQLite database storing LLM pipeline configurations,
+      pipeline executions, and background task state
+    attributes:
+      engine: SQLite
+      paradigm: RELATIONAL
+      deploymentModel: EMBEDDED
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: config.json
+    metadata:
+      created_at: 2026-03-23T12:27:40.442Z
+      updated_at: 2026-03-23T12:27:40.442Z
+      version: 1
+  timestamp: 2026-03-23T12:27:40.463Z
+  sequenceNumber: 1
+- type: add
+  elementId: data-store.database.referencedb
+  layerName: data-store
+  after:
+    id: da3774e7-8059-4708-ab1b-7b2cb0ee5b7d
+    path: data-store.database.referencedb
+    spec_node_id: data-store.database
+    type: database
+    layer_id: data-store
+    name: reference.db
+    description: Reference knowledge SQLite database storing ConceptNet, DBpedia,
+      Wikidata, and schema.org imported data with vector search
+    attributes:
+      engine: SQLite
+      paradigm: MULTI_MODEL
+      deploymentModel: EMBEDDED
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: config.json
+    metadata:
+      created_at: 2026-03-23T12:27:40.848Z
+      updated_at: 2026-03-23T12:27:40.848Z
+      version: 1
+  timestamp: 2026-03-23T12:27:40.869Z
+  sequenceNumber: 2
+- type: add
+  elementId: data-store.namespace.workspace-schema
+  layerName: data-store
+  after:
+    id: 6e2c3aaa-79b0-47b5-99bc-cffd713f57f6
+    path: data-store.namespace.workspace-schema
+    spec_node_id: data-store.namespace
+    type: namespace
+    layer_id: data-store
+    name: workspace_schema
+    description: "Schema namespace in local.db containing the core ontology tables:
+      ontology_entities, relationships, property_definitions, change_events"
+    attributes:
+      owner: SQLAlchemy ORM
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: database/models.py
+    metadata:
+      created_at: 2026-03-23T12:27:48.835Z
+      updated_at: 2026-03-23T12:27:48.835Z
+      version: 1
+  timestamp: 2026-03-23T12:27:48.855Z
+  sequenceNumber: 3
+- type: add
+  elementId: data-store.collection.ontology-entities
+  layerName: data-store
+  after:
+    id: 016d7d54-04cd-41f9-8a3c-8e085747885c
+    path: data-store.collection.ontology-entities
+    spec_node_id: data-store.collection
+    type: collection
+    layer_id: data-store
+    name: ontology_entities
+    description: Primary table for all ontology entities (taxonomies, concept
+      schemes, classes) with vector embeddings, discriminated by node_type
+    attributes:
+      collectionType: TABLE
+      partitionKey: id
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: database/models.py
+          symbol: OntologyEntity
+    metadata:
+      created_at: 2026-03-23T12:27:49.253Z
+      updated_at: 2026-03-23T12:27:49.253Z
+      version: 1
+  timestamp: 2026-03-23T12:27:49.274Z
+  sequenceNumber: 4
+- type: add
+  elementId: data-store.collection.relationships
+  layerName: data-store
+  after:
+    id: 357df59c-ef53-4cb5-93df-690a9f52b97b
+    path: data-store.collection.relationships
+    spec_node_id: data-store.collection
+    type: collection
+    layer_id: data-store
+    name: relationships
+    description: Table storing typed directed edges between ontology entities with
+      predicate label and optional predicate_id foreign key
+    attributes:
+      collectionType: TABLE
+      partitionKey: id
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: database/models.py
+          symbol: Relationship
+    metadata:
+      created_at: 2026-03-23T12:27:49.676Z
+      updated_at: 2026-03-23T12:27:49.676Z
+      version: 1
+  timestamp: 2026-03-23T12:27:49.697Z
+  sequenceNumber: 5
+- type: add
+  elementId: data-store.collection.property-definitions
+  layerName: data-store
+  after:
+    id: 5afa41c8-a976-47cd-9eaa-1f99d15fc201
+    path: data-store.collection.property-definitions
+    spec_node_id: data-store.collection
+    type: collection
+    layer_id: data-store
+    name: property_definitions
+    description: Table defining reusable property/predicate types with identifier,
+      title, definition, and relevance flag
+    attributes:
+      collectionType: TABLE
+      partitionKey: id
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: database/models.py
+          symbol: PropertyDefinition
+    metadata:
+      created_at: 2026-03-23T12:27:56.953Z
+      updated_at: 2026-03-23T12:27:56.953Z
+      version: 1
+  timestamp: 2026-03-23T12:27:56.976Z
+  sequenceNumber: 6
+- type: add
+  elementId: data-store.collection.change-events
+  layerName: data-store
+  after:
+    id: 60ed6ecc-02d6-4382-b214-301ddf7a9bcb
+    path: data-store.collection.change-events
+    spec_node_id: data-store.collection
+    type: collection
+    layer_id: data-store
+    name: change_events
+    description: Audit log table recording all create/update/delete events on
+      ontology entities with old_data/new_data JSON and processed flag
+    attributes:
+      collectionType: TABLE
+      partitionKey: id
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: database/models.py
+          symbol: ChangeEvent
+    metadata:
+      created_at: 2026-03-23T12:27:57.374Z
+      updated_at: 2026-03-23T12:27:57.374Z
+      version: 1
+  timestamp: 2026-03-23T12:27:57.396Z
+  sequenceNumber: 7
+- type: add
+  elementId: data-store.collection.pipeline-configurations
+  layerName: data-store
+  after:
+    id: ea4661a2-98b0-42b8-9c96-9c70d5b3c80f
+    path: data-store.collection.pipeline-configurations
+    spec_node_id: data-store.collection
+    type: collection
+    layer_id: data-store
+    name: pipeline_configurations
+    description: Table in operations.db storing LLM pipeline configurations with
+      provider, model, prompts, and version
+    attributes:
+      collectionType: TABLE
+      partitionKey: id
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: database/models.py
+          symbol: PipelineConfiguration
+    metadata:
+      created_at: 2026-03-23T12:27:57.790Z
+      updated_at: 2026-03-23T12:27:57.790Z
+      version: 1
+  timestamp: 2026-03-23T12:27:57.814Z
+  sequenceNumber: 8
+- type: add
+  elementId: data-store.index.ontology-entities-title-idx
+  layerName: data-store
+  after:
+    id: a578d0ed-ae42-4425-9d2a-d1813a483793
+    path: data-store.index.ontology-entities-title-idx
+    spec_node_id: data-store.index
+    type: index
+    layer_id: data-store
+    name: ontology_entities_title_idx
+    description: Index on ontology_entities.title for efficient full-text title
+      lookup across all entity types
+    attributes:
+      fields: title
+      unique: false
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: database/migrations/versions/013_add_structure_nodes_title_index.py
+    metadata:
+      created_at: 2026-03-23T12:28:07.732Z
+      updated_at: 2026-03-23T12:28:07.732Z
+      version: 1
+  timestamp: 2026-03-23T12:28:07.756Z
+  sequenceNumber: 9
+- type: add
+  elementId: data-store.index.relationship-uniqueness-idx
+  layerName: data-store
+  after:
+    id: 10477804-3c4e-4951-87d5-9563d90a97bb
+    path: data-store.index.relationship-uniqueness-idx
+    spec_node_id: data-store.index
+    type: index
+    layer_id: data-store
+    name: relationship_uniqueness_idx
+    description: Unique constraint index on (source_entity_id, target_entity_id,
+      predicate) preventing duplicate relationships
+    attributes:
+      fields: source_entity_id,target_entity_id,predicate
+      unique: true
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: database/models.py
+          symbol: Relationship.__table_args__
+    metadata:
+      created_at: 2026-03-23T12:28:08.166Z
+      updated_at: 2026-03-23T12:28:08.166Z
+      version: 1
+  timestamp: 2026-03-23T12:28:08.191Z
+  sequenceNumber: 10
+- type: add
+  elementId: data-store.field.title-embedding
+  layerName: data-store
+  after:
+    id: 547c8abc-2a0b-4caa-909e-ded7636da0a3
+    path: data-store.field.title-embedding
+    spec_node_id: data-store.field
+    type: field
+    layer_id: data-store
+    name: title_embedding
+    description: BLOB column storing the SentenceTransformer vector embedding of the
+      entity title for sqlite-vec similarity search
+    attributes:
+      dataType: BLOB
+      nullable: true
+      vectorDimensions: 384
+      distanceMetric: COSINE
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: database/models.py
+          symbol: OntologyEntity.title_embedding
+    metadata:
+      created_at: 2026-03-23T12:28:13.997Z
+      updated_at: 2026-03-23T12:28:13.997Z
+      version: 1
+  timestamp: 2026-03-23T12:28:14.021Z
+  sequenceNumber: 11
+- type: add
+  elementId: data-store.validationrule.entity-cascade-delete
+  layerName: data-store
+  after:
+    id: b4dcda79-d9b1-448b-a334-3b38b7ffe65d
+    path: data-store.validationrule.entity-cascade-delete
+    spec_node_id: data-store.validationrule
+    type: validationrule
+    layer_id: data-store
+    name: entity_cascade_delete
+    description: "Foreign key cascade rule: deleting a parent ontology entity
+      cascades to all child entities via parent_entity_id"
+    attributes:
+      ruleType: FOREIGN_KEY
+      referencedCollection: ontology_entities
+      onDelete: CASCADE
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: database/models.py
+          symbol: OntologyEntity.parent_entity_id
+    metadata:
+      created_at: 2026-03-23T12:28:14.482Z
+      updated_at: 2026-03-23T12:28:14.482Z
+      version: 1
+  timestamp: 2026-03-23T12:28:14.506Z
+  sequenceNumber: 12
+- type: add
+  elementId: data-store.retentionpolicy.reference-api-cache-cleanup
+  layerName: data-store
+  after:
+    id: 85af207e-0a0b-44d1-8489-6ee6ee086b8e
+    path: data-store.retentionpolicy.reference-api-cache-cleanup
+    spec_node_id: data-store.retentionpolicy
+    type: retentionpolicy
+    layer_id: data-store
+    name: reference_api_cache_cleanup
+    description: TTL-based cleanup policy for the reference_api_cache.db, pruning
+      entries older than the configured cache TTL (default 7 days)
+    attributes:
+      targetCollection: cache_entries
+      retentionDuration: 7d
+      action: DELETE
+      enabled: true
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: config.json
+    metadata:
+      created_at: 2026-03-23T12:28:24.187Z
+      updated_at: 2026-03-23T12:28:24.187Z
+      version: 1
+  timestamp: 2026-03-23T12:28:24.216Z
+  sequenceNumber: 13
+- type: add
+  elementId: data-store.eventhandler.change-events-insert-trigger
+  layerName: data-store
+  after:
+    id: 1771e367-b562-4770-823f-cfc92198bc53
+    path: data-store.eventhandler.change-events-insert-trigger
+    spec_node_id: data-store.eventhandler
+    type: eventhandler
+    layer_id: data-store
+    name: change_events_insert_trigger
+    description: Database trigger that fires after INSERT/UPDATE/DELETE on
+      ontology_entities to populate the change_events audit log
+    attributes:
+      handlerType: TRIGGER
+      events:
+        - INSERT
+        - UPDATE
+        - DELETE
+      targetCollection: change_events
+      timing: AFTER
+      granularity: ROW
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: database/migrations/versions/015_update_node_triggers.py
+    metadata:
+      created_at: 2026-03-23T12:28:33.835Z
+      updated_at: 2026-03-23T12:28:33.835Z
+      version: 1
+  timestamp: 2026-03-23T12:28:33.861Z
+  sequenceNumber: 14
+- type: add
+  elementId: data-store.view.ontology-entities-with-predicates
+  layerName: data-store
+  after:
+    id: 51ecfbd4-b5b3-4816-a097-7cfdf27a4e4c
+    path: data-store.view.ontology-entities-with-predicates
+    spec_node_id: data-store.view
+    type: view
+    layer_id: data-store
+    name: ontology_entities_with_predicates
+    description: Virtual view joining ontology_entities with property_definitions to
+      resolve structural predicate labels for each entity
+    attributes:
+      materialized: false
+      viewType: VIRTUAL
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: database/sql_builders.py
+    metadata:
+      created_at: 2026-03-23T12:28:34.297Z
+      updated_at: 2026-03-23T12:28:34.297Z
+      version: 1
+  timestamp: 2026-03-23T12:28:34.324Z
+  sequenceNumber: 15
+- type: add
+  elementId: data-store.storedlogic.similarity-search-function
+  layerName: data-store
+  after:
+    id: a1f9c313-3fdf-40b7-873a-6caf7f46b450
+    path: data-store.storedlogic.similarity-search-function
+    spec_node_id: data-store.storedlogic
+    type: storedlogic
+    layer_id: data-store
+    name: similarity_search_function
+    description: SQLite custom function using sqlite-vec to perform cosine
+      similarity search over binary-encoded entity embeddings
+    attributes:
+      logicType: FUNCTION
+      language: PYTHON
+      deterministic: true
+      sideEffects: false
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: utils/vector.py
+    metadata:
+      created_at: 2026-03-23T12:28:40.712Z
+      updated_at: 2026-03-23T12:28:40.712Z
+      version: 1
+  timestamp: 2026-03-23T12:28:40.738Z
+  sequenceNumber: 16
+- type: add
+  elementId: data-store.accesspattern.entity-by-parent
+  layerName: data-store
+  after:
+    id: 5d888023-8146-492d-8c50-e5dabcc93553
+    path: data-store.accesspattern.entity-by-parent
+    spec_node_id: data-store.accesspattern
+    type: accesspattern
+    layer_id: data-store
+    name: entity_by_parent
+    description: Access pattern for listing child entities by parent_entity_id —
+      used by all list/filter operations requiring hierarchical traversal
+    attributes:
+      patternType: RANGE_SCAN
+      targetCollection: ontology_entities
+      keyCondition: parent_entity_id
+      expectedFrequency: FREQUENT
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: database/models.py
+          symbol: OntologyEntity.parent_entity_id
+    metadata:
+      created_at: 2026-03-23T12:28:46.818Z
+      updated_at: 2026-03-23T12:28:46.818Z
+      version: 1
+  timestamp: 2026-03-23T12:28:46.844Z
+  sequenceNumber: 17
+- type: add
+  elementId: data-store.accesspattern.vector-similarity-search
+  layerName: data-store
+  after:
+    id: c8d86c2c-8f2a-4f70-b47b-21c0b74e6102
+    path: data-store.accesspattern.vector-similarity-search
+    spec_node_id: data-store.accesspattern
+    type: accesspattern
+    layer_id: data-store
+    name: vector_similarity_search
+    description: Semantic vector similarity search over ontology_entities using
+      sqlite-vec cosine distance on title_embedding and definition_embedding
+    attributes:
+      patternType: VECTOR_SIMILARITY
+      targetCollection: ontology_entities
+      expectedFrequency: FREQUENT
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: database/sql_builders.py
+    metadata:
+      created_at: 2026-03-23T12:28:47.281Z
+      updated_at: 2026-03-23T12:28:47.281Z
+      version: 1
+  timestamp: 2026-03-23T12:28:47.307Z
+  sequenceNumber: 18

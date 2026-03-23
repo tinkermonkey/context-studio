@@ -1,0 +1,21 @@
+apm.spanlink.rag-trace-to-llm-span-link:
+  id: 1d86ce23-f0f2-4d03-8799-d2bdfc6f391e
+  path: apm.spanlink.rag-trace-to-llm-span-link
+  spec_node_id: apm.spanlink
+  type: spanlink
+  layer_id: apm
+  name: RAG Trace to LLM Span Link
+  description: Span link connecting a RAG pipeline execution span to the
+    downstream LLM API call span for end-to-end traceability
+  attributes:
+    traceId: ""
+    spanId: ""
+    droppedAttributesCount: "0"
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: rag/rag_pipeline_service.py
+  metadata:
+    created_at: 2026-03-23T12:34:56.159Z
+    updated_at: 2026-03-23T12:34:56.159Z
+    version: 1

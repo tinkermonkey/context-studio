@@ -1,0 +1,21 @@
+ux.actionpattern.entity-search-action:
+  id: c3e9a4d4-8397-4d62-a321-578d5e416430
+  path: ux.actionpattern.entity-search-action
+  spec_node_id: ux.actionpattern
+  type: actionpattern
+  layer_id: ux
+  name: Entity Search Action
+  description: User action pattern for semantic and full-text search over ontology
+    entities with debounced input and result display
+  attributes:
+    description: Debounced search with semantic vector similarity fallback
+    category: crud
+    trigger: keyboard
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ../../ux/src/components/node_selectors
+  metadata:
+    created_at: 2026-03-23T12:30:33.931Z
+    updated_at: 2026-03-23T12:30:33.931Z
+    version: 1

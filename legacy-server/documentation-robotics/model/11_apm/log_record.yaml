@@ -1,0 +1,25 @@
+apm.logrecord.http-access-log-record:
+  id: 0d1d3283-78af-4e47-82b9-406788c58dc1
+  path: apm.logrecord.http-access-log-record
+  spec_node_id: apm.logrecord
+  type: logrecord
+  layer_id: apm
+  name: HTTP Access Log Record
+  description: "Structured log record for each HTTP request: method, path, status
+    code, response time in milliseconds"
+  attributes:
+    timeUnixNano: "0"
+    observedTimeUnixNano: "0"
+    severityNumber: "9"
+    body: HTTP request log
+    flags: "0"
+    droppedAttributesCount: "0"
+    severityText: INFO
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: utils/access_log_middleware.py
+  metadata:
+    created_at: 2026-03-23T12:33:39.862Z
+    updated_at: 2026-03-23T12:33:39.862Z
+    version: 1

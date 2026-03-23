@@ -1,0 +1,19 @@
+business.businessinteraction.rag-knowledge-retrieval:
+  id: 7bc5da09-9883-4d73-bfe8-a15798c1e473
+  path: business.businessinteraction.rag-knowledge-retrieval
+  spec_node_id: business.businessinteraction
+  type: businessinteraction
+  layer_id: business
+  name: RAG Knowledge Retrieval
+  description: "Business interaction: AI agents query the knowledge graph via
+    vector similarity search to retrieve contextually relevant entities for RAG
+    pipelines"
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: rag/rag_pipeline_service.py
+        symbol: RAGPipelineService
+  metadata:
+    created_at: 2026-03-23T12:42:24.452Z
+    updated_at: 2026-03-23T12:42:24.452Z
+    version: 1

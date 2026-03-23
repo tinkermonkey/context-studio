@@ -1,0 +1,20 @@
+business.representation.json-knowledge-graph-export:
+  id: 8d1221dd-0bab-41fd-b093-f85c80d897b2
+  path: business.representation.json-knowledge-graph-export
+  spec_node_id: business.representation
+  type: representation
+  layer_id: business
+  name: JSON Knowledge Graph Export
+  description: Representation of the knowledge graph as a structured JSON document
+    for interoperability and agent consumption
+  attributes:
+    format: json
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: api/ontology_entities.py
+        symbol: get_ontology_entities
+  metadata:
+    created_at: 2026-03-23T12:42:42.029Z
+    updated_at: 2026-03-23T12:42:42.029Z
+    version: 1

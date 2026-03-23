@@ -1,0 +1,23 @@
+security.validationrule.no-empty-entity-titles:
+  id: 26b0a8b1-af7e-4ec7-9f80-d52151d5bf27
+  path: security.validationrule.no-empty-entity-titles
+  spec_node_id: security.validationrule
+  type: validationrule
+  layer_id: security
+  name: No Empty Entity Titles
+  description: Validation rule enforcing that ontology entity titles cannot be
+    empty — validated at domain layer (Class.rename)
+  attributes:
+    type: length
+    value: "1"
+    message: Entity title cannot be empty
+    severity: error
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: domain/ontology/entities.py
+        symbol: Class.rename
+  metadata:
+    created_at: 2026-03-23T12:38:43.743Z
+    updated_at: 2026-03-23T12:38:43.743Z
+    version: 1

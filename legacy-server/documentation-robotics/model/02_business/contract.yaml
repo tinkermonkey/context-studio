@@ -1,0 +1,19 @@
+business.contract.open-api-contract:
+  id: 81155120-9a04-4f32-a6c4-c8cb49c0c7d2
+  path: business.contract.open-api-contract
+  spec_node_id: business.contract
+  type: contract
+  layer_id: business
+  name: OpenAPI Contract
+  description: "Business contract defining the REST API surface for Context
+    Studio: endpoint signatures, request/response schemas, and versioning
+    commitments"
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: api/ontology_entities.py
+        symbol: router
+  metadata:
+    created_at: 2026-03-23T12:42:41.527Z
+    updated_at: 2026-03-23T12:42:41.527Z
+    version: 1

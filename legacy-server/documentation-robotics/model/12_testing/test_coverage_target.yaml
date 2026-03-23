@@ -1,0 +1,165 @@
+testing.testcoveragetarget.ontology-entity-crud:
+  id: 4090ddb2-c1eb-4802-bbff-6bb98a4c0333
+  path: testing.testcoveragetarget.ontology-entity-crud
+  spec_node_id: testing.testcoveragetarget
+  type: testcoveragetarget
+  layer_id: testing
+  name: Ontology Entity CRUD
+  description: Coverage target for the full CRUD lifecycle of ontology entities
+    via the OntologyEntityService and REST API
+  attributes:
+    targetType: api-endpoint
+    priority: critical
+    description: OntologyEntityService CRUD operations
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: tests/unit_tests/test_node_service.py
+  metadata:
+    created_at: 2026-03-23T12:35:28.708Z
+    updated_at: 2026-03-23T12:35:28.709Z
+    version: 1
+testing.testcoveragetarget.relationship-service-operations:
+  id: 3403bb51-9b15-48d7-ad53-46c7899cb588
+  path: testing.testcoveragetarget.relationship-service-operations
+  spec_node_id: testing.testcoveragetarget
+  type: testcoveragetarget
+  layer_id: testing
+  name: Relationship Service Operations
+  description: Coverage target for creating, listing, updating, and deleting typed
+    relationships between ontology entities
+  attributes:
+    targetType: api-endpoint
+    priority: critical
+    description: RelationshipService operations
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: tests/unit_tests/test_ontology_entities.py
+  metadata:
+    created_at: 2026-03-23T12:35:29.155Z
+    updated_at: 2026-03-23T12:35:29.155Z
+    version: 1
+testing.testcoveragetarget.version-management-workflow:
+  id: f7c41e78-bc33-4e32-88f2-75c4e55aca6e
+  path: testing.testcoveragetarget.version-management-workflow
+  spec_node_id: testing.testcoveragetarget
+  type: testcoveragetarget
+  layer_id: testing
+  name: Version Management Workflow
+  description: "Coverage target for the complete version control workflow: stage,
+    commit, diff, rollback, and working tree management"
+  attributes:
+    targetType: business-workflow
+    priority: critical
+    description: Entity versioning and working tree management
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: tests/unit_tests/test_version_manager.py
+  metadata:
+    created_at: 2026-03-23T12:35:29.611Z
+    updated_at: 2026-03-23T12:35:29.611Z
+    version: 1
+testing.testcoveragetarget.changeset-collaboration-workflow:
+  id: 1a0761e5-c313-4daa-b83c-49d4f97b6f19
+  path: testing.testcoveragetarget.changeset-collaboration-workflow
+  spec_node_id: testing.testcoveragetarget
+  type: testcoveragetarget
+  layer_id: testing
+  name: Changeset Collaboration Workflow
+  description: Coverage target for changeset create/push/merge with conflict
+    detection and CRDT resolution
+  attributes:
+    targetType: business-workflow
+    priority: critical
+    description: Collaborative changeset lifecycle
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: tests/unit_tests/test_changeset_manager.py
+  metadata:
+    created_at: 2026-03-23T12:35:37.657Z
+    updated_at: 2026-03-23T12:35:37.657Z
+    version: 1
+testing.testcoveragetarget.rag-pipeline-execution:
+  id: c443c290-9a7d-4b83-af45-ae7d66286412
+  path: testing.testcoveragetarget.rag-pipeline-execution
+  spec_node_id: testing.testcoveragetarget
+  type: testcoveragetarget
+  layer_id: testing
+  name: RAG Pipeline Execution
+  description: "Coverage target for end-to-end RAG pipeline: text input -> NLP
+    extraction -> embedding -> LLM enrichment -> entity output"
+  attributes:
+    targetType: business-workflow
+    priority: high
+    description: RAG pipeline end-to-end execution
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: tests/unit_tests/test_rag_pipeline_service.py
+  metadata:
+    created_at: 2026-03-23T12:35:38.108Z
+    updated_at: 2026-03-23T12:35:38.108Z
+    version: 1
+testing.testcoveragetarget.dataset-management-api:
+  id: 0ca4c6fb-2514-4465-ab97-e92e2897c8d2
+  path: testing.testcoveragetarget.dataset-management-api
+  spec_node_id: testing.testcoveragetarget
+  type: testcoveragetarget
+  layer_id: testing
+  name: Dataset Management API
+  description: "Coverage target for dataset file lifecycle: create, activate,
+    list, switch, and delete dataset workspaces"
+  attributes:
+    targetType: api-endpoint
+    priority: high
+    description: Dataset workspace management API
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: tests/integration_tests/test_nodes_api_integration.py
+  metadata:
+    created_at: 2026-03-23T12:35:38.567Z
+    updated_at: 2026-03-23T12:35:38.567Z
+    version: 1
+testing.testcoveragetarget.predicate-crud-and-similarity:
+  id: 2d650200-86a3-463d-8827-1fc62521598f
+  path: testing.testcoveragetarget.predicate-crud-and-similarity
+  spec_node_id: testing.testcoveragetarget
+  type: testcoveragetarget
+  layer_id: testing
+  name: Predicate CRUD and Similarity
+  description: Test coverage target for predicate management including discovery,
+    similarity search, and ConceptNet import
+  metadata:
+    created_at: 2026-03-23T19:27:52.608Z
+    updated_at: 2026-03-23T19:27:52.608Z
+    version: 1
+testing.testcoveragetarget.structure-node-hierarchy-operations:
+  id: 44357a86-0ddb-4faa-805b-e74040c5697a
+  path: testing.testcoveragetarget.structure-node-hierarchy-operations
+  spec_node_id: testing.testcoveragetarget
+  type: testcoveragetarget
+  layer_id: testing
+  name: Structure Node Hierarchy Operations
+  description: Test coverage target for node creation, hierarchy traversal, move,
+    and link operations
+  metadata:
+    created_at: 2026-03-23T19:27:53.172Z
+    updated_at: 2026-03-23T19:27:53.172Z
+    version: 1
+testing.testcoveragetarget.rag-experiment-pipeline-comparison:
+  id: 8b347dbd-4602-48c7-8e0c-6006fde5aa15
+  path: testing.testcoveragetarget.rag-experiment-pipeline-comparison
+  spec_node_id: testing.testcoveragetarget
+  type: testcoveragetarget
+  layer_id: testing
+  name: RAG Experiment Pipeline Comparison
+  description: "Test coverage target for RAG experiment harness: paragraph
+    management, annotation, and pipeline run comparison"
+  metadata:
+    created_at: 2026-03-23T19:27:53.762Z
+    updated_at: 2026-03-23T19:27:53.762Z
+    version: 1

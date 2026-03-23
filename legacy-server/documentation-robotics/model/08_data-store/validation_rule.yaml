@@ -1,0 +1,22 @@
+data-store.validationrule.entity-cascade-delete:
+  id: b4dcda79-d9b1-448b-a334-3b38b7ffe65d
+  path: data-store.validationrule.entity-cascade-delete
+  spec_node_id: data-store.validationrule
+  type: validationrule
+  layer_id: data-store
+  name: entity_cascade_delete
+  description: "Foreign key cascade rule: deleting a parent ontology entity
+    cascades to all child entities via parent_entity_id"
+  attributes:
+    ruleType: FOREIGN_KEY
+    referencedCollection: ontology_entities
+    onDelete: CASCADE
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: database/models.py
+        symbol: OntologyEntity.parent_entity_id
+  metadata:
+    created_at: 2026-03-23T12:28:14.482Z
+    updated_at: 2026-03-23T12:28:14.482Z
+    version: 1

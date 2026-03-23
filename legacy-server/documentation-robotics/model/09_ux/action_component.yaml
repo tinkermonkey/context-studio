@@ -1,0 +1,20 @@
+ux.actioncomponent.create-entity-button:
+  id: e35b77bb-c9e1-4ff5-968e-98099f7883f1
+  path: ux.actioncomponent.create-entity-button
+  spec_node_id: ux.actioncomponent
+  type: actioncomponent
+  layer_id: ux
+  name: Create Entity Button
+  description: Action button triggering the entity creation modal/form for adding
+    new taxonomies, schemes, or classes
+  attributes:
+    type: button
+    label: Create Entity
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ../../ux/src/components/node_tables
+  metadata:
+    created_at: 2026-03-23T12:30:09.574Z
+    updated_at: 2026-03-23T12:30:09.574Z
+    version: 1

@@ -1,0 +1,21 @@
+data-model.numericschema.relationship-weight:
+  id: bf5fb1ba-1ce2-411f-af3e-1ad6b42c0a09
+  path: data-model.numericschema.relationship-weight
+  spec_node_id: data-model.numericschema
+  type: numericschema
+  layer_id: data-model
+  name: Relationship Weight
+  description: Float weight on relationships between ontology entities, defaulting
+    to 1.0, used for graph traversal and ranking
+  attributes:
+    type: number
+    minimum: 0
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: domain/ontology/entities.py
+        symbol: Relationship.weight
+  metadata:
+    created_at: 2026-03-23T12:26:55.878Z
+    updated_at: 2026-03-23T12:26:55.878Z
+    version: 1

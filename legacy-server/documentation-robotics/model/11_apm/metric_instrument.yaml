@@ -1,0 +1,70 @@
+apm.metricinstrument.rag-layer-processing-time:
+  id: b08d7649-93e8-4909-89de-0df5f41992b7
+  path: apm.metricinstrument.rag-layer-processing-time
+  spec_node_id: apm.metricinstrument
+  type: metricinstrument
+  layer_id: apm
+  name: RAG Layer Processing Time
+  description: Histogram instrument measuring processing time in milliseconds for
+    each RAG pipeline layer
+  attributes:
+    type: Histogram
+    unit: ms
+    description: RAG pipeline layer processing duration
+    enabled: true
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: rag/observability_store.py
+        symbol: RAGObservabilityStore.save_metrics
+  metadata:
+    created_at: 2026-03-23T12:33:52.843Z
+    updated_at: 2026-03-23T12:33:52.843Z
+    version: 1
+apm.metricinstrument.llm-execution-tracker:
+  id: 9b807d64-baea-4e3e-9379-67b2681085a9
+  path: apm.metricinstrument.llm-execution-tracker
+  spec_node_id: apm.metricinstrument
+  type: metricinstrument
+  layer_id: apm
+  name: LLM Execution Tracker
+  description: Counter instrument tracking LLM API call counts, token usage,
+    latency, and errors per pipeline execution
+  attributes:
+    type: Counter
+    unit: calls
+    description: LLM API call tracking per execution
+    enabled: true
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: llm/execution_tracker.py
+        symbol: ExecutionTracker
+  metadata:
+    created_at: 2026-03-23T12:33:53.311Z
+    updated_at: 2026-03-23T12:33:53.311Z
+    version: 1
+apm.metricinstrument.predicate-similarity-processing-time:
+  id: 0fc5edef-9aa8-461e-a84f-8b3cd8e3c4bf
+  path: apm.metricinstrument.predicate-similarity-processing-time
+  spec_node_id: apm.metricinstrument
+  type: metricinstrument
+  layer_id: apm
+  name: Predicate Similarity Processing Time
+  description: Measures elapsed time for embedding-based predicate similarity computations
+  metadata:
+    created_at: 2026-03-23T19:27:44.602Z
+    updated_at: 2026-03-23T19:27:44.602Z
+    version: 1
+apm.metricinstrument.background-task-queue-depth:
+  id: 5dbf44b8-d49d-47ce-b3f3-92091244db23
+  path: apm.metricinstrument.background-task-queue-depth
+  spec_node_id: apm.metricinstrument
+  type: metricinstrument
+  layer_id: apm
+  name: Background Task Queue Depth
+  description: Monitors number of pending and running background tasks
+  metadata:
+    created_at: 2026-03-23T19:27:45.169Z
+    updated_at: 2026-03-23T19:27:45.169Z
+    version: 1

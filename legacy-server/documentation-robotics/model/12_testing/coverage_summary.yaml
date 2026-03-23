@@ -1,0 +1,22 @@
+testing.coveragesummary.legacy-server-coverage-summary:
+  id: 3160ac65-711e-4e7b-881b-fc2c43347607
+  path: testing.coveragesummary.legacy-server-coverage-summary
+  spec_node_id: testing.coveragesummary
+  type: coveragesummary
+  layer_id: testing
+  name: Legacy Server Coverage Summary
+  description: "Coverage summary for the legacy server: 80+ unit tests, 80+
+    integration tests across all bounded contexts"
+  attributes:
+    totalTargets: 6
+    totalRequirements: 12
+    totalSketches: 3
+    generatedAt: 2026-03-23
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: tests
+  metadata:
+    created_at: 2026-03-23T12:36:11.164Z
+    updated_at: 2026-03-23T12:36:11.164Z
+    version: 1

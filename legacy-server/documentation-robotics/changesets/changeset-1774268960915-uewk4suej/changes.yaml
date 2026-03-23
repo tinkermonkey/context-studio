@@ -1,0 +1,555 @@
+- type: add
+  elementId: ux.uxapplication.context-studio
+  layerName: ux
+  after:
+    id: caa05407-126a-4c46-a09a-6c7d11a857df
+    path: ux.uxapplication.context-studio
+    spec_node_id: ux.uxapplication
+    type: uxapplication
+    layer_id: ux
+    name: Context Studio
+    description: React single-page application for knowledge graph management — the
+      front end for the legacy server API
+    attributes:
+      channel: web
+      version: 1.0.0
+      description: Local-first knowledge graph editor and RAG tool
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: ../../ux/src/main.tsx
+    metadata:
+      created_at: 2026-03-23T12:29:30.429Z
+      updated_at: 2026-03-23T12:29:30.429Z
+      version: 1
+  timestamp: 2026-03-23T12:29:30.451Z
+  sequenceNumber: 0
+- type: add
+  elementId: ux.uxlibrary.flowbite-react-component-library
+  layerName: ux
+  after:
+    id: ddd7428c-a94d-4e63-acac-b8ceaa550254
+    path: ux.uxlibrary.flowbite-react-component-library
+    spec_node_id: ux.uxlibrary
+    type: uxlibrary
+    layer_id: ux
+    name: Flowbite React Component Library
+    description: Primary UI component library (Flowbite React + Tailwind CSS)
+      providing form controls, tables, modals, and layout primitives
+    attributes:
+      version: latest
+      description: Flowbite React component library with Tailwind CSS
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: ../../ux/src/components/ui
+    metadata:
+      created_at: 2026-03-23T12:29:30.853Z
+      updated_at: 2026-03-23T12:29:30.853Z
+      version: 1
+  timestamp: 2026-03-23T12:29:30.876Z
+  sequenceNumber: 1
+- type: add
+  elementId: ux.view.layers-view
+  layerName: ux
+  after:
+    id: d14b6b99-70d7-4642-a5b5-157d4ea3c57a
+    path: ux.view.layers-view
+    spec_node_id: ux.view
+    type: view
+    layer_id: ux
+    name: Layers View
+    description: Page view for managing taxonomy (layer) entities — list, create,
+      edit, and delete taxonomies
+    attributes:
+      type: page
+      title: Layers
+      routable: true
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: ../../ux/src/routes/app/layers.tsx
+    metadata:
+      created_at: 2026-03-23T12:29:36.613Z
+      updated_at: 2026-03-23T12:29:36.613Z
+      version: 1
+  timestamp: 2026-03-23T12:29:36.636Z
+  sequenceNumber: 2
+- type: add
+  elementId: ux.view.domains-view
+  layerName: ux
+  after:
+    id: 5ecd8a3d-8e25-49bf-b56e-34891f5835fc
+    path: ux.view.domains-view
+    spec_node_id: ux.view
+    type: view
+    layer_id: ux
+    name: Domains View
+    description: Page view for managing concept scheme (domain) entities within a taxonomy
+    attributes:
+      type: page
+      title: Domains
+      routable: true
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: ../../ux/src/routes/app/domains.tsx
+    metadata:
+      created_at: 2026-03-23T12:29:37.035Z
+      updated_at: 2026-03-23T12:29:37.035Z
+      version: 1
+  timestamp: 2026-03-23T12:29:37.057Z
+  sequenceNumber: 3
+- type: add
+  elementId: ux.view.terms-view
+  layerName: ux
+  after:
+    id: 8d494aa7-1d27-45f8-a1ba-98549c09fa6d
+    path: ux.view.terms-view
+    spec_node_id: ux.view
+    type: view
+    layer_id: ux
+    name: Terms View
+    description: Page view for managing class (term) entities within a concept
+      scheme, including relationship editing
+    attributes:
+      type: page
+      title: Terms
+      routable: true
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: ../../ux/src/routes/app/terms.tsx
+    metadata:
+      created_at: 2026-03-23T12:29:37.459Z
+      updated_at: 2026-03-23T12:29:37.459Z
+      version: 1
+  timestamp: 2026-03-23T12:29:37.482Z
+  sequenceNumber: 4
+- type: add
+  elementId: ux.view.datasets-view
+  layerName: ux
+  after:
+    id: 3f4f0c73-2517-4f50-b7df-a1127094f41d
+    path: ux.view.datasets-view
+    spec_node_id: ux.view
+    type: view
+    layer_id: ux
+    name: Datasets View
+    description: Page view for dataset workspace management — list, create,
+      activate, and switch between SQLite dataset files
+    attributes:
+      type: page
+      title: Datasets
+      routable: true
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: ../../ux/src/routes/app/datasets.tsx
+    metadata:
+      created_at: 2026-03-23T12:29:43.190Z
+      updated_at: 2026-03-23T12:29:43.190Z
+      version: 1
+  timestamp: 2026-03-23T12:29:43.213Z
+  sequenceNumber: 5
+- type: add
+  elementId: ux.view.predicates-view
+  layerName: ux
+  after:
+    id: feb404a2-0055-4a80-9672-84a5451e3621
+    path: ux.view.predicates-view
+    spec_node_id: ux.view
+    type: view
+    layer_id: ux
+    name: Predicates View
+    description: Page view for managing property definitions
+      (predicates/relationship types) in the ontology
+    attributes:
+      type: page
+      title: Predicates
+      routable: true
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: ../../ux/src/routes/app/predicates.tsx
+    metadata:
+      created_at: 2026-03-23T12:29:43.633Z
+      updated_at: 2026-03-23T12:29:43.633Z
+      version: 1
+  timestamp: 2026-03-23T12:29:43.656Z
+  sequenceNumber: 6
+- type: add
+  elementId: ux.view.configuration-view
+  layerName: ux
+  after:
+    id: d4565d2b-6fc8-43e0-8a22-859ad43187e0
+    path: ux.view.configuration-view
+    spec_node_id: ux.view
+    type: view
+    layer_id: ux
+    name: Configuration View
+    description: Page view for server configuration management and LLM pipeline settings
+    attributes:
+      type: page
+      title: Configuration
+      routable: true
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: ../../ux/src/routes/app/config.tsx
+    metadata:
+      created_at: 2026-03-23T12:29:44.081Z
+      updated_at: 2026-03-23T12:29:44.081Z
+      version: 1
+  timestamp: 2026-03-23T12:29:44.106Z
+  sequenceNumber: 7
+- type: add
+  elementId: ux.librarycomponent.node-table
+  layerName: ux
+  after:
+    id: f465815e-4b76-4acd-a742-d9d09e8ecc07
+    path: ux.librarycomponent.node-table
+    spec_node_id: ux.librarycomponent
+    type: librarycomponent
+    layer_id: ux
+    name: Node Table
+    description: Reusable TanStack Table component for displaying paginated,
+      sortable, and filterable ontology entity lists
+    attributes:
+      type: table
+      category: data-display
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: ../../ux/src/components/node_tables
+    metadata:
+      created_at: 2026-03-23T12:29:50.423Z
+      updated_at: 2026-03-23T12:29:50.423Z
+      version: 1
+  timestamp: 2026-03-23T12:29:50.452Z
+  sequenceNumber: 8
+- type: add
+  elementId: ux.librarycomponent.node-selector
+  layerName: ux
+  after:
+    id: 8e83f3f4-1a06-4ea4-83b2-f247735b90ec
+    path: ux.librarycomponent.node-selector
+    spec_node_id: ux.librarycomponent
+    type: librarycomponent
+    layer_id: ux
+    name: Node Selector
+    description: Reusable dropdown/search component for selecting ontology entities
+      by type (taxonomy, scheme, class)
+    attributes:
+      type: form
+      category: input
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: ../../ux/src/components/node_selectors
+    metadata:
+      created_at: 2026-03-23T12:29:50.887Z
+      updated_at: 2026-03-23T12:29:50.887Z
+      version: 1
+  timestamp: 2026-03-23T12:29:50.914Z
+  sequenceNumber: 9
+- type: add
+  elementId: ux.librarycomponent.node-details-panel
+  layerName: ux
+  after:
+    id: aee9ec66-0f92-4d1c-b47a-71b9b467f00c
+    path: ux.librarycomponent.node-details-panel
+    spec_node_id: ux.librarycomponent
+    type: librarycomponent
+    layer_id: ux
+    name: Node Details Panel
+    description: Side panel component for displaying and editing ontology entity
+      details, attributes, and relationship links
+    attributes:
+      type: display
+      category: content
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: ../../ux/src/components/node_details
+    metadata:
+      created_at: 2026-03-23T12:30:00.077Z
+      updated_at: 2026-03-23T12:30:00.077Z
+      version: 1
+  timestamp: 2026-03-23T12:30:00.108Z
+  sequenceNumber: 10
+- type: add
+  elementId: ux.librarycomponent.rag-experiment-panel
+  layerName: ux
+  after:
+    id: c433eb02-b7ea-4899-b62e-c7791c962cda
+    path: ux.librarycomponent.rag-experiment-panel
+    spec_node_id: ux.librarycomponent
+    type: librarycomponent
+    layer_id: ux
+    name: RAG Experiment Panel
+    description: Panel component for configuring and running RAG experiments,
+      comparing pipeline outputs
+    attributes:
+      type: display
+      category: tools
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: ../../ux/src/routes/rag_experiments
+    metadata:
+      created_at: 2026-03-23T12:30:00.537Z
+      updated_at: 2026-03-23T12:30:00.537Z
+      version: 1
+  timestamp: 2026-03-23T12:30:00.566Z
+  sequenceNumber: 11
+- type: add
+  elementId: ux.librarysubview.structure-nodes-subview
+  layerName: ux
+  after:
+    id: f7c0237c-f963-4930-b137-aa297f0f4132
+    path: ux.librarysubview.structure-nodes-subview
+    spec_node_id: ux.librarysubview
+    type: librarysubview
+    layer_id: ux
+    name: Structure Nodes Subview
+    description: Sub-view component combining entity list, search, filters, and
+      relationship editor for managing the ontology hierarchy
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: ../../ux/src/routes/app/structure_nodes
+    metadata:
+      created_at: 2026-03-23T12:30:01.002Z
+      updated_at: 2026-03-23T12:30:01.002Z
+      version: 1
+  timestamp: 2026-03-23T12:30:01.029Z
+  sequenceNumber: 12
+- type: add
+  elementId: ux.experiencestate.entity-selected-state
+  layerName: ux
+  after:
+    id: 8f9e1dfc-cff6-4268-a7c7-1a05d04ef31c
+    path: ux.experiencestate.entity-selected-state
+    spec_node_id: ux.experiencestate
+    type: experiencestate
+    layer_id: ux
+    name: Entity Selected State
+    description: UI state when a specific ontology entity is selected — activates
+      the detail panel and relationship editor
+    attributes:
+      description: Entity selected, detail panel visible and editable
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: ../../ux/src/stores
+    metadata:
+      created_at: 2026-03-23T12:30:09.109Z
+      updated_at: 2026-03-23T12:30:09.109Z
+      version: 1
+  timestamp: 2026-03-23T12:30:09.137Z
+  sequenceNumber: 13
+- type: add
+  elementId: ux.actioncomponent.create-entity-button
+  layerName: ux
+  after:
+    id: e35b77bb-c9e1-4ff5-968e-98099f7883f1
+    path: ux.actioncomponent.create-entity-button
+    spec_node_id: ux.actioncomponent
+    type: actioncomponent
+    layer_id: ux
+    name: Create Entity Button
+    description: Action button triggering the entity creation modal/form for adding
+      new taxonomies, schemes, or classes
+    attributes:
+      type: button
+      label: Create Entity
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: ../../ux/src/components/node_tables
+    metadata:
+      created_at: 2026-03-23T12:30:09.574Z
+      updated_at: 2026-03-23T12:30:09.574Z
+      version: 1
+  timestamp: 2026-03-23T12:30:09.601Z
+  sequenceNumber: 14
+- type: add
+  elementId: ux.layoutconfig.app-shell-layout
+  layerName: ux
+  after:
+    id: d24735ff-d71b-4f5a-8a03-2d1e3cca99f4
+    path: ux.layoutconfig.app-shell-layout
+    spec_node_id: ux.layoutconfig
+    type: layoutconfig
+    layer_id: ux
+    name: App Shell Layout
+    description: "Root layout configuration: sidebar navigation with main content
+      area, responsive two-column grid"
+    attributes:
+      type: grid
+      columns: 2
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: ../../ux/src/components/layout
+    metadata:
+      created_at: 2026-03-23T12:30:10.044Z
+      updated_at: 2026-03-23T12:30:10.044Z
+      version: 1
+  timestamp: 2026-03-23T12:30:10.075Z
+  sequenceNumber: 15
+- type: add
+  elementId: ux.uxspec.ontology-editor-spec
+  layerName: ux
+  after:
+    id: 6b12b1ad-6040-4b2a-b756-dfac6770aed2
+    path: ux.uxspec.ontology-editor-spec
+    spec_node_id: ux.uxspec
+    type: uxspec
+    layer_id: ux
+    name: Ontology Editor Spec
+    description: "UX specification for the ontology editor experience: entity
+      hierarchy management, relationship editing, and semantic search"
+    attributes:
+      version: "1.0"
+      title: Ontology Editor
+      description: Knowledge graph entity management UX
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: ../../ux/src/routes/app
+    metadata:
+      created_at: 2026-03-23T12:30:19.764Z
+      updated_at: 2026-03-23T12:30:19.764Z
+      version: 1
+  timestamp: 2026-03-23T12:30:19.795Z
+  sequenceNumber: 16
+- type: add
+  elementId: ux.dataconfig.entity-list-data-config
+  layerName: ux
+  after:
+    id: 3f6a34ae-be9b-464e-8d11-633ceb5257e6
+    path: ux.dataconfig.entity-list-data-config
+    spec_node_id: ux.dataconfig
+    type: dataconfig
+    layer_id: ux
+    name: Entity List Data Config
+    description: Data binding configuration wiring the TanStack Query API hooks to
+      the entity list table component
+    attributes:
+      source: api
+      target: node-table
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: ../../ux/src/api/hooks
+    metadata:
+      created_at: 2026-03-23T12:30:20.667Z
+      updated_at: 2026-03-23T12:30:20.667Z
+      version: 1
+  timestamp: 2026-03-23T12:30:20.696Z
+  sequenceNumber: 17
+- type: add
+  elementId: ux.statepattern.crud-entity-pattern
+  layerName: ux
+  after:
+    id: 28d65b3d-e63a-4231-831b-e6cfc3dd9775
+    path: ux.statepattern.crud-entity-pattern
+    spec_node_id: ux.statepattern
+    type: statepattern
+    layer_id: ux
+    name: CRUD Entity Pattern
+    description: "State pattern for create/read/update/delete operations on ontology
+      entities: idle -> form open -> submitting -> success/error"
+    attributes:
+      description: Standard CRUD state machine for ontology entity operations
+      category: form
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: ../../ux/src/components/node_tables
+    metadata:
+      created_at: 2026-03-23T12:30:27.001Z
+      updated_at: 2026-03-23T12:30:27.001Z
+      version: 1
+  timestamp: 2026-03-23T12:30:27.029Z
+  sequenceNumber: 18
+- type: add
+  elementId: ux.actionpattern.entity-search-action
+  layerName: ux
+  after:
+    id: c3e9a4d4-8397-4d62-a321-578d5e416430
+    path: ux.actionpattern.entity-search-action
+    spec_node_id: ux.actionpattern
+    type: actionpattern
+    layer_id: ux
+    name: Entity Search Action
+    description: User action pattern for semantic and full-text search over ontology
+      entities with debounced input and result display
+    attributes:
+      description: Debounced search with semantic vector similarity fallback
+      category: crud
+      trigger: keyboard
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: ../../ux/src/components/node_selectors
+    metadata:
+      created_at: 2026-03-23T12:30:33.931Z
+      updated_at: 2026-03-23T12:30:33.931Z
+      version: 1
+  timestamp: 2026-03-23T12:30:33.959Z
+  sequenceNumber: 19
+- type: add
+  elementId: ux.errorconfig.api-error-handler
+  layerName: ux
+  after:
+    id: 3559e932-091d-492a-a69a-d30966c56180
+    path: ux.errorconfig.api-error-handler
+    spec_node_id: ux.errorconfig
+    type: errorconfig
+    layer_id: ux
+    name: API Error Handler
+    description: Global error handling configuration showing toast notifications on
+      API failures
+    attributes:
+      showNotification: true
+      notificationType: error
+      defaultErrorMessage: An error occurred. Please try again.
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: ../../ux/src/api
+    metadata:
+      created_at: 2026-03-23T12:30:39.649Z
+      updated_at: 2026-03-23T12:30:39.649Z
+      version: 1
+  timestamp: 2026-03-23T12:30:39.678Z
+  sequenceNumber: 20
+- type: add
+  elementId: ux.tablecolumn.entity-title-column
+  layerName: ux
+  after:
+    id: 70f9a776-d260-4d04-a0cd-f8f040b8d4e8
+    path: ux.tablecolumn.entity-title-column
+    spec_node_id: ux.tablecolumn
+    type: tablecolumn
+    layer_id: ux
+    name: Entity Title Column
+    description: Table column displaying the title of an ontology entity in the
+      entity list table, sortable and filterable
+    attributes:
+      header: Title
+      field: title
+      filterType: contains
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: ../../ux/src/components/node_tables
+    metadata:
+      created_at: 2026-03-23T12:30:40.167Z
+      updated_at: 2026-03-23T12:30:40.167Z
+      version: 1
+  timestamp: 2026-03-23T12:30:40.200Z
+  sequenceNumber: 21

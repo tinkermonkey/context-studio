@@ -1,0 +1,24 @@
+testing.coverageexclusion.llm-api-live-call-tests:
+  id: 204f68b4-73c2-476d-b937-10d0ec52181d
+  path: testing.coverageexclusion.llm-api-live-call-tests
+  spec_node_id: testing.coverageexclusion
+  type: coverageexclusion
+  layer_id: testing
+  name: LLM API Live Call Tests
+  description: "Coverage exclusion: tests requiring live LLM API calls to
+    OpenAI/Anthropic are excluded from the CI test suite to avoid costs and
+    flakiness"
+  attributes:
+    reason: External dependency on paid LLM APIs makes these tests unreliable and
+      costly in CI
+    riskAccepted: true
+    approvedBy: team
+    description: Live LLM API tests excluded from automated CI
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: tests/e2e
+  metadata:
+    created_at: 2026-03-23T12:36:40.547Z
+    updated_at: 2026-03-23T12:36:40.547Z
+    version: 1

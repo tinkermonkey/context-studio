@@ -1,0 +1,517 @@
+- type: add
+  elementId: security.securitymodel.context-studio-security-model
+  layerName: security
+  after:
+    id: c98161ca-2a3d-454b-bef8-5ea133e7d5eb
+    path: security.securitymodel.context-studio-security-model
+    spec_node_id: security.securitymodel
+    type: securitymodel
+    layer_id: security
+    name: Context Studio Security Model
+    description: "Security model for the Context Studio legacy server: local-first
+      desktop with optional API key authentication and SQL injection prevention"
+    attributes:
+      version: "1.0"
+      application: context-studio-legacy-server
+      accessControlModel: rbac
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: config.json
+    metadata:
+      created_at: 2026-03-23T12:37:18.617Z
+      updated_at: 2026-03-23T12:37:18.617Z
+      version: 1
+  timestamp: 2026-03-23T12:37:18.648Z
+  sequenceNumber: 0
+- type: add
+  elementId: security.actor.local-user
+  layerName: security
+  after:
+    id: c532acc0-87fe-4d2c-9b5a-372a863104b6
+    path: security.actor.local-user
+    spec_node_id: security.actor
+    type: actor
+    layer_id: security
+    name: Local User
+    description: "Primary actor: end user running Context Studio locally with full
+      access to all operations"
+    attributes:
+      type: human
+      trustLevel: full
+      description: Local workstation user with full access
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: config.json
+    metadata:
+      created_at: 2026-03-23T12:37:19.081Z
+      updated_at: 2026-03-23T12:37:19.081Z
+      version: 1
+  timestamp: 2026-03-23T12:37:19.102Z
+  sequenceNumber: 1
+- type: add
+  elementId: security.actor.api-client
+  layerName: security
+  after:
+    id: 49ceb470-f43f-42fa-869e-2a8cb649431b
+    path: security.actor.api-client
+    spec_node_id: security.actor
+    type: actor
+    layer_id: security
+    name: API Client
+    description: External API client (browser, scripted tool) accessing the REST API
+      over HTTP, optionally authenticated with an API key
+    attributes:
+      type: system
+      trustLevel: medium
+      description: External REST API consumer
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: config.json
+    metadata:
+      created_at: 2026-03-23T12:37:19.546Z
+      updated_at: 2026-03-23T12:37:19.546Z
+      version: 1
+  timestamp: 2026-03-23T12:37:19.571Z
+  sequenceNumber: 2
+- type: add
+  elementId: security.role.administrator
+  layerName: security
+  after:
+    id: 3901796a-313b-473b-ac4d-2a36c5c78be9
+    path: security.role.administrator
+    spec_node_id: security.role
+    type: role
+    layer_id: security
+    name: Administrator
+    description: Full administrator role — has unrestricted access to all ontology
+      entities, datasets, pipelines, and configuration
+    attributes:
+      displayName: Administrator
+      level: 1
+      inheritsFrom: ""
+      description: Full system access
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: config.json
+    metadata:
+      created_at: 2026-03-23T12:37:27.783Z
+      updated_at: 2026-03-23T12:37:27.783Z
+      version: 1
+  timestamp: 2026-03-23T12:37:27.807Z
+  sequenceNumber: 3
+- type: add
+  elementId: security.securitypolicy.api-key-authentication-policy
+  layerName: security
+  after:
+    id: 655a6db1-7e8b-4815-a994-8a7d9ecd0540
+    path: security.securitypolicy.api-key-authentication-policy
+    spec_node_id: security.securitypolicy
+    type: securitypolicy
+    layer_id: security
+    name: API Key Authentication Policy
+    description: "Optional API key authentication policy: when
+      require_secure_key=true, all requests must include X-API-Key header"
+    attributes:
+      priority: 1
+      target: endpoint
+      description: Optional API key enforcement via X-API-Key header
+      enabled: false
+      requirementLevel: optional
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: config.json
+    metadata:
+      created_at: 2026-03-23T12:37:35.911Z
+      updated_at: 2026-03-23T12:37:35.911Z
+      version: 1
+  timestamp: 2026-03-23T12:37:35.938Z
+  sequenceNumber: 4
+- type: add
+  elementId: security.securitypolicy.cors-policy
+  layerName: security
+  after:
+    id: 887fa49d-ba37-4038-8ef8-d8ffe2c20b89
+    path: security.securitypolicy.cors-policy
+    spec_node_id: security.securitypolicy
+    type: securitypolicy
+    layer_id: security
+    name: CORS Policy
+    description: CORS policy allowing configurable origins (default *) for
+      cross-origin API access from the React front end
+    attributes:
+      priority: 2
+      target: endpoint
+      description: CORS origin control via CORSMiddleware
+      enabled: true
+      requirementLevel: mandatory
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: app.py
+    metadata:
+      created_at: 2026-03-23T12:37:36.441Z
+      updated_at: 2026-03-23T12:37:36.441Z
+      version: 1
+  timestamp: 2026-03-23T12:37:36.468Z
+  sequenceNumber: 5
+- type: add
+  elementId: security.securitypolicy.error-message-sanitization-policy
+  layerName: security
+  after:
+    id: 8ba85728-9151-46c9-b76a-596a85ed2563
+    path: security.securitypolicy.error-message-sanitization-policy
+    spec_node_id: security.securitypolicy
+    type: securitypolicy
+    layer_id: security
+    name: Error Message Sanitization Policy
+    description: Policy sanitizing file paths and internal information from error
+      responses to prevent information disclosure (TC-SEC004)
+    attributes:
+      priority: 3
+      target: endpoint
+      description: Redact file paths from error responses
+      enabled: true
+      requirementLevel: mandatory
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: app.py
+          symbol: global_exception_handler
+    metadata:
+      created_at: 2026-03-23T12:37:36.943Z
+      updated_at: 2026-03-23T12:37:36.943Z
+      version: 1
+  timestamp: 2026-03-23T12:37:36.968Z
+  sequenceNumber: 6
+- type: add
+  elementId: security.threat.sql-injection
+  layerName: security
+  after:
+    id: d4aa93a2-cefd-4b09-873a-297fc169c8fe
+    path: security.threat.sql-injection
+    spec_node_id: security.threat
+    type: threat
+    layer_id: security
+    name: SQL Injection
+    description: "Threat: SQL injection attacks against the SQLite databases via
+      unsanitized API inputs (TC-SEC001)"
+    attributes:
+      threatens: data-store
+      likelihood: moderate
+      impact: high
+      description: SQL injection via API input fields
+      criticality: high
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: tests/integration_tests/test_phase4_security_tests.py
+    metadata:
+      created_at: 2026-03-23T12:37:51.860Z
+      updated_at: 2026-03-23T12:37:51.860Z
+      version: 1
+  timestamp: 2026-03-23T12:37:51.884Z
+  sequenceNumber: 7
+- type: add
+  elementId: security.threat.information-disclosure-via-error-messages
+  layerName: security
+  after:
+    id: aa285542-9d54-48d5-b53d-2b9d110485b4
+    path: security.threat.information-disclosure-via-error-messages
+    spec_node_id: security.threat
+    type: threat
+    layer_id: security
+    name: Information Disclosure via Error Messages
+    description: "Threat: internal file paths and stack traces leaking through
+      unhandled exception responses (TC-SEC004)"
+    attributes:
+      threatens: api
+      likelihood: moderate
+      impact: moderate
+      description: File path leakage via error responses
+      criticality: medium
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: app.py
+          symbol: global_exception_handler
+    metadata:
+      created_at: 2026-03-23T12:37:52.337Z
+      updated_at: 2026-03-23T12:37:52.337Z
+      version: 1
+  timestamp: 2026-03-23T12:37:52.361Z
+  sequenceNumber: 8
+- type: add
+  elementId: security.countermeasure.parameterized-queries
+  layerName: security
+  after:
+    id: de3e8093-8dae-47da-a83b-2c180c596232
+    path: security.countermeasure.parameterized-queries
+    spec_node_id: security.countermeasure
+    type: countermeasure
+    layer_id: security
+    name: Parameterized Queries
+    description: SQLAlchemy ORM uses parameterized queries for all database
+      operations, preventing SQL injection (TC-SEC001 countermeasure)
+    attributes:
+      type: technical
+      description: SQLAlchemy ORM parameterized queries prevent SQL injection
+      effectiveness: high
+      implemented: true
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: database/models.py
+    metadata:
+      created_at: 2026-03-23T12:37:58.692Z
+      updated_at: 2026-03-23T12:37:58.692Z
+      version: 1
+  timestamp: 2026-03-23T12:37:58.717Z
+  sequenceNumber: 9
+- type: add
+  elementId: security.countermeasure.global-exception-handler-sanitization
+  layerName: security
+  after:
+    id: e97b36fb-f273-48af-a32b-175e0497450e
+    path: security.countermeasure.global-exception-handler-sanitization
+    spec_node_id: security.countermeasure
+    type: countermeasure
+    layer_id: security
+    name: Global Exception Handler Sanitization
+    description: FastAPI global exception handler strips file paths and internal
+      info from error responses before returning to clients
+    attributes:
+      type: technical
+      description: Regex-based path sanitization in global exception handler
+      effectiveness: high
+      implemented: true
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: app.py
+          symbol: global_exception_handler
+    metadata:
+      created_at: 2026-03-23T12:37:59.192Z
+      updated_at: 2026-03-23T12:37:59.192Z
+      version: 1
+  timestamp: 2026-03-23T12:37:59.216Z
+  sequenceNumber: 10
+- type: add
+  elementId: security.dataclassification.internal-knowledge-graph-data
+  layerName: security
+  after:
+    id: 31f2d90b-e37b-4c4b-8cd4-64adb22c81e0
+    path: security.dataclassification.internal-knowledge-graph-data
+    spec_node_id: security.dataclassification
+    type: dataclassification
+    layer_id: security
+    name: Internal Knowledge Graph Data
+    description: Data classification for the ontology entity data stored in local.db
+      — internal, not requiring encryption at rest for the desktop use case
+    attributes:
+      classificationLevel: internal
+      encryptionRequirement: none
+      version: "1.0"
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: config.json
+    metadata:
+      created_at: 2026-03-23T12:38:07.820Z
+      updated_at: 2026-03-23T12:38:07.820Z
+      version: 1
+  timestamp: 2026-03-23T12:38:07.843Z
+  sequenceNumber: 11
+- type: add
+  elementId: security.permission.read-ontology-entities
+  layerName: security
+  after:
+    id: a228fdbd-8712-460c-9c66-16667b767775
+    path: security.permission.read-ontology-entities
+    spec_node_id: security.permission
+    type: permission
+    layer_id: security
+    name: Read Ontology Entities
+    description: Permission to read ontology entities, relationships, and property
+      definitions via GET endpoints
+    attributes:
+      scope: read-only
+      resource: ontology_entities
+      action: read
+      description: Read access to ontology data
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: config.json
+    metadata:
+      created_at: 2026-03-23T12:38:13.100Z
+      updated_at: 2026-03-23T12:38:13.100Z
+      version: 1
+  timestamp: 2026-03-23T12:38:13.125Z
+  sequenceNumber: 12
+- type: add
+  elementId: security.permission.write-ontology-entities
+  layerName: security
+  after:
+    id: 524f2adc-3414-4cc2-bf11-852ce08bb301
+    path: security.permission.write-ontology-entities
+    spec_node_id: security.permission
+    type: permission
+    layer_id: security
+    name: Write Ontology Entities
+    description: Permission to create, update, and delete ontology entities and
+      relationships
+    attributes:
+      scope: write
+      resource: ontology_entities
+      action: create
+      description: Write access to ontology data
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: config.json
+    metadata:
+      created_at: 2026-03-23T12:38:13.579Z
+      updated_at: 2026-03-23T12:38:13.579Z
+      version: 1
+  timestamp: 2026-03-23T12:38:13.604Z
+  sequenceNumber: 13
+- type: add
+  elementId: security.auditconfig.change-event-audit-configuration
+  layerName: security
+  after:
+    id: c12b1451-9cb0-4f23-b51a-5395feaf8218
+    path: security.auditconfig.change-event-audit-configuration
+    spec_node_id: security.auditconfig
+    type: auditconfig
+    layer_id: security
+    name: Change Event Audit Configuration
+    description: "Audit configuration: all ontology entity create/update/delete
+      operations are logged to change_events with old/new data JSON"
+    attributes:
+      level: detailed
+      sanitizeFields: "[]"
+      enabled: true
+      includePayload: true
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: database/models.py
+          symbol: ChangeEvent
+    metadata:
+      created_at: 2026-03-23T12:38:28.612Z
+      updated_at: 2026-03-23T12:38:28.612Z
+      version: 1
+  timestamp: 2026-03-23T12:38:28.639Z
+  sequenceNumber: 14
+- type: add
+  elementId: security.authenticationconfig.local-api-key-authentication
+  layerName: security
+  after:
+    id: 99d2ea18-d31d-4268-90aa-0c26114dc9d4
+    path: security.authenticationconfig.local-api-key-authentication
+    spec_node_id: security.authenticationconfig
+    type: authenticationconfig
+    layer_id: security
+    name: Local API Key Authentication
+    description: Optional API key authentication — require_secure_key toggle in
+      config.json, X-API-Key header, no session/JWT
+    attributes:
+      provider: local
+      sessionTimeout: 0
+      verificationLevel: ial1
+      mfaRequired: false
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: config.json
+    metadata:
+      created_at: 2026-03-23T12:38:29.101Z
+      updated_at: 2026-03-23T12:38:29.101Z
+      version: 1
+  timestamp: 2026-03-23T12:38:29.129Z
+  sequenceNumber: 15
+- type: add
+  elementId: security.informationentity.ontology-entity-data
+  layerName: security
+  after:
+    id: 3b70657f-58e1-45c3-80af-143f1b95c93c
+    path: security.informationentity.ontology-entity-data
+    spec_node_id: security.informationentity
+    type: informationentity
+    layer_id: security
+    name: Ontology Entity Data
+    description: Information entity representing the ontology knowledge graph data —
+      internal classification, stored in local SQLite
+    attributes:
+      classification: internal
+      description: Knowledge graph entities stored in local.db
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: database/models.py
+          symbol: OntologyEntity
+    metadata:
+      created_at: 2026-03-23T12:38:37.213Z
+      updated_at: 2026-03-23T12:38:37.213Z
+      version: 1
+  timestamp: 2026-03-23T12:38:37.241Z
+  sequenceNumber: 16
+- type: add
+  elementId: security.secureresource.rest-api-endpoints
+  layerName: security
+  after:
+    id: 76ad6fe6-9088-4c51-b86b-7d1537e3b5fb
+    path: security.secureresource.rest-api-endpoints
+    spec_node_id: security.secureresource
+    type: secureresource
+    layer_id: security
+    name: REST API Endpoints
+    description: The full set of HTTP REST API endpoints exposed by the FastAPI
+      server — primary access surface requiring policy enforcement
+    attributes:
+      resource: /api/**
+      type: api
+      description: All REST API routes
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: app.py
+    metadata:
+      created_at: 2026-03-23T12:38:43.231Z
+      updated_at: 2026-03-23T12:38:43.231Z
+      version: 1
+  timestamp: 2026-03-23T12:38:43.262Z
+  sequenceNumber: 17
+- type: add
+  elementId: security.validationrule.no-empty-entity-titles
+  layerName: security
+  after:
+    id: 26b0a8b1-af7e-4ec7-9f80-d52151d5bf27
+    path: security.validationrule.no-empty-entity-titles
+    spec_node_id: security.validationrule
+    type: validationrule
+    layer_id: security
+    name: No Empty Entity Titles
+    description: Validation rule enforcing that ontology entity titles cannot be
+      empty — validated at domain layer (Class.rename)
+    attributes:
+      type: length
+      value: "1"
+      message: Entity title cannot be empty
+      severity: error
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: domain/ontology/entities.py
+          symbol: Class.rename
+    metadata:
+      created_at: 2026-03-23T12:38:43.743Z
+      updated_at: 2026-03-23T12:38:43.743Z
+      version: 1
+  timestamp: 2026-03-23T12:38:43.774Z
+  sequenceNumber: 18

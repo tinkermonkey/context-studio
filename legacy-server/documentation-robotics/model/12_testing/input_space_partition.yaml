@@ -1,0 +1,21 @@
+testing.inputspacepartition.entity-node-type-partition:
+  id: 3f31021c-e784-469b-8ae6-9b0ba71582d0
+  path: testing.inputspacepartition.entity-node-type-partition
+  spec_node_id: testing.inputspacepartition
+  type: inputspacepartition
+  layer_id: testing
+  name: Entity node_type Partition
+  description: "Input space partition for node_type field: covers taxonomy,
+    concept_scheme, class, individual (valid), and invalid/empty values"
+  attributes:
+    fieldRef: OntologyEntity.node_type
+    presenceRule: required
+    description: Node type discriminator partition
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: tests/unit_tests/test_value_objects.py
+  metadata:
+    created_at: 2026-03-23T12:36:03.681Z
+    updated_at: 2026-03-23T12:36:03.681Z
+    version: 1

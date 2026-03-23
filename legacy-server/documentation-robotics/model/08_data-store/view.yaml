@@ -1,0 +1,20 @@
+data-store.view.ontology-entities-with-predicates:
+  id: 51ecfbd4-b5b3-4816-a097-7cfdf27a4e4c
+  path: data-store.view.ontology-entities-with-predicates
+  spec_node_id: data-store.view
+  type: view
+  layer_id: data-store
+  name: ontology_entities_with_predicates
+  description: Virtual view joining ontology_entities with property_definitions to
+    resolve structural predicate labels for each entity
+  attributes:
+    materialized: false
+    viewType: VIRTUAL
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: database/sql_builders.py
+  metadata:
+    created_at: 2026-03-23T12:28:34.297Z
+    updated_at: 2026-03-23T12:28:34.297Z
+    version: 1

@@ -1,0 +1,40 @@
+data-model.stringschema.uuid-string:
+  id: e37b33bd-c87a-4f5c-8ec7-5ff8f4397444
+  path: data-model.stringschema.uuid-string
+  spec_node_id: data-model.stringschema
+  type: stringschema
+  layer_id: data-model
+  name: UUID String
+  description: UUID string format used as the primary key type across all ontology
+    entities, relationships, and events
+  attributes:
+    type: string
+    format: uuid
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: database/models.py
+  metadata:
+    created_at: 2026-03-23T12:26:47.468Z
+    updated_at: 2026-03-23T12:26:47.468Z
+    version: 1
+data-model.stringschema.iso-8601-timestamp:
+  id: 833bcb79-779b-4459-b514-709a09249dfb
+  path: data-model.stringschema.iso-8601-timestamp
+  spec_node_id: data-model.stringschema
+  type: stringschema
+  layer_id: data-model
+  name: ISO 8601 Timestamp
+  description: ISO 8601 datetime string format used for created_at, updated_at,
+    and timestamp fields throughout the domain
+  attributes:
+    type: string
+    format: date-time
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: database/models.py
+  metadata:
+    created_at: 2026-03-23T12:26:47.905Z
+    updated_at: 2026-03-23T12:26:47.905Z
+    version: 1

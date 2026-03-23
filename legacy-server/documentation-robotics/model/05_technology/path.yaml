@@ -1,0 +1,19 @@
+technology.path.server-to-database-path:
+  id: 9e0606df-db9d-43b8-9beb-cc892dccd60f
+  path: technology.path.server-to-database-path
+  spec_node_id: technology.path
+  type: path
+  layer_id: technology
+  name: Server to Database Path
+  description: Point-to-point communication path between the FastAPI server
+    process and the SQLite databases on the local filesystem
+  attributes:
+    pathType: point-to-point
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: config.json
+  metadata:
+    created_at: 2026-03-23T12:23:00.323Z
+    updated_at: 2026-03-23T12:23:00.323Z
+    version: 1

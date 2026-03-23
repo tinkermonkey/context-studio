@@ -1,0 +1,10 @@
+id: changeset-1774268389901-qx1ubmttp
+name: extract-application-layer
+created: 2026-03-23T12:19:49.902Z
+modified: 2026-03-23T12:21:08.549Z
+status: committed
+baseSnapshot: sha256:28600d6f680489849d9ecc0d0bdfda1dca521f9ca094ae2a5b7600a261f70d3e
+stats:
+  additions: 24
+  modifications: 0
+  deletions: 0

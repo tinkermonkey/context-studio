@@ -1,0 +1,92 @@
+ux.librarycomponent.node-table:
+  id: f465815e-4b76-4acd-a742-d9d09e8ecc07
+  path: ux.librarycomponent.node-table
+  spec_node_id: ux.librarycomponent
+  type: librarycomponent
+  layer_id: ux
+  name: Node Table
+  description: Reusable TanStack Table component for displaying paginated,
+    sortable, and filterable ontology entity lists
+  attributes:
+    type: table
+    category: data-display
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ../../ux/src/components/node_tables
+  metadata:
+    created_at: 2026-03-23T12:29:50.423Z
+    updated_at: 2026-03-23T12:29:50.423Z
+    version: 1
+ux.librarycomponent.node-selector:
+  id: 8e83f3f4-1a06-4ea4-83b2-f247735b90ec
+  path: ux.librarycomponent.node-selector
+  spec_node_id: ux.librarycomponent
+  type: librarycomponent
+  layer_id: ux
+  name: Node Selector
+  description: Reusable dropdown/search component for selecting ontology entities
+    by type (taxonomy, scheme, class)
+  attributes:
+    type: form
+    category: input
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ../../ux/src/components/node_selectors
+  metadata:
+    created_at: 2026-03-23T12:29:50.887Z
+    updated_at: 2026-03-23T12:29:50.887Z
+    version: 1
+ux.librarycomponent.node-details-panel:
+  id: aee9ec66-0f92-4d1c-b47a-71b9b467f00c
+  path: ux.librarycomponent.node-details-panel
+  spec_node_id: ux.librarycomponent
+  type: librarycomponent
+  layer_id: ux
+  name: Node Details Panel
+  description: Side panel component for displaying and editing ontology entity
+    details, attributes, and relationship links
+  attributes:
+    type: display
+    category: content
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ../../ux/src/components/node_details
+  metadata:
+    created_at: 2026-03-23T12:30:00.077Z
+    updated_at: 2026-03-23T12:30:00.077Z
+    version: 1
+ux.librarycomponent.rag-experiment-panel:
+  id: c433eb02-b7ea-4899-b62e-c7791c962cda
+  path: ux.librarycomponent.rag-experiment-panel
+  spec_node_id: ux.librarycomponent
+  type: librarycomponent
+  layer_id: ux
+  name: RAG Experiment Panel
+  description: Panel component for configuring and running RAG experiments,
+    comparing pipeline outputs
+  attributes:
+    type: display
+    category: tools
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ../../ux/src/routes/rag_experiments
+  metadata:
+    created_at: 2026-03-23T12:30:00.537Z
+    updated_at: 2026-03-23T12:30:00.537Z
+    version: 1
+ux.librarycomponent.predicate-discovery-panel:
+  id: cd937df1-8c8a-49d4-a5c9-0ac9e2fb16c0
+  path: ux.librarycomponent.predicate-discovery-panel
+  spec_node_id: ux.librarycomponent
+  type: librarycomponent
+  layer_id: ux
+  name: Predicate Discovery Panel
+  description: Component for triggering and viewing predicate discovery results
+  metadata:
+    created_at: 2026-03-23T19:27:33.138Z
+    updated_at: 2026-03-23T19:27:33.138Z
+    version: 1

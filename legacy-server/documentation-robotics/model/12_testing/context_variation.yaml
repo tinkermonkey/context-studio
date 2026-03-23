@@ -1,0 +1,40 @@
+testing.contextvariation.unit-test-context:
+  id: 29dcb218-08a0-47ec-ad8d-27046d926b22
+  path: testing.contextvariation.unit-test-context
+  spec_node_id: testing.contextvariation
+  type: contextvariation
+  layer_id: testing
+  name: Unit Test Context
+  description: "Context variation for unit tests: pure Python, no DB, no network,
+    using fake/mock port implementations from tests/fakes/"
+  attributes:
+    contextType: functional
+    description: Isolated unit tests with fake ports, no I/O
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: tests/fakes
+  metadata:
+    created_at: 2026-03-23T12:36:46.940Z
+    updated_at: 2026-03-23T12:36:46.940Z
+    version: 1
+testing.contextvariation.integration-test-context:
+  id: f8cb191b-50ef-4b5a-8d3a-a15eb59d88ad
+  path: testing.contextvariation.integration-test-context
+  spec_node_id: testing.contextvariation
+  type: contextvariation
+  layer_id: testing
+  name: Integration Test Context
+  description: "Context variation for integration tests: real SQLite in-memory
+    database, real services, TestClient HTTP calls"
+  attributes:
+    contextType: functional
+    description: Integration tests with real SQLite and TestClient HTTP
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: tests/integration_tests/conftest.py
+  metadata:
+    created_at: 2026-03-23T12:36:47.441Z
+    updated_at: 2026-03-23T12:36:47.441Z
+    version: 1

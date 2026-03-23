@@ -1,0 +1,21 @@
+api.ratelimit.external-api-rate-limit:
+  id: 54141281-3140-4445-8c91-8559978edbdf
+  path: api.ratelimit.external-api-rate-limit
+  spec_node_id: api.ratelimit
+  type: ratelimit
+  layer_id: api
+  name: External API Rate Limit
+  description: Per-source rate limits enforced by the reference-api-buddy proxy
+    for ConceptNet, DBpedia, Wikidata, and other external knowledge APIs
+  attributes:
+    requests: 60
+    window: 1m
+    keyBy: source
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: config.json
+  metadata:
+    created_at: 2026-03-23T12:25:21.906Z
+    updated_at: 2026-03-23T12:25:21.906Z
+    version: 1

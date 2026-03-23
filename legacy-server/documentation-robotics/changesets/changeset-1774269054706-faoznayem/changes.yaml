@@ -1,0 +1,377 @@
+- type: add
+  elementId: navigation.navigationgraph.context-studio-navigation-graph
+  layerName: navigation
+  after:
+    id: 70d30e96-718d-424e-a0fd-13093c2e59cc
+    path: navigation.navigationgraph.context-studio-navigation-graph
+    spec_node_id: navigation.navigationgraph
+    type: navigationgraph
+    layer_id: navigation
+    name: Context Studio Navigation Graph
+    description: Top-level navigation graph for the Context Studio React SPA —
+      TanStack Router-based client-side routing
+    attributes:
+      version: "1.0"
+      application: Context Studio
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: ../../ux/src/routeTree.gen.ts
+    metadata:
+      created_at: 2026-03-23T12:31:01.551Z
+      updated_at: 2026-03-23T12:31:01.551Z
+      version: 1
+  timestamp: 2026-03-23T12:31:01.572Z
+  sequenceNumber: 0
+- type: add
+  elementId: navigation.route.app-root-route
+  layerName: navigation
+  after:
+    id: bcf71844-b73b-4465-93a5-5aaa218b1e21
+    path: navigation.route.app-root-route
+    spec_node_id: navigation.route
+    type: route
+    layer_id: navigation
+    name: App Root Route
+    description: Root application layout route — renders the navigation shell,
+      sidebar, and main content area
+    attributes:
+      type: public
+      title: Context Studio
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: ../../ux/src/routes/__root.tsx
+    metadata:
+      created_at: 2026-03-23T12:31:07.671Z
+      updated_at: 2026-03-23T12:31:07.671Z
+      version: 1
+  timestamp: 2026-03-23T12:31:07.693Z
+  sequenceNumber: 1
+- type: add
+  elementId: navigation.route.layers-route
+  layerName: navigation
+  after:
+    id: b62d3141-c1c6-4cc1-ab17-0445e32b28e1
+    path: navigation.route.layers-route
+    spec_node_id: navigation.route
+    type: route
+    layer_id: navigation
+    name: Layers Route
+    description: Route for the Taxonomy (Layers) management page — /app/layers
+    attributes:
+      type: public
+      title: Layers
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: ../../ux/src/routes/app/layers.tsx
+    metadata:
+      created_at: 2026-03-23T12:31:08.145Z
+      updated_at: 2026-03-23T12:31:08.145Z
+      version: 1
+  timestamp: 2026-03-23T12:31:08.167Z
+  sequenceNumber: 2
+- type: add
+  elementId: navigation.route.domains-route
+  layerName: navigation
+  after:
+    id: 94d7c1bb-b214-4bba-b91e-9824fa33c529
+    path: navigation.route.domains-route
+    spec_node_id: navigation.route
+    type: route
+    layer_id: navigation
+    name: Domains Route
+    description: Route for the Concept Schemes (Domains) management page — /app/domains
+    attributes:
+      type: public
+      title: Domains
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: ../../ux/src/routes/app/domains.tsx
+    metadata:
+      created_at: 2026-03-23T12:31:08.594Z
+      updated_at: 2026-03-23T12:31:08.594Z
+      version: 1
+  timestamp: 2026-03-23T12:31:08.616Z
+  sequenceNumber: 3
+- type: add
+  elementId: navigation.route.terms-route
+  layerName: navigation
+  after:
+    id: 4ec06f4c-3ddc-4128-8ec5-bda852675576
+    path: navigation.route.terms-route
+    spec_node_id: navigation.route
+    type: route
+    layer_id: navigation
+    name: Terms Route
+    description: Route for the Classes (Terms) management page — /app/terms
+    attributes:
+      type: public
+      title: Terms
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: ../../ux/src/routes/app/terms.tsx
+    metadata:
+      created_at: 2026-03-23T12:31:13.776Z
+      updated_at: 2026-03-23T12:31:13.776Z
+      version: 1
+  timestamp: 2026-03-23T12:31:13.810Z
+  sequenceNumber: 4
+- type: add
+  elementId: navigation.route.datasets-route
+  layerName: navigation
+  after:
+    id: 226068c6-2273-49d3-8158-f6d98b75c89d
+    path: navigation.route.datasets-route
+    spec_node_id: navigation.route
+    type: route
+    layer_id: navigation
+    name: Datasets Route
+    description: Route for the dataset workspace management page — /app/datasets
+    attributes:
+      type: public
+      title: Datasets
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: ../../ux/src/routes/app/datasets.tsx
+    metadata:
+      created_at: 2026-03-23T12:31:14.257Z
+      updated_at: 2026-03-23T12:31:14.257Z
+      version: 1
+  timestamp: 2026-03-23T12:31:14.285Z
+  sequenceNumber: 5
+- type: add
+  elementId: navigation.route.predicates-route
+  layerName: navigation
+  after:
+    id: 942e50a4-7a29-422d-a310-a182317ca121
+    path: navigation.route.predicates-route
+    spec_node_id: navigation.route
+    type: route
+    layer_id: navigation
+    name: Predicates Route
+    description: Route for the property definitions management page — /app/predicates
+    attributes:
+      type: public
+      title: Predicates
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: ../../ux/src/routes/app/predicates.tsx
+    metadata:
+      created_at: 2026-03-23T12:31:14.740Z
+      updated_at: 2026-03-23T12:31:14.740Z
+      version: 1
+  timestamp: 2026-03-23T12:31:14.767Z
+  sequenceNumber: 6
+- type: add
+  elementId: navigation.navigationflow.ontology-hierarchy-flow
+  layerName: navigation
+  after:
+    id: d75b070a-082d-4078-a116-7c18a9ba0da9
+    path: navigation.navigationflow.ontology-hierarchy-flow
+    spec_node_id: navigation.navigationflow
+    type: navigationflow
+    layer_id: navigation
+    name: Ontology Hierarchy Flow
+    description: "Three-step navigation flow guiding the user through the knowledge
+      graph hierarchy: Taxonomies -> Concept Schemes -> Classes"
+    attributes:
+      description: Hierarchical drill-down through taxonomy, concept scheme, and class
+        levels
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: ../../ux/src/routes/app
+    metadata:
+      created_at: 2026-03-23T12:31:23.552Z
+      updated_at: 2026-03-23T12:31:23.552Z
+      version: 1
+  timestamp: 2026-03-23T12:31:23.578Z
+  sequenceNumber: 7
+- type: add
+  elementId: navigation.navigationtransition.layers-to-domains
+  layerName: navigation
+  after:
+    id: 4308d372-08f1-4ce2-8a8a-5be2907f2bc2
+    path: navigation.navigationtransition.layers-to-domains
+    spec_node_id: navigation.navigationtransition
+    type: navigationtransition
+    layer_id: navigation
+    name: Layers to Domains
+    description: Navigation transition triggered when a user selects a taxonomy
+      (layer), driving navigation to the domains view for that taxonomy
+    attributes:
+      from: layers-route
+      to: domains-route
+      trigger: user-click
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: ../../ux/src/routes/app/layers.tsx
+    metadata:
+      created_at: 2026-03-23T12:31:30.919Z
+      updated_at: 2026-03-23T12:31:30.919Z
+      version: 1
+  timestamp: 2026-03-23T12:31:30.946Z
+  sequenceNumber: 8
+- type: add
+  elementId: navigation.navigationtransition.domains-to-terms
+  layerName: navigation
+  after:
+    id: 321ba200-09de-45fc-a44b-a456b984d7ca
+    path: navigation.navigationtransition.domains-to-terms
+    spec_node_id: navigation.navigationtransition
+    type: navigationtransition
+    layer_id: navigation
+    name: Domains to Terms
+    description: Navigation transition triggered when a user selects a concept
+      scheme (domain), driving navigation to the terms view for that scheme
+    attributes:
+      from: domains-route
+      to: terms-route
+      trigger: user-click
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: ../../ux/src/routes/app/domains.tsx
+    metadata:
+      created_at: 2026-03-23T12:31:31.451Z
+      updated_at: 2026-03-23T12:31:31.451Z
+      version: 1
+  timestamp: 2026-03-23T12:31:31.477Z
+  sequenceNumber: 9
+- type: add
+  elementId: navigation.breadcrumbconfig.ontology-breadcrumb
+  layerName: navigation
+  after:
+    id: d5a9e7da-100b-4fa9-bae3-0dd57d430eba
+    path: navigation.breadcrumbconfig.ontology-breadcrumb
+    spec_node_id: navigation.breadcrumbconfig
+    type: breadcrumbconfig
+    layer_id: navigation
+    name: Ontology Breadcrumb
+    description: Breadcrumb configuration showing the full path through Taxonomy ->
+      Concept Scheme -> Class hierarchy
+    attributes:
+      label: Current Location
+      showHome: true
+      homeLabel: Home
+      homeRoute: /
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: ../../ux/src/components/layout
+    metadata:
+      created_at: 2026-03-23T12:31:31.956Z
+      updated_at: 2026-03-23T12:31:31.956Z
+      version: 1
+  timestamp: 2026-03-23T12:31:31.984Z
+  sequenceNumber: 10
+- type: add
+  elementId: navigation.flowstep.select-taxonomy-step
+  layerName: navigation
+  after:
+    id: 198e386e-f1cd-427b-8c7b-98b840301f79
+    path: navigation.flowstep.select-taxonomy-step
+    spec_node_id: navigation.flowstep
+    type: flowstep
+    layer_id: navigation
+    name: Select Taxonomy Step
+    description: First step in the ontology hierarchy flow — user selects a taxonomy
+      from the layers list
+    attributes:
+      sequence: 1
+      route: layers-route
+      required: true
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: ../../ux/src/routes/app/layers.tsx
+    metadata:
+      created_at: 2026-03-23T12:31:40.759Z
+      updated_at: 2026-03-23T12:31:40.759Z
+      version: 1
+  timestamp: 2026-03-23T12:31:40.784Z
+  sequenceNumber: 11
+- type: add
+  elementId: navigation.contextvariable.active-dataset-id
+  layerName: navigation
+  after:
+    id: a7317fe4-11a5-42b3-baf6-603a4b95f30a
+    path: navigation.contextvariable.active-dataset-id
+    spec_node_id: navigation.contextvariable
+    type: contextvariable
+    layer_id: navigation
+    name: Active Dataset ID
+    description: Session context variable holding the currently active SQLite dataset ID
+    attributes:
+      schemaRef: "#/definitions/UUID"
+      scope: session
+      persistedIn: sessionStorage
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: ../../ux/src/stores
+    metadata:
+      created_at: 2026-03-23T12:31:47.781Z
+      updated_at: 2026-03-23T12:31:47.781Z
+      version: 1
+  timestamp: 2026-03-23T12:31:47.808Z
+  sequenceNumber: 12
+- type: add
+  elementId: navigation.contextvariable.selected-entity-id
+  layerName: navigation
+  after:
+    id: 0b94d69c-59f7-4e5a-aa12-85bd88f1e9c6
+    path: navigation.contextvariable.selected-entity-id
+    spec_node_id: navigation.contextvariable
+    type: contextvariable
+    layer_id: navigation
+    name: Selected Entity ID
+    description: Page-level context variable tracking the currently selected
+      ontology entity for the detail panel
+    attributes:
+      schemaRef: "#/definitions/UUID"
+      scope: step
+      persistedIn: url-param
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: ../../ux/src/stores
+    metadata:
+      created_at: 2026-03-23T12:31:48.268Z
+      updated_at: 2026-03-23T12:31:48.268Z
+      version: 1
+  timestamp: 2026-03-23T12:31:48.312Z
+  sequenceNumber: 13
+- type: add
+  elementId: navigation.navigationguard.dataset-required-guard
+  layerName: navigation
+  after:
+    id: aee4956f-733b-4250-b336-e843be6641d3
+    path: navigation.navigationguard.dataset-required-guard
+    spec_node_id: navigation.navigationguard
+    type: navigationguard
+    layer_id: navigation
+    name: Dataset Required Guard
+    description: Navigation guard ensuring an active dataset is configured before
+      allowing access to ontology entity routes
+    attributes:
+      type: custom
+      order: 1
+      description: Require active dataset before accessing entity routes
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: ../../ux/src/routes/__root.tsx
+    metadata:
+      created_at: 2026-03-23T12:31:56.481Z
+      updated_at: 2026-03-23T12:31:56.481Z
+      version: 1
+  timestamp: 2026-03-23T12:31:56.507Z
+  sequenceNumber: 14

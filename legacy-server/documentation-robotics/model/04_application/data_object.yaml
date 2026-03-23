@@ -1,0 +1,18 @@
+application.dataobject.ontology-entity-data-object:
+  id: 3302c202-00ed-4bc9-9d8d-98ff796a968f
+  path: application.dataobject.ontology-entity-data-object
+  spec_node_id: application.dataobject
+  type: dataobject
+  layer_id: application
+  name: Ontology Entity Data Object
+  description: In-flight data representation of a taxonomy, concept scheme, class,
+    or individual entity as it passes through application services
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: domain/ontology/entities.py
+        symbol: OntologyEntity
+  metadata:
+    created_at: 2026-03-23T12:20:58.557Z
+    updated_at: 2026-03-23T12:20:58.557Z
+    version: 1

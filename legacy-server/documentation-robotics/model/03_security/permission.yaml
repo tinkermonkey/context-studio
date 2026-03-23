@@ -1,0 +1,43 @@
+security.permission.read-ontology-entities:
+  id: a228fdbd-8712-460c-9c66-16667b767775
+  path: security.permission.read-ontology-entities
+  spec_node_id: security.permission
+  type: permission
+  layer_id: security
+  name: Read Ontology Entities
+  description: Permission to read ontology entities, relationships, and property
+    definitions via GET endpoints
+  attributes:
+    scope: read-only
+    resource: ontology_entities
+    action: read
+    description: Read access to ontology data
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: config.json
+  metadata:
+    created_at: 2026-03-23T12:38:13.100Z
+    updated_at: 2026-03-23T12:38:13.100Z
+    version: 1
+security.permission.write-ontology-entities:
+  id: 524f2adc-3414-4cc2-bf11-852ce08bb301
+  path: security.permission.write-ontology-entities
+  spec_node_id: security.permission
+  type: permission
+  layer_id: security
+  name: Write Ontology Entities
+  description: Permission to create, update, and delete ontology entities and relationships
+  attributes:
+    scope: write
+    resource: ontology_entities
+    action: create
+    description: Write access to ontology data
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: config.json
+  metadata:
+    created_at: 2026-03-23T12:38:13.579Z
+    updated_at: 2026-03-23T12:38:13.579Z
+    version: 1

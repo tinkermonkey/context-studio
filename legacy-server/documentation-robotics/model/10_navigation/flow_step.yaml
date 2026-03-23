@@ -1,0 +1,21 @@
+navigation.flowstep.select-taxonomy-step:
+  id: 198e386e-f1cd-427b-8c7b-98b840301f79
+  path: navigation.flowstep.select-taxonomy-step
+  spec_node_id: navigation.flowstep
+  type: flowstep
+  layer_id: navigation
+  name: Select Taxonomy Step
+  description: First step in the ontology hierarchy flow — user selects a taxonomy
+    from the layers list
+  attributes:
+    sequence: 1
+    route: layers-route
+    required: true
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ../../ux/src/routes/app/layers.tsx
+  metadata:
+    created_at: 2026-03-23T12:31:40.759Z
+    updated_at: 2026-03-23T12:31:40.759Z
+    version: 1

@@ -1,0 +1,40 @@
+business.businessevent.entity-changed-event:
+  id: 29b3459f-d485-472a-88a5-d00eb8af99ca
+  path: business.businessevent.entity-changed-event
+  spec_node_id: business.businessevent
+  type: businessevent
+  layer_id: business
+  name: Entity Changed Event
+  description: Business event triggered when an ontology entity is created,
+    updated, or deleted; recorded in the change_events audit trail
+  attributes:
+    type: internal
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: domain/ontology/events.py
+        symbol: OntologyEntityChanged
+  metadata:
+    created_at: 2026-03-23T12:42:33.481Z
+    updated_at: 2026-03-23T12:42:33.481Z
+    version: 1
+business.businessevent.sync-completed-event:
+  id: 8c514784-46bc-4391-a6ce-3f6a4f92974b
+  path: business.businessevent.sync-completed-event
+  spec_node_id: business.businessevent
+  type: businessevent
+  layer_id: business
+  name: Sync Completed Event
+  description: Business event signalling successful synchronisation of the local
+    knowledge graph to remote S3 storage
+  attributes:
+    type: external
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: sync/s3_sync_manager.py
+        symbol: S3SyncManager
+  metadata:
+    created_at: 2026-03-23T12:42:33.975Z
+    updated_at: 2026-03-23T12:42:33.975Z
+    version: 1

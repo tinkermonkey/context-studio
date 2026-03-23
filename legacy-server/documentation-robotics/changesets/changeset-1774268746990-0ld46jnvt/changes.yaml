@@ -1,0 +1,552 @@
+- type: add
+  elementId: data-model.schemadefinition.ontology-entity
+  layerName: data-model
+  after:
+    id: b43851dd-50f0-4bd2-adfe-ddb92a4b55d1
+    path: data-model.schemadefinition.ontology-entity
+    spec_node_id: data-model.schemadefinition
+    type: schemadefinition
+    layer_id: data-model
+    name: OntologyEntity
+    description: Unified domain entity representing a taxonomy, concept scheme,
+      class, or individual — the primary knowledge graph node type
+    attributes:
+      title: OntologyEntity
+      type: object
+      description: "Ontology entity: taxonomy, concept scheme, class, or individual"
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: domain/ontology/entities.py
+          symbol: Taxonomy,ConceptScheme,Class
+    metadata:
+      created_at: 2026-03-23T12:25:55.889Z
+      updated_at: 2026-03-23T12:25:55.889Z
+      version: 1
+  timestamp: 2026-03-23T12:25:55.913Z
+  sequenceNumber: 0
+- type: add
+  elementId: data-model.schemadefinition.relationship
+  layerName: data-model
+  after:
+    id: 4933eafa-9f25-4ff7-9503-9b4b157ece36
+    path: data-model.schemadefinition.relationship
+    spec_node_id: data-model.schemadefinition
+    type: schemadefinition
+    layer_id: data-model
+    name: Relationship
+    description: Typed, directed edge connecting two ontology entities with a
+      predicate label and optional weight
+    attributes:
+      title: Relationship
+      type: object
+      description: Directed relationship between two ontology entities
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: domain/ontology/entities.py
+          symbol: Relationship
+    metadata:
+      created_at: 2026-03-23T12:25:56.310Z
+      updated_at: 2026-03-23T12:25:56.310Z
+      version: 1
+  timestamp: 2026-03-23T12:25:56.334Z
+  sequenceNumber: 1
+- type: add
+  elementId: data-model.schemadefinition.property-definition
+  layerName: data-model
+  after:
+    id: a4b0ec6e-5a41-49be-bc92-102b289258c7
+    path: data-model.schemadefinition.property-definition
+    spec_node_id: data-model.schemadefinition
+    type: schemadefinition
+    layer_id: data-model
+    name: PropertyDefinition
+    description: Reusable predicate/property type that can be asserted on entities
+      and used as a relationship label
+    attributes:
+      title: PropertyDefinition
+      type: object
+      description: Reusable property type for entity relationships
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: domain/ontology/entities.py
+          symbol: PropertyDefinition
+    metadata:
+      created_at: 2026-03-23T12:25:56.762Z
+      updated_at: 2026-03-23T12:25:56.762Z
+      version: 1
+  timestamp: 2026-03-23T12:25:56.784Z
+  sequenceNumber: 2
+- type: add
+  elementId: data-model.schemadefinition.change-event
+  layerName: data-model
+  after:
+    id: 7aa521ad-a61f-4895-977f-9fc2ff7aa691
+    path: data-model.schemadefinition.change-event
+    spec_node_id: data-model.schemadefinition
+    type: schemadefinition
+    layer_id: data-model
+    name: ChangeEvent
+    description: Audit trail record for create/update/delete operations on ontology
+      entities, relationships, and predicates
+    attributes:
+      title: ChangeEvent
+      type: object
+      description: Audit log entry for entity changes with sync state
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: domain/versioning/entities.py
+          symbol: ChangeEvent
+    metadata:
+      created_at: 2026-03-23T12:26:03.337Z
+      updated_at: 2026-03-23T12:26:03.337Z
+      version: 1
+  timestamp: 2026-03-23T12:26:03.359Z
+  sequenceNumber: 3
+- type: add
+  elementId: data-model.schemadefinition.pipeline-configuration
+  layerName: data-model
+  after:
+    id: 8abad9ed-c804-42ec-bf50-a222e830bc84
+    path: data-model.schemadefinition.pipeline-configuration
+    spec_node_id: data-model.schemadefinition
+    type: schemadefinition
+    layer_id: data-model
+    name: PipelineConfiguration
+    description: Reusable LLM pipeline configuration with provider, model, prompt
+      templates, and execution parameters
+    attributes:
+      title: PipelineConfiguration
+      type: object
+      description: LLM pipeline configuration for ontology enrichment
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: domain/pipeline/entities.py
+          symbol: PipelineConfiguration
+    metadata:
+      created_at: 2026-03-23T12:26:03.755Z
+      updated_at: 2026-03-23T12:26:03.755Z
+      version: 1
+  timestamp: 2026-03-23T12:26:03.778Z
+  sequenceNumber: 4
+- type: add
+  elementId: data-model.schemadefinition.entity-version
+  layerName: data-model
+  after:
+    id: e7a08910-1307-4320-8ba2-6955a67c9c5a
+    path: data-model.schemadefinition.entity-version
+    spec_node_id: data-model.schemadefinition
+    type: schemadefinition
+    layer_id: data-model
+    name: EntityVersion
+    description: Point-in-time snapshot of an ontology entity for version history
+      and rollback
+    attributes:
+      title: EntityVersion
+      type: object
+      description: Versioned snapshot of an ontology entity
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: domain/versioning/entities.py
+          symbol: EntityVersion
+    metadata:
+      created_at: 2026-03-23T12:26:04.175Z
+      updated_at: 2026-03-23T12:26:04.175Z
+      version: 1
+  timestamp: 2026-03-23T12:26:04.201Z
+  sequenceNumber: 5
+- type: add
+  elementId: data-model.objectschema.ontology-entity-schema
+  layerName: data-model
+  after:
+    id: ee52a685-a6c2-4e36-9212-829f218d2159
+    path: data-model.objectschema.ontology-entity-schema
+    spec_node_id: data-model.objectschema
+    type: objectschema
+    layer_id: data-model
+    name: OntologyEntity Schema
+    description: Object schema for ontology entities with id, node_type, title,
+      definition, parent_entity_id, embeddings, and reference links
+    attributes:
+      type: object
+      required: id,node_type,title
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: database/models.py
+          symbol: OntologyEntity
+    metadata:
+      created_at: 2026-03-23T12:26:24.179Z
+      updated_at: 2026-03-23T12:26:24.179Z
+      version: 1
+  timestamp: 2026-03-23T12:26:24.204Z
+  sequenceNumber: 6
+- type: add
+  elementId: data-model.objectschema.relationship-schema
+  layerName: data-model
+  after:
+    id: 0b1aa4ac-ffd3-45cf-9bbd-35737eca419f
+    path: data-model.objectschema.relationship-schema
+    spec_node_id: data-model.objectschema
+    type: objectschema
+    layer_id: data-model
+    name: Relationship Schema
+    description: Object schema for typed directed relationships between ontology entities
+    attributes:
+      type: object
+      required: id,source_entity_id,target_entity_id,predicate
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: database/models.py
+          symbol: Relationship
+    metadata:
+      created_at: 2026-03-23T12:26:24.601Z
+      updated_at: 2026-03-23T12:26:24.601Z
+      version: 1
+  timestamp: 2026-03-23T12:26:24.624Z
+  sequenceNumber: 7
+- type: add
+  elementId: data-model.objectschema.change-event-schema
+  layerName: data-model
+  after:
+    id: 103cd59d-c45c-4c9d-bef5-05405d877065
+    path: data-model.objectschema.change-event-schema
+    spec_node_id: data-model.objectschema
+    type: objectschema
+    layer_id: data-model
+    name: ChangeEvent Schema
+    description: Object schema for the audit log capturing event_type, record_type,
+      record_id, old_data, new_data, and timestamp
+    attributes:
+      type: object
+      required: id,event_type,record_type,timestamp
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: database/models.py
+          symbol: ChangeEvent
+    metadata:
+      created_at: 2026-03-23T12:26:25.019Z
+      updated_at: 2026-03-23T12:26:25.019Z
+      version: 1
+  timestamp: 2026-03-23T12:26:25.042Z
+  sequenceNumber: 8
+- type: add
+  elementId: data-model.schemaproperty.node-type-enum
+  layerName: data-model
+  after:
+    id: dbc31ea1-bcc6-4bf9-9d7d-c76fb5e454aa
+    path: data-model.schemaproperty.node-type-enum
+    spec_node_id: data-model.schemaproperty
+    type: schemaproperty
+    layer_id: data-model
+    name: node_type enum
+    description: "Discriminator property on OntologyEntity: taxonomy |
+      concept_scheme | class | individual"
+    attributes:
+      type: string
+      enum: taxonomy,concept_scheme,class,individual
+      description: Entity node type discriminator
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: domain/ontology/value_objects.py
+          symbol: NodeType
+    metadata:
+      created_at: 2026-03-23T12:26:32.889Z
+      updated_at: 2026-03-23T12:26:32.889Z
+      version: 1
+  timestamp: 2026-03-23T12:26:32.912Z
+  sequenceNumber: 9
+- type: add
+  elementId: data-model.schemaproperty.title-embedding-blob
+  layerName: data-model
+  after:
+    id: 53fee10a-7585-44eb-86e4-2c5eb114d53c
+    path: data-model.schemaproperty.title-embedding-blob
+    spec_node_id: data-model.schemaproperty
+    type: schemaproperty
+    layer_id: data-model
+    name: title_embedding blob
+    description: Binary blob storing the SentenceTransformer vector embedding of the
+      entity title for similarity search
+    attributes:
+      type: string
+      format: binary
+      description: Vector embedding of entity title
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: database/models.py
+          symbol: OntologyEntity.title_embedding
+    metadata:
+      created_at: 2026-03-23T12:26:33.346Z
+      updated_at: 2026-03-23T12:26:33.346Z
+      version: 1
+  timestamp: 2026-03-23T12:26:33.370Z
+  sequenceNumber: 10
+- type: add
+  elementId: data-model.schemadefinition.external-reference
+  layerName: data-model
+  after:
+    id: fc064528-47da-4565-a974-ba3dae907e53
+    path: data-model.schemadefinition.external-reference
+    spec_node_id: data-model.schemadefinition
+    type: schemadefinition
+    layer_id: data-model
+    name: ExternalReference
+    description: Immutable reference linking an ontology entity to an external
+      knowledge base (Wikidata, DBpedia, ConceptNet)
+    attributes:
+      title: ExternalReference
+      type: object
+      description: Reference to external ontology or knowledge base URI
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: domain/ontology/value_objects.py
+          symbol: ExternalReference
+    metadata:
+      created_at: 2026-03-23T12:26:33.777Z
+      updated_at: 2026-03-23T12:26:33.777Z
+      version: 1
+  timestamp: 2026-03-23T12:26:33.802Z
+  sequenceNumber: 11
+- type: add
+  elementId: data-model.schemadefinition.lexical-sense
+  layerName: data-model
+  after:
+    id: d0f6f8b9-b6f6-4522-8e7e-35a75d320bc6
+    path: data-model.schemadefinition.lexical-sense
+    spec_node_id: data-model.schemadefinition
+    type: schemadefinition
+    layer_id: data-model
+    name: LexicalSense
+    description: Immutable lexical sense with synset_id, definition, lemma, and
+      confidence linking entities to WordNet and similar lexicons
+    attributes:
+      title: LexicalSense
+      type: object
+      description: Lexical sense definition from WordNet or similar lexicon
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: domain/ontology/value_objects.py
+          symbol: LexicalSense
+    metadata:
+      created_at: 2026-03-23T12:26:40.681Z
+      updated_at: 2026-03-23T12:26:40.681Z
+      version: 1
+  timestamp: 2026-03-23T12:26:40.705Z
+  sequenceNumber: 12
+- type: add
+  elementId: data-model.schemadefinition.ontology-mapping
+  layerName: data-model
+  after:
+    id: eb48db8d-36e9-4b77-a362-75d4aa57c08f
+    path: data-model.schemadefinition.ontology-mapping
+    spec_node_id: data-model.schemadefinition
+    type: schemadefinition
+    layer_id: data-model
+    name: OntologyMapping
+    description: Immutable mapping assertion linking ontology entities to external
+      ontologies (rdfs, skos, owl) via URI
+    attributes:
+      title: OntologyMapping
+      type: object
+      description: Mapping to external ontology URI
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: domain/ontology/value_objects.py
+          symbol: OntologyMapping
+    metadata:
+      created_at: 2026-03-23T12:26:41.110Z
+      updated_at: 2026-03-23T12:26:41.110Z
+      version: 1
+  timestamp: 2026-03-23T12:26:41.136Z
+  sequenceNumber: 13
+- type: add
+  elementId: data-model.schemadefinition.conflict
+  layerName: data-model
+  after:
+    id: 20c05e48-7e45-4b5f-b81c-1c3d74892ceb
+    path: data-model.schemadefinition.conflict
+    spec_node_id: data-model.schemadefinition
+    type: schemadefinition
+    layer_id: data-model
+    name: Conflict
+    description: Represents a detected conflict between local and remote entity
+      versions during a sync operation
+    attributes:
+      title: Conflict
+      type: object
+      description: Conflict between local and remote entity versions
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: domain/versioning/entities.py
+          symbol: Conflict
+    metadata:
+      created_at: 2026-03-23T12:26:41.542Z
+      updated_at: 2026-03-23T12:26:41.542Z
+      version: 1
+  timestamp: 2026-03-23T12:26:41.568Z
+  sequenceNumber: 14
+- type: add
+  elementId: data-model.stringschema.uuid-string
+  layerName: data-model
+  after:
+    id: e37b33bd-c87a-4f5c-8ec7-5ff8f4397444
+    path: data-model.stringschema.uuid-string
+    spec_node_id: data-model.stringschema
+    type: stringschema
+    layer_id: data-model
+    name: UUID String
+    description: UUID string format used as the primary key type across all ontology
+      entities, relationships, and events
+    attributes:
+      type: string
+      format: uuid
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: database/models.py
+    metadata:
+      created_at: 2026-03-23T12:26:47.468Z
+      updated_at: 2026-03-23T12:26:47.468Z
+      version: 1
+  timestamp: 2026-03-23T12:26:47.493Z
+  sequenceNumber: 15
+- type: add
+  elementId: data-model.stringschema.iso-8601-timestamp
+  layerName: data-model
+  after:
+    id: 833bcb79-779b-4459-b514-709a09249dfb
+    path: data-model.stringschema.iso-8601-timestamp
+    spec_node_id: data-model.stringschema
+    type: stringschema
+    layer_id: data-model
+    name: ISO 8601 Timestamp
+    description: ISO 8601 datetime string format used for created_at, updated_at,
+      and timestamp fields throughout the domain
+    attributes:
+      type: string
+      format: date-time
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: database/models.py
+    metadata:
+      created_at: 2026-03-23T12:26:47.905Z
+      updated_at: 2026-03-23T12:26:47.905Z
+      version: 1
+  timestamp: 2026-03-23T12:26:47.930Z
+  sequenceNumber: 16
+- type: add
+  elementId: data-model.arrayschema.reference-links-array
+  layerName: data-model
+  after:
+    id: e5f25c67-a2fc-46eb-8122-4b07bae1fc1a
+    path: data-model.arrayschema.reference-links-array
+    spec_node_id: data-model.arrayschema
+    type: arrayschema
+    layer_id: data-model
+    name: Reference Links Array
+    description: JSON array of ExternalReference objects stored on each
+      OntologyEntity for external knowledge source links
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: database/models.py
+          symbol: OntologyEntity.reference_links
+    metadata:
+      created_at: 2026-03-23T12:26:48.352Z
+      updated_at: 2026-03-23T12:26:48.352Z
+      version: 1
+  timestamp: 2026-03-23T12:26:48.379Z
+  sequenceNumber: 17
+- type: add
+  elementId: data-model.numericschema.relationship-weight
+  layerName: data-model
+  after:
+    id: bf5fb1ba-1ce2-411f-af3e-1ad6b42c0a09
+    path: data-model.numericschema.relationship-weight
+    spec_node_id: data-model.numericschema
+    type: numericschema
+    layer_id: data-model
+    name: Relationship Weight
+    description: Float weight on relationships between ontology entities, defaulting
+      to 1.0, used for graph traversal and ranking
+    attributes:
+      type: number
+      minimum: 0
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: domain/ontology/entities.py
+          symbol: Relationship.weight
+    metadata:
+      created_at: 2026-03-23T12:26:55.878Z
+      updated_at: 2026-03-23T12:26:55.878Z
+      version: 1
+  timestamp: 2026-03-23T12:26:55.906Z
+  sequenceNumber: 18
+- type: add
+  elementId: data-model.jsonschema.context-studio-domain-schema
+  layerName: data-model
+  after:
+    id: 4dc7bbf7-9a46-4e0d-b498-3160741418eb
+    path: data-model.jsonschema.context-studio-domain-schema
+    spec_node_id: data-model.jsonschema
+    type: jsonschema
+    layer_id: data-model
+    name: Context Studio Domain Schema
+    description: "Top-level JSON Schema document encompassing all core domain
+      entities: OntologyEntity, Relationship, PropertyDefinition, and
+      ChangeEvent"
+    attributes:
+      $schema: http://json-schema.org/draft-07/schema#
+      $id: context-studio-domain
+      type: object
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: database/models.py
+    metadata:
+      created_at: 2026-03-23T12:26:56.319Z
+      updated_at: 2026-03-23T12:26:56.319Z
+      version: 1
+  timestamp: 2026-03-23T12:26:56.347Z
+  sequenceNumber: 19
+- type: add
+  elementId: data-model.reference.ontology-entity-to-external-reference
+  layerName: data-model
+  after:
+    id: de20939f-24e4-4917-bb90-baa5dde11dfa
+    path: data-model.reference.ontology-entity-to-external-reference
+    spec_node_id: data-model.reference
+    type: reference
+    layer_id: data-model
+    name: OntologyEntity to ExternalReference
+    description: Schema reference linking OntologyEntity reference_links array to
+      the ExternalReference schema definition
+    attributes:
+      $ref: "#/definitions/ExternalReference"
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: domain/ontology/entities.py
+          symbol: Class.external_references
+    metadata:
+      created_at: 2026-03-23T12:26:56.760Z
+      updated_at: 2026-03-23T12:26:56.760Z
+      version: 1
+  timestamp: 2026-03-23T12:26:56.785Z
+  sequenceNumber: 20

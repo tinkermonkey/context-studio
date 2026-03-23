@@ -1,0 +1,122 @@
+motivation.goal.enable-structured-knowledge-graph-authoring:
+  id: df54d272-51a3-45ab-b375-d3c73ab7647f
+  path: motivation.goal.enable-structured-knowledge-graph-authoring
+  spec_node_id: motivation.goal
+  type: goal
+  layer_id: motivation
+  name: Enable Structured Knowledge Graph Authoring
+  description: "Primary goal: allow knowledge managers to create and maintain a
+    well-structured ontology of taxonomies, concept schemes, classes, and typed
+    relationships"
+  attributes:
+    priority: critical
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: api/ontology_entities.py
+        symbol: router
+  metadata:
+    created_at: 2026-03-23T12:43:25.813Z
+    updated_at: 2026-03-23T12:43:25.813Z
+    version: 1
+motivation.goal.automate-knowledge-enrichment:
+  id: c0c3bf12-9fa7-4531-b269-d45d11cc96b2
+  path: motivation.goal.automate-knowledge-enrichment
+  spec_node_id: motivation.goal
+  type: goal
+  layer_id: motivation
+  name: Automate Knowledge Enrichment
+  description: "Goal: reduce manual curation effort by automatically enriching
+    entities from ConceptNet, DBpedia, Wikidata, and schema.org"
+  attributes:
+    priority: high
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: reference_api/service.py
+        symbol: enrich
+  metadata:
+    created_at: 2026-03-23T12:43:26.293Z
+    updated_at: 2026-03-23T12:43:26.293Z
+    version: 1
+motivation.goal.serve-as-rag-knowledge-source:
+  id: e8c823ec-3799-4c7f-9e16-129bfe3cb284
+  path: motivation.goal.serve-as-rag-knowledge-source
+  spec_node_id: motivation.goal
+  type: goal
+  layer_id: motivation
+  name: Serve as RAG Knowledge Source
+  description: "Goal: expose the curated knowledge graph as a high-quality
+    semantic retrieval source for AI agents and LLM pipelines via vector
+    similarity search"
+  attributes:
+    priority: critical
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: rag/rag_pipeline_service.py
+        symbol: RAGPipelineService
+  metadata:
+    created_at: 2026-03-23T12:43:32.112Z
+    updated_at: 2026-03-23T12:43:32.112Z
+    version: 1
+motivation.goal.support-collaborative-knowledge-management:
+  id: 98bfacf0-5055-40e1-b1fc-7bf5f1c2f34d
+  path: motivation.goal.support-collaborative-knowledge-management
+  spec_node_id: motivation.goal
+  type: goal
+  layer_id: motivation
+  name: Support Collaborative Knowledge Management
+  description: "Goal: enable multiple users to collaboratively edit the knowledge
+    graph using changeset-based workflows with conflict-free CRDT merging"
+  attributes:
+    priority: high
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: services/changeset_manager.py
+        symbol: ChangesetManager
+  metadata:
+    created_at: 2026-03-23T12:43:32.629Z
+    updated_at: 2026-03-23T12:43:32.629Z
+    version: 1
+motivation.goal.ensure-local-first-data-privacy:
+  id: 319ae951-ff29-4edb-ae4b-edfa7182bbaa
+  path: motivation.goal.ensure-local-first-data-privacy
+  spec_node_id: motivation.goal
+  type: goal
+  layer_id: motivation
+  name: Ensure Local-First Data Privacy
+  description: "Goal: keep all knowledge graph data on the user's own machine by
+    default; remote sync is optional and user-controlled"
+  attributes:
+    priority: critical
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: config.json
+        symbol: server.host
+  metadata:
+    created_at: 2026-03-23T12:43:38.940Z
+    updated_at: 2026-03-23T12:43:38.940Z
+    version: 1
+motivation.goal.maintain-full-audit-traceability:
+  id: 1b25ad35-9757-433c-8e7b-0f4fc0ac9812
+  path: motivation.goal.maintain-full-audit-traceability
+  spec_node_id: motivation.goal
+  type: goal
+  layer_id: motivation
+  name: Maintain Full Audit Traceability
+  description: "Goal: record every create, update, and delete operation in an
+    immutable change_events log to support versioning and rollback"
+  attributes:
+    priority: high
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: domain/versioning/entities.py
+        symbol: ChangeEvent
+  metadata:
+    created_at: 2026-03-23T12:43:39.435Z
+    updated_at: 2026-03-23T12:43:39.435Z
+    version: 1

@@ -1,0 +1,82 @@
+data-store.database.localdb-workspace:
+  id: 1306e18c-bd63-4a96-a10c-f33998c0b2f5
+  path: data-store.database.localdb-workspace
+  spec_node_id: data-store.database
+  type: database
+  layer_id: data-store
+  name: local.db (Workspace)
+  description: Primary SQLite workspace database storing ontology entities,
+    relationships, predicates, and change events — one per dataset
+  attributes:
+    engine: SQLite
+    paradigm: RELATIONAL
+    deploymentModel: EMBEDDED
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: config.json
+  metadata:
+    created_at: 2026-03-23T12:27:40.019Z
+    updated_at: 2026-03-23T12:27:40.019Z
+    version: 1
+data-store.database.operationsdb:
+  id: 8c3aa038-cd64-478e-89ee-cf0483f7d271
+  path: data-store.database.operationsdb
+  spec_node_id: data-store.database
+  type: database
+  layer_id: data-store
+  name: operations.db
+  description: Operational SQLite database storing LLM pipeline configurations,
+    pipeline executions, and background task state
+  attributes:
+    engine: SQLite
+    paradigm: RELATIONAL
+    deploymentModel: EMBEDDED
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: config.json
+  metadata:
+    created_at: 2026-03-23T12:27:40.442Z
+    updated_at: 2026-03-23T12:27:40.442Z
+    version: 1
+data-store.database.referencedb:
+  id: da3774e7-8059-4708-ab1b-7b2cb0ee5b7d
+  path: data-store.database.referencedb
+  spec_node_id: data-store.database
+  type: database
+  layer_id: data-store
+  name: reference.db
+  description: Reference knowledge SQLite database storing ConceptNet, DBpedia,
+    Wikidata, and schema.org imported data with vector search
+  attributes:
+    engine: SQLite
+    paradigm: MULTI_MODEL
+    deploymentModel: EMBEDDED
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: config.json
+  metadata:
+    created_at: 2026-03-23T12:27:40.848Z
+    updated_at: 2026-03-23T12:27:40.848Z
+    version: 1
+data-store.database.reference-api-cachedb:
+  id: 4c56ec64-1e9b-4835-81d1-7bd86e3f6e74
+  path: data-store.database.reference-api-cachedb
+  spec_node_id: data-store.database
+  type: database
+  layer_id: data-store
+  name: reference_api_cache.db
+  description: SQLite cache for external reference API responses (ConceptNet,
+    DBpedia, Wikidata, schema.org); no Alembic migrations — can be dropped and
+    rebuilt without data loss
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: app.py
+        symbol: get_reference_manager
+  metadata:
+    created_at: 2026-03-23T19:02:54.776Z
+    updated_at: 2026-03-23T19:02:54.776Z
+    version: 1

@@ -1,0 +1,21 @@
+motivation.assessment.security-posture-assessment:
+  id: 46b3c6bf-0384-4ec4-8ea3-f88746b8242f
+  path: motivation.assessment.security-posture-assessment
+  spec_node_id: motivation.assessment
+  type: assessment
+  layer_id: motivation
+  name: Security Posture Assessment
+  description: "Security gap analysis: SQL injection prevention, API key auth,
+    write endpoint protection, and error sanitization are all present; HTTPS
+    enforcement and role-based access are absent"
+  attributes:
+    assessmentType: gap
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: tests/integration_tests/test_phase4_security_tests.py
+        symbol: TestTC_SEC001_SQLInjectionPrevention
+  metadata:
+    created_at: 2026-03-23T12:45:12.321Z
+    updated_at: 2026-03-23T12:45:12.321Z
+    version: 1

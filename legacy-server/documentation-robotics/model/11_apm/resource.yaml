@@ -1,0 +1,21 @@
+apm.resource.context-studio-legacy-server:
+  id: 011f7694-65c8-49e8-bedd-18a9cef619c5
+  path: apm.resource.context-studio-legacy-server
+  spec_node_id: apm.resource
+  type: resource
+  layer_id: apm
+  name: Context Studio Legacy Server
+  description: OpenTelemetry resource representing the Context Studio legacy server process
+  attributes:
+    droppedAttributesCount: 0
+    serviceName: context-studio-legacy-server
+    serviceVersion: 1.0.0
+    deploymentEnvironment: development
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: utils/logger.py
+  metadata:
+    created_at: 2026-03-23T12:33:21.219Z
+    updated_at: 2026-03-23T12:33:21.219Z
+    version: 1

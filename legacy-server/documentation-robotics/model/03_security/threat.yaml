@@ -1,0 +1,47 @@
+security.threat.sql-injection:
+  id: d4aa93a2-cefd-4b09-873a-297fc169c8fe
+  path: security.threat.sql-injection
+  spec_node_id: security.threat
+  type: threat
+  layer_id: security
+  name: SQL Injection
+  description: "Threat: SQL injection attacks against the SQLite databases via
+    unsanitized API inputs (TC-SEC001)"
+  attributes:
+    threatens: data-store
+    likelihood: moderate
+    impact: high
+    description: SQL injection via API input fields
+    criticality: high
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: tests/integration_tests/test_phase4_security_tests.py
+  metadata:
+    created_at: 2026-03-23T12:37:51.860Z
+    updated_at: 2026-03-23T12:37:51.860Z
+    version: 1
+security.threat.information-disclosure-via-error-messages:
+  id: aa285542-9d54-48d5-b53d-2b9d110485b4
+  path: security.threat.information-disclosure-via-error-messages
+  spec_node_id: security.threat
+  type: threat
+  layer_id: security
+  name: Information Disclosure via Error Messages
+  description: "Threat: internal file paths and stack traces leaking through
+    unhandled exception responses (TC-SEC004)"
+  attributes:
+    threatens: api
+    likelihood: moderate
+    impact: moderate
+    description: File path leakage via error responses
+    criticality: medium
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: app.py
+        symbol: global_exception_handler
+  metadata:
+    created_at: 2026-03-23T12:37:52.337Z
+    updated_at: 2026-03-23T12:37:52.337Z
+    version: 1

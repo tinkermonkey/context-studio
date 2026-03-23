@@ -1,0 +1,21 @@
+navigation.navigationguard.dataset-required-guard:
+  id: aee4956f-733b-4250-b336-e843be6641d3
+  path: navigation.navigationguard.dataset-required-guard
+  spec_node_id: navigation.navigationguard
+  type: navigationguard
+  layer_id: navigation
+  name: Dataset Required Guard
+  description: Navigation guard ensuring an active dataset is configured before
+    allowing access to ontology entity routes
+  attributes:
+    type: custom
+    order: 1
+    description: Require active dataset before accessing entity routes
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ../../ux/src/routes/__root.tsx
+  metadata:
+    created_at: 2026-03-23T12:31:56.481Z
+    updated_at: 2026-03-23T12:31:56.481Z
+    version: 1

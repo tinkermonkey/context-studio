@@ -1,0 +1,10 @@
+id: changeset-1774269552365-y7qy6l67j
+name: extract-business-layer
+created: 2026-03-23T12:39:12.377Z
+modified: 2026-03-23T12:42:50.291Z
+status: committed
+baseSnapshot: sha256:f6351e3fda9251483746dd7323c5c71e581eb69166b9f1e4620724b7348ceca6
+stats:
+  additions: 25
+  modifications: 0
+  deletions: 0

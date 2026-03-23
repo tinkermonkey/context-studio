@@ -1,0 +1,947 @@
+- type: add
+  elementId: motivation.stakeholder.knowledge-manager
+  layerName: motivation
+  after:
+    id: c7df94a4-1bd6-40b5-8aa7-2a6f57101844
+    path: motivation.stakeholder.knowledge-manager
+    spec_node_id: motivation.stakeholder
+    type: stakeholder
+    layer_id: motivation
+    name: Knowledge Manager
+    description: "Internal stakeholder: domain experts and ontology authors who
+      create and curate the knowledge graph"
+    attributes:
+      type: end-user
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: app.py
+          symbol: create_app
+    metadata:
+      created_at: 2026-03-23T12:43:14.804Z
+      updated_at: 2026-03-23T12:43:14.804Z
+      version: 1
+  timestamp: 2026-03-23T12:43:14.825Z
+  sequenceNumber: 0
+- type: add
+  elementId: motivation.stakeholder.ai-agent-consumer
+  layerName: motivation
+  after:
+    id: 2568906b-c5d5-4351-91fb-b0e98b709f19
+    path: motivation.stakeholder.ai-agent-consumer
+    spec_node_id: motivation.stakeholder
+    type: stakeholder
+    layer_id: motivation
+    name: AI Agent Consumer
+    description: "System stakeholder: AI agents and RAG pipelines that query the
+      knowledge graph via REST API for contextual knowledge retrieval"
+    attributes:
+      type: system
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: rag/rag_pipeline_service.py
+          symbol: RAGPipelineService
+    metadata:
+      created_at: 2026-03-23T12:43:15.279Z
+      updated_at: 2026-03-23T12:43:15.279Z
+      version: 1
+  timestamp: 2026-03-23T12:43:15.298Z
+  sequenceNumber: 1
+- type: add
+  elementId: motivation.stakeholder.desktop-application-user
+  layerName: motivation
+  after:
+    id: 4a94440a-865a-4d32-ba32-7e18b6e96b00
+    path: motivation.stakeholder.desktop-application-user
+    spec_node_id: motivation.stakeholder
+    type: stakeholder
+    layer_id: motivation
+    name: Desktop Application User
+    description: "End-user stakeholder: individuals running Context Studio as a
+      local-first desktop application on their own workstation"
+    attributes:
+      type: end-user
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: config.json
+          symbol: server.host
+    metadata:
+      created_at: 2026-03-23T12:43:19.877Z
+      updated_at: 2026-03-23T12:43:19.877Z
+      version: 1
+  timestamp: 2026-03-23T12:43:19.900Z
+  sequenceNumber: 2
+- type: add
+  elementId: motivation.stakeholder.platform-developer
+  layerName: motivation
+  after:
+    id: f3f84708-5f18-4612-99e9-16fd3ea2b5ae
+    path: motivation.stakeholder.platform-developer
+    spec_node_id: motivation.stakeholder
+    type: stakeholder
+    layer_id: motivation
+    name: Platform Developer
+    description: "Internal stakeholder: developers extending or maintaining Context
+      Studio and the underlying hexagonal architecture"
+    attributes:
+      type: internal
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: app.py
+          symbol: create_app
+    metadata:
+      created_at: 2026-03-23T12:43:20.347Z
+      updated_at: 2026-03-23T12:43:20.347Z
+      version: 1
+  timestamp: 2026-03-23T12:43:20.369Z
+  sequenceNumber: 3
+- type: add
+  elementId: motivation.goal.enable-structured-knowledge-graph-authoring
+  layerName: motivation
+  after:
+    id: df54d272-51a3-45ab-b375-d3c73ab7647f
+    path: motivation.goal.enable-structured-knowledge-graph-authoring
+    spec_node_id: motivation.goal
+    type: goal
+    layer_id: motivation
+    name: Enable Structured Knowledge Graph Authoring
+    description: "Primary goal: allow knowledge managers to create and maintain a
+      well-structured ontology of taxonomies, concept schemes, classes, and
+      typed relationships"
+    attributes:
+      priority: critical
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: api/ontology_entities.py
+          symbol: router
+    metadata:
+      created_at: 2026-03-23T12:43:25.813Z
+      updated_at: 2026-03-23T12:43:25.813Z
+      version: 1
+  timestamp: 2026-03-23T12:43:25.835Z
+  sequenceNumber: 4
+- type: add
+  elementId: motivation.goal.automate-knowledge-enrichment
+  layerName: motivation
+  after:
+    id: c0c3bf12-9fa7-4531-b269-d45d11cc96b2
+    path: motivation.goal.automate-knowledge-enrichment
+    spec_node_id: motivation.goal
+    type: goal
+    layer_id: motivation
+    name: Automate Knowledge Enrichment
+    description: "Goal: reduce manual curation effort by automatically enriching
+      entities from ConceptNet, DBpedia, Wikidata, and schema.org"
+    attributes:
+      priority: high
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: reference_api/service.py
+          symbol: enrich
+    metadata:
+      created_at: 2026-03-23T12:43:26.293Z
+      updated_at: 2026-03-23T12:43:26.293Z
+      version: 1
+  timestamp: 2026-03-23T12:43:26.316Z
+  sequenceNumber: 5
+- type: add
+  elementId: motivation.goal.serve-as-rag-knowledge-source
+  layerName: motivation
+  after:
+    id: e8c823ec-3799-4c7f-9e16-129bfe3cb284
+    path: motivation.goal.serve-as-rag-knowledge-source
+    spec_node_id: motivation.goal
+    type: goal
+    layer_id: motivation
+    name: Serve as RAG Knowledge Source
+    description: "Goal: expose the curated knowledge graph as a high-quality
+      semantic retrieval source for AI agents and LLM pipelines via vector
+      similarity search"
+    attributes:
+      priority: critical
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: rag/rag_pipeline_service.py
+          symbol: RAGPipelineService
+    metadata:
+      created_at: 2026-03-23T12:43:32.112Z
+      updated_at: 2026-03-23T12:43:32.112Z
+      version: 1
+  timestamp: 2026-03-23T12:43:32.137Z
+  sequenceNumber: 6
+- type: add
+  elementId: motivation.goal.support-collaborative-knowledge-management
+  layerName: motivation
+  after:
+    id: 98bfacf0-5055-40e1-b1fc-7bf5f1c2f34d
+    path: motivation.goal.support-collaborative-knowledge-management
+    spec_node_id: motivation.goal
+    type: goal
+    layer_id: motivation
+    name: Support Collaborative Knowledge Management
+    description: "Goal: enable multiple users to collaboratively edit the knowledge
+      graph using changeset-based workflows with conflict-free CRDT merging"
+    attributes:
+      priority: high
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: services/changeset_manager.py
+          symbol: ChangesetManager
+    metadata:
+      created_at: 2026-03-23T12:43:32.629Z
+      updated_at: 2026-03-23T12:43:32.629Z
+      version: 1
+  timestamp: 2026-03-23T12:43:32.652Z
+  sequenceNumber: 7
+- type: add
+  elementId: motivation.goal.ensure-local-first-data-privacy
+  layerName: motivation
+  after:
+    id: 319ae951-ff29-4edb-ae4b-edfa7182bbaa
+    path: motivation.goal.ensure-local-first-data-privacy
+    spec_node_id: motivation.goal
+    type: goal
+    layer_id: motivation
+    name: Ensure Local-First Data Privacy
+    description: "Goal: keep all knowledge graph data on the user's own machine by
+      default; remote sync is optional and user-controlled"
+    attributes:
+      priority: critical
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: config.json
+          symbol: server.host
+    metadata:
+      created_at: 2026-03-23T12:43:38.940Z
+      updated_at: 2026-03-23T12:43:38.940Z
+      version: 1
+  timestamp: 2026-03-23T12:43:38.964Z
+  sequenceNumber: 8
+- type: add
+  elementId: motivation.goal.maintain-full-audit-traceability
+  layerName: motivation
+  after:
+    id: 1b25ad35-9757-433c-8e7b-0f4fc0ac9812
+    path: motivation.goal.maintain-full-audit-traceability
+    spec_node_id: motivation.goal
+    type: goal
+    layer_id: motivation
+    name: Maintain Full Audit Traceability
+    description: "Goal: record every create, update, and delete operation in an
+      immutable change_events log to support versioning and rollback"
+    attributes:
+      priority: high
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: domain/versioning/entities.py
+          symbol: ChangeEvent
+    metadata:
+      created_at: 2026-03-23T12:43:39.435Z
+      updated_at: 2026-03-23T12:43:39.435Z
+      version: 1
+  timestamp: 2026-03-23T12:43:39.459Z
+  sequenceNumber: 9
+- type: add
+  elementId: motivation.principle.hexagonal-architecture
+  layerName: motivation
+  after:
+    id: a888eb53-7c89-41ab-b8b8-ea23430faad0
+    path: motivation.principle.hexagonal-architecture
+    spec_node_id: motivation.principle
+    type: principle
+    layer_id: motivation
+    name: Hexagonal Architecture
+    description: Domain logic in domain/ has zero infrastructure imports; all I/O is
+      mediated through ports and adapters to keep the core independently
+      testable
+    attributes:
+      category: architecture
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: app.py
+          symbol: create_app
+    metadata:
+      created_at: 2026-03-23T12:43:47.095Z
+      updated_at: 2026-03-23T12:43:47.095Z
+      version: 1
+  timestamp: 2026-03-23T12:43:47.120Z
+  sequenceNumber: 10
+- type: add
+  elementId: motivation.principle.local-first-by-default
+  layerName: motivation
+  after:
+    id: 2e9ed3f2-fede-4e62-9daa-f9bf9419825c
+    path: motivation.principle.local-first-by-default
+    spec_node_id: motivation.principle
+    type: principle
+    layer_id: motivation
+    name: Local-First by Default
+    description: All data stored locally in SQLite; cloud sync is an optional
+      add-on, not a requirement — the application must function fully offline
+    attributes:
+      category: architecture
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: config.json
+          symbol: database
+    metadata:
+      created_at: 2026-03-23T12:43:47.607Z
+      updated_at: 2026-03-23T12:43:47.607Z
+      version: 1
+  timestamp: 2026-03-23T12:43:47.632Z
+  sequenceNumber: 11
+- type: add
+  elementId: motivation.principle.api-key-authentication-only
+  layerName: motivation
+  after:
+    id: 92eb69b7-6875-4138-92ab-6ede349ccb0d
+    path: motivation.principle.api-key-authentication-only
+    spec_node_id: motivation.principle
+    type: principle
+    layer_id: motivation
+    name: API-Key Authentication Only
+    description: The application uses a lightweight X-API-Key header for security;
+      no OAuth, sessions, or user accounts — consistent with local-first desktop
+      operation
+    attributes:
+      category: security
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: config.json
+          symbol: security.require_secure_key
+    metadata:
+      created_at: 2026-03-23T12:43:53.153Z
+      updated_at: 2026-03-23T12:43:53.153Z
+      version: 1
+  timestamp: 2026-03-23T12:43:53.177Z
+  sequenceNumber: 12
+- type: add
+  elementId: motivation.principle.embeddings-first-semantic-search
+  layerName: motivation
+  after:
+    id: 91a63fa6-5be0-416d-9417-e0f1474bf1cf
+    path: motivation.principle.embeddings-first-semantic-search
+    spec_node_id: motivation.principle
+    type: principle
+    layer_id: motivation
+    name: Embeddings-First Semantic Search
+    description: All entity retrieval uses 384-dimension SentenceTransformer
+      embeddings stored in sqlite-vec; full-text keyword search is secondary
+    attributes:
+      category: data
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: services/ontology_entity_service.py
+          symbol: search_by_similarity
+    metadata:
+      created_at: 2026-03-23T12:43:53.648Z
+      updated_at: 2026-03-23T12:43:53.648Z
+      version: 1
+  timestamp: 2026-03-23T12:43:53.673Z
+  sequenceNumber: 13
+- type: add
+  elementId: motivation.principle.alembic-managed-schema-evolution
+  layerName: motivation
+  after:
+    id: d2ce9136-b949-44bd-915f-49ea61589cfa
+    path: motivation.principle.alembic-managed-schema-evolution
+    spec_node_id: motivation.principle
+    type: principle
+    layer_id: motivation
+    name: Alembic-Managed Schema Evolution
+    description: All schema changes go through Alembic autogenerate; hand-written
+      SQL migrations are prohibited to prevent schema drift
+    attributes:
+      category: data
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: database/models.py
+          symbol: Base
+    metadata:
+      created_at: 2026-03-23T12:43:58.508Z
+      updated_at: 2026-03-23T12:43:58.508Z
+      version: 1
+  timestamp: 2026-03-23T12:43:58.532Z
+  sequenceNumber: 14
+- type: add
+  elementId: motivation.principle.rate-limited-external-knowledge-sources
+  layerName: motivation
+  after:
+    id: 558d6185-6561-41c6-89a1-88ef71563fe6
+    path: motivation.principle.rate-limited-external-knowledge-sources
+    spec_node_id: motivation.principle
+    type: principle
+    layer_id: motivation
+    name: Rate-Limited External Knowledge Sources
+    description: All external API calls (ConceptNet, DBpedia, Wikidata, etc.) are
+      subject to per-source rate limits defined in config.json to prevent abuse
+    attributes:
+      category: operational
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: config.json
+          symbol: reference_sources
+    metadata:
+      created_at: 2026-03-23T12:43:59.026Z
+      updated_at: 2026-03-23T12:43:59.026Z
+      version: 1
+  timestamp: 2026-03-23T12:43:59.052Z
+  sequenceNumber: 15
+- type: add
+  elementId: motivation.requirement.vector-similarity-search-over-ontology-entities
+  layerName: motivation
+  after:
+    id: 6f637fb9-da58-47ee-8c3c-c4915b3a10cc
+    path: motivation.requirement.vector-similarity-search-over-ontology-entities
+    spec_node_id: motivation.requirement
+    type: requirement
+    layer_id: motivation
+    name: Vector Similarity Search Over Ontology Entities
+    description: The system must support k-nearest-neighbour vector search across
+      all ontology entities using sentence transformer embeddings at 384
+      dimensions
+    attributes:
+      requirementType: functional
+      priority: critical
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: services/ontology_entity_service.py
+          symbol: search_by_similarity
+    metadata:
+      created_at: 2026-03-23T12:44:04.496Z
+      updated_at: 2026-03-23T12:44:04.496Z
+      version: 1
+  timestamp: 2026-03-23T12:44:04.521Z
+  sequenceNumber: 16
+- type: add
+  elementId: motivation.requirement.multi-database-workspace-isolation
+  layerName: motivation
+  after:
+    id: e262df5b-bfcd-4435-b4c3-6423fbcd5b3e
+    path: motivation.requirement.multi-database-workspace-isolation
+    spec_node_id: motivation.requirement
+    type: requirement
+    layer_id: motivation
+    name: Multi-Database Workspace Isolation
+    description: The system must support multiple isolated SQLite databases so that
+      different knowledge graph projects do not share data
+    attributes:
+      requirementType: functional
+      priority: high
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: database/utils.py
+          symbol: create_database
+    metadata:
+      created_at: 2026-03-23T12:44:05.004Z
+      updated_at: 2026-03-23T12:44:05.004Z
+      version: 1
+  timestamp: 2026-03-23T12:44:05.028Z
+  sequenceNumber: 17
+- type: add
+  elementId: motivation.requirement.full-change-audit-log
+  layerName: motivation
+  after:
+    id: d37cdc03-9aab-449f-8e92-d93bc0f9832d
+    path: motivation.requirement.full-change-audit-log
+    spec_node_id: motivation.requirement
+    type: requirement
+    layer_id: motivation
+    name: Full Change Audit Log
+    description: Every create, update, and delete operation on ontology entities and
+      relationships must be recorded in a change_events table with actor and
+      timestamp
+    attributes:
+      requirementType: functional
+      priority: critical
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: domain/versioning/entities.py
+          symbol: ChangeEvent
+    metadata:
+      created_at: 2026-03-23T12:44:11.663Z
+      updated_at: 2026-03-23T12:44:11.663Z
+      version: 1
+  timestamp: 2026-03-23T12:44:11.692Z
+  sequenceNumber: 18
+- type: add
+  elementId: motivation.requirement.sql-injection-prevention
+  layerName: motivation
+  after:
+    id: b2d8165f-7a7f-45e7-9dfe-467773f632e4
+    path: motivation.requirement.sql-injection-prevention
+    spec_node_id: motivation.requirement
+    type: requirement
+    layer_id: motivation
+    name: SQL Injection Prevention
+    description: All database queries must use parameterised statements; raw string
+      interpolation into SQL is prohibited across all query paths
+    attributes:
+      requirementType: non-functional
+      priority: critical
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: tests/integration_tests/test_phase4_security_tests.py
+          symbol: TestTC_SEC001_SQLInjectionPrevention
+    metadata:
+      created_at: 2026-03-23T12:44:12.172Z
+      updated_at: 2026-03-23T12:44:12.172Z
+      version: 1
+  timestamp: 2026-03-23T12:44:12.201Z
+  sequenceNumber: 19
+- type: add
+  elementId: motivation.requirement.no-write-endpoints-exposed-publicly
+  layerName: motivation
+  after:
+    id: a44ef642-3917-4f9a-a40c-bf29803aa0dd
+    path: motivation.requirement.no-write-endpoints-exposed-publicly
+    spec_node_id: motivation.requirement
+    type: requirement
+    layer_id: motivation
+    name: No Write Endpoints Exposed Publicly
+    description: All write operations (create, update, delete) must require valid
+      API key authentication; unauthenticated write attempts must return 404 or
+      405
+    attributes:
+      requirementType: non-functional
+      priority: critical
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: tests/integration_tests/test_phase4_security_tests.py
+          symbol: TestTC_SEC003_WriteEndpointProtection
+    metadata:
+      created_at: 2026-03-23T12:44:21.016Z
+      updated_at: 2026-03-23T12:44:21.016Z
+      version: 1
+  timestamp: 2026-03-23T12:44:21.045Z
+  sequenceNumber: 20
+- type: add
+  elementId: motivation.requirement.configurable-llm-provider
+  layerName: motivation
+  after:
+    id: d7fbc3c5-fdca-407b-bda4-6b62ee7f79a8
+    path: motivation.requirement.configurable-llm-provider
+    spec_node_id: motivation.requirement
+    type: requirement
+    layer_id: motivation
+    name: Configurable LLM Provider
+    description: The LLM provider, model, and prompt templates must be configurable
+      at runtime via config.json without code changes
+    attributes:
+      requirementType: functional
+      priority: high
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: config.json
+          symbol: llm
+    metadata:
+      created_at: 2026-03-23T12:44:21.530Z
+      updated_at: 2026-03-23T12:44:21.530Z
+      version: 1
+  timestamp: 2026-03-23T12:44:21.557Z
+  sequenceNumber: 21
+- type: add
+  elementId: motivation.requirement.error-responses-must-not-expose-internals
+  layerName: motivation
+  after:
+    id: add2c5c0-8e9d-4f44-841f-2ea7e0025063
+    path: motivation.requirement.error-responses-must-not-expose-internals
+    spec_node_id: motivation.requirement
+    type: requirement
+    layer_id: motivation
+    name: Error Responses Must Not Expose Internals
+    description: API error responses must never include stack traces, internal file
+      paths, or raw SQL — all errors are wrapped in sanitized generic messages
+    attributes:
+      requirementType: non-functional
+      priority: high
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: app.py
+          symbol: global_exception_handler
+    metadata:
+      created_at: 2026-03-23T12:44:27.406Z
+      updated_at: 2026-03-23T12:44:27.406Z
+      version: 1
+  timestamp: 2026-03-23T12:44:27.433Z
+  sequenceNumber: 22
+- type: add
+  elementId: motivation.requirement.open-telemetry-observability
+  layerName: motivation
+  after:
+    id: ffb3ba13-dfce-4da4-9df0-f0d745731de2
+    path: motivation.requirement.open-telemetry-observability
+    spec_node_id: motivation.requirement
+    type: requirement
+    layer_id: motivation
+    name: OpenTelemetry Observability
+    description: The system must instrument key operations with OpenTelemetry spans,
+      metrics, and logs to support performance monitoring and debugging
+    attributes:
+      requirementType: non-functional
+      priority: medium
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: rag/observability_store.py
+          symbol: RAGObservabilityStore
+    metadata:
+      created_at: 2026-03-23T12:44:27.920Z
+      updated_at: 2026-03-23T12:44:27.920Z
+      version: 1
+  timestamp: 2026-03-23T12:44:27.951Z
+  sequenceNumber: 23
+- type: add
+  elementId: motivation.constraint.sqlite-only-persistence
+  layerName: motivation
+  after:
+    id: f74fb8c3-6870-4994-9dfd-0574d1af4bfc
+    path: motivation.constraint.sqlite-only-persistence
+    spec_node_id: motivation.constraint
+    type: constraint
+    layer_id: motivation
+    name: SQLite-Only Persistence
+    description: The primary data store must be SQLite; no other RDBMS or cloud
+      database is used for the core workspace to maintain the local-first,
+      zero-config guarantee
+    attributes:
+      constraintType: technical
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: database/models.py
+          symbol: engine
+    metadata:
+      created_at: 2026-03-23T12:44:33.393Z
+      updated_at: 2026-03-23T12:44:33.393Z
+      version: 1
+  timestamp: 2026-03-23T12:44:33.423Z
+  sequenceNumber: 24
+- type: add
+  elementId: motivation.constraint.python-3x-runtime
+  layerName: motivation
+  after:
+    id: 13616e5a-bb31-423a-b519-7ae56e24a1c1
+    path: motivation.constraint.python-3x-runtime
+    spec_node_id: motivation.constraint
+    type: constraint
+    layer_id: motivation
+    name: Python 3.x Runtime
+    description: All server-side code runs on Python 3.x; no other server languages
+      are in scope for the back-end
+    attributes:
+      constraintType: technical
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: requirements.txt
+          symbol: fastapi
+    metadata:
+      created_at: 2026-03-23T12:44:33.917Z
+      updated_at: 2026-03-23T12:44:33.917Z
+      version: 1
+  timestamp: 2026-03-23T12:44:33.945Z
+  sequenceNumber: 25
+- type: add
+  elementId: motivation.constraint.external-reference-source-rate-limits
+  layerName: motivation
+  after:
+    id: 9ed761af-f96d-4b94-b3a4-e1b39772ddf0
+    path: motivation.constraint.external-reference-source-rate-limits
+    spec_node_id: motivation.constraint
+    type: constraint
+    layer_id: motivation
+    name: External Reference Source Rate Limits
+    description: All calls to external knowledge sources (ConceptNet, DBpedia,
+      Wikidata, schema.org) are constrained by per-source rate limits defined in
+      config.json
+    attributes:
+      constraintType: external
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: config.json
+          symbol: reference_sources
+    metadata:
+      created_at: 2026-03-23T12:44:40.468Z
+      updated_at: 2026-03-23T12:44:40.468Z
+      version: 1
+  timestamp: 2026-03-23T12:44:40.500Z
+  sequenceNumber: 26
+- type: add
+  elementId: motivation.constraint.no-back-end-persistence-of-user-credentials
+  layerName: motivation
+  after:
+    id: 8f49a7d8-8d20-42a1-bb61-326bbd4d5a52
+    path: motivation.constraint.no-back-end-persistence-of-user-credentials
+    spec_node_id: motivation.constraint
+    type: constraint
+    layer_id: motivation
+    name: No Back-End Persistence of User Credentials
+    description: The application must never store user passwords or access tokens;
+      authentication is a single API key held in config.json
+    attributes:
+      constraintType: regulatory
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: config.json
+          symbol: security
+    metadata:
+      created_at: 2026-03-23T12:44:40.984Z
+      updated_at: 2026-03-23T12:44:40.984Z
+      version: 1
+  timestamp: 2026-03-23T12:44:41.013Z
+  sequenceNumber: 27
+- type: add
+  elementId: motivation.driver.growing-need-for-structured-ai-context
+  layerName: motivation
+  after:
+    id: 4f0974ea-e709-43cb-ba91-353a5db7d2d4
+    path: motivation.driver.growing-need-for-structured-ai-context
+    spec_node_id: motivation.driver
+    type: driver
+    layer_id: motivation
+    name: Growing Need for Structured AI Context
+    description: LLMs produce better outputs when grounded in structured, curated
+      domain knowledge; organisations need tooling to build and maintain that
+      knowledge
+    attributes:
+      category: market
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: rag/rag_pipeline_service.py
+          symbol: RAGPipelineService
+    metadata:
+      created_at: 2026-03-23T12:44:48.633Z
+      updated_at: 2026-03-23T12:44:48.633Z
+      version: 1
+  timestamp: 2026-03-23T12:44:48.663Z
+  sequenceNumber: 28
+- type: add
+  elementId: motivation.driver.knowledge-fragmentation-across-tools
+  layerName: motivation
+  after:
+    id: c1874851-fb3f-41fb-9754-32c8e7a2391b
+    path: motivation.driver.knowledge-fragmentation-across-tools
+    spec_node_id: motivation.driver
+    type: driver
+    layer_id: motivation
+    name: Knowledge Fragmentation Across Tools
+    description: Domain knowledge is scattered across wikis, spreadsheets, and
+      documents; a structured local graph consolidates it into a
+      machine-readable, queryable form
+    attributes:
+      category: operational
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: app.py
+          symbol: create_app
+    metadata:
+      created_at: 2026-03-23T12:44:49.162Z
+      updated_at: 2026-03-23T12:44:49.162Z
+      version: 1
+  timestamp: 2026-03-23T12:44:49.191Z
+  sequenceNumber: 29
+- type: add
+  elementId: motivation.driver.data-privacy-concerns-with-cloud-only-tools
+  layerName: motivation
+  after:
+    id: 9afa8d4c-c3c5-4dc2-bd60-68fe146f3e5b
+    path: motivation.driver.data-privacy-concerns-with-cloud-only-tools
+    spec_node_id: motivation.driver
+    type: driver
+    layer_id: motivation
+    name: Data Privacy Concerns with Cloud-Only Tools
+    description: Users with sensitive domain knowledge cannot use cloud-hosted
+      tools; a local-first application removes the privacy barrier to structured
+      knowledge management
+    attributes:
+      category: strategic
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: config.json
+          symbol: server.host
+    metadata:
+      created_at: 2026-03-23T12:44:58.293Z
+      updated_at: 2026-03-23T12:44:58.293Z
+      version: 1
+  timestamp: 2026-03-23T12:44:58.322Z
+  sequenceNumber: 30
+- type: add
+  elementId: motivation.value.knowledge-reusability
+  layerName: motivation
+  after:
+    id: 3d521335-9a99-4197-871e-52fbb21d845f
+    path: motivation.value.knowledge-reusability
+    spec_node_id: motivation.value
+    type: value
+    layer_id: motivation
+    name: Knowledge Reusability
+    description: A curated ontology graph is a reusable asset that accelerates both
+      human reasoning and AI inference across many tasks and domains
+    attributes:
+      valueType: strategic
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: domain/ontology/entities.py
+          symbol: Taxonomy
+    metadata:
+      created_at: 2026-03-23T12:44:58.812Z
+      updated_at: 2026-03-23T12:44:58.812Z
+      version: 1
+  timestamp: 2026-03-23T12:44:58.842Z
+  sequenceNumber: 31
+- type: add
+  elementId: motivation.value.reduced-manual-curation-effort
+  layerName: motivation
+  after:
+    id: 47e072db-47f7-4df4-97de-5d817adac7a4
+    path: motivation.value.reduced-manual-curation-effort
+    spec_node_id: motivation.value
+    type: value
+    layer_id: motivation
+    name: Reduced Manual Curation Effort
+    description: Automated enrichment from multiple external knowledge bases
+      significantly reduces the time and expertise required to build a
+      high-quality ontology
+    attributes:
+      valueType: operational
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: reference_api/service.py
+          symbol: enrich
+    metadata:
+      created_at: 2026-03-23T12:45:04.732Z
+      updated_at: 2026-03-23T12:45:04.732Z
+      version: 1
+  timestamp: 2026-03-23T12:45:04.763Z
+  sequenceNumber: 32
+- type: add
+  elementId: motivation.outcome.curated-domain-ontology
+  layerName: motivation
+  after:
+    id: d4e40c28-66ee-4208-acea-11f236e1bf43
+    path: motivation.outcome.curated-domain-ontology
+    spec_node_id: motivation.outcome
+    type: outcome
+    layer_id: motivation
+    name: Curated Domain Ontology
+    description: "The primary deliverable: a version-controlled, semantically
+      enriched knowledge graph ready for use in RAG pipelines, documentation,
+      and agent reasoning"
+    attributes:
+      status: in-progress
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: domain/ontology/entities.py
+          symbol: Taxonomy
+    metadata:
+      created_at: 2026-03-23T12:45:05.266Z
+      updated_at: 2026-03-23T12:45:05.266Z
+      version: 1
+  timestamp: 2026-03-23T12:45:05.299Z
+  sequenceNumber: 33
+- type: add
+  elementId: motivation.outcome.improved-ai-inference-quality
+  layerName: motivation
+  after:
+    id: 99601976-886c-4c8a-8bf5-593451de6374
+    path: motivation.outcome.improved-ai-inference-quality
+    spec_node_id: motivation.outcome
+    type: outcome
+    layer_id: motivation
+    name: Improved AI Inference Quality
+    description: By grounding LLM calls in a curated ontology, the expected outcome
+      is measurably higher accuracy and relevance in RAG pipeline outputs
+    attributes:
+      status: planned
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: rag/rag_pipeline_service.py
+          symbol: RAGPipelineService
+    metadata:
+      created_at: 2026-03-23T12:45:11.750Z
+      updated_at: 2026-03-23T12:45:11.750Z
+      version: 1
+  timestamp: 2026-03-23T12:45:11.781Z
+  sequenceNumber: 34
+- type: add
+  elementId: motivation.assessment.security-posture-assessment
+  layerName: motivation
+  after:
+    id: 46b3c6bf-0384-4ec4-8ea3-f88746b8242f
+    path: motivation.assessment.security-posture-assessment
+    spec_node_id: motivation.assessment
+    type: assessment
+    layer_id: motivation
+    name: Security Posture Assessment
+    description: "Security gap analysis: SQL injection prevention, API key auth,
+      write endpoint protection, and error sanitization are all present; HTTPS
+      enforcement and role-based access are absent"
+    attributes:
+      assessmentType: gap
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: tests/integration_tests/test_phase4_security_tests.py
+          symbol: TestTC_SEC001_SQLInjectionPrevention
+    metadata:
+      created_at: 2026-03-23T12:45:12.321Z
+      updated_at: 2026-03-23T12:45:12.321Z
+      version: 1
+  timestamp: 2026-03-23T12:45:12.352Z
+  sequenceNumber: 35
+- type: add
+  elementId: motivation.meaning.knowledge-as-infrastructure
+  layerName: motivation
+  after:
+    id: 964f976d-67c7-4de4-b96e-c85ec527f6e3
+    path: motivation.meaning.knowledge-as-infrastructure
+    spec_node_id: motivation.meaning
+    type: meaning
+    layer_id: motivation
+    name: Knowledge as Infrastructure
+    description: "The deeper purpose of Context Studio: treat curated, structured
+      knowledge as infrastructure that both humans and AI systems can rely on —
+      not as a one-off deliverable"
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: app.py
+          symbol: create_app
+    metadata:
+      created_at: 2026-03-23T12:45:16.208Z
+      updated_at: 2026-03-23T12:45:16.208Z
+      version: 1
+  timestamp: 2026-03-23T12:45:16.238Z
+  sequenceNumber: 36

@@ -1,0 +1,77 @@
+application.applicationevent.change-event:
+  id: 12fcd4d9-1559-475e-a0f0-55b28adfff80
+  path: application.applicationevent.change-event
+  spec_node_id: application.applicationevent
+  type: applicationevent
+  layer_id: application
+  name: Change Event
+  description: Domain event emitted on create, update, and delete of ontology
+    entities and relationships, consumed by the event processor for version
+    tracking
+  attributes:
+    eventType: domain
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: database/models.py
+        symbol: ChangeEvent
+  metadata:
+    created_at: 2026-03-23T12:20:37.480Z
+    updated_at: 2026-03-23T12:20:37.480Z
+    version: 1
+application.applicationevent.task-event:
+  id: dc2f8319-e341-4daa-8749-258cb42233ba
+  path: application.applicationevent.task-event
+  spec_node_id: application.applicationevent
+  type: applicationevent
+  layer_id: application
+  name: Task Event
+  description: Background task lifecycle events (submitted, running, completed,
+    failed) managed by the TaskManager
+  attributes:
+    eventType: system
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: services/task_manager.py
+        symbol: initialize_task_manager
+  metadata:
+    created_at: 2026-03-23T12:20:37.880Z
+    updated_at: 2026-03-23T12:20:37.880Z
+    version: 1
+application.applicationevent.graph-cache-invalidated:
+  id: 3963e7b0-162c-4e61-99c5-f11333231b9b
+  path: application.applicationevent.graph-cache-invalidated
+  spec_node_id: application.applicationevent
+  type: applicationevent
+  layer_id: application
+  name: Graph Cache Invalidated
+  description: Fired after any entity create/update/delete so the in-memory
+    NetworkX/SPARQL graph is rebuilt on next access
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: api/graph.py
+        symbol: invalidate_graph_cache
+  metadata:
+    created_at: 2026-03-23T19:01:20.807Z
+    updated_at: 2026-03-23T19:01:20.807Z
+    version: 1
+application.applicationevent.sync-push-completed:
+  id: 771d83db-ba81-4f17-b5d0-fcc1d0f30fd1
+  path: application.applicationevent.sync-push-completed
+  spec_node_id: application.applicationevent
+  type: applicationevent
+  layer_id: application
+  name: Sync Push Completed
+  description: Emitted after a successful S3 push, including the list of
+    date-partitioned Parquet batches written
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: services/s3_sync_manager.py
+        symbol: S3SyncManager.push_changes
+  metadata:
+    created_at: 2026-03-23T19:01:21.229Z
+    updated_at: 2026-03-23T19:01:21.229Z
+    version: 1

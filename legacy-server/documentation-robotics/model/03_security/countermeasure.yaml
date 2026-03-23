@@ -1,0 +1,45 @@
+security.countermeasure.parameterized-queries:
+  id: de3e8093-8dae-47da-a83b-2c180c596232
+  path: security.countermeasure.parameterized-queries
+  spec_node_id: security.countermeasure
+  type: countermeasure
+  layer_id: security
+  name: Parameterized Queries
+  description: SQLAlchemy ORM uses parameterized queries for all database
+    operations, preventing SQL injection (TC-SEC001 countermeasure)
+  attributes:
+    type: technical
+    description: SQLAlchemy ORM parameterized queries prevent SQL injection
+    effectiveness: high
+    implemented: true
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: database/models.py
+  metadata:
+    created_at: 2026-03-23T12:37:58.692Z
+    updated_at: 2026-03-23T12:37:58.692Z
+    version: 1
+security.countermeasure.global-exception-handler-sanitization:
+  id: e97b36fb-f273-48af-a32b-175e0497450e
+  path: security.countermeasure.global-exception-handler-sanitization
+  spec_node_id: security.countermeasure
+  type: countermeasure
+  layer_id: security
+  name: Global Exception Handler Sanitization
+  description: FastAPI global exception handler strips file paths and internal
+    info from error responses before returning to clients
+  attributes:
+    type: technical
+    description: Regex-based path sanitization in global exception handler
+    effectiveness: high
+    implemented: true
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: app.py
+        symbol: global_exception_handler
+  metadata:
+    created_at: 2026-03-23T12:37:59.192Z
+    updated_at: 2026-03-23T12:37:59.192Z
+    version: 1

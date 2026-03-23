@@ -1,0 +1,21 @@
+data-model.jsonschema.context-studio-domain-schema:
+  id: 4dc7bbf7-9a46-4e0d-b498-3160741418eb
+  path: data-model.jsonschema.context-studio-domain-schema
+  spec_node_id: data-model.jsonschema
+  type: jsonschema
+  layer_id: data-model
+  name: Context Studio Domain Schema
+  description: "Top-level JSON Schema document encompassing all core domain
+    entities: OntologyEntity, Relationship, PropertyDefinition, and ChangeEvent"
+  attributes:
+    $schema: http://json-schema.org/draft-07/schema#
+    $id: context-studio-domain
+    type: object
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: database/models.py
+  metadata:
+    created_at: 2026-03-23T12:26:56.319Z
+    updated_at: 2026-03-23T12:26:56.319Z
+    version: 1

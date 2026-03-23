@@ -1,0 +1,19 @@
+technology.technologyinterface.http-rest-interface:
+  id: 9ff89347-c23e-4b33-943b-1f43e1ec8857
+  path: technology.technologyinterface.http-rest-interface
+  spec_node_id: technology.technologyinterface
+  type: technologyinterface
+  layer_id: technology
+  name: HTTP REST Interface
+  description: HTTP/JSON interface exposed by the FastAPI server on port 8100 for
+    all API consumers
+  attributes:
+    protocol: http
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: config.json
+  metadata:
+    created_at: 2026-03-23T12:22:32.550Z
+    updated_at: 2026-03-23T12:22:32.550Z
+    version: 1

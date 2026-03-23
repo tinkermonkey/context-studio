@@ -1,0 +1,34 @@
+business.businessactor.knowledge-manager:
+  id: 3f613eb8-395c-44e0-9911-830c82abea6c
+  path: business.businessactor.knowledge-manager
+  spec_node_id: business.businessactor
+  type: businessactor
+  layer_id: business
+  name: Knowledge Manager
+  description: "Business actor: the person creating and curating the ontology
+    knowledge graph using Context Studio"
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: app.py
+  metadata:
+    created_at: 2026-03-23T12:39:47.504Z
+    updated_at: 2026-03-23T12:39:47.504Z
+    version: 1
+business.businessactor.ai-agent:
+  id: 4afb2d49-e3f7-44ca-8daf-70ed52d2cfd4
+  path: business.businessactor.ai-agent
+  spec_node_id: business.businessactor
+  type: businessactor
+  layer_id: business
+  name: AI Agent
+  description: "Business actor: an automated AI agent or pipeline consuming the
+    knowledge graph via the REST API for RAG or reasoning tasks"
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: api/rag_pipeline.py
+  metadata:
+    created_at: 2026-03-23T12:39:47.988Z
+    updated_at: 2026-03-23T12:39:47.988Z
+    version: 1

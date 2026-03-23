@@ -1,0 +1,19 @@
+technology.communicationnetwork.local-network:
+  id: 0e91fbb4-bc6d-4037-acfe-bc78a8954664
+  path: technology.communicationnetwork.local-network
+  spec_node_id: technology.communicationnetwork
+  type: communicationnetwork
+  layer_id: technology
+  name: Local Network
+  description: Localhost network (127.0.0.1) over which the FastAPI server and
+    proxy communicate
+  attributes:
+    networkType: lan
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: config.json
+  metadata:
+    created_at: 2026-03-23T12:22:40.110Z
+    updated_at: 2026-03-23T12:22:40.110Z
+    version: 1

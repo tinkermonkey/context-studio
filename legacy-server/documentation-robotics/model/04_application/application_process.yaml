@@ -1,0 +1,54 @@
+application.applicationprocess.dataset-management-process:
+  id: 8d7f9586-479b-4e35-bcce-c8ef6c0903e9
+  path: application.applicationprocess.dataset-management-process
+  spec_node_id: application.applicationprocess
+  type: applicationprocess
+  layer_id: application
+  name: Dataset Management Process
+  description: Lifecycle process for creating, switching, and managing SQLite
+    dataset files including migration execution
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: database/utils.py
+        symbol: get_dataset_manager
+  metadata:
+    created_at: 2026-03-23T12:20:43.842Z
+    updated_at: 2026-03-23T12:20:43.842Z
+    version: 1
+application.applicationprocess.event-processing-process:
+  id: a3f0b4b7-d981-4d60-a5ef-958d7943be71
+  path: application.applicationprocess.event-processing-process
+  spec_node_id: application.applicationprocess
+  type: applicationprocess
+  layer_id: application
+  name: Event Processing Process
+  description: Background event processor that consumes change events and drives
+    version management and working tree updates
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: utils/event_processor.py
+        symbol: create_event_processor
+  metadata:
+    created_at: 2026-03-23T12:20:44.265Z
+    updated_at: 2026-03-23T12:20:44.265Z
+    version: 1
+application.applicationprocess.background-task-processing:
+  id: cd2a1fae-e3ed-449d-ae74-25382224df7f
+  path: application.applicationprocess.background-task-processing
+  spec_node_id: application.applicationprocess
+  type: applicationprocess
+  layer_id: application
+  name: Background Task Processing
+  description: Asyncio task queue managing long-running operations such as
+    predicate discovery and embedding regeneration
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: services/task_manager.py
+        symbol: initialize_task_manager
+  metadata:
+    created_at: 2026-03-23T12:20:44.679Z
+    updated_at: 2026-03-23T12:20:44.679Z
+    version: 1

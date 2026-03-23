@@ -1,0 +1,583 @@
+- type: add
+  elementId: application.applicationservice.ontology-entity-service
+  layerName: application
+  after:
+    id: 78db0447-9249-4fbf-bf73-ce8da3f4c154
+    path: application.applicationservice.ontology-entity-service
+    spec_node_id: application.applicationservice
+    type: applicationservice
+    layer_id: application
+    name: Ontology Entity Service
+    description: Core CRUD and business logic for ontology entities (taxonomies,
+      concept schemes, classes, relationships)
+    attributes:
+      serviceType: synchronous
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: services/ontology_entity_service.py
+          symbol: OntologyEntityService
+    metadata:
+      created_at: 2026-03-23T12:20:04.085Z
+      updated_at: 2026-03-23T12:20:04.085Z
+      version: 1
+  timestamp: 2026-03-23T12:20:04.106Z
+  sequenceNumber: 0
+- type: add
+  elementId: application.applicationservice.graph-service
+  layerName: application
+  after:
+    id: 3ccf6308-b41d-446d-a8cf-2c3b694ead65
+    path: application.applicationservice.graph-service
+    spec_node_id: application.applicationservice
+    type: applicationservice
+    layer_id: application
+    name: Graph Service
+    description: In-memory graph construction, traversal, and cached graph analysis
+      over ontology entities
+    attributes:
+      serviceType: synchronous
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: graph/graph_service.py
+          symbol: GraphService
+    metadata:
+      created_at: 2026-03-23T12:20:04.455Z
+      updated_at: 2026-03-23T12:20:04.455Z
+      version: 1
+  timestamp: 2026-03-23T12:20:04.477Z
+  sequenceNumber: 1
+- type: add
+  elementId: application.applicationservice.llm-service
+  layerName: application
+  after:
+    id: c3e9311f-4683-4fee-a928-877d8353a033
+    path: application.applicationservice.llm-service
+    spec_node_id: application.applicationservice
+    type: applicationservice
+    layer_id: application
+    name: LLM Service
+    description: LLM provider routing and inference for ontology enrichment and RAG
+      pipelines
+    attributes:
+      serviceType: asynchronous
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: llm/service.py
+          symbol: LLMService
+    metadata:
+      created_at: 2026-03-23T12:20:04.824Z
+      updated_at: 2026-03-23T12:20:04.824Z
+      version: 1
+  timestamp: 2026-03-23T12:20:04.846Z
+  sequenceNumber: 2
+- type: add
+  elementId: application.applicationservice.rag-pipeline-service
+  layerName: application
+  after:
+    id: ca7a9272-ee6d-46db-8919-9773a07903c5
+    path: application.applicationservice.rag-pipeline-service
+    spec_node_id: application.applicationservice
+    type: applicationservice
+    layer_id: application
+    name: RAG Pipeline Service
+    description: Retrieval-Augmented Generation pipeline orchestrating NLP
+      extraction, embedding, and LLM enrichment for ontology entities
+    attributes:
+      serviceType: batch
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: rag/rag_pipeline_service.py
+          symbol: RAGPipelineService
+    metadata:
+      created_at: 2026-03-23T12:20:11.864Z
+      updated_at: 2026-03-23T12:20:11.864Z
+      version: 1
+  timestamp: 2026-03-23T12:20:11.887Z
+  sequenceNumber: 3
+- type: add
+  elementId: application.applicationservice.reference-service
+  layerName: application
+  after:
+    id: 8caf0838-506b-46f9-8557-392a8dc7fc60
+    path: application.applicationservice.reference-service
+    spec_node_id: application.applicationservice
+    type: applicationservice
+    layer_id: application
+    name: Reference Service
+    description: External knowledge lookup and predicate discovery from ConceptNet,
+      DBpedia, Wikidata, and schema.org
+    attributes:
+      serviceType: synchronous
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: reference_api/service.py
+          symbol: ReferenceService
+    metadata:
+      created_at: 2026-03-23T12:20:12.244Z
+      updated_at: 2026-03-23T12:20:12.244Z
+      version: 1
+  timestamp: 2026-03-23T12:20:12.269Z
+  sequenceNumber: 4
+- type: add
+  elementId: application.applicationservice.version-manager
+  layerName: application
+  after:
+    id: da837553-4c15-4c14-8cbc-0e1104f8e89a
+    path: application.applicationservice.version-manager
+    spec_node_id: application.applicationservice
+    type: applicationservice
+    layer_id: application
+    name: Version Manager
+    description: Version control and change tracking for ontology entities,
+      changesets, and working tree state
+    attributes:
+      serviceType: synchronous
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: services/version_manager.py
+          symbol: VersionManager
+    metadata:
+      created_at: 2026-03-23T12:20:12.631Z
+      updated_at: 2026-03-23T12:20:12.631Z
+      version: 1
+  timestamp: 2026-03-23T12:20:12.656Z
+  sequenceNumber: 5
+- type: add
+  elementId: application.applicationservice.changeset-manager
+  layerName: application
+  after:
+    id: ef3619f0-d822-42b4-8475-4d0f5bb32b82
+    path: application.applicationservice.changeset-manager
+    spec_node_id: application.applicationservice
+    type: applicationservice
+    layer_id: application
+    name: Changeset Manager
+    description: Manages collaborative changesets including creation, proposal,
+      conflict detection, and CRDT-based merging
+    attributes:
+      serviceType: synchronous
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: services/changeset_manager.py
+          symbol: ChangesetManager
+    metadata:
+      created_at: 2026-03-23T12:20:18.216Z
+      updated_at: 2026-03-23T12:20:18.216Z
+      version: 1
+  timestamp: 2026-03-23T12:20:18.241Z
+  sequenceNumber: 6
+- type: add
+  elementId: application.applicationservice.relationship-service
+  layerName: application
+  after:
+    id: f5eaebd0-1272-4221-a65e-98ab6f6b56ed
+    path: application.applicationservice.relationship-service
+    spec_node_id: application.applicationservice
+    type: applicationservice
+    layer_id: application
+    name: Relationship Service
+    description: CRUD operations and business logic for typed, directed
+      relationships between ontology entities
+    attributes:
+      serviceType: synchronous
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: services/relationship_service.py
+          symbol: RelationshipService
+    metadata:
+      created_at: 2026-03-23T12:20:18.609Z
+      updated_at: 2026-03-23T12:20:18.609Z
+      version: 1
+  timestamp: 2026-03-23T12:20:18.637Z
+  sequenceNumber: 7
+- type: add
+  elementId: application.applicationservice.nlp-pipeline
+  layerName: application
+  after:
+    id: 33054010-71dc-41b6-b85b-632500e4e76e
+    path: application.applicationservice.nlp-pipeline
+    spec_node_id: application.applicationservice
+    type: applicationservice
+    layer_id: application
+    name: NLP Pipeline
+    description: spaCy-based NLP text processing pipeline for entity and predicate
+      extraction
+    attributes:
+      serviceType: synchronous
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: nlp/pipeline.py
+          symbol: get_pipeline
+    metadata:
+      created_at: 2026-03-23T12:20:19.004Z
+      updated_at: 2026-03-23T12:20:19.004Z
+      version: 1
+  timestamp: 2026-03-23T12:20:19.032Z
+  sequenceNumber: 8
+- type: add
+  elementId: application.applicationcomponent.fast-api-application
+  layerName: application
+  after:
+    id: 31eea299-ec08-44f1-a869-e3f760e1282d
+    path: application.applicationcomponent.fast-api-application
+    spec_node_id: application.applicationcomponent
+    type: applicationcomponent
+    layer_id: application
+    name: FastAPI Application
+    description: Main FastAPI application entry point, router registration, CORS
+      middleware, and lifespan management
+    attributes:
+      type: internal
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: app.py
+          symbol: create_app
+    metadata:
+      created_at: 2026-03-23T12:20:30.157Z
+      updated_at: 2026-03-23T12:20:30.157Z
+      version: 1
+  timestamp: 2026-03-23T12:20:30.184Z
+  sequenceNumber: 9
+- type: add
+  elementId: application.applicationcomponent.service-factory
+  layerName: application
+  after:
+    id: 99ce3b18-f3a9-45d5-9ccc-ed1020f1ab37
+    path: application.applicationcomponent.service-factory
+    spec_node_id: application.applicationcomponent
+    type: applicationcomponent
+    layer_id: application
+    name: Service Factory
+    description: Dependency injection container that creates and caches service
+      instances with lifecycle management
+    attributes:
+      type: internal
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: services/service_factory.py
+          symbol: ServiceFactory
+    metadata:
+      created_at: 2026-03-23T12:20:30.545Z
+      updated_at: 2026-03-23T12:20:30.545Z
+      version: 1
+  timestamp: 2026-03-23T12:20:30.572Z
+  sequenceNumber: 10
+- type: add
+  elementId: application.applicationcomponent.database-manager
+  layerName: application
+  after:
+    id: 6c7f90f9-819d-4d24-b728-70af6bb658a0
+    path: application.applicationcomponent.database-manager
+    spec_node_id: application.applicationcomponent
+    type: applicationcomponent
+    layer_id: application
+    name: Database Manager
+    description: SQLAlchemy session and engine management with dataset switching support
+    attributes:
+      type: internal
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: database/utils.py
+          symbol: get_database_manager
+    metadata:
+      created_at: 2026-03-23T12:20:30.956Z
+      updated_at: 2026-03-23T12:20:30.956Z
+      version: 1
+  timestamp: 2026-03-23T12:20:30.984Z
+  sequenceNumber: 11
+- type: add
+  elementId: application.applicationinterface.rest-api-interface
+  layerName: application
+  after:
+    id: 4561be58-2d20-46ae-9a14-7f66b8f26ffc
+    path: application.applicationinterface.rest-api-interface
+    spec_node_id: application.applicationinterface
+    type: applicationinterface
+    layer_id: application
+    name: REST API Interface
+    description: HTTP/JSON REST API exposed by FastAPI for all client interactions
+    attributes:
+      protocol: HTTP
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: app.py
+          symbol: app
+    metadata:
+      created_at: 2026-03-23T12:20:37.077Z
+      updated_at: 2026-03-23T12:20:37.077Z
+      version: 1
+  timestamp: 2026-03-23T12:20:37.103Z
+  sequenceNumber: 12
+- type: add
+  elementId: application.applicationevent.change-event
+  layerName: application
+  after:
+    id: 12fcd4d9-1559-475e-a0f0-55b28adfff80
+    path: application.applicationevent.change-event
+    spec_node_id: application.applicationevent
+    type: applicationevent
+    layer_id: application
+    name: Change Event
+    description: Domain event emitted on create, update, and delete of ontology
+      entities and relationships, consumed by the event processor for version
+      tracking
+    attributes:
+      eventType: domain
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: database/models.py
+          symbol: ChangeEvent
+    metadata:
+      created_at: 2026-03-23T12:20:37.480Z
+      updated_at: 2026-03-23T12:20:37.480Z
+      version: 1
+  timestamp: 2026-03-23T12:20:37.506Z
+  sequenceNumber: 13
+- type: add
+  elementId: application.applicationevent.task-event
+  layerName: application
+  after:
+    id: dc2f8319-e341-4daa-8749-258cb42233ba
+    path: application.applicationevent.task-event
+    spec_node_id: application.applicationevent
+    type: applicationevent
+    layer_id: application
+    name: Task Event
+    description: Background task lifecycle events (submitted, running, completed,
+      failed) managed by the TaskManager
+    attributes:
+      eventType: system
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: services/task_manager.py
+          symbol: initialize_task_manager
+    metadata:
+      created_at: 2026-03-23T12:20:37.880Z
+      updated_at: 2026-03-23T12:20:37.880Z
+      version: 1
+  timestamp: 2026-03-23T12:20:37.906Z
+  sequenceNumber: 14
+- type: add
+  elementId: application.applicationprocess.dataset-management-process
+  layerName: application
+  after:
+    id: 8d7f9586-479b-4e35-bcce-c8ef6c0903e9
+    path: application.applicationprocess.dataset-management-process
+    spec_node_id: application.applicationprocess
+    type: applicationprocess
+    layer_id: application
+    name: Dataset Management Process
+    description: Lifecycle process for creating, switching, and managing SQLite
+      dataset files including migration execution
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: database/utils.py
+          symbol: get_dataset_manager
+    metadata:
+      created_at: 2026-03-23T12:20:43.842Z
+      updated_at: 2026-03-23T12:20:43.842Z
+      version: 1
+  timestamp: 2026-03-23T12:20:43.868Z
+  sequenceNumber: 15
+- type: add
+  elementId: application.applicationprocess.event-processing-process
+  layerName: application
+  after:
+    id: a3f0b4b7-d981-4d60-a5ef-958d7943be71
+    path: application.applicationprocess.event-processing-process
+    spec_node_id: application.applicationprocess
+    type: applicationprocess
+    layer_id: application
+    name: Event Processing Process
+    description: Background event processor that consumes change events and drives
+      version management and working tree updates
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: utils/event_processor.py
+          symbol: create_event_processor
+    metadata:
+      created_at: 2026-03-23T12:20:44.265Z
+      updated_at: 2026-03-23T12:20:44.265Z
+      version: 1
+  timestamp: 2026-03-23T12:20:44.292Z
+  sequenceNumber: 16
+- type: add
+  elementId: application.applicationprocess.background-task-processing
+  layerName: application
+  after:
+    id: cd2a1fae-e3ed-449d-ae74-25382224df7f
+    path: application.applicationprocess.background-task-processing
+    spec_node_id: application.applicationprocess
+    type: applicationprocess
+    layer_id: application
+    name: Background Task Processing
+    description: Asyncio task queue managing long-running operations such as
+      predicate discovery and embedding regeneration
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: services/task_manager.py
+          symbol: initialize_task_manager
+    metadata:
+      created_at: 2026-03-23T12:20:44.679Z
+      updated_at: 2026-03-23T12:20:44.679Z
+      version: 1
+  timestamp: 2026-03-23T12:20:44.707Z
+  sequenceNumber: 17
+- type: add
+  elementId: application.applicationfunction.embedding-generation
+  layerName: application
+  after:
+    id: 84693f76-dbf4-428d-b2dc-f5cf9b649d5e
+    path: application.applicationfunction.embedding-generation
+    spec_node_id: application.applicationfunction
+    type: applicationfunction
+    layer_id: application
+    name: Embedding Generation
+    description: SentenceTransformer embedding generation for ontology entity titles
+      and definitions, used for vector similarity search
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: embeddings/generate_embeddings.py
+          symbol: generate_embedding
+    metadata:
+      created_at: 2026-03-23T12:20:49.981Z
+      updated_at: 2026-03-23T12:20:49.981Z
+      version: 1
+  timestamp: 2026-03-23T12:20:50.009Z
+  sequenceNumber: 18
+- type: add
+  elementId: application.applicationfunction.sparql-query-function
+  layerName: application
+  after:
+    id: 93f74c87-4217-40cc-9eeb-41896133bc65
+    path: application.applicationfunction.sparql-query-function
+    spec_node_id: application.applicationfunction
+    type: applicationfunction
+    layer_id: application
+    name: SPARQL Query Function
+    description: SPARQL query execution over the in-memory RDF graph built from
+      ontology entities
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: graph/sparql_service.py
+          symbol: SPARQLService
+    metadata:
+      created_at: 2026-03-23T12:20:50.395Z
+      updated_at: 2026-03-23T12:20:50.395Z
+      version: 1
+  timestamp: 2026-03-23T12:20:50.422Z
+  sequenceNumber: 19
+- type: add
+  elementId: application.applicationfunction.network-metrics-function
+  layerName: application
+  after:
+    id: 729770c9-eb4a-4230-8b96-f45d92375e87
+    path: application.applicationfunction.network-metrics-function
+    spec_node_id: application.applicationfunction
+    type: applicationfunction
+    layer_id: application
+    name: Network Metrics Function
+    description: Graph network analysis computing centrality, clustering, and
+      community metrics via networkx
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: graph/network_service.py
+          symbol: NetworkService
+    metadata:
+      created_at: 2026-03-23T12:20:50.806Z
+      updated_at: 2026-03-23T12:20:50.806Z
+      version: 1
+  timestamp: 2026-03-23T12:20:50.834Z
+  sequenceNumber: 20
+- type: add
+  elementId: application.applicationcollaboration.version-control-collaboration
+  layerName: application
+  after:
+    id: e9683ff6-c922-4c0a-bf2f-5fb1800994da
+    path: application.applicationcollaboration.version-control-collaboration
+    spec_node_id: application.applicationcollaboration
+    type: applicationcollaboration
+    layer_id: application
+    name: Version Control Collaboration
+    description: "Collaborative version control subsystem: VersionManager,
+      WorkingTreeManager, ChangesetManager, and ProposalManager working together
+      to enable multi-user knowledge graph editing"
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: services/version_manager.py
+    metadata:
+      created_at: 2026-03-23T12:20:58.147Z
+      updated_at: 2026-03-23T12:20:58.147Z
+      version: 1
+  timestamp: 2026-03-23T12:20:58.176Z
+  sequenceNumber: 21
+- type: add
+  elementId: application.dataobject.ontology-entity-data-object
+  layerName: application
+  after:
+    id: 3302c202-00ed-4bc9-9d8d-98ff796a968f
+    path: application.dataobject.ontology-entity-data-object
+    spec_node_id: application.dataobject
+    type: dataobject
+    layer_id: application
+    name: Ontology Entity Data Object
+    description: In-flight data representation of a taxonomy, concept scheme, class,
+      or individual entity as it passes through application services
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: domain/ontology/entities.py
+          symbol: OntologyEntity
+    metadata:
+      created_at: 2026-03-23T12:20:58.557Z
+      updated_at: 2026-03-23T12:20:58.557Z
+      version: 1
+  timestamp: 2026-03-23T12:20:58.588Z
+  sequenceNumber: 22
+- type: add
+  elementId: application.applicationinteraction.crdt-merge-interaction
+  layerName: application
+  after:
+    id: e846641d-e2a7-415f-9593-892b06f4fdb2
+    path: application.applicationinteraction.crdt-merge-interaction
+    spec_node_id: application.applicationinteraction
+    type: applicationinteraction
+    layer_id: application
+    name: CRDT Merge Interaction
+    description: CRDT-based merge protocol coordinating conflict-free data type
+      merging between diverged changesets
+    attributes:
+      pattern: publish-subscribe
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: services/crdt_merge_engine.py
+          symbol: CRDTMergeEngine
+    metadata:
+      created_at: 2026-03-23T12:20:58.984Z
+      updated_at: 2026-03-23T12:20:58.984Z
+      version: 1
+  timestamp: 2026-03-23T12:20:59.013Z
+  sequenceNumber: 23

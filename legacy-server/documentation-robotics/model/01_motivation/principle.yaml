@@ -1,0 +1,121 @@
+motivation.principle.hexagonal-architecture:
+  id: a888eb53-7c89-41ab-b8b8-ea23430faad0
+  path: motivation.principle.hexagonal-architecture
+  spec_node_id: motivation.principle
+  type: principle
+  layer_id: motivation
+  name: Hexagonal Architecture
+  description: Domain logic in domain/ has zero infrastructure imports; all I/O is
+    mediated through ports and adapters to keep the core independently testable
+  attributes:
+    category: architecture
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: app.py
+        symbol: create_app
+  metadata:
+    created_at: 2026-03-23T12:43:47.095Z
+    updated_at: 2026-03-23T12:43:47.095Z
+    version: 1
+motivation.principle.local-first-by-default:
+  id: 2e9ed3f2-fede-4e62-9daa-f9bf9419825c
+  path: motivation.principle.local-first-by-default
+  spec_node_id: motivation.principle
+  type: principle
+  layer_id: motivation
+  name: Local-First by Default
+  description: All data stored locally in SQLite; cloud sync is an optional
+    add-on, not a requirement — the application must function fully offline
+  attributes:
+    category: architecture
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: config.json
+        symbol: database
+  metadata:
+    created_at: 2026-03-23T12:43:47.607Z
+    updated_at: 2026-03-23T12:43:47.607Z
+    version: 1
+motivation.principle.api-key-authentication-only:
+  id: 92eb69b7-6875-4138-92ab-6ede349ccb0d
+  path: motivation.principle.api-key-authentication-only
+  spec_node_id: motivation.principle
+  type: principle
+  layer_id: motivation
+  name: API-Key Authentication Only
+  description: The application uses a lightweight X-API-Key header for security;
+    no OAuth, sessions, or user accounts — consistent with local-first desktop
+    operation
+  attributes:
+    category: security
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: config.json
+        symbol: security.require_secure_key
+  metadata:
+    created_at: 2026-03-23T12:43:53.153Z
+    updated_at: 2026-03-23T12:43:53.153Z
+    version: 1
+motivation.principle.embeddings-first-semantic-search:
+  id: 91a63fa6-5be0-416d-9417-e0f1474bf1cf
+  path: motivation.principle.embeddings-first-semantic-search
+  spec_node_id: motivation.principle
+  type: principle
+  layer_id: motivation
+  name: Embeddings-First Semantic Search
+  description: All entity retrieval uses 384-dimension SentenceTransformer
+    embeddings stored in sqlite-vec; full-text keyword search is secondary
+  attributes:
+    category: data
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: services/ontology_entity_service.py
+        symbol: search_by_similarity
+  metadata:
+    created_at: 2026-03-23T12:43:53.648Z
+    updated_at: 2026-03-23T12:43:53.648Z
+    version: 1
+motivation.principle.alembic-managed-schema-evolution:
+  id: d2ce9136-b949-44bd-915f-49ea61589cfa
+  path: motivation.principle.alembic-managed-schema-evolution
+  spec_node_id: motivation.principle
+  type: principle
+  layer_id: motivation
+  name: Alembic-Managed Schema Evolution
+  description: All schema changes go through Alembic autogenerate; hand-written
+    SQL migrations are prohibited to prevent schema drift
+  attributes:
+    category: data
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: database/models.py
+        symbol: Base
+  metadata:
+    created_at: 2026-03-23T12:43:58.508Z
+    updated_at: 2026-03-23T12:43:58.508Z
+    version: 1
+motivation.principle.rate-limited-external-knowledge-sources:
+  id: 558d6185-6561-41c6-89a1-88ef71563fe6
+  path: motivation.principle.rate-limited-external-knowledge-sources
+  spec_node_id: motivation.principle
+  type: principle
+  layer_id: motivation
+  name: Rate-Limited External Knowledge Sources
+  description: All external API calls (ConceptNet, DBpedia, Wikidata, etc.) are
+    subject to per-source rate limits defined in config.json to prevent abuse
+  attributes:
+    category: operational
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: config.json
+        symbol: reference_sources
+  metadata:
+    created_at: 2026-03-23T12:43:59.026Z
+    updated_at: 2026-03-23T12:43:59.026Z
+    version: 1

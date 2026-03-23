@@ -1,0 +1,41 @@
+motivation.value.knowledge-reusability:
+  id: 3d521335-9a99-4197-871e-52fbb21d845f
+  path: motivation.value.knowledge-reusability
+  spec_node_id: motivation.value
+  type: value
+  layer_id: motivation
+  name: Knowledge Reusability
+  description: A curated ontology graph is a reusable asset that accelerates both
+    human reasoning and AI inference across many tasks and domains
+  attributes:
+    valueType: strategic
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: domain/ontology/entities.py
+        symbol: Taxonomy
+  metadata:
+    created_at: 2026-03-23T12:44:58.812Z
+    updated_at: 2026-03-23T12:44:58.812Z
+    version: 1
+motivation.value.reduced-manual-curation-effort:
+  id: 47e072db-47f7-4df4-97de-5d817adac7a4
+  path: motivation.value.reduced-manual-curation-effort
+  spec_node_id: motivation.value
+  type: value
+  layer_id: motivation
+  name: Reduced Manual Curation Effort
+  description: Automated enrichment from multiple external knowledge bases
+    significantly reduces the time and expertise required to build a
+    high-quality ontology
+  attributes:
+    valueType: operational
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: reference_api/service.py
+        symbol: enrich
+  metadata:
+    created_at: 2026-03-23T12:45:04.732Z
+    updated_at: 2026-03-23T12:45:04.732Z
+    version: 1

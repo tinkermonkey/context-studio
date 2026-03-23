@@ -1,0 +1,21 @@
+ux.errorconfig.api-error-handler:
+  id: 3559e932-091d-492a-a69a-d30966c56180
+  path: ux.errorconfig.api-error-handler
+  spec_node_id: ux.errorconfig
+  type: errorconfig
+  layer_id: ux
+  name: API Error Handler
+  description: Global error handling configuration showing toast notifications on
+    API failures
+  attributes:
+    showNotification: true
+    notificationType: error
+    defaultErrorMessage: An error occurred. Please try again.
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ../../ux/src/api
+  metadata:
+    created_at: 2026-03-23T12:30:39.649Z
+    updated_at: 2026-03-23T12:30:39.649Z
+    version: 1

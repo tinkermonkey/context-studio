@@ -1,0 +1,23 @@
+data-store.field.title-embedding:
+  id: 547c8abc-2a0b-4caa-909e-ded7636da0a3
+  path: data-store.field.title-embedding
+  spec_node_id: data-store.field
+  type: field
+  layer_id: data-store
+  name: title_embedding
+  description: BLOB column storing the SentenceTransformer vector embedding of the
+    entity title for sqlite-vec similarity search
+  attributes:
+    dataType: BLOB
+    nullable: true
+    vectorDimensions: 384
+    distanceMetric: COSINE
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: database/models.py
+        symbol: OntologyEntity.title_embedding
+  metadata:
+    created_at: 2026-03-23T12:28:13.997Z
+    updated_at: 2026-03-23T12:28:13.997Z
+    version: 1

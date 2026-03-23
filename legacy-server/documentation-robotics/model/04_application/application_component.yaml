@@ -1,0 +1,114 @@
+application.applicationcomponent.fast-api-application:
+  id: 31eea299-ec08-44f1-a869-e3f760e1282d
+  path: application.applicationcomponent.fast-api-application
+  spec_node_id: application.applicationcomponent
+  type: applicationcomponent
+  layer_id: application
+  name: FastAPI Application
+  description: Main FastAPI application entry point, router registration, CORS
+    middleware, and lifespan management
+  attributes:
+    type: internal
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: app.py
+        symbol: create_app
+  metadata:
+    created_at: 2026-03-23T12:20:30.157Z
+    updated_at: 2026-03-23T12:20:30.157Z
+    version: 1
+application.applicationcomponent.service-factory:
+  id: 99ce3b18-f3a9-45d5-9ccc-ed1020f1ab37
+  path: application.applicationcomponent.service-factory
+  spec_node_id: application.applicationcomponent
+  type: applicationcomponent
+  layer_id: application
+  name: Service Factory
+  description: Dependency injection container that creates and caches service
+    instances with lifecycle management
+  attributes:
+    type: internal
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: services/service_factory.py
+        symbol: ServiceFactory
+  metadata:
+    created_at: 2026-03-23T12:20:30.545Z
+    updated_at: 2026-03-23T12:20:30.545Z
+    version: 1
+application.applicationcomponent.database-manager:
+  id: 6c7f90f9-819d-4d24-b728-70af6bb658a0
+  path: application.applicationcomponent.database-manager
+  spec_node_id: application.applicationcomponent
+  type: applicationcomponent
+  layer_id: application
+  name: Database Manager
+  description: SQLAlchemy session and engine management with dataset switching support
+  attributes:
+    type: internal
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: database/utils.py
+        symbol: get_database_manager
+  metadata:
+    created_at: 2026-03-23T12:20:30.956Z
+    updated_at: 2026-03-23T12:20:30.956Z
+    version: 1
+application.applicationcomponent.graph-module:
+  id: cb61cc24-5e3c-4c2f-a839-fc9fe088fd7e
+  path: application.applicationcomponent.graph-module
+  spec_node_id: application.applicationcomponent
+  type: applicationcomponent
+  layer_id: application
+  name: Graph Module
+  description: Unified graph module combining NetworkX analytics and RDFLib SPARQL
+    query capabilities; caches in-memory graph representation built from
+    structure_nodes table
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: graph/graph_service.py
+        symbol: GraphService
+  metadata:
+    created_at: 2026-03-23T19:01:08.760Z
+    updated_at: 2026-03-23T19:01:08.760Z
+    version: 1
+application.applicationcomponent.rag-pipeline-module:
+  id: 7aa64725-f595-4231-9cbf-2d79dfbe9e46
+  path: application.applicationcomponent.rag-pipeline-module
+  spec_node_id: application.applicationcomponent
+  type: applicationcomponent
+  layer_id: application
+  name: RAG Pipeline Module
+  description: "Four-layer RAG extraction pipeline: KG context preparation, LLM
+    entity extraction, spaCy syntactic gap analysis, and concept resolution via
+    KG and web search"
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: rag/rag_pipeline_service.py
+        symbol: RAGPipelineService
+  metadata:
+    created_at: 2026-03-23T19:01:09.170Z
+    updated_at: 2026-03-23T19:01:09.170Z
+    version: 1
+application.applicationcomponent.rag-pipeline-registry:
+  id: 46438636-118c-4da9-8cbb-fed794401b7c
+  path: application.applicationcomponent.rag-pipeline-registry
+  spec_node_id: application.applicationcomponent
+  type: applicationcomponent
+  layer_id: application
+  name: RAG Pipeline Registry
+  description: Registry of available RAG pipeline implementations (standard, custom flavors)
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: rag/pipeline_registry.py
+        symbol: pipeline_registry
+  metadata:
+    created_at: 2026-03-23T19:26:46.828Z
+    updated_at: 2026-03-23T19:26:46.828Z
+    version: 1

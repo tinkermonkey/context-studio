@@ -1,0 +1,22 @@
+navigation.breadcrumbconfig.ontology-breadcrumb:
+  id: d5a9e7da-100b-4fa9-bae3-0dd57d430eba
+  path: navigation.breadcrumbconfig.ontology-breadcrumb
+  spec_node_id: navigation.breadcrumbconfig
+  type: breadcrumbconfig
+  layer_id: navigation
+  name: Ontology Breadcrumb
+  description: Breadcrumb configuration showing the full path through Taxonomy ->
+    Concept Scheme -> Class hierarchy
+  attributes:
+    label: Current Location
+    showHome: true
+    homeLabel: Home
+    homeRoute: /
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ../../ux/src/components/layout
+  metadata:
+    created_at: 2026-03-23T12:31:31.956Z
+    updated_at: 2026-03-23T12:31:31.956Z
+    version: 1

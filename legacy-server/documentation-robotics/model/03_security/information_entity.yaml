@@ -1,0 +1,21 @@
+security.informationentity.ontology-entity-data:
+  id: 3b70657f-58e1-45c3-80af-143f1b95c93c
+  path: security.informationentity.ontology-entity-data
+  spec_node_id: security.informationentity
+  type: informationentity
+  layer_id: security
+  name: Ontology Entity Data
+  description: Information entity representing the ontology knowledge graph data —
+    internal classification, stored in local SQLite
+  attributes:
+    classification: internal
+    description: Knowledge graph entities stored in local.db
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: database/models.py
+        symbol: OntologyEntity
+  metadata:
+    created_at: 2026-03-23T12:38:37.213Z
+    updated_at: 2026-03-23T12:38:37.213Z
+    version: 1
