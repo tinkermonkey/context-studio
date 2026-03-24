@@ -53,14 +53,21 @@ Each database has its own Alembic environment under `adapters/persistence/sqlite
 ### Tasks
 
 **0.1 Directory scaffold**
-Create the full directory structure from `architecture_design.md`. All `__init__.py` files. No business logic yet.
+Create the full directory structure from `architecture_design.md`. All `__init__.py` files. No business logic yet. Include `adapters/graph/` alongside `adapters/embedding/`, `adapters/llm/`, `adapters/nlp/`, `adapters/reference/`, `adapters/sync/`, and `adapters/web/`.
 
 **0.2 Dependencies**
 Set up `requirements.txt` with:
 - `fastapi`, `uvicorn[standard]`
 - `sqlalchemy`, `alembic`
 - `pydantic`
-- `pytest`, `httpx` (for testing)
+- `sentence-transformers`
+- `spacy`
+- `networkx`
+- `rdflib`
+- `duckdb`
+- `openai`, `anthropic`
+- `httpx` (for testing and reference API calls)
+- `pytest`
 
 Add dev dependencies (`requirements-dev.txt`): `black`, `ruff`, `mypy`.
 
@@ -81,6 +88,16 @@ A single `GET /api/health` route that returns server status. This is the first e
 
 **0.6 Logging**
 Port the logger utility. All modules log at appropriate levels.
+
+**0.7 NLP model setup**
+After `pip install`, download the spaCy English model:
+```
+python -m spacy download en_core_web_sm
+```
+Install spaCy component plugins (`concepcy`, `dbpedia_spotlight`) as needed. This is a separate step from pip install and must be run once per environment. Note: if this model is not loaded, the `AdminService` startup health check will report `nlp_pipeline_ready: false` in the `SystemHealth` entity.
+
+**0.8 Domain import guard**
+Implement `scripts/check_domain_imports.py`. This script scans `domain/` for any import of `sqlalchemy`, `fastapi`, `pydantic`, or any `adapters/` module and exits non-zero if found. This script is referenced in Phase 1 exit criteria and must exist before Phase 1 begins.
 
 ### Exit Criteria
 - `python app.py` starts without errors
@@ -124,9 +141,16 @@ Write `domain/ontology/services.py` with `OntologyService`:
 - Contains all business rules: type-specific validation, circular reference detection, embedding coordination, event emission
 - Zero imports from `adapters/`, `database/`, or any framework
 
+**1.7 Test fakes**
+Create `tests/fakes/` with:
+- `InMemoryOntologyRepository` — implements the `OntologyRepository` port using plain Python dicts
+- `FakeEmbeddingService` — implements the `EmbeddingService` port returning deterministic fixed-length vectors
+
+These fakes must satisfy the same port contracts as their real adapter counterparts. They must exist before task 1.6 unit tests can be written.
+
 **1.6 Unit tests**
 Write `tests/unit/domain/test_ontology_service.py` and `test_ontology_entities.py`:
-- Use fake in-memory implementations of ports
+- Use fake in-memory implementations of ports (from task 1.7)
 - Cover all business rules and invariants
 - Target: domain unit tests run in under 5 seconds
 
@@ -165,6 +189,9 @@ Write `tests/integration/test_sqlite_ontology_repo.py`:
 - Test all CRUD operations and search
 - Verify that domain entities round-trip correctly through the adapter
 
+**2.5 Embedding adapter**
+Implement `adapters/embedding/sentence_transformer.py` wrapping SentenceTransformer `all-MiniLM-L12-v2` with thread-safety (single model instance, lock around encode calls). Also update `tests/fakes/fake_embedding_service.py` (created in task 1.7) to confirm it produces output of the same dimensionality. This adapter is a prerequisite for the Phase 2 exit criterion: `OntologyService` wired end-to-end requires a real or fake `EmbeddingService` implementation.
+
 ### Exit Criteria
 - `alembic upgrade head` creates a clean schema from scratch
 - All adapter integration tests pass against a real SQLite database
@@ -189,10 +216,20 @@ Write `adapters/web/ontology_routes.py`:
 **3.3 Dependency wiring**
 Write `adapters/web/dependencies.py` with FastAPI dependency providers for all services.
 
+**3.7 Event infrastructure**
+Implement:
+- `adapters/events/in_process.py` — `InProcessEventPublisher` that dispatches domain events to registered handlers synchronously within the request lifecycle
+- `adapters/events/change_recorder.py` — `ChangeEventRecorder` that persists `ChangeEvent` domain events to `local.db`
+
+This infrastructure must exist before task 3.4 (composition root wiring) can be completed, as `OntologyService` depends on an `EventPublisher` port.
+
+**3.8 CORS and local security posture**
+Configure FastAPI CORS middleware in `app.py` to allow the React UX origin (e.g., `http://localhost:5173` for Vite dev server). Document the local-only security stance: no authentication is required because the server listens only on localhost and serves a single-user desktop application. Add a note in `config.json` documentation that file-system permissions on `config.json` are the primary protection for stored LLM API keys.
+
 **3.4 Composition root**
 Wire everything together in `app.py`:
 - Create SQLite engine
-- Instantiate adapters
+- Instantiate adapters (including `InProcessEventPublisher` and `ChangeEventRecorder` from task 3.7)
 - Instantiate domain services
 - Mount route routers
 
@@ -202,7 +239,7 @@ Write `tests/integration/test_ontology_api.py`:
 - Test all endpoints end-to-end through HTTP
 
 **3.6 Update OpenAPI spec**
-Run `utils/update_api_specs.py` to generate `documentation/openapi.json`.
+Run `scripts/update_api_specs.py` to generate `documentation/openapi.json` and commit the result. Front-end type generation (`npm run generate-types`) remains deferred to Phase 5.
 
 ### Exit Criteria
 - All ontology CRUD operations work through the HTTP API
@@ -215,34 +252,55 @@ Run `utils/update_api_specs.py` to generate `documentation/openapi.json`.
 
 Build each remaining bounded context in the same order: domain entities → ports → service → adapter → routes.
 
+**Parallelism notes:**
+- The `adapters/llm/` work done in 4.2 (Extraction) satisfies the `LLMProvider` port for 4.3 (Pipeline Management) — no redundant implementation is needed in 4.3.
+- Phase 4.4 (Versioning) has no dependency on 4.1–4.3 and can be developed in parallel if bandwidth allows.
+
 **4.1 Graph Analysis context**
 - `domain/graph/` entities, ports, `GraphAnalysisService`
 - `adapters/persistence/sqlite/` read-side for graph data
 - `adapters/graph/networkx_engine.py` wrapping NetworkX
 - `adapters/graph/rdflib_engine.py` wrapping RDFLib
 - Routes for graph construction, path queries, SPARQL, network metrics
+- Run `scripts/update_api_specs.py` after routes are live and commit the updated `documentation/openapi.json`
 
 **4.2 Knowledge Extraction (RAG) context**
 - `domain/extraction/` entities, ports, `ExtractionService`
 - `adapters/llm/` (OpenRouter/OpenAI/Anthropic providers)
 - `adapters/nlp/spacy_processor.py`
 - `adapters/reference/` (ConceptNet, DBpedia, Wikidata, schema.org)
-- Routes for text analysis and entity extraction
+- `adapters/persistence/sqlite/reference_repo.py` and a data import script/command to populate `reference.db` with ConceptNet, DBpedia, and schema.org data (prerequisite for Layer 3 reference enrichment below)
+- Routes for text analysis and entity extraction, built in four layers in order:
+  - **Layer 0 — KG context lookup**: semantic search against `OntologyRepository` to retrieve existing graph context before calling an LLM
+  - **Layer 1 — LLM extraction**: depends on `adapters/llm/` (OpenAI/Anthropic providers); extract entities and relationships from text using an LLM with KG context injected
+  - **Layer 2 — NLP gap filling**: depends on `adapters/nlp/spacy_processor.py`; use spaCy NER and entity linking to fill gaps the LLM missed; requires task 0.7 (NLP model setup)
+  - **Layer 3 — Reference enrichment**: depends on `adapters/reference/` and `reference.db` (populated by the import script above); enrich extracted entities with ConceptNet, DBpedia, and schema.org data
+- Note: the `AdminService` startup health check reports `nlp_pipeline_ready: false` if the spaCy model from task 0.7 is not loaded, matching the `SystemHealth` entity's `nlp_pipeline_ready` field. The e2e test `test_nlp_pipeline_processes_real_text` is marked `@pytest.mark.nlp` and requires the full NLP environment.
+- Run `scripts/update_api_specs.py` after routes are live and commit the updated `documentation/openapi.json`
 
 **4.3 LLM Pipeline Management context**
 - `domain/pipeline/` entities, ports, `PipelineService`
 - `adapters/persistence/sqlite/` pipeline repo (in `operations.db`)
 - Alembic migration for `operations.db`
-- Routes for pipeline configuration CRUD and execution
+- Routes for pipeline configuration CRUD and execution (reuses `adapters/llm/` from 4.2 — no new LLM adapter work needed)
+- Run `scripts/update_api_specs.py` after routes are live and commit the updated `documentation/openapi.json`
 
 **4.4 Version Control & Collaboration context**
-- `domain/versioning/` entities, ports, `VersioningService`
-- Change event persistence, changeset management, proposal workflow, conflict resolution
-- DuckDB-based sync adapter
+
+This context can be developed in parallel with 4.1–4.3. Build in sub-task order:
+
+- **4.4a Domain entities and persistence**: `domain/versioning/` entities, `ChangeRepository` port, SQLite adapter for change events and entity versions
+- **4.4b Changeset and Proposal workflow**: `VersioningService` domain service implementing changeset management and proposal workflow; depends on 4.4a
+- **4.4c CRDT merge engine**: conflict resolution logic using CRDT merge strategy; depends on 4.4b
+- **4.4d Sync adapters**: `adapters/sync/s3_sync.py` (`S3SyncAdapter`) and `adapters/sync/duckdb_sync.py` (DuckDB-based sync); can only start after 4.4a and 4.4b are complete
+- Run `scripts/update_api_specs.py` after routes are live and commit the updated `documentation/openapi.json`
 
 **4.5 System Administration context**
 - `domain/admin/` health, background tasks, configuration
+- `adapters/metrics/system_collector.py` — `SystemMetricsCollector` implementing the `MetricsCollector` port (collects CPU, memory, uptime); must be wired before admin routes go live
+- `adapters/config/json_store.py` — `JSONFileConfigStore` implementing the `ConfigurationStore` port; required by `AdminService.ManageConfiguration` and verified by the e2e test `test_configuration_read_and_update`
 - Routes for health, metrics, background task management
+- Run `scripts/update_api_specs.py` after routes are live and commit the updated `documentation/openapi.json`
 
 ### Exit Criteria
 - All bounded contexts implemented with domain tests and adapter tests
@@ -270,6 +328,8 @@ Implement any missing functionality discovered in the audit.
 
 **5.4 E2E tests**
 Run the full E2E test suite (per `e2e_test_strategy.md`) against the new server.
+
+Note: the Phase 1 tests in `e2e_test_strategy.md` were written assuming an in-place migration from a running legacy system. In this greenfield build, those tests reduce to: verify that the new terminology (`taxonomy`, `concept_scheme`, `class`) is correctly applied throughout API responses and the database schema. The migration-specific tests (`test_old_routes_still_work`, `test_migration_rollback`, `test_database_migration_data_integrity`) do not apply to the greenfield build and should be skipped.
 
 **5.5 Update CLAUDE.md**
 Reflect new directory structure and conventions.
