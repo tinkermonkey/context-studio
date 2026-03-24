@@ -1,0 +1,93 @@
+application.dataobject.ontology-entities-data:
+  id: e15deb4a-17a4-4055-b48a-768f197ba409
+  path: application.dataobject.ontology-entities-data
+  spec_node_id: application.dataobject
+  type: dataobject
+  layer_id: application
+  name: Ontology Entities Data
+  description: "In-flight domain entities for ontology management: Taxonomy,
+    ConceptScheme, Class, Relationship, PropertyDefinition instances flowing
+    between the OntologyService and its adapters"
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: domain/ontology/entities.py
+  metadata:
+    created_at: 2026-03-24T08:41:45.330Z
+    updated_at: 2026-03-24T08:41:45.330Z
+    version: 1
+application.dataobject.graph-analysis-data:
+  id: 047cc361-9629-4213-9f55-088f87034d23
+  path: application.dataobject.graph-analysis-data
+  spec_node_id: application.dataobject
+  type: dataobject
+  layer_id: application
+  name: Graph Analysis Data
+  description: "In-flight graph computation data: KnowledgeGraph descriptor,
+    GraphMetrics results, PathResult traversal outputs, and SPARQL query results
+    flowing between GraphAnalysisService and its adapters"
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: domain/graph/entities.py
+  metadata:
+    created_at: 2026-03-24T08:41:45.807Z
+    updated_at: 2026-03-24T08:41:45.807Z
+    version: 1
+application.dataobject.llm-response-data:
+  id: c36188ed-b77a-4043-bf50-00ca6326844e
+  path: application.dataobject.llm-response-data
+  spec_node_id: application.dataobject
+  type: dataobject
+  layer_id: application
+  name: LLM Response Data
+  description: "In-flight LLM inference data: LLMResponse objects (content, model,
+    tokens_in, tokens_out, duration_ms, finish_reason) flowing from LLMProvider
+    adapter to Extraction and Pipeline services"
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: domain/extraction/ports.py
+        symbol: LLMResponse
+  metadata:
+    created_at: 2026-03-24T08:41:46.267Z
+    updated_at: 2026-03-24T08:41:46.267Z
+    version: 1
+application.dataobject.nlp-processing-data:
+  id: 326f6ca9-9f2b-4b47-a119-b4dff035c9fb
+  path: application.dataobject.nlp-processing-data
+  spec_node_id: application.dataobject
+  type: dataobject
+  layer_id: application
+  name: NLP Processing Data
+  description: "In-flight NLP data: NLPResult objects (entities, tokens,
+    noun_chunks) and NLPEntity records flowing from SpacyNLPProcessor to
+    ExtractionService"
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: domain/extraction/ports.py
+        symbol: NLPResult
+  metadata:
+    created_at: 2026-03-24T08:41:46.736Z
+    updated_at: 2026-03-24T08:41:46.736Z
+    version: 1
+application.dataobject.reference-knowledge-data:
+  id: 8f16854c-ed79-47f5-98f0-7392dab1dd51
+  path: application.dataobject.reference-knowledge-data
+  spec_node_id: application.dataobject
+  type: dataobject
+  layer_id: application
+  name: Reference Knowledge Data
+  description: "In-flight reference enrichment data: ReferenceResult and
+    ReferenceRelation objects from ConceptNet/DBpedia/Wikidata adapters flowing
+    to ExtractionService"
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: domain/extraction/ports.py
+        symbol: ReferenceResult
+  metadata:
+    created_at: 2026-03-24T08:41:47.212Z
+    updated_at: 2026-03-24T08:41:47.212Z
+    version: 1

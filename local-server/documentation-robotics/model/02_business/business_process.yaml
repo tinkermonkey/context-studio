@@ -1,0 +1,44 @@
+business.businessprocess.ontology-authoring-workflow:
+  id: 72fa492d-6553-4e65-927d-292f90b1c90e
+  path: business.businessprocess.ontology-authoring-workflow
+  spec_node_id: business.businessprocess
+  type: businessprocess
+  layer_id: business
+  name: Ontology Authoring Workflow
+  description: "Process by which a knowledge manager incrementally builds a
+    knowledge graph: create taxonomy, create concept schemes, add classes with
+    definitions, link classes with typed relationships, enrich with external
+    references"
+  metadata:
+    created_at: 2026-03-24T08:44:21.704Z
+    updated_at: 2026-03-24T08:44:21.704Z
+    version: 1
+business.businessprocess.knowledge-extraction-workflow:
+  id: a40e945e-79d9-4f82-b12f-ffac58217157
+  path: business.businessprocess.knowledge-extraction-workflow
+  spec_node_id: business.businessprocess
+  type: businessprocess
+  layer_id: business
+  name: Knowledge Extraction Workflow
+  description: "Process of automatically extracting ontology entities from text:
+    submit text to extraction endpoint, receive extracted entities with
+    confidence scores, review and accept matching entities into the knowledge
+    graph"
+  metadata:
+    created_at: 2026-03-24T08:44:22.162Z
+    updated_at: 2026-03-24T08:44:22.162Z
+    version: 1
+business.businessprocess.changeset-approval-workflow:
+  id: 145b4015-c225-46f5-b399-892f47d58cb8
+  path: business.businessprocess.changeset-approval-workflow
+  spec_node_id: business.businessprocess
+  type: businessprocess
+  layer_id: business
+  name: Changeset Approval Workflow
+  description: "Version control process: work in progress → stage changes → submit
+    proposal → peer review → approve → merge. Enables collaborative knowledge
+    management with audit trail and conflict resolution"
+  metadata:
+    created_at: 2026-03-24T08:44:22.619Z
+    updated_at: 2026-03-24T08:44:22.619Z
+    version: 1

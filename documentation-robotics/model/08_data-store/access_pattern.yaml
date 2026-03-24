@@ -1,0 +1,49 @@
+data-store.accesspattern.entity-by-parent-range-scan:
+  id: 6bd0d8ba-47a0-432d-a412-c43ba9a98ea6
+  path: data-store.accesspattern.entity-by-parent-range-scan
+  spec_node_id: data-store.accesspattern
+  type: accesspattern
+  layer_id: data-store
+  name: entity_by_parent RANGE_SCAN
+  description: Range scan access pattern for retrieving all ontology entities with
+    a specific parent_entity_id — supports hierarchy traversal in the Ontology
+    Management bounded context
+  attributes:
+    patternType: RANGE_SCAN
+    targetCollection: ontology_entities
+    keyCondition: parent_entity_id = :parent_id
+    expectedFrequency: FREQUENT
+    consistencyRequirement: STRONG
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/persistence/sqlite/models.py
+        symbol: OntologyEntityModel.parent_entity_id
+  metadata:
+    created_at: 2026-03-24T09:24:40.723Z
+    updated_at: 2026-03-24T09:24:40.723Z
+    version: 1
+data-store.accesspattern.vector-similarity-search:
+  id: a45a82c7-10fc-4156-8246-d09af6369e66
+  path: data-store.accesspattern.vector-similarity-search
+  spec_node_id: data-store.accesspattern
+  type: accesspattern
+  layer_id: data-store
+  name: vector_similarity_search
+  description: Vector similarity search access pattern using SQLiteVector cosine
+    similarity — retrieves top-k semantically similar ontology entities by
+    embedding
+  attributes:
+    patternType: VECTOR_SIMILARITY
+    targetCollection: ontology_entities
+    keyCondition: embedding_vector ANN :query_vector
+    expectedFrequency: FREQUENT
+    consistencyRequirement: EVENTUAL
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/embedding
+  metadata:
+    created_at: 2026-03-24T09:24:45.603Z
+    updated_at: 2026-03-24T09:24:45.603Z
+    version: 1

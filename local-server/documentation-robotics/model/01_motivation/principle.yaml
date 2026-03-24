@@ -1,0 +1,101 @@
+motivation.principle.hexagonal-architecture-dependency-inversion:
+  id: 6503b06e-b5ed-4997-96cb-d24cf02a5fbe
+  path: motivation.principle.hexagonal-architecture-dependency-inversion
+  spec_node_id: motivation.principle
+  type: principle
+  layer_id: motivation
+  name: Hexagonal Architecture — Dependency Inversion
+  description: All dependencies point inward. Domain core has zero imports from
+    infrastructure, framework, or adapter code. Infrastructure changes never
+    require domain changes. Verified by check_domain_imports.py
+  attributes:
+    category: architecture
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: rearchitecture/architecture_design.md
+  metadata:
+    created_at: 2026-03-24T08:45:19.531Z
+    updated_at: 2026-03-24T08:45:19.531Z
+    version: 1
+motivation.principle.bounded-contexts-vertical-slices:
+  id: b2f5b3fc-7637-4552-88f2-11c7332794e8
+  path: motivation.principle.bounded-contexts-vertical-slices
+  spec_node_id: motivation.principle
+  type: principle
+  layer_id: motivation
+  name: Bounded Contexts — Vertical Slices
+  description: System decomposes into six bounded contexts that evolve
+    independently. Cross-context communication only through well-defined port
+    interfaces, never by reaching into another context internals
+  attributes:
+    category: architecture
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: rearchitecture/architecture_design.md
+  metadata:
+    created_at: 2026-03-24T08:45:19.975Z
+    updated_at: 2026-03-24T08:45:19.975Z
+    version: 1
+motivation.principle.standard-ontology-terminology:
+  id: e1aff4c2-8c3a-42de-8db4-9f4481bebee0
+  path: motivation.principle.standard-ontology-terminology
+  spec_node_id: motivation.principle
+  type: principle
+  layer_id: motivation
+  name: Standard Ontology Terminology
+  description: All domain entities use industry-standard OWL/SKOS terminology
+    (Taxonomy, ConceptScheme, Class, Relationship, PropertyDefinition) rather
+    than ad-hoc names. Reduces translation burden and enables external tooling
+    integration
+  attributes:
+    category: architecture
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: rearchitecture/architecture_design.md
+  metadata:
+    created_at: 2026-03-24T08:45:20.403Z
+    updated_at: 2026-03-24T08:45:20.403Z
+    version: 1
+motivation.principle.domain-first-development:
+  id: 46956a99-77a0-4a02-8ea0-5959a4e8a808
+  path: motivation.principle.domain-first-development
+  spec_node_id: motivation.principle
+  type: principle
+  layer_id: motivation
+  name: Domain-First Development
+  description: "Write domain entities and services before any infrastructure.
+    Tests prove business logic before a single database row exists. Order:
+    domain entities → ports → service → adapter → routes"
+  attributes:
+    category: development
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: rearchitecture/transformation_roadmap.md
+  metadata:
+    created_at: 2026-03-24T08:45:20.844Z
+    updated_at: 2026-03-24T08:45:20.844Z
+    version: 1
+motivation.principle.schema-managed-by-alembic-autogenerate:
+  id: 78dde9ca-a71b-4325-bc46-978cfa9997d6
+  path: motivation.principle.schema-managed-by-alembic-autogenerate
+  spec_node_id: motivation.principle
+  type: principle
+  layer_id: motivation
+  name: Schema Managed by Alembic Autogenerate
+  description: Never write migration SQL by hand. SQLAlchemy ORM models are the
+    single source of truth for the schema. Alembic autogenerates migrations from
+    model diffs, eliminating fragile hand-written SQL
+  attributes:
+    category: data
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: rearchitecture/transformation_roadmap.md
+  metadata:
+    created_at: 2026-03-24T08:45:21.285Z
+    updated_at: 2026-03-24T08:45:21.285Z
+    version: 1

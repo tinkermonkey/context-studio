@@ -1,0 +1,68 @@
+apm.alert.llm-pipeline-failure-alert:
+  id: 624a462d-c11d-44da-96e7-107d223ca066
+  path: apm.alert.llm-pipeline-failure-alert
+  spec_node_id: apm.alert
+  type: alert
+  layer_id: apm
+  name: LLM Pipeline Failure Alert
+  description: Alert triggered when LLM pipeline execution fails or times out,
+    recorded in the operations.db pipeline_executions table with ERROR status
+  attributes:
+    severity: critical
+    condition: pipeline_execution.status == failed
+    evaluationInterval: PT1M
+    description: LLM pipeline execution failure alert
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/domain/pipeline/services.py
+  metadata:
+    created_at: 2026-03-24T09:18:45.529Z
+    updated_at: 2026-03-24T09:18:45.529Z
+    version: 1
+apm.alert.rate-limit-breach-alert:
+  id: c2ca8186-7f92-4d52-9b12-d8484b5cdd5b
+  path: apm.alert.rate-limit-breach-alert
+  spec_node_id: apm.alert
+  type: alert
+  layer_id: apm
+  name: Rate Limit Breach Alert
+  description: Warning alert when external reference API rate limits are
+    approached — the reference adapter in adapters/reference enforces per-source
+    limits from config.json
+  attributes:
+    severity: warning
+    condition: external_api_request_rate > rate_limit_threshold
+    evaluationInterval: PT1M
+    description: External reference API rate limit approaching
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/reference
+  metadata:
+    created_at: 2026-03-24T09:18:50.119Z
+    updated_at: 2026-03-24T09:18:50.119Z
+    version: 1
+apm.alert.background-task-dead-letter-alert:
+  id: 98ea7c3a-9a3b-4607-bbf1-c923d7f4c8b9
+  path: apm.alert.background-task-dead-letter-alert
+  spec_node_id: apm.alert
+  type: alert
+  layer_id: apm
+  name: Background Task Dead Letter Alert
+  description: Alert triggered when background tasks accumulate in the dead-letter
+    state in operations.db, indicating persistent failures in the admin bounded
+    context
+  attributes:
+    severity: warning
+    condition: dead_letter_task_count > 0
+    evaluationInterval: PT5M
+    description: Background tasks in dead-letter state
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/domain/admin/services.py
+  metadata:
+    created_at: 2026-03-24T09:18:54.605Z
+    updated_at: 2026-03-24T09:18:54.605Z
+    version: 1

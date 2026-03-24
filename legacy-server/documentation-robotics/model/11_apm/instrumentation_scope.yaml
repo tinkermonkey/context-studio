@@ -8,7 +8,7 @@ apm.instrumentationscope.rag-pipeline-observability-scope:
   description: Instrumentation scope for the RAG pipeline observability store,
     capturing per-pipeline-run metrics and traces in operations.db
   attributes:
-    droppedAttributesCount: "0"
+    droppedAttributesCount: 0
     version: "1.0"
     schemaUrl: ""
   source_reference:

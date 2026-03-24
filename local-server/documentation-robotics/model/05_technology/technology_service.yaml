@@ -1,0 +1,136 @@
+technology.technologyservice.open-ai-api:
+  id: 3d3c58b4-a19e-45f0-b014-edc4fb9425c4
+  path: technology.technologyservice.open-ai-api
+  spec_node_id: technology.technologyservice
+  type: technologyservice
+  layer_id: technology
+  name: OpenAI API
+  description: External LLM inference service. Used by OpenAIProvider adapter for
+    GPT model inference. Accessed via HTTPS REST API with bearer token
+    authentication from config.json
+  attributes:
+    serviceType: compute
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: adapters/llm/openai_provider.py
+  metadata:
+    created_at: 2026-03-24T08:42:51.976Z
+    updated_at: 2026-03-24T08:42:51.976Z
+    version: 1
+technology.technologyservice.anthropic-api:
+  id: 1a661b6b-4ca4-4459-80f9-abe6149e3c57
+  path: technology.technologyservice.anthropic-api
+  spec_node_id: technology.technologyservice
+  type: technologyservice
+  layer_id: technology
+  name: Anthropic API
+  description: External LLM inference service (Claude models). Used by
+    AnthropicProvider adapter. Accessed via HTTPS REST API with bearer token
+    authentication from config.json
+  attributes:
+    serviceType: compute
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: adapters/llm/anthropic_provider.py
+  metadata:
+    created_at: 2026-03-24T08:42:52.429Z
+    updated_at: 2026-03-24T08:42:52.429Z
+    version: 1
+technology.technologyservice.concept-net-api:
+  id: 626f8a6d-c20d-497f-becb-188d31e8164d
+  path: technology.technologyservice.concept-net-api
+  spec_node_id: technology.technologyservice
+  type: technologyservice
+  layer_id: technology
+  name: ConceptNet API
+  description: External knowledge graph service for semantic relationships. Used
+    by ConceptNetSource adapter with response caching in reference_api_cache.db
+  attributes:
+    serviceType: database
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: adapters/reference/conceptnet.py
+  metadata:
+    created_at: 2026-03-24T08:42:52.876Z
+    updated_at: 2026-03-24T08:42:52.876Z
+    version: 1
+technology.technologyservice.dbpedia-api:
+  id: 09057838-48fc-4264-b538-1c6505b19c12
+  path: technology.technologyservice.dbpedia-api
+  spec_node_id: technology.technologyservice
+  type: technologyservice
+  layer_id: technology
+  name: DBpedia API
+  description: External linked-data service (DBpedia Lookup, SPARQL endpoint,
+    Spotlight). Used by DBpediaSource adapter for entity linking and enrichment
+  attributes:
+    serviceType: database
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: adapters/reference/dbpedia.py
+  metadata:
+    created_at: 2026-03-24T08:42:53.334Z
+    updated_at: 2026-03-24T08:42:53.334Z
+    version: 1
+technology.technologyservice.wikidata-api:
+  id: 51c98565-9e90-4f8b-b0ee-6f3e7b28ba99
+  path: technology.technologyservice.wikidata-api
+  spec_node_id: technology.technologyservice
+  type: technologyservice
+  layer_id: technology
+  name: Wikidata API
+  description: External knowledge base service (Wikidata SPARQL endpoint). Used by
+    WikidataSource adapter for structured entity data
+  attributes:
+    serviceType: database
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: adapters/reference/wikidata.py
+  metadata:
+    created_at: 2026-03-24T08:42:53.790Z
+    updated_at: 2026-03-24T08:42:53.790Z
+    version: 1
+technology.technologyservice.schemaorg-vocabulary:
+  id: 0aa6f0e5-8564-4b25-945b-932e0e84ae79
+  path: technology.technologyservice.schemaorg-vocabulary
+  spec_node_id: technology.technologyservice
+  type: technologyservice
+  layer_id: technology
+  name: schema.org Vocabulary
+  description: Structured data vocabulary. Used by SchemaOrgSource adapter for
+    standard property and class definitions
+  attributes:
+    serviceType: database
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: adapters/reference/schema_org.py
+  metadata:
+    created_at: 2026-03-24T08:42:54.248Z
+    updated_at: 2026-03-24T08:42:54.248Z
+    version: 1
+technology.technologyservice.amazon-s3:
+  id: 35ac3f8b-41a9-44a4-92f2-637d230a9ffd
+  path: technology.technologyservice.amazon-s3
+  spec_node_id: technology.technologyservice
+  type: technologyservice
+  layer_id: technology
+  name: Amazon S3
+  description: Remote object storage for workspace synchronization. Used by
+    S3SyncAdapter to push/pull DuckDB/Parquet format change exports. Sync is
+    optional and user-controlled per local-first principle
+  attributes:
+    serviceType: storage
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: adapters/sync/s3_sync.py
+  metadata:
+    created_at: 2026-03-24T08:43:04.673Z
+    updated_at: 2026-03-24T08:43:04.673Z
+    version: 1

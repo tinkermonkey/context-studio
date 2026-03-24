@@ -1,0 +1,88 @@
+data-store.database.localdb:
+  id: a870ae8f-e7a0-49c0-bfbd-6e6e0209f826
+  path: data-store.database.localdb
+  spec_node_id: data-store.database
+  type: database
+  layer_id: data-store
+  name: local.db
+  description: Primary Alembic-managed SQLite workspace database. Stores ontology
+    entities (taxonomies, concept schemes, classes), relationships, property
+    definitions, and change events. One instance per workspace
+  attributes:
+    engine: SQLite
+    paradigm: RELATIONAL
+    deploymentModel: EMBEDDED
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: adapters/persistence/sqlite/models.py
+  metadata:
+    created_at: 2026-03-24T08:39:10.710Z
+    updated_at: 2026-03-24T08:39:10.710Z
+    version: 1
+data-store.database.operationsdb:
+  id: 12945e59-2472-4d85-8ec5-8f75949aaba2
+  path: data-store.database.operationsdb
+  spec_node_id: data-store.database
+  type: database
+  layer_id: data-store
+  name: operations.db
+  description: Alembic-managed SQLite operational database. Stores LLM pipeline
+    configurations, execution logs, and background task state. Separate from
+    primary workspace data
+  attributes:
+    engine: SQLite
+    paradigm: RELATIONAL
+    deploymentModel: EMBEDDED
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: adapters/persistence/sqlite/models.py
+  metadata:
+    created_at: 2026-03-24T08:39:11.117Z
+    updated_at: 2026-03-24T08:39:11.117Z
+    version: 1
+data-store.database.referencedb:
+  id: ec57aee9-bcd9-42ff-a698-7606c1d24be6
+  path: data-store.database.referencedb
+  spec_node_id: data-store.database
+  type: database
+  layer_id: data-store
+  name: reference.db
+  description: SQLite database for imported reference knowledge from ConceptNet,
+    DBpedia, Wikidata, and schema.org. No Alembic migrations — can be dropped
+    and rebuilt from external sources
+  attributes:
+    engine: SQLite
+    paradigm: RELATIONAL
+    deploymentModel: EMBEDDED
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: adapters/persistence/sqlite/models.py
+  metadata:
+    created_at: 2026-03-24T08:39:11.521Z
+    updated_at: 2026-03-24T08:39:11.521Z
+    version: 1
+data-store.database.reference-api-cachedb:
+  id: a6819d07-c172-4605-b5e2-52412e829fea
+  path: data-store.database.reference-api-cachedb
+  spec_node_id: data-store.database
+  type: database
+  layer_id: data-store
+  name: reference_api_cache.db
+  description: SQLite cache for external reference API responses. No Alembic
+    migrations — a pure key-value response cache that can be dropped and rebuilt
+    without data loss
+  attributes:
+    engine: SQLite
+    paradigm: RELATIONAL
+    deploymentModel: EMBEDDED
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: adapters/reference/cache.py
+  metadata:
+    created_at: 2026-03-24T08:39:11.937Z
+    updated_at: 2026-03-24T08:39:11.937Z
+    version: 1

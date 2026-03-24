@@ -1,0 +1,20 @@
+technology.node.developer-workstation:
+  id: ef90e791-ebf7-4ef9-8068-e9db38b93c92
+  path: technology.node.developer-workstation
+  spec_node_id: technology.node
+  type: node
+  layer_id: technology
+  name: Developer Workstation
+  description: Target deployment environment. Context Studio is a local-first
+    desktop application — all processing runs on the user's own machine. The
+    local-server runs as a local process, not a remote service
+  attributes:
+    nodeType: physical-server
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: CLAUDE.md
+  metadata:
+    created_at: 2026-03-24T08:43:14.718Z
+    updated_at: 2026-03-24T08:43:14.718Z
+    version: 1

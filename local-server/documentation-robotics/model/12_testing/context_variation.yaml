@@ -1,0 +1,60 @@
+testing.contextvariation.unit-tests-no-io:
+  id: 0efec070-5d0d-4788-a27d-7d31bd56a93c
+  path: testing.contextvariation.unit-tests-no-io
+  spec_node_id: testing.contextvariation
+  type: contextvariation
+  layer_id: testing
+  name: Unit Tests — No I/O
+  description: "Tier 1: Domain unit tests running in milliseconds with no I/O. Use
+    fake/stub port implementations. Location: tests/unit/domain/. Prove business
+    rules without any infrastructure dependency"
+  attributes:
+    contextType: functional
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: tests/unit/
+  metadata:
+    created_at: 2026-03-24T08:46:59.056Z
+    updated_at: 2026-03-24T08:46:59.056Z
+    version: 1
+testing.contextvariation.integration-tests-real-sqlite:
+  id: 4f2f20a6-d160-4d37-9a8f-208795a702fc
+  path: testing.contextvariation.integration-tests-real-sqlite
+  spec_node_id: testing.contextvariation
+  type: contextvariation
+  layer_id: testing
+  name: Integration Tests — Real SQLite
+  description: "Tier 2: Adapter integration tests with real SQLite in-memory
+    databases. Location: tests/integration/. Test that adapters correctly
+    implement port contracts"
+  attributes:
+    contextType: functional
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: tests/integration/
+  metadata:
+    created_at: 2026-03-24T08:46:59.490Z
+    updated_at: 2026-03-24T08:46:59.490Z
+    version: 1
+testing.contextvariation.e2e-tests-real-external-services:
+  id: e4a2e411-b021-44a6-b67c-819ba9539572
+  path: testing.contextvariation.e2e-tests-real-external-services
+  spec_node_id: testing.contextvariation
+  type: contextvariation
+  layer_id: testing
+  name: E2E Tests — Real External Services
+  description: "Tier 3: Full-stack E2E tests through FastAPI HTTP API with real
+    databases, embeddings, NLP, LLM, and reference APIs. Location: tests/e2e/.
+    pytest markers: e2e, llm, reference, nlp, slow"
+  attributes:
+    contextType: functional
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: tests/e2e/conftest.py
+  metadata:
+    created_at: 2026-03-24T08:46:59.922Z
+    updated_at: 2026-03-24T08:46:59.922Z
+    version: 1

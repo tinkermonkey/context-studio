@@ -1,0 +1,231 @@
+- type: add
+  elementId: apm.span.api-request-span
+  layerName: apm
+  after:
+    id: 65502478-55d2-4b6c-84af-5ea486daa138
+    path: apm.span.api-request-span
+    spec_node_id: apm.span
+    type: span
+    layer_id: apm
+    name: API Request Span
+    description: Trace span representing the full duration of a single HTTP API
+      request, from receipt to response in the FastAPI application
+    attributes:
+      traceId: ""
+      spanId: ""
+      traceState: ""
+      parentSpanId: ""
+      spanKind: SERVER
+      startTimeUnixNano: "0"
+      endTimeUnixNano: "0"
+      droppedAttributesCount: 0
+      droppedEventsCount: "0"
+      droppedLinksCount: "0"
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/app.py
+    metadata:
+      created_at: 2026-03-24T09:18:18.812Z
+      updated_at: 2026-03-24T09:18:18.813Z
+      version: 1
+  timestamp: 2026-03-24T09:18:18.836Z
+  sequenceNumber: 0
+- type: add
+  elementId: apm.span.database-query-span
+  layerName: apm
+  after:
+    id: 6955d258-7253-419d-8227-24bf9bf4bfd3
+    path: apm.span.database-query-span
+    spec_node_id: apm.span
+    type: span
+    layer_id: apm
+    name: Database Query Span
+    description: OpenTelemetry span covering SQLAlchemy database query execution
+      across local.db and operations.db
+    attributes:
+      traceId: ""
+      spanId: ""
+      traceState: ""
+      parentSpanId: ""
+      spanKind: CLIENT
+      startTimeUnixNano: "0"
+      endTimeUnixNano: "0"
+      droppedAttributesCount: 0
+      droppedEventsCount: "0"
+      droppedLinksCount: "0"
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/persistence/sqlite
+    metadata:
+      created_at: 2026-03-24T09:18:23.146Z
+      updated_at: 2026-03-24T09:18:23.146Z
+      version: 1
+  timestamp: 2026-03-24T09:18:23.174Z
+  sequenceNumber: 1
+- type: add
+  elementId: apm.metricinstrument.rag-processing-time
+  layerName: apm
+  after:
+    id: 05325bcb-e3c1-4e2e-b5c7-69468f3800c3
+    path: apm.metricinstrument.rag-processing-time
+    spec_node_id: apm.metricinstrument
+    type: metricinstrument
+    layer_id: apm
+    name: RAG Processing Time
+    description: Histogram instrument measuring processing time in milliseconds for
+      RAG pipeline execution in the extraction bounded context
+    attributes:
+      type: Histogram
+      unit: ms
+      description: RAG pipeline processing duration
+      enabled: true
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/domain/extraction/services.py
+    metadata:
+      created_at: 2026-03-24T09:18:31.867Z
+      updated_at: 2026-03-24T09:18:31.867Z
+      version: 1
+  timestamp: 2026-03-24T09:18:31.892Z
+  sequenceNumber: 2
+- type: add
+  elementId: apm.metricinstrument.llm-execution-tracker
+  layerName: apm
+  after:
+    id: 019132b6-ff87-479a-bc1e-feeb254a4f95
+    path: apm.metricinstrument.llm-execution-tracker
+    spec_node_id: apm.metricinstrument
+    type: metricinstrument
+    layer_id: apm
+    name: LLM Execution Tracker
+    description: Counter instrument tracking LLM API call counts, token usage,
+      latency, and errors per pipeline execution — traced in operations.db
+      pipeline_executions table
+    attributes:
+      type: Counter
+      unit: calls
+      description: LLM API call tracking per execution
+      enabled: true
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/llm
+    metadata:
+      created_at: 2026-03-24T09:18:36.115Z
+      updated_at: 2026-03-24T09:18:36.115Z
+      version: 1
+  timestamp: 2026-03-24T09:18:36.141Z
+  sequenceNumber: 3
+- type: add
+  elementId: apm.metricinstrument.background-task-queue-depth
+  layerName: apm
+  after:
+    id: 1db45cd9-dd37-4dd6-b5ff-a14dec33a3b0
+    path: apm.metricinstrument.background-task-queue-depth
+    spec_node_id: apm.metricinstrument
+    type: metricinstrument
+    layer_id: apm
+    name: Background Task Queue Depth
+    description: Gauge instrument monitoring the number of pending and running
+      background tasks managed by the admin bounded context
+    attributes:
+      type: Gauge
+      unit: tasks
+      description: Pending and running background task count
+      enabled: true
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/domain/admin/services.py
+    metadata:
+      created_at: 2026-03-24T09:18:40.105Z
+      updated_at: 2026-03-24T09:18:40.105Z
+      version: 1
+  timestamp: 2026-03-24T09:18:40.132Z
+  sequenceNumber: 4
+- type: add
+  elementId: apm.alert.llm-pipeline-failure-alert
+  layerName: apm
+  after:
+    id: 624a462d-c11d-44da-96e7-107d223ca066
+    path: apm.alert.llm-pipeline-failure-alert
+    spec_node_id: apm.alert
+    type: alert
+    layer_id: apm
+    name: LLM Pipeline Failure Alert
+    description: Alert triggered when LLM pipeline execution fails or times out,
+      recorded in the operations.db pipeline_executions table with ERROR status
+    attributes:
+      severity: critical
+      condition: pipeline_execution.status == failed
+      evaluationInterval: PT1M
+      description: LLM pipeline execution failure alert
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/domain/pipeline/services.py
+    metadata:
+      created_at: 2026-03-24T09:18:45.529Z
+      updated_at: 2026-03-24T09:18:45.529Z
+      version: 1
+  timestamp: 2026-03-24T09:18:45.557Z
+  sequenceNumber: 5
+- type: add
+  elementId: apm.alert.rate-limit-breach-alert
+  layerName: apm
+  after:
+    id: c2ca8186-7f92-4d52-9b12-d8484b5cdd5b
+    path: apm.alert.rate-limit-breach-alert
+    spec_node_id: apm.alert
+    type: alert
+    layer_id: apm
+    name: Rate Limit Breach Alert
+    description: Warning alert when external reference API rate limits are
+      approached — the reference adapter in adapters/reference enforces
+      per-source limits from config.json
+    attributes:
+      severity: warning
+      condition: external_api_request_rate > rate_limit_threshold
+      evaluationInterval: PT1M
+      description: External reference API rate limit approaching
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/reference
+    metadata:
+      created_at: 2026-03-24T09:18:50.119Z
+      updated_at: 2026-03-24T09:18:50.119Z
+      version: 1
+  timestamp: 2026-03-24T09:18:50.146Z
+  sequenceNumber: 6
+- type: add
+  elementId: apm.alert.background-task-dead-letter-alert
+  layerName: apm
+  after:
+    id: 98ea7c3a-9a3b-4607-bbf1-c923d7f4c8b9
+    path: apm.alert.background-task-dead-letter-alert
+    spec_node_id: apm.alert
+    type: alert
+    layer_id: apm
+    name: Background Task Dead Letter Alert
+    description: Alert triggered when background tasks accumulate in the dead-letter
+      state in operations.db, indicating persistent failures in the admin
+      bounded context
+    attributes:
+      severity: warning
+      condition: dead_letter_task_count > 0
+      evaluationInterval: PT5M
+      description: Background tasks in dead-letter state
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/domain/admin/services.py
+    metadata:
+      created_at: 2026-03-24T09:18:54.605Z
+      updated_at: 2026-03-24T09:18:54.605Z
+      version: 1
+  timestamp: 2026-03-24T09:18:54.637Z
+  sequenceNumber: 7

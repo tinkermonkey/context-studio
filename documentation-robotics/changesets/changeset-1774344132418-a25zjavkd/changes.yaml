@@ -1,0 +1,185 @@
+- type: add
+  elementId: business.businessfunction.entity-enrichment
+  layerName: business
+  after:
+    id: 6f950e4c-32bb-42a6-948e-966579077ec8
+    path: business.businessfunction.entity-enrichment
+    spec_node_id: business.businessfunction
+    type: businessfunction
+    layer_id: business
+    name: Entity Enrichment
+    description: "Core business function: automatically enrich ontology entities
+      with definitions, synonyms, and cross-references from external knowledge
+      bases via the reference adapters"
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/reference
+    metadata:
+      created_at: 2026-03-24T09:22:19.146Z
+      updated_at: 2026-03-24T09:22:19.146Z
+      version: 1
+  timestamp: 2026-03-24T09:22:19.167Z
+  sequenceNumber: 0
+- type: add
+  elementId: business.businessfunction.semantic-search
+  layerName: business
+  after:
+    id: 1dfcbfa1-e25e-4fc4-8ec0-3ea747e12486
+    path: business.businessfunction.semantic-search
+    spec_node_id: business.businessfunction
+    type: businessfunction
+    layer_id: business
+    name: Semantic Search
+    description: "Core business function: vector-based similarity search across
+      ontology entities using SentenceTransformer embeddings stored in local.db
+      via SQLiteVector"
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/domain/ontology/services.py
+    metadata:
+      created_at: 2026-03-24T09:22:19.444Z
+      updated_at: 2026-03-24T09:22:19.444Z
+      version: 1
+  timestamp: 2026-03-24T09:22:19.463Z
+  sequenceNumber: 1
+- type: add
+  elementId: business.businessfunction.conflict-resolution
+  layerName: business
+  after:
+    id: 211e6f0d-aa74-4caf-86e2-db45b0fccf18
+    path: business.businessfunction.conflict-resolution
+    spec_node_id: business.businessfunction
+    type: businessfunction
+    layer_id: business
+    name: Conflict Resolution
+    description: "Core business function: detect and resolve merge conflicts in
+      collaborative changeset operations in the VersionControl bounded context"
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/domain/versioning/services.py
+    metadata:
+      created_at: 2026-03-24T09:22:19.735Z
+      updated_at: 2026-03-24T09:22:19.735Z
+      version: 1
+  timestamp: 2026-03-24T09:22:19.756Z
+  sequenceNumber: 2
+- type: add
+  elementId: business.businessevent.entity-changed-event
+  layerName: business
+  after:
+    id: db107840-f671-48fc-a1b1-bd7d42e52a21
+    path: business.businessevent.entity-changed-event
+    spec_node_id: business.businessevent
+    type: businessevent
+    layer_id: business
+    name: Entity Changed Event
+    description: Business event triggered when an ontology entity is created,
+      updated, or deleted; recorded in the change_events audit trail in local.db
+    attributes:
+      type: internal
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/domain/ontology/events.py
+          symbol: OntologyEntityChanged
+    metadata:
+      created_at: 2026-03-24T09:22:25.252Z
+      updated_at: 2026-03-24T09:22:25.252Z
+      version: 1
+  timestamp: 2026-03-24T09:22:25.275Z
+  sequenceNumber: 3
+- type: add
+  elementId: business.businessevent.sync-completed-event
+  layerName: business
+  after:
+    id: 45314c9b-c3a2-42d3-913b-372d6f315ebe
+    path: business.businessevent.sync-completed-event
+    spec_node_id: business.businessevent
+    type: businessevent
+    layer_id: business
+    name: Sync Completed Event
+    description: Business event signalling successful synchronisation of the local
+      knowledge graph to remote S3 storage via the sync adapter
+    attributes:
+      type: external
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/sync
+    metadata:
+      created_at: 2026-03-24T09:22:25.566Z
+      updated_at: 2026-03-24T09:22:25.566Z
+      version: 1
+  timestamp: 2026-03-24T09:22:25.589Z
+  sequenceNumber: 4
+- type: add
+  elementId: business.businessinteraction.rag-knowledge-retrieval
+  layerName: business
+  after:
+    id: 849e34af-2c0a-47d8-9c3d-b671356358ad
+    path: business.businessinteraction.rag-knowledge-retrieval
+    spec_node_id: business.businessinteraction
+    type: businessinteraction
+    layer_id: business
+    name: RAG Knowledge Retrieval
+    description: "Business interaction: AI agents query the knowledge graph via
+      vector similarity search to retrieve contextually relevant entities for
+      RAG pipelines"
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/domain/extraction/services.py
+    metadata:
+      created_at: 2026-03-24T09:22:31.663Z
+      updated_at: 2026-03-24T09:22:31.663Z
+      version: 1
+  timestamp: 2026-03-24T09:22:31.689Z
+  sequenceNumber: 5
+- type: add
+  elementId: business.businesscollaboration.knowledge-graph-collaboration
+  layerName: business
+  after:
+    id: b62743cc-3edb-4fe2-bbe3-0399997369a8
+    path: business.businesscollaboration.knowledge-graph-collaboration
+    spec_node_id: business.businesscollaboration
+    type: businesscollaboration
+    layer_id: business
+    name: Knowledge Graph Collaboration
+    description: Business collaboration between Knowledge Managers sharing a
+      knowledge graph through changeset-based editing and conflict resolution
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/domain/versioning/services.py
+    metadata:
+      created_at: 2026-03-24T09:22:31.995Z
+      updated_at: 2026-03-24T09:22:31.995Z
+      version: 1
+  timestamp: 2026-03-24T09:22:32.024Z
+  sequenceNumber: 6
+- type: add
+  elementId: business.contract.open-api-contract
+  layerName: business
+  after:
+    id: 39043742-4352-444b-8017-f2c65982627f
+    path: business.contract.open-api-contract
+    spec_node_id: business.contract
+    type: contract
+    layer_id: business
+    name: OpenAPI Contract
+    description: "Business contract defining the REST API surface for Context
+      Studio: endpoint signatures, request/response schemas, and versioning
+      commitments"
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/web
+    metadata:
+      created_at: 2026-03-24T09:22:32.329Z
+      updated_at: 2026-03-24T09:22:32.329Z
+      version: 1
+  timestamp: 2026-03-24T09:22:32.354Z
+  sequenceNumber: 7

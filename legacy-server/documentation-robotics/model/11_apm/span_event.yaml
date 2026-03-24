@@ -9,7 +9,7 @@ apm.spanevent.llm-cache-hit-event:
     cached response, avoiding an external API call
   attributes:
     timeUnixNano: "0"
-    droppedAttributesCount: "0"
+    droppedAttributesCount: 0
   source_reference:
     provenance: extracted
     locations:

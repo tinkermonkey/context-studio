@@ -1,0 +1,211 @@
+application.applicationinterface.ontology-repository-port:
+  id: 13db6dd6-754a-4007-a089-933d305394ff
+  path: application.applicationinterface.ontology-repository-port
+  spec_node_id: application.applicationinterface
+  type: applicationinterface
+  layer_id: application
+  name: Ontology Repository Port
+  description: "Driving port (Protocol) defining persistence contract for all
+    ontology entities. Methods: get/list/save/delete for Taxonomy,
+    ConceptScheme, Class, Individual, Relationship, PropertyDefinition.
+    Implemented by SQLiteOntologyRepository"
+  attributes:
+    protocol: REST
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: domain/ontology/ports.py
+        symbol: OntologyRepository
+  metadata:
+    created_at: 2026-03-24T08:41:02.694Z
+    updated_at: 2026-03-24T08:41:02.694Z
+    version: 1
+application.applicationinterface.embedding-service-port:
+  id: fff98841-2543-4a47-b934-70a620b2581c
+  path: application.applicationinterface.embedding-service-port
+  spec_node_id: application.applicationinterface
+  type: applicationinterface
+  layer_id: application
+  name: Embedding Service Port
+  description: "Driving port (Protocol) for generating vector embeddings. Methods:
+    embed_text, embed_batch, similarity. Implemented by
+    SentenceTransformerEmbedding adapter"
+  attributes:
+    protocol: REST
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: domain/ontology/ports.py
+        symbol: EmbeddingService
+  metadata:
+    created_at: 2026-03-24T08:41:03.128Z
+    updated_at: 2026-03-24T08:41:03.128Z
+    version: 1
+application.applicationinterface.event-publisher-port:
+  id: 890ff50b-00b4-490e-9224-395a24274637
+  path: application.applicationinterface.event-publisher-port
+  spec_node_id: application.applicationinterface
+  type: applicationinterface
+  layer_id: application
+  name: Event Publisher Port
+  description: "Driving port (Protocol) for fire-and-forget domain event
+    publication. Methods: publish, subscribe. Implemented by
+    InProcessEventPublisher using observer pattern"
+  attributes:
+    protocol: AMQP
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: domain/ontology/ports.py
+        symbol: EventPublisher
+  metadata:
+    created_at: 2026-03-24T08:41:03.587Z
+    updated_at: 2026-03-24T08:41:03.587Z
+    version: 1
+application.applicationinterface.llm-provider-port:
+  id: cece059b-fb59-40c0-a0dc-e7ba6203ecd4
+  path: application.applicationinterface.llm-provider-port
+  spec_node_id: application.applicationinterface
+  type: applicationinterface
+  layer_id: application
+  name: LLM Provider Port
+  description: "Driving port (Protocol) for LLM inference. Methods: complete
+    (returns LLMResponse with tokens/duration), is_model_available,
+    list_available_models. Implemented by LLMProviderRouter"
+  attributes:
+    protocol: HTTPS
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: domain/extraction/ports.py
+        symbol: LLMProvider
+  metadata:
+    created_at: 2026-03-24T08:41:04.030Z
+    updated_at: 2026-03-24T08:41:04.030Z
+    version: 1
+application.applicationinterface.nlp-processor-port:
+  id: f33f7bba-0e15-44f5-8a85-2d6fb960f0b7
+  path: application.applicationinterface.nlp-processor-port
+  spec_node_id: application.applicationinterface
+  type: applicationinterface
+  layer_id: application
+  name: NLP Processor Port
+  description: "Driving port (Protocol) for NLP text analysis. Methods: process
+    (returns NLPResult), extract_entities, is_ready. Implemented by
+    SpacyNLPProcessor"
+  attributes:
+    protocol: REST
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: domain/extraction/ports.py
+        symbol: NLPProcessor
+  metadata:
+    created_at: 2026-03-24T08:41:04.489Z
+    updated_at: 2026-03-24T08:41:04.489Z
+    version: 1
+application.applicationinterface.reference-source-port:
+  id: 81ba9d4b-f8a9-4aa8-bb9b-bb6d1b347e7d
+  path: application.applicationinterface.reference-source-port
+  spec_node_id: application.applicationinterface
+  type: applicationinterface
+  layer_id: application
+  name: Reference Source Port
+  description: "Driving port (Protocol) for querying external knowledge sources.
+    Methods: search, get_relations, is_available. Implemented by ConceptNet,
+    DBpedia, Wikidata, and SchemaOrg adapters with caching"
+  attributes:
+    protocol: HTTPS
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: domain/extraction/ports.py
+        symbol: ReferenceSource
+  metadata:
+    created_at: 2026-03-24T08:41:04.944Z
+    updated_at: 2026-03-24T08:41:04.944Z
+    version: 1
+application.applicationinterface.graph-engine-port:
+  id: 99ddb89f-6072-4678-bbec-675d26972229
+  path: application.applicationinterface.graph-engine-port
+  spec_node_id: application.applicationinterface
+  type: applicationinterface
+  layer_id: application
+  name: Graph Engine Port
+  description: "Driving port (Protocol) for graph computation. Methods:
+    build_from_data, shortest_path, centrality, communities, subgraph,
+    neighbors, has_cycle. Implemented by NetworkXGraphEngine"
+  attributes:
+    protocol: REST
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: domain/graph/ports.py
+        symbol: GraphEngine
+  metadata:
+    created_at: 2026-03-24T08:41:05.400Z
+    updated_at: 2026-03-24T08:41:05.400Z
+    version: 1
+application.applicationinterface.semantic-query-engine-port:
+  id: 470c3dab-40e8-44ad-8168-60ea4c61a442
+  path: application.applicationinterface.semantic-query-engine-port
+  spec_node_id: application.applicationinterface
+  type: applicationinterface
+  layer_id: application
+  name: Semantic Query Engine Port
+  description: "Driving port (Protocol) for SPARQL/RDF semantic queries. Methods:
+    load_ontology, execute_sparql, get_triples. Implemented by
+    RDFLibQueryEngine"
+  attributes:
+    protocol: REST
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: domain/graph/ports.py
+        symbol: SemanticQueryEngine
+  metadata:
+    created_at: 2026-03-24T08:41:05.850Z
+    updated_at: 2026-03-24T08:41:05.850Z
+    version: 1
+application.applicationinterface.change-repository-port:
+  id: 09bce153-af1a-44af-91e1-c27cf829add3
+  path: application.applicationinterface.change-repository-port
+  spec_node_id: application.applicationinterface
+  type: applicationinterface
+  layer_id: application
+  name: Change Repository Port
+  description: "Driving port (Protocol) for change event persistence. Methods:
+    record_change, get_changes, mark_processed, save_version, get_version,
+    list_versions. Implemented by SQLiteChangeRepository"
+  attributes:
+    protocol: REST
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: domain/versioning/ports.py
+        symbol: ChangeRepository
+  metadata:
+    created_at: 2026-03-24T08:41:06.303Z
+    updated_at: 2026-03-24T08:41:06.303Z
+    version: 1
+application.applicationinterface.sync-target-port:
+  id: be50aecd-c3fc-43de-926c-88f998ea4914
+  path: application.applicationinterface.sync-target-port
+  spec_node_id: application.applicationinterface
+  type: applicationinterface
+  layer_id: application
+  name: Sync Target Port
+  description: "Driving port (Protocol) for remote synchronization. Methods:
+    push_changes, pull_changes, get_sync_status. Implemented by S3SyncAdapter
+    using DuckDB/Parquet"
+  attributes:
+    protocol: HTTPS
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: domain/versioning/ports.py
+        symbol: SyncTarget
+  metadata:
+    created_at: 2026-03-24T08:41:06.750Z
+    updated_at: 2026-03-24T08:41:06.750Z
+    version: 1

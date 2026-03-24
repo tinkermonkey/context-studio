@@ -1,0 +1,172 @@
+api.tag.taxonomies:
+  id: 42ce35c5-0011-4a05-ab42-240b87f7aa3d
+  path: api.tag.taxonomies
+  spec_node_id: api.tag
+  type: tag
+  layer_id: api
+  name: taxonomies
+  description: Endpoints for managing top-level taxonomy containers
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: adapters/web/ontology_routes.py
+        symbol: router
+  metadata:
+    created_at: 2026-03-24T08:35:48.322Z
+    updated_at: 2026-03-24T08:35:48.322Z
+    version: 1
+api.tag.concept-schemes:
+  id: 34c8736f-ecdf-4810-8512-92d5f890627a
+  path: api.tag.concept-schemes
+  spec_node_id: api.tag
+  type: tag
+  layer_id: api
+  name: concept-schemes
+  description: Endpoints for managing concept schemes within taxonomies
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: adapters/web/ontology_routes.py
+        symbol: router
+  metadata:
+    created_at: 2026-03-24T08:35:48.698Z
+    updated_at: 2026-03-24T08:35:48.698Z
+    version: 1
+api.tag.classes:
+  id: 26a96629-d8ba-4440-9756-084a8ac3cdeb
+  path: api.tag.classes
+  spec_node_id: api.tag
+  type: tag
+  layer_id: api
+  name: classes
+  description: Endpoints for managing ontology classes (concepts)
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: adapters/web/ontology_routes.py
+        symbol: router
+  metadata:
+    created_at: 2026-03-24T08:35:49.103Z
+    updated_at: 2026-03-24T08:35:49.103Z
+    version: 1
+api.tag.relationships:
+  id: 96e76771-9442-4534-9028-d762fc85cfcf
+  path: api.tag.relationships
+  spec_node_id: api.tag
+  type: tag
+  layer_id: api
+  name: relationships
+  description: Endpoints for managing typed directed relationships between ontology entities
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: adapters/web/ontology_routes.py
+        symbol: router
+  metadata:
+    created_at: 2026-03-24T08:35:49.492Z
+    updated_at: 2026-03-24T08:35:49.492Z
+    version: 1
+api.tag.property-definitions:
+  id: c33c2736-645c-4504-ba06-b41b26037a9d
+  path: api.tag.property-definitions
+  spec_node_id: api.tag
+  type: tag
+  layer_id: api
+  name: property-definitions
+  description: Endpoints for managing object property definitions (relationship types)
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: adapters/web/ontology_routes.py
+        symbol: router
+  metadata:
+    created_at: 2026-03-24T08:35:49.920Z
+    updated_at: 2026-03-24T08:35:49.920Z
+    version: 1
+api.tag.graph:
+  id: a72fc971-3ebc-4548-ad8d-35fdffde6d7b
+  path: api.tag.graph
+  spec_node_id: api.tag
+  type: tag
+  layer_id: api
+  name: graph
+  description: Endpoints for graph construction, traversal, path queries, and
+    network analysis
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: adapters/web/graph_routes.py
+        symbol: router
+  metadata:
+    created_at: 2026-03-24T08:35:55.687Z
+    updated_at: 2026-03-24T08:35:55.687Z
+    version: 1
+api.tag.extraction:
+  id: 7130843f-1e18-4440-aa96-f680d76879d2
+  path: api.tag.extraction
+  spec_node_id: api.tag
+  type: tag
+  layer_id: api
+  name: extraction
+  description: Endpoints for knowledge extraction and RAG pipeline execution
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: adapters/web/extraction_routes.py
+        symbol: router
+  metadata:
+    created_at: 2026-03-24T08:35:56.109Z
+    updated_at: 2026-03-24T08:35:56.109Z
+    version: 1
+api.tag.pipelines:
+  id: 60ad46b7-3a9b-4d7a-8434-7d5845ca53b5
+  path: api.tag.pipelines
+  spec_node_id: api.tag
+  type: tag
+  layer_id: api
+  name: pipelines
+  description: Endpoints for LLM pipeline configuration management and execution
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: adapters/web/pipeline_routes.py
+        symbol: router
+  metadata:
+    created_at: 2026-03-24T08:35:56.520Z
+    updated_at: 2026-03-24T08:35:56.520Z
+    version: 1
+api.tag.versioning:
+  id: dee8dc77-c8ff-4cf8-bf2e-b63e661be6cc
+  path: api.tag.versioning
+  spec_node_id: api.tag
+  type: tag
+  layer_id: api
+  name: versioning
+  description: Endpoints for change tracking, changesets, proposals, and sync
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: adapters/web/versioning_routes.py
+        symbol: router
+  metadata:
+    created_at: 2026-03-24T08:35:56.945Z
+    updated_at: 2026-03-24T08:35:56.945Z
+    version: 1
+api.tag.admin:
+  id: d6a8c8e9-1ed4-4a9b-a04d-a73b21ee656e
+  path: api.tag.admin
+  spec_node_id: api.tag
+  type: tag
+  layer_id: api
+  name: admin
+  description: Endpoints for health monitoring, background tasks, and
+    configuration management
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: adapters/web/admin_routes.py
+        symbol: router
+  metadata:
+    created_at: 2026-03-24T08:35:57.360Z
+    updated_at: 2026-03-24T08:35:57.360Z
+    version: 1

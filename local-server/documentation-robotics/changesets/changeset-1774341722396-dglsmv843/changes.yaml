@@ -1,0 +1,618 @@
+- type: add
+  elementId: technology.systemsoftware.python-3
+  layerName: technology
+  after:
+    id: 209c5705-12f3-46f3-8948-a1352980f513
+    path: technology.systemsoftware.python-3
+    spec_node_id: technology.systemsoftware
+    type: systemsoftware
+    layer_id: technology
+    name: Python 3
+    description: Primary implementation language. Python 3.x runtime. All domain
+      entities use dataclasses (not Pydantic). Zero infrastructure imports
+      enforced in domain/ by check_domain_imports.py
+    attributes:
+      softwareType: middleware
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: requirements.txt
+    metadata:
+      created_at: 2026-03-24T08:42:25.912Z
+      updated_at: 2026-03-24T08:42:25.912Z
+      version: 1
+  timestamp: 2026-03-24T08:42:25.933Z
+  sequenceNumber: 0
+- type: add
+  elementId: technology.systemsoftware.fast-api
+  layerName: technology
+  after:
+    id: dc5b2f29-bd3a-4962-8da2-604417c1f317
+    path: technology.systemsoftware.fast-api
+    spec_node_id: technology.systemsoftware
+    type: systemsoftware
+    layer_id: technology
+    name: FastAPI
+    description: Web framework used in the adapters/web/ driving adapter. Route
+      handlers are thin — business logic stays in domain services. Pydantic
+      schemas used only for HTTP request/response validation
+    attributes:
+      softwareType: middleware
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: requirements.txt
+    metadata:
+      created_at: 2026-03-24T08:42:26.355Z
+      updated_at: 2026-03-24T08:42:26.355Z
+      version: 1
+  timestamp: 2026-03-24T08:42:26.378Z
+  sequenceNumber: 1
+- type: add
+  elementId: technology.systemsoftware.uvicorn
+  layerName: technology
+  after:
+    id: e8b67318-726c-4165-9d5b-1673124ee96a
+    path: technology.systemsoftware.uvicorn
+    spec_node_id: technology.systemsoftware
+    type: systemsoftware
+    layer_id: technology
+    name: uvicorn
+    description: ASGI server that runs the FastAPI application. Entry point is
+      app.py. Handles HTTP connections and request routing
+    attributes:
+      softwareType: middleware
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: requirements.txt
+    metadata:
+      created_at: 2026-03-24T08:42:26.783Z
+      updated_at: 2026-03-24T08:42:26.783Z
+      version: 1
+  timestamp: 2026-03-24T08:42:26.805Z
+  sequenceNumber: 2
+- type: add
+  elementId: technology.systemsoftware.sqlalchemy
+  layerName: technology
+  after:
+    id: b5a03933-6cbe-457d-b346-2c213f31eddf
+    path: technology.systemsoftware.sqlalchemy
+    spec_node_id: technology.systemsoftware
+    type: systemsoftware
+    layer_id: technology
+    name: SQLAlchemy
+    description: ORM used only in the adapters/persistence/sqlite/ adapter layer.
+      ORM models (models.py) are the source of truth for database schema. Domain
+      entities are pure dataclasses with no SQLAlchemy dependency
+    attributes:
+      softwareType: middleware
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: requirements.txt
+    metadata:
+      created_at: 2026-03-24T08:42:27.219Z
+      updated_at: 2026-03-24T08:42:27.219Z
+      version: 1
+  timestamp: 2026-03-24T08:42:27.242Z
+  sequenceNumber: 3
+- type: add
+  elementId: technology.systemsoftware.alembic
+  layerName: technology
+  after:
+    id: 05dc2b4e-4d0a-4a4e-b8cd-ff646dc4c6ef
+    path: technology.systemsoftware.alembic
+    spec_node_id: technology.systemsoftware
+    type: systemsoftware
+    layer_id: technology
+    name: Alembic
+    description: Database migration tool managing schema evolution for local.db and
+      operations.db. Autogenerates migrations from SQLAlchemy ORM models — never
+      hand-written SQL
+    attributes:
+      softwareType: middleware
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: requirements.txt
+    metadata:
+      created_at: 2026-03-24T08:42:27.649Z
+      updated_at: 2026-03-24T08:42:27.649Z
+      version: 1
+  timestamp: 2026-03-24T08:42:27.671Z
+  sequenceNumber: 4
+- type: add
+  elementId: technology.systemsoftware.sqlite
+  layerName: technology
+  after:
+    id: 1de426b5-6e8d-4bd0-9604-94d406e68f3b
+    path: technology.systemsoftware.sqlite
+    spec_node_id: technology.systemsoftware
+    type: systemsoftware
+    layer_id: technology
+    name: SQLite
+    description: "Embedded relational database engine. Four databases: local.db,
+      operations.db, reference.db, reference_api_cache.db. Used with
+      SQLiteVector extension for semantic embedding storage"
+    attributes:
+      softwareType: dbms
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: requirements.txt
+    metadata:
+      created_at: 2026-03-24T08:42:28.072Z
+      updated_at: 2026-03-24T08:42:28.072Z
+      version: 1
+  timestamp: 2026-03-24T08:42:28.102Z
+  sequenceNumber: 5
+- type: add
+  elementId: technology.systemsoftware.pydantic
+  layerName: technology
+  after:
+    id: 35147b56-1e0f-4851-b501-c214d89101df
+    path: technology.systemsoftware.pydantic
+    spec_node_id: technology.systemsoftware
+    type: systemsoftware
+    layer_id: technology
+    name: Pydantic
+    description: Data validation library used exclusively in adapters/web/schemas/
+      for HTTP request/response models. NOT used in domain — domain uses Python
+      dataclasses to stay framework-free
+    attributes:
+      softwareType: middleware
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: requirements.txt
+    metadata:
+      created_at: 2026-03-24T08:42:28.512Z
+      updated_at: 2026-03-24T08:42:28.512Z
+      version: 1
+  timestamp: 2026-03-24T08:42:28.537Z
+  sequenceNumber: 6
+- type: add
+  elementId: technology.systemsoftware.sentence-transformer
+  layerName: technology
+  after:
+    id: 68a8b00e-95c6-4152-aa48-40b60cb753c8
+    path: technology.systemsoftware.sentence-transformer
+    spec_node_id: technology.systemsoftware
+    type: systemsoftware
+    layer_id: technology
+    name: SentenceTransformer
+    description: ML model (all-MiniLM-L12-v2) for generating 384-dimensional text
+      embeddings. Runs locally — no external API calls. Used by the
+      EmbeddingAdapter to embed class titles and definitions for semantic search
+    attributes:
+      softwareType: middleware
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: adapters/embedding/sentence_transformer.py
+    metadata:
+      created_at: 2026-03-24T08:42:39.352Z
+      updated_at: 2026-03-24T08:42:39.352Z
+      version: 1
+  timestamp: 2026-03-24T08:42:39.376Z
+  sequenceNumber: 7
+- type: add
+  elementId: technology.systemsoftware.spa-cy
+  layerName: technology
+  after:
+    id: 8584ff12-939f-4dbd-9a0f-f988d9592209
+    path: technology.systemsoftware.spa-cy
+    spec_node_id: technology.systemsoftware
+    type: systemsoftware
+    layer_id: technology
+    name: spaCy
+    description: NLP pipeline framework for text processing. Used in NLPAdapter
+      (SpacyNLPProcessor) with concepcy, DBpedia Spotlight, and WordNet
+      components for named entity recognition and linking
+    attributes:
+      softwareType: middleware
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: adapters/nlp/spacy_processor.py
+    metadata:
+      created_at: 2026-03-24T08:42:39.806Z
+      updated_at: 2026-03-24T08:42:39.806Z
+      version: 1
+  timestamp: 2026-03-24T08:42:39.828Z
+  sequenceNumber: 8
+- type: add
+  elementId: technology.systemsoftware.network-x
+  layerName: technology
+  after:
+    id: 897dc67d-438b-492f-bac7-f4809180d700
+    path: technology.systemsoftware.network-x
+    spec_node_id: technology.systemsoftware
+    type: systemsoftware
+    layer_id: technology
+    name: NetworkX
+    description: Python graph library used by GraphEngineAdapter to build in-memory
+      directed graphs from ontology data. Provides path finding, centrality
+      algorithms, and community detection
+    attributes:
+      softwareType: middleware
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: adapters/graph/networkx_engine.py
+    metadata:
+      created_at: 2026-03-24T08:42:40.267Z
+      updated_at: 2026-03-24T08:42:40.267Z
+      version: 1
+  timestamp: 2026-03-24T08:42:40.296Z
+  sequenceNumber: 9
+- type: add
+  elementId: technology.systemsoftware.rdflib
+  layerName: technology
+  after:
+    id: 34dc538b-ede7-4f66-b28f-fefae1a17536
+    path: technology.systemsoftware.rdflib
+    spec_node_id: technology.systemsoftware
+    type: systemsoftware
+    layer_id: technology
+    name: RDFLib
+    description: Python RDF library used by SemanticQueryEngineAdapter to build
+      RDF/OWL representations of the ontology and execute SPARQL queries
+    attributes:
+      softwareType: middleware
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: adapters/graph/rdflib_engine.py
+    metadata:
+      created_at: 2026-03-24T08:42:40.727Z
+      updated_at: 2026-03-24T08:42:40.727Z
+      version: 1
+  timestamp: 2026-03-24T08:42:40.751Z
+  sequenceNumber: 10
+- type: add
+  elementId: technology.systemsoftware.duck-db
+  layerName: technology
+  after:
+    id: b8cee990-3d28-429a-8fd4-fc6327acee1e
+    path: technology.systemsoftware.duck-db
+    spec_node_id: technology.systemsoftware
+    type: systemsoftware
+    layer_id: technology
+    name: DuckDB
+    description: Analytical database used in the SyncAdapter for reading and writing
+      Parquet files during remote workspace synchronization. Enables S3 sync via
+      columnar format
+    attributes:
+      softwareType: dbms
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: adapters/sync/duckdb_sync.py
+    metadata:
+      created_at: 2026-03-24T08:42:41.170Z
+      updated_at: 2026-03-24T08:42:41.170Z
+      version: 1
+  timestamp: 2026-03-24T08:42:41.194Z
+  sequenceNumber: 11
+- type: add
+  elementId: technology.technologyservice.open-ai-api
+  layerName: technology
+  after:
+    id: 3d3c58b4-a19e-45f0-b014-edc4fb9425c4
+    path: technology.technologyservice.open-ai-api
+    spec_node_id: technology.technologyservice
+    type: technologyservice
+    layer_id: technology
+    name: OpenAI API
+    description: External LLM inference service. Used by OpenAIProvider adapter for
+      GPT model inference. Accessed via HTTPS REST API with bearer token
+      authentication from config.json
+    attributes:
+      serviceType: compute
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: adapters/llm/openai_provider.py
+    metadata:
+      created_at: 2026-03-24T08:42:51.976Z
+      updated_at: 2026-03-24T08:42:51.976Z
+      version: 1
+  timestamp: 2026-03-24T08:42:52.003Z
+  sequenceNumber: 12
+- type: add
+  elementId: technology.technologyservice.anthropic-api
+  layerName: technology
+  after:
+    id: 1a661b6b-4ca4-4459-80f9-abe6149e3c57
+    path: technology.technologyservice.anthropic-api
+    spec_node_id: technology.technologyservice
+    type: technologyservice
+    layer_id: technology
+    name: Anthropic API
+    description: External LLM inference service (Claude models). Used by
+      AnthropicProvider adapter. Accessed via HTTPS REST API with bearer token
+      authentication from config.json
+    attributes:
+      serviceType: compute
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: adapters/llm/anthropic_provider.py
+    metadata:
+      created_at: 2026-03-24T08:42:52.429Z
+      updated_at: 2026-03-24T08:42:52.429Z
+      version: 1
+  timestamp: 2026-03-24T08:42:52.454Z
+  sequenceNumber: 13
+- type: add
+  elementId: technology.technologyservice.concept-net-api
+  layerName: technology
+  after:
+    id: 626f8a6d-c20d-497f-becb-188d31e8164d
+    path: technology.technologyservice.concept-net-api
+    spec_node_id: technology.technologyservice
+    type: technologyservice
+    layer_id: technology
+    name: ConceptNet API
+    description: External knowledge graph service for semantic relationships. Used
+      by ConceptNetSource adapter with response caching in
+      reference_api_cache.db
+    attributes:
+      serviceType: database
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: adapters/reference/conceptnet.py
+    metadata:
+      created_at: 2026-03-24T08:42:52.876Z
+      updated_at: 2026-03-24T08:42:52.876Z
+      version: 1
+  timestamp: 2026-03-24T08:42:52.900Z
+  sequenceNumber: 14
+- type: add
+  elementId: technology.technologyservice.dbpedia-api
+  layerName: technology
+  after:
+    id: 09057838-48fc-4264-b538-1c6505b19c12
+    path: technology.technologyservice.dbpedia-api
+    spec_node_id: technology.technologyservice
+    type: technologyservice
+    layer_id: technology
+    name: DBpedia API
+    description: External linked-data service (DBpedia Lookup, SPARQL endpoint,
+      Spotlight). Used by DBpediaSource adapter for entity linking and
+      enrichment
+    attributes:
+      serviceType: database
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: adapters/reference/dbpedia.py
+    metadata:
+      created_at: 2026-03-24T08:42:53.334Z
+      updated_at: 2026-03-24T08:42:53.334Z
+      version: 1
+  timestamp: 2026-03-24T08:42:53.359Z
+  sequenceNumber: 15
+- type: add
+  elementId: technology.technologyservice.wikidata-api
+  layerName: technology
+  after:
+    id: 51c98565-9e90-4f8b-b0ee-6f3e7b28ba99
+    path: technology.technologyservice.wikidata-api
+    spec_node_id: technology.technologyservice
+    type: technologyservice
+    layer_id: technology
+    name: Wikidata API
+    description: External knowledge base service (Wikidata SPARQL endpoint). Used by
+      WikidataSource adapter for structured entity data
+    attributes:
+      serviceType: database
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: adapters/reference/wikidata.py
+    metadata:
+      created_at: 2026-03-24T08:42:53.790Z
+      updated_at: 2026-03-24T08:42:53.790Z
+      version: 1
+  timestamp: 2026-03-24T08:42:53.817Z
+  sequenceNumber: 16
+- type: add
+  elementId: technology.technologyservice.schemaorg-vocabulary
+  layerName: technology
+  after:
+    id: 0aa6f0e5-8564-4b25-945b-932e0e84ae79
+    path: technology.technologyservice.schemaorg-vocabulary
+    spec_node_id: technology.technologyservice
+    type: technologyservice
+    layer_id: technology
+    name: schema.org Vocabulary
+    description: Structured data vocabulary. Used by SchemaOrgSource adapter for
+      standard property and class definitions
+    attributes:
+      serviceType: database
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: adapters/reference/schema_org.py
+    metadata:
+      created_at: 2026-03-24T08:42:54.248Z
+      updated_at: 2026-03-24T08:42:54.248Z
+      version: 1
+  timestamp: 2026-03-24T08:42:54.276Z
+  sequenceNumber: 17
+- type: add
+  elementId: technology.technologyservice.amazon-s3
+  layerName: technology
+  after:
+    id: 35ac3f8b-41a9-44a4-92f2-637d230a9ffd
+    path: technology.technologyservice.amazon-s3
+    spec_node_id: technology.technologyservice
+    type: technologyservice
+    layer_id: technology
+    name: Amazon S3
+    description: Remote object storage for workspace synchronization. Used by
+      S3SyncAdapter to push/pull DuckDB/Parquet format change exports. Sync is
+      optional and user-controlled per local-first principle
+    attributes:
+      serviceType: storage
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: adapters/sync/s3_sync.py
+    metadata:
+      created_at: 2026-03-24T08:43:04.673Z
+      updated_at: 2026-03-24T08:43:04.673Z
+      version: 1
+  timestamp: 2026-03-24T08:43:04.702Z
+  sequenceNumber: 18
+- type: add
+  elementId: technology.artifact.configjson
+  layerName: technology
+  after:
+    id: 2f862b5e-3c3f-468a-bde3-79e539a69520
+    path: technology.artifact.configjson
+    spec_node_id: technology.artifact
+    type: artifact
+    layer_id: technology
+    name: config.json
+    description: Application configuration file. Single source of truth for all
+      runtime configuration (server host/port, database paths, LLM provider
+      keys, NLP model, embedding model, reference source settings, sync). No
+      environment variable overrides for app settings
+    attributes:
+      artifactType: configuration
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: config.py
+    metadata:
+      created_at: 2026-03-24T08:43:05.163Z
+      updated_at: 2026-03-24T08:43:05.163Z
+      version: 1
+  timestamp: 2026-03-24T08:43:05.189Z
+  sequenceNumber: 19
+- type: add
+  elementId: technology.artifact.requirementstxt
+  layerName: technology
+  after:
+    id: d5476da8-b1a1-4dc0-a821-78b74f5f084b
+    path: technology.artifact.requirementstxt
+    spec_node_id: technology.artifact
+    type: artifact
+    layer_id: technology
+    name: requirements.txt
+    description: "Python package dependency manifest for the local-server. Managed
+      dependencies: fastapi, uvicorn, sqlalchemy, alembic, pydantic,
+      sentence-transformers, spacy, networkx, rdflib, duckdb, pytest, httpx"
+    attributes:
+      artifactType: file
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: requirements.txt
+    metadata:
+      created_at: 2026-03-24T08:43:10.150Z
+      updated_at: 2026-03-24T08:43:10.150Z
+      version: 1
+  timestamp: 2026-03-24T08:43:10.177Z
+  sequenceNumber: 20
+- type: add
+  elementId: technology.node.developer-workstation
+  layerName: technology
+  after:
+    id: ef90e791-ebf7-4ef9-8068-e9db38b93c92
+    path: technology.node.developer-workstation
+    spec_node_id: technology.node
+    type: node
+    layer_id: technology
+    name: Developer Workstation
+    description: Target deployment environment. Context Studio is a local-first
+      desktop application — all processing runs on the user's own machine. The
+      local-server runs as a local process, not a remote service
+    attributes:
+      nodeType: physical-server
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: CLAUDE.md
+    metadata:
+      created_at: 2026-03-24T08:43:14.718Z
+      updated_at: 2026-03-24T08:43:14.718Z
+      version: 1
+  timestamp: 2026-03-24T08:43:14.744Z
+  sequenceNumber: 21
+- type: add
+  elementId: technology.technologyinterface.http-rest-interface
+  layerName: technology
+  after:
+    id: 9679f9b9-c825-412c-a365-8ecc502efc15
+    path: technology.technologyinterface.http-rest-interface
+    spec_node_id: technology.technologyinterface
+    type: technologyinterface
+    layer_id: technology
+    name: HTTP REST Interface
+    description: HTTP REST interface exposed by the FastAPI/uvicorn server on
+      localhost:8000. All API routes are prefixed with /api/. Documentation at
+      /docs (Swagger UI). OpenAPI spec at /openapi.json
+    attributes:
+      protocol: http
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: app.py
+    metadata:
+      created_at: 2026-03-24T08:43:29.381Z
+      updated_at: 2026-03-24T08:43:29.381Z
+      version: 1
+  timestamp: 2026-03-24T08:43:29.407Z
+  sequenceNumber: 22
+- type: add
+  elementId: technology.technologyprocess.domain-import-check
+  layerName: technology
+  after:
+    id: 17a10240-4e73-490e-92c3-6e72a051bb00
+    path: technology.technologyprocess.domain-import-check
+    spec_node_id: technology.technologyprocess
+    type: technologyprocess
+    layer_id: technology
+    name: Domain Import Check
+    description: Static analysis process (scripts/check_domain_imports.py) that
+      scans domain/ for any imports from infrastructure code. Enforces the
+      hexagonal dependency rule — zero infrastructure imports in domain/
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: scripts/check_domain_imports.py
+    metadata:
+      created_at: 2026-03-24T08:43:29.866Z
+      updated_at: 2026-03-24T08:43:29.866Z
+      version: 1
+  timestamp: 2026-03-24T08:43:29.893Z
+  sequenceNumber: 23
+- type: add
+  elementId: technology.technologyprocess.open-api-spec-generation
+  layerName: technology
+  after:
+    id: 9f6eb785-492d-4758-849f-cdf7da0ad696
+    path: technology.technologyprocess.open-api-spec-generation
+    spec_node_id: technology.technologyprocess
+    type: technologyprocess
+    layer_id: technology
+    name: OpenAPI Spec Generation
+    description: Script (scripts/update_api_specs.py) that generates
+      documentation/openapi.json from the running FastAPI application. Must be
+      run after any route changes to keep the spec current
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: scripts/update_api_specs.py
+    metadata:
+      created_at: 2026-03-24T08:43:30.345Z
+      updated_at: 2026-03-24T08:43:30.345Z
+      version: 1
+  timestamp: 2026-03-24T08:43:30.372Z
+  sequenceNumber: 24

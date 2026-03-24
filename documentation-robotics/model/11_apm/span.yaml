@@ -1,0 +1,56 @@
+apm.span.api-request-span:
+  id: 65502478-55d2-4b6c-84af-5ea486daa138
+  path: apm.span.api-request-span
+  spec_node_id: apm.span
+  type: span
+  layer_id: apm
+  name: API Request Span
+  description: Trace span representing the full duration of a single HTTP API
+    request, from receipt to response in the FastAPI application
+  attributes:
+    traceId: ""
+    spanId: ""
+    traceState: ""
+    parentSpanId: ""
+    spanKind: SERVER
+    startTimeUnixNano: "0"
+    endTimeUnixNano: "0"
+    droppedAttributesCount: 0
+    droppedEventsCount: "0"
+    droppedLinksCount: "0"
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/app.py
+  metadata:
+    created_at: 2026-03-24T09:18:18.812Z
+    updated_at: 2026-03-24T09:18:18.813Z
+    version: 1
+apm.span.database-query-span:
+  id: 6955d258-7253-419d-8227-24bf9bf4bfd3
+  path: apm.span.database-query-span
+  spec_node_id: apm.span
+  type: span
+  layer_id: apm
+  name: Database Query Span
+  description: OpenTelemetry span covering SQLAlchemy database query execution
+    across local.db and operations.db
+  attributes:
+    traceId: ""
+    spanId: ""
+    traceState: ""
+    parentSpanId: ""
+    spanKind: CLIENT
+    startTimeUnixNano: "0"
+    endTimeUnixNano: "0"
+    droppedAttributesCount: 0
+    droppedEventsCount: "0"
+    droppedLinksCount: "0"
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/persistence/sqlite
+  metadata:
+    created_at: 2026-03-24T09:18:23.146Z
+    updated_at: 2026-03-24T09:18:23.146Z
+    version: 1

@@ -1,0 +1,23 @@
+data-store.retentionpolicy.reference-api-cache-cleanup:
+  id: 5d481c77-0452-4415-8089-e64068de9afd
+  path: data-store.retentionpolicy.reference-api-cache-cleanup
+  spec_node_id: data-store.retentionpolicy
+  type: retentionpolicy
+  layer_id: data-store
+  name: reference_api_cache cleanup
+  description: 7-day TTL retention policy for the reference_api_cache.db — cached
+    responses from ConceptNet, DBpedia, Wikidata, and schema.org are dropped and
+    rebuilt on demand
+  attributes:
+    targetCollection: reference_api_cache
+    retentionDuration: P7D
+    action: DELETE
+    enabled: true
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/reference
+  metadata:
+    created_at: 2026-03-24T09:25:00.479Z
+    updated_at: 2026-03-24T09:25:00.479Z
+    version: 1

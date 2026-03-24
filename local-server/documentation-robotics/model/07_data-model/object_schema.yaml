@@ -1,0 +1,414 @@
+data-model.objectschema.taxonomy:
+  id: c38c4da3-6e73-423f-ad3c-658e18a0bbca
+  path: data-model.objectschema.taxonomy
+  spec_node_id: data-model.objectschema
+  type: objectschema
+  layer_id: data-model
+  name: Taxonomy
+  description: "Top-level organizational container for a knowledge domain.
+    Replaces StructureNode node_type=layer. Fields: id, title, definition,
+    created_at, last_modified, version"
+  attributes:
+    type: object
+    required: id,title
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: domain/ontology/entities.py
+        symbol: Taxonomy
+  metadata:
+    created_at: 2026-03-24T08:37:51.738Z
+    updated_at: 2026-03-24T08:37:51.738Z
+    version: 1
+data-model.objectschema.concept-scheme:
+  id: 5489fc41-c158-40e4-8365-d91e83f71399
+  path: data-model.objectschema.concept-scheme
+  spec_node_id: data-model.objectschema
+  type: objectschema
+  layer_id: data-model
+  name: ConceptScheme
+  description: "A coherent grouping of related classes within a taxonomy. Inspired
+    by SKOS ConceptScheme. Fields: id, title, taxonomy_id, definition,
+    created_at, last_modified, version"
+  attributes:
+    type: object
+    required: id,title,taxonomy_id
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: domain/ontology/entities.py
+        symbol: ConceptScheme
+  metadata:
+    created_at: 2026-03-24T08:37:52.146Z
+    updated_at: 2026-03-24T08:37:52.146Z
+    version: 1
+data-model.objectschema.class:
+  id: 9aa72a9c-0562-49b0-a1d4-00a8a2f39063
+  path: data-model.objectschema.class
+  spec_node_id: data-model.objectschema
+  type: objectschema
+  layer_id: data-model
+  name: Class
+  description: An ontology concept that defines a category. The primary working
+    entity in Context Studio. Replaces StructureNode node_type=term. Supports
+    subclass hierarchies, external references, lexical senses, embeddings
+  attributes:
+    type: object
+    required: id,title,concept_scheme_id
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: domain/ontology/entities.py
+        symbol: Class
+  metadata:
+    created_at: 2026-03-24T08:37:52.541Z
+    updated_at: 2026-03-24T08:37:52.541Z
+    version: 1
+data-model.objectschema.relationship:
+  id: 3c4da98f-dae2-4fb3-8f36-b079271601ef
+  path: data-model.objectschema.relationship
+  spec_node_id: data-model.objectschema
+  type: objectschema
+  layer_id: data-model
+  name: Relationship
+  description: "A typed, directed edge between two ontology entities. Replaces
+    StructureNodeLink. Fields: id, source_id, target_id, property_definition_id,
+    property_label, created_at"
+  attributes:
+    type: object
+    required: id,source_id,target_id,property_definition_id
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: domain/ontology/entities.py
+        symbol: Relationship
+  metadata:
+    created_at: 2026-03-24T08:37:52.947Z
+    updated_at: 2026-03-24T08:37:52.947Z
+    version: 1
+data-model.objectschema.property-definition:
+  id: 56ad4109-ec54-4a63-9145-308e32c80eb7
+  path: data-model.objectschema.property-definition
+  spec_node_id: data-model.objectschema
+  type: objectschema
+  layer_id: data-model
+  name: PropertyDefinition
+  description: "Defines a type of relationship (object property) between entities.
+    Replaces the Predicate table. Fields: id, identifier, title, definition,
+    ontology_mapping, is_relevant, date_created, date_modified"
+  attributes:
+    type: object
+    required: id,identifier,title
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: domain/ontology/entities.py
+        symbol: PropertyDefinition
+  metadata:
+    created_at: 2026-03-24T08:37:53.351Z
+    updated_at: 2026-03-24T08:37:53.351Z
+    version: 1
+data-model.objectschema.external-reference:
+  id: 5748ed47-2caf-48e1-85ba-80e06a6b9afe
+  path: data-model.objectschema.external-reference
+  spec_node_id: data-model.objectschema
+  type: objectschema
+  layer_id: data-model
+  name: External Reference
+  description: "Frozen value object representing a link to an external knowledge
+    source (DBpedia, Wikidata, ConceptNet, schema.org). Fields: source, uri,
+    label, confidence, metadata"
+  attributes:
+    type: object
+    required: source,uri
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: domain/ontology/value_objects.py
+        symbol: ExternalReference
+  metadata:
+    created_at: 2026-03-24T08:38:03.919Z
+    updated_at: 2026-03-24T08:38:03.919Z
+    version: 1
+data-model.objectschema.lexical-sense:
+  id: 54c998b1-8cbd-4547-8e18-3c62074e48e6
+  path: data-model.objectschema.lexical-sense
+  spec_node_id: data-model.objectschema
+  type: objectschema
+  layer_id: data-model
+  name: Lexical Sense
+  description: "Frozen value object for word sense disambiguation data from
+    WordNet. Fields: synset_id, definition, lemma, confidence, source"
+  attributes:
+    type: object
+    required: synset_id,definition,lemma
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: domain/ontology/value_objects.py
+        symbol: LexicalSense
+  metadata:
+    created_at: 2026-03-24T08:38:04.320Z
+    updated_at: 2026-03-24T08:38:04.320Z
+    version: 1
+data-model.objectschema.data-property-value:
+  id: b8a17c38-5da5-48a8-91f4-9ac0dd11d6fb
+  path: data-model.objectschema.data-property-value
+  spec_node_id: data-model.objectschema
+  type: objectschema
+  layer_id: data-model
+  name: Data Property Value
+  description: "Frozen value object for literal-valued attributes on an entity.
+    Corresponds to OWL DatatypeProperty. Fields: key, value, datatype"
+  attributes:
+    type: object
+    required: key,value
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: domain/ontology/value_objects.py
+        symbol: DataPropertyValue
+  metadata:
+    created_at: 2026-03-24T08:38:04.720Z
+    updated_at: 2026-03-24T08:38:04.720Z
+    version: 1
+data-model.objectschema.ontology-mapping:
+  id: 752e986e-3940-4945-b4de-2866c13fe7dd
+  path: data-model.objectschema.ontology-mapping
+  spec_node_id: data-model.objectschema
+  type: objectschema
+  layer_id: data-model
+  name: Ontology Mapping
+  description: "Frozen value object mapping a PropertyDefinition to an external
+    ontology standard (OWL, RDFS, SKOS, ConceptNet). Fields: ontology, uri,
+    label, exact_match"
+  attributes:
+    type: object
+    required: ontology,uri
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: domain/ontology/value_objects.py
+        symbol: OntologyMapping
+  metadata:
+    created_at: 2026-03-24T08:38:05.128Z
+    updated_at: 2026-03-24T08:38:05.128Z
+    version: 1
+data-model.objectschema.change-event:
+  id: 0e7e2dad-1c3c-48e3-8eb8-e08f7ca92ddd
+  path: data-model.objectschema.change-event
+  spec_node_id: data-model.objectschema
+  type: objectschema
+  layer_id: data-model
+  name: Change Event
+  description: "Atomic audit record of a create, update, or delete operation.
+    Fields: id, event_type, record_type, record_id, old_data, new_data,
+    timestamp, processed"
+  attributes:
+    type: object
+    required: event_type,record_type,timestamp
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: domain/versioning/entities.py
+        symbol: ChangeEvent
+  metadata:
+    created_at: 2026-03-24T08:38:05.536Z
+    updated_at: 2026-03-24T08:38:05.536Z
+    version: 1
+data-model.objectschema.pipeline-configuration:
+  id: ac09c072-4662-450b-9a1f-117383c6ef40
+  path: data-model.objectschema.pipeline-configuration
+  spec_node_id: data-model.objectschema
+  type: objectschema
+  layer_id: data-model
+  name: Pipeline Configuration
+  description: "LLM pipeline configuration replacing PipelineFlavor. Fields: id,
+    pipeline, title, provider, model, config, system_prompt, user_prompt,
+    version, enabled, created_at, last_updated"
+  attributes:
+    type: object
+    required: id,pipeline,title,provider,model
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: domain/pipeline/entities.py
+        symbol: PipelineConfiguration
+  metadata:
+    created_at: 2026-03-24T08:38:16.547Z
+    updated_at: 2026-03-24T08:38:16.547Z
+    version: 1
+data-model.objectschema.execution:
+  id: f092b072-b121-4c3e-89ba-3aec3716eb2a
+  path: data-model.objectschema.execution
+  spec_node_id: data-model.objectschema
+  type: objectschema
+  layer_id: data-model
+  name: Execution
+  description: "Traced LLM call record with full observability. Fields: id,
+    pipeline_config_id, input_text, output_text, provider, model, tokens_in,
+    tokens_out, duration_ms, status, error_message, timestamp"
+  attributes:
+    type: object
+    required: id,pipeline_config_id,status
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: domain/pipeline/entities.py
+        symbol: Execution
+  metadata:
+    created_at: 2026-03-24T08:38:16.984Z
+    updated_at: 2026-03-24T08:38:16.984Z
+    version: 1
+data-model.objectschema.knowledge-graph:
+  id: 2e81f535-db08-4364-935e-3f33113470b4
+  path: data-model.objectschema.knowledge-graph
+  spec_node_id: data-model.objectschema
+  type: objectschema
+  layer_id: data-model
+  name: Knowledge Graph
+  description: In-memory graph descriptor with node_count, edge_count,
+    is_directed, and last_built timestamp. The actual graph data lives behind
+    the GraphEngine port
+  attributes:
+    type: object
+    required: node_count,edge_count
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: domain/graph/entities.py
+        symbol: KnowledgeGraph
+  metadata:
+    created_at: 2026-03-24T08:38:17.455Z
+    updated_at: 2026-03-24T08:38:17.455Z
+    version: 1
+data-model.objectschema.graph-metrics:
+  id: 4582133a-9fe1-46ba-96d5-36c664b3de0c
+  path: data-model.objectschema.graph-metrics
+  spec_node_id: data-model.objectschema
+  type: objectschema
+  layer_id: data-model
+  name: Graph Metrics
+  description: Results from graph analysis algorithms including density,
+    average_degree, connected_components, centrality scores, communities, and
+    computation metadata
+  attributes:
+    type: object
+    required: density,average_degree,algorithm
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: domain/graph/entities.py
+        symbol: GraphMetrics
+  metadata:
+    created_at: 2026-03-24T08:38:17.903Z
+    updated_at: 2026-03-24T08:38:17.903Z
+    version: 1
+data-model.objectschema.extraction-result:
+  id: 59660ab2-e615-438b-897a-f876973249f6
+  path: data-model.objectschema.extraction-result
+  spec_node_id: data-model.objectschema
+  type: objectschema
+  layer_id: data-model
+  name: Extraction Result
+  description: Output of the four-layer RAG extraction pipeline. Contains
+    extracted entities, layer-level metrics, and processing duration
+  attributes:
+    type: object
+    required: input_text,extracted_entities
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: domain/extraction/entities.py
+        symbol: ExtractionResult
+  metadata:
+    created_at: 2026-03-24T08:38:18.359Z
+    updated_at: 2026-03-24T08:38:18.359Z
+    version: 1
+data-model.objectschema.entity-version:
+  id: dd6715ae-c206-4c72-b831-7cf3abefcf28
+  path: data-model.objectschema.entity-version
+  spec_node_id: data-model.objectschema
+  type: objectschema
+  layer_id: data-model
+  name: Entity Version
+  description: "Version snapshot of an entity at a specific point in history.
+    Fields: entity_id, version, state (working/staged/proposed/approved/merged),
+    snapshot dict, created_at, parent_version"
+  attributes:
+    type: object
+    required: entity_id,version,state,snapshot
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: domain/versioning/entities.py
+        symbol: EntityVersion
+  metadata:
+    created_at: 2026-03-24T08:38:27.441Z
+    updated_at: 2026-03-24T08:38:27.441Z
+    version: 1
+data-model.objectschema.app-configuration:
+  id: 05db8005-d668-44f3-8e09-2ffc6dda233f
+  path: data-model.objectschema.app-configuration
+  spec_node_id: data-model.objectschema
+  type: objectschema
+  layer_id: data-model
+  name: App Configuration
+  description: "Application configuration loaded from config.json. Sections:
+    server, database, llm, nlp, embedding, reference_sources, sync, logging"
+  attributes:
+    type: object
+    required: server,database,llm
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: domain/admin/entities.py
+        symbol: AppConfiguration
+  metadata:
+    created_at: 2026-03-24T08:38:27.885Z
+    updated_at: 2026-03-24T08:38:27.885Z
+    version: 1
+data-model.objectschema.system-health:
+  id: d219e887-25c1-4b1f-b0a5-4d4700c71bad
+  path: data-model.objectschema.system-health
+  spec_node_id: data-model.objectschema
+  type: objectschema
+  layer_id: data-model
+  name: System Health
+  description: Real-time system health snapshot including database_connected,
+    embedding_model_loaded, nlp_pipeline_ready, llm_providers_available,
+    uptime_seconds, and issues list
+  attributes:
+    type: object
+    required: status,database_connected
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: domain/admin/entities.py
+        symbol: SystemHealth
+  metadata:
+    created_at: 2026-03-24T08:38:28.347Z
+    updated_at: 2026-03-24T08:38:28.347Z
+    version: 1
+data-model.objectschema.background-task:
+  id: cfb27502-8a11-496e-90b5-5d46f1aa13e8
+  path: data-model.objectschema.background-task
+  spec_node_id: data-model.objectschema
+  type: objectschema
+  layer_id: data-model
+  name: Background Task
+  description: "Background task lifecycle record. Fields: id, name, status
+    (pending/running/completed/failed), progress 0-1, result, error, created_at,
+    started_at, completed_at"
+  attributes:
+    type: object
+    required: id,name,status
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: domain/admin/entities.py
+        symbol: BackgroundTask
+  metadata:
+    created_at: 2026-03-24T08:38:28.791Z
+    updated_at: 2026-03-24T08:38:28.791Z
+    version: 1

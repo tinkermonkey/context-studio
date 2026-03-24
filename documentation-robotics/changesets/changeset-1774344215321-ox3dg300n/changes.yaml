@@ -1,0 +1,84 @@
+- type: add
+  elementId: api.info.context-studio-api
+  layerName: api
+  after:
+    id: c66a4092-b0fe-4770-95b2-16977f3961d3
+    path: api.info.context-studio-api
+    spec_node_id: api.info
+    type: info
+    layer_id: api
+    name: Context Studio API
+    description: OpenAPI Info object for the Context Studio local-server REST API —
+      knowledge graph management, RAG pipeline, and system administration
+      endpoints
+    attributes:
+      title: Context Studio API
+      version: 0.1.0
+      description: Local-first knowledge graph API for RAG and ontology management
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/app.py
+    metadata:
+      created_at: 2026-03-24T09:23:40.383Z
+      updated_at: 2026-03-24T09:23:40.383Z
+      version: 1
+  timestamp: 2026-03-24T09:23:40.407Z
+  sequenceNumber: 0
+- type: add
+  elementId: api.securityscheme.api-key
+  layerName: api
+  after:
+    id: 26ac8064-37fa-4eeb-9d92-b840c6375ada
+    path: api.securityscheme.api-key
+    spec_node_id: api.securityscheme
+    type: securityscheme
+    layer_id: api
+    name: API Key
+    description: X-API-Key header authentication scheme — optional, enabled when
+      require_secure_key is true in config.json
+    attributes:
+      type: apiKey
+      in: header
+      description: X-API-Key header authentication, configurable via
+        require_secure_key in config.json
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/app.py
+          symbol: verify_api_key
+    metadata:
+      created_at: 2026-03-24T09:23:50.747Z
+      updated_at: 2026-03-24T09:23:50.747Z
+      version: 1
+  timestamp: 2026-03-24T09:23:50.768Z
+  sequenceNumber: 1
+- type: add
+  elementId: api.ratelimit.external-reference-api-rate-limit
+  layerName: api
+  after:
+    id: 60a97e0f-8c82-49b6-b04a-af8265800886
+    path: api.ratelimit.external-reference-api-rate-limit
+    spec_node_id: api.ratelimit
+    type: ratelimit
+    layer_id: api
+    name: External Reference API Rate Limit
+    description: Per-source rate limits for external knowledge base requests
+      (ConceptNet, DBpedia, Wikidata, schema.org) — configured per-source in
+      config.json reference_sources
+    attributes:
+      requests: 60
+      window: PT1M
+      keyBy: source
+      scope: global
+      action: throttle
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/reference
+    metadata:
+      created_at: 2026-03-24T09:23:57.494Z
+      updated_at: 2026-03-24T09:23:57.494Z
+      version: 1
+  timestamp: 2026-03-24T09:23:57.517Z
+  sequenceNumber: 2

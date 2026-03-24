@@ -1,0 +1,291 @@
+- type: add
+  elementId: testing.testcoveragetarget.ontology-crud
+  layerName: testing
+  after:
+    id: bf5c11f4-704a-4dec-9924-2e0ea3b4f39b
+    path: testing.testcoveragetarget.ontology-crud
+    spec_node_id: testing.testcoveragetarget
+    type: testcoveragetarget
+    layer_id: testing
+    name: Ontology CRUD
+    description: Coverage target for the full CRUD lifecycle of ontology entities
+      (Taxonomy, ConceptScheme, Class) via the OntologyManagement bounded
+      context and REST API
+    attributes:
+      targetType: api-endpoint
+      priority: critical
+      description: OntologyManagement bounded context CRUD operations
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/tests/unit
+    metadata:
+      created_at: 2026-03-24T09:21:27.012Z
+      updated_at: 2026-03-24T09:21:27.012Z
+      version: 1
+  timestamp: 2026-03-24T09:21:27.036Z
+  sequenceNumber: 0
+- type: add
+  elementId: testing.testcoveragetarget.graph-analysis
+  layerName: testing
+  after:
+    id: dab3e0c6-4978-4332-83be-b5f1a666969a
+    path: testing.testcoveragetarget.graph-analysis
+    spec_node_id: testing.testcoveragetarget
+    type: testcoveragetarget
+    layer_id: testing
+    name: Graph Analysis
+    description: Coverage target for in-memory graph construction, traversal, SPARQL
+      query execution, and network metrics computation
+    attributes:
+      targetType: business-workflow
+      priority: critical
+      description: Graph Analysis bounded context services
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/tests/unit
+    metadata:
+      created_at: 2026-03-24T09:21:27.315Z
+      updated_at: 2026-03-24T09:21:27.315Z
+      version: 1
+  timestamp: 2026-03-24T09:21:27.338Z
+  sequenceNumber: 1
+- type: add
+  elementId: testing.testcoveragetarget.extraction-pipeline
+  layerName: testing
+  after:
+    id: 1cff8007-885c-4c1d-9926-89f73d6b1b83
+    path: testing.testcoveragetarget.extraction-pipeline
+    spec_node_id: testing.testcoveragetarget
+    type: testcoveragetarget
+    layer_id: testing
+    name: Extraction Pipeline
+    description: "Coverage target for the RAG pipeline: text input -> NLP extraction
+      -> embedding -> entity output via the KnowledgeExtraction bounded context"
+    attributes:
+      targetType: business-workflow
+      priority: high
+      description: KnowledgeExtraction bounded context services
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/tests/unit
+    metadata:
+      created_at: 2026-03-24T09:21:33.400Z
+      updated_at: 2026-03-24T09:21:33.400Z
+      version: 1
+  timestamp: 2026-03-24T09:21:33.422Z
+  sequenceNumber: 2
+- type: add
+  elementId: testing.testcoveragetarget.llm-pipeline-execution
+  layerName: testing
+  after:
+    id: 47acdde6-08ca-4caa-a60e-e968190efaa8
+    path: testing.testcoveragetarget.llm-pipeline-execution
+    spec_node_id: testing.testcoveragetarget
+    type: testcoveragetarget
+    layer_id: testing
+    name: LLM Pipeline Execution
+    description: Coverage target for pipeline configuration and execution tracking
+      in the LLMPipelineManagement bounded context — traces stored in
+      operations.db
+    attributes:
+      targetType: business-workflow
+      priority: high
+      description: LLMPipelineManagement bounded context services
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/tests/unit
+    metadata:
+      created_at: 2026-03-24T09:21:33.697Z
+      updated_at: 2026-03-24T09:21:33.697Z
+      version: 1
+  timestamp: 2026-03-24T09:21:33.721Z
+  sequenceNumber: 3
+- type: add
+  elementId: testing.testcoveragetarget.versioning-workflow
+  layerName: testing
+  after:
+    id: 69cc3ed3-2773-4ac6-aaa6-49f0e0b4ae8c
+    path: testing.testcoveragetarget.versioning-workflow
+    spec_node_id: testing.testcoveragetarget
+    type: testcoveragetarget
+    layer_id: testing
+    name: Versioning Workflow
+    description: "Coverage target for the complete version control workflow: change
+      events, changesets, proposals, and conflict resolution in the
+      VersionControl bounded context"
+    attributes:
+      targetType: business-workflow
+      priority: critical
+      description: VersionControl bounded context versioning and changeset lifecycle
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/tests/unit
+    metadata:
+      created_at: 2026-03-24T09:21:39.202Z
+      updated_at: 2026-03-24T09:21:39.202Z
+      version: 1
+  timestamp: 2026-03-24T09:21:39.225Z
+  sequenceNumber: 4
+- type: add
+  elementId: testing.testcoveragetarget.admin-health
+  layerName: testing
+  after:
+    id: 5bff5373-8d1d-4dcf-963b-97b5175ee916
+    path: testing.testcoveragetarget.admin-health
+    spec_node_id: testing.testcoveragetarget
+    type: testcoveragetarget
+    layer_id: testing
+    name: Admin Health
+    description: Coverage target for health checks, background task management, and
+      configuration in the SystemAdministration bounded context
+    attributes:
+      targetType: api-endpoint
+      priority: medium
+      description: SystemAdministration bounded context health and task management
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/tests/unit
+    metadata:
+      created_at: 2026-03-24T09:21:39.519Z
+      updated_at: 2026-03-24T09:21:39.519Z
+      version: 1
+  timestamp: 2026-03-24T09:21:39.541Z
+  sequenceNumber: 5
+- type: add
+  elementId: testing.coveragegap.s3-sync-e2e-coverage
+  layerName: testing
+  after:
+    id: 4bbbeb05-abbc-4dd1-8a06-d4f95c803cc3
+    path: testing.coveragegap.s3-sync-e2e-coverage
+    spec_node_id: testing.coveragegap
+    type: coveragegap
+    layer_id: testing
+    name: S3 Sync E2E Coverage
+    description: "Coverage gap: S3 sync operations are not covered by automated E2E
+      tests due to external AWS dependency — manual verification required"
+    attributes:
+      severity: medium
+      affectedRequirements: s3-sync-workflow
+      remediationStatus: deferred
+      description: S3 sync E2E testing requires AWS credentials and live bucket
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/tests
+    metadata:
+      created_at: 2026-03-24T09:21:44.840Z
+      updated_at: 2026-03-24T09:21:44.840Z
+      version: 1
+  timestamp: 2026-03-24T09:21:44.864Z
+  sequenceNumber: 6
+- type: add
+  elementId: testing.coverageexclusion.llm-api-live-call-tests
+  layerName: testing
+  after:
+    id: 1179430d-940f-4678-b847-78d43dbc589f
+    path: testing.coverageexclusion.llm-api-live-call-tests
+    spec_node_id: testing.coverageexclusion
+    type: coverageexclusion
+    layer_id: testing
+    name: LLM API Live Call Tests
+    description: Tests requiring live LLM API calls to OpenAI/Anthropic are excluded
+      from the CI test suite to avoid costs and flakiness
+    attributes:
+      reason: External dependency on paid LLM APIs makes these tests unreliable and
+        costly in CI
+      riskAccepted: true
+      approvedBy: team
+      description: Live LLM API tests excluded from automated CI
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/tests/e2e
+    metadata:
+      created_at: 2026-03-24T09:21:50.577Z
+      updated_at: 2026-03-24T09:21:50.577Z
+      version: 1
+  timestamp: 2026-03-24T09:21:50.604Z
+  sequenceNumber: 7
+- type: add
+  elementId: testing.outcomecategory.entity-creation-success
+  layerName: testing
+  after:
+    id: a51ad22d-387f-4a54-a5bf-c2f6a4cbe86d
+    path: testing.outcomecategory.entity-creation-success
+    spec_node_id: testing.outcomecategory
+    type: outcomecategory
+    layer_id: testing
+    name: Entity Creation Success
+    description: "Expected outcome category: entity created with correct node_type,
+      title, and parent assignment, returned with UUID"
+    attributes:
+      outcomeType: success
+      description: Entity successfully created and returned
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/tests/unit
+    metadata:
+      created_at: 2026-03-24T09:21:56.224Z
+      updated_at: 2026-03-24T09:21:56.224Z
+      version: 1
+  timestamp: 2026-03-24T09:21:56.251Z
+  sequenceNumber: 8
+- type: add
+  elementId: testing.outcomecategory.validation-error
+  layerName: testing
+  after:
+    id: fb1594b6-af17-43db-8ec6-94e5d1be94a4
+    path: testing.outcomecategory.validation-error
+    spec_node_id: testing.outcomecategory
+    type: outcomecategory
+    layer_id: testing
+    name: Validation Error
+    description: "Expected outcome for invalid inputs: missing required fields,
+      duplicate titles, or invalid node_type values"
+    attributes:
+      outcomeType: validation-error
+      description: Validation failure with descriptive error message
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/tests/unit
+    metadata:
+      created_at: 2026-03-24T09:21:56.565Z
+      updated_at: 2026-03-24T09:21:56.565Z
+      version: 1
+  timestamp: 2026-03-24T09:21:56.589Z
+  sequenceNumber: 9
+- type: add
+  elementId: testing.inputspacepartition.entity-node-type-discriminator
+  layerName: testing
+  after:
+    id: 305a63d2-1fa6-4c5c-9963-709e6055abf9
+    path: testing.inputspacepartition.entity-node-type-discriminator
+    spec_node_id: testing.inputspacepartition
+    type: inputspacepartition
+    layer_id: testing
+    name: Entity node_type Discriminator
+    description: "Input space partition for node_type discriminator: covers
+      Taxonomy, ConceptScheme, Class (valid), and invalid/empty values — maps to
+      unified ontology_entities table in local.db"
+    attributes:
+      fieldRef: OntologyEntity.node_type
+      presenceRule: required
+      description: node_type discriminator partition for unified ontology_entities table
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/persistence/sqlite/models.py
+    metadata:
+      created_at: 2026-03-24T09:22:02.976Z
+      updated_at: 2026-03-24T09:22:02.976Z
+      version: 1
+  timestamp: 2026-03-24T09:22:03.016Z
+  sequenceNumber: 10

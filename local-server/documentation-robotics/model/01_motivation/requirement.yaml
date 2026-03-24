@@ -1,0 +1,63 @@
+motivation.requirement.zero-infrastructure-imports-in-domain:
+  id: b7232a3a-c451-418f-8e45-112175449693
+  path: motivation.requirement.zero-infrastructure-imports-in-domain
+  spec_node_id: motivation.requirement
+  type: requirement
+  layer_id: motivation
+  name: Zero Infrastructure Imports in Domain
+  description: The domain/ package must have zero imports from adapters/,
+    SQLAlchemy, FastAPI, Pydantic, or any other infrastructure code. Enforced by
+    scripts/check_domain_imports.py as a gate in CI
+  attributes:
+    requirementType: non-functional
+    priority: critical
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: scripts/check_domain_imports.py
+  metadata:
+    created_at: 2026-03-24T08:45:52.094Z
+    updated_at: 2026-03-24T08:45:52.094Z
+    version: 1
+motivation.requirement.three-tier-testing-pyramid:
+  id: 343ebb1e-8cfe-431e-92db-e3c9ab0dae2e
+  path: motivation.requirement.three-tier-testing-pyramid
+  spec_node_id: motivation.requirement
+  type: requirement
+  layer_id: motivation
+  name: Three-Tier Testing Pyramid
+  description: "All bounded contexts must have: (1) domain unit tests with fake
+    port implementations (no I/O), (2) adapter integration tests against real
+    SQLite, (3) E2E tests through the HTTP API with real external services"
+  attributes:
+    requirementType: quality
+    priority: high
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: rearchitecture/e2e_test_strategy.md
+  metadata:
+    created_at: 2026-03-24T08:45:52.539Z
+    updated_at: 2026-03-24T08:45:52.539Z
+    version: 1
+motivation.requirement.no-backwards-compatibility-with-legacy-server:
+  id: dec0e3d2-e723-44a9-8d58-4ff33d864465
+  path: motivation.requirement.no-backwards-compatibility-with-legacy-server
+  spec_node_id: motivation.requirement
+  type: requirement
+  layer_id: motivation
+  name: No Backwards Compatibility with Legacy Server
+  description: The new server defines entirely new API contracts and database
+    schema. No migration path from legacy-server/ database. No adapter shims for
+    legacy route shapes. Clean slate design
+  attributes:
+    requirementType: non-functional
+    priority: critical
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: rearchitecture/transformation_roadmap.md
+  metadata:
+    created_at: 2026-03-24T08:45:53.001Z
+    updated_at: 2026-03-24T08:45:53.001Z
+    version: 1

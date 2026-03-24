@@ -1,0 +1,47 @@
+security.threat.sql-injection:
+  id: b9ac021b-af70-4c87-9638-35224ab5ebe1
+  path: security.threat.sql-injection
+  spec_node_id: security.threat
+  type: threat
+  layer_id: security
+  name: SQL Injection
+  description: "Threat: SQL injection attacks against the SQLite databases
+    (local.db, operations.db) via unsanitized API inputs"
+  attributes:
+    threatens: data-store
+    likelihood: moderate
+    impact: high
+    description: SQL injection via API input fields
+    criticality: high
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/persistence/sqlite/models.py
+  metadata:
+    created_at: 2026-03-24T09:17:44.257Z
+    updated_at: 2026-03-24T09:17:44.257Z
+    version: 1
+security.threat.information-disclosure-via-error-messages:
+  id: 13180b9a-297d-4c3d-8426-9549247f1356
+  path: security.threat.information-disclosure-via-error-messages
+  spec_node_id: security.threat
+  type: threat
+  layer_id: security
+  name: Information Disclosure via Error Messages
+  description: "Threat: internal file paths and stack traces leaking through
+    unhandled exception responses in the FastAPI application"
+  attributes:
+    threatens: api
+    likelihood: moderate
+    impact: moderate
+    description: File path leakage via error responses
+    criticality: medium
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/app.py
+        symbol: global_exception_handler
+  metadata:
+    created_at: 2026-03-24T09:17:49.054Z
+    updated_at: 2026-03-24T09:17:49.054Z
+    version: 1

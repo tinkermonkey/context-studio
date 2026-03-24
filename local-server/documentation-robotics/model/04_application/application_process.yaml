@@ -1,0 +1,63 @@
+application.applicationprocess.composition-root-wiring:
+  id: f01d4c0f-fc31-4496-b334-84751ec0719d
+  path: application.applicationprocess.composition-root-wiring
+  spec_node_id: application.applicationprocess
+  type: applicationprocess
+  layer_id: application
+  name: Composition Root Wiring
+  description: The app.py lifespan function acts as the composition root. Creates
+    all driven adapters (repos, LLM, NLP, embedding, reference, graph engines),
+    instantiates domain services injecting the adapters as ports, registers
+    event subscriptions, and mounts route routers. Replaces the legacy
+    ServiceFactory god-object
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: app.py
+        symbol: lifespan
+  metadata:
+    created_at: 2026-03-24T08:41:18.239Z
+    updated_at: 2026-03-24T08:41:18.239Z
+    version: 1
+application.applicationprocess.event-driven-change-recording:
+  id: 60d9b76b-7c1c-466f-ba2b-8fc46e2d7912
+  path: application.applicationprocess.event-driven-change-recording
+  spec_node_id: application.applicationprocess
+  type: applicationprocess
+  layer_id: application
+  name: Event-Driven Change Recording
+  description: InProcessEventPublisher subscribes ChangeEventRecorder to domain
+    events (ClassCreated, ClassUpdated, ClassDeleted, RelationshipCreated,
+    etc.). When ontology mutations fire domain events, ChangeEventRecorder
+    persists them to change_events table. Decouples audit trail from domain
+    services
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: adapters/events/change_recorder.py
+        symbol: ChangeEventRecorder
+  metadata:
+    created_at: 2026-03-24T08:41:18.696Z
+    updated_at: 2026-03-24T08:41:18.696Z
+    version: 1
+application.applicationprocess.four-layer-rag-pipeline:
+  id: 77c4812e-6b57-4fd3-9c5d-c000fe414a53
+  path: application.applicationprocess.four-layer-rag-pipeline
+  spec_node_id: application.applicationprocess
+  type: applicationprocess
+  layer_id: application
+  name: Four-Layer RAG Pipeline
+  description: "Knowledge extraction pipeline: Layer 0 — KG context lookup
+    (semantic search in existing classes), Layer 1 — LLM entity extraction,
+    Layer 2 — NLP gap filling (spaCy NER), Layer 3 — Reference enrichment
+    (ConceptNet, DBpedia, Wikidata). Each layer produces ExtractedEntity records
+    with confidence scores"
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: domain/extraction/services.py
+        symbol: ExtractionService
+  metadata:
+    created_at: 2026-03-24T08:41:19.153Z
+    updated_at: 2026-03-24T08:41:19.153Z
+    version: 1

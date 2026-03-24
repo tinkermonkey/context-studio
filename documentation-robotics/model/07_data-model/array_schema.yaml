@@ -1,0 +1,23 @@
+data-model.arrayschema.external-references-list:
+  id: ff92871a-46c0-4467-a30f-5501a5929007
+  path: data-model.arrayschema.external-references-list
+  spec_node_id: data-model.arrayschema
+  type: arrayschema
+  layer_id: data-model
+  name: external_references list
+  description: Array schema for the external_references list on the Class entity —
+    holds enrichment references from ConceptNet, DBpedia, Wikidata, and
+    schema.org
+  attributes:
+    items: string
+    minItems: 0
+    uniqueItems: true
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/domain/ontology/entities.py
+        symbol: OntologyClass.external_references
+  metadata:
+    created_at: 2026-03-24T09:24:12.836Z
+    updated_at: 2026-03-24T09:24:12.836Z
+    version: 1

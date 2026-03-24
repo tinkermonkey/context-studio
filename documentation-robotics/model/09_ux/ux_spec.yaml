@@ -1,0 +1,21 @@
+ux.uxspec.ontology-editor-ux-spec:
+  id: 8e30ddde-fa86-4261-839c-41a15326673e
+  path: ux.uxspec.ontology-editor-ux-spec
+  spec_node_id: ux.uxspec
+  type: uxspec
+  layer_id: ux
+  name: Ontology Editor UX Spec
+  description: UX specification for the Ontology Editor experience within Context
+    Studio SPA. Covers the views for managing layers, domains, terms,
+    predicates, datasets, and configuration within the React/Vite front-end.
+  attributes:
+    experience: visual
+    version: 0.1.0
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/
+  metadata:
+    created_at: 2026-03-24T10:43:20.927Z
+    updated_at: 2026-03-24T10:43:20.927Z
+    version: 1

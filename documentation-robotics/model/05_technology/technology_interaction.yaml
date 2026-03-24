@@ -1,0 +1,17 @@
+technology.technologyinteraction.s3-sync-via-boto3:
+  id: 51ec4580-24c8-4a59-b332-84533d1c071f
+  path: technology.technologyinteraction.s3-sync-via-boto3
+  spec_node_id: technology.technologyinteraction
+  type: technologyinteraction
+  layer_id: technology
+  name: S3 Sync via boto3
+  description: Technology interaction in which the sync adapter serializes the
+    local knowledge graph to Parquet format and uploads to S3 using boto3
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/sync
+  metadata:
+    created_at: 2026-03-24T09:23:15.294Z
+    updated_at: 2026-03-24T09:23:15.294Z
+    version: 1

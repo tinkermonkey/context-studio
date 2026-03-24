@@ -1,0 +1,125 @@
+application.applicationevent.class-created:
+  id: 7a1e769b-ebcc-4322-ae1a-bf5da07c7c37
+  path: application.applicationevent.class-created
+  spec_node_id: application.applicationevent
+  type: applicationevent
+  layer_id: application
+  name: ClassCreated
+  description: "Domain event emitted by OntologyService when a new ontology class
+    is created. Carries: class_id, title, concept_scheme_id. Triggers change
+    event recording and graph cache invalidation"
+  attributes:
+    eventType: domain
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: domain/ontology/events.py
+        symbol: ClassCreated
+  metadata:
+    created_at: 2026-03-24T08:41:29.899Z
+    updated_at: 2026-03-24T08:41:29.899Z
+    version: 1
+application.applicationevent.class-updated:
+  id: b296036f-a4f4-47c2-b038-f4faf6f7edd7
+  path: application.applicationevent.class-updated
+  spec_node_id: application.applicationevent
+  type: applicationevent
+  layer_id: application
+  name: ClassUpdated
+  description: "Domain event emitted by OntologyService when a class is updated.
+    Carries: class_id, changed_fields, old_values, new_values. Triggers change
+    event recording and embedding regeneration"
+  attributes:
+    eventType: domain
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: domain/ontology/events.py
+        symbol: ClassUpdated
+  metadata:
+    created_at: 2026-03-24T08:41:30.391Z
+    updated_at: 2026-03-24T08:41:30.391Z
+    version: 1
+application.applicationevent.class-deleted:
+  id: 2f2f0532-b82e-4d55-b22c-8f2bea1a30f9
+  path: application.applicationevent.class-deleted
+  spec_node_id: application.applicationevent
+  type: applicationevent
+  layer_id: application
+  name: ClassDeleted
+  description: "Domain event emitted by OntologyService when a class is deleted.
+    Carries: class_id, title. Triggers change event recording and graph
+    invalidation"
+  attributes:
+    eventType: domain
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: domain/ontology/events.py
+        symbol: ClassDeleted
+  metadata:
+    created_at: 2026-03-24T08:41:30.861Z
+    updated_at: 2026-03-24T08:41:30.861Z
+    version: 1
+application.applicationevent.relationship-created:
+  id: 406c951d-bb5b-4d5c-8e39-f134b224facf
+  path: application.applicationevent.relationship-created
+  spec_node_id: application.applicationevent
+  type: applicationevent
+  layer_id: application
+  name: RelationshipCreated
+  description: "Domain event emitted by OntologyService when a relationship is
+    created. Carries: relationship_id, source_id, target_id,
+    property_definition_id. Triggers graph invalidation"
+  attributes:
+    eventType: domain
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: domain/ontology/events.py
+        symbol: RelationshipCreated
+  metadata:
+    created_at: 2026-03-24T08:41:31.338Z
+    updated_at: 2026-03-24T08:41:31.338Z
+    version: 1
+application.applicationevent.graph-invalidated:
+  id: 19f5d8da-9d67-42bb-a2a9-491fcdf11eb1
+  path: application.applicationevent.graph-invalidated
+  spec_node_id: application.applicationevent
+  type: applicationevent
+  layer_id: application
+  name: GraphInvalidated
+  description: "Domain event emitted when any ontology mutation makes the cached
+    graph stale. Carries: reason. Triggers GraphAnalysisService to mark the
+    in-memory graph as needing rebuild"
+  attributes:
+    eventType: domain
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: domain/ontology/events.py
+        symbol: GraphInvalidated
+  metadata:
+    created_at: 2026-03-24T08:41:31.824Z
+    updated_at: 2026-03-24T08:41:31.824Z
+    version: 1
+application.applicationevent.extraction-completed:
+  id: c72aa281-041d-47a4-bbb9-6523f15714d7
+  path: application.applicationevent.extraction-completed
+  spec_node_id: application.applicationevent
+  type: applicationevent
+  layer_id: application
+  name: ExtractionCompleted
+  description: "Domain event emitted by ExtractionService when a RAG extraction
+    pipeline run completes. Carries: result_id, entity_count, duration_ms"
+  attributes:
+    eventType: domain
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: domain/extraction/events.py
+        symbol: ExtractionCompleted
+  metadata:
+    created_at: 2026-03-24T08:41:32.297Z
+    updated_at: 2026-03-24T08:41:32.297Z
+    version: 1

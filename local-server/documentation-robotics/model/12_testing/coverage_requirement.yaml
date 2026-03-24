@@ -1,0 +1,63 @@
+testing.coveragerequirement.domain-business-rules-coverage:
+  id: 262df241-ff1a-41a8-8cec-3dbb545116d8
+  path: testing.coveragerequirement.domain-business-rules-coverage
+  spec_node_id: testing.coveragerequirement
+  type: coveragerequirement
+  layer_id: testing
+  name: Domain Business Rules Coverage
+  description: "All domain business rules and entity invariants must be covered by
+    unit tests using fake port implementations. Target: 100% of validation logic
+    in domain services"
+  attributes:
+    coverageCriteria: all-partitions
+    priority: critical
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: rearchitecture/e2e_test_strategy.md
+  metadata:
+    created_at: 2026-03-24T08:46:32.775Z
+    updated_at: 2026-03-24T08:46:32.775Z
+    version: 1
+testing.coveragerequirement.adapter-contract-compliance:
+  id: 4d8f2d7d-77bf-4f57-b27e-51f5a4365523
+  path: testing.coveragerequirement.adapter-contract-compliance
+  spec_node_id: testing.coveragerequirement
+  type: coveragerequirement
+  layer_id: testing
+  name: Adapter Contract Compliance
+  description: All port adapters must be tested against real infrastructure
+    (in-memory SQLite for repos, actual spaCy models for NLP). Verifies domain
+    entities round-trip correctly through each adapter
+  attributes:
+    coverageCriteria: each-choice
+    priority: high
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: rearchitecture/e2e_test_strategy.md
+  metadata:
+    created_at: 2026-03-24T08:46:33.203Z
+    updated_at: 2026-03-24T08:46:33.203Z
+    version: 1
+testing.coveragerequirement.e2e-workflow-coverage:
+  id: 3eb83e3b-16ac-4f57-b1f3-9725011026cc
+  path: testing.coveragerequirement.e2e-workflow-coverage
+  spec_node_id: testing.coveragerequirement
+  type: coveragerequirement
+  layer_id: testing
+  name: E2E Workflow Coverage
+  description: "Complete user-meaningful workflows tested through the HTTP API
+    with real services. Covers the full stack: ontology lifecycle, graph
+    analysis, RAG extraction, pipeline execution, version tracking"
+  attributes:
+    coverageCriteria: path-coverage
+    priority: high
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: rearchitecture/e2e_test_strategy.md
+  metadata:
+    created_at: 2026-03-24T08:46:33.644Z
+    updated_at: 2026-03-24T08:46:33.644Z
+    version: 1

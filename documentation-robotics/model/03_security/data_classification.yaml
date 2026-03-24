@@ -1,0 +1,21 @@
+security.dataclassification.internal-knowledge-graph-data:
+  id: f2499d5a-55a1-408a-9315-b547c25a23c0
+  path: security.dataclassification.internal-knowledge-graph-data
+  spec_node_id: security.dataclassification
+  type: dataclassification
+  layer_id: security
+  name: Internal Knowledge Graph Data
+  description: Data classification for the ontology entity data stored in local.db
+    — internal, not requiring encryption at rest for the desktop use case
+  attributes:
+    classificationLevel: internal
+    encryptionRequirement: none
+    version: "1.0"
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/config.py
+  metadata:
+    created_at: 2026-03-24T09:18:02.456Z
+    updated_at: 2026-03-24T09:18:02.456Z
+    version: 1

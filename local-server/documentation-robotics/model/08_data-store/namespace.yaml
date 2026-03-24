@@ -1,0 +1,18 @@
+data-store.namespace.alembic-migration-environment:
+  id: abbb52bc-8b3a-4b88-b006-eac93c3dd146
+  path: data-store.namespace.alembic-migration-environment
+  spec_node_id: data-store.namespace
+  type: namespace
+  layer_id: data-store
+  name: Alembic Migration Environment
+  description: Alembic migration environment under adapters/persistence/sqlite/.
+    Manages schema versioning for local.db and operations.db via autogenerate
+    from SQLAlchemy ORM models
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: adapters/persistence/sqlite/env.py
+  metadata:
+    created_at: 2026-03-24T08:39:36.482Z
+    updated_at: 2026-03-24T08:39:36.482Z
+    version: 1

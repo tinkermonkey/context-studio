@@ -1,0 +1,128 @@
+application.applicationservice.ontology-service:
+  id: 6ae39725-944f-42a8-8a97-b362c8e3d424
+  path: application.applicationservice.ontology-service
+  spec_node_id: application.applicationservice
+  type: applicationservice
+  layer_id: application
+  name: Ontology Service
+  description: Core domain service for Ontology Management bounded context. Owns
+    all business rules for taxonomies, concept schemes, classes, relationships,
+    and property definitions. Zero infrastructure imports — depends only on
+    OntologyRepository, EmbeddingService, and EventPublisher ports
+  attributes:
+    serviceType: synchronous
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: domain/ontology/services.py
+        symbol: OntologyService
+  metadata:
+    created_at: 2026-03-24T08:39:59.216Z
+    updated_at: 2026-03-24T08:39:59.216Z
+    version: 1
+application.applicationservice.graph-analysis-service:
+  id: 0a25d627-9f35-4c60-bd30-d4273c183cf9
+  path: application.applicationservice.graph-analysis-service
+  spec_node_id: application.applicationservice
+  type: applicationservice
+  layer_id: application
+  name: Graph Analysis Service
+  description: Domain service for Graph Analysis bounded context. Orchestrates
+    in-memory graph construction, path queries, network metrics, community
+    detection, and SPARQL execution via GraphEngine and SemanticQueryEngine
+    ports
+  attributes:
+    serviceType: synchronous
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: domain/graph/services.py
+        symbol: GraphAnalysisService
+  metadata:
+    created_at: 2026-03-24T08:39:59.619Z
+    updated_at: 2026-03-24T08:39:59.619Z
+    version: 1
+application.applicationservice.extraction-service:
+  id: e0de09aa-ace4-4895-87fe-b6ac6393374f
+  path: application.applicationservice.extraction-service
+  spec_node_id: application.applicationservice
+  type: applicationservice
+  layer_id: application
+  name: Extraction Service
+  description: "Domain service for Knowledge Extraction bounded context.
+    Orchestrates the four-layer RAG pipeline: KG context lookup, LLM extraction,
+    NLP gap filling, and reference enrichment"
+  attributes:
+    serviceType: asynchronous
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: domain/extraction/services.py
+        symbol: ExtractionService
+  metadata:
+    created_at: 2026-03-24T08:40:00.027Z
+    updated_at: 2026-03-24T08:40:00.027Z
+    version: 1
+application.applicationservice.pipeline-service:
+  id: 1f7a1426-55e7-438e-9dbc-784e9138d835
+  path: application.applicationservice.pipeline-service
+  spec_node_id: application.applicationservice
+  type: applicationservice
+  layer_id: application
+  name: Pipeline Service
+  description: Domain service for LLM Pipeline Management bounded context. Manages
+    pipeline configuration CRUD and executes LLM pipelines with full
+    traceability (tokens, duration, prompts)
+  attributes:
+    serviceType: asynchronous
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: domain/pipeline/services.py
+        symbol: PipelineService
+  metadata:
+    created_at: 2026-03-24T08:40:00.450Z
+    updated_at: 2026-03-24T08:40:00.450Z
+    version: 1
+application.applicationservice.versioning-service:
+  id: 4d2bf02e-554b-459f-82ce-046a3685f225
+  path: application.applicationservice.versioning-service
+  spec_node_id: application.applicationservice
+  type: applicationservice
+  layer_id: application
+  name: Versioning Service
+  description: Domain service for Version Control bounded context. Manages change
+    tracking, entity versioning, changeset workflow
+    (working/staged/proposed/approved/merged), and remote sync coordination
+  attributes:
+    serviceType: synchronous
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: domain/versioning/services.py
+        symbol: VersioningService
+  metadata:
+    created_at: 2026-03-24T08:40:00.874Z
+    updated_at: 2026-03-24T08:40:00.874Z
+    version: 1
+application.applicationservice.admin-service:
+  id: 44d7bd59-99ba-4952-8b1f-40ac39e92076
+  path: application.applicationservice.admin-service
+  spec_node_id: application.applicationservice
+  type: applicationservice
+  layer_id: application
+  name: Admin Service
+  description: Domain service for System Administration bounded context. Provides
+    health checks, system metrics, background task management, and configuration
+    management
+  attributes:
+    serviceType: synchronous
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: domain/admin/services.py
+        symbol: AdminService
+  metadata:
+    created_at: 2026-03-24T08:40:01.286Z
+    updated_at: 2026-03-24T08:40:01.286Z
+    version: 1

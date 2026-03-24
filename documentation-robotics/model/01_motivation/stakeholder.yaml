@@ -1,0 +1,77 @@
+motivation.stakeholder.knowledge-manager:
+  id: 98c60dc5-bdbc-4c89-89ea-b2dec8c53ef9
+  path: motivation.stakeholder.knowledge-manager
+  spec_node_id: motivation.stakeholder
+  type: stakeholder
+  layer_id: motivation
+  name: Knowledge Manager
+  description: "Internal stakeholder: domain experts and ontology authors who
+    create and curate the knowledge graph using the new hexagonal architecture
+    back-end"
+  attributes:
+    type: end-user
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/app.py
+  metadata:
+    created_at: 2026-03-24T09:20:35.128Z
+    updated_at: 2026-03-24T09:20:35.128Z
+    version: 1
+motivation.stakeholder.ai-agent-consumer:
+  id: e8e6dd1a-dafc-4a98-a711-25692406c66d
+  path: motivation.stakeholder.ai-agent-consumer
+  spec_node_id: motivation.stakeholder
+  type: stakeholder
+  layer_id: motivation
+  name: AI Agent Consumer
+  description: "System stakeholder: AI agents and RAG pipelines that query the
+    knowledge graph via REST API for contextual knowledge retrieval"
+  attributes:
+    type: system
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/domain/extraction/services.py
+  metadata:
+    created_at: 2026-03-24T09:20:35.437Z
+    updated_at: 2026-03-24T09:20:35.437Z
+    version: 1
+motivation.stakeholder.desktop-application-user:
+  id: 7e570955-63c1-4de1-9c3d-717b5876350e
+  path: motivation.stakeholder.desktop-application-user
+  spec_node_id: motivation.stakeholder
+  type: stakeholder
+  layer_id: motivation
+  name: Desktop Application User
+  description: "End-user stakeholder: individuals running Context Studio as a
+    local-first desktop application on their own workstation"
+  attributes:
+    type: end-user
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/config.py
+  metadata:
+    created_at: 2026-03-24T09:20:40.875Z
+    updated_at: 2026-03-24T09:20:40.875Z
+    version: 1
+motivation.stakeholder.platform-developer:
+  id: c9513c26-c053-4118-99ad-e1c907d3d2ce
+  path: motivation.stakeholder.platform-developer
+  spec_node_id: motivation.stakeholder
+  type: stakeholder
+  layer_id: motivation
+  name: Platform Developer
+  description: "Internal stakeholder: developers extending or maintaining Context
+    Studio and the underlying hexagonal architecture bounded contexts"
+  attributes:
+    type: internal
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/app.py
+  metadata:
+    created_at: 2026-03-24T09:20:41.167Z
+    updated_at: 2026-03-24T09:20:41.167Z
+    version: 1

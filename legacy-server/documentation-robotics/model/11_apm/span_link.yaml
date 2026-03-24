@@ -10,7 +10,7 @@ apm.spanlink.rag-trace-to-llm-span-link:
   attributes:
     traceId: ""
     spanId: ""
-    droppedAttributesCount: "0"
+    droppedAttributesCount: 0
   source_reference:
     provenance: extracted
     locations:

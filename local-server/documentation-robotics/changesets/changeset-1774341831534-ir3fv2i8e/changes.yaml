@@ -1,0 +1,251 @@
+- type: add
+  elementId: business.businessservice.ontology-management
+  layerName: business
+  after:
+    id: 73abde90-1d38-4bfa-8e5a-e7f7a37a4c0b
+    path: business.businessservice.ontology-management
+    spec_node_id: business.businessservice
+    type: businessservice
+    layer_id: business
+    name: Ontology Management
+    description: "Business capability for creating and maintaining knowledge graph
+      schemas: taxonomies, concept schemes, classes, typed relationships, and
+      property definitions. Corresponds to the Ontology Management bounded
+      context"
+    metadata:
+      created_at: 2026-03-24T08:44:06.240Z
+      updated_at: 2026-03-24T08:44:06.240Z
+      version: 1
+  timestamp: 2026-03-24T08:44:06.260Z
+  sequenceNumber: 0
+- type: add
+  elementId: business.businessservice.knowledge-extraction
+  layerName: business
+  after:
+    id: 1afb8413-c950-4fe4-81ad-a62e29c22988
+    path: business.businessservice.knowledge-extraction
+    spec_node_id: business.businessservice
+    type: businessservice
+    layer_id: business
+    name: Knowledge Extraction
+    description: Business capability for automating entity discovery from
+      unstructured text using the four-layer RAG pipeline (KG context, LLM, NLP,
+      reference sources). Corresponds to the Knowledge Extraction bounded
+      context
+    metadata:
+      created_at: 2026-03-24T08:44:06.664Z
+      updated_at: 2026-03-24T08:44:06.664Z
+      version: 1
+  timestamp: 2026-03-24T08:44:06.684Z
+  sequenceNumber: 1
+- type: add
+  elementId: business.businessservice.graph-analysis
+  layerName: business
+  after:
+    id: f7f30c0c-db22-404e-945a-6d7d30567fa1
+    path: business.businessservice.graph-analysis
+    spec_node_id: business.businessservice
+    type: businessservice
+    layer_id: business
+    name: Graph Analysis
+    description: "Business capability for analyzing the knowledge graph structure:
+      path finding, centrality, community detection, SPARQL queries. Corresponds
+      to the Graph Analysis bounded context"
+    metadata:
+      created_at: 2026-03-24T08:44:07.091Z
+      updated_at: 2026-03-24T08:44:07.091Z
+      version: 1
+  timestamp: 2026-03-24T08:44:07.111Z
+  sequenceNumber: 2
+- type: add
+  elementId: business.businessservice.llm-pipeline-management
+  layerName: business
+  after:
+    id: 10451b75-e364-474d-a41c-ccec0f82b99a
+    path: business.businessservice.llm-pipeline-management
+    spec_node_id: business.businessservice
+    type: businessservice
+    layer_id: business
+    name: LLM Pipeline Management
+    description: Business capability for configuring and executing LLM inference
+      pipelines with full traceability (token counts, durations, prompt/response
+      logging). Corresponds to the LLM Pipeline Management bounded context
+    metadata:
+      created_at: 2026-03-24T08:44:07.522Z
+      updated_at: 2026-03-24T08:44:07.522Z
+      version: 1
+  timestamp: 2026-03-24T08:44:07.542Z
+  sequenceNumber: 3
+- type: add
+  elementId: business.businessservice.version-control-and-collaboration
+  layerName: business
+  after:
+    id: 2584102c-69b7-4913-8c77-76ab07b9b3cd
+    path: business.businessservice.version-control-and-collaboration
+    spec_node_id: business.businessservice
+    type: businessservice
+    layer_id: business
+    name: Version Control and Collaboration
+    description: Business capability for tracking every knowledge graph mutation,
+      managing changesets and proposals through an approval workflow, and
+      synchronizing workspaces via S3. Corresponds to the Version Control
+      bounded context
+    metadata:
+      created_at: 2026-03-24T08:44:07.946Z
+      updated_at: 2026-03-24T08:44:07.946Z
+      version: 1
+  timestamp: 2026-03-24T08:44:07.967Z
+  sequenceNumber: 4
+- type: add
+  elementId: business.businessservice.system-administration
+  layerName: business
+  after:
+    id: aa7e0232-2768-4bd1-9438-a38c0e756b7e
+    path: business.businessservice.system-administration
+    spec_node_id: business.businessservice
+    type: businessservice
+    layer_id: business
+    name: System Administration
+    description: Business capability for health monitoring, configuration
+      management, and background task oversight. Corresponds to the System
+      Administration bounded context
+    metadata:
+      created_at: 2026-03-24T08:44:08.371Z
+      updated_at: 2026-03-24T08:44:08.371Z
+      version: 1
+  timestamp: 2026-03-24T08:44:08.391Z
+  sequenceNumber: 5
+- type: add
+  elementId: business.businessactor.knowledge-manager
+  layerName: business
+  after:
+    id: c106006a-8a82-47ee-a8cb-ba22be5488d9
+    path: business.businessactor.knowledge-manager
+    spec_node_id: business.businessactor
+    type: businessactor
+    layer_id: business
+    name: Knowledge Manager
+    description: Human user who authors and curates the knowledge graph. Creates
+      taxonomies, concept schemes, and classes. Reviews and approves changeset
+      proposals
+    metadata:
+      created_at: 2026-03-24T08:44:19.971Z
+      updated_at: 2026-03-24T08:44:19.971Z
+      version: 1
+  timestamp: 2026-03-24T08:44:19.993Z
+  sequenceNumber: 6
+- type: add
+  elementId: business.businessactor.ai-agent
+  layerName: business
+  after:
+    id: 3f784115-7e78-4147-ba1d-1868750ccd6c
+    path: business.businessactor.ai-agent
+    spec_node_id: business.businessactor
+    type: businessactor
+    layer_id: business
+    name: AI Agent
+    description: Automated consumer of the knowledge graph via the REST API. Uses
+      semantic search (embedding similarity) to retrieve relevant context for
+      RAG workflows
+    metadata:
+      created_at: 2026-03-24T08:44:20.394Z
+      updated_at: 2026-03-24T08:44:20.394Z
+      version: 1
+  timestamp: 2026-03-24T08:44:20.415Z
+  sequenceNumber: 7
+- type: add
+  elementId: business.businessrole.api-consumer
+  layerName: business
+  after:
+    id: 528dd60a-8c3d-426e-ab42-4fbe80272a1d
+    path: business.businessrole.api-consumer
+    spec_node_id: business.businessrole
+    type: businessrole
+    layer_id: business
+    name: API Consumer
+    description: Role played by any client (human-operated UX or AI agent) that
+      interacts with the server through the FastAPI HTTP REST interface
+    metadata:
+      created_at: 2026-03-24T08:44:20.822Z
+      updated_at: 2026-03-24T08:44:20.822Z
+      version: 1
+  timestamp: 2026-03-24T08:44:20.843Z
+  sequenceNumber: 8
+- type: add
+  elementId: business.businessobject.knowledge-graph
+  layerName: business
+  after:
+    id: 9c919e12-78c2-4444-b50e-e994e7d48bc5
+    path: business.businessobject.knowledge-graph
+    spec_node_id: business.businessobject
+    type: businessobject
+    layer_id: business
+    name: Knowledge Graph
+    description: The core business artifact. A structured ontology of taxonomies,
+      concept schemes, classes, and typed relationships representing a domain of
+      knowledge. Owned by the user and stored locally
+    metadata:
+      created_at: 2026-03-24T08:44:21.257Z
+      updated_at: 2026-03-24T08:44:21.257Z
+      version: 1
+  timestamp: 2026-03-24T08:44:21.278Z
+  sequenceNumber: 9
+- type: add
+  elementId: business.businessprocess.ontology-authoring-workflow
+  layerName: business
+  after:
+    id: 72fa492d-6553-4e65-927d-292f90b1c90e
+    path: business.businessprocess.ontology-authoring-workflow
+    spec_node_id: business.businessprocess
+    type: businessprocess
+    layer_id: business
+    name: Ontology Authoring Workflow
+    description: "Process by which a knowledge manager incrementally builds a
+      knowledge graph: create taxonomy, create concept schemes, add classes with
+      definitions, link classes with typed relationships, enrich with external
+      references"
+    metadata:
+      created_at: 2026-03-24T08:44:21.704Z
+      updated_at: 2026-03-24T08:44:21.704Z
+      version: 1
+  timestamp: 2026-03-24T08:44:21.731Z
+  sequenceNumber: 10
+- type: add
+  elementId: business.businessprocess.knowledge-extraction-workflow
+  layerName: business
+  after:
+    id: a40e945e-79d9-4f82-b12f-ffac58217157
+    path: business.businessprocess.knowledge-extraction-workflow
+    spec_node_id: business.businessprocess
+    type: businessprocess
+    layer_id: business
+    name: Knowledge Extraction Workflow
+    description: "Process of automatically extracting ontology entities from text:
+      submit text to extraction endpoint, receive extracted entities with
+      confidence scores, review and accept matching entities into the knowledge
+      graph"
+    metadata:
+      created_at: 2026-03-24T08:44:22.162Z
+      updated_at: 2026-03-24T08:44:22.162Z
+      version: 1
+  timestamp: 2026-03-24T08:44:22.185Z
+  sequenceNumber: 11
+- type: add
+  elementId: business.businessprocess.changeset-approval-workflow
+  layerName: business
+  after:
+    id: 145b4015-c225-46f5-b399-892f47d58cb8
+    path: business.businessprocess.changeset-approval-workflow
+    spec_node_id: business.businessprocess
+    type: businessprocess
+    layer_id: business
+    name: Changeset Approval Workflow
+    description: "Version control process: work in progress → stage changes → submit
+      proposal → peer review → approve → merge. Enables collaborative knowledge
+      management with audit trail and conflict resolution"
+    metadata:
+      created_at: 2026-03-24T08:44:22.619Z
+      updated_at: 2026-03-24T08:44:22.619Z
+      version: 1
+  timestamp: 2026-03-24T08:44:22.642Z
+  sequenceNumber: 12

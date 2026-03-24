@@ -1,0 +1,44 @@
+data-model.stringschema.uuid-string:
+  id: 4e9300cd-8640-4962-9ade-2251448f7125
+  path: data-model.stringschema.uuid-string
+  spec_node_id: data-model.stringschema
+  type: stringschema
+  layer_id: data-model
+  name: UUID string
+  description: String schema for entity identifiers — UUID v4 format, used as
+    primary keys across all ontology entities and stored as TEXT in SQLite
+  attributes:
+    type: string
+    format: uuid
+    minLength: 36
+    maxLength: 36
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/domain/ontology/entities.py
+        symbol: OntologyEntity.id
+  metadata:
+    created_at: 2026-03-24T09:24:22.815Z
+    updated_at: 2026-03-24T09:24:22.815Z
+    version: 1
+data-model.stringschema.iso-8601-datetime:
+  id: 3748f132-0c20-4a8c-8330-a84ceb891b76
+  path: data-model.stringschema.iso-8601-datetime
+  spec_node_id: data-model.stringschema
+  type: stringschema
+  layer_id: data-model
+  name: ISO 8601 datetime
+  description: String schema for timestamp fields (created_at, updated_at) — ISO
+    8601 format stored as TEXT in SQLite
+  attributes:
+    type: string
+    format: date-time
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/persistence/sqlite/models.py
+        symbol: OntologyEntityModel.created_at
+  metadata:
+    created_at: 2026-03-24T09:24:23.126Z
+    updated_at: 2026-03-24T09:24:23.126Z
+    version: 1

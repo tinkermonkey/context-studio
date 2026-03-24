@@ -1,0 +1,126 @@
+version: 0.1.0
+schema: documentation-robotics-v1
+cli_version: 0.1.3
+spec_version: 0.8.3
+created: 2026-03-24T08:35:29.898Z
+updated: 2026-03-24T08:56:20.884Z
+project:
+  name: Context Studio Local Server
+  description: Hexagonal (ports and adapters) Python back-end for Context Studio —
+    six bounded contexts for ontology management, graph analysis, knowledge
+    extraction, LLM pipeline management, version control, and system
+    administration
+  version: 0.1.0
+documentation: .dr/README.md
+layers:
+  motivation:
+    order: 1
+    name: Motivation
+    path: documentation-robotics/model/01_motivation/
+    enabled: true
+    elements:
+      driver: 2
+      goal: 6
+      principle: 5
+      requirement: 3
+  business:
+    order: 2
+    name: Business
+    path: documentation-robotics/model/02_business/
+    enabled: true
+    elements:
+      businessactor: 2
+      businessobject: 1
+      businessprocess: 3
+      businessrole: 1
+      businessservice: 6
+  security:
+    order: 3
+    name: Security
+    path: documentation-robotics/model/03_security/
+    enabled: true
+    elements: {}
+  application:
+    order: 4
+    name: Application
+    path: documentation-robotics/model/04_application/
+    enabled: true
+    elements:
+      applicationcomponent: 9
+      applicationevent: 6
+      applicationinterface: 10
+      applicationprocess: 3
+      applicationservice: 6
+      dataobject: 5
+  technology:
+    order: 5
+    name: Technology
+    path: documentation-robotics/model/05_technology/
+    enabled: true
+    elements:
+      artifact: 2
+      node: 1
+      systemsoftware: 12
+      technologyinterface: 1
+      technologyprocess: 2
+      technologyservice: 7
+  api:
+    order: 6
+    name: Api
+    path: documentation-robotics/model/06_api/
+    enabled: true
+    elements:
+      operation: 42
+      server: 1
+      tag: 10
+  data-model:
+    order: 7
+    name: Data model
+    path: documentation-robotics/model/07_data-model/
+    enabled: true
+    elements:
+      objectschema: 19
+      schemadefinition: 3
+  data-store:
+    order: 8
+    name: Data store
+    path: documentation-robotics/model/08_data-store/
+    enabled: true
+    elements:
+      collection: 6
+      database: 4
+      field: 3
+      index: 2
+      namespace: 1
+  ux:
+    order: 9
+    name: Ux
+    path: documentation-robotics/model/09_ux/
+    enabled: true
+    elements: {}
+  navigation:
+    order: 10
+    name: Navigation
+    path: documentation-robotics/model/10_navigation/
+    enabled: true
+    elements: {}
+  apm:
+    order: 11
+    name: Apm
+    path: documentation-robotics/model/11_apm/
+    enabled: true
+    elements: {}
+  testing:
+    order: 12
+    name: Testing
+    path: documentation-robotics/model/12_testing/
+    enabled: true
+    elements:
+      contextvariation: 3
+      coveragerequirement: 3
+      environmentfactor: 2
+      testcoveragemodel: 1
+changeset_history:
+  - name: add-cross-layer-relationships
+    committed_at: 2026-03-24T08:56:20.884Z
+    action: committed

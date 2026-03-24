@@ -1,0 +1,148 @@
+- type: add
+  elementId: data-store.accesspattern.entity-by-parent-range-scan
+  layerName: data-store
+  after:
+    id: 6bd0d8ba-47a0-432d-a412-c43ba9a98ea6
+    path: data-store.accesspattern.entity-by-parent-range-scan
+    spec_node_id: data-store.accesspattern
+    type: accesspattern
+    layer_id: data-store
+    name: entity_by_parent RANGE_SCAN
+    description: Range scan access pattern for retrieving all ontology entities with
+      a specific parent_entity_id — supports hierarchy traversal in the Ontology
+      Management bounded context
+    attributes:
+      patternType: RANGE_SCAN
+      targetCollection: ontology_entities
+      keyCondition: parent_entity_id = :parent_id
+      expectedFrequency: FREQUENT
+      consistencyRequirement: STRONG
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/persistence/sqlite/models.py
+          symbol: OntologyEntityModel.parent_entity_id
+    metadata:
+      created_at: 2026-03-24T09:24:40.723Z
+      updated_at: 2026-03-24T09:24:40.723Z
+      version: 1
+  timestamp: 2026-03-24T09:24:40.743Z
+  sequenceNumber: 0
+- type: add
+  elementId: data-store.accesspattern.vector-similarity-search
+  layerName: data-store
+  after:
+    id: a45a82c7-10fc-4156-8246-d09af6369e66
+    path: data-store.accesspattern.vector-similarity-search
+    spec_node_id: data-store.accesspattern
+    type: accesspattern
+    layer_id: data-store
+    name: vector_similarity_search
+    description: Vector similarity search access pattern using SQLiteVector cosine
+      similarity — retrieves top-k semantically similar ontology entities by
+      embedding
+    attributes:
+      patternType: VECTOR_SIMILARITY
+      targetCollection: ontology_entities
+      keyCondition: embedding_vector ANN :query_vector
+      expectedFrequency: FREQUENT
+      consistencyRequirement: EVENTUAL
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/embedding
+    metadata:
+      created_at: 2026-03-24T09:24:45.603Z
+      updated_at: 2026-03-24T09:24:45.603Z
+      version: 1
+  timestamp: 2026-03-24T09:24:45.625Z
+  sequenceNumber: 1
+- type: add
+  elementId: data-store.storedlogic.sqlite-vec-cosine-similarity
+  layerName: data-store
+  after:
+    id: 439f4d64-3ee2-4e36-aeaf-420f8d377703
+    path: data-store.storedlogic.sqlite-vec-cosine-similarity
+    spec_node_id: data-store.storedlogic
+    type: storedlogic
+    layer_id: data-store
+    name: sqlite-vec cosine similarity
+    description: SQLite user-defined function provided by the sqlite-vec extension
+      that computes cosine similarity between two embedding vectors for ANN
+      search
+    attributes:
+      logicType: UDF
+      language: C
+      returnType: FLOAT
+      deterministic: true
+      sideEffects: false
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/persistence/sqlite
+    metadata:
+      created_at: 2026-03-24T09:24:53.022Z
+      updated_at: 2026-03-24T09:24:53.022Z
+      version: 1
+  timestamp: 2026-03-24T09:24:53.044Z
+  sequenceNumber: 2
+- type: add
+  elementId: data-store.retentionpolicy.reference-api-cache-cleanup
+  layerName: data-store
+  after:
+    id: 5d481c77-0452-4415-8089-e64068de9afd
+    path: data-store.retentionpolicy.reference-api-cache-cleanup
+    spec_node_id: data-store.retentionpolicy
+    type: retentionpolicy
+    layer_id: data-store
+    name: reference_api_cache cleanup
+    description: 7-day TTL retention policy for the reference_api_cache.db — cached
+      responses from ConceptNet, DBpedia, Wikidata, and schema.org are dropped
+      and rebuilt on demand
+    attributes:
+      targetCollection: reference_api_cache
+      retentionDuration: P7D
+      action: DELETE
+      enabled: true
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/reference
+    metadata:
+      created_at: 2026-03-24T09:25:00.479Z
+      updated_at: 2026-03-24T09:25:00.479Z
+      version: 1
+  timestamp: 2026-03-24T09:25:00.501Z
+  sequenceNumber: 3
+- type: add
+  elementId: data-store.validationrule.entity-cascade-delete
+  layerName: data-store
+  after:
+    id: 25d3d241-5296-4413-ac83-b2fb4eaa7c29
+    path: data-store.validationrule.entity-cascade-delete
+    spec_node_id: data-store.validationrule
+    type: validationrule
+    layer_id: data-store
+    name: entity_cascade_delete
+    description: Foreign key cascade delete rule on parent_entity_id in
+      ontology_entities — deleting a parent Taxonomy or ConceptScheme cascades
+      to child entities
+    attributes:
+      ruleType: FOREIGN_KEY
+      targetFields: parent_entity_id
+      referencedCollection: ontology_entities
+      referencedFields: id
+      onDelete: CASCADE
+      onUpdate: NO_ACTION
+      enforcement: STRICT
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/persistence/sqlite/models.py
+          symbol: OntologyEntityModel.parent_entity_id
+    metadata:
+      created_at: 2026-03-24T09:25:09.792Z
+      updated_at: 2026-03-24T09:25:09.792Z
+      version: 1
+  timestamp: 2026-03-24T09:25:09.815Z
+  sequenceNumber: 4

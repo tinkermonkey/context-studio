@@ -1,0 +1,76 @@
+data-model.schemadefinition.node-type-enum:
+  id: 1f9dd366-1b25-4ff1-b913-3207fc46cc33
+  path: data-model.schemadefinition.node-type-enum
+  spec_node_id: data-model.schemadefinition
+  type: schemadefinition
+  layer_id: data-model
+  name: NodeType Enum
+  description: "Discriminator enum for ontology entity types. Values: taxonomy,
+    concept_scheme, class, individual. Used as the node_type column in the
+    unified ontology_entities table"
+  attributes:
+    title: NodeType
+    type: string
+    enum:
+      - taxonomy
+      - concept_scheme
+      - class
+      - individual
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: domain/ontology/value_objects.py
+        symbol: NodeType
+  metadata:
+    created_at: 2026-03-24T08:38:46.051Z
+    updated_at: 2026-03-24T08:38:46.051Z
+    version: 1
+data-model.schemadefinition.change-state-enum:
+  id: b0e88b45-6905-4a25-8aa7-4bc1daa85adf
+  path: data-model.schemadefinition.change-state-enum
+  spec_node_id: data-model.schemadefinition
+  type: schemadefinition
+  layer_id: data-model
+  name: ChangeState Enum
+  description: "Lifecycle state for entity versions in the versioning workflow.
+    Values: working, staged, proposed, approved, merged"
+  attributes:
+    title: ChangeState
+    type: string
+    enum:
+      - working
+      - staged
+      - proposed
+      - approved
+      - merged
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: domain/versioning/entities.py
+        symbol: ChangeState
+  metadata:
+    created_at: 2026-03-24T08:38:46.489Z
+    updated_at: 2026-03-24T08:38:46.489Z
+    version: 1
+data-model.schemadefinition.search-criteria:
+  id: 067333d6-b7e6-47f3-924f-18c008b1ce61
+  path: data-model.schemadefinition.search-criteria
+  spec_node_id: data-model.schemadefinition
+  type: schemadefinition
+  layer_id: data-model
+  name: Search Criteria
+  description: "Encapsulates search parameters for querying ontology entities.
+    Fields: query (text), node_type, taxonomy_id, scheme_id, parent_id,
+    use_semantic_search (bool), limit, offset"
+  attributes:
+    title: SearchCriteria
+    type: object
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: domain/ontology/value_objects.py
+        symbol: SearchCriteria
+  metadata:
+    created_at: 2026-03-24T08:38:46.950Z
+    updated_at: 2026-03-24T08:38:46.950Z
+    version: 1

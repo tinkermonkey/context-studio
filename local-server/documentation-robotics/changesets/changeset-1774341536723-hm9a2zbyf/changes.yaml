@@ -1,0 +1,415 @@
+- type: add
+  elementId: data-store.database.localdb
+  layerName: data-store
+  after:
+    id: a870ae8f-e7a0-49c0-bfbd-6e6e0209f826
+    path: data-store.database.localdb
+    spec_node_id: data-store.database
+    type: database
+    layer_id: data-store
+    name: local.db
+    description: Primary Alembic-managed SQLite workspace database. Stores ontology
+      entities (taxonomies, concept schemes, classes), relationships, property
+      definitions, and change events. One instance per workspace
+    attributes:
+      engine: SQLite
+      paradigm: RELATIONAL
+      deploymentModel: EMBEDDED
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: adapters/persistence/sqlite/models.py
+    metadata:
+      created_at: 2026-03-24T08:39:10.710Z
+      updated_at: 2026-03-24T08:39:10.710Z
+      version: 1
+  timestamp: 2026-03-24T08:39:10.734Z
+  sequenceNumber: 0
+- type: add
+  elementId: data-store.database.operationsdb
+  layerName: data-store
+  after:
+    id: 12945e59-2472-4d85-8ec5-8f75949aaba2
+    path: data-store.database.operationsdb
+    spec_node_id: data-store.database
+    type: database
+    layer_id: data-store
+    name: operations.db
+    description: Alembic-managed SQLite operational database. Stores LLM pipeline
+      configurations, execution logs, and background task state. Separate from
+      primary workspace data
+    attributes:
+      engine: SQLite
+      paradigm: RELATIONAL
+      deploymentModel: EMBEDDED
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: adapters/persistence/sqlite/models.py
+    metadata:
+      created_at: 2026-03-24T08:39:11.117Z
+      updated_at: 2026-03-24T08:39:11.117Z
+      version: 1
+  timestamp: 2026-03-24T08:39:11.139Z
+  sequenceNumber: 1
+- type: add
+  elementId: data-store.database.referencedb
+  layerName: data-store
+  after:
+    id: ec57aee9-bcd9-42ff-a698-7606c1d24be6
+    path: data-store.database.referencedb
+    spec_node_id: data-store.database
+    type: database
+    layer_id: data-store
+    name: reference.db
+    description: SQLite database for imported reference knowledge from ConceptNet,
+      DBpedia, Wikidata, and schema.org. No Alembic migrations — can be dropped
+      and rebuilt from external sources
+    attributes:
+      engine: SQLite
+      paradigm: RELATIONAL
+      deploymentModel: EMBEDDED
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: adapters/persistence/sqlite/models.py
+    metadata:
+      created_at: 2026-03-24T08:39:11.521Z
+      updated_at: 2026-03-24T08:39:11.521Z
+      version: 1
+  timestamp: 2026-03-24T08:39:11.545Z
+  sequenceNumber: 2
+- type: add
+  elementId: data-store.database.reference-api-cachedb
+  layerName: data-store
+  after:
+    id: a6819d07-c172-4605-b5e2-52412e829fea
+    path: data-store.database.reference-api-cachedb
+    spec_node_id: data-store.database
+    type: database
+    layer_id: data-store
+    name: reference_api_cache.db
+    description: SQLite cache for external reference API responses. No Alembic
+      migrations — a pure key-value response cache that can be dropped and
+      rebuilt without data loss
+    attributes:
+      engine: SQLite
+      paradigm: RELATIONAL
+      deploymentModel: EMBEDDED
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: adapters/reference/cache.py
+    metadata:
+      created_at: 2026-03-24T08:39:11.937Z
+      updated_at: 2026-03-24T08:39:11.937Z
+      version: 1
+  timestamp: 2026-03-24T08:39:11.975Z
+  sequenceNumber: 3
+- type: add
+  elementId: data-store.collection.ontology-entities
+  layerName: data-store
+  after:
+    id: f71cd837-e5ed-4de7-8e09-b80e5f124089
+    path: data-store.collection.ontology-entities
+    spec_node_id: data-store.collection
+    type: collection
+    layer_id: data-store
+    name: ontology_entities
+    description: Unified table in local.db for taxonomies, concept schemes, and
+      classes. Discriminated by node_type column. ORM-managed via Alembic
+      autogenerate
+    attributes:
+      collectionType: TABLE
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: adapters/persistence/sqlite/models.py
+          symbol: OntologyEntityORM
+    metadata:
+      created_at: 2026-03-24T08:39:21.589Z
+      updated_at: 2026-03-24T08:39:21.589Z
+      version: 1
+  timestamp: 2026-03-24T08:39:21.613Z
+  sequenceNumber: 4
+- type: add
+  elementId: data-store.collection.relationships
+  layerName: data-store
+  after:
+    id: 13b550ef-f736-4d2e-bcdf-3d926e5c6d85
+    path: data-store.collection.relationships
+    spec_node_id: data-store.collection
+    type: collection
+    layer_id: data-store
+    name: relationships
+    description: Table in local.db storing typed directed edges between ontology
+      entities. Maps to Relationship domain entity
+    attributes:
+      collectionType: TABLE
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: adapters/persistence/sqlite/models.py
+          symbol: RelationshipORM
+    metadata:
+      created_at: 2026-03-24T08:39:22.002Z
+      updated_at: 2026-03-24T08:39:22.002Z
+      version: 1
+  timestamp: 2026-03-24T08:39:22.025Z
+  sequenceNumber: 5
+- type: add
+  elementId: data-store.collection.property-definitions
+  layerName: data-store
+  after:
+    id: f962ad3a-0b2f-4399-ac8b-21dc8647aa4b
+    path: data-store.collection.property-definitions
+    spec_node_id: data-store.collection
+    type: collection
+    layer_id: data-store
+    name: property_definitions
+    description: Table in local.db storing object property definitions (relationship
+      type registry). Maps to PropertyDefinition domain entity
+    attributes:
+      collectionType: TABLE
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: adapters/persistence/sqlite/models.py
+          symbol: PropertyDefinitionORM
+    metadata:
+      created_at: 2026-03-24T08:39:22.425Z
+      updated_at: 2026-03-24T08:39:22.425Z
+      version: 1
+  timestamp: 2026-03-24T08:39:22.450Z
+  sequenceNumber: 6
+- type: add
+  elementId: data-store.collection.change-events
+  layerName: data-store
+  after:
+    id: e056c626-d499-4db9-941c-83b74e8a149e
+    path: data-store.collection.change-events
+    spec_node_id: data-store.collection
+    type: collection
+    layer_id: data-store
+    name: change_events
+    description: Append-only audit log table in local.db. Every create, update, and
+      delete operation on ontology entities generates a record here
+    attributes:
+      collectionType: TABLE
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: adapters/persistence/sqlite/models.py
+          symbol: ChangeEventORM
+    metadata:
+      created_at: 2026-03-24T08:39:22.844Z
+      updated_at: 2026-03-24T08:39:22.844Z
+      version: 1
+  timestamp: 2026-03-24T08:39:22.867Z
+  sequenceNumber: 7
+- type: add
+  elementId: data-store.collection.pipeline-configurations
+  layerName: data-store
+  after:
+    id: b5c67243-0ce8-4799-bee3-476c441b86ee
+    path: data-store.collection.pipeline-configurations
+    spec_node_id: data-store.collection
+    type: collection
+    layer_id: data-store
+    name: pipeline_configurations
+    description: Table in operations.db storing LLM pipeline configurations
+      (replaces pipeline_flavors)
+    attributes:
+      collectionType: TABLE
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: adapters/persistence/sqlite/models.py
+          symbol: PipelineConfigurationORM
+    metadata:
+      created_at: 2026-03-24T08:39:23.271Z
+      updated_at: 2026-03-24T08:39:23.271Z
+      version: 1
+  timestamp: 2026-03-24T08:39:23.295Z
+  sequenceNumber: 8
+- type: add
+  elementId: data-store.collection.pipeline-executions
+  layerName: data-store
+  after:
+    id: fd2b4709-2e02-4e91-88cc-8d7fa2594aa9
+    path: data-store.collection.pipeline-executions
+    spec_node_id: data-store.collection
+    type: collection
+    layer_id: data-store
+    name: pipeline_executions
+    description: Table in operations.db storing LLM execution traces with token
+      counts, durations, and full prompt/response content
+    attributes:
+      collectionType: TABLE
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: adapters/persistence/sqlite/models.py
+          symbol: PipelineExecutionORM
+    metadata:
+      created_at: 2026-03-24T08:39:23.697Z
+      updated_at: 2026-03-24T08:39:23.697Z
+      version: 1
+  timestamp: 2026-03-24T08:39:23.722Z
+  sequenceNumber: 9
+- type: add
+  elementId: data-store.field.node-type
+  layerName: data-store
+  after:
+    id: 57975168-90f8-4e0e-a391-4420b95dd415
+    path: data-store.field.node-type
+    spec_node_id: data-store.field
+    type: field
+    layer_id: data-store
+    name: node_type
+    description: "Discriminator column in ontology_entities table. Values: taxonomy,
+      concept_scheme, class, individual. Determines which domain entity type the
+      row represents"
+    attributes:
+      dataType: VARCHAR
+      nullable: false
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: adapters/persistence/sqlite/models.py
+          symbol: OntologyEntityORM.node_type
+    metadata:
+      created_at: 2026-03-24T08:39:34.348Z
+      updated_at: 2026-03-24T08:39:34.348Z
+      version: 1
+  timestamp: 2026-03-24T08:39:34.371Z
+  sequenceNumber: 10
+- type: add
+  elementId: data-store.field.title-embedding
+  layerName: data-store
+  after:
+    id: 65529adc-7691-4ed2-aa09-cc733b7f8be0
+    path: data-store.field.title-embedding
+    spec_node_id: data-store.field
+    type: field
+    layer_id: data-store
+    name: title_embedding
+    description: Serialized float32 numpy array (bytes) storing the
+      SentenceTransformer embedding of the entity title. Used for semantic
+      search
+    attributes:
+      dataType: BLOB
+      nullable: true
+      vectorDimensions: 384
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: adapters/persistence/sqlite/models.py
+          symbol: OntologyEntityORM.title_embedding
+    metadata:
+      created_at: 2026-03-24T08:39:34.770Z
+      updated_at: 2026-03-24T08:39:34.770Z
+      version: 1
+  timestamp: 2026-03-24T08:39:34.794Z
+  sequenceNumber: 11
+- type: add
+  elementId: data-store.field.definition-embedding
+  layerName: data-store
+  after:
+    id: 1117ff92-b777-43bc-b7ab-3358ab6de5d0
+    path: data-store.field.definition-embedding
+    spec_node_id: data-store.field
+    type: field
+    layer_id: data-store
+    name: definition_embedding
+    description: Serialized float32 numpy array (bytes) storing the
+      SentenceTransformer embedding of the entity definition. Used for semantic
+      search
+    attributes:
+      dataType: BLOB
+      nullable: true
+      vectorDimensions: 384
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: adapters/persistence/sqlite/models.py
+          symbol: OntologyEntityORM.definition_embedding
+    metadata:
+      created_at: 2026-03-24T08:39:35.197Z
+      updated_at: 2026-03-24T08:39:35.197Z
+      version: 1
+  timestamp: 2026-03-24T08:39:35.221Z
+  sequenceNumber: 12
+- type: add
+  elementId: data-store.index.idx-ontology-entities-node-type
+  layerName: data-store
+  after:
+    id: b09e5797-1f4c-4ee1-9a9d-66aa0a8f88e0
+    path: data-store.index.idx-ontology-entities-node-type
+    spec_node_id: data-store.index
+    type: index
+    layer_id: data-store
+    name: idx_ontology_entities_node_type
+    description: Index on node_type column for efficient type-filtered queries on
+      the unified ontology_entities table
+    attributes:
+      fields: node_type
+      unique: false
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: adapters/persistence/sqlite/models.py
+    metadata:
+      created_at: 2026-03-24T08:39:35.625Z
+      updated_at: 2026-03-24T08:39:35.625Z
+      version: 1
+  timestamp: 2026-03-24T08:39:35.649Z
+  sequenceNumber: 13
+- type: add
+  elementId: data-store.index.idx-ontology-entities-concept-scheme-id
+  layerName: data-store
+  after:
+    id: 48be811d-81b9-48d0-aa66-0fa0b38eba67
+    path: data-store.index.idx-ontology-entities-concept-scheme-id
+    spec_node_id: data-store.index
+    type: index
+    layer_id: data-store
+    name: idx_ontology_entities_concept_scheme_id
+    description: Index on concept_scheme_id for efficient listing of all classes
+      within a given concept scheme
+    attributes:
+      fields: concept_scheme_id
+      unique: false
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: adapters/persistence/sqlite/models.py
+    metadata:
+      created_at: 2026-03-24T08:39:36.057Z
+      updated_at: 2026-03-24T08:39:36.057Z
+      version: 1
+  timestamp: 2026-03-24T08:39:36.082Z
+  sequenceNumber: 14
+- type: add
+  elementId: data-store.namespace.alembic-migration-environment
+  layerName: data-store
+  after:
+    id: abbb52bc-8b3a-4b88-b006-eac93c3dd146
+    path: data-store.namespace.alembic-migration-environment
+    spec_node_id: data-store.namespace
+    type: namespace
+    layer_id: data-store
+    name: Alembic Migration Environment
+    description: Alembic migration environment under adapters/persistence/sqlite/.
+      Manages schema versioning for local.db and operations.db via autogenerate
+      from SQLAlchemy ORM models
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: adapters/persistence/sqlite/env.py
+    metadata:
+      created_at: 2026-03-24T08:39:36.482Z
+      updated_at: 2026-03-24T08:39:36.482Z
+      version: 1
+  timestamp: 2026-03-24T08:39:36.506Z
+  sequenceNumber: 15

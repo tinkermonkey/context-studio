@@ -1,0 +1,28 @@
+business.businessactor.knowledge-manager:
+  id: c106006a-8a82-47ee-a8cb-ba22be5488d9
+  path: business.businessactor.knowledge-manager
+  spec_node_id: business.businessactor
+  type: businessactor
+  layer_id: business
+  name: Knowledge Manager
+  description: Human user who authors and curates the knowledge graph. Creates
+    taxonomies, concept schemes, and classes. Reviews and approves changeset
+    proposals
+  metadata:
+    created_at: 2026-03-24T08:44:19.971Z
+    updated_at: 2026-03-24T08:44:19.971Z
+    version: 1
+business.businessactor.ai-agent:
+  id: 3f784115-7e78-4147-ba1d-1868750ccd6c
+  path: business.businessactor.ai-agent
+  spec_node_id: business.businessactor
+  type: businessactor
+  layer_id: business
+  name: AI Agent
+  description: Automated consumer of the knowledge graph via the REST API. Uses
+    semantic search (embedding similarity) to retrieve relevant context for RAG
+    workflows
+  metadata:
+    created_at: 2026-03-24T08:44:20.394Z
+    updated_at: 2026-03-24T08:44:20.394Z
+    version: 1

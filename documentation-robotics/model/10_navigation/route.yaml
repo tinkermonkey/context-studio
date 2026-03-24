@@ -1,0 +1,172 @@
+navigation.route.app-root-route:
+  id: 3751a813-b9e2-4fae-ad18-cc1f31377eb5
+  path: navigation.route.app-root-route
+  spec_node_id: navigation.route
+  type: route
+  layer_id: navigation
+  name: App Root Route
+  description: Root application layout route — renders the navigation shell,
+    sidebar, and main content area
+  attributes:
+    type: public
+    title: Context Studio
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/routes/__root.tsx
+  metadata:
+    created_at: 2026-03-24T09:20:07.548Z
+    updated_at: 2026-03-24T09:20:07.548Z
+    version: 1
+navigation.route.layers-route:
+  id: f756097c-0203-497c-af7e-6990410c8375
+  path: navigation.route.layers-route
+  spec_node_id: navigation.route
+  type: route
+  layer_id: navigation
+  name: Layers Route
+  description: Route for the Taxonomy (Layers) management page — /app/layers
+  attributes:
+    type: public
+    title: Layers
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/routes/app/layers.tsx
+  metadata:
+    created_at: 2026-03-24T09:20:07.851Z
+    updated_at: 2026-03-24T09:20:07.851Z
+    version: 1
+navigation.route.domains-route:
+  id: 80b0086b-fe11-43b6-8182-38fbe8e513ea
+  path: navigation.route.domains-route
+  spec_node_id: navigation.route
+  type: route
+  layer_id: navigation
+  name: Domains Route
+  description: Route for the Concept Schemes (Domains) management page — /app/domains
+  attributes:
+    type: public
+    title: Domains
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/routes/app/domains.tsx
+  metadata:
+    created_at: 2026-03-24T09:20:08.130Z
+    updated_at: 2026-03-24T09:20:08.130Z
+    version: 1
+navigation.route.terms-route:
+  id: 2986b8fe-7794-4b09-80a5-7130faf843d2
+  path: navigation.route.terms-route
+  spec_node_id: navigation.route
+  type: route
+  layer_id: navigation
+  name: Terms Route
+  description: Route for the Classes (Terms) management page — /app/terms
+  attributes:
+    type: public
+    title: Terms
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/routes/app/terms.tsx
+  metadata:
+    created_at: 2026-03-24T09:20:12.506Z
+    updated_at: 2026-03-24T09:20:12.506Z
+    version: 1
+navigation.route.datasets-route:
+  id: 16df9462-4b03-4924-889e-4834f03aa772
+  path: navigation.route.datasets-route
+  spec_node_id: navigation.route
+  type: route
+  layer_id: navigation
+  name: Datasets Route
+  description: Route for the dataset workspace management page — /app/datasets
+  attributes:
+    type: public
+    title: Datasets
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/routes/app/datasets.tsx
+  metadata:
+    created_at: 2026-03-24T09:20:12.797Z
+    updated_at: 2026-03-24T09:20:12.797Z
+    version: 1
+navigation.route.predicates-route:
+  id: 1036cdcb-413a-426c-9485-9eaa7e2b8606
+  path: navigation.route.predicates-route
+  spec_node_id: navigation.route
+  type: route
+  layer_id: navigation
+  name: Predicates Route
+  description: Route for the property definitions management page — /app/predicates
+  attributes:
+    type: public
+    title: Predicates
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/routes/app/predicates.tsx
+  metadata:
+    created_at: 2026-03-24T09:20:13.088Z
+    updated_at: 2026-03-24T09:20:13.088Z
+    version: 1
+navigation.route.rag-experiments-route:
+  id: b6188367-6496-450a-8115-f53cb9bf3c44
+  path: navigation.route.rag-experiments-route
+  spec_node_id: navigation.route
+  type: route
+  layer_id: navigation
+  name: RAG Experiments Route
+  description: Route serving the RAG experiments and pipeline testing view
+  attributes:
+    type: public
+    title: RAG Experiments
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/routes/app
+  metadata:
+    created_at: 2026-03-24T09:20:18.605Z
+    updated_at: 2026-03-24T09:20:18.605Z
+    version: 1
+navigation.route.configuration-route:
+  id: 6ace642d-28ee-41bf-bdaf-80741ac3b3d5
+  path: navigation.route.configuration-route
+  spec_node_id: navigation.route
+  type: route
+  layer_id: navigation
+  name: Configuration Route
+  description: Route serving the application configuration view
+  attributes:
+    type: public
+    title: Configuration
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/routes/app
+  metadata:
+    created_at: 2026-03-24T09:20:18.938Z
+    updated_at: 2026-03-24T09:20:18.938Z
+    version: 1
+navigation.route.admin-route:
+  id: 1ac00535-cae6-4c56-bccc-5ffe40a8ce24
+  path: navigation.route.admin-route
+  spec_node_id: navigation.route
+  type: route
+  layer_id: navigation
+  name: Admin Route
+  description: Route serving the administrative monitoring and health view
+  attributes:
+    type: public
+    title: Admin
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/routes/app
+  metadata:
+    created_at: 2026-03-24T09:20:19.255Z
+    updated_at: 2026-03-24T09:20:19.255Z
+    version: 1

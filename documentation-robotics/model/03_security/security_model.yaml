@@ -1,0 +1,23 @@
+security.securitymodel.context-studio-security-model:
+  id: 98a461cd-beda-44b0-95ec-9443c68a9bb8
+  path: security.securitymodel.context-studio-security-model
+  spec_node_id: security.securitymodel
+  type: securitymodel
+  layer_id: security
+  name: Context Studio Security Model
+  description: "Security model for the Context Studio local-first desktop app:
+    optional API key authentication, SQL injection prevention via SQLAlchemy
+    ORM, and global exception handler sanitization"
+  attributes:
+    version: "1.0"
+    application: context-studio-local-server
+    accessControlModel: rbac
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/app.py
+        symbol: create_app
+  metadata:
+    created_at: 2026-03-24T09:17:26.149Z
+    updated_at: 2026-03-24T09:17:26.149Z
+    version: 1

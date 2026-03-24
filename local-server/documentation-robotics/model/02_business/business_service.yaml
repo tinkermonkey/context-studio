@@ -1,0 +1,86 @@
+business.businessservice.ontology-management:
+  id: 73abde90-1d38-4bfa-8e5a-e7f7a37a4c0b
+  path: business.businessservice.ontology-management
+  spec_node_id: business.businessservice
+  type: businessservice
+  layer_id: business
+  name: Ontology Management
+  description: "Business capability for creating and maintaining knowledge graph
+    schemas: taxonomies, concept schemes, classes, typed relationships, and
+    property definitions. Corresponds to the Ontology Management bounded
+    context"
+  metadata:
+    created_at: 2026-03-24T08:44:06.240Z
+    updated_at: 2026-03-24T08:44:06.240Z
+    version: 1
+business.businessservice.knowledge-extraction:
+  id: 1afb8413-c950-4fe4-81ad-a62e29c22988
+  path: business.businessservice.knowledge-extraction
+  spec_node_id: business.businessservice
+  type: businessservice
+  layer_id: business
+  name: Knowledge Extraction
+  description: Business capability for automating entity discovery from
+    unstructured text using the four-layer RAG pipeline (KG context, LLM, NLP,
+    reference sources). Corresponds to the Knowledge Extraction bounded context
+  metadata:
+    created_at: 2026-03-24T08:44:06.664Z
+    updated_at: 2026-03-24T08:44:06.664Z
+    version: 1
+business.businessservice.graph-analysis:
+  id: f7f30c0c-db22-404e-945a-6d7d30567fa1
+  path: business.businessservice.graph-analysis
+  spec_node_id: business.businessservice
+  type: businessservice
+  layer_id: business
+  name: Graph Analysis
+  description: "Business capability for analyzing the knowledge graph structure:
+    path finding, centrality, community detection, SPARQL queries. Corresponds
+    to the Graph Analysis bounded context"
+  metadata:
+    created_at: 2026-03-24T08:44:07.091Z
+    updated_at: 2026-03-24T08:44:07.091Z
+    version: 1
+business.businessservice.llm-pipeline-management:
+  id: 10451b75-e364-474d-a41c-ccec0f82b99a
+  path: business.businessservice.llm-pipeline-management
+  spec_node_id: business.businessservice
+  type: businessservice
+  layer_id: business
+  name: LLM Pipeline Management
+  description: Business capability for configuring and executing LLM inference
+    pipelines with full traceability (token counts, durations, prompt/response
+    logging). Corresponds to the LLM Pipeline Management bounded context
+  metadata:
+    created_at: 2026-03-24T08:44:07.522Z
+    updated_at: 2026-03-24T08:44:07.522Z
+    version: 1
+business.businessservice.version-control-and-collaboration:
+  id: 2584102c-69b7-4913-8c77-76ab07b9b3cd
+  path: business.businessservice.version-control-and-collaboration
+  spec_node_id: business.businessservice
+  type: businessservice
+  layer_id: business
+  name: Version Control and Collaboration
+  description: Business capability for tracking every knowledge graph mutation,
+    managing changesets and proposals through an approval workflow, and
+    synchronizing workspaces via S3. Corresponds to the Version Control bounded
+    context
+  metadata:
+    created_at: 2026-03-24T08:44:07.946Z
+    updated_at: 2026-03-24T08:44:07.946Z
+    version: 1
+business.businessservice.system-administration:
+  id: aa7e0232-2768-4bd1-9438-a38c0e756b7e
+  path: business.businessservice.system-administration
+  spec_node_id: business.businessservice
+  type: businessservice
+  layer_id: business
+  name: System Administration
+  description: Business capability for health monitoring, configuration
+    management, and background task oversight. Corresponds to the System
+    Administration bounded context
+  metadata:
+    created_at: 2026-03-24T08:44:08.371Z
+    updated_at: 2026-03-24T08:44:08.371Z
+    version: 1

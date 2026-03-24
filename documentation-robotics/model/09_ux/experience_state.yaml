@@ -1,0 +1,22 @@
+ux.experiencestate.entity-crud-state:
+  id: a33ca972-6b2d-49a6-a6de-a3c984262dae
+  path: ux.experiencestate.entity-crud-state
+  spec_node_id: ux.experiencestate
+  type: experiencestate
+  layer_id: ux
+  name: Entity CRUD State
+  description: The composite experience state representing the loading, success,
+    and error states for entity CRUD operations in the Context Studio SPA.
+    Governs component visibility and enabled/disabled states during entity
+    create, read, update, and delete workflows.
+  attributes:
+    initial: false
+    channel: web
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: ux/src/
+  metadata:
+    created_at: 2026-03-24T10:43:36.357Z
+    updated_at: 2026-03-24T10:43:36.357Z
+    version: 1

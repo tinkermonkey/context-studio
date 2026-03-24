@@ -1,0 +1,19 @@
+business.businessservice.rest-api-gateway-service:
+  id: 0045b725-2a72-4347-9997-bad0a00be48d
+  path: business.businessservice.rest-api-gateway-service
+  spec_node_id: business.businessservice
+  type: businessservice
+  layer_id: business
+  name: REST API Gateway Service
+  description: The RESTful API surface of the Context Studio local server,
+    implemented as FastAPI routes in the web adapter layer. Provides all HTTP
+    endpoints for ontology management, graph analysis, knowledge extraction, LLM
+    pipeline management, versioning, and system administration.
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/web/
+  metadata:
+    created_at: 2026-03-24T10:43:06.585Z
+    updated_at: 2026-03-24T10:43:06.585Z
+    version: 1

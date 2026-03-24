@@ -1,0 +1,96 @@
+- type: add
+  elementId: technology.communicationnetwork.localhost-lan
+  layerName: technology
+  after:
+    id: 3b6259c5-1e4d-4299-bf74-d0ec47981903
+    path: technology.communicationnetwork.localhost-lan
+    spec_node_id: technology.communicationnetwork
+    type: communicationnetwork
+    layer_id: technology
+    name: Localhost LAN
+    description: The local loopback network over which the React SPA communicates
+      with the FastAPI back-end — standard localhost/127.0.0.1 HTTP
+    attributes:
+      networkType: lan
+      documentation: Localhost communication between UX and local-server
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/config.py
+    metadata:
+      created_at: 2026-03-24T09:23:09.505Z
+      updated_at: 2026-03-24T09:23:09.505Z
+      version: 1
+  timestamp: 2026-03-24T09:23:09.526Z
+  sequenceNumber: 0
+- type: add
+  elementId: technology.technologyinteraction.s3-sync-via-boto3
+  layerName: technology
+  after:
+    id: 51ec4580-24c8-4a59-b332-84533d1c071f
+    path: technology.technologyinteraction.s3-sync-via-boto3
+    spec_node_id: technology.technologyinteraction
+    type: technologyinteraction
+    layer_id: technology
+    name: S3 Sync via boto3
+    description: Technology interaction in which the sync adapter serializes the
+      local knowledge graph to Parquet format and uploads to S3 using boto3
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/sync
+    metadata:
+      created_at: 2026-03-24T09:23:15.294Z
+      updated_at: 2026-03-24T09:23:15.294Z
+      version: 1
+  timestamp: 2026-03-24T09:23:15.315Z
+  sequenceNumber: 1
+- type: add
+  elementId: technology.technologycollaboration.external-knowledge-integration
+  layerName: technology
+  after:
+    id: 980b3e94-6882-4f2d-a034-d589d346b272
+    path: technology.technologycollaboration.external-knowledge-integration
+    spec_node_id: technology.technologycollaboration
+    type: technologycollaboration
+    layer_id: technology
+    name: External Knowledge Integration
+    description: Technology collaboration between the reference adapter and external
+      knowledge sources (ConceptNet, DBpedia, Wikidata, schema.org) coordinated
+      by the reference adapter
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/reference
+    metadata:
+      created_at: 2026-03-24T09:23:18.831Z
+      updated_at: 2026-03-24T09:23:18.831Z
+      version: 1
+  timestamp: 2026-03-24T09:23:18.866Z
+  sequenceNumber: 2
+- type: add
+  elementId: technology.technologyevent.rate-limit-threshold-event
+  layerName: technology
+  after:
+    id: 422b8e21-7466-47be-8c23-6cda238cdfd6
+    path: technology.technologyevent.rate-limit-threshold-event
+    spec_node_id: technology.technologyevent
+    type: technologyevent
+    layer_id: technology
+    name: Rate Limit Threshold Event
+    description: Technology event fired when per-source request rate approaches the
+      configured limit in config.json for external reference adapters
+      (ConceptNet, DBpedia, Wikidata, schema.org)
+    attributes:
+      eventType: threshold-breach
+      documentation: Per-source rate limit enforcement event in reference adapter
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/reference
+    metadata:
+      created_at: 2026-03-24T09:23:25.755Z
+      updated_at: 2026-03-24T09:23:25.755Z
+      version: 1
+  timestamp: 2026-03-24T09:23:25.779Z
+  sequenceNumber: 3

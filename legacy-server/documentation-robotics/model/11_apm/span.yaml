@@ -15,7 +15,7 @@ apm.span.api-request-span:
     spanKind: SERVER
     startTimeUnixNano: "0"
     endTimeUnixNano: "0"
-    droppedAttributesCount: "0"
+    droppedAttributesCount: 0
     droppedEventsCount: "0"
     droppedLinksCount: "0"
   source_reference:

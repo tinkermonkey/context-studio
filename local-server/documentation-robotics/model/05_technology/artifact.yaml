@@ -1,0 +1,41 @@
+technology.artifact.configjson:
+  id: 2f862b5e-3c3f-468a-bde3-79e539a69520
+  path: technology.artifact.configjson
+  spec_node_id: technology.artifact
+  type: artifact
+  layer_id: technology
+  name: config.json
+  description: Application configuration file. Single source of truth for all
+    runtime configuration (server host/port, database paths, LLM provider keys,
+    NLP model, embedding model, reference source settings, sync). No environment
+    variable overrides for app settings
+  attributes:
+    artifactType: configuration
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: config.py
+  metadata:
+    created_at: 2026-03-24T08:43:05.163Z
+    updated_at: 2026-03-24T08:43:05.163Z
+    version: 1
+technology.artifact.requirementstxt:
+  id: d5476da8-b1a1-4dc0-a821-78b74f5f084b
+  path: technology.artifact.requirementstxt
+  spec_node_id: technology.artifact
+  type: artifact
+  layer_id: technology
+  name: requirements.txt
+  description: "Python package dependency manifest for the local-server. Managed
+    dependencies: fastapi, uvicorn, sqlalchemy, alembic, pydantic,
+    sentence-transformers, spacy, networkx, rdflib, duckdb, pytest, httpx"
+  attributes:
+    artifactType: file
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: requirements.txt
+  metadata:
+    created_at: 2026-03-24T08:43:10.150Z
+    updated_at: 2026-03-24T08:43:10.150Z
+    version: 1

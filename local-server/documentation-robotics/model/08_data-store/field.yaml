@@ -1,0 +1,67 @@
+data-store.field.node-type:
+  id: 57975168-90f8-4e0e-a391-4420b95dd415
+  path: data-store.field.node-type
+  spec_node_id: data-store.field
+  type: field
+  layer_id: data-store
+  name: node_type
+  description: "Discriminator column in ontology_entities table. Values: taxonomy,
+    concept_scheme, class, individual. Determines which domain entity type the
+    row represents"
+  attributes:
+    dataType: VARCHAR
+    nullable: false
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: adapters/persistence/sqlite/models.py
+        symbol: OntologyEntityORM.node_type
+  metadata:
+    created_at: 2026-03-24T08:39:34.348Z
+    updated_at: 2026-03-24T08:39:34.348Z
+    version: 1
+data-store.field.title-embedding:
+  id: 65529adc-7691-4ed2-aa09-cc733b7f8be0
+  path: data-store.field.title-embedding
+  spec_node_id: data-store.field
+  type: field
+  layer_id: data-store
+  name: title_embedding
+  description: Serialized float32 numpy array (bytes) storing the
+    SentenceTransformer embedding of the entity title. Used for semantic search
+  attributes:
+    dataType: BLOB
+    nullable: true
+    vectorDimensions: 384
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: adapters/persistence/sqlite/models.py
+        symbol: OntologyEntityORM.title_embedding
+  metadata:
+    created_at: 2026-03-24T08:39:34.770Z
+    updated_at: 2026-03-24T08:39:34.770Z
+    version: 1
+data-store.field.definition-embedding:
+  id: 1117ff92-b777-43bc-b7ab-3358ab6de5d0
+  path: data-store.field.definition-embedding
+  spec_node_id: data-store.field
+  type: field
+  layer_id: data-store
+  name: definition_embedding
+  description: Serialized float32 numpy array (bytes) storing the
+    SentenceTransformer embedding of the entity definition. Used for semantic
+    search
+  attributes:
+    dataType: BLOB
+    nullable: true
+    vectorDimensions: 384
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: adapters/persistence/sqlite/models.py
+        symbol: OntologyEntityORM.definition_embedding
+  metadata:
+    created_at: 2026-03-24T08:39:35.197Z
+    updated_at: 2026-03-24T08:39:35.197Z
+    version: 1

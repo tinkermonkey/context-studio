@@ -1,0 +1,181 @@
+application.applicationcomponent.domain-core:
+  id: 32ee7125-4b30-4c3f-9f71-0d271c87fa88
+  path: application.applicationcomponent.domain-core
+  spec_node_id: application.applicationcomponent
+  type: applicationcomponent
+  layer_id: application
+  name: Domain Core
+  description: The innermost hexagonal layer — zero infrastructure imports.
+    Contains all six bounded contexts (ontology, graph, extraction, pipeline,
+    versioning, admin). Verified clean by scripts/check_domain_imports.py
+  attributes:
+    type: internal
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: domain/__init__.py
+  metadata:
+    created_at: 2026-03-24T08:40:31.085Z
+    updated_at: 2026-03-24T08:40:31.085Z
+    version: 1
+application.applicationcomponent.persistence-adapter:
+  id: 5e7f423e-b5d4-40ff-b5a2-a44c2253067a
+  path: application.applicationcomponent.persistence-adapter
+  spec_node_id: application.applicationcomponent
+  type: applicationcomponent
+  layer_id: application
+  name: Persistence Adapter
+  description: Driven adapter implementing repository ports via SQLAlchemy ORM +
+    SQLite. Contains SQLiteOntologyRepository, SQLiteChangeRepository,
+    SQLitePipelineRepository, and Alembic migration environments for local.db
+    and operations.db
+  attributes:
+    type: internal
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: adapters/persistence/sqlite/ontology_repo.py
+  metadata:
+    created_at: 2026-03-24T08:40:31.506Z
+    updated_at: 2026-03-24T08:40:31.506Z
+    version: 1
+application.applicationcomponent.web-adapter:
+  id: 9456a7e3-198d-43c9-a587-484564a90fab
+  path: application.applicationcomponent.web-adapter
+  spec_node_id: application.applicationcomponent
+  type: applicationcomponent
+  layer_id: application
+  name: Web Adapter
+  description: Driving adapter implementing FastAPI route handlers for all bounded
+    contexts. Thin HTTP-to-domain translation only — no business logic. Pydantic
+    schemas live here for request/response validation
+  attributes:
+    type: internal
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: adapters/web/ontology_routes.py
+  metadata:
+    created_at: 2026-03-24T08:40:31.925Z
+    updated_at: 2026-03-24T08:40:31.925Z
+    version: 1
+application.applicationcomponent.llm-adapter:
+  id: 7bcd31e4-9cc1-47fc-8fa4-e73d2af796ca
+  path: application.applicationcomponent.llm-adapter
+  spec_node_id: application.applicationcomponent
+  type: applicationcomponent
+  layer_id: application
+  name: LLM Adapter
+  description: Driven adapter implementing the LLMProvider port. Contains
+    OpenAIProvider, AnthropicProvider, and LLMProviderRouter which delegates
+    based on the model name prefix
+  attributes:
+    type: internal
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: adapters/llm/provider_router.py
+  metadata:
+    created_at: 2026-03-24T08:40:32.350Z
+    updated_at: 2026-03-24T08:40:32.350Z
+    version: 1
+application.applicationcomponent.nlp-adapter:
+  id: 7c625d5c-de95-47e4-bc40-bdc883834a6c
+  path: application.applicationcomponent.nlp-adapter
+  spec_node_id: application.applicationcomponent
+  type: applicationcomponent
+  layer_id: application
+  name: NLP Adapter
+  description: Driven adapter implementing the NLPProcessor port via spaCy with
+    concepcy, DBpedia Spotlight, and WordNet components for entity recognition
+    and linking
+  attributes:
+    type: internal
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: adapters/nlp/spacy_processor.py
+  metadata:
+    created_at: 2026-03-24T08:40:32.780Z
+    updated_at: 2026-03-24T08:40:32.780Z
+    version: 1
+application.applicationcomponent.embedding-adapter:
+  id: 49c4fb71-27bf-4994-8b96-406b96f8a2b7
+  path: application.applicationcomponent.embedding-adapter
+  spec_node_id: application.applicationcomponent
+  type: applicationcomponent
+  layer_id: application
+  name: Embedding Adapter
+  description: Driven adapter implementing the EmbeddingService port via
+    SentenceTransformer all-MiniLM-L12-v2. Produces 384-dimensional embeddings
+    stored as serialized float32 bytes
+  attributes:
+    type: internal
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: adapters/embedding/sentence_transformer.py
+  metadata:
+    created_at: 2026-03-24T08:40:33.206Z
+    updated_at: 2026-03-24T08:40:33.206Z
+    version: 1
+application.applicationcomponent.reference-adapter:
+  id: 90c16d71-b26d-4bff-98e4-dd87ffca4caa
+  path: application.applicationcomponent.reference-adapter
+  spec_node_id: application.applicationcomponent
+  type: applicationcomponent
+  layer_id: application
+  name: Reference Adapter
+  description: Driven adapters implementing the ReferenceSource port for
+    ConceptNet, DBpedia, Wikidata, and schema.org. Includes a
+    CachedReferenceSource decorator that stores responses in
+    reference_api_cache.db
+  attributes:
+    type: internal
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: adapters/reference/conceptnet.py
+  metadata:
+    created_at: 2026-03-24T08:40:33.631Z
+    updated_at: 2026-03-24T08:40:33.631Z
+    version: 1
+application.applicationcomponent.graph-engine-adapter:
+  id: eb48e8f3-e985-48cd-b705-b0c412781448
+  path: application.applicationcomponent.graph-engine-adapter
+  spec_node_id: application.applicationcomponent
+  type: applicationcomponent
+  layer_id: application
+  name: Graph Engine Adapter
+  description: Driven adapters implementing GraphEngine (via NetworkX) and
+    SemanticQueryEngine (via RDFLib) ports for graph computation and SPARQL
+    execution
+  attributes:
+    type: internal
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: adapters/graph/networkx_engine.py
+  metadata:
+    created_at: 2026-03-24T08:40:34.067Z
+    updated_at: 2026-03-24T08:40:34.067Z
+    version: 1
+application.applicationcomponent.sync-adapter:
+  id: 301b335b-0efb-421e-b8f8-0e56ec2243ad
+  path: application.applicationcomponent.sync-adapter
+  spec_node_id: application.applicationcomponent
+  type: applicationcomponent
+  layer_id: application
+  name: Sync Adapter
+  description: Driven adapter implementing the SyncTarget port for remote
+    synchronization via S3 and DuckDB/Parquet
+  attributes:
+    type: internal
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: adapters/sync/s3_sync.py
+  metadata:
+    created_at: 2026-03-24T08:40:34.484Z
+    updated_at: 2026-03-24T08:40:34.484Z
+    version: 1

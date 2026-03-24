@@ -1,0 +1,403 @@
+- type: add
+  elementId: motivation.goal.enable-structured-knowledge-graph-authoring
+  layerName: motivation
+  after:
+    id: abc79590-64e1-4edf-9d68-7296047f8f9a
+    path: motivation.goal.enable-structured-knowledge-graph-authoring
+    spec_node_id: motivation.goal
+    type: goal
+    layer_id: motivation
+    name: Enable Structured Knowledge Graph Authoring
+    description: Allow knowledge managers to create and maintain a well-structured
+      ontology of taxonomies, concept schemes, classes, and typed relationships
+      using industry-standard OWL/SKOS terminology
+    attributes:
+      priority: critical
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: adapters/web/ontology_routes.py
+    metadata:
+      created_at: 2026-03-24T08:44:56.079Z
+      updated_at: 2026-03-24T08:44:56.079Z
+      version: 1
+  timestamp: 2026-03-24T08:44:56.100Z
+  sequenceNumber: 0
+- type: add
+  elementId: motivation.goal.automate-knowledge-enrichment
+  layerName: motivation
+  after:
+    id: 934cba95-1b42-4a23-b174-924abd005e02
+    path: motivation.goal.automate-knowledge-enrichment
+    spec_node_id: motivation.goal
+    type: goal
+    layer_id: motivation
+    name: Automate Knowledge Enrichment
+    description: Reduce manual curation effort by automatically enriching entities
+      from ConceptNet, DBpedia, Wikidata, and schema.org through the four-layer
+      RAG extraction pipeline
+    attributes:
+      priority: high
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: domain/extraction/services.py
+    metadata:
+      created_at: 2026-03-24T08:44:56.524Z
+      updated_at: 2026-03-24T08:44:56.524Z
+      version: 1
+  timestamp: 2026-03-24T08:44:56.546Z
+  sequenceNumber: 1
+- type: add
+  elementId: motivation.goal.serve-as-rag-knowledge-source
+  layerName: motivation
+  after:
+    id: b0473867-1586-498c-982a-0b17c52e45c7
+    path: motivation.goal.serve-as-rag-knowledge-source
+    spec_node_id: motivation.goal
+    type: goal
+    layer_id: motivation
+    name: Serve as RAG Knowledge Source
+    description: Expose the curated knowledge graph as a high-quality semantic
+      retrieval source for AI agents and LLM pipelines via vector similarity
+      search over class embeddings
+    attributes:
+      priority: critical
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: domain/extraction/services.py
+    metadata:
+      created_at: 2026-03-24T08:44:56.954Z
+      updated_at: 2026-03-24T08:44:56.954Z
+      version: 1
+  timestamp: 2026-03-24T08:44:56.975Z
+  sequenceNumber: 2
+- type: add
+  elementId: motivation.goal.ensure-local-first-data-privacy
+  layerName: motivation
+  after:
+    id: 10c2dba9-d671-48ac-b27a-0754e8168019
+    path: motivation.goal.ensure-local-first-data-privacy
+    spec_node_id: motivation.goal
+    type: goal
+    layer_id: motivation
+    name: Ensure Local-First Data Privacy
+    description: Keep all knowledge graph data on the user's own machine by default.
+      No cloud dependency for core functionality. Remote sync via S3 is optional
+      and user-controlled
+    attributes:
+      priority: critical
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: CLAUDE.md
+    metadata:
+      created_at: 2026-03-24T08:44:57.389Z
+      updated_at: 2026-03-24T08:44:57.389Z
+      version: 1
+  timestamp: 2026-03-24T08:44:57.411Z
+  sequenceNumber: 3
+- type: add
+  elementId: motivation.goal.maintain-full-audit-traceability
+  layerName: motivation
+  after:
+    id: 64c8182f-e5f7-493d-9d9d-01caf9c1f0b2
+    path: motivation.goal.maintain-full-audit-traceability
+    spec_node_id: motivation.goal
+    type: goal
+    layer_id: motivation
+    name: Maintain Full Audit Traceability
+    description: Record every create, update, and delete operation in an immutable
+      change_events audit log. Support versioning, rollback, and the changeset
+      approval workflow
+    attributes:
+      priority: high
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: domain/versioning/entities.py
+    metadata:
+      created_at: 2026-03-24T08:44:57.822Z
+      updated_at: 2026-03-24T08:44:57.822Z
+      version: 1
+  timestamp: 2026-03-24T08:44:57.845Z
+  sequenceNumber: 4
+- type: add
+  elementId: motivation.goal.support-collaborative-knowledge-management
+  layerName: motivation
+  after:
+    id: 282e6fb3-73d1-4025-a59a-243e8de71002
+    path: motivation.goal.support-collaborative-knowledge-management
+    spec_node_id: motivation.goal
+    type: goal
+    layer_id: motivation
+    name: Support Collaborative Knowledge Management
+    description: Enable multiple users to collaboratively edit the knowledge graph
+      using a changeset-based workflow with conflict detection and resolution
+    attributes:
+      priority: high
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: domain/versioning/services.py
+    metadata:
+      created_at: 2026-03-24T08:44:58.276Z
+      updated_at: 2026-03-24T08:44:58.276Z
+      version: 1
+  timestamp: 2026-03-24T08:44:58.298Z
+  sequenceNumber: 5
+- type: add
+  elementId: motivation.principle.hexagonal-architecture-dependency-inversion
+  layerName: motivation
+  after:
+    id: 6503b06e-b5ed-4997-96cb-d24cf02a5fbe
+    path: motivation.principle.hexagonal-architecture-dependency-inversion
+    spec_node_id: motivation.principle
+    type: principle
+    layer_id: motivation
+    name: Hexagonal Architecture — Dependency Inversion
+    description: All dependencies point inward. Domain core has zero imports from
+      infrastructure, framework, or adapter code. Infrastructure changes never
+      require domain changes. Verified by check_domain_imports.py
+    attributes:
+      category: architecture
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: rearchitecture/architecture_design.md
+    metadata:
+      created_at: 2026-03-24T08:45:19.531Z
+      updated_at: 2026-03-24T08:45:19.531Z
+      version: 1
+  timestamp: 2026-03-24T08:45:19.554Z
+  sequenceNumber: 6
+- type: add
+  elementId: motivation.principle.bounded-contexts-vertical-slices
+  layerName: motivation
+  after:
+    id: b2f5b3fc-7637-4552-88f2-11c7332794e8
+    path: motivation.principle.bounded-contexts-vertical-slices
+    spec_node_id: motivation.principle
+    type: principle
+    layer_id: motivation
+    name: Bounded Contexts — Vertical Slices
+    description: System decomposes into six bounded contexts that evolve
+      independently. Cross-context communication only through well-defined port
+      interfaces, never by reaching into another context internals
+    attributes:
+      category: architecture
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: rearchitecture/architecture_design.md
+    metadata:
+      created_at: 2026-03-24T08:45:19.975Z
+      updated_at: 2026-03-24T08:45:19.975Z
+      version: 1
+  timestamp: 2026-03-24T08:45:19.998Z
+  sequenceNumber: 7
+- type: add
+  elementId: motivation.principle.standard-ontology-terminology
+  layerName: motivation
+  after:
+    id: e1aff4c2-8c3a-42de-8db4-9f4481bebee0
+    path: motivation.principle.standard-ontology-terminology
+    spec_node_id: motivation.principle
+    type: principle
+    layer_id: motivation
+    name: Standard Ontology Terminology
+    description: All domain entities use industry-standard OWL/SKOS terminology
+      (Taxonomy, ConceptScheme, Class, Relationship, PropertyDefinition) rather
+      than ad-hoc names. Reduces translation burden and enables external tooling
+      integration
+    attributes:
+      category: architecture
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: rearchitecture/architecture_design.md
+    metadata:
+      created_at: 2026-03-24T08:45:20.403Z
+      updated_at: 2026-03-24T08:45:20.403Z
+      version: 1
+  timestamp: 2026-03-24T08:45:20.426Z
+  sequenceNumber: 8
+- type: add
+  elementId: motivation.principle.domain-first-development
+  layerName: motivation
+  after:
+    id: 46956a99-77a0-4a02-8ea0-5959a4e8a808
+    path: motivation.principle.domain-first-development
+    spec_node_id: motivation.principle
+    type: principle
+    layer_id: motivation
+    name: Domain-First Development
+    description: "Write domain entities and services before any infrastructure.
+      Tests prove business logic before a single database row exists. Order:
+      domain entities → ports → service → adapter → routes"
+    attributes:
+      category: development
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: rearchitecture/transformation_roadmap.md
+    metadata:
+      created_at: 2026-03-24T08:45:20.844Z
+      updated_at: 2026-03-24T08:45:20.844Z
+      version: 1
+  timestamp: 2026-03-24T08:45:20.866Z
+  sequenceNumber: 9
+- type: add
+  elementId: motivation.principle.schema-managed-by-alembic-autogenerate
+  layerName: motivation
+  after:
+    id: 78dde9ca-a71b-4325-bc46-978cfa9997d6
+    path: motivation.principle.schema-managed-by-alembic-autogenerate
+    spec_node_id: motivation.principle
+    type: principle
+    layer_id: motivation
+    name: Schema Managed by Alembic Autogenerate
+    description: Never write migration SQL by hand. SQLAlchemy ORM models are the
+      single source of truth for the schema. Alembic autogenerates migrations
+      from model diffs, eliminating fragile hand-written SQL
+    attributes:
+      category: data
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: rearchitecture/transformation_roadmap.md
+    metadata:
+      created_at: 2026-03-24T08:45:21.285Z
+      updated_at: 2026-03-24T08:45:21.285Z
+      version: 1
+  timestamp: 2026-03-24T08:45:21.308Z
+  sequenceNumber: 10
+- type: add
+  elementId: motivation.requirement.zero-infrastructure-imports-in-domain
+  layerName: motivation
+  after:
+    id: b7232a3a-c451-418f-8e45-112175449693
+    path: motivation.requirement.zero-infrastructure-imports-in-domain
+    spec_node_id: motivation.requirement
+    type: requirement
+    layer_id: motivation
+    name: Zero Infrastructure Imports in Domain
+    description: The domain/ package must have zero imports from adapters/,
+      SQLAlchemy, FastAPI, Pydantic, or any other infrastructure code. Enforced
+      by scripts/check_domain_imports.py as a gate in CI
+    attributes:
+      requirementType: non-functional
+      priority: critical
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: scripts/check_domain_imports.py
+    metadata:
+      created_at: 2026-03-24T08:45:52.094Z
+      updated_at: 2026-03-24T08:45:52.094Z
+      version: 1
+  timestamp: 2026-03-24T08:45:52.117Z
+  sequenceNumber: 11
+- type: add
+  elementId: motivation.requirement.three-tier-testing-pyramid
+  layerName: motivation
+  after:
+    id: 343ebb1e-8cfe-431e-92db-e3c9ab0dae2e
+    path: motivation.requirement.three-tier-testing-pyramid
+    spec_node_id: motivation.requirement
+    type: requirement
+    layer_id: motivation
+    name: Three-Tier Testing Pyramid
+    description: "All bounded contexts must have: (1) domain unit tests with fake
+      port implementations (no I/O), (2) adapter integration tests against real
+      SQLite, (3) E2E tests through the HTTP API with real external services"
+    attributes:
+      requirementType: quality
+      priority: high
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: rearchitecture/e2e_test_strategy.md
+    metadata:
+      created_at: 2026-03-24T08:45:52.539Z
+      updated_at: 2026-03-24T08:45:52.539Z
+      version: 1
+  timestamp: 2026-03-24T08:45:52.563Z
+  sequenceNumber: 12
+- type: add
+  elementId: motivation.requirement.no-backwards-compatibility-with-legacy-server
+  layerName: motivation
+  after:
+    id: dec0e3d2-e723-44a9-8d58-4ff33d864465
+    path: motivation.requirement.no-backwards-compatibility-with-legacy-server
+    spec_node_id: motivation.requirement
+    type: requirement
+    layer_id: motivation
+    name: No Backwards Compatibility with Legacy Server
+    description: The new server defines entirely new API contracts and database
+      schema. No migration path from legacy-server/ database. No adapter shims
+      for legacy route shapes. Clean slate design
+    attributes:
+      requirementType: non-functional
+      priority: critical
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: rearchitecture/transformation_roadmap.md
+    metadata:
+      created_at: 2026-03-24T08:45:53.001Z
+      updated_at: 2026-03-24T08:45:53.001Z
+      version: 1
+  timestamp: 2026-03-24T08:45:53.024Z
+  sequenceNumber: 13
+- type: add
+  elementId: motivation.driver.inconsistent-legacy-terminology
+  layerName: motivation
+  after:
+    id: 72678d4d-c809-4ffb-8722-1c1486ab2b78
+    path: motivation.driver.inconsistent-legacy-terminology
+    spec_node_id: motivation.driver
+    type: driver
+    layer_id: motivation
+    name: Inconsistent Legacy Terminology
+    description: The legacy server used ad-hoc names (StructureNode,
+      StructureNodeLink) rather than industry-standard OWL/SKOS terms. Created
+      translation burden and blocked external integration
+    attributes:
+      category: technical
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: rearchitecture/architecture_design.md
+    metadata:
+      created_at: 2026-03-24T08:45:53.445Z
+      updated_at: 2026-03-24T08:45:53.445Z
+      version: 1
+  timestamp: 2026-03-24T08:45:53.468Z
+  sequenceNumber: 14
+- type: add
+  elementId: motivation.driver.blurred-architecture-boundaries-in-legacy
+  layerName: motivation
+  after:
+    id: e64f2965-6368-4174-91a4-4456836d895d
+    path: motivation.driver.blurred-architecture-boundaries-in-legacy
+    spec_node_id: motivation.driver
+    type: driver
+    layer_id: motivation
+    name: Blurred Architecture Boundaries in Legacy
+    description: Business logic, persistence, and external API calls were intermixed
+      in legacy services. Services directly imported SQLAlchemy models. Route
+      handlers contained business rules. Made isolated testing impossible
+    attributes:
+      category: technical
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: rearchitecture/architecture_design.md
+    metadata:
+      created_at: 2026-03-24T08:45:53.894Z
+      updated_at: 2026-03-24T08:45:53.894Z
+      version: 1
+  timestamp: 2026-03-24T08:45:53.919Z
+  sequenceNumber: 15

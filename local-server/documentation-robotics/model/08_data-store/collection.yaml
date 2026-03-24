@@ -1,0 +1,121 @@
+data-store.collection.ontology-entities:
+  id: f71cd837-e5ed-4de7-8e09-b80e5f124089
+  path: data-store.collection.ontology-entities
+  spec_node_id: data-store.collection
+  type: collection
+  layer_id: data-store
+  name: ontology_entities
+  description: Unified table in local.db for taxonomies, concept schemes, and
+    classes. Discriminated by node_type column. ORM-managed via Alembic
+    autogenerate
+  attributes:
+    collectionType: TABLE
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: adapters/persistence/sqlite/models.py
+        symbol: OntologyEntityORM
+  metadata:
+    created_at: 2026-03-24T08:39:21.589Z
+    updated_at: 2026-03-24T08:39:21.589Z
+    version: 1
+data-store.collection.relationships:
+  id: 13b550ef-f736-4d2e-bcdf-3d926e5c6d85
+  path: data-store.collection.relationships
+  spec_node_id: data-store.collection
+  type: collection
+  layer_id: data-store
+  name: relationships
+  description: Table in local.db storing typed directed edges between ontology
+    entities. Maps to Relationship domain entity
+  attributes:
+    collectionType: TABLE
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: adapters/persistence/sqlite/models.py
+        symbol: RelationshipORM
+  metadata:
+    created_at: 2026-03-24T08:39:22.002Z
+    updated_at: 2026-03-24T08:39:22.002Z
+    version: 1
+data-store.collection.property-definitions:
+  id: f962ad3a-0b2f-4399-ac8b-21dc8647aa4b
+  path: data-store.collection.property-definitions
+  spec_node_id: data-store.collection
+  type: collection
+  layer_id: data-store
+  name: property_definitions
+  description: Table in local.db storing object property definitions (relationship
+    type registry). Maps to PropertyDefinition domain entity
+  attributes:
+    collectionType: TABLE
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: adapters/persistence/sqlite/models.py
+        symbol: PropertyDefinitionORM
+  metadata:
+    created_at: 2026-03-24T08:39:22.425Z
+    updated_at: 2026-03-24T08:39:22.425Z
+    version: 1
+data-store.collection.change-events:
+  id: e056c626-d499-4db9-941c-83b74e8a149e
+  path: data-store.collection.change-events
+  spec_node_id: data-store.collection
+  type: collection
+  layer_id: data-store
+  name: change_events
+  description: Append-only audit log table in local.db. Every create, update, and
+    delete operation on ontology entities generates a record here
+  attributes:
+    collectionType: TABLE
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: adapters/persistence/sqlite/models.py
+        symbol: ChangeEventORM
+  metadata:
+    created_at: 2026-03-24T08:39:22.844Z
+    updated_at: 2026-03-24T08:39:22.844Z
+    version: 1
+data-store.collection.pipeline-configurations:
+  id: b5c67243-0ce8-4799-bee3-476c441b86ee
+  path: data-store.collection.pipeline-configurations
+  spec_node_id: data-store.collection
+  type: collection
+  layer_id: data-store
+  name: pipeline_configurations
+  description: Table in operations.db storing LLM pipeline configurations
+    (replaces pipeline_flavors)
+  attributes:
+    collectionType: TABLE
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: adapters/persistence/sqlite/models.py
+        symbol: PipelineConfigurationORM
+  metadata:
+    created_at: 2026-03-24T08:39:23.271Z
+    updated_at: 2026-03-24T08:39:23.271Z
+    version: 1
+data-store.collection.pipeline-executions:
+  id: fd2b4709-2e02-4e91-88cc-8d7fa2594aa9
+  path: data-store.collection.pipeline-executions
+  spec_node_id: data-store.collection
+  type: collection
+  layer_id: data-store
+  name: pipeline_executions
+  description: Table in operations.db storing LLM execution traces with token
+    counts, durations, and full prompt/response content
+  attributes:
+    collectionType: TABLE
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: adapters/persistence/sqlite/models.py
+        symbol: PipelineExecutionORM
+  metadata:
+    created_at: 2026-03-24T08:39:23.697Z
+    updated_at: 2026-03-24T08:39:23.697Z
+    version: 1

@@ -1,0 +1,22 @@
+testing.testcoveragemodel.context-studio-local-server-test-coverage:
+  id: c606a629-9477-4e2d-816f-62a8914e7042
+  path: testing.testcoveragemodel.context-studio-local-server-test-coverage
+  spec_node_id: testing.testcoveragemodel
+  type: testcoveragemodel
+  layer_id: testing
+  name: Context Studio Local Server Test Coverage
+  description: "Three-tier test coverage model: domain unit tests (no I/O),
+    adapter integration tests (real SQLite), and E2E tests (real HTTP API with
+    real external services). Organized by build phase per
+    transformation_roadmap.md"
+  attributes:
+    version: "1.0"
+    application: Context Studio Local Server
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: rearchitecture/e2e_test_strategy.md
+  metadata:
+    created_at: 2026-03-24T08:46:25.920Z
+    updated_at: 2026-03-24T08:46:25.920Z
+    version: 1

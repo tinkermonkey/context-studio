@@ -1,0 +1,997 @@
+- type: add
+  elementId: application.applicationservice.ontology-service
+  layerName: application
+  after:
+    id: 6ae39725-944f-42a8-8a97-b362c8e3d424
+    path: application.applicationservice.ontology-service
+    spec_node_id: application.applicationservice
+    type: applicationservice
+    layer_id: application
+    name: Ontology Service
+    description: Core domain service for Ontology Management bounded context. Owns
+      all business rules for taxonomies, concept schemes, classes,
+      relationships, and property definitions. Zero infrastructure imports —
+      depends only on OntologyRepository, EmbeddingService, and EventPublisher
+      ports
+    attributes:
+      serviceType: synchronous
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: domain/ontology/services.py
+          symbol: OntologyService
+    metadata:
+      created_at: 2026-03-24T08:39:59.216Z
+      updated_at: 2026-03-24T08:39:59.216Z
+      version: 1
+  timestamp: 2026-03-24T08:39:59.235Z
+  sequenceNumber: 0
+- type: add
+  elementId: application.applicationservice.graph-analysis-service
+  layerName: application
+  after:
+    id: 0a25d627-9f35-4c60-bd30-d4273c183cf9
+    path: application.applicationservice.graph-analysis-service
+    spec_node_id: application.applicationservice
+    type: applicationservice
+    layer_id: application
+    name: Graph Analysis Service
+    description: Domain service for Graph Analysis bounded context. Orchestrates
+      in-memory graph construction, path queries, network metrics, community
+      detection, and SPARQL execution via GraphEngine and SemanticQueryEngine
+      ports
+    attributes:
+      serviceType: synchronous
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: domain/graph/services.py
+          symbol: GraphAnalysisService
+    metadata:
+      created_at: 2026-03-24T08:39:59.619Z
+      updated_at: 2026-03-24T08:39:59.619Z
+      version: 1
+  timestamp: 2026-03-24T08:39:59.641Z
+  sequenceNumber: 1
+- type: add
+  elementId: application.applicationservice.extraction-service
+  layerName: application
+  after:
+    id: e0de09aa-ace4-4895-87fe-b6ac6393374f
+    path: application.applicationservice.extraction-service
+    spec_node_id: application.applicationservice
+    type: applicationservice
+    layer_id: application
+    name: Extraction Service
+    description: "Domain service for Knowledge Extraction bounded context.
+      Orchestrates the four-layer RAG pipeline: KG context lookup, LLM
+      extraction, NLP gap filling, and reference enrichment"
+    attributes:
+      serviceType: asynchronous
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: domain/extraction/services.py
+          symbol: ExtractionService
+    metadata:
+      created_at: 2026-03-24T08:40:00.027Z
+      updated_at: 2026-03-24T08:40:00.027Z
+      version: 1
+  timestamp: 2026-03-24T08:40:00.060Z
+  sequenceNumber: 2
+- type: add
+  elementId: application.applicationservice.pipeline-service
+  layerName: application
+  after:
+    id: 1f7a1426-55e7-438e-9dbc-784e9138d835
+    path: application.applicationservice.pipeline-service
+    spec_node_id: application.applicationservice
+    type: applicationservice
+    layer_id: application
+    name: Pipeline Service
+    description: Domain service for LLM Pipeline Management bounded context. Manages
+      pipeline configuration CRUD and executes LLM pipelines with full
+      traceability (tokens, duration, prompts)
+    attributes:
+      serviceType: asynchronous
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: domain/pipeline/services.py
+          symbol: PipelineService
+    metadata:
+      created_at: 2026-03-24T08:40:00.450Z
+      updated_at: 2026-03-24T08:40:00.450Z
+      version: 1
+  timestamp: 2026-03-24T08:40:00.471Z
+  sequenceNumber: 3
+- type: add
+  elementId: application.applicationservice.versioning-service
+  layerName: application
+  after:
+    id: 4d2bf02e-554b-459f-82ce-046a3685f225
+    path: application.applicationservice.versioning-service
+    spec_node_id: application.applicationservice
+    type: applicationservice
+    layer_id: application
+    name: Versioning Service
+    description: Domain service for Version Control bounded context. Manages change
+      tracking, entity versioning, changeset workflow
+      (working/staged/proposed/approved/merged), and remote sync coordination
+    attributes:
+      serviceType: synchronous
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: domain/versioning/services.py
+          symbol: VersioningService
+    metadata:
+      created_at: 2026-03-24T08:40:00.874Z
+      updated_at: 2026-03-24T08:40:00.874Z
+      version: 1
+  timestamp: 2026-03-24T08:40:00.895Z
+  sequenceNumber: 4
+- type: add
+  elementId: application.applicationservice.admin-service
+  layerName: application
+  after:
+    id: 44d7bd59-99ba-4952-8b1f-40ac39e92076
+    path: application.applicationservice.admin-service
+    spec_node_id: application.applicationservice
+    type: applicationservice
+    layer_id: application
+    name: Admin Service
+    description: Domain service for System Administration bounded context. Provides
+      health checks, system metrics, background task management, and
+      configuration management
+    attributes:
+      serviceType: synchronous
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: domain/admin/services.py
+          symbol: AdminService
+    metadata:
+      created_at: 2026-03-24T08:40:01.286Z
+      updated_at: 2026-03-24T08:40:01.286Z
+      version: 1
+  timestamp: 2026-03-24T08:40:01.309Z
+  sequenceNumber: 5
+- type: add
+  elementId: application.applicationcomponent.domain-core
+  layerName: application
+  after:
+    id: 32ee7125-4b30-4c3f-9f71-0d271c87fa88
+    path: application.applicationcomponent.domain-core
+    spec_node_id: application.applicationcomponent
+    type: applicationcomponent
+    layer_id: application
+    name: Domain Core
+    description: The innermost hexagonal layer — zero infrastructure imports.
+      Contains all six bounded contexts (ontology, graph, extraction, pipeline,
+      versioning, admin). Verified clean by scripts/check_domain_imports.py
+    attributes:
+      type: internal
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: domain/__init__.py
+    metadata:
+      created_at: 2026-03-24T08:40:31.085Z
+      updated_at: 2026-03-24T08:40:31.085Z
+      version: 1
+  timestamp: 2026-03-24T08:40:31.107Z
+  sequenceNumber: 6
+- type: add
+  elementId: application.applicationcomponent.persistence-adapter
+  layerName: application
+  after:
+    id: 5e7f423e-b5d4-40ff-b5a2-a44c2253067a
+    path: application.applicationcomponent.persistence-adapter
+    spec_node_id: application.applicationcomponent
+    type: applicationcomponent
+    layer_id: application
+    name: Persistence Adapter
+    description: Driven adapter implementing repository ports via SQLAlchemy ORM +
+      SQLite. Contains SQLiteOntologyRepository, SQLiteChangeRepository,
+      SQLitePipelineRepository, and Alembic migration environments for local.db
+      and operations.db
+    attributes:
+      type: internal
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: adapters/persistence/sqlite/ontology_repo.py
+    metadata:
+      created_at: 2026-03-24T08:40:31.506Z
+      updated_at: 2026-03-24T08:40:31.506Z
+      version: 1
+  timestamp: 2026-03-24T08:40:31.528Z
+  sequenceNumber: 7
+- type: add
+  elementId: application.applicationcomponent.web-adapter
+  layerName: application
+  after:
+    id: 9456a7e3-198d-43c9-a587-484564a90fab
+    path: application.applicationcomponent.web-adapter
+    spec_node_id: application.applicationcomponent
+    type: applicationcomponent
+    layer_id: application
+    name: Web Adapter
+    description: Driving adapter implementing FastAPI route handlers for all bounded
+      contexts. Thin HTTP-to-domain translation only — no business logic.
+      Pydantic schemas live here for request/response validation
+    attributes:
+      type: internal
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: adapters/web/ontology_routes.py
+    metadata:
+      created_at: 2026-03-24T08:40:31.925Z
+      updated_at: 2026-03-24T08:40:31.925Z
+      version: 1
+  timestamp: 2026-03-24T08:40:31.948Z
+  sequenceNumber: 8
+- type: add
+  elementId: application.applicationcomponent.llm-adapter
+  layerName: application
+  after:
+    id: 7bcd31e4-9cc1-47fc-8fa4-e73d2af796ca
+    path: application.applicationcomponent.llm-adapter
+    spec_node_id: application.applicationcomponent
+    type: applicationcomponent
+    layer_id: application
+    name: LLM Adapter
+    description: Driven adapter implementing the LLMProvider port. Contains
+      OpenAIProvider, AnthropicProvider, and LLMProviderRouter which delegates
+      based on the model name prefix
+    attributes:
+      type: internal
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: adapters/llm/provider_router.py
+    metadata:
+      created_at: 2026-03-24T08:40:32.350Z
+      updated_at: 2026-03-24T08:40:32.350Z
+      version: 1
+  timestamp: 2026-03-24T08:40:32.372Z
+  sequenceNumber: 9
+- type: add
+  elementId: application.applicationcomponent.nlp-adapter
+  layerName: application
+  after:
+    id: 7c625d5c-de95-47e4-bc40-bdc883834a6c
+    path: application.applicationcomponent.nlp-adapter
+    spec_node_id: application.applicationcomponent
+    type: applicationcomponent
+    layer_id: application
+    name: NLP Adapter
+    description: Driven adapter implementing the NLPProcessor port via spaCy with
+      concepcy, DBpedia Spotlight, and WordNet components for entity recognition
+      and linking
+    attributes:
+      type: internal
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: adapters/nlp/spacy_processor.py
+    metadata:
+      created_at: 2026-03-24T08:40:32.780Z
+      updated_at: 2026-03-24T08:40:32.780Z
+      version: 1
+  timestamp: 2026-03-24T08:40:32.804Z
+  sequenceNumber: 10
+- type: add
+  elementId: application.applicationcomponent.embedding-adapter
+  layerName: application
+  after:
+    id: 49c4fb71-27bf-4994-8b96-406b96f8a2b7
+    path: application.applicationcomponent.embedding-adapter
+    spec_node_id: application.applicationcomponent
+    type: applicationcomponent
+    layer_id: application
+    name: Embedding Adapter
+    description: Driven adapter implementing the EmbeddingService port via
+      SentenceTransformer all-MiniLM-L12-v2. Produces 384-dimensional embeddings
+      stored as serialized float32 bytes
+    attributes:
+      type: internal
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: adapters/embedding/sentence_transformer.py
+    metadata:
+      created_at: 2026-03-24T08:40:33.206Z
+      updated_at: 2026-03-24T08:40:33.206Z
+      version: 1
+  timestamp: 2026-03-24T08:40:33.230Z
+  sequenceNumber: 11
+- type: add
+  elementId: application.applicationcomponent.reference-adapter
+  layerName: application
+  after:
+    id: 90c16d71-b26d-4bff-98e4-dd87ffca4caa
+    path: application.applicationcomponent.reference-adapter
+    spec_node_id: application.applicationcomponent
+    type: applicationcomponent
+    layer_id: application
+    name: Reference Adapter
+    description: Driven adapters implementing the ReferenceSource port for
+      ConceptNet, DBpedia, Wikidata, and schema.org. Includes a
+      CachedReferenceSource decorator that stores responses in
+      reference_api_cache.db
+    attributes:
+      type: internal
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: adapters/reference/conceptnet.py
+    metadata:
+      created_at: 2026-03-24T08:40:33.631Z
+      updated_at: 2026-03-24T08:40:33.631Z
+      version: 1
+  timestamp: 2026-03-24T08:40:33.657Z
+  sequenceNumber: 12
+- type: add
+  elementId: application.applicationcomponent.graph-engine-adapter
+  layerName: application
+  after:
+    id: eb48e8f3-e985-48cd-b705-b0c412781448
+    path: application.applicationcomponent.graph-engine-adapter
+    spec_node_id: application.applicationcomponent
+    type: applicationcomponent
+    layer_id: application
+    name: Graph Engine Adapter
+    description: Driven adapters implementing GraphEngine (via NetworkX) and
+      SemanticQueryEngine (via RDFLib) ports for graph computation and SPARQL
+      execution
+    attributes:
+      type: internal
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: adapters/graph/networkx_engine.py
+    metadata:
+      created_at: 2026-03-24T08:40:34.067Z
+      updated_at: 2026-03-24T08:40:34.067Z
+      version: 1
+  timestamp: 2026-03-24T08:40:34.091Z
+  sequenceNumber: 13
+- type: add
+  elementId: application.applicationcomponent.sync-adapter
+  layerName: application
+  after:
+    id: 301b335b-0efb-421e-b8f8-0e56ec2243ad
+    path: application.applicationcomponent.sync-adapter
+    spec_node_id: application.applicationcomponent
+    type: applicationcomponent
+    layer_id: application
+    name: Sync Adapter
+    description: Driven adapter implementing the SyncTarget port for remote
+      synchronization via S3 and DuckDB/Parquet
+    attributes:
+      type: internal
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: adapters/sync/s3_sync.py
+    metadata:
+      created_at: 2026-03-24T08:40:34.484Z
+      updated_at: 2026-03-24T08:40:34.484Z
+      version: 1
+  timestamp: 2026-03-24T08:40:34.516Z
+  sequenceNumber: 14
+- type: add
+  elementId: application.applicationinterface.ontology-repository-port
+  layerName: application
+  after:
+    id: 13db6dd6-754a-4007-a089-933d305394ff
+    path: application.applicationinterface.ontology-repository-port
+    spec_node_id: application.applicationinterface
+    type: applicationinterface
+    layer_id: application
+    name: Ontology Repository Port
+    description: "Driving port (Protocol) defining persistence contract for all
+      ontology entities. Methods: get/list/save/delete for Taxonomy,
+      ConceptScheme, Class, Individual, Relationship, PropertyDefinition.
+      Implemented by SQLiteOntologyRepository"
+    attributes:
+      protocol: REST
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: domain/ontology/ports.py
+          symbol: OntologyRepository
+    metadata:
+      created_at: 2026-03-24T08:41:02.694Z
+      updated_at: 2026-03-24T08:41:02.694Z
+      version: 1
+  timestamp: 2026-03-24T08:41:02.719Z
+  sequenceNumber: 15
+- type: add
+  elementId: application.applicationinterface.embedding-service-port
+  layerName: application
+  after:
+    id: fff98841-2543-4a47-b934-70a620b2581c
+    path: application.applicationinterface.embedding-service-port
+    spec_node_id: application.applicationinterface
+    type: applicationinterface
+    layer_id: application
+    name: Embedding Service Port
+    description: "Driving port (Protocol) for generating vector embeddings. Methods:
+      embed_text, embed_batch, similarity. Implemented by
+      SentenceTransformerEmbedding adapter"
+    attributes:
+      protocol: REST
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: domain/ontology/ports.py
+          symbol: EmbeddingService
+    metadata:
+      created_at: 2026-03-24T08:41:03.128Z
+      updated_at: 2026-03-24T08:41:03.128Z
+      version: 1
+  timestamp: 2026-03-24T08:41:03.153Z
+  sequenceNumber: 16
+- type: add
+  elementId: application.applicationinterface.event-publisher-port
+  layerName: application
+  after:
+    id: 890ff50b-00b4-490e-9224-395a24274637
+    path: application.applicationinterface.event-publisher-port
+    spec_node_id: application.applicationinterface
+    type: applicationinterface
+    layer_id: application
+    name: Event Publisher Port
+    description: "Driving port (Protocol) for fire-and-forget domain event
+      publication. Methods: publish, subscribe. Implemented by
+      InProcessEventPublisher using observer pattern"
+    attributes:
+      protocol: AMQP
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: domain/ontology/ports.py
+          symbol: EventPublisher
+    metadata:
+      created_at: 2026-03-24T08:41:03.587Z
+      updated_at: 2026-03-24T08:41:03.587Z
+      version: 1
+  timestamp: 2026-03-24T08:41:03.612Z
+  sequenceNumber: 17
+- type: add
+  elementId: application.applicationinterface.llm-provider-port
+  layerName: application
+  after:
+    id: cece059b-fb59-40c0-a0dc-e7ba6203ecd4
+    path: application.applicationinterface.llm-provider-port
+    spec_node_id: application.applicationinterface
+    type: applicationinterface
+    layer_id: application
+    name: LLM Provider Port
+    description: "Driving port (Protocol) for LLM inference. Methods: complete
+      (returns LLMResponse with tokens/duration), is_model_available,
+      list_available_models. Implemented by LLMProviderRouter"
+    attributes:
+      protocol: HTTPS
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: domain/extraction/ports.py
+          symbol: LLMProvider
+    metadata:
+      created_at: 2026-03-24T08:41:04.030Z
+      updated_at: 2026-03-24T08:41:04.030Z
+      version: 1
+  timestamp: 2026-03-24T08:41:04.055Z
+  sequenceNumber: 18
+- type: add
+  elementId: application.applicationinterface.nlp-processor-port
+  layerName: application
+  after:
+    id: f33f7bba-0e15-44f5-8a85-2d6fb960f0b7
+    path: application.applicationinterface.nlp-processor-port
+    spec_node_id: application.applicationinterface
+    type: applicationinterface
+    layer_id: application
+    name: NLP Processor Port
+    description: "Driving port (Protocol) for NLP text analysis. Methods: process
+      (returns NLPResult), extract_entities, is_ready. Implemented by
+      SpacyNLPProcessor"
+    attributes:
+      protocol: REST
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: domain/extraction/ports.py
+          symbol: NLPProcessor
+    metadata:
+      created_at: 2026-03-24T08:41:04.489Z
+      updated_at: 2026-03-24T08:41:04.489Z
+      version: 1
+  timestamp: 2026-03-24T08:41:04.514Z
+  sequenceNumber: 19
+- type: add
+  elementId: application.applicationinterface.reference-source-port
+  layerName: application
+  after:
+    id: 81ba9d4b-f8a9-4aa8-bb9b-bb6d1b347e7d
+    path: application.applicationinterface.reference-source-port
+    spec_node_id: application.applicationinterface
+    type: applicationinterface
+    layer_id: application
+    name: Reference Source Port
+    description: "Driving port (Protocol) for querying external knowledge sources.
+      Methods: search, get_relations, is_available. Implemented by ConceptNet,
+      DBpedia, Wikidata, and SchemaOrg adapters with caching"
+    attributes:
+      protocol: HTTPS
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: domain/extraction/ports.py
+          symbol: ReferenceSource
+    metadata:
+      created_at: 2026-03-24T08:41:04.944Z
+      updated_at: 2026-03-24T08:41:04.944Z
+      version: 1
+  timestamp: 2026-03-24T08:41:04.968Z
+  sequenceNumber: 20
+- type: add
+  elementId: application.applicationinterface.graph-engine-port
+  layerName: application
+  after:
+    id: 99ddb89f-6072-4678-bbec-675d26972229
+    path: application.applicationinterface.graph-engine-port
+    spec_node_id: application.applicationinterface
+    type: applicationinterface
+    layer_id: application
+    name: Graph Engine Port
+    description: "Driving port (Protocol) for graph computation. Methods:
+      build_from_data, shortest_path, centrality, communities, subgraph,
+      neighbors, has_cycle. Implemented by NetworkXGraphEngine"
+    attributes:
+      protocol: REST
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: domain/graph/ports.py
+          symbol: GraphEngine
+    metadata:
+      created_at: 2026-03-24T08:41:05.400Z
+      updated_at: 2026-03-24T08:41:05.400Z
+      version: 1
+  timestamp: 2026-03-24T08:41:05.425Z
+  sequenceNumber: 21
+- type: add
+  elementId: application.applicationinterface.semantic-query-engine-port
+  layerName: application
+  after:
+    id: 470c3dab-40e8-44ad-8168-60ea4c61a442
+    path: application.applicationinterface.semantic-query-engine-port
+    spec_node_id: application.applicationinterface
+    type: applicationinterface
+    layer_id: application
+    name: Semantic Query Engine Port
+    description: "Driving port (Protocol) for SPARQL/RDF semantic queries. Methods:
+      load_ontology, execute_sparql, get_triples. Implemented by
+      RDFLibQueryEngine"
+    attributes:
+      protocol: REST
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: domain/graph/ports.py
+          symbol: SemanticQueryEngine
+    metadata:
+      created_at: 2026-03-24T08:41:05.850Z
+      updated_at: 2026-03-24T08:41:05.850Z
+      version: 1
+  timestamp: 2026-03-24T08:41:05.877Z
+  sequenceNumber: 22
+- type: add
+  elementId: application.applicationinterface.change-repository-port
+  layerName: application
+  after:
+    id: 09bce153-af1a-44af-91e1-c27cf829add3
+    path: application.applicationinterface.change-repository-port
+    spec_node_id: application.applicationinterface
+    type: applicationinterface
+    layer_id: application
+    name: Change Repository Port
+    description: "Driving port (Protocol) for change event persistence. Methods:
+      record_change, get_changes, mark_processed, save_version, get_version,
+      list_versions. Implemented by SQLiteChangeRepository"
+    attributes:
+      protocol: REST
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: domain/versioning/ports.py
+          symbol: ChangeRepository
+    metadata:
+      created_at: 2026-03-24T08:41:06.303Z
+      updated_at: 2026-03-24T08:41:06.303Z
+      version: 1
+  timestamp: 2026-03-24T08:41:06.329Z
+  sequenceNumber: 23
+- type: add
+  elementId: application.applicationinterface.sync-target-port
+  layerName: application
+  after:
+    id: be50aecd-c3fc-43de-926c-88f998ea4914
+    path: application.applicationinterface.sync-target-port
+    spec_node_id: application.applicationinterface
+    type: applicationinterface
+    layer_id: application
+    name: Sync Target Port
+    description: "Driving port (Protocol) for remote synchronization. Methods:
+      push_changes, pull_changes, get_sync_status. Implemented by S3SyncAdapter
+      using DuckDB/Parquet"
+    attributes:
+      protocol: HTTPS
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: domain/versioning/ports.py
+          symbol: SyncTarget
+    metadata:
+      created_at: 2026-03-24T08:41:06.750Z
+      updated_at: 2026-03-24T08:41:06.750Z
+      version: 1
+  timestamp: 2026-03-24T08:41:06.779Z
+  sequenceNumber: 24
+- type: add
+  elementId: application.applicationprocess.composition-root-wiring
+  layerName: application
+  after:
+    id: f01d4c0f-fc31-4496-b334-84751ec0719d
+    path: application.applicationprocess.composition-root-wiring
+    spec_node_id: application.applicationprocess
+    type: applicationprocess
+    layer_id: application
+    name: Composition Root Wiring
+    description: The app.py lifespan function acts as the composition root. Creates
+      all driven adapters (repos, LLM, NLP, embedding, reference, graph
+      engines), instantiates domain services injecting the adapters as ports,
+      registers event subscriptions, and mounts route routers. Replaces the
+      legacy ServiceFactory god-object
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: app.py
+          symbol: lifespan
+    metadata:
+      created_at: 2026-03-24T08:41:18.239Z
+      updated_at: 2026-03-24T08:41:18.239Z
+      version: 1
+  timestamp: 2026-03-24T08:41:18.267Z
+  sequenceNumber: 25
+- type: add
+  elementId: application.applicationprocess.event-driven-change-recording
+  layerName: application
+  after:
+    id: 60d9b76b-7c1c-466f-ba2b-8fc46e2d7912
+    path: application.applicationprocess.event-driven-change-recording
+    spec_node_id: application.applicationprocess
+    type: applicationprocess
+    layer_id: application
+    name: Event-Driven Change Recording
+    description: InProcessEventPublisher subscribes ChangeEventRecorder to domain
+      events (ClassCreated, ClassUpdated, ClassDeleted, RelationshipCreated,
+      etc.). When ontology mutations fire domain events, ChangeEventRecorder
+      persists them to change_events table. Decouples audit trail from domain
+      services
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: adapters/events/change_recorder.py
+          symbol: ChangeEventRecorder
+    metadata:
+      created_at: 2026-03-24T08:41:18.696Z
+      updated_at: 2026-03-24T08:41:18.696Z
+      version: 1
+  timestamp: 2026-03-24T08:41:18.726Z
+  sequenceNumber: 26
+- type: add
+  elementId: application.applicationprocess.four-layer-rag-pipeline
+  layerName: application
+  after:
+    id: 77c4812e-6b57-4fd3-9c5d-c000fe414a53
+    path: application.applicationprocess.four-layer-rag-pipeline
+    spec_node_id: application.applicationprocess
+    type: applicationprocess
+    layer_id: application
+    name: Four-Layer RAG Pipeline
+    description: "Knowledge extraction pipeline: Layer 0 — KG context lookup
+      (semantic search in existing classes), Layer 1 — LLM entity extraction,
+      Layer 2 — NLP gap filling (spaCy NER), Layer 3 — Reference enrichment
+      (ConceptNet, DBpedia, Wikidata). Each layer produces ExtractedEntity
+      records with confidence scores"
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: domain/extraction/services.py
+          symbol: ExtractionService
+    metadata:
+      created_at: 2026-03-24T08:41:19.153Z
+      updated_at: 2026-03-24T08:41:19.153Z
+      version: 1
+  timestamp: 2026-03-24T08:41:19.182Z
+  sequenceNumber: 27
+- type: add
+  elementId: application.applicationevent.class-created
+  layerName: application
+  after:
+    id: 7a1e769b-ebcc-4322-ae1a-bf5da07c7c37
+    path: application.applicationevent.class-created
+    spec_node_id: application.applicationevent
+    type: applicationevent
+    layer_id: application
+    name: ClassCreated
+    description: "Domain event emitted by OntologyService when a new ontology class
+      is created. Carries: class_id, title, concept_scheme_id. Triggers change
+      event recording and graph cache invalidation"
+    attributes:
+      eventType: domain
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: domain/ontology/events.py
+          symbol: ClassCreated
+    metadata:
+      created_at: 2026-03-24T08:41:29.899Z
+      updated_at: 2026-03-24T08:41:29.899Z
+      version: 1
+  timestamp: 2026-03-24T08:41:29.927Z
+  sequenceNumber: 28
+- type: add
+  elementId: application.applicationevent.class-updated
+  layerName: application
+  after:
+    id: b296036f-a4f4-47c2-b038-f4faf6f7edd7
+    path: application.applicationevent.class-updated
+    spec_node_id: application.applicationevent
+    type: applicationevent
+    layer_id: application
+    name: ClassUpdated
+    description: "Domain event emitted by OntologyService when a class is updated.
+      Carries: class_id, changed_fields, old_values, new_values. Triggers change
+      event recording and embedding regeneration"
+    attributes:
+      eventType: domain
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: domain/ontology/events.py
+          symbol: ClassUpdated
+    metadata:
+      created_at: 2026-03-24T08:41:30.391Z
+      updated_at: 2026-03-24T08:41:30.391Z
+      version: 1
+  timestamp: 2026-03-24T08:41:30.420Z
+  sequenceNumber: 29
+- type: add
+  elementId: application.applicationevent.class-deleted
+  layerName: application
+  after:
+    id: 2f2f0532-b82e-4d55-b22c-8f2bea1a30f9
+    path: application.applicationevent.class-deleted
+    spec_node_id: application.applicationevent
+    type: applicationevent
+    layer_id: application
+    name: ClassDeleted
+    description: "Domain event emitted by OntologyService when a class is deleted.
+      Carries: class_id, title. Triggers change event recording and graph
+      invalidation"
+    attributes:
+      eventType: domain
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: domain/ontology/events.py
+          symbol: ClassDeleted
+    metadata:
+      created_at: 2026-03-24T08:41:30.861Z
+      updated_at: 2026-03-24T08:41:30.861Z
+      version: 1
+  timestamp: 2026-03-24T08:41:30.890Z
+  sequenceNumber: 30
+- type: add
+  elementId: application.applicationevent.relationship-created
+  layerName: application
+  after:
+    id: 406c951d-bb5b-4d5c-8e39-f134b224facf
+    path: application.applicationevent.relationship-created
+    spec_node_id: application.applicationevent
+    type: applicationevent
+    layer_id: application
+    name: RelationshipCreated
+    description: "Domain event emitted by OntologyService when a relationship is
+      created. Carries: relationship_id, source_id, target_id,
+      property_definition_id. Triggers graph invalidation"
+    attributes:
+      eventType: domain
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: domain/ontology/events.py
+          symbol: RelationshipCreated
+    metadata:
+      created_at: 2026-03-24T08:41:31.338Z
+      updated_at: 2026-03-24T08:41:31.338Z
+      version: 1
+  timestamp: 2026-03-24T08:41:31.368Z
+  sequenceNumber: 31
+- type: add
+  elementId: application.applicationevent.graph-invalidated
+  layerName: application
+  after:
+    id: 19f5d8da-9d67-42bb-a2a9-491fcdf11eb1
+    path: application.applicationevent.graph-invalidated
+    spec_node_id: application.applicationevent
+    type: applicationevent
+    layer_id: application
+    name: GraphInvalidated
+    description: "Domain event emitted when any ontology mutation makes the cached
+      graph stale. Carries: reason. Triggers GraphAnalysisService to mark the
+      in-memory graph as needing rebuild"
+    attributes:
+      eventType: domain
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: domain/ontology/events.py
+          symbol: GraphInvalidated
+    metadata:
+      created_at: 2026-03-24T08:41:31.824Z
+      updated_at: 2026-03-24T08:41:31.824Z
+      version: 1
+  timestamp: 2026-03-24T08:41:31.853Z
+  sequenceNumber: 32
+- type: add
+  elementId: application.applicationevent.extraction-completed
+  layerName: application
+  after:
+    id: c72aa281-041d-47a4-bbb9-6523f15714d7
+    path: application.applicationevent.extraction-completed
+    spec_node_id: application.applicationevent
+    type: applicationevent
+    layer_id: application
+    name: ExtractionCompleted
+    description: "Domain event emitted by ExtractionService when a RAG extraction
+      pipeline run completes. Carries: result_id, entity_count, duration_ms"
+    attributes:
+      eventType: domain
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: domain/extraction/events.py
+          symbol: ExtractionCompleted
+    metadata:
+      created_at: 2026-03-24T08:41:32.297Z
+      updated_at: 2026-03-24T08:41:32.297Z
+      version: 1
+  timestamp: 2026-03-24T08:41:32.327Z
+  sequenceNumber: 33
+- type: add
+  elementId: application.dataobject.ontology-entities-data
+  layerName: application
+  after:
+    id: e15deb4a-17a4-4055-b48a-768f197ba409
+    path: application.dataobject.ontology-entities-data
+    spec_node_id: application.dataobject
+    type: dataobject
+    layer_id: application
+    name: Ontology Entities Data
+    description: "In-flight domain entities for ontology management: Taxonomy,
+      ConceptScheme, Class, Relationship, PropertyDefinition instances flowing
+      between the OntologyService and its adapters"
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: domain/ontology/entities.py
+    metadata:
+      created_at: 2026-03-24T08:41:45.330Z
+      updated_at: 2026-03-24T08:41:45.330Z
+      version: 1
+  timestamp: 2026-03-24T08:41:45.362Z
+  sequenceNumber: 34
+- type: add
+  elementId: application.dataobject.graph-analysis-data
+  layerName: application
+  after:
+    id: 047cc361-9629-4213-9f55-088f87034d23
+    path: application.dataobject.graph-analysis-data
+    spec_node_id: application.dataobject
+    type: dataobject
+    layer_id: application
+    name: Graph Analysis Data
+    description: "In-flight graph computation data: KnowledgeGraph descriptor,
+      GraphMetrics results, PathResult traversal outputs, and SPARQL query
+      results flowing between GraphAnalysisService and its adapters"
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: domain/graph/entities.py
+    metadata:
+      created_at: 2026-03-24T08:41:45.807Z
+      updated_at: 2026-03-24T08:41:45.807Z
+      version: 1
+  timestamp: 2026-03-24T08:41:45.836Z
+  sequenceNumber: 35
+- type: add
+  elementId: application.dataobject.llm-response-data
+  layerName: application
+  after:
+    id: c36188ed-b77a-4043-bf50-00ca6326844e
+    path: application.dataobject.llm-response-data
+    spec_node_id: application.dataobject
+    type: dataobject
+    layer_id: application
+    name: LLM Response Data
+    description: "In-flight LLM inference data: LLMResponse objects (content, model,
+      tokens_in, tokens_out, duration_ms, finish_reason) flowing from
+      LLMProvider adapter to Extraction and Pipeline services"
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: domain/extraction/ports.py
+          symbol: LLMResponse
+    metadata:
+      created_at: 2026-03-24T08:41:46.267Z
+      updated_at: 2026-03-24T08:41:46.267Z
+      version: 1
+  timestamp: 2026-03-24T08:41:46.296Z
+  sequenceNumber: 36
+- type: add
+  elementId: application.dataobject.nlp-processing-data
+  layerName: application
+  after:
+    id: 326f6ca9-9f2b-4b47-a119-b4dff035c9fb
+    path: application.dataobject.nlp-processing-data
+    spec_node_id: application.dataobject
+    type: dataobject
+    layer_id: application
+    name: NLP Processing Data
+    description: "In-flight NLP data: NLPResult objects (entities, tokens,
+      noun_chunks) and NLPEntity records flowing from SpacyNLPProcessor to
+      ExtractionService"
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: domain/extraction/ports.py
+          symbol: NLPResult
+    metadata:
+      created_at: 2026-03-24T08:41:46.736Z
+      updated_at: 2026-03-24T08:41:46.736Z
+      version: 1
+  timestamp: 2026-03-24T08:41:46.766Z
+  sequenceNumber: 37
+- type: add
+  elementId: application.dataobject.reference-knowledge-data
+  layerName: application
+  after:
+    id: 8f16854c-ed79-47f5-98f0-7392dab1dd51
+    path: application.dataobject.reference-knowledge-data
+    spec_node_id: application.dataobject
+    type: dataobject
+    layer_id: application
+    name: Reference Knowledge Data
+    description: "In-flight reference enrichment data: ReferenceResult and
+      ReferenceRelation objects from ConceptNet/DBpedia/Wikidata adapters
+      flowing to ExtractionService"
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: domain/extraction/ports.py
+          symbol: ReferenceResult
+    metadata:
+      created_at: 2026-03-24T08:41:47.212Z
+      updated_at: 2026-03-24T08:41:47.212Z
+      version: 1
+  timestamp: 2026-03-24T08:41:47.247Z
+  sequenceNumber: 38

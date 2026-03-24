@@ -1,0 +1,67 @@
+apm.metricinstrument.rag-processing-time:
+  id: 05325bcb-e3c1-4e2e-b5c7-69468f3800c3
+  path: apm.metricinstrument.rag-processing-time
+  spec_node_id: apm.metricinstrument
+  type: metricinstrument
+  layer_id: apm
+  name: RAG Processing Time
+  description: Histogram instrument measuring processing time in milliseconds for
+    RAG pipeline execution in the extraction bounded context
+  attributes:
+    type: Histogram
+    unit: ms
+    description: RAG pipeline processing duration
+    enabled: true
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/domain/extraction/services.py
+  metadata:
+    created_at: 2026-03-24T09:18:31.867Z
+    updated_at: 2026-03-24T09:18:31.867Z
+    version: 1
+apm.metricinstrument.llm-execution-tracker:
+  id: 019132b6-ff87-479a-bc1e-feeb254a4f95
+  path: apm.metricinstrument.llm-execution-tracker
+  spec_node_id: apm.metricinstrument
+  type: metricinstrument
+  layer_id: apm
+  name: LLM Execution Tracker
+  description: Counter instrument tracking LLM API call counts, token usage,
+    latency, and errors per pipeline execution — traced in operations.db
+    pipeline_executions table
+  attributes:
+    type: Counter
+    unit: calls
+    description: LLM API call tracking per execution
+    enabled: true
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/llm
+  metadata:
+    created_at: 2026-03-24T09:18:36.115Z
+    updated_at: 2026-03-24T09:18:36.115Z
+    version: 1
+apm.metricinstrument.background-task-queue-depth:
+  id: 1db45cd9-dd37-4dd6-b5ff-a14dec33a3b0
+  path: apm.metricinstrument.background-task-queue-depth
+  spec_node_id: apm.metricinstrument
+  type: metricinstrument
+  layer_id: apm
+  name: Background Task Queue Depth
+  description: Gauge instrument monitoring the number of pending and running
+    background tasks managed by the admin bounded context
+  attributes:
+    type: Gauge
+    unit: tasks
+    description: Pending and running background task count
+    enabled: true
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/domain/admin/services.py
+  metadata:
+    created_at: 2026-03-24T09:18:40.105Z
+    updated_at: 2026-03-24T09:18:40.105Z
+    version: 1

@@ -1,0 +1,45 @@
+security.countermeasure.parameterized-queries-via-orm:
+  id: eae113f8-99da-4456-b067-4a67506d9052
+  path: security.countermeasure.parameterized-queries-via-orm
+  spec_node_id: security.countermeasure
+  type: countermeasure
+  layer_id: security
+  name: Parameterized Queries via ORM
+  description: SQLAlchemy ORM uses parameterized queries for all database
+    operations across all bounded contexts, preventing SQL injection
+  attributes:
+    type: technical
+    description: SQLAlchemy ORM parameterized queries prevent SQL injection
+    effectiveness: high
+    implemented: true
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/persistence/sqlite/models.py
+  metadata:
+    created_at: 2026-03-24T09:17:53.270Z
+    updated_at: 2026-03-24T09:17:53.270Z
+    version: 1
+security.countermeasure.global-exception-handler-sanitization:
+  id: 802b8726-a272-4d12-91c4-8d1b77afe9e1
+  path: security.countermeasure.global-exception-handler-sanitization
+  spec_node_id: security.countermeasure
+  type: countermeasure
+  layer_id: security
+  name: Global Exception Handler Sanitization
+  description: FastAPI global exception handler in local-server/app.py strips file
+    paths and internal info from error responses before returning to clients
+  attributes:
+    type: technical
+    description: Exception handler sanitizes internal paths from error responses
+    effectiveness: high
+    implemented: true
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/app.py
+        symbol: global_exception_handler
+  metadata:
+    created_at: 2026-03-24T09:17:57.139Z
+    updated_at: 2026-03-24T09:17:57.139Z
+    version: 1

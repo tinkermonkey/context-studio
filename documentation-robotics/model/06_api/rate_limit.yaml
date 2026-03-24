@@ -1,0 +1,24 @@
+api.ratelimit.external-reference-api-rate-limit:
+  id: 60a97e0f-8c82-49b6-b04a-af8265800886
+  path: api.ratelimit.external-reference-api-rate-limit
+  spec_node_id: api.ratelimit
+  type: ratelimit
+  layer_id: api
+  name: External Reference API Rate Limit
+  description: Per-source rate limits for external knowledge base requests
+    (ConceptNet, DBpedia, Wikidata, schema.org) — configured per-source in
+    config.json reference_sources
+  attributes:
+    requests: 60
+    window: PT1M
+    keyBy: source
+    scope: global
+    action: throttle
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/reference
+  metadata:
+    created_at: 2026-03-24T09:23:57.494Z
+    updated_at: 2026-03-24T09:23:57.494Z
+    version: 1

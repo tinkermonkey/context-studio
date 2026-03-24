@@ -1,0 +1,10 @@
+id: changeset-1774344132418-a25zjavkd
+name: fill-business-layer
+created: 2026-03-24T09:22:12.426Z
+modified: 2026-03-24T09:22:38.542Z
+status: committed
+baseSnapshot: sha256:910d5eb20cc3603e39c381205d5e6be09c421ef09946ad2daccd3fa67c947bb6
+stats:
+  additions: 8
+  modifications: 0
+  deletions: 0

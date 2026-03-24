@@ -1,0 +1,40 @@
+motivation.driver.inconsistent-legacy-terminology:
+  id: 72678d4d-c809-4ffb-8722-1c1486ab2b78
+  path: motivation.driver.inconsistent-legacy-terminology
+  spec_node_id: motivation.driver
+  type: driver
+  layer_id: motivation
+  name: Inconsistent Legacy Terminology
+  description: The legacy server used ad-hoc names (StructureNode,
+    StructureNodeLink) rather than industry-standard OWL/SKOS terms. Created
+    translation burden and blocked external integration
+  attributes:
+    category: technical
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: rearchitecture/architecture_design.md
+  metadata:
+    created_at: 2026-03-24T08:45:53.445Z
+    updated_at: 2026-03-24T08:45:53.445Z
+    version: 1
+motivation.driver.blurred-architecture-boundaries-in-legacy:
+  id: e64f2965-6368-4174-91a4-4456836d895d
+  path: motivation.driver.blurred-architecture-boundaries-in-legacy
+  spec_node_id: motivation.driver
+  type: driver
+  layer_id: motivation
+  name: Blurred Architecture Boundaries in Legacy
+  description: Business logic, persistence, and external API calls were intermixed
+    in legacy services. Services directly imported SQLAlchemy models. Route
+    handlers contained business rules. Made isolated testing impossible
+  attributes:
+    category: technical
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: rearchitecture/architecture_design.md
+  metadata:
+    created_at: 2026-03-24T08:45:53.894Z
+    updated_at: 2026-03-24T08:45:53.894Z
+    version: 1

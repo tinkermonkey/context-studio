@@ -1,0 +1,40 @@
+testing.outcomecategory.entity-creation-success:
+  id: a51ad22d-387f-4a54-a5bf-c2f6a4cbe86d
+  path: testing.outcomecategory.entity-creation-success
+  spec_node_id: testing.outcomecategory
+  type: outcomecategory
+  layer_id: testing
+  name: Entity Creation Success
+  description: "Expected outcome category: entity created with correct node_type,
+    title, and parent assignment, returned with UUID"
+  attributes:
+    outcomeType: success
+    description: Entity successfully created and returned
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/tests/unit
+  metadata:
+    created_at: 2026-03-24T09:21:56.224Z
+    updated_at: 2026-03-24T09:21:56.224Z
+    version: 1
+testing.outcomecategory.validation-error:
+  id: fb1594b6-af17-43db-8ec6-94e5d1be94a4
+  path: testing.outcomecategory.validation-error
+  spec_node_id: testing.outcomecategory
+  type: outcomecategory
+  layer_id: testing
+  name: Validation Error
+  description: "Expected outcome for invalid inputs: missing required fields,
+    duplicate titles, or invalid node_type values"
+  attributes:
+    outcomeType: validation-error
+    description: Validation failure with descriptive error message
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/tests/unit
+  metadata:
+    created_at: 2026-03-24T09:21:56.565Z
+    updated_at: 2026-03-24T09:21:56.565Z
+    version: 1

@@ -1,0 +1,42 @@
+testing.environmentfactor.llm-api-keys-available:
+  id: 4673cf51-0e07-442d-9e58-5f4be5b6c061
+  path: testing.environmentfactor.llm-api-keys-available
+  spec_node_id: testing.environmentfactor
+  type: environmentfactor
+  layer_id: testing
+  name: LLM API Keys Available
+  description: E2E tests marked with @pytest.mark.llm require valid OpenAI or
+    Anthropic API keys in config.json. Per-PR quick suite excludes LLM tests for
+    speed
+  attributes:
+    factorType: dependency-version
+    value: required for llm-marked tests
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: tests/e2e/conftest.py
+  metadata:
+    created_at: 2026-03-24T08:47:00.363Z
+    updated_at: 2026-03-24T08:47:00.363Z
+    version: 1
+testing.environmentfactor.external-reference-apis-reachable:
+  id: dc34e3fd-7463-43e9-b101-211389a234b2
+  path: testing.environmentfactor.external-reference-apis-reachable
+  spec_node_id: testing.environmentfactor
+  type: environmentfactor
+  layer_id: testing
+  name: External Reference APIs Reachable
+  description: E2E tests marked with @pytest.mark.reference require ConceptNet,
+    DBpedia, and Wikidata APIs to be reachable. Uses retry_on_external_failure
+    decorator — tests skip on persistent unavailability
+  attributes:
+    factorType: network
+    value: optional — tests skip on unavailability
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: tests/e2e/helpers.py
+  metadata:
+    created_at: 2026-03-24T08:47:00.822Z
+    updated_at: 2026-03-24T08:47:00.822Z
+    version: 1

@@ -1,0 +1,22 @@
+data-model.numericschema.relationship-weight:
+  id: 591d6432-143e-48bc-a736-2f3d89798299
+  path: data-model.numericschema.relationship-weight
+  spec_node_id: data-model.numericschema
+  type: numericschema
+  layer_id: data-model
+  name: relationship weight
+  description: Float schema for the weight property on typed relationships —
+    defaults to 1.0, used for semantic similarity scoring and graph traversal
+  attributes:
+    type: number
+    minimum: 0
+    maximum: 1
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/persistence/sqlite/models.py
+        symbol: RelationshipModel.weight
+  metadata:
+    created_at: 2026-03-24T09:24:17.421Z
+    updated_at: 2026-03-24T09:24:17.421Z
+    version: 1

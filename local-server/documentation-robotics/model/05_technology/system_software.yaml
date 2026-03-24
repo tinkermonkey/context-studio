@@ -1,0 +1,238 @@
+technology.systemsoftware.python-3:
+  id: 209c5705-12f3-46f3-8948-a1352980f513
+  path: technology.systemsoftware.python-3
+  spec_node_id: technology.systemsoftware
+  type: systemsoftware
+  layer_id: technology
+  name: Python 3
+  description: Primary implementation language. Python 3.x runtime. All domain
+    entities use dataclasses (not Pydantic). Zero infrastructure imports
+    enforced in domain/ by check_domain_imports.py
+  attributes:
+    softwareType: middleware
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: requirements.txt
+  metadata:
+    created_at: 2026-03-24T08:42:25.912Z
+    updated_at: 2026-03-24T08:42:25.912Z
+    version: 1
+technology.systemsoftware.fast-api:
+  id: dc5b2f29-bd3a-4962-8da2-604417c1f317
+  path: technology.systemsoftware.fast-api
+  spec_node_id: technology.systemsoftware
+  type: systemsoftware
+  layer_id: technology
+  name: FastAPI
+  description: Web framework used in the adapters/web/ driving adapter. Route
+    handlers are thin — business logic stays in domain services. Pydantic
+    schemas used only for HTTP request/response validation
+  attributes:
+    softwareType: middleware
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: requirements.txt
+  metadata:
+    created_at: 2026-03-24T08:42:26.355Z
+    updated_at: 2026-03-24T08:42:26.355Z
+    version: 1
+technology.systemsoftware.uvicorn:
+  id: e8b67318-726c-4165-9d5b-1673124ee96a
+  path: technology.systemsoftware.uvicorn
+  spec_node_id: technology.systemsoftware
+  type: systemsoftware
+  layer_id: technology
+  name: uvicorn
+  description: ASGI server that runs the FastAPI application. Entry point is
+    app.py. Handles HTTP connections and request routing
+  attributes:
+    softwareType: middleware
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: requirements.txt
+  metadata:
+    created_at: 2026-03-24T08:42:26.783Z
+    updated_at: 2026-03-24T08:42:26.783Z
+    version: 1
+technology.systemsoftware.sqlalchemy:
+  id: b5a03933-6cbe-457d-b346-2c213f31eddf
+  path: technology.systemsoftware.sqlalchemy
+  spec_node_id: technology.systemsoftware
+  type: systemsoftware
+  layer_id: technology
+  name: SQLAlchemy
+  description: ORM used only in the adapters/persistence/sqlite/ adapter layer.
+    ORM models (models.py) are the source of truth for database schema. Domain
+    entities are pure dataclasses with no SQLAlchemy dependency
+  attributes:
+    softwareType: middleware
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: requirements.txt
+  metadata:
+    created_at: 2026-03-24T08:42:27.219Z
+    updated_at: 2026-03-24T08:42:27.219Z
+    version: 1
+technology.systemsoftware.alembic:
+  id: 05dc2b4e-4d0a-4a4e-b8cd-ff646dc4c6ef
+  path: technology.systemsoftware.alembic
+  spec_node_id: technology.systemsoftware
+  type: systemsoftware
+  layer_id: technology
+  name: Alembic
+  description: Database migration tool managing schema evolution for local.db and
+    operations.db. Autogenerates migrations from SQLAlchemy ORM models — never
+    hand-written SQL
+  attributes:
+    softwareType: middleware
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: requirements.txt
+  metadata:
+    created_at: 2026-03-24T08:42:27.649Z
+    updated_at: 2026-03-24T08:42:27.649Z
+    version: 1
+technology.systemsoftware.sqlite:
+  id: 1de426b5-6e8d-4bd0-9604-94d406e68f3b
+  path: technology.systemsoftware.sqlite
+  spec_node_id: technology.systemsoftware
+  type: systemsoftware
+  layer_id: technology
+  name: SQLite
+  description: "Embedded relational database engine. Four databases: local.db,
+    operations.db, reference.db, reference_api_cache.db. Used with SQLiteVector
+    extension for semantic embedding storage"
+  attributes:
+    softwareType: dbms
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: requirements.txt
+  metadata:
+    created_at: 2026-03-24T08:42:28.072Z
+    updated_at: 2026-03-24T08:42:28.072Z
+    version: 1
+technology.systemsoftware.pydantic:
+  id: 35147b56-1e0f-4851-b501-c214d89101df
+  path: technology.systemsoftware.pydantic
+  spec_node_id: technology.systemsoftware
+  type: systemsoftware
+  layer_id: technology
+  name: Pydantic
+  description: Data validation library used exclusively in adapters/web/schemas/
+    for HTTP request/response models. NOT used in domain — domain uses Python
+    dataclasses to stay framework-free
+  attributes:
+    softwareType: middleware
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: requirements.txt
+  metadata:
+    created_at: 2026-03-24T08:42:28.512Z
+    updated_at: 2026-03-24T08:42:28.512Z
+    version: 1
+technology.systemsoftware.sentence-transformer:
+  id: 68a8b00e-95c6-4152-aa48-40b60cb753c8
+  path: technology.systemsoftware.sentence-transformer
+  spec_node_id: technology.systemsoftware
+  type: systemsoftware
+  layer_id: technology
+  name: SentenceTransformer
+  description: ML model (all-MiniLM-L12-v2) for generating 384-dimensional text
+    embeddings. Runs locally — no external API calls. Used by the
+    EmbeddingAdapter to embed class titles and definitions for semantic search
+  attributes:
+    softwareType: middleware
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: adapters/embedding/sentence_transformer.py
+  metadata:
+    created_at: 2026-03-24T08:42:39.352Z
+    updated_at: 2026-03-24T08:42:39.352Z
+    version: 1
+technology.systemsoftware.spa-cy:
+  id: 8584ff12-939f-4dbd-9a0f-f988d9592209
+  path: technology.systemsoftware.spa-cy
+  spec_node_id: technology.systemsoftware
+  type: systemsoftware
+  layer_id: technology
+  name: spaCy
+  description: NLP pipeline framework for text processing. Used in NLPAdapter
+    (SpacyNLPProcessor) with concepcy, DBpedia Spotlight, and WordNet components
+    for named entity recognition and linking
+  attributes:
+    softwareType: middleware
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: adapters/nlp/spacy_processor.py
+  metadata:
+    created_at: 2026-03-24T08:42:39.806Z
+    updated_at: 2026-03-24T08:42:39.806Z
+    version: 1
+technology.systemsoftware.network-x:
+  id: 897dc67d-438b-492f-bac7-f4809180d700
+  path: technology.systemsoftware.network-x
+  spec_node_id: technology.systemsoftware
+  type: systemsoftware
+  layer_id: technology
+  name: NetworkX
+  description: Python graph library used by GraphEngineAdapter to build in-memory
+    directed graphs from ontology data. Provides path finding, centrality
+    algorithms, and community detection
+  attributes:
+    softwareType: middleware
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: adapters/graph/networkx_engine.py
+  metadata:
+    created_at: 2026-03-24T08:42:40.267Z
+    updated_at: 2026-03-24T08:42:40.267Z
+    version: 1
+technology.systemsoftware.rdflib:
+  id: 34dc538b-ede7-4f66-b28f-fefae1a17536
+  path: technology.systemsoftware.rdflib
+  spec_node_id: technology.systemsoftware
+  type: systemsoftware
+  layer_id: technology
+  name: RDFLib
+  description: Python RDF library used by SemanticQueryEngineAdapter to build
+    RDF/OWL representations of the ontology and execute SPARQL queries
+  attributes:
+    softwareType: middleware
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: adapters/graph/rdflib_engine.py
+  metadata:
+    created_at: 2026-03-24T08:42:40.727Z
+    updated_at: 2026-03-24T08:42:40.727Z
+    version: 1
+technology.systemsoftware.duck-db:
+  id: b8cee990-3d28-429a-8fd4-fc6327acee1e
+  path: technology.systemsoftware.duck-db
+  spec_node_id: technology.systemsoftware
+  type: systemsoftware
+  layer_id: technology
+  name: DuckDB
+  description: Analytical database used in the SyncAdapter for reading and writing
+    Parquet files during remote workspace synchronization. Enables S3 sync via
+    columnar format
+  attributes:
+    softwareType: dbms
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: adapters/sync/duckdb_sync.py
+  metadata:
+    created_at: 2026-03-24T08:42:41.170Z
+    updated_at: 2026-03-24T08:42:41.170Z
+    version: 1

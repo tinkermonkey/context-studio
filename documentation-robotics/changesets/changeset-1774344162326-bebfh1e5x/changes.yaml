@@ -1,0 +1,91 @@
+- type: add
+  elementId: application.applicationfunction.embedding-generation
+  layerName: application
+  after:
+    id: a76818f8-38c0-4efd-b0bb-202d225665bb
+    path: application.applicationfunction.embedding-generation
+    spec_node_id: application.applicationfunction
+    type: applicationfunction
+    layer_id: application
+    name: Embedding Generation
+    description: Application function that generates vector embeddings for ontology
+      entities using the SentenceTransformer adapter — stored in local.db via
+      SQLiteVector
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/embedding
+    metadata:
+      created_at: 2026-03-24T09:22:47.738Z
+      updated_at: 2026-03-24T09:22:47.738Z
+      version: 1
+  timestamp: 2026-03-24T09:22:47.759Z
+  sequenceNumber: 0
+- type: add
+  elementId: application.applicationfunction.sparql-query-function
+  layerName: application
+  after:
+    id: da100225-d1ea-4a66-9fb9-9d7b9d487a1e
+    path: application.applicationfunction.sparql-query-function
+    spec_node_id: application.applicationfunction
+    type: applicationfunction
+    layer_id: application
+    name: SPARQL Query Function
+    description: Application function that executes SPARQL queries over the
+      in-memory graph constructed by RDFLib in the Graph Analysis bounded
+      context
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/domain/graph/services.py
+    metadata:
+      created_at: 2026-03-24T09:22:48.055Z
+      updated_at: 2026-03-24T09:22:48.055Z
+      version: 1
+  timestamp: 2026-03-24T09:22:48.078Z
+  sequenceNumber: 1
+- type: add
+  elementId: application.applicationfunction.network-metrics-function
+  layerName: application
+  after:
+    id: 3beb34e2-4eba-413d-b99d-b34c0236c8e9
+    path: application.applicationfunction.network-metrics-function
+    spec_node_id: application.applicationfunction
+    type: applicationfunction
+    layer_id: application
+    name: Network Metrics Function
+    description: Application function that computes graph network metrics
+      (centrality, density, clustering) using NetworkX within the Graph Analysis
+      bounded context
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/domain/graph/services.py
+    metadata:
+      created_at: 2026-03-24T09:22:53.409Z
+      updated_at: 2026-03-24T09:22:53.409Z
+      version: 1
+  timestamp: 2026-03-24T09:22:53.430Z
+  sequenceNumber: 2
+- type: add
+  elementId: application.applicationfunction.llm-provider-routing
+  layerName: application
+  after:
+    id: b42daa9e-049c-4203-b652-00acf9293b52
+    path: application.applicationfunction.llm-provider-routing
+    spec_node_id: application.applicationfunction
+    type: applicationfunction
+    layer_id: application
+    name: LLM Provider Routing
+    description: Application function that routes LLM requests to the appropriate
+      provider (OpenAI, Anthropic) via the LLMProviderRouter in the llm adapter
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/llm
+    metadata:
+      created_at: 2026-03-24T09:22:53.703Z
+      updated_at: 2026-03-24T09:22:53.703Z
+      version: 1
+  timestamp: 2026-03-24T09:22:53.754Z
+  sequenceNumber: 3

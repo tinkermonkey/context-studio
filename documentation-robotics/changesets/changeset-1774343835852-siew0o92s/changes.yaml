@@ -1,0 +1,223 @@
+- type: add
+  elementId: security.securitymodel.context-studio-security-model
+  layerName: security
+  after:
+    id: 98a461cd-beda-44b0-95ec-9443c68a9bb8
+    path: security.securitymodel.context-studio-security-model
+    spec_node_id: security.securitymodel
+    type: securitymodel
+    layer_id: security
+    name: Context Studio Security Model
+    description: "Security model for the Context Studio local-first desktop app:
+      optional API key authentication, SQL injection prevention via SQLAlchemy
+      ORM, and global exception handler sanitization"
+    attributes:
+      version: "1.0"
+      application: context-studio-local-server
+      accessControlModel: rbac
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/app.py
+          symbol: create_app
+    metadata:
+      created_at: 2026-03-24T09:17:26.149Z
+      updated_at: 2026-03-24T09:17:26.149Z
+      version: 1
+  timestamp: 2026-03-24T09:17:26.170Z
+  sequenceNumber: 0
+- type: add
+  elementId: security.authenticationconfig.local-api-key-authentication
+  layerName: security
+  after:
+    id: 15fb6285-3932-4482-b284-7490e762f0e2
+    path: security.authenticationconfig.local-api-key-authentication
+    spec_node_id: security.authenticationconfig
+    type: authenticationconfig
+    layer_id: security
+    name: Local API Key Authentication
+    description: Optional API key authentication — require_secure_key toggle in
+      config.json, X-API-Key header, no session/JWT. Configures the new
+      local-server FastAPI application.
+    attributes:
+      provider: local
+      sessionTimeout: 0
+      verificationLevel: ial1
+      mfaRequired: false
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/app.py
+          symbol: verify_api_key
+    metadata:
+      created_at: 2026-03-24T09:17:31.756Z
+      updated_at: 2026-03-24T09:17:31.756Z
+      version: 1
+  timestamp: 2026-03-24T09:17:31.779Z
+  sequenceNumber: 1
+- type: add
+  elementId: security.role.administrator
+  layerName: security
+  after:
+    id: d20dee6d-c39a-4239-8c06-8c8d6345d634
+    path: security.role.administrator
+    spec_node_id: security.role
+    type: role
+    layer_id: security
+    name: Administrator
+    description: Full administrator role — has unrestricted access to all ontology
+      entities, datasets, pipelines, and configuration in the new hexagonal
+      architecture
+    attributes:
+      displayName: Administrator
+      level: 1
+      inheritsFrom: ""
+      description: Full system access
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/app.py
+    metadata:
+      created_at: 2026-03-24T09:17:35.935Z
+      updated_at: 2026-03-24T09:17:35.935Z
+      version: 1
+  timestamp: 2026-03-24T09:17:35.960Z
+  sequenceNumber: 2
+- type: add
+  elementId: security.threat.sql-injection
+  layerName: security
+  after:
+    id: b9ac021b-af70-4c87-9638-35224ab5ebe1
+    path: security.threat.sql-injection
+    spec_node_id: security.threat
+    type: threat
+    layer_id: security
+    name: SQL Injection
+    description: "Threat: SQL injection attacks against the SQLite databases
+      (local.db, operations.db) via unsanitized API inputs"
+    attributes:
+      threatens: data-store
+      likelihood: moderate
+      impact: high
+      description: SQL injection via API input fields
+      criticality: high
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/persistence/sqlite/models.py
+    metadata:
+      created_at: 2026-03-24T09:17:44.257Z
+      updated_at: 2026-03-24T09:17:44.257Z
+      version: 1
+  timestamp: 2026-03-24T09:17:44.285Z
+  sequenceNumber: 3
+- type: add
+  elementId: security.threat.information-disclosure-via-error-messages
+  layerName: security
+  after:
+    id: 13180b9a-297d-4c3d-8426-9549247f1356
+    path: security.threat.information-disclosure-via-error-messages
+    spec_node_id: security.threat
+    type: threat
+    layer_id: security
+    name: Information Disclosure via Error Messages
+    description: "Threat: internal file paths and stack traces leaking through
+      unhandled exception responses in the FastAPI application"
+    attributes:
+      threatens: api
+      likelihood: moderate
+      impact: moderate
+      description: File path leakage via error responses
+      criticality: medium
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/app.py
+          symbol: global_exception_handler
+    metadata:
+      created_at: 2026-03-24T09:17:49.054Z
+      updated_at: 2026-03-24T09:17:49.054Z
+      version: 1
+  timestamp: 2026-03-24T09:17:49.086Z
+  sequenceNumber: 4
+- type: add
+  elementId: security.countermeasure.parameterized-queries-via-orm
+  layerName: security
+  after:
+    id: eae113f8-99da-4456-b067-4a67506d9052
+    path: security.countermeasure.parameterized-queries-via-orm
+    spec_node_id: security.countermeasure
+    type: countermeasure
+    layer_id: security
+    name: Parameterized Queries via ORM
+    description: SQLAlchemy ORM uses parameterized queries for all database
+      operations across all bounded contexts, preventing SQL injection
+    attributes:
+      type: technical
+      description: SQLAlchemy ORM parameterized queries prevent SQL injection
+      effectiveness: high
+      implemented: true
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/adapters/persistence/sqlite/models.py
+    metadata:
+      created_at: 2026-03-24T09:17:53.270Z
+      updated_at: 2026-03-24T09:17:53.270Z
+      version: 1
+  timestamp: 2026-03-24T09:17:53.298Z
+  sequenceNumber: 5
+- type: add
+  elementId: security.countermeasure.global-exception-handler-sanitization
+  layerName: security
+  after:
+    id: 802b8726-a272-4d12-91c4-8d1b77afe9e1
+    path: security.countermeasure.global-exception-handler-sanitization
+    spec_node_id: security.countermeasure
+    type: countermeasure
+    layer_id: security
+    name: Global Exception Handler Sanitization
+    description: FastAPI global exception handler in local-server/app.py strips file
+      paths and internal info from error responses before returning to clients
+    attributes:
+      type: technical
+      description: Exception handler sanitizes internal paths from error responses
+      effectiveness: high
+      implemented: true
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/app.py
+          symbol: global_exception_handler
+    metadata:
+      created_at: 2026-03-24T09:17:57.139Z
+      updated_at: 2026-03-24T09:17:57.139Z
+      version: 1
+  timestamp: 2026-03-24T09:17:57.167Z
+  sequenceNumber: 6
+- type: add
+  elementId: security.dataclassification.internal-knowledge-graph-data
+  layerName: security
+  after:
+    id: f2499d5a-55a1-408a-9315-b547c25a23c0
+    path: security.dataclassification.internal-knowledge-graph-data
+    spec_node_id: security.dataclassification
+    type: dataclassification
+    layer_id: security
+    name: Internal Knowledge Graph Data
+    description: Data classification for the ontology entity data stored in local.db
+      — internal, not requiring encryption at rest for the desktop use case
+    attributes:
+      classificationLevel: internal
+      encryptionRequirement: none
+      version: "1.0"
+    source_reference:
+      provenance: extracted
+      locations:
+        - file: local-server/config.py
+    metadata:
+      created_at: 2026-03-24T09:18:02.456Z
+      updated_at: 2026-03-24T09:18:02.456Z
+      version: 1
+  timestamp: 2026-03-24T09:18:02.483Z
+  sequenceNumber: 7

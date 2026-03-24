@@ -1,0 +1,59 @@
+motivation.constraint.sqlite-only-persistence:
+  id: e1c60608-6395-4e89-8019-6ee2c20446c9
+  path: motivation.constraint.sqlite-only-persistence
+  spec_node_id: motivation.constraint
+  type: constraint
+  layer_id: motivation
+  name: SQLite-Only Persistence
+  description: The primary data store must be SQLite; no other RDBMS or cloud
+    database is used for the core workspace to maintain the local-first,
+    zero-config guarantee
+  attributes:
+    constraintType: technical
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/persistence/sqlite/models.py
+  metadata:
+    created_at: 2026-03-24T09:20:49.338Z
+    updated_at: 2026-03-24T09:20:49.338Z
+    version: 1
+motivation.constraint.python-3x-runtime:
+  id: 48ad8ea6-9244-4d73-9c1b-6e1b2ecf6af6
+  path: motivation.constraint.python-3x-runtime
+  spec_node_id: motivation.constraint
+  type: constraint
+  layer_id: motivation
+  name: Python 3.x Runtime
+  description: All server-side code runs on Python 3.x; no other server languages
+    are in scope for the back-end
+  attributes:
+    constraintType: technical
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/requirements.txt
+  metadata:
+    created_at: 2026-03-24T09:20:49.643Z
+    updated_at: 2026-03-24T09:20:49.643Z
+    version: 1
+motivation.constraint.external-reference-source-rate-limits:
+  id: a43eb63f-e655-48db-8bb0-bd1c1ac9b986
+  path: motivation.constraint.external-reference-source-rate-limits
+  spec_node_id: motivation.constraint
+  type: constraint
+  layer_id: motivation
+  name: External Reference Source Rate Limits
+  description: All calls to external knowledge sources (ConceptNet, DBpedia,
+    Wikidata, schema.org) are constrained by per-source rate limits defined in
+    config.json
+  attributes:
+    constraintType: external
+  source_reference:
+    provenance: extracted
+    locations:
+      - file: local-server/adapters/reference
+  metadata:
+    created_at: 2026-03-24T09:20:49.947Z
+    updated_at: 2026-03-24T09:20:49.947Z
+    version: 1
