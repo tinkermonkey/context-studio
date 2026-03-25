@@ -76,9 +76,6 @@ def check_domain_imports() -> int:
     violations_found = False
 
     for py_file in domain_path.rglob("*.py"):
-        if py_file.name == "__init__.py":
-            continue
-
         try:
             with open(py_file, "r") as f:
                 source = f.read()

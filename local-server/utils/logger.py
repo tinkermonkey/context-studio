@@ -4,8 +4,8 @@ Logging configuration for Context Studio.
 
 import logging
 import logging.handlers
-import os
 from pathlib import Path
+from config import get_settings
 
 
 def get_logger(name: str) -> logging.Logger:
@@ -21,7 +21,11 @@ def get_logger(name: str) -> logging.Logger:
     logger = logging.getLogger(name)
 
     if not logger.handlers:
-        logger.setLevel(logging.INFO)
+        settings = get_settings()
+        logging_config = settings.logging
+
+        log_level = getattr(logging, logging_config.log_level.value)
+        logger.setLevel(log_level)
 
         log_dir = Path(__file__).parent.parent / "logs"
         log_dir.mkdir(exist_ok=True)
@@ -35,10 +39,10 @@ def get_logger(name: str) -> logging.Logger:
 
         file_handler = logging.handlers.RotatingFileHandler(
             log_file,
-            maxBytes=10 * 1024 * 1024,
-            backupCount=5,
+            maxBytes=logging_config.max_bytes,
+            backupCount=logging_config.backup_count,
         )
-        file_handler.setLevel(logging.INFO)
+        file_handler.setLevel(log_level)
         file_handler.setFormatter(formatter)
         logger.addHandler(file_handler)
 
