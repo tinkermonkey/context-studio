@@ -120,6 +120,20 @@ adapters/
 
 Always follow this sequence. Never skip a step.
 
+### When working from an architect's blueprint
+
+If you have received a design blueprint from the `local-server-architect` agent, the blueprint's Section 0 specifies documentation and model updates that **must be completed before any production Python code is written**. Complete these first:
+
+1. **Apply DR model changes** — use `dr-model` or `dr-design` to add/update all elements listed in Section 0. Run `dr-validate` and confirm 0 errors.
+2. **Update `rearchitecture/port_and_adapter_specs.md`** — apply every change listed in Section 0. If a new port is defined or an existing port gains methods, the spec must reflect this before the port is coded.
+3. **Update `rearchitecture/domain_model_design.md`** — add new entity definitions or invariants as specified.
+4. **Update `rearchitecture/transformation_roadmap.md`** — apply any task or exit criteria changes.
+5. **Commit** all documentation and model changes as a standalone commit before writing any production code.
+
+The `local-server-reviewer` verifies that documentation and model were updated before reviewing code. Skipping this step will block the review.
+
+### General sequence (applies whether or not an architect's blueprint exists)
+
 **1. Read the DR model element** for what you're about to build. If it doesn't exist, query with `dr-model` to find the closest match or confirm it's genuinely missing.
 
 **2. Read `port_and_adapter_specs.md`** for the exact port contract and adapter specification.
