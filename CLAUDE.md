@@ -29,6 +29,14 @@ Context Studio is local-first, designed to be packaged as a desktop app and run 
 
 **There is no backwards compatibility requirement.** The new server defines new API contracts and a new database schema. Nothing in `legacy-server/` constrains the design of `local-server/`.
 
+## Specialized Sub-Agents
+
+| Agent | Domain | When to Use |
+|-------|---------|-------------|
+| local-server-engineer | back-end implementation specialist | implementing features, domain entities, adapters, routes, or tests in local-server/ |
+| local-server-reviewer | back-end code reviewer | reviewing any local-server/ code after implementation |
+| local-server-architect | back-end architecture specialist | designing what to build before implementation begins — new contexts, ports, API contracts |
+
 ---
 
 ## Core Principles
