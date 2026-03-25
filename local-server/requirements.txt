@@ -1,0 +1,14 @@
+fastapi
+uvicorn[standard]
+sqlalchemy
+alembic
+pydantic
+sentence-transformers
+spacy
+networkx
+rdflib
+duckdb
+openai
+anthropic
+httpx
+python-dotenv
