@@ -1,7 +1,7 @@
 # ============================================================================
 # Stage 1: Base Environment Setup
 # ============================================================================
-# Last dependency refresh: 2026-03-07
+# Last dependency refresh: 2026-03-25
 FROM switchyard-orchestrator:latest
 
 # The base image already includes:
@@ -51,6 +51,18 @@ RUN apt-get update && apt-get install -y \
 # ============================================================================
 # WORKDIR should match where the orchestrator will mount the project
 WORKDIR /workspace/context-studio
+
+# ============================================================================
+# Python Dependencies - local-server/
+# ============================================================================
+# Copy only dependency manifests for installation
+COPY local-server/requirements.txt ./local-server/requirements.txt
+COPY local-server/requirements-dev.txt ./local-server/requirements-dev.txt
+
+# Install Python dependencies (system-wide, no venv needed in container)
+RUN --mount=type=cache,target=/root/.cache/pip \
+    pip install --no-cache-dir -r local-server/requirements.txt && \
+    pip install --no-cache-dir -r local-server/requirements-dev.txt
 
 # ============================================================================
 # Frontend Dependencies (Node.js) - ux/
@@ -116,6 +128,9 @@ RUN node --version && \
     npm --version && \
     python3 --version && \
     pip --version
+
+# Verify Python dependencies are importable
+RUN python3 -c "import fastapi; import sqlalchemy; import alembic; import pydantic; import pytest; print('Python deps OK')"
 
 # ============================================================================
 # Default command

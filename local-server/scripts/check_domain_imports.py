@@ -32,7 +32,7 @@ class ImportChecker(ast.NodeVisitor):
 
     def __init__(self, filename: str):
         self.filename = filename
-        self.violations = []
+        self.violations: list[tuple[int, str, str]] = []
 
     def visit_Import(self, node: ast.Import) -> None:
         """Check 'import X' statements"""

@@ -82,5 +82,11 @@ temp
 # Documentation (not needed for dependency install)
 documentation
 
+# Legacy server (reference only, not needed for builds)
+legacy-server
+
 # NLP sandbox and test data
 local-server/nlp_sandbox
+
+# Rearchitecture docs (not needed for dependency install)
+rearchitecture
