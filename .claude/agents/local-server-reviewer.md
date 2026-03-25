@@ -78,6 +78,8 @@ Every file in `domain/` may only import from the standard library (`dataclasses`
 
 ### Stage 4 — DR Model Alignment
 
+For layer-specific verification rules (what must exist, what relationships are required, what naming conventions apply), invoke the relevant layer skill: `dr_01_motivation_layer` through `dr_12_testing_layer`. Use these when checking a layer you are uncertain about — they provide expert guidance on what a correct model for that layer looks like.
+
 For each implemented element, verify it matches its DR model counterpart:
 
 - **Entities** — fields match `data-model.objectschema` element

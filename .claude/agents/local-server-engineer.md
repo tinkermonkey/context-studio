@@ -76,7 +76,7 @@ Then implement the domain, persistence, web, and finalise steps in order.
    - Pydantic schemas → route handlers → wire composition root → route integration tests
 5. Run `scripts/update_api_specs.py` and commit updated `openapi.json`.
 6. Run `scripts/check_domain_imports.py` — must exit 0.
-7. Run `dr-sync` to record any implementation drift.
+7. Run `dr-sync` to record any implementation drift. For large implementations spanning many files, use `dr-map` first to auto-generate the model diff from the codebase, then pass the result to `dr-sync`.
 
 **Unit tests** use fakes from `tests/fakes/` only — no real DB, no network. Always add at the top:
 ```python

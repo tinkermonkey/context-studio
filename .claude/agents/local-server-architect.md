@@ -46,7 +46,9 @@ Consult in this order:
 
 **Step 5 — Apply documentation and model updates.** Before producing the blueprint, apply all changes. The engineer and reviewer both depend on these being current when implementation begins.
 
-- Run `dr-design` or `dr-model` to add/update every new element. Run `dr-validate` — must exit 0.
+- Run `dr-design` or `dr-model` to add/update every new element. For a coherent batch of changes, use `dr-changeset` to stage them atomically before applying. If you are uncertain how to model an element correctly for a specific layer, invoke the `dr-advisor` agent or run the relevant layer skill (`dr_01_motivation_layer` through `dr_12_testing_layer`) for expert guidance.
+- After adding elements, run `dr-relate` to wire all intra-layer and inter-layer relationships for the new elements. Unrelated elements cause validation failures.
+- Run `dr-validate` — must exit 0.
 - Edit `rearchitecture/port_and_adapter_specs.md` if any port changes.
 - Edit `rearchitecture/domain_model_design.md` if any entity or invariant changes.
 - Edit `rearchitecture/transformation_roadmap.md` if phasing or exit criteria change.
