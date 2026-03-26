@@ -12,10 +12,8 @@ import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 import pytest
-from uuid import uuid4
 
 from domain.ontology.services import OntologyService
-from domain.ontology.entities import Taxonomy, ConceptScheme, Class, Relationship, PropertyDefinition
 from domain.ontology.events import (
     TaxonomyCreated, SchemeCreated, ClassCreated, ClassUpdated, ClassDeleted,
     ClassMoved, RelationshipCreated, RelationshipDeleted,
@@ -358,7 +356,7 @@ class TestDeleteClass:
         tax = service.create_taxonomy(title="Biology")
         scheme = service.create_scheme(taxonomy_id=tax.id, title="Animals")
         parent = service.create_class(scheme_id=scheme.id, title="Mammal")
-        child = service.create_class(scheme_id=scheme.id, title="Dog", parent_class_id=parent.id)
+        service.create_class(scheme_id=scheme.id, title="Dog", parent_class_id=parent.id)
 
         with pytest.raises(OntologyError, match="has.*subclass"):
             service.delete_class(class_id=parent.id)
@@ -532,8 +530,8 @@ class TestGetAndListOperations:
     def test_list_concept_schemes_all(self, service):
         """List all concept schemes."""
         tax = service.create_taxonomy(title="Biology")
-        scheme1 = service.create_scheme(taxonomy_id=tax.id, title="Animals")
-        scheme2 = service.create_scheme(taxonomy_id=tax.id, title="Plants")
+        service.create_scheme(taxonomy_id=tax.id, title="Animals")
+        service.create_scheme(taxonomy_id=tax.id, title="Plants")
         schemes = service.list_concept_schemes()
         assert len(schemes) == 2
 
@@ -542,7 +540,7 @@ class TestGetAndListOperations:
         tax1 = service.create_taxonomy(title="Biology")
         tax2 = service.create_taxonomy(title="Chemistry")
         scheme1 = service.create_scheme(taxonomy_id=tax1.id, title="Animals")
-        scheme2 = service.create_scheme(taxonomy_id=tax2.id, title="Elements")
+        service.create_scheme(taxonomy_id=tax2.id, title="Elements")
         schemes = service.list_concept_schemes(taxonomy_id=tax1.id)
         assert len(schemes) == 1
         assert schemes[0].id == scheme1.id
@@ -553,7 +551,7 @@ class TestGetAndListOperations:
         scheme1 = service.create_scheme(taxonomy_id=tax.id, title="Animals")
         scheme2 = service.create_scheme(taxonomy_id=tax.id, title="Plants")
         cls1 = service.create_class(scheme_id=scheme1.id, title="Dog")
-        cls2 = service.create_class(scheme_id=scheme2.id, title="Tree")
+        service.create_class(scheme_id=scheme2.id, title="Tree")
         classes = service.list_classes(scheme_id=scheme1.id)
         assert len(classes) == 1
         assert classes[0].id == cls1.id
