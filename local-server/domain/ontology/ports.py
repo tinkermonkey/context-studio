@@ -1,0 +1,434 @@
+"""
+Port interfaces (protocols) for the Ontology Management bounded context.
+
+Ports define contracts for external adapters (persistence, embedding, events, etc.).
+Using typing.Protocol enables structural subtyping — implementations need not
+explicitly inherit from these protocols.
+
+See ADR-2: Ports are Protocol interfaces (typing.Protocol), not abstract base classes.
+Implementations do not inherit from the protocol; they implement the interface structurally.
+"""
+
+from __future__ import annotations
+
+from typing import Callable, Optional, Protocol
+
+from .entities import Class, ConceptScheme, Individual, PropertyDefinition, Relationship, Taxonomy
+from .events import DomainEvent
+from .value_objects import SearchCriteria
+
+
+class OntologyRepository(Protocol):
+    """
+    Port for persisting and retrieving ontology entities.
+
+    All CRUD operations on Taxonomy, ConceptScheme, Class, Relationship, and
+    PropertyDefinition entities flow through this repository. Individual operations
+    are deferred (all raise NotImplementedError for now).
+    """
+
+    # Taxonomy operations
+    def get_taxonomy(self, taxonomy_id: str) -> Optional[Taxonomy]:
+        """
+        Retrieve a taxonomy by ID.
+
+        Args:
+            taxonomy_id: The ID of the taxonomy
+
+        Returns:
+            The Taxonomy if found, None otherwise
+        """
+        ...
+
+    def list_taxonomies(self) -> list[Taxonomy]:
+        """
+        Retrieve all taxonomies.
+
+        Returns:
+            List of all Taxonomy entities
+        """
+        ...
+
+    def save_taxonomy(self, taxonomy: Taxonomy) -> None:
+        """
+        Persist a taxonomy (create or update).
+
+        Args:
+            taxonomy: The Taxonomy entity to save
+        """
+        ...
+
+    def delete_taxonomy(self, taxonomy_id: str) -> None:
+        """
+        Delete a taxonomy by ID.
+
+        Args:
+            taxonomy_id: The ID of the taxonomy to delete
+        """
+        ...
+
+    # ConceptScheme operations
+    def get_concept_scheme(self, scheme_id: str) -> Optional[ConceptScheme]:
+        """
+        Retrieve a concept scheme by ID.
+
+        Args:
+            scheme_id: The ID of the concept scheme
+
+        Returns:
+            The ConceptScheme if found, None otherwise
+        """
+        ...
+
+    def list_concept_schemes(self, taxonomy_id: Optional[str] = None) -> list[ConceptScheme]:
+        """
+        Retrieve concept schemes, optionally filtered by taxonomy.
+
+        Args:
+            taxonomy_id: Optional ID to filter schemes to a specific taxonomy
+
+        Returns:
+            List of ConceptScheme entities
+        """
+        ...
+
+    def save_concept_scheme(self, scheme: ConceptScheme) -> None:
+        """
+        Persist a concept scheme (create or update).
+
+        Args:
+            scheme: The ConceptScheme entity to save
+        """
+        ...
+
+    def delete_concept_scheme(self, scheme_id: str) -> None:
+        """
+        Delete a concept scheme by ID.
+
+        Args:
+            scheme_id: The ID of the concept scheme to delete
+        """
+        ...
+
+    # Class operations
+    def get_class(self, class_id: str) -> Optional[Class]:
+        """
+        Retrieve a class by ID.
+
+        Args:
+            class_id: The ID of the class
+
+        Returns:
+            The Class if found, None otherwise
+        """
+        ...
+
+    def list_classes(
+        self,
+        scheme_id: Optional[str] = None,
+        parent_class_id: Optional[str] = None,
+        limit: int = 100,
+        offset: int = 0,
+    ) -> list[Class]:
+        """
+        Retrieve classes with optional filtering and pagination.
+
+        Args:
+            scheme_id: Optional concept scheme ID to filter by
+            parent_class_id: Optional parent class ID to filter by (for hierarchy)
+            limit: Maximum number of results to return
+            offset: Number of results to skip
+
+        Returns:
+            List of Class entities
+        """
+        ...
+
+    def search_classes(self, criteria: SearchCriteria) -> list[Class]:
+        """
+        Search for classes using search criteria.
+
+        Args:
+            criteria: SearchCriteria object specifying query, filters, and pagination
+
+        Returns:
+            List of matching Class entities
+        """
+        ...
+
+    def count_classes(self, scheme_id: Optional[str] = None) -> int:
+        """
+        Count classes, optionally filtered by scheme.
+
+        Args:
+            scheme_id: Optional concept scheme ID to count classes within
+
+        Returns:
+            Total count of classes
+        """
+        ...
+
+    def save_class(self, cls: Class) -> None:
+        """
+        Persist a class (create or update).
+
+        Args:
+            cls: The Class entity to save
+        """
+        ...
+
+    def delete_class(self, class_id: str) -> None:
+        """
+        Delete a class by ID.
+
+        Args:
+            class_id: The ID of the class to delete
+        """
+        ...
+
+    # Relationship operations
+    def get_relationship(self, relationship_id: str) -> Optional[Relationship]:
+        """
+        Retrieve a relationship by ID.
+
+        Args:
+            relationship_id: The ID of the relationship
+
+        Returns:
+            The Relationship if found, None otherwise
+        """
+        ...
+
+    def list_relationships(
+        self,
+        source_id: Optional[str] = None,
+        target_id: Optional[str] = None,
+        property_id: Optional[str] = None,
+    ) -> list[Relationship]:
+        """
+        Retrieve relationships with optional filtering.
+
+        Args:
+            source_id: Optional source entity ID to filter by
+            target_id: Optional target entity ID to filter by
+            property_id: Optional property definition ID to filter by (relationship type)
+
+        Returns:
+            List of Relationship entities
+        """
+        ...
+
+    def save_relationship(self, relationship: Relationship) -> None:
+        """
+        Persist a relationship (create or update).
+
+        Args:
+            relationship: The Relationship entity to save
+        """
+        ...
+
+    def delete_relationship(self, relationship_id: str) -> None:
+        """
+        Delete a relationship by ID.
+
+        Args:
+            relationship_id: The ID of the relationship to delete
+        """
+        ...
+
+    # PropertyDefinition operations
+    def get_property_definition(self, property_id: str) -> Optional[PropertyDefinition]:
+        """
+        Retrieve a property definition by ID.
+
+        Args:
+            property_id: The ID of the property definition
+
+        Returns:
+            The PropertyDefinition if found, None otherwise
+        """
+        ...
+
+    def get_property_definition_by_identifier(self, identifier: str) -> Optional[PropertyDefinition]:
+        """
+        Retrieve a property definition by its machine-readable identifier.
+
+        Args:
+            identifier: The identifier of the property definition
+
+        Returns:
+            The PropertyDefinition if found, None otherwise
+        """
+        ...
+
+    def list_property_definitions(self, is_relevant: Optional[bool] = None) -> list[PropertyDefinition]:
+        """
+        Retrieve property definitions, optionally filtered by relevance.
+
+        Args:
+            is_relevant: Optional filter for relevant property definitions
+
+        Returns:
+            List of PropertyDefinition entities
+        """
+        ...
+
+    def save_property_definition(self, prop: PropertyDefinition) -> None:
+        """
+        Persist a property definition (create or update).
+
+        Args:
+            prop: The PropertyDefinition entity to save
+        """
+        ...
+
+    def delete_property_definition(self, property_id: str) -> None:
+        """
+        Delete a property definition by ID.
+
+        Args:
+            property_id: The ID of the property definition to delete
+        """
+        ...
+
+    # Individual operations (deferred — all raise NotImplementedError for now)
+    def get_individual(self, individual_id: str) -> Optional[Individual]:
+        """
+        Retrieve an individual by ID.
+
+        Args:
+            individual_id: The ID of the individual
+
+        Returns:
+            The Individual if found, None otherwise
+
+        Note:
+            Currently not implemented — raises NotImplementedError
+        """
+        ...
+
+    def list_individuals(self, class_id: Optional[str] = None) -> list[Individual]:
+        """
+        Retrieve individuals, optionally filtered by class.
+
+        Args:
+            class_id: Optional class ID to filter by
+
+        Returns:
+            List of Individual entities
+
+        Note:
+            Currently not implemented — raises NotImplementedError
+        """
+        ...
+
+    def save_individual(self, individual: Individual) -> None:
+        """
+        Persist an individual (create or update).
+
+        Args:
+            individual: The Individual entity to save
+
+        Note:
+            Currently not implemented — raises NotImplementedError
+        """
+        ...
+
+    def delete_individual(self, individual_id: str) -> None:
+        """
+        Delete an individual by ID.
+
+        Args:
+            individual_id: The ID of the individual to delete
+
+        Note:
+            Currently not implemented — raises NotImplementedError
+        """
+        ...
+
+    # Bulk operations
+    def get_all_entities_and_relationships(self, taxonomy_id: str) -> dict:
+        """
+        Retrieve all entities and relationships for a taxonomy.
+
+        Args:
+            taxonomy_id: The ID of the taxonomy
+
+        Returns:
+            Dictionary containing all entities and relationships
+        """
+        ...
+
+
+class EmbeddingService(Protocol):
+    """
+    Port for embedding text into vector space.
+
+    Used to convert text into semantic embeddings for similarity searches
+    and clustering operations.
+    """
+
+    def embed_text(self, text: str) -> bytes:
+        """
+        Embed a single text into a vector.
+
+        Args:
+            text: The text to embed
+
+        Returns:
+            The embedding as bytes
+        """
+        ...
+
+    def embed_batch(self, texts: list[str]) -> list[bytes]:
+        """
+        Embed multiple texts in batch.
+
+        Args:
+            texts: List of texts to embed
+
+        Returns:
+            List of embeddings as bytes
+        """
+        ...
+
+    def similarity(self, embedding_a: bytes, embedding_b: bytes) -> float:
+        """
+        Compute similarity between two embeddings.
+
+        Args:
+            embedding_a: First embedding
+            embedding_b: Second embedding
+
+        Returns:
+            Similarity score as float (typically 0.0 to 1.0)
+        """
+        ...
+
+
+class EventPublisher(Protocol):
+    """
+    Port for publishing and subscribing to domain events.
+
+    Used to decouple event producers from event handlers, enabling event-driven
+    workflows and external integrations.
+    """
+
+    def publish(self, event: DomainEvent) -> None:
+        """
+        Publish a domain event.
+
+        Args:
+            event: The DomainEvent to publish
+        """
+        ...
+
+    def subscribe(self, event_type: type, handler: Callable) -> None:
+        """
+        Subscribe a handler to events of a specific type.
+
+        Args:
+            event_type: The DomainEvent subclass to subscribe to
+            handler: Callable that will handle the event
+        """
+        ...
