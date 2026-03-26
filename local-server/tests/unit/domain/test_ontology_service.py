@@ -662,6 +662,70 @@ class TestMoveClass:
         with pytest.raises(ValueError, match="not in the same scheme"):
             service.move_class(class_id=dog.id, new_parent_id=tree.id)
 
+    def test_move_class_to_current_parent_is_noop(self, service):
+        """Moving a class to its current parent is a no-op and does not emit events."""
+        tax = service.create_taxonomy(title="Biology")
+        scheme = service.create_scheme(taxonomy_id=tax.id, title="Animals")
+        mammal = service.create_class(scheme_id=scheme.id, title="Mammal")
+        dog = service.create_class(scheme_id=scheme.id, title="Dog", parent_class_id=mammal.id)
+
+        # Clear event history from creation
+        service._event_publisher.events = []
+
+        # Move dog to its current parent (mammal)
+        result = service.move_class(class_id=dog.id, new_parent_id=mammal.id)
+
+        # Verify the class is unchanged
+        assert result.parent_class_id == mammal.id
+
+        # Verify no events were emitted (no ClassMoved, no GraphInvalidated)
+        class_moved_events = service._event_publisher.get_events_of_type(ClassMoved)
+        assert len(class_moved_events) == 0
+
+        invalidation_events = service._event_publisher.get_events_of_type(GraphInvalidated)
+        assert len(invalidation_events) == 0
+
+    def test_move_class_to_root_current_parent_is_noop(self, service):
+        """Moving a root class to root again is a no-op and does not emit events."""
+        tax = service.create_taxonomy(title="Biology")
+        scheme = service.create_scheme(taxonomy_id=tax.id, title="Animals")
+        root_class = service.create_class(scheme_id=scheme.id, title="Root")
+
+        # Clear event history from creation
+        service._event_publisher.events = []
+
+        # Move root class to root (None) again
+        result = service.move_class(class_id=root_class.id, new_parent_id=None)
+
+        # Verify the class is unchanged
+        assert result.parent_class_id is None
+
+        # Verify no events were emitted
+        class_moved_events = service._event_publisher.get_events_of_type(ClassMoved)
+        assert len(class_moved_events) == 0
+
+        invalidation_events = service._event_publisher.get_events_of_type(GraphInvalidated)
+        assert len(invalidation_events) == 0
+
+    def test_move_class_corrupted_hierarchy_raises(self, service):
+        """Moving a class with a corrupted ancestor hierarchy raises CircularReferenceError."""
+        tax = service.create_taxonomy(title="Biology")
+        scheme = service.create_scheme(taxonomy_id=tax.id, title="Animals")
+        a = service.create_class(scheme_id=scheme.id, title="A")
+        b = service.create_class(scheme_id=scheme.id, title="B", parent_class_id=a.id)
+        c = service.create_class(scheme_id=scheme.id, title="C", parent_class_id=b.id)
+
+        # Corrupt the hierarchy by manually setting B's parent to a nonexistent class
+        # (simulating data corruption)
+        b_corrupted = b
+        b_corrupted.parent_class_id = "nonexistent_parent_id"
+        service._repository.save_class(b_corrupted)
+
+        # Now try to move A under C. During ancestor traversal of C:
+        # C -> B -> nonexistent -> should raise CircularReferenceError
+        with pytest.raises(CircularReferenceError, match="Corrupted hierarchy"):
+            service.move_class(class_id=a.id, new_parent_id=c.id)
+
 
 class TestDeleteClass:
     """Tests for delete_class."""

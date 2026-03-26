@@ -671,12 +671,13 @@ class OntologyService:
 
         Algorithm:
         1. Load the class; raise EntityNotFoundError if not found
-        2. If new_parent_id is None, the class becomes a root; proceed
-        3. If new_parent_id == class_id, raise CircularReferenceError
-        4. Load the new parent; raise EntityNotFoundError if not found
-        5. Verify new parent is in the same scheme; raise ValueError if not
-        6. Traverse ancestors of new_parent_id; if any ancestor equals class_id, raise CircularReferenceError
-        7. Set the parent and save; publish ClassMoved and GraphInvalidated
+        2. Guard against no-op: if new_parent_id == cls.parent_class_id, return unchanged
+        3. If new_parent_id is None, the class becomes a root; proceed
+        4. If new_parent_id == class_id, raise CircularReferenceError
+        5. Load the new parent; raise EntityNotFoundError if not found
+        6. Verify new parent is in the same scheme; raise ValueError if not
+        7. Traverse ancestors of new_parent_id; if any ancestor equals class_id, raise CircularReferenceError
+        8. Set the parent and save; publish ClassMoved and GraphInvalidated
 
         Args:
             class_id: The ID of the class to move
@@ -693,6 +694,10 @@ class OntologyService:
         cls = self._repository.get_class(class_id)
         if cls is None:
             raise EntityNotFoundError("Class", class_id)
+
+        # Guard against no-op updates
+        if new_parent_id == cls.parent_class_id:
+            return cls
 
         if new_parent_id is not None:
             # Check self-reference
@@ -711,9 +716,10 @@ class OntologyService:
             while current_id is not None:
                 ancestor = self._repository.get_class(current_id)
                 if ancestor is None:
-                    # This should not happen since we just validated new_parent exists
-                    # and we're traversing up from it, but be defensive
-                    break
+                    raise CircularReferenceError(
+                        f"Corrupted hierarchy: ancestor class {current_id} does not exist; "
+                        f"cannot complete circular reference detection"
+                    )
                 if ancestor.id == class_id:
                     raise CircularReferenceError("Move would create a circular reference")
                 current_id = ancestor.parent_class_id
