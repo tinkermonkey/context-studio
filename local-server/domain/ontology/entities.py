@@ -29,7 +29,7 @@ class Taxonomy:
         id: Unique identifier (UUID as string)
         title: Display name for the taxonomy
         definition: Optional longer description
-        date_created: Timestamp of creation
+        created_at: Timestamp of creation
         last_modified: Timestamp of last modification
         version: Version number for optimistic concurrency control
     """
@@ -37,7 +37,7 @@ class Taxonomy:
     id: str
     title: str
     definition: str | None = None
-    date_created: datetime | None = None
+    created_at: datetime | None = None
     last_modified: datetime | None = None
     version: int = 1
 
@@ -67,7 +67,7 @@ class ConceptScheme:
         taxonomy_id: ID of the parent taxonomy
         title: Display name for the scheme
         definition: Optional longer description
-        date_created: Timestamp of creation
+        created_at: Timestamp of creation
         last_modified: Timestamp of last modification
         version: Version number for optimistic concurrency control
     """
@@ -76,7 +76,7 @@ class ConceptScheme:
     taxonomy_id: str
     title: str
     definition: str | None = None
-    date_created: datetime | None = None
+    created_at: datetime | None = None
     last_modified: datetime | None = None
     version: int = 1
 
@@ -112,7 +112,7 @@ class Class:
         lexical_senses: List of lexical representations (labels in different languages)
         data_properties: List of data property values on this class
         embedding: Optional bytes representing the embedding (serialized float32 array)
-        date_created: Timestamp of creation
+        created_at: Timestamp of creation
         last_modified: Timestamp of last modification
         version: Version number for optimistic concurrency control
     """
@@ -127,7 +127,7 @@ class Class:
     lexical_senses: list[LexicalSense] = field(default_factory=list)
     data_properties: list[DataPropertyValue] = field(default_factory=list)
     embedding: bytes | None = None
-    date_created: datetime | None = None
+    created_at: datetime | None = None
     last_modified: datetime | None = None
     version: int = 1
 
@@ -179,7 +179,7 @@ class Individual:
         definition: Optional longer description
         data_property_values: List of data property values for this individual
         external_references: List of references to external knowledge bases
-        date_created: Timestamp of creation
+        created_at: Timestamp of creation
         last_modified: Timestamp of last modification
         version: Version number for optimistic concurrency control
     """
@@ -190,7 +190,7 @@ class Individual:
     definition: str | None = None
     data_property_values: list[DataPropertyValue] = field(default_factory=list)
     external_references: list[ExternalReference] = field(default_factory=list)
-    date_created: datetime | None = None
+    created_at: datetime | None = None
     last_modified: datetime | None = None
     version: int = 1
 
@@ -220,7 +220,7 @@ class Relationship:
         source_id: ID of the source entity
         target_id: ID of the target entity
         property_definition_id: ID of the property definition that defines this relationship type
-        date_created: Timestamp of creation
+        created_at: Timestamp of creation (auto-generated on instantiation)
 
     Raises:
         ValueError: If source_id equals target_id (checked in __post_init__)
@@ -230,7 +230,7 @@ class Relationship:
     source_id: str
     target_id: str
     property_definition_id: str
-    date_created: datetime | None = None
+    created_at: datetime = field(default_factory=datetime.utcnow)
 
     def __post_init__(self) -> None:
         """Validate relationship invariants."""

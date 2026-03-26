@@ -32,7 +32,7 @@ class TestInProcessEventPublisher:
             aggregate_id="class-123",
             class_id="class-123",
             title="TestClass",
-            scheme_id="scheme-456",
+            concept_scheme_id="scheme-456",
             taxonomy_id="tax-789",
         )
 
@@ -53,7 +53,7 @@ class TestInProcessEventPublisher:
             aggregate_id="class-123",
             class_id="class-123",
             title="TestClass",
-            scheme_id="scheme-456",
+            concept_scheme_id="scheme-456",
             taxonomy_id="tax-789",
         )
 
@@ -81,7 +81,7 @@ class TestInProcessEventPublisher:
             aggregate_id="class-123",
             class_id="class-123",
             title="TestClass",
-            scheme_id="scheme-456",
+            concept_scheme_id="scheme-456",
             taxonomy_id="tax-789",
         )
 
@@ -114,7 +114,7 @@ class TestInProcessEventPublisher:
             aggregate_id="class-123",
             class_id="class-123",
             title="TestClass",
-            scheme_id="scheme-456",
+            concept_scheme_id="scheme-456",
             taxonomy_id="tax-789",
         )
 
@@ -143,7 +143,7 @@ class TestInProcessEventPublisher:
             aggregate_id="class-123",
             class_id="class-123",
             title="TestClass",
-            scheme_id="scheme-456",
+            concept_scheme_id="scheme-456",
             taxonomy_id="tax-789",
         )
 
@@ -184,7 +184,7 @@ class TestInProcessEventPublisher:
             aggregate_id="class-1",
             class_id="class-1",
             title="Class1",
-            scheme_id="scheme-456",
+            concept_scheme_id="scheme-456",
             taxonomy_id="tax-789",
         )
 
@@ -194,7 +194,7 @@ class TestInProcessEventPublisher:
             aggregate_id="class-2",
             class_id="class-2",
             title="Class2",
-            scheme_id="scheme-456",
+            concept_scheme_id="scheme-456",
             taxonomy_id="tax-789",
         )
 
@@ -225,7 +225,7 @@ class TestInProcessEventPublisher:
             aggregate_id="class-123",
             class_id="class-123",
             title="TestClass",
-            scheme_id="scheme-456",
+            concept_scheme_id="scheme-456",
             taxonomy_id="tax-789",
         )
 
@@ -260,7 +260,7 @@ class TestInProcessEventPublisher:
             aggregate_id="class-123",
             class_id="class-123",
             title="TestClass",
-            scheme_id="scheme-456",
+            concept_scheme_id="scheme-456",
             taxonomy_id="tax-789",
         )
 
@@ -288,7 +288,7 @@ class TestInProcessEventPublisher:
             aggregate_id="class-123",
             class_id="class-123",
             title="TestClass",
-            scheme_id="scheme-456",
+            concept_scheme_id="scheme-456",
             taxonomy_id="tax-789",
         )
 

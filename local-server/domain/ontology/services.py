@@ -84,7 +84,7 @@ class OntologyService:
             id=taxonomy_id,
             title=title,
             definition=definition,
-            date_created=datetime.utcnow(),
+            created_at=datetime.utcnow(),
             last_modified=datetime.utcnow(),
         )
         self._repository.save_taxonomy(taxonomy)
@@ -252,7 +252,7 @@ class OntologyService:
             taxonomy_id=taxonomy_id,
             title=title,
             definition=definition,
-            date_created=datetime.utcnow(),
+            created_at=datetime.utcnow(),
             last_modified=datetime.utcnow(),
         )
         self._repository.save_concept_scheme(scheme)
@@ -369,7 +369,7 @@ class OntologyService:
             raise EntityNotFoundError("ConceptScheme", scheme_id)
 
         # Check for classes
-        classes = self._repository.list_classes(scheme_id=scheme_id)
+        classes = self._repository.list_classes(concept_scheme_id=scheme_id)
         if classes:
             raise OntologyError(f"Cannot delete concept scheme {scheme_id}: it has {len(classes)} class(es)")
 
@@ -452,7 +452,7 @@ class OntologyService:
             definition=definition,
             parent_class_id=parent_class_id,
             embedding=embedding,
-            date_created=datetime.utcnow(),
+            created_at=datetime.utcnow(),
             last_modified=datetime.utcnow(),
         )
         self._repository.save_class(cls)
@@ -818,7 +818,6 @@ class OntologyService:
             source_id=source_id,
             target_id=target_id,
             property_definition_id=property_definition_id,
-            date_created=datetime.utcnow(),
         )
         self._repository.save_relationship(relationship)
 

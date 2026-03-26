@@ -26,7 +26,7 @@ class TestTaxonomy:
         assert tax.id == "tax-1"
         assert tax.title == "Biology"
         assert tax.definition is None
-        assert tax.date_created is None
+        assert tax.created_at is None
         assert tax.last_modified is None
 
     def test_taxonomy_creation_with_description(self):
@@ -36,7 +36,7 @@ class TestTaxonomy:
 
     def test_taxonomy_rename(self):
         """Rename a taxonomy."""
-        tax = Taxonomy(id="tax-1", title="Biology", date_created=None)
+        tax = Taxonomy(id="tax-1", title="Biology", created_at=None)
         original_modified = tax.last_modified
         tax.rename("Biology 2024")
         assert tax.title == "Biology 2024"
@@ -72,7 +72,7 @@ class TestConceptScheme:
             id="scheme-1",
             taxonomy_id="tax-1",
             title="Animal Classification",
-            description="Classification by species",
+            definition="Classification by species",
         )
         assert scheme.definition == "Classification by species"
 
@@ -94,7 +94,7 @@ class TestClass:
 
     def test_class_creation(self):
         """Create a class."""
-        cls = Class(id="class-1", scheme_id="scheme-1", taxonomy_id="tax-1", title="Dog")
+        cls = Class(id="class-1", concept_scheme_id="scheme-1", taxonomy_id="tax-1", title="Dog")
         assert cls.id == "class-1"
         assert cls.concept_scheme_id == "scheme-1"
         assert cls.taxonomy_id == "tax-1"
@@ -109,10 +109,10 @@ class TestClass:
         """Create a class with description."""
         cls = Class(
             id="class-1",
-            scheme_id="scheme-1",
+            concept_scheme_id="scheme-1",
             taxonomy_id="tax-1",
             title="Dog",
-            description="Canine species",
+            definition="Canine species",
         )
         assert cls.definition == "Canine species"
 
@@ -120,7 +120,7 @@ class TestClass:
         """Create a class with parent."""
         cls = Class(
             id="class-1",
-            scheme_id="scheme-1",
+            concept_scheme_id="scheme-1",
             taxonomy_id="tax-1",
             title="Dog",
             parent_class_id="class-0",
@@ -129,43 +129,39 @@ class TestClass:
 
     def test_class_creation_with_embedding(self):
         """Create a class with embedding."""
-        title_embedding_floats = [0.1, 0.2, 0.3, 0.4, 0.5]
-        definition_embedding_floats = [0.5, 0.4, 0.3, 0.2, 0.1]
-        title_embedding = struct.pack('5f', *title_embedding_floats)
-        definition_embedding = struct.pack('5f', *definition_embedding_floats)
+        embedding_floats = [0.1, 0.2, 0.3, 0.4, 0.5]
+        embedding = struct.pack('5f', *embedding_floats)
         cls = Class(
             id="class-1",
-            scheme_id="scheme-1",
+            concept_scheme_id="scheme-1",
             taxonomy_id="tax-1",
             title="Dog",
-            title_embedding=title_embedding,
-            definition_embedding=definition_embedding,
+            embedding=embedding,
         )
-        assert cls.embedding == title_embedding
-        assert cls.embedding == definition_embedding
+        assert cls.embedding == embedding
 
     def test_class_rename(self):
         """Rename a class."""
-        cls = Class(id="class-1", scheme_id="scheme-1", taxonomy_id="tax-1", title="Dog")
+        cls = Class(id="class-1", concept_scheme_id="scheme-1", taxonomy_id="tax-1", title="Dog")
         cls.rename("Canine")
         assert cls.title == "Canine"
 
     def test_class_rename_empty_raises(self):
         """Rename with empty string raises ValueError."""
-        cls = Class(id="class-1", scheme_id="scheme-1", taxonomy_id="tax-1", title="Dog")
+        cls = Class(id="class-1", concept_scheme_id="scheme-1", taxonomy_id="tax-1", title="Dog")
         with pytest.raises(ValueError, match="Title cannot be empty"):
             cls.rename("")
 
     def test_class_add_subclass_of(self):
         """Add a parent class."""
-        cls = Class(id="class-1", scheme_id="scheme-1", taxonomy_id="tax-1", title="Dog")
+        cls = Class(id="class-1", concept_scheme_id="scheme-1", taxonomy_id="tax-1", title="Dog")
         assert cls.parent_class_id is None
         cls.add_subclass_of("class-0")
         assert cls.parent_class_id == "class-0"
 
     def test_class_add_subclass_of_self_raises(self):
         """Add self as parent raises ValueError."""
-        cls = Class(id="class-1", scheme_id="scheme-1", taxonomy_id="tax-1", title="Dog")
+        cls = Class(id="class-1", concept_scheme_id="scheme-1", taxonomy_id="tax-1", title="Dog")
         with pytest.raises(ValueError, match="A class cannot be its own parent"):
             cls.add_subclass_of("class-1")
 
@@ -173,7 +169,7 @@ class TestClass:
         """Remove the parent class."""
         cls = Class(
             id="class-1",
-            scheme_id="scheme-1",
+            concept_scheme_id="scheme-1",
             taxonomy_id="tax-1",
             title="Dog",
             parent_class_id="class-0",
@@ -190,7 +186,7 @@ class TestClass:
         ]
         cls = Class(
             id="class-1",
-            scheme_id="scheme-1",
+            concept_scheme_id="scheme-1",
             taxonomy_id="tax-1",
             title="Dog",
             external_references=refs,
@@ -206,7 +202,7 @@ class TestClass:
         ]
         cls = Class(
             id="class-1",
-            scheme_id="scheme-1",
+            concept_scheme_id="scheme-1",
             taxonomy_id="tax-1",
             title="Dog",
             lexical_senses=senses,
@@ -229,7 +225,7 @@ class TestIndividual:
 
     def test_individual_creation_with_description(self):
         """Create an individual with description."""
-        ind = Individual(id="ind-1", class_id="class-1", title="Fido", description="My pet dog")
+        ind = Individual(id="ind-1", class_id="class-1", title="Fido", definition="My pet dog")
         assert ind.definition == "My pet dog"
 
     def test_individual_creation_with_data_properties(self):
@@ -265,14 +261,12 @@ class TestRelationship:
             source_id="class-1",
             target_id="class-2",
             property_definition_id="prop-1",
-            property_label="has_part",
         )
         assert rel.id == "rel-1"
         assert rel.source_id == "class-1"
         assert rel.target_id == "class-2"
         assert rel.property_definition_id == "prop-1"
-        assert rel == "has_part"
-        assert rel.date_created is not None
+        assert rel.created_at is not None
 
     def test_relationship_self_loop_raises(self):
         """Create a relationship with same source and target raises ValueError."""
@@ -282,7 +276,6 @@ class TestRelationship:
                 source_id="class-1",
                 target_id="class-1",
                 property_definition_id="prop-1",
-                property_label="has_part",
             )
 
 
@@ -303,7 +296,7 @@ class TestPropertyDefinition:
             id="prop-1",
             identifier="is_a",
             title="Is A",
-            description="Taxonomic is-a relationship",
+            definition="Taxonomic is-a relationship",
         )
         assert prop.definition == "Taxonomic is-a relationship"
 

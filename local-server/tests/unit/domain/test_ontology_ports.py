@@ -81,7 +81,7 @@ class TestOntologyRepositoryProtocol:
         """FakeOntologyRepository implements taxonomy operations."""
         repo = FakeOntologyRepository()
         now = datetime.utcnow()
-        tax = Taxonomy(id="tax-1", title="Test", created_at=now, updated_at=now)
+        tax = Taxonomy(id="tax-1", title="Test", created_at=now, last_modified=now)
 
         repo.save_taxonomy(tax)
         retrieved = repo.get_taxonomy("tax-1")
@@ -160,7 +160,7 @@ class TestEventPublisherProtocol:
             aggregate_id="class-1",
             class_id="class-1",
             title="Test Class",
-            scheme_id="scheme-1",
+            concept_scheme_id="scheme-1",
             taxonomy_id="tax-1",
         )
         publisher.publish(event)
@@ -186,7 +186,7 @@ class TestEventPublisherProtocol:
             aggregate_id="class-1",
             class_id="class-1",
             title="Test Class",
-            scheme_id="scheme-1",
+            concept_scheme_id="scheme-1",
             taxonomy_id="tax-1",
         )
         publisher.publish(event)
@@ -220,7 +220,7 @@ class TestEventPublisherProtocol:
             aggregate_id="class-1",
             class_id="class-1",
             title="Test Class",
-            scheme_id="scheme-1",
+            concept_scheme_id="scheme-1",
             taxonomy_id="tax-1",
         )
         publisher.publish(event)
