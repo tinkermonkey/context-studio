@@ -9,7 +9,6 @@ import sys
 import ast
 from pathlib import Path
 
-
 BANNED_IMPORTS = {
     "adapters",
     "sqlalchemy",

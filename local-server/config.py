@@ -25,9 +25,7 @@ class ServerConfig(BaseModel):
 
     host: str = Field(default="127.0.0.1", description="Server host address")
     port: int = Field(default=8000, ge=1024, le=65535, description="Server port")
-    cors_origins: List[str] = Field(
-        default=["*"], description="CORS allowed origins"
-    )
+    cors_origins: List[str] = Field(default=["*"], description="CORS allowed origins")
 
 
 class DatabaseConfig(BaseModel):
@@ -71,10 +69,7 @@ class ConfigurationManager:
         """Load configuration from file with defaults"""
         load_dotenv()
 
-        if (
-            os.path.exists(self.config_file)
-            and os.path.getsize(self.config_file) > 0
-        ):
+        if os.path.exists(self.config_file) and os.path.getsize(self.config_file) > 0:
             with open(self.config_file, "r") as f:
                 config_data = json.load(f)
             self.settings = Settings(**config_data)
