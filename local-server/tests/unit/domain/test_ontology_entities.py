@@ -182,8 +182,8 @@ class TestClass:
     def test_class_with_external_references(self):
         """Create a class with external references."""
         refs = [
-            ExternalReference(source="DBpedia", identifier="Dog_(animal)", uri="http://dbpedia.org/..."),
-            ExternalReference(source="schema.org", identifier="Animal"),
+            ExternalReference(source="DBpedia", uri="http://dbpedia.org/resource/Dog_(animal)", label="Dog"),
+            ExternalReference(source="schema.org", uri="http://schema.org/Animal", label="Animal"),
         ]
         cls = Class(
             id="class-1",
@@ -198,8 +198,8 @@ class TestClass:
     def test_class_with_lexical_senses(self):
         """Create a class with lexical senses."""
         senses = [
-            LexicalSense(label="Dog", language_code="en", sense_type="preferred"),
-            LexicalSense(label="Chien", language_code="fr", sense_type="alternative"),
+            LexicalSense(synset_id="synset-1", definition="A domesticated carnivorous mammal", lemma="dog"),
+            LexicalSense(synset_id="synset-2", definition="Un mammifère carnivore domestique", lemma="chien"),
         ]
         cls = Class(
             id="class-1",
@@ -209,7 +209,7 @@ class TestClass:
             lexical_senses=senses,
         )
         assert len(cls.lexical_senses) == 2
-        assert cls.lexical_senses[1].label == "Chien"
+        assert cls.lexical_senses[1].lemma == "chien"
 
 
 class TestIndividual:
@@ -232,12 +232,12 @@ class TestIndividual:
     def test_individual_creation_with_data_properties(self):
         """Create an individual with data property values."""
         props = [
-            DataPropertyValue(property_identifier="age", value="5", datatype="xsd:integer"),
-            DataPropertyValue(property_identifier="name", value="Fido"),
+            DataPropertyValue(key="age", value=5, datatype="xsd:integer"),
+            DataPropertyValue(key="name", value="Fido"),
         ]
         ind = Individual(id="ind-1", class_id="class-1", title="Fido", data_property_values=props)
         assert len(ind.data_property_values) == 2
-        assert ind.data_property_values[0].value == "5"
+        assert ind.data_property_values[0].value == 5
 
     def test_individual_rename(self):
         """Rename an individual."""
