@@ -128,8 +128,8 @@ class TestClass:
 
     def test_class_creation_with_embedding(self):
         """Create a class with embedding."""
-        title_embedding = b"test-title-embedding"
-        definition_embedding = b"test-definition-embedding"
+        title_embedding = [0.1, 0.2, 0.3, 0.4, 0.5]
+        definition_embedding = [0.5, 0.4, 0.3, 0.2, 0.1]
         cls = Class(
             id="class-1",
             scheme_id="scheme-1",
