@@ -809,7 +809,7 @@ class TestCreateRelationship:
         mammal = service.create_class(scheme_id=scheme.id, title="Mammal")
         prop = service.create_property_definition(identifier="is_a", title="Is A")
 
-        rel = service.create_relationship(
+        service.create_relationship(
             source_id=dog.id,
             target_id=mammal.id,
             property_definition_id=prop.id,
