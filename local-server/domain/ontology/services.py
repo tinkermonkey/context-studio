@@ -160,6 +160,9 @@ class OntologyService:
         if new_title == taxonomy.title:
             return taxonomy
 
+        # Capture old value before modification
+        old_title = taxonomy.title
+
         taxonomy.rename(new_title)
         self._repository.save_taxonomy(taxonomy)
 
@@ -169,6 +172,8 @@ class OntologyService:
             aggregate_id=taxonomy_id,
             taxonomy_id=taxonomy_id,
             changed_fields=("title",),
+            old_values={"title": old_title},
+            new_values={"title": new_title},
         ))
 
         return taxonomy
@@ -327,6 +332,9 @@ class OntologyService:
         if new_title == scheme.title:
             return scheme
 
+        # Capture old value before modification
+        old_title = scheme.title
+
         scheme.rename(new_title)
         self._repository.save_concept_scheme(scheme)
 
@@ -337,6 +345,8 @@ class OntologyService:
             scheme_id=scheme_id,
             taxonomy_id=scheme.taxonomy_id,
             changed_fields=("title",),
+            old_values={"title": old_title},
+            new_values={"title": new_title},
         ))
 
         return scheme
@@ -536,6 +546,10 @@ class OntologyService:
         if cls is None:
             raise EntityNotFoundError("Class", class_id)
 
+        # Capture old values before modification
+        old_title = cls.title
+        old_description = cls.description
+
         title_changed = title is not None and title != cls.title
         desc_changed = description is not None and description != cls.description
 
@@ -565,12 +579,24 @@ class OntologyService:
         self._repository.save_class(cls)
 
         changed = tuple(f for f, was_changed in [("title", title_changed), ("description", desc_changed)] if was_changed)
+
+        old_values: dict[str, str | None] = {}
+        new_values: dict[str, str | None] = {}
+        if title_changed:
+            old_values["title"] = old_title
+            new_values["title"] = cls.title
+        if desc_changed:
+            old_values["description"] = old_description
+            new_values["description"] = cls.description
+
         self._event_publisher.publish(ClassUpdated(
             event_id=str(uuid4()),
             occurred_at=datetime.utcnow(),
             aggregate_id=class_id,
             class_id=class_id,
             changed_fields=changed,
+            old_values=old_values,
+            new_values=new_values,
         ))
 
         return cls
@@ -610,6 +636,9 @@ class OntologyService:
                 occurred_at=datetime.utcnow(),
                 aggregate_id=relationship.id,
                 relationship_id=relationship.id,
+                source_id=relationship.source_id,
+                target_id=relationship.target_id,
+                property_definition_id=relationship.property_definition_id,
             ))
 
         self._repository.delete_class(class_id)
@@ -871,6 +900,9 @@ class OntologyService:
             occurred_at=datetime.utcnow(),
             aggregate_id=relationship_id,
             relationship_id=relationship_id,
+            source_id=relationship.source_id,
+            target_id=relationship.target_id,
+            property_definition_id=relationship.property_definition_id,
         ))
 
         # Determine which taxonomy this relationship belonged to (for graph invalidation)

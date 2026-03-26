@@ -199,7 +199,7 @@ class TestTaxonomyUpdated:
     """Tests for TaxonomyUpdated event."""
 
     def test_taxonomy_updated_instantiation(self):
-        """TaxonomyUpdated can be instantiated with changed fields."""
+        """TaxonomyUpdated can be instantiated with changed fields and old/new values."""
         now = datetime.utcnow()
         event = TaxonomyUpdated(
             event_id="evt-tax-upd-001",
@@ -207,9 +207,13 @@ class TestTaxonomyUpdated:
             aggregate_id="tax-123",
             taxonomy_id="tax-123",
             changed_fields=("title",),
+            old_values={"title": "Old Title"},
+            new_values={"title": "New Title"},
         )
         assert event.taxonomy_id == "tax-123"
         assert event.changed_fields == ("title",)
+        assert event.old_values == {"title": "Old Title"}
+        assert event.new_values == {"title": "New Title"}
 
     def test_taxonomy_updated_with_multiple_changed_fields(self):
         """TaxonomyUpdated can have multiple changed fields."""
@@ -220,8 +224,12 @@ class TestTaxonomyUpdated:
             aggregate_id="tax-123",
             taxonomy_id="tax-123",
             changed_fields=("title", "description"),
+            old_values={"title": "Old Title", "description": "Old Desc"},
+            new_values={"title": "New Title", "description": "New Desc"},
         )
         assert event.changed_fields == ("title", "description")
+        assert event.old_values == {"title": "Old Title", "description": "Old Desc"}
+        assert event.new_values == {"title": "New Title", "description": "New Desc"}
 
     def test_taxonomy_updated_is_frozen(self):
         """TaxonomyUpdated instances are frozen."""
@@ -232,6 +240,8 @@ class TestTaxonomyUpdated:
             aggregate_id="tax-123",
             taxonomy_id="tax-123",
             changed_fields=("title",),
+            old_values={"title": "Old Title"},
+            new_values={"title": "New Title"},
         )
         with pytest.raises(FrozenInstanceError):
             event.changed_fields = ("description",)
@@ -283,7 +293,7 @@ class TestSchemeUpdated:
     """Tests for SchemeUpdated event."""
 
     def test_scheme_updated_instantiation(self):
-        """SchemeUpdated can be instantiated with changed fields."""
+        """SchemeUpdated can be instantiated with changed fields and old/new values."""
         now = datetime.utcnow()
         event = SchemeUpdated(
             event_id="evt-scheme-upd-001",
@@ -292,10 +302,14 @@ class TestSchemeUpdated:
             scheme_id="scheme-123",
             taxonomy_id="tax-456",
             changed_fields=("title",),
+            old_values={"title": "Old Title"},
+            new_values={"title": "New Title"},
         )
         assert event.scheme_id == "scheme-123"
         assert event.taxonomy_id == "tax-456"
         assert event.changed_fields == ("title",)
+        assert event.old_values == {"title": "Old Title"}
+        assert event.new_values == {"title": "New Title"}
 
     def test_scheme_updated_with_multiple_changed_fields(self):
         """SchemeUpdated can have multiple changed fields."""
@@ -307,8 +321,12 @@ class TestSchemeUpdated:
             scheme_id="scheme-123",
             taxonomy_id="tax-456",
             changed_fields=("title", "description"),
+            old_values={"title": "Old Title", "description": "Old Desc"},
+            new_values={"title": "New Title", "description": "New Desc"},
         )
         assert event.changed_fields == ("title", "description")
+        assert event.old_values == {"title": "Old Title", "description": "Old Desc"}
+        assert event.new_values == {"title": "New Title", "description": "New Desc"}
 
     def test_scheme_updated_is_frozen(self):
         """SchemeUpdated instances are frozen."""
@@ -320,6 +338,8 @@ class TestSchemeUpdated:
             scheme_id="scheme-123",
             taxonomy_id="tax-456",
             changed_fields=("title",),
+            old_values={"title": "Old Title"},
+            new_values={"title": "New Title"},
         )
         with pytest.raises(FrozenInstanceError):
             event.changed_fields = ("description",)
@@ -411,7 +431,7 @@ class TestClassUpdated:
     """Tests for ClassUpdated event."""
 
     def test_class_updated_instantiation(self):
-        """ClassUpdated can be instantiated with changed fields."""
+        """ClassUpdated can be instantiated with changed fields and old/new values."""
         now = datetime.utcnow()
         event = ClassUpdated(
             event_id="evt-class-upd-001",
@@ -419,9 +439,13 @@ class TestClassUpdated:
             aggregate_id="class-123",
             class_id="class-123",
             changed_fields=("title", "description"),
+            old_values={"title": "Old Title", "description": "Old Desc"},
+            new_values={"title": "New Title", "description": "New Desc"},
         )
         assert event.class_id == "class-123"
         assert event.changed_fields == ("title", "description")
+        assert event.old_values == {"title": "Old Title", "description": "Old Desc"}
+        assert event.new_values == {"title": "New Title", "description": "New Desc"}
 
     def test_class_updated_with_empty_changed_fields(self):
         """ClassUpdated can be instantiated with empty changed_fields tuple."""
@@ -432,8 +456,12 @@ class TestClassUpdated:
             aggregate_id="class-123",
             class_id="class-123",
             changed_fields=(),
+            old_values={},
+            new_values={},
         )
         assert event.changed_fields == ()
+        assert event.old_values == {}
+        assert event.new_values == {}
 
     def test_class_updated_is_frozen(self):
         """ClassUpdated instances are frozen."""
@@ -444,6 +472,8 @@ class TestClassUpdated:
             aggregate_id="class-123",
             class_id="class-123",
             changed_fields=("title",),
+            old_values={"title": "Old Title"},
+            new_values={"title": "New Title"},
         )
         with pytest.raises(FrozenInstanceError):
             event.changed_fields = ("new_field",)
@@ -614,8 +644,14 @@ class TestRelationshipDeleted:
             occurred_at=now,
             aggregate_id="rel-123",
             relationship_id="rel-123",
+            source_id="class-456",
+            target_id="class-789",
+            property_definition_id="prop-101",
         )
         assert event.relationship_id == "rel-123"
+        assert event.source_id == "class-456"
+        assert event.target_id == "class-789"
+        assert event.property_definition_id == "prop-101"
 
     def test_relationship_deleted_is_frozen(self):
         """RelationshipDeleted instances are frozen."""
@@ -625,6 +661,9 @@ class TestRelationshipDeleted:
             occurred_at=now,
             aggregate_id="rel-123",
             relationship_id="rel-123",
+            source_id="class-456",
+            target_id="class-789",
+            property_definition_id="prop-101",
         )
         with pytest.raises(FrozenInstanceError):
             event.relationship_id = "new-rel"

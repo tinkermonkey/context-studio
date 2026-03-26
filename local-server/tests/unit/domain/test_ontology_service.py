@@ -147,6 +147,8 @@ class TestRenameTaxonomy:
         assert len(events) == 1
         assert events[0].taxonomy_id == tax.id
         assert events[0].changed_fields == ("title",)
+        assert events[0].old_values == {"title": "Biology"}
+        assert events[0].new_values == {"title": "Life Sciences"}
 
     def test_rename_taxonomy_nonexistent_raises(self, service):
         """Rename nonexistent taxonomy raises EntityNotFoundError."""
@@ -276,6 +278,8 @@ class TestRenameScheme:
         assert events[0].scheme_id == scheme.id
         assert events[0].taxonomy_id == tax.id
         assert events[0].changed_fields == ("title",)
+        assert events[0].old_values == {"title": "Animals"}
+        assert events[0].new_values == {"title": "Animal Kingdom"}
 
     def test_rename_scheme_nonexistent_raises(self, service):
         """Rename nonexistent scheme raises EntityNotFoundError."""
@@ -504,6 +508,8 @@ class TestUpdateClass:
         events = service._event_publisher.get_events_of_type(ClassUpdated)
         assert len(events) == 1
         assert "title" in events[0].changed_fields
+        assert events[0].old_values == {"title": "Dog"}
+        assert events[0].new_values == {"title": "Canine"}
 
     def test_update_class_description_regenerates_embedding(self, service):
         """Update class description regenerates embedding."""
@@ -520,6 +526,8 @@ class TestUpdateClass:
         events = service._event_publisher.get_events_of_type(ClassUpdated)
         assert len(events) == 1
         assert "description" in events[0].changed_fields
+        assert events[0].old_values == {"description": None}
+        assert events[0].new_values == {"description": "Canine species"}
 
     def test_update_class_no_change_no_embedding_regen(self, service):
         """Update class with no title/description change does not regenerate embedding or emit event."""
@@ -718,6 +726,9 @@ class TestDeleteClass:
         rel_delete_events = service._event_publisher.get_events_of_type(RelationshipDeleted)
         assert len(rel_delete_events) == 1
         assert rel_delete_events[0].relationship_id == rel.id
+        assert rel_delete_events[0].source_id == dog.id
+        assert rel_delete_events[0].target_id == mammal.id
+        assert rel_delete_events[0].property_definition_id == prop.id
 
     def test_delete_class_cleans_up_orphaned_relationships_as_target(self, service):
         """Delete class cleans up relationships where it is the target."""
@@ -744,6 +755,9 @@ class TestDeleteClass:
         rel_delete_events = service._event_publisher.get_events_of_type(RelationshipDeleted)
         assert len(rel_delete_events) == 1
         assert rel_delete_events[0].relationship_id == rel.id
+        assert rel_delete_events[0].source_id == dog.id
+        assert rel_delete_events[0].target_id == mammal.id
+        assert rel_delete_events[0].property_definition_id == prop.id
 
     def test_delete_class_cleans_up_multiple_orphaned_relationships(self, service):
         """Delete class cleans up multiple relationships."""
@@ -936,6 +950,9 @@ class TestDeleteRelationship:
         events = service._event_publisher.get_events_of_type(RelationshipDeleted)
         assert len(events) == 1
         assert events[0].relationship_id == rel.id
+        assert events[0].source_id == dog.id
+        assert events[0].target_id == mammal.id
+        assert events[0].property_definition_id == prop.id
 
         # Verify GraphInvalidated event
         graph_events = service._event_publisher.get_events_of_type(GraphInvalidated)

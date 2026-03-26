@@ -153,6 +153,8 @@ class TestInProcessEventPublisher:
             aggregate_id="class-123",
             class_id="class-123",
             changed_fields=("title",),
+            old_values={"title": "OldTitle"},
+            new_values={"title": "NewTitle"},
         )
 
         publisher.subscribe(ClassCreated, class_created_handler)

@@ -99,10 +99,14 @@ class ClassUpdated(DomainEvent):
     Attributes:
         class_id: ID of the updated class
         changed_fields: Tuple of field names that changed
+        old_values: Dictionary of field names to their previous values
+        new_values: Dictionary of field names to their new values
     """
 
     class_id: str
     changed_fields: tuple[str, ...]
+    old_values: dict[str, str | None]
+    new_values: dict[str, str | None]
 
 
 @dataclass(frozen=True)
@@ -160,9 +164,15 @@ class RelationshipDeleted(DomainEvent):
 
     Attributes:
         relationship_id: ID of the deleted relationship
+        source_id: ID of the source entity
+        target_id: ID of the target entity
+        property_definition_id: ID of the property definition for this relationship type
     """
 
     relationship_id: str
+    source_id: str
+    target_id: str
+    property_definition_id: str
 
 
 @dataclass(frozen=True)
@@ -187,10 +197,14 @@ class TaxonomyUpdated(DomainEvent):
     Attributes:
         taxonomy_id: ID of the updated taxonomy
         changed_fields: Tuple of field names that changed
+        old_values: Dictionary of field names to their previous values
+        new_values: Dictionary of field names to their new values
     """
 
     taxonomy_id: str
     changed_fields: tuple[str, ...]
+    old_values: dict[str, str | None]
+    new_values: dict[str, str | None]
 
 
 @dataclass(frozen=True)
@@ -216,11 +230,15 @@ class SchemeUpdated(DomainEvent):
         scheme_id: ID of the updated concept scheme
         taxonomy_id: ID of the parent taxonomy
         changed_fields: Tuple of field names that changed
+        old_values: Dictionary of field names to their previous values
+        new_values: Dictionary of field names to their new values
     """
 
     scheme_id: str
     taxonomy_id: str
     changed_fields: tuple[str, ...]
+    old_values: dict[str, str | None]
+    new_values: dict[str, str | None]
 
 
 @dataclass(frozen=True)
