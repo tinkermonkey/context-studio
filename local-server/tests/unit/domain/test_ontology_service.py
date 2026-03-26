@@ -1139,7 +1139,7 @@ class TestGetAndListOperations:
         prop_irrelevant.is_relevant = False
         service._repository.save_property_definition(prop_irrelevant)
 
-        prop_unset = service.create_property_definition(
+        service.create_property_definition(
             identifier="related_to", title="Related To"
         )
         # is_relevant is None by default, no save needed
