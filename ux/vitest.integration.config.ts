@@ -10,7 +10,10 @@ export default defineConfig({
       provider: "istanbul",
     },
     exclude: ["node_modules", "dist", "e2e/**"],
-    include: ["test/integration/**/*.integration.test.tsx", "test/integration/**/*.test.tsx"],
+    include: [
+      "test/integration/**/*.integration.test.tsx",
+      "test/integration/**/*.test.tsx",
+    ],
   },
   resolve: {
     alias: {
