@@ -10,6 +10,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from enum import Enum
 from typing import Any
+from types import MappingProxyType
 
 
 class NodeType(str, Enum):
@@ -32,7 +33,7 @@ class ExternalReference:
         uri: The external URI
         label: Human-readable label from the source
         confidence: Match confidence score
-        metadata: Source-specific metadata
+        metadata: Source-specific metadata (immutable proxy around dict, or None)
     """
 
     identifier: str
@@ -40,7 +41,7 @@ class ExternalReference:
     uri: str
     label: str | None = None
     confidence: float | None = None
-    metadata: dict[str, Any] | None = None
+    metadata: MappingProxyType[str, Any] | None = None
 
 
 @dataclass(frozen=True)
@@ -102,7 +103,7 @@ class SearchCriteria:
 
     Attributes:
         query: Optional text search query
-        node_types: Optional filter by entity types (list of node types)
+        node_types: Optional filter by entity types (tuple of node types, immutable)
         taxonomy_id: Optional filter by taxonomy
         concept_scheme_id: Optional filter by concept scheme
         parent_id: Optional filter by parent entity
@@ -112,7 +113,7 @@ class SearchCriteria:
     """
 
     query: str | None = None
-    node_types: list[NodeType] | None = None
+    node_types: tuple[NodeType, ...] | None = None
     taxonomy_id: str | None = None
     concept_scheme_id: str | None = None
     parent_id: str | None = None
