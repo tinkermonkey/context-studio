@@ -9,20 +9,30 @@ from pathlib import Path
 from config import get_settings
 
 
-_logger_cache = {}
-_handlers_initialized = False
+_file_handler = None
+_handler_init_attempted = False
 
 
-def _initialize_handlers() -> None:
+def _get_handler() -> logging.Handler:
     """
-    Initialize file handlers for all cached loggers.
+    Initialize and return a shared handler for all loggers.
 
-    This is deferred from module import time to avoid filesystem access
-    during test collection in sandboxed environments.
+    The handler is created once on first call. If file handler setup fails
+    (e.g., read-only filesystem), falls back to stderr handler.
+
+    Returns:
+        A logging.Handler instance (either RotatingFileHandler or StreamHandler)
     """
-    global _handlers_initialized
-    if _handlers_initialized:
-        return
+    global _file_handler, _handler_init_attempted
+    if _handler_init_attempted:
+        return _file_handler
+
+    _handler_init_attempted = True
+
+    formatter = logging.Formatter(
+        "%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+        datefmt="%Y-%m-%d %H:%M:%S",
+    )
 
     try:
         settings = get_settings()
@@ -35,11 +45,6 @@ def _initialize_handlers() -> None:
 
         log_file = log_dir / "context_studio.log"
 
-        formatter = logging.Formatter(
-            "%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-            datefmt="%Y-%m-%d %H:%M:%S",
-        )
-
         file_handler = logging.handlers.RotatingFileHandler(
             log_file,
             maxBytes=logging_config.max_bytes,
@@ -48,48 +53,39 @@ def _initialize_handlers() -> None:
         file_handler.setLevel(log_level)
         file_handler.setFormatter(formatter)
 
-        # Add handler to all cached loggers
-        for logger in _logger_cache.values():
-            if not logger.handlers:
-                logger.addHandler(file_handler)
-            logger.setLevel(log_level)
-
-        _handlers_initialized = True
-    except Exception:
+        _file_handler = file_handler
+    except OSError as e:
         # If file handler setup fails (e.g., read-only filesystem),
-        # fall back to stderr handler for logging
+        # fall back to stderr handler and print diagnostic message
+        print(f"Warning: Could not set up file logging: {e}", file=sys.stderr)
         fallback_handler = logging.StreamHandler(sys.stderr)
-        fallback_handler.setFormatter(
-            logging.Formatter(
-                "%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-                datefmt="%Y-%m-%d %H:%M:%S",
-            )
-        )
-        for logger in _logger_cache.values():
-            if not logger.handlers:
-                logger.addHandler(fallback_handler)
-        _handlers_initialized = True
+        fallback_handler.setFormatter(formatter)
+        fallback_handler.setLevel(logging.INFO)
+        _file_handler = fallback_handler
+
+    return _file_handler
 
 
 def get_logger(name: str) -> logging.Logger:
     """
     Get a configured logger instance.
 
-    Logger file handlers are initialized lazily on first use to avoid
+    Logger handlers are initialized lazily on first use to avoid
     filesystem access during test collection.
 
     Args:
         name: The name of the logger, typically __name__
 
     Returns:
-        A configured logging.Logger instance
+        A configured logging.Logger instance with handlers attached
     """
-    if name not in _logger_cache:
-        _logger_cache[name] = logging.getLogger(name)
+    logger = logging.getLogger(name)
 
-    logger = _logger_cache[name]
-
-    # Ensure handlers are initialized before returning
-    _initialize_handlers()
+    # Attach handler if logger doesn't already have one
+    if not logger.handlers:
+        handler = _get_handler()
+        if handler:
+            logger.addHandler(handler)
+            logger.setLevel(handler.level)
 
     return logger
