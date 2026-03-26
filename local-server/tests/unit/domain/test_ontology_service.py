@@ -626,6 +626,95 @@ class TestDeleteClass:
         with pytest.raises(EntityNotFoundError, match="Class"):
             service.delete_class(class_id="nonexistent")
 
+    def test_delete_class_cleans_up_orphaned_relationships_as_source(self, service):
+        """Delete class cleans up relationships where it is the source."""
+        tax = service.create_taxonomy(title="Biology")
+        scheme = service.create_scheme(taxonomy_id=tax.id, title="Animals")
+        dog = service.create_class(scheme_id=scheme.id, title="Dog")
+        mammal = service.create_class(scheme_id=scheme.id, title="Mammal")
+        prop = service.create_property_definition(identifier="is_a", title="Is A")
+
+        rel = service.create_relationship(
+            source_id=dog.id,
+            target_id=mammal.id,
+            property_definition_id=prop.id,
+        )
+
+        # Delete the source class
+        service.delete_class(class_id=dog.id)
+
+        # Verify relationship is deleted
+        with pytest.raises(EntityNotFoundError):
+            service.get_relationship(rel.id)
+
+        # Verify RelationshipDeleted event was emitted
+        rel_delete_events = service._event_publisher.get_events_of_type(RelationshipDeleted)
+        assert len(rel_delete_events) == 1
+        assert rel_delete_events[0].relationship_id == rel.id
+
+    def test_delete_class_cleans_up_orphaned_relationships_as_target(self, service):
+        """Delete class cleans up relationships where it is the target."""
+        tax = service.create_taxonomy(title="Biology")
+        scheme = service.create_scheme(taxonomy_id=tax.id, title="Animals")
+        dog = service.create_class(scheme_id=scheme.id, title="Dog")
+        mammal = service.create_class(scheme_id=scheme.id, title="Mammal")
+        prop = service.create_property_definition(identifier="is_a", title="Is A")
+
+        rel = service.create_relationship(
+            source_id=dog.id,
+            target_id=mammal.id,
+            property_definition_id=prop.id,
+        )
+
+        # Delete the target class
+        service.delete_class(class_id=mammal.id)
+
+        # Verify relationship is deleted
+        with pytest.raises(EntityNotFoundError):
+            service.get_relationship(rel.id)
+
+        # Verify RelationshipDeleted event was emitted
+        rel_delete_events = service._event_publisher.get_events_of_type(RelationshipDeleted)
+        assert len(rel_delete_events) == 1
+        assert rel_delete_events[0].relationship_id == rel.id
+
+    def test_delete_class_cleans_up_multiple_orphaned_relationships(self, service):
+        """Delete class cleans up multiple relationships."""
+        tax = service.create_taxonomy(title="Biology")
+        scheme = service.create_scheme(taxonomy_id=tax.id, title="Animals")
+        dog = service.create_class(scheme_id=scheme.id, title="Dog")
+        mammal = service.create_class(scheme_id=scheme.id, title="Mammal")
+        animal = service.create_class(scheme_id=scheme.id, title="Animal")
+        prop1 = service.create_property_definition(identifier="is_a", title="Is A")
+        prop2 = service.create_property_definition(identifier="part_of", title="Part Of")
+
+        rel1 = service.create_relationship(
+            source_id=dog.id,
+            target_id=mammal.id,
+            property_definition_id=prop1.id,
+        )
+        rel2 = service.create_relationship(
+            source_id=mammal.id,
+            target_id=animal.id,
+            property_definition_id=prop2.id,
+        )
+
+        # Delete the middle class (mammal) which is both source and target
+        service.delete_class(class_id=mammal.id)
+
+        # Verify both relationships are deleted
+        with pytest.raises(EntityNotFoundError):
+            service.get_relationship(rel1.id)
+        with pytest.raises(EntityNotFoundError):
+            service.get_relationship(rel2.id)
+
+        # Verify two RelationshipDeleted events were emitted
+        rel_delete_events = service._event_publisher.get_events_of_type(RelationshipDeleted)
+        assert len(rel_delete_events) == 2
+        rel_ids = {e.relationship_id for e in rel_delete_events}
+        assert rel1.id in rel_ids
+        assert rel2.id in rel_ids
+
 
 class TestCreateRelationship:
     """Tests for create_relationship."""
@@ -683,6 +772,54 @@ class TestCreateRelationship:
                 target_id="target",
                 property_definition_id="nonexistent",
             )
+
+    def test_create_relationship_nonexistent_source_raises(self, service):
+        """Create relationship with nonexistent source raises EntityNotFoundError."""
+        tax = service.create_taxonomy(title="Biology")
+        scheme = service.create_scheme(taxonomy_id=tax.id, title="Animals")
+        target = service.create_class(scheme_id=scheme.id, title="Target")
+        prop = service.create_property_definition(identifier="is_a", title="Is A")
+
+        with pytest.raises(EntityNotFoundError, match="Class.*nonexistent"):
+            service.create_relationship(
+                source_id="nonexistent",
+                target_id=target.id,
+                property_definition_id=prop.id,
+            )
+
+    def test_create_relationship_nonexistent_target_raises(self, service):
+        """Create relationship with nonexistent target raises EntityNotFoundError."""
+        tax = service.create_taxonomy(title="Biology")
+        scheme = service.create_scheme(taxonomy_id=tax.id, title="Animals")
+        source = service.create_class(scheme_id=scheme.id, title="Source")
+        prop = service.create_property_definition(identifier="is_a", title="Is A")
+
+        with pytest.raises(EntityNotFoundError, match="Class.*nonexistent"):
+            service.create_relationship(
+                source_id=source.id,
+                target_id="nonexistent",
+                property_definition_id=prop.id,
+            )
+
+    def test_create_relationship_with_valid_entities_emits_correct_taxonomy_id(self, service):
+        """Create relationship correctly uses source class's taxonomy for graph invalidation."""
+        tax = service.create_taxonomy(title="Biology")
+        scheme = service.create_scheme(taxonomy_id=tax.id, title="Animals")
+        dog = service.create_class(scheme_id=scheme.id, title="Dog")
+        mammal = service.create_class(scheme_id=scheme.id, title="Mammal")
+        prop = service.create_property_definition(identifier="is_a", title="Is A")
+
+        rel = service.create_relationship(
+            source_id=dog.id,
+            target_id=mammal.id,
+            property_definition_id=prop.id,
+        )
+
+        # Verify GraphInvalidated event has the correct taxonomy_id from source
+        graph_events = service._event_publisher.get_events_of_type(GraphInvalidated)
+        graph_invalid_from_rel = [e for e in graph_events if e.reason == "relationship_created"]
+        assert len(graph_invalid_from_rel) == 1
+        assert graph_invalid_from_rel[0].taxonomy_id == tax.id
 
 
 class TestDeleteRelationship:

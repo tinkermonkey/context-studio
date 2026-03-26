@@ -566,6 +566,7 @@ class OntologyService:
         Delete a class.
 
         Validates that the class has no subclasses before deletion.
+        Cleans up any orphaned relationships where the class is source or target.
 
         Args:
             class_id: The ID of the class to delete
@@ -582,6 +583,20 @@ class OntologyService:
         subclasses = self._repository.list_classes(parent_class_id=class_id)
         if subclasses:
             raise OntologyError(f"Cannot delete class {class_id}: it has {len(subclasses)} subclass(es)")
+
+        # Find and delete all relationships where this class is source or target
+        orphaned_relationships = self._repository.list_relationships(
+            source_id=class_id
+        ) + self._repository.list_relationships(target_id=class_id)
+
+        for relationship in orphaned_relationships:
+            self._repository.delete_relationship(relationship.id)
+            self._event_publisher.publish(RelationshipDeleted(
+                event_id=str(uuid4()),
+                occurred_at=datetime.utcnow(),
+                aggregate_id=relationship.id,
+                relationship_id=relationship.id,
+            ))
 
         self._repository.delete_class(class_id)
 
@@ -702,6 +717,7 @@ class OntologyService:
 
         Validates that:
         - source_id != target_id (no self-loops)
+        - Both source and target entities exist
         - The property definition exists
 
         Args:
@@ -714,7 +730,7 @@ class OntologyService:
 
         Raises:
             ValueError: If source_id == target_id
-            EntityNotFoundError: If the property definition does not exist
+            EntityNotFoundError: If source, target, or property definition does not exist
         """
         if source_id == target_id:
             raise ValueError("A relationship cannot have the same source and target")
@@ -723,6 +739,16 @@ class OntologyService:
         prop_def = self._repository.get_property_definition(property_definition_id)
         if prop_def is None:
             raise EntityNotFoundError("PropertyDefinition", property_definition_id)
+
+        # Validate source entity exists
+        source_class = self._repository.get_class(source_id)
+        if source_class is None:
+            raise EntityNotFoundError("Class", source_id)
+
+        # Validate target entity exists
+        target_class = self._repository.get_class(target_id)
+        if target_class is None:
+            raise EntityNotFoundError("Class", target_id)
 
         relationship_id = str(uuid4())
         relationship = Relationship(
@@ -734,10 +760,8 @@ class OntologyService:
         )
         self._repository.save_relationship(relationship)
 
-        # Determine which taxonomy this relationship belongs to (for graph invalidation)
-        # Try to find the source as a Class to get its taxonomy
-        source_class = self._repository.get_class(source_id)
-        taxonomy_id = source_class.taxonomy_id if source_class else source_id
+        # Determine which taxonomy this relationship belongs to using the source class
+        taxonomy_id = source_class.taxonomy_id
 
         self._event_publisher.publish(RelationshipCreated(
             event_id=str(uuid4()),
