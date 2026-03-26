@@ -108,10 +108,12 @@ class Class:
         title: Display name for the class
         definition: Optional longer description
         parent_class_id: Optional ID of the parent class for hierarchy
+        structural_property_id: Optional ID of the primary structural relationship property definition
         external_references: List of references to external knowledge bases
         lexical_senses: List of lexical representations (labels in different languages)
         data_properties: List of data property values on this class
-        embedding: Optional bytes representing the embedding (serialized float32 array)
+        title_embedding: Optional bytes representing the embedding of the title (serialized float32 array)
+        definition_embedding: Optional bytes representing the embedding of the definition (serialized float32 array)
         created_at: Timestamp of creation
         last_modified: Timestamp of last modification
         version: Version number for optimistic concurrency control
@@ -123,10 +125,12 @@ class Class:
     title: str
     definition: str | None = None
     parent_class_id: str | None = None
+    structural_property_id: str | None = None
     external_references: list[ExternalReference] = field(default_factory=list)
     lexical_senses: list[LexicalSense] = field(default_factory=list)
     data_properties: list[DataPropertyValue] = field(default_factory=list)
-    embedding: bytes | None = None
+    title_embedding: bytes | None = None
+    definition_embedding: bytes | None = None
     created_at: datetime | None = None
     last_modified: datetime | None = None
     version: int = 1
@@ -220,6 +224,7 @@ class Relationship:
         source_id: ID of the source entity
         target_id: ID of the target entity
         property_definition_id: ID of the property definition that defines this relationship type
+        property_label: Denormalized display label for the relationship type (from PropertyDefinition title)
         created_at: Timestamp of creation (auto-generated on instantiation)
 
     Raises:
@@ -230,6 +235,7 @@ class Relationship:
     source_id: str
     target_id: str
     property_definition_id: str
+    property_label: str
     created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
 
     def __post_init__(self) -> None:
