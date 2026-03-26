@@ -491,6 +491,28 @@ class TestUpdateClass:
         events = service._event_publisher.get_events_of_type(ClassUpdated)
         assert len(events) == 0
 
+    def test_update_class_duplicate_title_in_scheme_raises(self, service):
+        """Update class to duplicate title in same scheme raises DuplicateEntityError."""
+        tax = service.create_taxonomy(title="Biology")
+        scheme = service.create_scheme(taxonomy_id=tax.id, title="Animals")
+        cls1 = service.create_class(scheme_id=scheme.id, title="Dog")
+        cls2 = service.create_class(scheme_id=scheme.id, title="Cat")
+
+        with pytest.raises(DuplicateEntityError, match="already exists"):
+            service.update_class(class_id=cls2.id, title="Dog")
+
+    def test_update_class_same_title_different_scheme_allowed(self, service):
+        """Update class to title that exists in different scheme is allowed."""
+        tax = service.create_taxonomy(title="Biology")
+        scheme1 = service.create_scheme(taxonomy_id=tax.id, title="Animals")
+        scheme2 = service.create_scheme(taxonomy_id=tax.id, title="Plants")
+        cls1 = service.create_class(scheme_id=scheme1.id, title="Life")
+        cls2 = service.create_class(scheme_id=scheme2.id, title="Organism")
+
+        # This should succeed because Life is in a different scheme
+        updated = service.update_class(class_id=cls2.id, title="Life")
+        assert updated.title == "Life"
+
     def test_update_class_nonexistent_raises(self, service):
         """Update nonexistent class raises EntityNotFoundError."""
         with pytest.raises(EntityNotFoundError, match="Class"):

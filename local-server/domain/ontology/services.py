@@ -512,6 +512,10 @@ class OntologyService:
         """
         Update a class's title and/or description.
 
+        Validates that:
+        - The class exists
+        - If a new title is provided, it is unique within the scheme (excluding the current class)
+
         If either title or description changed, regenerates the embedding.
         If neither changed, skips embedding regeneration.
 
@@ -525,6 +529,7 @@ class OntologyService:
 
         Raises:
             EntityNotFoundError: If the class does not exist
+            DuplicateEntityError: If a class with the new title already exists in this scheme
         """
         cls = self._repository.get_class(class_id)
         if cls is None:
@@ -532,6 +537,12 @@ class OntologyService:
 
         title_changed = title is not None and title != cls.title
         desc_changed = description is not None and description != cls.description
+
+        # Check for duplicate title within this scheme if title is changing
+        if title_changed:
+            existing_classes = self._repository.list_classes(scheme_id=cls.scheme_id)
+            if any(c.title == title and c.id != class_id for c in existing_classes):
+                raise DuplicateEntityError(f"Class with title '{title}' already exists in this scheme")
 
         if title is not None:
             cls.rename(title)
