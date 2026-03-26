@@ -181,7 +181,7 @@ class Individual:
         class_id: ID of the class this individual instantiates
         title: Display name for the individual
         definition: Optional longer description
-        data_property_values: List of data property values for this individual
+        data_properties: List of data property values for this individual
         external_references: List of references to external knowledge bases
         created_at: Timestamp of creation
         last_modified: Timestamp of last modification
@@ -192,7 +192,7 @@ class Individual:
     class_id: str
     title: str
     definition: str | None = None
-    data_property_values: list[DataPropertyValue] = field(default_factory=list)
+    data_properties: list[DataPropertyValue] = field(default_factory=list)
     external_references: list[ExternalReference] = field(default_factory=list)
     created_at: datetime | None = None
     last_modified: datetime | None = None

@@ -869,12 +869,15 @@ class OntologyService:
         if source_class:
             taxonomy_id = source_class.taxonomy_id
         else:
-            # Try source as an Individual
-            source_individual = self._repository.get_individual(relationship.source_id)
-            if source_individual:
-                individual_class = self._repository.get_class(source_individual.class_id)
-                if individual_class:
-                    taxonomy_id = individual_class.taxonomy_id
+            # Try source as an Individual (not yet implemented in Phase 1)
+            try:
+                source_individual = self._repository.get_individual(relationship.source_id)
+                if source_individual:
+                    individual_class = self._repository.get_class(source_individual.class_id)
+                    if individual_class:
+                        taxonomy_id = individual_class.taxonomy_id
+            except NotImplementedError:
+                pass
 
         # If source didn't yield taxonomy, try target the same way
         if not taxonomy_id:
@@ -882,11 +885,15 @@ class OntologyService:
             if target_class:
                 taxonomy_id = target_class.taxonomy_id
             else:
-                target_individual = self._repository.get_individual(relationship.target_id)
-                if target_individual:
-                    individual_class = self._repository.get_class(target_individual.class_id)
-                    if individual_class:
-                        taxonomy_id = individual_class.taxonomy_id
+                # Try target as an Individual (not yet implemented in Phase 1)
+                try:
+                    target_individual = self._repository.get_individual(relationship.target_id)
+                    if target_individual:
+                        individual_class = self._repository.get_class(target_individual.class_id)
+                        if individual_class:
+                            taxonomy_id = individual_class.taxonomy_id
+                except NotImplementedError:
+                    pass
 
         # Only emit GraphInvalidated if we found a valid taxonomy
         if taxonomy_id:

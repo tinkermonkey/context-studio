@@ -344,7 +344,7 @@ class TestIndividual:
         assert ind.class_id == "class-1"
         assert ind.title == "Fido"
         assert ind.definition is None
-        assert ind.data_property_values == []
+        assert ind.data_properties == []
 
     def test_individual_creation_with_description(self):
         """Create an individual with description."""
@@ -357,9 +357,9 @@ class TestIndividual:
             DataPropertyValue(property_identifier="age", value=5, datatype="xsd:integer"),
             DataPropertyValue(property_identifier="name", value="Fido"),
         ]
-        ind = Individual(id="ind-1", class_id="class-1", title="Fido", data_property_values=props)
-        assert len(ind.data_property_values) == 2
-        assert ind.data_property_values[0].value == 5
+        ind = Individual(id="ind-1", class_id="class-1", title="Fido", data_properties=props)
+        assert len(ind.data_properties) == 2
+        assert ind.data_properties[0].value == 5
 
     def test_individual_rename(self):
         """Rename an individual."""

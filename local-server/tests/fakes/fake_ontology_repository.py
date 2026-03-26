@@ -197,10 +197,10 @@ class FakeOntologyRepository:
     def get_individual(self, individual_id: str) -> Individual | None:
         """Individuals are not supported in Phase 1.
 
-        Return None to indicate the individual does not exist,
-        consistent with the method signature -> Individual | None.
+        Raises:
+            NotImplementedError: Individual operations are deferred to Phase 2
         """
-        return None
+        raise NotImplementedError("Individual operations are deferred to Phase 2")
 
     def list_individuals(self, class_id: str | None = None) -> list[Individual]:
         raise NotImplementedError("Individual operations are deferred to Phase 2")
