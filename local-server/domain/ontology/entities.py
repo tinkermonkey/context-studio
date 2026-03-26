@@ -16,6 +16,7 @@ from .value_objects import (
     DataPropertyValue,
     ExternalReference,
     LexicalSense,
+    OntologyMapping,
 )
 
 
@@ -103,9 +104,12 @@ class Class:
         title: Display name for the class
         description: Optional longer description
         parent_class_id: Optional ID of the parent class for hierarchy
+        structural_property_id: Optional ID of the primary structural relationship property definition
         external_references: List of references to external knowledge bases
         lexical_senses: List of lexical representations (labels in different languages)
-        embedding: Optional bytes representation of the semantic embedding
+        data_properties: List of data property values on this class
+        title_embedding: Optional bytes representation of the title embedding
+        definition_embedding: Optional bytes representation of the definition embedding
         created_at: Timestamp of creation
         updated_at: Timestamp of last modification
     """
@@ -116,9 +120,12 @@ class Class:
     title: str
     description: str | None = None
     parent_class_id: str | None = None
+    structural_property_id: str | None = None
     external_references: list[ExternalReference] = field(default_factory=list)
     lexical_senses: list[LexicalSense] = field(default_factory=list)
-    embedding: bytes | None = None
+    data_properties: list[DataPropertyValue] = field(default_factory=list)
+    title_embedding: bytes | None = None
+    definition_embedding: bytes | None = None
     created_at: datetime = field(default_factory=datetime.utcnow)
     updated_at: datetime = field(default_factory=datetime.utcnow)
 
@@ -207,6 +214,7 @@ class Relationship:
         source_id: ID of the source entity
         target_id: ID of the target entity
         property_definition_id: ID of the property definition that defines this relationship type
+        property_label: Denormalized label for display (from the property definition)
         created_at: Timestamp of creation
 
     Raises:
@@ -217,6 +225,7 @@ class Relationship:
     source_id: str
     target_id: str
     property_definition_id: str
+    property_label: str
     created_at: datetime = field(default_factory=datetime.utcnow)
 
     def __post_init__(self) -> None:
@@ -235,6 +244,8 @@ class PropertyDefinition:
         identifier: Machine-readable identifier for the property
         title: Display name for the property
         description: Optional longer description
+        ontology_mapping: Optional mapping to an external ontology standard
+        is_relevant: Optional relevance flag (None=not evaluated, True=relevant, False=irrelevant)
         created_at: Timestamp of creation
         updated_at: Timestamp of last modification
     """
@@ -243,6 +254,8 @@ class PropertyDefinition:
     identifier: str
     title: str
     description: str | None = None
+    ontology_mapping: OntologyMapping | None = None
+    is_relevant: bool | None = None
     created_at: datetime = field(default_factory=datetime.utcnow)
     updated_at: datetime = field(default_factory=datetime.utcnow)
 

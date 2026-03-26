@@ -71,17 +71,19 @@ class DataPropertyValue:
 @dataclass(frozen=True)
 class OntologyMapping:
     """
-    Mapping between entities in different ontologies.
+    Maps a PropertyDefinition to an external ontology standard.
 
     Attributes:
-        source_id: ID of the source entity
-        target_id: ID of the target entity
-        mapping_type: Type of mapping: "exactMatch", "closeMatch", "broadMatch", "narrowMatch"
+        ontology: The ontology standard (e.g., "owl", "rdfs", "skos", "conceptnet")
+        uri: The property URI in that ontology
+        label: Optional human-readable label
+        exact_match: Whether this is an exact semantic match
     """
 
-    source_id: str
-    target_id: str
-    mapping_type: str
+    ontology: str
+    uri: str
+    label: str | None = None
+    exact_match: bool = False
 
 
 @dataclass(frozen=True)
