@@ -28,17 +28,17 @@ class Taxonomy:
     Attributes:
         id: Unique identifier (UUID as string)
         title: Display name for the taxonomy
-        description: Optional longer description
+        definition: Optional longer description
         created_at: Timestamp of creation
-        updated_at: Timestamp of last modification
+        last_modified: Timestamp of last modification
         version: Version number for optimistic concurrency control
     """
 
     id: str
     title: str
-    description: str | None = None
+    definition: str | None = None
     created_at: datetime | None = None
-    updated_at: datetime | None = None
+    last_modified: datetime | None = None
     version: int = 1
 
     def rename(self, new_title: str) -> None:
@@ -54,7 +54,7 @@ class Taxonomy:
         if not new_title or not new_title.strip():
             raise ValueError("Title cannot be empty")
         self.title = new_title
-        self.updated_at = datetime.now(timezone.utc)
+        self.last_modified = datetime.now(timezone.utc)
 
 
 @dataclass
@@ -66,18 +66,18 @@ class ConceptScheme:
         id: Unique identifier (UUID as string)
         taxonomy_id: ID of the parent taxonomy
         title: Display name for the scheme
-        description: Optional longer description
+        definition: Optional longer description
         created_at: Timestamp of creation
-        updated_at: Timestamp of last modification
+        last_modified: Timestamp of last modification
         version: Version number for optimistic concurrency control
     """
 
     id: str
     taxonomy_id: str
     title: str
-    description: str | None = None
+    definition: str | None = None
     created_at: datetime | None = None
-    updated_at: datetime | None = None
+    last_modified: datetime | None = None
     version: int = 1
 
     def rename(self, new_title: str) -> None:
@@ -93,7 +93,7 @@ class ConceptScheme:
         if not new_title or not new_title.strip():
             raise ValueError("Title cannot be empty")
         self.title = new_title
-        self.updated_at = datetime.now(timezone.utc)
+        self.last_modified = datetime.now(timezone.utc)
 
 
 @dataclass
@@ -103,36 +103,36 @@ class Class:
 
     Attributes:
         id: Unique identifier (UUID as string)
-        scheme_id: ID of the parent concept scheme
+        concept_scheme_id: ID of the parent concept scheme
         taxonomy_id: ID of the parent taxonomy
         title: Display name for the class
-        description: Optional longer description
+        definition: Optional longer description
         parent_class_id: Optional ID of the parent class for hierarchy
         structural_property_id: Optional ID of the primary structural relationship property definition
         external_references: List of references to external knowledge bases
         lexical_senses: List of word sense disambiguation entries (e.g., WordNet synsets)
         data_properties: List of data property values on this class
         title_embedding: Optional bytes representing the embedding of the title (serialized float32 array)
-        description_embedding: Optional bytes representing the embedding of the description (serialized float32 array)
+        definition_embedding: Optional bytes representing the embedding of the definition (serialized float32 array)
         created_at: Timestamp of creation
-        updated_at: Timestamp of last modification
+        last_modified: Timestamp of last modification
         version: Version number for optimistic concurrency control
     """
 
     id: str
-    scheme_id: str
+    concept_scheme_id: str
     taxonomy_id: str
     title: str
-    description: str | None = None
+    definition: str | None = None
     parent_class_id: str | None = None
     structural_property_id: str | None = None
     external_references: list[ExternalReference] = field(default_factory=list)
     lexical_senses: list[LexicalSense] = field(default_factory=list)
     data_properties: list[DataPropertyValue] = field(default_factory=list)
     title_embedding: bytes | None = None
-    description_embedding: bytes | None = None
+    definition_embedding: bytes | None = None
     created_at: datetime | None = None
-    updated_at: datetime | None = None
+    last_modified: datetime | None = None
     version: int = 1
 
     def rename(self, new_title: str) -> None:
@@ -148,7 +148,7 @@ class Class:
         if not new_title or not new_title.strip():
             raise ValueError("Title cannot be empty")
         self.title = new_title
-        self.updated_at = datetime.now(timezone.utc)
+        self.last_modified = datetime.now(timezone.utc)
 
     def add_subclass_of(self, parent_id: str) -> None:
         """
@@ -163,12 +163,12 @@ class Class:
         if parent_id == self.id:
             raise ValueError("A class cannot be its own parent")
         self.parent_class_id = parent_id
-        self.updated_at = datetime.now(timezone.utc)
+        self.last_modified = datetime.now(timezone.utc)
 
     def remove_subclass_of(self) -> None:
         """Remove the parent class relationship (set to None)."""
         self.parent_class_id = None
-        self.updated_at = datetime.now(timezone.utc)
+        self.last_modified = datetime.now(timezone.utc)
 
 
 @dataclass
@@ -180,22 +180,22 @@ class Individual:
         id: Unique identifier (UUID as string)
         class_id: ID of the class this individual instantiates
         title: Display name for the individual
-        description: Optional longer description
+        definition: Optional longer description
         data_properties: List of data property values for this individual
         external_references: List of references to external knowledge bases
         created_at: Timestamp of creation
-        updated_at: Timestamp of last modification
+        last_modified: Timestamp of last modification
         version: Version number for optimistic concurrency control
     """
 
     id: str
     class_id: str
     title: str
-    description: str | None = None
+    definition: str | None = None
     data_properties: list[DataPropertyValue] = field(default_factory=list)
     external_references: list[ExternalReference] = field(default_factory=list)
     created_at: datetime | None = None
-    updated_at: datetime | None = None
+    last_modified: datetime | None = None
     version: int = 1
 
     def rename(self, new_title: str) -> None:
@@ -211,7 +211,7 @@ class Individual:
         if not new_title or not new_title.strip():
             raise ValueError("Title cannot be empty")
         self.title = new_title
-        self.updated_at = datetime.now(timezone.utc)
+        self.last_modified = datetime.now(timezone.utc)
 
 
 @dataclass
@@ -251,22 +251,22 @@ class PropertyDefinition:
         id: Unique identifier (UUID as string)
         identifier: Machine-readable identifier for the property
         title: Display name for the property
-        description: Optional longer description
+        definition: Optional longer description
         ontology_mapping: Optional mapping to an external ontology standard
         is_relevant: Optional relevance flag (None=not evaluated, True=relevant, False=irrelevant)
         created_at: Timestamp of creation
-        updated_at: Timestamp of last modification
+        last_modified: Timestamp of last modification
         version: Version number for optimistic concurrency control
     """
 
     id: str
     identifier: str
     title: str
-    description: str | None = None
+    definition: str | None = None
     ontology_mapping: OntologyMapping | None = None
     is_relevant: bool | None = None
     created_at: datetime | None = None
-    updated_at: datetime | None = None
+    last_modified: datetime | None = None
     version: int = 1
 
     def rename(self, new_title: str) -> None:
@@ -282,4 +282,4 @@ class PropertyDefinition:
         if not new_title or not new_title.strip():
             raise ValueError("Title cannot be empty")
         self.title = new_title
-        self.updated_at = datetime.now(timezone.utc)
+        self.last_modified = datetime.now(timezone.utc)

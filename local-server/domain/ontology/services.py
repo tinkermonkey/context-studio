@@ -83,9 +83,9 @@ class OntologyService:
         taxonomy = Taxonomy(
             id=taxonomy_id,
             title=title,
-            description=description,
+            definition=description,
             created_at=datetime.now(timezone.utc),
-            updated_at=datetime.now(timezone.utc),
+            last_modified=datetime.now(timezone.utc),
         )
         taxonomy = self._repository.save_taxonomy(taxonomy)
 
@@ -242,9 +242,9 @@ class OntologyService:
             id=scheme_id,
             taxonomy_id=taxonomy_id,
             title=title,
-            description=description,
+            definition=description,
             created_at=datetime.now(timezone.utc),
-            updated_at=datetime.now(timezone.utc),
+            last_modified=datetime.now(timezone.utc),
         )
         scheme = self._repository.save_concept_scheme(scheme)
 
@@ -417,7 +417,7 @@ class OntologyService:
             if parent_class is None:
                 raise EntityNotFoundError("Class", parent_class_id)
             # Verify parent is in the same scheme
-            if parent_class.scheme_id != concept_scheme_id:
+            if parent_class.concept_scheme_id != concept_scheme_id:
                 raise ValueError(f"Parent class {parent_class_id} is not in the same scheme")
 
         class_id = str(uuid4())
@@ -428,14 +428,14 @@ class OntologyService:
 
         cls = Class(
             id=class_id,
-            scheme_id=concept_scheme_id,
+            concept_scheme_id=concept_scheme_id,
             taxonomy_id=scheme.taxonomy_id,
             title=title,
-            description=description,
+            definition=description,
             parent_class_id=parent_class_id,
             title_embedding=embedding,
             created_at=datetime.now(timezone.utc),
-            updated_at=datetime.now(timezone.utc),
+            last_modified=datetime.now(timezone.utc),
         )
         cls = self._repository.save_class(cls)
 
@@ -526,25 +526,25 @@ class OntologyService:
 
         # Capture old values before modification
         old_title = cls.title
-        old_description = cls.description
+        old_definition = cls.definition
 
         title_changed = title is not None and title != cls.title
-        def_changed = description is not None and description != cls.description
+        def_changed = description is not None and description != cls.definition
 
         # Check for duplicate title within this scheme if title is changing
         if title_changed:
-            existing_classes = self._repository.list_classes(concept_scheme_id=cls.scheme_id)
+            existing_classes = self._repository.list_classes(concept_scheme_id=cls.concept_scheme_id)
             if any(c.title == title and c.id != class_id for c in existing_classes):
                 raise DuplicateEntityError(f"Class with title '{title}' already exists in this scheme")
 
         if title is not None and title_changed:
             cls.rename(title)
         if def_changed:
-            cls.description = description
+            cls.definition = description
 
         # Regenerate embedding only if title or description changed
         if title_changed or def_changed:
-            embed_text = f"{cls.title} {cls.description or ''}".strip()
+            embed_text = f"{cls.title} {cls.definition or ''}".strip()
             embedding = self._embedding_service.embed_text(embed_text)
             cls.title_embedding = embedding
 
@@ -552,10 +552,10 @@ class OntologyService:
         if not (title_changed or def_changed):
             return cls
 
-        cls.updated_at = datetime.now(timezone.utc)
+        cls.last_modified = datetime.now(timezone.utc)
         cls = self._repository.save_class(cls)
 
-        changed = tuple(f for f, was_changed in [("title", title_changed), ("description", def_changed)] if was_changed)
+        changed = tuple(f for f, was_changed in [("title", title_changed), ("definition", def_changed)] if was_changed)
 
         old_values: dict[str, str | None] = {}
         new_values: dict[str, str | None] = {}
@@ -563,8 +563,8 @@ class OntologyService:
             old_values["title"] = old_title
             new_values["title"] = cls.title
         if def_changed:
-            old_values["description"] = old_description
-            new_values["description"] = cls.description
+            old_values["definition"] = old_definition
+            new_values["definition"] = cls.definition
 
         self._event_publisher.publish(ClassUpdated(
             class_id=class_id,
@@ -673,7 +673,7 @@ class OntologyService:
             new_parent = self._repository.get_class(new_parent_id)
             if new_parent is None:
                 raise EntityNotFoundError("Class", new_parent_id)
-            if new_parent.scheme_id != cls.scheme_id:
+            if new_parent.concept_scheme_id != cls.concept_scheme_id:
                 raise ValueError(f"Parent class {new_parent_id} is not in the same scheme")
 
             # Traverse ancestor chain of new_parent_id looking for class_id
@@ -939,9 +939,9 @@ class OntologyService:
             id=property_id,
             identifier=identifier,
             title=title,
-            description=description,
+            definition=description,
             created_at=datetime.now(timezone.utc),
-            updated_at=datetime.now(timezone.utc),
+            last_modified=datetime.now(timezone.utc),
         )
         prop_def = self._repository.save_property_definition(prop_def)
 

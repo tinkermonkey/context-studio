@@ -91,7 +91,7 @@ class FakeOntologyRepository:
     ) -> list[Class]:
         results = list(self._classes.values())
         if concept_scheme_id is not None:
-            results = [c for c in results if c.scheme_id == concept_scheme_id]
+            results = [c for c in results if c.concept_scheme_id == concept_scheme_id]
         if parent_class_id is not None:
             results = [c for c in results if c.parent_class_id == parent_class_id]
         return results[offset : offset + limit]
@@ -105,11 +105,11 @@ class FakeOntologyRepository:
                 c
                 for c in results
                 if query_lower in c.title.lower()
-                or (c.description and query_lower in c.description.lower())
+                or (c.definition and query_lower in c.definition.lower())
             ]
 
         if criteria.concept_scheme_id:
-            results = [c for c in results if c.scheme_id == criteria.concept_scheme_id]
+            results = [c for c in results if c.concept_scheme_id == criteria.concept_scheme_id]
 
         if criteria.taxonomy_id:
             results = [c for c in results if c.taxonomy_id == criteria.taxonomy_id]
@@ -118,7 +118,7 @@ class FakeOntologyRepository:
 
     def count_classes(self, concept_scheme_id: str | None = None) -> int:
         if concept_scheme_id:
-            return sum(1 for c in self._classes.values() if c.scheme_id == concept_scheme_id)
+            return sum(1 for c in self._classes.values() if c.concept_scheme_id == concept_scheme_id)
         return len(self._classes)
 
     def save_class(self, cls: Class) -> Class:
