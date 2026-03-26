@@ -1,4 +1,6 @@
 import sys
+import os
+import importlib.util
 from pathlib import Path
 from logging.config import fileConfig
 
@@ -6,6 +8,7 @@ from sqlalchemy import engine_from_config
 from sqlalchemy import pool
 
 from alembic import context
+from alembic.config import Config
 
 # Add local-server root to path for imports
 local_server_root = Path(__file__).parent.parent.parent
@@ -23,11 +26,31 @@ if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
 # Check if this is an operations database migration
-# If -x db=operations is passed, this env.py should return early
+# If -x db=operations is passed, delegate to operations/env.py
 x_args = context.get_x_argument(as_dictionary=True)
 if x_args.get("db") == "operations":
-    # Route operations migrations to operations/env.py instead
-    sys.exit(0)
+    # Programmatically invoke operations environment
+    operations_env_path = Path(__file__).parent / "operations" / "env.py"
+
+    if operations_env_path.exists():
+        # Load operations config from the same alembic.ini
+        operations_config = Config(str(Path(__file__).parent / "alembic.ini"))
+        operations_config.set_main_option(
+            "sqlalchemy.url",
+            os.environ.get("OPERATIONS_DB_URL", "sqlite:///./operations.db")
+        )
+
+        # Import and execute operations environment
+        spec = importlib.util.spec_from_file_location("operations_env", operations_env_path)
+        operations_env_module = importlib.util.module_from_spec(spec)
+        operations_env_module.config = operations_config
+        operations_env_module.context = context
+        spec.loader.exec_module(operations_env_module)
+
+        # Operations env has handled the migration
+        sys.exit(0)
+    else:
+        raise FileNotFoundError(f"Operations environment not found at {operations_env_path}")
 
 # add your model's MetaData object here
 # for 'autogenerate' support

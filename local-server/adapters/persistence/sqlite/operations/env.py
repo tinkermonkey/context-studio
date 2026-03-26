@@ -1,3 +1,4 @@
+import os
 import sys
 from pathlib import Path
 from logging.config import fileConfig
@@ -30,13 +31,6 @@ config = context.config
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
-# Check if this is an operations database migration
-# If -x db=operations is NOT passed (or if db is set to something else), return early
-x_args = context.get_x_argument(as_dictionary=True)
-if x_args.get("db") not in ("operations", None):
-    # Not for us — main env.py handles it
-    sys.exit(0)
-
 # other values from the config, defined by the needs of env.py,
 # can be acquired:
 # my_important_option = config.get_main_option("my_important_option")
@@ -55,7 +49,6 @@ def run_migrations_offline() -> None:
     script output.
 
     """
-    import os
     url = os.environ.get("OPERATIONS_DB_URL", "sqlite:///./operations.db")
     context.configure(
         url=url,
@@ -75,7 +68,6 @@ def run_migrations_online() -> None:
     and associate a connection with the context.
 
     """
-    import os
     configuration = config.get_section(config.config_ini_section)
     configuration["sqlalchemy.url"] = os.environ.get("OPERATIONS_DB_URL", "sqlite:///./operations.db")
 
