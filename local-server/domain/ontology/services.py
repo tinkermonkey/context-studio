@@ -87,7 +87,7 @@ class OntologyService:
             created_at=datetime.now(timezone.utc),
             last_modified=datetime.now(timezone.utc),
         )
-        self._repository.save_taxonomy(taxonomy)
+        taxonomy = self._repository.save_taxonomy(taxonomy)
 
         self._event_publisher.publish(TaxonomyCreated(
             taxonomy_id=taxonomy_id,
@@ -161,7 +161,7 @@ class OntologyService:
         old_title = taxonomy.title
 
         taxonomy.rename(new_title)
-        self._repository.save_taxonomy(taxonomy)
+        taxonomy = self._repository.save_taxonomy(taxonomy)
 
         self._event_publisher.publish(TaxonomyUpdated(
             taxonomy_id=taxonomy_id,
@@ -246,7 +246,7 @@ class OntologyService:
             created_at=datetime.now(timezone.utc),
             last_modified=datetime.now(timezone.utc),
         )
-        self._repository.save_concept_scheme(scheme)
+        scheme = self._repository.save_concept_scheme(scheme)
 
         self._event_publisher.publish(SchemeCreated(
             concept_scheme_id=scheme_id,
@@ -324,7 +324,7 @@ class OntologyService:
         old_title = scheme.title
 
         scheme.rename(new_title)
-        self._repository.save_concept_scheme(scheme)
+        scheme = self._repository.save_concept_scheme(scheme)
 
         self._event_publisher.publish(SchemeUpdated(
             concept_scheme_id=scheme_id,
@@ -437,7 +437,7 @@ class OntologyService:
             created_at=datetime.now(timezone.utc),
             last_modified=datetime.now(timezone.utc),
         )
-        self._repository.save_class(cls)
+        cls = self._repository.save_class(cls)
 
         self._event_publisher.publish(ClassCreated(
             class_id=class_id,
@@ -553,7 +553,7 @@ class OntologyService:
             return cls
 
         cls.last_modified = datetime.now(timezone.utc)
-        self._repository.save_class(cls)
+        cls = self._repository.save_class(cls)
 
         changed = tuple(f for f, was_changed in [("title", title_changed), ("definition", def_changed)] if was_changed)
 
@@ -697,7 +697,7 @@ class OntologyService:
         else:
             cls.add_subclass_of(new_parent_id)
 
-        self._repository.save_class(cls)
+        cls = self._repository.save_class(cls)
 
         self._event_publisher.publish(ClassMoved(
             class_id=class_id,
@@ -780,7 +780,7 @@ class OntologyService:
             target_id=target_id,
             property_definition_id=property_definition_id,
         )
-        self._repository.save_relationship(relationship)
+        relationship = self._repository.save_relationship(relationship)
 
         # Determine which taxonomy this relationship belongs to using the source class
         taxonomy_id = source_class.taxonomy_id
@@ -942,7 +942,7 @@ class OntologyService:
             date_created=datetime.now(timezone.utc),
             date_modified=datetime.now(timezone.utc),
         )
-        self._repository.save_property_definition(prop_def)
+        prop_def = self._repository.save_property_definition(prop_def)
 
         self._event_publisher.publish(PropertyDefinitionCreated(
             property_id=property_id,
