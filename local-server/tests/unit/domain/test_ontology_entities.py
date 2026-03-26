@@ -180,8 +180,8 @@ class TestClass:
     def test_class_with_external_references(self):
         """Create a class with external references."""
         refs = [
-            ExternalReference(source="DBpedia", uri="http://dbpedia.org/resource/Dog_(animal)", label="Dog"),
-            ExternalReference(source="schema.org", uri="http://schema.org/Animal", label="Animal"),
+            ExternalReference(identifier="dog_dbpedia", source="DBpedia", uri="http://dbpedia.org/resource/Dog_(animal)", label="Dog"),
+            ExternalReference(identifier="animal_schema", source="schema.org", uri="http://schema.org/Animal", label="Animal"),
         ]
         cls = Class(
             id="class-1",
@@ -196,8 +196,8 @@ class TestClass:
     def test_class_with_lexical_senses(self):
         """Create a class with lexical senses."""
         senses = [
-            LexicalSense(synset_id="synset-1", definition="A domesticated carnivorous mammal", lemma="dog"),
-            LexicalSense(synset_id="synset-2", definition="Un mammifère carnivore domestique", lemma="chien"),
+            LexicalSense(label="dog", language_code="en", sense_type="noun"),
+            LexicalSense(label="chien", language_code="fr", sense_type="noun"),
         ]
         cls = Class(
             id="class-1",
@@ -207,7 +207,7 @@ class TestClass:
             lexical_senses=senses,
         )
         assert len(cls.lexical_senses) == 2
-        assert cls.lexical_senses[1].lemma == "chien"
+        assert cls.lexical_senses[1].label == "chien"
 
 
 class TestIndividual:
@@ -230,8 +230,8 @@ class TestIndividual:
     def test_individual_creation_with_data_properties(self):
         """Create an individual with data property values."""
         props = [
-            DataPropertyValue(key="age", value=5, datatype="xsd:integer"),
-            DataPropertyValue(key="name", value="Fido"),
+            DataPropertyValue(property_identifier="age", value=5, datatype="xsd:integer"),
+            DataPropertyValue(property_identifier="name", value="Fido"),
         ]
         ind = Individual(id="ind-1", class_id="class-1", title="Fido", data_property_values=props)
         assert len(ind.data_property_values) == 2
