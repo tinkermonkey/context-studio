@@ -1073,6 +1073,48 @@ class TestGetAndListOperations:
         assert len(by_target) == 1
         assert by_target[0].id == rel.id
 
+        # Filter by property_id
+        by_property = service.list_relationships(property_id=prop.id)
+        assert len(by_property) == 1
+        assert by_property[0].id == rel.id
+
+    def test_list_relationships_filtered_by_property(self, service):
+        """List relationships filtered by property_id."""
+        tax = service.create_taxonomy(title="Biology")
+        scheme = service.create_scheme(taxonomy_id=tax.id, title="Animals")
+        dog = service.create_class(scheme_id=scheme.id, title="Dog")
+        mammal = service.create_class(scheme_id=scheme.id, title="Mammal")
+        animal = service.create_class(scheme_id=scheme.id, title="Animal")
+
+        prop_is_a = service.create_property_definition(
+            identifier="is_a", title="Is A"
+        )
+        prop_part_of = service.create_property_definition(
+            identifier="part_of", title="Part Of"
+        )
+
+        # Create relationships with different property definitions
+        rel1 = service.create_relationship(
+            source_id=dog.id,
+            target_id=mammal.id,
+            property_definition_id=prop_is_a.id,
+        )
+        rel2 = service.create_relationship(
+            source_id=dog.id,
+            target_id=animal.id,
+            property_definition_id=prop_part_of.id,
+        )
+
+        # Filter by first property
+        by_is_a = service.list_relationships(property_id=prop_is_a.id)
+        assert len(by_is_a) == 1
+        assert by_is_a[0].id == rel1.id
+
+        # Filter by second property
+        by_part_of = service.list_relationships(property_id=prop_part_of.id)
+        assert len(by_part_of) == 1
+        assert by_part_of[0].id == rel2.id
+
     def test_list_property_definitions(self, service):
         """List all property definitions."""
         prop1 = service.create_property_definition(identifier="is_a", title="Is A")
@@ -1081,3 +1123,37 @@ class TestGetAndListOperations:
         assert len(props) == 2
         assert any(p.id == prop1.id for p in props)
         assert any(p.id == prop2.id for p in props)
+
+    def test_list_property_definitions_filtered_by_is_relevant(self, service):
+        """List property definitions filtered by is_relevant flag."""
+        # Create properties with different relevance states
+        prop_relevant = service.create_property_definition(
+            identifier="is_a", title="Is A"
+        )
+        prop_relevant.is_relevant = True
+        service._repository.save_property_definition(prop_relevant)
+
+        prop_irrelevant = service.create_property_definition(
+            identifier="part_of", title="Part Of"
+        )
+        prop_irrelevant.is_relevant = False
+        service._repository.save_property_definition(prop_irrelevant)
+
+        prop_unset = service.create_property_definition(
+            identifier="related_to", title="Related To"
+        )
+        # is_relevant is None by default, no save needed
+
+        # Filter for relevant properties
+        relevant_props = service.list_property_definitions(is_relevant=True)
+        assert len(relevant_props) == 1
+        assert relevant_props[0].id == prop_relevant.id
+
+        # Filter for irrelevant properties
+        irrelevant_props = service.list_property_definitions(is_relevant=False)
+        assert len(irrelevant_props) == 1
+        assert irrelevant_props[0].id == prop_irrelevant.id
+
+        # List all properties without filter
+        all_props = service.list_property_definitions()
+        assert len(all_props) == 3

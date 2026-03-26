@@ -157,7 +157,10 @@ class FakeOntologyRepository:
     def list_property_definitions(
         self, is_relevant: bool | None = None
     ) -> list[PropertyDefinition]:
-        return list(self._property_definitions.values())
+        results = list(self._property_definitions.values())
+        if is_relevant is not None:
+            results = [p for p in results if p.is_relevant == is_relevant]
+        return results
 
     def save_property_definition(self, prop: PropertyDefinition) -> None:
         self._property_definitions[prop.id] = prop
