@@ -37,7 +37,6 @@ class TestTaxonomy:
     def test_taxonomy_rename(self):
         """Rename a taxonomy."""
         tax = Taxonomy(id="tax-1", title="Biology", created_at=None)
-        original_modified = tax.last_modified
         tax.rename("Biology 2024")
         assert tax.title == "Biology 2024"
         assert tax.last_modified is not None
