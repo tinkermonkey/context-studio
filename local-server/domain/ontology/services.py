@@ -15,7 +15,9 @@ from typing import Optional
 
 from domain.ontology.entities import Taxonomy, ConceptScheme, Class, Relationship, PropertyDefinition
 from domain.ontology.events import (
-    TaxonomyCreated, SchemeCreated, ClassCreated, ClassUpdated, ClassDeleted,
+    TaxonomyCreated, TaxonomyUpdated, TaxonomyDeleted,
+    SchemeCreated, SchemeUpdated, SchemeDeleted,
+    ClassCreated, ClassUpdated, ClassDeleted,
     ClassMoved, RelationshipCreated, RelationshipDeleted,
     PropertyDefinitionCreated, GraphInvalidated
 )
@@ -124,6 +126,86 @@ class OntologyService:
         """
         return self._repository.list_taxonomies()
 
+    def rename_taxonomy(self, taxonomy_id: str, new_title: str) -> Taxonomy:
+        """
+        Rename a taxonomy.
+
+        Validates that the new title is unique across all taxonomies.
+
+        Args:
+            taxonomy_id: The ID of the taxonomy to rename
+            new_title: The new title for the taxonomy
+
+        Returns:
+            The updated Taxonomy
+
+        Raises:
+            EntityNotFoundError: If the taxonomy does not exist
+            DuplicateEntityError: If a taxonomy with the new title already exists
+            ValueError: If new_title is empty or whitespace
+        """
+        if not new_title or not new_title.strip():
+            raise ValueError("Title cannot be empty")
+
+        taxonomy = self._repository.get_taxonomy(taxonomy_id)
+        if taxonomy is None:
+            raise EntityNotFoundError("Taxonomy", taxonomy_id)
+
+        # Check for duplicate title (excluding the current taxonomy)
+        existing = self._repository.list_taxonomies()
+        if any(t.title == new_title and t.id != taxonomy_id for t in existing):
+            raise DuplicateEntityError(f"Taxonomy with title '{new_title}' already exists")
+
+        # Guard against no-op updates
+        if new_title == taxonomy.title:
+            return taxonomy
+
+        old_title = taxonomy.title
+        taxonomy.rename(new_title)
+        self._repository.save_taxonomy(taxonomy)
+
+        self._event_publisher.publish(TaxonomyUpdated(
+            event_id=str(uuid4()),
+            occurred_at=datetime.utcnow(),
+            aggregate_id=taxonomy_id,
+            taxonomy_id=taxonomy_id,
+            changed_fields=("title",),
+        ))
+
+        return taxonomy
+
+    def delete_taxonomy(self, taxonomy_id: str) -> None:
+        """
+        Delete a taxonomy.
+
+        Validates that the taxonomy has no concept schemes before deletion.
+
+        Args:
+            taxonomy_id: The ID of the taxonomy to delete
+
+        Raises:
+            EntityNotFoundError: If the taxonomy does not exist
+            OntologyError: If the taxonomy has concept schemes
+        """
+        taxonomy = self._repository.get_taxonomy(taxonomy_id)
+        if taxonomy is None:
+            raise EntityNotFoundError("Taxonomy", taxonomy_id)
+
+        # Check for concept schemes
+        schemes = self._repository.list_concept_schemes(taxonomy_id=taxonomy_id)
+        if schemes:
+            raise OntologyError(f"Cannot delete taxonomy {taxonomy_id}: it has {len(schemes)} concept scheme(s)")
+
+        self._repository.delete_taxonomy(taxonomy_id)
+
+        self._event_publisher.publish(TaxonomyDeleted(
+            event_id=str(uuid4()),
+            occurred_at=datetime.utcnow(),
+            aggregate_id=taxonomy_id,
+            taxonomy_id=taxonomy_id,
+            title=taxonomy.title,
+        ))
+
     # ConceptScheme operations
 
     def create_scheme(self, taxonomy_id: str, title: str, description: Optional[str] = None) -> ConceptScheme:
@@ -211,6 +293,87 @@ class OntologyService:
             List of ConceptScheme entities
         """
         return self._repository.list_concept_schemes(taxonomy_id=taxonomy_id)
+
+    def rename_scheme(self, scheme_id: str, new_title: str) -> ConceptScheme:
+        """
+        Rename a concept scheme.
+
+        Validates that the new title is unique within the scheme's parent taxonomy.
+
+        Args:
+            scheme_id: The ID of the concept scheme to rename
+            new_title: The new title for the scheme
+
+        Returns:
+            The updated ConceptScheme
+
+        Raises:
+            EntityNotFoundError: If the scheme does not exist
+            DuplicateEntityError: If a scheme with the new title already exists in this taxonomy
+            ValueError: If new_title is empty or whitespace
+        """
+        if not new_title or not new_title.strip():
+            raise ValueError("Title cannot be empty")
+
+        scheme = self._repository.get_concept_scheme(scheme_id)
+        if scheme is None:
+            raise EntityNotFoundError("ConceptScheme", scheme_id)
+
+        # Check for duplicate title within this taxonomy (excluding the current scheme)
+        existing_schemes = self._repository.list_concept_schemes(taxonomy_id=scheme.taxonomy_id)
+        if any(s.title == new_title and s.id != scheme_id for s in existing_schemes):
+            raise DuplicateEntityError(f"ConceptScheme with title '{new_title}' already exists in this taxonomy")
+
+        # Guard against no-op updates
+        if new_title == scheme.title:
+            return scheme
+
+        scheme.rename(new_title)
+        self._repository.save_concept_scheme(scheme)
+
+        self._event_publisher.publish(SchemeUpdated(
+            event_id=str(uuid4()),
+            occurred_at=datetime.utcnow(),
+            aggregate_id=scheme_id,
+            scheme_id=scheme_id,
+            taxonomy_id=scheme.taxonomy_id,
+            changed_fields=("title",),
+        ))
+
+        return scheme
+
+    def delete_scheme(self, scheme_id: str) -> None:
+        """
+        Delete a concept scheme.
+
+        Validates that the scheme has no classes before deletion.
+
+        Args:
+            scheme_id: The ID of the concept scheme to delete
+
+        Raises:
+            EntityNotFoundError: If the scheme does not exist
+            OntologyError: If the scheme has classes
+        """
+        scheme = self._repository.get_concept_scheme(scheme_id)
+        if scheme is None:
+            raise EntityNotFoundError("ConceptScheme", scheme_id)
+
+        # Check for classes
+        classes = self._repository.list_classes(scheme_id=scheme_id)
+        if classes:
+            raise OntologyError(f"Cannot delete concept scheme {scheme_id}: it has {len(classes)} class(es)")
+
+        self._repository.delete_concept_scheme(scheme_id)
+
+        self._event_publisher.publish(SchemeDeleted(
+            event_id=str(uuid4()),
+            occurred_at=datetime.utcnow(),
+            aggregate_id=scheme_id,
+            scheme_id=scheme_id,
+            taxonomy_id=scheme.taxonomy_id,
+            title=scheme.title,
+        ))
 
     # Class operations
 

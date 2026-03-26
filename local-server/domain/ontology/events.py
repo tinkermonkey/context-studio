@@ -197,6 +197,66 @@ class PropertyDefinitionCreated(DomainEvent):
 
 
 @dataclass(frozen=True)
+class TaxonomyUpdated(DomainEvent):
+    """
+    Event emitted when a taxonomy is updated (e.g., renamed).
+
+    Attributes:
+        taxonomy_id: ID of the updated taxonomy
+        changed_fields: Tuple of field names that changed
+    """
+
+    taxonomy_id: str
+    changed_fields: tuple[str, ...]
+
+
+@dataclass(frozen=True)
+class TaxonomyDeleted(DomainEvent):
+    """
+    Event emitted when a taxonomy is deleted.
+
+    Attributes:
+        taxonomy_id: ID of the deleted taxonomy
+        title: Title of the deleted taxonomy
+    """
+
+    taxonomy_id: str
+    title: str
+
+
+@dataclass(frozen=True)
+class SchemeUpdated(DomainEvent):
+    """
+    Event emitted when a concept scheme is updated (e.g., renamed).
+
+    Attributes:
+        scheme_id: ID of the updated concept scheme
+        taxonomy_id: ID of the parent taxonomy
+        changed_fields: Tuple of field names that changed
+    """
+
+    scheme_id: str
+    taxonomy_id: str
+    changed_fields: tuple[str, ...]
+
+
+@dataclass(frozen=True)
+class SchemeDeleted(DomainEvent):
+    """
+    Event emitted when a concept scheme is deleted.
+
+    Attributes:
+        scheme_id: ID of the deleted concept scheme
+        taxonomy_id: ID of the parent taxonomy
+        title: Title of the deleted concept scheme
+    """
+
+    scheme_id: str
+    taxonomy_id: str
+    title: str
+
+
+@dataclass(frozen=True)
 class GraphInvalidated(DomainEvent):
     """
     Event emitted when the graph state is invalidated and needs recomputation.
