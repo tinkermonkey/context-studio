@@ -495,7 +495,7 @@ class TestUpdateClass:
         """Update class to duplicate title in same scheme raises DuplicateEntityError."""
         tax = service.create_taxonomy(title="Biology")
         scheme = service.create_scheme(taxonomy_id=tax.id, title="Animals")
-        cls1 = service.create_class(scheme_id=scheme.id, title="Dog")
+        service.create_class(scheme_id=scheme.id, title="Dog")
         cls2 = service.create_class(scheme_id=scheme.id, title="Cat")
 
         with pytest.raises(DuplicateEntityError, match="already exists"):
@@ -506,7 +506,7 @@ class TestUpdateClass:
         tax = service.create_taxonomy(title="Biology")
         scheme1 = service.create_scheme(taxonomy_id=tax.id, title="Animals")
         scheme2 = service.create_scheme(taxonomy_id=tax.id, title="Plants")
-        cls1 = service.create_class(scheme_id=scheme1.id, title="Life")
+        service.create_class(scheme_id=scheme1.id, title="Life")
         cls2 = service.create_class(scheme_id=scheme2.id, title="Organism")
 
         # This should succeed because Life is in a different scheme
