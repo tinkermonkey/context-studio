@@ -100,7 +100,7 @@ class TestClass:
         assert cls.title == "Dog"
         assert cls.description is None
         assert cls.parent_class_id is None
-        assert cls.embedding is None
+        assert cls.title_embedding is None
         assert cls.external_references == []
         assert cls.lexical_senses == []
 
@@ -128,15 +128,18 @@ class TestClass:
 
     def test_class_creation_with_embedding(self):
         """Create a class with embedding."""
-        embedding = b"test-embedding-bytes"
+        title_embedding = b"test-title-embedding"
+        definition_embedding = b"test-definition-embedding"
         cls = Class(
             id="class-1",
             scheme_id="scheme-1",
             taxonomy_id="tax-1",
             title="Dog",
-            embedding=embedding,
+            title_embedding=title_embedding,
+            definition_embedding=definition_embedding,
         )
-        assert cls.embedding == embedding
+        assert cls.title_embedding == title_embedding
+        assert cls.definition_embedding == definition_embedding
 
     def test_class_rename(self):
         """Rename a class."""
@@ -259,11 +262,13 @@ class TestRelationship:
             source_id="class-1",
             target_id="class-2",
             property_definition_id="prop-1",
+            property_label="has_part",
         )
         assert rel.id == "rel-1"
         assert rel.source_id == "class-1"
         assert rel.target_id == "class-2"
         assert rel.property_definition_id == "prop-1"
+        assert rel.property_label == "has_part"
         assert rel.created_at is not None
 
     def test_relationship_self_loop_raises(self):
@@ -274,6 +279,7 @@ class TestRelationship:
                 source_id="class-1",
                 target_id="class-1",
                 property_definition_id="prop-1",
+                property_label="has_part",
             )
 
 

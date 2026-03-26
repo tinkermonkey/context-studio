@@ -441,7 +441,8 @@ class OntologyService:
             title=title,
             description=description,
             parent_class_id=parent_class_id,
-            embedding=embedding,
+            title_embedding=embedding,
+            definition_embedding=embedding,
             created_at=datetime.utcnow(),
             updated_at=datetime.utcnow(),
         )
@@ -552,7 +553,9 @@ class OntologyService:
         # Regenerate embedding only if title or description changed
         if title_changed or desc_changed:
             embed_text = f"{cls.title} {cls.description or ''}".strip()
-            cls.embedding = self._embedding_service.embed_text(embed_text)
+            embedding = self._embedding_service.embed_text(embed_text)
+            cls.title_embedding = embedding
+            cls.definition_embedding = embedding
 
         # Guard against no-op updates
         if not (title_changed or desc_changed):
@@ -767,6 +770,7 @@ class OntologyService:
             source_id=source_id,
             target_id=target_id,
             property_definition_id=property_definition_id,
+            property_label=prop_def.title,
             created_at=datetime.utcnow(),
         )
         self._repository.save_relationship(relationship)

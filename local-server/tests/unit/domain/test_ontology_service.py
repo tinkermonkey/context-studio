@@ -371,7 +371,7 @@ class TestCreateClass:
         assert cls.taxonomy_id == tax.id
         assert cls.title == "Dog"
         assert cls.description == "Canine species"
-        assert cls.embedding is not None  # Embedding should be generated
+        assert cls.title_embedding is not None  # Embedding should be generated
         assert cls.parent_class_id is None
 
         # Verify event
@@ -449,11 +449,11 @@ class TestUpdateClass:
         tax = service.create_taxonomy(title="Biology")
         scheme = service.create_scheme(taxonomy_id=tax.id, title="Animals")
         cls = service.create_class(scheme_id=scheme.id, title="Dog", description="Canine")
-        old_embedding = cls.embedding
+        old_embedding = cls.title_embedding
 
         updated = service.update_class(class_id=cls.id, title="Canine")
         assert updated.title == "Canine"
-        assert updated.embedding != old_embedding
+        assert updated.title_embedding != old_embedding
 
         # Verify event
         events = service._event_publisher.get_events_of_type(ClassUpdated)
@@ -465,11 +465,11 @@ class TestUpdateClass:
         tax = service.create_taxonomy(title="Biology")
         scheme = service.create_scheme(taxonomy_id=tax.id, title="Animals")
         cls = service.create_class(scheme_id=scheme.id, title="Dog")
-        old_embedding = cls.embedding
+        old_embedding = cls.title_embedding
 
         updated = service.update_class(class_id=cls.id, description="Canine species")
         assert updated.description == "Canine species"
-        assert updated.embedding != old_embedding
+        assert updated.title_embedding != old_embedding
 
         # Verify event
         events = service._event_publisher.get_events_of_type(ClassUpdated)
@@ -481,11 +481,11 @@ class TestUpdateClass:
         tax = service.create_taxonomy(title="Biology")
         scheme = service.create_scheme(taxonomy_id=tax.id, title="Animals")
         cls = service.create_class(scheme_id=scheme.id, title="Dog", description="Canine")
-        old_embedding = cls.embedding
+        old_embedding = cls.title_embedding
 
         # Call with empty update (no title, no description)
         updated = service.update_class(class_id=cls.id)
-        assert updated.embedding == old_embedding
+        assert updated.title_embedding == old_embedding
 
         # Verify no ClassUpdated event is emitted when no changes
         events = service._event_publisher.get_events_of_type(ClassUpdated)
