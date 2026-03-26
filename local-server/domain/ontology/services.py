@@ -947,6 +947,7 @@ class OntologyService:
 
         self._event_publisher.publish(PropertyDefinitionCreated(
             property_id=property_id,
+            identifier=identifier,
             title=title,
         ))
 

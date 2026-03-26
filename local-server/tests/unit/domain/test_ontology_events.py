@@ -40,26 +40,29 @@ class TestDomainEventBase:
     """Tests for DomainEvent base class."""
 
     def test_domain_event_creation_with_defaults(self):
-        """DomainEvent can be instantiated with default event_id and occurred_at."""
-        event = DomainEvent()
+        """DomainEvent can be instantiated with default event_id, occurred_at, and aggregate_id."""
+        event = DomainEvent(aggregate_id="agg-123")
         assert event.event_id is not None
         assert isinstance(event.event_id, str)
         assert event.occurred_at is not None
         assert isinstance(event.occurred_at, datetime)
+        assert event.aggregate_id == "agg-123"
 
     def test_domain_event_creation_with_explicit_values(self):
-        """DomainEvent can be instantiated with explicit event_id and occurred_at."""
+        """DomainEvent can be instantiated with explicit event_id, aggregate_id, and occurred_at."""
         now = datetime.now(timezone.utc)
         event = DomainEvent(
             event_id="evt-123",
+            aggregate_id="agg-456",
             occurred_at=now,
         )
         assert event.event_id == "evt-123"
+        assert event.aggregate_id == "agg-456"
         assert event.occurred_at == now
 
     def test_domain_event_is_frozen(self):
         """DomainEvent instances are frozen and cannot be modified."""
-        event = DomainEvent()
+        event = DomainEvent(aggregate_id="agg-123")
         with pytest.raises(FrozenInstanceError):
             event.event_id = "new-id"
 
@@ -534,18 +537,22 @@ class TestPropertyDefinitionCreated:
         """PropertyDefinitionCreated can be instantiated with all required fields."""
         event = PropertyDefinitionCreated(
             property_id="prop-123",
-            title="subClassOf",
+            identifier="subClassOf",
+            title="Sub Class Of",
         )
         assert event.event_id is not None
         assert event.occurred_at is not None
         assert event.property_id == "prop-123"
-        assert event.title == "subClassOf"
+        assert event.identifier == "subClassOf"
+        assert event.title == "Sub Class Of"
+        assert event.aggregate_id == "prop-123"
 
     def test_property_definition_created_is_frozen(self):
         """PropertyDefinitionCreated instances are frozen."""
         event = PropertyDefinitionCreated(
             property_id="prop-123",
-            title="subClassOf",
+            identifier="subClassOf",
+            title="Sub Class Of",
         )
         with pytest.raises(FrozenInstanceError):
             event.title = "New Title"

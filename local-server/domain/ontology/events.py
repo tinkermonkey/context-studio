@@ -17,15 +17,17 @@ class DomainEvent:
     """
     Base class for all domain events in the Ontology Management context.
 
-    All events have an event ID and timestamp. Subclasses add domain-specific
-    fields that capture the details of what changed.
+    All events have an event ID, timestamp, and aggregate ID (the entity that changed).
+    Subclasses add domain-specific fields that capture the details of what changed.
 
     Attributes:
         event_id: Unique identifier for this event (typically a UUID string)
         occurred_at: Timestamp of when the event occurred
+        aggregate_id: UUID of the aggregate (entity) that changed
     """
 
     event_id: str = field(default_factory=lambda: str(uuid4()))
+    aggregate_id: str = ""
     occurred_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
 
     def __post_init__(self) -> None:
@@ -38,6 +40,9 @@ class DomainEvent:
         for field_name, _ in self.__dataclass_fields__.items():
             v = getattr(self, field_name)
             # Only validate string fields; skip datetime and other types
+            # Skip validation for aggregate_id as it's auto-populated by subclasses
+            if field_name == "aggregate_id":
+                continue
             if isinstance(v, str) and not v.strip():
                 raise ValueError(f"Event field '{field_name}' cannot be empty")
 
@@ -55,6 +60,12 @@ class TaxonomyCreated(DomainEvent):
     taxonomy_id: str = ""
     title: str = ""
 
+    def __post_init__(self) -> None:
+        """Set aggregate_id to the taxonomy_id if not already set."""
+        if not self.aggregate_id:
+            object.__setattr__(self, "aggregate_id", self.taxonomy_id)
+        super().__post_init__()
+
 
 @dataclass(frozen=True)
 class SchemeCreated(DomainEvent):
@@ -70,6 +81,12 @@ class SchemeCreated(DomainEvent):
     concept_scheme_id: str = ""
     title: str = ""
     taxonomy_id: str = ""
+
+    def __post_init__(self) -> None:
+        """Set aggregate_id to the concept_scheme_id if not already set."""
+        if not self.aggregate_id:
+            object.__setattr__(self, "aggregate_id", self.concept_scheme_id)
+        super().__post_init__()
 
 
 @dataclass(frozen=True)
@@ -89,6 +106,12 @@ class ClassCreated(DomainEvent):
     concept_scheme_id: str = ""
     taxonomy_id: str = ""
 
+    def __post_init__(self) -> None:
+        """Set aggregate_id to the class_id if not already set."""
+        if not self.aggregate_id:
+            object.__setattr__(self, "aggregate_id", self.class_id)
+        super().__post_init__()
+
 
 @dataclass(frozen=True)
 class ClassUpdated(DomainEvent):
@@ -107,6 +130,12 @@ class ClassUpdated(DomainEvent):
     old_values: dict[str, str | None] = field(default_factory=dict)
     new_values: dict[str, str | None] = field(default_factory=dict)
 
+    def __post_init__(self) -> None:
+        """Set aggregate_id to the class_id if not already set."""
+        if not self.aggregate_id:
+            object.__setattr__(self, "aggregate_id", self.class_id)
+        super().__post_init__()
+
 
 @dataclass(frozen=True)
 class ClassDeleted(DomainEvent):
@@ -120,6 +149,12 @@ class ClassDeleted(DomainEvent):
 
     class_id: str = ""
     title: str = ""
+
+    def __post_init__(self) -> None:
+        """Set aggregate_id to the class_id if not already set."""
+        if not self.aggregate_id:
+            object.__setattr__(self, "aggregate_id", self.class_id)
+        super().__post_init__()
 
 
 @dataclass(frozen=True)
@@ -136,6 +171,12 @@ class ClassMoved(DomainEvent):
     class_id: str = ""
     old_parent_id: str | None = None
     new_parent_id: str | None = None
+
+    def __post_init__(self) -> None:
+        """Set aggregate_id to the class_id if not already set."""
+        if not self.aggregate_id:
+            object.__setattr__(self, "aggregate_id", self.class_id)
+        super().__post_init__()
 
 
 @dataclass(frozen=True)
@@ -155,6 +196,12 @@ class RelationshipCreated(DomainEvent):
     target_id: str = ""
     property_definition_id: str = ""
 
+    def __post_init__(self) -> None:
+        """Set aggregate_id to the relationship_id if not already set."""
+        if not self.aggregate_id:
+            object.__setattr__(self, "aggregate_id", self.relationship_id)
+        super().__post_init__()
+
 
 @dataclass(frozen=True)
 class RelationshipDeleted(DomainEvent):
@@ -173,6 +220,12 @@ class RelationshipDeleted(DomainEvent):
     target_id: str = ""
     property_definition_id: str = ""
 
+    def __post_init__(self) -> None:
+        """Set aggregate_id to the relationship_id if not already set."""
+        if not self.aggregate_id:
+            object.__setattr__(self, "aggregate_id", self.relationship_id)
+        super().__post_init__()
+
 
 @dataclass(frozen=True)
 class PropertyDefinitionCreated(DomainEvent):
@@ -181,11 +234,19 @@ class PropertyDefinitionCreated(DomainEvent):
 
     Attributes:
         property_id: ID of the created property definition
+        identifier: Identifier/name of the property definition
         title: Title of the property definition
     """
 
     property_id: str = ""
+    identifier: str = ""
     title: str = ""
+
+    def __post_init__(self) -> None:
+        """Set aggregate_id to the property_id if not already set."""
+        if not self.aggregate_id:
+            object.__setattr__(self, "aggregate_id", self.property_id)
+        super().__post_init__()
 
 
 @dataclass(frozen=True)
@@ -205,6 +266,12 @@ class TaxonomyUpdated(DomainEvent):
     old_values: dict[str, str | None] = field(default_factory=dict)
     new_values: dict[str, str | None] = field(default_factory=dict)
 
+    def __post_init__(self) -> None:
+        """Set aggregate_id to the taxonomy_id if not already set."""
+        if not self.aggregate_id:
+            object.__setattr__(self, "aggregate_id", self.taxonomy_id)
+        super().__post_init__()
+
 
 @dataclass(frozen=True)
 class TaxonomyDeleted(DomainEvent):
@@ -218,6 +285,12 @@ class TaxonomyDeleted(DomainEvent):
 
     taxonomy_id: str = ""
     title: str = ""
+
+    def __post_init__(self) -> None:
+        """Set aggregate_id to the taxonomy_id if not already set."""
+        if not self.aggregate_id:
+            object.__setattr__(self, "aggregate_id", self.taxonomy_id)
+        super().__post_init__()
 
 
 @dataclass(frozen=True)
@@ -239,6 +312,12 @@ class SchemeUpdated(DomainEvent):
     old_values: dict[str, str | None] = field(default_factory=dict)
     new_values: dict[str, str | None] = field(default_factory=dict)
 
+    def __post_init__(self) -> None:
+        """Set aggregate_id to the concept_scheme_id if not already set."""
+        if not self.aggregate_id:
+            object.__setattr__(self, "aggregate_id", self.concept_scheme_id)
+        super().__post_init__()
+
 
 @dataclass(frozen=True)
 class SchemeDeleted(DomainEvent):
@@ -255,6 +334,12 @@ class SchemeDeleted(DomainEvent):
     taxonomy_id: str = ""
     title: str = ""
 
+    def __post_init__(self) -> None:
+        """Set aggregate_id to the concept_scheme_id if not already set."""
+        if not self.aggregate_id:
+            object.__setattr__(self, "aggregate_id", self.concept_scheme_id)
+        super().__post_init__()
+
 
 @dataclass(frozen=True)
 class GraphInvalidated(DomainEvent):
@@ -268,3 +353,9 @@ class GraphInvalidated(DomainEvent):
 
     taxonomy_id: str = ""
     reason: str = ""
+
+    def __post_init__(self) -> None:
+        """Set aggregate_id to the taxonomy_id if not already set."""
+        if not self.aggregate_id:
+            object.__setattr__(self, "aggregate_id", self.taxonomy_id)
+        super().__post_init__()
