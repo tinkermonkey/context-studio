@@ -820,6 +820,7 @@ class OntologyService:
         self,
         source_id: Optional[str] = None,
         target_id: Optional[str] = None,
+        property_id: Optional[str] = None,
     ) -> list[Relationship]:
         """
         Retrieve relationships with optional filtering.
@@ -827,11 +828,12 @@ class OntologyService:
         Args:
             source_id: Optional source entity ID to filter by
             target_id: Optional target entity ID to filter by
+            property_id: Optional property definition ID to filter by (relationship type)
 
         Returns:
             List of Relationship entities
         """
-        return self._repository.list_relationships(source_id=source_id, target_id=target_id)
+        return self._repository.list_relationships(source_id=source_id, target_id=target_id, property_id=property_id)
 
     def delete_relationship(self, relationship_id: str) -> None:
         """
@@ -947,11 +949,14 @@ class OntologyService:
             raise EntityNotFoundError("PropertyDefinition", property_id)
         return prop_def
 
-    def list_property_definitions(self) -> list[PropertyDefinition]:
+    def list_property_definitions(self, is_relevant: Optional[bool] = None) -> list[PropertyDefinition]:
         """
-        Retrieve all property definitions.
+        Retrieve property definitions, optionally filtered by relevance.
+
+        Args:
+            is_relevant: Optional filter for relevant property definitions
 
         Returns:
-            List of all PropertyDefinition entities
+            List of PropertyDefinition entities
         """
-        return self._repository.list_property_definitions()
+        return self._repository.list_property_definitions(is_relevant=is_relevant)
