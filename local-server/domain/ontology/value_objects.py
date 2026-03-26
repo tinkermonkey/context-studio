@@ -23,48 +23,56 @@ class NodeType(str, Enum):
 @dataclass(frozen=True)
 class ExternalReference:
     """
-    Reference to an entity in an external source (e.g., DBpedia, schema.org).
+    Reference to an entity in an external source (e.g., DBpedia, Wikidata, ConceptNet).
 
     Attributes:
-        source: The name of the external knowledge base (e.g., "DBpedia", "schema.org")
-        identifier: The unique identifier in the external source
-        uri: Optional URI pointing to the external resource
+        source: The name of the external knowledge base (e.g., "dbpedia", "wikidata", "conceptnet")
+        uri: The external URI
+        label: Human-readable label from the source
+        confidence: Match confidence score
+        metadata: Source-specific metadata
     """
 
     source: str
-    identifier: str
-    uri: str | None = None
+    uri: str
+    label: str | None = None
+    confidence: float | None = None
+    metadata: dict | None = None
 
 
 @dataclass(frozen=True)
 class LexicalSense:
     """
-    Lexical representation (label, language, sense type) of a concept.
+    Word sense disambiguation data, typically from WordNet.
 
     Attributes:
-        label: The text label or term for this sense
-        language_code: ISO 639 language code (e.g., "en", "fr", "es")
-        sense_type: Type of sense: "preferred", "alternative", or "hidden"
+        synset_id: WordNet synset identifier
+        definition: The sense definition
+        lemma: The lemma/word form
+        confidence: Optional confidence score
+        source: The source of the lexical sense data (default: "wordnet")
     """
 
-    label: str
-    language_code: str
-    sense_type: str
+    synset_id: str
+    definition: str
+    lemma: str
+    confidence: float | None = None
+    source: str = "wordnet"
 
 
 @dataclass(frozen=True)
 class DataPropertyValue:
     """
-    Value for a data property on an individual.
+    A literal-valued attribute on an entity (corresponds to OWL DatatypeProperty).
 
     Attributes:
-        property_identifier: Identifier of the property definition
-        value: The value as a string
-        datatype: Optional datatype annotation (e.g., "xsd:string", "xsd:integer")
+        key: Attribute name
+        value: Attribute value (string, number, boolean, etc.)
+        datatype: Optional type hint (e.g., "xsd:string", "xsd:integer")
     """
 
-    property_identifier: str
-    value: str
+    key: str
+    value: str | int | float | bool | None
     datatype: str | None = None
 
 
@@ -89,20 +97,24 @@ class OntologyMapping:
 @dataclass(frozen=True)
 class SearchCriteria:
     """
-    Criteria for searching within the ontology.
+    Encapsulates search parameters for querying ontology entities.
 
     Attributes:
-        query: The search query string
-        node_types: Optional list of NodeType values to filter by
-        scheme_id: Optional concept scheme ID to limit search to
-        taxonomy_id: Optional taxonomy ID to limit search to
-        limit: Maximum number of results to return (default 20)
+        query: Optional text search query
+        node_type: Optional filter by entity type
+        taxonomy_id: Optional filter by taxonomy
+        scheme_id: Optional filter by concept scheme
+        parent_id: Optional filter by parent entity
+        use_semantic_search: Whether to use embedding similarity (default False)
+        limit: Maximum number of results to return (default 50)
         offset: Number of results to skip (default 0)
     """
 
-    query: str
-    node_types: list[NodeType] | None = None
-    scheme_id: str | None = None
+    query: str | None = None
+    node_type: NodeType | None = None
     taxonomy_id: str | None = None
-    limit: int = 20
+    scheme_id: str | None = None
+    parent_id: str | None = None
+    use_semantic_search: bool = False
+    limit: int = 50
     offset: int = 0
