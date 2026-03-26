@@ -8,6 +8,7 @@ all entity types including Individuals, Classes, Relationships, and others.
 
 import sys
 import os
+from typing import Any
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
@@ -212,7 +213,7 @@ class FakeOntologyRepository:
 
     # Bulk operations
 
-    def get_all_entities_and_relationships(self) -> tuple[list, list]:
+    def get_all_entities_and_relationships(self) -> tuple[list[Any], list[Relationship]]:
         """
         Retrieve all entities and relationships for graph building.
 
