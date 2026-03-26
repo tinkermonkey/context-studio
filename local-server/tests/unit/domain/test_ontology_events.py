@@ -40,7 +40,7 @@ class TestDomainEventBase:
     """Tests for DomainEvent base class."""
 
     def test_domain_event_creation_with_defaults(self):
-        """DomainEvent can be instantiated with default event_id, occurred_at, and aggregate_id."""
+        """DomainEvent requires aggregate_id and event_id is auto-generated."""
         event = DomainEvent(aggregate_id="agg-123")
         assert event.event_id is not None
         assert isinstance(event.event_id, str)
@@ -65,6 +65,16 @@ class TestDomainEventBase:
         event = DomainEvent(aggregate_id="agg-123")
         with pytest.raises(FrozenInstanceError):
             event.event_id = "new-id"
+
+    def test_domain_event_rejects_empty_aggregate_id(self):
+        """DomainEvent raises ValueError if aggregate_id is empty."""
+        now = datetime.now(timezone.utc)
+        with pytest.raises(ValueError, match="Event field 'aggregate_id' cannot be empty"):
+            DomainEvent(
+                event_id="evt-456",
+                aggregate_id="",
+                occurred_at=now,
+            )
 
     def test_domain_event_rejects_empty_event_id(self):
         """DomainEvent raises ValueError if event_id is empty."""
@@ -99,6 +109,14 @@ class TestTaxonomyCreated:
         assert event.taxonomy_id == "tax-123"
         assert event.title == "Biology Taxonomy"
 
+    def test_taxonomy_created_auto_populates_aggregate_id(self):
+        """TaxonomyCreated auto-populates aggregate_id from taxonomy_id."""
+        event = TaxonomyCreated(
+            taxonomy_id="tax-456",
+            title="Biology Taxonomy",
+        )
+        assert event.aggregate_id == "tax-456"
+
     def test_taxonomy_created_is_frozen(self):
         """TaxonomyCreated instances are frozen."""
         event = TaxonomyCreated(
@@ -118,7 +136,8 @@ class TestTaxonomyCreated:
 
     def test_taxonomy_created_rejects_empty_taxonomy_id(self):
         """TaxonomyCreated raises ValueError if taxonomy_id is empty."""
-        with pytest.raises(ValueError, match="Event field 'taxonomy_id' cannot be empty"):
+        # When taxonomy_id is empty, aggregate_id becomes empty too, causing aggregate_id validation to fail
+        with pytest.raises(ValueError, match="Event field 'aggregate_id' cannot be empty"):
             TaxonomyCreated(
                 taxonomy_id="",
                 title="Biology Taxonomy",
@@ -140,6 +159,15 @@ class TestSchemeCreated:
         assert event.concept_scheme_id == "scheme-123"
         assert event.title == "Animal Kingdom"
         assert event.taxonomy_id == "tax-456"
+
+    def test_scheme_created_auto_populates_aggregate_id(self):
+        """SchemeCreated auto-populates aggregate_id from concept_scheme_id."""
+        event = SchemeCreated(
+            concept_scheme_id="scheme-789",
+            title="Plant Kingdom",
+            taxonomy_id="tax-456",
+        )
+        assert event.aggregate_id == "scheme-789"
 
     def test_scheme_created_is_frozen(self):
         """SchemeCreated instances are frozen."""
@@ -169,6 +197,16 @@ class TestTaxonomyUpdated:
         assert event.changed_fields == ("title",)
         assert event.old_values == {"title": "Old Title"}
         assert event.new_values == {"title": "New Title"}
+
+    def test_taxonomy_updated_auto_populates_aggregate_id(self):
+        """TaxonomyUpdated auto-populates aggregate_id from taxonomy_id."""
+        event = TaxonomyUpdated(
+            taxonomy_id="tax-999",
+            changed_fields=("title",),
+            old_values={"title": "Old"},
+            new_values={"title": "New"},
+        )
+        assert event.aggregate_id == "tax-999"
 
     def test_taxonomy_updated_with_multiple_changed_fields(self):
         """TaxonomyUpdated can have multiple changed fields."""
@@ -208,6 +246,14 @@ class TestTaxonomyDeleted:
         assert event.taxonomy_id == "tax-123"
         assert event.title == "Biology"
 
+    def test_taxonomy_deleted_auto_populates_aggregate_id(self):
+        """TaxonomyDeleted auto-populates aggregate_id from taxonomy_id."""
+        event = TaxonomyDeleted(
+            taxonomy_id="tax-555",
+            title="Physics",
+        )
+        assert event.aggregate_id == "tax-555"
+
     def test_taxonomy_deleted_is_frozen(self):
         """TaxonomyDeleted instances are frozen."""
         event = TaxonomyDeleted(
@@ -245,6 +291,17 @@ class TestSchemeUpdated:
         assert event.changed_fields == ("title",)
         assert event.old_values == {"title": "Old Title"}
         assert event.new_values == {"title": "New Title"}
+
+    def test_scheme_updated_auto_populates_aggregate_id(self):
+        """SchemeUpdated auto-populates aggregate_id from concept_scheme_id."""
+        event = SchemeUpdated(
+            concept_scheme_id="scheme-888",
+            taxonomy_id="tax-999",
+            changed_fields=("title",),
+            old_values={"title": "Old"},
+            new_values={"title": "New"},
+        )
+        assert event.aggregate_id == "scheme-888"
 
     def test_scheme_updated_with_multiple_changed_fields(self):
         """SchemeUpdated can have multiple changed fields."""
@@ -288,6 +345,15 @@ class TestSchemeDeleted:
         assert event.taxonomy_id == "tax-456"
         assert event.title == "Animal Kingdom"
 
+    def test_scheme_deleted_auto_populates_aggregate_id(self):
+        """SchemeDeleted auto-populates aggregate_id from concept_scheme_id."""
+        event = SchemeDeleted(
+            concept_scheme_id="scheme-666",
+            taxonomy_id="tax-777",
+            title="Mineral Kingdom",
+        )
+        assert event.aggregate_id == "scheme-666"
+
     def test_scheme_deleted_is_frozen(self):
         """SchemeDeleted instances are frozen."""
         event = SchemeDeleted(
@@ -326,6 +392,16 @@ class TestClassCreated:
         assert event.concept_scheme_id == "scheme-456"
         assert event.taxonomy_id == "tax-789"
 
+    def test_class_created_auto_populates_aggregate_id(self):
+        """ClassCreated auto-populates aggregate_id from class_id."""
+        event = ClassCreated(
+            class_id="class-444",
+            title="Bird",
+            concept_scheme_id="scheme-555",
+            taxonomy_id="tax-666",
+        )
+        assert event.aggregate_id == "class-444"
+
     def test_class_created_is_frozen(self):
         """ClassCreated instances are frozen."""
         event = ClassCreated(
@@ -355,6 +431,16 @@ class TestClassUpdated:
         assert event.changed_fields == ("title", "description")
         assert event.old_values == {"title": "Old Title", "description": "Old Desc"}
         assert event.new_values == {"title": "New Title", "description": "New Desc"}
+
+    def test_class_updated_auto_populates_aggregate_id(self):
+        """ClassUpdated auto-populates aggregate_id from class_id."""
+        event = ClassUpdated(
+            class_id="class-222",
+            changed_fields=("title",),
+            old_values={"title": "Old"},
+            new_values={"title": "New"},
+        )
+        assert event.aggregate_id == "class-222"
 
     def test_class_updated_with_empty_changed_fields(self):
         """ClassUpdated can be instantiated with empty changed_fields tuple."""
@@ -394,6 +480,14 @@ class TestClassDeleted:
         assert event.class_id == "class-123"
         assert event.title == "Mammal"
 
+    def test_class_deleted_auto_populates_aggregate_id(self):
+        """ClassDeleted auto-populates aggregate_id from class_id."""
+        event = ClassDeleted(
+            class_id="class-333",
+            title="Fish",
+        )
+        assert event.aggregate_id == "class-333"
+
     def test_class_deleted_is_frozen(self):
         """ClassDeleted instances are frozen."""
         event = ClassDeleted(
@@ -419,6 +513,15 @@ class TestClassMoved:
         assert event.class_id == "class-123"
         assert event.old_parent_id == "parent-old"
         assert event.new_parent_id == "parent-new"
+
+    def test_class_moved_auto_populates_aggregate_id(self):
+        """ClassMoved auto-populates aggregate_id from class_id."""
+        event = ClassMoved(
+            class_id="class-111",
+            old_parent_id="parent-a",
+            new_parent_id="parent-b",
+        )
+        assert event.aggregate_id == "class-111"
 
     def test_class_moved_from_root_to_parent(self):
         """ClassMoved allows None for old_parent_id (was root)."""
@@ -452,7 +555,8 @@ class TestClassMoved:
 
     def test_class_moved_rejects_empty_class_id(self):
         """ClassMoved raises ValueError if class_id is empty."""
-        with pytest.raises(ValueError, match="Event field 'class_id' cannot be empty"):
+        # When class_id is empty, aggregate_id becomes empty too, causing aggregate_id validation to fail
+        with pytest.raises(ValueError, match="Event field 'aggregate_id' cannot be empty"):
             ClassMoved(
                 class_id="",
                 old_parent_id="parent-old",
@@ -488,6 +592,16 @@ class TestRelationshipCreated:
         assert event.target_id == "class-789"
         assert event.property_definition_id == "prop-101"
 
+    def test_relationship_created_auto_populates_aggregate_id(self):
+        """RelationshipCreated auto-populates aggregate_id from relationship_id."""
+        event = RelationshipCreated(
+            relationship_id="rel-999",
+            source_id="class-111",
+            target_id="class-222",
+            property_definition_id="prop-333",
+        )
+        assert event.aggregate_id == "rel-999"
+
     def test_relationship_created_is_frozen(self):
         """RelationshipCreated instances are frozen."""
         event = RelationshipCreated(
@@ -517,6 +631,16 @@ class TestRelationshipDeleted:
         assert event.source_id == "class-456"
         assert event.target_id == "class-789"
         assert event.property_definition_id == "prop-101"
+
+    def test_relationship_deleted_auto_populates_aggregate_id(self):
+        """RelationshipDeleted auto-populates aggregate_id from relationship_id."""
+        event = RelationshipDeleted(
+            relationship_id="rel-888",
+            source_id="class-555",
+            target_id="class-666",
+            property_definition_id="prop-777",
+        )
+        assert event.aggregate_id == "rel-888"
 
     def test_relationship_deleted_is_frozen(self):
         """RelationshipDeleted instances are frozen."""
@@ -571,6 +695,14 @@ class TestGraphInvalidated:
         assert event.occurred_at is not None
         assert event.taxonomy_id == "tax-123"
         assert event.reason == "Class hierarchy changed"
+
+    def test_graph_invalidated_auto_populates_aggregate_id(self):
+        """GraphInvalidated auto-populates aggregate_id from taxonomy_id."""
+        event = GraphInvalidated(
+            taxonomy_id="tax-444",
+            reason="Relationships modified",
+        )
+        assert event.aggregate_id == "tax-444"
 
     def test_graph_invalidated_is_frozen(self):
         """GraphInvalidated instances are frozen."""
