@@ -189,9 +189,16 @@ class FakeOntologyRepository:
     # Bulk operations
 
     def get_all_entities_and_relationships(self, taxonomy_id: str) -> dict[str, list]:
+        # Get classes for this taxonomy to filter relationships
+        taxonomy_classes = [c for c in self._classes.values() if c.taxonomy_id == taxonomy_id]
+        taxonomy_class_ids = {c.id for c in taxonomy_classes}
+
         return {
             "taxonomies": [t for t in self._taxonomies.values() if t.id == taxonomy_id],
             "schemes": [s for s in self._schemes.values() if s.taxonomy_id == taxonomy_id],
-            "classes": [c for c in self._classes.values() if c.taxonomy_id == taxonomy_id],
-            "relationships": list(self._relationships.values()),
+            "classes": taxonomy_classes,
+            "relationships": [
+                r for r in self._relationships.values()
+                if r.source_id in taxonomy_class_ids and r.target_id in taxonomy_class_ids
+            ],
         }
