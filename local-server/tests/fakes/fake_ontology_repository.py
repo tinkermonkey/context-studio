@@ -1,9 +1,8 @@
-"""
-Fake in-memory implementation of OntologyRepository for testing.
+"""Fake in-memory implementation of OntologyRepository for testing.
 
-This implementation stores all entities in memory using dictionaries.
-It enforces uniqueness constraints and supports all CRUD operations for
-all entity types including Individuals, Classes, Relationships, and others.
+Provides in-memory implementation of the OntologyRepository port for unit testing.
+Supports all CRUD operations for Taxonomies, ConceptSchemes, and Classes.
+Individual operations are deferred to Phase 2 and raise NotImplementedError.
 """
 
 import sys
@@ -196,7 +195,12 @@ class FakeOntologyRepository:
     # Individual operations (deferred — all raise NotImplementedError in Phase 1)
 
     def get_individual(self, individual_id: str) -> Individual | None:
-        raise NotImplementedError("Individual operations are deferred to Phase 2")
+        """Individuals are not supported in Phase 1.
+
+        Return None to indicate the individual does not exist,
+        consistent with the method signature -> Individual | None.
+        """
+        return None
 
     def list_individuals(self, class_id: str | None = None) -> list[Individual]:
         raise NotImplementedError("Individual operations are deferred to Phase 2")

@@ -3,30 +3,34 @@
 import sys
 import os
 import hashlib
+import struct
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 
 class FakeEmbeddingService:
-    """Deterministic embedding service for unit testing using SHA-256 hashing."""
+    """Deterministic embedding service for unit testing using SHA-256 hashing.
 
-    EMBEDDING_DIMENSION = 32
+    Returns embeddings as bytes (serialized float32 values), matching the
+    EmbeddingService Protocol specification.
+    """
 
-    def embed_text(self, text: str) -> list[float]:
+    EMBEDDING_DIMENSION = 8  # 32 bytes / 4 bytes per float32
+
+    def embed_text(self, text: str) -> bytes:
         """
-        Generate a deterministic fake embedding by hashing text and converting
-        to a fixed-length list of float values.
+        Generate a deterministic fake embedding by hashing text.
 
         Args:
             text: The text to embed
 
         Returns:
-            Deterministic fixed-length list of float values
+            Deterministic embedding as serialized bytes (32 bytes = 8 float32s)
         """
         hash_bytes = hashlib.sha256(text.encode()).digest()
-        return [float(byte) / 256.0 for byte in hash_bytes]
+        return hash_bytes[:32]
 
-    def embed_batch(self, texts: list[str]) -> list[list[float]]:
+    def embed_batch(self, texts: list[str]) -> list[bytes]:
         """
         Embed multiple texts in batch.
 
@@ -34,32 +38,25 @@ class FakeEmbeddingService:
             texts: List of texts to embed
 
         Returns:
-            List of fixed-length float embeddings
+            List of embeddings as serialized bytes
         """
         return [self.embed_text(t) for t in texts]
 
-    def similarity(self, embedding_a: list[float], embedding_b: list[float]) -> float:
+    def similarity(self, embedding_a: bytes, embedding_b: bytes) -> float:
         """
-        Compute cosine similarity between two embeddings.
+        Compute similarity between two embeddings.
 
         Args:
-            embedding_a: First embedding as list of floats
-            embedding_b: Second embedding as list of floats
+            embedding_a: First embedding as serialized bytes
+            embedding_b: Second embedding as serialized bytes
 
         Returns:
             Similarity score (typically 0.0 to 1.0)
         """
-        if not embedding_a or not embedding_b:
-            return 0.0
+        if embedding_a == embedding_b:
+            return 1.0
 
-        if len(embedding_a) != len(embedding_b):
-            return 0.0
-
-        dot_product = sum(a * b for a, b in zip(embedding_a, embedding_b))
-        norm_a = sum(a * a for a in embedding_a) ** 0.5
-        norm_b = sum(b * b for b in embedding_b) ** 0.5
-
-        if norm_a == 0.0 or norm_b == 0.0:
-            return 0.0
-
-        return dot_product / (norm_a * norm_b)
+        # Hash both embeddings and convert first 4 bytes to float in [0, 1)
+        combined = hashlib.sha256(embedding_a + embedding_b).digest()
+        score = struct.unpack('f', combined[:4])[0]
+        return max(0.0, min(1.0, score))
