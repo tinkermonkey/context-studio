@@ -11,7 +11,7 @@ Implementations do not inherit from the protocol; they implement the interface s
 
 from __future__ import annotations
 
-from typing import Callable, Protocol
+from typing import Any, Callable, Protocol, Sequence
 
 from .entities import Class, ConceptScheme, Individual, PropertyDefinition, Relationship, Taxonomy
 from .events import DomainEvent
@@ -49,21 +49,27 @@ class OntologyRepository(Protocol):
         """
         ...
 
-    def save_taxonomy(self, taxonomy: Taxonomy) -> None:
+    def save_taxonomy(self, taxonomy: Taxonomy) -> Taxonomy:
         """
         Persist a taxonomy (create or update).
 
         Args:
             taxonomy: The Taxonomy entity to save
+
+        Returns:
+            The persisted Taxonomy entity
         """
         ...
 
-    def delete_taxonomy(self, taxonomy_id: str) -> None:
+    def delete_taxonomy(self, taxonomy_id: str) -> bool:
         """
         Delete a taxonomy by ID.
 
         Args:
             taxonomy_id: The ID of the taxonomy to delete
+
+        Returns:
+            True if the taxonomy was deleted, False if it did not exist
         """
         ...
 
@@ -92,21 +98,27 @@ class OntologyRepository(Protocol):
         """
         ...
 
-    def save_concept_scheme(self, scheme: ConceptScheme) -> None:
+    def save_concept_scheme(self, scheme: ConceptScheme) -> ConceptScheme:
         """
         Persist a concept scheme (create or update).
 
         Args:
             scheme: The ConceptScheme entity to save
+
+        Returns:
+            The persisted ConceptScheme entity
         """
         ...
 
-    def delete_concept_scheme(self, concept_scheme_id: str) -> None:
+    def delete_concept_scheme(self, concept_scheme_id: str) -> bool:
         """
         Delete a concept scheme by ID.
 
         Args:
             concept_scheme_id: The ID of the concept scheme to delete
+
+        Returns:
+            True if the concept scheme was deleted, False if it did not exist
         """
         ...
 
@@ -168,21 +180,27 @@ class OntologyRepository(Protocol):
         """
         ...
 
-    def save_class(self, cls: Class) -> None:
+    def save_class(self, cls: Class) -> Class:
         """
         Persist a class (create or update).
 
         Args:
             cls: The Class entity to save
+
+        Returns:
+            The persisted Class entity
         """
         ...
 
-    def delete_class(self, class_id: str) -> None:
+    def delete_class(self, class_id: str) -> bool:
         """
         Delete a class by ID.
 
         Args:
             class_id: The ID of the class to delete
+
+        Returns:
+            True if the class was deleted, False if it did not exist
         """
         ...
 
@@ -218,21 +236,27 @@ class OntologyRepository(Protocol):
         """
         ...
 
-    def save_relationship(self, relationship: Relationship) -> None:
+    def save_relationship(self, relationship: Relationship) -> Relationship:
         """
         Persist a relationship (create or update).
 
         Args:
             relationship: The Relationship entity to save
+
+        Returns:
+            The persisted Relationship entity
         """
         ...
 
-    def delete_relationship(self, relationship_id: str) -> None:
+    def delete_relationship(self, relationship_id: str) -> bool:
         """
         Delete a relationship by ID.
 
         Args:
             relationship_id: The ID of the relationship to delete
+
+        Returns:
+            True if the relationship was deleted, False if it did not exist
         """
         ...
 
@@ -273,21 +297,27 @@ class OntologyRepository(Protocol):
         """
         ...
 
-    def save_property_definition(self, prop: PropertyDefinition) -> None:
+    def save_property_definition(self, prop: PropertyDefinition) -> PropertyDefinition:
         """
         Persist a property definition (create or update).
 
         Args:
             prop: The PropertyDefinition entity to save
+
+        Returns:
+            The persisted PropertyDefinition entity
         """
         ...
 
-    def delete_property_definition(self, property_id: str) -> None:
+    def delete_property_definition(self, property_id: str) -> bool:
         """
         Delete a property definition by ID.
 
         Args:
             property_id: The ID of the property definition to delete
+
+        Returns:
+            True if the property definition was deleted, False if it did not exist
         """
         ...
 
@@ -322,24 +352,30 @@ class OntologyRepository(Protocol):
         """
         ...
 
-    def save_individual(self, individual: Individual) -> None:
+    def save_individual(self, individual: Individual) -> Individual:
         """
         Persist an individual (create or update).
 
         Args:
             individual: The Individual entity to save
 
+        Returns:
+            The persisted Individual entity
+
         Note:
             Currently not implemented — raises NotImplementedError
         """
         ...
 
-    def delete_individual(self, individual_id: str) -> None:
+    def delete_individual(self, individual_id: str) -> bool:
         """
         Delete an individual by ID.
 
         Args:
             individual_id: The ID of the individual to delete
+
+        Returns:
+            True if the individual was deleted, False if it did not exist
 
         Note:
             Currently not implemented — raises NotImplementedError
@@ -347,15 +383,12 @@ class OntologyRepository(Protocol):
         ...
 
     # Bulk operations
-    def get_all_entities_and_relationships(self, taxonomy_id: str) -> dict[str, list]:
+    def get_all_entities_and_relationships(self) -> tuple[Sequence[Any], Sequence[Relationship]]:
         """
-        Retrieve all entities and relationships for a taxonomy.
-
-        Args:
-            taxonomy_id: The ID of the taxonomy
+        Retrieve all entities and relationships for graph building.
 
         Returns:
-            Dictionary containing all entities and relationships
+            Tuple of (all entities, all relationships) for building a complete graph
         """
         ...
 

@@ -41,11 +41,15 @@ class FakeOntologyRepository:
     def list_taxonomies(self) -> list[Taxonomy]:
         return list(self._taxonomies.values())
 
-    def save_taxonomy(self, taxonomy: Taxonomy) -> None:
+    def save_taxonomy(self, taxonomy: Taxonomy) -> Taxonomy:
         self._taxonomies[taxonomy.id] = taxonomy
+        return taxonomy
 
-    def delete_taxonomy(self, taxonomy_id: str) -> None:
-        self._taxonomies.pop(taxonomy_id, None)
+    def delete_taxonomy(self, taxonomy_id: str) -> bool:
+        if taxonomy_id in self._taxonomies:
+            self._taxonomies.pop(taxonomy_id)
+            return True
+        return False
 
     # ConceptScheme operations
 
@@ -60,11 +64,15 @@ class FakeOntologyRepository:
             results = [s for s in results if s.taxonomy_id == taxonomy_id]
         return results
 
-    def save_concept_scheme(self, scheme: ConceptScheme) -> None:
+    def save_concept_scheme(self, scheme: ConceptScheme) -> ConceptScheme:
         self._schemes[scheme.id] = scheme
+        return scheme
 
-    def delete_concept_scheme(self, concept_scheme_id: str) -> None:
-        self._schemes.pop(concept_scheme_id, None)
+    def delete_concept_scheme(self, concept_scheme_id: str) -> bool:
+        if concept_scheme_id in self._schemes:
+            self._schemes.pop(concept_scheme_id)
+            return True
+        return False
 
     # Class operations
 
@@ -110,11 +118,15 @@ class FakeOntologyRepository:
             return sum(1 for c in self._classes.values() if c.concept_scheme_id == concept_scheme_id)
         return len(self._classes)
 
-    def save_class(self, cls: Class) -> None:
+    def save_class(self, cls: Class) -> Class:
         self._classes[cls.id] = cls
+        return cls
 
-    def delete_class(self, class_id: str) -> None:
-        self._classes.pop(class_id, None)
+    def delete_class(self, class_id: str) -> bool:
+        if class_id in self._classes:
+            self._classes.pop(class_id)
+            return True
+        return False
 
     # Relationship operations
 
@@ -136,11 +148,15 @@ class FakeOntologyRepository:
             results = [r for r in results if r.property_definition_id == property_id]
         return results
 
-    def save_relationship(self, relationship: Relationship) -> None:
+    def save_relationship(self, relationship: Relationship) -> Relationship:
         self._relationships[relationship.id] = relationship
+        return relationship
 
-    def delete_relationship(self, relationship_id: str) -> None:
-        self._relationships.pop(relationship_id, None)
+    def delete_relationship(self, relationship_id: str) -> bool:
+        if relationship_id in self._relationships:
+            self._relationships.pop(relationship_id)
+            return True
+        return False
 
     # PropertyDefinition operations
 
@@ -163,11 +179,15 @@ class FakeOntologyRepository:
             results = [p for p in results if p.is_relevant == is_relevant]
         return results
 
-    def save_property_definition(self, prop: PropertyDefinition) -> None:
+    def save_property_definition(self, prop: PropertyDefinition) -> PropertyDefinition:
         self._property_definitions[prop.id] = prop
+        return prop
 
-    def delete_property_definition(self, property_id: str) -> None:
-        self._property_definitions.pop(property_id, None)
+    def delete_property_definition(self, property_id: str) -> bool:
+        if property_id in self._property_definitions:
+            self._property_definitions.pop(property_id)
+            return True
+        return False
 
     # Individual operations
 
@@ -180,25 +200,30 @@ class FakeOntologyRepository:
             results = [i for i in results if i.class_id == class_id]
         return results
 
-    def save_individual(self, individual: Individual) -> None:
+    def save_individual(self, individual: Individual) -> Individual:
         self._individuals[individual.id] = individual
+        return individual
 
-    def delete_individual(self, individual_id: str) -> None:
-        self._individuals.pop(individual_id, None)
+    def delete_individual(self, individual_id: str) -> bool:
+        if individual_id in self._individuals:
+            self._individuals.pop(individual_id)
+            return True
+        return False
 
     # Bulk operations
 
-    def get_all_entities_and_relationships(self, taxonomy_id: str) -> dict[str, list]:
-        # Get classes for this taxonomy to filter relationships
-        taxonomy_classes = [c for c in self._classes.values() if c.taxonomy_id == taxonomy_id]
-        taxonomy_class_ids = {c.id for c in taxonomy_classes}
+    def get_all_entities_and_relationships(self) -> tuple[list, list]:
+        """
+        Retrieve all entities and relationships for graph building.
 
-        return {
-            "taxonomies": [t for t in self._taxonomies.values() if t.id == taxonomy_id],
-            "schemes": [s for s in self._schemes.values() if s.taxonomy_id == taxonomy_id],
-            "classes": taxonomy_classes,
-            "relationships": [
-                r for r in self._relationships.values()
-                if r.source_id in taxonomy_class_ids and r.target_id in taxonomy_class_ids
-            ],
-        }
+        Returns:
+            Tuple of (all entities, all relationships)
+        """
+        all_entities = (
+            list(self._taxonomies.values())
+            + list(self._schemes.values())
+            + list(self._classes.values())
+            + list(self._individuals.values())
+            + list(self._property_definitions.values())
+        )
+        return (all_entities, list(self._relationships.values()))
