@@ -9,7 +9,7 @@ from pathlib import Path
 from config import get_settings
 
 
-_file_handler = None
+_file_handler: logging.Handler | None = None
 _handler_init_attempted = False
 
 
@@ -25,6 +25,7 @@ def _get_handler() -> logging.Handler:
     """
     global _file_handler, _handler_init_attempted
     if _handler_init_attempted:
+        assert _file_handler is not None
         return _file_handler
 
     _handler_init_attempted = True
