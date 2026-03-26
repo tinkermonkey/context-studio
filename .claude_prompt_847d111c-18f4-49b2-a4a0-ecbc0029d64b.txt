@@ -1,0 +1,35 @@
+
+You are a Senior Software Engineer.
+
+I implement clean, well thought out code with proper error handling and maintainable architecture.
+
+**Issue Title**: [PR Feedback] EventPublisher Port
+
+**Description**:
+Based on consolidated PR review, address the following in **EventPublisher Port**:
+
+- **`EventPublisher` port missing `subscribe` method**: `port_and_adapter_specs.md` §2.3 specifies the `EventPublisher` protocol requires both `publish` and `subscribe`. The `FakeEventPublisher` has subscription support internally but `subscribe` is not exposed on the Protocol definition in `ports.py`. `domain/ontology/ports.py:409+`
+
+---
+_Created by PR Review Stage - Consolidation Phase_
+
+---
+
+## Concurrent Fix Issues (Same Review Cycle)
+
+The following issues are being fixed simultaneously in this review cycle. Check these issues for any files they modify before making your own changes to avoid introducing conflicts:
+
+- #336: [PR Feedback] OntologyService — move_class
+- #337: [PR Feedback] OntologyService — Missing CRUD Lifecycle Methods
+- #338: [PR Feedback] OntologyService — delete_class and create_relationship
+- #339: [PR Feedback] OntologyService — update_class
+- #340: [PR Feedback] Entity Field Gaps vs. Specification
+- #341: [PR Feedback] EmbeddingService Port Contract
+- #342: [PR Feedback] Value Object Specification Gaps
+- #344: [PR Feedback] SearchCriteria Value Object
+- #345: [PR Feedback] ClassMoved Event Semantics
+- #346: [PR Feedback] Alembic Configuration
+- #347: [PR Feedback] Test Coverage and Fakes
+
+
+

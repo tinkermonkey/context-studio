@@ -10,7 +10,7 @@ Tests verify:
 import sys
 import os
 from datetime import datetime
-from typing import Optional
+from typing import Callable, Optional
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
@@ -201,7 +201,7 @@ class FakeEventPublisher:
             for handler in self.handlers[event_type]:
                 handler(event)
 
-    def subscribe(self, event_type: type, handler) -> None:
+    def subscribe(self, event_type: type[DomainEvent], handler: Callable[[DomainEvent], None]) -> None:
         if event_type not in self.handlers:
             self.handlers[event_type] = []
         self.handlers[event_type].append(handler)

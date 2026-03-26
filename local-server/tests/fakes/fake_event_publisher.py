@@ -21,7 +21,7 @@ class FakeEventPublisher:
         for handler in self._handlers.get(type(event), []):
             handler(event)
 
-    def subscribe(self, event_type: type, handler: Callable) -> None:
+    def subscribe(self, event_type: type[DomainEvent], handler: Callable[[DomainEvent], None]) -> None:
         if event_type not in self._handlers:
             self._handlers[event_type] = []
         self._handlers[event_type].append(handler)
