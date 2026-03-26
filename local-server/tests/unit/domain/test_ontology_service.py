@@ -45,9 +45,9 @@ class TestCreateTaxonomy:
         tax = service.create_taxonomy(title="Biology", description="Life sciences")
         assert tax.id is not None
         assert tax.title == "Biology"
-        assert tax.description == "Life sciences"
-        assert tax.created_at is not None
-        assert tax.updated_at is not None
+        assert tax.definition == "Life sciences"
+        assert tax.date_created is not None
+        assert tax.last_modified is not None
 
         # Verify it was saved
         retrieved = service.get_taxonomy(tax.id)
@@ -88,12 +88,12 @@ class TestCreateScheme:
         assert scheme.id is not None
         assert scheme.taxonomy_id == tax.id
         assert scheme.title == "Animals"
-        assert scheme.description == "Animal kingdom"
+        assert scheme.definition == "Animal kingdom"
 
         # Verify event
         events = service._event_publisher.get_events_of_type(SchemeCreated)
         assert len(events) == 1
-        assert events[0].scheme_id == scheme.id
+        assert events[0].concept_scheme_id == scheme.id
 
     def test_create_scheme_nonexistent_taxonomy_raises(self, service):
         """Create scheme in nonexistent taxonomy raises EntityNotFoundError."""
@@ -275,7 +275,7 @@ class TestRenameScheme:
         # Verify event was emitted
         events = service._event_publisher.get_events_of_type(SchemeUpdated)
         assert len(events) == 1
-        assert events[0].scheme_id == scheme.id
+        assert events[0].concept_scheme_id == scheme.id
         assert events[0].taxonomy_id == tax.id
         assert events[0].changed_fields == ("title",)
         assert events[0].old_values == {"title": "Animals"}
@@ -354,7 +354,7 @@ class TestDeleteScheme:
         # Verify event was emitted
         events = service._event_publisher.get_events_of_type(SchemeDeleted)
         assert len(events) == 1
-        assert events[0].scheme_id == scheme.id
+        assert events[0].concept_scheme_id == scheme.id
         assert events[0].taxonomy_id == tax.id
         assert events[0].title == "Animals"
 
@@ -402,11 +402,11 @@ class TestCreateClass:
         )
 
         assert cls.id is not None
-        assert cls.scheme_id == scheme.id
+        assert cls.concept_scheme_id == scheme.id
         assert cls.taxonomy_id == tax.id
         assert cls.title == "Dog"
-        assert cls.description == "Canine species"
-        assert cls.title_embedding is not None  # Embedding should be generated
+        assert cls.definition == "Canine species"
+        assert cls.embedding is not None  # Embedding should be generated
         assert cls.parent_class_id is None
 
         # Verify event
@@ -498,11 +498,11 @@ class TestUpdateClass:
         tax = service.create_taxonomy(title="Biology")
         scheme = service.create_scheme(taxonomy_id=tax.id, title="Animals")
         cls = service.create_class(scheme_id=scheme.id, title="Dog", description="Canine")
-        old_embedding = cls.title_embedding
+        old_embedding = cls.embedding
 
         updated = service.update_class(class_id=cls.id, title="Canine")
         assert updated.title == "Canine"
-        assert updated.title_embedding != old_embedding
+        assert updated.embedding != old_embedding
 
         # Verify event
         events = service._event_publisher.get_events_of_type(ClassUpdated)
@@ -516,29 +516,29 @@ class TestUpdateClass:
         tax = service.create_taxonomy(title="Biology")
         scheme = service.create_scheme(taxonomy_id=tax.id, title="Animals")
         cls = service.create_class(scheme_id=scheme.id, title="Dog")
-        old_embedding = cls.title_embedding
+        old_embedding = cls.embedding
 
         updated = service.update_class(class_id=cls.id, description="Canine species")
-        assert updated.description == "Canine species"
-        assert updated.title_embedding != old_embedding
+        assert updated.definition == "Canine species"
+        assert updated.embedding != old_embedding
 
         # Verify event
         events = service._event_publisher.get_events_of_type(ClassUpdated)
         assert len(events) == 1
-        assert "description" in events[0].changed_fields
-        assert events[0].old_values == {"description": None}
-        assert events[0].new_values == {"description": "Canine species"}
+        assert "definition" in events[0].changed_fields
+        assert events[0].old_values == {"definition": None}
+        assert events[0].new_values == {"definition": "Canine species"}
 
     def test_update_class_no_change_no_embedding_regen(self, service):
         """Update class with no title/description change does not regenerate embedding or emit event."""
         tax = service.create_taxonomy(title="Biology")
         scheme = service.create_scheme(taxonomy_id=tax.id, title="Animals")
         cls = service.create_class(scheme_id=scheme.id, title="Dog", description="Canine")
-        old_embedding = cls.title_embedding
+        old_embedding = cls.embedding
 
         # Call with empty update (no title, no description)
         updated = service.update_class(class_id=cls.id)
-        assert updated.title_embedding == old_embedding
+        assert updated.embedding == old_embedding
 
         # Verify no ClassUpdated event is emitted when no changes
         events = service._event_publisher.get_events_of_type(ClassUpdated)
@@ -1127,7 +1127,7 @@ class TestCreatePropertyDefinition:
         assert prop.id is not None
         assert prop.identifier == "is_a"
         assert prop.title == "Is A"
-        assert prop.description == "Taxonomic is-a relationship"
+        assert prop.definition == "Taxonomic is-a relationship"
 
         # Verify event
         events = service._event_publisher.get_events_of_type(PropertyDefinitionCreated)

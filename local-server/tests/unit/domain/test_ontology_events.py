@@ -172,11 +172,11 @@ class TestSchemeCreated:
             event_id="evt-scheme-001",
             occurred_at=now,
             aggregate_id="scheme-123",
-            scheme_id="scheme-123",
+            concept_scheme_id="scheme-123",
             title="Animal Kingdom",
             taxonomy_id="tax-456",
         )
-        assert event.scheme_id == "scheme-123"
+        assert event.concept_scheme_id == "scheme-123"
         assert event.title == "Animal Kingdom"
         assert event.taxonomy_id == "tax-456"
 
@@ -187,7 +187,7 @@ class TestSchemeCreated:
             event_id="evt-scheme-001",
             occurred_at=now,
             aggregate_id="scheme-123",
-            scheme_id="scheme-123",
+            concept_scheme_id="scheme-123",
             title="Animal Kingdom",
             taxonomy_id="tax-456",
         )
@@ -299,13 +299,13 @@ class TestSchemeUpdated:
             event_id="evt-scheme-upd-001",
             occurred_at=now,
             aggregate_id="scheme-123",
-            scheme_id="scheme-123",
+            concept_scheme_id="scheme-123",
             taxonomy_id="tax-456",
             changed_fields=("title",),
             old_values={"title": "Old Title"},
             new_values={"title": "New Title"},
         )
-        assert event.scheme_id == "scheme-123"
+        assert event.concept_scheme_id == "scheme-123"
         assert event.taxonomy_id == "tax-456"
         assert event.changed_fields == ("title",)
         assert event.old_values == {"title": "Old Title"}
@@ -318,7 +318,7 @@ class TestSchemeUpdated:
             event_id="evt-scheme-upd-001",
             occurred_at=now,
             aggregate_id="scheme-123",
-            scheme_id="scheme-123",
+            concept_scheme_id="scheme-123",
             taxonomy_id="tax-456",
             changed_fields=("title", "description"),
             old_values={"title": "Old Title", "description": "Old Desc"},
@@ -335,7 +335,7 @@ class TestSchemeUpdated:
             event_id="evt-scheme-upd-001",
             occurred_at=now,
             aggregate_id="scheme-123",
-            scheme_id="scheme-123",
+            concept_scheme_id="scheme-123",
             taxonomy_id="tax-456",
             changed_fields=("title",),
             old_values={"title": "Old Title"},
@@ -355,11 +355,11 @@ class TestSchemeDeleted:
             event_id="evt-scheme-del-001",
             occurred_at=now,
             aggregate_id="scheme-123",
-            scheme_id="scheme-123",
+            concept_scheme_id="scheme-123",
             taxonomy_id="tax-456",
             title="Animal Kingdom",
         )
-        assert event.scheme_id == "scheme-123"
+        assert event.concept_scheme_id == "scheme-123"
         assert event.taxonomy_id == "tax-456"
         assert event.title == "Animal Kingdom"
 
@@ -370,7 +370,7 @@ class TestSchemeDeleted:
             event_id="evt-scheme-del-001",
             occurred_at=now,
             aggregate_id="scheme-123",
-            scheme_id="scheme-123",
+            concept_scheme_id="scheme-123",
             taxonomy_id="tax-456",
             title="Animal Kingdom",
         )
@@ -385,7 +385,7 @@ class TestSchemeDeleted:
                 event_id="evt-scheme-del-001",
                 occurred_at=now,
                 aggregate_id="scheme-123",
-                scheme_id="scheme-123",
+                concept_scheme_id="scheme-123",
                 taxonomy_id="tax-456",
                 title="",
             )
@@ -403,12 +403,12 @@ class TestClassCreated:
             aggregate_id="class-123",
             class_id="class-123",
             title="Mammal",
-            scheme_id="scheme-456",
+            concept_scheme_id="scheme-456",
             taxonomy_id="tax-789",
         )
         assert event.class_id == "class-123"
         assert event.title == "Mammal"
-        assert event.scheme_id == "scheme-456"
+        assert event.concept_scheme_id == "scheme-456"
         assert event.taxonomy_id == "tax-789"
 
     def test_class_created_is_frozen(self):
@@ -420,7 +420,7 @@ class TestClassCreated:
             aggregate_id="class-123",
             class_id="class-123",
             title="Mammal",
-            scheme_id="scheme-456",
+            concept_scheme_id="scheme-456",
             taxonomy_id="tax-789",
         )
         with pytest.raises(FrozenInstanceError):

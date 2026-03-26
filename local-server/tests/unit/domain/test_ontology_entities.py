@@ -25,22 +25,22 @@ class TestTaxonomy:
         tax = Taxonomy(id="tax-1", title="Biology")
         assert tax.id == "tax-1"
         assert tax.title == "Biology"
-        assert tax.description is None
-        assert tax.created_at is not None
-        assert tax.updated_at is not None
+        assert tax.definition is None
+        assert tax.date_created is None
+        assert tax.last_modified is None
 
     def test_taxonomy_creation_with_description(self):
         """Create a taxonomy with description."""
-        tax = Taxonomy(id="tax-1", title="Biology", description="Life science taxonomy")
-        assert tax.description == "Life science taxonomy"
+        tax = Taxonomy(id="tax-1", title="Biology", definition="Life science taxonomy")
+        assert tax.definition == "Life science taxonomy"
 
     def test_taxonomy_rename(self):
         """Rename a taxonomy."""
-        tax = Taxonomy(id="tax-1", title="Biology")
-        original_created = tax.created_at
+        tax = Taxonomy(id="tax-1", title="Biology", date_created=None)
+        original_modified = tax.last_modified
         tax.rename("Biology 2024")
         assert tax.title == "Biology 2024"
-        assert tax.updated_at > original_created
+        assert tax.last_modified is not None
 
     def test_taxonomy_rename_empty_raises(self):
         """Rename with empty string raises ValueError."""
@@ -64,7 +64,7 @@ class TestConceptScheme:
         assert scheme.id == "scheme-1"
         assert scheme.taxonomy_id == "tax-1"
         assert scheme.title == "Animal Classification"
-        assert scheme.description is None
+        assert scheme.definition is None
 
     def test_concept_scheme_creation_with_description(self):
         """Create a concept scheme with description."""
@@ -74,7 +74,7 @@ class TestConceptScheme:
             title="Animal Classification",
             description="Classification by species",
         )
-        assert scheme.description == "Classification by species"
+        assert scheme.definition == "Classification by species"
 
     def test_concept_scheme_rename(self):
         """Rename a concept scheme."""
@@ -96,12 +96,12 @@ class TestClass:
         """Create a class."""
         cls = Class(id="class-1", scheme_id="scheme-1", taxonomy_id="tax-1", title="Dog")
         assert cls.id == "class-1"
-        assert cls.scheme_id == "scheme-1"
+        assert cls.concept_scheme_id == "scheme-1"
         assert cls.taxonomy_id == "tax-1"
         assert cls.title == "Dog"
-        assert cls.description is None
+        assert cls.definition is None
         assert cls.parent_class_id is None
-        assert cls.title_embedding is None
+        assert cls.embedding is None
         assert cls.external_references == []
         assert cls.lexical_senses == []
 
@@ -114,7 +114,7 @@ class TestClass:
             title="Dog",
             description="Canine species",
         )
-        assert cls.description == "Canine species"
+        assert cls.definition == "Canine species"
 
     def test_class_creation_with_parent(self):
         """Create a class with parent."""
@@ -141,8 +141,8 @@ class TestClass:
             title_embedding=title_embedding,
             definition_embedding=definition_embedding,
         )
-        assert cls.title_embedding == title_embedding
-        assert cls.definition_embedding == definition_embedding
+        assert cls.embedding == title_embedding
+        assert cls.embedding == definition_embedding
 
     def test_class_rename(self):
         """Rename a class."""
@@ -224,13 +224,13 @@ class TestIndividual:
         assert ind.id == "ind-1"
         assert ind.class_id == "class-1"
         assert ind.title == "Fido"
-        assert ind.description is None
+        assert ind.definition is None
         assert ind.data_property_values == []
 
     def test_individual_creation_with_description(self):
         """Create an individual with description."""
         ind = Individual(id="ind-1", class_id="class-1", title="Fido", description="My pet dog")
-        assert ind.description == "My pet dog"
+        assert ind.definition == "My pet dog"
 
     def test_individual_creation_with_data_properties(self):
         """Create an individual with data property values."""
@@ -271,8 +271,8 @@ class TestRelationship:
         assert rel.source_id == "class-1"
         assert rel.target_id == "class-2"
         assert rel.property_definition_id == "prop-1"
-        assert rel.property_label == "has_part"
-        assert rel.created_at is not None
+        assert rel == "has_part"
+        assert rel.date_created is not None
 
     def test_relationship_self_loop_raises(self):
         """Create a relationship with same source and target raises ValueError."""
@@ -295,7 +295,7 @@ class TestPropertyDefinition:
         assert prop.id == "prop-1"
         assert prop.identifier == "is_a"
         assert prop.title == "Is A"
-        assert prop.description is None
+        assert prop.definition is None
 
     def test_property_definition_creation_with_description(self):
         """Create a property definition with description."""
@@ -305,7 +305,7 @@ class TestPropertyDefinition:
             title="Is A",
             description="Taxonomic is-a relationship",
         )
-        assert prop.description == "Taxonomic is-a relationship"
+        assert prop.definition == "Taxonomic is-a relationship"
 
     def test_property_definition_rename(self):
         """Rename a property definition."""

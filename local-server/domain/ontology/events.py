@@ -63,12 +63,12 @@ class SchemeCreated(DomainEvent):
     Event emitted when a new concept scheme is created.
 
     Attributes:
-        scheme_id: ID of the created concept scheme
+        concept_scheme_id: ID of the created concept scheme
         title: Title of the concept scheme
         taxonomy_id: ID of the parent taxonomy
     """
 
-    scheme_id: str
+    concept_scheme_id: str
     title: str
     taxonomy_id: str
 
@@ -81,13 +81,13 @@ class ClassCreated(DomainEvent):
     Attributes:
         class_id: ID of the created class
         title: Title of the class
-        scheme_id: ID of the parent concept scheme
+        concept_scheme_id: ID of the parent concept scheme
         taxonomy_id: ID of the parent taxonomy
     """
 
     class_id: str
     title: str
-    scheme_id: str
+    concept_scheme_id: str
     taxonomy_id: str
 
 
@@ -227,14 +227,14 @@ class SchemeUpdated(DomainEvent):
     Event emitted when a concept scheme is updated (e.g., renamed).
 
     Attributes:
-        scheme_id: ID of the updated concept scheme
+        concept_scheme_id: ID of the updated concept scheme
         taxonomy_id: ID of the parent taxonomy
         changed_fields: Tuple of field names that changed
         old_values: Dictionary of field names to their previous values
         new_values: Dictionary of field names to their new values
     """
 
-    scheme_id: str
+    concept_scheme_id: str
     taxonomy_id: str
     changed_fields: tuple[str, ...]
     old_values: dict[str, str | None]
@@ -247,12 +247,12 @@ class SchemeDeleted(DomainEvent):
     Event emitted when a concept scheme is deleted.
 
     Attributes:
-        scheme_id: ID of the deleted concept scheme
+        concept_scheme_id: ID of the deleted concept scheme
         taxonomy_id: ID of the parent taxonomy
         title: Title of the deleted concept scheme
     """
 
-    scheme_id: str
+    concept_scheme_id: str
     taxonomy_id: str
     title: str
 

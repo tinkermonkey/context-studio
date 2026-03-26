@@ -54,7 +54,7 @@ class OntologyService:
 
     # Taxonomy operations
 
-    def create_taxonomy(self, title: str, description: Optional[str] = None) -> Taxonomy:
+    def create_taxonomy(self, title: str, definition: Optional[str] = None) -> Taxonomy:
         """
         Create a new taxonomy.
 
@@ -62,7 +62,7 @@ class OntologyService:
 
         Args:
             title: Display name for the taxonomy
-            description: Optional longer description
+            definition: Optional longer definition
 
         Returns:
             The created Taxonomy
@@ -83,9 +83,9 @@ class OntologyService:
         taxonomy = Taxonomy(
             id=taxonomy_id,
             title=title,
-            description=description,
-            created_at=datetime.utcnow(),
-            updated_at=datetime.utcnow(),
+            definition=definition,
+            date_created=datetime.utcnow(),
+            last_modified=datetime.utcnow(),
         )
         self._repository.save_taxonomy(taxonomy)
 
@@ -212,7 +212,7 @@ class OntologyService:
 
     # ConceptScheme operations
 
-    def create_scheme(self, taxonomy_id: str, title: str, description: Optional[str] = None) -> ConceptScheme:
+    def create_scheme(self, taxonomy_id: str, title: str, definition: Optional[str] = None) -> ConceptScheme:
         """
         Create a new concept scheme within a taxonomy.
 
@@ -223,7 +223,7 @@ class OntologyService:
         Args:
             taxonomy_id: ID of the parent taxonomy
             title: Display name for the scheme
-            description: Optional longer description
+            definition: Optional longer definition
 
         Returns:
             The created ConceptScheme
@@ -251,9 +251,9 @@ class OntologyService:
             id=scheme_id,
             taxonomy_id=taxonomy_id,
             title=title,
-            description=description,
-            created_at=datetime.utcnow(),
-            updated_at=datetime.utcnow(),
+            definition=definition,
+            date_created=datetime.utcnow(),
+            last_modified=datetime.utcnow(),
         )
         self._repository.save_concept_scheme(scheme)
 
@@ -261,7 +261,7 @@ class OntologyService:
             event_id=str(uuid4()),
             occurred_at=datetime.utcnow(),
             aggregate_id=scheme_id,
-            scheme_id=scheme_id,
+            concept_scheme_id=scheme_id,
             title=title,
             taxonomy_id=taxonomy_id,
         ))
@@ -342,7 +342,7 @@ class OntologyService:
             event_id=str(uuid4()),
             occurred_at=datetime.utcnow(),
             aggregate_id=scheme_id,
-            scheme_id=scheme_id,
+            concept_scheme_id=scheme_id,
             taxonomy_id=scheme.taxonomy_id,
             changed_fields=("title",),
             old_values={"title": old_title},
@@ -379,7 +379,7 @@ class OntologyService:
             event_id=str(uuid4()),
             occurred_at=datetime.utcnow(),
             aggregate_id=scheme_id,
-            scheme_id=scheme_id,
+            concept_scheme_id=scheme_id,
             taxonomy_id=scheme.taxonomy_id,
             title=scheme.title,
         ))
@@ -388,9 +388,9 @@ class OntologyService:
 
     def create_class(
         self,
-        scheme_id: str,
+        concept_scheme_id: str,
         title: str,
-        description: Optional[str] = None,
+        definition: Optional[str] = None,
         parent_class_id: Optional[str] = None,
     ) -> Class:
         """
@@ -403,9 +403,9 @@ class OntologyService:
         - The parent class ID is not the class ID (prevented in create, but checked)
 
         Args:
-            scheme_id: ID of the parent concept scheme
+            concept_scheme_id: ID of the parent concept scheme
             title: Display name for the class
-            description: Optional longer description
+            definition: Optional longer definition
             parent_class_id: Optional ID of the parent class for hierarchy
 
         Returns:
@@ -420,12 +420,12 @@ class OntologyService:
             raise ValueError("Title cannot be empty")
 
         # Validate scheme exists
-        scheme = self._repository.get_concept_scheme(scheme_id)
+        scheme = self._repository.get_concept_scheme(concept_scheme_id)
         if scheme is None:
-            raise EntityNotFoundError("ConceptScheme", scheme_id)
+            raise EntityNotFoundError("ConceptScheme", concept_scheme_id)
 
         # Check for duplicate title within this scheme
-        existing_classes = self._repository.list_classes(scheme_id=scheme_id)
+        existing_classes = self._repository.list_classes(concept_scheme_id=concept_scheme_id)
         if any(c.title == title for c in existing_classes):
             raise DuplicateEntityError(f"Class with title '{title}' already exists in this scheme")
 
@@ -435,26 +435,25 @@ class OntologyService:
             if parent_class is None:
                 raise EntityNotFoundError("Class", parent_class_id)
             # Verify parent is in the same scheme
-            if parent_class.scheme_id != scheme_id:
+            if parent_class.concept_scheme_id != concept_scheme_id:
                 raise ValueError(f"Parent class {parent_class_id} is not in the same scheme")
 
         class_id = str(uuid4())
 
         # Generate embedding for the class
-        embed_text = f"{title} {description or ''}".strip()
+        embed_text = f"{title} {definition or ''}".strip()
         embedding = self._embedding_service.embed_text(embed_text)
 
         cls = Class(
             id=class_id,
-            scheme_id=scheme_id,
+            concept_scheme_id=concept_scheme_id,
             taxonomy_id=scheme.taxonomy_id,
             title=title,
-            description=description,
+            definition=definition,
             parent_class_id=parent_class_id,
-            title_embedding=embedding,
-            definition_embedding=embedding,
-            created_at=datetime.utcnow(),
-            updated_at=datetime.utcnow(),
+            embedding=embedding,
+            date_created=datetime.utcnow(),
+            last_modified=datetime.utcnow(),
         )
         self._repository.save_class(cls)
 
@@ -464,7 +463,7 @@ class OntologyService:
             aggregate_id=class_id,
             class_id=class_id,
             title=title,
-            scheme_id=scheme_id,
+            concept_scheme_id=concept_scheme_id,
             taxonomy_id=scheme.taxonomy_id,
         ))
 
@@ -490,7 +489,7 @@ class OntologyService:
 
     def list_classes(
         self,
-        scheme_id: Optional[str] = None,
+        concept_scheme_id: Optional[str] = None,
         parent_class_id: Optional[str] = None,
         limit: int = 100,
         offset: int = 0,
@@ -499,7 +498,7 @@ class OntologyService:
         Retrieve classes with optional filtering and pagination.
 
         Args:
-            scheme_id: Optional concept scheme ID to filter by
+            concept_scheme_id: Optional concept scheme ID to filter by
             parent_class_id: Optional parent class ID to filter by (for hierarchy)
             limit: Maximum number of results to return
             offset: Number of results to skip
@@ -508,7 +507,7 @@ class OntologyService:
             List of Class entities
         """
         return self._repository.list_classes(
-            scheme_id=scheme_id,
+            concept_scheme_id=concept_scheme_id,
             parent_class_id=parent_class_id,
             limit=limit,
             offset=offset,
@@ -518,22 +517,22 @@ class OntologyService:
         self,
         class_id: str,
         title: Optional[str] = None,
-        description: Optional[str] = None,
+        definition: Optional[str] = None,
     ) -> Class:
         """
-        Update a class's title and/or description.
+        Update a class's title and/or definition.
 
         Validates that:
         - The class exists
         - If a new title is provided, it is unique within the scheme (excluding the current class)
 
-        If either title or description changed, regenerates the embedding.
+        If either title or definition changed, regenerates the embedding.
         If neither changed, skips embedding regeneration.
 
         Args:
             class_id: The ID of the class to update
             title: New title (optional)
-            description: New description (optional)
+            definition: New definition (optional)
 
         Returns:
             The updated Class
@@ -548,46 +547,45 @@ class OntologyService:
 
         # Capture old values before modification
         old_title = cls.title
-        old_description = cls.description
+        old_definition = cls.definition
 
         title_changed = title is not None and title != cls.title
-        desc_changed = description is not None and description != cls.description
+        def_changed = definition is not None and definition != cls.definition
 
         # Check for duplicate title within this scheme if title is changing
         if title_changed:
-            existing_classes = self._repository.list_classes(scheme_id=cls.scheme_id)
+            existing_classes = self._repository.list_classes(concept_scheme_id=cls.concept_scheme_id)
             if any(c.title == title and c.id != class_id for c in existing_classes):
                 raise DuplicateEntityError(f"Class with title '{title}' already exists in this scheme")
 
         if title is not None and title_changed:
             cls.rename(title)
-        if desc_changed:
-            cls.description = description
+        if def_changed:
+            cls.definition = definition
 
-        # Regenerate embedding only if title or description changed
-        if title_changed or desc_changed:
-            embed_text = f"{cls.title} {cls.description or ''}".strip()
+        # Regenerate embedding only if title or definition changed
+        if title_changed or def_changed:
+            embed_text = f"{cls.title} {cls.definition or ''}".strip()
             embedding = self._embedding_service.embed_text(embed_text)
-            cls.title_embedding = embedding
-            cls.definition_embedding = embedding
+            cls.embedding = embedding
 
         # Guard against no-op updates
-        if not (title_changed or desc_changed):
+        if not (title_changed or def_changed):
             return cls
 
-        cls.updated_at = datetime.utcnow()
+        cls.last_modified = datetime.utcnow()
         self._repository.save_class(cls)
 
-        changed = tuple(f for f, was_changed in [("title", title_changed), ("description", desc_changed)] if was_changed)
+        changed = tuple(f for f, was_changed in [("title", title_changed), ("definition", def_changed)] if was_changed)
 
         old_values: dict[str, str | None] = {}
         new_values: dict[str, str | None] = {}
         if title_changed:
             old_values["title"] = old_title
             new_values["title"] = cls.title
-        if desc_changed:
-            old_values["description"] = old_description
-            new_values["description"] = cls.description
+        if def_changed:
+            old_values["definition"] = old_definition
+            new_values["definition"] = cls.definition
 
         self._event_publisher.publish(ClassUpdated(
             event_id=str(uuid4()),
@@ -708,7 +706,7 @@ class OntologyService:
             new_parent = self._repository.get_class(new_parent_id)
             if new_parent is None:
                 raise EntityNotFoundError("Class", new_parent_id)
-            if new_parent.scheme_id != cls.scheme_id:
+            if new_parent.concept_scheme_id != cls.concept_scheme_id:
                 raise ValueError(f"Parent class {new_parent_id} is not in the same scheme")
 
             # Traverse ancestor chain of new_parent_id looking for class_id
@@ -820,8 +818,7 @@ class OntologyService:
             source_id=source_id,
             target_id=target_id,
             property_definition_id=property_definition_id,
-            property_label=prop_def.title,
-            created_at=datetime.utcnow(),
+            date_created=datetime.utcnow(),
         )
         self._repository.save_relationship(relationship)
 
@@ -955,7 +952,7 @@ class OntologyService:
         self,
         identifier: str,
         title: str,
-        description: Optional[str] = None,
+        definition: Optional[str] = None,
     ) -> PropertyDefinition:
         """
         Create a new property definition (relationship type).
@@ -967,7 +964,7 @@ class OntologyService:
         Args:
             identifier: Machine-readable identifier for the property
             title: Display name for the property
-            description: Optional longer description
+            definition: Optional longer definition
 
         Returns:
             The created PropertyDefinition
@@ -993,9 +990,9 @@ class OntologyService:
             id=property_id,
             identifier=identifier,
             title=title,
-            description=description,
-            created_at=datetime.utcnow(),
-            updated_at=datetime.utcnow(),
+            definition=definition,
+            date_created=datetime.utcnow(),
+            date_modified=datetime.utcnow(),
         )
         self._repository.save_property_definition(prop_def)
 
