@@ -22,6 +22,13 @@ config = context.config
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
+# Check if this is an operations database migration
+# If -x db=operations is passed, this env.py should return early
+x_args = context.get_x_argument(as_dictionary=True)
+if x_args.get("db") == "operations":
+    # Route operations migrations to operations/env.py instead
+    sys.exit(0)
+
 # add your model's MetaData object here
 # for 'autogenerate' support
 target_metadata = Base.metadata

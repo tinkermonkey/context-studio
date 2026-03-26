@@ -129,16 +129,29 @@ Alembic is configured under `adapters/persistence/sqlite/` with separate environ
 
 To make a schema change for **`local.db`**:
 1. Edit the ORM model in `adapters/persistence/sqlite/models.py`
-2. Run `alembic --config adapters/persistence/sqlite/alembic.ini revision --autogenerate -m "description of change"`
+2. Run `alembic --config adapters/persistence/sqlite/alembic.ini revision --autogenerate --version-path adapters/persistence/sqlite/versions -m "description of change"`
 3. Review the generated script in `adapters/persistence/sqlite/versions/`, then run `alembic --config adapters/persistence/sqlite/alembic.ini upgrade head`
 4. To roll back: `alembic --config adapters/persistence/sqlite/alembic.ini downgrade -1`
 
 To make a schema change for **`operations.db`** (when models are implemented):
 1. Edit the ORM model in `adapters/persistence/sqlite/operations/models.py`
-2. Run `alembic --config adapters/persistence/sqlite/alembic.ini -x db=operations revision --autogenerate -m "description of change"`
+2. Run `alembic --config adapters/persistence/sqlite/alembic.ini -x db=operations revision --autogenerate --version-path adapters/persistence/sqlite/operations/versions -m "description of change"`
 3. Review the generated script in `adapters/persistence/sqlite/operations/versions/`, then run `alembic --config adapters/persistence/sqlite/alembic.ini -x db=operations upgrade head`
+4. To roll back: `alembic --config adapters/persistence/sqlite/alembic.ini -x db=operations downgrade -1`
 
-**Never write migration SQL by hand.** Always use autogenerate.
+Alternatively, use the helper script:
+```bash
+# For local.db
+python scripts/run_migrations.py local upgrade head
+
+# For operations.db
+python scripts/run_migrations.py operations upgrade head
+
+# For both
+python scripts/run_migrations.py all upgrade head
+```
+
+**Never write migration SQL by hand.** Always use autogenerate. The `--version-path` flag is required when using multiple `version_locations` to specify which directory receives the generated migration script.
 
 ### Code Structure
 
@@ -157,11 +170,12 @@ To make a schema change for **`operations.db`** (when models are implemented):
 │   ├── persistence/sqlite/         # SQLAlchemy models, repository implementations, Alembic
 │   │   ├── alembic.ini             # Alembic configuration for both databases
 │   │   ├── env.py                  # Alembic environment for local.db
+│   │   ├── script.py.mako          # Alembic migration template
 │   │   ├── models.py               # SQLAlchemy ORM models (source of truth for local.db schema)
 │   │   ├── versions/               # Auto-generated Alembic migration scripts for local.db
 │   │   ├── operations/             # Separate environment for operations.db
 │   │   │   ├── env.py              # Alembic environment for operations.db
-│   │   │   ├── models.py           # SQLAlchemy ORM models for operations.db (placeholder)
+│   │   │   ├── models.py           # SQLAlchemy ORM models for operations.db
 │   │   │   └── versions/           # Auto-generated Alembic migration scripts for operations.db
 │   │   ├── ontology_repo.py        # Repository implementation for ontology context
 │   │   ├── change_repo.py          # Repository implementation for versioning context
@@ -181,7 +195,7 @@ To make a schema change for **`operations.db`** (when models are implemented):
 │   └── claudes_thoughts/           # Claude's notes and analysis
 ├── scripts/
 │   ├── check_domain_imports.py     # Verify domain/ has no infrastructure imports
-│   ├── run_migrations.py           # Helper to run Alembic migrations for local.db and operations.db
+│   ├── run_migrations.py           # Helper to run migrations for both databases
 │   └── update_api_specs.py
 └── utils/
     └── logger.py

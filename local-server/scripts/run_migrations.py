@@ -3,16 +3,15 @@
 Utility script to run Alembic migrations for both local.db and operations.db.
 
 Usage:
-    python scripts/run_migrations.py upgrade head
-    python scripts/run_migrations.py downgrade -1
-    python scripts/run_migrations.py revision --autogenerate -m "add column"
+    python scripts/run_migrations.py local upgrade head
+    python scripts/run_migrations.py operations downgrade -1
+    python scripts/run_migrations.py all upgrade head
 
 This script abstracts away the need to specify --config and working directories.
 """
 
 import subprocess
 import sys
-import os
 from pathlib import Path
 
 # Get the local-server root directory
@@ -25,12 +24,7 @@ def run_migrations(database: str, args: list[str]) -> int:
         print(f"Error: Invalid database '{database}'. Must be 'local' or 'operations'.")
         return 1
 
-    if database == "local":
-        config_path = SQLITE_DIR / "alembic.ini"
-        env_path = SQLITE_DIR / "env.py"
-    else:  # operations
-        config_path = SQLITE_DIR / "alembic.ini"
-        env_path = SQLITE_DIR / "operations" / "env.py"
+    config_path = SQLITE_DIR / "alembic.ini"
 
     # Construct the alembic command
     cmd = [
@@ -39,9 +33,9 @@ def run_migrations(database: str, args: list[str]) -> int:
         str(config_path),
     ]
 
-    # For operations.db, specify the script location
+    # For operations.db, route using the -x flag
     if database == "operations":
-        cmd.extend(["-n", "operations"])
+        cmd.extend(["-x", "db=operations"])
 
     cmd.extend(args)
 
