@@ -12,8 +12,6 @@ import os
 from datetime import datetime
 from typing import Optional
 
-import pytest
-
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 from domain.ontology.ports import (
@@ -22,19 +20,8 @@ from domain.ontology.ports import (
     OntologyRepository,
 )
 from domain.ontology.events import DomainEvent, ClassCreated
-from domain.ontology.entities import Taxonomy, ConceptScheme, Class, Relationship, PropertyDefinition
+from domain.ontology.entities import Taxonomy, ConceptScheme, Class, Relationship, PropertyDefinition, Individual
 from domain.ontology.value_objects import SearchCriteria
-
-
-class FakeTaxonomy:
-    """Fake Taxonomy for testing."""
-
-    def __init__(self, id: str, title: str):
-        self.id = id
-        self.title = title
-        self.description = None
-        self.created_at = datetime.utcnow()
-        self.updated_at = datetime.utcnow()
 
 
 class FakeOntologyRepository:
@@ -158,16 +145,16 @@ class FakeOntologyRepository:
         if property_id in self.property_definitions:
             del self.property_definitions[property_id]
 
-    def get_individual(self, individual_id: str):
+    def get_individual(self, individual_id: str) -> Optional[Individual]:
         raise NotImplementedError()
 
-    def list_individuals(self, class_id: Optional[str] = None):
+    def list_individuals(self, class_id: Optional[str] = None) -> list[Individual]:
         raise NotImplementedError()
 
-    def save_individual(self, individual):
+    def save_individual(self, individual: Individual) -> None:
         raise NotImplementedError()
 
-    def delete_individual(self, individual_id: str):
+    def delete_individual(self, individual_id: str) -> None:
         raise NotImplementedError()
 
     def get_all_entities_and_relationships(self, taxonomy_id: str) -> dict:

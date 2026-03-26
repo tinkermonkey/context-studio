@@ -36,7 +36,7 @@ class DomainEvent:
         Raises:
             ValueError: If any string field is empty or contains only whitespace
         """
-        for field_name, field_value in self.__dataclass_fields__.items():
+        for field_name, _ in self.__dataclass_fields__.items():
             v = getattr(self, field_name)
             # Only validate string fields; skip datetime and other types
             if isinstance(v, str) and not v.strip():

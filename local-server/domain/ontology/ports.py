@@ -11,7 +11,7 @@ Implementations do not inherit from the protocol; they implement the interface s
 
 from __future__ import annotations
 
-from typing import Callable, Optional, Protocol
+from typing import Callable, Protocol
 
 from .entities import Class, ConceptScheme, Individual, PropertyDefinition, Relationship, Taxonomy
 from .events import DomainEvent
@@ -28,7 +28,7 @@ class OntologyRepository(Protocol):
     """
 
     # Taxonomy operations
-    def get_taxonomy(self, taxonomy_id: str) -> Optional[Taxonomy]:
+    def get_taxonomy(self, taxonomy_id: str) -> Taxonomy | None:
         """
         Retrieve a taxonomy by ID.
 
@@ -68,7 +68,7 @@ class OntologyRepository(Protocol):
         ...
 
     # ConceptScheme operations
-    def get_concept_scheme(self, scheme_id: str) -> Optional[ConceptScheme]:
+    def get_concept_scheme(self, scheme_id: str) -> ConceptScheme | None:
         """
         Retrieve a concept scheme by ID.
 
@@ -80,7 +80,7 @@ class OntologyRepository(Protocol):
         """
         ...
 
-    def list_concept_schemes(self, taxonomy_id: Optional[str] = None) -> list[ConceptScheme]:
+    def list_concept_schemes(self, taxonomy_id: str | None = None) -> list[ConceptScheme]:
         """
         Retrieve concept schemes, optionally filtered by taxonomy.
 
@@ -111,7 +111,7 @@ class OntologyRepository(Protocol):
         ...
 
     # Class operations
-    def get_class(self, class_id: str) -> Optional[Class]:
+    def get_class(self, class_id: str) -> Class | None:
         """
         Retrieve a class by ID.
 
@@ -125,8 +125,8 @@ class OntologyRepository(Protocol):
 
     def list_classes(
         self,
-        scheme_id: Optional[str] = None,
-        parent_class_id: Optional[str] = None,
+        scheme_id: str | None = None,
+        parent_class_id: str | None = None,
         limit: int = 100,
         offset: int = 0,
     ) -> list[Class]:
@@ -156,7 +156,7 @@ class OntologyRepository(Protocol):
         """
         ...
 
-    def count_classes(self, scheme_id: Optional[str] = None) -> int:
+    def count_classes(self, scheme_id: str | None = None) -> int:
         """
         Count classes, optionally filtered by scheme.
 
@@ -187,7 +187,7 @@ class OntologyRepository(Protocol):
         ...
 
     # Relationship operations
-    def get_relationship(self, relationship_id: str) -> Optional[Relationship]:
+    def get_relationship(self, relationship_id: str) -> Relationship | None:
         """
         Retrieve a relationship by ID.
 
@@ -201,9 +201,9 @@ class OntologyRepository(Protocol):
 
     def list_relationships(
         self,
-        source_id: Optional[str] = None,
-        target_id: Optional[str] = None,
-        property_id: Optional[str] = None,
+        source_id: str | None = None,
+        target_id: str | None = None,
+        property_id: str | None = None,
     ) -> list[Relationship]:
         """
         Retrieve relationships with optional filtering.
@@ -237,7 +237,7 @@ class OntologyRepository(Protocol):
         ...
 
     # PropertyDefinition operations
-    def get_property_definition(self, property_id: str) -> Optional[PropertyDefinition]:
+    def get_property_definition(self, property_id: str) -> PropertyDefinition | None:
         """
         Retrieve a property definition by ID.
 
@@ -249,7 +249,7 @@ class OntologyRepository(Protocol):
         """
         ...
 
-    def get_property_definition_by_identifier(self, identifier: str) -> Optional[PropertyDefinition]:
+    def get_property_definition_by_identifier(self, identifier: str) -> PropertyDefinition | None:
         """
         Retrieve a property definition by its machine-readable identifier.
 
@@ -261,7 +261,7 @@ class OntologyRepository(Protocol):
         """
         ...
 
-    def list_property_definitions(self, is_relevant: Optional[bool] = None) -> list[PropertyDefinition]:
+    def list_property_definitions(self, is_relevant: bool | None = None) -> list[PropertyDefinition]:
         """
         Retrieve property definitions, optionally filtered by relevance.
 
@@ -292,7 +292,7 @@ class OntologyRepository(Protocol):
         ...
 
     # Individual operations (deferred — all raise NotImplementedError for now)
-    def get_individual(self, individual_id: str) -> Optional[Individual]:
+    def get_individual(self, individual_id: str) -> Individual | None:
         """
         Retrieve an individual by ID.
 
@@ -307,7 +307,7 @@ class OntologyRepository(Protocol):
         """
         ...
 
-    def list_individuals(self, class_id: Optional[str] = None) -> list[Individual]:
+    def list_individuals(self, class_id: str | None = None) -> list[Individual]:
         """
         Retrieve individuals, optionally filtered by class.
 
@@ -347,7 +347,7 @@ class OntologyRepository(Protocol):
         ...
 
     # Bulk operations
-    def get_all_entities_and_relationships(self, taxonomy_id: str) -> dict:
+    def get_all_entities_and_relationships(self, taxonomy_id: str) -> dict[str, list]:
         """
         Retrieve all entities and relationships for a taxonomy.
 
@@ -423,7 +423,7 @@ class EventPublisher(Protocol):
         """
         ...
 
-    def subscribe(self, event_type: type, handler: Callable) -> None:
+    def subscribe(self, event_type: type[DomainEvent], handler: Callable[[DomainEvent], None]) -> None:
         """
         Subscribe a handler to events of a specific type.
 
