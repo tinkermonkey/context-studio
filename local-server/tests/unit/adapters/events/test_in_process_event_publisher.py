@@ -204,3 +204,99 @@ class TestInProcessEventPublisher:
         assert len(received_events) == 2
         assert received_events[0] is event1
         assert received_events[1] is event2
+
+    def test_handler_exception_isolation(self):
+        """If one handler raises an exception, other handlers still execute."""
+        publisher = InProcessEventPublisher()
+        successful_handlers = []
+
+        def failing_handler(event: DomainEvent) -> None:
+            raise ValueError("Handler failed")
+
+        def successful_handler_1(event: DomainEvent) -> None:
+            successful_handlers.append(1)
+
+        def successful_handler_2(event: DomainEvent) -> None:
+            successful_handlers.append(2)
+
+        event = ClassCreated(
+            event_id=str(uuid4()),
+            occurred_at=datetime.utcnow(),
+            aggregate_id="class-123",
+            class_id="class-123",
+            title="TestClass",
+            scheme_id="scheme-456",
+            taxonomy_id="tax-789",
+        )
+
+        publisher.subscribe(ClassCreated, successful_handler_1)
+        publisher.subscribe(ClassCreated, failing_handler)
+        publisher.subscribe(ClassCreated, successful_handler_2)
+
+        # Publishing should not raise, even though one handler fails
+        publisher.publish(event)
+
+        # Both successful handlers should have executed despite the failing handler
+        assert len(successful_handlers) == 2
+        assert successful_handlers == [1, 2]
+
+    def test_multiple_handler_exceptions_isolated(self):
+        """Multiple failing handlers do not prevent other handlers from executing."""
+        publisher = InProcessEventPublisher()
+        successful_handlers = []
+
+        def failing_handler_1(event: DomainEvent) -> None:
+            raise RuntimeError("Handler 1 failed")
+
+        def successful_handler(event: DomainEvent) -> None:
+            successful_handlers.append("success")
+
+        def failing_handler_2(event: DomainEvent) -> None:
+            raise ValueError("Handler 2 failed")
+
+        event = ClassCreated(
+            event_id=str(uuid4()),
+            occurred_at=datetime.utcnow(),
+            aggregate_id="class-123",
+            class_id="class-123",
+            title="TestClass",
+            scheme_id="scheme-456",
+            taxonomy_id="tax-789",
+        )
+
+        publisher.subscribe(ClassCreated, failing_handler_1)
+        publisher.subscribe(ClassCreated, successful_handler)
+        publisher.subscribe(ClassCreated, failing_handler_2)
+
+        # Publishing should not raise despite multiple failing handlers
+        publisher.publish(event)
+
+        # Successful handler should have executed
+        assert len(successful_handlers) == 1
+        assert successful_handlers[0] == "success"
+
+    def test_exception_does_not_propagate_to_caller(self):
+        """Exceptions in handlers do not propagate to the publish() caller."""
+        publisher = InProcessEventPublisher()
+
+        def failing_handler(event: DomainEvent) -> None:
+            raise Exception("Handler error")
+
+        event = ClassCreated(
+            event_id=str(uuid4()),
+            occurred_at=datetime.utcnow(),
+            aggregate_id="class-123",
+            class_id="class-123",
+            title="TestClass",
+            scheme_id="scheme-456",
+            taxonomy_id="tax-789",
+        )
+
+        publisher.subscribe(ClassCreated, failing_handler)
+
+        # publish() should not raise even when handler fails
+        try:
+            publisher.publish(event)
+        except Exception:
+            # If we reach here, the exception was not properly isolated
+            assert False, "Handler exception propagated to publish() caller"
