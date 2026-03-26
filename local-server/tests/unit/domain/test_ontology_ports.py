@@ -9,7 +9,7 @@ Tests verify:
 
 import sys
 import os
-from datetime import datetime
+from datetime import datetime, timezone
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
@@ -79,7 +79,7 @@ class TestOntologyRepositoryProtocol:
     def test_ontology_repository_fake_taxonomy_operations(self):
         """FakeOntologyRepository implements taxonomy operations."""
         repo = FakeOntologyRepository()
-        now = datetime.utcnow()
+        now = datetime.now(timezone.utc)
         tax = Taxonomy(id="tax-1", title="Test", created_at=now, last_modified=now)
 
         repo.save_taxonomy(tax)
@@ -156,7 +156,6 @@ class TestEventPublisherProtocol:
     def test_event_publisher_publish_accepts_domain_event(self):
         """EventPublisher.publish accepts DomainEvent instances."""
         publisher = FakeEventPublisher()
-        datetime.utcnow()
         event = ClassCreated(
             class_id="class-1",
             title="Test Class",
@@ -179,7 +178,6 @@ class TestEventPublisherProtocol:
 
         publisher.subscribe(ClassCreated, handler)
 
-        datetime.utcnow()
         event = ClassCreated(
             class_id="class-1",
             title="Test Class",
@@ -210,7 +208,6 @@ class TestEventPublisherProtocol:
         publisher.subscribe(ClassCreated, handler1)
         publisher.subscribe(ClassCreated, handler2)
 
-        datetime.utcnow()
         event = ClassCreated(
             class_id="class-1",
             title="Test Class",

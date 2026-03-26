@@ -11,7 +11,7 @@ Tests verify:
 import sys
 import os
 from dataclasses import FrozenInstanceError
-from datetime import datetime
+from datetime import datetime, timezone
 
 import pytest
 
@@ -49,7 +49,7 @@ class TestDomainEventBase:
 
     def test_domain_event_creation_with_explicit_values(self):
         """DomainEvent can be instantiated with explicit event_id and occurred_at."""
-        now = datetime.utcnow()
+        now = datetime.now(timezone.utc)
         event = DomainEvent(
             event_id="evt-123",
             occurred_at=now,
@@ -65,7 +65,7 @@ class TestDomainEventBase:
 
     def test_domain_event_rejects_empty_event_id(self):
         """DomainEvent raises ValueError if event_id is empty."""
-        now = datetime.utcnow()
+        now = datetime.now(timezone.utc)
         with pytest.raises(ValueError, match="Event field 'event_id' cannot be empty"):
             DomainEvent(
                 event_id="",
@@ -74,7 +74,7 @@ class TestDomainEventBase:
 
     def test_domain_event_rejects_whitespace_event_id(self):
         """DomainEvent raises ValueError if event_id is only whitespace."""
-        now = datetime.utcnow()
+        now = datetime.now(timezone.utc)
         with pytest.raises(ValueError, match="Event field 'event_id' cannot be empty"):
             DomainEvent(
                 event_id="   ",
