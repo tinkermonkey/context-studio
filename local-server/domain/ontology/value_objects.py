@@ -9,6 +9,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from enum import Enum
+from typing import Any
 
 
 class NodeType(str, Enum):
@@ -37,7 +38,7 @@ class ExternalReference:
     uri: str
     label: str | None = None
     confidence: float | None = None
-    metadata: tuple[tuple[str, str], ...] | None = None
+    metadata: tuple[tuple[str, Any], ...] | None = None
 
 
 @dataclass(frozen=True)
