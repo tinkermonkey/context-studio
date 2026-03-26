@@ -13,7 +13,6 @@ import os
 from datetime import datetime
 from uuid import uuid4
 
-import pytest
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))))
 
