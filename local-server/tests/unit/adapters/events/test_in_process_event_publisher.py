@@ -295,8 +295,4 @@ class TestInProcessEventPublisher:
         publisher.subscribe(ClassCreated, failing_handler)
 
         # publish() should not raise even when handler fails
-        try:
-            publisher.publish(event)
-        except Exception:
-            # If we reach here, the exception was not properly isolated
-            assert False, "Handler exception propagated to publish() caller"
+        publisher.publish(event)

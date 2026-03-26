@@ -44,8 +44,9 @@ class InProcessEventPublisher:
             try:
                 handler(event)
             except Exception as e:
+                handler_name = getattr(handler, '__name__', repr(handler))
                 logger.error(
-                    f"Handler {handler.__name__} raised exception while processing "
+                    f"Handler {handler_name} raised exception while processing "
                     f"event {event_type.__name__} (id: {event.event_id}): {type(e).__name__}: {str(e)}",
                     exc_info=True,
                 )
