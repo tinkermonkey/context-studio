@@ -9,7 +9,6 @@ Tests verify:
 
 import sys
 import os
-import struct
 from datetime import datetime
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
@@ -111,19 +110,22 @@ class TestEmbeddingServiceProtocol:
         service: EmbeddingService = FakeEmbeddingService()
         assert service is not None
 
-    def test_embedding_service_embed_text_returns_bytes(self):
-        """EmbeddingService.embed_text returns bytes (serialized float32 array)."""
+    def test_embedding_service_embed_text_returns_list_of_floats(self):
+        """EmbeddingService.embed_text returns deterministic list of floats."""
         service = FakeEmbeddingService()
         result = service.embed_text("test text")
-        assert isinstance(result, bytes)
+        assert isinstance(result, list)
+        assert all(isinstance(f, float) for f in result)
+        assert len(result) == FakeEmbeddingService.EMBEDDING_DIMENSION
 
-    def test_embedding_service_embed_batch_returns_list_of_bytes(self):
-        """EmbeddingService.embed_batch returns list of bytes."""
+    def test_embedding_service_embed_batch_returns_list_of_lists(self):
+        """EmbeddingService.embed_batch returns list of float embeddings."""
         service = FakeEmbeddingService()
         result = service.embed_batch(["text1", "text2"])
         assert isinstance(result, list)
         assert len(result) == 2
-        assert all(isinstance(item, bytes) for item in result)
+        assert all(isinstance(item, list) for item in result)
+        assert all(all(isinstance(f, float) for f in item) for item in result)
 
     def test_embedding_service_similarity_returns_float(self):
         """EmbeddingService.similarity returns float."""
@@ -133,11 +135,11 @@ class TestEmbeddingServiceProtocol:
         result = service.similarity(emb1, emb2)
         assert isinstance(result, float)
 
-    def test_embedding_service_similarity_accepts_bytes(self):
-        """EmbeddingService.similarity accepts bytes arguments (serialized float32 arrays)."""
+    def test_embedding_service_similarity_accepts_list_of_floats(self):
+        """EmbeddingService.similarity accepts list of floats."""
         service = FakeEmbeddingService()
-        emb_a = struct.pack('4f', 0.1, 0.2, 0.3, 0.4)
-        emb_b = struct.pack('4f', 0.2, 0.3, 0.4, 0.5)
+        emb_a = [0.1, 0.2, 0.3, 0.4]
+        emb_b = [0.2, 0.3, 0.4, 0.5]
         result = service.similarity(emb_a, emb_b)
         assert isinstance(result, float)
 

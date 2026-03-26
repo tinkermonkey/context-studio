@@ -20,6 +20,7 @@ from domain.ontology.entities import (
     Relationship,
     Taxonomy,
 )
+from domain.ontology.exceptions import DuplicateEntityError
 from domain.ontology.value_objects import SearchCriteria
 
 
@@ -30,7 +31,6 @@ class FakeOntologyRepository:
         self._taxonomies: dict[str, Taxonomy] = {}
         self._schemes: dict[str, ConceptScheme] = {}
         self._classes: dict[str, Class] = {}
-        self._individuals: dict[str, Individual] = {}
         self._relationships: dict[str, Relationship] = {}
         self._property_definitions: dict[str, PropertyDefinition] = {}
 
@@ -43,6 +43,9 @@ class FakeOntologyRepository:
         return list(self._taxonomies.values())
 
     def save_taxonomy(self, taxonomy: Taxonomy) -> Taxonomy:
+        for existing_taxonomy in self._taxonomies.values():
+            if existing_taxonomy.title == taxonomy.title and existing_taxonomy.id != taxonomy.id:
+                raise DuplicateEntityError(f"Taxonomy with title '{taxonomy.title}' already exists")
         self._taxonomies[taxonomy.id] = taxonomy
         return taxonomy
 
@@ -190,26 +193,19 @@ class FakeOntologyRepository:
             return True
         return False
 
-    # Individual operations
+    # Individual operations (deferred — all raise NotImplementedError in Phase 1)
 
     def get_individual(self, individual_id: str) -> Individual | None:
-        return self._individuals.get(individual_id)
+        raise NotImplementedError("Individual operations are deferred to Phase 2")
 
     def list_individuals(self, class_id: str | None = None) -> list[Individual]:
-        results = list(self._individuals.values())
-        if class_id is not None:
-            results = [i for i in results if i.class_id == class_id]
-        return results
+        raise NotImplementedError("Individual operations are deferred to Phase 2")
 
     def save_individual(self, individual: Individual) -> Individual:
-        self._individuals[individual.id] = individual
-        return individual
+        raise NotImplementedError("Individual operations are deferred to Phase 2")
 
     def delete_individual(self, individual_id: str) -> bool:
-        if individual_id in self._individuals:
-            self._individuals.pop(individual_id)
-            return True
-        return False
+        raise NotImplementedError("Individual operations are deferred to Phase 2")
 
     # Bulk operations
 
@@ -224,7 +220,6 @@ class FakeOntologyRepository:
             list(self._taxonomies.values())
             + list(self._schemes.values())
             + list(self._classes.values())
-            + list(self._individuals.values())
             + list(self._property_definitions.values())
         )
         return (all_entities, list(self._relationships.values()))
