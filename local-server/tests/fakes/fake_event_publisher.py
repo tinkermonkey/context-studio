@@ -14,7 +14,7 @@ class FakeEventPublisher:
 
     def __init__(self) -> None:
         self._events: list[DomainEvent] = []
-        self._handlers: dict[type, list[Callable]] = {}
+        self._handlers: dict[type[DomainEvent], list[Callable[[DomainEvent], None]]] = {}
 
     def publish(self, event: DomainEvent) -> None:
         self._events.append(event)
