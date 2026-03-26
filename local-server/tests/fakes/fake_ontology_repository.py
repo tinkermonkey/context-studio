@@ -2,8 +2,8 @@
 Fake in-memory implementation of OntologyRepository for testing.
 
 This implementation stores all entities in memory using dictionaries.
-It enforces uniqueness constraints and supports all CRUD operations except
-for Individual-related methods, which raise NotImplementedError.
+It enforces uniqueness constraints and supports all CRUD operations for
+all entity types including Individuals, Classes, Relationships, and others.
 """
 
 import sys
