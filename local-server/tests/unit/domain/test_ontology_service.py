@@ -670,7 +670,7 @@ class TestMoveClass:
         dog = service.create_class(scheme_id=scheme.id, title="Dog", parent_class_id=mammal.id)
 
         # Clear event history from creation
-        service._event_publisher.events = []
+        service._event_publisher.clear()
 
         # Move dog to its current parent (mammal)
         result = service.move_class(class_id=dog.id, new_parent_id=mammal.id)
@@ -692,7 +692,7 @@ class TestMoveClass:
         root_class = service.create_class(scheme_id=scheme.id, title="Root")
 
         # Clear event history from creation
-        service._event_publisher.events = []
+        service._event_publisher.clear()
 
         # Move root class to root (None) again
         result = service.move_class(class_id=root_class.id, new_parent_id=None)
@@ -708,7 +708,7 @@ class TestMoveClass:
         assert len(invalidation_events) == 0
 
     def test_move_class_corrupted_hierarchy_raises(self, service):
-        """Moving a class with a corrupted ancestor hierarchy raises CircularReferenceError."""
+        """Moving a class with a corrupted ancestor hierarchy raises EntityNotFoundError."""
         tax = service.create_taxonomy(title="Biology")
         scheme = service.create_scheme(taxonomy_id=tax.id, title="Animals")
         a = service.create_class(scheme_id=scheme.id, title="A")
@@ -722,8 +722,8 @@ class TestMoveClass:
         service._repository.save_class(b_corrupted)
 
         # Now try to move A under C. During ancestor traversal of C:
-        # C -> B -> nonexistent -> should raise CircularReferenceError
-        with pytest.raises(CircularReferenceError, match="Corrupted hierarchy"):
+        # C -> B -> nonexistent -> should raise EntityNotFoundError
+        with pytest.raises(EntityNotFoundError):
             service.move_class(class_id=a.id, new_parent_id=c.id)
 
 

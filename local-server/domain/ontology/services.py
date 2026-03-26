@@ -687,7 +687,7 @@ class OntologyService:
             The updated Class
 
         Raises:
-            EntityNotFoundError: If the class or new parent does not exist
+            EntityNotFoundError: If the class, new parent, or any ancestor in the chain does not exist
             CircularReferenceError: If the move would create a circular reference
             ValueError: If new parent is in a different scheme
         """
@@ -716,9 +716,9 @@ class OntologyService:
             while current_id is not None:
                 ancestor = self._repository.get_class(current_id)
                 if ancestor is None:
-                    raise CircularReferenceError(
-                        f"Corrupted hierarchy: ancestor class {current_id} does not exist; "
-                        f"cannot complete circular reference detection"
+                    raise EntityNotFoundError(
+                        "Class",
+                        current_id,
                     )
                 if ancestor.id == class_id:
                     raise CircularReferenceError("Move would create a circular reference")
