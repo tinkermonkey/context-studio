@@ -165,7 +165,7 @@ class FakeOntologyRepository:
     def delete_property_definition(self, property_id: str) -> None:
         self._property_definitions.pop(property_id, None)
 
-    # Individual operations (not implemented in Phase 3)
+    # Individual operations (not yet implemented)
 
     def get_individual(self, individual_id: str) -> Individual | None:
         raise NotImplementedError("Individual persistence not yet implemented")
