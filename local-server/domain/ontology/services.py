@@ -474,7 +474,7 @@ class OntologyService:
                 raise CircularReferenceError("Cannot set a class as its own parent")
 
             # Traverse ancestor chain of new_parent_id looking for class_id
-            current_id = new_parent_id
+            current_id: str | None = new_parent_id
             while current_id is not None:
                 ancestor = self._repository.get_class(current_id)
                 if ancestor is None:
