@@ -160,7 +160,6 @@ class OntologyService:
         if new_title == taxonomy.title:
             return taxonomy
 
-        old_title = taxonomy.title
         taxonomy.rename(new_title)
         self._repository.save_taxonomy(taxonomy)
 

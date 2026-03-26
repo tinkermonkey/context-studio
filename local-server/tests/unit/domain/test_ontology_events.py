@@ -28,7 +28,11 @@ from domain.ontology.events import (
     RelationshipCreated,
     RelationshipDeleted,
     SchemeCreated,
+    SchemeUpdated,
+    SchemeDeleted,
     TaxonomyCreated,
+    TaxonomyUpdated,
+    TaxonomyDeleted,
 )
 
 
@@ -189,6 +193,182 @@ class TestSchemeCreated:
         )
         with pytest.raises(FrozenInstanceError):
             event.title = "New Title"
+
+
+class TestTaxonomyUpdated:
+    """Tests for TaxonomyUpdated event."""
+
+    def test_taxonomy_updated_instantiation(self):
+        """TaxonomyUpdated can be instantiated with changed fields."""
+        now = datetime.utcnow()
+        event = TaxonomyUpdated(
+            event_id="evt-tax-upd-001",
+            occurred_at=now,
+            aggregate_id="tax-123",
+            taxonomy_id="tax-123",
+            changed_fields=("title",),
+        )
+        assert event.taxonomy_id == "tax-123"
+        assert event.changed_fields == ("title",)
+
+    def test_taxonomy_updated_with_multiple_changed_fields(self):
+        """TaxonomyUpdated can have multiple changed fields."""
+        now = datetime.utcnow()
+        event = TaxonomyUpdated(
+            event_id="evt-tax-upd-001",
+            occurred_at=now,
+            aggregate_id="tax-123",
+            taxonomy_id="tax-123",
+            changed_fields=("title", "description"),
+        )
+        assert event.changed_fields == ("title", "description")
+
+    def test_taxonomy_updated_is_frozen(self):
+        """TaxonomyUpdated instances are frozen."""
+        now = datetime.utcnow()
+        event = TaxonomyUpdated(
+            event_id="evt-tax-upd-001",
+            occurred_at=now,
+            aggregate_id="tax-123",
+            taxonomy_id="tax-123",
+            changed_fields=("title",),
+        )
+        with pytest.raises(FrozenInstanceError):
+            event.changed_fields = ("description",)
+
+
+class TestTaxonomyDeleted:
+    """Tests for TaxonomyDeleted event."""
+
+    def test_taxonomy_deleted_instantiation(self):
+        """TaxonomyDeleted can be instantiated with all required fields."""
+        now = datetime.utcnow()
+        event = TaxonomyDeleted(
+            event_id="evt-tax-del-001",
+            occurred_at=now,
+            aggregate_id="tax-123",
+            taxonomy_id="tax-123",
+            title="Biology",
+        )
+        assert event.taxonomy_id == "tax-123"
+        assert event.title == "Biology"
+
+    def test_taxonomy_deleted_is_frozen(self):
+        """TaxonomyDeleted instances are frozen."""
+        now = datetime.utcnow()
+        event = TaxonomyDeleted(
+            event_id="evt-tax-del-001",
+            occurred_at=now,
+            aggregate_id="tax-123",
+            taxonomy_id="tax-123",
+            title="Biology",
+        )
+        with pytest.raises(FrozenInstanceError):
+            event.title = "New Title"
+
+    def test_taxonomy_deleted_rejects_empty_title(self):
+        """TaxonomyDeleted raises ValueError if title is empty."""
+        now = datetime.utcnow()
+        with pytest.raises(ValueError, match="Event field 'title' cannot be empty"):
+            TaxonomyDeleted(
+                event_id="evt-tax-del-001",
+                occurred_at=now,
+                aggregate_id="tax-123",
+                taxonomy_id="tax-123",
+                title="",
+            )
+
+
+class TestSchemeUpdated:
+    """Tests for SchemeUpdated event."""
+
+    def test_scheme_updated_instantiation(self):
+        """SchemeUpdated can be instantiated with changed fields."""
+        now = datetime.utcnow()
+        event = SchemeUpdated(
+            event_id="evt-scheme-upd-001",
+            occurred_at=now,
+            aggregate_id="scheme-123",
+            scheme_id="scheme-123",
+            taxonomy_id="tax-456",
+            changed_fields=("title",),
+        )
+        assert event.scheme_id == "scheme-123"
+        assert event.taxonomy_id == "tax-456"
+        assert event.changed_fields == ("title",)
+
+    def test_scheme_updated_with_multiple_changed_fields(self):
+        """SchemeUpdated can have multiple changed fields."""
+        now = datetime.utcnow()
+        event = SchemeUpdated(
+            event_id="evt-scheme-upd-001",
+            occurred_at=now,
+            aggregate_id="scheme-123",
+            scheme_id="scheme-123",
+            taxonomy_id="tax-456",
+            changed_fields=("title", "description"),
+        )
+        assert event.changed_fields == ("title", "description")
+
+    def test_scheme_updated_is_frozen(self):
+        """SchemeUpdated instances are frozen."""
+        now = datetime.utcnow()
+        event = SchemeUpdated(
+            event_id="evt-scheme-upd-001",
+            occurred_at=now,
+            aggregate_id="scheme-123",
+            scheme_id="scheme-123",
+            taxonomy_id="tax-456",
+            changed_fields=("title",),
+        )
+        with pytest.raises(FrozenInstanceError):
+            event.changed_fields = ("description",)
+
+
+class TestSchemeDeleted:
+    """Tests for SchemeDeleted event."""
+
+    def test_scheme_deleted_instantiation(self):
+        """SchemeDeleted can be instantiated with all required fields."""
+        now = datetime.utcnow()
+        event = SchemeDeleted(
+            event_id="evt-scheme-del-001",
+            occurred_at=now,
+            aggregate_id="scheme-123",
+            scheme_id="scheme-123",
+            taxonomy_id="tax-456",
+            title="Animal Kingdom",
+        )
+        assert event.scheme_id == "scheme-123"
+        assert event.taxonomy_id == "tax-456"
+        assert event.title == "Animal Kingdom"
+
+    def test_scheme_deleted_is_frozen(self):
+        """SchemeDeleted instances are frozen."""
+        now = datetime.utcnow()
+        event = SchemeDeleted(
+            event_id="evt-scheme-del-001",
+            occurred_at=now,
+            aggregate_id="scheme-123",
+            scheme_id="scheme-123",
+            taxonomy_id="tax-456",
+            title="Animal Kingdom",
+        )
+        with pytest.raises(FrozenInstanceError):
+            event.title = "New Title"
+
+    def test_scheme_deleted_rejects_empty_title(self):
+        """SchemeDeleted raises ValueError if title is empty."""
+        now = datetime.utcnow()
+        with pytest.raises(ValueError, match="Event field 'title' cannot be empty"):
+            SchemeDeleted(
+                event_id="evt-scheme-del-001",
+                occurred_at=now,
+                aggregate_id="scheme-123",
+                scheme_id="scheme-123",
+                taxonomy_id="tax-456",
+                title="",
+            )
 
 
 class TestClassCreated:
@@ -514,11 +694,15 @@ class TestEventImportability:
     """Tests that all events can be imported from the module."""
 
     def test_all_events_importable_from_events_module(self):
-        """All ten event classes are importable from domain.ontology.events."""
+        """All fifteen event classes are importable from domain.ontology.events."""
         events = [
             DomainEvent,
             TaxonomyCreated,
+            TaxonomyUpdated,
+            TaxonomyDeleted,
             SchemeCreated,
+            SchemeUpdated,
+            SchemeDeleted,
             ClassCreated,
             ClassUpdated,
             ClassDeleted,

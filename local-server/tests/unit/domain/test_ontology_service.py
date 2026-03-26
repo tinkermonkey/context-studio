@@ -15,7 +15,9 @@ import pytest
 
 from domain.ontology.services import OntologyService
 from domain.ontology.events import (
-    TaxonomyCreated, SchemeCreated, ClassCreated, ClassUpdated, ClassDeleted,
+    TaxonomyCreated, TaxonomyUpdated, TaxonomyDeleted,
+    SchemeCreated, SchemeUpdated, SchemeDeleted,
+    ClassCreated, ClassUpdated, ClassDeleted,
     ClassMoved, RelationshipCreated, RelationshipDeleted,
     PropertyDefinitionCreated, GraphInvalidated
 )
@@ -112,6 +114,243 @@ class TestCreateScheme:
         scheme1 = service.create_scheme(taxonomy_id=tax1.id, title="Elements")
         scheme2 = service.create_scheme(taxonomy_id=tax2.id, title="Elements")
         assert scheme1.id != scheme2.id
+
+
+class TestRenameTaxonomy:
+    """Tests for rename_taxonomy."""
+
+    def test_rename_taxonomy_success(self, service):
+        """Rename a taxonomy and verify it's persisted and event is emitted."""
+        tax = service.create_taxonomy(title="Biology")
+
+        renamed = service.rename_taxonomy(taxonomy_id=tax.id, new_title="Life Sciences")
+        assert renamed.title == "Life Sciences"
+
+        # Verify it was saved
+        retrieved = service.get_taxonomy(tax.id)
+        assert retrieved.title == "Life Sciences"
+
+        # Verify event was emitted
+        events = service._event_publisher.get_events_of_type(TaxonomyUpdated)
+        assert len(events) == 1
+        assert events[0].taxonomy_id == tax.id
+        assert events[0].changed_fields == ("title",)
+
+    def test_rename_taxonomy_nonexistent_raises(self, service):
+        """Rename nonexistent taxonomy raises EntityNotFoundError."""
+        with pytest.raises(EntityNotFoundError, match="Taxonomy"):
+            service.rename_taxonomy(taxonomy_id="nonexistent", new_title="NewTitle")
+
+    def test_rename_taxonomy_duplicate_title_raises(self, service):
+        """Rename to duplicate title raises DuplicateEntityError."""
+        service.create_taxonomy(title="Biology")
+        tax2 = service.create_taxonomy(title="Chemistry")
+
+        with pytest.raises(DuplicateEntityError, match="already exists"):
+            service.rename_taxonomy(taxonomy_id=tax2.id, new_title="Biology")
+
+    def test_rename_taxonomy_empty_title_raises(self, service):
+        """Rename to empty title raises ValueError."""
+        tax = service.create_taxonomy(title="Biology")
+
+        with pytest.raises(ValueError, match="Title cannot be empty"):
+            service.rename_taxonomy(taxonomy_id=tax.id, new_title="")
+
+    def test_rename_taxonomy_whitespace_title_raises(self, service):
+        """Rename to whitespace-only title raises ValueError."""
+        tax = service.create_taxonomy(title="Biology")
+
+        with pytest.raises(ValueError, match="Title cannot be empty"):
+            service.rename_taxonomy(taxonomy_id=tax.id, new_title="   ")
+
+    def test_rename_taxonomy_no_op_returns_unchanged(self, service):
+        """Renaming to same title is a no-op and returns unchanged entity."""
+        tax = service.create_taxonomy(title="Biology")
+        # Get the initial count of TaxonomyUpdated events (should be 0 at this point)
+        initial_update_count = len(service._event_publisher.get_events_of_type(TaxonomyUpdated))
+
+        renamed = service.rename_taxonomy(taxonomy_id=tax.id, new_title="Biology")
+        assert renamed.title == "Biology"
+
+        # No event should be emitted for no-op
+        events = service._event_publisher.get_events_of_type(TaxonomyUpdated)
+        assert len(events) == initial_update_count
+
+
+class TestDeleteTaxonomy:
+    """Tests for delete_taxonomy."""
+
+    def test_delete_taxonomy_success(self, service):
+        """Delete an empty taxonomy."""
+        tax = service.create_taxonomy(title="Biology")
+
+        service.delete_taxonomy(taxonomy_id=tax.id)
+
+        # Verify it's deleted
+        with pytest.raises(EntityNotFoundError):
+            service.get_taxonomy(tax.id)
+
+        # Verify event was emitted
+        events = service._event_publisher.get_events_of_type(TaxonomyDeleted)
+        assert len(events) == 1
+        assert events[0].taxonomy_id == tax.id
+        assert events[0].title == "Biology"
+
+    def test_delete_taxonomy_nonexistent_raises(self, service):
+        """Delete nonexistent taxonomy raises EntityNotFoundError."""
+        with pytest.raises(EntityNotFoundError, match="Taxonomy"):
+            service.delete_taxonomy(taxonomy_id="nonexistent")
+
+    def test_delete_taxonomy_with_schemes_raises(self, service):
+        """Delete taxonomy with concept schemes raises OntologyError."""
+        tax = service.create_taxonomy(title="Biology")
+        service.create_scheme(taxonomy_id=tax.id, title="Animals")
+
+        with pytest.raises(OntologyError, match="has.*concept scheme"):
+            service.delete_taxonomy(taxonomy_id=tax.id)
+
+    def test_delete_taxonomy_after_deleting_all_schemes_succeeds(self, service):
+        """Delete taxonomy succeeds after removing all schemes."""
+        tax = service.create_taxonomy(title="Biology")
+        scheme = service.create_scheme(taxonomy_id=tax.id, title="Animals")
+
+        # First, delete the scheme
+        service.delete_scheme(scheme_id=scheme.id)
+
+        # Now deleting taxonomy should succeed
+        service.delete_taxonomy(taxonomy_id=tax.id)
+
+        with pytest.raises(EntityNotFoundError):
+            service.get_taxonomy(tax.id)
+
+
+class TestRenameScheme:
+    """Tests for rename_scheme."""
+
+    def test_rename_scheme_success(self, service):
+        """Rename a concept scheme and verify it's persisted and event is emitted."""
+        tax = service.create_taxonomy(title="Biology")
+        scheme = service.create_scheme(taxonomy_id=tax.id, title="Animals")
+
+        renamed = service.rename_scheme(scheme_id=scheme.id, new_title="Animal Kingdom")
+        assert renamed.title == "Animal Kingdom"
+
+        # Verify it was saved
+        retrieved = service.get_concept_scheme(scheme.id)
+        assert retrieved.title == "Animal Kingdom"
+
+        # Verify event was emitted
+        events = service._event_publisher.get_events_of_type(SchemeUpdated)
+        assert len(events) == 1
+        assert events[0].scheme_id == scheme.id
+        assert events[0].taxonomy_id == tax.id
+        assert events[0].changed_fields == ("title",)
+
+    def test_rename_scheme_nonexistent_raises(self, service):
+        """Rename nonexistent scheme raises EntityNotFoundError."""
+        with pytest.raises(EntityNotFoundError, match="ConceptScheme"):
+            service.rename_scheme(scheme_id="nonexistent", new_title="NewTitle")
+
+    def test_rename_scheme_duplicate_title_in_taxonomy_raises(self, service):
+        """Rename to duplicate title within same taxonomy raises DuplicateEntityError."""
+        tax = service.create_taxonomy(title="Biology")
+        service.create_scheme(taxonomy_id=tax.id, title="Animals")
+        scheme2 = service.create_scheme(taxonomy_id=tax.id, title="Plants")
+
+        with pytest.raises(DuplicateEntityError, match="already exists"):
+            service.rename_scheme(scheme_id=scheme2.id, new_title="Animals")
+
+    def test_rename_scheme_same_title_different_taxonomy_allowed(self, service):
+        """Rename scheme to title that exists in different taxonomy is allowed."""
+        tax1 = service.create_taxonomy(title="Biology")
+        tax2 = service.create_taxonomy(title="Chemistry")
+        scheme1 = service.create_scheme(taxonomy_id=tax1.id, title="Elements")
+        scheme2 = service.create_scheme(taxonomy_id=tax2.id, title="Compounds")
+
+        # This should succeed because Elements is in a different taxonomy
+        renamed = service.rename_scheme(scheme_id=scheme2.id, new_title="Elements")
+        assert renamed.title == "Elements"
+
+    def test_rename_scheme_empty_title_raises(self, service):
+        """Rename to empty title raises ValueError."""
+        tax = service.create_taxonomy(title="Biology")
+        scheme = service.create_scheme(taxonomy_id=tax.id, title="Animals")
+
+        with pytest.raises(ValueError, match="Title cannot be empty"):
+            service.rename_scheme(scheme_id=scheme.id, new_title="")
+
+    def test_rename_scheme_whitespace_title_raises(self, service):
+        """Rename to whitespace-only title raises ValueError."""
+        tax = service.create_taxonomy(title="Biology")
+        scheme = service.create_scheme(taxonomy_id=tax.id, title="Animals")
+
+        with pytest.raises(ValueError, match="Title cannot be empty"):
+            service.rename_scheme(scheme_id=scheme.id, new_title="   ")
+
+    def test_rename_scheme_no_op_returns_unchanged(self, service):
+        """Renaming to same title is a no-op and returns unchanged entity."""
+        tax = service.create_taxonomy(title="Biology")
+        scheme = service.create_scheme(taxonomy_id=tax.id, title="Animals")
+        # Get the initial count of SchemeUpdated events (should be 0 at this point)
+        initial_update_count = len(service._event_publisher.get_events_of_type(SchemeUpdated))
+
+        renamed = service.rename_scheme(scheme_id=scheme.id, new_title="Animals")
+        assert renamed.title == "Animals"
+
+        # No event should be emitted for no-op
+        events = service._event_publisher.get_events_of_type(SchemeUpdated)
+        assert len(events) == initial_update_count
+
+
+class TestDeleteScheme:
+    """Tests for delete_scheme."""
+
+    def test_delete_scheme_success(self, service):
+        """Delete an empty concept scheme."""
+        tax = service.create_taxonomy(title="Biology")
+        scheme = service.create_scheme(taxonomy_id=tax.id, title="Animals")
+
+        service.delete_scheme(scheme_id=scheme.id)
+
+        # Verify it's deleted
+        with pytest.raises(EntityNotFoundError):
+            service.get_concept_scheme(scheme.id)
+
+        # Verify event was emitted
+        events = service._event_publisher.get_events_of_type(SchemeDeleted)
+        assert len(events) == 1
+        assert events[0].scheme_id == scheme.id
+        assert events[0].taxonomy_id == tax.id
+        assert events[0].title == "Animals"
+
+    def test_delete_scheme_nonexistent_raises(self, service):
+        """Delete nonexistent scheme raises EntityNotFoundError."""
+        with pytest.raises(EntityNotFoundError, match="ConceptScheme"):
+            service.delete_scheme(scheme_id="nonexistent")
+
+    def test_delete_scheme_with_classes_raises(self, service):
+        """Delete scheme with classes raises OntologyError."""
+        tax = service.create_taxonomy(title="Biology")
+        scheme = service.create_scheme(taxonomy_id=tax.id, title="Animals")
+        service.create_class(scheme_id=scheme.id, title="Dog")
+
+        with pytest.raises(OntologyError, match="has.*class"):
+            service.delete_scheme(scheme_id=scheme.id)
+
+    def test_delete_scheme_after_deleting_all_classes_succeeds(self, service):
+        """Delete scheme succeeds after removing all classes."""
+        tax = service.create_taxonomy(title="Biology")
+        scheme = service.create_scheme(taxonomy_id=tax.id, title="Animals")
+        cls = service.create_class(scheme_id=scheme.id, title="Dog")
+
+        # First, delete the class
+        service.delete_class(class_id=cls.id)
+
+        # Now deleting scheme should succeed
+        service.delete_scheme(scheme_id=scheme.id)
+
+        with pytest.raises(EntityNotFoundError):
+            service.get_concept_scheme(scheme.id)
 
 
 class TestCreateClass:
