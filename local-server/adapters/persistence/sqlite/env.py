@@ -14,6 +14,7 @@ from alembic.config import Config
 local_server_root = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(local_server_root))
 
+# Domain imports after path setup
 from adapters.persistence.sqlite.models import Base
 
 # this is the Alembic Config object, which provides
@@ -42,9 +43,12 @@ if x_args.get("db") == "operations":
 
         # Import and execute operations environment
         spec = importlib.util.spec_from_file_location("operations_env", operations_env_path)
+        if spec is None or spec.loader is None:
+            raise RuntimeError(f"Failed to load operations environment from {operations_env_path}")
+
         operations_env_module = importlib.util.module_from_spec(spec)
-        operations_env_module.config = operations_config
-        operations_env_module.context = context
+        operations_env_module.config = operations_config  # type: ignore[attr-defined]
+        operations_env_module.context = context  # type: ignore[attr-defined]
         spec.loader.exec_module(operations_env_module)
 
         # Operations env has handled the migration
@@ -93,8 +97,9 @@ def run_migrations_online() -> None:
     and associate a connection with the context.
 
     """
+    config_section = config.get_section(config.config_ini_section) or {}
     connectable = engine_from_config(
-        config.get_section(config.config_ini_section, {}),
+        config_section,
         prefix="sqlalchemy.",
         poolclass=pool.NullPool,
     )

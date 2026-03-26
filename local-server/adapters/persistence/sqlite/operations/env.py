@@ -68,7 +68,7 @@ def run_migrations_online() -> None:
     and associate a connection with the context.
 
     """
-    configuration = config.get_section(config.config_ini_section)
+    configuration = config.get_section(config.config_ini_section) or {}
     configuration["sqlalchemy.url"] = os.environ.get("OPERATIONS_DB_URL", "sqlite:///./operations.db")
 
     connectable = engine_from_config(
