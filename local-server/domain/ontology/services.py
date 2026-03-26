@@ -906,17 +906,42 @@ class OntologyService:
         ))
 
         # Determine which taxonomy this relationship belonged to (for graph invalidation)
-        # Try to find the source as a Class to get its taxonomy
-        source_class = self._repository.get_class(relationship.source_id)
-        taxonomy_id = source_class.taxonomy_id if source_class else relationship.source_id
+        # Try source: first as a Class, then as an Individual (get its class then taxonomy)
+        taxonomy_id = None
 
-        self._event_publisher.publish(GraphInvalidated(
-            event_id=str(uuid4()),
-            occurred_at=datetime.utcnow(),
-            aggregate_id=taxonomy_id,
-            taxonomy_id=taxonomy_id,
-            reason="relationship_deleted",
-        ))
+        # Try source as a Class
+        source_class = self._repository.get_class(relationship.source_id)
+        if source_class:
+            taxonomy_id = source_class.taxonomy_id
+        else:
+            # Try source as an Individual
+            source_individual = self._repository.get_individual(relationship.source_id)
+            if source_individual:
+                individual_class = self._repository.get_class(source_individual.class_id)
+                if individual_class:
+                    taxonomy_id = individual_class.taxonomy_id
+
+        # If source didn't yield taxonomy, try target the same way
+        if not taxonomy_id:
+            target_class = self._repository.get_class(relationship.target_id)
+            if target_class:
+                taxonomy_id = target_class.taxonomy_id
+            else:
+                target_individual = self._repository.get_individual(relationship.target_id)
+                if target_individual:
+                    individual_class = self._repository.get_class(target_individual.class_id)
+                    if individual_class:
+                        taxonomy_id = individual_class.taxonomy_id
+
+        # Only emit GraphInvalidated if we found a valid taxonomy
+        if taxonomy_id:
+            self._event_publisher.publish(GraphInvalidated(
+                event_id=str(uuid4()),
+                occurred_at=datetime.utcnow(),
+                aggregate_id=taxonomy_id,
+                taxonomy_id=taxonomy_id,
+                reason="relationship_deleted",
+            ))
 
     # PropertyDefinition operations
 

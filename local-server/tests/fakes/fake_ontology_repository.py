@@ -29,6 +29,7 @@ class FakeOntologyRepository:
         self._taxonomies: dict[str, Taxonomy] = {}
         self._schemes: dict[str, ConceptScheme] = {}
         self._classes: dict[str, Class] = {}
+        self._individuals: dict[str, Individual] = {}
         self._relationships: dict[str, Relationship] = {}
         self._property_definitions: dict[str, PropertyDefinition] = {}
 
@@ -168,19 +169,22 @@ class FakeOntologyRepository:
     def delete_property_definition(self, property_id: str) -> None:
         self._property_definitions.pop(property_id, None)
 
-    # Individual operations (not yet implemented)
+    # Individual operations
 
     def get_individual(self, individual_id: str) -> Individual | None:
-        raise NotImplementedError("Individual persistence not yet implemented")
+        return self._individuals.get(individual_id)
 
     def list_individuals(self, class_id: str | None = None) -> list[Individual]:
-        raise NotImplementedError("Individual persistence not yet implemented")
+        results = list(self._individuals.values())
+        if class_id is not None:
+            results = [i for i in results if i.class_id == class_id]
+        return results
 
     def save_individual(self, individual: Individual) -> None:
-        raise NotImplementedError("Individual persistence not yet implemented")
+        self._individuals[individual.id] = individual
 
     def delete_individual(self, individual_id: str) -> None:
-        raise NotImplementedError("Individual persistence not yet implemented")
+        self._individuals.pop(individual_id, None)
 
     # Bulk operations
 

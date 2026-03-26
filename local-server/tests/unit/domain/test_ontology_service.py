@@ -967,6 +967,69 @@ class TestDeleteRelationship:
         with pytest.raises(EntityNotFoundError, match="Relationship"):
             service.delete_relationship(relationship_id="nonexistent")
 
+    def test_delete_relationship_with_deleted_source_class(self, service):
+        """Delete relationship when source class is missing uses target class taxonomy."""
+        tax = service.create_taxonomy(title="Biology")
+        scheme = service.create_scheme(taxonomy_id=tax.id, title="Animals")
+        dog = service.create_class(scheme_id=scheme.id, title="Dog")
+        mammal = service.create_class(scheme_id=scheme.id, title="Mammal")
+        prop = service.create_property_definition(identifier="is_a", title="Is A")
+        rel = service.create_relationship(
+            source_id=dog.id,
+            target_id=mammal.id,
+            property_definition_id=prop.id,
+        )
+
+        # Delete the source class directly from repository to simulate external deletion
+        service._repository.delete_class(dog.id)
+
+        # Delete the relationship - should still emit valid GraphInvalidated with target's taxonomy
+        service.delete_relationship(relationship_id=rel.id)
+
+        # Verify the relationship is deleted
+        with pytest.raises(EntityNotFoundError):
+            service.get_relationship(rel.id)
+
+        # Verify GraphInvalidated event uses target class's taxonomy
+        graph_events = service._event_publisher.get_events_of_type(GraphInvalidated)
+        delete_graph_events = [e for e in graph_events if e.reason == "relationship_deleted"]
+        assert len(delete_graph_events) == 1
+        # Should use target's taxonomy since source is missing
+        assert delete_graph_events[0].taxonomy_id == tax.id
+
+    def test_delete_relationship_with_deleted_source_and_target_classes(self, service):
+        """Delete relationship when both source and target classes are missing emits no GraphInvalidated."""
+        tax = service.create_taxonomy(title="Biology")
+        scheme = service.create_scheme(taxonomy_id=tax.id, title="Animals")
+        dog = service.create_class(scheme_id=scheme.id, title="Dog")
+        mammal = service.create_class(scheme_id=scheme.id, title="Mammal")
+        prop = service.create_property_definition(identifier="is_a", title="Is A")
+        rel = service.create_relationship(
+            source_id=dog.id,
+            target_id=mammal.id,
+            property_definition_id=prop.id,
+        )
+
+        # Delete both source and target classes directly from repository
+        service._repository.delete_class(dog.id)
+        service._repository.delete_class(mammal.id)
+
+        # Get current count of GraphInvalidated events before deletion
+        existing_graph_events = service._event_publisher.get_events_of_type(GraphInvalidated)
+        existing_count = len([e for e in existing_graph_events if e.reason == "relationship_deleted"])
+
+        # Delete the relationship - should not emit GraphInvalidated since no valid taxonomy found
+        service.delete_relationship(relationship_id=rel.id)
+
+        # Verify the relationship is deleted
+        with pytest.raises(EntityNotFoundError):
+            service.get_relationship(rel.id)
+
+        # Verify no new GraphInvalidated event was emitted (since taxonomy couldn't be determined)
+        graph_events = service._event_publisher.get_events_of_type(GraphInvalidated)
+        delete_graph_events = [e for e in graph_events if e.reason == "relationship_deleted"]
+        assert len(delete_graph_events) == existing_count
+
 
 class TestGetPropertyDefinition:
     """Tests for get_property_definition."""
