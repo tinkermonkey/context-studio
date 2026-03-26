@@ -888,6 +888,27 @@ class TestCreateRelationship:
         assert len(graph_invalid_from_rel) == 1
         assert graph_invalid_from_rel[0].taxonomy_id == tax.id
 
+    def test_create_relationship_duplicate_triple_raises(self, service):
+        """Create relationship with duplicate triple raises ValueError."""
+        tax = service.create_taxonomy(title="Biology")
+        scheme = service.create_scheme(taxonomy_id=tax.id, title="Animals")
+        dog = service.create_class(scheme_id=scheme.id, title="Dog")
+        mammal = service.create_class(scheme_id=scheme.id, title="Mammal")
+        prop = service.create_property_definition(identifier="is_a", title="Is A")
+
+        service.create_relationship(
+            source_id=dog.id,
+            target_id=mammal.id,
+            property_definition_id=prop.id,
+        )
+
+        with pytest.raises(ValueError, match="already exists"):
+            service.create_relationship(
+                source_id=dog.id,
+                target_id=mammal.id,
+                property_definition_id=prop.id,
+            )
+
 
 class TestDeleteRelationship:
     """Tests for delete_relationship."""

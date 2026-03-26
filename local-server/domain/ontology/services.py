@@ -733,6 +733,7 @@ class OntologyService:
         - source_id != target_id (no self-loops)
         - Both source and target entities exist
         - The property definition exists
+        - The relationship triple (source_id, target_id, property_definition_id) is unique
 
         Args:
             source_id: ID of the source entity
@@ -743,7 +744,7 @@ class OntologyService:
             The created Relationship
 
         Raises:
-            ValueError: If source_id == target_id
+            ValueError: If source_id == target_id or if the relationship triple already exists
             EntityNotFoundError: If source, target, or property definition does not exist
         """
         if source_id == target_id:
@@ -763,6 +764,19 @@ class OntologyService:
         target_class = self._repository.get_class(target_id)
         if target_class is None:
             raise EntityNotFoundError("Class", target_id)
+
+        # Check if this relationship triple already exists
+        existing_relationships = self._repository.list_relationships(
+            source_id=source_id,
+            target_id=target_id,
+            property_id=property_definition_id,
+        )
+        if existing_relationships:
+            raise ValueError(
+                f"A relationship with triple (source_id={source_id}, "
+                f"target_id={target_id}, property_definition_id={property_definition_id}) "
+                "already exists"
+            )
 
         relationship_id = str(uuid4())
         relationship = Relationship(
