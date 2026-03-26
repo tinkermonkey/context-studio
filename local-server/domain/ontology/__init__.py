@@ -25,7 +25,11 @@ from .events import (
     RelationshipCreated,
     RelationshipDeleted,
     SchemeCreated,
+    SchemeDeleted,
+    SchemeUpdated,
     TaxonomyCreated,
+    TaxonomyDeleted,
+    TaxonomyUpdated,
 )
 from .exceptions import (
     CircularReferenceError,
@@ -58,7 +62,11 @@ __all__ = [
     # Domain Events
     "DomainEvent",
     "TaxonomyCreated",
+    "TaxonomyUpdated",
+    "TaxonomyDeleted",
     "SchemeCreated",
+    "SchemeUpdated",
+    "SchemeDeleted",
     "ClassCreated",
     "ClassUpdated",
     "ClassDeleted",
