@@ -82,28 +82,28 @@ class TestLexicalSense:
 
     def test_lexical_sense_creation(self):
         """Create a lexical sense."""
-        sense = LexicalSense(label="dog", language_code="en", sense_type="noun")
-        assert sense.label == "dog"
-        assert sense.language_code == "en"
-        assert sense.sense_type == "noun"
+        sense = LexicalSense(synset_id="dog.n.01", definition="a member of the genus Canis", lemma="dog")
+        assert sense.synset_id == "dog.n.01"
+        assert sense.definition == "a member of the genus Canis"
+        assert sense.lemma == "dog"
         assert sense.confidence is None
         assert sense.source == "wordnet"
 
     def test_lexical_sense_with_confidence(self):
         """Create a lexical sense with confidence."""
-        sense = LexicalSense(label="dog", language_code="en", sense_type="noun", confidence=0.98)
+        sense = LexicalSense(synset_id="dog.n.01", definition="a member of the genus Canis", lemma="dog", confidence=0.98)
         assert sense.confidence == 0.98
 
     def test_lexical_sense_with_custom_source(self):
         """Create a lexical sense with custom source."""
-        sense = LexicalSense(label="dog", language_code="en", sense_type="noun", source="custom_source")
+        sense = LexicalSense(synset_id="dog.n.01", definition="a member of the genus Canis", lemma="dog", source="custom_source")
         assert sense.source == "custom_source"
 
     def test_lexical_sense_is_frozen(self):
         """LexicalSense is frozen and immutable."""
-        sense = LexicalSense(label="dog", language_code="en", sense_type="noun")
+        sense = LexicalSense(synset_id="dog.n.01", definition="a member of the genus Canis", lemma="dog")
         with pytest.raises(Exception):
-            sense.label = "cat"
+            sense.synset_id = "cat.n.01"
 
 
 class TestDataPropertyValue:
@@ -320,8 +320,8 @@ class TestClass:
     def test_class_with_lexical_senses(self):
         """Create a class with lexical senses."""
         senses = [
-            LexicalSense(label="dog", language_code="en", sense_type="noun"),
-            LexicalSense(label="chien", language_code="fr", sense_type="noun"),
+            LexicalSense(synset_id="dog.n.01", definition="a member of the genus Canis", lemma="dog"),
+            LexicalSense(synset_id="dog.n.02", definition="a despicable person", lemma="dog"),
         ]
         cls = Class(
             id="class-1",
@@ -331,7 +331,7 @@ class TestClass:
             lexical_senses=senses,
         )
         assert len(cls.lexical_senses) == 2
-        assert cls.lexical_senses[1].label == "chien"
+        assert cls.lexical_senses[1].lemma == "dog"
 
 
 class TestIndividual:
@@ -445,41 +445,57 @@ class TestOntologyMapping:
     def test_ontology_mapping_creation(self):
         """Create an ontology mapping."""
         mapping = OntologyMapping(
-            source_id="entity-1",
-            target_id="entity-2",
-            mapping_type="equivalent",
+            ontology="schema.org",
+            uri="https://schema.org/Thing",
+            label="Thing",
+            exact_match=True,
         )
-        assert mapping.source_id == "entity-1"
-        assert mapping.target_id == "entity-2"
-        assert mapping.mapping_type == "equivalent"
+        assert mapping.ontology == "schema.org"
+        assert mapping.uri == "https://schema.org/Thing"
+        assert mapping.label == "Thing"
+        assert mapping.exact_match is True
+        assert mapping.confidence is None
+        assert mapping.source == "external"
 
-    def test_ontology_mapping_with_different_types(self):
-        """Create ontology mappings with different mapping types."""
-        types = ["equivalent", "related", "narrow", "broad"]
-        for mapping_type in types:
-            mapping = OntologyMapping(
-                source_id="entity-1",
-                target_id="entity-2",
-                mapping_type=mapping_type,
-            )
-            assert mapping.mapping_type == mapping_type
+    def test_ontology_mapping_with_exact_match_false(self):
+        """Create ontology mappings with exact_match=False."""
+        mapping = OntologyMapping(
+            ontology="dbpedia",
+            uri="http://dbpedia.org/ontology/SomeClass",
+            label="Some Class",
+            exact_match=False,
+        )
+        assert mapping.exact_match is False
+
+    def test_ontology_mapping_with_confidence(self):
+        """Create ontology mapping with confidence score."""
+        mapping = OntologyMapping(
+            ontology="owl",
+            uri="http://example.com/ontology/MyClass",
+            label="My Class",
+            exact_match=True,
+            confidence=0.95,
+        )
+        assert mapping.confidence == 0.95
 
     def test_ontology_mapping_is_frozen(self):
         """OntologyMapping is frozen and immutable."""
         mapping = OntologyMapping(
-            source_id="entity-1",
-            target_id="entity-2",
-            mapping_type="equivalent",
+            ontology="schema.org",
+            uri="https://schema.org/Thing",
+            label="Thing",
+            exact_match=True,
         )
         with pytest.raises(Exception):
-            mapping.source_id = "entity-3"
+            mapping.uri = "https://schema.org/Other"
 
     def test_ontology_mapping_in_property_definition(self):
         """PropertyDefinition can contain an OntologyMapping."""
         mapping = OntologyMapping(
-            source_id="entity-1",
-            target_id="entity-2",
-            mapping_type="equivalent",
+            ontology="schema.org",
+            uri="https://schema.org/Thing",
+            label="Thing",
+            exact_match=True,
         )
         prop = PropertyDefinition(
             id="prop-1",
@@ -488,7 +504,7 @@ class TestOntologyMapping:
             ontology_mapping=mapping,
         )
         assert prop.ontology_mapping == mapping
-        assert prop.ontology_mapping.source_id == "entity-1"
+        assert prop.ontology_mapping.ontology == "schema.org"
 
 
 class TestSearchCriteria:

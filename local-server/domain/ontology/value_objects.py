@@ -50,16 +50,16 @@ class LexicalSense:
     Word sense disambiguation data, typically from WordNet.
 
     Attributes:
-        label: Human-readable label or term
-        language_code: Language code (e.g., "en", "fr")
-        sense_type: Type of sense (e.g., "noun", "verb", "synset")
-        confidence: Optional confidence score
+        synset_id: The WordNet synset identifier (e.g., "dog.n.01")
+        definition: The definition of the sense from the source
+        lemma: The canonical lemma or term for this sense
+        confidence: Optional confidence score for the sense match
         source: The source of the lexical sense data (default: "wordnet")
     """
 
-    label: str
-    language_code: str
-    sense_type: str
+    synset_id: str
+    definition: str
+    lemma: str
     confidence: float | None = None
     source: str = "wordnet"
 
@@ -83,17 +83,23 @@ class DataPropertyValue:
 @dataclass(frozen=True)
 class OntologyMapping:
     """
-    Maps between two ontology entities.
+    Maps to an external ontology standard or schema.
 
     Attributes:
-        source_id: UUID of the source ontology entity
-        target_id: UUID of the target ontology entity
-        mapping_type: Type of mapping (e.g., "equivalent", "related", "narrow", "broad")
+        ontology: The name of the external ontology standard (e.g., "owl", "schema.org", "dbpedia")
+        uri: The URI of the external ontology term or class
+        label: Human-readable label from the external ontology
+        exact_match: Boolean indicating whether this is an exact semantic match
+        confidence: Optional confidence score for the mapping
+        source: The source system that created the mapping (default: "external")
     """
 
-    source_id: str
-    target_id: str
-    mapping_type: str
+    ontology: str
+    uri: str
+    label: str
+    exact_match: bool
+    confidence: float | None = None
+    source: str = "external"
 
 
 @dataclass(frozen=True)
