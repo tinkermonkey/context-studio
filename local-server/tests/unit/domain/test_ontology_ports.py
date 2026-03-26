@@ -156,7 +156,7 @@ class TestEventPublisherProtocol:
     def test_event_publisher_publish_accepts_domain_event(self):
         """EventPublisher.publish accepts DomainEvent instances."""
         publisher = FakeEventPublisher()
-        now = datetime.utcnow()
+        datetime.utcnow()
         event = ClassCreated(
             class_id="class-1",
             title="Test Class",
@@ -179,7 +179,7 @@ class TestEventPublisherProtocol:
 
         publisher.subscribe(ClassCreated, handler)
 
-        now = datetime.utcnow()
+        datetime.utcnow()
         event = ClassCreated(
             class_id="class-1",
             title="Test Class",
@@ -210,7 +210,7 @@ class TestEventPublisherProtocol:
         publisher.subscribe(ClassCreated, handler1)
         publisher.subscribe(ClassCreated, handler2)
 
-        now = datetime.utcnow()
+        datetime.utcnow()
         event = ClassCreated(
             class_id="class-1",
             title="Test Class",
