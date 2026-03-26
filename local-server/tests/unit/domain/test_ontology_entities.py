@@ -7,6 +7,7 @@ no fakes, just dataclass invariants and methods.
 
 import sys
 import os
+import struct
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
@@ -128,8 +129,10 @@ class TestClass:
 
     def test_class_creation_with_embedding(self):
         """Create a class with embedding."""
-        title_embedding = [0.1, 0.2, 0.3, 0.4, 0.5]
-        definition_embedding = [0.5, 0.4, 0.3, 0.2, 0.1]
+        title_embedding_floats = [0.1, 0.2, 0.3, 0.4, 0.5]
+        definition_embedding_floats = [0.5, 0.4, 0.3, 0.2, 0.1]
+        title_embedding = struct.pack('5f', *title_embedding_floats)
+        definition_embedding = struct.pack('5f', *definition_embedding_floats)
         cls = Class(
             id="class-1",
             scheme_id="scheme-1",
