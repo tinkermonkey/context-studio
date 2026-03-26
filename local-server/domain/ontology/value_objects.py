@@ -9,7 +9,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from enum import Enum
-from typing import Optional
 
 
 class NodeType(str, Enum):
@@ -34,7 +33,7 @@ class ExternalReference:
 
     source: str
     identifier: str
-    uri: Optional[str] = None
+    uri: str | None = None
 
 
 @dataclass(frozen=True)
@@ -66,7 +65,7 @@ class DataPropertyValue:
 
     property_identifier: str
     value: str
-    datatype: Optional[str] = None
+    datatype: str | None = None
 
 
 @dataclass(frozen=True)
@@ -100,8 +99,8 @@ class SearchCriteria:
     """
 
     query: str
-    node_types: Optional[list] = None
-    scheme_id: Optional[str] = None
-    taxonomy_id: Optional[str] = None
+    node_types: list[NodeType] | None = None
+    scheme_id: str | None = None
+    taxonomy_id: str | None = None
     limit: int = 20
     offset: int = 0
