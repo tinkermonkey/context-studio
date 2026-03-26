@@ -10,7 +10,7 @@ through their methods.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import datetime, timezone
 
 from .value_objects import (
     DataPropertyValue,
@@ -54,7 +54,7 @@ class Taxonomy:
         if not new_title or not new_title.strip():
             raise ValueError("Title cannot be empty")
         self.title = new_title
-        self.last_modified = datetime.utcnow()
+        self.last_modified = datetime.now(timezone.utc)
 
 
 @dataclass
@@ -93,7 +93,7 @@ class ConceptScheme:
         if not new_title or not new_title.strip():
             raise ValueError("Title cannot be empty")
         self.title = new_title
-        self.last_modified = datetime.utcnow()
+        self.last_modified = datetime.now(timezone.utc)
 
 
 @dataclass
@@ -144,7 +144,7 @@ class Class:
         if not new_title or not new_title.strip():
             raise ValueError("Title cannot be empty")
         self.title = new_title
-        self.last_modified = datetime.utcnow()
+        self.last_modified = datetime.now(timezone.utc)
 
     def add_subclass_of(self, parent_id: str) -> None:
         """
@@ -159,12 +159,12 @@ class Class:
         if parent_id == self.id:
             raise ValueError("A class cannot be its own parent")
         self.parent_class_id = parent_id
-        self.last_modified = datetime.utcnow()
+        self.last_modified = datetime.now(timezone.utc)
 
     def remove_subclass_of(self) -> None:
         """Remove the parent class relationship (set to None)."""
         self.parent_class_id = None
-        self.last_modified = datetime.utcnow()
+        self.last_modified = datetime.now(timezone.utc)
 
 
 @dataclass
@@ -207,7 +207,7 @@ class Individual:
         if not new_title or not new_title.strip():
             raise ValueError("Title cannot be empty")
         self.title = new_title
-        self.last_modified = datetime.utcnow()
+        self.last_modified = datetime.now(timezone.utc)
 
 
 @dataclass
@@ -230,7 +230,7 @@ class Relationship:
     source_id: str
     target_id: str
     property_definition_id: str
-    created_at: datetime = field(default_factory=datetime.utcnow)
+    created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
 
     def __post_init__(self) -> None:
         """Validate relationship invariants."""
@@ -278,4 +278,4 @@ class PropertyDefinition:
         if not new_title or not new_title.strip():
             raise ValueError("Title cannot be empty")
         self.title = new_title
-        self.date_modified = datetime.utcnow()
+        self.date_modified = datetime.now(timezone.utc)

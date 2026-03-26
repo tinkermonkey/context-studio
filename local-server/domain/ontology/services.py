@@ -9,7 +9,7 @@ for event distribution.
 
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import datetime, timezone
 from uuid import uuid4
 from typing import Optional
 
@@ -84,8 +84,8 @@ class OntologyService:
             id=taxonomy_id,
             title=title,
             definition=definition,
-            created_at=datetime.utcnow(),
-            last_modified=datetime.utcnow(),
+            created_at=datetime.now(timezone.utc),
+            last_modified=datetime.now(timezone.utc),
         )
         self._repository.save_taxonomy(taxonomy)
 
@@ -243,8 +243,8 @@ class OntologyService:
             taxonomy_id=taxonomy_id,
             title=title,
             definition=definition,
-            created_at=datetime.utcnow(),
-            last_modified=datetime.utcnow(),
+            created_at=datetime.now(timezone.utc),
+            last_modified=datetime.now(timezone.utc),
         )
         self._repository.save_concept_scheme(scheme)
 
@@ -434,8 +434,8 @@ class OntologyService:
             definition=definition,
             parent_class_id=parent_class_id,
             embedding=embedding,
-            created_at=datetime.utcnow(),
-            last_modified=datetime.utcnow(),
+            created_at=datetime.now(timezone.utc),
+            last_modified=datetime.now(timezone.utc),
         )
         self._repository.save_class(cls)
 
@@ -552,7 +552,7 @@ class OntologyService:
         if not (title_changed or def_changed):
             return cls
 
-        cls.last_modified = datetime.utcnow()
+        cls.last_modified = datetime.now(timezone.utc)
         self._repository.save_class(cls)
 
         changed = tuple(f for f, was_changed in [("title", title_changed), ("definition", def_changed)] if was_changed)
@@ -939,8 +939,8 @@ class OntologyService:
             identifier=identifier,
             title=title,
             definition=definition,
-            date_created=datetime.utcnow(),
-            date_modified=datetime.utcnow(),
+            date_created=datetime.now(timezone.utc),
+            date_modified=datetime.now(timezone.utc),
         )
         self._repository.save_property_definition(prop_def)
 
