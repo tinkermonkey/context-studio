@@ -10,7 +10,6 @@ Tests verify:
 import sys
 import os
 from datetime import datetime
-from typing import Callable, Optional
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
@@ -19,192 +18,11 @@ from domain.ontology.ports import (
     EventPublisher,
     OntologyRepository,
 )
-from domain.ontology.events import DomainEvent, ClassCreated
-from domain.ontology.entities import Taxonomy, ConceptScheme, Class, Relationship, PropertyDefinition, Individual
-from domain.ontology.value_objects import SearchCriteria
-
-
-class FakeOntologyRepository:
-    """
-    Fake implementation of OntologyRepository Protocol.
-
-    This demonstrates structural subtyping — it doesn't inherit from
-    OntologyRepository, but implements its interface structurally.
-    """
-
-    def __init__(self):
-        self.taxonomies = {}
-        self.concept_schemes = {}
-        self.classes = {}
-        self.relationships = {}
-        self.property_definitions = {}
-
-    def get_taxonomy(self, taxonomy_id: str) -> Optional[Taxonomy]:
-        return self.taxonomies.get(taxonomy_id)
-
-    def list_taxonomies(self) -> list[Taxonomy]:
-        return list(self.taxonomies.values())
-
-    def save_taxonomy(self, taxonomy: Taxonomy) -> None:
-        self.taxonomies[taxonomy.id] = taxonomy
-
-    def delete_taxonomy(self, taxonomy_id: str) -> None:
-        if taxonomy_id in self.taxonomies:
-            del self.taxonomies[taxonomy_id]
-
-    def get_concept_scheme(self, scheme_id: str) -> Optional[ConceptScheme]:
-        return self.concept_schemes.get(scheme_id)
-
-    def list_concept_schemes(self, taxonomy_id: Optional[str] = None) -> list[ConceptScheme]:
-        schemes = list(self.concept_schemes.values())
-        if taxonomy_id:
-            schemes = [s for s in schemes if s.taxonomy_id == taxonomy_id]
-        return schemes
-
-    def save_concept_scheme(self, scheme: ConceptScheme) -> None:
-        self.concept_schemes[scheme.id] = scheme
-
-    def delete_concept_scheme(self, scheme_id: str) -> None:
-        if scheme_id in self.concept_schemes:
-            del self.concept_schemes[scheme_id]
-
-    def get_class(self, class_id: str) -> Optional[Class]:
-        return self.classes.get(class_id)
-
-    def list_classes(
-        self,
-        scheme_id: Optional[str] = None,
-        parent_class_id: Optional[str] = None,
-        limit: int = 100,
-        offset: int = 0,
-    ) -> list[Class]:
-        classes = list(self.classes.values())
-        if scheme_id:
-            classes = [c for c in classes if c.scheme_id == scheme_id]
-        if parent_class_id:
-            classes = [c for c in classes if c.parent_class_id == parent_class_id]
-        return classes[offset : offset + limit]
-
-    def search_classes(self, criteria: SearchCriteria) -> list[Class]:
-        return []
-
-    def count_classes(self, scheme_id: Optional[str] = None) -> int:
-        classes = list(self.classes.values())
-        if scheme_id:
-            classes = [c for c in classes if c.scheme_id == scheme_id]
-        return len(classes)
-
-    def save_class(self, cls: Class) -> None:
-        self.classes[cls.id] = cls
-
-    def delete_class(self, class_id: str) -> None:
-        if class_id in self.classes:
-            del self.classes[class_id]
-
-    def get_relationship(self, relationship_id: str) -> Optional[Relationship]:
-        return self.relationships.get(relationship_id)
-
-    def list_relationships(
-        self,
-        source_id: Optional[str] = None,
-        target_id: Optional[str] = None,
-        property_id: Optional[str] = None,
-    ) -> list[Relationship]:
-        rels = list(self.relationships.values())
-        if source_id:
-            rels = [r for r in rels if r.source_id == source_id]
-        if target_id:
-            rels = [r for r in rels if r.target_id == target_id]
-        if property_id:
-            rels = [r for r in rels if r.property_definition_id == property_id]
-        return rels
-
-    def save_relationship(self, relationship: Relationship) -> None:
-        self.relationships[relationship.id] = relationship
-
-    def delete_relationship(self, relationship_id: str) -> None:
-        if relationship_id in self.relationships:
-            del self.relationships[relationship_id]
-
-    def get_property_definition(self, property_id: str) -> Optional[PropertyDefinition]:
-        return self.property_definitions.get(property_id)
-
-    def get_property_definition_by_identifier(self, identifier: str) -> Optional[PropertyDefinition]:
-        for prop in self.property_definitions.values():
-            if prop.identifier == identifier:
-                return prop
-        return None
-
-    def list_property_definitions(self, is_relevant: Optional[bool] = None) -> list[PropertyDefinition]:
-        return list(self.property_definitions.values())
-
-    def save_property_definition(self, prop: PropertyDefinition) -> None:
-        self.property_definitions[prop.id] = prop
-
-    def delete_property_definition(self, property_id: str) -> None:
-        if property_id in self.property_definitions:
-            del self.property_definitions[property_id]
-
-    def get_individual(self, individual_id: str) -> Optional[Individual]:
-        raise NotImplementedError()
-
-    def list_individuals(self, class_id: Optional[str] = None) -> list[Individual]:
-        raise NotImplementedError()
-
-    def save_individual(self, individual: Individual) -> None:
-        raise NotImplementedError()
-
-    def delete_individual(self, individual_id: str) -> None:
-        raise NotImplementedError()
-
-    def get_all_entities_and_relationships(self, taxonomy_id: str) -> dict:
-        return {}
-
-
-class FakeEmbeddingService:
-    """
-    Fake implementation of EmbeddingService Protocol.
-
-    This demonstrates structural subtyping — it doesn't inherit from
-    EmbeddingService, but implements its interface structurally.
-    """
-
-    def embed_text(self, text: str) -> list[float]:
-        # Simple fake: convert text to list of floats
-        hash_val = hash(text)
-        return [float((hash_val >> (i * 8)) & 0xFF) / 256.0 for i in range(8)]
-
-    def embed_batch(self, texts: list[str]) -> list[list[float]]:
-        return [self.embed_text(text) for text in texts]
-
-    def similarity(self, embedding_a: list[float], embedding_b: list[float]) -> float:
-        # Simple fake: return 0.5
-        return 0.5
-
-
-class FakeEventPublisher:
-    """
-    Fake implementation of EventPublisher Protocol.
-
-    This demonstrates structural subtyping — it doesn't inherit from
-    EventPublisher, but implements its interface structurally.
-    """
-
-    def __init__(self):
-        self.published_events = []
-        self.handlers = {}
-
-    def publish(self, event: DomainEvent) -> None:
-        self.published_events.append(event)
-        event_type = type(event)
-        if event_type in self.handlers:
-            for handler in self.handlers[event_type]:
-                handler(event)
-
-    def subscribe(self, event_type: type[DomainEvent], handler: Callable[[DomainEvent], None]) -> None:
-        if event_type not in self.handlers:
-            self.handlers[event_type] = []
-        self.handlers[event_type].append(handler)
+from domain.ontology.events import ClassCreated
+from domain.ontology.entities import Taxonomy
+from tests.fakes.fake_ontology_repository import FakeOntologyRepository
+from tests.fakes.fake_embedding_service import FakeEmbeddingService
+from tests.fakes.fake_event_publisher import FakeEventPublisher
 
 
 class TestOntologyRepositoryProtocol:
@@ -347,8 +165,9 @@ class TestEventPublisherProtocol:
             taxonomy_id="tax-1",
         )
         publisher.publish(event)
-        assert len(publisher.published_events) == 1
-        assert publisher.published_events[0] == event
+        events = publisher.get_events()
+        assert len(events) == 1
+        assert events[0] == event
 
     def test_event_publisher_subscribe_accepts_event_type_and_handler(self):
         """EventPublisher.subscribe accepts event type and handler callable."""
@@ -375,6 +194,9 @@ class TestEventPublisherProtocol:
 
         assert len(handler_called) == 1
         assert handler_called[0] == event
+        # Verify event was also stored
+        events = publisher.get_events()
+        assert len(events) == 1
 
     def test_event_publisher_multiple_subscribers(self):
         """EventPublisher supports multiple subscribers for same event type."""

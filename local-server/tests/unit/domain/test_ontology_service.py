@@ -115,6 +115,18 @@ class TestCreateScheme:
         scheme2 = service.create_scheme(taxonomy_id=tax2.id, title="Elements")
         assert scheme1.id != scheme2.id
 
+    def test_create_scheme_empty_title_raises(self, service):
+        """Create scheme with empty title raises ValueError."""
+        tax = service.create_taxonomy(title="Biology")
+        with pytest.raises(ValueError, match="Title cannot be empty"):
+            service.create_scheme(taxonomy_id=tax.id, title="")
+
+    def test_create_scheme_whitespace_title_raises(self, service):
+        """Create scheme with whitespace-only title raises ValueError."""
+        tax = service.create_taxonomy(title="Biology")
+        with pytest.raises(ValueError, match="Title cannot be empty"):
+            service.create_scheme(taxonomy_id=tax.id, title="   ")
+
 
 class TestRenameTaxonomy:
     """Tests for rename_taxonomy."""
@@ -222,6 +234,25 @@ class TestDeleteTaxonomy:
 
         with pytest.raises(EntityNotFoundError):
             service.get_taxonomy(tax.id)
+
+
+class TestGetConceptScheme:
+    """Tests for get_concept_scheme."""
+
+    def test_get_concept_scheme_success(self, service):
+        """Retrieve a concept scheme by ID."""
+        tax = service.create_taxonomy(title="Biology")
+        scheme = service.create_scheme(taxonomy_id=tax.id, title="Animals")
+
+        retrieved = service.get_concept_scheme(scheme.id)
+        assert retrieved.id == scheme.id
+        assert retrieved.title == "Animals"
+        assert retrieved.taxonomy_id == tax.id
+
+    def test_get_concept_scheme_nonexistent_raises(self, service):
+        """Get nonexistent scheme raises EntityNotFoundError."""
+        with pytest.raises(EntityNotFoundError, match="ConceptScheme"):
+            service.get_concept_scheme("nonexistent")
 
 
 class TestRenameScheme:
@@ -439,6 +470,20 @@ class TestCreateClass:
         cls1 = service.create_class(scheme_id=scheme1.id, title="Life")
         cls2 = service.create_class(scheme_id=scheme2.id, title="Life")
         assert cls1.id != cls2.id
+
+    def test_create_class_empty_title_raises(self, service):
+        """Create class with empty title raises ValueError."""
+        tax = service.create_taxonomy(title="Biology")
+        scheme = service.create_scheme(taxonomy_id=tax.id, title="Animals")
+        with pytest.raises(ValueError, match="Title cannot be empty"):
+            service.create_class(scheme_id=scheme.id, title="")
+
+    def test_create_class_whitespace_title_raises(self, service):
+        """Create class with whitespace-only title raises ValueError."""
+        tax = service.create_taxonomy(title="Biology")
+        scheme = service.create_scheme(taxonomy_id=tax.id, title="Animals")
+        with pytest.raises(ValueError, match="Title cannot be empty"):
+            service.create_class(scheme_id=scheme.id, title="   ")
 
 
 class TestUpdateClass:
@@ -883,6 +928,24 @@ class TestDeleteRelationship:
         """Delete nonexistent relationship raises EntityNotFoundError."""
         with pytest.raises(EntityNotFoundError, match="Relationship"):
             service.delete_relationship(relationship_id="nonexistent")
+
+
+class TestGetPropertyDefinition:
+    """Tests for get_property_definition."""
+
+    def test_get_property_definition_success(self, service):
+        """Retrieve a property definition by ID."""
+        prop = service.create_property_definition(identifier="is_a", title="Is A")
+
+        retrieved = service.get_property_definition(prop.id)
+        assert retrieved.id == prop.id
+        assert retrieved.identifier == "is_a"
+        assert retrieved.title == "Is A"
+
+    def test_get_property_definition_nonexistent_raises(self, service):
+        """Get nonexistent property definition raises EntityNotFoundError."""
+        with pytest.raises(EntityNotFoundError, match="PropertyDefinition"):
+            service.get_property_definition("nonexistent")
 
 
 class TestCreatePropertyDefinition:
