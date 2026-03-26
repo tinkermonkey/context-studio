@@ -240,7 +240,7 @@ class TestUpdateClass:
         assert "description" in events[0].changed_fields
 
     def test_update_class_no_change_no_embedding_regen(self, service):
-        """Update class with no title/description change does not regenerate embedding."""
+        """Update class with no title/description change does not regenerate embedding or emit event."""
         tax = service.create_taxonomy(title="Biology")
         scheme = service.create_scheme(taxonomy_id=tax.id, title="Animals")
         cls = service.create_class(scheme_id=scheme.id, title="Dog", description="Canine")
@@ -250,10 +250,9 @@ class TestUpdateClass:
         updated = service.update_class(class_id=cls.id)
         assert updated.embedding == old_embedding
 
-        # Verify ClassUpdated event is emitted but with empty changed_fields
+        # Verify no ClassUpdated event is emitted when no changes
         events = service._event_publisher.get_events_of_type(ClassUpdated)
-        assert len(events) == 1
-        assert len(events[0].changed_fields) == 0
+        assert len(events) == 0
 
     def test_update_class_nonexistent_raises(self, service):
         """Update nonexistent class raises EntityNotFoundError."""
@@ -450,10 +449,18 @@ class TestDeleteRelationship:
         with pytest.raises(EntityNotFoundError):
             service.get_relationship(rel.id)
 
-        # Verify event
+        # Verify RelationshipDeleted event
         events = service._event_publisher.get_events_of_type(RelationshipDeleted)
         assert len(events) == 1
         assert events[0].relationship_id == rel.id
+
+        # Verify GraphInvalidated event
+        graph_events = service._event_publisher.get_events_of_type(GraphInvalidated)
+        assert len(graph_events) >= 1
+        # Find the one from delete (not from create_relationship)
+        delete_graph_events = [e for e in graph_events if e.reason == "relationship_deleted"]
+        assert len(delete_graph_events) == 1
+        assert delete_graph_events[0].taxonomy_id == tax.id
 
     def test_delete_relationship_nonexistent_raises(self, service):
         """Delete nonexistent relationship raises EntityNotFoundError."""

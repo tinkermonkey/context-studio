@@ -13,7 +13,7 @@ from datetime import datetime
 from uuid import uuid4
 from typing import Optional
 
-from domain.ontology.entities import Taxonomy, ConceptScheme, Class, Individual, Relationship, PropertyDefinition
+from domain.ontology.entities import Taxonomy, ConceptScheme, Class, Relationship, PropertyDefinition
 from domain.ontology.events import (
     TaxonomyCreated, SchemeCreated, ClassCreated, ClassUpdated, ClassDeleted,
     ClassMoved, RelationshipCreated, RelationshipDeleted,
@@ -381,10 +381,14 @@ class OntologyService:
             embed_text = f"{cls.title} {cls.description or ''}".strip()
             cls.embedding = self._embedding_service.embed_text(embed_text)
 
+        # Guard against no-op updates
+        if not (title_changed or desc_changed):
+            return cls
+
         cls.updated_at = datetime.utcnow()
         self._repository.save_class(cls)
 
-        changed = tuple(f for f, changed in [("title", title_changed), ("description", desc_changed)] if changed)
+        changed = tuple(f for f, was_changed in [("title", title_changed), ("description", desc_changed)] if was_changed)
         self._event_publisher.publish(ClassUpdated(
             event_id=str(uuid4()),
             occurred_at=datetime.utcnow(),
@@ -634,6 +638,19 @@ class OntologyService:
             occurred_at=datetime.utcnow(),
             aggregate_id=relationship_id,
             relationship_id=relationship_id,
+        ))
+
+        # Determine which taxonomy this relationship belonged to (for graph invalidation)
+        # Try to find the source as a Class to get its taxonomy
+        source_class = self._repository.get_class(relationship.source_id)
+        taxonomy_id = source_class.taxonomy_id if source_class else relationship.source_id
+
+        self._event_publisher.publish(GraphInvalidated(
+            event_id=str(uuid4()),
+            occurred_at=datetime.utcnow(),
+            aggregate_id=taxonomy_id,
+            taxonomy_id=taxonomy_id,
+            reason="relationship_deleted",
         ))
 
     # PropertyDefinition operations
