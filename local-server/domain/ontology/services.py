@@ -559,9 +559,9 @@ class OntologyService:
             if any(c.title == title and c.id != class_id for c in existing_classes):
                 raise DuplicateEntityError(f"Class with title '{title}' already exists in this scheme")
 
-        if title is not None:
+        if title_changed:
             cls.rename(title)
-        if description is not None:
+        if desc_changed:
             cls.description = description
 
         # Regenerate embedding only if title or description changed
