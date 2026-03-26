@@ -11,6 +11,8 @@ PRPs/
 
 # Build and runtime artifacts
 *.log
+__pycache__/
+*.pyc
 
 # Database files and SQLite runtime artifacts
 /cache.db*
