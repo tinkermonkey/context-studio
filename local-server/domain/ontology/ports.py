@@ -74,12 +74,12 @@ class OntologyRepository(Protocol):
         ...
 
     # ConceptScheme operations
-    def get_concept_scheme(self, concept_scheme_id: str) -> ConceptScheme | None:
+    def get_concept_scheme(self, scheme_id: str) -> ConceptScheme | None:
         """
         Retrieve a concept scheme by ID.
 
         Args:
-            concept_scheme_id: The ID of the concept scheme
+            scheme_id: The ID of the concept scheme
 
         Returns:
             The ConceptScheme if found, None otherwise
@@ -110,12 +110,12 @@ class OntologyRepository(Protocol):
         """
         ...
 
-    def delete_concept_scheme(self, concept_scheme_id: str) -> bool:
+    def delete_concept_scheme(self, scheme_id: str) -> bool:
         """
         Delete a concept scheme by ID.
 
         Args:
-            concept_scheme_id: The ID of the concept scheme to delete
+            scheme_id: The ID of the concept scheme to delete
 
         Returns:
             True if the concept scheme was deleted, False if it did not exist
@@ -137,7 +137,7 @@ class OntologyRepository(Protocol):
 
     def list_classes(
         self,
-        concept_scheme_id: str | None = None,
+        scheme_id: str | None = None,
         parent_class_id: str | None = None,
         limit: int = 100,
         offset: int = 0,
@@ -146,7 +146,7 @@ class OntologyRepository(Protocol):
         Retrieve classes with optional filtering and pagination.
 
         Args:
-            concept_scheme_id: Optional concept scheme ID to filter by
+            scheme_id: Optional concept scheme ID to filter by
             parent_class_id: Optional parent class ID to filter by (for hierarchy)
             limit: Maximum number of results to return
             offset: Number of results to skip
@@ -168,12 +168,12 @@ class OntologyRepository(Protocol):
         """
         ...
 
-    def count_classes(self, concept_scheme_id: str | None = None) -> int:
+    def count_classes(self, scheme_id: str | None = None) -> int:
         """
         Count classes, optionally filtered by scheme.
 
         Args:
-            concept_scheme_id: Optional concept scheme ID to count classes within
+            scheme_id: Optional concept scheme ID to count classes within
 
         Returns:
             Total count of classes

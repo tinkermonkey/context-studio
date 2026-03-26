@@ -159,7 +159,7 @@ class TestEventPublisherProtocol:
         event = ClassCreated(
             class_id="class-1",
             title="Test Class",
-            concept_scheme_id="scheme-1",
+            scheme_id="scheme-1",
             taxonomy_id="tax-1",
         )
         publisher.publish(event)
@@ -181,7 +181,7 @@ class TestEventPublisherProtocol:
         event = ClassCreated(
             class_id="class-1",
             title="Test Class",
-            concept_scheme_id="scheme-1",
+            scheme_id="scheme-1",
             taxonomy_id="tax-1",
         )
         publisher.publish(event)
@@ -211,7 +211,7 @@ class TestEventPublisherProtocol:
         event = ClassCreated(
             class_id="class-1",
             title="Test Class",
-            concept_scheme_id="scheme-1",
+            scheme_id="scheme-1",
             taxonomy_id="tax-1",
         )
         publisher.publish(event)

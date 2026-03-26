@@ -107,7 +107,7 @@ class SearchCriteria:
         query: Optional text search query
         node_types: Optional filter by entity types (tuple of node types, immutable)
         taxonomy_id: Optional filter by taxonomy
-        concept_scheme_id: Optional filter by concept scheme
+        scheme_id: Optional filter by concept scheme
         parent_id: Optional filter by parent entity
         use_semantic_search: Whether to use embedding similarity (default False)
         limit: Maximum number of results to return (default 20)
@@ -117,7 +117,7 @@ class SearchCriteria:
     query: str | None = None
     node_types: tuple[NodeType, ...] | None = None
     taxonomy_id: str | None = None
-    concept_scheme_id: str | None = None
+    scheme_id: str | None = None
     parent_id: str | None = None
     use_semantic_search: bool = False
     limit: int = 20
