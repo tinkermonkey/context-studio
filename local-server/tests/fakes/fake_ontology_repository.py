@@ -192,24 +192,27 @@ class FakeOntologyRepository:
             return True
         return False
 
-    # Individual operations (deferred — all raise NotImplementedError in Phase 1)
+    # Individual operations (not yet implemented)
 
     def get_individual(self, individual_id: str) -> Individual | None:
-        """Individuals are not supported in Phase 1.
+        """Return None since individuals are not yet supported.
 
-        Raises:
-            NotImplementedError: Individual operations are deferred to Phase 2
+        Unlike other individual operations, this method returns None instead of
+        raising NotImplementedError because it is actively called by service code
+        (e.g., when resolving relationship source/target nodes). Returning None
+        is semantically equivalent to "entity not found" and allows graceful
+        degradation until individuals are implemented.
         """
-        raise NotImplementedError("Individual operations are deferred to Phase 2")
+        return None
 
     def list_individuals(self, class_id: str | None = None) -> list[Individual]:
-        raise NotImplementedError("Individual operations are deferred to Phase 2")
+        raise NotImplementedError("Individual operations are not yet implemented")
 
     def save_individual(self, individual: Individual) -> Individual:
-        raise NotImplementedError("Individual operations are deferred to Phase 2")
+        raise NotImplementedError("Individual operations are not yet implemented")
 
     def delete_individual(self, individual_id: str) -> bool:
-        raise NotImplementedError("Individual operations are deferred to Phase 2")
+        raise NotImplementedError("Individual operations are not yet implemented")
 
     # Bulk operations
 
