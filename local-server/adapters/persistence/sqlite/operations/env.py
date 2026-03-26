@@ -8,16 +8,13 @@ from sqlalchemy import pool
 
 from alembic import context
 
-# Add local-server root to path for imports
+# Ensure local-server root is in path for imports
 local_server_root = Path(__file__).parent.parent.parent.parent
-sys.path.insert(0, str(local_server_root))
-
-# Placeholder for operations.db models
-# This will be updated when OperationsBase is defined in domain-driven design
-# Currently a stub to support the multidb Alembic structure
+if str(local_server_root) not in sys.path:
+    sys.path.insert(0, str(local_server_root))
 
 try:
-    from adapters.persistence.sqlite.operations.models import OperationsBase
+    from adapters.persistence.sqlite.operations.models import OperationsBase  # noqa: E402
     target_metadata = OperationsBase.metadata
 except ImportError:
     target_metadata = None

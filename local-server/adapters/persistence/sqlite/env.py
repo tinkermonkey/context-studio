@@ -10,12 +10,12 @@ from sqlalchemy import pool
 from alembic import context
 from alembic.config import Config
 
-# Add local-server root to path for imports
+# Ensure local-server root is in path for imports
 local_server_root = Path(__file__).parent.parent.parent
-sys.path.insert(0, str(local_server_root))
+if str(local_server_root) not in sys.path:
+    sys.path.insert(0, str(local_server_root))
 
-# Domain imports after path setup
-from adapters.persistence.sqlite.models import Base
+from adapters.persistence.sqlite.models import Base  # noqa: E402
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
