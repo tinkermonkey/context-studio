@@ -169,14 +169,15 @@ class FakeEmbeddingService:
     EmbeddingService, but implements its interface structurally.
     """
 
-    def embed_text(self, text: str) -> bytes:
-        # Simple fake: just convert text to bytes
-        return text.encode("utf-8")
+    def embed_text(self, text: str) -> list[float]:
+        # Simple fake: convert text to list of floats
+        hash_val = hash(text)
+        return [float((hash_val >> (i * 8)) & 0xFF) / 256.0 for i in range(8)]
 
-    def embed_batch(self, texts: list[str]) -> list[bytes]:
+    def embed_batch(self, texts: list[str]) -> list[list[float]]:
         return [self.embed_text(text) for text in texts]
 
-    def similarity(self, embedding_a: bytes, embedding_b: bytes) -> float:
+    def similarity(self, embedding_a: list[float], embedding_b: list[float]) -> float:
         # Simple fake: return 0.5
         return 0.5
 
@@ -291,19 +292,21 @@ class TestEmbeddingServiceProtocol:
         service: EmbeddingService = FakeEmbeddingService()
         assert service is not None
 
-    def test_embedding_service_embed_text_returns_bytes(self):
-        """EmbeddingService.embed_text returns bytes."""
+    def test_embedding_service_embed_text_returns_list_float(self):
+        """EmbeddingService.embed_text returns list of floats."""
         service = FakeEmbeddingService()
         result = service.embed_text("test text")
-        assert isinstance(result, bytes)
+        assert isinstance(result, list)
+        assert all(isinstance(f, float) for f in result)
 
-    def test_embedding_service_embed_batch_returns_bytes_list(self):
-        """EmbeddingService.embed_batch returns list of bytes."""
+    def test_embedding_service_embed_batch_returns_list_of_list_float(self):
+        """EmbeddingService.embed_batch returns list of list of floats."""
         service = FakeEmbeddingService()
         result = service.embed_batch(["text1", "text2"])
         assert isinstance(result, list)
         assert len(result) == 2
-        assert all(isinstance(b, bytes) for b in result)
+        assert all(isinstance(item, list) for item in result)
+        assert all(isinstance(f, float) for item in result for f in item)
 
     def test_embedding_service_similarity_returns_float(self):
         """EmbeddingService.similarity returns float."""
@@ -313,11 +316,11 @@ class TestEmbeddingServiceProtocol:
         result = service.similarity(emb1, emb2)
         assert isinstance(result, float)
 
-    def test_embedding_service_similarity_accepts_bytes(self):
-        """EmbeddingService.similarity accepts bytes arguments."""
+    def test_embedding_service_similarity_accepts_list_float(self):
+        """EmbeddingService.similarity accepts list of float arguments."""
         service = FakeEmbeddingService()
-        emb_a = b"embedding1"
-        emb_b = b"embedding2"
+        emb_a = [0.1, 0.2, 0.3, 0.4]
+        emb_b = [0.2, 0.3, 0.4, 0.5]
         result = service.similarity(emb_a, emb_b)
         assert isinstance(result, float)
 

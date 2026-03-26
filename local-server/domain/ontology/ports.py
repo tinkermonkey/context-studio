@@ -368,7 +368,7 @@ class EmbeddingService(Protocol):
     and clustering operations.
     """
 
-    def embed_text(self, text: str) -> bytes:
+    def embed_text(self, text: str) -> list[float]:
         """
         Embed a single text into a vector.
 
@@ -376,11 +376,11 @@ class EmbeddingService(Protocol):
             text: The text to embed
 
         Returns:
-            The embedding as bytes
+            The embedding as a list of floats
         """
         ...
 
-    def embed_batch(self, texts: list[str]) -> list[bytes]:
+    def embed_batch(self, texts: list[str]) -> list[list[float]]:
         """
         Embed multiple texts in batch.
 
@@ -388,17 +388,17 @@ class EmbeddingService(Protocol):
             texts: List of texts to embed
 
         Returns:
-            List of embeddings as bytes
+            List of embeddings as lists of floats
         """
         ...
 
-    def similarity(self, embedding_a: bytes, embedding_b: bytes) -> float:
+    def similarity(self, embedding_a: list[float], embedding_b: list[float]) -> float:
         """
         Compute similarity between two embeddings.
 
         Args:
-            embedding_a: First embedding
-            embedding_b: Second embedding
+            embedding_a: First embedding as a list of floats
+            embedding_b: Second embedding as a list of floats
 
         Returns:
             Similarity score as float (typically 0.0 to 1.0)
