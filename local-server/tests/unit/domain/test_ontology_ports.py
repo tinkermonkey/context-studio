@@ -158,9 +158,6 @@ class TestEventPublisherProtocol:
         publisher = FakeEventPublisher()
         now = datetime.utcnow()
         event = ClassCreated(
-            event_id="evt-1",
-            occurred_at=now,
-            aggregate_id="class-1",
             class_id="class-1",
             title="Test Class",
             concept_scheme_id="scheme-1",
@@ -184,9 +181,6 @@ class TestEventPublisherProtocol:
 
         now = datetime.utcnow()
         event = ClassCreated(
-            event_id="evt-1",
-            occurred_at=now,
-            aggregate_id="class-1",
             class_id="class-1",
             title="Test Class",
             concept_scheme_id="scheme-1",
@@ -218,9 +212,6 @@ class TestEventPublisherProtocol:
 
         now = datetime.utcnow()
         event = ClassCreated(
-            event_id="evt-1",
-            occurred_at=now,
-            aggregate_id="class-1",
             class_id="class-1",
             title="Test Class",
             concept_scheme_id="scheme-1",

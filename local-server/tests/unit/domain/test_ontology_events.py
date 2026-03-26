@@ -39,26 +39,27 @@ from domain.ontology.events import (
 class TestDomainEventBase:
     """Tests for DomainEvent base class."""
 
-    def test_domain_event_creation(self):
-        """DomainEvent can be instantiated with required fields."""
+    def test_domain_event_creation_with_defaults(self):
+        """DomainEvent can be instantiated with default event_id and occurred_at."""
+        event = DomainEvent()
+        assert event.event_id is not None
+        assert isinstance(event.event_id, str)
+        assert event.occurred_at is not None
+        assert isinstance(event.occurred_at, datetime)
+
+    def test_domain_event_creation_with_explicit_values(self):
+        """DomainEvent can be instantiated with explicit event_id and occurred_at."""
         now = datetime.utcnow()
         event = DomainEvent(
             event_id="evt-123",
             occurred_at=now,
-            aggregate_id="agg-456",
         )
         assert event.event_id == "evt-123"
         assert event.occurred_at == now
-        assert event.aggregate_id == "agg-456"
 
     def test_domain_event_is_frozen(self):
         """DomainEvent instances are frozen and cannot be modified."""
-        now = datetime.utcnow()
-        event = DomainEvent(
-            event_id="evt-123",
-            occurred_at=now,
-            aggregate_id="agg-456",
-        )
+        event = DomainEvent()
         with pytest.raises(FrozenInstanceError):
             event.event_id = "new-id"
 
@@ -69,7 +70,6 @@ class TestDomainEventBase:
             DomainEvent(
                 event_id="",
                 occurred_at=now,
-                aggregate_id="agg-456",
             )
 
     def test_domain_event_rejects_whitespace_event_id(self):
@@ -79,58 +79,26 @@ class TestDomainEventBase:
             DomainEvent(
                 event_id="   ",
                 occurred_at=now,
-                aggregate_id="agg-456",
             )
-
-    def test_domain_event_rejects_empty_aggregate_id(self):
-        """DomainEvent raises ValueError if aggregate_id is empty."""
-        now = datetime.utcnow()
-        with pytest.raises(ValueError, match="Event field 'aggregate_id' cannot be empty"):
-            DomainEvent(
-                event_id="evt-123",
-                occurred_at=now,
-                aggregate_id="",
-            )
-
-    def test_domain_event_allows_whitespace_in_non_required_fields(self):
-        """DomainEvent allows whitespace-only strings if they are not required string fields."""
-        # The base DomainEvent only has required fields, so this tests that
-        # datetime fields are not validated
-        now = datetime.utcnow()
-        event = DomainEvent(
-            event_id="evt-123",
-            occurred_at=now,
-            aggregate_id="agg-456",
-        )
-        # Should not raise
-        assert event.event_id == "evt-123"
 
 
 class TestTaxonomyCreated:
     """Tests for TaxonomyCreated event."""
 
     def test_taxonomy_created_instantiation(self):
-        """TaxonomyCreated can be instantiated with all required fields."""
-        now = datetime.utcnow()
+        """TaxonomyCreated can be instantiated with required fields."""
         event = TaxonomyCreated(
-            event_id="evt-tax-001",
-            occurred_at=now,
-            aggregate_id="tax-123",
             taxonomy_id="tax-123",
             title="Biology Taxonomy",
         )
-        assert event.event_id == "evt-tax-001"
-        assert event.aggregate_id == "tax-123"
+        assert event.event_id is not None
+        assert event.occurred_at is not None
         assert event.taxonomy_id == "tax-123"
         assert event.title == "Biology Taxonomy"
 
     def test_taxonomy_created_is_frozen(self):
         """TaxonomyCreated instances are frozen."""
-        now = datetime.utcnow()
         event = TaxonomyCreated(
-            event_id="evt-tax-001",
-            occurred_at=now,
-            aggregate_id="tax-123",
             taxonomy_id="tax-123",
             title="Biology Taxonomy",
         )
@@ -139,24 +107,16 @@ class TestTaxonomyCreated:
 
     def test_taxonomy_created_rejects_empty_title(self):
         """TaxonomyCreated raises ValueError if title is empty."""
-        now = datetime.utcnow()
         with pytest.raises(ValueError, match="Event field 'title' cannot be empty"):
             TaxonomyCreated(
-                event_id="evt-tax-001",
-                occurred_at=now,
-                aggregate_id="tax-123",
                 taxonomy_id="tax-123",
                 title="",
             )
 
     def test_taxonomy_created_rejects_empty_taxonomy_id(self):
         """TaxonomyCreated raises ValueError if taxonomy_id is empty."""
-        now = datetime.utcnow()
         with pytest.raises(ValueError, match="Event field 'taxonomy_id' cannot be empty"):
             TaxonomyCreated(
-                event_id="evt-tax-001",
-                occurred_at=now,
-                aggregate_id="tax-123",
                 taxonomy_id="",
                 title="Biology Taxonomy",
             )
@@ -167,26 +127,20 @@ class TestSchemeCreated:
 
     def test_scheme_created_instantiation(self):
         """SchemeCreated can be instantiated with all required fields."""
-        now = datetime.utcnow()
         event = SchemeCreated(
-            event_id="evt-scheme-001",
-            occurred_at=now,
-            aggregate_id="scheme-123",
             concept_scheme_id="scheme-123",
             title="Animal Kingdom",
             taxonomy_id="tax-456",
         )
+        assert event.event_id is not None
+        assert event.occurred_at is not None
         assert event.concept_scheme_id == "scheme-123"
         assert event.title == "Animal Kingdom"
         assert event.taxonomy_id == "tax-456"
 
     def test_scheme_created_is_frozen(self):
         """SchemeCreated instances are frozen."""
-        now = datetime.utcnow()
         event = SchemeCreated(
-            event_id="evt-scheme-001",
-            occurred_at=now,
-            aggregate_id="scheme-123",
             concept_scheme_id="scheme-123",
             title="Animal Kingdom",
             taxonomy_id="tax-456",
@@ -200,16 +154,14 @@ class TestTaxonomyUpdated:
 
     def test_taxonomy_updated_instantiation(self):
         """TaxonomyUpdated can be instantiated with changed fields and old/new values."""
-        now = datetime.utcnow()
         event = TaxonomyUpdated(
-            event_id="evt-tax-upd-001",
-            occurred_at=now,
-            aggregate_id="tax-123",
             taxonomy_id="tax-123",
             changed_fields=("title",),
             old_values={"title": "Old Title"},
             new_values={"title": "New Title"},
         )
+        assert event.event_id is not None
+        assert event.occurred_at is not None
         assert event.taxonomy_id == "tax-123"
         assert event.changed_fields == ("title",)
         assert event.old_values == {"title": "Old Title"}
@@ -217,11 +169,7 @@ class TestTaxonomyUpdated:
 
     def test_taxonomy_updated_with_multiple_changed_fields(self):
         """TaxonomyUpdated can have multiple changed fields."""
-        now = datetime.utcnow()
         event = TaxonomyUpdated(
-            event_id="evt-tax-upd-001",
-            occurred_at=now,
-            aggregate_id="tax-123",
             taxonomy_id="tax-123",
             changed_fields=("title", "description"),
             old_values={"title": "Old Title", "description": "Old Desc"},
@@ -233,11 +181,7 @@ class TestTaxonomyUpdated:
 
     def test_taxonomy_updated_is_frozen(self):
         """TaxonomyUpdated instances are frozen."""
-        now = datetime.utcnow()
         event = TaxonomyUpdated(
-            event_id="evt-tax-upd-001",
-            occurred_at=now,
-            aggregate_id="tax-123",
             taxonomy_id="tax-123",
             changed_fields=("title",),
             old_values={"title": "Old Title"},
@@ -252,24 +196,18 @@ class TestTaxonomyDeleted:
 
     def test_taxonomy_deleted_instantiation(self):
         """TaxonomyDeleted can be instantiated with all required fields."""
-        now = datetime.utcnow()
         event = TaxonomyDeleted(
-            event_id="evt-tax-del-001",
-            occurred_at=now,
-            aggregate_id="tax-123",
             taxonomy_id="tax-123",
             title="Biology",
         )
+        assert event.event_id is not None
+        assert event.occurred_at is not None
         assert event.taxonomy_id == "tax-123"
         assert event.title == "Biology"
 
     def test_taxonomy_deleted_is_frozen(self):
         """TaxonomyDeleted instances are frozen."""
-        now = datetime.utcnow()
         event = TaxonomyDeleted(
-            event_id="evt-tax-del-001",
-            occurred_at=now,
-            aggregate_id="tax-123",
             taxonomy_id="tax-123",
             title="Biology",
         )
@@ -278,12 +216,8 @@ class TestTaxonomyDeleted:
 
     def test_taxonomy_deleted_rejects_empty_title(self):
         """TaxonomyDeleted raises ValueError if title is empty."""
-        now = datetime.utcnow()
         with pytest.raises(ValueError, match="Event field 'title' cannot be empty"):
             TaxonomyDeleted(
-                event_id="evt-tax-del-001",
-                occurred_at=now,
-                aggregate_id="tax-123",
                 taxonomy_id="tax-123",
                 title="",
             )
@@ -294,17 +228,15 @@ class TestSchemeUpdated:
 
     def test_scheme_updated_instantiation(self):
         """SchemeUpdated can be instantiated with changed fields and old/new values."""
-        now = datetime.utcnow()
         event = SchemeUpdated(
-            event_id="evt-scheme-upd-001",
-            occurred_at=now,
-            aggregate_id="scheme-123",
             concept_scheme_id="scheme-123",
             taxonomy_id="tax-456",
             changed_fields=("title",),
             old_values={"title": "Old Title"},
             new_values={"title": "New Title"},
         )
+        assert event.event_id is not None
+        assert event.occurred_at is not None
         assert event.concept_scheme_id == "scheme-123"
         assert event.taxonomy_id == "tax-456"
         assert event.changed_fields == ("title",)
@@ -313,11 +245,7 @@ class TestSchemeUpdated:
 
     def test_scheme_updated_with_multiple_changed_fields(self):
         """SchemeUpdated can have multiple changed fields."""
-        now = datetime.utcnow()
         event = SchemeUpdated(
-            event_id="evt-scheme-upd-001",
-            occurred_at=now,
-            aggregate_id="scheme-123",
             concept_scheme_id="scheme-123",
             taxonomy_id="tax-456",
             changed_fields=("title", "description"),
@@ -330,11 +258,7 @@ class TestSchemeUpdated:
 
     def test_scheme_updated_is_frozen(self):
         """SchemeUpdated instances are frozen."""
-        now = datetime.utcnow()
         event = SchemeUpdated(
-            event_id="evt-scheme-upd-001",
-            occurred_at=now,
-            aggregate_id="scheme-123",
             concept_scheme_id="scheme-123",
             taxonomy_id="tax-456",
             changed_fields=("title",),
@@ -350,26 +274,20 @@ class TestSchemeDeleted:
 
     def test_scheme_deleted_instantiation(self):
         """SchemeDeleted can be instantiated with all required fields."""
-        now = datetime.utcnow()
         event = SchemeDeleted(
-            event_id="evt-scheme-del-001",
-            occurred_at=now,
-            aggregate_id="scheme-123",
             concept_scheme_id="scheme-123",
             taxonomy_id="tax-456",
             title="Animal Kingdom",
         )
+        assert event.event_id is not None
+        assert event.occurred_at is not None
         assert event.concept_scheme_id == "scheme-123"
         assert event.taxonomy_id == "tax-456"
         assert event.title == "Animal Kingdom"
 
     def test_scheme_deleted_is_frozen(self):
         """SchemeDeleted instances are frozen."""
-        now = datetime.utcnow()
         event = SchemeDeleted(
-            event_id="evt-scheme-del-001",
-            occurred_at=now,
-            aggregate_id="scheme-123",
             concept_scheme_id="scheme-123",
             taxonomy_id="tax-456",
             title="Animal Kingdom",
@@ -379,12 +297,8 @@ class TestSchemeDeleted:
 
     def test_scheme_deleted_rejects_empty_title(self):
         """SchemeDeleted raises ValueError if title is empty."""
-        now = datetime.utcnow()
         with pytest.raises(ValueError, match="Event field 'title' cannot be empty"):
             SchemeDeleted(
-                event_id="evt-scheme-del-001",
-                occurred_at=now,
-                aggregate_id="scheme-123",
                 concept_scheme_id="scheme-123",
                 taxonomy_id="tax-456",
                 title="",
@@ -396,16 +310,14 @@ class TestClassCreated:
 
     def test_class_created_instantiation(self):
         """ClassCreated can be instantiated with all required fields."""
-        now = datetime.utcnow()
         event = ClassCreated(
-            event_id="evt-class-001",
-            occurred_at=now,
-            aggregate_id="class-123",
             class_id="class-123",
             title="Mammal",
             concept_scheme_id="scheme-456",
             taxonomy_id="tax-789",
         )
+        assert event.event_id is not None
+        assert event.occurred_at is not None
         assert event.class_id == "class-123"
         assert event.title == "Mammal"
         assert event.concept_scheme_id == "scheme-456"
@@ -413,11 +325,7 @@ class TestClassCreated:
 
     def test_class_created_is_frozen(self):
         """ClassCreated instances are frozen."""
-        now = datetime.utcnow()
         event = ClassCreated(
-            event_id="evt-class-001",
-            occurred_at=now,
-            aggregate_id="class-123",
             class_id="class-123",
             title="Mammal",
             concept_scheme_id="scheme-456",
@@ -432,16 +340,14 @@ class TestClassUpdated:
 
     def test_class_updated_instantiation(self):
         """ClassUpdated can be instantiated with changed fields and old/new values."""
-        now = datetime.utcnow()
         event = ClassUpdated(
-            event_id="evt-class-upd-001",
-            occurred_at=now,
-            aggregate_id="class-123",
             class_id="class-123",
             changed_fields=("title", "description"),
             old_values={"title": "Old Title", "description": "Old Desc"},
             new_values={"title": "New Title", "description": "New Desc"},
         )
+        assert event.event_id is not None
+        assert event.occurred_at is not None
         assert event.class_id == "class-123"
         assert event.changed_fields == ("title", "description")
         assert event.old_values == {"title": "Old Title", "description": "Old Desc"}
@@ -449,11 +355,7 @@ class TestClassUpdated:
 
     def test_class_updated_with_empty_changed_fields(self):
         """ClassUpdated can be instantiated with empty changed_fields tuple."""
-        now = datetime.utcnow()
         event = ClassUpdated(
-            event_id="evt-class-upd-001",
-            occurred_at=now,
-            aggregate_id="class-123",
             class_id="class-123",
             changed_fields=(),
             old_values={},
@@ -465,11 +367,7 @@ class TestClassUpdated:
 
     def test_class_updated_is_frozen(self):
         """ClassUpdated instances are frozen."""
-        now = datetime.utcnow()
         event = ClassUpdated(
-            event_id="evt-class-upd-001",
-            occurred_at=now,
-            aggregate_id="class-123",
             class_id="class-123",
             changed_fields=("title",),
             old_values={"title": "Old Title"},
@@ -484,24 +382,18 @@ class TestClassDeleted:
 
     def test_class_deleted_instantiation(self):
         """ClassDeleted can be instantiated with all required fields."""
-        now = datetime.utcnow()
         event = ClassDeleted(
-            event_id="evt-class-del-001",
-            occurred_at=now,
-            aggregate_id="class-123",
             class_id="class-123",
             title="Mammal",
         )
+        assert event.event_id is not None
+        assert event.occurred_at is not None
         assert event.class_id == "class-123"
         assert event.title == "Mammal"
 
     def test_class_deleted_is_frozen(self):
         """ClassDeleted instances are frozen."""
-        now = datetime.utcnow()
         event = ClassDeleted(
-            event_id="evt-class-del-001",
-            occurred_at=now,
-            aggregate_id="class-123",
             class_id="class-123",
             title="Mammal",
         )
@@ -514,26 +406,20 @@ class TestClassMoved:
 
     def test_class_moved_with_parent_ids(self):
         """ClassMoved can be instantiated with non-empty parent IDs."""
-        now = datetime.utcnow()
         event = ClassMoved(
-            event_id="evt-class-move-001",
-            occurred_at=now,
-            aggregate_id="class-123",
             class_id="class-123",
             old_parent_id="parent-old",
             new_parent_id="parent-new",
         )
+        assert event.event_id is not None
+        assert event.occurred_at is not None
         assert event.class_id == "class-123"
         assert event.old_parent_id == "parent-old"
         assert event.new_parent_id == "parent-new"
 
     def test_class_moved_from_root_to_parent(self):
         """ClassMoved allows None for old_parent_id (was root)."""
-        now = datetime.utcnow()
         event = ClassMoved(
-            event_id="evt-class-move-001",
-            occurred_at=now,
-            aggregate_id="class-123",
             class_id="class-123",
             old_parent_id=None,
             new_parent_id="parent-new",
@@ -543,11 +429,7 @@ class TestClassMoved:
 
     def test_class_moved_to_root(self):
         """ClassMoved allows None for new_parent_id (now root)."""
-        now = datetime.utcnow()
         event = ClassMoved(
-            event_id="evt-class-move-001",
-            occurred_at=now,
-            aggregate_id="class-123",
             class_id="class-123",
             old_parent_id="parent-old",
             new_parent_id=None,
@@ -557,11 +439,7 @@ class TestClassMoved:
 
     def test_class_moved_both_parents_none(self):
         """ClassMoved allows None for both parent IDs."""
-        now = datetime.utcnow()
         event = ClassMoved(
-            event_id="evt-class-move-001",
-            occurred_at=now,
-            aggregate_id="class-123",
             class_id="class-123",
             old_parent_id=None,
             new_parent_id=None,
@@ -571,12 +449,8 @@ class TestClassMoved:
 
     def test_class_moved_rejects_empty_class_id(self):
         """ClassMoved raises ValueError if class_id is empty."""
-        now = datetime.utcnow()
         with pytest.raises(ValueError, match="Event field 'class_id' cannot be empty"):
             ClassMoved(
-                event_id="evt-class-move-001",
-                occurred_at=now,
-                aggregate_id="class-123",
                 class_id="",
                 old_parent_id="parent-old",
                 new_parent_id="parent-new",
@@ -584,11 +458,7 @@ class TestClassMoved:
 
     def test_class_moved_is_frozen(self):
         """ClassMoved instances are frozen."""
-        now = datetime.utcnow()
         event = ClassMoved(
-            event_id="evt-class-move-001",
-            occurred_at=now,
-            aggregate_id="class-123",
             class_id="class-123",
             old_parent_id="parent-old",
             new_parent_id="parent-new",
@@ -602,16 +472,14 @@ class TestRelationshipCreated:
 
     def test_relationship_created_instantiation(self):
         """RelationshipCreated can be instantiated with all required fields."""
-        now = datetime.utcnow()
         event = RelationshipCreated(
-            event_id="evt-rel-001",
-            occurred_at=now,
-            aggregate_id="rel-123",
             relationship_id="rel-123",
             source_id="class-456",
             target_id="class-789",
             property_definition_id="prop-101",
         )
+        assert event.event_id is not None
+        assert event.occurred_at is not None
         assert event.relationship_id == "rel-123"
         assert event.source_id == "class-456"
         assert event.target_id == "class-789"
@@ -619,11 +487,7 @@ class TestRelationshipCreated:
 
     def test_relationship_created_is_frozen(self):
         """RelationshipCreated instances are frozen."""
-        now = datetime.utcnow()
         event = RelationshipCreated(
-            event_id="evt-rel-001",
-            occurred_at=now,
-            aggregate_id="rel-123",
             relationship_id="rel-123",
             source_id="class-456",
             target_id="class-789",
@@ -638,16 +502,14 @@ class TestRelationshipDeleted:
 
     def test_relationship_deleted_instantiation(self):
         """RelationshipDeleted can be instantiated with all required fields."""
-        now = datetime.utcnow()
         event = RelationshipDeleted(
-            event_id="evt-rel-del-001",
-            occurred_at=now,
-            aggregate_id="rel-123",
             relationship_id="rel-123",
             source_id="class-456",
             target_id="class-789",
             property_definition_id="prop-101",
         )
+        assert event.event_id is not None
+        assert event.occurred_at is not None
         assert event.relationship_id == "rel-123"
         assert event.source_id == "class-456"
         assert event.target_id == "class-789"
@@ -655,11 +517,7 @@ class TestRelationshipDeleted:
 
     def test_relationship_deleted_is_frozen(self):
         """RelationshipDeleted instances are frozen."""
-        now = datetime.utcnow()
         event = RelationshipDeleted(
-            event_id="evt-rel-del-001",
-            occurred_at=now,
-            aggregate_id="rel-123",
             relationship_id="rel-123",
             source_id="class-456",
             target_id="class-789",
@@ -674,24 +532,18 @@ class TestPropertyDefinitionCreated:
 
     def test_property_definition_created_instantiation(self):
         """PropertyDefinitionCreated can be instantiated with all required fields."""
-        now = datetime.utcnow()
         event = PropertyDefinitionCreated(
-            event_id="evt-prop-001",
-            occurred_at=now,
-            aggregate_id="prop-123",
             property_id="prop-123",
             title="subClassOf",
         )
+        assert event.event_id is not None
+        assert event.occurred_at is not None
         assert event.property_id == "prop-123"
         assert event.title == "subClassOf"
 
     def test_property_definition_created_is_frozen(self):
         """PropertyDefinitionCreated instances are frozen."""
-        now = datetime.utcnow()
         event = PropertyDefinitionCreated(
-            event_id="evt-prop-001",
-            occurred_at=now,
-            aggregate_id="prop-123",
             property_id="prop-123",
             title="subClassOf",
         )
@@ -704,24 +556,18 @@ class TestGraphInvalidated:
 
     def test_graph_invalidated_instantiation(self):
         """GraphInvalidated can be instantiated with all required fields."""
-        now = datetime.utcnow()
         event = GraphInvalidated(
-            event_id="evt-graph-inv-001",
-            occurred_at=now,
-            aggregate_id="tax-123",
             taxonomy_id="tax-123",
             reason="Class hierarchy changed",
         )
+        assert event.event_id is not None
+        assert event.occurred_at is not None
         assert event.taxonomy_id == "tax-123"
         assert event.reason == "Class hierarchy changed"
 
     def test_graph_invalidated_is_frozen(self):
         """GraphInvalidated instances are frozen."""
-        now = datetime.utcnow()
         event = GraphInvalidated(
-            event_id="evt-graph-inv-001",
-            occurred_at=now,
-            aggregate_id="tax-123",
             taxonomy_id="tax-123",
             reason="Class hierarchy changed",
         )

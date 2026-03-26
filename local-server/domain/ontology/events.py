@@ -7,8 +7,9 @@ notifications, and trigger-based workflows. All events are frozen dataclasses.
 
 from __future__ import annotations
 
-from dataclasses import dataclass
-from datetime import datetime
+from dataclasses import dataclass, field
+from datetime import datetime, timezone
+from uuid import uuid4
 
 
 @dataclass(frozen=True)
@@ -16,18 +17,16 @@ class DomainEvent:
     """
     Base class for all domain events in the Ontology Management context.
 
-    All events have an event ID, timestamp, and aggregate ID. Subclasses
-    add domain-specific fields.
+    All events have an event ID and timestamp. Subclasses add domain-specific
+    fields that capture the details of what changed.
 
     Attributes:
         event_id: Unique identifier for this event (typically a UUID string)
         occurred_at: Timestamp of when the event occurred
-        aggregate_id: ID of the primary aggregate involved in the event
     """
 
-    event_id: str
-    occurred_at: datetime
-    aggregate_id: str
+    event_id: str = field(default_factory=lambda: str(uuid4()))
+    occurred_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
 
     def __post_init__(self) -> None:
         """
@@ -53,8 +52,8 @@ class TaxonomyCreated(DomainEvent):
         title: Title of the taxonomy
     """
 
-    taxonomy_id: str
-    title: str
+    taxonomy_id: str = ""
+    title: str = ""
 
 
 @dataclass(frozen=True)
@@ -68,9 +67,9 @@ class SchemeCreated(DomainEvent):
         taxonomy_id: ID of the parent taxonomy
     """
 
-    concept_scheme_id: str
-    title: str
-    taxonomy_id: str
+    concept_scheme_id: str = ""
+    title: str = ""
+    taxonomy_id: str = ""
 
 
 @dataclass(frozen=True)
@@ -85,10 +84,10 @@ class ClassCreated(DomainEvent):
         taxonomy_id: ID of the parent taxonomy
     """
 
-    class_id: str
-    title: str
-    concept_scheme_id: str
-    taxonomy_id: str
+    class_id: str = ""
+    title: str = ""
+    concept_scheme_id: str = ""
+    taxonomy_id: str = ""
 
 
 @dataclass(frozen=True)
@@ -103,10 +102,10 @@ class ClassUpdated(DomainEvent):
         new_values: Dictionary of field names to their new values
     """
 
-    class_id: str
-    changed_fields: tuple[str, ...]
-    old_values: dict[str, str | None]
-    new_values: dict[str, str | None]
+    class_id: str = ""
+    changed_fields: tuple[str, ...] = field(default_factory=tuple)
+    old_values: dict[str, str | None] = field(default_factory=dict)
+    new_values: dict[str, str | None] = field(default_factory=dict)
 
 
 @dataclass(frozen=True)
@@ -119,8 +118,8 @@ class ClassDeleted(DomainEvent):
         title: Title of the deleted class
     """
 
-    class_id: str
-    title: str
+    class_id: str = ""
+    title: str = ""
 
 
 @dataclass(frozen=True)
@@ -134,9 +133,9 @@ class ClassMoved(DomainEvent):
         new_parent_id: ID of the new parent class (None if now root)
     """
 
-    class_id: str
-    old_parent_id: str | None
-    new_parent_id: str | None
+    class_id: str = ""
+    old_parent_id: str | None = None
+    new_parent_id: str | None = None
 
 
 @dataclass(frozen=True)
@@ -151,10 +150,10 @@ class RelationshipCreated(DomainEvent):
         property_definition_id: ID of the property definition for this relationship type
     """
 
-    relationship_id: str
-    source_id: str
-    target_id: str
-    property_definition_id: str
+    relationship_id: str = ""
+    source_id: str = ""
+    target_id: str = ""
+    property_definition_id: str = ""
 
 
 @dataclass(frozen=True)
@@ -169,10 +168,10 @@ class RelationshipDeleted(DomainEvent):
         property_definition_id: ID of the property definition for this relationship type
     """
 
-    relationship_id: str
-    source_id: str
-    target_id: str
-    property_definition_id: str
+    relationship_id: str = ""
+    source_id: str = ""
+    target_id: str = ""
+    property_definition_id: str = ""
 
 
 @dataclass(frozen=True)
@@ -185,8 +184,8 @@ class PropertyDefinitionCreated(DomainEvent):
         title: Title of the property definition
     """
 
-    property_id: str
-    title: str
+    property_id: str = ""
+    title: str = ""
 
 
 @dataclass(frozen=True)
@@ -201,10 +200,10 @@ class TaxonomyUpdated(DomainEvent):
         new_values: Dictionary of field names to their new values
     """
 
-    taxonomy_id: str
-    changed_fields: tuple[str, ...]
-    old_values: dict[str, str | None]
-    new_values: dict[str, str | None]
+    taxonomy_id: str = ""
+    changed_fields: tuple[str, ...] = field(default_factory=tuple)
+    old_values: dict[str, str | None] = field(default_factory=dict)
+    new_values: dict[str, str | None] = field(default_factory=dict)
 
 
 @dataclass(frozen=True)
@@ -217,8 +216,8 @@ class TaxonomyDeleted(DomainEvent):
         title: Title of the deleted taxonomy
     """
 
-    taxonomy_id: str
-    title: str
+    taxonomy_id: str = ""
+    title: str = ""
 
 
 @dataclass(frozen=True)
@@ -234,11 +233,11 @@ class SchemeUpdated(DomainEvent):
         new_values: Dictionary of field names to their new values
     """
 
-    concept_scheme_id: str
-    taxonomy_id: str
-    changed_fields: tuple[str, ...]
-    old_values: dict[str, str | None]
-    new_values: dict[str, str | None]
+    concept_scheme_id: str = ""
+    taxonomy_id: str = ""
+    changed_fields: tuple[str, ...] = field(default_factory=tuple)
+    old_values: dict[str, str | None] = field(default_factory=dict)
+    new_values: dict[str, str | None] = field(default_factory=dict)
 
 
 @dataclass(frozen=True)
@@ -252,9 +251,9 @@ class SchemeDeleted(DomainEvent):
         title: Title of the deleted concept scheme
     """
 
-    concept_scheme_id: str
-    taxonomy_id: str
-    title: str
+    concept_scheme_id: str = ""
+    taxonomy_id: str = ""
+    title: str = ""
 
 
 @dataclass(frozen=True)
@@ -267,5 +266,5 @@ class GraphInvalidated(DomainEvent):
         reason: Human-readable reason for invalidation
     """
 
-    taxonomy_id: str
-    reason: str
+    taxonomy_id: str = ""
+    reason: str = ""

@@ -90,9 +90,6 @@ class OntologyService:
         self._repository.save_taxonomy(taxonomy)
 
         self._event_publisher.publish(TaxonomyCreated(
-            event_id=str(uuid4()),
-            occurred_at=datetime.utcnow(),
-            aggregate_id=taxonomy_id,
             taxonomy_id=taxonomy_id,
             title=title,
         ))
@@ -167,9 +164,6 @@ class OntologyService:
         self._repository.save_taxonomy(taxonomy)
 
         self._event_publisher.publish(TaxonomyUpdated(
-            event_id=str(uuid4()),
-            occurred_at=datetime.utcnow(),
-            aggregate_id=taxonomy_id,
             taxonomy_id=taxonomy_id,
             changed_fields=("title",),
             old_values={"title": old_title},
@@ -203,9 +197,6 @@ class OntologyService:
         self._repository.delete_taxonomy(taxonomy_id)
 
         self._event_publisher.publish(TaxonomyDeleted(
-            event_id=str(uuid4()),
-            occurred_at=datetime.utcnow(),
-            aggregate_id=taxonomy_id,
             taxonomy_id=taxonomy_id,
             title=taxonomy.title,
         ))
@@ -258,9 +249,6 @@ class OntologyService:
         self._repository.save_concept_scheme(scheme)
 
         self._event_publisher.publish(SchemeCreated(
-            event_id=str(uuid4()),
-            occurred_at=datetime.utcnow(),
-            aggregate_id=scheme_id,
             concept_scheme_id=scheme_id,
             title=title,
             taxonomy_id=taxonomy_id,
@@ -339,9 +327,6 @@ class OntologyService:
         self._repository.save_concept_scheme(scheme)
 
         self._event_publisher.publish(SchemeUpdated(
-            event_id=str(uuid4()),
-            occurred_at=datetime.utcnow(),
-            aggregate_id=scheme_id,
             concept_scheme_id=scheme_id,
             taxonomy_id=scheme.taxonomy_id,
             changed_fields=("title",),
@@ -376,9 +361,6 @@ class OntologyService:
         self._repository.delete_concept_scheme(scheme_id)
 
         self._event_publisher.publish(SchemeDeleted(
-            event_id=str(uuid4()),
-            occurred_at=datetime.utcnow(),
-            aggregate_id=scheme_id,
             concept_scheme_id=scheme_id,
             taxonomy_id=scheme.taxonomy_id,
             title=scheme.title,
@@ -458,9 +440,6 @@ class OntologyService:
         self._repository.save_class(cls)
 
         self._event_publisher.publish(ClassCreated(
-            event_id=str(uuid4()),
-            occurred_at=datetime.utcnow(),
-            aggregate_id=class_id,
             class_id=class_id,
             title=title,
             concept_scheme_id=concept_scheme_id,
@@ -588,9 +567,6 @@ class OntologyService:
             new_values["definition"] = cls.definition
 
         self._event_publisher.publish(ClassUpdated(
-            event_id=str(uuid4()),
-            occurred_at=datetime.utcnow(),
-            aggregate_id=class_id,
             class_id=class_id,
             changed_fields=changed,
             old_values=old_values,
@@ -630,9 +606,6 @@ class OntologyService:
         for relationship in orphaned_relationships:
             self._repository.delete_relationship(relationship.id)
             self._event_publisher.publish(RelationshipDeleted(
-                event_id=str(uuid4()),
-                occurred_at=datetime.utcnow(),
-                aggregate_id=relationship.id,
                 relationship_id=relationship.id,
                 source_id=relationship.source_id,
                 target_id=relationship.target_id,
@@ -642,17 +615,11 @@ class OntologyService:
         self._repository.delete_class(class_id)
 
         self._event_publisher.publish(ClassDeleted(
-            event_id=str(uuid4()),
-            occurred_at=datetime.utcnow(),
-            aggregate_id=class_id,
             class_id=class_id,
             title=cls.title,
         ))
 
         self._event_publisher.publish(GraphInvalidated(
-            event_id=str(uuid4()),
-            occurred_at=datetime.utcnow(),
-            aggregate_id=cls.taxonomy_id,
             taxonomy_id=cls.taxonomy_id,
             reason="class_deleted",
         ))
@@ -733,18 +700,12 @@ class OntologyService:
         self._repository.save_class(cls)
 
         self._event_publisher.publish(ClassMoved(
-            event_id=str(uuid4()),
-            occurred_at=datetime.utcnow(),
-            aggregate_id=class_id,
             class_id=class_id,
             old_parent_id=old_parent_id,
             new_parent_id=new_parent_id,
         ))
 
         self._event_publisher.publish(GraphInvalidated(
-            event_id=str(uuid4()),
-            occurred_at=datetime.utcnow(),
-            aggregate_id=cls.taxonomy_id,
             taxonomy_id=cls.taxonomy_id,
             reason="class_moved",
         ))
@@ -825,9 +786,6 @@ class OntologyService:
         taxonomy_id = source_class.taxonomy_id
 
         self._event_publisher.publish(RelationshipCreated(
-            event_id=str(uuid4()),
-            occurred_at=datetime.utcnow(),
-            aggregate_id=relationship_id,
             relationship_id=relationship_id,
             source_id=source_id,
             target_id=target_id,
@@ -835,9 +793,6 @@ class OntologyService:
         ))
 
         self._event_publisher.publish(GraphInvalidated(
-            event_id=str(uuid4()),
-            occurred_at=datetime.utcnow(),
-            aggregate_id=taxonomy_id,
             taxonomy_id=taxonomy_id,
             reason="relationship_created",
         ))
@@ -898,9 +853,6 @@ class OntologyService:
         self._repository.delete_relationship(relationship_id)
 
         self._event_publisher.publish(RelationshipDeleted(
-            event_id=str(uuid4()),
-            occurred_at=datetime.utcnow(),
-            aggregate_id=relationship_id,
             relationship_id=relationship_id,
             source_id=relationship.source_id,
             target_id=relationship.target_id,
@@ -938,9 +890,6 @@ class OntologyService:
         # Only emit GraphInvalidated if we found a valid taxonomy
         if taxonomy_id:
             self._event_publisher.publish(GraphInvalidated(
-                event_id=str(uuid4()),
-                occurred_at=datetime.utcnow(),
-                aggregate_id=taxonomy_id,
                 taxonomy_id=taxonomy_id,
                 reason="relationship_deleted",
             ))
@@ -996,9 +945,6 @@ class OntologyService:
         self._repository.save_property_definition(prop_def)
 
         self._event_publisher.publish(PropertyDefinitionCreated(
-            event_id=str(uuid4()),
-            occurred_at=datetime.utcnow(),
-            aggregate_id=property_id,
             property_id=property_id,
             title=title,
         ))

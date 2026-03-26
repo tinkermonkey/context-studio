@@ -27,9 +27,6 @@ class TestInProcessEventPublisher:
         """Publishing an event with no registered handlers does not raise an error."""
         publisher = InProcessEventPublisher()
         event = ClassCreated(
-            event_id=str(uuid4()),
-            occurred_at=datetime.utcnow(),
-            aggregate_id="class-123",
             class_id="class-123",
             title="TestClass",
             concept_scheme_id="scheme-456",
@@ -48,9 +45,6 @@ class TestInProcessEventPublisher:
             received_events.append(event)
 
         event = ClassCreated(
-            event_id=str(uuid4()),
-            occurred_at=datetime.utcnow(),
-            aggregate_id="class-123",
             class_id="class-123",
             title="TestClass",
             concept_scheme_id="scheme-456",
@@ -76,9 +70,6 @@ class TestInProcessEventPublisher:
             received_by_handler2.append(event)
 
         event = ClassCreated(
-            event_id=str(uuid4()),
-            occurred_at=datetime.utcnow(),
-            aggregate_id="class-123",
             class_id="class-123",
             title="TestClass",
             concept_scheme_id="scheme-456",
@@ -109,9 +100,6 @@ class TestInProcessEventPublisher:
             execution_order.append(3)
 
         event = ClassCreated(
-            event_id=str(uuid4()),
-            occurred_at=datetime.utcnow(),
-            aggregate_id="class-123",
             class_id="class-123",
             title="TestClass",
             concept_scheme_id="scheme-456",
@@ -138,9 +126,6 @@ class TestInProcessEventPublisher:
             class_updated_events.append(event)
 
         created_event = ClassCreated(
-            event_id=str(uuid4()),
-            occurred_at=datetime.utcnow(),
-            aggregate_id="class-123",
             class_id="class-123",
             title="TestClass",
             concept_scheme_id="scheme-456",
@@ -148,9 +133,6 @@ class TestInProcessEventPublisher:
         )
 
         updated_event = ClassUpdated(
-            event_id=str(uuid4()),
-            occurred_at=datetime.utcnow(),
-            aggregate_id="class-123",
             class_id="class-123",
             changed_fields=("title",),
             old_values={"title": "OldTitle"},
@@ -179,9 +161,6 @@ class TestInProcessEventPublisher:
         publisher.subscribe(ClassCreated, handler)
 
         event1 = ClassCreated(
-            event_id=str(uuid4()),
-            occurred_at=datetime.utcnow(),
-            aggregate_id="class-1",
             class_id="class-1",
             title="Class1",
             concept_scheme_id="scheme-456",
@@ -189,9 +168,6 @@ class TestInProcessEventPublisher:
         )
 
         event2 = ClassCreated(
-            event_id=str(uuid4()),
-            occurred_at=datetime.utcnow(),
-            aggregate_id="class-2",
             class_id="class-2",
             title="Class2",
             concept_scheme_id="scheme-456",
@@ -220,9 +196,6 @@ class TestInProcessEventPublisher:
             successful_handlers.append(2)
 
         event = ClassCreated(
-            event_id=str(uuid4()),
-            occurred_at=datetime.utcnow(),
-            aggregate_id="class-123",
             class_id="class-123",
             title="TestClass",
             concept_scheme_id="scheme-456",
@@ -255,9 +228,6 @@ class TestInProcessEventPublisher:
             raise ValueError("Handler 2 failed")
 
         event = ClassCreated(
-            event_id=str(uuid4()),
-            occurred_at=datetime.utcnow(),
-            aggregate_id="class-123",
             class_id="class-123",
             title="TestClass",
             concept_scheme_id="scheme-456",
@@ -283,9 +253,6 @@ class TestInProcessEventPublisher:
             raise Exception("Handler error")
 
         event = ClassCreated(
-            event_id=str(uuid4()),
-            occurred_at=datetime.utcnow(),
-            aggregate_id="class-123",
             class_id="class-123",
             title="TestClass",
             concept_scheme_id="scheme-456",
