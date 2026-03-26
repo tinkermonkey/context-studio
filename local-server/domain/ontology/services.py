@@ -744,7 +744,8 @@ class OntologyService:
             The created Relationship
 
         Raises:
-            ValueError: If source_id == target_id or if the relationship triple already exists
+            ValueError: If source_id == target_id
+            DuplicateEntityError: If the relationship triple already exists
             EntityNotFoundError: If source, target, or property definition does not exist
         """
         if source_id == target_id:
@@ -772,7 +773,7 @@ class OntologyService:
             property_id=property_definition_id,
         )
         if existing_relationships:
-            raise ValueError(
+            raise DuplicateEntityError(
                 f"A relationship with triple (source_id={source_id}, "
                 f"target_id={target_id}, property_definition_id={property_definition_id}) "
                 "already exists"

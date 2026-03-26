@@ -889,7 +889,7 @@ class TestCreateRelationship:
         assert graph_invalid_from_rel[0].taxonomy_id == tax.id
 
     def test_create_relationship_duplicate_triple_raises(self, service):
-        """Create relationship with duplicate triple raises ValueError."""
+        """Create relationship with duplicate triple raises DuplicateEntityError."""
         tax = service.create_taxonomy(title="Biology")
         scheme = service.create_scheme(taxonomy_id=tax.id, title="Animals")
         dog = service.create_class(scheme_id=scheme.id, title="Dog")
@@ -902,7 +902,7 @@ class TestCreateRelationship:
             property_definition_id=prop.id,
         )
 
-        with pytest.raises(ValueError, match="already exists"):
+        with pytest.raises(DuplicateEntityError, match="already exists"):
             service.create_relationship(
                 source_id=dog.id,
                 target_id=mammal.id,
