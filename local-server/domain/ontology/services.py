@@ -690,7 +690,7 @@ class OntologyService:
                 current_id = ancestor.parent_class_id
 
         # Safe to proceed
-        old_parent_id = cls.parent_class_id or ""
+        old_parent_id = cls.parent_class_id
 
         if new_parent_id is None:
             cls.remove_subclass_of()
@@ -705,7 +705,7 @@ class OntologyService:
             aggregate_id=class_id,
             class_id=class_id,
             old_parent_id=old_parent_id,
-            new_parent_id=new_parent_id or "",
+            new_parent_id=new_parent_id,
         ))
 
         self._event_publisher.publish(GraphInvalidated(

@@ -126,30 +126,13 @@ class ClassMoved(DomainEvent):
 
     Attributes:
         class_id: ID of the moved class
-        old_parent_id: ID of the old parent class ("" if was root)
-        new_parent_id: ID of the new parent class ("" if now root)
+        old_parent_id: ID of the old parent class (None if was root)
+        new_parent_id: ID of the new parent class (None if now root)
     """
 
     class_id: str
-    old_parent_id: str
-    new_parent_id: str
-
-    def __post_init__(self) -> None:
-        """
-        Validate event fields, allowing empty strings for parent IDs.
-
-        Empty strings for old_parent_id and new_parent_id represent "no parent"
-        (root node status), so we only validate the required fields.
-
-        Raises:
-            ValueError: If event_id, occurred_at, or aggregate_id are empty
-        """
-        # Only validate truly required fields; parent_id fields can be empty
-        required_fields = ["event_id", "aggregate_id", "class_id"]
-        for field_name in required_fields:
-            v = getattr(self, field_name)
-            if isinstance(v, str) and not v.strip():
-                raise ValueError(f"Event field '{field_name}' cannot be empty")
+    old_parent_id: str | None
+    new_parent_id: str | None
 
 
 @dataclass(frozen=True)

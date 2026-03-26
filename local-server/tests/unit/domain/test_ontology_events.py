@@ -498,21 +498,21 @@ class TestClassMoved:
         assert event.new_parent_id == "parent-new"
 
     def test_class_moved_from_root_to_parent(self):
-        """ClassMoved allows empty string for old_parent_id (was root)."""
+        """ClassMoved allows None for old_parent_id (was root)."""
         now = datetime.utcnow()
         event = ClassMoved(
             event_id="evt-class-move-001",
             occurred_at=now,
             aggregate_id="class-123",
             class_id="class-123",
-            old_parent_id="",
+            old_parent_id=None,
             new_parent_id="parent-new",
         )
-        assert event.old_parent_id == ""
+        assert event.old_parent_id is None
         assert event.new_parent_id == "parent-new"
 
     def test_class_moved_to_root(self):
-        """ClassMoved allows empty string for new_parent_id (now root)."""
+        """ClassMoved allows None for new_parent_id (now root)."""
         now = datetime.utcnow()
         event = ClassMoved(
             event_id="evt-class-move-001",
@@ -520,24 +520,24 @@ class TestClassMoved:
             aggregate_id="class-123",
             class_id="class-123",
             old_parent_id="parent-old",
-            new_parent_id="",
+            new_parent_id=None,
         )
         assert event.old_parent_id == "parent-old"
-        assert event.new_parent_id == ""
+        assert event.new_parent_id is None
 
-    def test_class_moved_both_parents_empty(self):
-        """ClassMoved allows empty strings for both parent IDs."""
+    def test_class_moved_both_parents_none(self):
+        """ClassMoved allows None for both parent IDs."""
         now = datetime.utcnow()
         event = ClassMoved(
             event_id="evt-class-move-001",
             occurred_at=now,
             aggregate_id="class-123",
             class_id="class-123",
-            old_parent_id="",
-            new_parent_id="",
+            old_parent_id=None,
+            new_parent_id=None,
         )
-        assert event.old_parent_id == ""
-        assert event.new_parent_id == ""
+        assert event.old_parent_id is None
+        assert event.new_parent_id is None
 
     def test_class_moved_rejects_empty_class_id(self):
         """ClassMoved raises ValueError if class_id is empty."""
