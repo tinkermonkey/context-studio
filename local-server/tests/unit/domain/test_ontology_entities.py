@@ -220,7 +220,8 @@ class TestClass:
         assert cls.title == "Dog"
         assert cls.definition is None
         assert cls.parent_class_id is None
-        assert cls.embedding is None
+        assert cls.title_embedding is None
+        assert cls.definition_embedding is None
         assert cls.external_references == []
         assert cls.lexical_senses == []
 
@@ -247,17 +248,20 @@ class TestClass:
         assert cls.parent_class_id == "class-0"
 
     def test_class_creation_with_embedding(self):
-        """Create a class with embedding."""
+        """Create a class with title and definition embeddings."""
         embedding_floats = [0.1, 0.2, 0.3, 0.4, 0.5]
-        embedding = struct.pack('5f', *embedding_floats)
+        title_embedding = struct.pack('5f', *embedding_floats)
+        definition_embedding = struct.pack('5f', *[0.5, 0.4, 0.3, 0.2, 0.1])
         cls = Class(
             id="class-1",
             concept_scheme_id="scheme-1",
             taxonomy_id="tax-1",
             title="Dog",
-            embedding=embedding,
+            title_embedding=title_embedding,
+            definition_embedding=definition_embedding,
         )
-        assert cls.embedding == embedding
+        assert cls.title_embedding == title_embedding
+        assert cls.definition_embedding == definition_embedding
 
     def test_class_rename(self):
         """Rename a class."""
@@ -380,11 +384,13 @@ class TestRelationship:
             source_id="class-1",
             target_id="class-2",
             property_definition_id="prop-1",
+            property_label="Is A",
         )
         assert rel.id == "rel-1"
         assert rel.source_id == "class-1"
         assert rel.target_id == "class-2"
         assert rel.property_definition_id == "prop-1"
+        assert rel.property_label == "Is A"
         assert rel.created_at is not None
 
     def test_relationship_self_loop_raises(self):
@@ -395,6 +401,7 @@ class TestRelationship:
                 source_id="class-1",
                 target_id="class-1",
                 property_definition_id="prop-1",
+                property_label="Is A",
             )
 
 
