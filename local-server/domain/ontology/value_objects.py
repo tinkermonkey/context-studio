@@ -88,18 +88,14 @@ class OntologyMapping:
     Attributes:
         ontology: The name of the external ontology standard (e.g., "owl", "schema.org", "dbpedia")
         uri: The URI of the external ontology term or class
-        label: Human-readable label from the external ontology
-        exact_match: Boolean indicating whether this is an exact semantic match
-        confidence: Optional confidence score for the mapping
-        source: The source system that created the mapping (default: "external")
+        label: Human-readable label from the external ontology (optional)
+        exact_match: Boolean indicating whether this is an exact semantic match (default: False)
     """
 
     ontology: str
     uri: str
-    label: str
-    exact_match: bool
-    confidence: float | None = None
-    source: str = "external"
+    label: str | None = None
+    exact_match: bool = False
 
 
 @dataclass(frozen=True)

@@ -448,14 +448,11 @@ class TestOntologyMapping:
             ontology="schema.org",
             uri="https://schema.org/Thing",
             label="Thing",
-            exact_match=True,
         )
         assert mapping.ontology == "schema.org"
         assert mapping.uri == "https://schema.org/Thing"
         assert mapping.label == "Thing"
-        assert mapping.exact_match is True
-        assert mapping.confidence is None
-        assert mapping.source == "external"
+        assert mapping.exact_match is False
 
     def test_ontology_mapping_with_exact_match_false(self):
         """Create ontology mappings with exact_match=False."""
@@ -467,16 +464,14 @@ class TestOntologyMapping:
         )
         assert mapping.exact_match is False
 
-    def test_ontology_mapping_with_confidence(self):
-        """Create ontology mapping with confidence score."""
+    def test_ontology_mapping_without_label(self):
+        """Create ontology mapping without label (optional)."""
         mapping = OntologyMapping(
             ontology="owl",
             uri="http://example.com/ontology/MyClass",
-            label="My Class",
-            exact_match=True,
-            confidence=0.95,
         )
-        assert mapping.confidence == 0.95
+        assert mapping.label is None
+        assert mapping.exact_match is False
 
     def test_ontology_mapping_is_frozen(self):
         """OntologyMapping is frozen and immutable."""
@@ -484,7 +479,6 @@ class TestOntologyMapping:
             ontology="schema.org",
             uri="https://schema.org/Thing",
             label="Thing",
-            exact_match=True,
         )
         with pytest.raises(Exception):
             mapping.uri = "https://schema.org/Other"
@@ -495,7 +489,6 @@ class TestOntologyMapping:
             ontology="schema.org",
             uri="https://schema.org/Thing",
             label="Thing",
-            exact_match=True,
         )
         prop = PropertyDefinition(
             id="prop-1",

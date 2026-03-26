@@ -110,7 +110,7 @@ class Class:
         parent_class_id: Optional ID of the parent class for hierarchy
         structural_property_id: Optional ID of the primary structural relationship property definition
         external_references: List of references to external knowledge bases
-        lexical_senses: List of lexical representations (labels in different languages)
+        lexical_senses: List of word sense disambiguation entries (e.g., WordNet synsets)
         data_properties: List of data property values on this class
         title_embedding: Optional bytes representing the embedding of the title (serialized float32 array)
         definition_embedding: Optional bytes representing the embedding of the definition (serialized float32 array)
