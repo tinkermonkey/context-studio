@@ -327,6 +327,27 @@ class TestMoveClass:
         with pytest.raises(EntityNotFoundError, match="Class"):
             service.move_class(class_id="nonexistent", new_parent_id=None)
 
+    def test_move_class_nonexistent_parent_raises(self, service):
+        """Move a class to a nonexistent parent raises EntityNotFoundError."""
+        tax = service.create_taxonomy(title="Biology")
+        scheme = service.create_scheme(taxonomy_id=tax.id, title="Animals")
+        dog = service.create_class(scheme_id=scheme.id, title="Dog")
+
+        with pytest.raises(EntityNotFoundError, match="Class"):
+            service.move_class(class_id=dog.id, new_parent_id="nonexistent")
+
+    def test_move_class_cross_scheme_parent_raises(self, service):
+        """Move a class to a parent in a different scheme raises ValueError."""
+        tax = service.create_taxonomy(title="Biology")
+        scheme1 = service.create_scheme(taxonomy_id=tax.id, title="Animals")
+        scheme2 = service.create_scheme(taxonomy_id=tax.id, title="Plants")
+
+        dog = service.create_class(scheme_id=scheme1.id, title="Dog")
+        tree = service.create_class(scheme_id=scheme2.id, title="Tree")
+
+        with pytest.raises(ValueError, match="not in the same scheme"):
+            service.move_class(class_id=dog.id, new_parent_id=tree.id)
+
 
 class TestDeleteClass:
     """Tests for delete_class."""

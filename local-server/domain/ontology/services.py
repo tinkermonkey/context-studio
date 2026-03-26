@@ -443,15 +443,20 @@ class OntologyService:
         """
         Move a class in the hierarchy to a new parent.
 
-        Validates that moving to the new parent would not create a circular reference
-        by traversing the ancestor chain of the new parent.
+        Validates that:
+        - The class exists
+        - The new parent (if provided) exists and is in the same scheme
+        - Moving to the new parent would not create a circular reference
+          by traversing the ancestor chain of the new parent.
 
         Algorithm:
         1. Load the class; raise EntityNotFoundError if not found
         2. If new_parent_id is None, the class becomes a root; proceed
         3. If new_parent_id == class_id, raise CircularReferenceError
-        4. Traverse ancestors of new_parent_id; if any ancestor equals class_id, raise CircularReferenceError
-        5. Set the parent and save; publish ClassMoved and GraphInvalidated
+        4. Load the new parent; raise EntityNotFoundError if not found
+        5. Verify new parent is in the same scheme; raise ValueError if not
+        6. Traverse ancestors of new_parent_id; if any ancestor equals class_id, raise CircularReferenceError
+        7. Set the parent and save; publish ClassMoved and GraphInvalidated
 
         Args:
             class_id: The ID of the class to move
@@ -461,8 +466,9 @@ class OntologyService:
             The updated Class
 
         Raises:
-            EntityNotFoundError: If the class does not exist
+            EntityNotFoundError: If the class or new parent does not exist
             CircularReferenceError: If the move would create a circular reference
+            ValueError: If new parent is in a different scheme
         """
         cls = self._repository.get_class(class_id)
         if cls is None:
@@ -473,11 +479,20 @@ class OntologyService:
             if new_parent_id == class_id:
                 raise CircularReferenceError("Cannot set a class as its own parent")
 
+            # Verify new parent exists and is in the same scheme
+            new_parent = self._repository.get_class(new_parent_id)
+            if new_parent is None:
+                raise EntityNotFoundError("Class", new_parent_id)
+            if new_parent.scheme_id != cls.scheme_id:
+                raise ValueError(f"Parent class {new_parent_id} is not in the same scheme")
+
             # Traverse ancestor chain of new_parent_id looking for class_id
             current_id: str | None = new_parent_id
             while current_id is not None:
                 ancestor = self._repository.get_class(current_id)
                 if ancestor is None:
+                    # This should not happen since we just validated new_parent exists
+                    # and we're traversing up from it, but be defensive
                     break
                 if ancestor.id == class_id:
                     raise CircularReferenceError("Move would create a circular reference")
