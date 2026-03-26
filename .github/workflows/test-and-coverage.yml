@@ -4,7 +4,36 @@ on:
   workflow_dispatch:  # disabled - manual trigger only
 
 jobs:
-  test:
+  test-python:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Create and activate venv
+        working-directory: ./local-server
+        run: |
+          python -m venv .venv
+          echo "VIRTUAL_ENV=$PWD/.venv" >> $GITHUB_ENV
+          echo "$PWD/.venv/bin" >> $GITHUB_PATH
+
+      - name: Install dependencies
+        working-directory: ./local-server
+        run: |
+          pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install -r requirements-dev.txt
+
+      - name: Run pytest
+        working-directory: ./local-server
+        run: pytest tests/ -v --tb=short
+
+  test-node:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
