@@ -30,14 +30,14 @@ class ExternalReference:
         uri: The external URI
         label: Human-readable label from the source
         confidence: Match confidence score
-        metadata: Source-specific metadata
+        metadata: Source-specific metadata (immutable key-value pairs)
     """
 
     source: str
     uri: str
     label: str | None = None
     confidence: float | None = None
-    metadata: dict | None = None
+    metadata: tuple[tuple[str, str], ...] | None = None
 
 
 @dataclass(frozen=True)
