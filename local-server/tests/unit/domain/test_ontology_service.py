@@ -264,7 +264,7 @@ class TestRenameScheme:
         """Rename scheme to title that exists in different taxonomy is allowed."""
         tax1 = service.create_taxonomy(title="Biology")
         tax2 = service.create_taxonomy(title="Chemistry")
-        scheme1 = service.create_scheme(taxonomy_id=tax1.id, title="Elements")
+        service.create_scheme(taxonomy_id=tax1.id, title="Elements")
         scheme2 = service.create_scheme(taxonomy_id=tax2.id, title="Compounds")
 
         # This should succeed because Elements is in a different taxonomy
