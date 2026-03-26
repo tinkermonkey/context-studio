@@ -54,7 +54,7 @@ class OntologyService:
 
     # Taxonomy operations
 
-    def create_taxonomy(self, title: str, definition: Optional[str] = None) -> Taxonomy:
+    def create_taxonomy(self, title: str, description: Optional[str] = None) -> Taxonomy:
         """
         Create a new taxonomy.
 
@@ -62,7 +62,7 @@ class OntologyService:
 
         Args:
             title: Display name for the taxonomy
-            definition: Optional longer definition
+            description: Optional longer description
 
         Returns:
             The created Taxonomy
@@ -83,9 +83,9 @@ class OntologyService:
         taxonomy = Taxonomy(
             id=taxonomy_id,
             title=title,
-            definition=definition,
+            description=description,
             created_at=datetime.now(timezone.utc),
-            last_modified=datetime.now(timezone.utc),
+            updated_at=datetime.now(timezone.utc),
         )
         taxonomy = self._repository.save_taxonomy(taxonomy)
 
@@ -203,7 +203,7 @@ class OntologyService:
 
     # ConceptScheme operations
 
-    def create_scheme(self, taxonomy_id: str, title: str, definition: Optional[str] = None) -> ConceptScheme:
+    def create_scheme(self, taxonomy_id: str, title: str, description: Optional[str] = None) -> ConceptScheme:
         """
         Create a new concept scheme within a taxonomy.
 
@@ -214,7 +214,7 @@ class OntologyService:
         Args:
             taxonomy_id: ID of the parent taxonomy
             title: Display name for the scheme
-            definition: Optional longer definition
+            description: Optional longer description
 
         Returns:
             The created ConceptScheme
@@ -242,9 +242,9 @@ class OntologyService:
             id=scheme_id,
             taxonomy_id=taxonomy_id,
             title=title,
-            definition=definition,
+            description=description,
             created_at=datetime.now(timezone.utc),
-            last_modified=datetime.now(timezone.utc),
+            updated_at=datetime.now(timezone.utc),
         )
         scheme = self._repository.save_concept_scheme(scheme)
 
@@ -372,7 +372,7 @@ class OntologyService:
         self,
         concept_scheme_id: str,
         title: str,
-        definition: Optional[str] = None,
+        description: Optional[str] = None,
         parent_class_id: Optional[str] = None,
     ) -> Class:
         """
@@ -387,7 +387,7 @@ class OntologyService:
         Args:
             concept_scheme_id: ID of the parent concept scheme
             title: Display name for the class
-            definition: Optional longer definition
+            description: Optional longer description
             parent_class_id: Optional ID of the parent class for hierarchy
 
         Returns:
@@ -417,25 +417,25 @@ class OntologyService:
             if parent_class is None:
                 raise EntityNotFoundError("Class", parent_class_id)
             # Verify parent is in the same scheme
-            if parent_class.concept_scheme_id != concept_scheme_id:
+            if parent_class.scheme_id != concept_scheme_id:
                 raise ValueError(f"Parent class {parent_class_id} is not in the same scheme")
 
         class_id = str(uuid4())
 
         # Generate embedding for the class
-        embed_text = f"{title} {definition or ''}".strip()
+        embed_text = f"{title} {description or ''}".strip()
         embedding = self._embedding_service.embed_text(embed_text)
 
         cls = Class(
             id=class_id,
-            concept_scheme_id=concept_scheme_id,
+            scheme_id=concept_scheme_id,
             taxonomy_id=scheme.taxonomy_id,
             title=title,
-            definition=definition,
+            description=description,
             parent_class_id=parent_class_id,
             title_embedding=embedding,
             created_at=datetime.now(timezone.utc),
-            last_modified=datetime.now(timezone.utc),
+            updated_at=datetime.now(timezone.utc),
         )
         cls = self._repository.save_class(cls)
 
@@ -496,22 +496,22 @@ class OntologyService:
         self,
         class_id: str,
         title: Optional[str] = None,
-        definition: Optional[str] = None,
+        description: Optional[str] = None,
     ) -> Class:
         """
-        Update a class's title and/or definition.
+        Update a class's title and/or description.
 
         Validates that:
         - The class exists
         - If a new title is provided, it is unique within the scheme (excluding the current class)
 
-        If either title or definition changed, regenerates the embedding.
+        If either title or description changed, regenerates the embedding.
         If neither changed, skips embedding regeneration.
 
         Args:
             class_id: The ID of the class to update
             title: New title (optional)
-            definition: New definition (optional)
+            description: New description (optional)
 
         Returns:
             The updated Class
@@ -526,25 +526,25 @@ class OntologyService:
 
         # Capture old values before modification
         old_title = cls.title
-        old_definition = cls.definition
+        old_description = cls.description
 
         title_changed = title is not None and title != cls.title
-        def_changed = definition is not None and definition != cls.definition
+        def_changed = description is not None and description != cls.description
 
         # Check for duplicate title within this scheme if title is changing
         if title_changed:
-            existing_classes = self._repository.list_classes(concept_scheme_id=cls.concept_scheme_id)
+            existing_classes = self._repository.list_classes(concept_scheme_id=cls.scheme_id)
             if any(c.title == title and c.id != class_id for c in existing_classes):
                 raise DuplicateEntityError(f"Class with title '{title}' already exists in this scheme")
 
         if title is not None and title_changed:
             cls.rename(title)
         if def_changed:
-            cls.definition = definition
+            cls.description = description
 
-        # Regenerate embedding only if title or definition changed
+        # Regenerate embedding only if title or description changed
         if title_changed or def_changed:
-            embed_text = f"{cls.title} {cls.definition or ''}".strip()
+            embed_text = f"{cls.title} {cls.description or ''}".strip()
             embedding = self._embedding_service.embed_text(embed_text)
             cls.title_embedding = embedding
 
@@ -552,10 +552,10 @@ class OntologyService:
         if not (title_changed or def_changed):
             return cls
 
-        cls.last_modified = datetime.now(timezone.utc)
+        cls.updated_at = datetime.now(timezone.utc)
         cls = self._repository.save_class(cls)
 
-        changed = tuple(f for f, was_changed in [("title", title_changed), ("definition", def_changed)] if was_changed)
+        changed = tuple(f for f, was_changed in [("title", title_changed), ("description", def_changed)] if was_changed)
 
         old_values: dict[str, str | None] = {}
         new_values: dict[str, str | None] = {}
@@ -563,8 +563,8 @@ class OntologyService:
             old_values["title"] = old_title
             new_values["title"] = cls.title
         if def_changed:
-            old_values["definition"] = old_definition
-            new_values["definition"] = cls.definition
+            old_values["description"] = old_description
+            new_values["description"] = cls.description
 
         self._event_publisher.publish(ClassUpdated(
             class_id=class_id,
@@ -673,7 +673,7 @@ class OntologyService:
             new_parent = self._repository.get_class(new_parent_id)
             if new_parent is None:
                 raise EntityNotFoundError("Class", new_parent_id)
-            if new_parent.concept_scheme_id != cls.concept_scheme_id:
+            if new_parent.scheme_id != cls.scheme_id:
                 raise ValueError(f"Parent class {new_parent_id} is not in the same scheme")
 
             # Traverse ancestor chain of new_parent_id looking for class_id
@@ -726,13 +726,13 @@ class OntologyService:
         Validates that:
         - source_id != target_id (no self-loops)
         - Both source and target entities exist
-        - The property definition exists
+        - The property description exists
         - The relationship triple (source_id, target_id, property_definition_id) is unique
 
         Args:
             source_id: ID of the source entity
             target_id: ID of the target entity
-            property_definition_id: ID of the property definition (relationship type)
+            property_definition_id: ID of the property description (relationship type)
 
         Returns:
             The created Relationship
@@ -740,12 +740,12 @@ class OntologyService:
         Raises:
             ValueError: If source_id == target_id
             DuplicateEntityError: If the relationship triple already exists
-            EntityNotFoundError: If source, target, or property definition does not exist
+            EntityNotFoundError: If source, target, or property description does not exist
         """
         if source_id == target_id:
             raise ValueError("A relationship cannot have the same source and target")
 
-        # Validate property definition exists
+        # Validate property description exists
         prop_def = self._repository.get_property_definition(property_definition_id)
         if prop_def is None:
             raise EntityNotFoundError("PropertyDefinition", property_definition_id)
@@ -779,7 +779,6 @@ class OntologyService:
             source_id=source_id,
             target_id=target_id,
             property_definition_id=property_definition_id,
-            property_label=prop_def.title,
         )
         relationship = self._repository.save_relationship(relationship)
 
@@ -830,7 +829,7 @@ class OntologyService:
         Args:
             source_id: Optional source entity ID to filter by
             target_id: Optional target entity ID to filter by
-            property_id: Optional property definition ID to filter by (relationship type)
+            property_id: Optional property description ID to filter by (relationship type)
 
         Returns:
             List of Relationship entities
@@ -902,19 +901,19 @@ class OntologyService:
         self,
         identifier: str,
         title: str,
-        definition: Optional[str] = None,
+        description: Optional[str] = None,
     ) -> PropertyDefinition:
         """
-        Create a new property definition (relationship type).
+        Create a new property description (relationship type).
 
         Validates that:
-        - The identifier is unique across all property definitions
-        - The title is unique across all property definitions
+        - The identifier is unique across all property descriptions
+        - The title is unique across all property descriptions
 
         Args:
             identifier: Machine-readable identifier for the property
             title: Display name for the property
-            definition: Optional longer definition
+            description: Optional longer description
 
         Returns:
             The created PropertyDefinition
@@ -940,9 +939,9 @@ class OntologyService:
             id=property_id,
             identifier=identifier,
             title=title,
-            definition=definition,
-            date_created=datetime.now(timezone.utc),
-            date_modified=datetime.now(timezone.utc),
+            description=description,
+            created_at=datetime.now(timezone.utc),
+            updated_at=datetime.now(timezone.utc),
         )
         prop_def = self._repository.save_property_definition(prop_def)
 
@@ -956,10 +955,10 @@ class OntologyService:
 
     def get_property_definition(self, property_id: str) -> PropertyDefinition:
         """
-        Retrieve a property definition by ID.
+        Retrieve a property description by ID.
 
         Args:
-            property_id: The ID of the property definition
+            property_id: The ID of the property description
 
         Returns:
             The PropertyDefinition
@@ -974,10 +973,10 @@ class OntologyService:
 
     def list_property_definitions(self, is_relevant: Optional[bool] = None) -> list[PropertyDefinition]:
         """
-        Retrieve property definitions, optionally filtered by relevance.
+        Retrieve property descriptions, optionally filtered by relevance.
 
         Args:
-            is_relevant: Optional filter for relevant property definitions
+            is_relevant: Optional filter for relevant property descriptions
 
         Returns:
             List of PropertyDefinition entities

@@ -42,12 +42,12 @@ class TestCreateTaxonomy:
 
     def test_create_taxonomy_success(self, service):
         """Create a taxonomy and verify it's persisted and event is emitted."""
-        tax = service.create_taxonomy(title="Biology", definition="Life sciences")
+        tax = service.create_taxonomy(title="Biology", description="Life sciences")
         assert tax.id is not None
         assert tax.title == "Biology"
-        assert tax.definition == "Life sciences"
+        assert tax.description == "Life sciences"
         assert tax.created_at is not None
-        assert tax.last_modified is not None
+        assert tax.updated_at is not None
 
         # Verify it was saved
         retrieved = service.get_taxonomy(tax.id)
@@ -83,12 +83,12 @@ class TestCreateScheme:
     def test_create_scheme_success(self, service):
         """Create a concept scheme in a taxonomy."""
         tax = service.create_taxonomy(title="Biology")
-        scheme = service.create_scheme(taxonomy_id=tax.id, title="Animals", definition="Animal kingdom")
+        scheme = service.create_scheme(taxonomy_id=tax.id, title="Animals", description="Animal kingdom")
 
         assert scheme.id is not None
         assert scheme.taxonomy_id == tax.id
         assert scheme.title == "Animals"
-        assert scheme.definition == "Animal kingdom"
+        assert scheme.description == "Animal kingdom"
 
         # Verify event
         events = service._event_publisher.get_events_of_type(SchemeCreated)
@@ -398,14 +398,14 @@ class TestCreateClass:
         cls = service.create_class(
             concept_scheme_id=scheme.id,
             title="Dog",
-            definition="Canine species",
+            description="Canine species",
         )
 
         assert cls.id is not None
-        assert cls.concept_scheme_id == scheme.id
+        assert cls.scheme_id == scheme.id
         assert cls.taxonomy_id == tax.id
         assert cls.title == "Dog"
-        assert cls.definition == "Canine species"
+        assert cls.description == "Canine species"
         assert cls.title_embedding is not None  # Title embedding should be generated
         assert cls.parent_class_id is None
 
@@ -497,7 +497,7 @@ class TestUpdateClass:
         """Update class title regenerates embedding."""
         tax = service.create_taxonomy(title="Biology")
         scheme = service.create_scheme(taxonomy_id=tax.id, title="Animals")
-        cls = service.create_class(concept_scheme_id=scheme.id, title="Dog", definition="Canine")
+        cls = service.create_class(concept_scheme_id=scheme.id, title="Dog", description="Canine")
         old_embedding = cls.title_embedding
 
         updated = service.update_class(class_id=cls.id, title="Canine")
@@ -518,22 +518,22 @@ class TestUpdateClass:
         cls = service.create_class(concept_scheme_id=scheme.id, title="Dog")
         old_embedding = cls.title_embedding
 
-        updated = service.update_class(class_id=cls.id, definition="Canine species")
-        assert updated.definition == "Canine species"
+        updated = service.update_class(class_id=cls.id, description="Canine species")
+        assert updated.description == "Canine species"
         assert updated.title_embedding != old_embedding
 
         # Verify event
         events = service._event_publisher.get_events_of_type(ClassUpdated)
         assert len(events) == 1
-        assert "definition" in events[0].changed_fields
-        assert events[0].old_values == {"definition": None}
-        assert events[0].new_values == {"definition": "Canine species"}
+        assert "description" in events[0].changed_fields
+        assert events[0].old_values == {"description": None}
+        assert events[0].new_values == {"description": "Canine species"}
 
     def test_update_class_no_change_no_embedding_regen(self, service):
         """Update class with no title/description change does not regenerate embedding or emit event."""
         tax = service.create_taxonomy(title="Biology")
         scheme = service.create_scheme(taxonomy_id=tax.id, title="Animals")
-        cls = service.create_class(concept_scheme_id=scheme.id, title="Dog", definition="Canine")
+        cls = service.create_class(concept_scheme_id=scheme.id, title="Dog", description="Canine")
         old_embedding = cls.title_embedding
 
         # Call with empty update (no title, no description)
@@ -1099,7 +1099,7 @@ class TestGetPropertyDefinition:
     """Tests for get_property_definition."""
 
     def test_get_property_definition_success(self, service):
-        """Retrieve a property definition by ID."""
+        """Retrieve a property description by ID."""
         prop = service.create_property_definition(identifier="is_a", title="Is A")
 
         retrieved = service.get_property_definition(prop.id)
@@ -1108,7 +1108,7 @@ class TestGetPropertyDefinition:
         assert retrieved.title == "Is A"
 
     def test_get_property_definition_nonexistent_raises(self, service):
-        """Get nonexistent property definition raises EntityNotFoundError."""
+        """Get nonexistent property description raises EntityNotFoundError."""
         with pytest.raises(EntityNotFoundError, match="PropertyDefinition"):
             service.get_property_definition("nonexistent")
 
@@ -1117,17 +1117,17 @@ class TestCreatePropertyDefinition:
     """Tests for create_property_definition."""
 
     def test_create_property_definition_success(self, service):
-        """Create a property definition."""
+        """Create a property description."""
         prop = service.create_property_definition(
             identifier="is_a",
             title="Is A",
-            definition="Taxonomic is-a relationship",
+            description="Taxonomic is-a relationship",
         )
 
         assert prop.id is not None
         assert prop.identifier == "is_a"
         assert prop.title == "Is A"
-        assert prop.definition == "Taxonomic is-a relationship"
+        assert prop.description == "Taxonomic is-a relationship"
 
         # Verify event
         events = service._event_publisher.get_events_of_type(PropertyDefinitionCreated)
@@ -1258,7 +1258,7 @@ class TestGetAndListOperations:
             identifier="part_of", title="Part Of"
         )
 
-        # Create relationships with different property definitions
+        # Create relationships with different property descriptions
         rel1 = service.create_relationship(
             source_id=dog.id,
             target_id=mammal.id,
@@ -1281,7 +1281,7 @@ class TestGetAndListOperations:
         assert by_part_of[0].id == rel2.id
 
     def test_list_property_definitions(self, service):
-        """List all property definitions."""
+        """List all property descriptions."""
         prop1 = service.create_property_definition(identifier="is_a", title="Is A")
         prop2 = service.create_property_definition(identifier="part_of", title="Part Of")
         props = service.list_property_definitions()
@@ -1290,7 +1290,7 @@ class TestGetAndListOperations:
         assert any(p.id == prop2.id for p in props)
 
     def test_list_property_definitions_filtered_by_is_relevant(self, service):
-        """List property definitions filtered by is_relevant flag."""
+        """List property descriptions filtered by is_relevant flag."""
         # Create properties with different relevance states
         prop_relevant = service.create_property_definition(
             identifier="is_a", title="Is A"

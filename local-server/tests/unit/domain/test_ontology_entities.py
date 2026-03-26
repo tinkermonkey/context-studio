@@ -145,21 +145,21 @@ class TestTaxonomy:
         tax = Taxonomy(id="tax-1", title="Biology")
         assert tax.id == "tax-1"
         assert tax.title == "Biology"
-        assert tax.definition is None
+        assert tax.description is None
         assert tax.created_at is None
-        assert tax.last_modified is None
+        assert tax.updated_at is None
 
     def test_taxonomy_creation_with_description(self):
         """Create a taxonomy with description."""
-        tax = Taxonomy(id="tax-1", title="Biology", definition="Life science taxonomy")
-        assert tax.definition == "Life science taxonomy"
+        tax = Taxonomy(id="tax-1", title="Biology", description="Life science taxonomy")
+        assert tax.description == "Life science taxonomy"
 
     def test_taxonomy_rename(self):
         """Rename a taxonomy."""
         tax = Taxonomy(id="tax-1", title="Biology", created_at=None)
         tax.rename("Biology 2024")
         assert tax.title == "Biology 2024"
-        assert tax.last_modified is not None
+        assert tax.updated_at is not None
 
     def test_taxonomy_rename_empty_raises(self):
         """Rename with empty string raises ValueError."""
@@ -183,7 +183,7 @@ class TestConceptScheme:
         assert scheme.id == "scheme-1"
         assert scheme.taxonomy_id == "tax-1"
         assert scheme.title == "Animal Classification"
-        assert scheme.definition is None
+        assert scheme.description is None
 
     def test_concept_scheme_creation_with_description(self):
         """Create a concept scheme with description."""
@@ -191,9 +191,9 @@ class TestConceptScheme:
             id="scheme-1",
             taxonomy_id="tax-1",
             title="Animal Classification",
-            definition="Classification by species",
+            description="Classification by species",
         )
-        assert scheme.definition == "Classification by species"
+        assert scheme.description == "Classification by species"
 
     def test_concept_scheme_rename(self):
         """Rename a concept scheme."""
@@ -213,15 +213,15 @@ class TestClass:
 
     def test_class_creation(self):
         """Create a class."""
-        cls = Class(id="class-1", concept_scheme_id="scheme-1", taxonomy_id="tax-1", title="Dog")
+        cls = Class(id="class-1", scheme_id="scheme-1", taxonomy_id="tax-1", title="Dog")
         assert cls.id == "class-1"
-        assert cls.concept_scheme_id == "scheme-1"
+        assert cls.scheme_id == "scheme-1"
         assert cls.taxonomy_id == "tax-1"
         assert cls.title == "Dog"
-        assert cls.definition is None
+        assert cls.description is None
         assert cls.parent_class_id is None
         assert cls.title_embedding is None
-        assert cls.definition_embedding is None
+        assert cls.description_embedding is None
         assert cls.external_references == []
         assert cls.lexical_senses == []
 
@@ -229,18 +229,18 @@ class TestClass:
         """Create a class with description."""
         cls = Class(
             id="class-1",
-            concept_scheme_id="scheme-1",
+            scheme_id="scheme-1",
             taxonomy_id="tax-1",
             title="Dog",
-            definition="Canine species",
+            description="Canine species",
         )
-        assert cls.definition == "Canine species"
+        assert cls.description == "Canine species"
 
     def test_class_creation_with_parent(self):
         """Create a class with parent."""
         cls = Class(
             id="class-1",
-            concept_scheme_id="scheme-1",
+            scheme_id="scheme-1",
             taxonomy_id="tax-1",
             title="Dog",
             parent_class_id="class-0",
@@ -248,43 +248,43 @@ class TestClass:
         assert cls.parent_class_id == "class-0"
 
     def test_class_creation_with_embedding(self):
-        """Create a class with title and definition embeddings."""
+        """Create a class with title and description embeddings."""
         embedding_floats = [0.1, 0.2, 0.3, 0.4, 0.5]
         title_embedding = struct.pack('5f', *embedding_floats)
-        definition_embedding = struct.pack('5f', *[0.5, 0.4, 0.3, 0.2, 0.1])
+        description_embedding = struct.pack('5f', *[0.5, 0.4, 0.3, 0.2, 0.1])
         cls = Class(
             id="class-1",
-            concept_scheme_id="scheme-1",
+            scheme_id="scheme-1",
             taxonomy_id="tax-1",
             title="Dog",
             title_embedding=title_embedding,
-            definition_embedding=definition_embedding,
+            description_embedding=description_embedding,
         )
         assert cls.title_embedding == title_embedding
-        assert cls.definition_embedding == definition_embedding
+        assert cls.description_embedding == description_embedding
 
     def test_class_rename(self):
         """Rename a class."""
-        cls = Class(id="class-1", concept_scheme_id="scheme-1", taxonomy_id="tax-1", title="Dog")
+        cls = Class(id="class-1", scheme_id="scheme-1", taxonomy_id="tax-1", title="Dog")
         cls.rename("Canine")
         assert cls.title == "Canine"
 
     def test_class_rename_empty_raises(self):
         """Rename with empty string raises ValueError."""
-        cls = Class(id="class-1", concept_scheme_id="scheme-1", taxonomy_id="tax-1", title="Dog")
+        cls = Class(id="class-1", scheme_id="scheme-1", taxonomy_id="tax-1", title="Dog")
         with pytest.raises(ValueError, match="Title cannot be empty"):
             cls.rename("")
 
     def test_class_add_subclass_of(self):
         """Add a parent class."""
-        cls = Class(id="class-1", concept_scheme_id="scheme-1", taxonomy_id="tax-1", title="Dog")
+        cls = Class(id="class-1", scheme_id="scheme-1", taxonomy_id="tax-1", title="Dog")
         assert cls.parent_class_id is None
         cls.add_subclass_of("class-0")
         assert cls.parent_class_id == "class-0"
 
     def test_class_add_subclass_of_self_raises(self):
         """Add self as parent raises ValueError."""
-        cls = Class(id="class-1", concept_scheme_id="scheme-1", taxonomy_id="tax-1", title="Dog")
+        cls = Class(id="class-1", scheme_id="scheme-1", taxonomy_id="tax-1", title="Dog")
         with pytest.raises(ValueError, match="A class cannot be its own parent"):
             cls.add_subclass_of("class-1")
 
@@ -292,7 +292,7 @@ class TestClass:
         """Remove the parent class."""
         cls = Class(
             id="class-1",
-            concept_scheme_id="scheme-1",
+            scheme_id="scheme-1",
             taxonomy_id="tax-1",
             title="Dog",
             parent_class_id="class-0",
@@ -309,7 +309,7 @@ class TestClass:
         ]
         cls = Class(
             id="class-1",
-            concept_scheme_id="scheme-1",
+            scheme_id="scheme-1",
             taxonomy_id="tax-1",
             title="Dog",
             external_references=refs,
@@ -325,7 +325,7 @@ class TestClass:
         ]
         cls = Class(
             id="class-1",
-            concept_scheme_id="scheme-1",
+            scheme_id="scheme-1",
             taxonomy_id="tax-1",
             title="Dog",
             lexical_senses=senses,
@@ -343,13 +343,13 @@ class TestIndividual:
         assert ind.id == "ind-1"
         assert ind.class_id == "class-1"
         assert ind.title == "Fido"
-        assert ind.definition is None
+        assert ind.description is None
         assert ind.data_properties == []
 
     def test_individual_creation_with_description(self):
         """Create an individual with description."""
-        ind = Individual(id="ind-1", class_id="class-1", title="Fido", definition="My pet dog")
-        assert ind.definition == "My pet dog"
+        ind = Individual(id="ind-1", class_id="class-1", title="Fido", description="My pet dog")
+        assert ind.description == "My pet dog"
 
     def test_individual_creation_with_data_properties(self):
         """Create an individual with data property values."""
@@ -384,13 +384,11 @@ class TestRelationship:
             source_id="class-1",
             target_id="class-2",
             property_definition_id="prop-1",
-            property_label="Is A",
         )
         assert rel.id == "rel-1"
         assert rel.source_id == "class-1"
         assert rel.target_id == "class-2"
         assert rel.property_definition_id == "prop-1"
-        assert rel.property_label == "Is A"
         assert rel.created_at is not None
 
     def test_relationship_self_loop_raises(self):
@@ -401,38 +399,37 @@ class TestRelationship:
                 source_id="class-1",
                 target_id="class-1",
                 property_definition_id="prop-1",
-                property_label="Is A",
             )
 
 
 class TestPropertyDefinition:
     """Tests for PropertyDefinition entity."""
 
-    def test_property_definition_creation(self):
-        """Create a property definition."""
+    def test_property_description_creation(self):
+        """Create a property description."""
         prop = PropertyDefinition(id="prop-1", identifier="is_a", title="Is A")
         assert prop.id == "prop-1"
         assert prop.identifier == "is_a"
         assert prop.title == "Is A"
-        assert prop.definition is None
+        assert prop.description is None
 
-    def test_property_definition_creation_with_description(self):
-        """Create a property definition with description."""
+    def test_property_description_creation_with_description(self):
+        """Create a property description with description."""
         prop = PropertyDefinition(
             id="prop-1",
             identifier="is_a",
             title="Is A",
-            definition="Taxonomic is-a relationship",
+            description="Taxonomic is-a relationship",
         )
-        assert prop.definition == "Taxonomic is-a relationship"
+        assert prop.description == "Taxonomic is-a relationship"
 
-    def test_property_definition_rename(self):
-        """Rename a property definition."""
+    def test_property_description_rename(self):
+        """Rename a property description."""
         prop = PropertyDefinition(id="prop-1", identifier="is_a", title="Is A")
         prop.rename("Is-A Relationship")
         assert prop.title == "Is-A Relationship"
 
-    def test_property_definition_rename_empty_raises(self):
+    def test_property_description_rename_empty_raises(self):
         """Rename with empty string raises ValueError."""
         prop = PropertyDefinition(id="prop-1", identifier="is_a", title="Is A")
         with pytest.raises(ValueError, match="Title cannot be empty"):
@@ -483,7 +480,7 @@ class TestOntologyMapping:
         with pytest.raises(Exception):
             mapping.uri = "https://schema.org/Other"
 
-    def test_ontology_mapping_in_property_definition(self):
+    def test_ontology_mapping_in_property_description(self):
         """PropertyDefinition can contain an OntologyMapping."""
         mapping = OntologyMapping(
             ontology="schema.org",
