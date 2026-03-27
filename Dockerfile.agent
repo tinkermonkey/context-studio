@@ -130,7 +130,7 @@ RUN node --version && \
     pip --version
 
 # Verify Python dependencies are importable
-RUN python3 -c "import fastapi; import sqlalchemy; import alembic; import pydantic; import pytest; print('Python deps OK')"
+RUN python3 -c "import fastapi; import sqlalchemy; import alembic; import pydantic; import pytest; import networkx; print('Python deps OK')"
 
 # ============================================================================
 # Default command

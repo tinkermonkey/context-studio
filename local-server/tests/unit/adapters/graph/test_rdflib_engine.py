@@ -88,7 +88,7 @@ class TestRDFLibQueryEngineOntologyLoading:
         # First load
         nodes1 = [{"id": "node-1", "title": "Alpha", "node_type": "class"}]
         engine.load_ontology(nodes1, [], [])
-        count1 = engine.triple_count()
+        engine.triple_count()
 
         # Second load with different data
         nodes2 = [
@@ -364,7 +364,6 @@ class TestRDFLibQueryEngineTripleOperations:
 
         # Query for relationship triples
         source = "http://context-studio.local/entity/node-1"
-        target = "http://context-studio.local/entity/node-2"
 
         all_triples = engine.get_triples(subject=source)
 
