@@ -11,6 +11,8 @@ from typing import Any
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
+from domain.graph.exceptions import NodeNotFoundError
+
 
 class FakeGraphEngine:
     """In-memory implementation of GraphEngine protocol for unit testing."""
@@ -180,7 +182,13 @@ class FakeGraphEngine:
 
         Returns:
             Set of neighboring node IDs
+
+        Raises:
+            NodeNotFoundError: If node_id does not exist in the graph
         """
+        if node_id not in self._nodes:
+            raise NodeNotFoundError(node_id)
+
         neighbors_set = set()
 
         for edge in self._edges:

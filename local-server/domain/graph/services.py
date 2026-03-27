@@ -402,49 +402,36 @@ class GraphAnalysisService:
         self._ensure_graph()
         return self._graph_engine.has_cycle(source_id, target_id)
 
-    def extract_subgraph(self, node_id: str, depth: int = 1) -> KnowledgeGraph:
+    def extract_subgraph(self, node_ids: list[str]) -> KnowledgeGraph:
         """
-        Extract a subgraph around a node up to a specified depth.
-
-        Uses breadth-first search to find all nodes within the specified distance
-        from the center node, then extracts the subgraph containing those nodes
-        and all edges between them.
+        Extract a subgraph containing the specified nodes and all edges between them.
 
         Args:
-            node_id: ID of the center node
-            depth: Maximum distance from the center node (default 1)
+            node_ids: List of node IDs to include in the subgraph
 
         Returns:
             KnowledgeGraph descriptor for the subgraph
 
         Raises:
-            NodeNotFoundError: If the center node does not exist in the graph
+            NodeNotFoundError: If any node in the list does not exist in the graph
         """
+        from .exceptions import NodeNotFoundError
+
         self._ensure_graph()
 
-        # BFS to find all nodes within the specified depth
-        visited = set()
-        queue = deque([(node_id, 0)])  # (node_id, current_depth)
-        subgraph_nodes = set()
+        if not node_ids:
+            raise ValueError("node_ids must contain at least one node ID")
 
-        while queue:
-            current_node, current_depth = queue.popleft()
+        # Verify all nodes exist in the graph by attempting to get neighbors
+        # neighbors() raises NodeNotFoundError if node doesn't exist
+        for node_id in node_ids:
+            try:
+                self._graph_engine.neighbors(node_id)
+            except NodeNotFoundError:
+                raise NodeNotFoundError(f"Node '{node_id}' not found in graph")
 
-            if current_node in visited:
-                continue
-
-            visited.add(current_node)
-            subgraph_nodes.add(current_node)
-
-            # Only traverse further if we haven't reached the depth limit
-            if current_depth < depth:
-                neighbors = self._graph_engine.neighbors(current_node, direction="both")
-                for neighbor in neighbors:
-                    if neighbor not in visited:
-                        queue.append((neighbor, current_depth + 1))
-
-        # Extract subgraph with the collected nodes
-        subgraph = self._graph_engine.subgraph(list(subgraph_nodes))
+        # Extract subgraph with the specified nodes
+        subgraph = self._graph_engine.subgraph(node_ids)
 
         return KnowledgeGraph(
             node_count=subgraph.node_count(),

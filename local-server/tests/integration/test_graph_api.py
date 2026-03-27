@@ -416,31 +416,30 @@ class TestNeighborsIntegration:
 class TestSubgraphExtractionIntegration:
     """Integration tests for subgraph extraction with real graph."""
 
-    def test_subgraph_extraction_depth_1(self, client, populated_repository):
-        """Subgraph extraction includes center node and direct neighbors."""
+    def test_subgraph_extraction_single_node(self, client, populated_repository):
+        """Subgraph extraction with single node returns valid subgraph."""
         classes = list(populated_repository.list_classes())
         if len(classes) > 0:
-            response = client.get(f"/api/graph/nodes/{classes[0].id}/subgraph?depth=1")
+            response = client.get(f"/api/graph/subgraph?nodes={classes[0].id}")
             assert response.status_code == status.HTTP_200_OK
             data = response.json()
 
-            # Subgraph should include at least the center node
+            # Subgraph should include at least the specified node
             assert data["node_count"] >= 1
             assert data["edge_count"] >= 0
 
-    def test_subgraph_extraction_depth_2(self, client, populated_repository):
-        """Subgraph extraction respects depth parameter."""
+    def test_subgraph_extraction_multiple_nodes(self, client, populated_repository):
+        """Subgraph extraction with multiple nodes returns valid subgraph."""
         classes = list(populated_repository.list_classes())
-        if len(classes) > 0:
-            # Depth 1
-            response1 = client.get(f"/api/graph/nodes/{classes[0].id}/subgraph?depth=1")
-            data1 = response1.json()
+        if len(classes) > 1:
+            node_ids = f"{classes[0].id},{classes[1].id}"
+            response = client.get(f"/api/graph/subgraph?nodes={node_ids}")
+            assert response.status_code == status.HTTP_200_OK
+            data = response.json()
 
-            # Depth 2 should have at least as many nodes
-            response2 = client.get(f"/api/graph/nodes/{classes[0].id}/subgraph?depth=2")
-            data2 = response2.json()
-
-            assert data2["node_count"] >= data1["node_count"]
+            # Subgraph should include at least the specified nodes
+            assert data["node_count"] >= 2
+            assert data["edge_count"] >= 0
 
 
 class TestCycleDetectionIntegration:

@@ -10,7 +10,7 @@ This module implements all HTTP endpoints for graph analysis operations:
 - GET /centrality - Node centrality scores
 - GET /communities - Community detection results
 - GET /nodes/{node_id}/neighbors - Neighbor traversal
-- GET /nodes/{node_id}/subgraph - Subgraph extraction
+- GET /subgraph - Subgraph extraction (multi-node query)
 - POST /cycle-check - Cycle detection for proposed edge
 - POST /sparql - SPARQL query execution
 - GET /rdf/triples - RDF triple access
@@ -328,28 +328,35 @@ async def get_neighbors(
 
 # ==================== Subgraph Extraction Endpoint ====================
 
-@router.get("/nodes/{node_id}/subgraph", response_model=KnowledgeGraphResponse)
+@router.get("/subgraph", response_model=KnowledgeGraphResponse)
 async def get_subgraph(
-    node_id: str,
-    depth: int = Query(1, description="Maximum distance from center node", ge=1, le=10),
+    nodes: str = Query(..., description="Comma-separated list of node IDs to extract subgraph for"),
     service: GraphAnalysisService = Depends(get_graph_service),
 ) -> KnowledgeGraphResponse:
     """
-    Extract a subgraph around a node up to a specified depth.
+    Extract a subgraph containing the specified nodes and all edges between them.
 
     Args:
-        node_id: ID of the center node
-        depth: Maximum distance from the center node (minimum 1, maximum 10)
+        nodes: Comma-separated list of node IDs (e.g., "id1,id2,id3")
         service: GraphAnalysisService from dependency injection
 
     Returns:
         KnowledgeGraphResponse describing the extracted subgraph
 
     Raises:
-        HTTPException: 404 if node is not found, 422 if graph error occurs
+        HTTPException: 404 if any node is not found, 400 if nodes parameter is invalid, 422 if graph error occurs
     """
     try:
-        subgraph = service.extract_subgraph(node_id, depth)
+        # Parse and validate the comma-separated node IDs
+        node_list = [node_id.strip() for node_id in nodes.split(",") if node_id.strip()]
+
+        if not node_list:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="nodes parameter must contain at least one node ID"
+            )
+
+        subgraph = service.extract_subgraph(node_list)
         return KnowledgeGraphResponse.model_validate(subgraph)
     except (NodeNotFoundError, GraphError) as exc:
         status_code, message = _handle_graph_error(exc)

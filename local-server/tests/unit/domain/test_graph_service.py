@@ -511,8 +511,9 @@ class TestSubgraphExtraction:
         """extract_subgraph returns KnowledgeGraph with valid counts."""
         svc, _, _ = service
         classes = repository_with_data.list_classes()
-        assert len(classes) > 0
-        result = svc.extract_subgraph(classes[0].id, depth=1)
+        assert len(classes) > 1
+        node_ids = [classes[0].id, classes[1].id]
+        result = svc.extract_subgraph(node_ids)
 
         assert isinstance(result, KnowledgeGraph)
         assert isinstance(result.node_count, int)
@@ -522,23 +523,24 @@ class TestSubgraphExtraction:
         assert result.node_count >= 0
         assert result.edge_count >= 0
 
-    def test_extract_subgraph_depth_1(self, service, repository_with_data):
-        """extract_subgraph with depth=1 includes center node and its neighbors."""
+    def test_extract_subgraph_single_node(self, service, repository_with_data):
+        """extract_subgraph with single node returns subgraph with that node."""
         svc, _, _ = service
         classes = repository_with_data.list_classes()
         assert len(classes) > 0
-        result = svc.extract_subgraph(classes[0].id, depth=1)
-        assert result.node_count >= 1  # At least the source node
-        assert result.edge_count >= 0  # Edges can be zero
-
-    def test_extract_subgraph_depth_2(self, service, repository_with_data):
-        """extract_subgraph respects depth parameter and returns valid subgraph."""
-        svc, _, _ = service
-        classes = repository_with_data.list_classes()
-        assert len(classes) > 0
-        result = svc.extract_subgraph(classes[0].id, depth=2)
-        assert isinstance(result, KnowledgeGraph)
+        result = svc.extract_subgraph([classes[0].id])
         assert result.node_count >= 1
+        assert result.edge_count >= 0
+
+    def test_extract_subgraph_multiple_nodes(self, service, repository_with_data):
+        """extract_subgraph with multiple nodes returns subgraph containing those nodes."""
+        svc, _, _ = service
+        classes = repository_with_data.list_classes()
+        assert len(classes) > 1
+        node_ids = [classes[0].id, classes[1].id]
+        result = svc.extract_subgraph(node_ids)
+        assert isinstance(result, KnowledgeGraph)
+        assert result.node_count >= len(node_ids)
         assert result.edge_count >= 0
 
 

@@ -8,7 +8,7 @@ Tests cover all 11 HTTP endpoints in adapters/web/graph_routes.py:
 - GET /centrality - Centrality scores
 - GET /communities - Community detection
 - GET /nodes/{node_id}/neighbors - Neighbors
-- GET /nodes/{node_id}/subgraph - Subgraph extraction
+- GET /subgraph - Subgraph extraction (multi-node query)
 - POST /cycle-check - Cycle detection
 - POST /sparql - SPARQL execution
 - GET /rdf/triples - RDF triples
@@ -382,18 +382,18 @@ class TestNeighborsEndpoint:
 
 
 class TestSubgraphEndpoint:
-    """Tests for GET /nodes/{node_id}/subgraph endpoint."""
+    """Tests for GET /subgraph endpoint."""
 
     def test_subgraph_returns_200(self, client, repository_with_data):
-        """GET /nodes/{node_id}/subgraph returns 200 OK."""
+        """GET /subgraph returns 200 OK."""
         classes = repository_with_data.list_classes()
-        response = client.get(f"/api/graph/nodes/{classes[0].id}/subgraph")
+        response = client.get(f"/api/graph/subgraph?nodes={classes[0].id}")
         assert response.status_code == status.HTTP_200_OK
 
     def test_subgraph_response_structure(self, client, repository_with_data):
-        """GET /nodes/{node_id}/subgraph response contains node_count, edge_count, is_directed."""
+        """GET /subgraph response contains node_count, edge_count, is_directed."""
         classes = repository_with_data.list_classes()
-        response = client.get(f"/api/graph/nodes/{classes[0].id}/subgraph")
+        response = client.get(f"/api/graph/subgraph?nodes={classes[0].id}")
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
 
@@ -404,24 +404,28 @@ class TestSubgraphEndpoint:
         assert isinstance(data["edge_count"], int)
         assert isinstance(data["is_directed"], bool)
 
-    def test_subgraph_with_depth_parameter(self, client, repository_with_data):
-        """GET /nodes/{node_id}/subgraph accepts depth parameter."""
+    def test_subgraph_with_multiple_nodes(self, client, repository_with_data):
+        """GET /subgraph accepts multiple comma-separated node IDs."""
         classes = repository_with_data.list_classes()
-        response = client.get(f"/api/graph/nodes/{classes[0].id}/subgraph?depth=2")
-        assert response.status_code == status.HTTP_200_OK
+        if len(classes) > 1:
+            nodes = f"{classes[0].id},{classes[1].id}"
+            response = client.get(f"/api/graph/subgraph?nodes={nodes}")
+            assert response.status_code == status.HTTP_200_OK
 
-    def test_subgraph_depth_validation(self, client, repository_with_data):
-        """GET /nodes/{node_id}/subgraph validates depth bounds (1-10)."""
-        classes = repository_with_data.list_classes()
-        # depth > 10 should fail validation
-        response = client.get(f"/api/graph/nodes/{classes[0].id}/subgraph?depth=15")
+    def test_subgraph_missing_nodes_parameter(self, client):
+        """GET /subgraph without nodes parameter returns 422."""
+        response = client.get("/api/graph/subgraph")
         assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
 
-    def test_subgraph_nonexistent_node_returns_empty_subgraph(self, client):
-        """GET /nodes/{node_id}/subgraph with nonexistent node returns minimal subgraph."""
-        response = client.get("/api/graph/nodes/nonexistent/subgraph")
-        # Fake engine returns empty subgraph, implementation detail
-        assert response.status_code in [status.HTTP_200_OK, status.HTTP_404_NOT_FOUND]
+    def test_subgraph_empty_nodes_parameter(self, client):
+        """GET /subgraph with empty nodes parameter returns 400."""
+        response = client.get("/api/graph/subgraph?nodes=")
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+
+    def test_subgraph_nonexistent_node_returns_404(self, client):
+        """GET /subgraph with nonexistent node returns 404."""
+        response = client.get("/api/graph/subgraph?nodes=nonexistent")
+        assert response.status_code == status.HTTP_404_NOT_FOUND
 
 
 class TestCycleCheckEndpoint:

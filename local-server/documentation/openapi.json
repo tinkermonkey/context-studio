@@ -1184,13 +1184,35 @@
         }
       }
     },
+    "/api/graph/build": {
+      "post": {
+        "tags": [
+          "graph"
+        ],
+        "summary": "Build Graph",
+        "description": "Explicitly build the in-memory graph from current ontology data.\n\nThis endpoint allows clients to trigger graph construction on demand. Graph building\nnormally happens lazily on first query, but this endpoint enables explicit control\nover graph refresh timing and validates that the graph can be built without errors.\n\nArgs:\n    service: GraphAnalysisService from dependency injection\n\nReturns:\n    KnowledgeGraphResponse containing node count, edge count, and build timestamp\n\nRaises:\n    HTTPException: 422 if graph construction fails",
+        "operationId": "build_graph_api_graph_build_post",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/KnowledgeGraphResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/graph/metrics": {
       "get": {
         "tags": [
           "graph"
         ],
         "summary": "Get Metrics",
-        "description": "Get structural metrics for the entire graph.\n\nArgs:\n    algorithm: Centrality algorithm to use (betweenness, pagerank, closeness, degree)\n    service: GraphAnalysisService from dependency injection\n\nReturns:\n    GraphMetricsResponse containing density, average degree, connected components, and degree distribution\n\nRaises:\n    HTTPException: 400 if algorithm is invalid, 422 if graph error occurs",
+        "description": "Get structural metrics for the entire graph.\n\nArgs:\n    algorithm: Centrality algorithm to use (betweenness, pagerank, closeness, degree)\n    service: GraphAnalysisService from dependency injection\n\nReturns:\n    GraphMetricsResponse containing density, average degree, connected components, degree distribution, centrality scores, communities, algorithm, and computed timestamp\n\nRaises:\n    HTTPException: 400 if algorithm is invalid or community detection fails, 422 if graph error occurs",
         "operationId": "get_metrics_api_graph_metrics_get",
         "parameters": [
           {
@@ -1223,6 +1245,28 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/graph/degree-distribution": {
+      "get": {
+        "tags": [
+          "graph"
+        ],
+        "summary": "Get Degree Distribution",
+        "description": "Get the degree distribution across all nodes in the graph.\n\nThe degree of a node is the number of edges connected to it. This endpoint\nprovides the raw degree counts for each node, useful for network analysis\nand topology studies.\n\nArgs:\n    service: GraphAnalysisService from dependency injection\n\nReturns:\n    DegreeDistributionResponse containing node ID to degree mapping and computed timestamp\n\nRaises:\n    HTTPException: 422 if graph error occurs",
+        "operationId": "get_degree_distribution_api_graph_degree_distribution_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DegreeDistributionResponse"
                 }
               }
             }
@@ -1300,7 +1344,7 @@
           "graph"
         ],
         "summary": "Get All Paths",
-        "description": "Find all simple paths between two nodes up to a maximum depth.\n\nArgs:\n    source_id: ID of the starting node\n    target_id: ID of the ending node\n    max_depth: Maximum path length to explore (minimum 1)\n    service: GraphAnalysisService from dependency injection\n\nReturns:\n    List of PathResultResponse objects, one for each found path\n\nRaises:\n    HTTPException: 404 if either node is not found, 422 if graph error occurs",
+        "description": "Find all simple paths between two nodes up to a maximum depth.\n\nArgs:\n    source_id: ID of the starting node\n    target_id: ID of the ending node\n    max_depth: Maximum path length to explore (minimum 1, maximum 20)\n    service: GraphAnalysisService from dependency injection\n\nReturns:\n    List of PathResultResponse objects, one for each found path\n\nRaises:\n    HTTPException: 404 if either node is not found, 422 if graph error occurs",
         "operationId": "get_all_paths_api_graph_paths_all_get",
         "parameters": [
           {
@@ -1331,6 +1375,7 @@
             "required": false,
             "schema": {
               "type": "integer",
+              "maximum": 20,
               "minimum": 1,
               "description": "Maximum path length to explore",
               "default": 5,
@@ -1419,7 +1464,7 @@
           "graph"
         ],
         "summary": "Get Communities",
-        "description": "Partition the graph into communities using the specified algorithm.\n\nArgs:\n    algorithm: Name of the community detection algorithm (louvain, label_propagation)\n    service: GraphAnalysisService from dependency injection\n\nReturns:\n    CommunitiesResponse containing detected communities as lists of node IDs\n\nRaises:\n    HTTPException: 400 if algorithm is not recognized, 422 if graph error occurs",
+        "description": "Partition the graph into communities using the specified algorithm.\n\nArgs:\n    algorithm: Name of the community detection algorithm (louvain, label_propagation)\n    service: GraphAnalysisService from dependency injection\n\nReturns:\n    CommunitiesResponse containing detected communities as lists of node IDs\n\nRaises:\n    HTTPException: 400 if algorithm is not recognized or community detection fails, 422 if graph error occurs",
         "operationId": "get_communities_api_graph_communities_get",
         "parameters": [
           {
@@ -1482,6 +1527,11 @@
             "in": "query",
             "required": false,
             "schema": {
+              "enum": [
+                "in",
+                "out",
+                "both"
+              ],
               "type": "string",
               "description": "Direction: 'in', 'out', or 'both'",
               "default": "both",
@@ -1514,36 +1564,25 @@
         }
       }
     },
-    "/api/graph/nodes/{node_id}/subgraph": {
+    "/api/graph/subgraph": {
       "get": {
         "tags": [
           "graph"
         ],
         "summary": "Get Subgraph",
-        "description": "Extract a subgraph around a node up to a specified depth.\n\nArgs:\n    node_id: ID of the center node\n    depth: Maximum distance from the center node (minimum 1)\n    service: GraphAnalysisService from dependency injection\n\nReturns:\n    KnowledgeGraphResponse describing the extracted subgraph\n\nRaises:\n    HTTPException: 404 if node is not found, 422 if graph error occurs",
-        "operationId": "get_subgraph_api_graph_nodes__node_id__subgraph_get",
+        "description": "Extract a subgraph containing the specified nodes and all edges between them.\n\nArgs:\n    nodes: Comma-separated list of node IDs (e.g., \"id1,id2,id3\")\n    service: GraphAnalysisService from dependency injection\n\nReturns:\n    KnowledgeGraphResponse describing the extracted subgraph\n\nRaises:\n    HTTPException: 404 if any node is not found, 400 if nodes parameter is invalid, 422 if graph error occurs",
+        "operationId": "get_subgraph_api_graph_subgraph_get",
         "parameters": [
           {
-            "name": "node_id",
-            "in": "path",
+            "name": "nodes",
+            "in": "query",
             "required": true,
             "schema": {
               "type": "string",
-              "title": "Node Id"
-            }
-          },
-          {
-            "name": "depth",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "minimum": 1,
-              "description": "Maximum distance from center node",
-              "default": 1,
-              "title": "Depth"
+              "description": "Comma-separated list of node IDs to extract subgraph for",
+              "title": "Nodes"
             },
-            "description": "Maximum distance from center node"
+            "description": "Comma-separated list of node IDs to extract subgraph for"
           }
         ],
         "responses": {
@@ -2291,6 +2330,31 @@
         "title": "DataPropertyValueResponse",
         "description": "Response containing data property value."
       },
+      "DegreeDistributionResponse": {
+        "properties": {
+          "distribution": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "type": "object",
+            "title": "Distribution",
+            "description": "Mapping of node IDs to their degrees"
+          },
+          "computed_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Computed At",
+            "description": "Timestamp when distribution was computed"
+          }
+        },
+        "type": "object",
+        "required": [
+          "distribution",
+          "computed_at"
+        ],
+        "title": "DegreeDistributionResponse",
+        "description": "Response containing degree distribution for all nodes."
+      },
       "ExternalReferenceResponse": {
         "properties": {
           "source": {
@@ -2361,6 +2425,36 @@
             "type": "object",
             "title": "Degree Distribution",
             "description": "Distribution of node degrees"
+          },
+          "centrality": {
+            "additionalProperties": {
+              "type": "number"
+            },
+            "type": "object",
+            "title": "Centrality",
+            "description": "Centrality scores for all nodes"
+          },
+          "communities": {
+            "items": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "type": "array",
+            "title": "Communities",
+            "description": "Detected communities as lists of node IDs"
+          },
+          "algorithm": {
+            "type": "string",
+            "title": "Algorithm",
+            "description": "Name of the centrality algorithm used"
+          },
+          "computed_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Computed At",
+            "description": "Timestamp when metrics were computed"
           }
         },
         "type": "object",
@@ -2368,7 +2462,11 @@
           "density",
           "average_degree",
           "connected_components",
-          "degree_distribution"
+          "degree_distribution",
+          "centrality",
+          "communities",
+          "algorithm",
+          "computed_at"
         ],
         "title": "GraphMetricsResponse",
         "description": "Response containing computed graph metrics."
@@ -2523,17 +2621,17 @@
             "title": "Target Id",
             "description": "ID of the ending node"
           },
-          "path": {
+          "nodes": {
             "items": {
               "type": "string"
             },
             "type": "array",
-            "title": "Path",
+            "title": "Nodes",
             "description": "Ordered list of node IDs from source to target"
           },
-          "length": {
+          "distance": {
             "type": "integer",
-            "title": "Length",
+            "title": "Distance",
             "description": "Number of edges in the path"
           },
           "relationships": {
@@ -2549,8 +2647,8 @@
         "required": [
           "source_id",
           "target_id",
-          "path",
-          "length",
+          "nodes",
+          "distance",
           "relationships"
         ],
         "title": "PathResultResponse",
