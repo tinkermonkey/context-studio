@@ -2,6 +2,7 @@ import os
 import sys
 from pathlib import Path
 from logging.config import fileConfig
+from typing import Any
 
 from sqlalchemy import engine_from_config
 from sqlalchemy import pool
@@ -13,11 +14,12 @@ local_server_root = Path(__file__).parent.parent.parent.parent
 if str(local_server_root) not in sys.path:
     sys.path.insert(0, str(local_server_root))
 
+target_metadata: Any = None
 try:
     from adapters.persistence.sqlite.operations.models import OperationsBase  # noqa: E402
     target_metadata = OperationsBase.metadata
 except ImportError:
-    target_metadata = None
+    pass
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.

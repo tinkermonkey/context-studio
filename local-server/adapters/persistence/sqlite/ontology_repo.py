@@ -12,7 +12,7 @@ Key responsibilities:
 - Hierarchical queries (parent-child relationships)
 """
 
-from typing import Optional, Sequence, Any
+from typing import Optional, Sequence, Any, cast
 from datetime import datetime, timezone
 
 from sqlalchemy.orm import Session
@@ -86,7 +86,7 @@ class SQLiteOntologyRepository:
         )
         if orm_entity is None:
             return None
-        return map_orm_to_domain(orm_entity)
+        return cast(Taxonomy, map_orm_to_domain(orm_entity))
 
     def list_taxonomies(self) -> Sequence[Taxonomy]:
         """
@@ -100,7 +100,7 @@ class SQLiteOntologyRepository:
             .filter(OntologyEntity.node_type == NodeType.TAXONOMY)
             .all()
         )
-        return [map_orm_to_domain(e) for e in orm_entities]
+        return [cast(Taxonomy, map_orm_to_domain(e)) for e in orm_entities]
 
     def save_taxonomy(self, taxonomy: Taxonomy) -> Taxonomy:
         """
@@ -143,13 +143,13 @@ class SQLiteOntologyRepository:
             self.session.add(orm_entity)
         else:
             # Update existing
-            orm_entity.title = taxonomy.title
-            orm_entity.description = taxonomy.description
-            orm_entity.last_modified = datetime.now(timezone.utc)
-            orm_entity.version += 1
+            orm_entity.title = taxonomy.title  # type: ignore[assignment]
+            orm_entity.description = taxonomy.description  # type: ignore[assignment]
+            orm_entity.last_modified = datetime.now(timezone.utc)  # type: ignore[assignment]
+            orm_entity.version = orm_entity.version + 1  # type: ignore[assignment]
 
         self.session.flush()
-        return map_orm_to_domain(orm_entity)
+        return cast(Taxonomy, map_orm_to_domain(orm_entity))
 
     def delete_taxonomy(self, taxonomy_id: str) -> bool:
         """
@@ -203,7 +203,7 @@ class SQLiteOntologyRepository:
         )
         if orm_entity is None:
             return None
-        return map_orm_to_domain(orm_entity)
+        return cast(ConceptScheme, map_orm_to_domain(orm_entity))
 
     def list_concept_schemes(
         self, taxonomy_id: Optional[str] = None
@@ -225,7 +225,7 @@ class SQLiteOntologyRepository:
             query = query.filter(OntologyEntity.taxonomy_id == taxonomy_id)
 
         orm_entities = query.all()
-        return [map_orm_to_domain(e) for e in orm_entities]
+        return [cast(ConceptScheme, map_orm_to_domain(e)) for e in orm_entities]
 
     def save_concept_scheme(self, scheme: ConceptScheme) -> ConceptScheme:
         """
@@ -276,13 +276,13 @@ class SQLiteOntologyRepository:
             self.session.add(orm_entity)
         else:
             # Update existing
-            orm_entity.title = scheme.title
-            orm_entity.description = scheme.description
-            orm_entity.last_modified = datetime.now(timezone.utc)
-            orm_entity.version += 1
+            orm_entity.title = scheme.title  # type: ignore[assignment]
+            orm_entity.description = scheme.description  # type: ignore[assignment]
+            orm_entity.last_modified = datetime.now(timezone.utc)  # type: ignore[assignment]
+            orm_entity.version = orm_entity.version + 1  # type: ignore[assignment]
 
         self.session.flush()
-        return map_orm_to_domain(orm_entity)
+        return cast(ConceptScheme, map_orm_to_domain(orm_entity))
 
     def delete_concept_scheme(self, concept_scheme_id: str) -> bool:
         """
@@ -336,7 +336,7 @@ class SQLiteOntologyRepository:
         )
         if orm_entity is None:
             return None
-        return map_orm_to_domain(orm_entity)
+        return cast(Class, map_orm_to_domain(orm_entity))
 
     def list_classes(
         self,
@@ -368,7 +368,7 @@ class SQLiteOntologyRepository:
             query = query.filter(OntologyEntity.parent_class_id == parent_class_id)
 
         orm_entities = query.limit(limit).offset(offset).all()
-        return [map_orm_to_domain(e) for e in orm_entities]
+        return [cast(Class, map_orm_to_domain(e)) for e in orm_entities]
 
     def count_classes(
         self,
@@ -469,26 +469,26 @@ class SQLiteOntologyRepository:
         if orm_entity is None:
             # Create new
             orm_entity = map_domain_to_orm(cls)
-            orm_entity.created_at = datetime.now(timezone.utc)
-            orm_entity.last_modified = datetime.now(timezone.utc)
-            orm_entity.version = 1
+            orm_entity.created_at = datetime.now(timezone.utc)  # type: ignore[assignment]
+            orm_entity.last_modified = datetime.now(timezone.utc)  # type: ignore[assignment]
+            orm_entity.version = 1  # type: ignore[assignment]
             self.session.add(orm_entity)
         else:
             # Update existing
             mapped_orm = map_domain_to_orm(cls)
-            orm_entity.title = cls.title
-            orm_entity.description = cls.description
-            orm_entity.parent_class_id = cls.parent_class_id
-            orm_entity.structural_property_id = cls.structural_property_id
-            orm_entity.external_references = mapped_orm.external_references
-            orm_entity.lexical_senses = mapped_orm.lexical_senses
-            orm_entity.data_properties = mapped_orm.data_properties
-            orm_entity.embedding = mapped_orm.embedding
-            orm_entity.last_modified = datetime.now(timezone.utc)
-            orm_entity.version += 1
+            orm_entity.title = cls.title  # type: ignore[assignment]
+            orm_entity.description = cls.description  # type: ignore[assignment]
+            orm_entity.parent_class_id = cls.parent_class_id  # type: ignore[assignment]
+            orm_entity.structural_property_id = cls.structural_property_id  # type: ignore[assignment]
+            orm_entity.external_references = mapped_orm.external_references  # type: ignore[assignment]
+            orm_entity.lexical_senses = mapped_orm.lexical_senses  # type: ignore[assignment]
+            orm_entity.data_properties = mapped_orm.data_properties  # type: ignore[assignment]
+            orm_entity.embedding = mapped_orm.embedding  # type: ignore[assignment]
+            orm_entity.last_modified = datetime.now(timezone.utc)  # type: ignore[assignment]
+            orm_entity.version = orm_entity.version + 1  # type: ignore[assignment]
 
         self.session.flush()
-        return map_orm_to_domain(orm_entity)
+        return cast(Class, map_orm_to_domain(orm_entity))
 
     def delete_class(self, class_id: str) -> bool:
         """
@@ -575,7 +575,7 @@ class SQLiteOntologyRepository:
         query = query.limit(criteria.limit).offset(criteria.offset)
 
         orm_entities = query.all()
-        return [map_orm_to_domain(e) for e in orm_entities]
+        return [cast(Class, map_orm_to_domain(e)) for e in orm_entities]
 
     # ==================== Individual CRUD ====================
 
@@ -601,7 +601,7 @@ class SQLiteOntologyRepository:
         )
         if orm_entity is None:
             return None
-        return map_orm_to_domain(orm_entity)
+        return cast(Individual, map_orm_to_domain(orm_entity))
 
     def list_individuals(
         self, class_id: Optional[str] = None
@@ -623,7 +623,7 @@ class SQLiteOntologyRepository:
             query = query.filter(OntologyEntity.class_id == class_id)
 
         orm_entities = query.all()
-        return [map_orm_to_domain(e) for e in orm_entities]
+        return [cast(Individual, map_orm_to_domain(e)) for e in orm_entities]
 
     def save_individual(self, individual: Individual) -> Individual:
         """
@@ -662,21 +662,22 @@ class SQLiteOntologyRepository:
         if orm_entity is None:
             # Create new
             orm_entity = map_domain_to_orm(individual)
-            orm_entity.created_at = datetime.now(timezone.utc)
-            orm_entity.last_modified = datetime.now(timezone.utc)
-            orm_entity.version = 1
+            orm_entity.created_at = datetime.now(timezone.utc)  # type: ignore[assignment]
+            orm_entity.last_modified = datetime.now(timezone.utc)  # type: ignore[assignment]
+            orm_entity.version = 1  # type: ignore[assignment]
             self.session.add(orm_entity)
         else:
             # Update existing
-            orm_entity.title = individual.title
-            orm_entity.description = individual.description
-            orm_entity.data_properties = map_domain_to_orm(individual).data_properties
-            orm_entity.external_references = map_domain_to_orm(individual).external_references
-            orm_entity.last_modified = datetime.now(timezone.utc)
-            orm_entity.version += 1
+            mapped_orm = map_domain_to_orm(individual)
+            orm_entity.title = individual.title  # type: ignore[assignment]
+            orm_entity.description = individual.description  # type: ignore[assignment]
+            orm_entity.data_properties = mapped_orm.data_properties  # type: ignore[assignment]
+            orm_entity.external_references = mapped_orm.external_references  # type: ignore[assignment]
+            orm_entity.last_modified = datetime.now(timezone.utc)  # type: ignore[assignment]
+            orm_entity.version = orm_entity.version + 1  # type: ignore[assignment]
 
         self.session.flush()
-        return map_orm_to_domain(orm_entity)
+        return cast(Individual, map_orm_to_domain(orm_entity))
 
     def delete_individual(self, individual_id: str) -> bool:
         """
@@ -730,7 +731,7 @@ class SQLiteOntologyRepository:
         )
         if orm_entity is None:
             return None
-        return map_orm_to_domain(orm_entity)
+        return cast(PropertyDefinition, map_orm_to_domain(orm_entity))
 
     def list_property_definitions(
         self,
@@ -757,7 +758,7 @@ class SQLiteOntologyRepository:
             query = query.filter(OntologyEntity.is_relevant == is_relevant)
 
         orm_entities = query.limit(limit).offset(offset).all()
-        return [map_orm_to_domain(e) for e in orm_entities]
+        return [cast(PropertyDefinition, map_orm_to_domain(e)) for e in orm_entities]
 
     def get_property_definition_by_identifier(
         self, identifier: str
@@ -783,7 +784,7 @@ class SQLiteOntologyRepository:
         )
         if orm_entity is None:
             return None
-        return map_orm_to_domain(orm_entity)
+        return cast(PropertyDefinition, map_orm_to_domain(orm_entity))
 
     def save_property_definition(
         self, prop: PropertyDefinition
@@ -837,9 +838,9 @@ class SQLiteOntologyRepository:
         if orm_entity is None:
             # Create new
             orm_entity = map_domain_to_orm(prop)
-            orm_entity.created_at = datetime.now(timezone.utc)
-            orm_entity.last_modified = datetime.now(timezone.utc)
-            orm_entity.version = 1
+            orm_entity.created_at = datetime.now(timezone.utc)  # type: ignore[assignment]
+            orm_entity.last_modified = datetime.now(timezone.utc)  # type: ignore[assignment]
+            orm_entity.version = 1  # type: ignore[assignment]
             self.session.add(orm_entity)
 
             # Also create in property_definitions table for optimized queries
@@ -857,29 +858,30 @@ class SQLiteOntologyRepository:
             self.session.add(prop_def_orm)
         else:
             # Update existing in both tables
-            orm_entity.title = prop.title
-            orm_entity.description = prop.description
-            orm_entity.identifier = prop.identifier
-            orm_entity.ontology_mapping = map_domain_to_orm(prop).ontology_mapping
-            orm_entity.is_relevant = prop.is_relevant
-            orm_entity.last_modified = datetime.now(timezone.utc)
-            orm_entity.version += 1
+            mapped_orm = map_domain_to_orm(prop)
+            orm_entity.title = prop.title  # type: ignore[assignment]
+            orm_entity.description = prop.description  # type: ignore[assignment]
+            orm_entity.identifier = prop.identifier  # type: ignore[assignment]
+            orm_entity.ontology_mapping = mapped_orm.ontology_mapping  # type: ignore[assignment]
+            orm_entity.is_relevant = prop.is_relevant  # type: ignore[assignment]
+            orm_entity.last_modified = datetime.now(timezone.utc)  # type: ignore[assignment]
+            orm_entity.version = orm_entity.version + 1  # type: ignore[assignment]
 
             # Also update in property_definitions table
-            prop_def_orm = self.session.query(PropertyDefinitionORM).filter(
+            prop_def_orm_maybe = self.session.query(PropertyDefinitionORM).filter(
                 PropertyDefinitionORM.id == prop.id
             ).first()
-            if prop_def_orm:
-                prop_def_orm.title = prop.title
-                prop_def_orm.description = prop.description
-                prop_def_orm.identifier = prop.identifier
-                prop_def_orm.ontology_mapping = map_domain_to_orm(prop).ontology_mapping
-                prop_def_orm.is_relevant = prop.is_relevant
-                prop_def_orm.last_modified = datetime.now(timezone.utc)
-                prop_def_orm.version += 1
+            if prop_def_orm_maybe:
+                prop_def_orm_maybe.title = prop.title  # type: ignore[assignment]
+                prop_def_orm_maybe.description = prop.description  # type: ignore[assignment]
+                prop_def_orm_maybe.identifier = prop.identifier  # type: ignore[assignment]
+                prop_def_orm_maybe.ontology_mapping = mapped_orm.ontology_mapping  # type: ignore[assignment]
+                prop_def_orm_maybe.is_relevant = prop.is_relevant  # type: ignore[assignment]
+                prop_def_orm_maybe.last_modified = datetime.now(timezone.utc)  # type: ignore[assignment]
+                prop_def_orm_maybe.version = prop_def_orm_maybe.version + 1  # type: ignore[assignment]
 
         self.session.flush()
-        return map_orm_to_domain(orm_entity)
+        return cast(PropertyDefinition, map_orm_to_domain(orm_entity))
 
     def delete_property_definition(self, property_id: str) -> bool:
         """
@@ -1023,9 +1025,9 @@ class SQLiteOntologyRepository:
             self.session.add(orm_rel)
         else:
             # Update: only update the timestamp field, everything else is immutable
-            orm_rel.source_id = rel.source_id
-            orm_rel.target_id = rel.target_id
-            orm_rel.property_definition_id = rel.property_definition_id
+            orm_rel.source_id = rel.source_id  # type: ignore[assignment]
+            orm_rel.target_id = rel.target_id  # type: ignore[assignment]
+            orm_rel.property_definition_id = rel.property_definition_id  # type: ignore[assignment]
 
         self.session.flush()
         return map_relationship_orm_to_domain(orm_rel)
@@ -1085,8 +1087,8 @@ class SQLiteOntologyRepository:
         Returns:
             True if adding this parent would create a cycle, False otherwise
         """
-        visited = set()
-        current = potential_parent_id
+        visited: set[str] = set()
+        current: str | None = potential_parent_id
 
         while current is not None:
             if current in visited:

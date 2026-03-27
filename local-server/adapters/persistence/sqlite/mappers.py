@@ -9,8 +9,9 @@ SQLAlchemy ORM models. Handles:
 - Embedding vector handling
 """
 
-from typing import Union, Any
+from typing import Union, Any, cast
 import struct
+from datetime import datetime
 
 from domain.ontology.entities import (
     Taxonomy,
@@ -221,51 +222,76 @@ def map_orm_to_domain(orm_entity: OntologyEntity) -> Union[Taxonomy, ConceptSche
     Raises:
         ValueError: If node_type is not recognized
     """
-    common_args = {
-        "id": orm_entity.id,
-        "title": orm_entity.title,
-        "description": orm_entity.description,
-        "created_at": orm_entity.created_at,
-        "last_modified": orm_entity.last_modified,
-        "version": orm_entity.version,
-    }
+    entity_id = cast(str, orm_entity.id)
+    entity_title = cast(str, orm_entity.title)
+    entity_description = cast(str | None, orm_entity.description)
+    entity_created_at = cast(datetime | None, orm_entity.created_at)
+    entity_last_modified = cast(datetime | None, orm_entity.last_modified)
+    entity_version = cast(int, orm_entity.version)
 
     if orm_entity.node_type == NodeType.TAXONOMY:
-        return Taxonomy(**common_args)
+        return Taxonomy(
+            id=entity_id,
+            title=entity_title,
+            description=entity_description,
+            created_at=entity_created_at,
+            last_modified=entity_last_modified,
+            version=entity_version,
+        )
 
     elif orm_entity.node_type == NodeType.CONCEPT_SCHEME:
         return ConceptScheme(
-            **common_args,
-            taxonomy_id=orm_entity.taxonomy_id,
+            id=entity_id,
+            title=entity_title,
+            description=entity_description,
+            created_at=entity_created_at,
+            last_modified=entity_last_modified,
+            version=entity_version,
+            taxonomy_id=cast(str, orm_entity.taxonomy_id),
         )
 
     elif orm_entity.node_type == NodeType.CLASS:
         return Class(
-            **common_args,
-            concept_scheme_id=orm_entity.concept_scheme_id,
-            taxonomy_id=orm_entity.taxonomy_id,
-            parent_class_id=orm_entity.parent_class_id,
-            structural_property_id=orm_entity.structural_property_id,
-            external_references=deserialize_external_references(orm_entity.external_references or []),
-            lexical_senses=deserialize_lexical_senses(orm_entity.lexical_senses or []),
-            data_properties=deserialize_data_properties(orm_entity.data_properties or []),
-            embedding=_deserialize_embedding(orm_entity.embedding),
+            id=entity_id,
+            title=entity_title,
+            description=entity_description,
+            created_at=entity_created_at,
+            last_modified=entity_last_modified,
+            version=entity_version,
+            concept_scheme_id=cast(str, orm_entity.concept_scheme_id),
+            taxonomy_id=cast(str, orm_entity.taxonomy_id),
+            parent_class_id=cast(str | None, orm_entity.parent_class_id),
+            structural_property_id=cast(str | None, orm_entity.structural_property_id),
+            external_references=deserialize_external_references(cast(list[dict[str, Any]], orm_entity.external_references) or []),
+            lexical_senses=deserialize_lexical_senses(cast(list[dict[str, str]], orm_entity.lexical_senses) or []),
+            data_properties=deserialize_data_properties(cast(list[dict[str, Any]], orm_entity.data_properties) or []),
+            embedding=_deserialize_embedding(cast(bytes | None, orm_entity.embedding)),
         )
 
     elif orm_entity.node_type == NodeType.INDIVIDUAL:
         return Individual(
-            **common_args,
-            class_id=orm_entity.class_id,
-            data_properties=deserialize_data_properties(orm_entity.data_properties or []),
-            external_references=deserialize_external_references(orm_entity.external_references or []),
+            id=entity_id,
+            title=entity_title,
+            description=entity_description,
+            created_at=entity_created_at,
+            last_modified=entity_last_modified,
+            version=entity_version,
+            class_id=cast(str, orm_entity.class_id),
+            data_properties=deserialize_data_properties(cast(list[dict[str, Any]], orm_entity.data_properties) or []),
+            external_references=deserialize_external_references(cast(list[dict[str, Any]], orm_entity.external_references) or []),
         )
 
     elif orm_entity.node_type == NodeType.PROPERTY_DEFINITION:
         return PropertyDefinition(
-            **common_args,
-            identifier=orm_entity.identifier,
-            ontology_mapping=deserialize_ontology_mapping(orm_entity.ontology_mapping),
-            is_relevant=orm_entity.is_relevant,
+            id=entity_id,
+            title=entity_title,
+            description=entity_description,
+            created_at=entity_created_at,
+            last_modified=entity_last_modified,
+            version=entity_version,
+            identifier=cast(str, orm_entity.identifier),
+            ontology_mapping=deserialize_ontology_mapping(cast(dict[str, str] | None, orm_entity.ontology_mapping)),
+            is_relevant=cast(bool | None, orm_entity.is_relevant),
         )
 
     else:
@@ -356,11 +382,11 @@ def map_relationship_orm_to_domain(orm_rel: RelationshipORM) -> Relationship:
         Domain Relationship entity
     """
     return Relationship(
-        id=orm_rel.id,
-        source_id=orm_rel.source_id,
-        target_id=orm_rel.target_id,
-        property_definition_id=orm_rel.property_definition_id,
-        created_at=orm_rel.created_at,
+        id=cast(str, orm_rel.id),
+        source_id=cast(str, orm_rel.source_id),
+        target_id=cast(str, orm_rel.target_id),
+        property_definition_id=cast(str, orm_rel.property_definition_id),
+        created_at=cast(datetime, orm_rel.created_at),
     )
 
 
@@ -397,15 +423,15 @@ def map_property_definition_orm_to_domain(orm_prop: PropertyDefinitionORM) -> Pr
         Domain PropertyDefinition entity
     """
     return PropertyDefinition(
-        id=orm_prop.id,
-        identifier=orm_prop.identifier,
-        title=orm_prop.title,
-        description=orm_prop.description,
-        ontology_mapping=deserialize_ontology_mapping(orm_prop.ontology_mapping),
-        is_relevant=orm_prop.is_relevant,
-        created_at=orm_prop.created_at,
-        last_modified=orm_prop.last_modified,
-        version=orm_prop.version,
+        id=cast(str, orm_prop.id),
+        identifier=cast(str, orm_prop.identifier),
+        title=cast(str, orm_prop.title),
+        description=cast(str | None, orm_prop.description),
+        ontology_mapping=deserialize_ontology_mapping(cast(dict[str, str] | None, orm_prop.ontology_mapping)),
+        is_relevant=cast(bool | None, orm_prop.is_relevant),
+        created_at=cast(datetime | None, orm_prop.created_at),
+        last_modified=cast(datetime | None, orm_prop.last_modified),
+        version=cast(int, orm_prop.version),
     )
 
 
