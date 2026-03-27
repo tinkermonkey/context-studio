@@ -110,10 +110,9 @@ class Class:
         parent_class_id: Optional ID of the parent class for hierarchy
         structural_property_id: Optional ID of the primary structural relationship property definition
         external_references: List of references to external knowledge bases
-        lexical_senses: List of word sense disambiguation entries (e.g., WordNet synsets)
+        lexical_senses: List of word sense disambiguation entries
         data_properties: List of data property values on this class
-        title_embedding: Optional bytes representing the embedding of the title (serialized float32 array)
-        description_embedding: Optional bytes representing the embedding of the description (serialized float32 array)
+        embedding: Optional bytes representing the semantic embedding (serialized float array)
         created_at: Timestamp of creation
         last_modified: Timestamp of last modification
         version: Version number for optimistic concurrency control
@@ -129,8 +128,7 @@ class Class:
     external_references: list[ExternalReference] = field(default_factory=list)
     lexical_senses: list[LexicalSense] = field(default_factory=list)
     data_properties: list[DataPropertyValue] = field(default_factory=list)
-    title_embedding: bytes | None = None
-    description_embedding: bytes | None = None
+    embedding: bytes | None = None
     created_at: datetime | None = None
     last_modified: datetime | None = None
     version: int = 1

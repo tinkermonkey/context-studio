@@ -23,33 +23,26 @@ class TestExternalReference:
 
     def test_external_reference_creation(self):
         """Create an external reference."""
-        ref = ExternalReference(identifier="dog_dbpedia", source="DBpedia", uri="http://dbpedia.org/resource/Dog_(animal)")
-        assert ref.identifier == "dog_dbpedia"
+        ref = ExternalReference(source="DBpedia", identifier="dog_dbpedia", uri="http://dbpedia.org/resource/Dog_(animal)")
         assert ref.source == "DBpedia"
+        assert ref.identifier == "dog_dbpedia"
         assert ref.uri == "http://dbpedia.org/resource/Dog_(animal)"
-        assert ref.label is None
-        assert ref.confidence is None
         assert ref.metadata is None
 
-    def test_external_reference_with_optional_fields(self):
-        """Create an external reference with optional fields."""
-        ref = ExternalReference(
-            identifier="dog_dbpedia",
-            source="DBpedia",
-            uri="http://dbpedia.org/resource/Dog_(animal)",
-            label="Dog",
-            confidence=0.95,
-        )
-        assert ref.label == "Dog"
-        assert ref.confidence == 0.95
+    def test_external_reference_without_uri(self):
+        """Create an external reference without URI (optional)."""
+        ref = ExternalReference(source="DBpedia", identifier="dog_dbpedia")
+        assert ref.source == "DBpedia"
+        assert ref.identifier == "dog_dbpedia"
+        assert ref.uri is None
 
     def test_external_reference_with_metadata(self):
         """Create an external reference with immutable metadata."""
         metadata_dict = {"category": "animal", "population": 500000}
         metadata = MappingProxyType(metadata_dict)
         ref = ExternalReference(
-            identifier="dog_dbpedia",
             source="DBpedia",
+            identifier="dog_dbpedia",
             uri="http://dbpedia.org/resource/Dog_(animal)",
             metadata=metadata,
         )
@@ -62,8 +55,8 @@ class TestExternalReference:
         metadata_dict = {"category": "animal"}
         metadata = MappingProxyType(metadata_dict)
         ref = ExternalReference(
-            identifier="dog_dbpedia",
             source="DBpedia",
+            identifier="dog_dbpedia",
             uri="http://dbpedia.org/resource/Dog_(animal)",
             metadata=metadata,
         )
@@ -72,7 +65,7 @@ class TestExternalReference:
 
     def test_external_reference_is_frozen(self):
         """ExternalReference is frozen and immutable."""
-        ref = ExternalReference(identifier="dog_dbpedia", source="DBpedia", uri="http://dbpedia.org/resource/Dog_(animal)")
+        ref = ExternalReference(source="DBpedia", identifier="dog_dbpedia", uri="http://dbpedia.org/resource/Dog_(animal)")
         with pytest.raises(Exception):
             ref.identifier = "dog_schema"
 
@@ -82,28 +75,27 @@ class TestLexicalSense:
 
     def test_lexical_sense_creation(self):
         """Create a lexical sense."""
-        sense = LexicalSense(synset_id="dog.n.01", definition="a member of the genus Canis", lemma="dog")
-        assert sense.synset_id == "dog.n.01"
-        assert sense.definition == "a member of the genus Canis"
-        assert sense.lemma == "dog"
-        assert sense.confidence is None
-        assert sense.source == "wordnet"
+        sense = LexicalSense(label="dog", language_code="en", sense_type="synset")
+        assert sense.label == "dog"
+        assert sense.language_code == "en"
+        assert sense.sense_type == "synset"
 
-    def test_lexical_sense_with_confidence(self):
-        """Create a lexical sense with confidence."""
-        sense = LexicalSense(synset_id="dog.n.01", definition="a member of the genus Canis", lemma="dog", confidence=0.98)
-        assert sense.confidence == 0.98
+    def test_lexical_sense_with_different_language(self):
+        """Create a lexical sense with different language."""
+        sense = LexicalSense(label="gato", language_code="es", sense_type="synset")
+        assert sense.language_code == "es"
+        assert sense.label == "gato"
 
-    def test_lexical_sense_with_custom_source(self):
-        """Create a lexical sense with custom source."""
-        sense = LexicalSense(synset_id="dog.n.01", definition="a member of the genus Canis", lemma="dog", source="custom_source")
-        assert sense.source == "custom_source"
+    def test_lexical_sense_with_different_sense_type(self):
+        """Create a lexical sense with different sense type."""
+        sense = LexicalSense(label="dog", language_code="en", sense_type="word_form")
+        assert sense.sense_type == "word_form"
 
     def test_lexical_sense_is_frozen(self):
         """LexicalSense is frozen and immutable."""
-        sense = LexicalSense(synset_id="dog.n.01", definition="a member of the genus Canis", lemma="dog")
+        sense = LexicalSense(label="dog", language_code="en", sense_type="synset")
         with pytest.raises(Exception):
-            sense.synset_id = "cat.n.01"
+            sense.label = "cat"
 
 
 class TestDataPropertyValue:
@@ -220,8 +212,7 @@ class TestClass:
         assert cls.title == "Dog"
         assert cls.description is None
         assert cls.parent_class_id is None
-        assert cls.title_embedding is None
-        assert cls.description_embedding is None
+        assert cls.embedding is None
         assert cls.external_references == []
         assert cls.lexical_senses == []
 
@@ -248,20 +239,17 @@ class TestClass:
         assert cls.parent_class_id == "class-0"
 
     def test_class_creation_with_embedding(self):
-        """Create a class with title and description embeddings."""
+        """Create a class with semantic embedding."""
         embedding_floats = [0.1, 0.2, 0.3, 0.4, 0.5]
-        title_embedding = struct.pack('5f', *embedding_floats)
-        description_embedding = struct.pack('5f', *[0.5, 0.4, 0.3, 0.2, 0.1])
+        embedding = struct.pack('5f', *embedding_floats)
         cls = Class(
             id="class-1",
             concept_scheme_id="scheme-1",
             taxonomy_id="tax-1",
             title="Dog",
-            title_embedding=title_embedding,
-            description_embedding=description_embedding,
+            embedding=embedding,
         )
-        assert cls.title_embedding == title_embedding
-        assert cls.description_embedding == description_embedding
+        assert cls.embedding == embedding
 
     def test_class_rename(self):
         """Rename a class."""
@@ -304,8 +292,8 @@ class TestClass:
     def test_class_with_external_references(self):
         """Create a class with external references."""
         refs = [
-            ExternalReference(identifier="dog_dbpedia", source="DBpedia", uri="http://dbpedia.org/resource/Dog_(animal)", label="Dog"),
-            ExternalReference(identifier="animal_schema", source="schema.org", uri="http://schema.org/Animal", label="Animal"),
+            ExternalReference(source="DBpedia", identifier="dog_dbpedia", uri="http://dbpedia.org/resource/Dog_(animal)"),
+            ExternalReference(source="schema.org", identifier="animal_schema", uri="http://schema.org/Animal"),
         ]
         cls = Class(
             id="class-1",
@@ -320,8 +308,8 @@ class TestClass:
     def test_class_with_lexical_senses(self):
         """Create a class with lexical senses."""
         senses = [
-            LexicalSense(synset_id="dog.n.01", definition="a member of the genus Canis", lemma="dog"),
-            LexicalSense(synset_id="dog.n.02", definition="a despicable person", lemma="dog"),
+            LexicalSense(label="dog", language_code="en", sense_type="synset"),
+            LexicalSense(label="dog", language_code="en", sense_type="word_form"),
         ]
         cls = Class(
             id="class-1",
@@ -331,7 +319,7 @@ class TestClass:
             lexical_senses=senses,
         )
         assert len(cls.lexical_senses) == 2
-        assert cls.lexical_senses[1].lemma == "dog"
+        assert cls.lexical_senses[1].label == "dog"
 
 
 class TestIndividual:
@@ -442,50 +430,39 @@ class TestOntologyMapping:
     def test_ontology_mapping_creation(self):
         """Create an ontology mapping."""
         mapping = OntologyMapping(
-            ontology="schema.org",
-            uri="https://schema.org/Thing",
-            label="Thing",
+            source_id="source-uuid",
+            target_id="target-uuid",
+            mapping_type="exact_match",
         )
-        assert mapping.ontology == "schema.org"
-        assert mapping.uri == "https://schema.org/Thing"
-        assert mapping.label == "Thing"
-        assert mapping.exact_match is False
+        assert mapping.source_id == "source-uuid"
+        assert mapping.target_id == "target-uuid"
+        assert mapping.mapping_type == "exact_match"
 
-    def test_ontology_mapping_with_exact_match_false(self):
-        """Create ontology mappings with exact_match=False."""
+    def test_ontology_mapping_with_related_match(self):
+        """Create ontology mapping with related_match type."""
         mapping = OntologyMapping(
-            ontology="dbpedia",
-            uri="http://dbpedia.org/ontology/SomeClass",
-            label="Some Class",
-            exact_match=False,
+            source_id="source-uuid",
+            target_id="target-uuid",
+            mapping_type="related_match",
         )
-        assert mapping.exact_match is False
-
-    def test_ontology_mapping_without_label(self):
-        """Create ontology mapping without label (optional)."""
-        mapping = OntologyMapping(
-            ontology="owl",
-            uri="http://example.com/ontology/MyClass",
-        )
-        assert mapping.label is None
-        assert mapping.exact_match is False
+        assert mapping.mapping_type == "related_match"
 
     def test_ontology_mapping_is_frozen(self):
         """OntologyMapping is frozen and immutable."""
         mapping = OntologyMapping(
-            ontology="schema.org",
-            uri="https://schema.org/Thing",
-            label="Thing",
+            source_id="source-uuid",
+            target_id="target-uuid",
+            mapping_type="exact_match",
         )
         with pytest.raises(Exception):
-            mapping.uri = "https://schema.org/Other"
+            mapping.target_id = "other-uuid"
 
     def test_ontology_mapping_in_property_definition(self):
         """PropertyDefinition can contain an OntologyMapping."""
         mapping = OntologyMapping(
-            ontology="schema.org",
-            uri="https://schema.org/Thing",
-            label="Thing",
+            source_id="prop-1",
+            target_id="schema-org-prop",
+            mapping_type="exact_match",
         )
         prop = PropertyDefinition(
             id="prop-1",
@@ -494,7 +471,7 @@ class TestOntologyMapping:
             ontology_mapping=mapping,
         )
         assert prop.ontology_mapping == mapping
-        assert prop.ontology_mapping.ontology == "schema.org"
+        assert prop.ontology_mapping.mapping_type == "exact_match"
 
 
 class TestSearchCriteria:

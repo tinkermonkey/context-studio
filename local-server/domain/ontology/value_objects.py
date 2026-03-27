@@ -28,40 +28,32 @@ class ExternalReference:
     Reference to an entity in an external source (e.g., DBpedia, Wikidata, ConceptNet).
 
     Attributes:
-        identifier: The external identifier (required)
         source: The name of the external knowledge base (e.g., "dbpedia", "wikidata", "conceptnet")
-        uri: The external URI
-        label: Human-readable label from the source
-        confidence: Match confidence score
+        identifier: The external identifier (required)
+        uri: The external URI (optional)
         metadata: Source-specific metadata (immutable proxy around dict, or None)
     """
 
-    identifier: str
     source: str
-    uri: str
-    label: str | None = None
-    confidence: float | None = None
+    identifier: str
+    uri: str | None = None
     metadata: MappingProxyType[str, Any] | None = None
 
 
 @dataclass(frozen=True)
 class LexicalSense:
     """
-    Word sense disambiguation data, typically from WordNet.
+    Word sense disambiguation data from external lexical sources.
 
     Attributes:
-        synset_id: The WordNet synset identifier (e.g., "dog.n.01")
-        definition: The definition of the sense from the source
-        lemma: The canonical lemma or term for this sense
-        confidence: Optional confidence score for the sense match
-        source: The source of the lexical sense data (default: "wordnet")
+        label: The sense label or term (required)
+        language_code: ISO 639-1 language code (required)
+        sense_type: The type of sense (e.g., "synset", "word_sense") (required)
     """
 
-    synset_id: str
-    definition: str
-    lemma: str
-    confidence: float | None = None
-    source: str = "wordnet"
+    label: str
+    language_code: str
+    sense_type: str
 
 
 @dataclass(frozen=True)
@@ -83,19 +75,17 @@ class DataPropertyValue:
 @dataclass(frozen=True)
 class OntologyMapping:
     """
-    Maps to an external ontology standard or schema.
+    Maps between entities in different ontologies.
 
     Attributes:
-        ontology: The name of the external ontology standard (e.g., "owl", "schema.org", "dbpedia")
-        uri: The URI of the external ontology term or class
-        label: Human-readable label from the external ontology (optional)
-        exact_match: Boolean indicating whether this is an exact semantic match (default: False)
+        source_id: The UUID of the source entity (required)
+        target_id: The UUID of the target entity (required)
+        mapping_type: The type of mapping (e.g., "exact_match", "related_match") (required)
     """
 
-    ontology: str
-    uri: str
-    label: str | None = None
-    exact_match: bool = False
+    source_id: str
+    target_id: str
+    mapping_type: str
 
 
 @dataclass(frozen=True)

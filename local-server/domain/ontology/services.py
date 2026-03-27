@@ -433,7 +433,7 @@ class OntologyService:
             title=title,
             description=description,
             parent_class_id=parent_class_id,
-            title_embedding=embedding,
+            embedding=embedding,
             created_at=datetime.now(timezone.utc),
             last_modified=datetime.now(timezone.utc),
         )
@@ -546,7 +546,7 @@ class OntologyService:
         if title_changed or desc_changed:
             embed_text = f"{cls.title} {cls.description or ''}".strip()
             embedding = self._embedding_service.embed_text(embed_text)
-            cls.title_embedding = embedding
+            cls.embedding = embedding
 
         # Guard against no-op updates
         if not (title_changed or desc_changed):
