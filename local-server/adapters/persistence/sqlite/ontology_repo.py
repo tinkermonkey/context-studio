@@ -12,7 +12,7 @@ Key responsibilities:
 - Hierarchical queries (parent-child relationships)
 """
 
-from typing import Optional, Sequence, Union
+from typing import Optional, Sequence, Union, Any
 from datetime import datetime, timezone
 
 from sqlalchemy.orm import Session
@@ -1055,18 +1055,15 @@ class SQLiteOntologyRepository:
 
     def get_all_entities_and_relationships(
         self,
-    ) -> tuple[dict[str, Union[Taxonomy, ConceptScheme, Class, Individual, PropertyDefinition]], list[Relationship]]:
+    ) -> tuple[Sequence[Any], Sequence[Relationship]]:
         """
         Retrieve all entities and relationships for graph analysis.
 
         Returns:
-            Tuple of (entities dict keyed by ID, relationships list)
+            Tuple of (entities sequence, relationships sequence)
         """
         all_orm_entities = self.session.query(OntologyEntity).all()
-        entities = {
-            e.id: map_orm_to_domain(e)
-            for e in all_orm_entities
-        }
+        entities = [map_orm_to_domain(e) for e in all_orm_entities]
 
         all_orm_rels = self.session.query(RelationshipORM).all()
         relationships = [map_relationship_orm_to_domain(r) for r in all_orm_rels]
