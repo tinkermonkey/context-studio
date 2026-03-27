@@ -7,7 +7,6 @@ supporting semantic queries, SPARQL execution, and triple pattern matching.
 
 from __future__ import annotations
 
-import re
 from typing import Any, Sequence
 
 from rdflib import Graph, Namespace, URIRef, Literal
@@ -123,21 +122,19 @@ class RDFLibQueryEngine:
         """
         Execute a SPARQL SELECT query against the RDF graph.
 
-        Validates the query to ensure it is a read-only SELECT operation,
-        then executes it and returns the results.
+        Note: SPARQL validation (keyword checking) is performed by the domain
+        service before this method is invoked. This method focuses on framework-
+        specific exception translation.
 
         Args:
-            query: SPARQL query string (SELECT queries only)
+            query: Pre-validated SPARQL query string (SELECT queries only)
 
         Returns:
             List of result dictionaries, where each dict maps variable names to values
 
         Raises:
-            SPARQLValidationError: If the query contains forbidden keywords or has syntax errors
+            SPARQLValidationError: If the query has syntax errors
         """
-        # Validate the query before executing
-        self._validate_sparql(query)
-
         # Execute the SPARQL query
         try:
             results = self._graph.query(query)
@@ -206,28 +203,3 @@ class RDFLibQueryEngine:
         """
         return len(self._graph)
 
-    def _validate_sparql(self, query: str) -> None:
-        """
-        Validate SPARQL query to prevent dangerous operations.
-
-        Only SELECT queries are allowed. Queries containing INSERT, DELETE, DROP,
-        CLEAR, LOAD, or CREATE operations are rejected for safety.
-
-        Uses word-boundary regex matching to avoid false positives from substring
-        matching (e.g., "CREATE" inside "CREATED_BY" string literal).
-
-        Args:
-            query: The SPARQL query to validate
-
-        Raises:
-            SPARQLValidationError: If the query contains forbidden keywords
-        """
-        forbidden_keywords = {"INSERT", "DELETE", "DROP", "CLEAR", "LOAD", "CREATE"}
-
-        query_upper = query.upper()
-
-        for keyword in forbidden_keywords:
-            # Use word-boundary regex to match only complete keywords, not substrings
-            pattern = rf"\b{keyword}\b"
-            if re.search(pattern, query_upper):
-                raise SPARQLValidationError(query, f"Forbidden keyword: {keyword}")

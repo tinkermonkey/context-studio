@@ -9,6 +9,7 @@ cache invalidation via a stale-flag pattern triggered by GraphInvalidated events
 
 from __future__ import annotations
 
+import re
 from collections import deque
 from datetime import datetime, timezone
 from typing import TYPE_CHECKING, Any
@@ -426,6 +427,7 @@ class GraphAnalysisService:
             SPARQLValidationError: If the query is invalid or contains disallowed operations
         """
         self._ensure_rdf()
+        self._validate_sparql(query)
         return self._query_engine.execute_sparql(query)
 
     def get_triple_count(self) -> int:
@@ -467,3 +469,35 @@ class GraphAnalysisService:
         """
         self._graph_stale = True
         self._rdf_stale = True
+
+    def _validate_sparql(self, query: str) -> None:
+        """
+        Validate SPARQL query for safety and correctness.
+
+        Uses word-boundary regex to avoid matching keywords inside identifiers
+        or string literals. For example, 'CREATED_BY' contains 'CREATE' but is
+        not a CREATE statement.
+
+        Args:
+            query: SPARQL query string to validate.
+
+        Raises:
+            SPARQLValidationError: If query contains forbidden keywords
+                                   or is considered unsafe.
+        """
+        # Forbidden keywords that indicate mutation or unsafe operations
+        forbidden_keywords = {
+            "DELETE", "DROP", "INSERT", "UPDATE", "CREATE", "CLEAR",
+            "LOAD", "WITH", "UNION", "GRAPH"
+        }
+
+        query_upper = query.upper()
+
+        for keyword in forbidden_keywords:
+            # Use word-boundary regex to avoid matching inside words
+            if re.search(rf"\b{keyword}\b", query_upper):
+                raise SPARQLValidationError(
+                    query,
+                    f"Query contains forbidden keyword '{keyword}'. "
+                    "Only SELECT queries are supported."
+                )

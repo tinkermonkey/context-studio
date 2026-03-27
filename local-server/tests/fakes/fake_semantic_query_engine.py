@@ -6,12 +6,9 @@ Stores triples and provides minimal implementations of RDF operations.
 
 import sys
 import os
-import re
 from typing import Any
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
-
-from domain.graph.exceptions import SPARQLValidationError
 
 
 class FakeSemanticQueryEngine:
@@ -60,18 +57,15 @@ class FakeSemanticQueryEngine:
         """
         Execute a SPARQL SELECT query against the RDF graph.
 
-        For the fake implementation, validates the query and returns empty list.
+        For the fake implementation, returns an empty list.
+        Validation is performed by the domain service before invocation.
 
         Args:
             query: SPARQL query string
 
         Returns:
             Empty list (minimal fake implementation)
-
-        Raises:
-            SPARQLValidationError: If the query contains forbidden keywords
         """
-        self._validate_sparql(query)
         return []
 
     def get_triples(
@@ -125,28 +119,3 @@ class FakeSemanticQueryEngine:
         """
         return len(self._triples)
 
-    def _validate_sparql(self, query: str) -> None:
-        """
-        Validate SPARQL query to prevent dangerous operations.
-
-        Only SELECT queries are allowed. Queries containing INSERT, DELETE, DROP,
-        CLEAR, LOAD, or CREATE operations are rejected for safety.
-
-        Uses word-boundary regex matching to avoid false positives from substring
-        matching (e.g., "CREATE" inside "CREATED_BY" string literal).
-
-        Args:
-            query: The SPARQL query to validate
-
-        Raises:
-            SPARQLValidationError: If the query contains forbidden keywords
-        """
-        forbidden_keywords = {"INSERT", "DELETE", "DROP", "CLEAR", "LOAD", "CREATE"}
-
-        query_upper = query.upper()
-
-        for keyword in forbidden_keywords:
-            # Use word-boundary regex to match only complete keywords, not substrings
-            pattern = rf"\b{keyword}\b"
-            if re.search(pattern, query_upper):
-                raise SPARQLValidationError(query, f"Forbidden keyword: {keyword}")

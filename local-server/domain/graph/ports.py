@@ -182,6 +182,11 @@ class SemanticQueryEngine(Protocol):
     The SemanticQueryEngine wraps an RDF graph library (e.g., RDFLib) and provides
     a unified interface for semantic queries, SPARQL execution, and triple access.
     It is stateful — once load_ontology() is called, the engine retains the RDF graph.
+
+    Contract: SPARQL validation (forbidden keyword checking) is performed by the
+    domain GraphAnalysisService before execute_sparql() is invoked. Implementations
+    focus on framework-specific concerns (exception translation, RDF operations)
+    and can assume queries are pre-validated for safety.
     """
 
     def load_ontology(
