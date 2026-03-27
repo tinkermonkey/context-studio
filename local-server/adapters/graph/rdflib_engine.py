@@ -145,9 +145,10 @@ class RDFLibQueryEngine:
             # RDFLib query results are Row objects with variable names
             # Convert to dict mapping variable names to their values (as strings)
             row_dict = {}
-            for var in results.vars:
-                value = row[var]
-                row_dict[str(var)] = str(value) if value is not None else None
+            if results.vars is not None:
+                for var in results.vars:
+                    value = row[var]  # type: ignore
+                    row_dict[str(var)] = str(value) if value is not None else None
             result_list.append(row_dict)
 
         return result_list

@@ -22,7 +22,7 @@ class NetworkXGraphEngine:
 
     def __init__(self) -> None:
         """Initialize the NetworkX graph engine with an empty directed graph."""
-        self._graph = nx.DiGraph()
+        self._graph: nx.DiGraph = nx.DiGraph()
 
     def build_from_data(self, nodes: Sequence[dict], edges: Sequence[dict]) -> None:
         """
@@ -157,13 +157,13 @@ class NetworkXGraphEngine:
             ValueError: If algorithm is not recognized
         """
         if algorithm == "louvain":
-            communities_generator = nx.community.louvain_communities(self._graph)
-            return [set(community) for community in communities_generator]
+            louvain_communities = nx.community.louvain_communities(self._graph)
+            return list(louvain_communities)
         elif algorithm == "label_propagation":
             # Label propagation requires an undirected graph
             undirected_graph = self._graph.to_undirected()
-            communities_generator = nx.community.label_propagation_communities(undirected_graph)
-            return [set(community) for community in communities_generator]
+            label_communities = nx.community.label_propagation_communities(undirected_graph)
+            return list(label_communities)
         else:
             raise ValueError(f"Unknown community detection algorithm: {algorithm}")
 
@@ -194,7 +194,7 @@ class NetworkXGraphEngine:
         Returns:
             Set of neighboring node IDs
         """
-        neighbors_set = set()
+        neighbors_set: set[str] = set()
 
         if direction in ("out", "both"):
             # Successors: nodes that this node points to

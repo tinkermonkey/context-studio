@@ -130,7 +130,11 @@ RUN node --version && \
     pip --version
 
 # Verify Python dependencies are importable
-RUN python3 -c "import fastapi; import sqlalchemy; import alembic; import pydantic; import pytest; import networkx; print('Python deps OK')"
+RUN python3 -c "import fastapi; import sqlalchemy; import alembic; import pydantic; import pytest; import networkx; import rdflib; print('Python deps OK')"
+
+# Verify mypy type stubs are installed
+RUN python3 -c "import networkx_stubs; print('Type stubs OK')" 2>/dev/null || \
+    python3 -c "import importlib.metadata; importlib.metadata.version('types-networkx'); print('types-networkx OK')"
 
 # ============================================================================
 # Default command
