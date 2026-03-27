@@ -444,6 +444,7 @@ class TestMetrics:
         assert isinstance(result.connected_components, int)
         assert isinstance(result.centrality, dict)
         assert isinstance(result.communities, list)
+        assert isinstance(result.algorithm, str)
 
     def test_get_metrics_density_in_range(self, service):
         """get_metrics density is between 0 and 1."""
@@ -476,6 +477,16 @@ class TestRDFOperations:
         second_count = svc.get_triple_count()
         assert first_count == second_count
 
+    def test_execute_sparql_triggers_rdf_load(self, service):
+        """execute_sparql triggers RDF load if not loaded."""
+        svc, _, query_engine = service
+        # Query engine should not be loaded yet
+        assert not query_engine.is_loaded()
+        # Call execute_sparql
+        _ = svc.execute_sparql("SELECT * WHERE { ?s ?p ?o }")
+        # Query engine should now be loaded
+        assert query_engine.is_loaded()
+
     def test_execute_sparql_returns_list(self, service):
         """execute_sparql returns list of results."""
         svc, _, _ = service
@@ -487,6 +498,16 @@ class TestRDFOperations:
         svc, _, _ = service
         results = svc.execute_sparql("SELECT * WHERE { ?s ?p ?o . FILTER(false) }")
         assert isinstance(results, list)
+
+    def test_get_triples_triggers_rdf_load(self, service):
+        """get_triples triggers RDF load if not loaded."""
+        svc, _, query_engine = service
+        # Query engine should not be loaded yet
+        assert not query_engine.is_loaded()
+        # Call get_triples
+        _ = svc.get_triples()
+        # Query engine should now be loaded
+        assert query_engine.is_loaded()
 
     def test_get_triples_by_subject(self, service, repository_with_data):
         """get_triples filters by subject."""
@@ -520,6 +541,41 @@ class TestRDFOperations:
         )
         assert isinstance(triples, list)
 
+    def test_execute_sparql_rejects_insert(self, service):
+        """execute_sparql rejects INSERT keyword."""
+        svc, _, _ = service
+        with pytest.raises(SPARQLValidationError):
+            svc.execute_sparql("INSERT DATA { <s> <p> <o> }")
+
+    def test_execute_sparql_rejects_delete(self, service):
+        """execute_sparql rejects DELETE keyword."""
+        svc, _, _ = service
+        with pytest.raises(SPARQLValidationError):
+            svc.execute_sparql("DELETE DATA { <s> <p> <o> }")
+
+    def test_execute_sparql_rejects_drop(self, service):
+        """execute_sparql rejects DROP keyword."""
+        svc, _, _ = service
+        with pytest.raises(SPARQLValidationError):
+            svc.execute_sparql("DROP GRAPH <graph>")
+
+    def test_execute_sparql_rejects_clear(self, service):
+        """execute_sparql rejects CLEAR keyword."""
+        svc, _, _ = service
+        with pytest.raises(SPARQLValidationError):
+            svc.execute_sparql("CLEAR GRAPH <graph>")
+
+    def test_execute_sparql_rejects_load(self, service):
+        """execute_sparql rejects LOAD keyword."""
+        svc, _, _ = service
+        with pytest.raises(SPARQLValidationError):
+            svc.execute_sparql("LOAD <http://example.org/data>")
+
+    def test_execute_sparql_rejects_create(self, service):
+        """execute_sparql rejects CREATE keyword."""
+        svc, _, _ = service
+        with pytest.raises(SPARQLValidationError):
+            svc.execute_sparql("CREATE GRAPH <graph>")
 
 
 class TestRDFInvalidation:
