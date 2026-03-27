@@ -25,6 +25,8 @@ def _get_handler() -> logging.Handler:
     """
     global _file_handler, _handler_init_attempted
     if _handler_init_attempted:
+        # _file_handler is guaranteed to be non-None after initialization
+        assert _file_handler is not None
         return _file_handler
 
     formatter = logging.Formatter(
