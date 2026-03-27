@@ -103,6 +103,15 @@ class GraphEngine(Protocol):
         """
         ...
 
+    def connected_components(self) -> int:
+        """
+        Count the number of connected components in the graph.
+
+        Returns:
+            Number of connected components (isolated nodes count as separate components)
+        """
+        ...
+
     def communities(self, algorithm: str = "louvain") -> list[set[str]]:
         """
         Partition the graph into communities using the specified algorithm.

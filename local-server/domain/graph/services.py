@@ -9,8 +9,9 @@ cache invalidation via a stale-flag pattern triggered by GraphInvalidated events
 
 from __future__ import annotations
 
+from collections import deque
 from datetime import datetime, timezone
-from typing import TYPE_CHECKING, Any, Sequence
+from typing import TYPE_CHECKING
 
 from .entities import GraphMetrics, KnowledgeGraph, PathResult
 from .exceptions import InvalidAlgorithmError, SPARQLValidationError
@@ -19,6 +20,13 @@ from .ports import GraphEngine, SemanticQueryEngine
 if TYPE_CHECKING:
     from ..ontology.events import GraphInvalidated
     from ..ontology.ports import OntologyRepository
+
+# Map domain entity class names to node_type strings
+_NODE_TYPE_MAP = {
+    "Taxonomy": "taxonomy",
+    "ConceptScheme": "concept_scheme",
+    "Class": "class",
+}
 
 
 class GraphAnalysisService:
@@ -54,6 +62,23 @@ class GraphAnalysisService:
         self._graph_stale = True
         self._rdf_stale = True
 
+    @staticmethod
+    def _derive_node_type(entity: object) -> str:
+        """
+        Derive node_type from the entity's class name.
+
+        This avoids requiring a node_type attribute on domain entities.
+        The class name is used as the key into _NODE_TYPE_MAP.
+
+        Args:
+            entity: Domain entity object
+
+        Returns:
+            Node type string (e.g., "taxonomy", "class", "concept_scheme")
+        """
+        class_name = entity.__class__.__name__
+        return _NODE_TYPE_MAP.get(class_name, class_name.lower())
+
     def _ensure_graph(self) -> None:
         """
         Build the graph if it is stale.
@@ -73,7 +98,7 @@ class GraphAnalysisService:
             node_dict = {
                 "id": str(entity.id),
                 "title": entity.title,
-                "node_type": entity.node_type,
+                "node_type": self._derive_node_type(entity),
             }
             nodes.append(node_dict)
 
@@ -114,7 +139,7 @@ class GraphAnalysisService:
             node_dict = {
                 "id": str(entity.id),
                 "title": entity.title,
-                "node_type": entity.node_type,
+                "node_type": self._derive_node_type(entity),
             }
             nodes.append(node_dict)
 
@@ -170,11 +195,8 @@ class GraphAnalysisService:
         degree_dist = self._graph_engine.degree_distribution()
         avg_degree = sum(degree_dist.values()) / len(degree_dist) if degree_dist else 0.0
 
-        # Count connected components (approximation: use centrality to infer isolation)
-        # A better implementation would use the actual graph library's component counting
-        centrality = self._graph_engine.centrality(algorithm)
-        isolated_nodes = sum(1 for score in centrality.values() if score == 0)
-        connected_components = isolated_nodes + 1 if node_count > 0 else 0
+        # Count connected components using graph engine
+        connected_components = self._graph_engine.connected_components()
 
         # Get communities
         communities = self._graph_engine.communities("louvain")
@@ -183,7 +205,7 @@ class GraphAnalysisService:
             density=density,
             average_degree=avg_degree,
             connected_components=connected_components,
-            centrality=centrality,
+            centrality=self._graph_engine.centrality(algorithm),
             communities=communities,
             algorithm=algorithm,
             computed_at=datetime.now(timezone.utc),
@@ -315,6 +337,10 @@ class GraphAnalysisService:
         """
         Extract a subgraph around a node up to a specified depth.
 
+        Uses breadth-first search to find all nodes within the specified distance
+        from the center node, then extracts the subgraph containing those nodes
+        and all edges between them.
+
         Args:
             node_id: ID of the center node
             depth: Maximum distance from the center node (default 1)
@@ -324,10 +350,29 @@ class GraphAnalysisService:
         """
         self._ensure_graph()
 
-        # Use the graph engine's subgraph method to extract neighbors at given depth
-        # This is a simplified implementation — a full implementation would traverse
-        # the graph to depth and collect all nodes/edges
-        subgraph = self._graph_engine.subgraph([node_id])
+        # BFS to find all nodes within the specified depth
+        visited = set()
+        queue = deque([(node_id, 0)])  # (node_id, current_depth)
+        subgraph_nodes = set()
+
+        while queue:
+            current_node, current_depth = queue.popleft()
+
+            if current_node in visited:
+                continue
+
+            visited.add(current_node)
+            subgraph_nodes.add(current_node)
+
+            # Only traverse further if we haven't reached the depth limit
+            if current_depth < depth:
+                neighbors = self._graph_engine.neighbors(current_node, direction="both")
+                for neighbor in neighbors:
+                    if neighbor not in visited:
+                        queue.append((neighbor, current_depth + 1))
+
+        # Extract subgraph with the collected nodes
+        subgraph = self._graph_engine.subgraph(list(subgraph_nodes))
 
         return KnowledgeGraph(
             node_count=subgraph.node_count(),
