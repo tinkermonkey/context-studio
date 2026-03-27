@@ -254,7 +254,7 @@ async def get_neighbors(
             direction=direction,
             neighbors=sorted(list(neighbors)),
         )
-    except (NodeNotFoundError, InvalidAlgorithmError, GraphError) as exc:
+    except (NodeNotFoundError, GraphError) as exc:
         status_code, message = _handle_graph_error(exc)
         raise HTTPException(status_code=status_code, detail=message)
 
