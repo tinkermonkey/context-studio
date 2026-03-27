@@ -23,7 +23,7 @@ These schemas handle serialization/deserialization between HTTP and domain model
 
 from datetime import datetime
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 
 # ==================== Request Schemas ====================
@@ -74,14 +74,13 @@ class GraphMetricsResponse(BaseModel):
 class PathResultResponse(BaseModel):
     """Response containing a single path between two nodes."""
 
+    model_config = ConfigDict(from_attributes=True, populate_by_name=True, ser_json_schema=True)
+
     source_id: str = Field(..., description="ID of the starting node")
     target_id: str = Field(..., description="ID of the ending node")
-    path: list[str] = Field(..., description="Ordered list of node IDs from source to target")
-    length: int = Field(..., description="Number of edges in the path")
+    nodes: list[str] = Field(..., alias="path", serialization_alias="nodes", description="Ordered list of node IDs from source to target")
+    distance: int = Field(..., alias="length", serialization_alias="distance", description="Number of edges in the path")
     relationships: list[str] = Field(..., description="Relationship types traversed along the path")
-
-    class Config:
-        from_attributes = True
 
 
 class CentralityResponse(BaseModel):

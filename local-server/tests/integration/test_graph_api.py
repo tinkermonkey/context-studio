@@ -22,7 +22,7 @@ from pathlib import Path
 from uuid import uuid4
 
 from sqlalchemy import create_engine
-from sqlalchemy.orm import Session, sessionmaker
+from sqlalchemy.orm import sessionmaker
 
 from fastapi import FastAPI, status
 from fastapi.testclient import TestClient
@@ -206,6 +206,10 @@ def service(populated_repository):
         query_engine=semantic_query_engine,
     )
 
+    # Mark graph as not stale since we just built it
+    service._graph_stale = False
+    service._rdf_stale = False
+
     return service
 
 
@@ -379,8 +383,8 @@ class TestNeighborsIntegration:
             # Find a node with outgoing edges
             node_with_out = None
             for rel in relationships:
-                if populated_repository.get_class(rel.source_node_id):
-                    node_with_out = rel.source_node_id
+                if populated_repository.get_class(rel.source_id):
+                    node_with_out = rel.source_id
                     break
 
             if node_with_out:
