@@ -19,7 +19,8 @@ from domain.ontology.events import (
     SchemeCreated, SchemeUpdated, SchemeDeleted,
     ClassCreated, ClassUpdated, ClassDeleted,
     ClassMoved, RelationshipCreated, RelationshipDeleted,
-    PropertyDefinitionCreated, GraphInvalidated
+    PropertyDefinitionCreated, PropertyDefinitionUpdated, PropertyDefinitionDeleted,
+    ConceptSchemeUpdated, GraphInvalidated
 )
 from domain.ontology.exceptions import EntityNotFoundError, CircularReferenceError, DuplicateEntityError, OntologyError
 from domain.ontology.ports import OntologyRepository, EmbeddingService, EventPublisher
