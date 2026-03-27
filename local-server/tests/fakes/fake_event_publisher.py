@@ -2,7 +2,7 @@
 
 import sys
 import os
-from typing import Callable
+from typing import Callable, TypeVar
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
@@ -11,6 +11,9 @@ from utils.logger import get_logger
 
 
 logger = get_logger(__name__)
+
+# Contravariant TypeVar allows handlers typed for specific event subclasses
+EventT_contra = TypeVar('EventT_contra', bound=DomainEvent, contravariant=True)
 
 
 class FakeEventPublisher:
@@ -41,10 +44,10 @@ class FakeEventPublisher:
                     exc_info=True,
                 )
 
-    def subscribe(self, event_type: type[DomainEvent], handler: Callable[[DomainEvent], None]) -> None:
+    def subscribe(self, event_type: type[EventT_contra], handler: Callable[[EventT_contra], None]) -> None:
         if event_type not in self._handlers:
             self._handlers[event_type] = []
-        self._handlers[event_type].append(handler)
+        self._handlers[event_type].append(handler)  # type: ignore[arg-type]
 
     def get_events(self) -> list[DomainEvent]:
         return list(self._events)

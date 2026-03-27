@@ -1,12 +1,16 @@
 """In-process event publisher implementation using observer pattern."""
 
-from typing import Callable
+from typing import Callable, TypeVar
 
 from domain.ontology.events import DomainEvent
 from utils.logger import get_logger
 
 
 logger = get_logger(__name__)
+
+# Contravariant TypeVar allows handlers typed for specific event subclasses
+# E.g., a handler expecting GraphInvalidated can be assigned to Callable[[DomainEvent], None]
+EventT_contra = TypeVar('EventT_contra', bound=DomainEvent, contravariant=True)
 
 
 class InProcessEventPublisher:
@@ -53,8 +57,8 @@ class InProcessEventPublisher:
 
     def subscribe(
         self,
-        event_type: type[DomainEvent],
-        handler: Callable[[DomainEvent], None],
+        event_type: type[EventT_contra],
+        handler: Callable[[EventT_contra], None],
     ) -> None:
         """
         Subscribe a handler to events of a specific type.
@@ -68,4 +72,4 @@ class InProcessEventPublisher:
         """
         if event_type not in self._handlers:
             self._handlers[event_type] = []
-        self._handlers[event_type].append(handler)
+        self._handlers[event_type].append(handler)  # type: ignore[arg-type]

@@ -11,11 +11,14 @@ Implementations do not inherit from the protocol; they implement the interface s
 
 from __future__ import annotations
 
-from typing import Any, Callable, Protocol, Sequence
+from typing import Any, Callable, Protocol, Sequence, TypeVar
 
 from .entities import Class, ConceptScheme, Individual, PropertyDefinition, Relationship, Taxonomy
 from .events import DomainEvent
 from .value_objects import SearchCriteria
+
+# Contravariant TypeVar for event handlers
+EventT_contra = TypeVar('EventT_contra', bound=DomainEvent, contravariant=True)
 
 
 class OntologyRepository(Protocol):
@@ -457,7 +460,7 @@ class EventPublisher(Protocol):
         """
         ...
 
-    def subscribe(self, event_type: type[DomainEvent], handler: Callable[[DomainEvent], None]) -> None:
+    def subscribe(self, event_type: type[EventT_contra], handler: Callable[[EventT_contra], None]) -> None:
         """
         Subscribe a handler to events of a specific type.
 
