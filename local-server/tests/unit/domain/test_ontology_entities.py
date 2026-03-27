@@ -7,7 +7,6 @@ no fakes, just dataclass invariants and methods.
 
 import sys
 import os
-import struct
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
