@@ -11,10 +11,9 @@ from __future__ import annotations
 
 from datetime import datetime, timezone
 from uuid import uuid4
-from typing import Optional
 
-from domain.ontology.entities import Taxonomy, ConceptScheme, Class, Relationship, PropertyDefinition, Individual
-from domain.ontology.events import (
+from .entities import Taxonomy, ConceptScheme, Class, Relationship, PropertyDefinition, Individual
+from .events import (
     TaxonomyCreated, TaxonomyUpdated, TaxonomyDeleted,
     SchemeCreated, SchemeUpdated, SchemeDeleted,
     ClassCreated, ClassUpdated, ClassDeleted,
@@ -22,8 +21,8 @@ from domain.ontology.events import (
     PropertyDefinitionCreated, PropertyDefinitionUpdated, PropertyDefinitionDeleted,
     ConceptSchemeUpdated, GraphInvalidated
 )
-from domain.ontology.exceptions import EntityNotFoundError, CircularReferenceError, DuplicateEntityError, OntologyError
-from domain.ontology.ports import OntologyRepository, EmbeddingService, EventPublisher
+from .exceptions import EntityNotFoundError, CircularReferenceError, DuplicateEntityError, OntologyError
+from .ports import OntologyRepository, EmbeddingService, EventPublisher
 
 
 class OntologyService:
@@ -55,7 +54,7 @@ class OntologyService:
 
     # Taxonomy operations
 
-    def create_taxonomy(self, title: str, description: Optional[str] = None) -> Taxonomy:
+    def create_taxonomy(self, title: str, description: str | None = None) -> Taxonomy:
         """
         Create a new taxonomy.
 
@@ -128,8 +127,8 @@ class OntologyService:
     def update_taxonomy(
         self,
         taxonomy_id: str,
-        title: Optional[str] = None,
-        description: Optional[str] = None,
+        title: str | None = None,
+        description: str | None = None,
     ) -> Taxonomy:
         """
         Update a taxonomy's title and/or description.
@@ -278,7 +277,7 @@ class OntologyService:
 
     # ConceptScheme operations
 
-    def create_scheme(self, taxonomy_id: str, title: str, description: Optional[str] = None) -> ConceptScheme:
+    def create_scheme(self, taxonomy_id: str, title: str, description: str | None = None) -> ConceptScheme:
         """
         Create a new concept scheme within a taxonomy.
 
@@ -350,7 +349,7 @@ class OntologyService:
             raise EntityNotFoundError("ConceptScheme", concept_scheme_id)
         return scheme
 
-    def list_concept_schemes(self, taxonomy_id: Optional[str] = None) -> list[ConceptScheme]:
+    def list_concept_schemes(self, taxonomy_id: str | None = None) -> list[ConceptScheme]:
         """
         Retrieve concept schemes, optionally filtered by taxonomy.
 
@@ -448,8 +447,8 @@ class OntologyService:
         self,
         concept_scheme_id: str,
         title: str,
-        description: Optional[str] = None,
-        parent_class_id: Optional[str] = None,
+        description: str | None = None,
+        parent_class_id: str | None = None,
     ) -> Class:
         """
         Create a new class within a concept scheme.
@@ -545,8 +544,8 @@ class OntologyService:
 
     def list_classes(
         self,
-        concept_scheme_id: Optional[str] = None,
-        parent_class_id: Optional[str] = None,
+        concept_scheme_id: str | None = None,
+        parent_class_id: str | None = None,
         limit: int = 100,
         offset: int = 0,
     ) -> list[Class]:
@@ -572,8 +571,8 @@ class OntologyService:
     def update_class(
         self,
         class_id: str,
-        title: Optional[str] = None,
-        description: Optional[str] = None,
+        title: str | None = None,
+        description: str | None = None,
     ) -> Class:
         """
         Update a class's title and/or description.
@@ -702,7 +701,7 @@ class OntologyService:
             reason="class_deleted",
         ))
 
-    def move_class(self, class_id: str, new_parent_id: Optional[str]) -> Class:
+    def move_class(self, class_id: str, new_parent_id: str | None) -> Class:
         """
         Move a class in the hierarchy to a new parent.
 
@@ -897,9 +896,9 @@ class OntologyService:
 
     def list_relationships(
         self,
-        source_id: Optional[str] = None,
-        target_id: Optional[str] = None,
-        property_id: Optional[str] = None,
+        source_id: str | None = None,
+        target_id: str | None = None,
+        property_id: str | None = None,
     ) -> list[Relationship]:
         """
         Retrieve relationships with optional filtering.
@@ -979,7 +978,7 @@ class OntologyService:
         self,
         identifier: str,
         title: str,
-        description: Optional[str] = None,
+        description: str | None = None,
     ) -> PropertyDefinition:
         """
         Create a new property definition (relationship type).
@@ -1050,7 +1049,7 @@ class OntologyService:
             raise EntityNotFoundError("PropertyDefinition", property_id)
         return prop_def
 
-    def list_property_definitions(self, is_relevant: Optional[bool] = None) -> list[PropertyDefinition]:
+    def list_property_definitions(self, is_relevant: bool | None = None) -> list[PropertyDefinition]:
         """
         Retrieve property definitions, optionally filtered by relevance.
 
@@ -1065,8 +1064,8 @@ class OntologyService:
     def update_property_definition(
         self,
         property_id: str,
-        title: Optional[str] = None,
-        description: Optional[str] = None,
+        title: str | None = None,
+        description: str | None = None,
     ) -> PropertyDefinition:
         """
         Update a property definition's title and/or description.
@@ -1140,8 +1139,8 @@ class OntologyService:
     def update_concept_scheme(
         self,
         concept_scheme_id: str,
-        title: Optional[str] = None,
-        description: Optional[str] = None,
+        title: str | None = None,
+        description: str | None = None,
     ) -> ConceptScheme:
         """
         Update a concept scheme's title and/or description.
@@ -1185,7 +1184,7 @@ class OntologyService:
 
         return scheme
 
-    def count_classes(self, concept_scheme_id: Optional[str] = None) -> int:
+    def count_classes(self, concept_scheme_id: str | None = None) -> int:
         """
         Count the number of classes, optionally filtered by concept scheme.
 
@@ -1204,7 +1203,7 @@ class OntologyService:
         self,
         class_id: str,
         title: str,
-        description: Optional[str] = None,
+        description: str | None = None,
     ) -> Individual:
         """
         Create a new individual instance of a class.
@@ -1273,7 +1272,7 @@ class OntologyService:
             raise EntityNotFoundError("Individual", individual_id)
         return individual
 
-    def list_individuals(self, class_id: Optional[str] = None) -> list[Individual]:
+    def list_individuals(self, class_id: str | None = None) -> list[Individual]:
         """
         Retrieve all individuals, optionally filtered by class.
 
@@ -1288,8 +1287,8 @@ class OntologyService:
     def update_individual(
         self,
         individual_id: str,
-        title: Optional[str] = None,
-        description: Optional[str] = None,
+        title: str | None = None,
+        description: str | None = None,
     ) -> Individual:
         """
         Update an individual's title and/or description.
