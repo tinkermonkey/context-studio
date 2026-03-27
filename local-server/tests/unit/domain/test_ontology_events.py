@@ -150,20 +150,20 @@ class TestSchemeCreated:
     def test_scheme_created_instantiation(self):
         """SchemeCreated can be instantiated with all required fields."""
         event = SchemeCreated(
-            scheme_id="scheme-123",
+            concept_scheme_id="scheme-123",
             title="Animal Kingdom",
             taxonomy_id="tax-456",
         )
         assert event.event_id is not None
         assert event.occurred_at is not None
-        assert event.scheme_id == "scheme-123"
+        assert event.concept_scheme_id == "scheme-123"
         assert event.title == "Animal Kingdom"
         assert event.taxonomy_id == "tax-456"
 
     def test_scheme_created_auto_populates_aggregate_id(self):
-        """SchemeCreated auto-populates aggregate_id from scheme_id."""
+        """SchemeCreated auto-populates aggregate_id from concept_scheme_id."""
         event = SchemeCreated(
-            scheme_id="scheme-789",
+            concept_scheme_id="scheme-789",
             title="Plant Kingdom",
             taxonomy_id="tax-456",
         )
@@ -172,7 +172,7 @@ class TestSchemeCreated:
     def test_scheme_created_is_frozen(self):
         """SchemeCreated instances are frozen."""
         event = SchemeCreated(
-            scheme_id="scheme-123",
+            concept_scheme_id="scheme-123",
             title="Animal Kingdom",
             taxonomy_id="tax-456",
         )
@@ -278,7 +278,7 @@ class TestSchemeUpdated:
     def test_scheme_updated_instantiation(self):
         """SchemeUpdated can be instantiated with changed fields and old/new values."""
         event = SchemeUpdated(
-            scheme_id="scheme-123",
+            concept_scheme_id="scheme-123",
             taxonomy_id="tax-456",
             changed_fields=("title",),
             old_values={"title": "Old Title"},
@@ -286,16 +286,16 @@ class TestSchemeUpdated:
         )
         assert event.event_id is not None
         assert event.occurred_at is not None
-        assert event.scheme_id == "scheme-123"
+        assert event.concept_scheme_id == "scheme-123"
         assert event.taxonomy_id == "tax-456"
         assert event.changed_fields == ("title",)
         assert event.old_values == {"title": "Old Title"}
         assert event.new_values == {"title": "New Title"}
 
     def test_scheme_updated_auto_populates_aggregate_id(self):
-        """SchemeUpdated auto-populates aggregate_id from scheme_id."""
+        """SchemeUpdated auto-populates aggregate_id from concept_scheme_id."""
         event = SchemeUpdated(
-            scheme_id="scheme-888",
+            concept_scheme_id="scheme-888",
             taxonomy_id="tax-999",
             changed_fields=("title",),
             old_values={"title": "Old"},
@@ -306,7 +306,7 @@ class TestSchemeUpdated:
     def test_scheme_updated_with_multiple_changed_fields(self):
         """SchemeUpdated can have multiple changed fields."""
         event = SchemeUpdated(
-            scheme_id="scheme-123",
+            concept_scheme_id="scheme-123",
             taxonomy_id="tax-456",
             changed_fields=("title", "description"),
             old_values={"title": "Old Title", "description": "Old Desc"},
@@ -319,7 +319,7 @@ class TestSchemeUpdated:
     def test_scheme_updated_is_frozen(self):
         """SchemeUpdated instances are frozen."""
         event = SchemeUpdated(
-            scheme_id="scheme-123",
+            concept_scheme_id="scheme-123",
             taxonomy_id="tax-456",
             changed_fields=("title",),
             old_values={"title": "Old Title"},
@@ -335,20 +335,20 @@ class TestSchemeDeleted:
     def test_scheme_deleted_instantiation(self):
         """SchemeDeleted can be instantiated with all required fields."""
         event = SchemeDeleted(
-            scheme_id="scheme-123",
+            concept_scheme_id="scheme-123",
             taxonomy_id="tax-456",
             title="Animal Kingdom",
         )
         assert event.event_id is not None
         assert event.occurred_at is not None
-        assert event.scheme_id == "scheme-123"
+        assert event.concept_scheme_id == "scheme-123"
         assert event.taxonomy_id == "tax-456"
         assert event.title == "Animal Kingdom"
 
     def test_scheme_deleted_auto_populates_aggregate_id(self):
-        """SchemeDeleted auto-populates aggregate_id from scheme_id."""
+        """SchemeDeleted auto-populates aggregate_id from concept_scheme_id."""
         event = SchemeDeleted(
-            scheme_id="scheme-666",
+            concept_scheme_id="scheme-666",
             taxonomy_id="tax-777",
             title="Mineral Kingdom",
         )
@@ -357,7 +357,7 @@ class TestSchemeDeleted:
     def test_scheme_deleted_is_frozen(self):
         """SchemeDeleted instances are frozen."""
         event = SchemeDeleted(
-            scheme_id="scheme-123",
+            concept_scheme_id="scheme-123",
             taxonomy_id="tax-456",
             title="Animal Kingdom",
         )
@@ -368,7 +368,7 @@ class TestSchemeDeleted:
         """SchemeDeleted raises ValueError if title is empty."""
         with pytest.raises(ValueError, match="Event field 'title' cannot be empty"):
             SchemeDeleted(
-                scheme_id="scheme-123",
+                concept_scheme_id="scheme-123",
                 taxonomy_id="tax-456",
                 title="",
             )
@@ -382,14 +382,14 @@ class TestClassCreated:
         event = ClassCreated(
             class_id="class-123",
             title="Mammal",
-            scheme_id="scheme-456",
+            concept_scheme_id="scheme-456",
             taxonomy_id="tax-789",
         )
         assert event.event_id is not None
         assert event.occurred_at is not None
         assert event.class_id == "class-123"
         assert event.title == "Mammal"
-        assert event.scheme_id == "scheme-456"
+        assert event.concept_scheme_id == "scheme-456"
         assert event.taxonomy_id == "tax-789"
 
     def test_class_created_auto_populates_aggregate_id(self):
@@ -397,7 +397,7 @@ class TestClassCreated:
         event = ClassCreated(
             class_id="class-444",
             title="Bird",
-            scheme_id="scheme-555",
+            concept_scheme_id="scheme-555",
             taxonomy_id="tax-666",
         )
         assert event.aggregate_id == "class-444"
@@ -407,7 +407,7 @@ class TestClassCreated:
         event = ClassCreated(
             class_id="class-123",
             title="Mammal",
-            scheme_id="scheme-456",
+            concept_scheme_id="scheme-456",
             taxonomy_id="tax-789",
         )
         with pytest.raises(FrozenInstanceError):

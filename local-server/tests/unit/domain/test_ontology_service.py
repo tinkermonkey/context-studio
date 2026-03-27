@@ -93,7 +93,7 @@ class TestCreateScheme:
         # Verify event
         events = service._event_publisher.get_events_of_type(SchemeCreated)
         assert len(events) == 1
-        assert events[0].scheme_id == scheme.id
+        assert events[0].concept_scheme_id == scheme.id
 
     def test_create_scheme_nonexistent_taxonomy_raises(self, service):
         """Create scheme in nonexistent taxonomy raises EntityNotFoundError."""
@@ -229,7 +229,7 @@ class TestDeleteTaxonomy:
         scheme = service.create_scheme(taxonomy_id=tax.id, title="Animals")
 
         # First, delete the scheme
-        service.delete_scheme(scheme_id=scheme.id)
+        service.delete_scheme(concept_scheme_id=scheme.id)
 
         # Now deleting taxonomy should succeed
         service.delete_taxonomy(taxonomy_id=tax.id)
@@ -265,7 +265,7 @@ class TestRenameScheme:
         tax = service.create_taxonomy(title="Biology")
         scheme = service.create_scheme(taxonomy_id=tax.id, title="Animals")
 
-        renamed = service.rename_scheme(scheme_id=scheme.id, new_title="Animal Kingdom")
+        renamed = service.rename_scheme(concept_scheme_id=scheme.id, new_title="Animal Kingdom")
         assert renamed.title == "Animal Kingdom"
 
         # Verify it was saved
@@ -275,7 +275,7 @@ class TestRenameScheme:
         # Verify event was emitted
         events = service._event_publisher.get_events_of_type(SchemeUpdated)
         assert len(events) == 1
-        assert events[0].scheme_id == scheme.id
+        assert events[0].concept_scheme_id == scheme.id
         assert events[0].taxonomy_id == tax.id
         assert events[0].changed_fields == ("title",)
         assert events[0].old_values == {"title": "Animals"}
@@ -284,7 +284,7 @@ class TestRenameScheme:
     def test_rename_scheme_nonexistent_raises(self, service):
         """Rename nonexistent scheme raises EntityNotFoundError."""
         with pytest.raises(EntityNotFoundError, match="ConceptScheme"):
-            service.rename_scheme(scheme_id="nonexistent", new_title="NewTitle")
+            service.rename_scheme(concept_scheme_id="nonexistent", new_title="NewTitle")
 
     def test_rename_scheme_duplicate_title_in_taxonomy_raises(self, service):
         """Rename to duplicate title within same taxonomy raises DuplicateEntityError."""
@@ -293,7 +293,7 @@ class TestRenameScheme:
         scheme2 = service.create_scheme(taxonomy_id=tax.id, title="Plants")
 
         with pytest.raises(DuplicateEntityError, match="already exists"):
-            service.rename_scheme(scheme_id=scheme2.id, new_title="Animals")
+            service.rename_scheme(concept_scheme_id=scheme2.id, new_title="Animals")
 
     def test_rename_scheme_same_title_different_taxonomy_allowed(self, service):
         """Rename scheme to title that exists in different taxonomy is allowed."""
@@ -303,7 +303,7 @@ class TestRenameScheme:
         scheme2 = service.create_scheme(taxonomy_id=tax2.id, title="Compounds")
 
         # This should succeed because Elements is in a different taxonomy
-        renamed = service.rename_scheme(scheme_id=scheme2.id, new_title="Elements")
+        renamed = service.rename_scheme(concept_scheme_id=scheme2.id, new_title="Elements")
         assert renamed.title == "Elements"
 
     def test_rename_scheme_empty_title_raises(self, service):
@@ -312,7 +312,7 @@ class TestRenameScheme:
         scheme = service.create_scheme(taxonomy_id=tax.id, title="Animals")
 
         with pytest.raises(ValueError, match="Title cannot be empty"):
-            service.rename_scheme(scheme_id=scheme.id, new_title="")
+            service.rename_scheme(concept_scheme_id=scheme.id, new_title="")
 
     def test_rename_scheme_whitespace_title_raises(self, service):
         """Rename to whitespace-only title raises ValueError."""
@@ -320,7 +320,7 @@ class TestRenameScheme:
         scheme = service.create_scheme(taxonomy_id=tax.id, title="Animals")
 
         with pytest.raises(ValueError, match="Title cannot be empty"):
-            service.rename_scheme(scheme_id=scheme.id, new_title="   ")
+            service.rename_scheme(concept_scheme_id=scheme.id, new_title="   ")
 
     def test_rename_scheme_no_op_returns_unchanged(self, service):
         """Renaming to same title is a no-op and returns unchanged entity."""
@@ -329,7 +329,7 @@ class TestRenameScheme:
         # Get the initial count of SchemeUpdated events (should be 0 at this point)
         initial_update_count = len(service._event_publisher.get_events_of_type(SchemeUpdated))
 
-        renamed = service.rename_scheme(scheme_id=scheme.id, new_title="Animals")
+        renamed = service.rename_scheme(concept_scheme_id=scheme.id, new_title="Animals")
         assert renamed.title == "Animals"
 
         # No event should be emitted for no-op
@@ -345,7 +345,7 @@ class TestDeleteScheme:
         tax = service.create_taxonomy(title="Biology")
         scheme = service.create_scheme(taxonomy_id=tax.id, title="Animals")
 
-        service.delete_scheme(scheme_id=scheme.id)
+        service.delete_scheme(concept_scheme_id=scheme.id)
 
         # Verify it's deleted
         with pytest.raises(EntityNotFoundError):
@@ -354,35 +354,35 @@ class TestDeleteScheme:
         # Verify event was emitted
         events = service._event_publisher.get_events_of_type(SchemeDeleted)
         assert len(events) == 1
-        assert events[0].scheme_id == scheme.id
+        assert events[0].concept_scheme_id == scheme.id
         assert events[0].taxonomy_id == tax.id
         assert events[0].title == "Animals"
 
     def test_delete_scheme_nonexistent_raises(self, service):
         """Delete nonexistent scheme raises EntityNotFoundError."""
         with pytest.raises(EntityNotFoundError, match="ConceptScheme"):
-            service.delete_scheme(scheme_id="nonexistent")
+            service.delete_scheme(concept_scheme_id="nonexistent")
 
     def test_delete_scheme_with_classes_raises(self, service):
         """Delete scheme with classes raises OntologyError."""
         tax = service.create_taxonomy(title="Biology")
         scheme = service.create_scheme(taxonomy_id=tax.id, title="Animals")
-        service.create_class(scheme_id=scheme.id, title="Dog")
+        service.create_class(concept_scheme_id=scheme.id, title="Dog")
 
         with pytest.raises(OntologyError, match="has.*class"):
-            service.delete_scheme(scheme_id=scheme.id)
+            service.delete_scheme(concept_scheme_id=scheme.id)
 
     def test_delete_scheme_after_deleting_all_classes_succeeds(self, service):
         """Delete scheme succeeds after removing all classes."""
         tax = service.create_taxonomy(title="Biology")
         scheme = service.create_scheme(taxonomy_id=tax.id, title="Animals")
-        cls = service.create_class(scheme_id=scheme.id, title="Dog")
+        cls = service.create_class(concept_scheme_id=scheme.id, title="Dog")
 
         # First, delete the class
         service.delete_class(class_id=cls.id)
 
         # Now deleting scheme should succeed
-        service.delete_scheme(scheme_id=scheme.id)
+        service.delete_scheme(concept_scheme_id=scheme.id)
 
         with pytest.raises(EntityNotFoundError):
             service.get_concept_scheme(scheme.id)
@@ -396,13 +396,13 @@ class TestCreateClass:
         tax = service.create_taxonomy(title="Biology")
         scheme = service.create_scheme(taxonomy_id=tax.id, title="Animals")
         cls = service.create_class(
-            scheme_id=scheme.id,
+            concept_scheme_id=scheme.id,
             title="Dog",
             description="Canine species",
         )
 
         assert cls.id is not None
-        assert cls.scheme_id == scheme.id
+        assert cls.concept_scheme_id == scheme.id
         assert cls.taxonomy_id == tax.id
         assert cls.title == "Dog"
         assert cls.description == "Canine species"
@@ -418,9 +418,9 @@ class TestCreateClass:
         """Create a class with parent class."""
         tax = service.create_taxonomy(title="Biology")
         scheme = service.create_scheme(taxonomy_id=tax.id, title="Animals")
-        parent = service.create_class(scheme_id=scheme.id, title="Mammal")
+        parent = service.create_class(concept_scheme_id=scheme.id, title="Mammal")
         child = service.create_class(
-            scheme_id=scheme.id,
+            concept_scheme_id=scheme.id,
             title="Dog",
             parent_class_id=parent.id,
         )
@@ -430,7 +430,7 @@ class TestCreateClass:
     def test_create_class_nonexistent_scheme_raises(self, service):
         """Create class in nonexistent scheme raises EntityNotFoundError."""
         with pytest.raises(EntityNotFoundError, match="ConceptScheme"):
-            service.create_class(scheme_id="nonexistent", title="Dog")
+            service.create_class(concept_scheme_id="nonexistent", title="Dog")
 
     def test_create_class_nonexistent_parent_raises(self, service):
         """Create class with nonexistent parent raises EntityNotFoundError."""
@@ -438,7 +438,7 @@ class TestCreateClass:
         scheme = service.create_scheme(taxonomy_id=tax.id, title="Animals")
         with pytest.raises(EntityNotFoundError, match="Class"):
             service.create_class(
-                scheme_id=scheme.id,
+                concept_scheme_id=scheme.id,
                 title="Dog",
                 parent_class_id="nonexistent",
             )
@@ -448,11 +448,11 @@ class TestCreateClass:
         tax = service.create_taxonomy(title="Biology")
         scheme1 = service.create_scheme(taxonomy_id=tax.id, title="Animals")
         scheme2 = service.create_scheme(taxonomy_id=tax.id, title="Plants")
-        parent = service.create_class(scheme_id=scheme1.id, title="Mammal")
+        parent = service.create_class(concept_scheme_id=scheme1.id, title="Mammal")
 
         with pytest.raises(ValueError, match="not in the same scheme"):
             service.create_class(
-                scheme_id=scheme2.id,
+                concept_scheme_id=scheme2.id,
                 title="Tree",
                 parent_class_id=parent.id,
             )
@@ -461,18 +461,18 @@ class TestCreateClass:
         """Duplicate title in same scheme raises DuplicateEntityError."""
         tax = service.create_taxonomy(title="Biology")
         scheme = service.create_scheme(taxonomy_id=tax.id, title="Animals")
-        service.create_class(scheme_id=scheme.id, title="Dog")
+        service.create_class(concept_scheme_id=scheme.id, title="Dog")
 
         with pytest.raises(DuplicateEntityError, match="already exists"):
-            service.create_class(scheme_id=scheme.id, title="Dog")
+            service.create_class(concept_scheme_id=scheme.id, title="Dog")
 
     def test_create_class_same_title_different_scheme_allowed(self, service):
         """Same title in different scheme is allowed."""
         tax = service.create_taxonomy(title="Biology")
         scheme1 = service.create_scheme(taxonomy_id=tax.id, title="Animals")
         scheme2 = service.create_scheme(taxonomy_id=tax.id, title="Plants")
-        cls1 = service.create_class(scheme_id=scheme1.id, title="Life")
-        cls2 = service.create_class(scheme_id=scheme2.id, title="Life")
+        cls1 = service.create_class(concept_scheme_id=scheme1.id, title="Life")
+        cls2 = service.create_class(concept_scheme_id=scheme2.id, title="Life")
         assert cls1.id != cls2.id
 
     def test_create_class_empty_title_raises(self, service):
@@ -480,14 +480,14 @@ class TestCreateClass:
         tax = service.create_taxonomy(title="Biology")
         scheme = service.create_scheme(taxonomy_id=tax.id, title="Animals")
         with pytest.raises(ValueError, match="Title cannot be empty"):
-            service.create_class(scheme_id=scheme.id, title="")
+            service.create_class(concept_scheme_id=scheme.id, title="")
 
     def test_create_class_whitespace_title_raises(self, service):
         """Create class with whitespace-only title raises ValueError."""
         tax = service.create_taxonomy(title="Biology")
         scheme = service.create_scheme(taxonomy_id=tax.id, title="Animals")
         with pytest.raises(ValueError, match="Title cannot be empty"):
-            service.create_class(scheme_id=scheme.id, title="   ")
+            service.create_class(concept_scheme_id=scheme.id, title="   ")
 
 
 class TestUpdateClass:
@@ -497,7 +497,7 @@ class TestUpdateClass:
         """Update class title regenerates embedding."""
         tax = service.create_taxonomy(title="Biology")
         scheme = service.create_scheme(taxonomy_id=tax.id, title="Animals")
-        cls = service.create_class(scheme_id=scheme.id, title="Dog", description="Canine")
+        cls = service.create_class(concept_scheme_id=scheme.id, title="Dog", description="Canine")
         old_embedding = cls.title_embedding
 
         updated = service.update_class(class_id=cls.id, title="Canine")
@@ -515,7 +515,7 @@ class TestUpdateClass:
         """Update class description regenerates embedding."""
         tax = service.create_taxonomy(title="Biology")
         scheme = service.create_scheme(taxonomy_id=tax.id, title="Animals")
-        cls = service.create_class(scheme_id=scheme.id, title="Dog")
+        cls = service.create_class(concept_scheme_id=scheme.id, title="Dog")
         old_embedding = cls.title_embedding
 
         updated = service.update_class(class_id=cls.id, description="Canine species")
@@ -533,7 +533,7 @@ class TestUpdateClass:
         """Update class with no title/description change does not regenerate embedding or emit event."""
         tax = service.create_taxonomy(title="Biology")
         scheme = service.create_scheme(taxonomy_id=tax.id, title="Animals")
-        cls = service.create_class(scheme_id=scheme.id, title="Dog", description="Canine")
+        cls = service.create_class(concept_scheme_id=scheme.id, title="Dog", description="Canine")
         old_embedding = cls.title_embedding
 
         # Call with empty update (no title, no description)
@@ -548,8 +548,8 @@ class TestUpdateClass:
         """Update class to duplicate title in same scheme raises DuplicateEntityError."""
         tax = service.create_taxonomy(title="Biology")
         scheme = service.create_scheme(taxonomy_id=tax.id, title="Animals")
-        service.create_class(scheme_id=scheme.id, title="Dog")
-        cls2 = service.create_class(scheme_id=scheme.id, title="Cat")
+        service.create_class(concept_scheme_id=scheme.id, title="Dog")
+        cls2 = service.create_class(concept_scheme_id=scheme.id, title="Cat")
 
         with pytest.raises(DuplicateEntityError, match="already exists"):
             service.update_class(class_id=cls2.id, title="Dog")
@@ -559,8 +559,8 @@ class TestUpdateClass:
         tax = service.create_taxonomy(title="Biology")
         scheme1 = service.create_scheme(taxonomy_id=tax.id, title="Animals")
         scheme2 = service.create_scheme(taxonomy_id=tax.id, title="Plants")
-        service.create_class(scheme_id=scheme1.id, title="Life")
-        cls2 = service.create_class(scheme_id=scheme2.id, title="Organism")
+        service.create_class(concept_scheme_id=scheme1.id, title="Life")
+        cls2 = service.create_class(concept_scheme_id=scheme2.id, title="Organism")
 
         # This should succeed because Life is in a different scheme
         updated = service.update_class(class_id=cls2.id, title="Life")
@@ -579,8 +579,8 @@ class TestMoveClass:
         """Move a class to a new parent."""
         tax = service.create_taxonomy(title="Biology")
         scheme = service.create_scheme(taxonomy_id=tax.id, title="Animals")
-        mammal = service.create_class(scheme_id=scheme.id, title="Mammal")
-        dog = service.create_class(scheme_id=scheme.id, title="Dog", parent_class_id=None)
+        mammal = service.create_class(concept_scheme_id=scheme.id, title="Mammal")
+        dog = service.create_class(concept_scheme_id=scheme.id, title="Dog", parent_class_id=None)
 
         moved = service.move_class(class_id=dog.id, new_parent_id=mammal.id)
         assert moved.parent_class_id == mammal.id
@@ -598,8 +598,8 @@ class TestMoveClass:
         """Move a class to root (parent_id=None)."""
         tax = service.create_taxonomy(title="Biology")
         scheme = service.create_scheme(taxonomy_id=tax.id, title="Animals")
-        mammal = service.create_class(scheme_id=scheme.id, title="Mammal")
-        dog = service.create_class(scheme_id=scheme.id, title="Dog", parent_class_id=mammal.id)
+        mammal = service.create_class(concept_scheme_id=scheme.id, title="Mammal")
+        dog = service.create_class(concept_scheme_id=scheme.id, title="Dog", parent_class_id=mammal.id)
 
         moved = service.move_class(class_id=dog.id, new_parent_id=None)
         assert moved.parent_class_id is None
@@ -608,7 +608,7 @@ class TestMoveClass:
         """Move a class to itself as parent raises CircularReferenceError."""
         tax = service.create_taxonomy(title="Biology")
         scheme = service.create_scheme(taxonomy_id=tax.id, title="Animals")
-        cls = service.create_class(scheme_id=scheme.id, title="Dog")
+        cls = service.create_class(concept_scheme_id=scheme.id, title="Dog")
 
         with pytest.raises(CircularReferenceError, match="own parent"):
             service.move_class(class_id=cls.id, new_parent_id=cls.id)
@@ -617,8 +617,8 @@ class TestMoveClass:
         """Circular reference A→B→A raises CircularReferenceError."""
         tax = service.create_taxonomy(title="Biology")
         scheme = service.create_scheme(taxonomy_id=tax.id, title="Animals")
-        a = service.create_class(scheme_id=scheme.id, title="A")
-        b = service.create_class(scheme_id=scheme.id, title="B", parent_class_id=a.id)
+        a = service.create_class(concept_scheme_id=scheme.id, title="A")
+        b = service.create_class(concept_scheme_id=scheme.id, title="B", parent_class_id=a.id)
 
         # Try to move A under B, which would create B→A→B
         with pytest.raises(CircularReferenceError, match="circular reference"):
@@ -628,9 +628,9 @@ class TestMoveClass:
         """Circular reference A→B→C→A raises CircularReferenceError."""
         tax = service.create_taxonomy(title="Biology")
         scheme = service.create_scheme(taxonomy_id=tax.id, title="Animals")
-        a = service.create_class(scheme_id=scheme.id, title="A")
-        b = service.create_class(scheme_id=scheme.id, title="B", parent_class_id=a.id)
-        c = service.create_class(scheme_id=scheme.id, title="C", parent_class_id=b.id)
+        a = service.create_class(concept_scheme_id=scheme.id, title="A")
+        b = service.create_class(concept_scheme_id=scheme.id, title="B", parent_class_id=a.id)
+        c = service.create_class(concept_scheme_id=scheme.id, title="C", parent_class_id=b.id)
 
         # Try to move A under C, which would create C→A→B→C
         with pytest.raises(CircularReferenceError, match="circular reference"):
@@ -645,7 +645,7 @@ class TestMoveClass:
         """Move a class to a nonexistent parent raises EntityNotFoundError."""
         tax = service.create_taxonomy(title="Biology")
         scheme = service.create_scheme(taxonomy_id=tax.id, title="Animals")
-        dog = service.create_class(scheme_id=scheme.id, title="Dog")
+        dog = service.create_class(concept_scheme_id=scheme.id, title="Dog")
 
         with pytest.raises(EntityNotFoundError, match="Class"):
             service.move_class(class_id=dog.id, new_parent_id="nonexistent")
@@ -656,8 +656,8 @@ class TestMoveClass:
         scheme1 = service.create_scheme(taxonomy_id=tax.id, title="Animals")
         scheme2 = service.create_scheme(taxonomy_id=tax.id, title="Plants")
 
-        dog = service.create_class(scheme_id=scheme1.id, title="Dog")
-        tree = service.create_class(scheme_id=scheme2.id, title="Tree")
+        dog = service.create_class(concept_scheme_id=scheme1.id, title="Dog")
+        tree = service.create_class(concept_scheme_id=scheme2.id, title="Tree")
 
         with pytest.raises(ValueError, match="not in the same scheme"):
             service.move_class(class_id=dog.id, new_parent_id=tree.id)
@@ -666,8 +666,8 @@ class TestMoveClass:
         """Moving a class to its current parent is a no-op and does not emit events."""
         tax = service.create_taxonomy(title="Biology")
         scheme = service.create_scheme(taxonomy_id=tax.id, title="Animals")
-        mammal = service.create_class(scheme_id=scheme.id, title="Mammal")
-        dog = service.create_class(scheme_id=scheme.id, title="Dog", parent_class_id=mammal.id)
+        mammal = service.create_class(concept_scheme_id=scheme.id, title="Mammal")
+        dog = service.create_class(concept_scheme_id=scheme.id, title="Dog", parent_class_id=mammal.id)
 
         # Clear event history from creation
         service._event_publisher.clear()
@@ -689,7 +689,7 @@ class TestMoveClass:
         """Moving a root class to root again is a no-op and does not emit events."""
         tax = service.create_taxonomy(title="Biology")
         scheme = service.create_scheme(taxonomy_id=tax.id, title="Animals")
-        root_class = service.create_class(scheme_id=scheme.id, title="Root")
+        root_class = service.create_class(concept_scheme_id=scheme.id, title="Root")
 
         # Clear event history from creation
         service._event_publisher.clear()
@@ -711,9 +711,9 @@ class TestMoveClass:
         """Moving a class with a corrupted ancestor hierarchy raises EntityNotFoundError."""
         tax = service.create_taxonomy(title="Biology")
         scheme = service.create_scheme(taxonomy_id=tax.id, title="Animals")
-        a = service.create_class(scheme_id=scheme.id, title="A")
-        b = service.create_class(scheme_id=scheme.id, title="B", parent_class_id=a.id)
-        c = service.create_class(scheme_id=scheme.id, title="C", parent_class_id=b.id)
+        a = service.create_class(concept_scheme_id=scheme.id, title="A")
+        b = service.create_class(concept_scheme_id=scheme.id, title="B", parent_class_id=a.id)
+        c = service.create_class(concept_scheme_id=scheme.id, title="C", parent_class_id=b.id)
 
         # Corrupt the hierarchy by manually setting B's parent to a nonexistent class
         # (simulating data corruption)
@@ -734,7 +734,7 @@ class TestDeleteClass:
         """Delete a class with no subclasses."""
         tax = service.create_taxonomy(title="Biology")
         scheme = service.create_scheme(taxonomy_id=tax.id, title="Animals")
-        cls = service.create_class(scheme_id=scheme.id, title="Dog")
+        cls = service.create_class(concept_scheme_id=scheme.id, title="Dog")
 
         service.delete_class(class_id=cls.id)
 
@@ -754,8 +754,8 @@ class TestDeleteClass:
         """Delete class with subclasses raises OntologyError."""
         tax = service.create_taxonomy(title="Biology")
         scheme = service.create_scheme(taxonomy_id=tax.id, title="Animals")
-        parent = service.create_class(scheme_id=scheme.id, title="Mammal")
-        service.create_class(scheme_id=scheme.id, title="Dog", parent_class_id=parent.id)
+        parent = service.create_class(concept_scheme_id=scheme.id, title="Mammal")
+        service.create_class(concept_scheme_id=scheme.id, title="Dog", parent_class_id=parent.id)
 
         with pytest.raises(OntologyError, match="has.*subclass"):
             service.delete_class(class_id=parent.id)
@@ -769,8 +769,8 @@ class TestDeleteClass:
         """Delete class cleans up relationships where it is the source."""
         tax = service.create_taxonomy(title="Biology")
         scheme = service.create_scheme(taxonomy_id=tax.id, title="Animals")
-        dog = service.create_class(scheme_id=scheme.id, title="Dog")
-        mammal = service.create_class(scheme_id=scheme.id, title="Mammal")
+        dog = service.create_class(concept_scheme_id=scheme.id, title="Dog")
+        mammal = service.create_class(concept_scheme_id=scheme.id, title="Mammal")
         prop = service.create_property_definition(identifier="is_a", title="Is A")
 
         rel = service.create_relationship(
@@ -798,8 +798,8 @@ class TestDeleteClass:
         """Delete class cleans up relationships where it is the target."""
         tax = service.create_taxonomy(title="Biology")
         scheme = service.create_scheme(taxonomy_id=tax.id, title="Animals")
-        dog = service.create_class(scheme_id=scheme.id, title="Dog")
-        mammal = service.create_class(scheme_id=scheme.id, title="Mammal")
+        dog = service.create_class(concept_scheme_id=scheme.id, title="Dog")
+        mammal = service.create_class(concept_scheme_id=scheme.id, title="Mammal")
         prop = service.create_property_definition(identifier="is_a", title="Is A")
 
         rel = service.create_relationship(
@@ -827,9 +827,9 @@ class TestDeleteClass:
         """Delete class cleans up multiple relationships."""
         tax = service.create_taxonomy(title="Biology")
         scheme = service.create_scheme(taxonomy_id=tax.id, title="Animals")
-        dog = service.create_class(scheme_id=scheme.id, title="Dog")
-        mammal = service.create_class(scheme_id=scheme.id, title="Mammal")
-        animal = service.create_class(scheme_id=scheme.id, title="Animal")
+        dog = service.create_class(concept_scheme_id=scheme.id, title="Dog")
+        mammal = service.create_class(concept_scheme_id=scheme.id, title="Mammal")
+        animal = service.create_class(concept_scheme_id=scheme.id, title="Animal")
         prop1 = service.create_property_definition(identifier="is_a", title="Is A")
         prop2 = service.create_property_definition(identifier="part_of", title="Part Of")
 
@@ -868,8 +868,8 @@ class TestCreateRelationship:
         """Create a relationship between two classes."""
         tax = service.create_taxonomy(title="Biology")
         scheme = service.create_scheme(taxonomy_id=tax.id, title="Animals")
-        dog = service.create_class(scheme_id=scheme.id, title="Dog")
-        mammal = service.create_class(scheme_id=scheme.id, title="Mammal")
+        dog = service.create_class(concept_scheme_id=scheme.id, title="Dog")
+        mammal = service.create_class(concept_scheme_id=scheme.id, title="Mammal")
         prop = service.create_property_definition(identifier="is_a", title="Is A")
 
         rel = service.create_relationship(
@@ -895,7 +895,7 @@ class TestCreateRelationship:
         """Create relationship with same source and target raises ValueError."""
         tax = service.create_taxonomy(title="Biology")
         scheme = service.create_scheme(taxonomy_id=tax.id, title="Animals")
-        dog = service.create_class(scheme_id=scheme.id, title="Dog")
+        dog = service.create_class(concept_scheme_id=scheme.id, title="Dog")
         prop = service.create_property_definition(identifier="is_a", title="Is A")
 
         with pytest.raises(ValueError, match="same source and target"):
@@ -909,7 +909,7 @@ class TestCreateRelationship:
         """Create relationship with nonexistent property raises EntityNotFoundError."""
         tax = service.create_taxonomy(title="Biology")
         scheme = service.create_scheme(taxonomy_id=tax.id, title="Animals")
-        dog = service.create_class(scheme_id=scheme.id, title="Dog")
+        dog = service.create_class(concept_scheme_id=scheme.id, title="Dog")
 
         with pytest.raises(EntityNotFoundError, match="PropertyDefinition"):
             service.create_relationship(
@@ -922,7 +922,7 @@ class TestCreateRelationship:
         """Create relationship with nonexistent source raises EntityNotFoundError."""
         tax = service.create_taxonomy(title="Biology")
         scheme = service.create_scheme(taxonomy_id=tax.id, title="Animals")
-        target = service.create_class(scheme_id=scheme.id, title="Target")
+        target = service.create_class(concept_scheme_id=scheme.id, title="Target")
         prop = service.create_property_definition(identifier="is_a", title="Is A")
 
         with pytest.raises(EntityNotFoundError, match="Class.*nonexistent"):
@@ -936,7 +936,7 @@ class TestCreateRelationship:
         """Create relationship with nonexistent target raises EntityNotFoundError."""
         tax = service.create_taxonomy(title="Biology")
         scheme = service.create_scheme(taxonomy_id=tax.id, title="Animals")
-        source = service.create_class(scheme_id=scheme.id, title="Source")
+        source = service.create_class(concept_scheme_id=scheme.id, title="Source")
         prop = service.create_property_definition(identifier="is_a", title="Is A")
 
         with pytest.raises(EntityNotFoundError, match="Class.*nonexistent"):
@@ -950,8 +950,8 @@ class TestCreateRelationship:
         """Create relationship correctly uses source class's taxonomy for graph invalidation."""
         tax = service.create_taxonomy(title="Biology")
         scheme = service.create_scheme(taxonomy_id=tax.id, title="Animals")
-        dog = service.create_class(scheme_id=scheme.id, title="Dog")
-        mammal = service.create_class(scheme_id=scheme.id, title="Mammal")
+        dog = service.create_class(concept_scheme_id=scheme.id, title="Dog")
+        mammal = service.create_class(concept_scheme_id=scheme.id, title="Mammal")
         prop = service.create_property_definition(identifier="is_a", title="Is A")
 
         service.create_relationship(
@@ -970,8 +970,8 @@ class TestCreateRelationship:
         """Create relationship with duplicate triple raises DuplicateEntityError."""
         tax = service.create_taxonomy(title="Biology")
         scheme = service.create_scheme(taxonomy_id=tax.id, title="Animals")
-        dog = service.create_class(scheme_id=scheme.id, title="Dog")
-        mammal = service.create_class(scheme_id=scheme.id, title="Mammal")
+        dog = service.create_class(concept_scheme_id=scheme.id, title="Dog")
+        mammal = service.create_class(concept_scheme_id=scheme.id, title="Mammal")
         prop = service.create_property_definition(identifier="is_a", title="Is A")
 
         service.create_relationship(
@@ -995,8 +995,8 @@ class TestDeleteRelationship:
         """Delete a relationship."""
         tax = service.create_taxonomy(title="Biology")
         scheme = service.create_scheme(taxonomy_id=tax.id, title="Animals")
-        dog = service.create_class(scheme_id=scheme.id, title="Dog")
-        mammal = service.create_class(scheme_id=scheme.id, title="Mammal")
+        dog = service.create_class(concept_scheme_id=scheme.id, title="Dog")
+        mammal = service.create_class(concept_scheme_id=scheme.id, title="Mammal")
         prop = service.create_property_definition(identifier="is_a", title="Is A")
         rel = service.create_relationship(
             source_id=dog.id,
@@ -1035,8 +1035,8 @@ class TestDeleteRelationship:
         """Delete relationship when source class is missing uses target class taxonomy."""
         tax = service.create_taxonomy(title="Biology")
         scheme = service.create_scheme(taxonomy_id=tax.id, title="Animals")
-        dog = service.create_class(scheme_id=scheme.id, title="Dog")
-        mammal = service.create_class(scheme_id=scheme.id, title="Mammal")
+        dog = service.create_class(concept_scheme_id=scheme.id, title="Dog")
+        mammal = service.create_class(concept_scheme_id=scheme.id, title="Mammal")
         prop = service.create_property_definition(identifier="is_a", title="Is A")
         rel = service.create_relationship(
             source_id=dog.id,
@@ -1065,8 +1065,8 @@ class TestDeleteRelationship:
         """Delete relationship when both source and target classes are missing emits no GraphInvalidated."""
         tax = service.create_taxonomy(title="Biology")
         scheme = service.create_scheme(taxonomy_id=tax.id, title="Animals")
-        dog = service.create_class(scheme_id=scheme.id, title="Dog")
-        mammal = service.create_class(scheme_id=scheme.id, title="Mammal")
+        dog = service.create_class(concept_scheme_id=scheme.id, title="Dog")
+        mammal = service.create_class(concept_scheme_id=scheme.id, title="Mammal")
         prop = service.create_property_definition(identifier="is_a", title="Is A")
         rel = service.create_relationship(
             source_id=dog.id,
@@ -1197,9 +1197,9 @@ class TestGetAndListOperations:
         tax = service.create_taxonomy(title="Biology")
         scheme1 = service.create_scheme(taxonomy_id=tax.id, title="Animals")
         scheme2 = service.create_scheme(taxonomy_id=tax.id, title="Plants")
-        cls1 = service.create_class(scheme_id=scheme1.id, title="Dog")
-        service.create_class(scheme_id=scheme2.id, title="Tree")
-        classes = service.list_classes(scheme_id=scheme1.id)
+        cls1 = service.create_class(concept_scheme_id=scheme1.id, title="Dog")
+        service.create_class(concept_scheme_id=scheme2.id, title="Tree")
+        classes = service.list_classes(concept_scheme_id=scheme1.id)
         assert len(classes) == 1
         assert classes[0].id == cls1.id
 
@@ -1207,9 +1207,9 @@ class TestGetAndListOperations:
         """List classes filtered by parent class."""
         tax = service.create_taxonomy(title="Biology")
         scheme = service.create_scheme(taxonomy_id=tax.id, title="Animals")
-        mammal = service.create_class(scheme_id=scheme.id, title="Mammal")
-        dog = service.create_class(scheme_id=scheme.id, title="Dog", parent_class_id=mammal.id)
-        cat = service.create_class(scheme_id=scheme.id, title="Cat", parent_class_id=mammal.id)
+        mammal = service.create_class(concept_scheme_id=scheme.id, title="Mammal")
+        dog = service.create_class(concept_scheme_id=scheme.id, title="Dog", parent_class_id=mammal.id)
+        cat = service.create_class(concept_scheme_id=scheme.id, title="Cat", parent_class_id=mammal.id)
         children = service.list_classes(parent_class_id=mammal.id)
         assert len(children) == 2
         assert any(c.id == dog.id for c in children)
@@ -1219,8 +1219,8 @@ class TestGetAndListOperations:
         """List relationships with filters."""
         tax = service.create_taxonomy(title="Biology")
         scheme = service.create_scheme(taxonomy_id=tax.id, title="Animals")
-        dog = service.create_class(scheme_id=scheme.id, title="Dog")
-        mammal = service.create_class(scheme_id=scheme.id, title="Mammal")
+        dog = service.create_class(concept_scheme_id=scheme.id, title="Dog")
+        mammal = service.create_class(concept_scheme_id=scheme.id, title="Mammal")
         prop = service.create_property_definition(identifier="is_a", title="Is A")
         rel = service.create_relationship(
             source_id=dog.id,
@@ -1247,9 +1247,9 @@ class TestGetAndListOperations:
         """List relationships filtered by property_id."""
         tax = service.create_taxonomy(title="Biology")
         scheme = service.create_scheme(taxonomy_id=tax.id, title="Animals")
-        dog = service.create_class(scheme_id=scheme.id, title="Dog")
-        mammal = service.create_class(scheme_id=scheme.id, title="Mammal")
-        animal = service.create_class(scheme_id=scheme.id, title="Animal")
+        dog = service.create_class(concept_scheme_id=scheme.id, title="Dog")
+        mammal = service.create_class(concept_scheme_id=scheme.id, title="Mammal")
+        animal = service.create_class(concept_scheme_id=scheme.id, title="Animal")
 
         prop_is_a = service.create_property_definition(
             identifier="is_a", title="Is A"

@@ -213,9 +213,9 @@ class TestClass:
 
     def test_class_creation(self):
         """Create a class."""
-        cls = Class(id="class-1", scheme_id="scheme-1", taxonomy_id="tax-1", title="Dog")
+        cls = Class(id="class-1", concept_scheme_id="scheme-1", taxonomy_id="tax-1", title="Dog")
         assert cls.id == "class-1"
-        assert cls.scheme_id == "scheme-1"
+        assert cls.concept_scheme_id == "scheme-1"
         assert cls.taxonomy_id == "tax-1"
         assert cls.title == "Dog"
         assert cls.description is None
@@ -229,7 +229,7 @@ class TestClass:
         """Create a class with description."""
         cls = Class(
             id="class-1",
-            scheme_id="scheme-1",
+            concept_scheme_id="scheme-1",
             taxonomy_id="tax-1",
             title="Dog",
             description="Canine species",
@@ -240,7 +240,7 @@ class TestClass:
         """Create a class with parent."""
         cls = Class(
             id="class-1",
-            scheme_id="scheme-1",
+            concept_scheme_id="scheme-1",
             taxonomy_id="tax-1",
             title="Dog",
             parent_class_id="class-0",
@@ -254,7 +254,7 @@ class TestClass:
         description_embedding = struct.pack('5f', *[0.5, 0.4, 0.3, 0.2, 0.1])
         cls = Class(
             id="class-1",
-            scheme_id="scheme-1",
+            concept_scheme_id="scheme-1",
             taxonomy_id="tax-1",
             title="Dog",
             title_embedding=title_embedding,
@@ -265,26 +265,26 @@ class TestClass:
 
     def test_class_rename(self):
         """Rename a class."""
-        cls = Class(id="class-1", scheme_id="scheme-1", taxonomy_id="tax-1", title="Dog")
+        cls = Class(id="class-1", concept_scheme_id="scheme-1", taxonomy_id="tax-1", title="Dog")
         cls.rename("Canine")
         assert cls.title == "Canine"
 
     def test_class_rename_empty_raises(self):
         """Rename with empty string raises ValueError."""
-        cls = Class(id="class-1", scheme_id="scheme-1", taxonomy_id="tax-1", title="Dog")
+        cls = Class(id="class-1", concept_scheme_id="scheme-1", taxonomy_id="tax-1", title="Dog")
         with pytest.raises(ValueError, match="Title cannot be empty"):
             cls.rename("")
 
     def test_class_add_subclass_of(self):
         """Add a parent class."""
-        cls = Class(id="class-1", scheme_id="scheme-1", taxonomy_id="tax-1", title="Dog")
+        cls = Class(id="class-1", concept_scheme_id="scheme-1", taxonomy_id="tax-1", title="Dog")
         assert cls.parent_class_id is None
         cls.add_subclass_of("class-0")
         assert cls.parent_class_id == "class-0"
 
     def test_class_add_subclass_of_self_raises(self):
         """Add self as parent raises ValueError."""
-        cls = Class(id="class-1", scheme_id="scheme-1", taxonomy_id="tax-1", title="Dog")
+        cls = Class(id="class-1", concept_scheme_id="scheme-1", taxonomy_id="tax-1", title="Dog")
         with pytest.raises(ValueError, match="A class cannot be its own parent"):
             cls.add_subclass_of("class-1")
 
@@ -292,7 +292,7 @@ class TestClass:
         """Remove the parent class."""
         cls = Class(
             id="class-1",
-            scheme_id="scheme-1",
+            concept_scheme_id="scheme-1",
             taxonomy_id="tax-1",
             title="Dog",
             parent_class_id="class-0",
@@ -309,7 +309,7 @@ class TestClass:
         ]
         cls = Class(
             id="class-1",
-            scheme_id="scheme-1",
+            concept_scheme_id="scheme-1",
             taxonomy_id="tax-1",
             title="Dog",
             external_references=refs,
@@ -325,7 +325,7 @@ class TestClass:
         ]
         cls = Class(
             id="class-1",
-            scheme_id="scheme-1",
+            concept_scheme_id="scheme-1",
             taxonomy_id="tax-1",
             title="Dog",
             lexical_senses=senses,
@@ -506,7 +506,7 @@ class TestSearchCriteria:
         assert criteria.query is None
         assert criteria.node_types is None
         assert criteria.taxonomy_id is None
-        assert criteria.scheme_id is None
+        assert criteria.concept_scheme_id is None
         assert criteria.parent_id is None
         assert criteria.use_semantic_search is False
         assert criteria.limit == 20
@@ -561,8 +561,8 @@ class TestSearchCriteria:
 
     def test_search_criteria_with_concept_scheme_filter(self):
         """SearchCriteria with concept scheme filter."""
-        criteria = SearchCriteria(scheme_id="scheme-1")
-        assert criteria.scheme_id == "scheme-1"
+        criteria = SearchCriteria(concept_scheme_id="scheme-1")
+        assert criteria.concept_scheme_id == "scheme-1"
 
     def test_search_criteria_with_parent_filter(self):
         """SearchCriteria with parent entity filter."""

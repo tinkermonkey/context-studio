@@ -249,19 +249,19 @@ class OntologyService:
         scheme = self._repository.save_concept_scheme(scheme)
 
         self._event_publisher.publish(SchemeCreated(
-            scheme_id=scheme_id,
+            concept_scheme_id=scheme_id,
             title=title,
             taxonomy_id=taxonomy_id,
         ))
 
         return scheme
 
-    def get_concept_scheme(self, scheme_id: str) -> ConceptScheme:
+    def get_concept_scheme(self, concept_scheme_id: str) -> ConceptScheme:
         """
         Retrieve a concept scheme by ID.
 
         Args:
-            scheme_id: The ID of the concept scheme
+            concept_scheme_id: The ID of the concept scheme
 
         Returns:
             The ConceptScheme
@@ -269,9 +269,9 @@ class OntologyService:
         Raises:
             EntityNotFoundError: If the scheme does not exist
         """
-        scheme = self._repository.get_concept_scheme(scheme_id)
+        scheme = self._repository.get_concept_scheme(concept_scheme_id)
         if scheme is None:
-            raise EntityNotFoundError("ConceptScheme", scheme_id)
+            raise EntityNotFoundError("ConceptScheme", concept_scheme_id)
         return scheme
 
     def list_concept_schemes(self, taxonomy_id: Optional[str] = None) -> list[ConceptScheme]:
@@ -286,14 +286,14 @@ class OntologyService:
         """
         return self._repository.list_concept_schemes(taxonomy_id=taxonomy_id)
 
-    def rename_scheme(self, scheme_id: str, new_title: str) -> ConceptScheme:
+    def rename_scheme(self, concept_scheme_id: str, new_title: str) -> ConceptScheme:
         """
         Rename a concept scheme.
 
         Validates that the new title is unique within the scheme's parent taxonomy.
 
         Args:
-            scheme_id: The ID of the concept scheme to rename
+            concept_scheme_id: The ID of the concept scheme to rename
             new_title: The new title for the scheme
 
         Returns:
@@ -307,13 +307,13 @@ class OntologyService:
         if not new_title or not new_title.strip():
             raise ValueError("Title cannot be empty")
 
-        scheme = self._repository.get_concept_scheme(scheme_id)
+        scheme = self._repository.get_concept_scheme(concept_scheme_id)
         if scheme is None:
-            raise EntityNotFoundError("ConceptScheme", scheme_id)
+            raise EntityNotFoundError("ConceptScheme", concept_scheme_id)
 
         # Check for duplicate title within this taxonomy (excluding the current scheme)
         existing_schemes = self._repository.list_concept_schemes(taxonomy_id=scheme.taxonomy_id)
-        if any(s.title == new_title and s.id != scheme_id for s in existing_schemes):
+        if any(s.title == new_title and s.id != concept_scheme_id for s in existing_schemes):
             raise DuplicateEntityError(f"ConceptScheme with title '{new_title}' already exists in this taxonomy")
 
         # Guard against no-op updates
@@ -327,7 +327,7 @@ class OntologyService:
         scheme = self._repository.save_concept_scheme(scheme)
 
         self._event_publisher.publish(SchemeUpdated(
-            scheme_id=scheme_id,
+            concept_scheme_id=concept_scheme_id,
             taxonomy_id=scheme.taxonomy_id,
             changed_fields=("title",),
             old_values={"title": old_title},
@@ -336,32 +336,32 @@ class OntologyService:
 
         return scheme
 
-    def delete_scheme(self, scheme_id: str) -> None:
+    def delete_scheme(self, concept_scheme_id: str) -> None:
         """
         Delete a concept scheme.
 
         Validates that the scheme has no classes before deletion.
 
         Args:
-            scheme_id: The ID of the concept scheme to delete
+            concept_scheme_id: The ID of the concept scheme to delete
 
         Raises:
             EntityNotFoundError: If the scheme does not exist
             OntologyError: If the scheme has classes
         """
-        scheme = self._repository.get_concept_scheme(scheme_id)
+        scheme = self._repository.get_concept_scheme(concept_scheme_id)
         if scheme is None:
-            raise EntityNotFoundError("ConceptScheme", scheme_id)
+            raise EntityNotFoundError("ConceptScheme", concept_scheme_id)
 
         # Check for classes
-        classes = self._repository.list_classes(scheme_id=scheme_id)
+        classes = self._repository.list_classes(concept_scheme_id=concept_scheme_id)
         if classes:
-            raise OntologyError(f"Cannot delete concept scheme {scheme_id}: it has {len(classes)} class(es)")
+            raise OntologyError(f"Cannot delete concept scheme {concept_scheme_id}: it has {len(classes)} class(es)")
 
-        self._repository.delete_concept_scheme(scheme_id)
+        self._repository.delete_concept_scheme(concept_scheme_id)
 
         self._event_publisher.publish(SchemeDeleted(
-            scheme_id=scheme_id,
+            concept_scheme_id=concept_scheme_id,
             taxonomy_id=scheme.taxonomy_id,
             title=scheme.title,
         ))
@@ -370,7 +370,7 @@ class OntologyService:
 
     def create_class(
         self,
-        scheme_id: str,
+        concept_scheme_id: str,
         title: str,
         description: Optional[str] = None,
         parent_class_id: Optional[str] = None,
@@ -385,7 +385,7 @@ class OntologyService:
         - The parent class ID is not the class ID (prevented in create, but checked)
 
         Args:
-            scheme_id: ID of the parent concept scheme
+            concept_scheme_id: ID of the parent concept scheme
             title: Display name for the class
             description: Optional longer description
             parent_class_id: Optional ID of the parent class for hierarchy
@@ -402,12 +402,12 @@ class OntologyService:
             raise ValueError("Title cannot be empty")
 
         # Validate scheme exists
-        scheme = self._repository.get_concept_scheme(scheme_id)
+        scheme = self._repository.get_concept_scheme(concept_scheme_id)
         if scheme is None:
-            raise EntityNotFoundError("ConceptScheme", scheme_id)
+            raise EntityNotFoundError("ConceptScheme", concept_scheme_id)
 
         # Check for duplicate title within this scheme
-        existing_classes = self._repository.list_classes(scheme_id=scheme_id)
+        existing_classes = self._repository.list_classes(concept_scheme_id=concept_scheme_id)
         if any(c.title == title for c in existing_classes):
             raise DuplicateEntityError(f"Class with title '{title}' already exists in this scheme")
 
@@ -417,7 +417,7 @@ class OntologyService:
             if parent_class is None:
                 raise EntityNotFoundError("Class", parent_class_id)
             # Verify parent is in the same scheme
-            if parent_class.scheme_id != scheme_id:
+            if parent_class.concept_scheme_id != concept_scheme_id:
                 raise ValueError(f"Parent class {parent_class_id} is not in the same scheme")
 
         class_id = str(uuid4())
@@ -428,7 +428,7 @@ class OntologyService:
 
         cls = Class(
             id=class_id,
-            scheme_id=scheme_id,
+            concept_scheme_id=concept_scheme_id,
             taxonomy_id=scheme.taxonomy_id,
             title=title,
             description=description,
@@ -442,7 +442,7 @@ class OntologyService:
         self._event_publisher.publish(ClassCreated(
             class_id=class_id,
             title=title,
-            scheme_id=scheme_id,
+            concept_scheme_id=concept_scheme_id,
             taxonomy_id=scheme.taxonomy_id,
         ))
 
@@ -468,7 +468,7 @@ class OntologyService:
 
     def list_classes(
         self,
-        scheme_id: Optional[str] = None,
+        concept_scheme_id: Optional[str] = None,
         parent_class_id: Optional[str] = None,
         limit: int = 100,
         offset: int = 0,
@@ -477,7 +477,7 @@ class OntologyService:
         Retrieve classes with optional filtering and pagination.
 
         Args:
-            scheme_id: Optional concept scheme ID to filter by
+            concept_scheme_id: Optional concept scheme ID to filter by
             parent_class_id: Optional parent class ID to filter by (for hierarchy)
             limit: Maximum number of results to return
             offset: Number of results to skip
@@ -486,7 +486,7 @@ class OntologyService:
             List of Class entities
         """
         return self._repository.list_classes(
-            scheme_id=scheme_id,
+            concept_scheme_id=concept_scheme_id,
             parent_class_id=parent_class_id,
             limit=limit,
             offset=offset,
@@ -533,7 +533,7 @@ class OntologyService:
 
         # Check for duplicate title within this scheme if title is changing
         if title_changed:
-            existing_classes = self._repository.list_classes(scheme_id=cls.scheme_id)
+            existing_classes = self._repository.list_classes(concept_scheme_id=cls.concept_scheme_id)
             if any(c.title == title and c.id != class_id for c in existing_classes):
                 raise DuplicateEntityError(f"Class with title '{title}' already exists in this scheme")
 
@@ -673,7 +673,7 @@ class OntologyService:
             new_parent = self._repository.get_class(new_parent_id)
             if new_parent is None:
                 raise EntityNotFoundError("Class", new_parent_id)
-            if new_parent.scheme_id != cls.scheme_id:
+            if new_parent.concept_scheme_id != cls.concept_scheme_id:
                 raise ValueError(f"Parent class {new_parent_id} is not in the same scheme")
 
             # Traverse ancestor chain of new_parent_id looking for class_id

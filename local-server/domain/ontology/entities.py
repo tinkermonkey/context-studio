@@ -103,7 +103,7 @@ class Class:
 
     Attributes:
         id: Unique identifier (UUID as string)
-        scheme_id: ID of the parent concept scheme
+        concept_scheme_id: ID of the parent concept scheme
         taxonomy_id: ID of the parent taxonomy
         title: Display name for the class
         description: Optional longer description
@@ -120,7 +120,7 @@ class Class:
     """
 
     id: str
-    scheme_id: str
+    concept_scheme_id: str
     taxonomy_id: str
     title: str
     description: str | None = None
