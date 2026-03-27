@@ -343,7 +343,12 @@ class GraphAnalysisService:
 
         Raises:
             NodeNotFoundError: If node_id does not exist in the graph
+            InvalidAlgorithmError: If direction is not a valid value
         """
+        if direction not in ("in", "out", "both"):
+            valid_directions = ["in", "out", "both"]
+            raise InvalidAlgorithmError(direction, valid_directions)
+
         self._ensure_graph()
         # The graph engine will raise NodeNotFoundError if the node doesn't exist
         return self._graph_engine.neighbors(node_id, direction)

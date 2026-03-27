@@ -24,7 +24,7 @@ No business logic lives here—all validation and constraints are in the domain 
 Error handling translates domain exceptions to appropriate HTTP responses.
 """
 
-from typing import Optional
+from typing import Literal, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 
@@ -141,7 +141,7 @@ async def get_shortest_path(
 async def get_all_paths(
     source_id: str = Query(..., description="ID of the starting node"),
     target_id: str = Query(..., description="ID of the ending node"),
-    max_depth: int = Query(5, description="Maximum path length to explore", ge=1),
+    max_depth: int = Query(5, description="Maximum path length to explore", ge=1, le=20),
     service: GraphAnalysisService = Depends(get_graph_service),
 ) -> list[PathResultResponse]:
     """
@@ -150,7 +150,7 @@ async def get_all_paths(
     Args:
         source_id: ID of the starting node
         target_id: ID of the ending node
-        max_depth: Maximum path length to explore (minimum 1)
+        max_depth: Maximum path length to explore (minimum 1, maximum 20)
         service: GraphAnalysisService from dependency injection
 
     Returns:
@@ -230,7 +230,7 @@ async def get_communities(
 @router.get("/nodes/{node_id}/neighbors", response_model=NeighborsResponse)
 async def get_neighbors(
     node_id: str,
-    direction: str = Query("both", description="Direction: 'in', 'out', or 'both'"),
+    direction: Literal["in", "out", "both"] = Query("both", description="Direction: 'in', 'out', or 'both'"),
     service: GraphAnalysisService = Depends(get_graph_service),
 ) -> NeighborsResponse:
     """
@@ -254,7 +254,7 @@ async def get_neighbors(
             direction=direction,
             neighbors=sorted(list(neighbors)),
         )
-    except (NodeNotFoundError, GraphError) as exc:
+    except (NodeNotFoundError, InvalidAlgorithmError, GraphError) as exc:
         status_code, message = _handle_graph_error(exc)
         raise HTTPException(status_code=status_code, detail=message)
 
@@ -264,7 +264,7 @@ async def get_neighbors(
 @router.get("/nodes/{node_id}/subgraph", response_model=KnowledgeGraphResponse)
 async def get_subgraph(
     node_id: str,
-    depth: int = Query(1, description="Maximum distance from center node", ge=1),
+    depth: int = Query(1, description="Maximum distance from center node", ge=1, le=10),
     service: GraphAnalysisService = Depends(get_graph_service),
 ) -> KnowledgeGraphResponse:
     """
@@ -272,7 +272,7 @@ async def get_subgraph(
 
     Args:
         node_id: ID of the center node
-        depth: Maximum distance from the center node (minimum 1)
+        depth: Maximum distance from the center node (minimum 1, maximum 10)
         service: GraphAnalysisService from dependency injection
 
     Returns:
