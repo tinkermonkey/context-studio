@@ -10,7 +10,6 @@ SQLAlchemy ORM models. Handles:
 """
 
 from typing import Union, Any
-from datetime import datetime, timezone
 import struct
 
 from domain.ontology.entities import (

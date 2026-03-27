@@ -12,7 +12,7 @@ Key responsibilities:
 - Hierarchical queries (parent-child relationships)
 """
 
-from typing import Optional, Sequence, Union, Any
+from typing import Optional, Sequence, Any
 from datetime import datetime, timezone
 
 from sqlalchemy.orm import Session

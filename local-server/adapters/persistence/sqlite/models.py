@@ -16,7 +16,6 @@ Design Notes:
 """
 
 from datetime import datetime, timezone
-from typing import Optional
 
 from sqlalchemy import (
     Column,
@@ -32,7 +31,7 @@ from sqlalchemy import (
     JSON,
     LargeBinary,
 )
-from sqlalchemy.orm import declarative_base, relationship
+from sqlalchemy.orm import declarative_base
 
 Base = declarative_base()
 

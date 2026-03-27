@@ -12,7 +12,6 @@ Tests the adapter against a real in-memory SQLite database to verify:
 import sys
 import os
 import pytest
-from datetime import datetime, timezone
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
@@ -29,11 +28,8 @@ from domain.ontology.entities import (
 )
 from domain.ontology.value_objects import (
     ExternalReference,
-    LexicalSense,
     DataPropertyValue,
-    OntologyMapping,
     SearchCriteria,
-    NodeType,
 )
 
 from adapters.persistence.sqlite.models import Base
