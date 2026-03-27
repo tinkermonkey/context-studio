@@ -428,14 +428,16 @@ class TestCycleDetection:
         assert result is False
 
     def test_check_cycle_self_loop_detection(self, service, repository_with_data):
-        """check_cycle detects self-loops (source == target)."""
+        """check_cycle detects self-loops (source == target) correctly."""
         svc, _, _ = service
         classes = repository_with_data.list_classes()
         assert len(classes) > 0
-        # A self-loop would create a cycle
+        # A self-loop (same node as source and target) would create a cycle
+        # The Relationship entity prevents source_id == target_id in __post_init__,
+        # but the graph engine detects whether adding that edge would cause a cycle
         result = svc.check_cycle(classes[0].id, classes[0].id)
-        assert isinstance(result, bool)
-        # Note: self-loop behavior depends on implementation
+        # Self-loops always create cycles by definition
+        assert result is True
 
 
 class TestSubgraphExtraction:

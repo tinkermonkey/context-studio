@@ -21,6 +21,9 @@ import tempfile
 from pathlib import Path
 from uuid import uuid4
 
+from sqlalchemy import create_engine
+from sqlalchemy.orm import Session, sessionmaker
+
 from fastapi import FastAPI, status
 from fastapi.testclient import TestClient
 
@@ -32,7 +35,8 @@ from domain.ontology.entities import (
     Relationship,
     PropertyDefinition,
 )
-from adapters.persistence.sqlite.ontology_repo import OntologyRepository
+from adapters.persistence.sqlite.sqlalchemy_setup import Base
+from adapters.persistence.sqlite.ontology_repo import SQLiteOntologyRepository
 from adapters.graph.networkx_engine import NetworkXGraphEngine
 from adapters.graph.rdflib_engine import RDFLibQueryEngine
 from adapters.web.graph_routes import router
@@ -43,31 +47,30 @@ def temp_db():
     """Create a temporary SQLite database for integration tests."""
     with tempfile.TemporaryDirectory() as tmpdir:
         db_path = Path(tmpdir) / "test.db"
-        # Initialize database with schema
-        from alembic.config import Config as AlembicConfig
-        from alembic import command
+        db_url = f"sqlite:///{db_path}"
 
-        alembic_cfg = AlembicConfig(
-            os.path.join(
-                os.path.dirname(__file__),
-                "../../adapters/persistence/sqlite/alembic.ini",
-            )
-        )
-        alembic_cfg.set_main_option("sqlalchemy.url", f"sqlite:///{db_path}")
+        engine = create_engine(db_url)
+        Base.metadata.create_all(engine)
 
-        try:
-            command.upgrade(alembic_cfg, "head")
-        except Exception:
-            # If migrations fail, continue with what we have
-            pass
-
-        yield db_path
+        yield db_url
 
 
 @pytest.fixture
-def repository(temp_db):
-    """Create a real OntologyRepository with actual persistence."""
-    return OntologyRepository(database_url=f"sqlite:///{temp_db}")
+def session_factory(temp_db):
+    """Create a session factory for the temporary database."""
+    engine = create_engine(temp_db)
+    SessionLocal = sessionmaker(bind=engine)
+    return SessionLocal
+
+
+@pytest.fixture
+def repository(session_factory):
+    """Create a real SQLiteOntologyRepository with actual persistence."""
+    session = session_factory()
+    try:
+        yield SQLiteOntologyRepository(session=session)
+    finally:
+        session.close()
 
 
 @pytest.fixture
