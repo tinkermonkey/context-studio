@@ -69,6 +69,9 @@ class FakeOntologyRepository:
         return results
 
     def save_concept_scheme(self, scheme: ConceptScheme) -> ConceptScheme:
+        for existing_scheme in self._schemes.values():
+            if existing_scheme.title == scheme.title and existing_scheme.id != scheme.id and existing_scheme.taxonomy_id == scheme.taxonomy_id:
+                raise DuplicateEntityError(f"ConceptScheme with title '{scheme.title}' already exists in this taxonomy")
         self._schemes[scheme.id] = scheme
         return scheme
 
@@ -123,6 +126,9 @@ class FakeOntologyRepository:
         return len(self._classes)
 
     def save_class(self, cls: Class) -> Class:
+        for existing_class in self._classes.values():
+            if existing_class.title == cls.title and existing_class.id != cls.id and existing_class.concept_scheme_id == cls.concept_scheme_id:
+                raise DuplicateEntityError(f"Class with title '{cls.title}' already exists in this scheme")
         self._classes[cls.id] = cls
         return cls
 

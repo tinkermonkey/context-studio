@@ -608,13 +608,13 @@ class OntologyService:
         title_changed = title is not None and title != cls.title
         desc_changed = description is not None and description != cls.description
 
-        # Check for duplicate title within this scheme if title is changing
+        # Check for empty title first if title is changing
         if title_changed:
+            if not title or not title.strip():
+                raise ValueError("Title cannot be empty")
             existing_classes = self._repository.list_classes(concept_scheme_id=cls.concept_scheme_id)
             if any(c.title == title and c.id != class_id for c in existing_classes):
                 raise DuplicateEntityError(f"Class with title '{title}' already exists in this scheme")
-            if not title or not title.strip():
-                raise ValueError("Title cannot be empty")
             cls.title = title
 
         if desc_changed:
@@ -1314,11 +1314,15 @@ class OntologyService:
         if individual is None:
             raise EntityNotFoundError("Individual", individual_id)
 
-        # If title is provided, validate uniqueness within the class
+        # Track what actually changed
+        title_changed = title is not None and title != individual.title
+        desc_changed = description is not None and description != individual.description
+
+        # If title is provided, validate emptiness first, then uniqueness
         if title is not None:
             if not title or not title.strip():
                 raise ValueError("Title cannot be empty")
-            if title != individual.title:
+            if title_changed:
                 existing = self._repository.list_individuals(class_id=individual.class_id)
                 if any(ind.title == title for ind in existing):
                     raise DuplicateEntityError(
@@ -1330,7 +1334,11 @@ class OntologyService:
         if description is not None:
             individual.description = description
 
-        # Update timestamp
+        # Guard against no-op updates
+        if not (title_changed or desc_changed):
+            return individual
+
+        # Update timestamp and save only if something actually changed
         individual.last_modified = datetime.now(timezone.utc)
 
         individual = self._repository.save_individual(individual)
