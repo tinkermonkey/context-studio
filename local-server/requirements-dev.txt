@@ -2,3 +2,4 @@ pytest
 black
 ruff
 mypy
+typing-extensions

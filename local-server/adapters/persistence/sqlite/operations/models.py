@@ -10,6 +10,8 @@ Models are defined here and serve as the source of truth for Alembic migrations.
 Currently a placeholder for the operations.db Alembic environment.
 """
 
-from sqlalchemy.orm import declarative_base
+from sqlalchemy.orm import DeclarativeBase
 
-OperationsBase = declarative_base()
+
+class OperationsBase(DeclarativeBase):
+    pass
