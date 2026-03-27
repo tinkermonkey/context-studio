@@ -35,7 +35,7 @@ from domain.ontology.entities import (
     Relationship,
     PropertyDefinition,
 )
-from adapters.persistence.sqlite.sqlalchemy_setup import Base
+from adapters.persistence.sqlite.models import Base
 from adapters.persistence.sqlite.ontology_repo import SQLiteOntologyRepository
 from adapters.graph.networkx_engine import NetworkXGraphEngine
 from adapters.graph.rdflib_engine import RDFLibQueryEngine
