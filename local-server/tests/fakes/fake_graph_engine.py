@@ -167,21 +167,22 @@ class FakeGraphEngine:
         subgraph.build_from_data(subgraph_nodes, subgraph_edges)
         return subgraph
 
-    def neighbors(self, node_id: str, direction: str = "both") -> set[str]:
+    def neighbors(self, node_id: str, direction: str = "both", depth: int = 1) -> set[str]:
         """
-        Get all neighbors of a node with directional filtering.
+        Get all neighbors of a node up to a specified depth with directional filtering.
 
-        Returns neighbors based on stored edges and the direction parameter.
-        - "out": nodes that this node points to
-        - "in": nodes that point to this node
+        Uses breadth-first traversal to find all nodes within the specified depth.
+        - "out": successors (nodes this node points to)
+        - "in": predecessors (nodes that point to this node)
         - "both": all connected neighbors
 
         Args:
-            node_id: ID of the node
+            node_id: ID of the center node
             direction: Direction of traversal: "in", "out", or "both"
+            depth: Maximum distance from center node (default 1)
 
         Returns:
-            Set of neighboring node IDs
+            Set of neighboring node IDs (excludes the center node)
 
         Raises:
             NodeNotFoundError: If node_id does not exist in the graph
@@ -189,13 +190,38 @@ class FakeGraphEngine:
         if node_id not in self._nodes:
             raise NodeNotFoundError(node_id)
 
-        neighbors_set = set()
+        if depth < 1:
+            return set()
 
-        for edge in self._edges:
-            if direction in ("out", "both") and edge["source_id"] == node_id:
-                neighbors_set.add(edge["target_id"])
-            if direction in ("in", "both") and edge["target_id"] == node_id:
-                neighbors_set.add(edge["source_id"])
+        neighbors_set = set()
+        visited = {node_id}  # Track visited nodes
+        current_level = {node_id}  # Start from the center node
+
+        for _ in range(depth):
+            next_level = set()
+
+            for current_node in current_level:
+                for edge in self._edges:
+                    if direction in ("out", "both") and edge["source_id"] == current_node:
+                        target = edge["target_id"]
+                        if target not in visited:
+                            next_level.add(target)
+
+                    if direction in ("in", "both") and edge["target_id"] == current_node:
+                        source = edge["source_id"]
+                        if source not in visited:
+                            next_level.add(source)
+
+            # Mark newly discovered nodes as visited
+            visited.update(next_level)
+            # Add newly discovered nodes to result
+            neighbors_set.update(next_level)
+            # Move to next level
+            current_level = next_level
+
+            # If no new nodes discovered, stop
+            if not next_level:
+                break
 
         return neighbors_set
 

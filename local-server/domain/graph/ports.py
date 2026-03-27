@@ -142,16 +142,18 @@ class GraphEngine(Protocol):
         """
         ...
 
-    def neighbors(self, node_id: str, direction: str = "both") -> set[str]:
+    def neighbors(self, node_id: str, direction: str = "both", depth: int = 1) -> set[str]:
         """
-        Get all neighbors of a node with optional directional filtering.
+        Get all neighbors of a node up to a specified depth with optional directional filtering.
 
         Args:
-            node_id: ID of the node
+            node_id: ID of the center node
             direction: Direction of traversal: "in" (predecessors), "out" (successors), "both" (default)
+            depth: Maximum distance from center node (default 1). Depth 1 returns immediate neighbors,
+                   depth 2 returns two hops away, etc.
 
         Returns:
-            Set of neighboring node IDs
+            Set of neighboring node IDs at the specified depth (excludes the center node)
 
         Raises:
             NodeNotFoundError: If node_id does not exist in the graph

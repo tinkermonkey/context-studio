@@ -56,6 +56,7 @@ from adapters.web.schemas.graph import (
     TripleCountResponse,
     TripleResponse,
     DegreeDistributionResponse,
+    SubgraphResultResponse,
 )
 
 router = APIRouter(prefix="/api/graph", tags=["graph"])
@@ -326,7 +327,7 @@ async def get_neighbors(
         raise HTTPException(status_code=status_code, detail=message)
 
 
-# ==================== Subgraph Extraction Endpoint ====================
+# ==================== Subgraph Extraction Endpoints ====================
 
 @router.get("/subgraph", response_model=KnowledgeGraphResponse)
 async def get_subgraph(
@@ -335,6 +336,9 @@ async def get_subgraph(
 ) -> KnowledgeGraphResponse:
     """
     Extract a subgraph containing the specified nodes and all edges between them.
+
+    This endpoint extracts a subgraph from a pre-computed list of node IDs.
+    For depth-based neighborhood extraction, use GET /nodes/{node_id}/subgraph instead.
 
     Args:
         nodes: Comma-separated list of node IDs (e.g., "id1,id2,id3")
@@ -358,6 +362,37 @@ async def get_subgraph(
 
         subgraph = service.extract_subgraph(node_list)
         return KnowledgeGraphResponse.model_validate(subgraph)
+    except (NodeNotFoundError, GraphError) as exc:
+        status_code, message = _handle_graph_error(exc)
+        raise HTTPException(status_code=status_code, detail=message)
+
+
+@router.get("/nodes/{node_id}/subgraph", response_model=SubgraphResultResponse)
+async def get_subgraph_by_depth(
+    node_id: str,
+    depth: int = Query(1, description="Maximum traversal depth from center node", ge=1, le=10),
+    service: GraphAnalysisService = Depends(get_graph_service),
+) -> SubgraphResultResponse:
+    """
+    Extract a subgraph containing a center node and all nodes within a specified depth (FR-9).
+
+    This implements depth-based subgraph extraction where depth 1 returns the center node
+    and its immediate neighbors, depth 2 returns two hops away, etc.
+
+    Args:
+        node_id: ID of the center node
+        depth: Maximum distance from center node (minimum 1, maximum 10, default 1)
+        service: GraphAnalysisService from dependency injection
+
+    Returns:
+        SubgraphResultResponse containing center node ID, node count, edge count, depth, and extraction timestamp
+
+    Raises:
+        HTTPException: 404 if center node is not found, 400 if depth is invalid, 422 if graph error occurs
+    """
+    try:
+        subgraph_result = service.extract_subgraph_by_depth(node_id, depth)
+        return SubgraphResultResponse.model_validate(subgraph_result)
     except (NodeNotFoundError, GraphError) as exc:
         status_code, message = _handle_graph_error(exc)
         raise HTTPException(status_code=status_code, detail=message)

@@ -170,3 +170,16 @@ class DegreeDistributionResponse(BaseModel):
 
     class Config:
         from_attributes = True
+
+
+class SubgraphResultResponse(BaseModel):
+    """Response containing depth-based subgraph extraction result."""
+
+    center_node_id: str = Field(..., description="ID of the center node")
+    node_count: int = Field(..., description="Number of nodes in the subgraph")
+    edge_count: int = Field(..., description="Number of edges in the subgraph")
+    depth: int = Field(..., description="Maximum traversal depth from center node")
+    extracted_at: datetime = Field(..., description="Timestamp when the subgraph was extracted")
+
+    class Config:
+        from_attributes = True

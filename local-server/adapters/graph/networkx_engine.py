@@ -214,16 +214,21 @@ class NetworkXGraphEngine:
         subgraph_instance._graph = nx.DiGraph(subgraph_view)
         return subgraph_instance
 
-    def neighbors(self, node_id: str, direction: str = "both") -> set[str]:
+    def neighbors(self, node_id: str, direction: str = "both", depth: int = 1) -> set[str]:
         """
-        Get all neighbors of a node with optional directional filtering.
+        Get all neighbors of a node up to a specified depth with optional directional filtering.
+
+        Performs a breadth-first traversal from the specified node, collecting all nodes
+        within the specified depth (excluding the center node itself).
 
         Args:
-            node_id: ID of the node
+            node_id: ID of the center node
             direction: Direction of traversal: "in" (predecessors), "out" (successors), "both" (default)
+            depth: Maximum distance from center node (default 1). Depth 1 returns immediate neighbors,
+                   depth 2 returns two hops away, etc.
 
         Returns:
-            Set of neighboring node IDs
+            Set of neighboring node IDs at the specified depth (excludes the center node)
 
         Raises:
             NodeNotFoundError: If node_id does not exist in the graph
@@ -232,15 +237,37 @@ class NetworkXGraphEngine:
         if node_id not in self._graph:
             raise NodeNotFoundError(node_id)
 
+        if depth < 1:
+            return set()
+
         neighbors_set: set[str] = set()
+        visited: set[str] = {node_id}  # Track visited nodes to avoid revisiting
+        current_level = {node_id}  # Nodes at current depth level
 
-        if direction in ("out", "both"):
-            # Successors: nodes that this node points to
-            neighbors_set.update(self._graph.successors(node_id))
+        for _ in range(depth):
+            next_level: set[str] = set()
 
-        if direction in ("in", "both"):
-            # Predecessors: nodes that point to this node
-            neighbors_set.update(self._graph.predecessors(node_id))
+            for current_node in current_level:
+                if direction in ("out", "both"):
+                    # Successors: nodes that this node points to
+                    successors = set(self._graph.successors(current_node))
+                    next_level.update(successors - visited)
+
+                if direction in ("in", "both"):
+                    # Predecessors: nodes that point to this node
+                    predecessors = set(self._graph.predecessors(current_node))
+                    next_level.update(predecessors - visited)
+
+            # Mark newly discovered nodes as visited
+            visited.update(next_level)
+            # Add newly discovered nodes to the result set
+            neighbors_set.update(next_level)
+            # Move to next level for next iteration
+            current_level = next_level
+
+            # If no new nodes discovered, stop
+            if not next_level:
+                break
 
         return neighbors_set
 

@@ -13,7 +13,7 @@ import re
 from datetime import datetime, timezone
 from typing import TYPE_CHECKING, Any
 
-from .entities import GraphMetrics, KnowledgeGraph, PathResult
+from .entities import GraphMetrics, KnowledgeGraph, PathResult, SubgraphResult
 from .exceptions import InvalidAlgorithmError, NodeNotFoundError, SPARQLValidationError
 from .ports import GraphEngine, SemanticQueryEngine
 
@@ -405,6 +405,9 @@ class GraphAnalysisService:
         """
         Extract a subgraph containing the specified nodes and all edges between them.
 
+        This method extracts a subgraph from a pre-computed list of node IDs.
+        For depth-based neighborhood extraction, use extract_subgraph_by_depth() instead.
+
         Args:
             node_ids: List of node IDs to include in the subgraph
 
@@ -423,7 +426,7 @@ class GraphAnalysisService:
         # neighbors() raises NodeNotFoundError if node doesn't exist
         for node_id in node_ids:
             try:
-                self._graph_engine.neighbors(node_id)
+                self._graph_engine.neighbors(node_id, depth=1)
             except NodeNotFoundError as exc:
                 raise NodeNotFoundError(f"Node '{node_id}' not found in graph") from exc
 
@@ -435,6 +438,52 @@ class GraphAnalysisService:
             edge_count=subgraph.edge_count(),
             is_directed=True,
             last_built=datetime.now(timezone.utc),
+        )
+
+    def extract_subgraph_by_depth(self, center_node_id: str, depth: int) -> SubgraphResult:
+        """
+        Extract a subgraph containing a center node and all nodes within a specified depth.
+
+        This implements the FR-9 specification for depth-based subgraph extraction.
+        Depth 1 returns the center node and its immediate neighbors.
+        Depth 2 returns the center node, immediate neighbors, and their neighbors, etc.
+
+        Args:
+            center_node_id: ID of the center node
+            depth: Maximum distance from center node (must be >= 1)
+
+        Returns:
+            SubgraphResult containing the center node ID, node count, edge count, depth, and extraction timestamp
+
+        Raises:
+            NodeNotFoundError: If the center node does not exist in the graph
+            ValueError: If depth is less than 1
+        """
+        if depth < 1:
+            raise ValueError("depth must be at least 1")
+
+        self._ensure_graph()
+
+        # Verify the center node exists by calling neighbors with depth=1
+        try:
+            self._graph_engine.neighbors(center_node_id, depth=1)
+        except NodeNotFoundError as exc:
+            raise NodeNotFoundError(f"Center node '{center_node_id}' not found in graph") from exc
+
+        # Get all nodes within the specified depth
+        # neighbors() with depth=N returns all nodes within N hops (excluding the center node)
+        neighborhood = self._graph_engine.neighbors(center_node_id, direction="both", depth=depth)
+
+        # Create the subgraph with the center node plus all nodes in the neighborhood
+        subgraph_nodes = {center_node_id} | neighborhood
+        subgraph = self._graph_engine.subgraph(list(subgraph_nodes))
+
+        return SubgraphResult(
+            center_node_id=center_node_id,
+            node_count=subgraph.node_count(),
+            edge_count=subgraph.edge_count(),
+            depth=depth,
+            extracted_at=datetime.now(timezone.utc),
         )
 
     def execute_sparql(self, query: str) -> list[dict[str, Any]]:

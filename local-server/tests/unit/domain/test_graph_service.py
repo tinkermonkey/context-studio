@@ -16,8 +16,8 @@ import pytest
 from uuid import uuid4
 
 from domain.graph.services import GraphAnalysisService
-from domain.graph.entities import KnowledgeGraph, GraphMetrics, PathResult
-from domain.graph.exceptions import InvalidAlgorithmError, SPARQLValidationError
+from domain.graph.entities import KnowledgeGraph, GraphMetrics, PathResult, SubgraphResult
+from domain.graph.exceptions import InvalidAlgorithmError, SPARQLValidationError, NodeNotFoundError
 from domain.ontology.entities import Class, Taxonomy, ConceptScheme, Relationship, PropertyDefinition
 from domain.ontology.events import GraphInvalidated
 from tests.fakes.fake_ontology_repository import FakeOntologyRepository
@@ -542,6 +542,40 @@ class TestSubgraphExtraction:
         assert isinstance(result, KnowledgeGraph)
         assert result.node_count >= len(node_ids)
         assert result.edge_count >= 0
+
+    def test_extract_subgraph_by_depth_returns_subgraph_result(self, service, repository_with_data):
+        """extract_subgraph_by_depth returns SubgraphResult with depth information."""
+        svc, _, _ = service
+        classes = repository_with_data.list_classes()
+        assert len(classes) > 0
+        result = svc.extract_subgraph_by_depth(classes[0].id, depth=1)
+
+        assert isinstance(result, SubgraphResult)
+        assert result.center_node_id == classes[0].id
+        assert result.depth == 1
+        assert isinstance(result.node_count, int)
+        assert isinstance(result.edge_count, int)
+        assert result.node_count >= 1  # At least the center node
+
+    def test_extract_subgraph_by_depth_includes_center_node(self, service, repository_with_data):
+        """extract_subgraph_by_depth includes the center node in the subgraph."""
+        svc, _, _ = service
+        classes = repository_with_data.list_classes()
+        center_id = classes[0].id
+        result = svc.extract_subgraph_by_depth(center_id, depth=1)
+        assert result.node_count >= 1
+
+    def test_extract_subgraph_by_depth_invalid_depth(self, service):
+        """extract_subgraph_by_depth raises ValueError for invalid depth."""
+        svc, _, _ = service
+        with pytest.raises(ValueError):
+            svc.extract_subgraph_by_depth("nonexistent", depth=0)
+
+    def test_extract_subgraph_by_depth_nonexistent_center(self, service):
+        """extract_subgraph_by_depth raises NodeNotFoundError for nonexistent center node."""
+        svc, _, _ = service
+        with pytest.raises(NodeNotFoundError):
+            svc.extract_subgraph_by_depth("nonexistent-node-id", depth=1)
 
 
 class TestMetrics:
