@@ -7,11 +7,13 @@ supporting semantic queries, SPARQL execution, and triple pattern matching.
 
 from __future__ import annotations
 
+import re
 from typing import Any, Sequence
 
 from rdflib import Graph, Namespace, URIRef, Literal
 from rdflib.namespace import RDF, RDFS
 from rdflib.exceptions import ParserError
+from pyparsing.exceptions import ParseException
 
 from domain.graph.exceptions import SPARQLValidationError
 
@@ -122,22 +124,37 @@ class RDFLibQueryEngine:
         """
         Execute a SPARQL SELECT query against the RDF graph.
 
-        Note: SPARQL validation (keyword checking) is performed by the domain
-        service before this method is invoked. This method focuses on framework-
-        specific exception translation.
+        Validates the query to reject forbidden keywords before execution,
+        then handles any parsing exceptions from rdflib.
 
         Args:
-            query: Pre-validated SPARQL query string (SELECT queries only)
+            query: SPARQL query string (SELECT queries only)
 
         Returns:
             List of result dictionaries, where each dict maps variable names to values
 
         Raises:
-            SPARQLValidationError: If the query has syntax errors
+            SPARQLValidationError: If the query contains forbidden keywords or has syntax errors
         """
+        # Pre-validate the query for forbidden keywords
+        self._validate_sparql_keywords(query)
+
         # Execute the SPARQL query
         try:
             results = self._graph.query(query)
+        except ParseException as e:
+            # Extract forbidden keyword from parse exception message
+            # ParseException message format: "Expected ..., found 'KEYWORD' ..."
+            error_msg = str(e)
+            keyword_match = re.search(r"found '(\w+)'", error_msg)
+            if keyword_match:
+                keyword = keyword_match.group(1).upper()
+                # Check if this is a forbidden keyword
+                forbidden_keywords = {"INSERT", "DELETE", "DROP", "CLEAR", "LOAD", "CREATE"}
+                if keyword in forbidden_keywords:
+                    raise SPARQLValidationError(query, f"Forbidden keyword: {keyword}")
+            # Fall through to generic error if keyword extraction fails
+            raise SPARQLValidationError(query, f"SPARQL syntax error: {error_msg}")
         except ParserError as e:
             raise SPARQLValidationError(query, f"SPARQL syntax error: {str(e)}")
 
@@ -184,6 +201,28 @@ class RDFLibQueryEngine:
             results.append((str(s), str(p), str(o)))
 
         return results
+
+    def _validate_sparql_keywords(self, query: str) -> None:
+        """
+        Validate SPARQL query for forbidden keywords.
+
+        Uses word-boundary regex matching to detect forbidden keywords like
+        INSERT, DELETE, DROP, CLEAR, LOAD, and CREATE. These indicate unsafe
+        operations that should not be allowed in read-only SPARQL queries.
+
+        Args:
+            query: SPARQL query string to validate
+
+        Raises:
+            SPARQLValidationError: If query contains any forbidden keywords
+        """
+        forbidden_keywords = {"INSERT", "DELETE", "DROP", "CLEAR", "LOAD", "CREATE"}
+        query_upper = query.upper()
+
+        for keyword in forbidden_keywords:
+            # Use word-boundary regex to detect keywords even in comments
+            if re.search(rf"\b{keyword}\b", query_upper):
+                raise SPARQLValidationError(query, f"Forbidden keyword: {keyword}")
 
     def is_loaded(self) -> bool:
         """
