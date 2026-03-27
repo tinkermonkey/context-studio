@@ -14,7 +14,7 @@ from datetime import datetime, timezone
 from typing import TYPE_CHECKING, Any
 
 from .entities import GraphMetrics, KnowledgeGraph, PathResult
-from .exceptions import InvalidAlgorithmError, SPARQLValidationError
+from .exceptions import InvalidAlgorithmError, NodeNotFoundError, SPARQLValidationError
 from .ports import GraphEngine, SemanticQueryEngine
 
 if TYPE_CHECKING:
@@ -224,9 +224,13 @@ class GraphAnalysisService:
 
         Returns:
             PathResult if a path exists, None otherwise
+
+        Raises:
+            NodeNotFoundError: If either node does not exist in the graph
         """
         self._ensure_graph()
 
+        # The graph engine will raise NodeNotFoundError if either node doesn't exist
         path = self._graph_engine.shortest_path(source_id, target_id)
         if path is None:
             return None
@@ -247,13 +251,17 @@ class GraphAnalysisService:
         Args:
             source_id: ID of the starting node
             target_id: ID of the ending node
-            max_depth: Maximum path length to explore
+            max_depth: Maximum path length to explore (number of edges)
 
         Returns:
             List of PathResult objects, one for each found path
+
+        Raises:
+            NodeNotFoundError: If either node does not exist in the graph
         """
         self._ensure_graph()
 
+        # The graph engine will raise NodeNotFoundError if either node doesn't exist
         paths = self._graph_engine.all_paths(source_id, target_id, max_depth)
         results = []
         for path in paths:
@@ -318,8 +326,12 @@ class GraphAnalysisService:
 
         Returns:
             Set of neighboring node IDs
+
+        Raises:
+            NodeNotFoundError: If node_id does not exist in the graph
         """
         self._ensure_graph()
+        # The graph engine will raise NodeNotFoundError if the node doesn't exist
         return self._graph_engine.neighbors(node_id, direction)
 
     def check_cycle(self, source_id: str, target_id: str) -> bool:
@@ -350,8 +362,14 @@ class GraphAnalysisService:
 
         Returns:
             KnowledgeGraph descriptor for the subgraph
+
+        Raises:
+            NodeNotFoundError: If the center node does not exist in the graph
         """
         self._ensure_graph()
+
+        # Verify the center node exists (will raise NodeNotFoundError if not)
+        self._graph_engine.neighbors(node_id, direction="both")
 
         # BFS to find all nodes within the specified depth
         visited = set()

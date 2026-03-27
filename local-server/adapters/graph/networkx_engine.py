@@ -11,6 +11,8 @@ from __future__ import annotations
 import networkx as nx
 from typing import Any, Sequence
 
+from domain.graph.exceptions import NodeNotFoundError
+
 
 class NetworkXGraphEngine:
     """
@@ -71,11 +73,21 @@ class NetworkXGraphEngine:
         Returns:
             Ordered list of node IDs from source to target (inclusive),
             or None if no path exists
+
+        Raises:
+            NodeNotFoundError: If either source_id or target_id does not exist in the graph
         """
+        # Verify both nodes exist in the graph
+        if source_id not in self._graph:
+            raise NodeNotFoundError(source_id)
+        if target_id not in self._graph:
+            raise NodeNotFoundError(target_id)
+
         try:
             path = nx.shortest_path(self._graph, source_id, target_id)
             return list(path)
-        except (nx.NetworkXNoPath, nx.NodeNotFound):
+        except nx.NetworkXNoPath:
+            # No path exists between the two nodes
             return None
 
     def all_paths(self, source_id: str, target_id: str, max_depth: int = 5) -> list[list[str]]:
@@ -85,15 +97,28 @@ class NetworkXGraphEngine:
         Args:
             source_id: ID of the starting node
             target_id: ID of the ending node
-            max_depth: Maximum path length to explore (default 5)
+            max_depth: Maximum path length to explore (default 5). This is the maximum number
+                      of edges in any path (NetworkX's cutoff parameter).
 
         Returns:
             List of paths, where each path is an ordered list of node IDs
+
+        Raises:
+            NodeNotFoundError: If either source_id or target_id does not exist in the graph
         """
+        # Verify both nodes exist in the graph
+        if source_id not in self._graph:
+            raise NodeNotFoundError(source_id)
+        if target_id not in self._graph:
+            raise NodeNotFoundError(target_id)
+
         try:
-            paths = nx.all_simple_paths(self._graph, source_id, target_id, cutoff=max_depth - 1)
+            # cutoff parameter in nx.all_simple_paths means paths with length <= cutoff edges
+            # max_depth is the max number of edges, so we pass it directly as cutoff
+            paths = nx.all_simple_paths(self._graph, source_id, target_id, cutoff=max_depth)
             return [list(path) for path in paths]
-        except (nx.NetworkXNoPath, nx.NodeNotFound):
+        except nx.NetworkXNoPath:
+            # No paths exist between the two nodes
             return []
 
     def centrality(self, algorithm: str = "betweenness") -> dict[str, float]:
@@ -193,7 +218,14 @@ class NetworkXGraphEngine:
 
         Returns:
             Set of neighboring node IDs
+
+        Raises:
+            NodeNotFoundError: If node_id does not exist in the graph
         """
+        # Verify node exists in the graph
+        if node_id not in self._graph:
+            raise NodeNotFoundError(node_id)
+
         neighbors_set: set[str] = set()
 
         if direction in ("out", "both"):

@@ -146,16 +146,33 @@ class TestNetworkXGraphEngineShortestPath:
 
         assert path is None
 
-    def test_shortest_path_nonexistent_node_returns_none(self):
-        """Shortest path returns None when source or target does not exist."""
+    def test_shortest_path_nonexistent_source_raises_error(self):
+        """Shortest path raises NodeNotFoundError when source node does not exist."""
         engine = NetworkXGraphEngine()
         nodes = [{"id": "node-1"}]
         edges = []
 
         engine.build_from_data(nodes, edges)
-        path = engine.shortest_path("node-1", "nonexistent")
 
-        assert path is None
+        from domain.graph.exceptions import NodeNotFoundError
+        with pytest.raises(NodeNotFoundError) as exc_info:
+            engine.shortest_path("nonexistent", "node-1")
+
+        assert "nonexistent" in str(exc_info.value)
+
+    def test_shortest_path_nonexistent_target_raises_error(self):
+        """Shortest path raises NodeNotFoundError when target node does not exist."""
+        engine = NetworkXGraphEngine()
+        nodes = [{"id": "node-1"}]
+        edges = []
+
+        engine.build_from_data(nodes, edges)
+
+        from domain.graph.exceptions import NodeNotFoundError
+        with pytest.raises(NodeNotFoundError) as exc_info:
+            engine.shortest_path("node-1", "nonexistent")
+
+        assert "nonexistent" in str(exc_info.value)
 
 
 class TestNetworkXGraphEngineAllPaths:
@@ -251,6 +268,34 @@ class TestNetworkXGraphEngineAllPaths:
         paths = engine.all_paths("node-2", "node-3")
 
         assert paths == []
+
+    def test_all_paths_nonexistent_source_raises_error(self):
+        """All paths raises NodeNotFoundError when source node does not exist."""
+        engine = NetworkXGraphEngine()
+        nodes = [{"id": "node-1"}]
+        edges = []
+
+        engine.build_from_data(nodes, edges)
+
+        from domain.graph.exceptions import NodeNotFoundError
+        with pytest.raises(NodeNotFoundError) as exc_info:
+            engine.all_paths("nonexistent", "node-1")
+
+        assert "nonexistent" in str(exc_info.value)
+
+    def test_all_paths_nonexistent_target_raises_error(self):
+        """All paths raises NodeNotFoundError when target node does not exist."""
+        engine = NetworkXGraphEngine()
+        nodes = [{"id": "node-1"}]
+        edges = []
+
+        engine.build_from_data(nodes, edges)
+
+        from domain.graph.exceptions import NodeNotFoundError
+        with pytest.raises(NodeNotFoundError) as exc_info:
+            engine.all_paths("node-1", "nonexistent")
+
+        assert "nonexistent" in str(exc_info.value)
 
 
 class TestNetworkXGraphEngineCentrality:
@@ -487,6 +532,20 @@ class TestNetworkXGraphEngineNeighbors:
 
         assert neighbors == set()
 
+    def test_neighbors_nonexistent_node_raises_error(self):
+        """Neighbors raises NodeNotFoundError when node does not exist."""
+        engine = NetworkXGraphEngine()
+        nodes = [{"id": "a"}]
+        edges = []
+
+        engine.build_from_data(nodes, edges)
+
+        from domain.graph.exceptions import NodeNotFoundError
+        with pytest.raises(NodeNotFoundError) as exc_info:
+            engine.neighbors("nonexistent")
+
+        assert "nonexistent" in str(exc_info.value)
+
 
 class TestNetworkXGraphEngineHasCycle:
     """Tests for cycle detection."""
@@ -606,8 +665,10 @@ class TestNetworkXGraphEngineSubgraph:
         assert subgraph.edge_count() == 2
         # a->b and b->c exist
         assert subgraph.shortest_path("a", "c") is not None
-        # a->d does not exist (d not in subgraph)
-        assert subgraph.shortest_path("a", "d") is None
+        # a->d raises error because d is not in subgraph
+        from domain.graph.exceptions import NodeNotFoundError
+        with pytest.raises(NodeNotFoundError):
+            subgraph.shortest_path("a", "d")
 
     def test_subgraph_returns_new_engine(self):
         """Subgraph returns a new GraphEngine instance."""
