@@ -479,13 +479,8 @@ class GraphAnalysisService:
         all_node_ids = [center_node_id] + sorted(list(neighborhood))
         subgraph = self._graph_engine.subgraph(list(subgraph_nodes))
 
-        # Collect edge IDs from the subgraph (edge tuples of (source_id, target_id))
-        # Access the internal _edges list from the subgraph implementation
-        edge_ids: list[tuple[str, str]] = []
-        if hasattr(subgraph, "_edges"):
-            for edge in subgraph._edges:
-                edge_tuple = (edge["source_id"], edge["target_id"])
-                edge_ids.append(edge_tuple)
+        # Collect edge IDs from the subgraph using the edges() port method
+        edge_ids = subgraph.edges()
 
         return SubgraphResult(
             center_node_id=center_node_id,

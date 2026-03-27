@@ -225,6 +225,15 @@ class FakeGraphEngine:
 
         return neighbors_set
 
+    def edges(self) -> list[tuple[str, str]]:
+        """
+        Get all edges in the graph as (source, target) tuples.
+
+        Returns:
+            List of edge tuples, where each tuple is (source_id, target_id)
+        """
+        return [(edge["source_id"], edge["target_id"]) for edge in self._edges]
+
     def has_cycle(self, source_id: str, target_id: str) -> bool:
         """
         Check if adding an edge would create a cycle.
