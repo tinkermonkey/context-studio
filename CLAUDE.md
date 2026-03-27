@@ -125,13 +125,33 @@ All databases use SQLite with the SQLiteVector extension for embedding storage a
 
 Schema changes are managed with **Alembic**. The SQLAlchemy ORM models in `adapters/persistence/sqlite/models.py` are the source of truth for the schema.
 
-To make a schema change:
-1. Edit the ORM model in `adapters/persistence/sqlite/models.py`
-2. Run `alembic revision --autogenerate -m "description of change"` — Alembic generates the migration
-3. Review the generated script, then run `alembic upgrade head`
-4. To roll back: `alembic downgrade -1`
+Alembic is configured under `adapters/persistence/sqlite/` with separate environments for `local.db` and `operations.db`:
 
-**Never write migration SQL by hand.** Always use autogenerate.
+To make a schema change for **`local.db`**:
+1. Edit the ORM model in `adapters/persistence/sqlite/models.py`
+2. Run `alembic --config adapters/persistence/sqlite/alembic.ini revision --autogenerate --version-path adapters/persistence/sqlite/versions -m "description of change"`
+3. Review the generated script in `adapters/persistence/sqlite/versions/`, then run `alembic --config adapters/persistence/sqlite/alembic.ini upgrade head`
+4. To roll back: `alembic --config adapters/persistence/sqlite/alembic.ini downgrade -1`
+
+To make a schema change for **`operations.db`** (when models are implemented):
+1. Edit the ORM model in `adapters/persistence/sqlite/operations/models.py`
+2. Run `alembic --config adapters/persistence/sqlite/alembic.ini -x db=operations revision --autogenerate --version-path adapters/persistence/sqlite/operations/versions -m "description of change"`
+3. Review the generated script in `adapters/persistence/sqlite/operations/versions/`, then run `alembic --config adapters/persistence/sqlite/alembic.ini -x db=operations upgrade head`
+4. To roll back: `alembic --config adapters/persistence/sqlite/alembic.ini -x db=operations downgrade -1`
+
+Alternatively, use the helper script:
+```bash
+# For local.db
+python scripts/run_migrations.py local upgrade head
+
+# For operations.db
+python scripts/run_migrations.py operations upgrade head
+
+# For both
+python scripts/run_migrations.py all upgrade head
+```
+
+**Never write migration SQL by hand.** Always use autogenerate. The `--version-path` flag is required when using multiple `version_locations` to specify which directory receives the generated migration script.
 
 ### Code Structure
 
@@ -148,6 +168,18 @@ To make a schema change:
 │   └── admin/                      # entities.py, services.py, ports.py
 ├── adapters/
 │   ├── persistence/sqlite/         # SQLAlchemy models, repository implementations, Alembic
+│   │   ├── alembic.ini             # Alembic configuration for both databases
+│   │   ├── env.py                  # Alembic environment for local.db
+│   │   ├── script.py.mako          # Alembic migration template
+│   │   ├── models.py               # SQLAlchemy ORM models (source of truth for local.db schema)
+│   │   ├── versions/               # Auto-generated Alembic migration scripts for local.db
+│   │   ├── operations/             # Separate environment for operations.db
+│   │   │   ├── env.py              # Alembic environment for operations.db
+│   │   │   ├── models.py           # SQLAlchemy ORM models for operations.db
+│   │   │   └── versions/           # Auto-generated Alembic migration scripts for operations.db
+│   │   ├── ontology_repo.py        # Repository implementation for ontology context
+│   │   ├── change_repo.py          # Repository implementation for versioning context
+│   │   └── pipeline_repo.py        # Repository implementation for pipeline context
 │   ├── embedding/                  # SentenceTransformer adapter
 │   ├── llm/                        # OpenAI, Anthropic, provider router
 │   ├── nlp/                        # spaCy processor adapter
@@ -163,6 +195,7 @@ To make a schema change:
 │   └── claudes_thoughts/           # Claude's notes and analysis
 ├── scripts/
 │   ├── check_domain_imports.py     # Verify domain/ has no infrastructure imports
+│   ├── run_migrations.py           # Helper to run migrations for both databases
 │   └── update_api_specs.py
 └── utils/
     └── logger.py
@@ -197,12 +230,13 @@ All imports point inward. `domain/` has **zero imports** from `adapters/`, `data
 
 ### Best Practices
 
-- **Schema Management**: Use Alembic autogenerate — never hand-write migration SQL
+- **Schema Management**: Use Alembic autogenerate — never hand-write migration SQL. Alembic configuration is at `adapters/persistence/sqlite/alembic.ini` with separate environments for `local.db` and `operations.db`
 - **Domain purity**: Domain entities use Python dataclasses, not Pydantic or SQLAlchemy. Pydantic lives in `adapters/web/schemas/` only
 - **Code Quality**: Follow PEP 8 style guide for Python code
 - **Testing**: Write domain unit tests first (using fake port implementations), then adapter tests, then route tests
 - **Environment Variables**: Use `.env` files for sensitive configurations and secrets
 - **Virtual Environment**: Always use `local-server/.venv` — activate it before running any Python command
+- **Alembic Migrations**: Run migrations from `local-server/` directory with `--config adapters/persistence/sqlite/alembic.ini` or use the helper script `scripts/run_migrations.py`
 
 ### Common Pitfalls
 

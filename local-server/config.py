@@ -1,0 +1,119 @@
+"""
+Configuration settings for the Context Studio Local Server.
+"""
+
+import os
+import json
+from typing import Optional, List
+from pydantic import BaseModel, Field
+from enum import Enum
+from dotenv import load_dotenv
+
+
+class LogLevel(str, Enum):
+    """Log level options"""
+
+    DEBUG = "DEBUG"
+    INFO = "INFO"
+    WARNING = "WARNING"
+    ERROR = "ERROR"
+    CRITICAL = "CRITICAL"
+
+
+class ServerConfig(BaseModel):
+    """Server configuration section"""
+
+    host: str = Field(default="127.0.0.1", description="Server host address")
+    port: int = Field(default=8000, ge=1024, le=65535, description="Server port")
+    cors_origins: List[str] = Field(default=["*"], description="CORS allowed origins")
+
+
+class DatabaseConfig(BaseModel):
+    """Database configuration section"""
+
+    local_db_path: str = Field(
+        default="./local.db", description="Main workspace database path"
+    )
+    operations_db_path: str = Field(
+        default="./operations.db", description="Operations database path"
+    )
+
+
+class LoggingConfig(BaseModel):
+    """Logging configuration section"""
+
+    log_level: LogLevel = Field(default=LogLevel.INFO, description="Log level")
+    max_bytes: int = Field(
+        default=10 * 1024 * 1024, description="Max log file size in bytes"
+    )
+    backup_count: int = Field(default=5, description="Number of backup log files")
+
+
+class Settings(BaseModel):
+    """Centralized configuration settings"""
+
+    server: ServerConfig = Field(default_factory=ServerConfig)
+    database: DatabaseConfig = Field(default_factory=DatabaseConfig)
+    logging: LoggingConfig = Field(default_factory=LoggingConfig)
+
+
+class ConfigurationManager:
+    """Manages configuration loading from config.json"""
+
+    def __init__(self, config_file: str = "./config.json"):
+        self.config_file = config_file
+        self.settings: Optional[Settings] = None
+        self.load()
+
+    def load(self) -> Settings:
+        """Load configuration from file with defaults"""
+        load_dotenv()
+
+        if os.path.exists(self.config_file) and os.path.getsize(self.config_file) > 0:
+            with open(self.config_file, "r") as f:
+                config_data = json.load(f)
+            self.settings = Settings(**config_data)
+        else:
+            self.settings = Settings()
+            self.save()
+
+        return self.settings
+
+    def save(self) -> bool:
+        """Save current configuration to file"""
+        try:
+            if self.settings is None:
+                return False
+            config_dir = os.path.dirname(self.config_file)
+            if config_dir:
+                os.makedirs(config_dir, exist_ok=True)
+            with open(self.config_file, "w") as f:
+                json.dump(self.settings.model_dump(), f, indent=2)
+            return True
+        except Exception:
+            return False
+
+    def get_settings(self) -> Settings:
+        """Get the current settings"""
+        if self.settings is None:
+            raise RuntimeError("Settings not initialized")
+        return self.settings
+
+
+# Global configuration manager instance
+_config_manager: Optional[ConfigurationManager] = None
+
+
+def get_config_manager() -> ConfigurationManager:
+    """Get the global configuration manager instance"""
+    global _config_manager
+    if _config_manager is None:
+        config_path = os.getenv("CONFIG_PATH", "./config.json")
+        _config_manager = ConfigurationManager(config_file=config_path)
+    return _config_manager
+
+
+def get_settings() -> Settings:
+    """Get the global settings instance from configuration manager"""
+    config_manager = get_config_manager()
+    return config_manager.get_settings()

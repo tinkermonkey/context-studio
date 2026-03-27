@@ -101,8 +101,7 @@ class Class:
     external_references: list[ExternalReference] = field(default_factory=list)
     lexical_senses: list[LexicalSense] = field(default_factory=list)
     data_properties: list[DataPropertyValue] = field(default_factory=list)
-    title_embedding: Optional[bytes] = None
-    definition_embedding: Optional[bytes] = None
+    embedding: Optional[bytes] = None
     created_at: Optional[datetime] = None
     last_modified: Optional[datetime] = None
     version: int = 1
@@ -219,10 +218,9 @@ Represents a link to an external knowledge source (DBpedia, Wikidata, ConceptNet
 @dataclass(frozen=True)
 class ExternalReference:
     source: str                 # e.g., "dbpedia", "wikidata", "conceptnet"
-    uri: str                    # the external URI
-    label: Optional[str] = None # human-readable label from the source
-    confidence: Optional[float] = None  # match confidence score
-    metadata: Optional[dict] = None     # source-specific metadata
+    identifier: str             # the external identifier
+    uri: Optional[str] = None   # the external URI (optional)
+    metadata: Optional[MappingProxyType[str, Any]] = None  # source-specific metadata
 ```
 
 
@@ -230,16 +228,14 @@ class ExternalReference:
 
 #### LexicalSense
 
-Word sense disambiguation data, typically from WordNet.
+Word sense disambiguation data from external lexical sources.
 
 ```python
 @dataclass(frozen=True)
 class LexicalSense:
-    synset_id: str              # WordNet synset identifier
-    definition: str             # the sense definition
-    lemma: str                  # the lemma/word form
-    confidence: Optional[float] = None
-    source: str = "wordnet"
+    label: str                  # the sense label (e.g., "semantic web technology")
+    language_code: str          # ISO 639-1 code (e.g., "en", "fr")
+    sense_type: str             # sense type (e.g., "synset", "word_sense")
 ```
 
 
@@ -262,16 +258,20 @@ class DataPropertyValue:
 
 #### OntologyMapping
 
-Maps a PropertyDefinition to an external ontology standard.
+Maps between entities in different ontologies or between internal entities.
 
 ```python
 @dataclass(frozen=True)
 class OntologyMapping:
-    ontology: str               # e.g., "owl", "rdfs", "skos", "conceptnet"
-    uri: str                    # the property URI in that ontology
-    label: Optional[str] = None
-    exact_match: bool = False   # whether this is an exact semantic match
+    source_id: str              # UUID of source entity
+    target_id: str              # UUID of target entity
+    mapping_type: str           # type of mapping (exact_match, related_match, close_match, etc.)
 ```
+
+**Usage Notes:**
+- Primary use in `PropertyDefinition.ontology_mapping`: Represents mapping of a PropertyDefinition to an external ontology standard (e.g., OWL, RDFS, SKOS)
+- When used independently: Represents a mapping between two internal ontology entities
+- Supports both use cases through generic `source_id` and `target_id` fields
 
 
 ---
@@ -509,8 +509,7 @@ class SQLiteOntologyRepository:
             external_references=self._parse_references(orm_entity.reference_links),
             lexical_senses=self._parse_senses(orm_entity.word_senses),
             data_properties=self._parse_attributes(orm_entity.attributes),
-            title_embedding=orm_entity.title_embedding,
-            definition_embedding=orm_entity.definition_embedding,
+            embedding=orm_entity.embedding,
             version=orm_entity.version,
             created_at=orm_entity.created_at,
             last_modified=orm_entity.last_modified,
@@ -528,8 +527,7 @@ class SQLiteOntologyRepository:
             reference_links=json.dumps([asdict(r) for r in cls.external_references]),
             word_senses=json.dumps([asdict(s) for s in cls.lexical_senses]),
             attributes=json.dumps([asdict(a) for a in cls.data_properties]),
-            title_embedding=cls.title_embedding,
-            definition_embedding=cls.definition_embedding,
+            embedding=cls.embedding,
             version=cls.version,
         )
 ```
