@@ -1543,7 +1543,7 @@ class TestUpdateIndividual:
         scheme = service.create_scheme(taxonomy_id=tax.id, title="Animals")
         cls = service.create_class(concept_scheme_id=scheme.id, title="Dog")
 
-        ind1 = service.create_individual(class_id=cls.id, title="Fido")
+        service.create_individual(class_id=cls.id, title="Fido")
         ind2 = service.create_individual(class_id=cls.id, title="Buddy")
 
         with pytest.raises(DuplicateEntityError, match="already exists"):
