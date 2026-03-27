@@ -296,7 +296,7 @@ class TestClassCRUD:
         assert saved_child.parent_class_id == "parent"
 
         # Retrieve children
-        children = repo.list_classes(parent_id="parent")
+        children = repo.list_classes(parent_class_id="parent")
         assert len(children) == 1
         assert children[0].id == "child"
 
