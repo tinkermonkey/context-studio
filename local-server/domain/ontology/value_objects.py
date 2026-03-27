@@ -20,6 +20,7 @@ class NodeType(str, Enum):
     CONCEPT_SCHEME = "concept_scheme"
     CLASS = "class"
     INDIVIDUAL = "individual"
+    PROPERTY_DEFINITION = "property_definition"
 
 
 @dataclass(frozen=True)

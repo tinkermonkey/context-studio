@@ -12,9 +12,8 @@ Key responsibilities:
 - Hierarchical queries (parent-child relationships)
 """
 
-from typing import Optional, Sequence
+from typing import Optional, Sequence, Union
 from datetime import datetime, timezone
-import uuid
 
 from sqlalchemy.orm import Session
 from sqlalchemy import and_, or_
@@ -27,7 +26,6 @@ from domain.ontology.entities import (
     Relationship,
     PropertyDefinition,
 )
-from domain.ontology.ports import OntologyRepository
 from domain.ontology.value_objects import SearchCriteria, NodeType
 
 from adapters.persistence.sqlite.models import (
@@ -43,9 +41,9 @@ from adapters.persistence.sqlite.mappers import (
 )
 
 
-class SQLiteOntologyRepository(OntologyRepository):
+class SQLiteOntologyRepository:
     """
-    SQLAlchemy-based implementation of the OntologyRepository port.
+    SQLAlchemy-based implementation of the OntologyRepository port (structural subtyping).
 
     Manages persistence of all ontology entities using a unified single-table
     inheritance pattern with node_type discriminator. Enforces invariants
@@ -183,12 +181,12 @@ class SQLiteOntologyRepository(OntologyRepository):
 
     # ==================== ConceptScheme CRUD ====================
 
-    def get_concept_scheme(self, scheme_id: str) -> Optional[ConceptScheme]:
+    def get_concept_scheme(self, concept_scheme_id: str) -> Optional[ConceptScheme]:
         """
         Retrieve a concept scheme by ID.
 
         Args:
-            scheme_id: UUID of the concept scheme
+            concept_scheme_id: UUID of the concept scheme
 
         Returns:
             ConceptScheme entity if found, None otherwise
@@ -197,7 +195,7 @@ class SQLiteOntologyRepository(OntologyRepository):
             self.session.query(OntologyEntity)
             .filter(
                 and_(
-                    OntologyEntity.id == scheme_id,
+                    OntologyEntity.id == concept_scheme_id,
                     OntologyEntity.node_type == NodeType.CONCEPT_SCHEME,
                 )
             )
@@ -286,12 +284,12 @@ class SQLiteOntologyRepository(OntologyRepository):
         self.session.flush()
         return map_orm_to_domain(orm_entity)
 
-    def delete_concept_scheme(self, scheme_id: str) -> bool:
+    def delete_concept_scheme(self, concept_scheme_id: str) -> bool:
         """
         Delete a concept scheme and all its classes (cascade).
 
         Args:
-            scheme_id: UUID of the concept scheme
+            concept_scheme_id: UUID of the concept scheme
 
         Returns:
             True if deleted, False if not found
@@ -300,7 +298,7 @@ class SQLiteOntologyRepository(OntologyRepository):
             self.session.query(OntologyEntity)
             .filter(
                 and_(
-                    OntologyEntity.id == scheme_id,
+                    OntologyEntity.id == concept_scheme_id,
                     OntologyEntity.node_type == NodeType.CONCEPT_SCHEME,
                 )
             )
@@ -342,15 +340,19 @@ class SQLiteOntologyRepository(OntologyRepository):
 
     def list_classes(
         self,
-        scheme_id: Optional[str] = None,
-        parent_id: Optional[str] = None,
+        concept_scheme_id: Optional[str] = None,
+        parent_class_id: Optional[str] = None,
+        limit: int = 100,
+        offset: int = 0,
     ) -> Sequence[Class]:
         """
         List classes, optionally filtered by concept scheme or parent class.
 
         Args:
-            scheme_id: Optional concept scheme ID to filter by
-            parent_id: Optional parent class ID to filter by
+            concept_scheme_id: Optional concept scheme ID to filter by
+            parent_class_id: Optional parent class ID to filter by
+            limit: Maximum number of results to return (default 100)
+            offset: Number of results to skip (default 0)
 
         Returns:
             Sequence of Class entities
@@ -359,14 +361,41 @@ class SQLiteOntologyRepository(OntologyRepository):
             OntologyEntity.node_type == NodeType.CLASS
         )
 
-        if scheme_id is not None:
-            query = query.filter(OntologyEntity.concept_scheme_id == scheme_id)
+        if concept_scheme_id is not None:
+            query = query.filter(OntologyEntity.concept_scheme_id == concept_scheme_id)
 
-        if parent_id is not None:
-            query = query.filter(OntologyEntity.parent_class_id == parent_id)
+        if parent_class_id is not None:
+            query = query.filter(OntologyEntity.parent_class_id == parent_class_id)
 
-        orm_entities = query.all()
+        orm_entities = query.limit(limit).offset(offset).all()
         return [map_orm_to_domain(e) for e in orm_entities]
+
+    def count_classes(
+        self,
+        concept_scheme_id: Optional[str] = None,
+        parent_class_id: Optional[str] = None,
+    ) -> int:
+        """
+        Count classes matching optional filters.
+
+        Args:
+            concept_scheme_id: Optional concept scheme ID to filter by
+            parent_class_id: Optional parent class ID to filter by
+
+        Returns:
+            Number of matching Class entities
+        """
+        query = self.session.query(OntologyEntity).filter(
+            OntologyEntity.node_type == NodeType.CLASS
+        )
+
+        if concept_scheme_id is not None:
+            query = query.filter(OntologyEntity.concept_scheme_id == concept_scheme_id)
+
+        if parent_class_id is not None:
+            query = query.filter(OntologyEntity.parent_class_id == parent_class_id)
+
+        return query.count()
 
     def save_class(self, cls: Class) -> Class:
         """
@@ -446,14 +475,15 @@ class SQLiteOntologyRepository(OntologyRepository):
             self.session.add(orm_entity)
         else:
             # Update existing
+            mapped_orm = map_domain_to_orm(cls)
             orm_entity.title = cls.title
             orm_entity.description = cls.description
             orm_entity.parent_class_id = cls.parent_class_id
             orm_entity.structural_property_id = cls.structural_property_id
-            orm_entity.external_references = map_domain_to_orm(cls).external_references
-            orm_entity.lexical_senses = map_domain_to_orm(cls).lexical_senses
-            orm_entity.data_properties = map_domain_to_orm(cls).data_properties
-            orm_entity.embedding = cls.embedding
+            orm_entity.external_references = mapped_orm.external_references
+            orm_entity.lexical_senses = mapped_orm.lexical_senses
+            orm_entity.data_properties = mapped_orm.data_properties
+            orm_entity.embedding = mapped_orm.embedding
             orm_entity.last_modified = datetime.now(timezone.utc)
             orm_entity.version += 1
 
@@ -678,12 +708,12 @@ class SQLiteOntologyRepository(OntologyRepository):
 
     # ==================== PropertyDefinition CRUD ====================
 
-    def get_property_definition(self, prop_id: str) -> Optional[PropertyDefinition]:
+    def get_property_definition(self, property_id: str) -> Optional[PropertyDefinition]:
         """
         Retrieve a property definition by ID.
 
         Args:
-            prop_id: UUID of the property definition
+            property_id: UUID of the property definition
 
         Returns:
             PropertyDefinition entity if found, None otherwise
@@ -692,8 +722,8 @@ class SQLiteOntologyRepository(OntologyRepository):
             self.session.query(OntologyEntity)
             .filter(
                 and_(
-                    OntologyEntity.id == prop_id,
-                    OntologyEntity.node_type == "property_definition",
+                    OntologyEntity.id == property_id,
+                    OntologyEntity.node_type == NodeType.PROPERTY_DEFINITION,
                 )
             )
             .first()
@@ -702,19 +732,58 @@ class SQLiteOntologyRepository(OntologyRepository):
             return None
         return map_orm_to_domain(orm_entity)
 
-    def list_property_definitions(self) -> Sequence[PropertyDefinition]:
+    def list_property_definitions(
+        self,
+        is_relevant: Optional[bool] = None,
+        limit: int = 100,
+        offset: int = 0,
+    ) -> Sequence[PropertyDefinition]:
         """
-        Retrieve all property definitions.
+        Retrieve all property definitions with optional relevance filter.
+
+        Args:
+            is_relevant: Optional filter by relevance status
+            limit: Maximum number of results to return (default 100)
+            offset: Number of results to skip (default 0)
 
         Returns:
             Sequence of PropertyDefinition entities
         """
-        orm_entities = (
-            self.session.query(OntologyEntity)
-            .filter(OntologyEntity.node_type == "property_definition")
-            .all()
+        query = self.session.query(OntologyEntity).filter(
+            OntologyEntity.node_type == NodeType.PROPERTY_DEFINITION
         )
+
+        if is_relevant is not None:
+            query = query.filter(OntologyEntity.is_relevant == is_relevant)
+
+        orm_entities = query.limit(limit).offset(offset).all()
         return [map_orm_to_domain(e) for e in orm_entities]
+
+    def get_property_definition_by_identifier(
+        self, identifier: str
+    ) -> Optional[PropertyDefinition]:
+        """
+        Retrieve a property definition by its identifier.
+
+        Args:
+            identifier: The identifier string to search for
+
+        Returns:
+            PropertyDefinition entity if found, None otherwise
+        """
+        orm_entity = (
+            self.session.query(OntologyEntity)
+            .filter(
+                and_(
+                    OntologyEntity.identifier == identifier,
+                    OntologyEntity.node_type == NodeType.PROPERTY_DEFINITION,
+                )
+            )
+            .first()
+        )
+        if orm_entity is None:
+            return None
+        return map_orm_to_domain(orm_entity)
 
     def save_property_definition(
         self, prop: PropertyDefinition
@@ -744,7 +813,7 @@ class SQLiteOntologyRepository(OntologyRepository):
                 and_(
                     OntologyEntity.identifier == prop.identifier,
                     OntologyEntity.id != prop.id,
-                    OntologyEntity.node_type == "property_definition",
+                    OntologyEntity.node_type == NodeType.PROPERTY_DEFINITION,
                 )
             )
             .first()
@@ -759,7 +828,7 @@ class SQLiteOntologyRepository(OntologyRepository):
             .filter(
                 and_(
                     OntologyEntity.id == prop.id,
-                    OntologyEntity.node_type == "property_definition",
+                    OntologyEntity.node_type == NodeType.PROPERTY_DEFINITION,
                 )
             )
             .first()
@@ -812,7 +881,7 @@ class SQLiteOntologyRepository(OntologyRepository):
         self.session.flush()
         return map_orm_to_domain(orm_entity)
 
-    def delete_property_definition(self, prop_id: str) -> bool:
+    def delete_property_definition(self, property_id: str) -> bool:
         """
         Delete a property definition.
 
@@ -820,7 +889,7 @@ class SQLiteOntologyRepository(OntologyRepository):
         due to foreign key constraint.
 
         Args:
-            prop_id: UUID of the property definition
+            property_id: UUID of the property definition
 
         Returns:
             True if deleted, False if not found
@@ -829,8 +898,8 @@ class SQLiteOntologyRepository(OntologyRepository):
             self.session.query(OntologyEntity)
             .filter(
                 and_(
-                    OntologyEntity.id == prop_id,
-                    OntologyEntity.node_type == "property_definition",
+                    OntologyEntity.id == property_id,
+                    OntologyEntity.node_type == NodeType.PROPERTY_DEFINITION,
                 )
             )
             .first()
@@ -841,7 +910,7 @@ class SQLiteOntologyRepository(OntologyRepository):
 
         # Also delete from property_definitions table
         self.session.query(PropertyDefinitionORM).filter(
-            PropertyDefinitionORM.id == prop_id
+            PropertyDefinitionORM.id == property_id
         ).delete()
 
         self.session.delete(orm_entity)
@@ -850,18 +919,18 @@ class SQLiteOntologyRepository(OntologyRepository):
 
     # ==================== Relationship CRUD ====================
 
-    def get_relationship(self, rel_id: str) -> Optional[Relationship]:
+    def get_relationship(self, relationship_id: str) -> Optional[Relationship]:
         """
         Retrieve a relationship by ID.
 
         Args:
-            rel_id: UUID of the relationship
+            relationship_id: UUID of the relationship
 
         Returns:
             Relationship entity if found, None otherwise
         """
         orm_rel = self.session.query(RelationshipORM).filter(
-            RelationshipORM.id == rel_id
+            RelationshipORM.id == relationship_id
         ).first()
 
         if orm_rel is None:
@@ -873,13 +942,19 @@ class SQLiteOntologyRepository(OntologyRepository):
         self,
         source_id: Optional[str] = None,
         target_id: Optional[str] = None,
+        property_id: Optional[str] = None,
+        limit: int = 100,
+        offset: int = 0,
     ) -> Sequence[Relationship]:
         """
-        List relationships, optionally filtered by source or target.
+        List relationships, optionally filtered by source, target, or property definition.
 
         Args:
             source_id: Optional source entity ID to filter by
             target_id: Optional target entity ID to filter by
+            property_id: Optional property definition ID to filter by
+            limit: Maximum number of results to return (default 100)
+            offset: Number of results to skip (default 0)
 
         Returns:
             Sequence of Relationship entities
@@ -892,7 +967,10 @@ class SQLiteOntologyRepository(OntologyRepository):
         if target_id is not None:
             query = query.filter(RelationshipORM.target_id == target_id)
 
-        orm_rels = query.all()
+        if property_id is not None:
+            query = query.filter(RelationshipORM.property_definition_id == property_id)
+
+        orm_rels = query.limit(limit).offset(offset).all()
         return [map_relationship_orm_to_domain(r) for r in orm_rels]
 
     def save_relationship(self, rel: Relationship) -> Relationship:
@@ -952,18 +1030,18 @@ class SQLiteOntologyRepository(OntologyRepository):
         self.session.flush()
         return map_relationship_orm_to_domain(orm_rel)
 
-    def delete_relationship(self, rel_id: str) -> bool:
+    def delete_relationship(self, relationship_id: str) -> bool:
         """
         Delete a relationship.
 
         Args:
-            rel_id: UUID of the relationship
+            relationship_id: UUID of the relationship
 
         Returns:
             True if deleted, False if not found
         """
         orm_rel = self.session.query(RelationshipORM).filter(
-            RelationshipORM.id == rel_id
+            RelationshipORM.id == relationship_id
         ).first()
 
         if orm_rel is None:
@@ -972,6 +1050,28 @@ class SQLiteOntologyRepository(OntologyRepository):
         self.session.delete(orm_rel)
         self.session.flush()
         return True
+
+    # ==================== Utility Methods ====================
+
+    def get_all_entities_and_relationships(
+        self,
+    ) -> tuple[dict[str, Union[Taxonomy, ConceptScheme, Class, Individual, PropertyDefinition]], list[Relationship]]:
+        """
+        Retrieve all entities and relationships for graph analysis.
+
+        Returns:
+            Tuple of (entities dict keyed by ID, relationships list)
+        """
+        all_orm_entities = self.session.query(OntologyEntity).all()
+        entities = {
+            e.id: map_orm_to_domain(e)
+            for e in all_orm_entities
+        }
+
+        all_orm_rels = self.session.query(RelationshipORM).all()
+        relationships = [map_relationship_orm_to_domain(r) for r in all_orm_rels]
+
+        return entities, relationships
 
     # ==================== Helper Methods ====================
 

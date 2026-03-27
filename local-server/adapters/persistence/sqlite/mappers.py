@@ -11,7 +11,7 @@ SQLAlchemy ORM models. Handles:
 
 from typing import Union, Any
 from datetime import datetime, timezone
-import json
+import struct
 
 from domain.ontology.entities import (
     Taxonomy,
@@ -250,7 +250,7 @@ def map_orm_to_domain(orm_entity: OntologyEntity) -> Union[Taxonomy, ConceptSche
             external_references=deserialize_external_references(orm_entity.external_references or []),
             lexical_senses=deserialize_lexical_senses(orm_entity.lexical_senses or []),
             data_properties=deserialize_data_properties(orm_entity.data_properties or []),
-            embedding=orm_entity.embedding,
+            embedding=_deserialize_embedding(orm_entity.embedding),
         )
 
     elif orm_entity.node_type == NodeType.INDIVIDUAL:
@@ -261,7 +261,7 @@ def map_orm_to_domain(orm_entity: OntologyEntity) -> Union[Taxonomy, ConceptSche
             external_references=deserialize_external_references(orm_entity.external_references or []),
         )
 
-    elif orm_entity.node_type == "property_definition":
+    elif orm_entity.node_type == NodeType.PROPERTY_DEFINITION:
         return PropertyDefinition(
             **common_args,
             identifier=orm_entity.identifier,
@@ -321,7 +321,7 @@ def map_domain_to_orm(
             external_references=serialize_external_references(entity.external_references),
             lexical_senses=serialize_lexical_senses(entity.lexical_senses),
             data_properties=serialize_data_properties(entity.data_properties),
-            embedding=entity.embedding,
+            embedding=_serialize_embedding(entity.embedding),
         )
 
     elif isinstance(entity, Individual):
@@ -336,7 +336,7 @@ def map_domain_to_orm(
     elif isinstance(entity, PropertyDefinition):
         return OntologyEntity(
             **common_args,
-            node_type="property_definition",
+            node_type=NodeType.PROPERTY_DEFINITION,
             identifier=entity.identifier,
             ontology_mapping=serialize_ontology_mapping(entity.ontology_mapping),
             is_relevant=entity.is_relevant,
@@ -431,3 +431,18 @@ def map_property_definition_domain_to_orm(prop: PropertyDefinition) -> PropertyD
         last_modified=prop.last_modified,
         version=prop.version,
     )
+
+
+def _serialize_embedding(embedding: list[float] | None) -> bytes | None:
+    """Serialize embedding vector to bytes using struct packing."""
+    if not embedding:
+        return None
+    return struct.pack(f'{len(embedding)}f', *embedding)
+
+
+def _deserialize_embedding(data: bytes | None) -> list[float] | None:
+    """Deserialize embedding vector from bytes using struct unpacking."""
+    if not data:
+        return None
+    size = len(data) // 4
+    return list(struct.unpack(f'{size}f', data))
