@@ -187,7 +187,7 @@ class TestGraphConstruction:
 
         # Build graph first time
         _ = service.find_shortest_path("node1", "node2")
-        first_node_count = graph_engine.node_count()
+        graph_engine.node_count()
 
         # Invalidate the graph
         event = GraphInvalidated(taxonomy_id="test", reason="test")
