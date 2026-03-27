@@ -62,6 +62,10 @@ class GraphMetricsResponse(BaseModel):
     average_degree: float = Field(..., description="Average degree of nodes")
     connected_components: int = Field(..., description="Number of connected components")
     degree_distribution: dict[str, int] = Field(..., description="Distribution of node degrees")
+    centrality: dict[str, float] = Field(..., description="Centrality scores for all nodes")
+    communities: list[list[str]] = Field(..., description="Detected communities as lists of node IDs")
+    algorithm: str = Field(..., description="Name of the centrality algorithm used")
+    computed_at: datetime = Field(..., description="Timestamp when metrics were computed")
 
     class Config:
         from_attributes = True

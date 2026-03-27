@@ -180,7 +180,15 @@ class GraphAnalysisService:
 
         Returns:
             GraphMetrics object with computed metrics
+
+        Raises:
+            InvalidAlgorithmError: If algorithm is not recognized
         """
+        # Validate algorithm upfront (same validation as get_centrality)
+        valid_algorithms = ["pagerank", "betweenness", "closeness", "degree"]
+        if algorithm not in valid_algorithms:
+            raise InvalidAlgorithmError(algorithm, valid_algorithms)
+
         self._ensure_graph()
 
         node_count = self._graph_engine.node_count()
@@ -204,14 +212,18 @@ class GraphAnalysisService:
         # Detect communities using louvain algorithm
         communities = self._graph_engine.communities("louvain")
 
+        # Convert communities from sets to sorted lists for JSON serialization
+        communities_as_lists = [sorted(list(community)) for community in communities]
+
         return GraphMetrics(
             density=density,
             average_degree=avg_degree,
             connected_components=connected_components,
             degree_distribution=degree_dist,
             centrality=centrality_scores,
-            communities=communities,
+            communities=communities_as_lists,
             algorithm=algorithm,
+            computed_at=datetime.now(timezone.utc),
         )
 
     def find_shortest_path(self, source_id: str, target_id: str) -> PathResult | None:

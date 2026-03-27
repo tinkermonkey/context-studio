@@ -58,3 +58,17 @@ class SPARQLValidationError(GraphError):
         self.query = query
         self.reason = reason
         super().__init__(f"SPARQL validation failed: {reason}")
+
+
+class CommunityDetectionError(GraphError):
+    """Raised when community detection fails."""
+
+    def __init__(self, reason: str) -> None:
+        """
+        Initialize the exception.
+
+        Args:
+            reason: The reason why community detection failed
+        """
+        self.reason = reason
+        super().__init__(f"Community detection failed: {reason}")

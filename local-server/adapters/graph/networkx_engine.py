@@ -11,7 +11,7 @@ from __future__ import annotations
 import networkx as nx
 from typing import Any, Sequence
 
-from domain.graph.exceptions import NodeNotFoundError
+from domain.graph.exceptions import NodeNotFoundError, CommunityDetectionError
 
 
 class NetworkXGraphEngine:
@@ -180,17 +180,23 @@ class NetworkXGraphEngine:
 
         Raises:
             ValueError: If algorithm is not recognized
+            CommunityDetectionError: If community detection fails (e.g., empty graph)
         """
-        if algorithm == "louvain":
-            louvain_communities = nx.community.louvain_communities(self._graph)
-            return list(louvain_communities)
-        elif algorithm == "label_propagation":
-            # Label propagation requires an undirected graph
-            undirected_graph = self._graph.to_undirected()
-            label_communities = nx.community.label_propagation_communities(undirected_graph)
-            return list(label_communities)
-        else:
-            raise ValueError(f"Unknown community detection algorithm: {algorithm}")
+        try:
+            if algorithm == "louvain":
+                louvain_communities = nx.community.louvain_communities(self._graph)
+                return list(louvain_communities)
+            elif algorithm == "label_propagation":
+                # Label propagation requires an undirected graph
+                undirected_graph = self._graph.to_undirected()
+                label_communities = nx.community.label_propagation_communities(undirected_graph)
+                return list(label_communities)
+            else:
+                raise ValueError(f"Unknown community detection algorithm: {algorithm}")
+        except ZeroDivisionError as e:
+            raise CommunityDetectionError(
+                "Cannot detect communities in an empty or edgeless graph"
+            ) from e
 
     def subgraph(self, node_ids: Sequence[str]) -> NetworkXGraphEngine:
         """

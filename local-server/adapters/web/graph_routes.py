@@ -34,6 +34,7 @@ from domain.graph.exceptions import (
     NodeNotFoundError,
     InvalidAlgorithmError,
     SPARQLValidationError,
+    CommunityDetectionError,
 )
 
 from adapters.web.dependencies import get_graph_service
@@ -70,7 +71,7 @@ def _handle_graph_error(exc: GraphError) -> tuple[int, str]:
     """
     if isinstance(exc, NodeNotFoundError):
         return (status.HTTP_404_NOT_FOUND, str(exc))
-    elif isinstance(exc, (InvalidAlgorithmError, SPARQLValidationError)):
+    elif isinstance(exc, (InvalidAlgorithmError, SPARQLValidationError, CommunityDetectionError)):
         return (status.HTTP_400_BAD_REQUEST, str(exc))
     else:
         return (status.HTTP_422_UNPROCESSABLE_ENTITY, str(exc))
@@ -91,15 +92,15 @@ async def get_metrics(
         service: GraphAnalysisService from dependency injection
 
     Returns:
-        GraphMetricsResponse containing density, average degree, connected components, and degree distribution
+        GraphMetricsResponse containing density, average degree, connected components, degree distribution, centrality scores, communities, algorithm, and computed timestamp
 
     Raises:
-        HTTPException: 400 if algorithm is invalid, 422 if graph error occurs
+        HTTPException: 400 if algorithm is invalid or community detection fails, 422 if graph error occurs
     """
     try:
         metrics = service.get_metrics(algorithm=algorithm)
         return GraphMetricsResponse.model_validate(metrics)
-    except (InvalidAlgorithmError, GraphError) as exc:
+    except (InvalidAlgorithmError, CommunityDetectionError, GraphError) as exc:
         status_code, message = _handle_graph_error(exc)
         raise HTTPException(status_code=status_code, detail=message)
 
@@ -212,14 +213,14 @@ async def get_communities(
         CommunitiesResponse containing detected communities as lists of node IDs
 
     Raises:
-        HTTPException: 400 if algorithm is not recognized, 422 if graph error occurs
+        HTTPException: 400 if algorithm is not recognized or community detection fails, 422 if graph error occurs
     """
     try:
         communities = service.get_communities(algorithm)
         # Convert communities (list of sets) to list of sorted lists for JSON serialization
         communities_as_lists = [sorted(list(community)) for community in communities]
         return CommunitiesResponse(algorithm=algorithm, communities=communities_as_lists)
-    except (InvalidAlgorithmError, GraphError) as exc:
+    except (InvalidAlgorithmError, CommunityDetectionError, GraphError) as exc:
         status_code, message = _handle_graph_error(exc)
         raise HTTPException(status_code=status_code, detail=message)
 
