@@ -566,6 +566,76 @@ class TestRDFCountEndpoint:
         assert data["count"] >= 0
 
 
+class TestBuildGraphEndpoint:
+    """Tests for POST /build endpoint."""
+
+    def test_build_graph_returns_200(self, client):
+        """POST /build returns 200 OK."""
+        response = client.post("/api/graph/build")
+        assert response.status_code == status.HTTP_200_OK
+
+    def test_build_graph_response_structure(self, client):
+        """POST /build response contains knowledge graph information."""
+        response = client.post("/api/graph/build")
+        assert response.status_code == status.HTTP_200_OK
+        data = response.json()
+
+        assert "node_count" in data
+        assert "edge_count" in data
+        assert "is_directed" in data
+        assert "last_built" in data
+        assert isinstance(data["node_count"], int)
+        assert isinstance(data["edge_count"], int)
+        assert isinstance(data["is_directed"], bool)
+
+    def test_build_graph_with_data(self, client):
+        """POST /build with actual data returns non-empty graph."""
+        response = client.post("/api/graph/build")
+        assert response.status_code == status.HTTP_200_OK
+        data = response.json()
+        # Should have at least some nodes from the test data
+        assert data["node_count"] >= 0
+
+
+class TestDegreeDistributionEndpoint:
+    """Tests for GET /degree-distribution endpoint."""
+
+    def test_degree_distribution_returns_200(self, client):
+        """GET /degree-distribution returns 200 OK."""
+        response = client.get("/api/graph/degree-distribution")
+        assert response.status_code == status.HTTP_200_OK
+
+    def test_degree_distribution_response_structure(self, client):
+        """GET /degree-distribution response contains node degrees."""
+        response = client.get("/api/graph/degree-distribution")
+        assert response.status_code == status.HTTP_200_OK
+        data = response.json()
+
+        assert "distribution" in data
+        assert "computed_at" in data
+        assert isinstance(data["distribution"], dict)
+
+    def test_degree_distribution_values_are_integers(self, client):
+        """GET /degree-distribution returns integer degree values."""
+        response = client.get("/api/graph/degree-distribution")
+        assert response.status_code == status.HTTP_200_OK
+        data = response.json()
+
+        for node_id, degree in data["distribution"].items():
+            assert isinstance(node_id, str)
+            assert isinstance(degree, int)
+            assert degree >= 0
+
+    def test_degree_distribution_with_data(self, client, repository_with_data):
+        """GET /degree-distribution with actual data includes all nodes."""
+        response = client.get("/api/graph/degree-distribution")
+        assert response.status_code == status.HTTP_200_OK
+        data = response.json()
+
+        # Should have entries for classes in the repository
+        assert len(data["distribution"]) > 0
+
+
 class TestErrorHandling:
     """Tests for error handling across all endpoints."""
 

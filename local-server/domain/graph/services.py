@@ -15,12 +15,13 @@ from datetime import datetime, timezone
 from typing import TYPE_CHECKING, Any
 
 from .entities import GraphMetrics, KnowledgeGraph, PathResult
-from .events import GraphInvalidated
 from .exceptions import InvalidAlgorithmError, SPARQLValidationError
 from .ports import GraphEngine, SemanticQueryEngine
 
 if TYPE_CHECKING:
     from ..ontology.ports import OntologyRepository
+
+from ..ontology.events import GraphInvalidated
 
 # Map domain entity class names to node_type strings
 _NODE_TYPE_MAP = {

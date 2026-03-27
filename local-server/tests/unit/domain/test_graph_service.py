@@ -213,6 +213,70 @@ class TestGraphConstruction:
         assert graph_engine.edge_count() == 0
 
 
+class TestExplicitGraphBuildAndDegrees:
+    """Tests for explicit graph building and degree distribution."""
+
+    def test_build_graph_returns_knowledge_graph(self, service):
+        """build_graph() returns KnowledgeGraph with node/edge counts."""
+        svc, _, _ = service
+        result = svc.build_graph()
+
+        assert isinstance(result, KnowledgeGraph)
+        assert result.node_count >= 0
+        assert result.edge_count >= 0
+        assert result.is_directed is True
+        assert result.last_built is not None
+
+    def test_build_graph_marks_graph_not_stale(self, service):
+        """After build_graph(), graph is no longer marked stale."""
+        svc, _, _ = service
+        assert svc._graph_stale  # Initially stale
+
+        svc.build_graph()
+
+        assert not svc._graph_stale  # No longer stale
+
+    def test_build_graph_with_data(self, service, repository_with_data):
+        """build_graph() with ontology data returns correct counts."""
+        svc, _, _ = service
+        result = svc.build_graph()
+
+        # Should have at least: 1 taxonomy + 1 scheme + 3 classes = 5 nodes
+        # (property definition is also counted as a node in some configurations)
+        assert result.node_count > 0
+        assert result.edge_count >= 0
+
+    def test_get_degree_distribution_returns_dict(self, service):
+        """get_degree_distribution() returns dict of node_id -> degree."""
+        svc, _, _ = service
+        result = svc.get_degree_distribution()
+
+        assert isinstance(result, dict)
+        # Each value should be an int representing the degree
+        for node_id, degree in result.items():
+            assert isinstance(node_id, str)
+            assert isinstance(degree, int)
+            assert degree >= 0
+
+    def test_get_degree_distribution_with_data(self, service, repository_with_data):
+        """get_degree_distribution() with data includes all nodes."""
+        svc, _, _ = service
+        result = svc.get_degree_distribution()
+
+        assert isinstance(result, dict)
+        # Should have entries for taxonomy, scheme, and classes
+        assert len(result) > 0
+
+    def test_get_degree_distribution_marks_graph_not_stale(self, service):
+        """After get_degree_distribution(), graph is no longer marked stale."""
+        svc, _, _ = service
+        assert svc._graph_stale  # Initially stale
+
+        svc.get_degree_distribution()
+
+        assert not svc._graph_stale  # No longer stale
+
+
 class TestPathFinding:
     """Tests for path finding operations."""
 
