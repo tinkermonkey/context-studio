@@ -92,7 +92,7 @@ class OntologyService:
 
         self._event_publisher.publish(TaxonomyCreated(
             taxonomy_id=taxonomy_id,
-            title=title,
+            title=title if title else "",
         ))
 
         return taxonomy
@@ -150,6 +150,10 @@ class OntologyService:
         if taxonomy is None:
             raise EntityNotFoundError("Taxonomy", taxonomy_id)
 
+        # Capture old values before modification
+        old_title = taxonomy.title
+        old_description = taxonomy.description
+
         # Check if new title is unique
         if title is not None and title != taxonomy.title:
             if not title or not title.strip():
@@ -162,12 +166,33 @@ class OntologyService:
         if description is not None:
             taxonomy.description = description
 
+        # Guard against no-op updates
+        title_changed = title is not None and title != old_title
+        desc_changed = description is not None and description != old_description
+
+        if not (title_changed or desc_changed):
+            return taxonomy
+
         taxonomy.last_modified = datetime.now(timezone.utc)
         taxonomy = self._repository.save_taxonomy(taxonomy)
 
+        # Emit event only if there were actual changes
+        changed = tuple(f for f, was_changed in [("title", title_changed), ("description", desc_changed)] if was_changed)
+
+        old_values: dict[str, str | None] = {}
+        new_values: dict[str, str | None] = {}
+        if title_changed:
+            old_values["title"] = old_title
+            new_values["title"] = title
+        if desc_changed:
+            old_values["description"] = old_description
+            new_values["description"] = description
+
         self._event_publisher.publish(TaxonomyUpdated(
             taxonomy_id=taxonomy_id,
-            title=taxonomy.title,
+            changed_fields=changed,
+            old_values=old_values,
+            new_values=new_values,
         ))
 
         return taxonomy

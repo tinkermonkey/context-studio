@@ -9,9 +9,12 @@ The current implementation uses the 'all-MiniLM-L12-v2' model by default,
 which is lightweight and suitable for desktop deployment.
 """
 
-from typing import Optional
+from typing import TYPE_CHECKING, Optional
 
 from utils.logger import get_logger
+
+if TYPE_CHECKING:
+    from sentence_transformers import SentenceTransformer
 
 logger = get_logger(__name__)
 
@@ -35,7 +38,7 @@ class SentenceTransformerEmbedding:
             model_name: Name of the SentenceTransformer model to use
         """
         self.model_name = model_name
-        self._model: Optional[object] = None
+        self._model: Optional[SentenceTransformer] = None
 
     def _ensure_model_loaded(self) -> None:
         """
@@ -77,6 +80,8 @@ class SentenceTransformerEmbedding:
             RuntimeError: If model loading fails
         """
         self._ensure_model_loaded()
+        if self._model is None:
+            raise RuntimeError("Model failed to load")
         try:
             # SentenceTransformer.encode returns numpy array; convert to list
             embedding = self._model.encode(text, convert_to_tensor=False)
@@ -102,6 +107,8 @@ class SentenceTransformerEmbedding:
             RuntimeError: If model loading fails
         """
         self._ensure_model_loaded()
+        if self._model is None:
+            raise RuntimeError("Model failed to load")
         try:
             # SentenceTransformer.encode returns numpy array; convert to list of lists
             embeddings = self._model.encode(texts, convert_to_tensor=False)
@@ -123,7 +130,7 @@ class SentenceTransformerEmbedding:
         """
         try:
             import numpy as np
-            from sklearn.metrics.pairwise import cosine_similarity
+            from sklearn.metrics.pairwise import cosine_similarity  # type: ignore[import-untyped]
 
             # Convert to numpy arrays and compute cosine similarity
             arr_a = np.array(embedding_a).reshape(1, -1)

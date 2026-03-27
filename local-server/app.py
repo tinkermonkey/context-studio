@@ -77,8 +77,9 @@ async def lifespan(app: FastAPI):
         # --- Driven Adapters (Infrastructure) ---
 
         # Persistence
-        # Pass the session factory function, not a single long-lived session
-        ontology_repo = SQLiteOntologyRepository(db_manager.get_local_session)
+        # Create a new session for the repository
+        local_session = db_manager.get_local_session()
+        ontology_repo = SQLiteOntologyRepository(local_session)
         logger.info("OntologyRepository created")
 
         # Embedding service

@@ -12,7 +12,7 @@ Key responsibilities:
 - Hierarchical queries (parent-child relationships)
 """
 
-from typing import Optional, Sequence, Any, cast
+from typing import Optional, Any, cast
 from datetime import datetime, timezone
 
 from sqlalchemy.orm import Session
@@ -88,7 +88,7 @@ class SQLiteOntologyRepository:
             return None
         return cast(Taxonomy, map_orm_to_domain(orm_entity))
 
-    def list_taxonomies(self) -> Sequence[Taxonomy]:
+    def list_taxonomies(self) -> list[Taxonomy]:
         """
         Retrieve all taxonomies.
 
@@ -207,7 +207,7 @@ class SQLiteOntologyRepository:
 
     def list_concept_schemes(
         self, taxonomy_id: Optional[str] = None
-    ) -> Sequence[ConceptScheme]:
+    ) -> list[ConceptScheme]:
         """
         List concept schemes, optionally filtered by taxonomy.
 
@@ -344,7 +344,7 @@ class SQLiteOntologyRepository:
         parent_class_id: Optional[str] = None,
         limit: int = 100,
         offset: int = 0,
-    ) -> Sequence[Class]:
+    ) -> list[Class]:
         """
         List classes, optionally filtered by concept scheme or parent class.
 
@@ -518,7 +518,7 @@ class SQLiteOntologyRepository:
         self.session.flush()
         return True
 
-    def search_classes(self, criteria: SearchCriteria) -> Sequence[Class]:
+    def search_classes(self, criteria: SearchCriteria) -> list[Class]:
         """
         Search classes by text and optional filters.
 
@@ -605,7 +605,7 @@ class SQLiteOntologyRepository:
 
     def list_individuals(
         self, class_id: Optional[str] = None
-    ) -> Sequence[Individual]:
+    ) -> list[Individual]:
         """
         List individuals, optionally filtered by class.
 
@@ -738,7 +738,7 @@ class SQLiteOntologyRepository:
         is_relevant: Optional[bool] = None,
         limit: int = 100,
         offset: int = 0,
-    ) -> Sequence[PropertyDefinition]:
+    ) -> list[PropertyDefinition]:
         """
         Retrieve all property definitions with optional relevance filter.
 
@@ -947,7 +947,7 @@ class SQLiteOntologyRepository:
         property_id: Optional[str] = None,
         limit: int = 100,
         offset: int = 0,
-    ) -> Sequence[Relationship]:
+    ) -> list[Relationship]:
         """
         List relationships, optionally filtered by source, target, or property definition.
 
@@ -1057,7 +1057,7 @@ class SQLiteOntologyRepository:
 
     def get_all_entities_and_relationships(
         self,
-    ) -> tuple[Sequence[Any], Sequence[Relationship]]:
+    ) -> tuple[list[Any], list[Relationship]]:
         """
         Retrieve all entities and relationships for graph analysis.
 
