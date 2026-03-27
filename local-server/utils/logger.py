@@ -17,18 +17,15 @@ def _get_handler() -> logging.Handler:
     """
     Initialize and return a shared handler for all loggers.
 
-    The handler is created once on first call. If file handler setup fails
-    (e.g., read-only filesystem), falls back to stderr handler.
+    The handler is created once on first call. If file handler setup fails,
+    falls back to stderr handler.
 
     Returns:
         A logging.Handler instance (either RotatingFileHandler or StreamHandler)
     """
     global _file_handler, _handler_init_attempted
     if _handler_init_attempted:
-        assert _file_handler is not None
         return _file_handler
-
-    _handler_init_attempted = True
 
     formatter = logging.Formatter(
         "%(asctime)s - %(name)s - %(levelname)s - %(message)s",
@@ -55,14 +52,17 @@ def _get_handler() -> logging.Handler:
         file_handler.setFormatter(formatter)
 
         _file_handler = file_handler
-    except OSError as e:
-        # If file handler setup fails (e.g., read-only filesystem),
-        # fall back to stderr handler and print diagnostic message
+    except Exception as e:
+        # If any error occurs during file handler setup, fall back to stderr.
+        # This handles OSError (e.g., read-only filesystem), configuration errors,
+        # or any other unexpected failures.
         print(f"Warning: Could not set up file logging: {e}", file=sys.stderr)
         fallback_handler = logging.StreamHandler(sys.stderr)
         fallback_handler.setFormatter(formatter)
         fallback_handler.setLevel(logging.INFO)
         _file_handler = fallback_handler
+    finally:
+        _handler_init_attempted = True
 
     return _file_handler
 
