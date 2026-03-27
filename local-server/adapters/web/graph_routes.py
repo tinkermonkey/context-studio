@@ -2,7 +2,9 @@
 FastAPI routes for the Graph Analysis bounded context.
 
 This module implements all HTTP endpoints for graph analysis operations:
+- POST /build - Explicitly build the graph from current ontology
 - GET /metrics - Graph-level structural metrics
+- GET /degree-distribution - Node degree distribution
 - GET /paths/shortest - Shortest path between two nodes
 - GET /paths/all - All paths between two nodes
 - GET /centrality - Node centrality scores
@@ -24,6 +26,7 @@ No business logic lives here—all validation and constraints are in the domain 
 Error handling translates domain exceptions to appropriate HTTP responses.
 """
 
+from datetime import datetime, timezone
 from typing import Literal, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
@@ -52,6 +55,7 @@ from adapters.web.schemas.graph import (
     TriplesResponse,
     TripleCountResponse,
     TripleResponse,
+    DegreeDistributionResponse,
 )
 
 router = APIRouter(prefix="/api/graph", tags=["graph"])
@@ -75,6 +79,36 @@ def _handle_graph_error(exc: GraphError) -> tuple[int, str]:
         return (status.HTTP_400_BAD_REQUEST, str(exc))
     else:
         return (status.HTTP_422_UNPROCESSABLE_ENTITY, str(exc))
+
+
+# ==================== Graph Construction Endpoint ====================
+
+@router.post("/build", response_model=KnowledgeGraphResponse)
+async def build_graph(
+    service: GraphAnalysisService = Depends(get_graph_service),
+) -> KnowledgeGraphResponse:
+    """
+    Explicitly build the in-memory graph from current ontology data.
+
+    This endpoint allows clients to trigger graph construction on demand. Graph building
+    normally happens lazily on first query, but this endpoint enables explicit control
+    over graph refresh timing and validates that the graph can be built without errors.
+
+    Args:
+        service: GraphAnalysisService from dependency injection
+
+    Returns:
+        KnowledgeGraphResponse containing node count, edge count, and build timestamp
+
+    Raises:
+        HTTPException: 422 if graph construction fails
+    """
+    try:
+        graph = service.build_graph()
+        return KnowledgeGraphResponse.model_validate(graph)
+    except GraphError as exc:
+        status_code, message = _handle_graph_error(exc)
+        raise HTTPException(status_code=status_code, detail=message)
 
 
 # ==================== Graph Metrics Endpoint ====================
@@ -101,6 +135,39 @@ async def get_metrics(
         metrics = service.get_metrics(algorithm=algorithm)
         return GraphMetricsResponse.model_validate(metrics)
     except (InvalidAlgorithmError, GraphError) as exc:
+        status_code, message = _handle_graph_error(exc)
+        raise HTTPException(status_code=status_code, detail=message)
+
+
+# ==================== Degree Distribution Endpoint ====================
+
+@router.get("/degree-distribution", response_model=DegreeDistributionResponse)
+async def get_degree_distribution(
+    service: GraphAnalysisService = Depends(get_graph_service),
+) -> DegreeDistributionResponse:
+    """
+    Get the degree distribution across all nodes in the graph.
+
+    The degree of a node is the number of edges connected to it. This endpoint
+    provides the raw degree counts for each node, useful for network analysis
+    and topology studies.
+
+    Args:
+        service: GraphAnalysisService from dependency injection
+
+    Returns:
+        DegreeDistributionResponse containing node ID to degree mapping and computed timestamp
+
+    Raises:
+        HTTPException: 422 if graph error occurs
+    """
+    try:
+        distribution = service.get_degree_distribution()
+        return DegreeDistributionResponse(
+            distribution=distribution,
+            computed_at=datetime.now(timezone.utc),
+        )
+    except GraphError as exc:
         status_code, message = _handle_graph_error(exc)
         raise HTTPException(status_code=status_code, detail=message)
 

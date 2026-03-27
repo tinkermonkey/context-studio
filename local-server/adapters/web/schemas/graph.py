@@ -160,3 +160,13 @@ class TripleCountResponse(BaseModel):
 
     class Config:
         from_attributes = True
+
+
+class DegreeDistributionResponse(BaseModel):
+    """Response containing degree distribution for all nodes."""
+
+    distribution: dict[str, int] = Field(..., description="Mapping of node IDs to their degrees")
+    computed_at: datetime = Field(..., description="Timestamp when distribution was computed")
+
+    class Config:
+        from_attributes = True

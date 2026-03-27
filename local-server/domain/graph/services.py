@@ -15,11 +15,11 @@ from datetime import datetime, timezone
 from typing import TYPE_CHECKING, Any
 
 from .entities import GraphMetrics, KnowledgeGraph, PathResult
+from .events import GraphInvalidated
 from .exceptions import InvalidAlgorithmError, SPARQLValidationError
 from .ports import GraphEngine, SemanticQueryEngine
 
 if TYPE_CHECKING:
-    from ..ontology.events import GraphInvalidated
     from ..ontology.ports import OntologyRepository
 
 # Map domain entity class names to node_type strings
@@ -171,6 +171,45 @@ class GraphAnalysisService:
         # Load the RDF graph
         self._query_engine.load_ontology(nodes, edges, prop_defs)
         self._rdf_stale = False
+
+    def build_graph(self) -> KnowledgeGraph:
+        """
+        Explicitly build the in-memory graph from current ontology data.
+
+        This endpoint allows clients to trigger graph construction on demand,
+        which normally happens lazily on first query. Useful for validating
+        that the graph can be built without errors and for explicit control
+        over graph refresh timing.
+
+        Returns:
+            KnowledgeGraph descriptor with node count, edge count, and timestamp
+
+        Raises:
+            GraphError: If graph construction fails
+        """
+        self._ensure_graph()
+        return KnowledgeGraph(
+            node_count=self._graph_engine.node_count(),
+            edge_count=self._graph_engine.edge_count(),
+            is_directed=True,
+            last_built=datetime.now(timezone.utc),
+        )
+
+    def get_degree_distribution(self) -> dict[str, int]:
+        """
+        Get the degree of each node in the graph.
+
+        The degree is the number of edges connected to a node (in-degree + out-degree
+        for directed graphs).
+
+        Returns:
+            Dictionary mapping node ID to degree
+
+        Raises:
+            GraphError: If graph construction fails
+        """
+        self._ensure_graph()
+        return self._graph_engine.degree_distribution()
 
     def get_metrics(self, algorithm: str = "betweenness") -> GraphMetrics:
         """

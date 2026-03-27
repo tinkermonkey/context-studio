@@ -83,3 +83,26 @@ class PathResult:
     path: list[str]
     length: int
     relationships: list[str]
+
+
+@dataclass
+class SubgraphResult:
+    """
+    A subgraph extracted around a center node.
+
+    Represents the result of subgraph extraction operations, including the center node
+    and all nodes/edges within a specified distance from it.
+
+    Attributes:
+        center_node_id: ID of the center node around which the subgraph was extracted
+        node_count: Number of nodes in the subgraph
+        edge_count: Number of edges in the subgraph
+        depth: Maximum distance from center node that was included
+        extracted_at: Timestamp when the subgraph was extracted
+    """
+
+    center_node_id: str
+    node_count: int
+    edge_count: int
+    depth: int
+    extracted_at: datetime
