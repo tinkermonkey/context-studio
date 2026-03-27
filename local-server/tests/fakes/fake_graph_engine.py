@@ -168,16 +168,27 @@ class FakeGraphEngine:
         """
         Get all neighbors of a node with directional filtering.
 
-        For the fake implementation, returns empty set (no edges tracked).
+        Returns neighbors based on stored edges and the direction parameter.
+        - "out": nodes that this node points to
+        - "in": nodes that point to this node
+        - "both": all connected neighbors
 
         Args:
             node_id: ID of the node
             direction: Direction of traversal: "in", "out", or "both"
 
         Returns:
-            Set of neighboring node IDs (empty in fake)
+            Set of neighboring node IDs
         """
-        return set()
+        neighbors_set = set()
+
+        for edge in self._edges:
+            if direction in ("out", "both") and edge["source_id"] == node_id:
+                neighbors_set.add(edge["target_id"])
+            if direction in ("in", "both") and edge["target_id"] == node_id:
+                neighbors_set.add(edge["source_id"])
+
+        return neighbors_set
 
     def has_cycle(self, source_id: str, target_id: str) -> bool:
         """
