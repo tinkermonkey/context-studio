@@ -112,7 +112,7 @@ class Class:
         external_references: List of references to external knowledge bases
         lexical_senses: List of word sense disambiguation entries
         data_properties: List of data property values on this class
-        embedding: Optional bytes representing the semantic embedding (serialized float array)
+        embedding: Optional list of floats representing the semantic embedding
         created_at: Timestamp of creation
         last_modified: Timestamp of last modification
         version: Version number for optimistic concurrency control
@@ -128,7 +128,7 @@ class Class:
     external_references: list[ExternalReference] = field(default_factory=list)
     lexical_senses: list[LexicalSense] = field(default_factory=list)
     data_properties: list[DataPropertyValue] = field(default_factory=list)
-    embedding: bytes | None = None
+    embedding: list[float] | None = None
     created_at: datetime | None = None
     last_modified: datetime | None = None
     version: int = 1

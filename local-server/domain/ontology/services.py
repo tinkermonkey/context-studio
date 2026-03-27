@@ -424,7 +424,7 @@ class OntologyService:
 
         # Generate embedding for the class
         embed_text = f"{title} {description or ''}".strip()
-        embedding = self._embedding_service.embed_text(embed_text)
+        embedding = self._embedding_service.embed(embed_text)
 
         cls = Class(
             id=class_id,
@@ -545,7 +545,7 @@ class OntologyService:
         # Regenerate embedding only if title or description changed
         if title_changed or desc_changed:
             embed_text = f"{cls.title} {cls.description or ''}".strip()
-            embedding = self._embedding_service.embed_text(embed_text)
+            embedding = self._embedding_service.embed(embed_text)
             cls.embedding = embedding
 
         # Guard against no-op updates

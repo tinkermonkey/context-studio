@@ -398,11 +398,11 @@ class EmbeddingService(Protocol):
     Port for embedding text into vector space.
 
     Used to convert text into semantic embeddings for similarity searches
-    and clustering operations. Embeddings are returned as bytes (serialized
-    float32 numpy arrays) for efficient storage and comparison.
+    and clustering operations. Embeddings are returned as fixed-length lists
+    of floats for semantic operations.
     """
 
-    def embed_text(self, text: str) -> bytes:
+    def embed(self, text: str) -> list[float]:
         """
         Embed a single text into a vector.
 
@@ -410,11 +410,11 @@ class EmbeddingService(Protocol):
             text: The text to embed
 
         Returns:
-            The embedding as serialized bytes (float32 numpy array)
+            The embedding as a list of floats (fixed-length vector)
         """
         ...
 
-    def embed_batch(self, texts: list[str]) -> list[bytes]:
+    def embed_batch(self, texts: list[str]) -> list[list[float]]:
         """
         Embed multiple texts in batch.
 
@@ -422,17 +422,17 @@ class EmbeddingService(Protocol):
             texts: List of texts to embed
 
         Returns:
-            List of embeddings as serialized bytes (float32 numpy arrays)
+            List of embeddings, each as a list of floats
         """
         ...
 
-    def similarity(self, embedding_a: bytes, embedding_b: bytes) -> float:
+    def similarity(self, embedding_a: list[float], embedding_b: list[float]) -> float:
         """
         Compute similarity between two embeddings.
 
         Args:
-            embedding_a: First embedding as serialized bytes
-            embedding_b: Second embedding as serialized bytes
+            embedding_a: First embedding as a list of floats
+            embedding_b: Second embedding as a list of floats
 
         Returns:
             Similarity score as float (typically 0.0 to 1.0)

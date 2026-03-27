@@ -110,39 +110,48 @@ class TestEmbeddingServiceProtocol:
         service: EmbeddingService = FakeEmbeddingService()
         assert service is not None
 
-    def test_embedding_service_embed_text_returns_bytes(self):
-        """EmbeddingService.embed_text returns bytes matching the Protocol."""
+    def test_embedding_service_embed_returns_list_of_floats(self):
+        """EmbeddingService.embed returns list[float] matching the Protocol (FR-1.15)."""
         service = FakeEmbeddingService()
-        result = service.embed_text("test text")
-        assert isinstance(result, bytes)
-        assert len(result) == 32
+        result = service.embed("test text")
+        assert isinstance(result, list)
+        assert len(result) == 8  # Fixed dimension
+        assert all(isinstance(f, float) for f in result)
 
-    def test_embedding_service_embed_batch_returns_list_of_bytes(self):
-        """EmbeddingService.embed_batch returns list of bytes."""
+    def test_embedding_service_embed_returns_deterministic_embedding(self):
+        """EmbeddingService.embed returns deterministic embeddings for same text (FR-1.22)."""
+        service = FakeEmbeddingService()
+        emb1 = service.embed("hello world")
+        emb2 = service.embed("hello world")
+        assert emb1 == emb2, "Same text should produce identical embeddings"
+
+    def test_embedding_service_embed_batch_returns_list_of_float_lists(self):
+        """EmbeddingService.embed_batch returns list[list[float]]."""
         service = FakeEmbeddingService()
         result = service.embed_batch(["text1", "text2"])
         assert isinstance(result, list)
         assert len(result) == 2
-        assert all(isinstance(b, bytes) for b in result)
-        assert all(len(b) == 32 for b in result)
+        assert all(isinstance(emb, list) for emb in result)
+        assert all(all(isinstance(f, float) for f in emb) for emb in result)
+        assert all(len(emb) == 8 for emb in result)
 
     def test_embedding_service_similarity_returns_float(self):
         """EmbeddingService.similarity returns float."""
         service = FakeEmbeddingService()
-        emb1 = service.embed_text("text1")
-        emb2 = service.embed_text("text2")
+        emb1 = service.embed("text1")
+        emb2 = service.embed("text2")
         result = service.similarity(emb1, emb2)
         assert isinstance(result, float)
 
-    def test_embedding_service_similarity_accepts_bytes(self):
-        """EmbeddingService.similarity accepts bytes arguments."""
+    def test_embedding_service_similarity_accepts_float_lists(self):
+        """EmbeddingService.similarity accepts list[float] arguments."""
         service = FakeEmbeddingService()
-        embedding1 = service.embed_text("hello")
-        embedding2 = service.embed_text("hello")
+        embedding1 = service.embed("hello")
+        embedding2 = service.embed("hello")
         result = service.similarity(embedding1, embedding2)
         assert isinstance(result, float)
         assert 0.0 <= result <= 1.0
-        assert result == 1.0  # Same embedding returns 1.0 similarity
+        assert result == 1.0, "Identical embeddings should have 1.0 similarity"
 
 
 class TestEventPublisherProtocol:
