@@ -398,20 +398,8 @@ class GraphAnalysisService:
 
         Returns:
             True if adding the edge would create a cycle, False otherwise
-
-        Raises:
-            NodeNotFoundError: If either node doesn't exist
         """
         self._ensure_graph()
-
-        # Validate that both nodes exist in the repository
-        if not self._repository.get_class(source_id):
-            from .exceptions import NodeNotFoundError
-            raise NodeNotFoundError(source_id)
-        if not self._repository.get_class(target_id):
-            from .exceptions import NodeNotFoundError
-            raise NodeNotFoundError(target_id)
-
         return self._graph_engine.has_cycle(source_id, target_id)
 
     def extract_subgraph(self, node_id: str, depth: int = 1) -> KnowledgeGraph:

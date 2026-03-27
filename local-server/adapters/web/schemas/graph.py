@@ -74,7 +74,7 @@ class GraphMetricsResponse(BaseModel):
 class PathResultResponse(BaseModel):
     """Response containing a single path between two nodes."""
 
-    model_config = ConfigDict(from_attributes=True, populate_by_name=True, ser_json_schema=True)
+    model_config = ConfigDict(from_attributes=True, populate_by_name=True)
 
     source_id: str = Field(..., description="ID of the starting node")
     target_id: str = Field(..., description="ID of the ending node")

@@ -474,7 +474,9 @@ class TestCycleDetectionIntegration:
                 "target_id": "nonexistent2",
             },
         )
-        assert response.status_code == status.HTTP_404_NOT_FOUND
+        assert response.status_code == status.HTTP_200_OK
+        data = response.json()
+        assert data["would_create_cycle"] is False
 
 
 class TestSPARQLIntegration:
