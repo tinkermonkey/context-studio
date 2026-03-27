@@ -195,13 +195,53 @@ class FakeGraphEngine:
         """
         Check if adding an edge would create a cycle.
 
-        For the fake implementation, always returns False.
+        Uses depth-first search to detect if a path exists from target_id
+        to source_id. If such a path exists, adding source_id -> target_id
+        would create a cycle.
 
         Args:
             source_id: ID of the proposed edge source
             target_id: ID of the proposed edge target
 
         Returns:
-            False always in fake implementation
+            True if a path exists from target_id to source_id, False otherwise
         """
+        if source_id not in self._nodes or target_id not in self._nodes:
+            return False
+
+        # Check if there's already a path from target_id to source_id
+        # If yes, adding source_id -> target_id would create a cycle
+        return self._has_path(target_id, source_id)
+
+    def _has_path(self, start_id: str, end_id: str) -> bool:
+        """
+        Check if a path exists from start_id to end_id using DFS.
+
+        Args:
+            start_id: Starting node ID
+            end_id: Target node ID
+
+        Returns:
+            True if path exists, False otherwise
+        """
+        if start_id == end_id:
+            return True
+
+        visited = set()
+        stack = [start_id]
+
+        while stack:
+            current = stack.pop()
+            if current in visited:
+                continue
+            visited.add(current)
+
+            if current == end_id:
+                return True
+
+            # Add all outgoing neighbors to stack
+            for edge in self._edges:
+                if edge["source_id"] == current and edge["target_id"] not in visited:
+                    stack.append(edge["target_id"])
+
         return False

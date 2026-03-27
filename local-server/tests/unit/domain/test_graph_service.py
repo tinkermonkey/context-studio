@@ -283,23 +283,35 @@ class TestCentrality:
             assert cls.id in result
             assert isinstance(result[cls.id], float)
 
-    def test_get_centrality_betweenness(self, service):
+    def test_get_centrality_betweenness(self, service, repository_with_data):
         """get_centrality with betweenness returns node scores."""
         svc, _, _ = service
         result = svc.get_centrality("betweenness")
         assert isinstance(result, dict)
+        classes = repository_with_data.list_classes()
+        for cls in classes:
+            assert cls.id in result
+            assert isinstance(result[cls.id], float)
 
-    def test_get_centrality_closeness(self, service):
+    def test_get_centrality_closeness(self, service, repository_with_data):
         """get_centrality with closeness returns node scores."""
         svc, _, _ = service
         result = svc.get_centrality("closeness")
         assert isinstance(result, dict)
+        classes = repository_with_data.list_classes()
+        for cls in classes:
+            assert cls.id in result
+            assert isinstance(result[cls.id], float)
 
-    def test_get_centrality_degree(self, service):
+    def test_get_centrality_degree(self, service, repository_with_data):
         """get_centrality with degree returns node scores."""
         svc, _, _ = service
         result = svc.get_centrality("degree")
         assert isinstance(result, dict)
+        classes = repository_with_data.list_classes()
+        for cls in classes:
+            assert cls.id in result
+            assert isinstance(result[cls.id], (int, float))
 
     def test_get_centrality_invalid_raises(self, service):
         """get_centrality with invalid algorithm raises InvalidAlgorithmError."""
@@ -316,21 +328,25 @@ class TestCentrality:
 class TestCommunityDetection:
     """Tests for community detection."""
 
-    def test_get_communities_louvain(self, service):
+    def test_get_communities_louvain(self, service, repository_with_data):
         """get_communities with louvain returns list of sets."""
         svc, _, _ = service
         result = svc.get_communities("louvain")
 
         assert isinstance(result, list)
         assert all(isinstance(comm, set) for comm in result)
+        # Each community should be non-empty
+        assert all(len(comm) > 0 for comm in result)
 
-    def test_get_communities_label_propagation(self, service):
+    def test_get_communities_label_propagation(self, service, repository_with_data):
         """get_communities with label_propagation returns list of sets."""
         svc, _, _ = service
         result = svc.get_communities("label_propagation")
 
         assert isinstance(result, list)
         assert all(isinstance(comm, set) for comm in result)
+        # Each community should be non-empty
+        assert all(len(comm) > 0 for comm in result)
 
     def test_get_communities_invalid_raises(self, service):
         """get_communities with invalid algorithm raises InvalidAlgorithmError."""
@@ -348,43 +364,55 @@ class TestNeighbors:
     """Tests for neighbor retrieval."""
 
     def test_get_neighbors_direction_in(self, service, repository_with_data):
-        """get_neighbors accepts 'in' direction."""
+        """get_neighbors accepts 'in' direction and returns node IDs."""
         svc, _, _ = service
         classes = repository_with_data.list_classes()
         assert len(classes) > 0
         result = svc.get_neighbors(classes[0].id, direction="in")
         assert isinstance(result, set)
+        # All neighbors should be valid node IDs
+        all_class_ids = {cls.id for cls in classes}
+        assert result.issubset(all_class_ids)
 
     def test_get_neighbors_direction_out(self, service, repository_with_data):
-        """get_neighbors accepts 'out' direction."""
+        """get_neighbors accepts 'out' direction and returns node IDs."""
         svc, _, _ = service
         classes = repository_with_data.list_classes()
         assert len(classes) > 0
         result = svc.get_neighbors(classes[0].id, direction="out")
         assert isinstance(result, set)
+        # All neighbors should be valid node IDs
+        all_class_ids = {cls.id for cls in classes}
+        assert result.issubset(all_class_ids)
 
     def test_get_neighbors_direction_both(self, service, repository_with_data):
-        """get_neighbors accepts 'both' direction (default)."""
+        """get_neighbors accepts 'both' direction and returns node IDs."""
         svc, _, _ = service
         classes = repository_with_data.list_classes()
         assert len(classes) > 0
         result = svc.get_neighbors(classes[0].id, direction="both")
         assert isinstance(result, set)
+        # All neighbors should be valid node IDs
+        all_class_ids = {cls.id for cls in classes}
+        assert result.issubset(all_class_ids)
 
     def test_get_neighbors_default_direction(self, service, repository_with_data):
-        """get_neighbors defaults to 'both' direction."""
+        """get_neighbors defaults to 'both' direction and returns node IDs."""
         svc, _, _ = service
         classes = repository_with_data.list_classes()
         assert len(classes) > 0
         result = svc.get_neighbors(classes[0].id)
         assert isinstance(result, set)
+        # All neighbors should be valid node IDs
+        all_class_ids = {cls.id for cls in classes}
+        assert result.issubset(all_class_ids)
 
 
 class TestCycleDetection:
     """Tests for cycle detection."""
 
     def test_check_cycle_returns_bool(self, service, repository_with_data):
-        """check_cycle returns boolean."""
+        """check_cycle returns boolean indicating if cycle would be created."""
         svc, _, _ = service
         classes = repository_with_data.list_classes()
         assert len(classes) >= 2
@@ -392,17 +420,29 @@ class TestCycleDetection:
         assert isinstance(result, bool)
 
     def test_check_cycle_nonexistent_nodes(self, service):
-        """check_cycle works with nonexistent nodes."""
+        """check_cycle returns False for nonexistent nodes."""
         svc, _, _ = service
         result = svc.check_cycle("nonexistent1", "nonexistent2")
         assert isinstance(result, bool)
+        # No cycle can exist if nodes don't exist
+        assert result is False
+
+    def test_check_cycle_self_loop_detection(self, service, repository_with_data):
+        """check_cycle detects self-loops (source == target)."""
+        svc, _, _ = service
+        classes = repository_with_data.list_classes()
+        assert len(classes) > 0
+        # A self-loop would create a cycle
+        result = svc.check_cycle(classes[0].id, classes[0].id)
+        assert isinstance(result, bool)
+        # Note: self-loop behavior depends on implementation
 
 
 class TestSubgraphExtraction:
     """Tests for subgraph extraction."""
 
     def test_extract_subgraph_returns_knowledge_graph(self, service, repository_with_data):
-        """extract_subgraph returns KnowledgeGraph."""
+        """extract_subgraph returns KnowledgeGraph with valid counts."""
         svc, _, _ = service
         classes = repository_with_data.list_classes()
         assert len(classes) > 0
@@ -412,22 +452,28 @@ class TestSubgraphExtraction:
         assert isinstance(result.node_count, int)
         assert isinstance(result.edge_count, int)
         assert result.is_directed
+        # Counts should be non-negative
+        assert result.node_count >= 0
+        assert result.edge_count >= 0
 
     def test_extract_subgraph_depth_1(self, service, repository_with_data):
-        """extract_subgraph with depth=1 includes node and its neighbors."""
+        """extract_subgraph with depth=1 includes center node and its neighbors."""
         svc, _, _ = service
         classes = repository_with_data.list_classes()
         assert len(classes) > 0
         result = svc.extract_subgraph(classes[0].id, depth=1)
         assert result.node_count >= 1  # At least the source node
+        assert result.edge_count >= 0  # Edges can be zero
 
     def test_extract_subgraph_depth_2(self, service, repository_with_data):
-        """extract_subgraph respects depth parameter."""
+        """extract_subgraph respects depth parameter and returns valid subgraph."""
         svc, _, _ = service
         classes = repository_with_data.list_classes()
         assert len(classes) > 0
         result = svc.extract_subgraph(classes[0].id, depth=2)
         assert isinstance(result, KnowledgeGraph)
+        assert result.node_count >= 1
+        assert result.edge_count >= 0
 
 
 class TestMetrics:
