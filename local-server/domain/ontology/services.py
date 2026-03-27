@@ -613,12 +613,12 @@ class OntologyService:
             existing_classes = self._repository.list_classes(concept_scheme_id=cls.concept_scheme_id)
             if any(c.title == title and c.id != class_id for c in existing_classes):
                 raise DuplicateEntityError(f"Class with title '{title}' already exists in this scheme")
+            if not title or not title.strip():
+                raise ValueError("Title cannot be empty")
+            cls.title = title
 
-        if title is not None and title_changed:
-            cls.rename(title)
         if desc_changed:
             cls.description = description
-            cls.last_modified = datetime.now(timezone.utc)
 
         # Regenerate embedding only if title or description changed
         if title_changed or desc_changed:
@@ -630,6 +630,7 @@ class OntologyService:
         if not (title_changed or desc_changed):
             return cls
 
+        cls.last_modified = datetime.now(timezone.utc)
         cls = self._repository.save_class(cls)
 
         changed = tuple(f for f, was_changed in [("title", title_changed), ("description", desc_changed)] if was_changed)
