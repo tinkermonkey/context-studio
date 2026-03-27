@@ -176,6 +176,8 @@ class SubgraphResultResponse(BaseModel):
     """Response containing depth-based subgraph extraction result."""
 
     center_node_id: str = Field(..., description="ID of the center node")
+    node_ids: list[str] = Field(..., description="IDs of all nodes in the subgraph")
+    edge_ids: list[tuple[str, str]] = Field(..., description="Edges connecting nodes in the subgraph as (source, target) tuples")
     node_count: int = Field(..., description="Number of nodes in the subgraph")
     edge_count: int = Field(..., description="Number of edges in the subgraph")
     depth: int = Field(..., description="Maximum traversal depth from center node")

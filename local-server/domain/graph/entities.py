@@ -95,6 +95,8 @@ class SubgraphResult:
 
     Attributes:
         center_node_id: ID of the center node around which the subgraph was extracted
+        node_ids: IDs of all nodes in the subgraph
+        edge_ids: List of (source_id, target_id) tuples for edges in the subgraph
         node_count: Number of nodes in the subgraph
         edge_count: Number of edges in the subgraph
         depth: Maximum distance from center node that was included
@@ -102,6 +104,8 @@ class SubgraphResult:
     """
 
     center_node_id: str
+    node_ids: list[str]
+    edge_ids: list[tuple[str, str]]
     node_count: int
     edge_count: int
     depth: int

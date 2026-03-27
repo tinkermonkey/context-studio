@@ -17,7 +17,7 @@ from uuid import uuid4
 
 from domain.graph.services import GraphAnalysisService
 from domain.graph.entities import KnowledgeGraph, GraphMetrics, PathResult, SubgraphResult
-from domain.graph.exceptions import InvalidAlgorithmError, SPARQLValidationError, NodeNotFoundError
+from domain.graph.exceptions import GraphError, InvalidAlgorithmError, SPARQLValidationError, NodeNotFoundError
 from domain.ontology.entities import Class, Taxonomy, ConceptScheme, Relationship, PropertyDefinition
 from domain.ontology.events import GraphInvalidated
 from tests.fakes.fake_ontology_repository import FakeOntologyRepository
@@ -566,9 +566,9 @@ class TestSubgraphExtraction:
         assert result.node_count >= 1
 
     def test_extract_subgraph_by_depth_invalid_depth(self, service):
-        """extract_subgraph_by_depth raises ValueError for invalid depth."""
+        """extract_subgraph_by_depth raises GraphError for invalid depth."""
         svc, _, _ = service
-        with pytest.raises(ValueError):
+        with pytest.raises(GraphError):
             svc.extract_subgraph_by_depth("nonexistent", depth=0)
 
     def test_extract_subgraph_by_depth_nonexistent_center(self, service):
@@ -576,6 +576,80 @@ class TestSubgraphExtraction:
         svc, _, _ = service
         with pytest.raises(NodeNotFoundError):
             svc.extract_subgraph_by_depth("nonexistent-node-id", depth=1)
+
+    def test_extract_subgraph_by_depth_includes_node_ids(self, service, repository_with_data):
+        """extract_subgraph_by_depth includes actual node IDs in result."""
+        svc, _, _ = service
+        classes = repository_with_data.list_classes()
+        center_id = classes[0].id
+        result = svc.extract_subgraph_by_depth(center_id, depth=1)
+
+        assert hasattr(result, "node_ids")
+        assert isinstance(result.node_ids, list)
+        assert center_id in result.node_ids
+        assert len(result.node_ids) == result.node_count
+
+    def test_extract_subgraph_by_depth_includes_edge_ids(self, service, repository_with_data):
+        """extract_subgraph_by_depth includes actual edge IDs in result."""
+        svc, _, _ = service
+        classes = repository_with_data.list_classes()
+        center_id = classes[0].id
+        result = svc.extract_subgraph_by_depth(center_id, depth=1)
+
+        assert hasattr(result, "edge_ids")
+        assert isinstance(result.edge_ids, list)
+        assert len(result.edge_ids) == result.edge_count
+
+    def test_extract_subgraph_by_depth_depth_2_expands_neighborhood(self, service, repository_with_data):
+        """extract_subgraph_by_depth with depth=2 returns nodes beyond immediate neighbors."""
+        svc, _, _ = service
+        classes = repository_with_data.list_classes()
+
+        # Get subgraph with depth=1 and depth=2 from the same node
+        result_depth_1 = svc.extract_subgraph_by_depth(classes[0].id, depth=1)
+        result_depth_2 = svc.extract_subgraph_by_depth(classes[0].id, depth=2)
+
+        # Depth 2 should have at least as many nodes as depth 1
+        assert result_depth_2.node_count >= result_depth_1.node_count
+        assert result_depth_2.depth == 2
+
+    def test_extract_subgraph_by_depth_depth_3_further_expansion(self, service, repository_with_data):
+        """extract_subgraph_by_depth with depth=3 returns nodes at greater distance."""
+        svc, _, _ = service
+        classes = repository_with_data.list_classes()
+
+        # Get subgraph with depth=2 and depth=3 from the same node
+        result_depth_2 = svc.extract_subgraph_by_depth(classes[0].id, depth=2)
+        result_depth_3 = svc.extract_subgraph_by_depth(classes[0].id, depth=3)
+
+        # Depth 3 should have at least as many nodes as depth 2
+        assert result_depth_3.node_count >= result_depth_2.node_count
+        assert result_depth_3.depth == 3
+
+    def test_extract_subgraph_by_depth_node_ids_count_consistency(self, service, repository_with_data):
+        """node_count must match the length of node_ids list."""
+        svc, _, _ = service
+        classes = repository_with_data.list_classes()
+        center_id = classes[0].id
+        result = svc.extract_subgraph_by_depth(center_id, depth=2)
+
+        assert result.node_count == len(result.node_ids)
+        assert result.edge_count == len(result.edge_ids)
+
+    def test_extract_subgraph_by_depth_edge_ids_valid_tuples(self, service, repository_with_data):
+        """edge_ids are valid (source, target) tuples with both endpoints in node_ids."""
+        svc, _, _ = service
+        classes = repository_with_data.list_classes()
+        center_id = classes[0].id
+        result = svc.extract_subgraph_by_depth(center_id, depth=2)
+
+        node_id_set = set(result.node_ids)
+        for edge_tuple in result.edge_ids:
+            assert isinstance(edge_tuple, tuple)
+            assert len(edge_tuple) == 2
+            source_id, target_id = edge_tuple
+            assert source_id in node_id_set, f"Edge source {source_id} not in node_ids"
+            assert target_id in node_id_set, f"Edge target {target_id} not in node_ids"
 
 
 class TestMetrics:

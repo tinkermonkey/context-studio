@@ -14,7 +14,7 @@ from datetime import datetime, timezone
 from typing import TYPE_CHECKING, Any
 
 from .entities import GraphMetrics, KnowledgeGraph, PathResult, SubgraphResult
-from .exceptions import InvalidAlgorithmError, NodeNotFoundError, SPARQLValidationError
+from .exceptions import GraphError, InvalidAlgorithmError, NodeNotFoundError, SPARQLValidationError
 from .ports import GraphEngine, SemanticQueryEngine
 
 if TYPE_CHECKING:
@@ -453,14 +453,14 @@ class GraphAnalysisService:
             depth: Maximum distance from center node (must be >= 1)
 
         Returns:
-            SubgraphResult containing the center node ID, node count, edge count, depth, and extraction timestamp
+            SubgraphResult containing the center node ID, node IDs, edge IDs, counts, depth, and extraction timestamp
 
         Raises:
             NodeNotFoundError: If the center node does not exist in the graph
-            ValueError: If depth is less than 1
+            GraphError: If depth is less than 1
         """
         if depth < 1:
-            raise ValueError("depth must be at least 1")
+            raise GraphError("depth must be at least 1")
 
         self._ensure_graph()
 
@@ -476,10 +476,21 @@ class GraphAnalysisService:
 
         # Create the subgraph with the center node plus all nodes in the neighborhood
         subgraph_nodes = {center_node_id} | neighborhood
+        all_node_ids = [center_node_id] + sorted(list(neighborhood))
         subgraph = self._graph_engine.subgraph(list(subgraph_nodes))
+
+        # Collect edge IDs from the subgraph (edge tuples of (source_id, target_id))
+        # Access the internal _edges list from the subgraph implementation
+        edge_ids: list[tuple[str, str]] = []
+        if hasattr(subgraph, "_edges"):
+            for edge in subgraph._edges:
+                edge_tuple = (edge["source_id"], edge["target_id"])
+                edge_ids.append(edge_tuple)
 
         return SubgraphResult(
             center_node_id=center_node_id,
+            node_ids=all_node_ids,
+            edge_ids=edge_ids,
             node_count=subgraph.node_count(),
             edge_count=subgraph.edge_count(),
             depth=depth,
