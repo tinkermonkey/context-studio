@@ -13,7 +13,7 @@ from datetime import datetime, timezone
 from uuid import uuid4
 from typing import Optional
 
-from domain.ontology.entities import Taxonomy, ConceptScheme, Class, Relationship, PropertyDefinition
+from domain.ontology.entities import Taxonomy, ConceptScheme, Class, Relationship, PropertyDefinition, Individual
 from domain.ontology.events import (
     TaxonomyCreated, TaxonomyUpdated, TaxonomyDeleted,
     SchemeCreated, SchemeUpdated, SchemeDeleted,
@@ -1197,3 +1197,157 @@ class OntologyService:
         """
         classes = self._repository.list_classes(concept_scheme_id=concept_scheme_id)
         return len(classes)
+
+    # Individual operations
+
+    def create_individual(
+        self,
+        class_id: str,
+        title: str,
+        description: Optional[str] = None,
+    ) -> Individual:
+        """
+        Create a new individual instance of a class.
+
+        Validates that:
+        - The class exists
+        - The title is unique within the class
+
+        Args:
+            class_id: ID of the class this individual instantiates
+            title: Display name for the individual
+            description: Optional longer description
+
+        Returns:
+            The created Individual
+
+        Raises:
+            EntityNotFoundError: If the class does not exist
+            DuplicateEntityError: If an individual with this title already exists in the class
+            ValueError: If title is empty or whitespace
+        """
+        if not title or not title.strip():
+            raise ValueError("Title cannot be empty")
+
+        # Verify class exists
+        cls = self._repository.get_class(class_id)
+        if cls is None:
+            raise EntityNotFoundError("Class", class_id)
+
+        # Check for duplicate title within the class
+        existing = self._repository.list_individuals(class_id=class_id)
+        if any(ind.title == title for ind in existing):
+            raise DuplicateEntityError(
+                f"Individual with title '{title}' already exists in class '{class_id}'"
+            )
+
+        individual_id = str(uuid4())
+        now = datetime.now(timezone.utc)
+        individual = Individual(
+            id=individual_id,
+            class_id=class_id,
+            title=title,
+            description=description,
+            created_at=now,
+            last_modified=now,
+        )
+        individual = self._repository.save_individual(individual)
+
+        return individual
+
+    def get_individual(self, individual_id: str) -> Individual:
+        """
+        Retrieve an individual by ID.
+
+        Args:
+            individual_id: The ID of the individual
+
+        Returns:
+            The Individual
+
+        Raises:
+            EntityNotFoundError: If the individual does not exist
+        """
+        individual = self._repository.get_individual(individual_id)
+        if individual is None:
+            raise EntityNotFoundError("Individual", individual_id)
+        return individual
+
+    def list_individuals(self, class_id: Optional[str] = None) -> list[Individual]:
+        """
+        Retrieve all individuals, optionally filtered by class.
+
+        Args:
+            class_id: Optional class ID to filter by
+
+        Returns:
+            List of individuals matching the filter
+        """
+        return self._repository.list_individuals(class_id=class_id)
+
+    def update_individual(
+        self,
+        individual_id: str,
+        title: Optional[str] = None,
+        description: Optional[str] = None,
+    ) -> Individual:
+        """
+        Update an individual's title and/or description.
+
+        Validates that:
+        - The individual exists
+        - If title is updated, it is unique within the individual's class
+
+        Args:
+            individual_id: The ID of the individual to update
+            title: New title (optional)
+            description: New description (optional)
+
+        Returns:
+            The updated Individual
+
+        Raises:
+            EntityNotFoundError: If the individual does not exist
+            DuplicateEntityError: If title is updated to a value that already exists in the class
+        """
+        individual = self._repository.get_individual(individual_id)
+        if individual is None:
+            raise EntityNotFoundError("Individual", individual_id)
+
+        # If title is provided, validate uniqueness within the class
+        if title is not None:
+            if not title or not title.strip():
+                raise ValueError("Title cannot be empty")
+            if title != individual.title:
+                existing = self._repository.list_individuals(class_id=individual.class_id)
+                if any(ind.title == title for ind in existing):
+                    raise DuplicateEntityError(
+                        f"Individual with title '{title}' already exists in class '{individual.class_id}'"
+                    )
+                individual.title = title
+
+        # Update description if provided
+        if description is not None:
+            individual.description = description
+
+        # Update timestamp
+        individual.last_modified = datetime.now(timezone.utc)
+
+        individual = self._repository.save_individual(individual)
+        return individual
+
+    def delete_individual(self, individual_id: str) -> None:
+        """
+        Delete an individual.
+
+        Args:
+            individual_id: The ID of the individual to delete
+
+        Raises:
+            EntityNotFoundError: If the individual does not exist
+        """
+        individual = self._repository.get_individual(individual_id)
+        if individual is None:
+            raise EntityNotFoundError("Individual", individual_id)
+
+        self._repository.delete_individual(individual_id)

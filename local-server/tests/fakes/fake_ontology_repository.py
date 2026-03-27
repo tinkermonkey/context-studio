@@ -32,6 +32,7 @@ class FakeOntologyRepository:
         self._classes: dict[str, Class] = {}
         self._relationships: dict[str, Relationship] = {}
         self._property_definitions: dict[str, PropertyDefinition] = {}
+        self._individuals: dict[str, Individual] = {}
 
     # Taxonomy operations
 
@@ -192,27 +193,67 @@ class FakeOntologyRepository:
             return True
         return False
 
-    # Individual operations (not yet implemented)
+    # Individual operations
 
     def get_individual(self, individual_id: str) -> Individual | None:
-        """Return None since individuals are not yet supported.
+        """Retrieve an individual by ID.
 
-        Unlike other individual operations, this method returns None instead of
-        raising NotImplementedError because it is actively called by service code
-        (e.g., when resolving relationship source/target nodes). Returning None
-        is semantically equivalent to "entity not found" and allows graceful
-        degradation until individuals are implemented.
+        Returns None if the individual does not exist.
         """
-        return None
+        return self._individuals.get(individual_id)
 
     def list_individuals(self, class_id: str | None = None) -> list[Individual]:
-        raise NotImplementedError("Individual operations are not yet implemented")
+        """Retrieve all individuals, optionally filtered by class ID.
+
+        Args:
+            class_id: Optional class ID to filter by
+
+        Returns:
+            List of individuals matching the filter
+        """
+        results = list(self._individuals.values())
+        if class_id is not None:
+            results = [ind for ind in results if ind.class_id == class_id]
+        return results
 
     def save_individual(self, individual: Individual) -> Individual:
-        raise NotImplementedError("Individual operations are not yet implemented")
+        """Save an individual (insert or update).
+
+        Validates that the individual's title is unique within its class.
+
+        Args:
+            individual: The Individual to save
+
+        Returns:
+            The saved Individual
+
+        Raises:
+            DuplicateEntityError: If an individual with this title already exists in the class
+        """
+        # Check for duplicate title within the class (excluding the individual being updated)
+        for existing in self._individuals.values():
+            if (existing.class_id == individual.class_id and
+                existing.title == individual.title and
+                existing.id != individual.id):
+                raise DuplicateEntityError(
+                    f"Individual with title '{individual.title}' already exists in class '{individual.class_id}'"
+                )
+        self._individuals[individual.id] = individual
+        return individual
 
     def delete_individual(self, individual_id: str) -> bool:
-        raise NotImplementedError("Individual operations are not yet implemented")
+        """Delete an individual by ID.
+
+        Args:
+            individual_id: The ID of the individual to delete
+
+        Returns:
+            True if the individual was deleted, False if it did not exist
+        """
+        if individual_id in self._individuals:
+            self._individuals.pop(individual_id)
+            return True
+        return False
 
     # Bulk operations
 
