@@ -368,9 +368,6 @@ class GraphAnalysisService:
         """
         self._ensure_graph()
 
-        # Verify the center node exists (will raise NodeNotFoundError if not)
-        self._graph_engine.neighbors(node_id, direction="both")
-
         # BFS to find all nodes within the specified depth
         visited = set()
         queue = deque([(node_id, 0)])  # (node_id, current_depth)

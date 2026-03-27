@@ -65,6 +65,9 @@ class GraphEngine(Protocol):
         Returns:
             Ordered list of node IDs from source to target (inclusive),
             or None if no path exists
+
+        Raises:
+            NodeNotFoundError: If source_id or target_id does not exist in the graph
         """
         ...
 
@@ -79,6 +82,9 @@ class GraphEngine(Protocol):
 
         Returns:
             List of paths, where each path is an ordered list of node IDs
+
+        Raises:
+            NodeNotFoundError: If source_id or target_id does not exist in the graph
         """
         ...
 
@@ -146,6 +152,9 @@ class GraphEngine(Protocol):
 
         Returns:
             Set of neighboring node IDs
+
+        Raises:
+            NodeNotFoundError: If node_id does not exist in the graph
         """
         ...
 

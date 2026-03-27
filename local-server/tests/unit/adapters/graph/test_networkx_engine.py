@@ -21,6 +21,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(
 
 import pytest
 from adapters.graph.networkx_engine import NetworkXGraphEngine
+from domain.graph.exceptions import NodeNotFoundError
 
 
 class TestNetworkXGraphEngineConstruction:
@@ -154,7 +155,6 @@ class TestNetworkXGraphEngineShortestPath:
 
         engine.build_from_data(nodes, edges)
 
-        from domain.graph.exceptions import NodeNotFoundError
         with pytest.raises(NodeNotFoundError) as exc_info:
             engine.shortest_path("nonexistent", "node-1")
 
@@ -168,7 +168,6 @@ class TestNetworkXGraphEngineShortestPath:
 
         engine.build_from_data(nodes, edges)
 
-        from domain.graph.exceptions import NodeNotFoundError
         with pytest.raises(NodeNotFoundError) as exc_info:
             engine.shortest_path("node-1", "nonexistent")
 
@@ -277,7 +276,6 @@ class TestNetworkXGraphEngineAllPaths:
 
         engine.build_from_data(nodes, edges)
 
-        from domain.graph.exceptions import NodeNotFoundError
         with pytest.raises(NodeNotFoundError) as exc_info:
             engine.all_paths("nonexistent", "node-1")
 
@@ -291,7 +289,6 @@ class TestNetworkXGraphEngineAllPaths:
 
         engine.build_from_data(nodes, edges)
 
-        from domain.graph.exceptions import NodeNotFoundError
         with pytest.raises(NodeNotFoundError) as exc_info:
             engine.all_paths("node-1", "nonexistent")
 
@@ -540,7 +537,6 @@ class TestNetworkXGraphEngineNeighbors:
 
         engine.build_from_data(nodes, edges)
 
-        from domain.graph.exceptions import NodeNotFoundError
         with pytest.raises(NodeNotFoundError) as exc_info:
             engine.neighbors("nonexistent")
 
@@ -666,7 +662,6 @@ class TestNetworkXGraphEngineSubgraph:
         # a->b and b->c exist
         assert subgraph.shortest_path("a", "c") is not None
         # a->d raises error because d is not in subgraph
-        from domain.graph.exceptions import NodeNotFoundError
         with pytest.raises(NodeNotFoundError):
             subgraph.shortest_path("a", "d")
 
