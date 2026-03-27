@@ -243,7 +243,9 @@ class NetworkXGraphEngine:
         Check if adding an edge from source_id to target_id would create a cycle.
 
         This is semantically equivalent to: would adding source -> target create a
-        reverse path from target back to source?
+        cycle? A cycle exists if:
+        - source_id == target_id (self-loop), OR
+        - there is already a path from target_id back to source_id in the graph
 
         Args:
             source_id: ID of the proposed edge source
@@ -252,21 +254,16 @@ class NetworkXGraphEngine:
         Returns:
             True if adding the edge would create a cycle, False otherwise
         """
-        # Check if edge already exists
-        edge_already_exists = self._graph.has_edge(source_id, target_id)
+        # Self-loop is always a cycle
+        if source_id == target_id:
+            return True
 
-        # Only add edge if it's new to avoid corrupting existing edges
-        if not edge_already_exists:
-            self._graph.add_edge(source_id, target_id)
-
-        # Check if a reverse path exists (would indicate a cycle)
+        # Check if a path already exists from target_id back to source_id
+        # If yes, adding source_id -> target_id would create a cycle
         try:
             cycle_exists = nx.has_path(self._graph, target_id, source_id)
         except nx.NodeNotFound:
+            # If either node doesn't exist, no cycle can be created
             cycle_exists = False
-        finally:
-            # Only remove the edge if we just added it
-            if not edge_already_exists:
-                self._graph.remove_edge(source_id, target_id)
 
         return cycle_exists
