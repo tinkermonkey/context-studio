@@ -19,6 +19,7 @@ import os
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))))
 
+import pytest
 from adapters.graph.networkx_engine import NetworkXGraphEngine
 
 
@@ -342,11 +343,10 @@ class TestNetworkXGraphEngineCentrality:
         nodes = [{"id": "a"}]
         engine.build_from_data(nodes, [])
 
-        try:
+        with pytest.raises(ValueError) as exc_info:
             engine.centrality("unknown_algorithm")
-            assert False, "Should have raised ValueError"
-        except ValueError as e:
-            assert "unknown_algorithm" in str(e).lower()
+
+        assert "unknown_algorithm" in str(exc_info.value).lower()
 
 
 class TestNetworkXGraphEngineCommunities:
@@ -407,11 +407,10 @@ class TestNetworkXGraphEngineCommunities:
         nodes = [{"id": "a"}]
         engine.build_from_data(nodes, [])
 
-        try:
+        with pytest.raises(ValueError) as exc_info:
             engine.communities("unknown_algorithm")
-            assert False, "Should have raised ValueError"
-        except ValueError as e:
-            assert "unknown_algorithm" in str(e).lower()
+
+        assert "unknown_algorithm" in str(exc_info.value).lower()
 
 
 class TestNetworkXGraphEngineNeighbors:

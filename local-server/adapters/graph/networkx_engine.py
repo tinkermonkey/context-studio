@@ -220,8 +220,12 @@ class NetworkXGraphEngine:
         Returns:
             True if adding the edge would create a cycle, False otherwise
         """
-        # Temporarily add the edge
-        self._graph.add_edge(source_id, target_id)
+        # Check if edge already exists
+        edge_already_exists = self._graph.has_edge(source_id, target_id)
+
+        # Only add edge if it's new to avoid corrupting existing edges
+        if not edge_already_exists:
+            self._graph.add_edge(source_id, target_id)
 
         # Check if a reverse path exists (would indicate a cycle)
         try:
@@ -229,7 +233,8 @@ class NetworkXGraphEngine:
         except nx.NodeNotFound:
             cycle_exists = False
         finally:
-            # Remove the temporary edge
-            self._graph.remove_edge(source_id, target_id)
+            # Only remove the edge if we just added it
+            if not edge_already_exists:
+                self._graph.remove_edge(source_id, target_id)
 
         return cycle_exists

@@ -7,6 +7,8 @@ supporting semantic queries, SPARQL execution, and triple pattern matching.
 
 from __future__ import annotations
 
+from typing import Sequence
+
 from rdflib import Graph, Namespace, URIRef, Literal
 from rdflib.namespace import RDF, RDFS
 
@@ -31,7 +33,7 @@ class RDFLibQueryEngine:
         self._loaded = False
 
     def load_ontology(
-        self, nodes: list[dict], edges: list[dict], property_definitions: list[dict]
+        self, nodes: Sequence[dict], edges: Sequence[dict], property_definitions: Sequence[dict]
     ) -> None:
         """
         Load ontology data into the RDF graph.
