@@ -3,7 +3,7 @@
 import sys
 import os
 import hashlib
-import struct
+import math
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
@@ -32,14 +32,15 @@ class FakeEmbeddingService:
             Deterministic embedding as a list of 8 floats in [0, 1)
         """
         hash_bytes = hashlib.sha256(text.encode()).digest()
-        # Convert 32 bytes into 8 float32 values by taking 4-byte chunks
+        # Convert 32 bytes into 8 float values by taking 4-byte chunks
         embedding = []
         for i in range(self.EMBEDDING_DIMENSION):
-            # Extract 4 bytes and unpack as float32, then normalize to [0, 1)
+            # Extract 4 bytes and convert to float in [0, 1) using integer normalization
+            # This avoids NaN/Inf that can result from interpreting raw bytes as float32
             chunk = hash_bytes[i * 4:(i + 1) * 4]
-            float_val = struct.unpack('f', chunk)[0]
-            # Normalize to [0, 1) range
-            normalized = (float_val % 1.0 + 1.0) % 1.0
+            int_val = int.from_bytes(chunk, byteorder='little')
+            # Normalize to [0, 1) range using integer division
+            normalized = (int_val % (2 ** 32)) / (2 ** 32)
             embedding.append(normalized)
         return embedding
 
@@ -65,9 +66,20 @@ class FakeEmbeddingService:
 
         Returns:
             Similarity score as float in range [0.0, 1.0]
+
+        Raises:
+            ValueError: If embeddings contain NaN or Inf values
         """
         if len(embedding_a) != len(embedding_b):
             raise ValueError("Embeddings must have the same length")
+
+        # Check for NaN or Inf values which indicate invalid embeddings
+        for val in embedding_a:
+            if math.isnan(val) or math.isinf(val):
+                raise ValueError(f"embedding_a contains invalid value: {val}")
+        for val in embedding_b:
+            if math.isnan(val) or math.isinf(val):
+                raise ValueError(f"embedding_b contains invalid value: {val}")
 
         if embedding_a == embedding_b:
             return 1.0

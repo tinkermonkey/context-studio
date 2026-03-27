@@ -240,8 +240,7 @@ class TestClass:
 
     def test_class_creation_with_embedding(self):
         """Create a class with semantic embedding."""
-        embedding_floats = [0.1, 0.2, 0.3, 0.4, 0.5]
-        embedding = struct.pack('5f', *embedding_floats)
+        embedding = [0.1, 0.2, 0.3, 0.4, 0.5]
         cls = Class(
             id="class-1",
             concept_scheme_id="scheme-1",
