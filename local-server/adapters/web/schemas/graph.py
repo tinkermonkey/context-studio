@@ -63,10 +63,6 @@ class GraphMetricsResponse(BaseModel):
     average_degree: float = Field(..., description="Average degree of nodes")
     connected_components: int = Field(..., description="Number of connected components")
     degree_distribution: dict[str, int] = Field(..., description="Distribution of node degrees")
-    centrality: dict[str, float] = Field(..., description="Centrality scores by algorithm")
-    communities: list[list[str]] = Field(..., description="Communities as sorted lists of node IDs")
-    algorithm: str = Field(..., description="Algorithm used for centrality computation")
-    computed_at: datetime = Field(..., description="Timestamp when metrics were computed")
 
     class Config:
         from_attributes = True
@@ -91,12 +87,18 @@ class CentralityResponse(BaseModel):
     algorithm: str = Field(..., description="Name of the centrality algorithm")
     scores: dict[str, float] = Field(..., description="Centrality scores mapped by node ID")
 
+    class Config:
+        from_attributes = True
+
 
 class CommunitiesResponse(BaseModel):
     """Response containing community detection results."""
 
     algorithm: str = Field(..., description="Name of the community detection algorithm")
     communities: list[list[str]] = Field(..., description="Communities as sorted lists of node IDs")
+
+    class Config:
+        from_attributes = True
 
 
 class NeighborsResponse(BaseModel):
@@ -106,6 +108,9 @@ class NeighborsResponse(BaseModel):
     direction: str = Field(..., description="Direction of traversal: 'in', 'out', or 'both'")
     neighbors: list[str] = Field(..., description="List of neighboring node IDs")
 
+    class Config:
+        from_attributes = True
+
 
 class CycleCheckResponse(BaseModel):
     """Response from cycle detection check."""
@@ -114,12 +119,18 @@ class CycleCheckResponse(BaseModel):
     target_id: str = Field(..., description="ID of the proposed edge target")
     would_create_cycle: bool = Field(..., description="Whether adding this edge would create a cycle")
 
+    class Config:
+        from_attributes = True
+
 
 class SPARQLResponse(BaseModel):
     """Response from SPARQL query execution."""
 
     results: list[dict] = Field(..., description="Query result bindings")
     triple_count: int = Field(..., description="Total number of triples in the graph")
+
+    class Config:
+        from_attributes = True
 
 
 class TripleResponse(BaseModel):
@@ -144,3 +155,6 @@ class TripleCountResponse(BaseModel):
     """Response containing RDF triple count."""
 
     count: int = Field(..., description="Number of RDF triples in the graph")
+
+    class Config:
+        from_attributes = True

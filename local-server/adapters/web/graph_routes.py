@@ -24,7 +24,7 @@ No business logic lives here—all validation and constraints are in the domain 
 Error handling translates domain exceptions to appropriate HTTP responses.
 """
 
-from typing import NoReturn, Optional
+from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 
@@ -53,27 +53,27 @@ from adapters.web.schemas.graph import (
     TripleResponse,
 )
 
-router = APIRouter(prefix="/graph", tags=["graph"])
+router = APIRouter(prefix="/api/graph", tags=["graph"])
 
 
 # ==================== Error Handler Utilities ====================
 
-def _handle_graph_error(exc: GraphError) -> NoReturn:
+def _handle_graph_error(exc: GraphError) -> tuple[int, str]:
     """
-    Map domain exceptions to HTTP status codes and raise HTTPException.
+    Map domain exceptions to HTTP status codes and error messages.
 
     Args:
         exc: The domain exception from the graph service
 
-    Raises:
-        HTTPException: With appropriate status code and detail message
+    Returns:
+        Tuple of (status_code, error_message)
     """
     if isinstance(exc, NodeNotFoundError):
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc))
+        return (status.HTTP_404_NOT_FOUND, str(exc))
     elif isinstance(exc, (InvalidAlgorithmError, SPARQLValidationError)):
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc))
+        return (status.HTTP_400_BAD_REQUEST, str(exc))
     else:
-        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(exc))
+        return (status.HTTP_422_UNPROCESSABLE_ENTITY, str(exc))
 
 
 # ==================== Graph Metrics Endpoint ====================
@@ -91,27 +91,24 @@ async def get_metrics(
         service: GraphAnalysisService from dependency injection
 
     Returns:
-        GraphMetricsResponse containing density, degree stats, and community info
+        GraphMetricsResponse containing density, degree stats, and communities
 
     Raises:
         HTTPException: 400 if algorithm is invalid, 422 if graph error occurs
     """
     try:
         metrics = service.get_metrics(algorithm=algorithm)
-        # Convert communities (list of sets) to list of sorted lists for JSON serialization
-        communities_as_lists = [sorted(list(community)) for community in metrics.communities]
+        # Get degree distribution from graph engine
+        degree_dist = service._graph_engine.degree_distribution()
         return GraphMetricsResponse(
             density=metrics.density,
             average_degree=metrics.average_degree,
             connected_components=metrics.connected_components,
-            degree_distribution={},  # Would be populated by graph engine in future enhancement
-            centrality=metrics.centrality,
-            communities=communities_as_lists,
-            algorithm=metrics.algorithm,
-            computed_at=metrics.computed_at,
+            degree_distribution=degree_dist,
         )
     except (InvalidAlgorithmError, GraphError) as exc:
-        _handle_graph_error(exc)
+        status_code, message = _handle_graph_error(exc)
+        raise HTTPException(status_code=status_code, detail=message)
 
 
 # ==================== Path Finding Endpoints ====================
@@ -142,7 +139,8 @@ async def get_shortest_path(
             return None
         return PathResultResponse.model_validate(path_result)
     except (NodeNotFoundError, GraphError) as exc:
-        _handle_graph_error(exc)
+        status_code, message = _handle_graph_error(exc)
+        raise HTTPException(status_code=status_code, detail=message)
 
 
 @router.get("/paths/all", response_model=list[PathResultResponse])
@@ -171,7 +169,8 @@ async def get_all_paths(
         path_results = service.find_all_paths(source_id, target_id, max_depth)
         return [PathResultResponse.model_validate(p) for p in path_results]
     except (NodeNotFoundError, GraphError) as exc:
-        _handle_graph_error(exc)
+        status_code, message = _handle_graph_error(exc)
+        raise HTTPException(status_code=status_code, detail=message)
 
 
 # ==================== Centrality Endpoint ====================
@@ -198,7 +197,8 @@ async def get_centrality(
         scores = service.get_centrality(algorithm)
         return CentralityResponse(algorithm=algorithm, scores=scores)
     except (InvalidAlgorithmError, GraphError) as exc:
-        _handle_graph_error(exc)
+        status_code, message = _handle_graph_error(exc)
+        raise HTTPException(status_code=status_code, detail=message)
 
 
 # ==================== Community Detection Endpoint ====================
@@ -227,7 +227,8 @@ async def get_communities(
         communities_as_lists = [sorted(list(community)) for community in communities]
         return CommunitiesResponse(algorithm=algorithm, communities=communities_as_lists)
     except (InvalidAlgorithmError, GraphError) as exc:
-        _handle_graph_error(exc)
+        status_code, message = _handle_graph_error(exc)
+        raise HTTPException(status_code=status_code, detail=message)
 
 
 # ==================== Neighbor Traversal Endpoint ====================
@@ -260,7 +261,8 @@ async def get_neighbors(
             neighbors=sorted(list(neighbors)),
         )
     except (NodeNotFoundError, GraphError) as exc:
-        _handle_graph_error(exc)
+        status_code, message = _handle_graph_error(exc)
+        raise HTTPException(status_code=status_code, detail=message)
 
 
 # ==================== Subgraph Extraction Endpoint ====================
@@ -289,7 +291,8 @@ async def get_subgraph(
         subgraph = service.extract_subgraph(node_id, depth)
         return KnowledgeGraphResponse.model_validate(subgraph)
     except (NodeNotFoundError, GraphError) as exc:
-        _handle_graph_error(exc)
+        status_code, message = _handle_graph_error(exc)
+        raise HTTPException(status_code=status_code, detail=message)
 
 
 # ==================== Cycle Check Endpoint ====================
@@ -320,7 +323,8 @@ async def check_cycle(
             would_create_cycle=would_create_cycle,
         )
     except (NodeNotFoundError, GraphError) as exc:
-        _handle_graph_error(exc)
+        status_code, message = _handle_graph_error(exc)
+        raise HTTPException(status_code=status_code, detail=message)
 
 
 # ==================== SPARQL Query Endpoint ====================
@@ -348,7 +352,8 @@ async def execute_sparql(
         triple_count = service.get_triple_count()
         return SPARQLResponse(results=results, triple_count=triple_count)
     except (SPARQLValidationError, GraphError) as exc:
-        _handle_graph_error(exc)
+        status_code, message = _handle_graph_error(exc)
+        raise HTTPException(status_code=status_code, detail=message)
 
 
 # ==================== RDF Triple Endpoints ====================
@@ -382,7 +387,8 @@ async def get_rdf_triples(
         ]
         return TriplesResponse(triples=triple_responses, count=len(triple_responses))
     except GraphError as exc:
-        _handle_graph_error(exc)
+        status_code, message = _handle_graph_error(exc)
+        raise HTTPException(status_code=status_code, detail=message)
 
 
 @router.get("/rdf/count", response_model=TripleCountResponse)
@@ -405,4 +411,5 @@ async def get_rdf_triple_count(
         count = service.get_triple_count()
         return TripleCountResponse(count=count)
     except GraphError as exc:
-        _handle_graph_error(exc)
+        status_code, message = _handle_graph_error(exc)
+        raise HTTPException(status_code=status_code, detail=message)
