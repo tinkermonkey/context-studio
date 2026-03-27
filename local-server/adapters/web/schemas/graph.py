@@ -22,7 +22,6 @@ These schemas handle serialization/deserialization between HTTP and domain model
 """
 
 from datetime import datetime
-from typing import Optional
 
 from pydantic import BaseModel, Field
 

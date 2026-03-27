@@ -172,10 +172,11 @@ class GraphAnalysisService:
         """
         Compute structural metrics for the entire graph.
 
-        Includes density, average degree, connected components, and degree distribution.
+        Includes density, average degree, connected components, degree distribution,
+        centrality scores, and community detection results.
 
         Args:
-            algorithm: Centrality algorithm to use (for consistency, though not returned)
+            algorithm: Centrality algorithm to use (default: betweenness)
 
         Returns:
             GraphMetrics object with computed metrics
@@ -197,11 +198,20 @@ class GraphAnalysisService:
         # Count connected components using graph engine
         connected_components = self._graph_engine.connected_components()
 
+        # Compute centrality scores using the specified algorithm
+        centrality_scores = self._graph_engine.centrality(algorithm)
+
+        # Detect communities using louvain algorithm
+        communities = self._graph_engine.communities("louvain")
+
         return GraphMetrics(
             density=density,
             average_degree=avg_degree,
             connected_components=connected_components,
             degree_distribution=degree_dist,
+            centrality=centrality_scores,
+            communities=communities,
+            algorithm=algorithm,
         )
 
     def find_shortest_path(self, source_id: str, target_id: str) -> PathResult | None:
