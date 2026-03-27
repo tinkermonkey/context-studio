@@ -425,15 +425,6 @@ class GraphAnalysisService:
         Raises:
             SPARQLValidationError: If the query is invalid or contains disallowed operations
         """
-        # Validate query: reject update/delete operations for safety
-        disallowed_keywords = ["INSERT", "DELETE", "DROP", "CLEAR", "LOAD", "CREATE"]
-        query_upper = query.upper()
-        for keyword in disallowed_keywords:
-            if keyword in query_upper:
-                raise SPARQLValidationError(
-                    query, f"SPARQL {keyword} operations are not allowed"
-                )
-
         self._ensure_rdf()
         return self._query_engine.execute_sparql(query)
 

@@ -7,10 +7,12 @@ supporting semantic queries, SPARQL execution, and triple pattern matching.
 
 from __future__ import annotations
 
+import re
 from typing import Any, Sequence
 
 from rdflib import Graph, Namespace, URIRef, Literal
 from rdflib.namespace import RDF, RDFS
+from rdflib.exceptions import ParserError
 
 from domain.graph.exceptions import SPARQLValidationError
 
@@ -131,13 +133,16 @@ class RDFLibQueryEngine:
             List of result dictionaries, where each dict maps variable names to values
 
         Raises:
-            SPARQLValidationError: If the query contains forbidden keywords
+            SPARQLValidationError: If the query contains forbidden keywords or has syntax errors
         """
         # Validate the query before executing
         self._validate_sparql(query)
 
         # Execute the SPARQL query
-        results = self._graph.query(query)
+        try:
+            results = self._graph.query(query)
+        except ParserError as e:
+            raise SPARQLValidationError(query, f"SPARQL syntax error: {str(e)}")
 
         # Convert results to list of dicts
         result_list = []
@@ -208,6 +213,9 @@ class RDFLibQueryEngine:
         Only SELECT queries are allowed. Queries containing INSERT, DELETE, DROP,
         CLEAR, LOAD, or CREATE operations are rejected for safety.
 
+        Uses word-boundary regex matching to avoid false positives from substring
+        matching (e.g., "CREATE" inside "CREATED_BY" string literal).
+
         Args:
             query: The SPARQL query to validate
 
@@ -219,5 +227,7 @@ class RDFLibQueryEngine:
         query_upper = query.upper()
 
         for keyword in forbidden_keywords:
-            if keyword in query_upper:
+            # Use word-boundary regex to match only complete keywords, not substrings
+            pattern = rf"\b{keyword}\b"
+            if re.search(pattern, query_upper):
                 raise SPARQLValidationError(query, f"Forbidden keyword: {keyword}")

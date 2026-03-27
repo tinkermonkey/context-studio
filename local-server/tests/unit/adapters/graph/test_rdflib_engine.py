@@ -279,6 +279,47 @@ class TestRDFLibQueryEngineSPARQL:
         with pytest.raises(SPARQLValidationError):
             engine.execute_sparql(query)
 
+    def test_execute_sparql_allows_substring_in_string_literal(self):
+        """SPARQL validation does not reject keywords inside string literals.
+
+        Uses word-boundary regex matching to avoid false positives.
+        Keywords like "CREATE" inside "CREATED_BY" string literals should be allowed.
+        """
+        engine = RDFLibQueryEngine()
+        nodes = [{"id": "node-1", "title": "Alpha", "node_type": "class"}]
+        engine.load_ontology(nodes, [], [])
+
+        # Query with "CREATE" inside a string literal should be allowed
+        query = """
+        PREFIX entity: <http://context-studio.local/entity/>
+        PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+        SELECT ?s WHERE {
+            ?s rdfs:label "CREATED_BY" .
+            ?s ?p ?o
+        }
+        """
+
+        # Should not raise SPARQLValidationError
+        results = engine.execute_sparql(query)
+        assert isinstance(results, list)
+
+    def test_execute_sparql_rejects_actual_delete_keyword(self):
+        """SPARQL validation rejects actual DELETE keyword, not substring."""
+        engine = RDFLibQueryEngine()
+        nodes = [{"id": "node-1", "title": "Alpha", "node_type": "class"}]
+        engine.load_ontology(nodes, [], [])
+
+        # Query with actual DELETE keyword should be rejected
+        query = """
+        DELETE { ?s ?p ?o }
+        WHERE { ?s ?p ?o }
+        """
+
+        with pytest.raises(SPARQLValidationError) as exc_info:
+            engine.execute_sparql(query)
+
+        assert "Forbidden keyword: DELETE" in str(exc_info.value)
+
 
 class TestRDFLibQueryEngineTripleOperations:
     """Tests for triple pattern matching and retrieval."""
