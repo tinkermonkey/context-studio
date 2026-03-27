@@ -487,8 +487,7 @@ class GraphAnalysisService:
         """
         # Forbidden keywords that indicate mutation or unsafe operations
         forbidden_keywords = {
-            "DELETE", "DROP", "INSERT", "UPDATE", "CREATE", "CLEAR",
-            "LOAD", "WITH", "UNION", "GRAPH"
+            "INSERT", "DELETE", "DROP", "CLEAR", "LOAD", "CREATE"
         }
 
         query_upper = query.upper()
