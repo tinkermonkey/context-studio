@@ -39,26 +39,19 @@ class GraphMetrics:
     Computed structural metrics for an entire knowledge graph.
 
     Metrics are derived from the graph topology and include density,
-    degree statistics, connected component analysis, centrality scores,
-    and community partition results.
+    degree statistics, connected component analysis, and degree distribution.
 
     Attributes:
         density: Edge density (number of edges / max possible edges)
         average_degree: Mean degree across all nodes
         connected_components: Number of connected components in the graph
-        centrality: Dict mapping node ID (str) to centrality score (float)
-        communities: List of community partitions, each partition is a set of node IDs
-        algorithm: Name of the algorithm used for metrics computation
-        computed_at: Timestamp when metrics were computed
+        degree_distribution: Distribution of node degrees as dict[degree_count -> frequency]
     """
 
     density: float
     average_degree: float
     connected_components: int
-    centrality: dict[str, float]
-    communities: list[set[str]]
-    algorithm: str
-    computed_at: datetime
+    degree_distribution: dict[str, int]
 
 
 @dataclass

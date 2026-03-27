@@ -91,21 +91,14 @@ async def get_metrics(
         service: GraphAnalysisService from dependency injection
 
     Returns:
-        GraphMetricsResponse containing density, degree stats, and communities
+        GraphMetricsResponse containing density, average degree, connected components, and degree distribution
 
     Raises:
         HTTPException: 400 if algorithm is invalid, 422 if graph error occurs
     """
     try:
         metrics = service.get_metrics(algorithm=algorithm)
-        # Get degree distribution from graph engine
-        degree_dist = service._graph_engine.degree_distribution()
-        return GraphMetricsResponse(
-            density=metrics.density,
-            average_degree=metrics.average_degree,
-            connected_components=metrics.connected_components,
-            degree_distribution=degree_dist,
-        )
+        return GraphMetricsResponse.model_validate(metrics)
     except (InvalidAlgorithmError, GraphError) as exc:
         status_code, message = _handle_graph_error(exc)
         raise HTTPException(status_code=status_code, detail=message)
