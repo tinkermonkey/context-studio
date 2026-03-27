@@ -28,6 +28,9 @@ _NODE_TYPE_MAP = {
     "Class": "class",
 }
 
+# Valid centrality algorithms for graph analysis
+_VALID_CENTRALITY_ALGORITHMS = ["pagerank", "betweenness", "closeness", "degree"]
+
 
 class GraphAnalysisService:
     """
@@ -185,9 +188,8 @@ class GraphAnalysisService:
             InvalidAlgorithmError: If algorithm is not recognized
         """
         # Validate algorithm upfront (same validation as get_centrality)
-        valid_algorithms = ["pagerank", "betweenness", "closeness", "degree"]
-        if algorithm not in valid_algorithms:
-            raise InvalidAlgorithmError(algorithm, valid_algorithms)
+        if algorithm not in _VALID_CENTRALITY_ALGORITHMS:
+            raise InvalidAlgorithmError(algorithm, _VALID_CENTRALITY_ALGORITHMS)
 
         self._ensure_graph()
 
@@ -301,9 +303,8 @@ class GraphAnalysisService:
         Raises:
             InvalidAlgorithmError: If algorithm is not recognized
         """
-        valid_algorithms = ["pagerank", "betweenness", "closeness", "degree"]
-        if algorithm not in valid_algorithms:
-            raise InvalidAlgorithmError(algorithm, valid_algorithms)
+        if algorithm not in _VALID_CENTRALITY_ALGORITHMS:
+            raise InvalidAlgorithmError(algorithm, _VALID_CENTRALITY_ALGORITHMS)
 
         self._ensure_graph()
         return self._graph_engine.centrality(algorithm)

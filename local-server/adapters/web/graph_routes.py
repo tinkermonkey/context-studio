@@ -100,7 +100,7 @@ async def get_metrics(
     try:
         metrics = service.get_metrics(algorithm=algorithm)
         return GraphMetricsResponse.model_validate(metrics)
-    except (InvalidAlgorithmError, CommunityDetectionError, GraphError) as exc:
+    except (InvalidAlgorithmError, GraphError) as exc:
         status_code, message = _handle_graph_error(exc)
         raise HTTPException(status_code=status_code, detail=message)
 
@@ -220,7 +220,7 @@ async def get_communities(
         # Convert communities (list of sets) to list of sorted lists for JSON serialization
         communities_as_lists = [sorted(list(community)) for community in communities]
         return CommunitiesResponse(algorithm=algorithm, communities=communities_as_lists)
-    except (InvalidAlgorithmError, CommunityDetectionError, GraphError) as exc:
+    except (InvalidAlgorithmError, GraphError) as exc:
         status_code, message = _handle_graph_error(exc)
         raise HTTPException(status_code=status_code, detail=message)
 

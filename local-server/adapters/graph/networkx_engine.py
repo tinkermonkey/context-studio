@@ -193,7 +193,7 @@ class NetworkXGraphEngine:
                 return list(label_communities)
             else:
                 raise ValueError(f"Unknown community detection algorithm: {algorithm}")
-        except ZeroDivisionError as e:
+        except (ZeroDivisionError, nx.NetworkXError) as e:
             raise CommunityDetectionError(
                 "Cannot detect communities in an empty or edgeless graph"
             ) from e
