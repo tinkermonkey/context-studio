@@ -289,6 +289,51 @@ class SchemeDeleted(DomainEvent):
 
 
 @dataclass(frozen=True)
+class PropertyDefinitionUpdated(DomainEvent):
+    """
+    Event emitted when a property definition is updated.
+
+    Attributes:
+        property_id: ID of the updated property definition
+        title: New title of the property definition
+        description: New description of the property definition
+    """
+
+    _aggregate_id_field: ClassVar[str] = "property_id"
+    property_id: str = ""
+    title: str = ""
+    description: str | None = None
+
+
+@dataclass(frozen=True)
+class PropertyDefinitionDeleted(DomainEvent):
+    """
+    Event emitted when a property definition is deleted.
+
+    Attributes:
+        property_id: ID of the deleted property definition
+    """
+
+    _aggregate_id_field: ClassVar[str] = "property_id"
+    property_id: str = ""
+
+
+@dataclass(frozen=True)
+class ConceptSchemeUpdated(DomainEvent):
+    """
+    Event emitted when a concept scheme is updated.
+
+    Attributes:
+        concept_scheme_id: ID of the updated concept scheme
+        title: New title of the concept scheme
+    """
+
+    _aggregate_id_field: ClassVar[str] = "concept_scheme_id"
+    concept_scheme_id: str = ""
+    title: str = ""
+
+
+@dataclass(frozen=True)
 class GraphInvalidated(DomainEvent):
     """
     Event emitted when the graph state is invalidated and needs recomputation.

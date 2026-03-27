@@ -20,7 +20,7 @@ These schemas handle serialization/deserialization between HTTP and domain model
 """
 
 from datetime import datetime
-from typing import Optional
+from typing import Optional, Any
 
 from pydantic import BaseModel, Field
 
@@ -91,24 +91,26 @@ class ConceptSchemeResponse(BaseModel):
 class ExternalReferenceRequest(BaseModel):
     """Request to add an external reference."""
 
-    uri: str = Field(..., description="URI to external resource")
-    label: Optional[str] = Field(None, description="Display label for the reference")
-    source: Optional[str] = Field(None, description="Source of the reference (e.g., 'dbpedia', 'wikidata')")
+    source: str = Field(..., description="Source of the reference (e.g., 'dbpedia', 'wikidata')")
+    identifier: str = Field(..., description="External identifier")
+    uri: Optional[str] = Field(None, description="URI to external resource")
+    metadata: Optional[dict[str, Any]] = Field(None, description="Source-specific metadata")
 
 
 class LexicalSenseRequest(BaseModel):
     """Request to add a lexical sense."""
 
-    word_sense: str = Field(..., description="Word sense identifier (e.g., 'synset-123')")
-    definition: Optional[str] = Field(None, description="Definition of the sense")
+    label: str = Field(..., description="The sense label or term")
+    language_code: str = Field(..., description="ISO 639-1 language code")
+    sense_type: str = Field(..., description="Type of sense (e.g., 'synset', 'word_sense')")
 
 
 class DataPropertyValueRequest(BaseModel):
     """Request to add a data property value."""
 
-    property_name: str = Field(..., description="Name of the property")
-    value: str = Field(..., description="Value of the property")
-    value_type: Optional[str] = Field(None, description="Type of the value (e.g., 'string', 'integer')")
+    property_identifier: str = Field(..., description="Property identifier")
+    value: str | int | float | bool | None = Field(..., description="Value of the property")
+    datatype: Optional[str] = Field(None, description="Type of the value (e.g., 'xsd:string', 'xsd:integer')")
 
 
 class ClassCreateRequest(BaseModel):
@@ -135,24 +137,26 @@ class ClassMoveRequest(BaseModel):
 class ExternalReferenceResponse(BaseModel):
     """Response containing external reference data."""
 
-    uri: str
-    label: Optional[str] = None
-    source: Optional[str] = None
+    source: str = Field(..., description="Source of the reference")
+    identifier: str = Field(..., description="External identifier")
+    uri: Optional[str] = Field(None, description="External URI")
+    metadata: Optional[dict[str, Any]] = Field(None, description="Source-specific metadata")
 
 
 class LexicalSenseResponse(BaseModel):
     """Response containing lexical sense data."""
 
-    word_sense: str
-    definition: Optional[str] = None
+    label: str = Field(..., description="The sense label or term")
+    language_code: str = Field(..., description="ISO 639-1 language code")
+    sense_type: str = Field(..., description="Type of sense")
 
 
 class DataPropertyValueResponse(BaseModel):
     """Response containing data property value."""
 
-    property_name: str
-    value: str
-    value_type: Optional[str] = None
+    property_identifier: str = Field(..., description="Property identifier")
+    value: str | int | float | bool | None = Field(..., description="Value of the property")
+    datatype: Optional[str] = Field(None, description="Type of the value")
 
 
 class ClassResponse(BaseModel):
@@ -194,6 +198,7 @@ class RelationshipResponse(BaseModel):
     source_id: str = Field(..., description="Source entity ID")
     target_id: str = Field(..., description="Target entity ID")
     property_definition_id: str = Field(..., description="Property definition ID (relationship type)")
+    created_at: Optional[datetime] = Field(None, description="Creation timestamp")
 
     class Config:
         from_attributes = True
@@ -223,7 +228,7 @@ class PropertyDefinitionResponse(BaseModel):
     identifier: str = Field(..., description="Machine-readable identifier")
     title: str = Field(..., description="Display name")
     description: Optional[str] = Field(None, description="Optional description")
-    is_relevant: bool = Field(default=True, description="Whether this property is relevant")
+    is_relevant: Optional[bool] = Field(None, description="Relevance flag (None=not evaluated, True=relevant, False=irrelevant)")
     created_at: Optional[datetime] = Field(None, description="Creation timestamp")
     last_modified: Optional[datetime] = Field(None, description="Last modification timestamp")
     version: int = Field(default=1, description="Version number for optimistic concurrency control")
@@ -237,7 +242,7 @@ class PropertyDefinitionResponse(BaseModel):
 class ListResponse(BaseModel):
     """Generic paginated list response."""
 
-    items: list = Field(..., description="List of items")
+    items: list[Any] = Field(..., description="List of items")
     total: int = Field(..., description="Total number of items")
     limit: int = Field(..., description="Limit applied")
     offset: int = Field(..., description="Offset applied")

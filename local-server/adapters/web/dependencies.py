@@ -27,7 +27,7 @@ from fastapi import Request
 from domain.ontology.services import OntologyService
 
 
-def get_ontology_service(request: Request) -> OntologyService:
+async def get_ontology_service(request: Request) -> OntologyService:
     """
     Extract the OntologyService from app state.
 
@@ -36,5 +36,11 @@ def get_ontology_service(request: Request) -> OntologyService:
 
     Returns:
         The OntologyService instance from app.state
+
+    Raises:
+        RuntimeError: If service is not initialized in app.state
     """
-    return request.app.state.ontology_service
+    service = getattr(request.app.state, "ontology_service", None)
+    if service is None:
+        raise RuntimeError("OntologyService not initialized in app.state")
+    return service

@@ -124,7 +124,7 @@ async def list_taxonomies(
             limit=100,
             offset=0,
         )
-    except Exception as exc:
+    except (ValueError, OntologyError) as exc:
         status_code, message = _handle_domain_error(exc)
         raise HTTPException(status_code=status_code, detail=message)
 
@@ -175,11 +175,11 @@ async def update_taxonomy(
         HTTPException: 400 if invalid input, 404 if not found, 409 if title exists
     """
     try:
-        if request.title is not None:
-            taxonomy = service.rename_taxonomy(taxonomy_id, request.title)
-        else:
-            taxonomy = service.get_taxonomy(taxonomy_id)
-
+        taxonomy = service.update_taxonomy(
+            taxonomy_id=taxonomy_id,
+            title=request.title,
+            description=request.description,
+        )
         return TaxonomyResponse.model_validate(taxonomy)
     except (ValueError, EntityNotFoundError, DuplicateEntityError) as exc:
         status_code, message = _handle_domain_error(exc)
@@ -265,7 +265,7 @@ async def list_concept_schemes(
             limit=100,
             offset=0,
         )
-    except Exception as exc:
+    except (ValueError, OntologyError) as exc:
         status_code, message = _handle_domain_error(exc)
         raise HTTPException(status_code=status_code, detail=message)
 
@@ -316,11 +316,11 @@ async def update_concept_scheme(
         HTTPException: 400 if invalid, 404 if not found, 409 if title exists
     """
     try:
-        if request.title is not None:
-            scheme = service.rename_scheme(scheme_id, request.title)
-        else:
-            scheme = service.get_concept_scheme(scheme_id)
-
+        scheme = service.update_concept_scheme(
+            concept_scheme_id=scheme_id,
+            title=request.title,
+            description=request.description,
+        )
         return ConceptSchemeResponse.model_validate(scheme)
     except (ValueError, EntityNotFoundError, DuplicateEntityError) as exc:
         status_code, message = _handle_domain_error(exc)
@@ -412,14 +412,14 @@ async def list_classes(
             limit=limit,
             offset=offset,
         )
-        total = service._repository.count_classes(concept_scheme_id=concept_scheme_id)
+        total = service.count_classes(concept_scheme_id=concept_scheme_id)
         return ListResponse(
             items=[ClassResponse.model_validate(c) for c in classes],
             total=total,
             limit=limit,
             offset=offset,
         )
-    except Exception as exc:
+    except (ValueError, OntologyError) as exc:
         status_code, message = _handle_domain_error(exc)
         raise HTTPException(status_code=status_code, detail=message)
 
@@ -597,7 +597,7 @@ async def list_relationships(
             limit=100,
             offset=0,
         )
-    except Exception as exc:
+    except (ValueError, OntologyError) as exc:
         status_code, message = _handle_domain_error(exc)
         raise HTTPException(status_code=status_code, detail=message)
 
@@ -703,7 +703,7 @@ async def list_property_definitions(
             limit=100,
             offset=0,
         )
-    except Exception as exc:
+    except (ValueError, OntologyError) as exc:
         status_code, message = _handle_domain_error(exc)
         raise HTTPException(status_code=status_code, detail=message)
 
@@ -756,12 +756,15 @@ async def update_property_definition(
         HTTPException: 400 if invalid, 404 if not found
     """
     try:
-        prop_def = service.get_property_definition(property_id)
-        # Currently, the domain service doesn't have an update method for property definitions
-        # This endpoint is a placeholder for future implementation
+        prop_def = service.update_property_definition(
+            property_id=property_id,
+            title=request.title,
+            description=request.description,
+        )
         return PropertyDefinitionResponse.model_validate(prop_def)
-    except EntityNotFoundError as exc:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc))
+    except (ValueError, EntityNotFoundError, DuplicateEntityError) as exc:
+        status_code, message = _handle_domain_error(exc)
+        raise HTTPException(status_code=status_code, detail=message)
 
 
 @router.delete("/properties/{property_id}", status_code=status.HTTP_204_NO_CONTENT)
@@ -780,6 +783,7 @@ async def delete_property_definition(
         HTTPException: 404 if not found
     """
     try:
-        service._repository.delete_property_definition(property_id)
-    except EntityNotFoundError as exc:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc))
+        service.delete_property_definition(property_id)
+    except (EntityNotFoundError, OntologyError) as exc:
+        status_code, message = _handle_domain_error(exc)
+        raise HTTPException(status_code=status_code, detail=message)

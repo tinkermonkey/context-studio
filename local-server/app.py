@@ -73,14 +73,12 @@ async def lifespan(app: FastAPI):
     )
     logger.info("Database connections initialized")
 
-    # Get local database session for creating repositories
-    local_session = db_manager.get_local_session()
-
     try:
         # --- Driven Adapters (Infrastructure) ---
 
         # Persistence
-        ontology_repo = SQLiteOntologyRepository(local_session)
+        # Pass the session factory function, not a single long-lived session
+        ontology_repo = SQLiteOntologyRepository(db_manager.get_local_session)
         logger.info("OntologyRepository created")
 
         # Embedding service

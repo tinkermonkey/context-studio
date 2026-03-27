@@ -123,6 +123,54 @@ class OntologyService:
         """
         return self._repository.list_taxonomies()
 
+    def update_taxonomy(
+        self,
+        taxonomy_id: str,
+        title: Optional[str] = None,
+        description: Optional[str] = None,
+    ) -> Taxonomy:
+        """
+        Update a taxonomy's title and/or description.
+
+        Args:
+            taxonomy_id: The taxonomy ID
+            title: New title (optional)
+            description: New description (optional)
+
+        Returns:
+            The updated Taxonomy
+
+        Raises:
+            EntityNotFoundError: If the taxonomy does not exist
+            DuplicateEntityError: If the title already exists
+            ValueError: If the title is empty
+        """
+        taxonomy = self._repository.get_taxonomy(taxonomy_id)
+        if taxonomy is None:
+            raise EntityNotFoundError("Taxonomy", taxonomy_id)
+
+        # Check if new title is unique
+        if title is not None and title != taxonomy.title:
+            if not title or not title.strip():
+                raise ValueError("Title cannot be empty")
+            existing = self._repository.list_taxonomies()
+            if any(t.id != taxonomy_id and t.title == title for t in existing):
+                raise DuplicateEntityError(f"Taxonomy with title '{title}' already exists")
+            taxonomy.title = title
+
+        if description is not None:
+            taxonomy.description = description
+
+        taxonomy.last_modified = datetime.now(timezone.utc)
+        taxonomy = self._repository.save_taxonomy(taxonomy)
+
+        self._event_publisher.publish(TaxonomyUpdated(
+            taxonomy_id=taxonomy_id,
+            title=taxonomy.title,
+        ))
+
+        return taxonomy
+
     def rename_taxonomy(self, taxonomy_id: str, new_title: str) -> Taxonomy:
         """
         Rename a taxonomy.
@@ -982,3 +1030,139 @@ class OntologyService:
             List of PropertyDefinition entities
         """
         return self._repository.list_property_definitions(is_relevant=is_relevant)
+
+    def update_property_definition(
+        self,
+        property_id: str,
+        title: Optional[str] = None,
+        description: Optional[str] = None,
+    ) -> PropertyDefinition:
+        """
+        Update a property definition's title and/or description.
+
+        Note: identifier cannot be changed after creation.
+
+        Args:
+            property_id: The property definition ID
+            title: New title (optional)
+            description: New description (optional)
+
+        Returns:
+            The updated PropertyDefinition
+
+        Raises:
+            EntityNotFoundError: If the property does not exist
+            DuplicateEntityError: If the new title already exists
+            ValueError: If the new title is empty
+        """
+        prop_def = self._repository.get_property_definition(property_id)
+        if prop_def is None:
+            raise EntityNotFoundError("PropertyDefinition", property_id)
+
+        # Check if new title is unique
+        if title is not None and title != prop_def.title:
+            if not title or not title.strip():
+                raise ValueError("Title cannot be empty")
+            existing_props = self._repository.list_property_definitions()
+            if any(p.id != property_id and p.title == title for p in existing_props):
+                raise DuplicateEntityError(f"PropertyDefinition with title '{title}' already exists")
+            prop_def.title = title
+
+        if description is not None:
+            prop_def.description = description
+
+        prop_def.last_modified = datetime.now(timezone.utc)
+        prop_def = self._repository.save_property_definition(prop_def)
+
+        self._event_publisher.publish(PropertyDefinitionUpdated(
+            property_id=property_id,
+            title=prop_def.title,
+            description=prop_def.description,
+        ))
+
+        return prop_def
+
+    def delete_property_definition(self, property_id: str) -> None:
+        """
+        Delete a property definition.
+
+        Args:
+            property_id: The property definition ID
+
+        Raises:
+            EntityNotFoundError: If the property does not exist
+            OntologyError: If the property is in use by relationships
+        """
+        prop_def = self._repository.get_property_definition(property_id)
+        if prop_def is None:
+            raise EntityNotFoundError("PropertyDefinition", property_id)
+
+        # Check if property is in use
+        relationships = self._repository.list_relationships(property_id=property_id)
+        if relationships:
+            raise OntologyError(f"PropertyDefinition '{property_id}' is in use by {len(relationships)} relationship(s)")
+
+        self._repository.delete_property_definition(property_id)
+
+        self._event_publisher.publish(PropertyDefinitionDeleted(property_id=property_id))
+
+    def update_concept_scheme(
+        self,
+        concept_scheme_id: str,
+        title: Optional[str] = None,
+        description: Optional[str] = None,
+    ) -> ConceptScheme:
+        """
+        Update a concept scheme's title and/or description.
+
+        Args:
+            concept_scheme_id: The concept scheme ID
+            title: New title (optional)
+            description: New description (optional)
+
+        Returns:
+            The updated ConceptScheme
+
+        Raises:
+            EntityNotFoundError: If the concept scheme does not exist
+            DuplicateEntityError: If the title already exists
+            ValueError: If the title is empty
+        """
+        scheme = self._repository.get_concept_scheme(concept_scheme_id)
+        if scheme is None:
+            raise EntityNotFoundError("ConceptScheme", concept_scheme_id)
+
+        # Check if new title is unique
+        if title is not None and title != scheme.title:
+            if not title or not title.strip():
+                raise ValueError("Title cannot be empty")
+            existing_schemes = self._repository.list_concept_schemes(taxonomy_id=scheme.taxonomy_id)
+            if any(s.id != concept_scheme_id and s.title == title for s in existing_schemes):
+                raise DuplicateEntityError(f"ConceptScheme with title '{title}' already exists in this taxonomy")
+            scheme.title = title
+
+        if description is not None:
+            scheme.description = description
+
+        scheme.last_modified = datetime.now(timezone.utc)
+        scheme = self._repository.save_concept_scheme(scheme)
+
+        self._event_publisher.publish(ConceptSchemeUpdated(
+            concept_scheme_id=concept_scheme_id,
+            title=scheme.title,
+        ))
+
+        return scheme
+
+    def count_classes(self, concept_scheme_id: Optional[str] = None) -> int:
+        """
+        Count the number of classes, optionally filtered by concept scheme.
+
+        Args:
+            concept_scheme_id: Optional concept scheme ID to filter by
+
+        Returns:
+            The count of classes
+        """
+        classes = self._repository.list_classes(concept_scheme_id=concept_scheme_id)
+        return len(classes)
