@@ -1,0 +1,3055 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Context Studio",
+    "version": "1.0.0"
+  },
+  "paths": {
+    "/api/taxonomies": {
+      "get": {
+        "tags": [
+          "ontology"
+        ],
+        "summary": "List Taxonomies",
+        "description": "Retrieve all taxonomies.\n\nReturns:\n    ListResponse containing all taxonomies",
+        "operationId": "list_taxonomies_api_taxonomies_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "ontology"
+        ],
+        "summary": "Create Taxonomy",
+        "description": "Create a new taxonomy.\n\nArgs:\n    request: TaxonomyCreateRequest with title and optional description\n    service: OntologyService from dependency injection\n\nReturns:\n    Created taxonomy as TaxonomyResponse\n\nRaises:\n    HTTPException: 400 if title is empty, 409 if title already exists",
+        "operationId": "create_taxonomy_api_taxonomies_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TaxonomyCreateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaxonomyResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/taxonomies/{taxonomy_id}": {
+      "get": {
+        "tags": [
+          "ontology"
+        ],
+        "summary": "Get Taxonomy",
+        "description": "Retrieve a taxonomy by ID.\n\nArgs:\n    taxonomy_id: The taxonomy ID\n    service: OntologyService from dependency injection\n\nReturns:\n    TaxonomyResponse\n\nRaises:\n    HTTPException: 404 if taxonomy not found",
+        "operationId": "get_taxonomy_api_taxonomies__taxonomy_id__get",
+        "parameters": [
+          {
+            "name": "taxonomy_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Taxonomy Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaxonomyResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "ontology"
+        ],
+        "summary": "Update Taxonomy",
+        "description": "Update a taxonomy's title and/or description.\n\nArgs:\n    taxonomy_id: The taxonomy ID\n    request: TaxonomyUpdateRequest with optional fields to update\n    service: OntologyService from dependency injection\n\nReturns:\n    Updated TaxonomyResponse\n\nRaises:\n    HTTPException: 400 if invalid input, 404 if not found, 409 if title exists",
+        "operationId": "update_taxonomy_api_taxonomies__taxonomy_id__put",
+        "parameters": [
+          {
+            "name": "taxonomy_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Taxonomy Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TaxonomyUpdateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaxonomyResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "ontology"
+        ],
+        "summary": "Delete Taxonomy",
+        "description": "Delete a taxonomy.\n\nArgs:\n    taxonomy_id: The taxonomy ID\n    service: OntologyService from dependency injection\n\nRaises:\n    HTTPException: 404 if not found, 422 if it has concept schemes",
+        "operationId": "delete_taxonomy_api_taxonomies__taxonomy_id__delete",
+        "parameters": [
+          {
+            "name": "taxonomy_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Taxonomy Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/taxonomies/{taxonomy_id}/schemes": {
+      "post": {
+        "tags": [
+          "ontology"
+        ],
+        "summary": "Create Concept Scheme",
+        "description": "Create a new concept scheme within a taxonomy.\n\nArgs:\n    taxonomy_id: The parent taxonomy ID\n    request: ConceptSchemeCreateRequest with title and optional description\n    service: OntologyService from dependency injection\n\nReturns:\n    Created ConceptSchemeResponse\n\nRaises:\n    HTTPException: 400 if invalid, 404 if taxonomy not found, 409 if title exists",
+        "operationId": "create_concept_scheme_api_taxonomies__taxonomy_id__schemes_post",
+        "parameters": [
+          {
+            "name": "taxonomy_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Taxonomy Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ConceptSchemeCreateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConceptSchemeResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/schemes": {
+      "get": {
+        "tags": [
+          "ontology"
+        ],
+        "summary": "List Concept Schemes",
+        "description": "Retrieve concept schemes, optionally filtered by taxonomy.\n\nArgs:\n    taxonomy_id: Optional taxonomy ID to filter by\n    service: OntologyService from dependency injection\n\nReturns:\n    ListResponse containing matching concept schemes",
+        "operationId": "list_concept_schemes_api_schemes_get",
+        "parameters": [
+          {
+            "name": "taxonomy_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Optional taxonomy ID to filter by",
+              "title": "Taxonomy Id"
+            },
+            "description": "Optional taxonomy ID to filter by"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/schemes/{scheme_id}": {
+      "get": {
+        "tags": [
+          "ontology"
+        ],
+        "summary": "Get Concept Scheme",
+        "description": "Retrieve a concept scheme by ID.\n\nArgs:\n    scheme_id: The concept scheme ID\n    service: OntologyService from dependency injection\n\nReturns:\n    ConceptSchemeResponse\n\nRaises:\n    HTTPException: 404 if not found",
+        "operationId": "get_concept_scheme_api_schemes__scheme_id__get",
+        "parameters": [
+          {
+            "name": "scheme_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Scheme Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConceptSchemeResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "ontology"
+        ],
+        "summary": "Update Concept Scheme",
+        "description": "Update a concept scheme's title and/or description.\n\nArgs:\n    scheme_id: The concept scheme ID\n    request: ConceptSchemeUpdateRequest with optional fields to update\n    service: OntologyService from dependency injection\n\nReturns:\n    Updated ConceptSchemeResponse\n\nRaises:\n    HTTPException: 400 if invalid, 404 if not found, 409 if title exists",
+        "operationId": "update_concept_scheme_api_schemes__scheme_id__put",
+        "parameters": [
+          {
+            "name": "scheme_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Scheme Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ConceptSchemeUpdateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConceptSchemeResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "ontology"
+        ],
+        "summary": "Delete Concept Scheme",
+        "description": "Delete a concept scheme.\n\nArgs:\n    scheme_id: The concept scheme ID\n    service: OntologyService from dependency injection\n\nRaises:\n    HTTPException: 404 if not found, 422 if it has classes",
+        "operationId": "delete_concept_scheme_api_schemes__scheme_id__delete",
+        "parameters": [
+          {
+            "name": "scheme_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Scheme Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/schemes/{scheme_id}/classes": {
+      "post": {
+        "tags": [
+          "ontology"
+        ],
+        "summary": "Create Class",
+        "description": "Create a new class within a concept scheme.\n\nArgs:\n    scheme_id: The parent concept scheme ID\n    request: ClassCreateRequest with title and optional description/parent\n    service: OntologyService from dependency injection\n\nReturns:\n    Created ClassResponse\n\nRaises:\n    HTTPException: 400 if invalid, 404 if scheme/parent not found, 409 if title exists",
+        "operationId": "create_class_api_schemes__scheme_id__classes_post",
+        "parameters": [
+          {
+            "name": "scheme_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Scheme Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ClassCreateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ClassResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/classes": {
+      "get": {
+        "tags": [
+          "ontology"
+        ],
+        "summary": "List Classes",
+        "description": "Retrieve classes with optional filtering and pagination.\n\nArgs:\n    concept_scheme_id: Optional concept scheme ID to filter by\n    parent_class_id: Optional parent class ID to filter by\n    limit: Maximum number of results (1-1000, default 100)\n    offset: Number of results to skip (default 0)\n    service: OntologyService from dependency injection\n\nReturns:\n    ListResponse containing matching classes",
+        "operationId": "list_classes_api_classes_get",
+        "parameters": [
+          {
+            "name": "concept_scheme_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Optional concept scheme ID to filter by",
+              "title": "Concept Scheme Id"
+            },
+            "description": "Optional concept scheme ID to filter by"
+          },
+          {
+            "name": "parent_class_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Optional parent class ID to filter by",
+              "title": "Parent Class Id"
+            },
+            "description": "Optional parent class ID to filter by"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 1000,
+              "minimum": 1,
+              "description": "Maximum number of results",
+              "default": 100,
+              "title": "Limit"
+            },
+            "description": "Maximum number of results"
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "Number of results to skip",
+              "default": 0,
+              "title": "Offset"
+            },
+            "description": "Number of results to skip"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/classes/{class_id}": {
+      "get": {
+        "tags": [
+          "ontology"
+        ],
+        "summary": "Get Class",
+        "description": "Retrieve a class by ID.\n\nArgs:\n    class_id: The class ID\n    service: OntologyService from dependency injection\n\nReturns:\n    ClassResponse\n\nRaises:\n    HTTPException: 404 if not found",
+        "operationId": "get_class_api_classes__class_id__get",
+        "parameters": [
+          {
+            "name": "class_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Class Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ClassResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "ontology"
+        ],
+        "summary": "Update Class",
+        "description": "Update a class's title and/or description.\n\nArgs:\n    class_id: The class ID\n    request: ClassUpdateRequest with optional fields to update\n    service: OntologyService from dependency injection\n\nReturns:\n    Updated ClassResponse\n\nRaises:\n    HTTPException: 400 if invalid, 404 if not found, 409 if title exists",
+        "operationId": "update_class_api_classes__class_id__put",
+        "parameters": [
+          {
+            "name": "class_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Class Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ClassUpdateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ClassResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "ontology"
+        ],
+        "summary": "Delete Class",
+        "description": "Delete a class.\n\nArgs:\n    class_id: The class ID\n    service: OntologyService from dependency injection\n\nRaises:\n    HTTPException: 404 if not found, 422 if it has subclasses",
+        "operationId": "delete_class_api_classes__class_id__delete",
+        "parameters": [
+          {
+            "name": "class_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Class Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/classes/{class_id}/move": {
+      "post": {
+        "tags": [
+          "ontology"
+        ],
+        "summary": "Move Class",
+        "description": "Move a class to a different parent in the hierarchy.\n\nArgs:\n    class_id: The class ID\n    request: ClassMoveRequest with new_parent_id (or None to make root)\n    service: OntologyService from dependency injection\n\nReturns:\n    Updated ClassResponse\n\nRaises:\n    HTTPException: 400 if invalid, 404 if not found, 422 if circular reference",
+        "operationId": "move_class_api_classes__class_id__move_post",
+        "parameters": [
+          {
+            "name": "class_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Class Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ClassMoveRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ClassResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/relationships": {
+      "post": {
+        "tags": [
+          "ontology"
+        ],
+        "summary": "Create Relationship",
+        "description": "Create a new typed relationship between two entities.\n\nArgs:\n    request: RelationshipCreateRequest with source, target, and property definition IDs\n    service: OntologyService from dependency injection\n\nReturns:\n    Created RelationshipResponse\n\nRaises:\n    HTTPException: 400 if invalid (self-loop), 404 if entities not found, 409 if duplicate",
+        "operationId": "create_relationship_api_relationships_post",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RelationshipCreateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RelationshipResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "ontology"
+        ],
+        "summary": "List Relationships",
+        "description": "Retrieve relationships with optional filtering.\n\nArgs:\n    source_id: Optional source entity ID to filter by\n    target_id: Optional target entity ID to filter by\n    property_id: Optional property definition ID to filter by\n    service: OntologyService from dependency injection\n\nReturns:\n    ListResponse containing matching relationships",
+        "operationId": "list_relationships_api_relationships_get",
+        "parameters": [
+          {
+            "name": "source_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Optional source entity ID to filter by",
+              "title": "Source Id"
+            },
+            "description": "Optional source entity ID to filter by"
+          },
+          {
+            "name": "target_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Optional target entity ID to filter by",
+              "title": "Target Id"
+            },
+            "description": "Optional target entity ID to filter by"
+          },
+          {
+            "name": "property_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Optional property definition ID to filter by",
+              "title": "Property Id"
+            },
+            "description": "Optional property definition ID to filter by"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/relationships/{relationship_id}": {
+      "get": {
+        "tags": [
+          "ontology"
+        ],
+        "summary": "Get Relationship",
+        "description": "Retrieve a relationship by ID.\n\nArgs:\n    relationship_id: The relationship ID\n    service: OntologyService from dependency injection\n\nReturns:\n    RelationshipResponse\n\nRaises:\n    HTTPException: 404 if not found",
+        "operationId": "get_relationship_api_relationships__relationship_id__get",
+        "parameters": [
+          {
+            "name": "relationship_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Relationship Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RelationshipResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "ontology"
+        ],
+        "summary": "Delete Relationship",
+        "description": "Delete a relationship.\n\nArgs:\n    relationship_id: The relationship ID\n    service: OntologyService from dependency injection\n\nRaises:\n    HTTPException: 404 if not found",
+        "operationId": "delete_relationship_api_relationships__relationship_id__delete",
+        "parameters": [
+          {
+            "name": "relationship_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Relationship Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/properties": {
+      "post": {
+        "tags": [
+          "ontology"
+        ],
+        "summary": "Create Property Definition",
+        "description": "Create a new property definition (relationship type).\n\nArgs:\n    request: PropertyDefinitionCreateRequest with identifier and title\n    service: OntologyService from dependency injection\n\nReturns:\n    Created PropertyDefinitionResponse\n\nRaises:\n    HTTPException: 400 if invalid, 409 if identifier or title exists",
+        "operationId": "create_property_definition_api_properties_post",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PropertyDefinitionCreateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PropertyDefinitionResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "ontology"
+        ],
+        "summary": "List Property Definitions",
+        "description": "Retrieve property definitions, optionally filtered by relevance.\n\nArgs:\n    is_relevant: Optional filter for relevant properties\n    service: OntologyService from dependency injection\n\nReturns:\n    ListResponse containing property definitions",
+        "operationId": "list_property_definitions_api_properties_get",
+        "parameters": [
+          {
+            "name": "is_relevant",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Optional filter for relevant properties",
+              "title": "Is Relevant"
+            },
+            "description": "Optional filter for relevant properties"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/properties/{property_id}": {
+      "get": {
+        "tags": [
+          "ontology"
+        ],
+        "summary": "Get Property Definition",
+        "description": "Retrieve a property definition by ID.\n\nArgs:\n    property_id: The property definition ID\n    service: OntologyService from dependency injection\n\nReturns:\n    PropertyDefinitionResponse\n\nRaises:\n    HTTPException: 404 if not found",
+        "operationId": "get_property_definition_api_properties__property_id__get",
+        "parameters": [
+          {
+            "name": "property_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Property Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PropertyDefinitionResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "ontology"
+        ],
+        "summary": "Update Property Definition",
+        "description": "Update a property definition's title and/or description.\n\nNote: identifier cannot be changed after creation.\n\nArgs:\n    property_id: The property definition ID\n    request: PropertyDefinitionUpdateRequest with optional fields to update\n    service: OntologyService from dependency injection\n\nReturns:\n    Updated PropertyDefinitionResponse\n\nRaises:\n    HTTPException: 400 if invalid, 404 if not found",
+        "operationId": "update_property_definition_api_properties__property_id__put",
+        "parameters": [
+          {
+            "name": "property_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Property Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PropertyDefinitionUpdateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PropertyDefinitionResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "ontology"
+        ],
+        "summary": "Delete Property Definition",
+        "description": "Delete a property definition.\n\nArgs:\n    property_id: The property definition ID\n    service: OntologyService from dependency injection\n\nRaises:\n    HTTPException: 404 if not found",
+        "operationId": "delete_property_definition_api_properties__property_id__delete",
+        "parameters": [
+          {
+            "name": "property_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Property Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/graph/metrics": {
+      "get": {
+        "tags": [
+          "graph"
+        ],
+        "summary": "Get Metrics",
+        "description": "Get structural metrics for the entire graph.\n\nArgs:\n    algorithm: Centrality algorithm to use (betweenness, pagerank, closeness, degree)\n    service: GraphAnalysisService from dependency injection\n\nReturns:\n    GraphMetricsResponse containing density, average degree, connected components, and degree distribution\n\nRaises:\n    HTTPException: 400 if algorithm is invalid, 422 if graph error occurs",
+        "operationId": "get_metrics_api_graph_metrics_get",
+        "parameters": [
+          {
+            "name": "algorithm",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "description": "Centrality algorithm to use",
+              "default": "betweenness",
+              "title": "Algorithm"
+            },
+            "description": "Centrality algorithm to use"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GraphMetricsResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/graph/paths/shortest": {
+      "get": {
+        "tags": [
+          "graph"
+        ],
+        "summary": "Get Shortest Path",
+        "description": "Find the shortest path between two nodes.\n\nArgs:\n    source_id: ID of the starting node\n    target_id: ID of the ending node\n    service: GraphAnalysisService from dependency injection\n\nReturns:\n    PathResultResponse if a path exists, None otherwise\n\nRaises:\n    HTTPException: 404 if either node is not found, 422 if graph error occurs",
+        "operationId": "get_shortest_path_api_graph_paths_shortest_get",
+        "parameters": [
+          {
+            "name": "source_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "ID of the starting node",
+              "title": "Source Id"
+            },
+            "description": "ID of the starting node"
+          },
+          {
+            "name": "target_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "ID of the ending node",
+              "title": "Target Id"
+            },
+            "description": "ID of the ending node"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/PathResultResponse"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "title": "Response Get Shortest Path Api Graph Paths Shortest Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/graph/paths/all": {
+      "get": {
+        "tags": [
+          "graph"
+        ],
+        "summary": "Get All Paths",
+        "description": "Find all simple paths between two nodes up to a maximum depth.\n\nArgs:\n    source_id: ID of the starting node\n    target_id: ID of the ending node\n    max_depth: Maximum path length to explore (minimum 1)\n    service: GraphAnalysisService from dependency injection\n\nReturns:\n    List of PathResultResponse objects, one for each found path\n\nRaises:\n    HTTPException: 404 if either node is not found, 422 if graph error occurs",
+        "operationId": "get_all_paths_api_graph_paths_all_get",
+        "parameters": [
+          {
+            "name": "source_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "ID of the starting node",
+              "title": "Source Id"
+            },
+            "description": "ID of the starting node"
+          },
+          {
+            "name": "target_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "ID of the ending node",
+              "title": "Target Id"
+            },
+            "description": "ID of the ending node"
+          },
+          {
+            "name": "max_depth",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "description": "Maximum path length to explore",
+              "default": 5,
+              "title": "Max Depth"
+            },
+            "description": "Maximum path length to explore"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PathResultResponse"
+                  },
+                  "title": "Response Get All Paths Api Graph Paths All Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/graph/centrality": {
+      "get": {
+        "tags": [
+          "graph"
+        ],
+        "summary": "Get Centrality",
+        "description": "Compute centrality scores for all nodes using the specified algorithm.\n\nArgs:\n    algorithm: Name of the centrality algorithm (betweenness, pagerank, closeness, degree)\n    service: GraphAnalysisService from dependency injection\n\nReturns:\n    CentralityResponse mapping node IDs to centrality scores\n\nRaises:\n    HTTPException: 400 if algorithm is not recognized, 422 if graph error occurs",
+        "operationId": "get_centrality_api_graph_centrality_get",
+        "parameters": [
+          {
+            "name": "algorithm",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "description": "Centrality algorithm to use",
+              "default": "betweenness",
+              "title": "Algorithm"
+            },
+            "description": "Centrality algorithm to use"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CentralityResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/graph/communities": {
+      "get": {
+        "tags": [
+          "graph"
+        ],
+        "summary": "Get Communities",
+        "description": "Partition the graph into communities using the specified algorithm.\n\nArgs:\n    algorithm: Name of the community detection algorithm (louvain, label_propagation)\n    service: GraphAnalysisService from dependency injection\n\nReturns:\n    CommunitiesResponse containing detected communities as lists of node IDs\n\nRaises:\n    HTTPException: 400 if algorithm is not recognized, 422 if graph error occurs",
+        "operationId": "get_communities_api_graph_communities_get",
+        "parameters": [
+          {
+            "name": "algorithm",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "description": "Community detection algorithm to use",
+              "default": "louvain",
+              "title": "Algorithm"
+            },
+            "description": "Community detection algorithm to use"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommunitiesResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/graph/nodes/{node_id}/neighbors": {
+      "get": {
+        "tags": [
+          "graph"
+        ],
+        "summary": "Get Neighbors",
+        "description": "Get all neighbors of a node with optional directional filtering.\n\nArgs:\n    node_id: ID of the queried node\n    direction: Direction of traversal (in, out, or both)\n    service: GraphAnalysisService from dependency injection\n\nReturns:\n    NeighborsResponse containing list of neighboring node IDs\n\nRaises:\n    HTTPException: 404 if node is not found, 422 if graph error occurs",
+        "operationId": "get_neighbors_api_graph_nodes__node_id__neighbors_get",
+        "parameters": [
+          {
+            "name": "node_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Node Id"
+            }
+          },
+          {
+            "name": "direction",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "description": "Direction: 'in', 'out', or 'both'",
+              "default": "both",
+              "title": "Direction"
+            },
+            "description": "Direction: 'in', 'out', or 'both'"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NeighborsResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/graph/nodes/{node_id}/subgraph": {
+      "get": {
+        "tags": [
+          "graph"
+        ],
+        "summary": "Get Subgraph",
+        "description": "Extract a subgraph around a node up to a specified depth.\n\nArgs:\n    node_id: ID of the center node\n    depth: Maximum distance from the center node (minimum 1)\n    service: GraphAnalysisService from dependency injection\n\nReturns:\n    KnowledgeGraphResponse describing the extracted subgraph\n\nRaises:\n    HTTPException: 404 if node is not found, 422 if graph error occurs",
+        "operationId": "get_subgraph_api_graph_nodes__node_id__subgraph_get",
+        "parameters": [
+          {
+            "name": "node_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Node Id"
+            }
+          },
+          {
+            "name": "depth",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "description": "Maximum distance from center node",
+              "default": 1,
+              "title": "Depth"
+            },
+            "description": "Maximum distance from center node"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/KnowledgeGraphResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/graph/cycle-check": {
+      "post": {
+        "tags": [
+          "graph"
+        ],
+        "summary": "Check Cycle",
+        "description": "Check if adding an edge from source to target would create a cycle.\n\nArgs:\n    request: CycleCheckRequest with source_id and target_id\n    service: GraphAnalysisService from dependency injection\n\nReturns:\n    CycleCheckResponse indicating whether a cycle would be created\n\nRaises:\n    HTTPException: 404 if either node is not found, 422 if graph error occurs",
+        "operationId": "check_cycle_api_graph_cycle_check_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CycleCheckRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CycleCheckResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/graph/sparql": {
+      "post": {
+        "tags": [
+          "graph"
+        ],
+        "summary": "Execute Sparql",
+        "description": "Execute a SPARQL SELECT query against the RDF graph.\n\nArgs:\n    request: SPARQLRequest containing the query string\n    service: GraphAnalysisService from dependency injection\n\nReturns:\n    SPARQLResponse containing query results and triple count\n\nRaises:\n    HTTPException: 400 if query is invalid, 422 if graph error occurs",
+        "operationId": "execute_sparql_api_graph_sparql_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SPARQLRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SPARQLResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/graph/rdf/triples": {
+      "get": {
+        "tags": [
+          "graph"
+        ],
+        "summary": "Get Rdf Triples",
+        "description": "Retrieve RDF triples matching optional subject/predicate/object patterns.\n\nArgs:\n    subject: Optional subject to match\n    predicate: Optional predicate to match\n    object_param: Optional object to match\n    service: GraphAnalysisService from dependency injection\n\nReturns:\n    TriplesResponse containing matching triples and count\n\nRaises:\n    HTTPException: 422 if graph error occurs",
+        "operationId": "get_rdf_triples_api_graph_rdf_triples_get",
+        "parameters": [
+          {
+            "name": "subject",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Optional RDF subject to filter",
+              "title": "Subject"
+            },
+            "description": "Optional RDF subject to filter"
+          },
+          {
+            "name": "predicate",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Optional RDF predicate to filter",
+              "title": "Predicate"
+            },
+            "description": "Optional RDF predicate to filter"
+          },
+          {
+            "name": "object",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Optional RDF object to filter",
+              "title": "Object"
+            },
+            "description": "Optional RDF object to filter"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TriplesResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/graph/rdf/count": {
+      "get": {
+        "tags": [
+          "graph"
+        ],
+        "summary": "Get Rdf Triple Count",
+        "description": "Get the number of RDF triples in the graph.\n\nArgs:\n    service: GraphAnalysisService from dependency injection\n\nReturns:\n    TripleCountResponse containing the triple count\n\nRaises:\n    HTTPException: 422 if graph error occurs",
+        "operationId": "get_rdf_triple_count_api_graph_rdf_count_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TripleCountResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/health": {
+      "get": {
+        "summary": "Health",
+        "description": "Health check endpoint",
+        "operationId": "health_api_health_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "CentralityResponse": {
+        "properties": {
+          "algorithm": {
+            "type": "string",
+            "title": "Algorithm",
+            "description": "Name of the centrality algorithm"
+          },
+          "scores": {
+            "additionalProperties": {
+              "type": "number"
+            },
+            "type": "object",
+            "title": "Scores",
+            "description": "Centrality scores mapped by node ID"
+          }
+        },
+        "type": "object",
+        "required": [
+          "algorithm",
+          "scores"
+        ],
+        "title": "CentralityResponse",
+        "description": "Response containing centrality scores."
+      },
+      "ClassCreateRequest": {
+        "properties": {
+          "title": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Title",
+            "description": "Display name for the class"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description",
+            "description": "Optional longer description"
+          },
+          "parent_class_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Parent Class Id",
+            "description": "Optional ID of parent class for hierarchy"
+          }
+        },
+        "type": "object",
+        "required": [
+          "title"
+        ],
+        "title": "ClassCreateRequest",
+        "description": "Request to create a new class."
+      },
+      "ClassMoveRequest": {
+        "properties": {
+          "new_parent_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "New Parent Id",
+            "description": "ID of new parent class, or null to make root"
+          }
+        },
+        "type": "object",
+        "title": "ClassMoveRequest",
+        "description": "Request to move a class to a different parent."
+      },
+      "ClassResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id",
+            "description": "Unique identifier"
+          },
+          "concept_scheme_id": {
+            "type": "string",
+            "title": "Concept Scheme Id",
+            "description": "Parent concept scheme ID"
+          },
+          "taxonomy_id": {
+            "type": "string",
+            "title": "Taxonomy Id",
+            "description": "Parent taxonomy ID"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title",
+            "description": "Display name"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description",
+            "description": "Optional description"
+          },
+          "parent_class_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Parent Class Id",
+            "description": "Optional parent class ID"
+          },
+          "structural_property_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Structural Property Id",
+            "description": "Optional structural property ID"
+          },
+          "external_references": {
+            "items": {
+              "$ref": "#/components/schemas/ExternalReferenceResponse"
+            },
+            "type": "array",
+            "title": "External References"
+          },
+          "lexical_senses": {
+            "items": {
+              "$ref": "#/components/schemas/LexicalSenseResponse"
+            },
+            "type": "array",
+            "title": "Lexical Senses"
+          },
+          "data_properties": {
+            "items": {
+              "$ref": "#/components/schemas/DataPropertyValueResponse"
+            },
+            "type": "array",
+            "title": "Data Properties"
+          },
+          "embedding": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "number"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Embedding",
+            "description": "Optional semantic embedding"
+          },
+          "created_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created At",
+            "description": "Creation timestamp"
+          },
+          "last_modified": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Modified",
+            "description": "Last modification timestamp"
+          },
+          "version": {
+            "type": "integer",
+            "title": "Version",
+            "description": "Version number for optimistic concurrency control",
+            "default": 1
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "concept_scheme_id",
+          "taxonomy_id",
+          "title"
+        ],
+        "title": "ClassResponse",
+        "description": "Response containing class data."
+      },
+      "ClassUpdateRequest": {
+        "properties": {
+          "title": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title",
+            "description": "New title"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description",
+            "description": "New description"
+          }
+        },
+        "type": "object",
+        "title": "ClassUpdateRequest",
+        "description": "Request to update a class."
+      },
+      "CommunitiesResponse": {
+        "properties": {
+          "algorithm": {
+            "type": "string",
+            "title": "Algorithm",
+            "description": "Name of the community detection algorithm"
+          },
+          "communities": {
+            "items": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "type": "array",
+            "title": "Communities",
+            "description": "Communities as sorted lists of node IDs"
+          }
+        },
+        "type": "object",
+        "required": [
+          "algorithm",
+          "communities"
+        ],
+        "title": "CommunitiesResponse",
+        "description": "Response containing community detection results."
+      },
+      "ConceptSchemeCreateRequest": {
+        "properties": {
+          "title": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Title",
+            "description": "Display name for the concept scheme"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description",
+            "description": "Optional longer description"
+          }
+        },
+        "type": "object",
+        "required": [
+          "title"
+        ],
+        "title": "ConceptSchemeCreateRequest",
+        "description": "Request to create a new concept scheme."
+      },
+      "ConceptSchemeResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id",
+            "description": "Unique identifier"
+          },
+          "taxonomy_id": {
+            "type": "string",
+            "title": "Taxonomy Id",
+            "description": "Parent taxonomy ID"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title",
+            "description": "Display name"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description",
+            "description": "Optional description"
+          },
+          "created_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created At",
+            "description": "Creation timestamp"
+          },
+          "last_modified": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Modified",
+            "description": "Last modification timestamp"
+          },
+          "version": {
+            "type": "integer",
+            "title": "Version",
+            "description": "Version number for optimistic concurrency control",
+            "default": 1
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "taxonomy_id",
+          "title"
+        ],
+        "title": "ConceptSchemeResponse",
+        "description": "Response containing concept scheme data."
+      },
+      "ConceptSchemeUpdateRequest": {
+        "properties": {
+          "title": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title",
+            "description": "New title"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description",
+            "description": "New description"
+          }
+        },
+        "type": "object",
+        "title": "ConceptSchemeUpdateRequest",
+        "description": "Request to update a concept scheme."
+      },
+      "CycleCheckRequest": {
+        "properties": {
+          "source_id": {
+            "type": "string",
+            "title": "Source Id",
+            "description": "ID of the proposed edge source"
+          },
+          "target_id": {
+            "type": "string",
+            "title": "Target Id",
+            "description": "ID of the proposed edge target"
+          }
+        },
+        "type": "object",
+        "required": [
+          "source_id",
+          "target_id"
+        ],
+        "title": "CycleCheckRequest",
+        "description": "Request to check if adding an edge would create a cycle."
+      },
+      "CycleCheckResponse": {
+        "properties": {
+          "source_id": {
+            "type": "string",
+            "title": "Source Id",
+            "description": "ID of the proposed edge source"
+          },
+          "target_id": {
+            "type": "string",
+            "title": "Target Id",
+            "description": "ID of the proposed edge target"
+          },
+          "would_create_cycle": {
+            "type": "boolean",
+            "title": "Would Create Cycle",
+            "description": "Whether adding this edge would create a cycle"
+          }
+        },
+        "type": "object",
+        "required": [
+          "source_id",
+          "target_id",
+          "would_create_cycle"
+        ],
+        "title": "CycleCheckResponse",
+        "description": "Response from cycle detection check."
+      },
+      "DataPropertyValueResponse": {
+        "properties": {
+          "property_identifier": {
+            "type": "string",
+            "title": "Property Identifier",
+            "description": "Property identifier"
+          },
+          "value": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "integer"
+              },
+              {
+                "type": "number"
+              },
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Value",
+            "description": "Value of the property"
+          },
+          "datatype": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Datatype",
+            "description": "Type of the value"
+          }
+        },
+        "type": "object",
+        "required": [
+          "property_identifier",
+          "value"
+        ],
+        "title": "DataPropertyValueResponse",
+        "description": "Response containing data property value."
+      },
+      "ExternalReferenceResponse": {
+        "properties": {
+          "source": {
+            "type": "string",
+            "title": "Source",
+            "description": "Source of the reference"
+          },
+          "identifier": {
+            "type": "string",
+            "title": "Identifier",
+            "description": "External identifier"
+          },
+          "uri": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Uri",
+            "description": "External URI"
+          },
+          "metadata": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Metadata",
+            "description": "Source-specific metadata"
+          }
+        },
+        "type": "object",
+        "required": [
+          "source",
+          "identifier"
+        ],
+        "title": "ExternalReferenceResponse",
+        "description": "Response containing external reference data."
+      },
+      "GraphMetricsResponse": {
+        "properties": {
+          "density": {
+            "type": "number",
+            "title": "Density",
+            "description": "Edge density of the graph"
+          },
+          "average_degree": {
+            "type": "number",
+            "title": "Average Degree",
+            "description": "Average degree of nodes"
+          },
+          "connected_components": {
+            "type": "integer",
+            "title": "Connected Components",
+            "description": "Number of connected components"
+          },
+          "degree_distribution": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "type": "object",
+            "title": "Degree Distribution",
+            "description": "Distribution of node degrees"
+          }
+        },
+        "type": "object",
+        "required": [
+          "density",
+          "average_degree",
+          "connected_components",
+          "degree_distribution"
+        ],
+        "title": "GraphMetricsResponse",
+        "description": "Response containing computed graph metrics."
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "KnowledgeGraphResponse": {
+        "properties": {
+          "node_count": {
+            "type": "integer",
+            "title": "Node Count",
+            "description": "Number of nodes in the graph"
+          },
+          "edge_count": {
+            "type": "integer",
+            "title": "Edge Count",
+            "description": "Number of edges in the graph"
+          },
+          "is_directed": {
+            "type": "boolean",
+            "title": "Is Directed",
+            "description": "Whether the graph is directed"
+          },
+          "last_built": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Last Built",
+            "description": "Timestamp when the graph was last built"
+          }
+        },
+        "type": "object",
+        "required": [
+          "node_count",
+          "edge_count",
+          "is_directed",
+          "last_built"
+        ],
+        "title": "KnowledgeGraphResponse",
+        "description": "Response containing knowledge graph metadata."
+      },
+      "LexicalSenseResponse": {
+        "properties": {
+          "label": {
+            "type": "string",
+            "title": "Label",
+            "description": "The sense label or term"
+          },
+          "language_code": {
+            "type": "string",
+            "title": "Language Code",
+            "description": "ISO 639-1 language code"
+          },
+          "sense_type": {
+            "type": "string",
+            "title": "Sense Type",
+            "description": "Type of sense"
+          }
+        },
+        "type": "object",
+        "required": [
+          "label",
+          "language_code",
+          "sense_type"
+        ],
+        "title": "LexicalSenseResponse",
+        "description": "Response containing lexical sense data."
+      },
+      "ListResponse": {
+        "properties": {
+          "items": {
+            "items": {},
+            "type": "array",
+            "title": "Items",
+            "description": "List of items"
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total",
+            "description": "Total number of items"
+          },
+          "limit": {
+            "type": "integer",
+            "title": "Limit",
+            "description": "Limit applied"
+          },
+          "offset": {
+            "type": "integer",
+            "title": "Offset",
+            "description": "Offset applied"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items",
+          "total",
+          "limit",
+          "offset"
+        ],
+        "title": "ListResponse",
+        "description": "Generic paginated list response."
+      },
+      "NeighborsResponse": {
+        "properties": {
+          "node_id": {
+            "type": "string",
+            "title": "Node Id",
+            "description": "ID of the queried node"
+          },
+          "direction": {
+            "type": "string",
+            "title": "Direction",
+            "description": "Direction of traversal: 'in', 'out', or 'both'"
+          },
+          "neighbors": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Neighbors",
+            "description": "List of neighboring node IDs"
+          }
+        },
+        "type": "object",
+        "required": [
+          "node_id",
+          "direction",
+          "neighbors"
+        ],
+        "title": "NeighborsResponse",
+        "description": "Response containing neighbor nodes."
+      },
+      "PathResultResponse": {
+        "properties": {
+          "source_id": {
+            "type": "string",
+            "title": "Source Id",
+            "description": "ID of the starting node"
+          },
+          "target_id": {
+            "type": "string",
+            "title": "Target Id",
+            "description": "ID of the ending node"
+          },
+          "path": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Path",
+            "description": "Ordered list of node IDs from source to target"
+          },
+          "length": {
+            "type": "integer",
+            "title": "Length",
+            "description": "Number of edges in the path"
+          },
+          "relationships": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Relationships",
+            "description": "Relationship types traversed along the path"
+          }
+        },
+        "type": "object",
+        "required": [
+          "source_id",
+          "target_id",
+          "path",
+          "length",
+          "relationships"
+        ],
+        "title": "PathResultResponse",
+        "description": "Response containing a single path between two nodes."
+      },
+      "PropertyDefinitionCreateRequest": {
+        "properties": {
+          "identifier": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Identifier",
+            "description": "Machine-readable identifier"
+          },
+          "title": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Title",
+            "description": "Display name for the property"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description",
+            "description": "Optional longer description"
+          }
+        },
+        "type": "object",
+        "required": [
+          "identifier",
+          "title"
+        ],
+        "title": "PropertyDefinitionCreateRequest",
+        "description": "Request to create a new property definition."
+      },
+      "PropertyDefinitionResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id",
+            "description": "Unique identifier"
+          },
+          "identifier": {
+            "type": "string",
+            "title": "Identifier",
+            "description": "Machine-readable identifier"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title",
+            "description": "Display name"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description",
+            "description": "Optional description"
+          },
+          "is_relevant": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Is Relevant",
+            "description": "Relevance flag (None=not evaluated, True=relevant, False=irrelevant)"
+          },
+          "created_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created At",
+            "description": "Creation timestamp"
+          },
+          "last_modified": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Modified",
+            "description": "Last modification timestamp"
+          },
+          "version": {
+            "type": "integer",
+            "title": "Version",
+            "description": "Version number for optimistic concurrency control",
+            "default": 1
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "identifier",
+          "title"
+        ],
+        "title": "PropertyDefinitionResponse",
+        "description": "Response containing property definition data."
+      },
+      "PropertyDefinitionUpdateRequest": {
+        "properties": {
+          "title": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title",
+            "description": "New title"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description",
+            "description": "New description"
+          }
+        },
+        "type": "object",
+        "title": "PropertyDefinitionUpdateRequest",
+        "description": "Request to update a property definition."
+      },
+      "RelationshipCreateRequest": {
+        "properties": {
+          "source_id": {
+            "type": "string",
+            "title": "Source Id",
+            "description": "ID of source entity"
+          },
+          "target_id": {
+            "type": "string",
+            "title": "Target Id",
+            "description": "ID of target entity"
+          },
+          "property_definition_id": {
+            "type": "string",
+            "title": "Property Definition Id",
+            "description": "ID of property definition (relationship type)"
+          }
+        },
+        "type": "object",
+        "required": [
+          "source_id",
+          "target_id",
+          "property_definition_id"
+        ],
+        "title": "RelationshipCreateRequest",
+        "description": "Request to create a new relationship."
+      },
+      "RelationshipResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id",
+            "description": "Unique identifier"
+          },
+          "source_id": {
+            "type": "string",
+            "title": "Source Id",
+            "description": "Source entity ID"
+          },
+          "target_id": {
+            "type": "string",
+            "title": "Target Id",
+            "description": "Target entity ID"
+          },
+          "property_definition_id": {
+            "type": "string",
+            "title": "Property Definition Id",
+            "description": "Property definition ID (relationship type)"
+          },
+          "created_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created At",
+            "description": "Creation timestamp"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "source_id",
+          "target_id",
+          "property_definition_id"
+        ],
+        "title": "RelationshipResponse",
+        "description": "Response containing relationship data."
+      },
+      "SPARQLRequest": {
+        "properties": {
+          "query": {
+            "type": "string",
+            "title": "Query",
+            "description": "SPARQL SELECT query string"
+          }
+        },
+        "type": "object",
+        "required": [
+          "query"
+        ],
+        "title": "SPARQLRequest",
+        "description": "Request to execute a SPARQL query."
+      },
+      "SPARQLResponse": {
+        "properties": {
+          "results": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "type": "array",
+            "title": "Results",
+            "description": "Query result bindings"
+          },
+          "triple_count": {
+            "type": "integer",
+            "title": "Triple Count",
+            "description": "Total number of triples in the graph"
+          }
+        },
+        "type": "object",
+        "required": [
+          "results",
+          "triple_count"
+        ],
+        "title": "SPARQLResponse",
+        "description": "Response from SPARQL query execution."
+      },
+      "TaxonomyCreateRequest": {
+        "properties": {
+          "title": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Title",
+            "description": "Display name for the taxonomy"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description",
+            "description": "Optional longer description"
+          }
+        },
+        "type": "object",
+        "required": [
+          "title"
+        ],
+        "title": "TaxonomyCreateRequest",
+        "description": "Request to create a new taxonomy."
+      },
+      "TaxonomyResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id",
+            "description": "Unique identifier"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title",
+            "description": "Display name"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description",
+            "description": "Optional description"
+          },
+          "created_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created At",
+            "description": "Creation timestamp"
+          },
+          "last_modified": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Modified",
+            "description": "Last modification timestamp"
+          },
+          "version": {
+            "type": "integer",
+            "title": "Version",
+            "description": "Version number for optimistic concurrency control",
+            "default": 1
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "title"
+        ],
+        "title": "TaxonomyResponse",
+        "description": "Response containing taxonomy data."
+      },
+      "TaxonomyUpdateRequest": {
+        "properties": {
+          "title": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title",
+            "description": "New title for the taxonomy"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description",
+            "description": "New description"
+          }
+        },
+        "type": "object",
+        "title": "TaxonomyUpdateRequest",
+        "description": "Request to update a taxonomy."
+      },
+      "TripleCountResponse": {
+        "properties": {
+          "count": {
+            "type": "integer",
+            "title": "Count",
+            "description": "Number of RDF triples in the graph"
+          }
+        },
+        "type": "object",
+        "required": [
+          "count"
+        ],
+        "title": "TripleCountResponse",
+        "description": "Response containing RDF triple count."
+      },
+      "TripleResponse": {
+        "properties": {
+          "subject": {
+            "type": "string",
+            "title": "Subject",
+            "description": "RDF subject"
+          },
+          "predicate": {
+            "type": "string",
+            "title": "Predicate",
+            "description": "RDF predicate"
+          },
+          "object": {
+            "type": "string",
+            "title": "Object",
+            "description": "RDF object"
+          }
+        },
+        "type": "object",
+        "required": [
+          "subject",
+          "predicate",
+          "object"
+        ],
+        "title": "TripleResponse",
+        "description": "Response containing a single RDF triple."
+      },
+      "TriplesResponse": {
+        "properties": {
+          "triples": {
+            "items": {
+              "$ref": "#/components/schemas/TripleResponse"
+            },
+            "type": "array",
+            "title": "Triples",
+            "description": "List of RDF triples"
+          },
+          "count": {
+            "type": "integer",
+            "title": "Count",
+            "description": "Number of triples returned"
+          }
+        },
+        "type": "object",
+        "required": [
+          "triples",
+          "count"
+        ],
+        "title": "TriplesResponse",
+        "description": "Response containing RDF triples."
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "ctx": {
+            "type": "object",
+            "title": "Context"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      }
+    }
+  }
+}
