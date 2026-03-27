@@ -577,6 +577,25 @@ class TestRDFOperations:
         with pytest.raises(SPARQLValidationError):
             svc.execute_sparql("CREATE GRAPH <graph>")
 
+    def test_execute_sparql_allows_created_by_substring(self, service):
+        """Word-boundary regex allows 'CREATED_BY' inside string literals."""
+        svc, _, _ = service
+        # Should not raise — 'CREATED_BY' is not a keyword, it contains 'CREATE'
+        # but is not a standalone CREATE keyword
+        result = svc.execute_sparql(
+            'SELECT ?s WHERE { ?s rdfs:label "CREATED_BY" }'
+        )
+        assert result is not None
+
+    def test_execute_sparql_allows_created_date_identifier(self, service):
+        """Word-boundary regex allows 'created_date' as identifier."""
+        svc, _, _ = service
+        # Should not raise — 'created_date' is not the CREATE keyword
+        result = svc.execute_sparql(
+            'SELECT ?created_date WHERE { ?s ex:created_date ?created_date }'
+        )
+        assert result is not None
+
 
 class TestRDFInvalidation:
     """Tests for RDF cache invalidation."""
