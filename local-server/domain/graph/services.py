@@ -10,12 +10,11 @@ cache invalidation via a stale-flag pattern triggered by GraphInvalidated events
 from __future__ import annotations
 
 import re
-from collections import deque
 from datetime import datetime, timezone
 from typing import TYPE_CHECKING, Any
 
 from .entities import GraphMetrics, KnowledgeGraph, PathResult
-from .exceptions import InvalidAlgorithmError, SPARQLValidationError
+from .exceptions import InvalidAlgorithmError, NodeNotFoundError, SPARQLValidationError
 from .ports import GraphEngine, SemanticQueryEngine
 
 if TYPE_CHECKING:
@@ -415,8 +414,6 @@ class GraphAnalysisService:
         Raises:
             NodeNotFoundError: If any node in the list does not exist in the graph
         """
-        from .exceptions import NodeNotFoundError
-
         self._ensure_graph()
 
         if not node_ids:
@@ -427,8 +424,8 @@ class GraphAnalysisService:
         for node_id in node_ids:
             try:
                 self._graph_engine.neighbors(node_id)
-            except NodeNotFoundError:
-                raise NodeNotFoundError(f"Node '{node_id}' not found in graph")
+            except NodeNotFoundError as exc:
+                raise NodeNotFoundError(f"Node '{node_id}' not found in graph") from exc
 
         # Extract subgraph with the specified nodes
         subgraph = self._graph_engine.subgraph(node_ids)

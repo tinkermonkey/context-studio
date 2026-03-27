@@ -407,10 +407,10 @@ class TestSubgraphEndpoint:
     def test_subgraph_with_multiple_nodes(self, client, repository_with_data):
         """GET /subgraph accepts multiple comma-separated node IDs."""
         classes = repository_with_data.list_classes()
-        if len(classes) > 1:
-            nodes = f"{classes[0].id},{classes[1].id}"
-            response = client.get(f"/api/graph/subgraph?nodes={nodes}")
-            assert response.status_code == status.HTTP_200_OK
+        assert len(classes) > 1
+        nodes = f"{classes[0].id},{classes[1].id}"
+        response = client.get(f"/api/graph/subgraph?nodes={nodes}")
+        assert response.status_code == status.HTTP_200_OK
 
     def test_subgraph_missing_nodes_parameter(self, client):
         """GET /subgraph without nodes parameter returns 422."""
