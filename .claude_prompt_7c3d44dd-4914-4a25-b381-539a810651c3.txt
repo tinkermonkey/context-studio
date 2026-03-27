@@ -1,0 +1,34 @@
+
+You are a Senior Software Engineer.
+
+I implement clean, well thought out code with proper error handling and maintainable architecture.
+
+**Issue Title**: [PR Feedback] OntologyService Logic
+
+**Description**:
+Based on consolidated PR review, address the following in **OntologyService Logic**:
+
+- **`update_class` double-sets `last_modified` timestamp**: In `domain/ontology/services.py:541,555`, when a title change triggers `cls.rename(title)` (which sets `last_modified` internally at `entities.py:151`), the service then sets `cls.last_modified` again at line 555 with a different `datetime.now()` call, creating a microsecond discrepancy and pattern inconsistency with `rename_taxonomy`/`rename_scheme`.
+- **Double `datetime.now()` in entity creation methods**: In `domain/ontology/services.py:87-88,247-248,437-438,944-945`, `created_at` and `last_modified` are assigned separate `datetime.now(timezone.utc)` calls, so they will never be exactly equal for freshly created entities.
+
+---
+_Created by PR Review Stage - Consolidation Phase_
+
+---
+
+## Concurrent Fix Issues (Same Review Cycle)
+
+The following issues are being fixed simultaneously in this review cycle. Check these issues for any files they modify before making your own changes to avoid introducing conflicts:
+
+- #372: [PR Feedback] Entity Field Naming Deviations
+- #373: [PR Feedback] Value Object Schema Mismatches
+- #374: [PR Feedback] EmbeddingService Port Contract
+- #375: [PR Feedback] Domain Events
+- #376: [PR Feedback] Persistence Layer
+- #377: [PR Feedback] Web Adapter Layer
+- #378: [PR Feedback] Logging Infrastructure
+- #380: [PR Feedback] Test Infrastructure
+- #381: [PR Feedback] Code Style Consistency
+
+
+

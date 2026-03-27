@@ -81,12 +81,13 @@ class OntologyService:
             raise DuplicateEntityError(f"Taxonomy with title '{title}' already exists")
 
         taxonomy_id = str(uuid4())
+        now = datetime.now(timezone.utc)
         taxonomy = Taxonomy(
             id=taxonomy_id,
             title=title,
             description=description,
-            created_at=datetime.now(timezone.utc),
-            last_modified=datetime.now(timezone.utc),
+            created_at=now,
+            last_modified=now,
         )
         taxonomy = self._repository.save_taxonomy(taxonomy)
 
@@ -312,13 +313,14 @@ class OntologyService:
             raise DuplicateEntityError(f"ConceptScheme with title '{title}' already exists in this taxonomy")
 
         scheme_id = str(uuid4())
+        now = datetime.now(timezone.utc)
         scheme = ConceptScheme(
             id=scheme_id,
             taxonomy_id=taxonomy_id,
             title=title,
             description=description,
-            created_at=datetime.now(timezone.utc),
-            last_modified=datetime.now(timezone.utc),
+            created_at=now,
+            last_modified=now,
         )
         scheme = self._repository.save_concept_scheme(scheme)
 
@@ -500,6 +502,7 @@ class OntologyService:
         embed_text = f"{title} {description or ''}".strip()
         embedding = self._embedding_service.embed(embed_text)
 
+        now = datetime.now(timezone.utc)
         cls = Class(
             id=class_id,
             concept_scheme_id=concept_scheme_id,
@@ -508,8 +511,8 @@ class OntologyService:
             description=description,
             parent_class_id=parent_class_id,
             embedding=embedding,
-            created_at=datetime.now(timezone.utc),
-            last_modified=datetime.now(timezone.utc),
+            created_at=now,
+            last_modified=now,
         )
         cls = self._repository.save_class(cls)
 
@@ -615,6 +618,7 @@ class OntologyService:
             cls.rename(title)
         if desc_changed:
             cls.description = description
+            cls.last_modified = datetime.now(timezone.utc)
 
         # Regenerate embedding only if title or description changed
         if title_changed or desc_changed:
@@ -626,7 +630,6 @@ class OntologyService:
         if not (title_changed or desc_changed):
             return cls
 
-        cls.last_modified = datetime.now(timezone.utc)
         cls = self._repository.save_class(cls)
 
         changed = tuple(f for f, was_changed in [("title", title_changed), ("description", desc_changed)] if was_changed)
@@ -1009,13 +1012,14 @@ class OntologyService:
             raise DuplicateEntityError(f"PropertyDefinition with title '{title}' already exists")
 
         property_id = str(uuid4())
+        now = datetime.now(timezone.utc)
         prop_def = PropertyDefinition(
             id=property_id,
             identifier=identifier,
             title=title,
             description=description,
-            created_at=datetime.now(timezone.utc),
-            last_modified=datetime.now(timezone.utc),
+            created_at=now,
+            last_modified=now,
         )
         prop_def = self._repository.save_property_definition(prop_def)
 
