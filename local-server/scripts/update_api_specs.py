@@ -2,7 +2,7 @@
 Update API specifications and generate front-end types.
 
 This script generates OpenAPI specs from the FastAPI application
-and can be extended to generate TypeScript types for the front-end.
+and copies it to both the back-end and front-end documentation directories.
 """
 
 import json
@@ -16,29 +16,46 @@ from app import app
 
 
 def main():
-    """Generate OpenAPI spec from FastAPI application"""
+    """Generate OpenAPI spec from FastAPI application and copy to both back-end and UX."""
     try:
         # Get the OpenAPI schema from the FastAPI app
-        openapi_schema = app.openapi()
+        spec = app.openapi()
 
-        # Define output path
-        output_path = os.path.join(
+        # Define back-end output path
+        backend_doc_dir = os.path.join(
             os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
-            "documentation",
-            "openapi.json"
+            "documentation"
         )
+        os.makedirs(backend_doc_dir, exist_ok=True)
+        backend_output_path = os.path.join(backend_doc_dir, "openapi.json")
 
-        # Write the schema to file
-        with open(output_path, "w") as f:
-            json.dump(openapi_schema, f, indent=2)
+        # Write to back-end documentation directory
+        with open(backend_output_path, "w") as f:
+            json.dump(spec, f, indent=2)
+            f.write("\n")
+
+        print(f"✓ OpenAPI spec generated: {backend_output_path}")
+
+        # Copy to UX documentation directory
+        ux_doc_dir = os.path.abspath(
+            os.path.join(
+                os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                "../ux/documentation"
+            )
+        )
+        os.makedirs(ux_doc_dir, exist_ok=True)
+        ux_output_path = os.path.join(ux_doc_dir, "openapi.json")
+
+        with open(ux_output_path, "w") as f:
+            json.dump(spec, f, indent=2)
+            f.write("\n")
+
+        print(f"✓ OpenAPI spec also copied to: {ux_output_path}")
 
         # Count endpoints for verification
-        paths = openapi_schema.get("paths", {})
+        paths = spec.get("paths", {})
         endpoint_count = sum(len(methods) for methods in paths.values())
-
-        print(f"✓ OpenAPI spec generated: {output_path}")
         print(f"  Total endpoints: {endpoint_count}")
-        print(f"  Paths: {list(paths.keys())}")
 
         return 0
     except Exception as e:
