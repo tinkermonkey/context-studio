@@ -11,7 +11,7 @@ from __future__ import annotations
 
 from collections import deque
 from datetime import datetime, timezone
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from .entities import GraphMetrics, KnowledgeGraph, PathResult
 from .exceptions import InvalidAlgorithmError, SPARQLValidationError
@@ -381,7 +381,7 @@ class GraphAnalysisService:
             last_built=datetime.now(timezone.utc),
         )
 
-    def execute_sparql(self, query: str) -> list[dict]:
+    def execute_sparql(self, query: str) -> list[dict[str, Any]]:
         """
         Execute a SPARQL SELECT query against the RDF graph.
 

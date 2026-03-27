@@ -7,6 +7,7 @@ all GraphEngine protocol methods with straightforward implementations.
 
 import sys
 import os
+from typing import Any
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
@@ -16,10 +17,10 @@ class FakeGraphEngine:
 
     def __init__(self) -> None:
         """Initialize the fake graph engine with empty storage."""
-        self._nodes: dict[str, dict] = {}
-        self._edges: list[dict] = []
+        self._nodes: dict[str, dict[str, Any]] = {}
+        self._edges: list[dict[str, Any]] = []
 
-    def build_from_data(self, nodes: list[dict], edges: list[dict]) -> None:
+    def build_from_data(self, nodes: list[dict[str, Any]], edges: list[dict[str, Any]]) -> None:
         """
         Construct the graph from node and edge data.
 

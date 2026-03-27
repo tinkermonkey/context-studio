@@ -56,7 +56,7 @@ def create_operations_db_engine(database_url: str = "sqlite:///./operations.db")
     )
 
 
-def create_session_factory(engine: Engine) -> sessionmaker:
+def create_session_factory(engine: Engine) -> sessionmaker[Session]:
     """
     Create a SQLAlchemy session factory for the given engine.
 
@@ -75,7 +75,7 @@ def create_session_factory(engine: Engine) -> sessionmaker:
     )
 
 
-def create_session(session_factory: sessionmaker) -> Session:
+def create_session(session_factory: sessionmaker[Session]) -> Session:
     """
     Create a new database session.
 
@@ -111,8 +111,8 @@ class DatabaseManager:
         """Initialize the database manager with no engines yet."""
         self._local_engine: Optional[Engine] = None
         self._operations_engine: Optional[Engine] = None
-        self._local_session_factory: Optional[sessionmaker] = None
-        self._operations_session_factory: Optional[sessionmaker] = None
+        self._local_session_factory: Optional[sessionmaker[Session]] = None
+        self._operations_session_factory: Optional[sessionmaker[Session]] = None
 
     def initialize(
         self,

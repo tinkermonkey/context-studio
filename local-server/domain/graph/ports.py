@@ -8,7 +8,7 @@ explicitly inherit from these protocols.
 
 from __future__ import annotations
 
-from typing import Protocol, Sequence
+from typing import Any, Protocol, Sequence
 
 
 class GraphEngine(Protocol):
@@ -20,7 +20,7 @@ class GraphEngine(Protocol):
     is called, the engine holds the graph until build_from_data() is called again.
     """
 
-    def build_from_data(self, nodes: Sequence[dict], edges: Sequence[dict]) -> None:
+    def build_from_data(self, nodes: Sequence[dict[str, Any]], edges: Sequence[dict[str, Any]]) -> None:
         """
         Construct the graph from node and edge data.
 
@@ -176,7 +176,7 @@ class SemanticQueryEngine(Protocol):
     """
 
     def load_ontology(
-        self, nodes: Sequence[dict], edges: Sequence[dict], property_definitions: Sequence[dict]
+        self, nodes: Sequence[dict[str, Any]], edges: Sequence[dict[str, Any]], property_definitions: Sequence[dict[str, Any]]
     ) -> None:
         """
         Load ontology data into the RDF graph.
@@ -191,7 +191,7 @@ class SemanticQueryEngine(Protocol):
         """
         ...
 
-    def execute_sparql(self, query: str) -> list[dict]:
+    def execute_sparql(self, query: str) -> list[dict[str, Any]]:
         """
         Execute a SPARQL SELECT query against the RDF graph.
 

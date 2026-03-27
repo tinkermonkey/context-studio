@@ -9,7 +9,7 @@ cycle detection for directed graphs.
 from __future__ import annotations
 
 import networkx as nx
-from typing import Sequence
+from typing import Any, Sequence
 
 
 class NetworkXGraphEngine:
@@ -22,9 +22,9 @@ class NetworkXGraphEngine:
 
     def __init__(self) -> None:
         """Initialize the NetworkX graph engine with an empty directed graph."""
-        self._graph: nx.DiGraph = nx.DiGraph()
+        self._graph: nx.DiGraph = nx.DiGraph()  # type: ignore[type-arg]
 
-    def build_from_data(self, nodes: Sequence[dict], edges: Sequence[dict]) -> None:
+    def build_from_data(self, nodes: Sequence[dict[str, Any]], edges: Sequence[dict[str, Any]]) -> None:
         """
         Construct the graph from node and edge data.
 

@@ -6,6 +6,7 @@ Stores triples and provides minimal implementations of RDF operations.
 
 import sys
 import os
+from typing import Any
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
@@ -19,7 +20,7 @@ class FakeSemanticQueryEngine:
         self._loaded = False
 
     def load_ontology(
-        self, nodes: list[dict], edges: list[dict], property_definitions: list[dict]
+        self, nodes: list[dict[str, Any]], edges: list[dict[str, Any]], property_definitions: list[dict[str, Any]]
     ) -> None:
         """
         Load ontology data into the RDF graph.
@@ -52,7 +53,7 @@ class FakeSemanticQueryEngine:
 
         self._loaded = True
 
-    def execute_sparql(self, query: str) -> list[dict]:
+    def execute_sparql(self, query: str) -> list[dict[str, Any]]:
         """
         Execute a SPARQL SELECT query against the RDF graph.
 
