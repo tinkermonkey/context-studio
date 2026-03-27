@@ -1,0 +1,231 @@
+"""
+Port interfaces (protocols) for the Graph Analysis bounded context.
+
+Ports define contracts for graph infrastructure adapters (NetworkX, RDFLib, etc.).
+Using typing.Protocol enables structural subtyping — implementations do not
+explicitly inherit from these protocols.
+"""
+
+from __future__ import annotations
+
+from typing import Protocol, Sequence
+
+
+class GraphEngine(Protocol):
+    """
+    Port for in-memory graph operations (shortest path, centrality, community detection, etc.).
+
+    The GraphEngine wraps a graph library (e.g., NetworkX) and provides a unified
+    interface for structural graph analysis. It is stateful — once build_from_data()
+    is called, the engine holds the graph until build_from_data() is called again.
+    """
+
+    def build_from_data(self, nodes: Sequence[dict], edges: Sequence[dict]) -> None:
+        """
+        Construct the graph from node and edge data.
+
+        This method clears any existing graph and builds a new one from scratch.
+        The engine retains the graph until this method is called again.
+
+        Args:
+            nodes: Sequence of node dictionaries. Each dict should contain at least
+                   'id' (str) and may contain other attributes (title, node_type, etc.)
+            edges: Sequence of edge dictionaries. Each dict should contain at least
+                   'source_id' (str), 'target_id' (str), and may contain other
+                   attributes (property_definition_id, etc.)
+        """
+        ...
+
+    def node_count(self) -> int:
+        """
+        Return the number of nodes in the graph.
+
+        Returns:
+            Number of nodes in the current graph
+        """
+        ...
+
+    def edge_count(self) -> int:
+        """
+        Return the number of edges in the graph.
+
+        Returns:
+            Number of edges in the current graph
+        """
+        ...
+
+    def shortest_path(self, source_id: str, target_id: str) -> list[str] | None:
+        """
+        Find the shortest path between two nodes.
+
+        Args:
+            source_id: ID of the starting node
+            target_id: ID of the ending node
+
+        Returns:
+            Ordered list of node IDs from source to target (inclusive),
+            or None if no path exists
+        """
+        ...
+
+    def all_paths(self, source_id: str, target_id: str, max_depth: int = 5) -> list[list[str]]:
+        """
+        Find all simple paths between two nodes up to a maximum depth.
+
+        Args:
+            source_id: ID of the starting node
+            target_id: ID of the ending node
+            max_depth: Maximum path length to explore (default 5)
+
+        Returns:
+            List of paths, where each path is an ordered list of node IDs
+        """
+        ...
+
+    def centrality(self, algorithm: str = "betweenness") -> dict[str, float]:
+        """
+        Compute centrality scores for all nodes using the specified algorithm.
+
+        Args:
+            algorithm: Name of the centrality algorithm (e.g., "betweenness", "pagerank")
+
+        Returns:
+            Dictionary mapping node ID (str) to centrality score (float)
+        """
+        ...
+
+    def degree_distribution(self) -> dict[str, int]:
+        """
+        Get the degree of each node.
+
+        Returns:
+            Dictionary mapping node ID (str) to degree (int)
+        """
+        ...
+
+    def communities(self, algorithm: str = "louvain") -> list[set[str]]:
+        """
+        Partition the graph into communities using the specified algorithm.
+
+        Args:
+            algorithm: Name of the community detection algorithm (e.g., "louvain", "label_propagation")
+
+        Returns:
+            List of communities, where each community is a set of node IDs
+        """
+        ...
+
+    def subgraph(self, node_ids: Sequence[str]) -> GraphEngine:
+        """
+        Extract a subgraph containing only the specified nodes and edges between them.
+
+        Args:
+            node_ids: IDs of nodes to include in the subgraph
+
+        Returns:
+            A new GraphEngine instance wrapping the subgraph
+        """
+        ...
+
+    def neighbors(self, node_id: str, direction: str = "both") -> set[str]:
+        """
+        Get all neighbors of a node with optional directional filtering.
+
+        Args:
+            node_id: ID of the node
+            direction: Direction of traversal: "in" (predecessors), "out" (successors), "both" (default)
+
+        Returns:
+            Set of neighboring node IDs
+        """
+        ...
+
+    def has_cycle(self, source_id: str, target_id: str) -> bool:
+        """
+        Check if adding an edge from source_id to target_id would create a cycle.
+
+        This is semantically equivalent to: would adding source -> target create a
+        reverse path from target back to source?
+
+        Args:
+            source_id: ID of the proposed edge source
+            target_id: ID of the proposed edge target
+
+        Returns:
+            True if adding the edge would create a cycle, False otherwise
+        """
+        ...
+
+
+class SemanticQueryEngine(Protocol):
+    """
+    Port for RDF/SPARQL operations on ontology knowledge.
+
+    The SemanticQueryEngine wraps an RDF graph library (e.g., RDFLib) and provides
+    a unified interface for semantic queries, SPARQL execution, and triple access.
+    It is stateful — once load_ontology() is called, the engine retains the RDF graph.
+    """
+
+    def load_ontology(
+        self, nodes: Sequence[dict], edges: Sequence[dict], property_definitions: Sequence[dict]
+    ) -> None:
+        """
+        Load ontology data into the RDF graph.
+
+        This method clears any existing RDF graph and builds a new one from
+        ontology entities and relationships using standard RDF vocabularies.
+
+        Args:
+            nodes: Sequence of ontology entity dictionaries (Taxonomy, ConceptScheme, Class, etc.)
+            edges: Sequence of relationship dictionaries linking entities
+            property_definitions: Sequence of property definition dictionaries for relationship types
+        """
+        ...
+
+    def execute_sparql(self, query: str) -> list[dict]:
+        """
+        Execute a SPARQL SELECT query against the RDF graph.
+
+        Args:
+            query: SPARQL query string (SELECT queries only)
+
+        Returns:
+            List of result dictionaries, where each dict maps variable names to values
+        """
+        ...
+
+    def get_triples(
+        self, subject: str | None = None, predicate: str | None = None, object: str | None = None
+    ) -> list[tuple[str, str, str]]:
+        """
+        Retrieve RDF triples matching the given pattern.
+
+        Any parameter may be None to match any value in that position.
+
+        Args:
+            subject: Optional subject URI/ID to match
+            predicate: Optional predicate URI/property to match
+            object: Optional object value to match
+
+        Returns:
+            List of matching triples, each as (subject, predicate, object)
+        """
+        ...
+
+    def is_loaded(self) -> bool:
+        """
+        Check if the RDF graph is currently loaded with data.
+
+        Returns:
+            True if load_ontology() has been called and the graph contains data
+        """
+        ...
+
+    def triple_count(self) -> int:
+        """
+        Get the number of triples in the RDF graph.
+
+        Returns:
+            Number of triples currently in the graph
+        """
+        ...
