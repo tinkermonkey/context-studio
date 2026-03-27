@@ -43,7 +43,6 @@ from adapters.web.schemas.ontology import (
     PropertyDefinitionUpdateRequest,
     PropertyDefinitionResponse,
     ListResponse,
-    ErrorResponse,
 )
 
 router = APIRouter(prefix="/api", tags=["ontology"])

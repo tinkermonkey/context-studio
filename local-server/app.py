@@ -60,7 +60,7 @@ async def lifespan(app: FastAPI):
     # Load configuration
     config_manager = ConfigurationManager()
     settings = config_manager.get_settings()
-    logger.info(f"Configuration loaded from config.json")
+    logger.info("Configuration loaded from config.json")
 
     # Initialize database manager
     db_manager = DatabaseManager()
@@ -86,7 +86,7 @@ async def lifespan(app: FastAPI):
         logger.info("EmbeddingService created")
 
         # LLM provider router
-        llm_provider = LLMProviderRouter()
+        LLMProviderRouter()
         logger.info("LLM provider router created")
 
         # Event publisher
