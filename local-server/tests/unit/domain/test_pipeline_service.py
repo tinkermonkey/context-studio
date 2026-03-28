@@ -12,9 +12,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(
 
 import pytest
 import time
-from datetime import datetime, timezone
 
-from domain.pipeline.entities import PipelineConfiguration, Execution
 from domain.pipeline.events import PipelineExecuted
 from domain.pipeline.services import PipelineService
 from tests.fakes.fake_pipeline_repository import FakePipelineRepository
@@ -325,7 +323,7 @@ class TestPipelineServiceExecution:
             user_prompt="User: {text}",
         )
 
-        execution = self.service.execute_pipeline(config.id, "Input")
+        self.service.execute_pipeline(config.id, "Input")
 
         events = self.event_pub.get_events_of_type(PipelineExecuted)
         assert len(events) == 1

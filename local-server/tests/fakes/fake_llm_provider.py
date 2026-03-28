@@ -2,6 +2,7 @@
 
 import sys
 import os
+from typing import Any
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
@@ -24,7 +25,7 @@ class FakeLLMProvider:
         self.tokens_in = tokens_in
         self.tokens_out = tokens_out
         self.call_count = 0
-        self.last_call_args = None
+        self.last_call_args: dict[str, Any] | None = None
         self.should_raise_error = False
         self.error_to_raise = None
         self.available_models = ["test-model", "gpt-4", "claude-opus"]
@@ -36,7 +37,7 @@ class FakeLLMProvider:
         model: str,
         temperature: float = 0.0,
         max_tokens: int = 2000,
-        response_format: dict | None = None,
+        response_format: dict[str, Any] | None = None,
     ) -> LLMResponse:
         """
         Request a completion from the fake LLM.

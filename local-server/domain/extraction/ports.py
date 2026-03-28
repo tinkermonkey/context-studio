@@ -5,7 +5,7 @@ Protocol definitions for external dependencies required by the extraction domain
 plus value objects used in port contracts.
 """
 from dataclasses import dataclass
-from typing import Protocol
+from typing import Any, Protocol
 
 
 # ============================================================================
@@ -118,7 +118,7 @@ class LLMProvider(Protocol):
         model: str,
         temperature: float = 0.0,
         max_tokens: int = 2000,
-        response_format: dict | None = None,
+        response_format: dict[str, Any] | None = None,
     ) -> LLMResponse:
         """
         Request a completion from an LLM.
