@@ -5,7 +5,8 @@ Provides persistence for pipeline configurations and execution records in operat
 Handles domain-to-ORM mapping, session management, and query logic.
 """
 
-from typing import Optional
+from typing import Optional, cast
+from datetime import datetime
 
 from sqlalchemy.orm import sessionmaker
 
@@ -155,18 +156,18 @@ class SQLitePipelineRepository:
             Domain PipelineConfiguration entity
         """
         return PipelineConfiguration(
-            id=row.id,
-            pipeline=row.pipeline,
-            title=row.title,
-            provider=row.provider,
-            model=row.model,
+            id=cast(str, row.id),
+            pipeline=cast(str, row.pipeline),
+            title=cast(str, row.title),
+            provider=cast(str, row.provider),
+            model=cast(str, row.model),
             config=dict(row.config) if row.config else {},
-            system_prompt=row.system_prompt,
-            user_prompt=row.user_prompt,
-            version=row.version,
-            enabled=row.enabled,
-            created_at=row.created_at,
-            last_updated=row.last_updated,
+            system_prompt=cast(str, row.system_prompt),
+            user_prompt=cast(str, row.user_prompt),
+            version=cast(int, row.version),
+            enabled=cast(bool, row.enabled),
+            created_at=cast(datetime, row.created_at),
+            last_updated=cast(datetime, row.last_updated),
         )
 
     def _to_model_config(
@@ -207,18 +208,18 @@ class SQLitePipelineRepository:
             Domain Execution entity
         """
         return Execution(
-            id=row.id,
-            pipeline_config_id=row.pipeline_config_id,
-            input_text=row.input_text or "",
-            output_text=row.output_text or "",
-            provider=row.provider or "",
-            model=row.model or "",
-            tokens_in=row.tokens_in,
-            tokens_out=row.tokens_out,
-            duration_ms=row.duration_ms,
-            status=row.status,
-            error_message=row.error_message,
-            timestamp=row.timestamp,
+            id=cast(str, row.id),
+            pipeline_config_id=cast(str, row.pipeline_config_id),
+            input_text=cast(str, row.input_text) or "",
+            output_text=cast(str, row.output_text) or "",
+            provider=cast(str, row.provider) or "",
+            model=cast(str, row.model) or "",
+            tokens_in=cast(int, row.tokens_in),
+            tokens_out=cast(int, row.tokens_out),
+            duration_ms=cast(int, row.duration_ms),
+            status=cast(str, row.status),
+            error_message=cast(str | None, row.error_message),
+            timestamp=cast(datetime, row.timestamp),
         )
 
     def _to_model_execution(self, execution: Execution) -> ExecutionModel:
