@@ -14,7 +14,7 @@ from datetime import datetime, timezone
 from typing import TYPE_CHECKING, Any
 
 from .entities import GraphMetrics, KnowledgeGraph, PathResult, SubgraphResult
-from .exceptions import GraphError, InvalidAlgorithmError, NodeNotFoundError, SPARQLValidationError
+from .exceptions import GraphError, InvalidAlgorithmError, SPARQLValidationError
 from .ports import GraphEngine, SemanticQueryEngine
 
 if TYPE_CHECKING:
