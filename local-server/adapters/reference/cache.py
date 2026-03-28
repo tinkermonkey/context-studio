@@ -4,6 +4,7 @@ import json
 import sqlite3
 from datetime import datetime, timedelta
 from pathlib import Path
+from typing import Literal, cast, overload
 
 from domain.extraction.ports import ReferenceSource, ReferenceResult, ReferenceRelation
 from utils.logger import get_logger
@@ -149,6 +150,18 @@ class CachedReferenceSource:
         """
         return self._inner.is_available()
 
+    @overload
+    def _get_cached(
+        self, key: str, is_relations: Literal[False] = False
+    ) -> list[ReferenceResult] | None:
+        ...
+
+    @overload
+    def _get_cached(
+        self, key: str, is_relations: Literal[True]
+    ) -> list[ReferenceRelation] | None:
+        ...
+
     def _get_cached(
         self, key: str, is_relations: bool = False
     ) -> list[ReferenceResult] | list[ReferenceRelation] | None:
@@ -215,6 +228,24 @@ class CachedReferenceSource:
             logger.warning(f"Failed to retrieve cache entry {key}: {e}")
             return None
 
+    @overload
+    def _set_cached(
+        self,
+        key: str,
+        value: list[ReferenceResult],
+        is_relations: Literal[False] = False,
+    ) -> None:
+        ...
+
+    @overload
+    def _set_cached(
+        self,
+        key: str,
+        value: list[ReferenceRelation],
+        is_relations: Literal[True],
+    ) -> None:
+        ...
+
     def _set_cached(
         self,
         key: str,
@@ -234,22 +265,22 @@ class CachedReferenceSource:
 
             # Convert dataclass objects to dicts for JSON serialization
             serializable_value = []
-            for item in value:
+            for item in value:  # type: ignore[union-attr]
                 if is_relations:
                     serializable_value.append(
                         {
-                            "subject_uri": item.subject_uri,
-                            "predicate": item.predicate,
-                            "object_uri": item.object_uri,
+                            "subject_uri": item.subject_uri,  # type: ignore[union-attr]
+                            "predicate": item.predicate,  # type: ignore[union-attr]
+                            "object_uri": item.object_uri,  # type: ignore[union-attr]
                             "source": item.source,
                         }
                     )
                 else:
                     serializable_value.append(
                         {
-                            "uri": item.uri,
-                            "label": item.label,
-                            "description": item.description,
+                            "uri": item.uri,  # type: ignore[union-attr]
+                            "label": item.label,  # type: ignore[union-attr]
+                            "description": item.description,  # type: ignore[union-attr]
                             "source": item.source,
                         }
                     )
