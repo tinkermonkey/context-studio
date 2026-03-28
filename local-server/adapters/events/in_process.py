@@ -2,7 +2,7 @@
 
 from typing import Callable, TypeVar
 
-from domain.ontology.events import DomainEvent
+from domain.events import DomainEvent
 from utils.logger import get_logger
 
 

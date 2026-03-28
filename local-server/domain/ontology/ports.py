@@ -11,14 +11,12 @@ Implementations do not inherit from the protocol; they implement the interface s
 
 from __future__ import annotations
 
-from typing import Any, Callable, Protocol, Sequence, TypeVar
+from typing import Any, Protocol, Sequence
 
 from .entities import Class, ConceptScheme, Individual, PropertyDefinition, Relationship, Taxonomy
-from .events import DomainEvent
 from .value_objects import SearchCriteria
-
-# Contravariant TypeVar for event handlers
-EventT_contra = TypeVar('EventT_contra', bound=DomainEvent, contravariant=True)
+from domain.events import DomainEvent
+from domain.ports import EventPublisher
 
 
 class OntologyRepository(Protocol):
@@ -443,29 +441,3 @@ class EmbeddingService(Protocol):
         ...
 
 
-class EventPublisher(Protocol):
-    """
-    Port for publishing and subscribing to domain events.
-
-    Used to decouple event producers from event handlers, enabling event-driven
-    workflows and external integrations.
-    """
-
-    def publish(self, event: DomainEvent) -> None:
-        """
-        Publish a domain event.
-
-        Args:
-            event: The DomainEvent to publish
-        """
-        ...
-
-    def subscribe(self, event_type: type[EventT_contra], handler: Callable[[EventT_contra], None]) -> None:
-        """
-        Subscribe a handler to events of a specific type.
-
-        Args:
-            event_type: The DomainEvent subclass to subscribe to
-            handler: Callable that will handle the event
-        """
-        ...
