@@ -118,6 +118,7 @@ class SpacyNLPProcessor:
                     label=ent.label_,
                     start=ent.start_char,
                     end=ent.end_char,
+                    confidence=0.85,  # spaCy default confidence
                     linked_uri=linked_uri,
                 )
             )

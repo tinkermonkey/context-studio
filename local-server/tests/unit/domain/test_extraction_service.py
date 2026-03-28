@@ -30,7 +30,7 @@ class FakeOntologyRepository:
 
     def get_all_entities_and_relationships(self):
         """Return empty entities and relationships."""
-        return {}, {}
+        return [], []
 
 
 class FakeEmbeddingService:
@@ -123,7 +123,7 @@ class FakeNLPProcessor:
 
         # Return mock entities
         return [
-            NLPEntity(text="Microsoft", label="ORG", start=0, end=9),
+            NLPEntity(text="Microsoft", label="ORG", start=0, end=9, confidence=0.9),
         ]
 
     def is_ready(self) -> bool:

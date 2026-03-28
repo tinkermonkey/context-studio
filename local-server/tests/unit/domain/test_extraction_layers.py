@@ -16,6 +16,8 @@ from domain.extraction import layers
 from domain.extraction.entities import ExtractedEntity
 from domain.extraction.value_objects import LayerInput
 from domain.extraction.ports import LLMResponse, NLPEntity, ReferenceResult
+from domain.ontology.entities import Class
+from domain.ontology.value_objects import ExternalReference
 
 
 # ============================================================================
@@ -30,7 +32,34 @@ class FakeOntologyRepository:
 
     def get_all_entities_and_relationships(self):
         """Return configured entities and relationships."""
-        return self.entities_dict, {}
+        # Convert dict format to typed domain entities
+        entities = []
+        for entity_id, entity_data in self.entities_dict.items():
+            # Convert external_references dicts to ExternalReference objects
+            external_refs = []
+            if entity_data.get("external_references"):
+                for ref in entity_data["external_references"]:
+                    external_refs.append(
+                        ExternalReference(
+                            source=ref.get("source", "unknown"),
+                            identifier=ref.get("uri", entity_id),
+                            uri=ref.get("uri"),
+                        )
+                    )
+
+            # Create a Class entity
+            cls = Class(
+                id=entity_id,
+                concept_scheme_id="test-scheme",
+                taxonomy_id="test-taxonomy",
+                title=entity_data.get("title", ""),
+                description=entity_data.get("description"),
+                embedding=entity_data.get("embedding"),
+                external_references=external_refs,
+            )
+            entities.append(cls)
+
+        return entities, []
 
 
 class FakeEmbeddingService:
@@ -469,7 +498,7 @@ class TestLayer2NLPGapFilling:
     def test_nlp_gap_extracts_new_entities(self):
         """NLP processor entities are extracted and added."""
         nlp_entities = [
-            NLPEntity(text="Apple", label="ORG", start=0, end=5),
+            NLPEntity(text="Apple", label="ORG", start=0, end=5, confidence=0.75),
         ]
         input_data = LayerInput(text="Apple Inc.", existing_entities=[])
         output = layers.nlp_gap.execute(input_data, FakeNLPProcessor(nlp_entities))
@@ -481,7 +510,7 @@ class TestLayer2NLPGapFilling:
         """Entities already found in prior layers are skipped."""
         prior_entity = ExtractedEntity(label="Apple", entity_type="ORG")
         nlp_entities = [
-            NLPEntity(text="Apple", label="ORG", start=0, end=5),
+            NLPEntity(text="Apple", label="ORG", start=0, end=5, confidence=0.75),
         ]
         input_data = LayerInput(
             text="Apple Inc.",
@@ -495,7 +524,7 @@ class TestLayer2NLPGapFilling:
     def test_nlp_gap_confidence_from_entity(self):
         """Confidence is taken from NLP entity if available."""
         nlp_entities = [
-            NLPEntity(text="Apple", label="ORG", start=0, end=5),
+            NLPEntity(text="Apple", label="ORG", start=0, end=5, confidence=0.75),
         ]
         input_data = LayerInput(text="Apple Inc.", existing_entities=[])
         output = layers.nlp_gap.execute(input_data, FakeNLPProcessor(nlp_entities))
@@ -507,7 +536,7 @@ class TestLayer2NLPGapFilling:
         """Deduplication is case-insensitive."""
         prior_entity = ExtractedEntity(label="apple", entity_type="ORG")
         nlp_entities = [
-            NLPEntity(text="Apple", label="ORG", start=0, end=5),
+            NLPEntity(text="Apple", label="ORG", start=0, end=5, confidence=0.75),
         ]
         input_data = LayerInput(
             text="Apple Inc.",
@@ -522,7 +551,7 @@ class TestLayer2NLPGapFilling:
         """Deduplication normalizes whitespace."""
         prior_entity = ExtractedEntity(label="Apple Inc.", entity_type="ORG")
         nlp_entities = [
-            NLPEntity(text="  Apple Inc.  ", label="ORG", start=0, end=14),
+            NLPEntity(text="  Apple Inc.  ", label="ORG", start=0, end=14, confidence=0.8),
         ]
         input_data = LayerInput(
             text="  Apple Inc.  company",

@@ -4,6 +4,7 @@ Knowledge Graph context extraction layer (Layer 0).
 Extracts entities and relationships from the existing knowledge graph
 to provide context for subsequent extraction layers.
 """
+from domain.ontology.entities import Class, Individual, Taxonomy, ConceptScheme
 from domain.extraction.entities import ExtractedEntity
 from domain.extraction.value_objects import LayerOutput
 
@@ -32,40 +33,52 @@ def execute(text: str, ontology_repo, embedding_service) -> LayerOutput:
     # Get embedding for the input text
     text_embedding = embedding_service.embed(text.strip())
 
-    # Retrieve all classes from the ontology
-    all_entities = ontology_repo.get_all_entities_and_relationships()
+    # Retrieve all entities from the ontology
+    all_entities_result = ontology_repo.get_all_entities_and_relationships()
 
-    if not all_entities:
-        return LayerOutput(entities=entities, metadata={"reason": "no_entities_in_repo"})
+    if not all_entities_result or not all_entities_result[0]:
+        return LayerOutput(
+            entities=entities,
+            metadata={
+                "reason": "no_entities_in_repo",
+                "matches_found": 0,
+                "threshold": 0.7,
+                "entities_checked": 0,
+            }
+        )
 
-    entities_dict, _ = all_entities
+    all_entities, _ = all_entities_result
 
     # Search for semantically similar entities
     matches_found = 0
-    for entity_id, entity_data in entities_dict.items():
-        entity_embedding = entity_data.get("embedding")
-        if not entity_embedding:
+    for entity in all_entities:
+        # Only consider Class and Individual entities with embeddings
+        if not isinstance(entity, (Class, Individual)):
+            continue
+
+        if not entity.embedding:
             continue
 
         # Compute similarity
-        similarity = embedding_service.similarity(text_embedding, entity_embedding)
+        similarity = embedding_service.similarity(text_embedding, entity.embedding)
 
         # Use similarity threshold of 0.7 for KG context
         if similarity >= 0.7:
-            entity_label = entity_data.get("title", "")
-            entity_type = entity_data.get("node_type", "unknown")
-            # Safely extract URI from external_references, handling empty lists
-            external_refs = entity_data.get("external_references", [])
-            entity_uri = external_refs[0].get("uri") if external_refs else None
+            # Derive entity type from the entity class
+            entity_type = entity.__class__.__name__
+            # Extract URI from external references if available
+            entity_uri = None
+            if entity.external_references:
+                entity_uri = entity.external_references[0].uri
 
             extracted = ExtractedEntity(
-                label=entity_label,
+                label=entity.title,
                 entity_type=entity_type,
                 source_layer=0,
                 confidence=float(similarity),
                 uri=entity_uri,
-                description=entity_data.get("description"),
-                properties={"kg_entity_id": entity_id},
+                description=entity.description,
+                properties={"kg_entity_id": entity.id},
             )
             entities.append(extracted)
             matches_found += 1
@@ -75,6 +88,6 @@ def execute(text: str, ontology_repo, embedding_service) -> LayerOutput:
         metadata={
             "matches_found": matches_found,
             "threshold": 0.7,
-            "entities_checked": len(entities_dict),
+            "entities_checked": len(all_entities),
         },
     )

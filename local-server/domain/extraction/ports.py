@@ -4,8 +4,13 @@ Extraction domain ports (interfaces).
 Protocol definitions for external dependencies required by the extraction domain,
 plus value objects used in port contracts.
 """
+from __future__ import annotations
+
 from dataclasses import dataclass
-from typing import Any, Protocol
+from typing import TYPE_CHECKING, Any, Protocol, Sequence
+
+if TYPE_CHECKING:
+    from domain.extraction.entities import ExtractionResult
 
 
 # ============================================================================
@@ -41,12 +46,14 @@ class NLPEntity:
         label: The entity type label (e.g., 'ORG', 'PERSON', 'GPE')
         start: Character offset where entity begins
         end: Character offset where entity ends
+        confidence: Confidence score from 0.0 to 1.0
         linked_uri: Optional URI linking to external knowledge base
     """
     text: str
     label: str
     start: int
     end: int
+    confidence: float
     linked_uri: str | None = None
 
 
@@ -74,11 +81,13 @@ class ReferenceResult:
         uri: Unique URI for this resource
         label: Human-readable label or title
         description: Optional longer description
+        confidence: Confidence score from 0.0 to 1.0
         source: Which reference source returned this result
     """
     uri: str
     label: str
     description: str | None = None
+    confidence: float = 1.0
     source: str = ""
 
 
@@ -91,11 +100,13 @@ class ReferenceRelation:
         subject_uri: URI of the source concept
         predicate: Type of relationship (e.g., 'narrower', 'broader')
         object_uri: URI of the target concept
+        weight: Optional strength/confidence weight for the relation
         source: Which reference source this relation comes from
     """
     subject_uri: str
     predicate: str
     object_uri: str
+    weight: float | None = None
     source: str = ""
 
 
@@ -250,5 +261,55 @@ class ReferenceSource(Protocol):
 
         Returns:
             True if the source can be queried, False otherwise
+        """
+        ...
+
+
+class ExtractionRepository(Protocol):
+    """
+    Port for persistence of extraction results.
+
+    Implementations store and retrieve extraction results, processing metrics,
+    and related extraction pipeline artifacts.
+    """
+
+    def save_extraction_result(self, result: ExtractionResult) -> ExtractionResult:
+        """
+        Save an extraction result to persistent storage.
+
+        Args:
+            result: The ExtractionResult to save
+
+        Returns:
+            The saved ExtractionResult (may have updated metadata like id or timestamp)
+        """
+        ...
+
+    def get_extraction_result(self, result_id: str) -> ExtractionResult | None:
+        """
+        Retrieve an extraction result by ID.
+
+        Args:
+            result_id: The ID of the extraction result
+
+        Returns:
+            The ExtractionResult or None if not found
+        """
+        ...
+
+    def list_extraction_results(
+        self,
+        limit: int = 100,
+        offset: int = 0,
+    ) -> Sequence[ExtractionResult]:
+        """
+        List extraction results with pagination.
+
+        Args:
+            limit: Maximum number of results to return
+            offset: Number of results to skip
+
+        Returns:
+            Sequence of ExtractionResult objects
         """
         ...

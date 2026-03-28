@@ -11,6 +11,7 @@ import time
 from datetime import datetime, timezone
 from uuid import uuid4
 
+from domain.ontology.ports import OntologyRepository, EmbeddingService
 from domain.ports import EventPublisher
 from . import layers
 from .entities import ExtractedEntity, ExtractionResult
@@ -39,8 +40,8 @@ class ExtractionService:
 
     def __init__(
         self,
-        ontology_repo,
-        embedding_service,
+        ontology_repo: OntologyRepository,
+        embedding_service: EmbeddingService,
         llm: LLMProvider,
         nlp: NLPProcessor,
         reference_sources: list[ReferenceSource],
@@ -68,6 +69,7 @@ class ExtractionService:
         """
         Extract entities from text through four coordinated layers.
 
+        This is the main use case that orchestrates the full extraction pipeline.
         Layers execute sequentially:
         - Layer 0: Knowledge graph context (uses embedding similarity)
         - Layer 1: LLM extraction (structured JSON output)
@@ -164,6 +166,154 @@ class ExtractionService:
         # Check if no entities were extracted across all layers
         if not deduplicated:
             raise ExtractionError("All extraction layers failed to extract entities")
+
+        # Calculate execution time
+        duration_ms = int((time.time() - start_time) * 1000)
+
+        # Create result
+        result = ExtractionResult(
+            id=result_id,
+            text=text,
+            extracted_entities=deduplicated,
+            layers_executed=layers_executed,
+            total_duration_ms=duration_ms,
+            created_at=datetime.now(timezone.utc),
+        )
+
+        # Publish completion event
+        self._event_publisher.publish(ExtractionCompleted(
+            result_id=result_id,
+            entity_count=len(deduplicated),
+            duration_ms=duration_ms,
+        ))
+
+        return result
+
+    def analyze_text(self, text: str) -> ExtractionResult:
+        """
+        Analyze text for linguistic features and named entities.
+
+        This use case focuses on NLP-based analysis including tokenization,
+        entity recognition, language detection, and linguistic features.
+        It may also provide context from the knowledge graph.
+
+        Args:
+            text: Source text to analyze
+
+        Returns:
+            ExtractionResult containing analyzed entities and linguistic metadata
+
+        Raises:
+            ExtractionError: If text validation fails
+        """
+        if not text or not text.strip():
+            raise ExtractionError("Text cannot be empty")
+
+        result_id = str(uuid4())
+        start_time = time.time()
+        layers_executed: list[ExtractionLayerResult] = []
+        all_entities: list[ExtractedEntity] = []
+
+        # Layer 0: Knowledge graph context
+        layer_0_output = self._execute_layer(
+            layer_num=0,
+            layer_name="Knowledge Graph Context",
+            layer_fn=lambda: layers.kg_context.execute(
+                text=text,
+                ontology_repo=self._ontology_repo,
+                embedding_service=self._embedding_service,
+            ),
+            layers_executed=layers_executed,
+        )
+        all_entities.extend(layer_0_output.entities)
+
+        # Layer 2: NLP gap-filling (primary for text analysis)
+        layer_2_input = LayerInput(
+            text=text,
+            existing_entities=all_entities.copy(),
+            kg_context=layer_0_output.entities,
+        )
+        layer_2_output = self._execute_layer(
+            layer_num=2,
+            layer_name="NLP Gap-Filling",
+            layer_fn=lambda: layers.nlp_gap.execute(
+                input=layer_2_input,
+                nlp=self._nlp,
+            ),
+            layers_executed=layers_executed,
+        )
+        all_entities.extend(layer_2_output.entities)
+
+        # Deduplicate entities
+        deduplicated = self._deduplicate(all_entities)
+
+        # Calculate execution time
+        duration_ms = int((time.time() - start_time) * 1000)
+
+        # Create result
+        result = ExtractionResult(
+            id=result_id,
+            text=text,
+            extracted_entities=deduplicated,
+            layers_executed=layers_executed,
+            total_duration_ms=duration_ms,
+            created_at=datetime.now(timezone.utc),
+        )
+
+        # Publish completion event
+        self._event_publisher.publish(ExtractionCompleted(
+            result_id=result_id,
+            entity_count=len(deduplicated),
+            duration_ms=duration_ms,
+        ))
+
+        return result
+
+    def enrich_from_references(self, text: str, extracted_entities: list[ExtractedEntity]) -> ExtractionResult:
+        """
+        Enrich extracted entities with external reference knowledge.
+
+        This use case takes already-extracted entities and enriches them with
+        URIs, metadata, and relationships from external knowledge sources like
+        ConceptNet, DBpedia, Wikidata, and schema.org.
+
+        Args:
+            text: Original source text
+            extracted_entities: Entities to enrich
+
+        Returns:
+            ExtractionResult with enriched entities and reference metadata
+
+        Raises:
+            ExtractionError: If text validation fails
+        """
+        if not text or not text.strip():
+            raise ExtractionError("Text cannot be empty")
+
+        result_id = str(uuid4())
+        start_time = time.time()
+        layers_executed: list[ExtractionLayerResult] = []
+        all_entities = extracted_entities.copy()
+
+        # Layer 3: Reference source enrichment
+        layer_3_input = LayerInput(
+            text=text,
+            existing_entities=all_entities.copy(),
+            kg_context=[],
+        )
+        layer_3_output = self._execute_layer(
+            layer_num=3,
+            layer_name="Reference Source Enrichment",
+            layer_fn=lambda: layers.reference.execute(
+                input=layer_3_input,
+                sources=self._reference_sources,
+            ),
+            layers_executed=layers_executed,
+        )
+        all_entities.extend(layer_3_output.entities)
+
+        # Deduplicate entities
+        deduplicated = self._deduplicate(all_entities)
 
         # Calculate execution time
         duration_ms = int((time.time() - start_time) * 1000)

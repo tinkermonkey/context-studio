@@ -34,6 +34,29 @@ class ExtractedEntity:
 
 
 @dataclass
+class ProcessingMetrics:
+    """
+    Metrics for an extraction layer or full extraction operation.
+
+    Attributes:
+        layer_name: Name of the layer or overall operation
+        duration_ms: Time spent processing (milliseconds)
+        tokens_processed: Total tokens processed
+        entities_found: Number of entities found in this stage
+        relationships_found: Number of relationships found in this stage
+        error_count: Number of errors encountered
+        skipped_count: Number of items skipped
+    """
+    layer_name: str
+    duration_ms: int
+    tokens_processed: int = 0
+    entities_found: int = 0
+    relationships_found: int = 0
+    error_count: int = 0
+    skipped_count: int = 0
+
+
+@dataclass
 class ExtractionResult:
     """
     The complete output of an extraction operation.
