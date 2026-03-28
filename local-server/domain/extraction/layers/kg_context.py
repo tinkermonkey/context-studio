@@ -56,7 +56,8 @@ def execute(text: str, ontology_repo, embedding_service) -> LayerOutput:
         if not isinstance(entity, (Class, Individual)):
             continue
 
-        if not entity.embedding:
+        # Guard against entities without embedding attribute (Individual may not have embeddings)
+        if not hasattr(entity, 'embedding') or not entity.embedding:
             continue
 
         # Compute similarity

@@ -167,27 +167,14 @@ class ExtractionService:
         if not deduplicated:
             raise ExtractionError("All extraction layers failed to extract entities")
 
-        # Calculate execution time
-        duration_ms = int((time.time() - start_time) * 1000)
-
-        # Create result
-        result = ExtractionResult(
-            id=result_id,
-            text=text,
-            extracted_entities=deduplicated,
-            layers_executed=layers_executed,
-            total_duration_ms=duration_ms,
-            created_at=datetime.now(timezone.utc),
-        )
-
-        # Publish completion event
-        self._event_publisher.publish(ExtractionCompleted(
+        # Build and return result
+        return self._build_result(
             result_id=result_id,
-            entity_count=len(deduplicated),
-            duration_ms=duration_ms,
-        ))
-
-        return result
+            text=text,
+            deduplicated=deduplicated,
+            layers_executed=layers_executed,
+            start_time=start_time,
+        )
 
     def analyze_text(self, text: str) -> ExtractionResult:
         """
@@ -247,27 +234,14 @@ class ExtractionService:
         # Deduplicate entities
         deduplicated = self._deduplicate(all_entities)
 
-        # Calculate execution time
-        duration_ms = int((time.time() - start_time) * 1000)
-
-        # Create result
-        result = ExtractionResult(
-            id=result_id,
-            text=text,
-            extracted_entities=deduplicated,
-            layers_executed=layers_executed,
-            total_duration_ms=duration_ms,
-            created_at=datetime.now(timezone.utc),
-        )
-
-        # Publish completion event
-        self._event_publisher.publish(ExtractionCompleted(
+        # Build and return result
+        return self._build_result(
             result_id=result_id,
-            entity_count=len(deduplicated),
-            duration_ms=duration_ms,
-        ))
-
-        return result
+            text=text,
+            deduplicated=deduplicated,
+            layers_executed=layers_executed,
+            start_time=start_time,
+        )
 
     def enrich_from_references(self, text: str, extracted_entities: list[ExtractedEntity]) -> ExtractionResult:
         """
@@ -315,6 +289,39 @@ class ExtractionService:
         # Deduplicate entities
         deduplicated = self._deduplicate(all_entities)
 
+        # Build and return result
+        return self._build_result(
+            result_id=result_id,
+            text=text,
+            deduplicated=deduplicated,
+            layers_executed=layers_executed,
+            start_time=start_time,
+        )
+
+    def _build_result(
+        self,
+        result_id: str,
+        text: str,
+        deduplicated: list[ExtractedEntity],
+        layers_executed: list[ExtractionLayerResult],
+        start_time: float,
+    ) -> ExtractionResult:
+        """
+        Construct ExtractionResult from deduplicated entities and layer metadata.
+
+        This helper consolidates common result assembly and event publishing logic
+        used by extract(), analyze_text(), and enrich_from_references().
+
+        Args:
+            result_id: Unique identifier for this extraction result
+            text: Original source text
+            deduplicated: Deduplicated list of extracted entities
+            layers_executed: Execution details for each layer that ran
+            start_time: Start time (from time.time()) for calculating duration
+
+        Returns:
+            Fully constructed ExtractionResult with completion event published
+        """
         # Calculate execution time
         duration_ms = int((time.time() - start_time) * 1000)
 

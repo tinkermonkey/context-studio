@@ -14,6 +14,10 @@ from utils.logger import get_logger
 
 logger = get_logger(__name__)
 
+# spaCy's base NER pipeline does not produce per-entity confidence scores.
+# This synthetic default is used as a conservative confidence for all extracted entities.
+SPACY_DEFAULT_ENTITY_CONFIDENCE = 0.85
+
 
 class SpacyNLPProcessor:
     """
@@ -118,7 +122,7 @@ class SpacyNLPProcessor:
                     label=ent.label_,
                     start=ent.start_char,
                     end=ent.end_char,
-                    confidence=0.85,  # spaCy default confidence
+                    confidence=SPACY_DEFAULT_ENTITY_CONFIDENCE,
                     linked_uri=linked_uri,
                 )
             )

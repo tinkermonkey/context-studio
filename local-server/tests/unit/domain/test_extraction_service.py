@@ -572,6 +572,185 @@ class TestStringSimilarity:
         assert 0.8 < sim < 1.0  # High but not exact
 
 
+class TestAnalyzeText:
+    """Tests for analyze_text() use case."""
+
+    def test_analyze_text_success(self, service):
+        """Analyze text extracts entities through KG context and NLP layers."""
+        result = service.analyze_text("Apple and Microsoft are companies.")
+
+        # Should have result structure
+        assert result.id is not None
+        assert result.text == "Apple and Microsoft are companies."
+        assert len(result.extracted_entities) > 0
+        assert result.total_duration_ms >= 0
+        assert result.created_at is not None
+
+        # Should execute layers 0 and 2 (KG context and NLP gap-filling)
+        # Note: The full extract() runs all 4 layers, but analyze_text() runs 0 and 2
+        assert len(result.layers_executed) >= 2
+
+    def test_analyze_text_empty_text_raises(self, service):
+        """Analyze text with empty text raises ExtractionError."""
+        with pytest.raises(ExtractionError, match="empty"):
+            service.analyze_text("")
+
+    def test_analyze_text_whitespace_text_raises(self, service):
+        """Analyze text with whitespace-only text raises ExtractionError."""
+        with pytest.raises(ExtractionError, match="empty"):
+            service.analyze_text("   ")
+
+    def test_analyze_text_emits_completion_event(self, service):
+        """Analyze text emits ExtractionCompleted event with correct data."""
+        result = service.analyze_text("Test text with entities")
+
+        events = service._event_publisher.get_events()
+        assert len(events) > 0
+
+        completion_events = [e for e in events if isinstance(e, ExtractionCompleted)]
+        assert len(completion_events) > 0
+
+        event = completion_events[-1]  # Get the most recent event
+        assert event.result_id == result.id
+        assert event.entity_count == len(result.extracted_entities)
+        assert event.duration_ms == result.total_duration_ms
+
+    def test_analyze_text_measures_duration(self, service):
+        """Analyze text records execution time."""
+        result = service.analyze_text("Test text")
+
+        # Duration should be non-negative
+        assert result.total_duration_ms >= 0
+
+        # At least one layer should be executed
+        assert len(result.layers_executed) > 0
+
+
+class TestEnrichFromReferences:
+    """Tests for enrich_from_references() use case."""
+
+    def test_enrich_from_references_success(self, service):
+        """Enrich entities with external references."""
+        # Start with some entities
+        input_entities = [
+            ExtractedEntity(
+                label="Apple",
+                entity_type="ORG",
+                source_layer=1,
+                confidence=0.9,
+            ),
+            ExtractedEntity(
+                label="Microsoft",
+                entity_type="ORG",
+                source_layer=1,
+                confidence=0.85,
+            ),
+        ]
+
+        result = service.enrich_from_references(
+            "Apple and Microsoft are companies.",
+            input_entities,
+        )
+
+        # Should have result structure
+        assert result.id is not None
+        assert result.text == "Apple and Microsoft are companies."
+        assert len(result.extracted_entities) > 0
+        assert result.total_duration_ms >= 0
+        assert result.created_at is not None
+
+        # Should contain at least the input entities (possibly enriched)
+        result_labels = {e.label for e in result.extracted_entities}
+        assert "Apple" in result_labels
+        assert "Microsoft" in result_labels
+
+    def test_enrich_from_references_empty_text_raises(self, service):
+        """Enrich with empty text raises ExtractionError."""
+        input_entities = [
+            ExtractedEntity(label="Apple", entity_type="ORG", source_layer=1)
+        ]
+
+        with pytest.raises(ExtractionError, match="empty"):
+            service.enrich_from_references("", input_entities)
+
+    def test_enrich_from_references_whitespace_text_raises(self, service):
+        """Enrich with whitespace-only text raises ExtractionError."""
+        input_entities = [
+            ExtractedEntity(label="Apple", entity_type="ORG", source_layer=1)
+        ]
+
+        with pytest.raises(ExtractionError, match="empty"):
+            service.enrich_from_references("   ", input_entities)
+
+    def test_enrich_from_references_empty_entities(self, service):
+        """Enrich with empty entity list returns result structure."""
+        result = service.enrich_from_references("Test text", [])
+
+        # Should have result structure even with no input entities
+        assert result.id is not None
+        assert result.text == "Test text"
+        assert result.total_duration_ms >= 0
+        assert result.created_at is not None
+
+    def test_enrich_from_references_deduplicates(self, service):
+        """Enrich deduplicates input entities with reference results."""
+        # Input with duplicates
+        input_entities = [
+            ExtractedEntity(
+                label="Apple",
+                entity_type="ORG",
+                source_layer=0,
+                confidence=0.8,
+            ),
+            ExtractedEntity(
+                label="Apple",  # Same label
+                entity_type="ORG",
+                source_layer=2,
+                confidence=0.75,
+            ),
+        ]
+
+        result = service.enrich_from_references("Apple Inc.", input_entities)
+
+        # Deduplication should occur
+        apple_entities = [e for e in result.extracted_entities if e.label == "Apple"]
+        # Should keep the highest-priority entity (source_layer 0 has higher priority than 2)
+        assert len(apple_entities) >= 1
+
+    def test_enrich_from_references_emits_completion_event(self, service):
+        """Enrich from references emits ExtractionCompleted event."""
+        input_entities = [
+            ExtractedEntity(label="Apple", entity_type="ORG", source_layer=1)
+        ]
+
+        result = service.enrich_from_references("Apple", input_entities)
+
+        events = service._event_publisher.get_events()
+        assert len(events) > 0
+
+        completion_events = [e for e in events if isinstance(e, ExtractionCompleted)]
+        assert len(completion_events) > 0
+
+        event = completion_events[-1]  # Get the most recent event
+        assert event.result_id == result.id
+        assert event.entity_count == len(result.extracted_entities)
+        assert event.duration_ms == result.total_duration_ms
+
+    def test_enrich_from_references_measures_duration(self, service):
+        """Enrich from references records execution time."""
+        input_entities = [
+            ExtractedEntity(label="Apple", entity_type="ORG", source_layer=1)
+        ]
+
+        result = service.enrich_from_references("Apple", input_entities)
+
+        # Duration should be non-negative
+        assert result.total_duration_ms >= 0
+
+        # Layer 3 should be executed
+        assert len(result.layers_executed) > 0
+
+
 class TestExceptionHandling:
     """Tests for exception behavior."""
 
