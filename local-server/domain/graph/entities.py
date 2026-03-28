@@ -48,7 +48,7 @@ class GraphMetrics:
         connected_components: Number of connected components in the graph
         degree_distribution: Distribution of node degrees as dict[degree_count -> frequency]
         centrality: Centrality scores for all nodes, keyed by node ID
-        communities: List of communities detected in the graph, each as a sorted list of node IDs
+        communities: List of communities detected in the graph, each as a set of node IDs
         algorithm: Name of the centrality algorithm used
         computed_at: Timestamp when metrics were computed
     """
@@ -58,7 +58,7 @@ class GraphMetrics:
     connected_components: int
     degree_distribution: dict[str, int]
     centrality: dict[str, float]
-    communities: list[list[str]]
+    communities: list[set[str]]
     algorithm: str
     computed_at: datetime
 

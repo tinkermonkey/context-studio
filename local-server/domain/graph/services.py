@@ -254,16 +254,13 @@ class GraphAnalysisService:
         # Detect communities using louvain algorithm
         communities = self._graph_engine.communities("louvain")
 
-        # Convert communities from sets to sorted lists for JSON serialization
-        communities_as_lists = [sorted(list(community)) for community in communities]
-
         return GraphMetrics(
             density=density,
             average_degree=avg_degree,
             connected_components=connected_components,
             degree_distribution=degree_dist,
             centrality=centrality_scores,
-            communities=communities_as_lists,
+            communities=communities,
             algorithm=algorithm,
             computed_at=datetime.now(timezone.utc),
         )
