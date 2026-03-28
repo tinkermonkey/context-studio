@@ -31,10 +31,8 @@ from fastapi import FastAPI, status
 from fastapi.testclient import TestClient
 
 from domain.extraction.services import ExtractionService
-from domain.extraction.ports import LLMProvider, NLPProcessor, ReferenceSource
 from domain.extraction.value_objects import LayerOutput
 from domain.ontology.entities import Taxonomy, ConceptScheme, Class
-from domain.ports import EventPublisher
 from adapters.persistence.sqlite.models import Base
 from adapters.persistence.sqlite.ontology_repo import SQLiteOntologyRepository
 from adapters.embedding.sentence_transformer import SentenceTransformerEmbedding
@@ -62,7 +60,6 @@ class MockNLPProcessor:
 
     def process(self, text):
         """Return mock NLP results."""
-        from domain.extraction.value_objects import LayerOutput
         return LayerOutput(entities=[], metadata={})
 
 

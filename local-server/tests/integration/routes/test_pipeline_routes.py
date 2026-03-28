@@ -28,8 +28,6 @@ from fastapi import FastAPI, status
 from fastapi.testclient import TestClient
 
 from domain.pipeline.services import PipelineService
-from domain.extraction.ports import LLMProvider
-from domain.ports import EventPublisher
 from adapters.persistence.sqlite.operations.models import OperationsBase
 from adapters.persistence.sqlite.pipeline_repo import SQLitePipelineRepository
 from adapters.events.in_process import InProcessEventPublisher
