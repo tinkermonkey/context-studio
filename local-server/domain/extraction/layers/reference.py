@@ -42,8 +42,13 @@ def execute(input: LayerInput, sources: list[ReferenceSource]) -> LayerOutput:
 
     # For each entity from prior layers, enrich with reference data
     enrichment_count = 0
+    enriched_ids = set()
 
     for prior_entity in input.existing_entities:
+        # Skip if already enriched in this pass
+        if prior_entity.id in enriched_ids:
+            continue
+
         # Search for this entity in reference sources
         for source in available_sources:
             results = source.search(prior_entity.label, limit=5)
@@ -52,8 +57,8 @@ def execute(input: LayerInput, sources: list[ReferenceSource]) -> LayerOutput:
                 # Use the top result to enrich the entity
                 top_result = results[0]
 
-                # Merge reference data into the prior entity's properties
-                # without changing source_layer (keep original)
+                # Create enriched entity with same ID to preserve reference
+                # The deduplication layer will use ID matching to handle this
                 enriched_entity = ExtractedEntity(
                     id=prior_entity.id,
                     label=prior_entity.label,
@@ -69,6 +74,7 @@ def execute(input: LayerInput, sources: list[ReferenceSource]) -> LayerOutput:
                     },
                 )
                 entities.append(enriched_entity)
+                enriched_ids.add(prior_entity.id)
                 enrichment_count += 1
                 break  # Move to next entity after first source match
 

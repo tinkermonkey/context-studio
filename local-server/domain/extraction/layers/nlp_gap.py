@@ -51,7 +51,9 @@ def execute(input: LayerInput, nlp: NLPProcessor) -> LayerOutput:
             label=nlp_entity.text.strip(),
             entity_type=nlp_entity.label,  # spaCy label
             source_layer=2,
-            confidence=1.0,  # NLP model assertions don't have explicit confidence
+            # Use 0.75 default for NLP extraction - represents typical reliability
+            # of en_core_web_sm model for general entity recognition
+            confidence=getattr(nlp_entity, "confidence", 0.75),
             uri=nlp_entity.linked_uri,
             properties={
                 "char_offset_start": nlp_entity.start,

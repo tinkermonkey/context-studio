@@ -54,7 +54,9 @@ def execute(text: str, ontology_repo, embedding_service) -> LayerOutput:
         if similarity >= 0.7:
             entity_label = entity_data.get("title", "")
             entity_type = entity_data.get("node_type", "unknown")
-            entity_uri = entity_data.get("external_references", [{}])[0].get("uri")
+            # Safely extract URI from external_references, handling empty lists
+            external_refs = entity_data.get("external_references", [])
+            entity_uri = external_refs[0].get("uri") if external_refs else None
 
             extracted = ExtractedEntity(
                 label=entity_label,

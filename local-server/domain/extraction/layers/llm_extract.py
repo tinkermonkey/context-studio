@@ -76,28 +76,43 @@ JSON Array:"""
     # Parse LLM response
     response_text = response.content.strip()
 
-    # Try to extract JSON array from response
+    # Try to extract JSON array from response using proper bracket matching
     json_match = None
     if "[" in response_text:
         start_idx = response_text.index("[")
-        if "]" in response_text[start_idx:]:
-            end_idx = response_text.index("]", start_idx) + 1
+        # Find matching closing bracket by counting bracket depth
+        bracket_count = 0
+        end_idx = None
+        for i in range(start_idx, len(response_text)):
+            if response_text[i] == "[":
+                bracket_count += 1
+            elif response_text[i] == "]":
+                bracket_count -= 1
+                if bracket_count == 0:
+                    end_idx = i + 1
+                    break
+
+        if end_idx is not None:
             json_match = response_text[start_idx:end_idx]
 
     if json_match:
-        entity_list = json.loads(json_match)
-        for item in entity_list:
-            if isinstance(item, dict) and "label" in item:
-                extracted = ExtractedEntity(
-                    label=item.get("label", "").strip(),
-                    entity_type=item.get("type", "UNKNOWN"),
-                    source_layer=1,
-                    confidence=float(item.get("confidence", 0.5)),
-                    uri=item.get("uri"),
-                    description=item.get("description"),
-                )
-                if extracted.label:  # Only add if label is non-empty
-                    entities.append(extracted)
+        try:
+            entity_list = json.loads(json_match)
+            for item in entity_list:
+                if isinstance(item, dict) and "label" in item:
+                    extracted = ExtractedEntity(
+                        label=item.get("label", "").strip(),
+                        entity_type=item.get("type", "UNKNOWN"),
+                        source_layer=1,
+                        confidence=float(item.get("confidence", 0.5)),
+                        uri=item.get("uri"),
+                        description=item.get("description"),
+                    )
+                    if extracted.label:  # Only add if label is non-empty
+                        entities.append(extracted)
+        except (json.JSONDecodeError, ValueError):
+            # Invalid JSON found - return empty entities
+            pass
 
     return LayerOutput(
         entities=entities,

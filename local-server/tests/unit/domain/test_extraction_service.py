@@ -575,6 +575,34 @@ class TestStringSimilarity:
 class TestExceptionHandling:
     """Tests for exception behavior."""
 
+    def test_all_layers_fail_raises_extraction_error(self):
+        """Extraction raises ExtractionError if no entities are extracted."""
+        # All layers fail to extract entities (either by exception or returning no results)
+        class ThrowingOntologyRepository:
+            def get_all_entities_and_relationships(self):
+                raise RuntimeError("Ontology repo error")
+
+        class ThrowingEmbeddingService:
+            def embed(self, text):
+                raise RuntimeError("Embedding error")
+            def embed_batch(self, texts):
+                raise RuntimeError("Embedding error")
+            def similarity(self, a, b):
+                raise RuntimeError("Embedding error")
+
+        service = ExtractionService(
+            ontology_repo=ThrowingOntologyRepository(),  # Layer 0 fails
+            embedding_service=ThrowingEmbeddingService(),
+            llm=FakeLLMProvider(should_fail=True),  # Layer 1 fails
+            nlp=FakeNLPProcessor(should_fail=True),  # Layer 2 fails (empty entities)
+            reference_sources=[FakeReferenceSource(should_fail=True)],  # Layer 3: no entities to enrich
+            event_publisher=FakeEventPublisher(),
+        )
+
+        # No entities extracted across all layers should raise ExtractionError
+        with pytest.raises(ExtractionError, match="All extraction layers failed"):
+            service.extract("Test text")
+
     def test_nlp_processor_not_ready_allows_continuation(self):
         """NLP processor not ready doesn't stop extraction."""
         class NotReadyNLPProcessor:

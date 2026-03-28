@@ -161,6 +161,10 @@ class ExtractionService:
         # Deduplicate entities across layers
         deduplicated = self._deduplicate(all_entities)
 
+        # Check if all layers failed to produce any entities
+        if not deduplicated:
+            raise ExtractionError("All extraction layers failed to extract any entities")
+
         # Calculate execution time
         duration_ms = int((time.time() - start_time) * 1000)
 
@@ -239,13 +243,14 @@ class ExtractionService:
 
     def _deduplicate(self, entities: list[ExtractedEntity]) -> list[ExtractedEntity]:
         """
-        Deduplicate entities across layers using string similarity.
+        Deduplicate entities across layers using ID and string similarity.
 
         Deduplication rules:
         1. Sort by priority: source_layer 1 > 0 > 2 > 3
-        2. Group entities with normalized labels matching >= 0.85 similarity
-        3. Keep the highest-priority entity in each group
-        4. Return merged group sorted by priority
+        2. Group entities by ID first (exact match) - entities with same ID are same entity
+        3. Then group entities with normalized labels matching >= 0.85 similarity
+        4. Keep the highest-priority entity in each group
+        5. Return deduplicated entities sorted by priority
 
         Args:
             entities: Unfiltered list of entities from all layers
@@ -272,7 +277,7 @@ class ExtractionService:
             if i in used_indices:
                 continue
 
-            # Find all entities similar to this one
+            # Find all entities duplicated with this one
             used_indices.add(i)
 
             for j in range(i + 1, len(sorted_entities)):
@@ -281,7 +286,12 @@ class ExtractionService:
 
                 other = sorted_entities[j]
 
-                # Normalize labels for comparison
+                # First check: same ID means same entity
+                if entity.id == other.id:
+                    used_indices.add(j)
+                    continue
+
+                # Second check: label similarity for cross-layer matches
                 label_similarity = self._normalized_similarity(entity.label, other.label)
 
                 if label_similarity >= self.SIMILARITY_THRESHOLD:
