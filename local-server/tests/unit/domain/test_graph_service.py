@@ -295,7 +295,10 @@ class TestPathFinding:
         assert result.target_id == classes[1].id
         assert result.path == [classes[0].id, classes[1].id]
         assert result.length == 1
-        assert result.relationships == []
+        # Relationships should be populated from edge property definitions
+        assert isinstance(result.relationships, list)
+        assert len(result.relationships) == 1  # One edge in the path
+        assert result.relationships[0] == "is a"  # Property definition title from fixture
 
     def test_find_shortest_path_not_exists(self, service):
         """find_shortest_path returns None when no path exists."""

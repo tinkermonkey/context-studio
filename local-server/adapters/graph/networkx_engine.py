@@ -309,3 +309,18 @@ class NetworkXGraphEngine:
             cycle_exists = False
 
         return cycle_exists
+
+    def get_edge_data(self, source_id: str, target_id: str) -> dict[str, Any]:
+        """
+        Get the attributes/properties of a specific edge.
+
+        Args:
+            source_id: ID of the edge source node
+            target_id: ID of the edge target node
+
+        Returns:
+            Dictionary of edge attributes (e.g., property_definition_id), or empty dict if edge doesn't exist
+        """
+        if self._graph.has_edge(source_id, target_id):
+            return dict(self._graph[source_id][target_id])
+        return {}

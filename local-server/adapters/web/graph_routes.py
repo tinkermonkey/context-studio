@@ -175,12 +175,12 @@ async def get_degree_distribution(
 
 # ==================== Path Finding Endpoints ====================
 
-@router.get("/paths/shortest", response_model=Optional[PathResultResponse])
+@router.get("/paths/shortest", response_model=PathResultResponse)
 async def get_shortest_path(
     source_id: str = Query(..., description="ID of the starting node"),
     target_id: str = Query(..., description="ID of the ending node"),
     service: GraphAnalysisService = Depends(get_graph_service),
-) -> Optional[PathResultResponse]:
+) -> PathResultResponse:
     """
     Find the shortest path between two nodes.
 
@@ -190,15 +190,18 @@ async def get_shortest_path(
         service: GraphAnalysisService from dependency injection
 
     Returns:
-        PathResultResponse if a path exists, None otherwise
+        PathResultResponse if a path exists
 
     Raises:
-        HTTPException: 404 if either node is not found, 422 if graph error occurs
+        HTTPException: 404 if either node is not found or no path exists, 422 if graph error occurs
     """
     try:
         path_result = service.find_shortest_path(source_id, target_id)
         if path_result is None:
-            return None
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"No path exists between '{source_id}' and '{target_id}'"
+            )
         return PathResultResponse.model_validate(path_result)
     except (NodeNotFoundError, GraphError) as exc:
         status_code, message = _handle_graph_error(exc)

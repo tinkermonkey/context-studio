@@ -289,13 +289,15 @@ class GraphAnalysisService:
         if path is None:
             return None
 
-        # Stub: relationships list is empty for now (would require edge labels from graph engine)
+        # Retrieve relationship labels for edges in the path
+        relationships = self._get_path_relationships(path)
+
         return PathResult(
             source_id=source_id,
             target_id=target_id,
             path=path,
             length=len(path) - 1,
-            relationships=[],
+            relationships=relationships,
         )
 
     def find_all_paths(self, source_id: str, target_id: str, max_depth: int = 5) -> list[PathResult]:
@@ -319,12 +321,15 @@ class GraphAnalysisService:
         paths = self._graph_engine.all_paths(source_id, target_id, max_depth)
         results = []
         for path in paths:
+            # Retrieve relationship labels for edges in this path
+            relationships = self._get_path_relationships(path)
+
             result = PathResult(
                 source_id=source_id,
                 target_id=target_id,
                 path=path,
                 length=len(path) - 1,
-                relationships=[],
+                relationships=relationships,
             )
             results.append(result)
 
@@ -549,6 +554,44 @@ class GraphAnalysisService:
         """
         self._graph_stale = True
         self._rdf_stale = True
+
+    def _get_path_relationships(self, path: list[str]) -> list[str]:
+        """
+        Get relationship labels for all edges in a path.
+
+        For each consecutive pair of nodes in the path, retrieves the edge's
+        property_definition_id and looks up the corresponding property definition
+        title to use as the relationship label.
+
+        Args:
+            path: Ordered list of node IDs from source to target
+
+        Returns:
+            List of relationship labels, one for each edge in the path
+        """
+        relationships = []
+        property_defs = self._repository.list_property_definitions()
+        prop_def_map = {prop.id: prop.title for prop in property_defs}
+
+        # Iterate through consecutive pairs of nodes in the path
+        for i in range(len(path) - 1):
+            source = path[i]
+            target = path[i + 1]
+
+            # Get edge attributes from graph engine
+            edge_data = self._graph_engine.get_edge_data(source, target)
+            prop_def_id = edge_data.get("property_definition_id")
+
+            # Look up property definition title, or use identifier if available
+            if prop_def_id and prop_def_id in prop_def_map:
+                label = prop_def_map[prop_def_id]
+            else:
+                # Fallback: use property_definition_id as label if lookup fails
+                label = prop_def_id if prop_def_id else "unknown"
+
+            relationships.append(label)
+
+        return relationships
 
     def _validate_sparql(self, query: str) -> None:
         """

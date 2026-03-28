@@ -288,3 +288,20 @@ class FakeGraphEngine:
                     stack.append(edge["target_id"])
 
         return False
+
+    def get_edge_data(self, source_id: str, target_id: str) -> dict[str, Any]:
+        """
+        Get the attributes/properties of a specific edge.
+
+        Args:
+            source_id: ID of the edge source node
+            target_id: ID of the edge target node
+
+        Returns:
+            Dictionary of edge attributes, or empty dict if edge doesn't exist
+        """
+        for edge in self._edges:
+            if edge["source_id"] == source_id and edge["target_id"] == target_id:
+                # Return a copy of all attributes except source/target
+                return {k: v for k, v in edge.items() if k not in ("source_id", "target_id")}
+        return {}
