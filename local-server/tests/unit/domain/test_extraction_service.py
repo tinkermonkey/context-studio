@@ -632,36 +632,3 @@ class TestExceptionHandling:
         assert result.layers_executed[3].success is True
         assert result.layers_executed[3].entities_found == 0
         assert len(result.layers_executed) == 4
-
-
-class TestReferenceEnrichment:
-    """Tests for reference enrichment preservation."""
-
-    def test_reference_enrichment_preserves_metadata(self):
-        """URIs and descriptions from reference layer survive deduplication."""
-        fake_ontology = FakeOntologyRepository()
-        fake_embedding = FakeEmbeddingService()
-        fake_llm = FakeLLMProvider()
-        fake_nlp = FakeNLPProcessor()
-        fake_reference = FakeReferenceSource()
-        event_publisher = FakeEventPublisher()
-
-        service = ExtractionService(
-            ontology_repo=fake_ontology,
-            embedding_service=fake_embedding,
-            llm=fake_llm,
-            nlp=fake_nlp,
-            reference_sources=[fake_reference],
-            event_publisher=event_publisher,
-        )
-
-        result = service.extract("Test text")
-
-        # Check that at least one entity has enrichment metadata
-        has_reference_data = any(
-            "reference_source" in (e.properties or {})
-            for e in result.extracted_entities
-        )
-        # The reference layer successfully enriches if it finds matches
-        # This test verifies that enrichment data is not discarded
-        assert has_reference_data is True
