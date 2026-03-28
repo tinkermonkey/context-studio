@@ -1,0 +1,280 @@
+"""
+Domain service for LLM pipeline management.
+
+PipelineService orchestrates pipeline configuration lifecycle and execution
+tracking. It depends on PipelineRepository (for persistence), LLMProvider
+(for model invocation), and EventPublisher (for event-driven workflows).
+"""
+
+from __future__ import annotations
+
+import time
+from datetime import datetime, timezone
+from typing import TYPE_CHECKING
+from uuid import uuid4
+
+from .entities import Execution, PipelineConfiguration
+from .events import PipelineExecuted
+from .ports import PipelineRepository
+
+if TYPE_CHECKING:
+    from domain.extraction.ports import LLMProvider
+    from domain.ports import EventPublisher
+
+
+class PipelineService:
+    """
+    Domain service for managing LLM pipeline configurations and executions.
+
+    The service orchestrates:
+    - Configuration lifecycle (create, read, update, delete)
+    - Pipeline execution with complete instrumentation (tokens, duration, status)
+    - Event publishing for all execution completions
+    - Timeout handling for long-running LLM calls
+    """
+
+    def __init__(
+        self,
+        pipeline_repo: PipelineRepository,
+        llm: LLMProvider,
+        event_publisher: EventPublisher,
+    ) -> None:
+        """
+        Initialize the pipeline service.
+
+        Args:
+            pipeline_repo: Port for persisting pipeline configurations and executions
+            llm: Port for invoking LLM models
+            event_publisher: Port for publishing domain events
+        """
+        self._pipeline_repo = pipeline_repo
+        self._llm = llm
+        self._event_publisher = event_publisher
+
+    def create_config(
+        self,
+        pipeline: str,
+        title: str,
+        provider: str,
+        model: str,
+        config: dict,
+        system_prompt: str,
+        user_prompt: str,
+    ) -> PipelineConfiguration:
+        """
+        Create a new pipeline configuration.
+
+        Args:
+            pipeline: Pipeline identifier/slug
+            title: Human-readable title
+            provider: LLM provider name
+            model: Model identifier
+            config: Provider-specific configuration
+            system_prompt: System prompt for the model
+            user_prompt: User message template with {text} placeholder
+
+        Returns:
+            The created PipelineConfiguration
+        """
+        now = datetime.now(timezone.utc)
+        config_obj = PipelineConfiguration(
+            id=str(uuid4()),
+            pipeline=pipeline,
+            title=title,
+            provider=provider,
+            model=model,
+            config=config,
+            system_prompt=system_prompt,
+            user_prompt=user_prompt,
+            version=1,
+            enabled=True,
+            created_at=now,
+            last_updated=now,
+        )
+        return self._pipeline_repo.save_config(config_obj)
+
+    def get_config(self, config_id: str) -> PipelineConfiguration | None:
+        """
+        Retrieve a pipeline configuration by ID.
+
+        Args:
+            config_id: Configuration ID
+
+        Returns:
+            PipelineConfiguration if found, None otherwise
+        """
+        return self._pipeline_repo.get_config(config_id)
+
+    def list_configs(self, enabled_only: bool = False) -> list[PipelineConfiguration]:
+        """
+        List pipeline configurations.
+
+        Args:
+            enabled_only: If True, return only enabled configurations
+
+        Returns:
+            List of PipelineConfiguration objects
+        """
+        return self._pipeline_repo.list_configs(enabled_only=enabled_only)
+
+    def update_config(
+        self,
+        config_id: str,
+        **kwargs,
+    ) -> PipelineConfiguration:
+        """
+        Update a pipeline configuration.
+
+        Allowed fields to update: title, provider, model, config, system_prompt,
+        user_prompt, enabled.
+
+        Args:
+            config_id: Configuration ID
+            **kwargs: Fields to update
+
+        Returns:
+            The updated PipelineConfiguration
+
+        Raises:
+            ValueError: If configuration not found
+        """
+        existing = self._pipeline_repo.get_config(config_id)
+        if existing is None:
+            raise ValueError(f"Pipeline configuration {config_id} not found")
+
+        # Create updated config by copying and applying changes
+        updated = PipelineConfiguration(
+            id=existing.id,
+            pipeline=existing.pipeline,
+            title=kwargs.get("title", existing.title),
+            provider=kwargs.get("provider", existing.provider),
+            model=kwargs.get("model", existing.model),
+            config=kwargs.get("config", existing.config),
+            system_prompt=kwargs.get("system_prompt", existing.system_prompt),
+            user_prompt=kwargs.get("user_prompt", existing.user_prompt),
+            version=existing.version + 1,
+            enabled=kwargs.get("enabled", existing.enabled),
+            created_at=existing.created_at,
+            last_updated=datetime.now(timezone.utc),
+        )
+        return self._pipeline_repo.save_config(updated)
+
+    def delete_config(self, config_id: str) -> bool:
+        """
+        Delete a pipeline configuration.
+
+        Args:
+            config_id: Configuration ID
+
+        Returns:
+            True if deletion was successful, False if not found
+        """
+        return self._pipeline_repo.delete_config(config_id)
+
+    def execute_pipeline(self, config_id: str, input_text: str) -> Execution:
+        """
+        Execute a pipeline configuration with the given input.
+
+        Records a complete execution record including tokens, duration, and status.
+        Handles timeouts by recording an execution with status="timeout".
+        Publishes a PipelineExecuted event on completion.
+
+        Args:
+            config_id: Configuration ID to execute
+            input_text: Input text to process
+
+        Returns:
+            The recorded Execution
+
+        Raises:
+            ValueError: If configuration not found
+        """
+        config = self._pipeline_repo.get_config(config_id)
+        if config is None:
+            raise ValueError(f"Pipeline configuration {config_id} not found")
+
+        execution_id = str(uuid4())
+        start_time = time.time()
+
+        # Prepare the user prompt by replacing the placeholder
+        user_message = config.user_prompt.replace("{text}", input_text)
+
+        # Get timeout from config, default to 30 seconds
+        timeout_seconds = config.config.get("timeout", 30)
+
+        try:
+            # Call the LLM with timeout handling
+            response = self._llm.complete(
+                system_prompt=config.system_prompt,
+                user_prompt=user_message,
+                model=config.model,
+                temperature=config.config.get("temperature", 0.0),
+                max_tokens=config.config.get("max_tokens", 2000),
+                response_format=config.config.get("response_format"),
+            )
+
+            duration_ms = int((time.time() - start_time) * 1000)
+
+            # Check if execution exceeded timeout
+            if duration_ms > timeout_seconds * 1000:
+                execution = Execution(
+                    id=execution_id,
+                    pipeline_config_id=config_id,
+                    input_text=input_text,
+                    output_text="",
+                    provider=config.provider,
+                    model=config.model,
+                    tokens_in=0,
+                    tokens_out=0,
+                    duration_ms=duration_ms,
+                    status="timeout",
+                    error_message=f"Execution exceeded timeout of {timeout_seconds} seconds",
+                    timestamp=datetime.now(timezone.utc),
+                )
+            else:
+                # Record successful execution
+                execution = Execution(
+                    id=execution_id,
+                    pipeline_config_id=config_id,
+                    input_text=input_text,
+                    output_text=response.content,
+                    provider=config.provider,
+                    model=response.model,
+                    tokens_in=response.tokens_in,
+                    tokens_out=response.tokens_out,
+                    duration_ms=duration_ms,
+                    status="success",
+                    error_message=None,
+                    timestamp=datetime.now(timezone.utc),
+                )
+
+        except Exception as e:
+            # Record error execution
+            duration_ms = int((time.time() - start_time) * 1000)
+            execution = Execution(
+                id=execution_id,
+                pipeline_config_id=config_id,
+                input_text=input_text,
+                output_text="",
+                provider=config.provider,
+                model=config.model,
+                tokens_in=0,
+                tokens_out=0,
+                duration_ms=duration_ms,
+                status="error",
+                error_message=str(e),
+                timestamp=datetime.now(timezone.utc),
+            )
+
+        # Record the execution
+        recorded_execution = self._pipeline_repo.record_execution(execution)
+
+        # Publish completion event
+        event = PipelineExecuted(
+            execution_id=recorded_execution.id,
+            pipeline_id=config_id,
+            status=recorded_execution.status,
+        )
+        self._event_publisher.publish(event)
+
+        return recorded_execution
