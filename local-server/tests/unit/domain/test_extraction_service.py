@@ -666,4 +666,4 @@ class TestReferenceEnrichment:
         )
         # The reference layer successfully enriches if it finds matches
         # This test verifies that enrichment data is not discarded
-        assert isinstance(result.extracted_entities, list)
+        assert has_reference_data is True
