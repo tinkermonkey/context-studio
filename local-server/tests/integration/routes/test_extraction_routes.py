@@ -31,44 +31,15 @@ from fastapi import FastAPI, status
 from fastapi.testclient import TestClient
 
 from domain.extraction.services import ExtractionService
-from domain.extraction.value_objects import LayerOutput
 from domain.ontology.entities import Taxonomy, ConceptScheme, Class
 from adapters.persistence.sqlite.models import Base
 from adapters.persistence.sqlite.ontology_repo import SQLiteOntologyRepository
 from adapters.embedding.sentence_transformer import SentenceTransformerEmbedding
 from adapters.events.in_process import InProcessEventPublisher
 from adapters.web.extraction_routes import router
-
-
-# Mock adapters for testing
-class MockLLMProvider:
-    """Mock LLM provider for testing."""
-
-    def complete(self, system_prompt, user_prompt, model, temperature, max_tokens, response_format):
-        """Return mock LLM response."""
-        from domain.extraction.ports import LLMResponse
-        return LLMResponse(
-            content='{"entities": []}',
-            model=model,
-            tokens_in=10,
-            tokens_out=20,
-        )
-
-
-class MockNLPProcessor:
-    """Mock NLP processor for testing."""
-
-    def process(self, text):
-        """Return mock NLP results."""
-        return LayerOutput(entities=[], metadata={})
-
-
-class MockReferenceSource:
-    """Mock reference source for testing."""
-
-    def enrich(self, entities):
-        """Return mock enriched entities."""
-        return entities
+from tests.fakes.fake_llm_provider import FakeLLMProvider
+from tests.fakes.fake_nlp_processor import FakeNLPProcessor
+from tests.fakes.fake_reference_source import FakeReferenceSource
 
 
 @pytest.fixture
@@ -155,13 +126,13 @@ def event_publisher():
 
 @pytest.fixture
 def extraction_service(populated_repository, embedding_service, event_publisher):
-    """Create ExtractionService with mock adapters."""
+    """Create ExtractionService with fake adapters."""
     service = ExtractionService(
         ontology_repo=populated_repository,
         embedding_service=embedding_service,
-        llm=MockLLMProvider(),
-        nlp=MockNLPProcessor(),
-        reference_sources=[MockReferenceSource()],
+        llm=FakeLLMProvider(response_content='{"entities": []}'),
+        nlp=FakeNLPProcessor(),
+        reference_sources=[FakeReferenceSource()],
         event_publisher=event_publisher,
     )
     return service

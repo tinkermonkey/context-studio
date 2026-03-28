@@ -32,21 +32,7 @@ from adapters.persistence.sqlite.operations.models import OperationsBase
 from adapters.persistence.sqlite.pipeline_repo import SQLitePipelineRepository
 from adapters.events.in_process import InProcessEventPublisher
 from adapters.web.pipeline_routes import router
-
-
-# Mock LLM provider for testing
-class MockLLMProvider:
-    """Mock LLM provider for testing pipeline execution."""
-
-    def complete(self, system_prompt, user_prompt, model, temperature, max_tokens, response_format):
-        """Return mock LLM response."""
-        from domain.extraction.ports import LLMResponse
-        return LLMResponse(
-            content='{"result": "test output"}',
-            model=model,
-            tokens_in=10,
-            tokens_out=20,
-        )
+from tests.fakes.fake_llm_provider import FakeLLMProvider
 
 
 @pytest.fixture
@@ -84,10 +70,10 @@ def event_publisher():
 
 @pytest.fixture
 def pipeline_service(pipeline_repository, event_publisher):
-    """Create PipelineService with mock LLM adapter."""
+    """Create PipelineService with fake LLM adapter."""
     service = PipelineService(
         pipeline_repo=pipeline_repository,
-        llm=MockLLMProvider(),
+        llm=FakeLLMProvider(response_content='{"result": "test output"}'),
         event_publisher=event_publisher,
     )
     return service
