@@ -12,8 +12,7 @@ Response schemas (for GET/returns):
 These schemas handle serialization/deserialization between HTTP and domain models.
 """
 
-from datetime import datetime
-from typing import Optional, Any
+from typing import Optional
 
 from pydantic import BaseModel, Field
 

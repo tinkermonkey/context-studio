@@ -83,6 +83,7 @@ async def create_pipeline_configuration(
             config=request.config,
             system_prompt=request.system_prompt,
             user_prompt=request.user_prompt,
+            enabled=request.enabled,
         )
         return PipelineConfigurationResponse.model_validate(config)
     except (ValueError,) as exc:
@@ -280,12 +281,14 @@ async def get_pipeline_executions(
         List of ExecutionResponse objects, up to 50 most recent
 
     Raises:
-        HTTPException: 404 if configuration not found (validated by get_executions call)
+        HTTPException: 404 if configuration not found
     """
     try:
-        executions = service._pipeline_repo.get_executions(pipeline_id, limit=50)
+        executions = service.list_executions(pipeline_id, limit=50)
         return [ExecutionResponse.model_validate(e) for e in executions]
-    except (ValueError,) as exc:
+    except ValueError as exc:
+        if "not found" in str(exc):
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc))
         status_code, message = _handle_domain_error(exc)
         raise HTTPException(status_code=status_code, detail=message)
     except Exception as exc:

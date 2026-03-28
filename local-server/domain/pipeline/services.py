@@ -57,6 +57,7 @@ class PipelineService:
         config: dict,
         system_prompt: str,
         user_prompt: str,
+        enabled: bool = True,
     ) -> PipelineConfiguration:
         """
         Create a new pipeline configuration.
@@ -69,6 +70,7 @@ class PipelineService:
             config: Provider-specific configuration
             system_prompt: System prompt for the model
             user_prompt: User message template with {text} placeholder
+            enabled: Whether this configuration is active (default True)
 
         Returns:
             The created PipelineConfiguration
@@ -84,7 +86,7 @@ class PipelineService:
             system_prompt=system_prompt,
             user_prompt=user_prompt,
             version=1,
-            enabled=True,
+            enabled=enabled,
             created_at=now,
             last_updated=now,
         )
@@ -176,6 +178,27 @@ class PipelineService:
             True if deletion was successful, False if not found
         """
         return self._pipeline_repo.delete_config(config_id)
+
+    def list_executions(self, config_id: str, limit: int = 50) -> list[Execution]:
+        """
+        Retrieve execution history for a pipeline configuration.
+
+        Results are returned in reverse chronological order (most recent first).
+
+        Args:
+            config_id: Configuration ID
+            limit: Maximum number of executions to return (default 50)
+
+        Returns:
+            List of Execution objects, up to the specified limit
+
+        Raises:
+            ValueError: If configuration not found
+        """
+        config = self._pipeline_repo.get_config(config_id)
+        if config is None:
+            raise ValueError(f"Pipeline configuration {config_id} not found")
+        return self._pipeline_repo.get_executions(config_id, limit=limit)
 
     def execute_pipeline(self, config_id: str, input_text: str) -> Execution:
         """

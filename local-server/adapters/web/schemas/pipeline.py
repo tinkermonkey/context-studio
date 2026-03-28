@@ -13,7 +13,7 @@ These schemas handle serialization/deserialization between HTTP and domain model
 """
 
 from datetime import datetime
-from typing import Optional, Any
+from typing import Optional
 
 from pydantic import BaseModel, Field
 
@@ -56,8 +56,8 @@ class PipelineConfigurationResponse(BaseModel):
     user_prompt: str = Field(..., description="User message template")
     version: int = Field(..., description="Configuration version number")
     enabled: bool = Field(..., description="Whether this configuration is active")
-    created_at: str = Field(..., description="ISO 8601 creation timestamp")
-    last_updated: str = Field(..., description="ISO 8601 last update timestamp")
+    created_at: datetime = Field(..., description="ISO 8601 creation timestamp")
+    last_updated: datetime = Field(..., description="ISO 8601 last update timestamp")
 
     class Config:
         from_attributes = True
@@ -80,7 +80,7 @@ class ExecutionResponse(BaseModel):
     duration_ms: int = Field(..., description="Execution duration in milliseconds")
     status: str = Field(..., description="Completion status (success, error, timeout)")
     error_message: Optional[str] = Field(None, description="Error description if applicable")
-    timestamp: str = Field(..., description="ISO 8601 execution timestamp")
+    timestamp: datetime = Field(..., description="ISO 8601 execution timestamp")
 
     class Config:
         from_attributes = True
