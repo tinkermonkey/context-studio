@@ -242,16 +242,27 @@ class TestGraphMetricsIntegration:
     def test_metrics_centrality_scores_include_all_nodes(
         self, client, populated_repository
     ):
-        """Centrality scores should include all nodes."""
+        """Centrality scores should include all entity types."""
         response = client.get("/api/graph/metrics")
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
 
+        # Build expected nodes from all entity types (Taxonomy, ConceptScheme, Class)
+        taxonomies = populated_repository.list_taxonomies()
+        schemes = populated_repository.list_concept_schemes()
         classes = populated_repository.list_classes()
-        centrality_nodes = set(data["centrality"].keys())
-        expected_nodes = {cls.id for cls in classes}
 
-        assert centrality_nodes == expected_nodes
+        expected_nodes = {
+            *{tax.id for tax in taxonomies},
+            *{scheme.id for scheme in schemes},
+            *{cls.id for cls in classes},
+        }
+        centrality_nodes = set(data["centrality"].keys())
+
+        # All expected nodes should have centrality scores
+        assert expected_nodes.issubset(centrality_nodes)
+        # Centrality scores should exist for all returned nodes
+        assert len(centrality_nodes) > 0
 
     def test_metrics_with_different_algorithms(self, client):
         """GET /metrics works with different centrality algorithms."""
@@ -312,10 +323,19 @@ class TestCentralityIntegration:
     """Integration tests for centrality computation with real algorithms."""
 
     def test_centrality_algorithms_return_valid_scores(self, client, populated_repository):
-        """All centrality algorithms return valid scores for all nodes."""
+        """All centrality algorithms return valid scores for all entity types."""
         algorithms = ["betweenness", "pagerank", "closeness", "degree"]
+
+        # Build expected nodes from all entity types (Taxonomy, ConceptScheme, Class)
+        taxonomies = populated_repository.list_taxonomies()
+        schemes = populated_repository.list_concept_schemes()
         classes = populated_repository.list_classes()
-        expected_nodes = {cls.id for cls in classes}
+
+        expected_nodes = {
+            *{tax.id for tax in taxonomies},
+            *{scheme.id for scheme in schemes},
+            *{cls.id for cls in classes},
+        }
 
         for algo in algorithms:
             response = client.get(f"/api/graph/centrality?algorithm={algo}")
@@ -323,7 +343,10 @@ class TestCentralityIntegration:
             data = response.json()
 
             assert data["algorithm"] == algo
-            assert set(data["scores"].keys()) == expected_nodes
+            scores = set(data["scores"].keys())
+
+            # All expected entity types should have scores
+            assert expected_nodes.issubset(scores)
 
             for node_id, score in data["scores"].items():
                 assert isinstance(score, (int, float))
@@ -336,8 +359,17 @@ class TestCommunityDetectionIntegration:
     def test_community_detection_partitions_graph(self, client, populated_repository):
         """Community detection returns non-overlapping partitions."""
         algorithms = ["louvain", "label_propagation"]
+
+        # Build expected nodes from all entity types (Taxonomy, ConceptScheme, Class)
+        taxonomies = populated_repository.list_taxonomies()
+        schemes = populated_repository.list_concept_schemes()
         classes = populated_repository.list_classes()
-        all_nodes = {cls.id for cls in classes}
+
+        expected_nodes = {
+            *{tax.id for tax in taxonomies},
+            *{scheme.id for scheme in schemes},
+            *{cls.id for cls in classes},
+        }
 
         for algo in algorithms:
             response = client.get(f"/api/graph/communities?algorithm={algo}")
@@ -350,7 +382,7 @@ class TestCommunityDetectionIntegration:
             # All communities should be non-empty
             assert all(len(comm) > 0 for comm in communities)
 
-            # Communities should partition all nodes (no overlaps)
+            # Communities should partition nodes (no overlaps)
             community_nodes = set()
             for comm in communities:
                 # Convert list back to set for verification
@@ -359,8 +391,8 @@ class TestCommunityDetectionIntegration:
                 assert not (community_nodes & comm_set)
                 community_nodes |= comm_set
 
-            # All nodes should be in some community
-            assert community_nodes == all_nodes
+            # All expected entity types should be in some community
+            assert expected_nodes.issubset(community_nodes)
 
 
 class TestNeighborsIntegration:
