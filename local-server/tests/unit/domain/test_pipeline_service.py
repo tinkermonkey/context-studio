@@ -11,6 +11,7 @@ import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 import pytest
+import time
 from datetime import datetime, timezone
 
 from domain.pipeline.entities import PipelineConfiguration, Execution
@@ -427,3 +428,37 @@ class TestPipelineServiceExecution:
         # Should use defaults
         assert self.llm.last_call_args["temperature"] == 0.0
         assert self.llm.last_call_args["max_tokens"] == 2000
+
+    def test_execute_pipeline_soft_timeout_records_timeout_if_exceeded(self):
+        """Execute pipeline records timeout if duration exceeds config timeout (soft timeout check)."""
+        # Create a fake LLM that returns quickly but we'll simulate slow execution
+        # by patching the duration calculation
+        config = self.service.create_config(
+            pipeline="test",
+            title="Test",
+            provider="openai",
+            model="gpt-4",
+            config={"timeout": 1},  # 1 second timeout
+            system_prompt="System",
+            user_prompt="User: {text}",
+        )
+
+        # Monkey-patch time.time to simulate a slow execution
+        original_time = time.time
+        call_count = [0]
+
+        def fake_time():
+            call_count[0] += 1
+            if call_count[0] == 1:  # First call (start_time)
+                return 0.0
+            else:  # Second call (end_time)
+                return 2.0  # 2 seconds elapsed, exceeds 1 second timeout
+
+        time.time = fake_time
+        try:
+            execution = self.service.execute_pipeline(config.id, "Input")
+            assert execution.status == "timeout"
+            assert "exceeded timeout" in execution.error_message
+            assert execution.duration_ms == 2000
+        finally:
+            time.time = original_time

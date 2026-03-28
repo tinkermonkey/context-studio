@@ -10,16 +10,13 @@ from __future__ import annotations
 
 import time
 from datetime import datetime, timezone
-from typing import TYPE_CHECKING
 from uuid import uuid4
 
+from domain.extraction.ports import LLMProvider
+from domain.ports import EventPublisher
 from .entities import Execution, PipelineConfiguration
 from .events import PipelineExecuted
 from .ports import PipelineRepository
-
-if TYPE_CHECKING:
-    from domain.extraction.ports import LLMProvider
-    from domain.ports import EventPublisher
 
 
 class PipelineService:
@@ -120,17 +117,26 @@ class PipelineService:
     def update_config(
         self,
         config_id: str,
-        **kwargs,
+        title: str | None = None,
+        provider: str | None = None,
+        model: str | None = None,
+        config: dict | None = None,
+        system_prompt: str | None = None,
+        user_prompt: str | None = None,
+        enabled: bool | None = None,
     ) -> PipelineConfiguration:
         """
         Update a pipeline configuration.
 
-        Allowed fields to update: title, provider, model, config, system_prompt,
-        user_prompt, enabled.
-
         Args:
             config_id: Configuration ID
-            **kwargs: Fields to update
+            title: Updated title (optional)
+            provider: Updated provider (optional)
+            model: Updated model (optional)
+            config: Updated config dict (optional)
+            system_prompt: Updated system prompt (optional)
+            user_prompt: Updated user prompt (optional)
+            enabled: Updated enabled status (optional)
 
         Returns:
             The updated PipelineConfiguration
@@ -146,14 +152,14 @@ class PipelineService:
         updated = PipelineConfiguration(
             id=existing.id,
             pipeline=existing.pipeline,
-            title=kwargs.get("title", existing.title),
-            provider=kwargs.get("provider", existing.provider),
-            model=kwargs.get("model", existing.model),
-            config=kwargs.get("config", existing.config),
-            system_prompt=kwargs.get("system_prompt", existing.system_prompt),
-            user_prompt=kwargs.get("user_prompt", existing.user_prompt),
+            title=title if title is not None else existing.title,
+            provider=provider if provider is not None else existing.provider,
+            model=model if model is not None else existing.model,
+            config=config if config is not None else existing.config,
+            system_prompt=system_prompt if system_prompt is not None else existing.system_prompt,
+            user_prompt=user_prompt if user_prompt is not None else existing.user_prompt,
             version=existing.version + 1,
-            enabled=kwargs.get("enabled", existing.enabled),
+            enabled=enabled if enabled is not None else existing.enabled,
             created_at=existing.created_at,
             last_updated=datetime.now(timezone.utc),
         )
@@ -215,7 +221,10 @@ class PipelineService:
 
             duration_ms = int((time.time() - start_time) * 1000)
 
-            # Check if execution exceeded timeout
+            # Soft timeout check: This is a post-hoc check that only applies to completed calls.
+            # It does not interrupt a hanging LLM call; that responsibility belongs to the LLM
+            # adapter layer. If a call returns successfully but took longer than the configured
+            # timeout, we record it as a timeout execution rather than a success.
             if duration_ms > timeout_seconds * 1000:
                 execution = Execution(
                     id=execution_id,
