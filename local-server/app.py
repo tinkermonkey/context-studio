@@ -92,7 +92,7 @@ async def lifespan(app: FastAPI):
         logger.info("EmbeddingService created")
 
         # LLM provider router
-        llm_router = LLMProviderRouter(
+        LLMProviderRouter(
             openai_api_key=settings.llm.openai_api_key,
             anthropic_api_key=settings.llm.anthropic_api_key,
         )

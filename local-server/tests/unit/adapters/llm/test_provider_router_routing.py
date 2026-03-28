@@ -13,7 +13,7 @@ Tests verify:
 import sys
 import os
 import pytest
-from unittest.mock import Mock, patch, MagicMock
+from unittest.mock import Mock, patch
 
 sys.path.append(
     os.path.dirname(

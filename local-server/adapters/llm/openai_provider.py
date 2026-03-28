@@ -8,8 +8,10 @@ from typing import Any
 
 try:
     import openai
+    HAS_OPENAI = True
 except ImportError:
-    openai = None
+    HAS_OPENAI = False
+    openai = None  # type: ignore[assignment]
 
 from domain.extraction.ports import LLMResponse
 from utils.logger import get_logger
@@ -35,11 +37,11 @@ class OpenAIProvider:
             api_key: OpenAI API key for authentication
         """
         self._api_key = api_key
-        if openai is None:
-            logger.warning("openai package not installed — completions will fail")
-            self._client = None
+        self._client: Any = None
+        if HAS_OPENAI:
+            self._client = openai.OpenAI(api_key=api_key)  # type: ignore[attr-defined]
         else:
-            self._client = openai.OpenAI(api_key=api_key)
+            logger.warning("openai package not installed — completions will fail")
 
     def complete(
         self,
@@ -89,7 +91,7 @@ class OpenAIProvider:
             if response_format is not None:
                 kwargs["response_format"] = response_format
 
-            response = self._client.chat.completions.create(**kwargs)
+            response = self._client.chat.completions.create(**kwargs)  # type: ignore[union-attr]
 
             return LLMResponse(
                 content=response.choices[0].message.content or "",

@@ -8,8 +8,10 @@ from typing import Any
 
 try:
     import anthropic
+    HAS_ANTHROPIC = True
 except ImportError:
-    anthropic = None
+    HAS_ANTHROPIC = False
+    anthropic = None  # type: ignore[assignment]
 
 from domain.extraction.ports import LLMResponse
 from utils.logger import get_logger
@@ -39,11 +41,11 @@ class AnthropicProvider:
             api_key: Anthropic API key for authentication
         """
         self._api_key = api_key
-        if anthropic is None:
-            logger.warning("anthropic package not installed — completions will fail")
-            self._client = None
+        self._client: Any = None
+        if HAS_ANTHROPIC:
+            self._client = anthropic.Anthropic(api_key=api_key)  # type: ignore[attr-defined]
         else:
-            self._client = anthropic.Anthropic(api_key=api_key)
+            logger.warning("anthropic package not installed — completions will fail")
 
     def complete(
         self,
@@ -78,7 +80,7 @@ class AnthropicProvider:
             raise ValueError(f"Model {model} is not available from Anthropic provider")
 
         try:
-            response = self._client.messages.create(
+            response = self._client.messages.create(  # type: ignore[union-attr]
                 model=model,
                 max_tokens=max_tokens,
                 temperature=temperature,
