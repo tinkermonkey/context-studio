@@ -4,7 +4,6 @@ OpenAI LLM provider implementation.
 Provides integration with OpenAI's API for language model completions.
 """
 
-import time
 from typing import Any
 
 try:
@@ -74,8 +73,6 @@ class OpenAIProvider:
         if not self.is_model_available(model):
             raise ValueError(f"Model {model} is not available from OpenAI provider")
 
-        start_time = time.time()
-
         try:
             messages = [
                 {"role": "system", "content": system_prompt},
@@ -93,8 +90,6 @@ class OpenAIProvider:
                 kwargs["response_format"] = response_format
 
             response = self._client.chat.completions.create(**kwargs)
-
-            duration_ms = (time.time() - start_time) * 1000
 
             return LLMResponse(
                 content=response.choices[0].message.content or "",

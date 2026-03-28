@@ -12,6 +12,7 @@ Tests verify:
 
 import sys
 import os
+import pytest
 from unittest.mock import Mock, patch, MagicMock
 
 sys.path.append(
@@ -269,11 +270,3 @@ class TestLLMProviderRouter:
             response_format={"type": "json_object"},
         )
         assert response is expected_response
-
-
-# Import pytest at the end to avoid issues
-try:
-    import pytest
-except ImportError:
-    # pytest not available in this context
-    pass

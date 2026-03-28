@@ -4,7 +4,6 @@ Anthropic LLM provider implementation.
 Provides integration with Anthropic's Claude API for language model completions.
 """
 
-import time
 from typing import Any
 
 try:
@@ -78,8 +77,6 @@ class AnthropicProvider:
         if not self.is_model_available(model):
             raise ValueError(f"Model {model} is not available from Anthropic provider")
 
-        start_time = time.time()
-
         try:
             response = self._client.messages.create(
                 model=model,
@@ -88,8 +85,6 @@ class AnthropicProvider:
                 system=system_prompt,
                 messages=[{"role": "user", "content": user_prompt}],
             )
-
-            duration_ms = (time.time() - start_time) * 1000
 
             return LLMResponse(
                 content=response.content[0].text if response.content else "",
