@@ -529,6 +529,8 @@ class GraphAnalysisService:
             SPARQLValidationError: If the query is invalid or contains disallowed operations
         """
         self._ensure_rdf()
+        # Validate query at domain level before delegating to adapter
+        # This provides defense-in-depth: the adapter also validates in _validate_sparql_keywords
         self._validate_sparql(query)
         return self._query_engine.execute_sparql(query)
 
@@ -631,8 +633,9 @@ class GraphAnalysisService:
         }
 
         # Remove string literals from the query to avoid matching keywords inside strings
-        # This regex matches both single-quoted and double-quoted strings
-        query_without_literals = re.sub(r'["\'].*?["\']', ' ', query)
+        # This regex matches same-type quote pairs: double-quoted strings and single-quoted strings
+        # This correctly handles apostrophes inside double-quoted strings and vice versa
+        query_without_literals = re.sub(r'"[^"]*"|\'[^\']*\'', ' ', query)
         query_upper = query_without_literals.upper()
 
         for keyword in forbidden_keywords:
