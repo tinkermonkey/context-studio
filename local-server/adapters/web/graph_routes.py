@@ -302,30 +302,32 @@ async def get_communities(
 async def get_neighbors(
     node_id: str,
     direction: Literal["in", "out", "both"] = Query("both", description="Direction: 'in', 'out', or 'both'"),
+    depth: int = Query(1, description="Maximum traversal depth from center node", ge=1, le=10),
     service: GraphAnalysisService = Depends(get_graph_service),
 ) -> NeighborsResponse:
     """
-    Get all neighbors of a node with optional directional filtering.
+    Get all neighbors of a node up to a specified depth with optional directional filtering.
 
     Args:
         node_id: ID of the queried node
         direction: Direction of traversal (in, out, or both)
+        depth: Maximum distance from center node (minimum 1, maximum 10, default 1)
         service: GraphAnalysisService from dependency injection
 
     Returns:
         NeighborsResponse containing list of neighboring node IDs
 
     Raises:
-        HTTPException: 404 if node is not found, 422 if graph error occurs
+        HTTPException: 404 if node is not found, 400 if direction is invalid, 422 if graph error occurs
     """
     try:
-        neighbors = service.get_neighbors(node_id, direction)
+        neighbors = service.get_neighbors(node_id, direction=direction, depth=depth)
         return NeighborsResponse(
             node_id=node_id,
             direction=direction,
             neighbors=sorted(list(neighbors)),
         )
-    except (NodeNotFoundError, GraphError) as exc:
+    except (NodeNotFoundError, InvalidAlgorithmError, GraphError) as exc:
         status_code, message = _handle_graph_error(exc)
         raise HTTPException(status_code=status_code, detail=message)
 

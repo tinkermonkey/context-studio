@@ -383,23 +383,31 @@ class GraphAnalysisService:
         self._ensure_graph()
         return self._graph_engine.communities(algorithm)
 
-    def get_neighbors(self, node_id: str, direction: str = "both") -> set[str]:
+    def get_neighbors(self, node_id: str, direction: str = "both", depth: int = 1) -> set[str]:
         """
-        Get all neighbors of a node with optional directional filtering.
+        Get all neighbors of a node up to a specified depth with optional directional filtering.
 
         Args:
             node_id: ID of the node
-            direction: Direction of traversal: "in", "out", or "both" (default)
+            direction: Direction of traversal: "in" (predecessors), "out" (successors), or "both" (default)
+            depth: Maximum distance from center node (default 1). Depth 1 returns immediate neighbors,
+                   depth 2 returns two hops away, etc.
 
         Returns:
-            Set of neighboring node IDs
+            Set of neighboring node IDs (excludes the center node)
 
         Raises:
             NodeNotFoundError: If node_id does not exist in the graph
+            InvalidAlgorithmError: If direction is not "in", "out", or "both"
         """
+        # Validate direction parameter (same validation as get_centrality validates algorithm)
+        valid_directions = ["in", "out", "both"]
+        if direction not in valid_directions:
+            raise InvalidAlgorithmError(direction, valid_directions)
+
         self._ensure_graph()
         # The graph engine will raise NodeNotFoundError if the node doesn't exist
-        return self._graph_engine.neighbors(node_id, direction)
+        return self._graph_engine.neighbors(node_id, direction=direction, depth=depth)
 
     def check_cycle(self, source_id: str, target_id: str) -> bool:
         """
