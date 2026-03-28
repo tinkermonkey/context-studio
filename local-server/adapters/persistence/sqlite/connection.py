@@ -157,6 +157,12 @@ class DatabaseManager:
             raise RuntimeError("DatabaseManager not initialized. Call initialize() first.")
         return self._operations_session_factory()
 
+    def get_operations_session_factory(self) -> sessionmaker[Session]:
+        """Return the operations.db session factory. Must call initialize() first."""
+        if self._operations_session_factory is None:
+            raise RuntimeError("DatabaseManager not initialized. Call initialize() first.")
+        return self._operations_session_factory
+
     def dispose(self) -> None:
         """
         Close all connections and dispose of connection pools.

@@ -26,6 +26,8 @@ from fastapi import Request
 
 from domain.ontology.services import OntologyService
 from domain.graph.services import GraphAnalysisService
+from domain.extraction.services import ExtractionService
+from domain.pipeline.services import PipelineService
 
 
 async def get_ontology_service(request: Request) -> OntologyService:
@@ -63,4 +65,42 @@ async def get_graph_service(request: Request) -> GraphAnalysisService:
     service = getattr(request.app.state, "graph_service", None)
     if service is None:
         raise RuntimeError("GraphAnalysisService not initialized in app.state")
+    return service
+
+
+async def get_extraction_service(request: Request) -> ExtractionService:
+    """
+    Extract the ExtractionService from app state.
+
+    Args:
+        request: FastAPI request object
+
+    Returns:
+        The ExtractionService instance from app.state
+
+    Raises:
+        RuntimeError: If service is not initialized in app.state
+    """
+    service = getattr(request.app.state, "extraction_service", None)
+    if service is None:
+        raise RuntimeError("ExtractionService not initialized in app.state")
+    return service
+
+
+async def get_pipeline_service(request: Request) -> PipelineService:
+    """
+    Extract the PipelineService from app state.
+
+    Args:
+        request: FastAPI request object
+
+    Returns:
+        The PipelineService instance from app.state
+
+    Raises:
+        RuntimeError: If service is not initialized in app.state
+    """
+    service = getattr(request.app.state, "pipeline_service", None)
+    if service is None:
+        raise RuntimeError("PipelineService not initialized in app.state")
     return service

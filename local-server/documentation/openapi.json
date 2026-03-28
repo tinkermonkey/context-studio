@@ -1280,7 +1280,7 @@
           "graph"
         ],
         "summary": "Get Shortest Path",
-        "description": "Find the shortest path between two nodes.\n\nArgs:\n    source_id: ID of the starting node\n    target_id: ID of the ending node\n    service: GraphAnalysisService from dependency injection\n\nReturns:\n    PathResultResponse if a path exists, None otherwise\n\nRaises:\n    HTTPException: 404 if either node is not found, 422 if graph error occurs",
+        "description": "Find the shortest path between two nodes.\n\nArgs:\n    source_id: ID of the starting node\n    target_id: ID of the ending node\n    service: GraphAnalysisService from dependency injection\n\nReturns:\n    PathResultResponse if a path exists\n\nRaises:\n    HTTPException: 404 if either node is not found or no path exists, 422 if graph error occurs",
         "operationId": "get_shortest_path_api_graph_paths_shortest_get",
         "parameters": [
           {
@@ -1312,15 +1312,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "anyOf": [
-                    {
-                      "$ref": "#/components/schemas/PathResultResponse"
-                    },
-                    {
-                      "type": "null"
-                    }
-                  ],
-                  "title": "Response Get Shortest Path Api Graph Paths Shortest Get"
+                  "$ref": "#/components/schemas/PathResultResponse"
                 }
               }
             }
@@ -1510,7 +1502,7 @@
           "graph"
         ],
         "summary": "Get Neighbors",
-        "description": "Get all neighbors of a node with optional directional filtering.\n\nArgs:\n    node_id: ID of the queried node\n    direction: Direction of traversal (in, out, or both)\n    service: GraphAnalysisService from dependency injection\n\nReturns:\n    NeighborsResponse containing list of neighboring node IDs\n\nRaises:\n    HTTPException: 404 if node is not found, 422 if graph error occurs",
+        "description": "Get all neighbors of a node up to a specified depth with optional directional filtering.\n\nArgs:\n    node_id: ID of the queried node\n    direction: Direction of traversal (in, out, or both)\n    depth: Maximum distance from center node (minimum 1, maximum 10, default 1)\n    service: GraphAnalysisService from dependency injection\n\nReturns:\n    NeighborsResponse containing list of neighboring node IDs\n\nRaises:\n    HTTPException: 404 if node is not found, 400 if direction is invalid, 422 if graph error occurs",
         "operationId": "get_neighbors_api_graph_nodes__node_id__neighbors_get",
         "parameters": [
           {
@@ -1538,6 +1530,20 @@
               "title": "Direction"
             },
             "description": "Direction: 'in', 'out', or 'both'"
+          },
+          {
+            "name": "depth",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 10,
+              "minimum": 1,
+              "description": "Maximum traversal depth from center node",
+              "default": 1,
+              "title": "Depth"
+            },
+            "description": "Maximum traversal depth from center node"
           }
         ],
         "responses": {
@@ -1570,7 +1576,7 @@
           "graph"
         ],
         "summary": "Get Subgraph",
-        "description": "Extract a subgraph containing the specified nodes and all edges between them.\n\nArgs:\n    nodes: Comma-separated list of node IDs (e.g., \"id1,id2,id3\")\n    service: GraphAnalysisService from dependency injection\n\nReturns:\n    KnowledgeGraphResponse describing the extracted subgraph\n\nRaises:\n    HTTPException: 404 if any node is not found, 400 if nodes parameter is invalid, 422 if graph error occurs",
+        "description": "Extract a subgraph containing the specified nodes and all edges between them.\n\nThis endpoint extracts a subgraph from a pre-computed list of node IDs.\nFor depth-based neighborhood extraction, use GET /nodes/{node_id}/subgraph instead.\n\nArgs:\n    nodes: Comma-separated list of node IDs (e.g., \"id1,id2,id3\")\n    service: GraphAnalysisService from dependency injection\n\nReturns:\n    KnowledgeGraphResponse describing the extracted subgraph\n\nRaises:\n    HTTPException: 404 if any node is not found, 400 if nodes parameter is invalid, 422 if graph error occurs",
         "operationId": "get_subgraph_api_graph_subgraph_get",
         "parameters": [
           {
@@ -1592,6 +1598,63 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/KnowledgeGraphResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/graph/nodes/{node_id}/subgraph": {
+      "get": {
+        "tags": [
+          "graph"
+        ],
+        "summary": "Get Subgraph By Depth",
+        "description": "Extract a subgraph containing a center node and all nodes within a specified depth (FR-9).\n\nThis implements depth-based subgraph extraction where depth 1 returns the center node\nand its immediate neighbors, depth 2 returns two hops away, etc.\n\nArgs:\n    node_id: ID of the center node\n    depth: Maximum distance from center node (minimum 1, maximum 10, default 1)\n    service: GraphAnalysisService from dependency injection\n\nReturns:\n    SubgraphResultResponse containing center node ID, node count, edge count, depth, and extraction timestamp\n\nRaises:\n    HTTPException: 404 if center node is not found, 400 if depth is invalid, 422 if graph error occurs",
+        "operationId": "get_subgraph_by_depth_api_graph_nodes__node_id__subgraph_get",
+        "parameters": [
+          {
+            "name": "node_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Node Id"
+            }
+          },
+          {
+            "name": "depth",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 10,
+              "minimum": 1,
+              "description": "Maximum traversal depth from center node",
+              "default": 1,
+              "title": "Depth"
+            },
+            "description": "Maximum traversal depth from center node"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SubgraphResultResponse"
                 }
               }
             }
@@ -1796,6 +1859,342 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/TripleCountResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/extract": {
+      "post": {
+        "tags": [
+          "extraction"
+        ],
+        "summary": "Extract Entities",
+        "description": "Extract entities from text through coordinated extraction layers.\n\nFour layers execute sequentially:\n- Layer 0: Knowledge graph context (uses embedding similarity)\n- Layer 1: LLM extraction (structured JSON output)\n- Layer 2: NLP gap-filling (catches missed entities)\n- Layer 3: Reference source enrichment (adds URIs and metadata)\n\nArgs:\n    request: ExtractRequest with text to extract from\n    service: ExtractionService from dependency injection\n\nReturns:\n    ExtractionResultSchema containing extracted entities and layer metadata\n\nRaises:\n    HTTPException: 400 if text is empty/invalid, 500 for internal errors",
+        "operationId": "extract_entities_api_extract_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ExtractRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExtractionResultSchema"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/pipelines": {
+      "get": {
+        "tags": [
+          "pipeline"
+        ],
+        "summary": "List Pipeline Configurations",
+        "description": "Retrieve all pipeline configurations.\n\nReturns:\n    List of PipelineConfigurationResponse objects",
+        "operationId": "list_pipeline_configurations_api_pipelines_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/PipelineConfigurationResponse"
+                  },
+                  "type": "array",
+                  "title": "Response List Pipeline Configurations Api Pipelines Get"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "pipeline"
+        ],
+        "summary": "Create Pipeline Configuration",
+        "description": "Create a new pipeline configuration.\n\nArgs:\n    request: PipelineConfigurationCreate with configuration details\n    service: PipelineService from dependency injection\n\nReturns:\n    Created PipelineConfigurationResponse with server-generated id\n\nRaises:\n    HTTPException: 400 if invalid input, 500 for internal errors",
+        "operationId": "create_pipeline_configuration_api_pipelines_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PipelineConfigurationCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PipelineConfigurationResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/pipelines/{pipeline_id}": {
+      "get": {
+        "tags": [
+          "pipeline"
+        ],
+        "summary": "Get Pipeline Configuration",
+        "description": "Retrieve a pipeline configuration by ID.\n\nArgs:\n    pipeline_id: The pipeline configuration ID\n    service: PipelineService from dependency injection\n\nReturns:\n    PipelineConfigurationResponse\n\nRaises:\n    HTTPException: 404 if not found",
+        "operationId": "get_pipeline_configuration_api_pipelines__pipeline_id__get",
+        "parameters": [
+          {
+            "name": "pipeline_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Pipeline Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PipelineConfigurationResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "pipeline"
+        ],
+        "summary": "Update Pipeline Configuration",
+        "description": "Update a pipeline configuration's properties.\n\nArgs:\n    pipeline_id: The pipeline configuration ID\n    request: PipelineConfigurationUpdate with optional fields to update\n    service: PipelineService from dependency injection\n\nReturns:\n    Updated PipelineConfigurationResponse\n\nRaises:\n    HTTPException: 400 if invalid, 404 if not found",
+        "operationId": "update_pipeline_configuration_api_pipelines__pipeline_id__put",
+        "parameters": [
+          {
+            "name": "pipeline_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Pipeline Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PipelineConfigurationUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PipelineConfigurationResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "pipeline"
+        ],
+        "summary": "Delete Pipeline Configuration",
+        "description": "Delete a pipeline configuration.\n\nArgs:\n    pipeline_id: The pipeline configuration ID\n    service: PipelineService from dependency injection\n\nRaises:\n    HTTPException: 404 if not found",
+        "operationId": "delete_pipeline_configuration_api_pipelines__pipeline_id__delete",
+        "parameters": [
+          {
+            "name": "pipeline_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Pipeline Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/pipelines/{pipeline_id}/execute": {
+      "post": {
+        "tags": [
+          "pipeline"
+        ],
+        "summary": "Execute Pipeline",
+        "description": "Execute a pipeline configuration with the given input.\n\nArgs:\n    pipeline_id: The pipeline configuration ID\n    request: PipelineExecuteRequest with input_text\n    service: PipelineService from dependency injection\n\nReturns:\n    ExecutionResponse with output, tokens, duration, and status\n\nRaises:\n    HTTPException: 400 if invalid, 404 if configuration not found",
+        "operationId": "execute_pipeline_api_pipelines__pipeline_id__execute_post",
+        "parameters": [
+          {
+            "name": "pipeline_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Pipeline Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PipelineExecuteRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExecutionResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/pipelines/{pipeline_id}/executions": {
+      "get": {
+        "tags": [
+          "pipeline"
+        ],
+        "summary": "Get Pipeline Executions",
+        "description": "Retrieve execution history for a pipeline configuration.\n\nResults are returned in reverse chronological order (most recent first).\n\nArgs:\n    pipeline_id: The pipeline configuration ID\n    service: PipelineService from dependency injection\n\nReturns:\n    List of ExecutionResponse objects, up to 50 most recent\n\nRaises:\n    HTTPException: 404 if configuration not found (validated by get_executions call)",
+        "operationId": "get_pipeline_executions_api_pipelines__pipeline_id__executions_get",
+        "parameters": [
+          {
+            "name": "pipeline_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Pipeline Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ExecutionResponse"
+                  },
+                  "title": "Response Get Pipeline Executions Api Pipelines  Pipeline Id  Executions Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
                 }
               }
             }
@@ -2355,6 +2754,75 @@
         "title": "DegreeDistributionResponse",
         "description": "Response containing degree distribution for all nodes."
       },
+      "ExecutionResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id",
+            "description": "Unique identifier for this execution"
+          },
+          "pipeline_config_id": {
+            "type": "string",
+            "title": "Pipeline Config Id",
+            "description": "ID of the executed PipelineConfiguration"
+          },
+          "output_text": {
+            "type": "string",
+            "title": "Output Text",
+            "description": "The generated response from the LLM"
+          },
+          "tokens_in": {
+            "type": "integer",
+            "title": "Tokens In",
+            "description": "Number of tokens in the input"
+          },
+          "tokens_out": {
+            "type": "integer",
+            "title": "Tokens Out",
+            "description": "Number of tokens in the output"
+          },
+          "duration_ms": {
+            "type": "integer",
+            "title": "Duration Ms",
+            "description": "Execution duration in milliseconds"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "description": "Completion status (success, error, timeout)"
+          },
+          "error_message": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error Message",
+            "description": "Error description if applicable"
+          },
+          "timestamp": {
+            "type": "string",
+            "title": "Timestamp",
+            "description": "ISO 8601 execution timestamp"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "pipeline_config_id",
+          "output_text",
+          "tokens_in",
+          "tokens_out",
+          "duration_ms",
+          "status",
+          "timestamp"
+        ],
+        "title": "ExecutionResponse",
+        "description": "Response containing pipeline execution record data."
+      },
       "ExternalReferenceResponse": {
         "properties": {
           "source": {
@@ -2400,6 +2868,191 @@
         ],
         "title": "ExternalReferenceResponse",
         "description": "Response containing external reference data."
+      },
+      "ExtractRequest": {
+        "properties": {
+          "text": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Text",
+            "description": "Text to extract entities from"
+          }
+        },
+        "type": "object",
+        "required": [
+          "text"
+        ],
+        "title": "ExtractRequest",
+        "description": "Request to extract entities from text."
+      },
+      "ExtractedEntitySchema": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id",
+            "description": "Unique identifier for the entity"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label",
+            "description": "The extracted entity label/name"
+          },
+          "entity_type": {
+            "type": "string",
+            "title": "Entity Type",
+            "description": "Classification of the entity"
+          },
+          "source_layer": {
+            "type": "integer",
+            "title": "Source Layer",
+            "description": "Which layer extracted this entity (0-3)"
+          },
+          "confidence": {
+            "type": "number",
+            "title": "Confidence",
+            "description": "Confidence score from 0.0 to 1.0"
+          },
+          "uri": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Uri",
+            "description": "Optional URI to external knowledge base"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description",
+            "description": "Optional description of the entity"
+          },
+          "properties": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Properties",
+            "description": "Optional metadata key-value pairs"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "label",
+          "entity_type",
+          "source_layer",
+          "confidence"
+        ],
+        "title": "ExtractedEntitySchema",
+        "description": "Response containing extracted entity data."
+      },
+      "ExtractionLayerResultSchema": {
+        "properties": {
+          "layer_number": {
+            "type": "integer",
+            "title": "Layer Number",
+            "description": "Layer index (0-3)"
+          },
+          "layer_name": {
+            "type": "string",
+            "title": "Layer Name",
+            "description": "Human-readable name of the layer"
+          },
+          "entities_found": {
+            "type": "integer",
+            "title": "Entities Found",
+            "description": "Count of entities extracted by this layer"
+          },
+          "duration_ms": {
+            "type": "integer",
+            "title": "Duration Ms",
+            "description": "Execution time in milliseconds"
+          },
+          "success": {
+            "type": "boolean",
+            "title": "Success",
+            "description": "Whether layer completed successfully"
+          },
+          "error_message": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error Message",
+            "description": "Error message if layer failed"
+          }
+        },
+        "type": "object",
+        "required": [
+          "layer_number",
+          "layer_name",
+          "entities_found",
+          "duration_ms",
+          "success"
+        ],
+        "title": "ExtractionLayerResultSchema",
+        "description": "Response containing execution metadata for a single extraction layer."
+      },
+      "ExtractionResultSchema": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id",
+            "description": "Unique identifier for this extraction result"
+          },
+          "text": {
+            "type": "string",
+            "title": "Text",
+            "description": "The source text that was extracted"
+          },
+          "extracted_entities": {
+            "items": {
+              "$ref": "#/components/schemas/ExtractedEntitySchema"
+            },
+            "type": "array",
+            "title": "Extracted Entities",
+            "description": "Deduplicated list of extracted entities"
+          },
+          "layers_executed": {
+            "items": {
+              "$ref": "#/components/schemas/ExtractionLayerResultSchema"
+            },
+            "type": "array",
+            "title": "Layers Executed",
+            "description": "Execution details for each layer that ran"
+          },
+          "total_duration_ms": {
+            "type": "integer",
+            "title": "Total Duration Ms",
+            "description": "Total extraction time in milliseconds"
+          },
+          "created_at": {
+            "type": "string",
+            "title": "Created At",
+            "description": "ISO 8601 timestamp when extraction completed"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "text",
+          "total_duration_ms",
+          "created_at"
+        ],
+        "title": "ExtractionResultSchema",
+        "description": "Response containing the complete output of an extraction operation."
       },
       "GraphMetricsResponse": {
         "properties": {
@@ -2654,6 +3307,263 @@
         "title": "PathResultResponse",
         "description": "Response containing a single path between two nodes."
       },
+      "PipelineConfigurationCreate": {
+        "properties": {
+          "pipeline": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Pipeline",
+            "description": "Pipeline identifier/slug for categorization"
+          },
+          "title": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Title",
+            "description": "Human-readable title for the pipeline"
+          },
+          "provider": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Provider",
+            "description": "LLM provider name (openai, anthropic)"
+          },
+          "model": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Model",
+            "description": "Model identifier (e.g., gpt-4, claude-opus)"
+          },
+          "config": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Config",
+            "description": "Provider-specific configuration"
+          },
+          "system_prompt": {
+            "type": "string",
+            "minLength": 1,
+            "title": "System Prompt",
+            "description": "System prompt to guide model behavior"
+          },
+          "user_prompt": {
+            "type": "string",
+            "minLength": 1,
+            "title": "User Prompt",
+            "description": "User message template with {text} placeholder"
+          },
+          "enabled": {
+            "type": "boolean",
+            "title": "Enabled",
+            "description": "Whether this configuration is active",
+            "default": true
+          }
+        },
+        "type": "object",
+        "required": [
+          "pipeline",
+          "title",
+          "provider",
+          "model",
+          "system_prompt",
+          "user_prompt"
+        ],
+        "title": "PipelineConfigurationCreate",
+        "description": "Request to create a new pipeline configuration."
+      },
+      "PipelineConfigurationResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id",
+            "description": "Unique identifier"
+          },
+          "pipeline": {
+            "type": "string",
+            "title": "Pipeline",
+            "description": "Pipeline identifier/slug"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title",
+            "description": "Human-readable title"
+          },
+          "provider": {
+            "type": "string",
+            "title": "Provider",
+            "description": "LLM provider name"
+          },
+          "model": {
+            "type": "string",
+            "title": "Model",
+            "description": "Model identifier"
+          },
+          "config": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Config",
+            "description": "Provider-specific configuration"
+          },
+          "system_prompt": {
+            "type": "string",
+            "title": "System Prompt",
+            "description": "System prompt"
+          },
+          "user_prompt": {
+            "type": "string",
+            "title": "User Prompt",
+            "description": "User message template"
+          },
+          "version": {
+            "type": "integer",
+            "title": "Version",
+            "description": "Configuration version number"
+          },
+          "enabled": {
+            "type": "boolean",
+            "title": "Enabled",
+            "description": "Whether this configuration is active"
+          },
+          "created_at": {
+            "type": "string",
+            "title": "Created At",
+            "description": "ISO 8601 creation timestamp"
+          },
+          "last_updated": {
+            "type": "string",
+            "title": "Last Updated",
+            "description": "ISO 8601 last update timestamp"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "pipeline",
+          "title",
+          "provider",
+          "model",
+          "system_prompt",
+          "user_prompt",
+          "version",
+          "enabled",
+          "created_at",
+          "last_updated"
+        ],
+        "title": "PipelineConfigurationResponse",
+        "description": "Response containing pipeline configuration data."
+      },
+      "PipelineConfigurationUpdate": {
+        "properties": {
+          "title": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title",
+            "description": "Updated title"
+          },
+          "provider": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Provider",
+            "description": "Updated provider"
+          },
+          "model": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Model",
+            "description": "Updated model"
+          },
+          "config": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Config",
+            "description": "Updated configuration"
+          },
+          "system_prompt": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "System Prompt",
+            "description": "Updated system prompt"
+          },
+          "user_prompt": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "User Prompt",
+            "description": "Updated user prompt"
+          },
+          "enabled": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Enabled",
+            "description": "Updated enabled status"
+          }
+        },
+        "type": "object",
+        "title": "PipelineConfigurationUpdate",
+        "description": "Request to update a pipeline configuration."
+      },
+      "PipelineExecuteRequest": {
+        "properties": {
+          "input_text": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Input Text",
+            "description": "Input text to process"
+          }
+        },
+        "type": "object",
+        "required": [
+          "input_text"
+        ],
+        "title": "PipelineExecuteRequest",
+        "description": "Request to execute a pipeline."
+      },
       "PropertyDefinitionCreateRequest": {
         "properties": {
           "identifier": {
@@ -2881,8 +3791,9 @@
         "properties": {
           "query": {
             "type": "string",
+            "maxLength": 10000,
             "title": "Query",
-            "description": "SPARQL SELECT query string"
+            "description": "SPARQL SELECT query string (max 10000 characters)"
           }
         },
         "type": "object",
@@ -2916,6 +3827,74 @@
         ],
         "title": "SPARQLResponse",
         "description": "Response from SPARQL query execution."
+      },
+      "SubgraphResultResponse": {
+        "properties": {
+          "center_node_id": {
+            "type": "string",
+            "title": "Center Node Id",
+            "description": "ID of the center node"
+          },
+          "node_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Node Ids",
+            "description": "IDs of all nodes in the subgraph"
+          },
+          "edge_ids": {
+            "items": {
+              "prefixItems": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "string"
+                }
+              ],
+              "type": "array",
+              "maxItems": 2,
+              "minItems": 2
+            },
+            "type": "array",
+            "title": "Edge Ids",
+            "description": "Edges connecting nodes in the subgraph as (source, target) tuples"
+          },
+          "node_count": {
+            "type": "integer",
+            "title": "Node Count",
+            "description": "Number of nodes in the subgraph"
+          },
+          "edge_count": {
+            "type": "integer",
+            "title": "Edge Count",
+            "description": "Number of edges in the subgraph"
+          },
+          "depth": {
+            "type": "integer",
+            "title": "Depth",
+            "description": "Maximum traversal depth from center node"
+          },
+          "extracted_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Extracted At",
+            "description": "Timestamp when the subgraph was extracted"
+          }
+        },
+        "type": "object",
+        "required": [
+          "center_node_id",
+          "node_ids",
+          "edge_ids",
+          "node_count",
+          "edge_count",
+          "depth",
+          "extracted_at"
+        ],
+        "title": "SubgraphResultResponse",
+        "description": "Response containing depth-based subgraph extraction result."
       },
       "TaxonomyCreateRequest": {
         "properties": {

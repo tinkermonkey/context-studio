@@ -1,0 +1,293 @@
+"""
+FastAPI routes for the LLM Pipeline Management bounded context.
+
+This module implements HTTP endpoints for pipeline configuration and execution:
+- POST   /api/pipelines              → Create pipeline configuration
+- GET    /api/pipelines              → List all configurations
+- GET    /api/pipelines/{id}         → Retrieve single configuration
+- PUT    /api/pipelines/{id}         → Update configuration
+- DELETE /api/pipelines/{id}         → Delete configuration
+- POST   /api/pipelines/{id}/execute → Execute pipeline
+- GET    /api/pipelines/{id}/executions → Retrieve execution history
+
+Each endpoint is a thin adapter that:
+1. Receives HTTP request + parsed Pydantic schema
+2. Calls domain service with domain entities
+3. Catches domain exceptions and maps to HTTP status codes
+4. Returns response schema serialized as JSON
+
+No business logic lives here—all validation and constraints are in the domain service.
+Error handling translates domain exceptions to appropriate HTTP responses.
+"""
+
+from fastapi import APIRouter, Depends, HTTPException, status
+
+from domain.pipeline.services import PipelineService
+
+from adapters.web.dependencies import get_pipeline_service
+from adapters.web.schemas.pipeline import (
+    PipelineConfigurationCreate,
+    PipelineConfigurationUpdate,
+    PipelineConfigurationResponse,
+    PipelineExecuteRequest,
+    ExecutionResponse,
+)
+
+router = APIRouter(prefix="/api", tags=["pipeline"])
+
+
+# ==================== Error Handler Utilities ====================
+
+def _handle_domain_error(exc: Exception) -> tuple[int, str]:
+    """
+    Map domain exceptions to HTTP status codes and error messages.
+
+    Args:
+        exc: The domain exception
+
+    Returns:
+        Tuple of (status_code, error_message)
+    """
+    if isinstance(exc, ValueError):
+        return (status.HTTP_400_BAD_REQUEST, str(exc))
+    else:
+        return (status.HTTP_500_INTERNAL_SERVER_ERROR, "An unexpected error occurred")
+
+
+# ==================== Pipeline Configuration Endpoints ====================
+
+@router.post("/pipelines", response_model=PipelineConfigurationResponse, status_code=status.HTTP_201_CREATED)
+async def create_pipeline_configuration(
+    request: PipelineConfigurationCreate,
+    service: PipelineService = Depends(get_pipeline_service),
+) -> PipelineConfigurationResponse:
+    """
+    Create a new pipeline configuration.
+
+    Args:
+        request: PipelineConfigurationCreate with configuration details
+        service: PipelineService from dependency injection
+
+    Returns:
+        Created PipelineConfigurationResponse with server-generated id
+
+    Raises:
+        HTTPException: 400 if invalid input, 500 for internal errors
+    """
+    try:
+        config = service.create_config(
+            pipeline=request.pipeline,
+            title=request.title,
+            provider=request.provider,
+            model=request.model,
+            config=request.config,
+            system_prompt=request.system_prompt,
+            user_prompt=request.user_prompt,
+        )
+        return PipelineConfigurationResponse.model_validate(config)
+    except (ValueError,) as exc:
+        status_code, message = _handle_domain_error(exc)
+        raise HTTPException(status_code=status_code, detail=message)
+    except Exception as exc:
+        status_code, message = _handle_domain_error(exc)
+        raise HTTPException(status_code=status_code, detail=message)
+
+
+@router.get("/pipelines", response_model=list[PipelineConfigurationResponse])
+async def list_pipeline_configurations(
+    service: PipelineService = Depends(get_pipeline_service),
+) -> list[PipelineConfigurationResponse]:
+    """
+    Retrieve all pipeline configurations.
+
+    Returns:
+        List of PipelineConfigurationResponse objects
+    """
+    try:
+        configs = service.list_configs()
+        return [PipelineConfigurationResponse.model_validate(c) for c in configs]
+    except (ValueError,) as exc:
+        status_code, message = _handle_domain_error(exc)
+        raise HTTPException(status_code=status_code, detail=message)
+    except Exception as exc:
+        status_code, message = _handle_domain_error(exc)
+        raise HTTPException(status_code=status_code, detail=message)
+
+
+@router.get("/pipelines/{pipeline_id}", response_model=PipelineConfigurationResponse)
+async def get_pipeline_configuration(
+    pipeline_id: str,
+    service: PipelineService = Depends(get_pipeline_service),
+) -> PipelineConfigurationResponse:
+    """
+    Retrieve a pipeline configuration by ID.
+
+    Args:
+        pipeline_id: The pipeline configuration ID
+        service: PipelineService from dependency injection
+
+    Returns:
+        PipelineConfigurationResponse
+
+    Raises:
+        HTTPException: 404 if not found
+    """
+    try:
+        config = service.get_config(pipeline_id)
+        if config is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Pipeline configuration {pipeline_id} not found"
+            )
+        return PipelineConfigurationResponse.model_validate(config)
+    except HTTPException:
+        raise
+    except (ValueError,) as exc:
+        status_code, message = _handle_domain_error(exc)
+        raise HTTPException(status_code=status_code, detail=message)
+    except Exception as exc:
+        status_code, message = _handle_domain_error(exc)
+        raise HTTPException(status_code=status_code, detail=message)
+
+
+@router.put("/pipelines/{pipeline_id}", response_model=PipelineConfigurationResponse)
+async def update_pipeline_configuration(
+    pipeline_id: str,
+    request: PipelineConfigurationUpdate,
+    service: PipelineService = Depends(get_pipeline_service),
+) -> PipelineConfigurationResponse:
+    """
+    Update a pipeline configuration's properties.
+
+    Args:
+        pipeline_id: The pipeline configuration ID
+        request: PipelineConfigurationUpdate with optional fields to update
+        service: PipelineService from dependency injection
+
+    Returns:
+        Updated PipelineConfigurationResponse
+
+    Raises:
+        HTTPException: 400 if invalid, 404 if not found
+    """
+    try:
+        config = service.update_config(
+            config_id=pipeline_id,
+            title=request.title,
+            provider=request.provider,
+            model=request.model,
+            config=request.config,
+            system_prompt=request.system_prompt,
+            user_prompt=request.user_prompt,
+            enabled=request.enabled,
+        )
+        return PipelineConfigurationResponse.model_validate(config)
+    except ValueError as exc:
+        if "not found" in str(exc):
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc))
+        status_code, message = _handle_domain_error(exc)
+        raise HTTPException(status_code=status_code, detail=message)
+    except Exception as exc:
+        status_code, message = _handle_domain_error(exc)
+        raise HTTPException(status_code=status_code, detail=message)
+
+
+@router.delete("/pipelines/{pipeline_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_pipeline_configuration(
+    pipeline_id: str,
+    service: PipelineService = Depends(get_pipeline_service),
+) -> None:
+    """
+    Delete a pipeline configuration.
+
+    Args:
+        pipeline_id: The pipeline configuration ID
+        service: PipelineService from dependency injection
+
+    Raises:
+        HTTPException: 404 if not found
+    """
+    try:
+        success = service.delete_config(pipeline_id)
+        if not success:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Pipeline configuration {pipeline_id} not found"
+            )
+    except HTTPException:
+        raise
+    except (ValueError,) as exc:
+        status_code, message = _handle_domain_error(exc)
+        raise HTTPException(status_code=status_code, detail=message)
+    except Exception as exc:
+        status_code, message = _handle_domain_error(exc)
+        raise HTTPException(status_code=status_code, detail=message)
+
+
+# ==================== Pipeline Execution Endpoints ====================
+
+@router.post("/pipelines/{pipeline_id}/execute", response_model=ExecutionResponse)
+async def execute_pipeline(
+    pipeline_id: str,
+    request: PipelineExecuteRequest,
+    service: PipelineService = Depends(get_pipeline_service),
+) -> ExecutionResponse:
+    """
+    Execute a pipeline configuration with the given input.
+
+    Args:
+        pipeline_id: The pipeline configuration ID
+        request: PipelineExecuteRequest with input_text
+        service: PipelineService from dependency injection
+
+    Returns:
+        ExecutionResponse with output, tokens, duration, and status
+
+    Raises:
+        HTTPException: 400 if invalid, 404 if configuration not found
+    """
+    try:
+        execution = service.execute_pipeline(
+            config_id=pipeline_id,
+            input_text=request.input_text,
+        )
+        return ExecutionResponse.model_validate(execution)
+    except ValueError as exc:
+        if "not found" in str(exc):
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc))
+        status_code, message = _handle_domain_error(exc)
+        raise HTTPException(status_code=status_code, detail=message)
+    except Exception as exc:
+        status_code, message = _handle_domain_error(exc)
+        raise HTTPException(status_code=status_code, detail=message)
+
+
+@router.get("/pipelines/{pipeline_id}/executions", response_model=list[ExecutionResponse])
+async def get_pipeline_executions(
+    pipeline_id: str,
+    service: PipelineService = Depends(get_pipeline_service),
+) -> list[ExecutionResponse]:
+    """
+    Retrieve execution history for a pipeline configuration.
+
+    Results are returned in reverse chronological order (most recent first).
+
+    Args:
+        pipeline_id: The pipeline configuration ID
+        service: PipelineService from dependency injection
+
+    Returns:
+        List of ExecutionResponse objects, up to 50 most recent
+
+    Raises:
+        HTTPException: 404 if configuration not found (validated by get_executions call)
+    """
+    try:
+        executions = service._pipeline_repo.get_executions(pipeline_id, limit=50)
+        return [ExecutionResponse.model_validate(e) for e in executions]
+    except (ValueError,) as exc:
+        status_code, message = _handle_domain_error(exc)
+        raise HTTPException(status_code=status_code, detail=message)
+    except Exception as exc:
+        status_code, message = _handle_domain_error(exc)
+        raise HTTPException(status_code=status_code, detail=message)
