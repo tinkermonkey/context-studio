@@ -25,6 +25,7 @@ Usage in route handlers:
 from fastapi import Request
 
 from domain.ontology.services import OntologyService
+from domain.graph.services import GraphAnalysisService
 
 
 async def get_ontology_service(request: Request) -> OntologyService:
@@ -43,4 +44,23 @@ async def get_ontology_service(request: Request) -> OntologyService:
     service = getattr(request.app.state, "ontology_service", None)
     if service is None:
         raise RuntimeError("OntologyService not initialized in app.state")
+    return service
+
+
+async def get_graph_service(request: Request) -> GraphAnalysisService:
+    """
+    Extract the GraphAnalysisService from app state.
+
+    Args:
+        request: FastAPI request object
+
+    Returns:
+        The GraphAnalysisService instance from app.state
+
+    Raises:
+        RuntimeError: If service is not initialized in app.state
+    """
+    service = getattr(request.app.state, "graph_service", None)
+    if service is None:
+        raise RuntimeError("GraphAnalysisService not initialized in app.state")
     return service

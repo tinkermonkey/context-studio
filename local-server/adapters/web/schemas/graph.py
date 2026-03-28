@@ -1,0 +1,187 @@
+"""
+Pydantic schemas for the Graph Analysis bounded context.
+
+Request schemas (for POST):
+- CycleCheckRequest
+- SPARQLRequest
+
+Response schemas (for GET/returns):
+- KnowledgeGraphResponse
+- GraphMetricsResponse
+- PathResultResponse
+- CentralityResponse
+- CommunitiesResponse
+- NeighborsResponse
+- CycleCheckResponse
+- SPARQLResponse
+- TripleResponse
+- TriplesResponse
+- TripleCountResponse
+
+These schemas handle serialization/deserialization between HTTP and domain models.
+"""
+
+from datetime import datetime
+
+from pydantic import BaseModel, ConfigDict, Field
+
+
+# ==================== Request Schemas ====================
+
+class CycleCheckRequest(BaseModel):
+    """Request to check if adding an edge would create a cycle."""
+
+    source_id: str = Field(..., description="ID of the proposed edge source")
+    target_id: str = Field(..., description="ID of the proposed edge target")
+
+
+class SPARQLRequest(BaseModel):
+    """Request to execute a SPARQL query."""
+
+    query: str = Field(..., max_length=10000, description="SPARQL SELECT query string (max 10000 characters)")
+
+
+# ==================== Response Schemas ====================
+
+class KnowledgeGraphResponse(BaseModel):
+    """Response containing knowledge graph metadata."""
+
+    node_count: int = Field(..., description="Number of nodes in the graph")
+    edge_count: int = Field(..., description="Number of edges in the graph")
+    is_directed: bool = Field(..., description="Whether the graph is directed")
+    last_built: datetime = Field(..., description="Timestamp when the graph was last built")
+
+    class Config:
+        from_attributes = True
+
+
+class GraphMetricsResponse(BaseModel):
+    """Response containing computed graph metrics."""
+
+    density: float = Field(..., description="Edge density of the graph")
+    average_degree: float = Field(..., description="Average degree of nodes")
+    connected_components: int = Field(..., description="Number of connected components")
+    degree_distribution: dict[str, int] = Field(..., description="Distribution of node degrees")
+    centrality: dict[str, float] = Field(..., description="Centrality scores for all nodes")
+    communities: list[list[str]] = Field(..., description="Detected communities as lists of node IDs")
+    algorithm: str = Field(..., description="Name of the centrality algorithm used")
+    computed_at: datetime = Field(..., description="Timestamp when metrics were computed")
+
+    class Config:
+        from_attributes = True
+
+
+class PathResultResponse(BaseModel):
+    """Response containing a single path between two nodes."""
+
+    model_config = ConfigDict(from_attributes=True, populate_by_name=True)
+
+    source_id: str = Field(..., description="ID of the starting node")
+    target_id: str = Field(..., description="ID of the ending node")
+    nodes: list[str] = Field(..., alias="path", serialization_alias="nodes", description="Ordered list of node IDs from source to target")
+    distance: int = Field(..., alias="length", serialization_alias="distance", description="Number of edges in the path")
+    relationships: list[str] = Field(..., description="Relationship types traversed along the path")
+
+
+class CentralityResponse(BaseModel):
+    """Response containing centrality scores."""
+
+    algorithm: str = Field(..., description="Name of the centrality algorithm")
+    scores: dict[str, float] = Field(..., description="Centrality scores mapped by node ID")
+
+    class Config:
+        from_attributes = True
+
+
+class CommunitiesResponse(BaseModel):
+    """Response containing community detection results."""
+
+    algorithm: str = Field(..., description="Name of the community detection algorithm")
+    communities: list[list[str]] = Field(..., description="Communities as sorted lists of node IDs")
+
+    class Config:
+        from_attributes = True
+
+
+class NeighborsResponse(BaseModel):
+    """Response containing neighbor nodes."""
+
+    node_id: str = Field(..., description="ID of the queried node")
+    direction: str = Field(..., description="Direction of traversal: 'in', 'out', or 'both'")
+    neighbors: list[str] = Field(..., description="List of neighboring node IDs")
+
+    class Config:
+        from_attributes = True
+
+
+class CycleCheckResponse(BaseModel):
+    """Response from cycle detection check."""
+
+    source_id: str = Field(..., description="ID of the proposed edge source")
+    target_id: str = Field(..., description="ID of the proposed edge target")
+    would_create_cycle: bool = Field(..., description="Whether adding this edge would create a cycle")
+
+    class Config:
+        from_attributes = True
+
+
+class SPARQLResponse(BaseModel):
+    """Response from SPARQL query execution."""
+
+    results: list[dict] = Field(..., description="Query result bindings")
+    triple_count: int = Field(..., description="Total number of triples in the graph")
+
+    class Config:
+        from_attributes = True
+
+
+class TripleResponse(BaseModel):
+    """Response containing a single RDF triple."""
+
+    subject: str = Field(..., description="RDF subject")
+    predicate: str = Field(..., description="RDF predicate")
+    object: str = Field(..., description="RDF object")
+
+
+class TriplesResponse(BaseModel):
+    """Response containing RDF triples."""
+
+    triples: list[TripleResponse] = Field(..., description="List of RDF triples")
+    count: int = Field(..., description="Number of triples returned")
+
+    class Config:
+        from_attributes = True
+
+
+class TripleCountResponse(BaseModel):
+    """Response containing RDF triple count."""
+
+    count: int = Field(..., description="Number of RDF triples in the graph")
+
+    class Config:
+        from_attributes = True
+
+
+class DegreeDistributionResponse(BaseModel):
+    """Response containing degree distribution for all nodes."""
+
+    distribution: dict[str, int] = Field(..., description="Mapping of node IDs to their degrees")
+    computed_at: datetime = Field(..., description="Timestamp when distribution was computed")
+
+    class Config:
+        from_attributes = True
+
+
+class SubgraphResultResponse(BaseModel):
+    """Response containing depth-based subgraph extraction result."""
+
+    center_node_id: str = Field(..., description="ID of the center node")
+    node_ids: list[str] = Field(..., description="IDs of all nodes in the subgraph")
+    edge_ids: list[tuple[str, str]] = Field(..., description="Edges connecting nodes in the subgraph as (source, target) tuples")
+    node_count: int = Field(..., description="Number of nodes in the subgraph")
+    edge_count: int = Field(..., description="Number of edges in the subgraph")
+    depth: int = Field(..., description="Maximum traversal depth from center node")
+    extracted_at: datetime = Field(..., description="Timestamp when the subgraph was extracted")
+
+    class Config:
+        from_attributes = True

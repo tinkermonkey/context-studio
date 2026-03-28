@@ -27,12 +27,17 @@ from adapters.persistence.sqlite.ontology_repo import SQLiteOntologyRepository
 from adapters.embedding.sentence_transformer import SentenceTransformerEmbedding
 from adapters.llm.provider_router import LLMProviderRouter
 from adapters.events.in_process import InProcessEventPublisher
+from adapters.graph.networkx_engine import NetworkXGraphEngine
+from adapters.graph.rdflib_engine import RDFLibQueryEngine
 
 # Import domain services
 from domain.ontology.services import OntologyService
+from domain.graph.services import GraphAnalysisService
+from domain.ontology.events import GraphInvalidated
 
 # Import routes
 from adapters.web.ontology_routes import router as ontology_router
+from adapters.web.graph_routes import router as graph_router
 
 logger = get_logger(__name__)
 
@@ -103,9 +108,24 @@ async def lifespan(app: FastAPI):
         )
         logger.info("OntologyService created and wired with adapters")
 
+        graph_engine = NetworkXGraphEngine()
+        query_engine = RDFLibQueryEngine()
+        graph_service = GraphAnalysisService(
+            repository=ontology_repo,
+            graph_engine=graph_engine,
+            query_engine=query_engine,
+        )
+        logger.info("GraphAnalysisService created and wired with adapters")
+
+        # --- Wire event subscriptions ---
+
+        event_publisher.subscribe(GraphInvalidated, graph_service.on_graph_invalidated)
+        logger.info("Event subscription: GraphInvalidated -> GraphAnalysisService.on_graph_invalidated")
+
         # --- Store services in app.state for dependency injection ---
 
         app.state.ontology_service = ontology_service
+        app.state.graph_service = graph_service
         app.state.db_manager = db_manager
 
         logger.info("Services registered in app.state for dependency injection")
@@ -139,6 +159,7 @@ app.add_middleware(
 
 # Include routers (these are the FastAPI APIRouter instances)
 app.include_router(ontology_router)
+app.include_router(graph_router)
 
 
 @app.get("/api/health")

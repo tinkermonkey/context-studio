@@ -3,3 +3,4 @@ black
 ruff
 mypy
 typing-extensions
+types-networkx
