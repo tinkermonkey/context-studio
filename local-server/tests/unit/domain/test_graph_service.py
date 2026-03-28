@@ -319,6 +319,11 @@ class TestPathFinding:
         assert all(isinstance(r, PathResult) for r in results)
         assert all(r.source_id == classes[0].id for r in results)
         assert all(r.target_id == classes[1].id for r in results)
+        # Relationships should be populated from edge property definitions
+        assert all(isinstance(r.relationships, list) for r in results)
+        assert all(len(r.relationships) > 0 for r in results)
+        # All relationships should have the expected property definition title
+        assert all(all(rel == "is a" for rel in r.relationships) for r in results)
 
     def test_find_all_paths_not_exists(self, service):
         """find_all_paths returns empty list when no paths exist."""

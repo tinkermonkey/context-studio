@@ -289,8 +289,12 @@ class GraphAnalysisService:
         if path is None:
             return None
 
+        # Build property definition map once for efficient lookup
+        property_defs = self._repository.list_property_definitions()
+        prop_def_map = {prop.id: prop.title for prop in property_defs}
+
         # Retrieve relationship labels for edges in the path
-        relationships = self._get_path_relationships(path)
+        relationships = self._get_path_relationships(path, prop_def_map)
 
         return PathResult(
             source_id=source_id,
@@ -319,10 +323,15 @@ class GraphAnalysisService:
 
         # The graph engine will raise NodeNotFoundError if either node doesn't exist
         paths = self._graph_engine.all_paths(source_id, target_id, max_depth)
+
+        # Build property definition map once for efficient lookup across all paths
+        property_defs = self._repository.list_property_definitions()
+        prop_def_map = {prop.id: prop.title for prop in property_defs}
+
         results = []
         for path in paths:
             # Retrieve relationship labels for edges in this path
-            relationships = self._get_path_relationships(path)
+            relationships = self._get_path_relationships(path, prop_def_map)
 
             result = PathResult(
                 source_id=source_id,
@@ -555,7 +564,7 @@ class GraphAnalysisService:
         self._graph_stale = True
         self._rdf_stale = True
 
-    def _get_path_relationships(self, path: list[str]) -> list[str]:
+    def _get_path_relationships(self, path: list[str], prop_def_map: dict[str, str]) -> list[str]:
         """
         Get relationship labels for all edges in a path.
 
@@ -565,13 +574,12 @@ class GraphAnalysisService:
 
         Args:
             path: Ordered list of node IDs from source to target
+            prop_def_map: Pre-built dictionary mapping property definition ID to title
 
         Returns:
             List of relationship labels, one for each edge in the path
         """
         relationships = []
-        property_defs = self._repository.list_property_definitions()
-        prop_def_map = {prop.id: prop.title for prop in property_defs}
 
         # Iterate through consecutive pairs of nodes in the path
         for i in range(len(path) - 1):

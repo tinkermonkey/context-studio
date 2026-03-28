@@ -208,15 +208,18 @@ class TestShortestPathEndpoint:
             # Response should contain length info (length or distance)
             assert any(key in data for key in ["length", "distance"])
 
-    def test_shortest_path_returns_none_if_no_path(self, client, repository_with_data):
-        """GET /paths/shortest returns null if no path exists."""
+    def test_shortest_path_returns_404_if_no_path(self, client, repository_with_data):
+        """GET /paths/shortest returns 404 if no path exists."""
         classes = repository_with_data.list_classes()
-        # Request a path that doesn't exist using valid nodes
+        # Request a path where target node doesn't exist
         response = client.get(
-            f"/api/graph/paths/shortest?source_id={classes[0].id}&target_id={classes[0].id}"
+            f"/api/graph/paths/shortest?source_id={classes[0].id}&target_id=nonexistent-id"
         )
-        # Could be 200 with None or other valid response depending on implementation
-        assert response.status_code in [status.HTTP_200_OK, status.HTTP_404_NOT_FOUND]
+        # Should return 404 Not Found (from NodeNotFoundError raised by graph engine)
+        assert response.status_code == status.HTTP_404_NOT_FOUND
+        data = response.json()
+        # Verify error detail message
+        assert "detail" in data
 
     def test_shortest_path_missing_parameters_returns_422(self, client):
         """GET /paths/shortest without required parameters returns 422."""
