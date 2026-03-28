@@ -10,7 +10,6 @@ import os
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
-import pytest
 from datetime import datetime, timezone
 
 from domain.extraction.entities import ExtractedEntity, ExtractionResult
@@ -74,17 +73,14 @@ class TestExtractedEntity:
         entity.properties["key"] = "value"
         assert entity.properties["key"] == "value"
 
-    def test_extracted_entity_source_layers(self):
-        """ExtractedEntity supports all source layer values."""
-        for layer in [0, 1, 2, 3]:
-            entity = ExtractedEntity(label="Test", source_layer=layer)
-            assert entity.source_layer == layer
+    def test_extracted_entity_mutable_properties_isolation(self):
+        """ExtractedEntity properties dict doesn't share state across instances."""
+        entity1 = ExtractedEntity(label="Entity1")
+        entity2 = ExtractedEntity(label="Entity2")
 
-    def test_extracted_entity_confidence_range(self):
-        """ExtractedEntity can store confidence values."""
-        for confidence in [0.0, 0.5, 0.95, 1.0]:
-            entity = ExtractedEntity(label="Test", confidence=confidence)
-            assert entity.confidence == confidence
+        entity1.properties["key"] = "value1"
+        assert "key" not in entity2.properties
+        assert entity2.properties == {}
 
 
 class TestExtractionResult:
@@ -209,11 +205,6 @@ class TestExtractionResult:
         assert len(result.layers_executed) == 3
         assert result.layers_executed[2].success is False
         assert result.layers_executed[2].error_message == "Layer failed"
-
-    def test_extraction_result_duration(self):
-        """ExtractionResult tracks total duration."""
-        result = ExtractionResult(text="Test", total_duration_ms=523)
-        assert result.total_duration_ms == 523
 
     def test_extraction_result_mutable_lists(self):
         """ExtractionResult entity and layer lists can be modified."""

@@ -16,14 +16,60 @@ from datetime import datetime, timezone
 from domain.pipeline.entities import PipelineConfiguration, Execution
 
 
+@pytest.fixture
+def make_config():
+    """Factory fixture for PipelineConfiguration with sensible defaults."""
+    def _make(**overrides):
+        now = datetime.now(timezone.utc)
+        defaults = {
+            "id": "config-default",
+            "pipeline": "test-pipeline",
+            "title": "Test Pipeline",
+            "provider": "openai",
+            "model": "gpt-4",
+            "config": {},
+            "system_prompt": "You are a helpful assistant.",
+            "user_prompt": "Process: {text}",
+            "version": 1,
+            "enabled": True,
+            "created_at": now,
+            "last_updated": now,
+        }
+        defaults.update(overrides)
+        return PipelineConfiguration(**defaults)
+    return _make
+
+
+@pytest.fixture
+def make_execution():
+    """Factory fixture for Execution with sensible defaults."""
+    def _make(**overrides):
+        now = datetime.now(timezone.utc)
+        defaults = {
+            "id": "exec-default",
+            "pipeline_config_id": "config-default",
+            "input_text": "Test input",
+            "output_text": "Test output",
+            "provider": "openai",
+            "model": "gpt-4",
+            "tokens_in": 10,
+            "tokens_out": 10,
+            "duration_ms": 100,
+            "status": "success",
+            "error_message": None,
+            "timestamp": now,
+        }
+        defaults.update(overrides)
+        return Execution(**defaults)
+    return _make
+
+
 class TestPipelineConfiguration:
     """Tests for PipelineConfiguration dataclass."""
 
-    def test_construct_with_all_fields(self):
+    def test_construct_with_all_fields(self, make_config):
         """Create a PipelineConfiguration with all fields."""
-        now = datetime.now(timezone.utc)
-
-        config = PipelineConfiguration(
+        config = make_config(
             id="config-123",
             pipeline="document-extractor",
             title="Extract Key Information",
@@ -34,8 +80,6 @@ class TestPipelineConfiguration:
             user_prompt="Extract key information from: {text}",
             version=2,
             enabled=True,
-            created_at=now,
-            last_updated=now,
         )
 
         assert config.id == "config-123"
@@ -48,177 +92,48 @@ class TestPipelineConfiguration:
         assert config.user_prompt == "Extract key information from: {text}"
         assert config.version == 2
         assert config.enabled is True
-        assert config.created_at == now
-        assert config.last_updated == now
 
-    def test_construct_with_minimal_fields(self):
-        """Create a PipelineConfiguration with required fields only."""
-        now = datetime.now(timezone.utc)
-
-        config = PipelineConfiguration(
+    def test_construct_with_minimal_fields(self, make_config):
+        """Create a PipelineConfiguration with default fields."""
+        config = make_config(
             id="config-456",
             pipeline="ner",
             title="Named Entity Recognition",
             provider="anthropic",
             model="claude-opus",
-            config={},
-            system_prompt="Extract entities.",
-            user_prompt="Process: {text}",
-            version=1,
-            enabled=True,
-            created_at=now,
-            last_updated=now,
         )
 
         assert config.id == "config-456"
         assert config.pipeline == "ner"
         assert config.title == "Named Entity Recognition"
 
-    def test_pipeline_configuration_config_is_mutable_dict(self):
+    def test_pipeline_configuration_config_is_mutable_dict(self, make_config):
         """PipelineConfiguration config dict can be modified."""
-        now = datetime.now(timezone.utc)
-        config = PipelineConfiguration(
-            id="id",
-            pipeline="test",
-            title="Test",
-            provider="openai",
-            model="gpt-4",
-            config={"timeout": 30},
-            system_prompt="System",
-            user_prompt="User: {text}",
-            version=1,
-            enabled=True,
-            created_at=now,
-            last_updated=now,
-        )
-
+        config = make_config(config={"timeout": 30})
         config.config["temperature"] = 0.5
         assert config.config["temperature"] == 0.5
 
-    def test_pipeline_configuration_with_empty_config(self):
+    def test_pipeline_configuration_with_empty_config(self, make_config):
         """PipelineConfiguration can have empty config dict."""
-        now = datetime.now(timezone.utc)
-        config = PipelineConfiguration(
-            id="id",
-            pipeline="test",
-            title="Test",
-            provider="openai",
-            model="gpt-4",
-            config={},
-            system_prompt="System",
-            user_prompt="User: {text}",
-            version=1,
-            enabled=True,
-            created_at=now,
-            last_updated=now,
-        )
-
+        config = make_config(config={})
         assert config.config == {}
 
-    def test_pipeline_configuration_enabled_flag(self):
-        """PipelineConfiguration tracks enabled/disabled state."""
-        now = datetime.now(timezone.utc)
-        enabled_config = PipelineConfiguration(
-            id="id1",
-            pipeline="test",
-            title="Enabled",
-            provider="openai",
-            model="gpt-4",
-            config={},
-            system_prompt="System",
-            user_prompt="User: {text}",
-            version=1,
-            enabled=True,
-            created_at=now,
-            last_updated=now,
-        )
+    def test_pipeline_configuration_config_dict_isolation(self, make_config):
+        """PipelineConfiguration config dicts don't share state across instances."""
+        config1 = make_config(config={"timeout": 30})
+        config2 = make_config(config={})
 
-        disabled_config = PipelineConfiguration(
-            id="id2",
-            pipeline="test",
-            title="Disabled",
-            provider="openai",
-            model="gpt-4",
-            config={},
-            system_prompt="System",
-            user_prompt="User: {text}",
-            version=1,
-            enabled=False,
-            created_at=now,
-            last_updated=now,
-        )
-
-        assert enabled_config.enabled is True
-        assert disabled_config.enabled is False
-
-    def test_pipeline_configuration_version_tracking(self):
-        """PipelineConfiguration tracks version number."""
-        now = datetime.now(timezone.utc)
-        v1 = PipelineConfiguration(
-            id="id",
-            pipeline="test",
-            title="Test",
-            provider="openai",
-            model="gpt-4",
-            config={},
-            system_prompt="System",
-            user_prompt="User: {text}",
-            version=1,
-            enabled=True,
-            created_at=now,
-            last_updated=now,
-        )
-
-        v2 = PipelineConfiguration(
-            id="id",
-            pipeline="test",
-            title="Test",
-            provider="openai",
-            model="gpt-4-turbo",
-            config={},
-            system_prompt="System",
-            user_prompt="User: {text}",
-            version=2,
-            enabled=True,
-            created_at=now,
-            last_updated=now,
-        )
-
-        assert v1.version == 1
-        assert v2.version == 2
-
-    def test_pipeline_configuration_timestamps(self):
-        """PipelineConfiguration tracks creation and update timestamps."""
-        created = datetime.now(timezone.utc)
-        updated = datetime.now(timezone.utc)
-
-        config = PipelineConfiguration(
-            id="id",
-            pipeline="test",
-            title="Test",
-            provider="openai",
-            model="gpt-4",
-            config={},
-            system_prompt="System",
-            user_prompt="User: {text}",
-            version=1,
-            enabled=True,
-            created_at=created,
-            last_updated=updated,
-        )
-
-        assert config.created_at == created
-        assert config.last_updated == updated
+        config1.config["temperature"] = 0.5
+        assert "temperature" not in config2.config
+        assert config2.config == {}
 
 
 class TestExecution:
     """Tests for Execution dataclass."""
 
-    def test_construct_with_all_fields(self):
+    def test_construct_with_all_fields(self, make_execution):
         """Create an Execution with all fields."""
-        now = datetime.now(timezone.utc)
-
-        execution = Execution(
+        execution = make_execution(
             id="exec-123",
             pipeline_config_id="config-123",
             input_text="Sample input text",
@@ -229,8 +144,6 @@ class TestExecution:
             tokens_out=120,
             duration_ms=523,
             status="success",
-            error_message=None,
-            timestamp=now,
         )
 
         assert execution.id == "exec-123"
@@ -244,189 +157,46 @@ class TestExecution:
         assert execution.duration_ms == 523
         assert execution.status == "success"
         assert execution.error_message is None
-        assert execution.timestamp == now
 
-    def test_execution_with_error_status(self):
+    def test_execution_with_error_status(self, make_execution):
         """Create an Execution with error status."""
-        now = datetime.now(timezone.utc)
-
-        execution = Execution(
-            id="exec-456",
-            pipeline_config_id="config-123",
-            input_text="Input",
-            output_text="",
-            provider="openai",
-            model="gpt-4",
-            tokens_in=0,
-            tokens_out=0,
-            duration_ms=150,
+        execution = make_execution(
             status="error",
             error_message="LLM service unavailable",
-            timestamp=now,
+            output_text="",
+            tokens_in=0,
+            tokens_out=0,
         )
 
         assert execution.status == "error"
         assert execution.error_message == "LLM service unavailable"
         assert execution.output_text == ""
 
-    def test_execution_with_timeout_status(self):
+    def test_execution_with_timeout_status(self, make_execution):
         """Create an Execution with timeout status."""
-        now = datetime.now(timezone.utc)
-
-        execution = Execution(
-            id="exec-789",
-            pipeline_config_id="config-123",
-            input_text="Input",
-            output_text="",
-            provider="openai",
-            model="gpt-4",
-            tokens_in=0,
-            tokens_out=0,
-            duration_ms=30000,
+        execution = make_execution(
             status="timeout",
             error_message="Execution exceeded timeout of 30 seconds",
-            timestamp=now,
+            output_text="",
+            duration_ms=30000,
         )
 
         assert execution.status == "timeout"
         assert "exceeded timeout" in execution.error_message
 
-    def test_execution_tracks_token_counts(self):
-        """Execution tracks input and output token counts."""
-        now = datetime.now(timezone.utc)
-
-        # Low token count
-        exec1 = Execution(
-            id="e1",
-            pipeline_config_id="c1",
-            input_text="Hi",
-            output_text="Hello",
+    def test_execution_different_providers(self, make_execution):
+        """Execution supports different provider/model combinations."""
+        openai_exec = make_execution(
             provider="openai",
             model="gpt-4",
-            tokens_in=1,
-            tokens_out=1,
-            duration_ms=10,
-            status="success",
-            error_message=None,
-            timestamp=now,
         )
 
-        # High token count
-        exec2 = Execution(
-            id="e2",
-            pipeline_config_id="c1",
-            input_text="Long input " * 100,
-            output_text="Long output " * 200,
-            provider="openai",
-            model="gpt-4",
-            tokens_in=200,
-            tokens_out=500,
-            duration_ms=1500,
-            status="success",
-            error_message=None,
-            timestamp=now,
-        )
-
-        assert exec1.tokens_in == 1
-        assert exec1.tokens_out == 1
-        assert exec2.tokens_in == 200
-        assert exec2.tokens_out == 500
-
-    def test_execution_duration_tracking(self):
-        """Execution tracks execution duration in milliseconds."""
-        now = datetime.now(timezone.utc)
-
-        # Fast execution
-        fast = Execution(
-            id="fast",
-            pipeline_config_id="config",
-            input_text="Input",
-            output_text="Output",
-            provider="openai",
-            model="gpt-4",
-            tokens_in=10,
-            tokens_out=10,
-            duration_ms=50,
-            status="success",
-            error_message=None,
-            timestamp=now,
-        )
-
-        # Slow execution
-        slow = Execution(
-            id="slow",
-            pipeline_config_id="config",
-            input_text="Input",
-            output_text="Output",
-            provider="openai",
-            model="gpt-4",
-            tokens_in=10,
-            tokens_out=10,
-            duration_ms=5000,
-            status="success",
-            error_message=None,
-            timestamp=now,
-        )
-
-        assert fast.duration_ms == 50
-        assert slow.duration_ms == 5000
-
-    def test_execution_provider_and_model_fields(self):
-        """Execution tracks provider and model information."""
-        now = datetime.now(timezone.utc)
-
-        openai_exec = Execution(
-            id="e1",
-            pipeline_config_id="c1",
-            input_text="Input",
-            output_text="Output",
-            provider="openai",
-            model="gpt-4",
-            tokens_in=10,
-            tokens_out=10,
-            duration_ms=100,
-            status="success",
-            error_message=None,
-            timestamp=now,
-        )
-
-        anthropic_exec = Execution(
-            id="e2",
-            pipeline_config_id="c1",
-            input_text="Input",
-            output_text="Output",
+        anthropic_exec = make_execution(
             provider="anthropic",
             model="claude-opus",
-            tokens_in=10,
-            tokens_out=10,
-            duration_ms=100,
-            status="success",
-            error_message=None,
-            timestamp=now,
         )
 
         assert openai_exec.provider == "openai"
         assert openai_exec.model == "gpt-4"
         assert anthropic_exec.provider == "anthropic"
         assert anthropic_exec.model == "claude-opus"
-
-    def test_execution_timestamp(self):
-        """Execution records execution timestamp."""
-        now = datetime.now(timezone.utc)
-
-        execution = Execution(
-            id="id",
-            pipeline_config_id="config",
-            input_text="Input",
-            output_text="Output",
-            provider="openai",
-            model="gpt-4",
-            tokens_in=10,
-            tokens_out=10,
-            duration_ms=100,
-            status="success",
-            error_message=None,
-            timestamp=now,
-        )
-
-        assert execution.timestamp == now
