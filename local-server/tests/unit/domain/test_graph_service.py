@@ -142,8 +142,12 @@ class TestGraphConstruction:
             query_engine=FakeSemanticQueryEngine(),
         )
 
-        # Call a method that requires the graph
-        _ = service.find_shortest_path("node1", "node2")
+        # Get real node IDs from the repository
+        classes = repository_with_data.list_classes()
+        assert len(classes) >= 2
+
+        # Call a method that requires the graph with real node IDs
+        _ = service.find_shortest_path(classes[0].id, classes[1].id)
 
         # Graph should now be built (stale flag cleared)
         assert not service._graph_stale
@@ -160,15 +164,17 @@ class TestGraphConstruction:
             query_engine=FakeSemanticQueryEngine(),
         )
 
-        # Get initial call count
-        initial_count = len(repo.list_classes())
+        # Get real node IDs from the repository
+        classes = repo.list_classes()
+        assert len(classes) >= 2
+        initial_count = len(classes)
 
         # First call builds the graph
-        _ = service.find_shortest_path("node1", "node2")
+        _ = service.find_shortest_path(classes[0].id, classes[1].id)
         first_node_count = graph_engine.node_count()
 
         # Second call reuses the graph (no additional repository reads)
-        _ = service.find_shortest_path("node1", "node3")
+        _ = service.find_shortest_path(classes[0].id, classes[1].id)
         second_node_count = graph_engine.node_count()
 
         # Node count should be the same (graph reused)
@@ -185,8 +191,12 @@ class TestGraphConstruction:
             query_engine=FakeSemanticQueryEngine(),
         )
 
+        # Get real node IDs from the repository
+        classes = repository_with_data.list_classes()
+        assert len(classes) >= 2
+
         # Build graph first time
-        _ = service.find_shortest_path("node1", "node2")
+        _ = service.find_shortest_path(classes[0].id, classes[1].id)
         graph_engine.node_count()
 
         # Invalidate the graph
@@ -195,7 +205,7 @@ class TestGraphConstruction:
         assert service._graph_stale
 
         # Next call should rebuild
-        _ = service.find_shortest_path("node1", "node3")
+        _ = service.find_shortest_path(classes[0].id, classes[1].id)
         assert not service._graph_stale
 
     def test_empty_ontology_returns_valid_graph(self, empty_repository):
@@ -207,8 +217,11 @@ class TestGraphConstruction:
             query_engine=FakeSemanticQueryEngine(),
         )
 
-        _ = service.find_shortest_path("node1", "node2")
+        # Calling find_shortest_path on empty graph raises NodeNotFoundError
+        with pytest.raises(NodeNotFoundError):
+            service.find_shortest_path("node1", "node2")
 
+        # Verify graph was built but is empty
         assert graph_engine.node_count() == 0
         assert graph_engine.edge_count() == 0
 
@@ -301,10 +314,10 @@ class TestPathFinding:
         assert result.relationships[0] == "is a"  # Property definition title from fixture
 
     def test_find_shortest_path_not_exists(self, service):
-        """find_shortest_path returns None when no path exists."""
+        """find_shortest_path raises NodeNotFoundError when nodes don't exist."""
         svc, _, _ = service
-        result = svc.find_shortest_path("nonexistent1", "nonexistent2")
-        assert result is None
+        with pytest.raises(NodeNotFoundError):
+            svc.find_shortest_path("nonexistent1", "nonexistent2")
 
     def test_find_all_paths_exists(self, service, repository_with_data):
         """find_all_paths returns list of PathResult when paths exist."""
@@ -326,10 +339,10 @@ class TestPathFinding:
         assert all(all(rel == "is a" for rel in r.relationships) for r in results)
 
     def test_find_all_paths_not_exists(self, service):
-        """find_all_paths returns empty list when no paths exist."""
+        """find_all_paths raises NodeNotFoundError when nodes don't exist."""
         svc, _, _ = service
-        results = svc.find_all_paths("nonexistent1", "nonexistent2")
-        assert results == []
+        with pytest.raises(NodeNotFoundError):
+            svc.find_all_paths("nonexistent1", "nonexistent2")
 
     def test_find_all_paths_respects_max_depth(self, service, repository_with_data):
         """find_all_paths passes max_depth to graph engine."""
@@ -710,6 +723,20 @@ class TestMetrics:
         result = svc.get_metrics()
         # Should have some centrality scores
         assert isinstance(result.centrality, dict)
+
+    def test_get_metrics_connected_components_calculation(self, service, repository_with_data):
+        """get_metrics computes connected components correctly."""
+        svc, _, _ = service
+        result = svc.get_metrics()
+        # With fixture data, should have at least 1 component
+        assert result.connected_components >= 1
+
+    def test_get_metrics_average_degree_non_negative(self, service):
+        """get_metrics average_degree is non-negative."""
+        svc, _, _ = service
+        result = svc.get_metrics()
+        # Average degree should be non-negative
+        assert result.average_degree >= 0.0
 
 
 class TestRDFOperations:

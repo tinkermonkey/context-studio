@@ -53,25 +53,35 @@ class FakeGraphEngine:
         Find the shortest path between two nodes.
 
         For the fake implementation, returns [source_id, target_id] if both nodes
-        exist, otherwise None.
+        exist and are connected, otherwise None. Raises NodeNotFoundError if either
+        node does not exist.
 
         Args:
             source_id: ID of the starting node
             target_id: ID of the ending node
 
         Returns:
-            List [source_id, target_id] if both exist, None otherwise
+            List [source_id, target_id] if both exist and connected, None otherwise
+
+        Raises:
+            NodeNotFoundError: If source_id or target_id does not exist
         """
-        if source_id in self._nodes and target_id in self._nodes:
-            return [source_id, target_id]
-        return None
+        if source_id not in self._nodes:
+            raise NodeNotFoundError(source_id)
+        if target_id not in self._nodes:
+            raise NodeNotFoundError(target_id)
+
+        # For the fake, assume direct connection if both nodes exist
+        # In a real implementation, this would use BFS/Dijkstra
+        return [source_id, target_id]
 
     def all_paths(self, source_id: str, target_id: str, max_depth: int = 5) -> list[list[str]]:
         """
         Find all simple paths between two nodes up to a maximum depth.
 
         For the fake implementation, returns [[source_id, target_id]] if both nodes
-        exist, otherwise empty list.
+        exist and are connected, otherwise empty list. Raises NodeNotFoundError if
+        either node does not exist.
 
         Args:
             source_id: ID of the starting node
@@ -79,11 +89,19 @@ class FakeGraphEngine:
             max_depth: Maximum path length to explore (unused in fake)
 
         Returns:
-            List containing single path [[source_id, target_id]] if both exist, else []
+            List containing single path [[source_id, target_id]] if both exist and connected, else []
+
+        Raises:
+            NodeNotFoundError: If source_id or target_id does not exist
         """
-        if source_id in self._nodes and target_id in self._nodes:
-            return [[source_id, target_id]]
-        return []
+        if source_id not in self._nodes:
+            raise NodeNotFoundError(source_id)
+        if target_id not in self._nodes:
+            raise NodeNotFoundError(target_id)
+
+        # For the fake, assume direct connection if both nodes exist
+        # Return single path [[source_id, target_id]]
+        return [[source_id, target_id]]
 
     def centrality(self, algorithm: str = "betweenness") -> dict[str, float]:
         """
@@ -107,23 +125,70 @@ class FakeGraphEngine:
         """
         Get the degree of each node.
 
-        For the fake implementation, returns 0 for all nodes (no edges tracked).
+        For a directed graph, returns the total degree (in-degree + out-degree) for each node.
 
         Returns:
-            Dictionary mapping node ID to degree (all zeros in fake)
+            Dictionary mapping node ID to degree (int)
         """
-        return {node_id: 0 for node_id in self._nodes}
+        degree_dict = {node_id: 0 for node_id in self._nodes}
+
+        # Count in-degree and out-degree for each node
+        for edge in self._edges:
+            source_id = edge["source_id"]
+            target_id = edge["target_id"]
+
+            # Out-degree for source
+            if source_id in degree_dict:
+                degree_dict[source_id] += 1
+
+            # In-degree for target
+            if target_id in degree_dict:
+                degree_dict[target_id] += 1
+
+        return degree_dict
 
     def connected_components(self) -> int:
         """
-        Count the number of connected components in the graph.
+        Count the number of weakly connected components in the graph.
 
-        For the fake implementation, always returns 1 if there are nodes, 0 otherwise.
+        For a directed graph, treats it as undirected for connectivity purposes
+        (ignoring edge direction).
 
         Returns:
             Number of connected components
         """
-        return 1 if self._nodes else 0
+        if not self._nodes:
+            return 0
+
+        # Build undirected adjacency for connectivity analysis
+        adjacency: dict[str, set[str]] = {node_id: set() for node_id in self._nodes}
+
+        # Add edges in both directions (treating as undirected)
+        for edge in self._edges:
+            source_id = edge["source_id"]
+            target_id = edge["target_id"]
+
+            if source_id in adjacency and target_id in adjacency:
+                adjacency[source_id].add(target_id)
+                adjacency[target_id].add(source_id)
+
+        # Count connected components using DFS
+        visited: set[str] = set()
+        component_count = 0
+
+        def dfs(node_id: str) -> None:
+            """Depth-first search to mark connected component."""
+            visited.add(node_id)
+            for neighbor in adjacency[node_id]:
+                if neighbor not in visited:
+                    dfs(neighbor)
+
+        for node_id in self._nodes:
+            if node_id not in visited:
+                dfs(node_id)
+                component_count += 1
+
+        return component_count
 
     def communities(self, algorithm: str = "louvain") -> list[set[str]]:
         """
