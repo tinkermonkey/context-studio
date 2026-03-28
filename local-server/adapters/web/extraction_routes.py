@@ -23,6 +23,8 @@ from adapters.web.dependencies import get_extraction_service
 from adapters.web.schemas.extraction import (
     ExtractRequest,
     ExtractionResultSchema,
+    ExtractedEntitySchema,
+    ExtractionLayerResultSchema,
 )
 
 router = APIRouter(prefix="/api", tags=["extraction"])
@@ -62,27 +64,27 @@ def _to_schema(result) -> ExtractionResultSchema:
         id=result.id,
         text=result.text,
         extracted_entities=[
-            {
-                "id": e.id,
-                "label": e.label,
-                "entity_type": e.entity_type,
-                "source_layer": e.source_layer,
-                "confidence": e.confidence,
-                "uri": e.uri,
-                "description": e.description,
-                "properties": e.properties,
-            }
+            ExtractedEntitySchema(
+                id=e.id,
+                label=e.label,
+                entity_type=e.entity_type,
+                source_layer=e.source_layer,
+                confidence=e.confidence,
+                uri=e.uri,
+                description=e.description,
+                properties=e.properties,
+            )
             for e in result.extracted_entities
         ],
         layers_executed=[
-            {
-                "layer_number": lr.layer_number,
-                "layer_name": lr.layer_name,
-                "entities_found": lr.entities_found,
-                "duration_ms": lr.duration_ms,
-                "success": lr.success,
-                "error_message": lr.error_message,
-            }
+            ExtractionLayerResultSchema(
+                layer_number=lr.layer_number,
+                layer_name=lr.layer_name,
+                entities_found=lr.entities_found,
+                duration_ms=lr.duration_ms,
+                success=lr.success,
+                error_message=lr.error_message,
+            )
             for lr in result.layers_executed
         ],
         total_duration_ms=result.total_duration_ms,

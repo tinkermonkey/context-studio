@@ -41,6 +41,7 @@ from adapters.reference.cache import CachedReferenceSource
 from domain.ontology.services import OntologyService
 from domain.graph.services import GraphAnalysisService
 from domain.extraction.services import ExtractionService
+from domain.extraction.ports import ReferenceSource
 from domain.pipeline.services import PipelineService
 from domain.ontology.events import GraphInvalidated
 from domain.extraction.events import ExtractionCompleted
@@ -149,13 +150,13 @@ async def lifespan(app: FastAPI):
         logger.info("NLP processor created")
 
         # Reference sources (wrapped in cache)
-        raw_sources = [
+        raw_sources: list[ReferenceSource] = [
             ConceptNetSource(),
             DBpediaSource(),
             WikidataSource(),
             SchemaOrgSource(),
         ]
-        reference_sources = [
+        reference_sources: list[ReferenceSource] = [
             CachedReferenceSource(src, cache_db_path=settings.reference.cache_db_path)
             for src in raw_sources
         ]

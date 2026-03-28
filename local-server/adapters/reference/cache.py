@@ -12,7 +12,7 @@ from utils.logger import get_logger
 logger = get_logger(__name__)
 
 
-class CachedReferenceSource:
+class CachedReferenceSource(ReferenceSource):
     """
     Decorator that wraps a ReferenceSource and caches results.
 
