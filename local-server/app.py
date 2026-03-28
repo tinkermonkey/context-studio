@@ -35,6 +35,7 @@ from adapters.reference.conceptnet import ConceptNetSource
 from adapters.reference.dbpedia import DBpediaSource
 from adapters.reference.wikidata import WikidataSource
 from adapters.reference.schema_org import SchemaOrgSource
+from adapters.reference.cache import CachedReferenceSource
 
 # Import domain services
 from domain.ontology.services import OntologyService
@@ -137,7 +138,7 @@ async def lifespan(app: FastAPI):
         logger.info("EmbeddingService created")
 
         # LLM provider router
-        llm_provider = LLMProviderRouter(
+        llm_router = LLMProviderRouter(
             openai_api_key=settings.llm.openai_api_key,
             anthropic_api_key=settings.llm.anthropic_api_key,
         )
@@ -147,14 +148,18 @@ async def lifespan(app: FastAPI):
         nlp_processor = SpacyNLPProcessor()
         logger.info("NLP processor created")
 
-        # Reference sources
-        reference_sources = [
+        # Reference sources (wrapped in cache)
+        raw_sources = [
             ConceptNetSource(),
             DBpediaSource(),
             WikidataSource(),
             SchemaOrgSource(),
         ]
-        logger.info("Reference sources created")
+        reference_sources = [
+            CachedReferenceSource(src, cache_db_path=settings.reference.cache_db_path)
+            for src in raw_sources
+        ]
+        logger.info("Reference sources created and wrapped with caching")
 
         # Event publisher
         event_publisher = InProcessEventPublisher()
@@ -181,7 +186,7 @@ async def lifespan(app: FastAPI):
         extraction_service = ExtractionService(
             ontology_repo=ontology_repo,
             embedding_service=embedding_service,
-            llm=llm_provider,
+            llm=llm_router,
             nlp=nlp_processor,
             reference_sources=reference_sources,
             event_publisher=event_publisher,
@@ -190,7 +195,7 @@ async def lifespan(app: FastAPI):
 
         pipeline_service = PipelineService(
             pipeline_repo=pipeline_repo,
-            llm=llm_provider,
+            llm=llm_router,
             event_publisher=event_publisher,
         )
         logger.info("PipelineService created and wired with adapters")
@@ -216,7 +221,7 @@ async def lifespan(app: FastAPI):
 
         # Store adapters needed for health checks
         app.state.nlp_processor = nlp_processor
-        app.state.llm_router = llm_provider
+        app.state.llm_router = llm_router
 
         logger.info("Services registered in app.state for dependency injection")
 
