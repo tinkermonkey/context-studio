@@ -383,6 +383,27 @@ class TestNeighborsEndpoint:
         response = client.get(f"/api/graph/nodes/{classes[0].id}/neighbors?direction=invalid")
         assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
 
+    def test_neighbors_with_depth_parameter(self, client, repository_with_data):
+        """GET /nodes/{node_id}/neighbors accepts depth parameter."""
+        classes = repository_with_data.list_classes()
+        response = client.get(f"/api/graph/nodes/{classes[0].id}/neighbors?depth=2")
+        assert response.status_code == status.HTTP_200_OK
+        data = response.json()
+        assert "neighbors" in data
+        assert isinstance(data["neighbors"], list)
+
+    def test_neighbors_depth_zero_returns_422(self, client, repository_with_data):
+        """GET /nodes/{node_id}/neighbors with depth=0 returns 422 validation error."""
+        classes = repository_with_data.list_classes()
+        response = client.get(f"/api/graph/nodes/{classes[0].id}/neighbors?depth=0")
+        assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
+
+    def test_neighbors_depth_exceeds_max_returns_422(self, client, repository_with_data):
+        """GET /nodes/{node_id}/neighbors with depth>10 returns 422 validation error."""
+        classes = repository_with_data.list_classes()
+        response = client.get(f"/api/graph/nodes/{classes[0].id}/neighbors?depth=11")
+        assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
+
 
 class TestSubgraphEndpoint:
     """Tests for GET /subgraph endpoint."""

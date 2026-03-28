@@ -479,6 +479,28 @@ class TestNeighbors:
         all_class_ids = {cls.id for cls in classes}
         assert result.issubset(all_class_ids)
 
+    def test_get_neighbors_invalid_direction_raises_error(self, service, repository_with_data):
+        """get_neighbors raises InvalidAlgorithmError for invalid direction."""
+        svc, _, _ = service
+        classes = repository_with_data.list_classes()
+        assert len(classes) > 0
+        with pytest.raises(InvalidAlgorithmError) as exc_info:
+            svc.get_neighbors(classes[0].id, direction="invalid")
+        error_msg = str(exc_info.value).lower()
+        assert "invalid" in error_msg
+
+    def test_get_neighbors_with_depth(self, service, repository_with_data):
+        """get_neighbors accepts depth parameter for multi-hop traversal."""
+        svc, _, _ = service
+        classes = repository_with_data.list_classes()
+        assert len(classes) > 0
+        # Test with depth=2 to verify multi-hop behavior
+        result = svc.get_neighbors(classes[0].id, depth=2)
+        assert isinstance(result, set)
+        # All neighbors should be valid node IDs
+        all_class_ids = {cls.id for cls in classes}
+        assert result.issubset(all_class_ids)
+
 
 class TestCycleDetection:
     """Tests for cycle detection."""
