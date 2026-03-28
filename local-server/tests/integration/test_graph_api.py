@@ -64,13 +64,17 @@ def session_factory(temp_db):
 
 
 @pytest.fixture
-def repository(session_factory):
+def session(session_factory):
+    """Create a session that stays open for the duration of the test."""
+    session_instance = session_factory()
+    yield session_instance
+    session_instance.close()
+
+
+@pytest.fixture
+def repository(session):
     """Create a real SQLiteOntologyRepository with actual persistence."""
-    session = session_factory()
-    try:
-        yield SQLiteOntologyRepository(session=session)
-    finally:
-        session.close()
+    return SQLiteOntologyRepository(session=session)
 
 
 @pytest.fixture
@@ -192,23 +196,11 @@ def service(populated_repository):
     graph_engine = NetworkXGraphEngine()
     semantic_query_engine = RDFLibQueryEngine()
 
-    # Populate graph engine with data from repository
-    nodes = [{"id": cls.id} for cls in populated_repository.list_classes()]
-    edges = [
-        {"source_id": rel.source_id, "target_id": rel.target_id}
-        for rel in populated_repository.list_relationships()
-    ]
-    graph_engine.build_from_data(nodes, edges)
-
     service = GraphAnalysisService(
         repository=populated_repository,
         graph_engine=graph_engine,
         query_engine=semantic_query_engine,
     )
-
-    # Mark graph as not stale since we just built it
-    service._graph_stale = False
-    service._rdf_stale = False
 
     return service
 
