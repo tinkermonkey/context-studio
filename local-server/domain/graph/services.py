@@ -613,9 +613,10 @@ class GraphAnalysisService:
         """
         Validate SPARQL query for safety and correctness.
 
-        Uses word-boundary regex to avoid matching keywords inside identifiers
-        or string literals. For example, 'CREATED_BY' contains 'CREATE' but is
-        not a CREATE statement.
+        Uses word-boundary regex matching to detect forbidden keywords, but excludes
+        string literals to prevent false positives. For example, a query like
+        `SELECT ?s WHERE { ?s rdfs:label "Please DELETE this item" }` should be allowed
+        even though DELETE appears in a string literal.
 
         Args:
             query: SPARQL query string to validate.
@@ -629,10 +630,14 @@ class GraphAnalysisService:
             "INSERT", "DELETE", "DROP", "CLEAR", "LOAD", "CREATE"
         }
 
-        query_upper = query.upper()
+        # Remove string literals from the query to avoid matching keywords inside strings
+        # This regex matches both single-quoted and double-quoted strings
+        query_without_literals = re.sub(r'["\'].*?["\']', ' ', query)
+        query_upper = query_without_literals.upper()
 
         for keyword in forbidden_keywords:
-            # Use word-boundary regex to avoid matching inside words
+            # Use word-boundary regex to detect keywords, but not inside identifiers
+            # Now that literals are removed, this won't match keywords in string values
             if re.search(rf"\b{keyword}\b", query_upper):
                 raise SPARQLValidationError(
                     query,

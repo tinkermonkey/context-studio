@@ -38,7 +38,7 @@ class CycleCheckRequest(BaseModel):
 class SPARQLRequest(BaseModel):
     """Request to execute a SPARQL query."""
 
-    query: str = Field(..., description="SPARQL SELECT query string")
+    query: str = Field(..., max_length=10000, description="SPARQL SELECT query string (max 10000 characters)")
 
 
 # ==================== Response Schemas ====================

@@ -181,24 +181,42 @@ class RDFLibQueryEngine:
         Uses RDFLib's triple pattern matching to find matching triples.
         Any parameter may be None to match any value in that position.
 
+        The object parameter may match either URIRef or Literal objects, since triples
+        can have either type as the object. If an object is provided, this method queries
+        for both URIRef and Literal matches.
+
         Args:
             subject: Optional subject URI/ID to match
             predicate: Optional predicate URI/property to match
-            object: Optional object value to match
+            object: Optional object value to match (matches both URIRef and Literal objects)
 
         Returns:
             List of matching triples, each as (subject, predicate, object)
         """
         results = []
 
-        # Convert parameters to URIRefs or None
+        # Convert subject and predicate to URIRefs or None
         subject_uri = URIRef(subject) if subject else None
         predicate_uri = URIRef(predicate) if predicate else None
-        object_uri = URIRef(object) if object else None
 
-        # Query triples using RDFLib's triple pattern matching
-        for s, p, o in self._graph.triples((subject_uri, predicate_uri, object_uri)):
-            results.append((str(s), str(p), str(o)))
+        # Handle object parameter: it could match either URIRef or Literal
+        if object is None:
+            # No object filter - use standard pattern matching
+            for s, p, o in self._graph.triples((subject_uri, predicate_uri, None)):
+                results.append((str(s), str(p), str(o)))
+        else:
+            # Try to match as URIRef first
+            object_uri = URIRef(object)
+            for s, p, o in self._graph.triples((subject_uri, predicate_uri, object_uri)):
+                results.append((str(s), str(p), str(o)))
+
+            # Then try to match as Literal
+            object_literal = Literal(object)
+            for s, p, o in self._graph.triples((subject_uri, predicate_uri, object_literal)):
+                # Check if this triple is already in results to avoid duplicates
+                triple_str = (str(s), str(p), str(o))
+                if triple_str not in results:
+                    results.append(triple_str)
 
         return results
 
@@ -210,6 +228,10 @@ class RDFLibQueryEngine:
         INSERT, DELETE, DROP, CLEAR, LOAD, and CREATE. These indicate unsafe
         operations that should not be allowed in read-only SPARQL queries.
 
+        String literals (quoted values) are excluded from validation to prevent
+        false positives when action words appear in label strings like
+        "Please DELETE this item".
+
         Args:
             query: SPARQL query string to validate
 
@@ -217,10 +239,15 @@ class RDFLibQueryEngine:
             SPARQLValidationError: If query contains any forbidden keywords
         """
         forbidden_keywords = {"INSERT", "DELETE", "DROP", "CLEAR", "LOAD", "CREATE"}
-        query_upper = query.upper()
+
+        # Remove string literals from the query to avoid matching keywords inside strings
+        # This regex matches both single-quoted and double-quoted strings
+        query_without_literals = re.sub(r'["\'].*?["\']', ' ', query)
+        query_upper = query_without_literals.upper()
 
         for keyword in forbidden_keywords:
-            # Use word-boundary regex to detect keywords even in comments
+            # Use word-boundary regex to detect keywords, but not inside identifiers
+            # Now that literals are removed, this won't match keywords in string values
             if re.search(rf"\b{keyword}\b", query_upper):
                 raise SPARQLValidationError(query, f"Forbidden keyword: {keyword}")
 
