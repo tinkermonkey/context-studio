@@ -2,47 +2,60 @@
 LLM provider router implementation.
 
 Routes requests to the appropriate LLM provider based on the model identifier.
-Currently provides a stub implementation for testing and future provider expansion.
+Manages multiple LLM providers (OpenAI, Anthropic, etc.) and routes completion
+requests to the appropriate provider based on model availability.
 
 This adapter implements the LLMProvider port and is used by the Knowledge Extraction
 and LLM Pipeline services.
 """
 
-from dataclasses import dataclass
-from typing import Optional
+from typing import Any
 
+from adapters.llm.openai_provider import OpenAIProvider
+from adapters.llm.anthropic_provider import AnthropicProvider
+from domain.extraction.ports import LLMProvider, LLMResponse
 from utils.logger import get_logger
 
 logger = get_logger(__name__)
-
-
-@dataclass
-class LLMResponse:
-    """Response from an LLM provider."""
-
-    content: str
-    model: str
-    tokens_in: int
-    tokens_out: int
-    duration_ms: float
-    finish_reason: str  # "stop", "length", "error", etc.
 
 
 class LLMProviderRouter:
     """
     Routes LLM requests to appropriate providers based on model.
 
-    This adapter currently provides a stub implementation. In a full implementation,
-    it would route to specific providers (OpenAI, Anthropic, etc.) based on the
-    model identifier.
-
-    For desktop deployments, we may use local models via Ollama or similar,
-    or route to cloud providers based on configuration.
+    Manages multiple LLM providers and routes completion requests to the correct
+    provider based on which models are available. Validates API keys at initialization
+    and logs warnings for invalid configurations without raising exceptions.
     """
 
-    def __init__(self) -> None:
-        """Initialize the LLM provider router."""
-        logger.info("LLM Provider Router initialized (stub implementation)")
+    def __init__(self, openai_api_key: str = "", anthropic_api_key: str = "") -> None:
+        """
+        Initialize the LLM provider router with API keys.
+
+        Args:
+            openai_api_key: OpenAI API key (optional)
+            anthropic_api_key: Anthropic API key (optional)
+        """
+        self._providers: dict[str, LLMProvider] = {}
+
+        if openai_api_key:
+            if not openai_api_key.startswith("sk-"):
+                logger.warning(
+                    "OpenAI API key format invalid — provider marked unavailable"
+                )
+            else:
+                try:
+                    self._providers["openai"] = OpenAIProvider(openai_api_key)
+                    logger.info("OpenAI provider initialized")
+                except Exception as e:
+                    logger.error(f"Failed to initialize OpenAI provider: {str(e)}")
+
+        if anthropic_api_key:
+            try:
+                self._providers["anthropic"] = AnthropicProvider(anthropic_api_key)
+                logger.info("Anthropic provider initialized")
+            except Exception as e:
+                logger.error(f"Failed to initialize Anthropic provider: {str(e)}")
 
     def complete(
         self,
@@ -50,48 +63,78 @@ class LLMProviderRouter:
         user_prompt: str,
         model: str,
         temperature: float = 0.0,
-        max_tokens: Optional[int] = None,
-        response_format: Optional[str] = None,
+        max_tokens: int = 2000,
+        response_format: dict[str, Any] | None = None,
     ) -> LLMResponse:
         """
         Request a completion from an LLM provider.
 
+        Routes to the appropriate provider based on the model identifier.
+
         Args:
-            system_prompt: System prompt to set context
+            system_prompt: System context for the model
             user_prompt: The user's prompt
-            model: Model identifier (e.g., 'gpt-4', 'claude-opus')
+            model: Model identifier (e.g., 'gpt-4o', 'claude-opus-4-6')
             temperature: Sampling temperature (0.0-1.0)
             max_tokens: Maximum tokens in response
-            response_format: Optional response format ("json", "text")
+            response_format: Optional response format specification
 
         Returns:
             LLMResponse with the completion
 
         Raises:
-            NotImplementedError: Currently a stub implementation
+            ValueError: If no provider is available for the requested model
         """
-        raise NotImplementedError(
-            "LLM provider router is not yet implemented. "
-            "Configure an LLM provider (OpenAI, Anthropic, etc.) in the adapters."
+        provider = self._route_to_provider(model)
+        return provider.complete(
+            system_prompt=system_prompt,
+            user_prompt=user_prompt,
+            model=model,
+            temperature=temperature,
+            max_tokens=max_tokens,
+            response_format=response_format,
         )
+
+    def _route_to_provider(self, model: str) -> LLMProvider:
+        """
+        Find the appropriate provider for a model.
+
+        Args:
+            model: Model identifier to route
+
+        Returns:
+            LLMProvider instance that supports the model
+
+        Raises:
+            ValueError: If no provider supports the model
+        """
+        for provider in self._providers.values():
+            if provider.is_model_available(model):
+                return provider
+        raise ValueError(f"No provider available for model: {model}")
 
     def is_model_available(self, model: str) -> bool:
         """
-        Check if a model is available.
+        Check if a model is available from any provider.
 
         Args:
             model: Model identifier to check
 
         Returns:
-            True if the model is available, False otherwise
+            True if any configured provider supports the model, False otherwise
         """
-        return False  # Stub: no models available yet
+        return any(p.is_model_available(model) for p in self._providers.values())
 
     def list_available_models(self) -> list[str]:
         """
         List all available models from configured providers.
 
+        Returns the union of models from all configured providers.
+
         Returns:
             List of available model identifiers
         """
-        return []  # Stub: no models available yet
+        models = []
+        for provider in self._providers.values():
+            models.extend(provider.list_available_models())
+        return models

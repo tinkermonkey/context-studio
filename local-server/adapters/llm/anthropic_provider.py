@@ -1,0 +1,124 @@
+"""
+Anthropic LLM provider implementation.
+
+Provides integration with Anthropic's Claude API for language model completions.
+"""
+
+import time
+from typing import Any
+
+try:
+    import anthropic
+except ImportError:
+    anthropic = None
+
+from domain.extraction.ports import LLMResponse
+from utils.logger import get_logger
+
+logger = get_logger(__name__)
+
+
+class AnthropicProvider:
+    """
+    LLM provider for Anthropic Claude models.
+
+    Implements the LLMProvider protocol to provide access to Anthropic's
+    Claude models including Claude Opus, Sonnet, and Haiku.
+    """
+
+    AVAILABLE_MODELS = [
+        "claude-opus-4-6",
+        "claude-sonnet-4-6",
+        "claude-haiku-4-5-20251001",
+    ]
+
+    def __init__(self, api_key: str) -> None:
+        """
+        Initialize Anthropic provider with API key.
+
+        Args:
+            api_key: Anthropic API key for authentication
+        """
+        self._api_key = api_key
+        if anthropic is None:
+            logger.warning("anthropic package not installed — completions will fail")
+            self._client = None
+        else:
+            self._client = anthropic.Anthropic(api_key=api_key)
+
+    def complete(
+        self,
+        system_prompt: str,
+        user_prompt: str,
+        model: str,
+        temperature: float = 0.0,
+        max_tokens: int = 2000,
+        response_format: dict[str, Any] | None = None,
+    ) -> LLMResponse:
+        """
+        Request a completion from Anthropic Claude.
+
+        Args:
+            system_prompt: System context for the model
+            user_prompt: User message to respond to
+            model: Model identifier (e.g., 'claude-opus-4-6')
+            temperature: Sampling temperature (0.0–1.0)
+            max_tokens: Maximum tokens to generate
+            response_format: Optional JSON schema for structured output (not used by Anthropic)
+
+        Returns:
+            LLMResponse with generated content and metadata
+
+        Raises:
+            RuntimeError: If Anthropic client is not initialized or API call fails
+        """
+        if self._client is None:
+            raise RuntimeError("Anthropic client not initialized — package not installed")
+
+        if not self.is_model_available(model):
+            raise ValueError(f"Model {model} is not available from Anthropic provider")
+
+        start_time = time.time()
+
+        try:
+            response = self._client.messages.create(
+                model=model,
+                max_tokens=max_tokens,
+                temperature=temperature,
+                system=system_prompt,
+                messages=[{"role": "user", "content": user_prompt}],
+            )
+
+            duration_ms = (time.time() - start_time) * 1000
+
+            return LLMResponse(
+                content=response.content[0].text if response.content else "",
+                tokens_in=response.usage.input_tokens,
+                tokens_out=response.usage.output_tokens,
+                finish_reason=response.stop_reason or "unknown",
+                model=model,
+            )
+        except Exception as e:
+            logger.error(f"Anthropic API error: {str(e)}")
+            raise
+
+    def is_model_available(self, model: str) -> bool:
+        """
+        Check if a model is available from Anthropic.
+
+        Args:
+            model: Model identifier to check
+
+        Returns:
+            True if the model is in the available models list, False otherwise
+        """
+        return model in self.AVAILABLE_MODELS
+
+    def list_available_models(self) -> list[str]:
+        """
+        Get list of available Anthropic models.
+
+        Returns:
+            List of available model identifiers
+        """
+        return list(self.AVAILABLE_MODELS)
