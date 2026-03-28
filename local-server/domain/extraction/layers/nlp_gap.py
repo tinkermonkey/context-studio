@@ -53,7 +53,7 @@ def execute(input: LayerInput, nlp: NLPProcessor) -> LayerOutput:
             source_layer=2,
             # Use 0.75 default for NLP extraction - represents typical reliability
             # of en_core_web_sm model for general entity recognition
-            confidence=getattr(nlp_entity, "confidence", 0.75),
+            confidence=0.75,
             uri=nlp_entity.linked_uri,
             properties={
                 "char_offset_start": nlp_entity.start,

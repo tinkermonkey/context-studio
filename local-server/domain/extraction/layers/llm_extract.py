@@ -76,43 +76,49 @@ JSON Array:"""
     # Parse LLM response
     response_text = response.content.strip()
 
-    # Try to extract JSON array from response using proper bracket matching
-    json_match = None
-    if "[" in response_text:
-        start_idx = response_text.index("[")
-        # Find matching closing bracket by counting bracket depth
-        bracket_count = 0
-        end_idx = None
-        for i in range(start_idx, len(response_text)):
-            if response_text[i] == "[":
-                bracket_count += 1
-            elif response_text[i] == "]":
-                bracket_count -= 1
-                if bracket_count == 0:
-                    end_idx = i + 1
-                    break
-
-        if end_idx is not None:
-            json_match = response_text[start_idx:end_idx]
-
-    if json_match:
+    # Try to parse response as-is first
+    entity_list = None
+    if response_text.startswith("["):
         try:
-            entity_list = json.loads(json_match)
-            for item in entity_list:
-                if isinstance(item, dict) and "label" in item:
-                    extracted = ExtractedEntity(
-                        label=item.get("label", "").strip(),
-                        entity_type=item.get("type", "UNKNOWN"),
-                        source_layer=1,
-                        confidence=float(item.get("confidence", 0.5)),
-                        uri=item.get("uri"),
-                        description=item.get("description"),
-                    )
-                    if extracted.label:  # Only add if label is non-empty
-                        entities.append(extracted)
-        except (json.JSONDecodeError, ValueError):
-            # Invalid JSON found - return empty entities
-            pass
+            entity_list = json.loads(response_text)
+        except json.JSONDecodeError:
+            pass  # Fall through to extraction logic
+
+    # If direct parse failed, extract JSON array from response text
+    if entity_list is None:
+        json_match = None
+        if "[" in response_text:
+            start_idx = response_text.index("[")
+            # Use rindex to find the LAST ], which is more resilient to brackets in string values
+            try:
+                end_idx = response_text.rindex("]") + 1
+                # Only accept if ] comes after [
+                if end_idx > start_idx:
+                    json_match = response_text[start_idx:end_idx]
+            except ValueError:
+                pass  # No closing bracket found
+
+        if json_match:
+            try:
+                entity_list = json.loads(json_match)
+            except json.JSONDecodeError:
+                # Invalid JSON found - return empty entities
+                pass
+
+    # Parse extracted entity list
+    if entity_list and isinstance(entity_list, list):
+        for item in entity_list:
+            if isinstance(item, dict) and "label" in item:
+                extracted = ExtractedEntity(
+                    label=item.get("label", "").strip(),
+                    entity_type=item.get("type", "UNKNOWN"),
+                    source_layer=1,
+                    confidence=float(item.get("confidence", 0.5)),
+                    uri=item.get("uri"),
+                    description=item.get("description"),
+                )
+                if extracted.label:  # Only add if label is non-empty
+                    entities.append(extracted)
 
     return LayerOutput(
         entities=entities,
