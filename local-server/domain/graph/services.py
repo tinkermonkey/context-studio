@@ -447,10 +447,7 @@ class GraphAnalysisService:
         # Verify all nodes exist in the graph by attempting to get neighbors
         # neighbors() raises NodeNotFoundError if node doesn't exist
         for node_id in node_ids:
-            try:
-                self._graph_engine.neighbors(node_id)
-            except NodeNotFoundError as exc:
-                raise NodeNotFoundError(node_id) from exc
+            self._graph_engine.neighbors(node_id)
 
         # Extract subgraph with the specified nodes
         subgraph = self._graph_engine.subgraph(node_ids)
@@ -488,10 +485,7 @@ class GraphAnalysisService:
 
         # Verify the center node exists by calling neighbors with default depth=1
         # neighbors() raises NodeNotFoundError if node_id does not exist in the graph
-        try:
-            self._graph_engine.neighbors(center_node_id)
-        except NodeNotFoundError as exc:
-            raise NodeNotFoundError(center_node_id) from exc
+        self._graph_engine.neighbors(center_node_id)
 
         # Get all nodes within the specified depth
         # neighbors() with depth=N returns all nodes within N hops (excluding the center node)
