@@ -161,8 +161,8 @@ class ExtractionService:
         # Deduplicate entities across layers
         deduplicated = self._deduplicate(all_entities)
 
-        # Check if all layers failed (all have success=False)
-        if all(not layer.success for layer in layers_executed):
+        # Check if no entities were extracted across all layers
+        if not deduplicated:
             raise ExtractionError("All extraction layers failed to extract entities")
 
         # Calculate execution time

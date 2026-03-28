@@ -11,11 +11,10 @@ import os
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
-import pytest
 
 from domain.extraction import layers
 from domain.extraction.entities import ExtractedEntity
-from domain.extraction.value_objects import LayerInput, LayerOutput
+from domain.extraction.value_objects import LayerInput
 from domain.extraction.ports import LLMResponse, NLPEntity, ReferenceResult
 
 
