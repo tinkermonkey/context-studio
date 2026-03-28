@@ -5,10 +5,9 @@ Provides persistence for pipeline configurations and execution records in operat
 Handles domain-to-ORM mapping, session management, and query logic.
 """
 
-from datetime import datetime
 from typing import Optional
 
-from sqlalchemy.orm import sessionmaker, Session
+from sqlalchemy.orm import sessionmaker
 
 from domain.pipeline.entities import PipelineConfiguration, Execution
 from adapters.persistence.sqlite.operations.models import (

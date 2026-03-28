@@ -20,8 +20,6 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspa
 from domain.pipeline.entities import PipelineConfiguration, Execution
 from adapters.persistence.sqlite.operations.models import (
     OperationsBase,
-    PipelineConfigurationModel,
-    ExecutionModel,
 )
 from adapters.persistence.sqlite.pipeline_repo import SQLitePipelineRepository
 
