@@ -30,7 +30,7 @@ from fastapi.testclient import TestClient
 from domain.pipeline.services import PipelineService
 from domain.extraction.ports import LLMProvider
 from domain.ports import EventPublisher
-from adapters.persistence.sqlite.operations.models import Base
+from adapters.persistence.sqlite.operations.models import OperationsBase
 from adapters.persistence.sqlite.pipeline_repo import SQLitePipelineRepository
 from adapters.events.in_process import InProcessEventPublisher
 from adapters.web.pipeline_routes import router
@@ -59,7 +59,7 @@ def temp_ops_db():
         db_url = f"sqlite:///{db_path}"
 
         engine = create_engine(db_url)
-        Base.metadata.create_all(engine)
+        OperationsBase.metadata.create_all(engine)
 
         yield db_url
 

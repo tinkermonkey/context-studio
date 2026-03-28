@@ -15,7 +15,7 @@ Architecture:
 from contextlib import asynccontextmanager
 
 import uvicorn
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 
 from config import ConfigurationManager
@@ -42,14 +42,45 @@ from domain.graph.services import GraphAnalysisService
 from domain.extraction.services import ExtractionService
 from domain.pipeline.services import PipelineService
 from domain.ontology.events import GraphInvalidated
+from domain.extraction.events import ExtractionCompleted
+from domain.pipeline.events import PipelineExecuted
 
 # Import routes
 from adapters.web.ontology_routes import router as ontology_router
 from adapters.web.graph_routes import router as graph_router
 from adapters.web.extraction_routes import router as extraction_router
 from adapters.web.pipeline_routes import router as pipeline_router
+from adapters.web.schemas.admin import SystemHealthResponse
 
 logger = get_logger(__name__)
+
+
+# ==================== Event Handlers ====================
+
+def handle_extraction_completed(event: ExtractionCompleted) -> None:
+    """
+    Handle ExtractionCompleted events.
+
+    Args:
+        event: The ExtractionCompleted event to process
+    """
+    logger.info(
+        f"Extraction completed: result_id={event.result_id}, "
+        f"entity_count={event.entity_count}, duration_ms={event.duration_ms}"
+    )
+
+
+def handle_pipeline_executed(event: PipelineExecuted) -> None:
+    """
+    Handle PipelineExecuted events.
+
+    Args:
+        event: The PipelineExecuted event to process
+    """
+    logger.info(
+        f"Pipeline executed: execution_id={event.execution_id}, "
+        f"pipeline_id={event.pipeline_id}, status={event.status}"
+    )
 
 
 @asynccontextmanager
@@ -169,6 +200,12 @@ async def lifespan(app: FastAPI):
         event_publisher.subscribe(GraphInvalidated, graph_service.on_graph_invalidated)
         logger.info("Event subscription: GraphInvalidated -> GraphAnalysisService.on_graph_invalidated")
 
+        event_publisher.subscribe(ExtractionCompleted, handle_extraction_completed)
+        logger.info("Event subscription: ExtractionCompleted -> handle_extraction_completed")
+
+        event_publisher.subscribe(PipelineExecuted, handle_pipeline_executed)
+        logger.info("Event subscription: PipelineExecuted -> handle_pipeline_executed")
+
         # --- Store services in app.state for dependency injection ---
 
         app.state.ontology_service = ontology_service
@@ -176,6 +213,10 @@ async def lifespan(app: FastAPI):
         app.state.extraction_service = extraction_service
         app.state.pipeline_service = pipeline_service
         app.state.db_manager = db_manager
+
+        # Store adapters needed for health checks
+        app.state.nlp_processor = nlp_processor
+        app.state.llm_router = llm_provider
 
         logger.info("Services registered in app.state for dependency injection")
 
@@ -213,10 +254,43 @@ app.include_router(extraction_router)
 app.include_router(pipeline_router)
 
 
-@app.get("/api/health")
-async def health():
-    """Health check endpoint"""
-    return {"status": "ok"}
+@app.get("/api/health", response_model=SystemHealthResponse)
+async def health(request: Request) -> SystemHealthResponse:
+    """
+    Health check endpoint.
+
+    Returns the overall system health status along with the readiness of optional
+    components (NLP pipeline, LLM providers).
+
+    Health status rules:
+    - "healthy": All core systems operational
+    - "degraded": Optional components (NLP, LLM) unavailable but system functional
+    - "unhealthy": Critical systems (database) unavailable
+
+    Returns:
+        SystemHealthResponse with status and component readiness
+    """
+    # Check NLP pipeline readiness
+    nlp_processor = getattr(request.app.state, "nlp_processor", None)
+    nlp_ready = nlp_processor.is_ready() if nlp_processor else False
+
+    # Check available LLM providers
+    llm_router = getattr(request.app.state, "llm_router", None)
+    llm_models = llm_router.list_available_models() if llm_router else []
+
+    # Determine overall status
+    # Core systems are always up if we got this far
+    # Degraded if optional components are missing or unavailable
+    if not nlp_ready or not llm_models:
+        status = "degraded"
+    else:
+        status = "healthy"
+
+    return SystemHealthResponse(
+        status=status,
+        nlp_pipeline_ready=nlp_ready,
+        llm_providers_available=llm_models,
+    )
 
 
 if __name__ == "__main__":

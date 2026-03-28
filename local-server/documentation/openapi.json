@@ -2161,7 +2161,7 @@
           "pipeline"
         ],
         "summary": "Get Pipeline Executions",
-        "description": "Retrieve execution history for a pipeline configuration.\n\nResults are returned in reverse chronological order (most recent first).\n\nArgs:\n    pipeline_id: The pipeline configuration ID\n    service: PipelineService from dependency injection\n\nReturns:\n    List of ExecutionResponse objects, up to 50 most recent\n\nRaises:\n    HTTPException: 404 if configuration not found (validated by get_executions call)",
+        "description": "Retrieve execution history for a pipeline configuration.\n\nResults are returned in reverse chronological order (most recent first).\n\nArgs:\n    pipeline_id: The pipeline configuration ID\n    service: PipelineService from dependency injection\n\nReturns:\n    List of ExecutionResponse objects, up to 50 most recent\n\nRaises:\n    HTTPException: 404 if configuration not found",
         "operationId": "get_pipeline_executions_api_pipelines__pipeline_id__executions_get",
         "parameters": [
           {
@@ -2205,14 +2205,16 @@
     "/api/health": {
       "get": {
         "summary": "Health",
-        "description": "Health check endpoint",
+        "description": "Health check endpoint.\n\nReturns the overall system health status along with the readiness of optional\ncomponents (NLP pipeline, LLM providers).\n\nHealth status rules:\n- \"healthy\": All core systems operational\n- \"degraded\": Optional components (NLP, LLM) unavailable but system functional\n- \"unhealthy\": Critical systems (database) unavailable\n\nReturns:\n    SystemHealthResponse with status and component readiness",
         "operationId": "health_api_health_get",
         "responses": {
           "200": {
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/SystemHealthResponse"
+                }
               }
             }
           }
@@ -2805,6 +2807,7 @@
           },
           "timestamp": {
             "type": "string",
+            "format": "date-time",
             "title": "Timestamp",
             "description": "ISO 8601 execution timestamp"
           }
@@ -3425,11 +3428,13 @@
           },
           "created_at": {
             "type": "string",
+            "format": "date-time",
             "title": "Created At",
             "description": "ISO 8601 creation timestamp"
           },
           "last_updated": {
             "type": "string",
+            "format": "date-time",
             "title": "Last Updated",
             "description": "ISO 8601 last update timestamp"
           }
@@ -3895,6 +3900,35 @@
         ],
         "title": "SubgraphResultResponse",
         "description": "Response containing depth-based subgraph extraction result."
+      },
+      "SystemHealthResponse": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "description": "Overall health status: \"healthy\", \"degraded\", or \"unhealthy\""
+          },
+          "nlp_pipeline_ready": {
+            "type": "boolean",
+            "title": "Nlp Pipeline Ready",
+            "description": "Whether spaCy NLP model is loaded and ready"
+          },
+          "llm_providers_available": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Llm Providers Available",
+            "description": "List of available LLM model identifiers"
+          }
+        },
+        "type": "object",
+        "required": [
+          "status",
+          "nlp_pipeline_ready"
+        ],
+        "title": "SystemHealthResponse",
+        "description": "Response containing system health status and capabilities."
       },
       "TaxonomyCreateRequest": {
         "properties": {

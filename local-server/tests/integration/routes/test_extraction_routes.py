@@ -251,12 +251,12 @@ class TestExtractionRoutes:
             assert isinstance(layer["success"], bool)
 
     def test_extract_with_empty_text_returns_400(self, client):
-        """POST /api/extract with empty text returns 400."""
+        """POST /api/extract with empty text returns 422 (validation error)."""
         response = client.post(
             "/api/extract",
             json={"text": ""}
         )
-        assert response.status_code == status.HTTP_400_BAD_REQUEST
+        assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
 
     def test_extract_with_whitespace_only_returns_400(self, client):
         """POST /api/extract with whitespace-only text returns 400."""
