@@ -1,8 +1,8 @@
 """add pipeline_configurations and pipeline_executions tables
 
-Revision ID: 001
+Revision ID: 619a27b89a15
 Revises:
-Create Date: 2026-03-28 21:45:00.000000
+Create Date: 2026-03-28 22:00:00.000000
 
 """
 from alembic import op
@@ -10,9 +10,9 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = '001'
+revision = '619a27b89a15'
 down_revision = None
-branch_labels = None
+branch_labels = ('operations',)
 depends_on = None
 
 
