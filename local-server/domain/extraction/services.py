@@ -273,7 +273,6 @@ class ExtractionService:
                 continue
 
             # Find all entities similar to this one
-            group = [entity]
             used_indices.add(i)
 
             for j in range(i + 1, len(sorted_entities)):

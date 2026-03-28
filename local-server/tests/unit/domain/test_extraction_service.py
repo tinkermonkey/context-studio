@@ -14,12 +14,10 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(
 import pytest
 
 from domain.extraction.services import ExtractionService
-from domain.extraction.entities import ExtractedEntity, ExtractionResult
+from domain.extraction.entities import ExtractedEntity
 from domain.extraction.events import ExtractionCompleted
 from domain.extraction.exceptions import ExtractionError
-from domain.extraction.ports import LLMProvider, NLPProcessor, ReferenceSource
 from domain.extraction.ports import LLMResponse, NLPResult, NLPEntity
-from domain.extraction.value_objects import LayerOutput
 from tests.fakes.fake_event_publisher import FakeEventPublisher
 
 
