@@ -1,5 +1,7 @@
 """spaCy NLP processor adapter for named entity recognition and tokenization."""
 
+from typing import Any, Optional
+
 try:
     import spacy
     HAS_SPACY = True
@@ -7,7 +9,7 @@ except ImportError:
     HAS_SPACY = False
     spacy = None  # type: ignore[assignment]
 
-from domain.extraction.ports import NLPProcessor, NLPResult, NLPEntity
+from domain.extraction.ports import NLPResult, NLPEntity
 from utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -30,7 +32,7 @@ class SpacyNLPProcessor:
         Attempts to load the configured spaCy model. If loading fails, logs a warning
         and continues in a degraded state where is_ready() returns False.
         """
-        self._nlp = None
+        self._nlp: Optional[Any] = None
         if not HAS_SPACY:
             logger.warning("spaCy not installed. NLP processing will be unavailable.")
             return
@@ -67,6 +69,7 @@ class SpacyNLPProcessor:
         if not self.is_ready():
             return NLPResult(tokens=[], entities=[], language="unknown")
 
+        assert self._nlp is not None
         doc = self._nlp(text)
         tokens = [token.text for token in doc]
         entities = self._extract_from_doc(doc)
@@ -87,6 +90,7 @@ class SpacyNLPProcessor:
         if not self.is_ready():
             return []
 
+        assert self._nlp is not None
         doc = self._nlp(text)
         return self._extract_from_doc(doc)
 
