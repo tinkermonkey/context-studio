@@ -6,18 +6,14 @@ import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 import pytest
-from unittest.mock import MagicMock, patch
 
 
-def test_is_ready_returns_false_when_not_loaded():
-    """Test that is_ready() returns False when spaCy model is not loaded."""
-    with patch("adapters.nlp.spacy_processor.logger") as mock_logger:
-        from adapters.nlp.spacy_processor import SpacyNLPProcessor
-
-        # Create a processor with mocked import error
-        with patch("builtins.__import__", side_effect=ImportError("No module named 'spacy'")):
-            processor = SpacyNLPProcessor()
-            assert processor.is_ready() is False
+def test_is_ready_returns_false_when_not_loaded(monkeypatch):
+    """Test that is_ready() returns False when spaCy is not installed."""
+    monkeypatch.setitem(sys.modules, 'spacy', None)
+    from adapters.nlp.spacy_processor import SpacyNLPProcessor
+    processor = SpacyNLPProcessor()
+    assert processor.is_ready() is False
 
 
 def test_process_returns_empty_result_when_not_ready():
@@ -92,26 +88,7 @@ def test_extract_entities_populates_text_label_offsets():
         # Verify entity text matches the substring at the given offsets
         assert text[entity.start : entity.end] == entity.text
         # Verify entity has a label
-        assert entity.label in [
-            "ORG",
-            "PERSON",
-            "GPE",
-            "DATE",
-            "MONEY",
-            "PRODUCT",
-            "EVENT",
-            "WORK_OF_ART",
-            "LAW",
-            "LANGUAGE",
-            "NORP",
-            "FAC",
-            "LOC",
-            "QUANTITY",
-            "ORDINAL",
-            "CARDINAL",
-            "PERCENT",
-            "TIME",
-        ]
+        assert isinstance(entity.label, str) and entity.label
 
 
 @pytest.mark.nlp

@@ -1,0 +1,4 @@
+[tool.pytest.ini_options]
+markers = [
+    "nlp: marks tests as requiring NLP dependencies (deselect with '-m \"not nlp\"')",
+]
