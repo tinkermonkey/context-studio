@@ -8,7 +8,7 @@ embedding services, LLM providers, NLP processors, and reference sources.
 from __future__ import annotations
 
 import time
-from datetime import datetime
+from datetime import datetime, timezone
 from uuid import uuid4
 
 from domain.ports import EventPublisher
@@ -171,7 +171,7 @@ class ExtractionService:
             extracted_entities=deduplicated,
             layers_executed=layers_executed,
             total_duration_ms=duration_ms,
-            created_at=datetime.now(),
+            created_at=datetime.now(timezone.utc),
         )
 
         # Publish completion event

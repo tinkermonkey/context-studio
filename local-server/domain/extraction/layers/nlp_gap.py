@@ -28,51 +28,43 @@ def execute(input: LayerInput, nlp: NLPProcessor) -> LayerOutput:
     if not input.text or not input.text.strip():
         return LayerOutput(entities=entities, metadata={"reason": "empty_text"})
 
-    try:
-        # Check if NLP processor is ready
-        if not nlp.is_ready():
-            return LayerOutput(
-                entities=[],
-                metadata={"reason": "nlp_processor_not_ready"},
-            )
-
-        # Extract entities using NLP
-        nlp_entities = nlp.extract_entities(input.text)
-
-        # Get set of already extracted entity texts (normalized)
-        existing_labels = {e.label.lower().strip() for e in input.existing_entities}
-
-        # Convert NLP entities to our domain model
-        for nlp_entity in nlp_entities:
-            # Skip if already extracted in prior layers
-            if nlp_entity.text.lower().strip() in existing_labels:
-                continue
-
-            extracted = ExtractedEntity(
-                label=nlp_entity.text.strip(),
-                entity_type=nlp_entity.label,  # spaCy label
-                source_layer=2,
-                confidence=1.0,  # NLP model assertions don't have explicit confidence
-                uri=nlp_entity.linked_uri,
-                properties={
-                    "char_offset_start": nlp_entity.start,
-                    "char_offset_end": nlp_entity.end,
-                },
-            )
-            entities.append(extracted)
-
-        return LayerOutput(
-            entities=entities,
-            metadata={
-                "nlp_entities_found": len(nlp_entities),
-                "duplicates_skipped": len(nlp_entities) - len(entities),
-                "processor_ready": True,
-            },
-        )
-
-    except Exception as exc:
-        # Layer error does not prevent subsequent layers from executing
+    # Check if NLP processor is ready
+    if not nlp.is_ready():
         return LayerOutput(
             entities=[],
-            metadata={"error": str(exc), "error_type": type(exc).__name__},
+            metadata={"reason": "nlp_processor_not_ready"},
         )
+
+    # Extract entities using NLP
+    nlp_entities = nlp.extract_entities(input.text)
+
+    # Get set of already extracted entity texts (normalized)
+    existing_labels = {e.label.lower().strip() for e in input.existing_entities}
+
+    # Convert NLP entities to our domain model
+    for nlp_entity in nlp_entities:
+        # Skip if already extracted in prior layers
+        if nlp_entity.text.lower().strip() in existing_labels:
+            continue
+
+        extracted = ExtractedEntity(
+            label=nlp_entity.text.strip(),
+            entity_type=nlp_entity.label,  # spaCy label
+            source_layer=2,
+            confidence=1.0,  # NLP model assertions don't have explicit confidence
+            uri=nlp_entity.linked_uri,
+            properties={
+                "char_offset_start": nlp_entity.start,
+                "char_offset_end": nlp_entity.end,
+            },
+        )
+        entities.append(extracted)
+
+    return LayerOutput(
+        entities=entities,
+        metadata={
+            "nlp_entities_found": len(nlp_entities),
+            "duplicates_skipped": len(nlp_entities) - len(entities),
+            "processor_ready": True,
+        },
+    )

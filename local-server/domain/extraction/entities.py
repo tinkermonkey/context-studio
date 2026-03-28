@@ -4,7 +4,7 @@ Extraction domain entities.
 Mutable dataclasses representing the core domain model for knowledge extraction.
 """
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import datetime, timezone
 from uuid import uuid4
 
 
@@ -51,4 +51,4 @@ class ExtractionResult:
     extracted_entities: list[ExtractedEntity] = field(default_factory=list)
     layers_executed: list = field(default_factory=list)  # list[ExtractionLayerResult]
     total_duration_ms: int = 0
-    created_at: datetime = field(default_factory=datetime.now)
+    created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
