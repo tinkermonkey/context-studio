@@ -13,9 +13,9 @@ from datetime import datetime, timezone
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
+from domain.ports import EventPublisher
 from domain.ontology.ports import (
     EmbeddingService,
-    EventPublisher,
     OntologyRepository,
 )
 from domain.ontology.events import ClassCreated

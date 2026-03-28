@@ -19,7 +19,6 @@ from .events import (
     ClassDeleted,
     ClassMoved,
     ClassUpdated,
-    DomainEvent,
     GraphInvalidated,
     PropertyDefinitionCreated,
     RelationshipCreated,
@@ -39,7 +38,6 @@ from .exceptions import (
 )
 from .ports import (
     EmbeddingService,
-    EventPublisher,
     OntologyRepository,
 )
 from .value_objects import (
@@ -60,7 +58,6 @@ __all__ = [
     "Relationship",
     "PropertyDefinition",
     # Domain Events
-    "DomainEvent",
     "TaxonomyCreated",
     "TaxonomyUpdated",
     "TaxonomyDeleted",
@@ -78,7 +75,6 @@ __all__ = [
     # Ports (Protocols)
     "OntologyRepository",
     "EmbeddingService",
-    "EventPublisher",
     # Value Objects
     "NodeType",
     "ExternalReference",

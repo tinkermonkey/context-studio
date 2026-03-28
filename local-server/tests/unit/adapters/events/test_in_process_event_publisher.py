@@ -15,7 +15,8 @@ import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))))
 
 from adapters.events.in_process import InProcessEventPublisher
-from domain.ontology.events import ClassCreated, ClassUpdated, DomainEvent
+from domain.events import DomainEvent
+from domain.ontology.events import ClassCreated, ClassUpdated
 
 
 class TestInProcessEventPublisher:

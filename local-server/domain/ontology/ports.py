@@ -15,8 +15,6 @@ from typing import Any, Protocol, Sequence
 
 from .entities import Class, ConceptScheme, Individual, PropertyDefinition, Relationship, Taxonomy
 from .value_objects import SearchCriteria
-from domain.events import DomainEvent
-from domain.ports import EventPublisher
 
 
 class OntologyRepository(Protocol):
