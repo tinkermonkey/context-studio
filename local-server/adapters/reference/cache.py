@@ -4,7 +4,7 @@ import json
 import sqlite3
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Literal, cast, overload
+from typing import Literal, overload
 
 from domain.extraction.ports import ReferenceSource, ReferenceResult, ReferenceRelation
 from utils.logger import get_logger

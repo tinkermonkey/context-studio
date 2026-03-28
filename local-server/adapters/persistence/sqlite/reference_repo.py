@@ -54,7 +54,7 @@ class LocalReferenceRepository:
             with sqlite3.connect(self._db_path) as conn:
                 conn.execute(
                     """
-                    CREATE TABLE IF NOT EXISTS references (
+                    CREATE TABLE IF NOT EXISTS "references" (
                         id INTEGER PRIMARY KEY,
                         uri TEXT UNIQUE NOT NULL,
                         label TEXT NOT NULL,
@@ -66,19 +66,19 @@ class LocalReferenceRepository:
 
                 conn.execute(
                     """
-                    CREATE INDEX IF NOT EXISTS idx_references_uri ON references(uri)
+                    CREATE INDEX IF NOT EXISTS idx_references_uri ON "references"(uri)
                     """
                 )
 
                 conn.execute(
                     """
-                    CREATE INDEX IF NOT EXISTS idx_references_label ON references(label)
+                    CREATE INDEX IF NOT EXISTS idx_references_label ON "references"(label)
                     """
                 )
 
                 conn.execute(
                     """
-                    CREATE TABLE IF NOT EXISTS reference_relations (
+                    CREATE TABLE IF NOT EXISTS "reference_relations" (
                         id INTEGER PRIMARY KEY,
                         subject_uri TEXT NOT NULL,
                         predicate TEXT NOT NULL,
@@ -91,7 +91,7 @@ class LocalReferenceRepository:
                 conn.execute(
                     """
                     CREATE INDEX IF NOT EXISTS idx_relations_subject
-                    ON reference_relations(subject_uri)
+                    ON "reference_relations"(subject_uri)
                     """
                 )
 
@@ -117,7 +117,7 @@ class LocalReferenceRepository:
                 cursor = conn.execute(
                     """
                     SELECT uri, label, description, source
-                    FROM references
+                    FROM "references"
                     WHERE label LIKE ? OR description LIKE ?
                     LIMIT ?
                     """,
@@ -157,7 +157,7 @@ class LocalReferenceRepository:
                 cursor = conn.execute(
                     """
                     SELECT subject_uri, predicate, object_uri, source
-                    FROM reference_relations
+                    FROM "reference_relations"
                     WHERE subject_uri = ?
                     LIMIT ?
                     """,
@@ -199,7 +199,7 @@ class LocalReferenceRepository:
             with sqlite3.connect(self._db_path) as conn:
                 conn.execute(
                     """
-                    INSERT OR REPLACE INTO references (uri, label, description, source)
+                    INSERT OR REPLACE INTO "references" (uri, label, description, source)
                     VALUES (?, ?, ?, ?)
                     """,
                     (uri, label, description, source),
@@ -230,7 +230,7 @@ class LocalReferenceRepository:
             with sqlite3.connect(self._db_path) as conn:
                 conn.execute(
                     """
-                    INSERT OR IGNORE INTO reference_relations
+                    INSERT OR IGNORE INTO "reference_relations"
                     (subject_uri, predicate, object_uri, source)
                     VALUES (?, ?, ?, ?)
                     """,
