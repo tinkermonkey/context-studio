@@ -56,6 +56,18 @@ class FakeReferenceSource:
             for i in range(min(limit, 2))
         ]
 
+    async def search_async(self, term: str, limit: int = 10) -> list[ReferenceResult]:
+        """Async search implementation."""
+        return self.search(term, limit)
+
+    async def get_relations_async(self, uri: str, limit: int = 10) -> list[ReferenceRelation]:
+        """Async get relations implementation."""
+        return self.get_relations(uri, limit)
+
+    async def is_available_async(self) -> bool:
+        """Async is available implementation."""
+        return self.is_available()
+
 
 class TestCachedReferenceSourceInit:
     """Test CachedReferenceSource initialization."""
