@@ -4,6 +4,7 @@ OpenAI LLM provider implementation.
 Provides integration with OpenAI's API for language model completions.
 """
 
+import time
 from typing import Any
 
 try:
@@ -97,13 +98,16 @@ class OpenAIProvider:
             if timeout is not None:
                 kwargs["timeout"] = timeout
 
+            start_time = time.perf_counter()
             response = self._client.chat.completions.create(**kwargs)  # type: ignore[union-attr]
+            elapsed_time = time.perf_counter() - start_time
+            duration_ms = elapsed_time * 1000
 
             return LLMResponse(
                 content=response.choices[0].message.content or "",
                 tokens_in=response.usage.prompt_tokens,
                 tokens_out=response.usage.completion_tokens,
-                duration_ms=0.0,
+                duration_ms=duration_ms,
                 finish_reason=response.choices[0].finish_reason or "unknown",
                 model=model,
             )

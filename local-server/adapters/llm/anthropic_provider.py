@@ -4,6 +4,7 @@ Anthropic LLM provider implementation.
 Provides integration with Anthropic's Claude API for language model completions.
 """
 
+import time
 from typing import Any
 
 try:
@@ -94,13 +95,16 @@ class AnthropicProvider:
             if timeout is not None:
                 kwargs["timeout"] = timeout
 
+            start_time = time.perf_counter()
             response = self._client.messages.create(**kwargs)  # type: ignore[union-attr]
+            elapsed_time = time.perf_counter() - start_time
+            duration_ms = elapsed_time * 1000
 
             return LLMResponse(
                 content=response.content[0].text if response.content else "",
                 tokens_in=response.usage.input_tokens,
                 tokens_out=response.usage.output_tokens,
-                duration_ms=0.0,
+                duration_ms=duration_ms,
                 finish_reason=response.stop_reason or "unknown",
                 model=model,
             )

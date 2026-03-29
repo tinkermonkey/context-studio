@@ -78,8 +78,9 @@ class SpacyNLPProcessor:
         doc = self._nlp(text)
         tokens = [token.text for token in doc]
         entities = self._extract_from_doc(doc)
+        noun_chunks = [chunk.text for chunk in doc.noun_chunks]
 
-        return NLPResult(tokens=tokens, entities=entities, noun_chunks=[], language="en")
+        return NLPResult(tokens=tokens, entities=entities, noun_chunks=noun_chunks, language="en")
 
     def extract_entities(self, text: str) -> list[NLPEntity]:
         """
