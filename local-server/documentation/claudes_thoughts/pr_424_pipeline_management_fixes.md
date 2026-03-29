@@ -107,18 +107,21 @@ execution = Execution(
 
 ## Issue 3: Missing ExecutionResponse Fields
 
-### Problem
-`adapters/web/schemas/pipeline.py:72-86` — The `ExecutionResponse` schema omitted `provider` and `model` fields that exist on the domain `Execution` entity, causing API responses to be incomplete.
+### Status
+**Already Completed** — The `provider` and `model` fields were added to the `ExecutionResponse` schema in a prior commit. This commit does not modify these fields.
 
-### Solution
-Added `provider` and `model` fields to the response schema:
+### Context
+`adapters/web/schemas/pipeline.py:78-79` — The `ExecutionResponse` schema includes `provider` and `model` fields that correspond to the domain `Execution` entity. These fields were necessary to ensure API responses contain complete execution metadata for client tracking.
 
-**Before:**
+### Verification
+The fields are present in the current schema:
 ```python
 class ExecutionResponse(BaseModel):
     id: str
     pipeline_config_id: str
     output_text: str
+    provider: str  # Present: LLM provider that executed the request
+    model: str     # Present: Model that generated the response
     tokens_in: int
     tokens_out: int
     duration_ms: int
@@ -127,31 +130,7 @@ class ExecutionResponse(BaseModel):
     timestamp: datetime
 ```
 
-**After:**
-```python
-class ExecutionResponse(BaseModel):
-    id: str
-    pipeline_config_id: str
-    output_text: str
-    provider: str  # NEW
-    model: str     # NEW
-    tokens_in: int
-    tokens_out: int
-    duration_ms: int
-    status: str
-    error_message: Optional[str]
-    timestamp: datetime
-```
-
-### Rationale
-- Clients need to know which provider and model was used for each execution
-- Model selection can be dynamic (multiple models available, router picks based on availability)
-- Provider/model are captured on the domain `Execution` entity and should be exposed in the API
-
-### Impact
-- API responses now include complete execution metadata
-- Clients can track which provider/model was used for cost analysis
-- No breaking change (fields are new, not removed)
+This commit does not change these fields; they are documented here for completeness in the feedback resolution.
 
 ---
 
@@ -185,10 +164,14 @@ Documented the implementation plan for adding OpenRouter support to the LLM prov
 1. `test_execute_pipeline_publishes_event_on_error` — Changed from generic `Exception` to `RuntimeError` (application-level error)
 2. `test_execute_pipeline_soft_timeout_records_timeout_if_exceeded` → `test_execute_pipeline_records_success_even_if_slow` — Verifies successful responses are not discarded based on duration
 
+### New Tests
+1. `test_execute_pipeline_records_error_for_type_error` — Verifies `TypeError` exceptions are caught and recorded correctly
+2. `test_execute_pipeline_records_error_for_key_error` — Verifies `KeyError` exceptions are caught and recorded correctly
+
 ### Test Results
-- All 21 domain unit tests pass
-- All 21 route integration tests pass
-- Total: 42 tests, 100% pass rate
+- All 23 domain unit tests pass (21 original + 2 new)
+- All route integration tests pass
+- Total: 23+ tests, 100% pass rate
 
 ---
 

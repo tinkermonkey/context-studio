@@ -461,3 +461,53 @@ class TestPipelineServiceExecution:
             assert execution.duration_ms == 2000
         finally:
             time.time = original_time
+
+    def test_execute_pipeline_records_error_for_type_error(self):
+        """Execute pipeline records execution with error status when LLM raises TypeError."""
+        # Set up LLM to raise TypeError (e.g., invalid model type)
+        self.llm.should_raise_error = True
+        self.llm.error_to_raise = TypeError("Model argument must be a string")
+
+        config = self.service.create_config(
+            pipeline="extractor",
+            title="Test Extractor",
+            provider="openai",
+            model="gpt-4",
+            config={},
+            system_prompt="Extract",
+            user_prompt="Input: {text}",
+        )
+
+        execution = self.service.execute_pipeline(config.id, "Test input")
+
+        assert execution.status == "error"
+        assert "Model argument must be a string" in execution.error_message
+        assert execution.output_text == ""
+        assert execution.tokens_in == 0
+        assert execution.tokens_out == 0
+        assert execution.duration_ms >= 0
+
+    def test_execute_pipeline_records_error_for_key_error(self):
+        """Execute pipeline records execution with error status when LLM raises KeyError."""
+        # Set up LLM to raise KeyError (e.g., missing config key)
+        self.llm.should_raise_error = True
+        self.llm.error_to_raise = KeyError("api_key")
+
+        config = self.service.create_config(
+            pipeline="extractor",
+            title="Test Extractor",
+            provider="openai",
+            model="gpt-4",
+            config={},
+            system_prompt="Extract",
+            user_prompt="Input: {text}",
+        )
+
+        execution = self.service.execute_pipeline(config.id, "Test input")
+
+        assert execution.status == "error"
+        assert "api_key" in execution.error_message
+        assert execution.output_text == ""
+        assert execution.tokens_in == 0
+        assert execution.tokens_out == 0
+        assert execution.duration_ms >= 0
