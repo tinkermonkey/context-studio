@@ -11,14 +11,16 @@ from domain.extraction.ports import ReferenceRelation, ReferenceResult
 class FakeReferenceSource:
     """Fake reference source that returns deterministic results for testing."""
 
-    def __init__(self, name: str = "fake-source") -> None:
+    def __init__(self, name: str = "fake-source", should_fail: bool = False) -> None:
         """
         Initialize the fake reference source.
 
         Args:
             name: Name of the reference source
+            should_fail: If True, raise RuntimeError on search() and get_relations() calls
         """
         self._name = name
+        self.should_fail = should_fail
         self.call_count = 0
         self.last_search_term: str | None = None
 
@@ -44,7 +46,13 @@ class FakeReferenceSource:
 
         Returns:
             List of matching ReferenceResult objects
+
+        Raises:
+            RuntimeError: If should_fail is True
         """
+        if self.should_fail:
+            raise RuntimeError("Reference source error")
+
         self.call_count += 1
         self.last_search_term = term
 
@@ -75,7 +83,13 @@ class FakeReferenceSource:
 
         Returns:
             List of ReferenceRelation objects (empty for fake)
+
+        Raises:
+            RuntimeError: If should_fail is True
         """
+        if self.should_fail:
+            raise RuntimeError("Reference source error")
+
         return []
 
     def is_available(self) -> bool:

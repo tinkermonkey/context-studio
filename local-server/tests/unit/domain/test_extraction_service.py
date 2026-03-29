@@ -19,153 +19,11 @@ from domain.extraction.events import ExtractionCompleted
 from domain.extraction.exceptions import ExtractionError
 from domain.extraction.ports import LLMResponse, NLPResult, NLPEntity
 from tests.fakes.fake_event_publisher import FakeEventPublisher
-
-
-# ============================================================================
-# Fake implementations for injection
-# ============================================================================
-
-class FakeOntologyRepository:
-    """Fake ontology repository that returns empty entities."""
-
-    def get_all_entities_and_relationships(self):
-        """Return empty entities and relationships."""
-        return [], []
-
-
-class FakeEmbeddingService:
-    """Fake embedding service with deterministic embeddings."""
-
-    def embed(self, text: str) -> list[float]:
-        """Return a deterministic embedding based on text length."""
-        # Simple embedding: normalize text length to vector
-        if not text:
-            return [0.0] * 10
-        return [float(len(text)) / 100.0] * 10
-
-    def embed_batch(self, texts: list[str]) -> list[list[float]]:
-        """Embed multiple texts."""
-        return [self.embed(text) for text in texts]
-
-    def similarity(self, embedding_a: list[float], embedding_b: list[float]) -> float:
-        """Compute simple cosine-like similarity."""
-        if not embedding_a or not embedding_b:
-            return 0.0
-        dot = sum(a * b for a, b in zip(embedding_a, embedding_b))
-        norm_a = sum(a * a for a in embedding_a) ** 0.5
-        norm_b = sum(b * b for b in embedding_b) ** 0.5
-        if norm_a == 0 or norm_b == 0:
-            return 0.0
-        return dot / (norm_a * norm_b)
-
-
-class FakeLLMProvider:
-    """Fake LLM provider that returns mock extraction results."""
-
-    def __init__(self, should_fail: bool = False):
-        self.should_fail = should_fail
-
-    def complete(
-        self,
-        system_prompt: str,
-        user_prompt: str,
-        model: str,
-        temperature: float = 0.0,
-        max_tokens: int = 2000,
-        response_format=None,
-    ) -> LLMResponse:
-        """Return mock LLM response."""
-        if self.should_fail:
-            raise RuntimeError("LLM provider error")
-
-        # Return mock entities as JSON
-        content = '[{"label": "Apple", "type": "ORG", "confidence": 0.95}]'
-        return LLMResponse(
-            content=content,
-            tokens_in=50,
-            tokens_out=30,
-            finish_reason="stop",
-            model=model,
-        )
-
-    def is_model_available(self, model: str) -> bool:
-        """Check if model is available."""
-        return True
-
-    def list_available_models(self) -> list[str]:
-        """List available models."""
-        return ["gpt-4", "gpt-3.5-turbo"]
-
-
-class FakeNLPProcessor:
-    """Fake NLP processor that returns mock entities."""
-
-    def __init__(self, should_fail: bool = False):
-        self.should_fail = should_fail
-
-    def process(self, text: str) -> NLPResult:
-        """Return mock NLP result."""
-        if self.should_fail:
-            raise RuntimeError("NLP processor error")
-
-        entities = self.extract_entities(text)
-        tokens = text.split()
-        return NLPResult(
-            tokens=tokens,
-            entities=entities,
-            language="en",
-        )
-
-    def extract_entities(self, text: str) -> list[NLPEntity]:
-        """Extract mock named entities."""
-        if self.should_fail:
-            raise RuntimeError("NLP processor error")
-
-        # Return mock entities
-        return [
-            NLPEntity(text="Microsoft", label="ORG", start=0, end=9, confidence=0.9),
-        ]
-
-    def is_ready(self) -> bool:
-        """Check if processor is ready."""
-        return True
-
-
-class FakeReferenceSource:
-    """Fake reference source that returns mock search results."""
-
-    def __init__(self, source_name_val: str = "TestSource", should_fail: bool = False):
-        self._source_name = source_name_val
-        self.should_fail = should_fail
-
-    @property
-    def source_name(self) -> str:
-        """Get source name."""
-        return self._source_name
-
-    def search(self, term: str, limit: int = 10) -> list:
-        """Return mock search results."""
-        if self.should_fail:
-            raise RuntimeError("Reference source error")
-
-        # Mock result
-        from domain.extraction.ports import ReferenceResult
-        return [
-            ReferenceResult(
-                uri=f"https://example.com/{term}",
-                label=term,
-                description=f"Reference for {term}",
-                source=self.source_name,
-            )
-        ]
-
-    def get_relations(self, uri: str, limit: int = 10) -> list:
-        """Get relations for URI."""
-        return []
-
-    def is_available(self) -> bool:
-        """Check if source is available."""
-        return True
+from tests.fakes.fake_ontology_repository import FakeOntologyRepository
+from tests.fakes.fake_embedding_service import FakeEmbeddingService
+from tests.fakes.fake_llm_provider import FakeLLMProvider
+from tests.fakes.fake_nlp_processor import FakeNLPProcessor
+from tests.fakes.fake_reference_source import FakeReferenceSource
 
 
 # ============================================================================
@@ -481,8 +339,8 @@ class TestLayerExecution:
         # Layer 2 (NLP) should have succeeded and found entities
         assert result.layers_executed[2].success is True
 
-        # NLP layer should have found Microsoft
-        assert any(e.label == "Microsoft" for e in result.extracted_entities)
+        # NLP layer should have found entities (FakeEntity from the fake processor)
+        assert any(e.entity_type == "ORG" for e in result.extracted_entities)
 
 
 class TestLayerForwardOutput:
@@ -794,16 +652,21 @@ class TestExceptionHandling:
                 # Won't be called if not ready
                 raise RuntimeError("Should not be called")
 
+        # LLM provider that returns valid JSON entities
+        llm_provider = FakeLLMProvider(
+            response_content='[{"label": "TestEntity", "type": "ORG", "confidence": 0.9}]'
+        )
+
         service = ExtractionService(
             ontology_repo=FakeOntologyRepository(),
             embedding_service=FakeEmbeddingService(),
-            llm=FakeLLMProvider(),
+            llm=llm_provider,
             nlp=NotReadyNLPProcessor(),  # Layer 2 not ready
             reference_sources=[FakeReferenceSource()],
             event_publisher=FakeEventPublisher(),
         )
 
-        # Should not raise despite NLP not being ready
+        # Should not raise despite NLP not being ready - LLM will extract entities
         result = service.extract("Test text")
 
         assert result.layers_executed[2].success is True

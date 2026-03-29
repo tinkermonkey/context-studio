@@ -13,14 +13,16 @@ from domain.extraction.ports import NLPEntity, NLPResult
 class FakeNLPProcessor:
     """Fake NLP processor that returns deterministic results for testing."""
 
-    def __init__(self, language: str = "en") -> None:
+    def __init__(self, language: str = "en", should_fail: bool = False) -> None:
         """
         Initialize the fake NLP processor.
 
         Args:
             language: Language code to return in results
+            should_fail: If True, raise RuntimeError on process() and extract_entities() calls
         """
         self.language = language
+        self.should_fail = should_fail
         self.call_count = 0
         self.last_text_processed: str | None = None
 
@@ -33,7 +35,13 @@ class FakeNLPProcessor:
 
         Returns:
             NLPResult with tokens, entities, and language
+
+        Raises:
+            RuntimeError: If should_fail is True
         """
+        if self.should_fail:
+            raise RuntimeError("NLP processor error")
+
         self.call_count += 1
         self.last_text_processed = text
 
@@ -57,7 +65,13 @@ class FakeNLPProcessor:
 
         Returns:
             List of NLPEntity objects found in the text
+
+        Raises:
+            RuntimeError: If should_fail is True
         """
+        if self.should_fail:
+            raise RuntimeError("NLP processor error")
+
         if not text:
             return []
 
