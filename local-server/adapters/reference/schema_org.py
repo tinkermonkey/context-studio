@@ -77,7 +77,6 @@ class SchemaOrgSource:
             timeout: Unused (included for protocol compatibility)
         """
         self._timeout = timeout
-        self._async_client = None
 
     @property
     def source_name(self) -> str:

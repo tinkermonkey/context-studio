@@ -40,8 +40,8 @@ def service():
         nlp=FakeNLPProcessor(),
         reference_sources=[FakeReferenceSource("TestSource")],
         event_publisher=FakeEventPublisher(),
-            extraction_repo=FakeExtractionRepository(),
-        )
+        extraction_repo=FakeExtractionRepository(),
+    )
 
 
 # ============================================================================

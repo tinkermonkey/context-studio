@@ -27,7 +27,6 @@ class ConceptNetSource:
             timeout: HTTP request timeout in seconds
         """
         self._timeout = timeout
-        self._async_client: httpx.AsyncClient | None = None
 
     @property
     def source_name(self) -> str:
