@@ -72,6 +72,7 @@ class SpacyNLPProcessor:
             Returns empty results if the processor is not ready.
         """
         if not self.is_ready():
+            logger.warning(f"NLP processor not ready. Returning empty results for text: {text[:100]}")
             return NLPResult(tokens=[], entities=[], noun_chunks=[], language="unknown")
 
         assert self._nlp is not None
@@ -94,6 +95,7 @@ class SpacyNLPProcessor:
             Returns empty list if the processor is not ready.
         """
         if not self.is_ready():
+            logger.warning(f"NLP processor not ready. Returning empty entities for text: {text[:100]}")
             return []
 
         assert self._nlp is not None
