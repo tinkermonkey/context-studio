@@ -5,6 +5,7 @@ Enriches extracted entities by resolving them against external reference
 knowledge sources.
 """
 import logging
+from types import MappingProxyType
 
 from domain.extraction.entities import ExtractedEntity
 from domain.extraction.ports import ReferenceSource
@@ -42,12 +43,12 @@ def execute(input: LayerInput, sources: list[ReferenceSource]) -> LayerOutput:
     entities: list[ExtractedEntity] = []
 
     if not input.text or not input.text.strip():
-        return LayerOutput(entities=entities, metadata={"reason": "empty_text"})
+        return LayerOutput(entities=tuple(entities), metadata=MappingProxyType({"reason": "empty_text"}))
 
     if not input.existing_entities:
         return LayerOutput(
-            entities=entities,
-            metadata={"reason": "no_prior_entities", "enriched_count": 0},
+            entities=tuple(entities),
+            metadata=MappingProxyType({"reason": "no_prior_entities", "enriched_count": 0}),
         )
 
     # Filter to available sources
@@ -55,12 +56,12 @@ def execute(input: LayerInput, sources: list[ReferenceSource]) -> LayerOutput:
 
     if not available_sources:
         return LayerOutput(
-            entities=[],
-            metadata={
+            entities=tuple(),
+            metadata=MappingProxyType({
                 "reason": "no_available_reference_sources",
                 "prior_entities": len(input.existing_entities),
                 "enriched_count": 0,
-            },
+            }),
         )
 
     # For each entity from prior layers, attempt to enrich with reference data
@@ -107,11 +108,11 @@ def execute(input: LayerInput, sources: list[ReferenceSource]) -> LayerOutput:
                 break  # Move to next entity after first source match
 
     return LayerOutput(
-        entities=entities,
-        metadata={
+        entities=tuple(entities),
+        metadata=MappingProxyType({
             "prior_entities": len(input.existing_entities),
             "enriched_count": enrichment_count,
             "sources_checked": len(available_sources),
             "sources_available": [s.source_name for s in available_sources],
-        },
+        }),
     )

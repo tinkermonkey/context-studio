@@ -10,6 +10,7 @@ from __future__ import annotations
 import logging
 import time
 from datetime import datetime, timezone
+from types import MappingProxyType
 from uuid import uuid4
 
 from domain.ontology.ports import OntologyRepository, EmbeddingService
@@ -129,7 +130,7 @@ class ExtractionService:
         # Layer 1: LLM extraction
         layer_1_input = LayerInput(
             text=text,
-            existing_entities=all_entities.copy(),
+            existing_entities=tuple(all_entities.copy()),
         )
         layer_1_output = self._execute_layer(
             layer_num=1,
@@ -145,7 +146,7 @@ class ExtractionService:
         # Layer 2: NLP gap-filling
         layer_2_input = LayerInput(
             text=text,
-            existing_entities=all_entities.copy(),
+            existing_entities=tuple(all_entities.copy()),
         )
         layer_2_output = self._execute_layer(
             layer_num=2,
@@ -161,7 +162,7 @@ class ExtractionService:
         # Layer 3: Reference source enrichment
         layer_3_input = LayerInput(
             text=text,
-            existing_entities=all_entities.copy(),
+            existing_entities=tuple(all_entities.copy()),
         )
         layer_3_output = self._execute_layer(
             layer_num=3,
@@ -228,7 +229,7 @@ class ExtractionService:
         # Layer 2: NLP gap-filling (primary for text analysis)
         layer_2_input = LayerInput(
             text=text,
-            existing_entities=all_entities.copy(),
+            existing_entities=tuple(all_entities.copy()),
         )
         layer_2_output = self._execute_layer(
             layer_num=2,
@@ -282,8 +283,8 @@ class ExtractionService:
         # Layer 3: Reference source enrichment
         layer_3_input = LayerInput(
             text=text,
-            existing_entities=all_entities.copy(),
-            kg_context=[],
+            existing_entities=tuple(all_entities.copy()),
+            kg_context=None,
         )
         layer_3_output = self._execute_layer(
             layer_num=3,
@@ -433,7 +434,7 @@ class ExtractionService:
             ))
 
             # Return empty output so subsequent layers can continue
-            return LayerOutput(entities=[], metadata={"error": error_msg})
+            return LayerOutput(entities=tuple(), metadata=MappingProxyType({"error": error_msg}))
 
     def _deduplicate(self, entities: list[ExtractedEntity]) -> list[ExtractedEntity]:
         """

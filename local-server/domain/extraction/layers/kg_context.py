@@ -4,6 +4,8 @@ Knowledge Graph context extraction layer (Layer 0).
 Extracts entities and relationships from the existing knowledge graph
 to provide context for subsequent extraction layers.
 """
+from types import MappingProxyType
+
 from domain.ontology.entities import Class, Individual
 from domain.extraction.entities import ExtractedEntity
 from domain.extraction.value_objects import LayerOutput
@@ -28,7 +30,7 @@ def execute(text: str, ontology_repo, embedding_service) -> LayerOutput:
     entities: list[ExtractedEntity] = []
 
     if not text or not text.strip():
-        return LayerOutput(entities=entities, metadata={"reason": "empty_text"})
+        return LayerOutput(entities=tuple(entities), metadata=MappingProxyType({"reason": "empty_text"}))
 
     # Get embedding for the input text
     text_embedding = embedding_service.embed(text.strip())
@@ -38,13 +40,13 @@ def execute(text: str, ontology_repo, embedding_service) -> LayerOutput:
 
     if not all_entities_result or not all_entities_result[0]:
         return LayerOutput(
-            entities=entities,
-            metadata={
+            entities=tuple(entities),
+            metadata=MappingProxyType({
                 "reason": "no_entities_in_repo",
                 "matches_found": 0,
                 "threshold": 0.7,
                 "entities_checked": 0,
-            }
+            })
         )
 
     all_entities, _ = all_entities_result
@@ -85,10 +87,10 @@ def execute(text: str, ontology_repo, embedding_service) -> LayerOutput:
             matches_found += 1
 
     return LayerOutput(
-        entities=entities,
-        metadata={
+        entities=tuple(entities),
+        metadata=MappingProxyType({
             "matches_found": matches_found,
             "threshold": 0.7,
             "entities_checked": len(all_entities),
-        },
+        }),
     )
