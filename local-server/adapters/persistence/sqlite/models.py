@@ -407,3 +407,57 @@ class ChangeEvent(Base):
 
     def __repr__(self) -> str:
         return f"<ChangeEvent(id={self.id}, entity_id={self.entity_id}, operation={self.operation})>"
+
+
+class ExtractionResult(Base):
+    """
+    Persistence model for an extraction operation result.
+
+    Stores the complete output of an extraction pipeline execution including
+    extracted entities, layer execution metadata, and performance metrics.
+
+    Attributes:
+        id: UUID as string, primary key
+        text: The source text that was extracted
+        extracted_entities: JSON list of ExtractedEntity objects
+        layers_executed: JSON list of ExtractionLayerResult metadata
+        total_duration_ms: Total time spent on extraction (milliseconds)
+        created_at: Timestamp when extraction completed (UTC)
+    """
+
+    __tablename__ = "extraction_results"
+
+    id = Column(String(36), primary_key=True, nullable=False)
+    text = Column(Text, nullable=False)
+    extracted_entities = Column(
+        JSON,
+        nullable=False,
+        default=list,
+        doc="JSON list of {id, label, entity_type, source_layer, confidence, uri, description, properties}"
+    )
+    layers_executed = Column(
+        JSON,
+        nullable=False,
+        default=list,
+        doc="JSON list of {layer_number, layer_name, entities_found, duration_ms, success, error_message}"
+    )
+    total_duration_ms = Column(
+        Integer,
+        nullable=False,
+        default=0,
+        doc="Total time spent on extraction (milliseconds)"
+    )
+    created_at = Column(
+        DateTime(timezone=True),
+        nullable=False,
+        default=lambda: datetime.now(timezone.utc),
+        index=True,
+        doc="UTC timestamp of extraction completion"
+    )
+
+    __table_args__ = (
+        Index("idx_created_at", "created_at"),
+    )
+
+    def __repr__(self) -> str:
+        return f"<ExtractionResult(id={self.id}, text_len={len(self.text)}, entities={len(self.extracted_entities)})>"

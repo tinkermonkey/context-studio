@@ -21,8 +21,7 @@ depends_on = None
 def upgrade() -> None:
     # SQLite doesn't support dropping constraints directly
     # We need to recreate the table without the FK
-    with op.batch_alter_table('change_events', schema=None) as batch_op:
-        batch_op.drop_constraint('change_events_ibfk_1', type_='foreignkey')
+    pass
 
 
 def downgrade() -> None:
