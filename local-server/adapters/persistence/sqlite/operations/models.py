@@ -8,8 +8,6 @@ This module contains ORM models for:
 Models are defined here and serve as the source of truth for Alembic migrations.
 """
 
-from datetime import datetime
-from typing import Any
 
 from sqlalchemy import Column, String, Integer, Boolean, DateTime, Text, JSON, Index
 from sqlalchemy.orm import declarative_base
