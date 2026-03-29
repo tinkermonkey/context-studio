@@ -345,8 +345,10 @@ class PipelineService:
         if failures:
             handler_names = ", ".join(name for name, _ in failures)
             _logger.warning(
-                f"Event handlers failed for PipelineExecuted (execution_id={recorded_execution.id}): {handler_names}. "
-                f"Pipeline execution is recorded but audit trail may have gaps."
+                "Event handlers failed for PipelineExecuted (execution_id=%s): %s. "
+                "Pipeline execution is recorded but audit trail may have gaps.",
+                recorded_execution.id,
+                handler_names,
             )
 
         return recorded_execution

@@ -372,8 +372,10 @@ class ExtractionService:
         if failures:
             handler_names = ", ".join(name for name, _ in failures)
             _logger.warning(
-                f"Event handlers failed for ExtractionCompleted (result_id={result_id}): {handler_names}. "
-                f"Extraction result is returned but audit trail may have gaps."
+                "Event handlers failed for ExtractionCompleted (result_id=%s): %s. "
+                "Extraction result is returned but audit trail may have gaps.",
+                result_id,
+                handler_names,
             )
 
         return result
