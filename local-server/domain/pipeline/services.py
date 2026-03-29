@@ -8,6 +8,7 @@ tracking. It depends on PipelineRepository (for persistence), LLMProvider
 
 from __future__ import annotations
 
+import logging
 import time
 from datetime import datetime, timezone
 from uuid import uuid4
@@ -18,6 +19,9 @@ from .entities import Execution, PipelineConfiguration
 from .events import PipelineExecuted
 from .exceptions import PipelineNotFoundError
 from .ports import PipelineRepository
+
+
+_logger = logging.getLogger(__name__)
 
 
 class PipelineService:
@@ -337,6 +341,12 @@ class PipelineService:
             pipeline_id=config_id,
             status=recorded_execution.status,
         )
-        self._event_publisher.publish(event)
+        failures = self._event_publisher.publish(event)
+        if failures:
+            handler_names = ", ".join(name for name, _ in failures)
+            _logger.warning(
+                f"Event handlers failed for PipelineExecuted (execution_id={recorded_execution.id}): {handler_names}. "
+                f"Pipeline execution is recorded but audit trail may have gaps."
+            )
 
         return recorded_execution

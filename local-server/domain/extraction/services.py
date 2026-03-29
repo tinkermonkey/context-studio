@@ -364,11 +364,17 @@ class ExtractionService:
             # and the completion event is still published. Persistence is fire-and-forget.
 
         # Publish completion event
-        self._event_publisher.publish(ExtractionCompleted(
+        failures = self._event_publisher.publish(ExtractionCompleted(
             result_id=result_id,
             entity_count=len(deduplicated),
             duration_ms=duration_ms,
         ))
+        if failures:
+            handler_names = ", ".join(name for name, _ in failures)
+            _logger.warning(
+                f"Event handlers failed for ExtractionCompleted (result_id={result_id}): {handler_names}. "
+                f"Extraction result is returned but audit trail may have gaps."
+            )
 
         return result
 

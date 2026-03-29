@@ -23,16 +23,22 @@ class FakeEventPublisher:
         self._events: list[DomainEvent] = []
         self._handlers: dict[type[DomainEvent], list[Callable[[DomainEvent], None]]] = {}
 
-    def publish(self, event: DomainEvent) -> None:
+    def publish(self, event: DomainEvent) -> list[tuple[str, Exception]]:
         """
         Publish a domain event to all registered handlers.
 
         Handler exceptions are isolated to prevent cascade failures. If a handler
         raises an exception, the exception is logged and other handlers continue
         to execute. This mirrors the behavior of InProcessEventPublisher.
+
+        Returns:
+            List of tuples (handler_name, exception) for any handlers that failed.
+            Empty list if all handlers succeeded.
         """
         self._events.append(event)
         event_type = type(event)
+        failures: list[tuple[str, Exception]] = []
+
         for handler in self._handlers.get(event_type, []):
             try:
                 handler(event)
@@ -43,6 +49,9 @@ class FakeEventPublisher:
                     f"event {event_type.__name__} (id: {event.event_id}): {type(e).__name__}: {str(e)}",
                     exc_info=True,
                 )
+                failures.append((handler_name, e))
+
+        return failures
 
     def subscribe(self, event_type: type[EventT_contra], handler: Callable[[EventT_contra], None]) -> None:
         if event_type not in self._handlers:
