@@ -11,7 +11,7 @@ Implementations do not inherit from the protocol; they implement the interface s
 
 from __future__ import annotations
 
-from typing import Any, Protocol, Sequence
+from typing import Protocol, Sequence
 
 from .entities import Class, ConceptScheme, Individual, PropertyDefinition, Relationship, Taxonomy
 from .value_objects import SearchCriteria

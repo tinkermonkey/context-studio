@@ -4,7 +4,7 @@ Knowledge Graph context extraction layer (Layer 0).
 Extracts entities and relationships from the existing knowledge graph
 to provide context for subsequent extraction layers.
 """
-from domain.ontology.entities import Class, Individual, Taxonomy, ConceptScheme
+from domain.ontology.entities import Class, Individual
 from domain.extraction.entities import ExtractedEntity
 from domain.extraction.value_objects import LayerOutput
 
