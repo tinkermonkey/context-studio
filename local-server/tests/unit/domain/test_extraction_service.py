@@ -17,7 +17,6 @@ from domain.extraction.services import ExtractionService
 from domain.extraction.entities import ExtractedEntity
 from domain.extraction.events import ExtractionCompleted
 from domain.extraction.exceptions import ExtractionError
-from domain.extraction.ports import LLMResponse, NLPResult, NLPEntity
 from tests.fakes.fake_event_publisher import FakeEventPublisher
 from tests.fakes.fake_ontology_repository import FakeOntologyRepository
 from tests.fakes.fake_embedding_service import FakeEmbeddingService

@@ -229,7 +229,7 @@ class PipelineService:
         user_message = config.user_prompt.replace("{text}", input_text)
 
         # Get timeout from config, default to 30 seconds
-        timeout_seconds = config.config.get("timeout", 30)
+        config.config.get("timeout", 30)
 
         try:
             # Call the LLM with timeout handling
