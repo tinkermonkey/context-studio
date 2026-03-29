@@ -2,12 +2,6 @@
 
 import httpx
 
-from adapters.reference.exceptions import (
-    ReferenceSourceNetworkError,
-    ReferenceSourceTimeoutError,
-    ReferenceSourceHTTPError,
-    ReferenceSourceParseError,
-)
 from domain.extraction.ports import ReferenceResult, ReferenceRelation
 from utils.logger import get_logger
 
@@ -79,13 +73,7 @@ class DBpediaSource:
             limit: Maximum number of results to return
 
         Returns:
-            List of ReferenceResult objects.
-
-        Raises:
-            ReferenceSourceNetworkError: On network connectivity issues
-            ReferenceSourceTimeoutError: On request timeout
-            ReferenceSourceHTTPError: On HTTP error responses
-            ReferenceSourceParseError: On JSON parsing failures
+            List of ReferenceResult objects. Returns empty list on network failures.
         """
         try:
             response = httpx.get(
@@ -121,32 +109,22 @@ class DBpediaSource:
 
             return results
         except httpx.TimeoutException as e:
-            logger.error(f"DBpedia search timed out for '{term}': {e}")
-            raise ReferenceSourceTimeoutError(
-                f"DBpedia search timed out for '{term}'"
-            ) from e
+            logger.warning(f"DBpedia search timed out for '{term}': {e}")
+            return []
         except httpx.NetworkError as e:
-            logger.error(f"DBpedia network error during search for '{term}': {e}")
-            raise ReferenceSourceNetworkError(
-                f"DBpedia network error during search for '{term}'"
-            ) from e
+            logger.warning(f"DBpedia network error during search for '{term}': {e}")
+            return []
         except httpx.HTTPStatusError as e:
-            logger.error(
+            logger.warning(
                 f"DBpedia HTTP {e.response.status_code} error during search for '{term}': {e}"
             )
-            raise ReferenceSourceHTTPError(
-                f"DBpedia returned HTTP {e.response.status_code} for search '{term}'"
-            ) from e
+            return []
         except httpx.HTTPError as e:
-            logger.error(f"DBpedia HTTP error during search for '{term}': {e}")
-            raise ReferenceSourceHTTPError(
-                f"DBpedia HTTP error during search for '{term}'"
-            ) from e
+            logger.warning(f"DBpedia HTTP error during search for '{term}': {e}")
+            return []
         except ValueError as e:
-            logger.error(f"DBpedia JSON parse error during search for '{term}': {e}")
-            raise ReferenceSourceParseError(
-                f"DBpedia returned invalid JSON for search '{term}'"
-            ) from e
+            logger.warning(f"DBpedia JSON parse error during search for '{term}': {e}")
+            return []
 
     def get_relations(self, uri: str, limit: int = 10) -> list[ReferenceRelation]:
         """

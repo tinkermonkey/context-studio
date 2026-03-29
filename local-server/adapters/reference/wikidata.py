@@ -2,12 +2,6 @@
 
 import httpx
 
-from adapters.reference.exceptions import (
-    ReferenceSourceNetworkError,
-    ReferenceSourceTimeoutError,
-    ReferenceSourceHTTPError,
-    ReferenceSourceParseError,
-)
 from domain.extraction.ports import ReferenceResult, ReferenceRelation
 from utils.logger import get_logger
 
@@ -83,13 +77,7 @@ class WikidataSource:
             limit: Maximum number of results to return
 
         Returns:
-            List of ReferenceResult objects.
-
-        Raises:
-            ReferenceSourceNetworkError: On network connectivity issues
-            ReferenceSourceTimeoutError: On request timeout
-            ReferenceSourceHTTPError: On HTTP error responses
-            ReferenceSourceParseError: On JSON parsing failures
+            List of ReferenceResult objects. Returns empty list on network failures.
         """
         try:
             response = httpx.get(
@@ -128,32 +116,22 @@ class WikidataSource:
 
             return results
         except httpx.TimeoutException as e:
-            logger.error(f"Wikidata search timed out for '{term}': {e}")
-            raise ReferenceSourceTimeoutError(
-                f"Wikidata search timed out for '{term}'"
-            ) from e
+            logger.warning(f"Wikidata search timed out for '{term}': {e}")
+            return []
         except httpx.NetworkError as e:
-            logger.error(f"Wikidata network error during search for '{term}': {e}")
-            raise ReferenceSourceNetworkError(
-                f"Wikidata network error during search for '{term}'"
-            ) from e
+            logger.warning(f"Wikidata network error during search for '{term}': {e}")
+            return []
         except httpx.HTTPStatusError as e:
-            logger.error(
+            logger.warning(
                 f"Wikidata HTTP {e.response.status_code} error during search for '{term}': {e}"
             )
-            raise ReferenceSourceHTTPError(
-                f"Wikidata returned HTTP {e.response.status_code} for search '{term}'"
-            ) from e
+            return []
         except httpx.HTTPError as e:
-            logger.error(f"Wikidata HTTP error during search for '{term}': {e}")
-            raise ReferenceSourceHTTPError(
-                f"Wikidata HTTP error during search for '{term}'"
-            ) from e
+            logger.warning(f"Wikidata HTTP error during search for '{term}': {e}")
+            return []
         except ValueError as e:
-            logger.error(f"Wikidata JSON parse error during search for '{term}': {e}")
-            raise ReferenceSourceParseError(
-                f"Wikidata returned invalid JSON for search '{term}'"
-            ) from e
+            logger.warning(f"Wikidata JSON parse error during search for '{term}': {e}")
+            return []
 
     def get_relations(self, uri: str, limit: int = 10) -> list[ReferenceRelation]:
         """
@@ -167,13 +145,7 @@ class WikidataSource:
             limit: Maximum number of relations to return
 
         Returns:
-            List of ReferenceRelation objects.
-
-        Raises:
-            ReferenceSourceNetworkError: On network connectivity issues
-            ReferenceSourceTimeoutError: On request timeout
-            ReferenceSourceHTTPError: On HTTP error responses
-            ReferenceSourceParseError: On JSON parsing failures
+            List of ReferenceRelation objects. Returns empty list on network failures.
         """
         try:
             # Extract entity ID from Wikidata URI
@@ -227,33 +199,23 @@ class WikidataSource:
 
             return relations
         except httpx.TimeoutException as e:
-            logger.error(f"Wikidata get_relations timed out for '{uri}': {e}")
-            raise ReferenceSourceTimeoutError(
-                f"Wikidata get_relations timed out for '{uri}'"
-            ) from e
+            logger.warning(f"Wikidata get_relations timed out for '{uri}': {e}")
+            return []
         except httpx.NetworkError as e:
-            logger.error(
+            logger.warning(
                 f"Wikidata network error during get_relations for '{uri}': {e}"
             )
-            raise ReferenceSourceNetworkError(
-                f"Wikidata network error during get_relations for '{uri}'"
-            ) from e
+            return []
         except httpx.HTTPStatusError as e:
-            logger.error(
+            logger.warning(
                 f"Wikidata HTTP {e.response.status_code} error during get_relations for '{uri}': {e}"
             )
-            raise ReferenceSourceHTTPError(
-                f"Wikidata returned HTTP {e.response.status_code} for get_relations '{uri}'"
-            ) from e
+            return []
         except httpx.HTTPError as e:
-            logger.error(f"Wikidata HTTP error during get_relations for '{uri}': {e}")
-            raise ReferenceSourceHTTPError(
-                f"Wikidata HTTP error during get_relations for '{uri}'"
-            ) from e
+            logger.warning(f"Wikidata HTTP error during get_relations for '{uri}': {e}")
+            return []
         except ValueError as e:
-            logger.error(
+            logger.warning(
                 f"Wikidata JSON parse error during get_relations for '{uri}': {e}"
             )
-            raise ReferenceSourceParseError(
-                f"Wikidata returned invalid JSON for get_relations '{uri}'"
-            ) from e
+            return []

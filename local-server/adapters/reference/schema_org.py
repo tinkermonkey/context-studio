@@ -143,12 +143,12 @@ class SchemaOrgSource:
         except KeyError as e:
             logger.error(f"schema.org malformed definition structure for '{term}': {e}")
             raise ReferenceSourceParseError(
-                f"schema.org vocabulary has malformed definition"
+                "schema.org vocabulary has malformed definition"
             ) from e
         except Exception as e:
             logger.error(f"Unexpected error during schema.org search for '{term}': {e}")
             raise ReferenceSourceError(
-                f"Unexpected error during schema.org search"
+                "Unexpected error during schema.org search"
             ) from e
 
     def get_relations(self, uri: str, limit: int = 10) -> list[ReferenceRelation]:
@@ -188,5 +188,5 @@ class SchemaOrgSource:
         except Exception as e:
             logger.error(f"Unexpected error during schema.org get_relations for '{uri}': {e}")
             raise ReferenceSourceError(
-                f"Unexpected error during schema.org get_relations"
+                "Unexpected error during schema.org get_relations"
             ) from e
