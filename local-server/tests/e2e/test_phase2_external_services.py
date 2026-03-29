@@ -26,8 +26,17 @@ from adapters.embedding.sentence_transformer import SentenceTransformerEmbedding
 from adapters.nlp.spacy_processor import SpacyNLPProcessor
 
 # Import LLM providers with fallback support
-OpenAIProvider = pytest.importorskip("adapters.llm.openai_provider", minversion=None).OpenAIProvider
-AnthropicProvider = pytest.importorskip("adapters.llm.anthropic_provider", minversion=None).AnthropicProvider
+try:
+    from adapters.llm.openai_provider import OpenAIProvider, AuthenticationError as OpenAIAuthenticationError
+except ImportError:
+    OpenAIProvider = None
+    OpenAIAuthenticationError = None
+
+try:
+    from adapters.llm.anthropic_provider import AnthropicProvider, AuthenticationError as AnthropicAuthenticationError
+except ImportError:
+    AnthropicProvider = None
+    AnthropicAuthenticationError = None
 
 try:
     from adapters.llm.provider_router import LLMProviderRouter
@@ -271,6 +280,9 @@ class TestLLMProviders:
 
     def test_openai_provider_is_model_available(self):
         """Check if OpenAI models are available."""
+        if OpenAIProvider is None:
+            pytest.skip("OpenAI provider not available")
+
         api_key = os.environ.get("OPENAI_API_KEY")
         if not api_key:
             pytest.skip("OpenAI API key not configured")
@@ -279,11 +291,14 @@ class TestLLMProviders:
             provider = OpenAIProvider(api_key=api_key)
             available = provider.is_model_available("gpt-4")
             assert isinstance(available, bool)
-        except (ConnectionError, AuthenticationError, ValueError) as e:
+        except (ConnectionError, OpenAIAuthenticationError, ValueError) as e:
             pytest.skip(f"OpenAI provider connection failed: {e}")
 
     def test_anthropic_provider_is_model_available(self):
         """Check if Anthropic models are available."""
+        if AnthropicProvider is None:
+            pytest.skip("Anthropic provider not available")
+
         api_key = os.environ.get("ANTHROPIC_API_KEY")
         if not api_key:
             pytest.skip("Anthropic API key not configured")
@@ -292,7 +307,7 @@ class TestLLMProviders:
             provider = AnthropicProvider(api_key=api_key)
             available = provider.is_model_available("claude-opus")
             assert isinstance(available, bool)
-        except (ConnectionError, AuthenticationError, ValueError) as e:
+        except (ConnectionError, AnthropicAuthenticationError, ValueError) as e:
             pytest.skip(f"Anthropic provider connection failed: {e}")
 
     def test_llm_provider_router(self):
