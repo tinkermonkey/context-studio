@@ -4,3 +4,4 @@ ruff
 mypy
 typing-extensions
 types-networkx
+types-SQLAlchemy
