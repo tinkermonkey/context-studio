@@ -15,6 +15,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(
 
 import pytest
 import tempfile
+import time
 from pathlib import Path
 from datetime import datetime, timezone
 from uuid import uuid4
@@ -300,9 +301,7 @@ class TestListExtractionResults:
 
     def test_list_returns_most_recent_first(self, repository):
         """List returns results ordered by created_at descending."""
-        import time
-
-        # Save results with slight delays to ensure different timestamps
+        # Save results with explicit timestamps to ensure consistent ordering
         result1 = repository.save_extraction_result(
             ExtractionResult(
                 id=str(uuid4()),
@@ -313,7 +312,6 @@ class TestListExtractionResults:
                 created_at=datetime(2026, 1, 1, tzinfo=timezone.utc),
             )
         )
-        time.sleep(0.01)
 
         result2 = repository.save_extraction_result(
             ExtractionResult(
