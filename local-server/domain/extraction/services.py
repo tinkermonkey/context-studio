@@ -17,7 +17,7 @@ from . import layers
 from .entities import ExtractedEntity, ExtractionResult
 from .events import ExtractionCompleted
 from .exceptions import ExtractionError
-from .ports import LLMProvider, NLPProcessor, ReferenceSource
+from .ports import LLMProvider, NLPProcessor, ReferenceSource, ExtractionRepository
 from .value_objects import ExtractionLayerResult, LayerInput, LayerOutput
 
 
@@ -46,6 +46,7 @@ class ExtractionService:
         nlp: NLPProcessor,
         reference_sources: list[ReferenceSource],
         event_publisher: EventPublisher,
+        extraction_repo: ExtractionRepository,
     ) -> None:
         """
         Initialize the service with port dependencies.
@@ -57,6 +58,7 @@ class ExtractionService:
             nlp: Port for NLP processing
             reference_sources: List of reference source ports
             event_publisher: Port for publishing domain events
+            extraction_repo: Port for persisting extraction results
         """
         self._ontology_repo = ontology_repo
         self._embedding_service = embedding_service
@@ -64,6 +66,7 @@ class ExtractionService:
         self._nlp = nlp
         self._reference_sources = reference_sources
         self._event_publisher = event_publisher
+        self._extraction_repo = extraction_repo
 
     def extract(self, text: str) -> ExtractionResult:
         """
@@ -334,6 +337,9 @@ class ExtractionService:
             total_duration_ms=duration_ms,
             created_at=datetime.now(timezone.utc),
         )
+
+        # Persist the result
+        self._extraction_repo.save_extraction_result(result)
 
         # Publish completion event
         self._event_publisher.publish(ExtractionCompleted(
