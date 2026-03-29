@@ -1,4 +1,5 @@
 [tool.pytest.ini_options]
+asyncio_mode = "auto"
 markers = [
     "nlp: marks tests as requiring NLP dependencies (deselect with '-m \"not nlp\"')",
     "reference: marks tests as requiring external reference sources (deselect with '-m \"not reference\"')",
