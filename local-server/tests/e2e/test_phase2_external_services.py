@@ -27,21 +27,19 @@ from adapters.nlp.spacy_processor import SpacyNLPProcessor
 
 # Import LLM providers with fallback support
 try:
-    from adapters.llm.openai_provider import OpenAIProvider, AuthenticationError as OpenAIAuthenticationError
+    from adapters.llm.openai_provider import OpenAIProvider
 except ImportError:
-    OpenAIProvider = None
-    OpenAIAuthenticationError = None
+    OpenAIProvider = None  # type: ignore[assignment,misc]
 
 try:
-    from adapters.llm.anthropic_provider import AnthropicProvider, AuthenticationError as AnthropicAuthenticationError
+    from adapters.llm.anthropic_provider import AnthropicProvider
 except ImportError:
-    AnthropicProvider = None
-    AnthropicAuthenticationError = None
+    AnthropicProvider = None  # type: ignore[assignment,misc]
 
 try:
     from adapters.llm.provider_router import LLMProviderRouter
 except ImportError:
-    LLMProviderRouter = None
+    LLMProviderRouter = None  # type: ignore[assignment,misc]
 
 
 class TestEmbeddingService:
@@ -291,7 +289,7 @@ class TestLLMProviders:
             provider = OpenAIProvider(api_key=api_key)
             available = provider.is_model_available("gpt-4")
             assert isinstance(available, bool)
-        except (ConnectionError, OpenAIAuthenticationError, ValueError) as e:
+        except (ConnectionError, RuntimeError, ValueError) as e:
             pytest.skip(f"OpenAI provider connection failed: {e}")
 
     def test_anthropic_provider_is_model_available(self):
@@ -307,7 +305,7 @@ class TestLLMProviders:
             provider = AnthropicProvider(api_key=api_key)
             available = provider.is_model_available("claude-opus")
             assert isinstance(available, bool)
-        except (ConnectionError, AnthropicAuthenticationError, ValueError) as e:
+        except (ConnectionError, RuntimeError, ValueError) as e:
             pytest.skip(f"Anthropic provider connection failed: {e}")
 
     def test_llm_provider_router(self):
