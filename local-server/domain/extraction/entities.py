@@ -23,6 +23,9 @@ class ExtractedEntity:
         uri: Optional URI linking to external knowledge base
         description: Optional free-text description
         properties: Optional key-value metadata associated with the entity
+
+    Raises:
+        ValueError: If source_layer is not 0-3 or confidence is not 0.0-1.0
     """
     id: str = field(default_factory=lambda: str(uuid4()))
     label: str = ""
@@ -33,6 +36,13 @@ class ExtractedEntity:
     uri: str | None = None
     description: str | None = None
     properties: dict = field(default_factory=dict)
+
+    def __post_init__(self) -> None:
+        """Validate extracted entity invariants."""
+        if not 0 <= self.source_layer <= 3:
+            raise ValueError(f"source_layer must be 0-3, got {self.source_layer}")
+        if not 0.0 <= self.confidence <= 1.0:
+            raise ValueError(f"confidence must be 0.0-1.0, got {self.confidence}")
 
 
 @dataclass
@@ -70,10 +80,18 @@ class ExtractionResult:
         layers_executed: Execution details for each layer that ran
         total_duration_ms: Total time spent on extraction (milliseconds)
         created_at: Timestamp when extraction completed
+
+    Raises:
+        ValueError: If total_duration_ms is negative
     """
     id: str = field(default_factory=lambda: str(uuid4()))
     text: str = ""
     extracted_entities: list[ExtractedEntity] = field(default_factory=list)
-    layers_executed: list = field(default_factory=list)  # list[ExtractionLayerResult]
+    layers_executed: list["ProcessingMetrics"] = field(default_factory=list)
     total_duration_ms: int = 0
     created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
+
+    def __post_init__(self) -> None:
+        """Validate extraction result invariants."""
+        if self.total_duration_ms < 0:
+            raise ValueError(f"total_duration_ms must be non-negative, got {self.total_duration_ms}")

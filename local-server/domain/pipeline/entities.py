@@ -33,6 +33,9 @@ class PipelineConfiguration:
         enabled: Whether this configuration is active
         created_at: Timestamp when this configuration was created
         last_updated: Timestamp of the most recent update
+
+    Raises:
+        ValueError: If provider is not "openai" or "anthropic", or if version < 1
     """
 
     id: str
@@ -47,6 +50,13 @@ class PipelineConfiguration:
     enabled: bool
     created_at: datetime
     last_updated: datetime
+
+    def __post_init__(self) -> None:
+        """Validate pipeline configuration invariants."""
+        if self.provider not in ("openai", "anthropic"):
+            raise ValueError(f"provider must be 'openai' or 'anthropic', got '{self.provider}'")
+        if self.version < 1:
+            raise ValueError(f"version must be >= 1, got {self.version}")
 
 
 @dataclass
@@ -70,6 +80,9 @@ class Execution:
         status: Completion status ("success" | "error" | "timeout")
         error_message: Error description if status is "error", None otherwise
         timestamp: When the execution occurred
+
+    Raises:
+        ValueError: If status is invalid, tokens/duration are negative, or error_message validation fails
     """
 
     id: str
@@ -84,3 +97,16 @@ class Execution:
     status: str
     error_message: str | None
     timestamp: datetime
+
+    def __post_init__(self) -> None:
+        """Validate execution invariants."""
+        if self.status not in ("success", "error", "timeout"):
+            raise ValueError(f"status must be 'success', 'error', or 'timeout', got '{self.status}'")
+        if self.tokens_in < 0:
+            raise ValueError(f"tokens_in must be non-negative, got {self.tokens_in}")
+        if self.tokens_out < 0:
+            raise ValueError(f"tokens_out must be non-negative, got {self.tokens_out}")
+        if self.duration_ms < 0:
+            raise ValueError(f"duration_ms must be non-negative, got {self.duration_ms}")
+        if self.status == "error" and not self.error_message:
+            raise ValueError("error_message must be set when status is 'error'")

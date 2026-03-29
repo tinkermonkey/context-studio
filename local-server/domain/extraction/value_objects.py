@@ -3,6 +3,8 @@ Extraction domain value objects.
 
 Immutable dataclasses representing immutable values in the extraction domain.
 """
+from __future__ import annotations
+
 from dataclasses import dataclass
 
 
@@ -18,6 +20,9 @@ class ExtractionLayerResult:
         duration_ms: Time spent in this layer (milliseconds)
         success: Whether the layer completed without unhandled exceptions
         error_message: If success=False, the error message explaining the failure
+
+    Raises:
+        ValueError: If layer_number is not 0-3
     """
     layer_number: int
     layer_name: str
@@ -25,6 +30,11 @@ class ExtractionLayerResult:
     duration_ms: int
     success: bool
     error_message: str | None = None
+
+    def __post_init__(self) -> None:
+        """Validate extraction layer result invariants."""
+        if not 0 <= self.layer_number <= 3:
+            raise ValueError(f"layer_number must be 0-3, got {self.layer_number}")
 
 
 @dataclass(frozen=True)
@@ -38,8 +48,8 @@ class LayerInput:
         kg_context: Optional knowledge graph context from layer 0
     """
     text: str
-    existing_entities: list  # list[ExtractedEntity] — string annotation avoids circular import
-    kg_context: list | None = None
+    existing_entities: list[ExtractedEntity]  # noqa: F821 — ExtractedEntity defined in entities.py
+    kg_context: list[str] | None = None
 
 
 @dataclass(frozen=True)
@@ -51,5 +61,5 @@ class LayerOutput:
         entities: List of entities found by this layer
         metadata: Optional key-value metadata about the extraction
     """
-    entities: list  # list[ExtractedEntity] — string annotation avoids circular import
+    entities: list[ExtractedEntity]  # noqa: F821 — ExtractedEntity defined in entities.py
     metadata: dict | None = None
