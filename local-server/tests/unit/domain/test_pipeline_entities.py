@@ -65,7 +65,7 @@ def make_execution():
 
 
 class TestPipelineConfiguration:
-    """Tests for PipelineConfiguration dataclass."""
+    """Tests for PipelineConfiguration dataclass and validation."""
 
     def test_construct_with_all_fields(self, make_config):
         """Create a PipelineConfiguration with all fields."""
@@ -127,9 +127,49 @@ class TestPipelineConfiguration:
         assert "temperature" not in config2.config
         assert config2.config == {}
 
+    def test_pipeline_configuration_invalid_provider(self, make_config):
+        """PipelineConfiguration raises ValueError for invalid provider."""
+        with pytest.raises(ValueError, match="provider must be"):
+            make_config(provider="invalid_provider")
+
+    def test_pipeline_configuration_invalid_provider_lowercase(self, make_config):
+        """PipelineConfiguration raises ValueError for unrecognized provider."""
+        with pytest.raises(ValueError, match="provider must be"):
+            make_config(provider="claude")
+
+    def test_pipeline_configuration_valid_provider_openai(self, make_config):
+        """PipelineConfiguration accepts provider='openai'."""
+        config = make_config(provider="openai")
+        assert config.provider == "openai"
+
+    def test_pipeline_configuration_valid_provider_anthropic(self, make_config):
+        """PipelineConfiguration accepts provider='anthropic'."""
+        config = make_config(provider="anthropic")
+        assert config.provider == "anthropic"
+
+    def test_pipeline_configuration_invalid_version_zero(self, make_config):
+        """PipelineConfiguration raises ValueError if version is 0."""
+        with pytest.raises(ValueError, match="version must be >= 1"):
+            make_config(version=0)
+
+    def test_pipeline_configuration_invalid_version_negative(self, make_config):
+        """PipelineConfiguration raises ValueError if version is negative."""
+        with pytest.raises(ValueError, match="version must be >= 1"):
+            make_config(version=-1)
+
+    def test_pipeline_configuration_valid_version_one(self, make_config):
+        """PipelineConfiguration accepts version=1."""
+        config = make_config(version=1)
+        assert config.version == 1
+
+    def test_pipeline_configuration_valid_version_high(self, make_config):
+        """PipelineConfiguration accepts high version numbers."""
+        config = make_config(version=100)
+        assert config.version == 100
+
 
 class TestExecution:
-    """Tests for Execution dataclass."""
+    """Tests for Execution dataclass and validation."""
 
     def test_construct_with_all_fields(self, make_execution):
         """Create an Execution with all fields."""
@@ -200,3 +240,78 @@ class TestExecution:
         assert openai_exec.model == "gpt-4"
         assert anthropic_exec.provider == "anthropic"
         assert anthropic_exec.model == "claude-opus"
+
+    def test_execution_invalid_status(self, make_execution):
+        """Execution raises ValueError for invalid status."""
+        with pytest.raises(ValueError, match="status must be"):
+            make_execution(status="invalid_status")
+
+    def test_execution_invalid_status_failed(self, make_execution):
+        """Execution raises ValueError for 'failed' status."""
+        with pytest.raises(ValueError, match="status must be"):
+            make_execution(status="failed")
+
+    def test_execution_valid_status_success(self, make_execution):
+        """Execution accepts status='success'."""
+        execution = make_execution(status="success")
+        assert execution.status == "success"
+
+    def test_execution_valid_status_error(self, make_execution):
+        """Execution accepts status='error'."""
+        execution = make_execution(status="error", error_message="Test error")
+        assert execution.status == "error"
+
+    def test_execution_valid_status_timeout(self, make_execution):
+        """Execution accepts status='timeout'."""
+        execution = make_execution(status="timeout", error_message="Timed out")
+        assert execution.status == "timeout"
+
+    def test_execution_error_status_without_message_raises(self, make_execution):
+        """Execution raises ValueError if status='error' but error_message is None."""
+        with pytest.raises(ValueError, match="error_message must be set when status is 'error'"):
+            make_execution(status="error", error_message=None)
+
+    def test_execution_error_status_with_empty_message_raises(self, make_execution):
+        """Execution raises ValueError if status='error' with empty error_message."""
+        with pytest.raises(ValueError, match="error_message must be set when status is 'error'"):
+            make_execution(status="error", error_message="")
+
+    def test_execution_timeout_status_without_message_allowed(self, make_execution):
+        """Execution allows status='timeout' without error_message."""
+        execution = make_execution(status="timeout", error_message=None)
+        assert execution.status == "timeout"
+        assert execution.error_message is None
+
+    def test_execution_success_status_with_message_allowed(self, make_execution):
+        """Execution allows error_message for status='success' (just ignored)."""
+        execution = make_execution(status="success", error_message="Not used")
+        assert execution.status == "success"
+
+    def test_execution_invalid_negative_tokens_in(self, make_execution):
+        """Execution raises ValueError if tokens_in is negative."""
+        with pytest.raises(ValueError, match="tokens_in must be non-negative"):
+            make_execution(tokens_in=-1)
+
+    def test_execution_invalid_negative_tokens_out(self, make_execution):
+        """Execution raises ValueError if tokens_out is negative."""
+        with pytest.raises(ValueError, match="tokens_out must be non-negative"):
+            make_execution(tokens_out=-1)
+
+    def test_execution_invalid_negative_duration(self, make_execution):
+        """Execution raises ValueError if duration_ms is negative."""
+        with pytest.raises(ValueError, match="duration_ms must be non-negative"):
+            make_execution(duration_ms=-1)
+
+    def test_execution_valid_zero_tokens_and_duration(self, make_execution):
+        """Execution accepts zero tokens and duration."""
+        execution = make_execution(tokens_in=0, tokens_out=0, duration_ms=0)
+        assert execution.tokens_in == 0
+        assert execution.tokens_out == 0
+        assert execution.duration_ms == 0
+
+    def test_execution_valid_positive_tokens_and_duration(self, make_execution):
+        """Execution accepts positive tokens and duration."""
+        execution = make_execution(tokens_in=100, tokens_out=200, duration_ms=5000)
+        assert execution.tokens_in == 100
+        assert execution.tokens_out == 200
+        assert execution.duration_ms == 5000

@@ -2,7 +2,7 @@
 Unit tests for extraction domain entities.
 
 Tests cover entity construction, field initialization, and dataclass behavior
-for ExtractedEntity and ExtractionResult.
+for ExtractedEntity and ExtractionResult, including validation of invariants.
 """
 
 import sys
@@ -10,6 +10,7 @@ import os
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
+import pytest
 from datetime import datetime, timezone
 
 from domain.extraction.entities import ExtractedEntity, ExtractionResult
@@ -81,6 +82,56 @@ class TestExtractedEntity:
         entity1.properties["key"] = "value1"
         assert "key" not in entity2.properties
         assert entity2.properties == {}
+
+    def test_extracted_entity_invalid_source_layer_negative(self):
+        """ExtractedEntity raises ValueError if source_layer is negative."""
+        with pytest.raises(ValueError, match="source_layer must be 0-3"):
+            ExtractedEntity(label="Test", source_layer=-1)
+
+    def test_extracted_entity_invalid_source_layer_too_high(self):
+        """ExtractedEntity raises ValueError if source_layer is > 3."""
+        with pytest.raises(ValueError, match="source_layer must be 0-3"):
+            ExtractedEntity(label="Test", source_layer=4)
+
+    def test_extracted_entity_invalid_source_layer_boundary(self):
+        """ExtractedEntity raises ValueError if source_layer is 5."""
+        with pytest.raises(ValueError, match="source_layer must be 0-3"):
+            ExtractedEntity(label="Test", source_layer=5)
+
+    def test_extracted_entity_invalid_confidence_negative(self):
+        """ExtractedEntity raises ValueError if confidence is negative."""
+        with pytest.raises(ValueError, match="confidence must be 0.0-1.0"):
+            ExtractedEntity(label="Test", confidence=-0.1)
+
+    def test_extracted_entity_invalid_confidence_too_high(self):
+        """ExtractedEntity raises ValueError if confidence is > 1.0."""
+        with pytest.raises(ValueError, match="confidence must be 0.0-1.0"):
+            ExtractedEntity(label="Test", confidence=1.5)
+
+    def test_extracted_entity_invalid_confidence_just_over(self):
+        """ExtractedEntity raises ValueError if confidence is > 1.0."""
+        with pytest.raises(ValueError, match="confidence must be 0.0-1.0"):
+            ExtractedEntity(label="Test", confidence=1.01)
+
+    def test_extracted_entity_valid_boundary_source_layer_zero(self):
+        """ExtractedEntity accepts source_layer=0."""
+        entity = ExtractedEntity(label="Test", source_layer=0)
+        assert entity.source_layer == 0
+
+    def test_extracted_entity_valid_boundary_source_layer_three(self):
+        """ExtractedEntity accepts source_layer=3."""
+        entity = ExtractedEntity(label="Test", source_layer=3)
+        assert entity.source_layer == 3
+
+    def test_extracted_entity_valid_boundary_confidence_zero(self):
+        """ExtractedEntity accepts confidence=0.0."""
+        entity = ExtractedEntity(label="Test", confidence=0.0)
+        assert entity.confidence == 0.0
+
+    def test_extracted_entity_valid_boundary_confidence_one(self):
+        """ExtractedEntity accepts confidence=1.0."""
+        entity = ExtractedEntity(label="Test", confidence=1.0)
+        assert entity.confidence == 1.0
 
 
 class TestExtractionResult:
@@ -223,3 +274,82 @@ class TestExtractionResult:
         )
         result.layers_executed.append(layer)
         assert len(result.layers_executed) == 1
+
+    def test_extraction_result_invalid_negative_duration(self):
+        """ExtractionResult raises ValueError if total_duration_ms is negative."""
+        with pytest.raises(ValueError, match="total_duration_ms must be non-negative"):
+            ExtractionResult(text="Test", total_duration_ms=-1)
+
+    def test_extraction_result_invalid_large_negative_duration(self):
+        """ExtractionResult raises ValueError if total_duration_ms is very negative."""
+        with pytest.raises(ValueError, match="total_duration_ms must be non-negative"):
+            ExtractionResult(text="Test", total_duration_ms=-1000)
+
+    def test_extraction_result_valid_boundary_duration_zero(self):
+        """ExtractionResult accepts total_duration_ms=0."""
+        result = ExtractionResult(text="Test", total_duration_ms=0)
+        assert result.total_duration_ms == 0
+
+    def test_extraction_result_valid_positive_duration(self):
+        """ExtractionResult accepts positive total_duration_ms."""
+        result = ExtractionResult(text="Test", total_duration_ms=1000)
+        assert result.total_duration_ms == 1000
+
+
+class TestExtractionLayerResult:
+    """Tests for ExtractionLayerResult value object validation."""
+
+    def test_extraction_layer_result_invalid_negative_layer_number(self):
+        """ExtractionLayerResult raises ValueError if layer_number is negative."""
+        with pytest.raises(ValueError, match="layer_number must be 0-3"):
+            ExtractionLayerResult(
+                layer_number=-1,
+                layer_name="Test",
+                entities_found=0,
+                duration_ms=0,
+                success=True,
+            )
+
+    def test_extraction_layer_result_invalid_too_high_layer_number(self):
+        """ExtractionLayerResult raises ValueError if layer_number is > 3."""
+        with pytest.raises(ValueError, match="layer_number must be 0-3"):
+            ExtractionLayerResult(
+                layer_number=4,
+                layer_name="Test",
+                entities_found=0,
+                duration_ms=0,
+                success=True,
+            )
+
+    def test_extraction_layer_result_invalid_boundary_layer_number(self):
+        """ExtractionLayerResult raises ValueError if layer_number is 5."""
+        with pytest.raises(ValueError, match="layer_number must be 0-3"):
+            ExtractionLayerResult(
+                layer_number=5,
+                layer_name="Test",
+                entities_found=0,
+                duration_ms=0,
+                success=True,
+            )
+
+    def test_extraction_layer_result_valid_boundary_layer_zero(self):
+        """ExtractionLayerResult accepts layer_number=0."""
+        result = ExtractionLayerResult(
+            layer_number=0,
+            layer_name="KG Context",
+            entities_found=2,
+            duration_ms=100,
+            success=True,
+        )
+        assert result.layer_number == 0
+
+    def test_extraction_layer_result_valid_boundary_layer_three(self):
+        """ExtractionLayerResult accepts layer_number=3."""
+        result = ExtractionLayerResult(
+            layer_number=3,
+            layer_name="Reference",
+            entities_found=1,
+            duration_ms=50,
+            success=True,
+        )
+        assert result.layer_number == 3

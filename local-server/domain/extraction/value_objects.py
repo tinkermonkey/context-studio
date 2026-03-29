@@ -3,9 +3,11 @@ Extraction domain value objects.
 
 Immutable dataclasses representing immutable values in the extraction domain.
 """
-from __future__ import annotations
-
 from dataclasses import dataclass
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from domain.extraction.entities import ExtractedEntity
 
 
 @dataclass(frozen=True)
@@ -48,7 +50,7 @@ class LayerInput:
         kg_context: Optional knowledge graph context from layer 0
     """
     text: str
-    existing_entities: list[ExtractedEntity]  # noqa: F821 — ExtractedEntity defined in entities.py
+    existing_entities: list["ExtractedEntity"]
     kg_context: list[str] | None = None
 
 
@@ -61,5 +63,5 @@ class LayerOutput:
         entities: List of entities found by this layer
         metadata: Optional key-value metadata about the extraction
     """
-    entities: list[ExtractedEntity]  # noqa: F821 — ExtractedEntity defined in entities.py
+    entities: list["ExtractedEntity"]
     metadata: dict | None = None
