@@ -345,19 +345,22 @@ class ExtractionService:
             created_at=datetime.now(timezone.utc),
         )
 
-        # Persist the result, but don't fail the entire extraction if persistence fails
+        # Persist the result, but don't fail the entire extraction if persistence fails.
+        # This is critical: extraction results from expensive LLM calls must never be
+        # lost due to a persistence layer failure. The result is still returned to the
+        # caller and the domain event is still published even if the database save fails.
         try:
             self._extraction_repo.save_extraction_result(result)
         except Exception as exc:
             _logger.error(
-                "Failed to persist extraction result %s: %s: %s",
+                "Failed to persist extraction result %s: %s: %s. Result will still be returned to caller.",
                 result_id,
                 type(exc).__name__,
                 str(exc),
                 exc_info=exc,
             )
-            # Continue: the result is still returned and the event is still published
-            # Persistence failure should not cause loss of extraction results
+            # IMPORTANT: Continue execution. The result is still returned to the caller
+            # and the completion event is still published. Persistence is fire-and-forget.
 
         # Publish completion event
         self._event_publisher.publish(ExtractionCompleted(
@@ -438,18 +441,19 @@ class ExtractionService:
 
         Deduplication rules:
         1. Sort by priority: source_layer 1 > 0 > 2 > 3
-        2. Group entities by ID first (exact match) - entities with same ID are same entity
-           Special case: if one entity is from layer 3 (reference enrichment), prefer it
-           as it contains additional enrichment data from external sources
+        2. Group entities by ID first (exact match) - entities with same ID are the same entity
+           Special handling: if multiple entities share an ID, prefer enriched copies from layer 3
+           (reference layer) as they contain additional URIs, descriptions, and metadata from
+           external sources. Never discard enrichment data when deduplicating.
         3. Then group entities with normalized labels matching >= threshold similarity
-        4. Keep the highest-priority entity in each group (or enriched version if available)
-        5. Return deduplicated entities sorted by priority
+        4. Keep the highest-priority entity in each group, or the enriched version if available
+        5. Return deduplicated entities
 
         Args:
             entities: Unfiltered list of entities from all layers
 
         Returns:
-            Deduplicated list of entities
+            Deduplicated list of entities with enrichment data preserved
         """
         if not entities:
             return []
@@ -458,6 +462,7 @@ class ExtractionService:
             return entities
 
         # Sort by priority (lower value = higher priority)
+        # Layer 1 (LLM) has highest priority, then Layer 0 (KG), then Layer 2 (NLP), then Layer 3 (Reference)
         sorted_entities = sorted(
             entities,
             key=lambda e: self.DEDUP_PRIORITY.get(e.source_layer, 999),
@@ -470,10 +475,10 @@ class ExtractionService:
             if i in used_indices:
                 continue
 
-            # Find all entities duplicated with this one
+            # Find all entities that represent the same concept
             used_indices.add(i)
             entity_to_keep = entity
-            found_enrichment = False
+            enriched_from_layer_3 = False
 
             for j in range(i + 1, len(sorted_entities)):
                 if j in used_indices:
@@ -482,23 +487,43 @@ class ExtractionService:
                 other = sorted_entities[j]
 
                 # First check: same ID means same entity
+                # This is the most reliable way to identify duplicates across layers
                 if entity.id == other.id:
-                    # Prefer enriched copy from reference layer (layer 3)
-                    # If we have a layer 3 entity, prefer it over the original for its additional data
-                    if other.source_layer == 3 and not found_enrichment:
-                        entity_to_keep = other
-                        found_enrichment = True
+                    # When we have multiple copies of the same entity (same ID),
+                    # always prefer the one with the most enrichment data.
+                    # Layer 3 (reference enrichment) provides URIs and external metadata.
+                    # Always prefer layer 3 enrichment, even if it comes from lower-priority source.
+                    if other.source_layer == 3 and not enriched_from_layer_3:
+                        # Enrich: take the higher-priority entity as base, but update with
+                        # enrichment data from layer 3 (URIs, descriptions, properties)
+                        entity_to_keep = ExtractedEntity(
+                            id=entity.id,  # Keep original ID
+                            label=entity.label,  # Keep original label
+                            entity_type=entity.entity_type,  # Keep original type
+                            source_layer=entity.source_layer,  # Keep original layer (for priority tracking)
+                            confidence=max(entity.confidence, other.confidence),  # Take best confidence
+                            uri=other.uri or entity.uri,  # Prefer enriched URI from layer 3
+                            description=other.description or entity.description,  # Prefer enriched description
+                            matched_class_id=entity.matched_class_id,  # Keep original class match
+                            properties={
+                                **(entity.properties or {}),  # Start with original properties
+                                **(other.properties or {}),  # Overlay enrichment properties
+                            },
+                        )
+                        enriched_from_layer_3 = True
                     used_indices.add(j)
                     continue
 
                 # Second check: label similarity for cross-layer matches
+                # Use this for entities that may have been extracted with slightly different text
                 label_similarity = self._normalized_similarity(entity.label, other.label)
 
                 if label_similarity >= self._similarity_threshold:
                     # Mark as duplicate of current entity (higher priority)
+                    # Only mark as used; don't merge—keep the higher-priority entity
                     used_indices.add(j)
 
-            # Keep the highest-priority entity from the group (or enriched version if found)
+            # Keep the entity (possibly enriched from layer 3)
             deduplicated.append(entity_to_keep)
 
         return deduplicated
