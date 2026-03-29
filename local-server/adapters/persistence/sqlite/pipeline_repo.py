@@ -8,7 +8,7 @@ Handles domain-to-ORM mapping, session management, and query logic.
 from typing import Optional, cast
 from datetime import datetime
 
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import sessionmaker, Session
 
 from domain.pipeline.entities import PipelineConfiguration, Execution
 from adapters.persistence.sqlite.operations.models import (
@@ -25,14 +25,23 @@ class SQLitePipelineRepository:
     complete instrumentation for observability.
     """
 
-    def __init__(self, session_factory: sessionmaker) -> None:
+    def __init__(self, session_factory: sessionmaker[Session]) -> None:
         """
         Initialize the repository with a SQLAlchemy session factory.
 
         Args:
             session_factory: SQLAlchemy sessionmaker configured for operations.db
         """
-        self._session_factory = session_factory
+        self.session_factory = session_factory
+
+    def _get_session(self) -> Session:
+        """
+        Create and return a new isolated session.
+
+        Returns:
+            SQLAlchemy Session instance
+        """
+        return self.session_factory()
 
     def get_config(self, config_id: str) -> Optional[PipelineConfiguration]:
         """
@@ -44,9 +53,13 @@ class SQLitePipelineRepository:
         Returns:
             PipelineConfiguration if found, None otherwise
         """
-        with self._session_factory() as session:
+        session = self._get_session()
+        try:
             row = session.get(PipelineConfigurationModel, str(config_id))
+            session.flush()
             return self._to_domain_config(row) if row else None
+        finally:
+            session.close()
 
     def list_configs(self, enabled_only: bool = False) -> list[PipelineConfiguration]:
         """
@@ -58,12 +71,16 @@ class SQLitePipelineRepository:
         Returns:
             List of PipelineConfiguration objects
         """
-        with self._session_factory() as session:
+        session = self._get_session()
+        try:
             query = session.query(PipelineConfigurationModel)
             if enabled_only:
                 query = query.filter_by(enabled=True)
             rows = query.all()
+            session.flush()
             return [self._to_domain_config(row) for row in rows]
+        finally:
+            session.close()
 
     def save_config(self, config: PipelineConfiguration) -> PipelineConfiguration:
         """
@@ -78,11 +95,14 @@ class SQLitePipelineRepository:
         Returns:
             The saved PipelineConfiguration
         """
-        with self._session_factory() as session:
+        session = self._get_session()
+        try:
             model = self._to_model_config(config)
             session.merge(model)
             session.commit()
-        return config
+            return config
+        finally:
+            session.close()
 
     def delete_config(self, config_id: str) -> bool:
         """
@@ -94,13 +114,16 @@ class SQLitePipelineRepository:
         Returns:
             True if deletion was successful, False if configuration was not found
         """
-        with self._session_factory() as session:
+        session = self._get_session()
+        try:
             row = session.get(PipelineConfigurationModel, str(config_id))
             if not row:
                 return False
             session.delete(row)
             session.commit()
             return True
+        finally:
+            session.close()
 
     def record_execution(self, execution: Execution) -> Execution:
         """
@@ -112,11 +135,14 @@ class SQLitePipelineRepository:
         Returns:
             The recorded Execution
         """
-        with self._session_factory() as session:
+        session = self._get_session()
+        try:
             model = self._to_model_execution(execution)
             session.add(model)
             session.commit()
-        return execution
+            return execution
+        finally:
+            session.close()
 
     def get_executions(
         self, pipeline_config_id: str, limit: int = 50
@@ -133,7 +159,8 @@ class SQLitePipelineRepository:
         Returns:
             List of Execution objects, up to limit
         """
-        with self._session_factory() as session:
+        session = self._get_session()
+        try:
             rows = (
                 session.query(ExecutionModel)
                 .filter_by(pipeline_config_id=str(pipeline_config_id))
@@ -141,7 +168,10 @@ class SQLitePipelineRepository:
                 .limit(limit)
                 .all()
             )
+            session.flush()
             return [self._to_domain_execution(row) for row in rows]
+        finally:
+            session.close()
 
     def _to_domain_config(
         self, row: PipelineConfigurationModel,

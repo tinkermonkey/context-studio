@@ -10,7 +10,7 @@ import uuid
 from datetime import datetime, timezone
 from typing import cast
 
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, sessionmaker
 
 from adapters.persistence.sqlite.models import ChangeEvent
 
@@ -23,17 +23,26 @@ class SQLiteChangeRepository:
     audit trail purposes. Maintains referential integrity with ontology entities.
 
     Attributes:
-        session: SQLAlchemy session for database access
+        session_factory: SQLAlchemy sessionmaker for creating isolated sessions
     """
 
-    def __init__(self, session: Session) -> None:
+    def __init__(self, session_factory: sessionmaker[Session]) -> None:
         """
-        Initialize the repository with a database session.
+        Initialize the repository with a database session factory.
 
         Args:
-            session: SQLAlchemy Session instance for this operation
+            session_factory: SQLAlchemy sessionmaker for creating isolated sessions
         """
-        self.session = session
+        self.session_factory = session_factory
+
+    def _get_session(self) -> Session:
+        """
+        Create and return a new isolated session.
+
+        Returns:
+            SQLAlchemy Session instance
+        """
+        return self.session_factory()
 
     def record_change(
         self,
@@ -62,20 +71,24 @@ class SQLiteChangeRepository:
         Returns:
             The ID of the recorded change event
         """
-        change_event = ChangeEvent(
-            id=str(uuid.uuid4()),
-            entity_id=entity_id,
-            entity_type=entity_type,
-            operation=operation,
-            new_state=new_state,
-            previous_state=previous_state,
-            timestamp=datetime.now(timezone.utc),
-            user_id=user_id,
-            change_reason=change_reason,
-            changeset_id=changeset_id,
-        )
+        session = self._get_session()
+        try:
+            change_event = ChangeEvent(
+                id=str(uuid.uuid4()),
+                entity_id=entity_id,
+                entity_type=entity_type,
+                operation=operation,
+                new_state=new_state,
+                previous_state=previous_state,
+                timestamp=datetime.now(timezone.utc),
+                user_id=user_id,
+                change_reason=change_reason,
+                changeset_id=changeset_id,
+            )
 
-        self.session.add(change_event)
-        self.session.flush()
+            session.add(change_event)
+            session.commit()
 
-        return cast(str, change_event.id)
+            return cast(str, change_event.id)
+        finally:
+            session.close()

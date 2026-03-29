@@ -48,18 +48,15 @@ def db_engine():
 
 
 @pytest.fixture
-def session(db_engine):
-    """Create a session for testing."""
-    SessionLocal = sessionmaker(bind=db_engine)
-    session = SessionLocal()
-    yield session
-    session.close()
+def session_factory(db_engine):
+    """Create a session factory for testing."""
+    return sessionmaker(bind=db_engine)
 
 
 @pytest.fixture
-def repo(session):
+def repo(session_factory):
     """Create a repository instance for testing."""
-    return SQLiteOntologyRepository(session)
+    return SQLiteOntologyRepository(session_factory)
 
 
 @pytest.fixture

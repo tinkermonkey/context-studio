@@ -105,9 +105,10 @@ async def lifespan(app: FastAPI):
         # --- Driven Adapters (Infrastructure) ---
 
         # Persistence
-        # Create sessions for the repositories
-        local_session = db_manager.get_local_session()
-        ontology_repo = SQLiteOntologyRepository(local_session)
+        # Repositories receive session factories, not sessions.
+        # Per-request sessions are created in route dependencies.
+        local_session_factory = db_manager.get_local_session_factory()
+        ontology_repo = SQLiteOntologyRepository(local_session_factory)
         logger.info("OntologyRepository created")
 
         operations_session_factory = db_manager.get_operations_session_factory()
@@ -147,7 +148,7 @@ async def lifespan(app: FastAPI):
         logger.info("Event publisher created")
 
         # Change event recorder for audit trail
-        change_repo = SQLiteChangeRepository(local_session)
+        change_repo = SQLiteChangeRepository(local_session_factory)
         change_recorder = ChangeEventRecorder(change_repo)
         logger.info("ChangeEventRecorder created")
 
@@ -218,7 +219,6 @@ async def lifespan(app: FastAPI):
 
     finally:
         # Cleanup
-        local_session.close()
         db_manager.dispose()
         embedding_service.cleanup()
         logger.info("Cleanup completed")

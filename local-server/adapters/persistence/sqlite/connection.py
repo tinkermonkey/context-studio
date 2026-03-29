@@ -151,6 +151,12 @@ class DatabaseManager:
             raise RuntimeError("DatabaseManager not initialized. Call initialize() first.")
         return self._local_session_factory()
 
+    def get_local_session_factory(self) -> sessionmaker[Session]:
+        """Return the local.db session factory. Must call initialize() first."""
+        if self._local_session_factory is None:
+            raise RuntimeError("DatabaseManager not initialized. Call initialize() first.")
+        return self._local_session_factory
+
     def get_operations_session(self) -> Session:
         """Create a new session for operations.db. Must call initialize() first."""
         if self._operations_session_factory is None:

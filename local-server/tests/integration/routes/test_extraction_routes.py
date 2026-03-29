@@ -64,17 +64,9 @@ def session_factory(temp_db):
 
 
 @pytest.fixture
-def session(session_factory):
-    """Create a session that stays open for the duration of the test."""
-    session_instance = session_factory()
-    yield session_instance
-    session_instance.close()
-
-
-@pytest.fixture
-def repository(session):
+def repository(session_factory):
     """Create a real SQLiteOntologyRepository with actual persistence."""
-    return SQLiteOntologyRepository(session=session)
+    return SQLiteOntologyRepository(session_factory)
 
 
 @pytest.fixture
