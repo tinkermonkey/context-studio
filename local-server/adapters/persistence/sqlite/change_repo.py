@@ -8,6 +8,7 @@ where domain events are subscribed to and persisted as change records.
 
 import uuid
 from datetime import datetime, timezone
+from typing import cast
 
 from sqlalchemy.orm import Session
 
@@ -77,4 +78,4 @@ class SQLiteChangeRepository:
         self.session.add(change_event)
         self.session.flush()
 
-        return change_event.id
+        return cast(str, change_event.id)
