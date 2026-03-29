@@ -3,7 +3,9 @@
 import sys
 import os
 
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+sys.path.append(
+    os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+)
 
 from domain.extraction.ports import NLPEntity, NLPResult
 
@@ -65,6 +67,7 @@ class FakeNLPProcessor:
                 label="ORG",
                 start=0,
                 end=10,
+                confidence=0.9,
                 linked_uri=None,
             )
         ]
