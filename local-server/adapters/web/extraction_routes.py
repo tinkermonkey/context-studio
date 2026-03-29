@@ -17,7 +17,8 @@ Error handling translates domain exceptions to appropriate HTTP responses.
 from fastapi import APIRouter, Depends, HTTPException, status
 
 from domain.extraction.services import ExtractionService
-from domain.extraction.exceptions import ExtractionError
+from domain.extraction.exceptions import ExtractionError, InvalidInputError, LayerExecutionError
+from utils.logger import get_logger
 
 from adapters.web.dependencies import get_extraction_service
 from adapters.web.schemas.extraction import (
@@ -28,6 +29,8 @@ from adapters.web.schemas.extraction import (
 )
 
 router = APIRouter(prefix="/api", tags=["extraction"])
+
+_logger = get_logger(__name__)
 
 
 # ==================== Error Handler Utilities ====================
@@ -42,11 +45,16 @@ def _handle_domain_error(exc: Exception) -> tuple[int, str]:
     Returns:
         Tuple of (status_code, error_message)
     """
-    if isinstance(exc, ExtractionError):
+    if isinstance(exc, InvalidInputError):
         return (status.HTTP_400_BAD_REQUEST, str(exc))
-    elif isinstance(exc, ValueError):
+    elif isinstance(exc, LayerExecutionError):
+        _logger.error(f"Extraction layer execution error: {exc}", exc_info=exc)
+        return (status.HTTP_500_INTERNAL_SERVER_ERROR, "Extraction layer failed to execute")
+    elif isinstance(exc, ExtractionError):
         return (status.HTTP_400_BAD_REQUEST, str(exc))
     else:
+        # Log the original exception for unexpected errors
+        _logger.error(f"Unexpected error in extraction endpoint: {exc}", exc_info=exc)
         return (status.HTTP_500_INTERNAL_SERVER_ERROR, "An unexpected error occurred")
 
 
@@ -121,9 +129,6 @@ async def extract_entities(
     try:
         result = service.extract(request.text)
         return _to_schema(result)
-    except (ExtractionError, ValueError) as exc:
-        status_code, message = _handle_domain_error(exc)
-        raise HTTPException(status_code=status_code, detail=message)
     except Exception as exc:
         status_code, message = _handle_domain_error(exc)
         raise HTTPException(status_code=status_code, detail=message)

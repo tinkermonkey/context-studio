@@ -23,6 +23,8 @@ Error handling translates domain exceptions to appropriate HTTP responses.
 from fastapi import APIRouter, Depends, HTTPException, status
 
 from domain.pipeline.services import PipelineService
+from domain.pipeline.exceptions import PipelineNotFoundError, PipelineError
+from utils.logger import get_logger
 
 from adapters.web.dependencies import get_pipeline_service
 from adapters.web.schemas.pipeline import (
@@ -34,6 +36,8 @@ from adapters.web.schemas.pipeline import (
 )
 
 router = APIRouter(prefix="/api", tags=["pipeline"])
+
+_logger = get_logger(__name__)
 
 
 # ==================== Error Handler Utilities ====================
@@ -48,9 +52,15 @@ def _handle_domain_error(exc: Exception) -> tuple[int, str]:
     Returns:
         Tuple of (status_code, error_message)
     """
-    if isinstance(exc, ValueError):
+    if isinstance(exc, PipelineNotFoundError):
+        return (status.HTTP_404_NOT_FOUND, str(exc))
+    elif isinstance(exc, PipelineError):
+        return (status.HTTP_400_BAD_REQUEST, str(exc))
+    elif isinstance(exc, ValueError):
         return (status.HTTP_400_BAD_REQUEST, str(exc))
     else:
+        # Log the original exception for unexpected errors
+        _logger.error(f"Unexpected error in pipeline endpoint: {exc}", exc_info=exc)
         return (status.HTTP_500_INTERNAL_SERVER_ERROR, "An unexpected error occurred")
 
 
@@ -86,9 +96,6 @@ async def create_pipeline_configuration(
             enabled=request.enabled,
         )
         return PipelineConfigurationResponse.model_validate(config)
-    except (ValueError,) as exc:
-        status_code, message = _handle_domain_error(exc)
-        raise HTTPException(status_code=status_code, detail=message)
     except Exception as exc:
         status_code, message = _handle_domain_error(exc)
         raise HTTPException(status_code=status_code, detail=message)
@@ -107,9 +114,6 @@ async def list_pipeline_configurations(
     try:
         configs = service.list_configs()
         return [PipelineConfigurationResponse.model_validate(c) for c in configs]
-    except (ValueError,) as exc:
-        status_code, message = _handle_domain_error(exc)
-        raise HTTPException(status_code=status_code, detail=message)
     except Exception as exc:
         status_code, message = _handle_domain_error(exc)
         raise HTTPException(status_code=status_code, detail=message)
@@ -136,16 +140,8 @@ async def get_pipeline_configuration(
     try:
         config = service.get_config(pipeline_id)
         if config is None:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Pipeline configuration {pipeline_id} not found"
-            )
+            raise PipelineNotFoundError(f"Pipeline configuration {pipeline_id} not found")
         return PipelineConfigurationResponse.model_validate(config)
-    except HTTPException:
-        raise
-    except (ValueError,) as exc:
-        status_code, message = _handle_domain_error(exc)
-        raise HTTPException(status_code=status_code, detail=message)
     except Exception as exc:
         status_code, message = _handle_domain_error(exc)
         raise HTTPException(status_code=status_code, detail=message)
@@ -183,11 +179,6 @@ async def update_pipeline_configuration(
             enabled=request.enabled,
         )
         return PipelineConfigurationResponse.model_validate(config)
-    except ValueError as exc:
-        if "not found" in str(exc):
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc))
-        status_code, message = _handle_domain_error(exc)
-        raise HTTPException(status_code=status_code, detail=message)
     except Exception as exc:
         status_code, message = _handle_domain_error(exc)
         raise HTTPException(status_code=status_code, detail=message)
@@ -211,15 +202,7 @@ async def delete_pipeline_configuration(
     try:
         success = service.delete_config(pipeline_id)
         if not success:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Pipeline configuration {pipeline_id} not found"
-            )
-    except HTTPException:
-        raise
-    except (ValueError,) as exc:
-        status_code, message = _handle_domain_error(exc)
-        raise HTTPException(status_code=status_code, detail=message)
+            raise PipelineNotFoundError(f"Pipeline configuration {pipeline_id} not found")
     except Exception as exc:
         status_code, message = _handle_domain_error(exc)
         raise HTTPException(status_code=status_code, detail=message)
@@ -253,11 +236,6 @@ async def execute_pipeline(
             input_text=request.input_text,
         )
         return ExecutionResponse.model_validate(execution)
-    except ValueError as exc:
-        if "not found" in str(exc):
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc))
-        status_code, message = _handle_domain_error(exc)
-        raise HTTPException(status_code=status_code, detail=message)
     except Exception as exc:
         status_code, message = _handle_domain_error(exc)
         raise HTTPException(status_code=status_code, detail=message)
@@ -286,11 +264,6 @@ async def get_pipeline_executions(
     try:
         executions = service.list_executions(pipeline_id, limit=50)
         return [ExecutionResponse.model_validate(e) for e in executions]
-    except ValueError as exc:
-        if "not found" in str(exc):
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc))
-        status_code, message = _handle_domain_error(exc)
-        raise HTTPException(status_code=status_code, detail=message)
     except Exception as exc:
         status_code, message = _handle_domain_error(exc)
         raise HTTPException(status_code=status_code, detail=message)

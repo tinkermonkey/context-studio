@@ -16,6 +16,7 @@ from domain.extraction.ports import LLMProvider
 from domain.ports import EventPublisher
 from .entities import Execution, PipelineConfiguration
 from .events import PipelineExecuted
+from .exceptions import PipelineNotFoundError
 from .ports import PipelineRepository
 
 
@@ -144,11 +145,11 @@ class PipelineService:
             The updated PipelineConfiguration
 
         Raises:
-            ValueError: If configuration not found
+            PipelineNotFoundError: If configuration not found
         """
         existing = self._pipeline_repo.get_config(config_id)
         if existing is None:
-            raise ValueError(f"Pipeline configuration {config_id} not found")
+            raise PipelineNotFoundError(f"Pipeline configuration {config_id} not found")
 
         # Create updated config by copying and applying changes
         updated = PipelineConfiguration(
@@ -193,11 +194,11 @@ class PipelineService:
             List of Execution objects, up to the specified limit
 
         Raises:
-            ValueError: If configuration not found
+            PipelineNotFoundError: If configuration not found
         """
         config = self._pipeline_repo.get_config(config_id)
         if config is None:
-            raise ValueError(f"Pipeline configuration {config_id} not found")
+            raise PipelineNotFoundError(f"Pipeline configuration {config_id} not found")
         return self._pipeline_repo.get_executions(config_id, limit=limit)
 
     def execute_pipeline(self, config_id: str, input_text: str) -> Execution:
@@ -216,11 +217,11 @@ class PipelineService:
             The recorded Execution
 
         Raises:
-            ValueError: If configuration not found
+            PipelineNotFoundError: If configuration not found
         """
         config = self._pipeline_repo.get_config(config_id)
         if config is None:
-            raise ValueError(f"Pipeline configuration {config_id} not found")
+            raise PipelineNotFoundError(f"Pipeline configuration {config_id} not found")
 
         execution_id = str(uuid4())
         start_time = time.time()

@@ -15,6 +15,7 @@ import time
 
 from domain.pipeline.events import PipelineExecuted
 from domain.pipeline.services import PipelineService
+from domain.pipeline.exceptions import PipelineNotFoundError
 from tests.fakes.fake_pipeline_repository import FakePipelineRepository
 from tests.fakes.fake_llm_provider import FakeLLMProvider
 from tests.fakes.fake_event_publisher import FakeEventPublisher
@@ -175,8 +176,8 @@ class TestPipelineServiceConfigurationCRUD:
         assert updated.system_prompt == "Original system"  # Unchanged
 
     def test_update_config_raises_if_not_found(self):
-        """Updating non-existent config raises ValueError."""
-        with pytest.raises(ValueError, match="not found"):
+        """Updating non-existent config raises PipelineNotFoundError."""
+        with pytest.raises(PipelineNotFoundError, match="not found"):
             self.service.update_config("nonexistent-id", title="New Title")
 
     def test_delete_config(self):
@@ -331,8 +332,8 @@ class TestPipelineServiceExecution:
         assert event.status == "error"
 
     def test_execute_pipeline_raises_if_config_not_found(self):
-        """Execute pipeline raises ValueError if config not found."""
-        with pytest.raises(ValueError, match="not found"):
+        """Execute pipeline raises PipelineNotFoundError if config not found."""
+        with pytest.raises(PipelineNotFoundError, match="not found"):
             self.service.execute_pipeline("nonexistent-id", "Input")
 
     def test_execute_pipeline_records_with_repository(self):

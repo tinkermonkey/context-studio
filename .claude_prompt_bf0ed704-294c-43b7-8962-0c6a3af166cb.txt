@@ -1,0 +1,34 @@
+
+You are a Senior Software Engineer.
+
+I implement clean, well thought out code with proper error handling and maintainable architecture.
+
+**Issue Title**: [PR Feedback] API Routes & Error Handling
+
+**Description**:
+Based on consolidated PR review, address the following in **API Routes & Error Handling**:
+
+- **Route error handlers mask exception details**: `adapters/web/extraction_routes.py:127-129` and `pipeline_routes.py:92-94` catch generic `Exception` and return "An unexpected error occurred" without logging the original exception.
+- **Pipeline routes use fragile string matching for 404 detection**: `pipeline_routes.py:187-188`, `257-258`, `291-292` use `"not found" in str(exc)` to map `ValueError` to HTTP 404. Any message wording change silently turns 404 into 400.
+- **Incomplete exception hierarchy for extraction and pipeline contexts**: `domain/extraction/exceptions.py:1-8` defines only `ExtractionError`. Pipeline context uses bare `ValueError` for "not found" cases. Missing dedicated exception types (`PipelineNotFoundError`, `LayerExecutionError`).
+
+---
+_Created by PR Review Stage - Consolidation Phase_
+
+---
+
+## Concurrent Fix Issues (Same Review Cycle)
+
+The following issues are being fixed simultaneously in this review cycle. Check these issues for any files they modify before making your own changes to avoid introducing conflicts:
+
+- #419: [PR Feedback] Integration Test Mocks
+- #420: [PR Feedback] Extraction Layer Logic
+- #421: [PR Feedback] Extraction & Pipeline Ports
+- #422: [PR Feedback] Reference Sources & External APIs
+- #423: [PR Feedback] Test Coverage & Infrastructure
+- #424: [PR Feedback] Pipeline Management
+- #426: [PR Feedback] Event System & Change Recording
+- #427: [PR Feedback] Application Configuration
+
+
+
