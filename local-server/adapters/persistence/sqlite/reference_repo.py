@@ -150,7 +150,7 @@ class LocalReferenceRepository:
                 return results
         except Exception as e:
             logger.warning(f"Local reference search failed for '{term}': {e}")
-            return []
+            raise
 
     def get_relations(self, uri: str, limit: int = 10) -> list[ReferenceRelation]:
         """
@@ -190,7 +190,7 @@ class LocalReferenceRepository:
                 return relations
         except Exception as e:
             logger.warning(f"Local reference get_relations failed for '{uri}': {e}")
-            return []
+            raise
 
     def import_reference(
         self, uri: str, label: str, description: str | None, source: str
