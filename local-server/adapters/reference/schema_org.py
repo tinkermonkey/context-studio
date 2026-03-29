@@ -1,5 +1,6 @@
 """schema.org reference source adapter for vocabulary definitions."""
 
+from adapters.reference.exceptions import ReferenceSourceParseError
 from domain.extraction.ports import ReferenceResult, ReferenceRelation
 from utils.logger import get_logger
 
@@ -106,6 +107,9 @@ class SchemaOrgSource:
 
         Returns:
             List of ReferenceResult objects matching the term
+
+        Raises:
+            ReferenceSourceParseError: On unexpected data structure errors
         """
         try:
             term_lower = term.lower()
@@ -133,9 +137,16 @@ class SchemaOrgSource:
                     break
 
             return results
+        except KeyError as e:
+            logger.error(f"schema.org malformed definition structure for '{term}': {e}")
+            raise ReferenceSourceParseError(
+                f"schema.org vocabulary has malformed definition"
+            ) from e
         except Exception as e:
-            logger.warning(f"schema.org search failed for '{term}': {e}")
-            return []
+            logger.error(f"Unexpected error during schema.org search for '{term}': {e}")
+            raise ReferenceSourceParseError(
+                f"Unexpected error during schema.org search"
+            ) from e
 
     def get_relations(self, uri: str, limit: int = 10) -> list[ReferenceRelation]:
         """
@@ -149,6 +160,9 @@ class SchemaOrgSource:
 
         Returns:
             List of ReferenceRelation objects
+
+        Raises:
+            ReferenceSourceParseError: On unexpected data structure errors
         """
         try:
             # Extract type name from URI
@@ -169,5 +183,7 @@ class SchemaOrgSource:
 
             return relations
         except Exception as e:
-            logger.warning(f"schema.org get_relations failed for '{uri}': {e}")
-            return []
+            logger.error(f"Unexpected error during schema.org get_relations for '{uri}': {e}")
+            raise ReferenceSourceParseError(
+                f"Unexpected error during schema.org get_relations"
+            ) from e

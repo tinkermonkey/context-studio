@@ -9,6 +9,7 @@ Each bounded context has getter functions for its services:
 - get_ontology_service()
 - get_graph_service()
 - get_extraction_service()
+- get_reference_sources()
 - etc.
 
 Usage in route handlers:
@@ -27,6 +28,7 @@ from fastapi import Request
 from domain.ontology.services import OntologyService
 from domain.graph.services import GraphAnalysisService
 from domain.extraction.services import ExtractionService
+from domain.extraction.ports import ReferenceSource
 from domain.pipeline.services import PipelineService
 
 
@@ -104,3 +106,22 @@ async def get_pipeline_service(request: Request) -> PipelineService:
     if service is None:
         raise RuntimeError("PipelineService not initialized in app.state")
     return service
+
+
+async def get_reference_sources(request: Request) -> list[ReferenceSource]:
+    """
+    Extract the list of reference sources from app state.
+
+    Args:
+        request: FastAPI request object
+
+    Returns:
+        The list of ReferenceSource instances from app.state
+
+    Raises:
+        RuntimeError: If reference sources are not initialized in app.state
+    """
+    sources = getattr(request.app.state, "reference_sources", None)
+    if sources is None:
+        raise RuntimeError("Reference sources not initialized in app.state")
+    return sources

@@ -31,6 +31,8 @@ class CachedReferenceSource(ReferenceSource):
         Initialize the caching decorator.
 
         Automatically creates the cache database on initialization if it doesn't exist.
+        If cache initialization fails, caching is disabled and all requests pass through
+        to the inner source.
 
         Args:
             inner: The wrapped ReferenceSource implementation
@@ -40,6 +42,7 @@ class CachedReferenceSource(ReferenceSource):
         self._inner = inner
         self._cache_db_path = cache_db_path
         self._ttl_hours = ttl_hours
+        self._cache_available = True
         self._ensure_cache_db()
 
     def _ensure_cache_db(self) -> None:
@@ -49,6 +52,9 @@ class CachedReferenceSource(ReferenceSource):
         Creates two tables:
         - cache: Caches search results with TTL
         - relations_cache: Caches relationship queries with TTL
+
+        If initialization fails, sets _cache_available to False and logs an error.
+        This allows graceful degradation: requests pass through to inner source without caching.
         """
         try:
             Path(self._cache_db_path).parent.mkdir(parents=True, exist_ok=True)
@@ -75,8 +81,15 @@ class CachedReferenceSource(ReferenceSource):
                 )
 
                 conn.commit()
+        except OSError as e:
+            logger.error(f"Failed to create directory for cache database: {e}")
+            self._cache_available = False
+        except sqlite3.DatabaseError as e:
+            logger.error(f"Failed to initialize cache database schema: {e}")
+            self._cache_available = False
         except Exception as e:
-            logger.warning(f"Failed to initialize cache database: {e}")
+            logger.error(f"Unexpected error initializing cache database: {e}")
+            self._cache_available = False
 
     @property
     def source_name(self) -> str:
@@ -93,7 +106,8 @@ class CachedReferenceSource(ReferenceSource):
         Search for entities, using cache if available.
 
         Cache key is constructed from source name, term, and limit to ensure
-        different limits get separate cache entries.
+        different limits get separate cache entries. If cache is unavailable,
+        all requests pass through to the inner source.
 
         Args:
             term: Search query
@@ -102,6 +116,9 @@ class CachedReferenceSource(ReferenceSource):
         Returns:
             List of ReferenceResult objects from cache or inner source
         """
+        if not self._cache_available:
+            return self._inner.search(term, limit)
+
         cache_key = f"search:{self.source_name}:{term}:{limit}"
         cached = self._get_cached(cache_key)
 
@@ -120,6 +137,7 @@ class CachedReferenceSource(ReferenceSource):
         Get relationships for a URI, using cache if available.
 
         Cache key is constructed from source name, URI, and limit.
+        If cache is unavailable, all requests pass through to the inner source.
 
         Args:
             uri: URI to find relations for
@@ -128,6 +146,9 @@ class CachedReferenceSource(ReferenceSource):
         Returns:
             List of ReferenceRelation objects from cache or inner source
         """
+        if not self._cache_available:
+            return self._inner.get_relations(uri, limit)
+
         cache_key = f"relations:{self.source_name}:{uri}:{limit}"
         cached = self._get_cached(cache_key, is_relations=True)
 

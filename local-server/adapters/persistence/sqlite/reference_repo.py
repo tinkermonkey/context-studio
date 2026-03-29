@@ -47,6 +47,10 @@ class LocalReferenceRepository:
         Create database schema if it doesn't exist.
 
         This is idempotent and safe to call multiple times.
+
+        Raises:
+            OSError: If parent directory cannot be created
+            sqlite3.DatabaseError: If database schema creation fails
         """
         try:
             Path(self._db_path).parent.mkdir(parents=True, exist_ok=True)
@@ -96,8 +100,15 @@ class LocalReferenceRepository:
                 )
 
                 conn.commit()
+        except OSError as e:
+            logger.error(f"Failed to create directory for reference database: {e}")
+            raise
+        except sqlite3.DatabaseError as e:
+            logger.error(f"Failed to initialize reference database schema: {e}")
+            raise
         except Exception as e:
-            logger.warning(f"Failed to initialize reference database: {e}")
+            logger.error(f"Unexpected error initializing reference database: {e}")
+            raise
 
     def search(self, term: str, limit: int = 10) -> list[ReferenceResult]:
         """

@@ -2,6 +2,12 @@
 
 import httpx
 
+from adapters.reference.exceptions import (
+    ReferenceSourceNetworkError,
+    ReferenceSourceTimeoutError,
+    ReferenceSourceHTTPError,
+    ReferenceSourceParseError,
+)
 from domain.extraction.ports import ReferenceResult, ReferenceRelation
 from utils.logger import get_logger
 
@@ -50,7 +56,17 @@ class ConceptNetSource:
                 timeout=self._timeout,
             )
             return response.status_code == 200
-        except Exception:
+        except httpx.TimeoutException as e:
+            logger.warning(f"ConceptNet availability check timed out: {e}")
+            return False
+        except httpx.NetworkError as e:
+            logger.warning(f"ConceptNet network error during availability check: {e}")
+            return False
+        except httpx.HTTPError as e:
+            logger.warning(f"ConceptNet HTTP error during availability check: {e}")
+            return False
+        except Exception as e:
+            logger.error(f"Unexpected error during ConceptNet availability check: {e}")
             return False
 
     def search(self, term: str, limit: int = 10) -> list[ReferenceResult]:
@@ -62,7 +78,13 @@ class ConceptNetSource:
             limit: Maximum number of results to return
 
         Returns:
-            List of ReferenceResult objects. Returns empty list on any error.
+            List of ReferenceResult objects. Returns empty list on network error.
+
+        Raises:
+            ReferenceSourceNetworkError: On network connectivity issues
+            ReferenceSourceTimeoutError: On request timeout
+            ReferenceSourceHTTPError: On HTTP error responses
+            ReferenceSourceParseError: On JSON parsing failures
         """
         try:
             response = httpx.get(
@@ -98,9 +120,33 @@ class ConceptNetSource:
                         break
 
             return results
-        except Exception as e:
-            logger.warning(f"ConceptNet search failed for '{term}': {e}")
-            return []
+        except httpx.TimeoutException as e:
+            logger.error(f"ConceptNet search timed out for '{term}': {e}")
+            raise ReferenceSourceTimeoutError(
+                f"ConceptNet search timed out for '{term}'"
+            ) from e
+        except httpx.NetworkError as e:
+            logger.error(f"ConceptNet network error during search for '{term}': {e}")
+            raise ReferenceSourceNetworkError(
+                f"ConceptNet network error during search for '{term}'"
+            ) from e
+        except httpx.HTTPStatusError as e:
+            logger.error(
+                f"ConceptNet HTTP {e.response.status_code} error during search for '{term}': {e}"
+            )
+            raise ReferenceSourceHTTPError(
+                f"ConceptNet returned HTTP {e.response.status_code} for search '{term}'"
+            ) from e
+        except httpx.HTTPError as e:
+            logger.error(f"ConceptNet HTTP error during search for '{term}': {e}")
+            raise ReferenceSourceHTTPError(
+                f"ConceptNet HTTP error during search for '{term}'"
+            ) from e
+        except ValueError as e:
+            logger.error(f"ConceptNet JSON parse error during search for '{term}': {e}")
+            raise ReferenceSourceParseError(
+                f"ConceptNet returned invalid JSON for search '{term}'"
+            ) from e
 
     def get_relations(self, uri: str, limit: int = 10) -> list[ReferenceRelation]:
         """
@@ -111,7 +157,13 @@ class ConceptNetSource:
             limit: Maximum number of relations to return
 
         Returns:
-            List of ReferenceRelation objects. Returns empty list on any error.
+            List of ReferenceRelation objects. Returns empty list on network error.
+
+        Raises:
+            ReferenceSourceNetworkError: On network connectivity issues
+            ReferenceSourceTimeoutError: On request timeout
+            ReferenceSourceHTTPError: On HTTP error responses
+            ReferenceSourceParseError: On JSON parsing failures
         """
         try:
             response = httpx.get(
@@ -146,6 +198,34 @@ class ConceptNetSource:
                         )
 
             return relations
-        except Exception as e:
-            logger.warning(f"ConceptNet get_relations failed for '{uri}': {e}")
-            return []
+        except httpx.TimeoutException as e:
+            logger.error(f"ConceptNet get_relations timed out for '{uri}': {e}")
+            raise ReferenceSourceTimeoutError(
+                f"ConceptNet get_relations timed out for '{uri}'"
+            ) from e
+        except httpx.NetworkError as e:
+            logger.error(
+                f"ConceptNet network error during get_relations for '{uri}': {e}"
+            )
+            raise ReferenceSourceNetworkError(
+                f"ConceptNet network error during get_relations for '{uri}'"
+            ) from e
+        except httpx.HTTPStatusError as e:
+            logger.error(
+                f"ConceptNet HTTP {e.response.status_code} error during get_relations for '{uri}': {e}"
+            )
+            raise ReferenceSourceHTTPError(
+                f"ConceptNet returned HTTP {e.response.status_code} for get_relations '{uri}'"
+            ) from e
+        except httpx.HTTPError as e:
+            logger.error(f"ConceptNet HTTP error during get_relations for '{uri}': {e}")
+            raise ReferenceSourceHTTPError(
+                f"ConceptNet HTTP error during get_relations for '{uri}'"
+            ) from e
+        except ValueError as e:
+            logger.error(
+                f"ConceptNet JSON parse error during get_relations for '{uri}': {e}"
+            )
+            raise ReferenceSourceParseError(
+                f"ConceptNet returned invalid JSON for get_relations '{uri}'"
+            ) from e

@@ -2,6 +2,12 @@
 
 import httpx
 
+from adapters.reference.exceptions import (
+    ReferenceSourceNetworkError,
+    ReferenceSourceTimeoutError,
+    ReferenceSourceHTTPError,
+    ReferenceSourceParseError,
+)
 from domain.extraction.ports import ReferenceResult, ReferenceRelation
 from utils.logger import get_logger
 
@@ -51,7 +57,17 @@ class DBpediaSource:
                 timeout=self._timeout,
             )
             return response.status_code == 200
-        except Exception:
+        except httpx.TimeoutException as e:
+            logger.warning(f"DBpedia availability check timed out: {e}")
+            return False
+        except httpx.NetworkError as e:
+            logger.warning(f"DBpedia network error during availability check: {e}")
+            return False
+        except httpx.HTTPError as e:
+            logger.warning(f"DBpedia HTTP error during availability check: {e}")
+            return False
+        except Exception as e:
+            logger.error(f"Unexpected error during DBpedia availability check: {e}")
             return False
 
     def search(self, term: str, limit: int = 10) -> list[ReferenceResult]:
@@ -63,7 +79,13 @@ class DBpediaSource:
             limit: Maximum number of results to return
 
         Returns:
-            List of ReferenceResult objects. Returns empty list on any error.
+            List of ReferenceResult objects. Returns empty list on network error.
+
+        Raises:
+            ReferenceSourceNetworkError: On network connectivity issues
+            ReferenceSourceTimeoutError: On request timeout
+            ReferenceSourceHTTPError: On HTTP error responses
+            ReferenceSourceParseError: On JSON parsing failures
         """
         try:
             response = httpx.get(
@@ -98,9 +120,33 @@ class DBpediaSource:
                         )
 
             return results
-        except Exception as e:
-            logger.warning(f"DBpedia search failed for '{term}': {e}")
-            return []
+        except httpx.TimeoutException as e:
+            logger.error(f"DBpedia search timed out for '{term}': {e}")
+            raise ReferenceSourceTimeoutError(
+                f"DBpedia search timed out for '{term}'"
+            ) from e
+        except httpx.NetworkError as e:
+            logger.error(f"DBpedia network error during search for '{term}': {e}")
+            raise ReferenceSourceNetworkError(
+                f"DBpedia network error during search for '{term}'"
+            ) from e
+        except httpx.HTTPStatusError as e:
+            logger.error(
+                f"DBpedia HTTP {e.response.status_code} error during search for '{term}': {e}"
+            )
+            raise ReferenceSourceHTTPError(
+                f"DBpedia returned HTTP {e.response.status_code} for search '{term}'"
+            ) from e
+        except httpx.HTTPError as e:
+            logger.error(f"DBpedia HTTP error during search for '{term}': {e}")
+            raise ReferenceSourceHTTPError(
+                f"DBpedia HTTP error during search for '{term}'"
+            ) from e
+        except ValueError as e:
+            logger.error(f"DBpedia JSON parse error during search for '{term}': {e}")
+            raise ReferenceSourceParseError(
+                f"DBpedia returned invalid JSON for search '{term}'"
+            ) from e
 
     def get_relations(self, uri: str, limit: int = 10) -> list[ReferenceRelation]:
         """

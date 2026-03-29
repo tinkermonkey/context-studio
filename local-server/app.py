@@ -52,6 +52,7 @@ from adapters.web.ontology_routes import router as ontology_router
 from adapters.web.graph_routes import router as graph_router
 from adapters.web.extraction_routes import router as extraction_router
 from adapters.web.pipeline_routes import router as pipeline_router
+from adapters.web.reference_routes import router as reference_router
 from adapters.web.schemas.admin import SystemHealthResponse
 
 logger = get_logger(__name__)
@@ -219,6 +220,7 @@ async def lifespan(app: FastAPI):
         app.state.extraction_service = extraction_service
         app.state.pipeline_service = pipeline_service
         app.state.db_manager = db_manager
+        app.state.reference_sources = reference_sources
 
         # Store adapters needed for health checks
         app.state.nlp_processor = nlp_processor
@@ -258,6 +260,7 @@ app.include_router(ontology_router)
 app.include_router(graph_router)
 app.include_router(extraction_router)
 app.include_router(pipeline_router)
+app.include_router(reference_router)
 
 
 @app.get("/api/health", response_model=SystemHealthResponse)
