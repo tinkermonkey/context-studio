@@ -121,7 +121,6 @@ class ExtractionService:
         layer_1_input = LayerInput(
             text=text,
             existing_entities=all_entities.copy(),
-            kg_context=layer_0_output.entities,
         )
         layer_1_output = self._execute_layer(
             layer_num=1,
@@ -138,7 +137,6 @@ class ExtractionService:
         layer_2_input = LayerInput(
             text=text,
             existing_entities=all_entities.copy(),
-            kg_context=layer_0_output.entities,
         )
         layer_2_output = self._execute_layer(
             layer_num=2,
@@ -155,7 +153,6 @@ class ExtractionService:
         layer_3_input = LayerInput(
             text=text,
             existing_entities=all_entities.copy(),
-            kg_context=layer_0_output.entities,
         )
         layer_3_output = self._execute_layer(
             layer_num=3,
@@ -223,7 +220,6 @@ class ExtractionService:
         layer_2_input = LayerInput(
             text=text,
             existing_entities=all_entities.copy(),
-            kg_context=layer_0_output.entities,
         )
         layer_2_output = self._execute_layer(
             layer_num=2,
