@@ -22,7 +22,7 @@ sys.path.append(
 )
 
 from adapters.llm.provider_router import LLMProviderRouter
-from domain.ports import LLMResponse
+from domain.extraction.ports import LLMResponse
 
 
 class MockLLMProvider:
@@ -262,7 +262,7 @@ class TestLLMProviderRouter:
             model="gpt-4o",
             temperature=0.7,
             max_tokens=1000,
-            response_format={"type": "json_object"},
+            response_format="json",
         )
 
         openai_provider.complete.assert_called_once_with(
@@ -271,7 +271,7 @@ class TestLLMProviderRouter:
             model="gpt-4o",
             temperature=0.7,
             max_tokens=1000,
-            response_format={"type": "json_object"},
+            response_format="json",
             timeout=None,
         )
         assert response is expected_response

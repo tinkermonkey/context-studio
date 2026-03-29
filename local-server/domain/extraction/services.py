@@ -13,7 +13,8 @@ from datetime import datetime, timezone
 from uuid import uuid4
 
 from domain.ontology.ports import OntologyRepository, EmbeddingService
-from domain.ports import EventPublisher, LLMProvider
+from domain.ports import EventPublisher
+from domain.extraction.ports import LLMProvider
 from . import layers
 from .entities import ExtractedEntity, ExtractionResult
 from .events import ExtractionCompleted

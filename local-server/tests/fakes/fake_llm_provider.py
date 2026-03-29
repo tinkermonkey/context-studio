@@ -6,7 +6,8 @@ from typing import Any
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
-from domain.ports import LLMResponse
+from typing import Literal
+from domain.extraction.ports import LLMResponse
 
 
 class FakeLLMProvider:
@@ -26,7 +27,7 @@ class FakeLLMProvider:
         self.tokens_in = tokens_in
         self.tokens_out = tokens_out
         self.call_count = 0
-        self.last_call_args: dict[str, Any] | None = None
+        self.last_call_args: dict[str, Literal["json", "text"] | None] | None = None
         self.should_raise_error = should_fail
         self.error_to_raise = RuntimeError("LLM provider error") if should_fail else None
         self.available_models = ["test-model", "gpt-4", "claude-opus"]
@@ -38,7 +39,7 @@ class FakeLLMProvider:
         model: str,
         temperature: float = 0.0,
         max_tokens: int = 2000,
-        response_format: dict[str, Any] | None = None,
+        response_format: Literal["json", "text"] | None = None,
         timeout: float | None = None,
     ) -> LLMResponse:
         """

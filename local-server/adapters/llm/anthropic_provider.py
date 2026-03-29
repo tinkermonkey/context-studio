@@ -5,7 +5,7 @@ Provides integration with Anthropic's Claude API for language model completions.
 """
 
 import time
-from typing import Any
+from typing import Literal
 
 try:
     import anthropic
@@ -14,7 +14,7 @@ except ImportError:
     HAS_ANTHROPIC = False
     anthropic = None  # type: ignore[assignment]
 
-from domain.ports import LLMResponse
+from domain.extraction.ports import LLMResponse
 from utils.logger import get_logger
 from utils.async_executor import run_sync_in_executor
 
@@ -56,7 +56,7 @@ class AnthropicProvider:
         model: str,
         temperature: float = 0.0,
         max_tokens: int = 2000,
-        response_format: dict[str, Any] | None = None,
+        response_format: Literal["json", "text"] | None = None,
         timeout: float | None = None,
     ) -> LLMResponse:
         """
@@ -140,7 +140,7 @@ class AnthropicProvider:
         model: str,
         temperature: float = 0.0,
         max_tokens: int = 2000,
-        response_format: dict[str, Any] | None = None,
+        response_format: Literal["json", "text"] | None = None,
         timeout: float | None = None,
     ) -> LLMResponse:
         """

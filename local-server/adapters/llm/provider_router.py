@@ -9,11 +9,11 @@ This adapter implements the LLMProvider port and is used by the Knowledge Extrac
 and LLM Pipeline services.
 """
 
-from typing import Any
+from typing import Literal
 
 from adapters.llm.openai_provider import OpenAIProvider
 from adapters.llm.anthropic_provider import AnthropicProvider
-from domain.ports import LLMProvider, LLMResponse
+from domain.extraction.ports import LLMProvider, LLMResponse
 from utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -69,7 +69,7 @@ class LLMProviderRouter:
         model: str,
         temperature: float = 0.0,
         max_tokens: int = 2000,
-        response_format: dict[str, Any] | None = None,
+        response_format: Literal["json", "text"] | None = None,
         timeout: float | None = None,
     ) -> LLMResponse:
         """
@@ -154,7 +154,7 @@ class LLMProviderRouter:
         model: str,
         temperature: float = 0.0,
         max_tokens: int = 2000,
-        response_format: dict[str, Any] | None = None,
+        response_format: Literal["json", "text"] | None = None,
         timeout: float | None = None,
     ) -> LLMResponse:
         """

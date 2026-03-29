@@ -176,7 +176,7 @@ class TestExtractionLayerMetrics:
         # Should complete despite reference source failure
         assert result is not None
         # Layer 3 should have recorded an error or continued with entities
-        layer_3 = next((l for l in result.layers_executed if l.layer_num == 3), None)
+        layer_3 = next((layer for layer in result.layers_executed if layer.layer_num == 3), None)
         if layer_3 is not None:
             # Either layer recorded an error message OR it has entities despite failure
             assert layer_3.error_message is not None or len(layer_3.entities) > 0
@@ -209,7 +209,7 @@ class TestReferenceAggregationAcrossSources:
         result = service.extract("Apple is a company")
 
         # Verify that reference layer executed
-        layer_3 = next((l for l in result.layers_executed if l.layer_num == 3), None)
+        layer_3 = next((layer for layer in result.layers_executed if layer.layer_num == 3), None)
         assert layer_3 is not None
         assert layer_3.layer_name == "Reference Source Enrichment"
 
@@ -371,7 +371,7 @@ def test_full_rag_extraction_pipeline():
     assert result.created_at is not None
 
     # Verify at least Layer 1 (LLM) extracted entities
-    llm_layer = next((l for l in result.layers_executed if l.layer_num == 1), None)
+    llm_layer = next((layer for layer in result.layers_executed if layer.layer_num == 1), None)
     assert llm_layer is not None
     # LLM layer should contribute entities
     assert llm_layer.entities or len(result.entities) > 0

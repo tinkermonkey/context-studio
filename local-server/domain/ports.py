@@ -8,8 +8,7 @@ and other cross-cutting concerns. Using typing.Protocol enables structural subty
 
 from __future__ import annotations
 
-from dataclasses import dataclass
-from typing import Any, Callable, Protocol, TypeVar
+from typing import Callable, Protocol, TypeVar
 
 from .events import DomainEvent
 
@@ -83,63 +82,5 @@ class EventPublisher(Protocol):
         Args:
             event_type: The DomainEvent subclass to subscribe to
             handler: Callable that will handle the event
-        """
-        ...
-
-
-class LLMProvider(Protocol):
-    """
-    Port for LLM completion and model introspection.
-
-    Implementations provide access to language models for text generation
-    and information about available models. This port is shared across both
-    the extraction and pipeline bounded contexts.
-    """
-
-    def complete(
-        self,
-        system_prompt: str,
-        user_prompt: str,
-        model: str,
-        temperature: float = 0.0,
-        max_tokens: int = 2000,
-        response_format: dict[str, Any] | None = None,
-        timeout: float | None = None,
-    ) -> LLMResponse:
-        """
-        Request a completion from an LLM.
-
-        Args:
-            system_prompt: System context for the model
-            user_prompt: User message to respond to
-            model: Model identifier
-            temperature: Sampling temperature (0.0–1.0)
-            max_tokens: Maximum tokens to generate
-            response_format: Optional JSON schema for structured output
-            timeout: Request timeout in seconds (provider-specific behavior)
-
-        Returns:
-            LLMResponse with generated content and metadata
-        """
-        ...
-
-    def is_model_available(self, model: str) -> bool:
-        """
-        Check if a specific model is available.
-
-        Args:
-            model: Model identifier
-
-        Returns:
-            True if the model can be used, False otherwise
-        """
-        ...
-
-    def list_available_models(self) -> list[str]:
-        """
-        Get list of available model identifiers.
-
-        Returns:
-            List of model names that can be used with complete()
         """
         ...

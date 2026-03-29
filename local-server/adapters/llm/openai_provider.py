@@ -5,7 +5,7 @@ Provides integration with OpenAI's API for language model completions.
 """
 
 import time
-from typing import Any
+from typing import Literal
 
 try:
     import openai
@@ -14,7 +14,7 @@ except ImportError:
     HAS_OPENAI = False
     openai = None  # type: ignore[assignment]
 
-from domain.ports import LLMResponse
+from domain.extraction.ports import LLMResponse
 from utils.logger import get_logger
 from utils.async_executor import run_sync_in_executor
 
@@ -52,7 +52,7 @@ class OpenAIProvider:
         model: str,
         temperature: float = 0.0,
         max_tokens: int = 2000,
-        response_format: dict[str, Any] | None = None,
+        response_format: Literal["json", "text"] | None = None,
         timeout: float | None = None,
     ) -> LLMResponse:
         """
@@ -92,8 +92,11 @@ class OpenAIProvider:
                 "max_tokens": max_tokens,
             }
 
-            if response_format is not None:
-                kwargs["response_format"] = response_format
+            if response_format == "json":
+                kwargs["response_format"] = {"type": "json_object"}
+            elif response_format == "text":
+                # OpenAI doesn't require special handling for text mode
+                pass
 
             if timeout is not None:
                 kwargs["timeout"] = timeout
@@ -143,7 +146,7 @@ class OpenAIProvider:
         model: str,
         temperature: float = 0.0,
         max_tokens: int = 2000,
-        response_format: dict[str, Any] | None = None,
+        response_format: Literal["json", "text"] | None = None,
         timeout: float | None = None,
     ) -> LLMResponse:
         """

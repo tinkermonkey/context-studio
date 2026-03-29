@@ -12,7 +12,8 @@ import time
 from datetime import datetime, timezone
 from uuid import uuid4
 
-from domain.ports import EventPublisher, LLMProvider
+from domain.ports import EventPublisher
+from domain.extraction.ports import LLMProvider
 from .entities import Execution, PipelineConfiguration
 from .events import PipelineExecuted
 from .exceptions import PipelineNotFoundError

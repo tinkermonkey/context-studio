@@ -8,7 +8,7 @@ import logging
 
 from domain.extraction.entities import ExtractedEntity
 from domain.extraction.value_objects import LayerInput, LayerOutput
-from domain.ports import LLMProvider
+from domain.extraction.ports import LLMProvider
 
 _logger = logging.getLogger(__name__)
 
