@@ -64,6 +64,10 @@ RUN --mount=type=cache,target=/root/.cache/pip \
     pip install --no-cache-dir -r local-server/requirements.txt && \
     pip install --no-cache-dir -r local-server/requirements-dev.txt
 
+# Write pytest.ini so asyncio_mode=auto is always available even if pyproject.toml
+# is not readable (e.g., partial bind mounts in orchestrator environments)
+RUN printf '[pytest]\nasyncio_mode = auto\n' > local-server/pytest.ini
+
 # ============================================================================
 # Frontend Dependencies (Node.js) - ux/
 # ============================================================================

@@ -1,5 +1,5 @@
-pytest
-pytest-asyncio
+pytest>=9.0
+pytest-asyncio>=1.0
 black
 ruff
 mypy
