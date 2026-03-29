@@ -10,11 +10,9 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(
 
 import pytest
 from unittest.mock import Mock
-from datetime import datetime, timezone
 
 from domain.extraction.services import ExtractionService
 from domain.extraction.entities import ExtractedEntity, ExtractionResult
-from domain.extraction.value_objects import ExtractionLayerResult
 from domain.extraction.exceptions import ExtractionError
 
 
@@ -408,7 +406,6 @@ class TestExtractionServicePersistence:
         extraction_repo = service_with_fakes["extraction_repo"]
 
         # Make persistence fail
-        original_save = extraction_repo.save_extraction_result
 
         def failing_save(result):
             raise RuntimeError("Database connection failed")
@@ -437,7 +434,7 @@ class TestExtractionServicePersistence:
         )
 
         # Run extraction
-        result = service.extract("Test text")
+        service.extract("Test text")
 
         # Event should still be published
         assert len(event_publisher.published_events) > 0
@@ -467,7 +464,6 @@ class TestExtractionServiceErrorHandling:
         nlp = service_with_fakes["nlp"]
 
         # Make NLP layer fail
-        original_extract = nlp.extract_entities
         nlp.extract_entities = Mock(side_effect=RuntimeError("NLP model error"))
 
         # But LLM layer has ready() that returns False to trigger exception
