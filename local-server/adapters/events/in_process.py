@@ -31,7 +31,7 @@ class InProcessEventPublisher:
         """Initialize the event publisher with empty handler registry."""
         self._handlers: dict[type[DomainEvent], list[Callable[[DomainEvent], None]]] = {}
 
-    def publish(self, event: DomainEvent) -> None:
+    def publish(self, event: DomainEvent) -> list[tuple[str, Exception]]:
         """
         Publish a domain event to all registered handlers.
 
@@ -42,8 +42,14 @@ class InProcessEventPublisher:
 
         Args:
             event: The DomainEvent to publish
+
+        Returns:
+            List of tuples (handler_name, exception) for any handlers that failed.
+            Empty list if all handlers succeeded.
         """
         event_type = type(event)
+        failures: list[tuple[str, Exception]] = []
+
         for handler in self._handlers.get(event_type, []):
             try:
                 handler(event)
@@ -54,6 +60,9 @@ class InProcessEventPublisher:
                     f"event {event_type.__name__} (id: {event.event_id}): {type(e).__name__}: {str(e)}",
                     exc_info=True,
                 )
+                failures.append((handler_name, e))
+
+        return failures
 
     def subscribe(
         self,

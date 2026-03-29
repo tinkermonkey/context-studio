@@ -25,9 +25,11 @@ from utils.logger import get_logger
 from adapters.persistence.sqlite.connection import DatabaseManager
 from adapters.persistence.sqlite.ontology_repo import SQLiteOntologyRepository
 from adapters.persistence.sqlite.pipeline_repo import SQLitePipelineRepository
+from adapters.persistence.sqlite.change_repo import SQLiteChangeRepository
 from adapters.embedding.sentence_transformer import SentenceTransformerEmbedding
 from adapters.llm.provider_router import LLMProviderRouter
 from adapters.events.in_process import InProcessEventPublisher
+from adapters.events.change_recorder import ChangeEventRecorder
 from adapters.graph.networkx_engine import NetworkXGraphEngine
 from adapters.graph.rdflib_engine import RDFLibQueryEngine
 from adapters.nlp.spacy_processor import SpacyNLPProcessor
@@ -59,31 +61,8 @@ logger = get_logger(__name__)
 
 
 # ==================== Event Handlers ====================
-
-def handle_extraction_completed(event: ExtractionCompleted) -> None:
-    """
-    Handle ExtractionCompleted events.
-
-    Args:
-        event: The ExtractionCompleted event to process
-    """
-    logger.info(
-        f"Extraction completed: result_id={event.result_id}, "
-        f"entity_count={event.entity_count}, duration_ms={event.duration_ms}"
-    )
-
-
-def handle_pipeline_executed(event: PipelineExecuted) -> None:
-    """
-    Handle PipelineExecuted events.
-
-    Args:
-        event: The PipelineExecuted event to process
-    """
-    logger.info(
-        f"Pipeline executed: execution_id={event.execution_id}, "
-        f"pipeline_id={event.pipeline_id}, status={event.status}"
-    )
+# Note: Event handlers are created and wired during application startup in the lifespan
+# function. See the "Wire event subscriptions" section below.
 
 
 @asynccontextmanager
@@ -167,6 +146,11 @@ async def lifespan(app: FastAPI):
         event_publisher = InProcessEventPublisher()
         logger.info("Event publisher created")
 
+        # Change event recorder for audit trail
+        change_repo = SQLiteChangeRepository(local_session)
+        change_recorder = ChangeEventRecorder(change_repo)
+        logger.info("ChangeEventRecorder created")
+
         # --- Domain Services ---
 
         ontology_service = OntologyService(
@@ -207,11 +191,11 @@ async def lifespan(app: FastAPI):
         event_publisher.subscribe(GraphInvalidated, graph_service.on_graph_invalidated)
         logger.info("Event subscription: GraphInvalidated -> GraphAnalysisService.on_graph_invalidated")
 
-        event_publisher.subscribe(ExtractionCompleted, handle_extraction_completed)
-        logger.info("Event subscription: ExtractionCompleted -> handle_extraction_completed")
+        event_publisher.subscribe(ExtractionCompleted, change_recorder.on_extraction_completed)
+        logger.info("Event subscription: ExtractionCompleted -> ChangeEventRecorder.on_extraction_completed")
 
-        event_publisher.subscribe(PipelineExecuted, handle_pipeline_executed)
-        logger.info("Event subscription: PipelineExecuted -> handle_pipeline_executed")
+        event_publisher.subscribe(PipelineExecuted, change_recorder.on_pipeline_executed)
+        logger.info("Event subscription: PipelineExecuted -> ChangeEventRecorder.on_pipeline_executed")
 
         # --- Store services in app.state for dependency injection ---
 
