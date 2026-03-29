@@ -16,6 +16,7 @@ No business logic lives here—coordination of multiple sources is handled
 by a simple aggregation pattern.
 """
 
+import asyncio
 from datetime import datetime
 
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -68,30 +69,43 @@ async def reference_status(
     source_statuses = []
     available_count = 0
 
-    for source in sources:
+    # Use async availability checks in parallel
+    async def check_source(source: ReferenceSource) -> tuple[ReferenceSourceStatusSchema, bool]:
         try:
-            is_available = source.is_available()
-            if is_available:
-                available_count += 1
+            # Try async method first, fallback to sync
+            if hasattr(source, 'is_available_async'):
+                is_available = await source.is_available_async()
+            else:
+                is_available = source.is_available()
 
-            source_statuses.append(
+            return (
                 ReferenceSourceStatusSchema(
                     name=source.source_name,
                     available=is_available,
                     last_checked=datetime.now().isoformat(),
-                )
+                ),
+                is_available,
             )
         except Exception as e:
             logger.warning(
                 f"Error checking availability of {source.source_name}: {e}"
             )
-            source_statuses.append(
+            return (
                 ReferenceSourceStatusSchema(
                     name=source.source_name,
                     available=False,
                     last_checked=datetime.now().isoformat(),
-                )
+                ),
+                False,
             )
+
+    # Run all checks concurrently
+    results = await asyncio.gather(*[check_source(s) for s in sources])
+
+    for status_schema, is_available in results:
+        source_statuses.append(status_schema)
+        if is_available:
+            available_count += 1
 
     return ReferenceStatusResponseSchema(
         sources=source_statuses,
@@ -146,34 +160,54 @@ async def search_references(
                 detail=f"None of the requested sources are available: {request.sources}",
             )
 
-    results = []
-    sources_searched = []
-    sources_failed = []
-
-    for source in sources_to_query:
+    async def search_single_source(source: ReferenceSource) -> tuple[list[ReferenceResultSchema], str, bool]:
+        """Search a single source and return results or error."""
         try:
-            if not source.is_available():
-                sources_failed.append(source.source_name)
-                continue
+            # Try async method first, fallback to sync
+            if hasattr(source, 'is_available_async'):
+                is_available = await source.is_available_async()
+            else:
+                is_available = source.is_available()
 
-            source_results = source.search(request.term, limit=request.limit)
-            sources_searched.append(source.source_name)
+            if not is_available:
+                return [], source.source_name, False
 
-            for result in source_results:
-                results.append(
-                    ReferenceResultSchema(
-                        uri=result.uri,
-                        label=result.label,
-                        description=result.description,
-                        confidence=result.confidence,
-                        source=result.source,
-                    )
+            # Try async search first, fallback to sync
+            if hasattr(source, 'search_async'):
+                source_results = await source.search_async(request.term, limit=request.limit)
+            else:
+                source_results = source.search(request.term, limit=request.limit)
+
+            results = [
+                ReferenceResultSchema(
+                    uri=result.uri,
+                    label=result.label,
+                    description=result.description,
+                    confidence=result.confidence,
+                    source=result.source,
                 )
+                for result in source_results
+            ]
+            return results, source.source_name, True
         except Exception as e:
             logger.error(
                 f"Error searching {source.source_name} for '{request.term}': {e}"
             )
-            sources_failed.append(source.source_name)
+            return [], source.source_name, False
+
+    # Run all searches concurrently
+    search_results = await asyncio.gather(*[search_single_source(s) for s in sources_to_query])
+
+    results = []
+    sources_searched = []
+    sources_failed = []
+
+    for source_results, source_name, success in search_results:
+        if success:
+            sources_searched.append(source_name)
+            results.extend(source_results)
+        else:
+            sources_failed.append(source_name)
 
     return ReferenceSearchResponseSchema(
         term=request.term,
@@ -230,34 +264,54 @@ async def get_reference_relations(
                 detail=f"None of the requested sources are available: {request.sources}",
             )
 
-    relations = []
-    sources_queried = []
-    sources_failed = []
-
-    for source in sources_to_query:
+    async def get_relations_from_source(source: ReferenceSource) -> tuple[list[ReferenceRelationSchema], str, bool]:
+        """Get relations from a single source."""
         try:
-            if not source.is_available():
-                sources_failed.append(source.source_name)
-                continue
+            # Try async method first, fallback to sync
+            if hasattr(source, 'is_available_async'):
+                is_available = await source.is_available_async()
+            else:
+                is_available = source.is_available()
 
-            source_relations = source.get_relations(request.uri, limit=request.limit)
-            sources_queried.append(source.source_name)
+            if not is_available:
+                return [], source.source_name, False
 
-            for relation in source_relations:
-                relations.append(
-                    ReferenceRelationSchema(
-                        subject_uri=relation.subject_uri,
-                        predicate=relation.predicate,
-                        object_uri=relation.object_uri,
-                        weight=relation.weight,
-                        source=relation.source,
-                    )
+            # Try async get_relations first, fallback to sync
+            if hasattr(source, 'get_relations_async'):
+                source_relations = await source.get_relations_async(request.uri, limit=request.limit)
+            else:
+                source_relations = source.get_relations(request.uri, limit=request.limit)
+
+            relations = [
+                ReferenceRelationSchema(
+                    subject_uri=relation.subject_uri,
+                    predicate=relation.predicate,
+                    object_uri=relation.object_uri,
+                    weight=relation.weight,
+                    source=relation.source,
                 )
+                for relation in source_relations
+            ]
+            return relations, source.source_name, True
         except Exception as e:
             logger.error(
                 f"Error getting relations from {source.source_name} for '{request.uri}': {e}"
             )
-            sources_failed.append(source.source_name)
+            return [], source.source_name, False
+
+    # Run all relation queries concurrently
+    relation_results = await asyncio.gather(*[get_relations_from_source(s) for s in sources_to_query])
+
+    relations = []
+    sources_queried = []
+    sources_failed = []
+
+    for source_relations, source_name, success in relation_results:
+        if success:
+            sources_queried.append(source_name)
+            relations.extend(source_relations)
+        else:
+            sources_failed.append(source_name)
 
     return ReferenceRelationsResponseSchema(
         uri=request.uri,

@@ -9,9 +9,11 @@ The current implementation uses the 'all-MiniLM-L12-v2' model by default,
 which is lightweight and suitable for desktop deployment.
 """
 
+import asyncio
 from typing import TYPE_CHECKING, Optional
 
 from utils.logger import get_logger
+from utils.async_executor import run_sync_in_executor
 
 if TYPE_CHECKING:
     from sentence_transformers import SentenceTransformer
@@ -153,3 +155,52 @@ class SentenceTransformerEmbedding:
         if self._model is not None:
             self._model = None
             logger.info("SentenceTransformer model unloaded")
+
+    async def embed_async(self, text: str) -> list[float]:
+        """
+        Embed a single text into a vector (async version).
+
+        Runs the embedding operation in a thread pool to avoid blocking the event loop.
+
+        Args:
+            text: The text to embed
+
+        Returns:
+            The embedding as a list of floats
+
+        Raises:
+            RuntimeError: If model loading fails
+        """
+        return await run_sync_in_executor(self.embed, text)
+
+    async def embed_batch_async(self, texts: list[str]) -> list[list[float]]:
+        """
+        Embed multiple texts in batch (async version).
+
+        Runs the embedding operation in a thread pool to avoid blocking the event loop.
+
+        Args:
+            texts: List of texts to embed
+
+        Returns:
+            List of embeddings, each as a list of floats
+
+        Raises:
+            RuntimeError: If model loading fails
+        """
+        return await run_sync_in_executor(self.embed_batch, texts)
+
+    async def similarity_async(self, embedding_a: list[float], embedding_b: list[float]) -> float:
+        """
+        Compute similarity between two embeddings (async version).
+
+        Runs the computation in a thread pool to avoid blocking the event loop.
+
+        Args:
+            embedding_a: First embedding as a list of floats
+            embedding_b: Second embedding as a list of floats
+
+        Returns:
+            Similarity score as float
+        """
+        return await run_sync_in_executor(self.similarity, embedding_a, embedding_b)

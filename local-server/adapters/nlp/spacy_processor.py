@@ -1,5 +1,6 @@
 """spaCy NLP processor adapter for named entity recognition and tokenization."""
 
+import asyncio
 from typing import Any, Optional
 
 try:
@@ -11,6 +12,7 @@ except ImportError:
 
 from domain.extraction.ports import NLPResult, NLPEntity
 from utils.logger import get_logger
+from utils.async_executor import run_sync_in_executor
 
 logger = get_logger(__name__)
 
@@ -128,3 +130,33 @@ class SpacyNLPProcessor:
             )
 
         return entities
+
+    async def process_async(self, text: str) -> NLPResult:
+        """
+        Perform full NLP processing on text (async version).
+
+        Runs the processing in a thread pool to avoid blocking the event loop.
+
+        Args:
+            text: Text to process
+
+        Returns:
+            NLPResult with tokens, entities, and language.
+            Returns empty results if the processor is not ready.
+        """
+        return await run_sync_in_executor(self.process, text)
+
+    async def extract_entities_async(self, text: str) -> list[NLPEntity]:
+        """
+        Extract named entities from text (async version).
+
+        Runs the extraction in a thread pool to avoid blocking the event loop.
+
+        Args:
+            text: Text to process
+
+        Returns:
+            List of NLPEntity objects found in the text.
+            Returns empty list if the processor is not ready.
+        """
+        return await run_sync_in_executor(self.extract_entities, text)

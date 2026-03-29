@@ -27,6 +27,7 @@ Usage in route handlers:
         pass
 """
 
+import asyncio
 from collections.abc import AsyncGenerator
 from typing import cast
 
@@ -39,6 +40,7 @@ from domain.extraction.services import ExtractionService
 from domain.extraction.ports import ReferenceSource
 from domain.pipeline.services import PipelineService
 from adapters.persistence.sqlite.connection import DatabaseManager
+from utils.async_executor import run_sync_in_executor
 
 
 async def get_ontology_service(request: Request) -> OntologyService:
@@ -163,7 +165,8 @@ async def get_local_db_session(request: Request) -> AsyncGenerator[Session, None
     try:
         yield session
     finally:
-        session.close()
+        # Close session asynchronously to avoid blocking the event loop
+        await run_sync_in_executor(session.close)
 
 
 async def get_operations_db_session(request: Request) -> AsyncGenerator[Session, None]:
@@ -193,4 +196,5 @@ async def get_operations_db_session(request: Request) -> AsyncGenerator[Session,
     try:
         yield session
     finally:
-        session.close()
+        # Close session asynchronously to avoid blocking the event loop
+        await run_sync_in_executor(session.close)

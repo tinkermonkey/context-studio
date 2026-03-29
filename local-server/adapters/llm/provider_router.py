@@ -9,6 +9,7 @@ This adapter implements the LLMProvider port and is used by the Knowledge Extrac
 and LLM Pipeline services.
 """
 
+import asyncio
 from typing import Any
 
 from adapters.llm.openai_provider import OpenAIProvider
@@ -138,3 +139,53 @@ class LLMProviderRouter:
         for provider in self._providers.values():
             models.extend(provider.list_available_models())
         return models
+
+    async def complete_async(
+        self,
+        system_prompt: str,
+        user_prompt: str,
+        model: str,
+        temperature: float = 0.0,
+        max_tokens: int = 2000,
+        response_format: dict[str, Any] | None = None,
+    ) -> LLMResponse:
+        """
+        Request a completion from an LLM provider (async version).
+
+        Routes to the appropriate provider based on the model identifier.
+
+        Args:
+            system_prompt: System context for the model
+            user_prompt: The user's prompt
+            model: Model identifier (e.g., 'gpt-4o', 'claude-opus-4-6')
+            temperature: Sampling temperature (0.0-1.0)
+            max_tokens: Maximum tokens in response
+            response_format: Optional response format specification
+
+        Returns:
+            LLMResponse with the completion
+
+        Raises:
+            ValueError: If no provider is available for the requested model
+        """
+        provider = self._route_to_provider(model)
+        # Check if provider has async method and use it, otherwise fallback to sync
+        if hasattr(provider, 'complete_async'):
+            return await provider.complete_async(
+                system_prompt=system_prompt,
+                user_prompt=user_prompt,
+                model=model,
+                temperature=temperature,
+                max_tokens=max_tokens,
+                response_format=response_format,
+            )
+        else:
+            # Fallback for providers without async support
+            return provider.complete(
+                system_prompt=system_prompt,
+                user_prompt=user_prompt,
+                model=model,
+                temperature=temperature,
+                max_tokens=max_tokens,
+                response_format=response_format,
+            )

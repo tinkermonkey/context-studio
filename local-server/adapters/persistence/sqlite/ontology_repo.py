@@ -14,9 +14,12 @@ Key responsibilities:
 
 from typing import Optional, Any, cast
 from datetime import datetime, timezone
+import asyncio
 
 from sqlalchemy.orm import Session, sessionmaker
 from sqlalchemy import and_, or_
+
+from utils.async_executor import run_sync_in_executor
 
 from domain.ontology.entities import (
     Taxonomy,
@@ -1192,3 +1195,377 @@ class SQLiteOntologyRepository:
             current = parent_class.parent_class_id
 
         return False
+
+    # ==================== Async Methods ====================
+
+    async def get_taxonomy_async(self, taxonomy_id: str) -> Optional[Taxonomy]:
+        """
+        Retrieve a taxonomy by ID (async version).
+
+        Args:
+            taxonomy_id: UUID of the taxonomy
+
+        Returns:
+            Taxonomy entity if found, None otherwise
+        """
+        return await run_sync_in_executor(self.get_taxonomy, taxonomy_id)
+
+    async def list_taxonomies_async(self) -> list[Taxonomy]:
+        """
+        Retrieve all taxonomies (async version).
+
+        Returns:
+            Sequence of Taxonomy entities
+        """
+        return await run_sync_in_executor(self.list_taxonomies)
+
+    async def save_taxonomy_async(self, taxonomy: Taxonomy) -> Taxonomy:
+        """
+        Create or update a taxonomy (async version).
+
+        Args:
+            taxonomy: Taxonomy entity to save
+
+        Returns:
+            Saved Taxonomy entity (with timestamps set)
+        """
+        return await run_sync_in_executor(self.save_taxonomy, taxonomy)
+
+    async def delete_taxonomy_async(self, taxonomy_id: str) -> bool:
+        """
+        Delete a taxonomy and all its children (async version).
+
+        Args:
+            taxonomy_id: UUID of the taxonomy
+
+        Returns:
+            True if deleted, False if not found
+        """
+        return await run_sync_in_executor(self.delete_taxonomy, taxonomy_id)
+
+    async def get_concept_scheme_async(self, concept_scheme_id: str) -> Optional[ConceptScheme]:
+        """
+        Retrieve a concept scheme by ID (async version).
+
+        Args:
+            concept_scheme_id: UUID of the concept scheme
+
+        Returns:
+            ConceptScheme entity if found, None otherwise
+        """
+        return await run_sync_in_executor(self.get_concept_scheme, concept_scheme_id)
+
+    async def list_concept_schemes_async(self, taxonomy_id: Optional[str] = None) -> list[ConceptScheme]:
+        """
+        List concept schemes (async version).
+
+        Args:
+            taxonomy_id: Optional taxonomy ID to filter by
+
+        Returns:
+            Sequence of ConceptScheme entities
+        """
+        return await run_sync_in_executor(self.list_concept_schemes, taxonomy_id)
+
+    async def save_concept_scheme_async(self, scheme: ConceptScheme) -> ConceptScheme:
+        """
+        Create or update a concept scheme (async version).
+
+        Args:
+            scheme: ConceptScheme entity to save
+
+        Returns:
+            Saved ConceptScheme entity
+        """
+        return await run_sync_in_executor(self.save_concept_scheme, scheme)
+
+    async def delete_concept_scheme_async(self, concept_scheme_id: str) -> bool:
+        """
+        Delete a concept scheme and all its classes (async version).
+
+        Args:
+            concept_scheme_id: UUID of the concept scheme
+
+        Returns:
+            True if deleted, False if not found
+        """
+        return await run_sync_in_executor(self.delete_concept_scheme, concept_scheme_id)
+
+    async def get_class_async(self, class_id: str) -> Optional[Class]:
+        """
+        Retrieve a class by ID (async version).
+
+        Args:
+            class_id: UUID of the class
+
+        Returns:
+            Class entity if found, None otherwise
+        """
+        return await run_sync_in_executor(self.get_class, class_id)
+
+    async def list_classes_async(
+        self,
+        concept_scheme_id: Optional[str] = None,
+        parent_class_id: Optional[str] = None,
+        limit: int = 100,
+        offset: int = 0,
+    ) -> list[Class]:
+        """
+        List classes (async version).
+
+        Args:
+            concept_scheme_id: Optional concept scheme ID to filter by
+            parent_class_id: Optional parent class ID to filter by
+            limit: Maximum number of results to return
+            offset: Number of results to skip
+
+        Returns:
+            Sequence of Class entities
+        """
+        return await run_sync_in_executor(
+            self.list_classes, concept_scheme_id, parent_class_id, limit, offset
+        )
+
+    async def count_classes_async(
+        self,
+        concept_scheme_id: Optional[str] = None,
+        parent_class_id: Optional[str] = None,
+    ) -> int:
+        """
+        Count classes matching optional filters (async version).
+
+        Args:
+            concept_scheme_id: Optional concept scheme ID to filter by
+            parent_class_id: Optional parent class ID to filter by
+
+        Returns:
+            Number of matching Class entities
+        """
+        return await run_sync_in_executor(self.count_classes, concept_scheme_id, parent_class_id)
+
+    async def save_class_async(self, cls: Class) -> Class:
+        """
+        Create or update a class (async version).
+
+        Args:
+            cls: Class entity to save
+
+        Returns:
+            Saved Class entity
+        """
+        return await run_sync_in_executor(self.save_class, cls)
+
+    async def delete_class_async(self, class_id: str) -> bool:
+        """
+        Delete a class and all its children (async version).
+
+        Args:
+            class_id: UUID of the class
+
+        Returns:
+            True if deleted, False if not found
+        """
+        return await run_sync_in_executor(self.delete_class, class_id)
+
+    async def search_classes_async(self, criteria: SearchCriteria) -> list[Class]:
+        """
+        Search classes by text and optional filters (async version).
+
+        Args:
+            criteria: SearchCriteria with query, filters, and pagination
+
+        Returns:
+            Sequence of matching Class entities
+        """
+        return await run_sync_in_executor(self.search_classes, criteria)
+
+    async def get_individual_async(self, individual_id: str) -> Optional[Individual]:
+        """
+        Retrieve an individual by ID (async version).
+
+        Args:
+            individual_id: UUID of the individual
+
+        Returns:
+            Individual entity if found, None otherwise
+        """
+        return await run_sync_in_executor(self.get_individual, individual_id)
+
+    async def list_individuals_async(self, class_id: Optional[str] = None) -> list[Individual]:
+        """
+        List individuals (async version).
+
+        Args:
+            class_id: Optional class ID to filter by
+
+        Returns:
+            Sequence of Individual entities
+        """
+        return await run_sync_in_executor(self.list_individuals, class_id)
+
+    async def save_individual_async(self, individual: Individual) -> Individual:
+        """
+        Create or update an individual (async version).
+
+        Args:
+            individual: Individual entity to save
+
+        Returns:
+            Saved Individual entity
+        """
+        return await run_sync_in_executor(self.save_individual, individual)
+
+    async def delete_individual_async(self, individual_id: str) -> bool:
+        """
+        Delete an individual (async version).
+
+        Args:
+            individual_id: UUID of the individual
+
+        Returns:
+            True if deleted, False if not found
+        """
+        return await run_sync_in_executor(self.delete_individual, individual_id)
+
+    async def get_property_definition_async(self, property_id: str) -> Optional[PropertyDefinition]:
+        """
+        Retrieve a property definition by ID (async version).
+
+        Args:
+            property_id: UUID of the property definition
+
+        Returns:
+            PropertyDefinition entity if found, None otherwise
+        """
+        return await run_sync_in_executor(self.get_property_definition, property_id)
+
+    async def list_property_definitions_async(
+        self,
+        is_relevant: Optional[bool] = None,
+        limit: int = 100,
+        offset: int = 0,
+    ) -> list[PropertyDefinition]:
+        """
+        Retrieve all property definitions (async version).
+
+        Args:
+            is_relevant: Optional filter by relevance status
+            limit: Maximum number of results to return
+            offset: Number of results to skip
+
+        Returns:
+            Sequence of PropertyDefinition entities
+        """
+        return await run_sync_in_executor(
+            self.list_property_definitions, is_relevant, limit, offset
+        )
+
+    async def get_property_definition_by_identifier_async(self, identifier: str) -> Optional[PropertyDefinition]:
+        """
+        Retrieve a property definition by its identifier (async version).
+
+        Args:
+            identifier: The identifier string to search for
+
+        Returns:
+            PropertyDefinition entity if found, None otherwise
+        """
+        return await run_sync_in_executor(
+            self.get_property_definition_by_identifier, identifier
+        )
+
+    async def save_property_definition_async(self, prop: PropertyDefinition) -> PropertyDefinition:
+        """
+        Create or update a property definition (async version).
+
+        Args:
+            prop: PropertyDefinition entity to save
+
+        Returns:
+            Saved PropertyDefinition entity
+        """
+        return await run_sync_in_executor(self.save_property_definition, prop)
+
+    async def delete_property_definition_async(self, property_id: str) -> bool:
+        """
+        Delete a property definition (async version).
+
+        Args:
+            property_id: UUID of the property definition
+
+        Returns:
+            True if deleted, False if not found
+        """
+        return await run_sync_in_executor(self.delete_property_definition, property_id)
+
+    async def get_relationship_async(self, relationship_id: str) -> Optional[Relationship]:
+        """
+        Retrieve a relationship by ID (async version).
+
+        Args:
+            relationship_id: UUID of the relationship
+
+        Returns:
+            Relationship entity if found, None otherwise
+        """
+        return await run_sync_in_executor(self.get_relationship, relationship_id)
+
+    async def list_relationships_async(
+        self,
+        source_id: Optional[str] = None,
+        target_id: Optional[str] = None,
+        property_id: Optional[str] = None,
+        limit: int = 100,
+        offset: int = 0,
+    ) -> list[Relationship]:
+        """
+        List relationships (async version).
+
+        Args:
+            source_id: Optional source entity ID to filter by
+            target_id: Optional target entity ID to filter by
+            property_id: Optional property definition ID to filter by
+            limit: Maximum number of results to return
+            offset: Number of results to skip
+
+        Returns:
+            Sequence of Relationship entities
+        """
+        return await run_sync_in_executor(
+            self.list_relationships, source_id, target_id, property_id, limit, offset
+        )
+
+    async def save_relationship_async(self, rel: Relationship) -> Relationship:
+        """
+        Create or update a relationship (async version).
+
+        Args:
+            rel: Relationship entity to save
+
+        Returns:
+            Saved Relationship entity
+        """
+        return await run_sync_in_executor(self.save_relationship, rel)
+
+    async def delete_relationship_async(self, relationship_id: str) -> bool:
+        """
+        Delete a relationship (async version).
+
+        Args:
+            relationship_id: UUID of the relationship
+
+        Returns:
+            True if deleted, False if not found
+        """
+        return await run_sync_in_executor(self.delete_relationship, relationship_id)
+
+    async def get_all_entities_and_relationships_async(
+        self,
+    ) -> tuple[list[Any], list[Relationship]]:
+        """
+        Retrieve all entities and relationships for graph analysis (async version).
+
+        Returns:
+            Tuple of (entities sequence, relationships sequence)
+        """
+        return await run_sync_in_executor(self.get_all_entities_and_relationships)

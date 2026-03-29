@@ -4,6 +4,7 @@ Anthropic LLM provider implementation.
 Provides integration with Anthropic's Claude API for language model completions.
 """
 
+import asyncio
 from typing import Any
 
 try:
@@ -15,6 +16,7 @@ except ImportError:
 
 from domain.extraction.ports import LLMResponse
 from utils.logger import get_logger
+from utils.async_executor import run_sync_in_executor
 
 logger = get_logger(__name__)
 
@@ -119,3 +121,41 @@ class AnthropicProvider:
             List of available model identifiers
         """
         return list(self.AVAILABLE_MODELS)
+
+    async def complete_async(
+        self,
+        system_prompt: str,
+        user_prompt: str,
+        model: str,
+        temperature: float = 0.0,
+        max_tokens: int = 2000,
+        response_format: dict[str, Any] | None = None,
+    ) -> LLMResponse:
+        """
+        Request a completion from Anthropic Claude (async version).
+
+        Runs the API call in a thread pool to avoid blocking the event loop.
+
+        Args:
+            system_prompt: System context for the model
+            user_prompt: User message to respond to
+            model: Model identifier (e.g., 'claude-opus-4-6')
+            temperature: Sampling temperature (0.0–1.0)
+            max_tokens: Maximum tokens to generate
+            response_format: Optional JSON schema for structured output (not used by Anthropic)
+
+        Returns:
+            LLMResponse with generated content and metadata
+
+        Raises:
+            RuntimeError: If Anthropic client is not initialized or API call fails
+        """
+        return await run_sync_in_executor(
+            self.complete,
+            system_prompt,
+            user_prompt,
+            model,
+            temperature,
+            max_tokens,
+            response_format,
+        )
