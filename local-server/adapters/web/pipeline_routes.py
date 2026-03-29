@@ -25,6 +25,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from domain.pipeline.services import PipelineService
 from domain.pipeline.exceptions import PipelineNotFoundError, PipelineError
 from utils.logger import get_logger
+from utils.async_executor import run_sync_in_executor
 
 from adapters.web.dependencies import get_pipeline_service
 from adapters.web.schemas.pipeline import (
@@ -225,7 +226,8 @@ async def execute_pipeline(
         HTTPException: 400 if invalid, 404 if configuration not found
     """
     try:
-        execution = service.execute_pipeline(
+        execution = await run_sync_in_executor(
+            service.execute_pipeline,
             config_id=pipeline_id,
             input_text=request.input_text,
         )

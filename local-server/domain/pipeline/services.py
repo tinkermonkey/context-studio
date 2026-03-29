@@ -305,6 +305,27 @@ class PipelineService:
                 error_message=str(e),
                 timestamp=datetime.now(timezone.utc),
             )
+        except Exception as e:
+            # Record error execution for all remaining application errors
+            # (e.g. ConnectionError, httpx.HTTPError, network timeouts, provider API errors)
+            # System errors (KeyboardInterrupt, SystemExit) propagate for observability
+            if isinstance(e, (KeyboardInterrupt, SystemExit)):
+                raise
+            duration_ms = int((time.time() - start_time) * 1000)
+            execution = Execution(
+                id=execution_id,
+                pipeline_config_id=config_id,
+                input_text=input_text,
+                output_text="",
+                provider=config.provider,
+                model=config.model,
+                tokens_in=0,
+                tokens_out=0,
+                duration_ms=duration_ms,
+                status="error",
+                error_message=str(e),
+                timestamp=datetime.now(timezone.utc),
+            )
 
         # Record the execution
         recorded_execution = self._pipeline_repo.record_execution(execution)
