@@ -4,6 +4,7 @@ import httpx
 
 from domain.extraction.ports import ReferenceResult, ReferenceRelation
 from utils.logger import get_logger
+from utils.async_executor import run_sync_in_executor
 
 logger = get_logger(__name__)
 
@@ -152,34 +153,18 @@ class DBpediaSource:
         """
         Check if DBpedia Lookup API is available (async version).
 
+        Delegates to sync method via executor to avoid code duplication.
+
         Returns:
             True if API responds, False on any error
         """
-        try:
-            if self._async_client is None:
-                self._async_client = httpx.AsyncClient(timeout=self._timeout)
-
-            response = await self._async_client.get(
-                self.LOOKUP_URL,
-                params={"query": "test", "format": "json"},
-            )
-            return response.status_code == 200
-        except httpx.TimeoutException as e:
-            logger.warning(f"DBpedia availability check timed out: {e}")
-            return False
-        except httpx.NetworkError as e:
-            logger.warning(f"DBpedia network error during availability check: {e}")
-            return False
-        except httpx.HTTPError as e:
-            logger.warning(f"DBpedia HTTP error during availability check: {e}")
-            return False
-        except Exception as e:
-            logger.error(f"Unexpected error during DBpedia availability check: {e}")
-            return False
+        return await run_sync_in_executor(self.is_available)
 
     async def search_async(self, term: str, limit: int = 10) -> list[ReferenceResult]:
         """
         Search for entities matching a term in DBpedia (async version).
+
+        Delegates to sync method via executor to avoid code duplication.
 
         Args:
             term: Search query
@@ -188,57 +173,7 @@ class DBpediaSource:
         Returns:
             List of ReferenceResult objects. Returns empty list on network failures.
         """
-        try:
-            if self._async_client is None:
-                self._async_client = httpx.AsyncClient(timeout=self._timeout)
-
-            response = await self._async_client.get(
-                self.LOOKUP_URL,
-                params={
-                    "query": term,
-                    "format": "json",
-                    "maxResults": limit,
-                },
-            )
-            response.raise_for_status()
-
-            data = response.json()
-            results = []
-
-            if "results" in data:
-                for result in data["results"][:limit]:
-                    uri = result.get("uri", "")
-                    label = result.get("label", "")
-                    description = result.get("description", None)
-
-                    if uri:
-                        results.append(
-                            ReferenceResult(
-                                uri=uri,
-                                label=label,
-                                description=description,
-                                source=self.source_name,
-                            )
-                        )
-
-            return results
-        except httpx.TimeoutException as e:
-            logger.warning(f"DBpedia search timed out for '{term}': {e}")
-            return []
-        except httpx.NetworkError as e:
-            logger.warning(f"DBpedia network error during search for '{term}': {e}")
-            return []
-        except httpx.HTTPStatusError as e:
-            logger.warning(
-                f"DBpedia HTTP {e.response.status_code} error during search for '{term}': {e}"
-            )
-            return []
-        except httpx.HTTPError as e:
-            logger.warning(f"DBpedia HTTP error during search for '{term}': {e}")
-            return []
-        except ValueError as e:
-            logger.warning(f"DBpedia JSON parse error during search for '{term}': {e}")
-            return []
+        return await run_sync_in_executor(self.search, term, limit)
 
     async def get_relations_async(self, uri: str, limit: int = 10) -> list[ReferenceRelation]:
         """
@@ -255,9 +190,8 @@ class DBpediaSource:
 
     async def cleanup_async(self) -> None:
         """
-        Clean up the async HTTP client.
+        Clean up resources.
 
-        Call this when shutting down the application.
+        No-op for DBpedia as sync client cleanup is handled separately.
         """
-        if self._async_client is not None:
-            await self._async_client.aclose()
+        pass

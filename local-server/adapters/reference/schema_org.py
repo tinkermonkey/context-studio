@@ -6,6 +6,7 @@ from adapters.reference.exceptions import (
 )
 from domain.extraction.ports import ReferenceResult, ReferenceRelation
 from utils.logger import get_logger
+from utils.async_executor import run_sync_in_executor
 
 logger = get_logger(__name__)
 
@@ -196,18 +197,18 @@ class SchemaOrgSource:
         """
         Check if schema.org vocabulary is available (async version).
 
-        Always returns True since schema.org is a local vocabulary.
+        Delegates to sync method via executor to avoid code duplication.
 
         Returns:
             True (always available)
         """
-        return True
+        return await run_sync_in_executor(self.is_available)
 
     async def search_async(self, term: str, limit: int = 10) -> list[ReferenceResult]:
         """
         Search for schema.org type definitions matching a term (async version).
 
-        Performs substring matching on labels and descriptions (case-insensitive).
+        Delegates to sync method via executor to avoid code duplication.
 
         Args:
             term: Search query
@@ -219,48 +220,13 @@ class SchemaOrgSource:
         Raises:
             ReferenceSourceParseError: On unexpected data structure errors
         """
-        try:
-            term_lower = term.lower()
-            results = []
-
-            for key, definition in SCHEMA_ORG_DEFINITIONS.items():
-                label_match = term_lower in definition["label"].lower()
-                desc_match = (
-                    term_lower in definition["description"].lower()
-                    if definition.get("description")
-                    else False
-                )
-
-                if label_match or desc_match:
-                    results.append(
-                        ReferenceResult(
-                            uri=definition["uri"],
-                            label=definition["label"],
-                            description=definition["description"],
-                            source=self.source_name,
-                        )
-                    )
-
-                if len(results) >= limit:
-                    break
-
-            return results
-        except KeyError as e:
-            logger.error(f"schema.org malformed definition structure for '{term}': {e}")
-            raise ReferenceSourceParseError(
-                "schema.org vocabulary has malformed definition"
-            ) from e
-        except Exception as e:
-            logger.error(f"Unexpected error during schema.org search for '{term}': {e}")
-            raise ReferenceSourceError(
-                "Unexpected error during schema.org search"
-            ) from e
+        return await run_sync_in_executor(self.search, term, limit)
 
     async def get_relations_async(self, uri: str, limit: int = 10) -> list[ReferenceRelation]:
         """
         Get relationships connected to a URI in schema.org (async version).
 
-        Retrieves the type hierarchy relationships for a given schema.org type.
+        Delegates to sync method via executor to avoid code duplication.
 
         Args:
             uri: URI of the type to find relations for
@@ -272,32 +238,11 @@ class SchemaOrgSource:
         Raises:
             ReferenceSourceParseError: On unexpected data structure errors
         """
-        try:
-            # Extract type name from URI
-            type_name = uri.split("/")[-1]
-
-            relations = []
-            if type_name in SCHEMA_ORG_RELATIONS:
-                for predicate, object_type in SCHEMA_ORG_RELATIONS[type_name][:limit]:
-                    relations.append(
-                        ReferenceRelation(
-                            subject_uri=uri,
-                            predicate=predicate,
-                            object_uri=f"http://schema.org/{object_type}",
-                            source=self.source_name,
-                        )
-                    )
-
-            return relations
-        except Exception as e:
-            logger.error(f"Unexpected error during schema.org get_relations for '{uri}': {e}")
-            raise ReferenceSourceError(
-                "Unexpected error during schema.org get_relations"
-            ) from e
+        return await run_sync_in_executor(self.get_relations, uri, limit)
 
     async def cleanup_async(self) -> None:
         """
-        Clean up the async HTTP client.
+        Clean up resources.
 
         No-op for schema.org since it uses local data only.
         """
