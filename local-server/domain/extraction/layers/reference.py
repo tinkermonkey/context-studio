@@ -4,12 +4,13 @@ Reference source enrichment layer (Layer 3).
 Enriches extracted entities by resolving them against external reference
 knowledge sources.
 """
+import logging
+
 from domain.extraction.entities import ExtractedEntity
 from domain.extraction.ports import ReferenceSource
 from domain.extraction.value_objects import LayerInput, LayerOutput
-from utils.logger import get_logger
 
-logger = get_logger(__name__)
+_logger = logging.getLogger(__name__)
 
 
 def execute(input: LayerInput, sources: list[ReferenceSource]) -> LayerOutput:
@@ -74,7 +75,7 @@ def execute(input: LayerInput, sources: list[ReferenceSource]) -> LayerOutput:
             try:
                 results = source.search(prior_entity.label, limit=5)
             except Exception as e:
-                logger.warning(
+                _logger.warning(
                     f"Source {source.source_name} failed during search for '{prior_entity.label}': {e}"
                 )
                 continue
