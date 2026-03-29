@@ -16,8 +16,7 @@ import pytest
 from domain.extraction import layers
 from domain.extraction.entities import ExtractedEntity
 from domain.extraction.value_objects import LayerInput
-from domain.extraction.ports import NLPEntity, ReferenceResult
-from domain.ports import LLMResponse
+from domain.extraction.ports import NLPEntity, ReferenceResult, LLMResponse
 from domain.ontology.entities import Class
 from domain.ontology.value_objects import ExternalReference
 
