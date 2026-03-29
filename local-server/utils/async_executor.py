@@ -12,7 +12,7 @@ P = ParamSpec("P")
 T = TypeVar("T")
 
 
-def run_sync_in_executor(func: Callable[P, T], *args: Any, **kwargs: Any) -> asyncio.Task[T]:
+def run_sync_in_executor(func: Callable[P, T], *args: Any, **kwargs: Any) -> asyncio.Future[T]:
     """
     Run a synchronous function in the default thread pool executor.
 
@@ -25,7 +25,7 @@ def run_sync_in_executor(func: Callable[P, T], *args: Any, **kwargs: Any) -> asy
         **kwargs: Keyword arguments for the function
 
     Returns:
-        An awaitable Task that resolves to the function's return value
+        An awaitable Future that resolves to the function's return value
 
     Example:
         result = await run_sync_in_executor(blocking_func, arg1, arg2=value)

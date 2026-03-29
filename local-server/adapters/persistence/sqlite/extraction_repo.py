@@ -10,6 +10,7 @@ Key responsibilities:
 - List extraction results with pagination
 """
 
+from datetime import datetime, timezone
 from typing import Sequence
 
 from sqlalchemy.orm import Session, sessionmaker
@@ -32,7 +33,7 @@ class SQLiteExtractionRepository:
         session_factory: SQLAlchemy sessionmaker for creating isolated sessions
     """
 
-    def __init__(self, session_factory: sessionmaker[Session]) -> None:
+    def __init__(self, session_factory: sessionmaker) -> None:
         """
         Initialize the repository with a database session factory.
 
@@ -182,37 +183,37 @@ class SQLiteExtractionRepository:
         # Reconstruct extracted entities from JSON
         extracted_entities = [
             ExtractedEntity(
-                id=entity_data.get("id", ""),
-                label=entity_data.get("label", ""),
-                entity_type=entity_data.get("entity_type", ""),
-                source_layer=entity_data.get("source_layer", 0),
-                confidence=entity_data.get("confidence", 0.0),
-                uri=entity_data.get("uri"),
-                description=entity_data.get("description"),
-                properties=entity_data.get("properties", {}),
+                id=entity_data.get("id", ""),  # type: ignore[assignment]
+                label=entity_data.get("label", ""),  # type: ignore[assignment]
+                entity_type=entity_data.get("entity_type", ""),  # type: ignore[assignment]
+                source_layer=entity_data.get("source_layer", 0),  # type: ignore[assignment]
+                confidence=entity_data.get("confidence", 0.0),  # type: ignore[assignment]
+                uri=entity_data.get("uri"),  # type: ignore[assignment]
+                description=entity_data.get("description"),  # type: ignore[assignment]
+                properties=entity_data.get("properties", {}),  # type: ignore[assignment]
             )
-            for entity_data in (orm_result.extracted_entities or [])
+            for entity_data in (orm_result.extracted_entities or [])  # type: ignore[union-attr]
         ]
 
         # Reconstruct layer results from JSON
         layers_executed = [
             ExtractionLayerResult(
-                layer_number=layer_data.get("layer_number", 0),
-                layer_name=layer_data.get("layer_name", ""),
-                entities_found=layer_data.get("entities_found", 0),
-                duration_ms=layer_data.get("duration_ms", 0),
-                success=layer_data.get("success", False),
-                error_message=layer_data.get("error_message"),
+                layer_number=layer_data.get("layer_number", 0),  # type: ignore[assignment]
+                layer_name=layer_data.get("layer_name", ""),  # type: ignore[assignment]
+                entities_found=layer_data.get("entities_found", 0),  # type: ignore[assignment]
+                duration_ms=layer_data.get("duration_ms", 0),  # type: ignore[assignment]
+                success=layer_data.get("success", False),  # type: ignore[assignment]
+                error_message=layer_data.get("error_message"),  # type: ignore[assignment]
             )
-            for layer_data in (orm_result.layers_executed or [])
+            for layer_data in (orm_result.layers_executed or [])  # type: ignore[union-attr]
         ]
 
         # Create domain entity
         return ExtractionResult(
-            id=orm_result.id,
-            text=orm_result.text,
+            id=orm_result.id or "",  # type: ignore[arg-type]
+            text=orm_result.text or "",  # type: ignore[arg-type]
             extracted_entities=extracted_entities,
             layers_executed=layers_executed,
-            total_duration_ms=orm_result.total_duration_ms,
-            created_at=orm_result.created_at,
+            total_duration_ms=orm_result.total_duration_ms or 0,  # type: ignore[arg-type]
+            created_at=orm_result.created_at or datetime.now(timezone.utc),  # type: ignore[arg-type]
         )

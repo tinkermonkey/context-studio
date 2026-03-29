@@ -8,15 +8,16 @@ This module contains ORM models for:
 Models are defined here and serve as the source of truth for Alembic migrations.
 """
 
+from datetime import datetime
+from typing import Any
+
 from sqlalchemy import Column, String, Integer, Boolean, DateTime, Text, JSON, Index
-from sqlalchemy.orm import DeclarativeBase
+from sqlalchemy.orm import declarative_base
+
+OperationsBase = declarative_base()  # type: ignore[name-defined,var-annotated]
 
 
-class OperationsBase(DeclarativeBase):
-    pass
-
-
-class PipelineConfigurationModel(OperationsBase):
+class PipelineConfigurationModel(OperationsBase):  # type: ignore[misc,valid-type]
     """
     SQLAlchemy ORM model for LLM pipeline configurations in operations.db.
 
@@ -51,7 +52,7 @@ class PipelineConfigurationModel(OperationsBase):
     last_updated = Column(DateTime, nullable=False)
 
 
-class ExecutionModel(OperationsBase):
+class ExecutionModel(OperationsBase):  # type: ignore[misc,valid-type]
     """
     SQLAlchemy ORM model for pipeline execution records in operations.db.
 

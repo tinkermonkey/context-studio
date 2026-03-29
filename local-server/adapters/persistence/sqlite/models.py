@@ -16,6 +16,7 @@ Design Notes:
 """
 
 from datetime import datetime, timezone
+from typing import Any
 
 from sqlalchemy import (
     Column,
@@ -31,14 +32,12 @@ from sqlalchemy import (
     JSON,
     LargeBinary,
 )
-from sqlalchemy.orm import DeclarativeBase
+from sqlalchemy.orm import declarative_base
+
+Base = declarative_base()  # type: ignore[name-defined,var-annotated]
 
 
-class Base(DeclarativeBase):
-    pass
-
-
-class OntologyEntity(Base):
+class OntologyEntity(Base):  # type: ignore[misc,valid-type]
     """
     Unified table for all ontology entity types using single-table inheritance.
 
@@ -198,7 +197,7 @@ class OntologyEntity(Base):
         return f"<OntologyEntity(id={self.id}, type={self.node_type}, title={self.title})>"
 
 
-class Relationship(Base):
+class Relationship(Base):  # type: ignore[misc,valid-type]
     """
     A typed, directed edge between two ontology entities.
 
@@ -258,7 +257,7 @@ class Relationship(Base):
         return f"<Relationship(id={self.id}, source={self.source_id}, target={self.target_id})>"
 
 
-class PropertyDefinition(Base):
+class PropertyDefinition(Base):  # type: ignore[misc,valid-type]
     """
     Registry of defined object property types (OWL:ObjectProperty).
 
@@ -327,7 +326,7 @@ class PropertyDefinition(Base):
         return f"<PropertyDefinition(id={self.id}, identifier={self.identifier})>"
 
 
-class ChangeEvent(Base):
+class ChangeEvent(Base):  # type: ignore[misc,valid-type]
     """
     Audit trail of all changes to ontology entities.
 
@@ -409,7 +408,7 @@ class ChangeEvent(Base):
         return f"<ChangeEvent(id={self.id}, entity_id={self.entity_id}, operation={self.operation})>"
 
 
-class ExtractionResult(Base):
+class ExtractionResult(Base):  # type: ignore[misc,valid-type]
     """
     Persistence model for an extraction operation result.
 
@@ -460,4 +459,4 @@ class ExtractionResult(Base):
     )
 
     def __repr__(self) -> str:
-        return f"<ExtractionResult(id={self.id}, text_len={len(self.text)}, entities={len(self.extracted_entities)})>"
+        return f"<ExtractionResult(id={self.id}, text_len={len(self.text or '')}, entities={len(self.extracted_entities or [])})>"

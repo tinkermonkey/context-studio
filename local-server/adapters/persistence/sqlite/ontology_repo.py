@@ -55,7 +55,7 @@ class SQLiteOntologyRepository:
         session_factory: SQLAlchemy sessionmaker for creating isolated sessions
     """
 
-    def __init__(self, session_factory: sessionmaker[Session]) -> None:
+    def __init__(self, session_factory: sessionmaker) -> None:
         """
         Initialize the repository with a database session factory.
 

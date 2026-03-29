@@ -25,7 +25,7 @@ class SQLitePipelineRepository:
     complete instrumentation for observability.
     """
 
-    def __init__(self, session_factory: sessionmaker[Session]) -> None:
+    def __init__(self, session_factory: sessionmaker) -> None:
         """
         Initialize the repository with a SQLAlchemy session factory.
 
@@ -146,7 +146,7 @@ class SQLitePipelineRepository:
             rows = (
                 session.query(ExecutionModel)
                 .filter_by(pipeline_config_id=str(pipeline_config_id))
-                .order_by(ExecutionModel.timestamp.desc())
+                .order_by(ExecutionModel.timestamp.desc())  # type: ignore[attr-defined]
                 .limit(limit)
                 .all()
             )
