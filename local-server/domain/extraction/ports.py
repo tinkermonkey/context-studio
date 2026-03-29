@@ -293,8 +293,9 @@ class ReferenceSource(Protocol):
         """
         Search for entities matching a term asynchronously.
 
-        Implementations should delegate to search() via run_sync_in_executor
-        to avoid blocking the event loop.
+        Async variant of search(). Implementations must ensure this method
+        does not block the event loop, typically by delegating to the
+        synchronous search() method via an executor.
 
         Args:
             term: Search query
@@ -309,8 +310,9 @@ class ReferenceSource(Protocol):
         """
         Get relationships connected to a URI asynchronously.
 
-        Implementations should delegate to get_relations() via run_sync_in_executor
-        to avoid blocking the event loop.
+        Async variant of get_relations(). Implementations must ensure this method
+        does not block the event loop, typically by delegating to the
+        synchronous get_relations() method via an executor.
 
         Args:
             uri: URI of the resource to find relations for
@@ -325,8 +327,9 @@ class ReferenceSource(Protocol):
         """
         Check if this source is available asynchronously.
 
-        Implementations should delegate to is_available() via run_sync_in_executor
-        to avoid blocking the event loop.
+        Async variant of is_available(). Implementations must ensure this method
+        does not block the event loop, typically by delegating to the
+        synchronous is_available() method via an executor.
 
         Returns:
             True if the source can be queried, False otherwise
