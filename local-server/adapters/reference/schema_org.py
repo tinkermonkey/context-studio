@@ -1,6 +1,9 @@
 """schema.org reference source adapter for vocabulary definitions."""
 
-from adapters.reference.exceptions import ReferenceSourceParseError
+from adapters.reference.exceptions import (
+    ReferenceSourceError,
+    ReferenceSourceParseError,
+)
 from domain.extraction.ports import ReferenceResult, ReferenceRelation
 from utils.logger import get_logger
 
@@ -144,7 +147,7 @@ class SchemaOrgSource:
             ) from e
         except Exception as e:
             logger.error(f"Unexpected error during schema.org search for '{term}': {e}")
-            raise ReferenceSourceParseError(
+            raise ReferenceSourceError(
                 f"Unexpected error during schema.org search"
             ) from e
 
@@ -184,6 +187,6 @@ class SchemaOrgSource:
             return relations
         except Exception as e:
             logger.error(f"Unexpected error during schema.org get_relations for '{uri}': {e}")
-            raise ReferenceSourceParseError(
+            raise ReferenceSourceError(
                 f"Unexpected error during schema.org get_relations"
             ) from e

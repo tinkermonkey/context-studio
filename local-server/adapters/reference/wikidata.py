@@ -83,7 +83,7 @@ class WikidataSource:
             limit: Maximum number of results to return
 
         Returns:
-            List of ReferenceResult objects. Returns empty list on network error.
+            List of ReferenceResult objects.
 
         Raises:
             ReferenceSourceNetworkError: On network connectivity issues
@@ -167,7 +167,7 @@ class WikidataSource:
             limit: Maximum number of relations to return
 
         Returns:
-            List of ReferenceRelation objects. Returns empty list on network error.
+            List of ReferenceRelation objects.
 
         Raises:
             ReferenceSourceNetworkError: On network connectivity issues

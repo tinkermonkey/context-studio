@@ -79,7 +79,7 @@ class DBpediaSource:
             limit: Maximum number of results to return
 
         Returns:
-            List of ReferenceResult objects. Returns empty list on network error.
+            List of ReferenceResult objects.
 
         Raises:
             ReferenceSourceNetworkError: On network connectivity issues
