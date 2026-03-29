@@ -24,6 +24,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 
 from domain.ontology.services import OntologyService
 from utils.async_executor import run_sync_in_executor
+from utils.logger import get_logger
 from domain.ontology.exceptions import EntityNotFoundError, CircularReferenceError, DuplicateEntityError, OntologyError
 
 from adapters.web.dependencies import get_ontology_service
@@ -47,6 +48,8 @@ from adapters.web.schemas.ontology import (
 )
 
 router = APIRouter(prefix="/api", tags=["ontology"])
+
+_logger = get_logger(__name__)
 
 
 # ==================== Error Handler Utilities ====================
@@ -72,6 +75,8 @@ def _handle_domain_error(exc: Exception) -> tuple[int, str]:
     elif isinstance(exc, ValueError):
         return (status.HTTP_400_BAD_REQUEST, str(exc))
     else:
+        # Log the original exception for unexpected errors
+        _logger.error(f"Unexpected error in ontology endpoint: {exc}", exc_info=exc)
         return (status.HTTP_500_INTERNAL_SERVER_ERROR, "An unexpected error occurred")
 
 
@@ -102,7 +107,7 @@ async def create_taxonomy(
             request.description,
         )
         return TaxonomyResponse.model_validate(taxonomy)
-    except (ValueError, DuplicateEntityError) as exc:
+    except Exception as exc:
         status_code, message = _handle_domain_error(exc)
         raise HTTPException(status_code=status_code, detail=message)
 
@@ -125,7 +130,7 @@ async def list_taxonomies(
             limit=100,
             offset=0,
         )
-    except (ValueError, OntologyError) as exc:
+    except Exception as exc:
         status_code, message = _handle_domain_error(exc)
         raise HTTPException(status_code=status_code, detail=message)
 
@@ -151,8 +156,9 @@ async def get_taxonomy(
     try:
         taxonomy = await run_sync_in_executor(service.get_taxonomy, taxonomy_id)
         return TaxonomyResponse.model_validate(taxonomy)
-    except EntityNotFoundError as exc:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc))
+    except Exception as exc:
+        status_code, message = _handle_domain_error(exc)
+        raise HTTPException(status_code=status_code, detail=message)
 
 
 @router.put("/taxonomies/{taxonomy_id}", response_model=TaxonomyResponse)
@@ -183,7 +189,7 @@ async def update_taxonomy(
             description=request.description,
         )
         return TaxonomyResponse.model_validate(taxonomy)
-    except (ValueError, EntityNotFoundError, DuplicateEntityError) as exc:
+    except Exception as exc:
         status_code, message = _handle_domain_error(exc)
         raise HTTPException(status_code=status_code, detail=message)
 
@@ -205,7 +211,7 @@ async def delete_taxonomy(
     """
     try:
         await run_sync_in_executor(service.delete_taxonomy, taxonomy_id)
-    except (EntityNotFoundError, OntologyError) as exc:
+    except Exception as exc:
         status_code, message = _handle_domain_error(exc)
         raise HTTPException(status_code=status_code, detail=message)
 
@@ -240,7 +246,7 @@ async def create_concept_scheme(
             description=request.description,
         )
         return ConceptSchemeResponse.model_validate(scheme)
-    except (ValueError, EntityNotFoundError, DuplicateEntityError) as exc:
+    except Exception as exc:
         status_code, message = _handle_domain_error(exc)
         raise HTTPException(status_code=status_code, detail=message)
 
@@ -268,7 +274,7 @@ async def list_concept_schemes(
             limit=100,
             offset=0,
         )
-    except (ValueError, OntologyError) as exc:
+    except Exception as exc:
         status_code, message = _handle_domain_error(exc)
         raise HTTPException(status_code=status_code, detail=message)
 
@@ -294,8 +300,9 @@ async def get_concept_scheme(
     try:
         scheme = service.get_concept_scheme(scheme_id)
         return ConceptSchemeResponse.model_validate(scheme)
-    except EntityNotFoundError as exc:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc))
+    except Exception as exc:
+        status_code, message = _handle_domain_error(exc)
+        raise HTTPException(status_code=status_code, detail=message)
 
 
 @router.put("/schemes/{scheme_id}", response_model=ConceptSchemeResponse)
@@ -325,7 +332,7 @@ async def update_concept_scheme(
             description=request.description,
         )
         return ConceptSchemeResponse.model_validate(scheme)
-    except (ValueError, EntityNotFoundError, DuplicateEntityError) as exc:
+    except Exception as exc:
         status_code, message = _handle_domain_error(exc)
         raise HTTPException(status_code=status_code, detail=message)
 
@@ -347,7 +354,7 @@ async def delete_concept_scheme(
     """
     try:
         service.delete_scheme(scheme_id)
-    except (EntityNotFoundError, OntologyError) as exc:
+    except Exception as exc:
         status_code, message = _handle_domain_error(exc)
         raise HTTPException(status_code=status_code, detail=message)
 
@@ -382,7 +389,7 @@ async def create_class(
             parent_class_id=request.parent_class_id,
         )
         return ClassResponse.model_validate(cls)
-    except (ValueError, EntityNotFoundError, DuplicateEntityError) as exc:
+    except Exception as exc:
         status_code, message = _handle_domain_error(exc)
         raise HTTPException(status_code=status_code, detail=message)
 
@@ -422,7 +429,7 @@ async def list_classes(
             limit=limit,
             offset=offset,
         )
-    except (ValueError, OntologyError) as exc:
+    except Exception as exc:
         status_code, message = _handle_domain_error(exc)
         raise HTTPException(status_code=status_code, detail=message)
 
@@ -448,8 +455,9 @@ async def get_class(
     try:
         cls = service.get_class(class_id)
         return ClassResponse.model_validate(cls)
-    except EntityNotFoundError as exc:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc))
+    except Exception as exc:
+        status_code, message = _handle_domain_error(exc)
+        raise HTTPException(status_code=status_code, detail=message)
 
 
 @router.put("/classes/{class_id}", response_model=ClassResponse)
@@ -479,7 +487,7 @@ async def update_class(
             description=request.description,
         )
         return ClassResponse.model_validate(cls)
-    except (ValueError, EntityNotFoundError, DuplicateEntityError) as exc:
+    except Exception as exc:
         status_code, message = _handle_domain_error(exc)
         raise HTTPException(status_code=status_code, detail=message)
 
@@ -510,7 +518,7 @@ async def move_class(
             new_parent_id=request.new_parent_id,
         )
         return ClassResponse.model_validate(cls)
-    except (ValueError, EntityNotFoundError, CircularReferenceError) as exc:
+    except Exception as exc:
         status_code, message = _handle_domain_error(exc)
         raise HTTPException(status_code=status_code, detail=message)
 
@@ -532,7 +540,7 @@ async def delete_class(
     """
     try:
         service.delete_class(class_id)
-    except (EntityNotFoundError, OntologyError) as exc:
+    except Exception as exc:
         status_code, message = _handle_domain_error(exc)
         raise HTTPException(status_code=status_code, detail=message)
 
@@ -564,7 +572,7 @@ async def create_relationship(
             property_definition_id=request.property_definition_id,
         )
         return RelationshipResponse.model_validate(relationship)
-    except (ValueError, EntityNotFoundError, DuplicateEntityError) as exc:
+    except Exception as exc:
         status_code, message = _handle_domain_error(exc)
         raise HTTPException(status_code=status_code, detail=message)
 
@@ -600,7 +608,7 @@ async def list_relationships(
             limit=100,
             offset=0,
         )
-    except (ValueError, OntologyError) as exc:
+    except Exception as exc:
         status_code, message = _handle_domain_error(exc)
         raise HTTPException(status_code=status_code, detail=message)
 
@@ -626,8 +634,9 @@ async def get_relationship(
     try:
         relationship = service.get_relationship(relationship_id)
         return RelationshipResponse.model_validate(relationship)
-    except EntityNotFoundError as exc:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc))
+    except Exception as exc:
+        status_code, message = _handle_domain_error(exc)
+        raise HTTPException(status_code=status_code, detail=message)
 
 
 @router.delete("/relationships/{relationship_id}", status_code=status.HTTP_204_NO_CONTENT)
@@ -647,8 +656,9 @@ async def delete_relationship(
     """
     try:
         service.delete_relationship(relationship_id)
-    except EntityNotFoundError as exc:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc))
+    except Exception as exc:
+        status_code, message = _handle_domain_error(exc)
+        raise HTTPException(status_code=status_code, detail=message)
 
 
 # ==================== PropertyDefinition Endpoints ====================
@@ -678,7 +688,7 @@ async def create_property_definition(
             description=request.description,
         )
         return PropertyDefinitionResponse.model_validate(prop_def)
-    except (ValueError, DuplicateEntityError) as exc:
+    except Exception as exc:
         status_code, message = _handle_domain_error(exc)
         raise HTTPException(status_code=status_code, detail=message)
 
@@ -706,7 +716,7 @@ async def list_property_definitions(
             limit=100,
             offset=0,
         )
-    except (ValueError, OntologyError) as exc:
+    except Exception as exc:
         status_code, message = _handle_domain_error(exc)
         raise HTTPException(status_code=status_code, detail=message)
 
@@ -732,8 +742,9 @@ async def get_property_definition(
     try:
         prop_def = service.get_property_definition(property_id)
         return PropertyDefinitionResponse.model_validate(prop_def)
-    except EntityNotFoundError as exc:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc))
+    except Exception as exc:
+        status_code, message = _handle_domain_error(exc)
+        raise HTTPException(status_code=status_code, detail=message)
 
 
 @router.put("/properties/{property_id}", response_model=PropertyDefinitionResponse)
@@ -765,7 +776,7 @@ async def update_property_definition(
             description=request.description,
         )
         return PropertyDefinitionResponse.model_validate(prop_def)
-    except (ValueError, EntityNotFoundError, DuplicateEntityError) as exc:
+    except Exception as exc:
         status_code, message = _handle_domain_error(exc)
         raise HTTPException(status_code=status_code, detail=message)
 
@@ -787,6 +798,6 @@ async def delete_property_definition(
     """
     try:
         service.delete_property_definition(property_id)
-    except (EntityNotFoundError, OntologyError) as exc:
+    except Exception as exc:
         status_code, message = _handle_domain_error(exc)
         raise HTTPException(status_code=status_code, detail=message)
