@@ -23,6 +23,7 @@ from tests.fakes.fake_embedding_service import FakeEmbeddingService
 from tests.fakes.fake_llm_provider import FakeLLMProvider
 from tests.fakes.fake_nlp_processor import FakeNLPProcessor
 from tests.fakes.fake_reference_source import FakeReferenceSource
+from tests.fakes.fake_extraction_repository import FakeExtractionRepository
 
 
 # ============================================================================
@@ -39,7 +40,8 @@ def service():
         nlp=FakeNLPProcessor(),
         reference_sources=[FakeReferenceSource("TestSource")],
         event_publisher=FakeEventPublisher(),
-    )
+            extraction_repo=FakeExtractionRepository(),
+        )
 
 
 # ============================================================================
@@ -88,6 +90,7 @@ class TestExtract:
             nlp=FakeNLPProcessor(),
             reference_sources=[FakeReferenceSource()],
             event_publisher=FakeEventPublisher(),
+            extraction_repo=FakeExtractionRepository(),
         )
 
         result = service.extract("Test text")
@@ -140,6 +143,7 @@ class TestDeduplication:
             nlp=FakeNLPProcessor(),
             reference_sources=[],
             event_publisher=FakeEventPublisher(),
+            extraction_repo=FakeExtractionRepository(),
         )
 
         # Create entities with same label but different source layers
@@ -177,6 +181,7 @@ class TestDeduplication:
             nlp=FakeNLPProcessor(),
             reference_sources=[],
             event_publisher=FakeEventPublisher(),
+            extraction_repo=FakeExtractionRepository(),
         )
 
         # Labels with low similarity (below 0.85)
@@ -197,6 +202,7 @@ class TestDeduplication:
             nlp=FakeNLPProcessor(),
             reference_sources=[],
             event_publisher=FakeEventPublisher(),
+            extraction_repo=FakeExtractionRepository(),
         )
 
         entity_a = ExtractedEntity(label="Apple", entity_type="ORG", source_layer=0)
@@ -218,6 +224,7 @@ class TestDeduplication:
             nlp=FakeNLPProcessor(),
             reference_sources=[],
             event_publisher=FakeEventPublisher(),
+            extraction_repo=FakeExtractionRepository(),
         )
 
         entity_a = ExtractedEntity(label="Apple Inc.", entity_type="ORG", source_layer=0)
@@ -236,6 +243,7 @@ class TestDeduplication:
             nlp=FakeNLPProcessor(),
             reference_sources=[],
             event_publisher=FakeEventPublisher(),
+            extraction_repo=FakeExtractionRepository(),
         )
 
         # Same entity from all layers
@@ -261,6 +269,7 @@ class TestDeduplication:
             nlp=FakeNLPProcessor(),
             reference_sources=[],
             event_publisher=FakeEventPublisher(),
+            extraction_repo=FakeExtractionRepository(),
         )
 
         result = service._deduplicate([])
@@ -275,6 +284,7 @@ class TestDeduplication:
             nlp=FakeNLPProcessor(),
             reference_sources=[],
             event_publisher=FakeEventPublisher(),
+            extraction_repo=FakeExtractionRepository(),
         )
 
         entity = ExtractedEntity(label="Apple", entity_type="ORG", source_layer=1)
@@ -296,6 +306,7 @@ class TestLayerExecution:
             nlp=FakeNLPProcessor(),
             reference_sources=[FakeReferenceSource()],
             event_publisher=FakeEventPublisher(),
+            extraction_repo=FakeExtractionRepository(),
         )
 
         result = service.extract("Test text")
@@ -327,6 +338,7 @@ class TestLayerExecution:
             nlp=FakeNLPProcessor(),  # This layer still runs
             reference_sources=[FakeReferenceSource()],
             event_publisher=FakeEventPublisher(),
+            extraction_repo=FakeExtractionRepository(),
         )
 
         result = service.extract("Test text with content")
@@ -356,6 +368,7 @@ class TestLayerForwardOutput:
             nlp=FakeNLPProcessor(),
             reference_sources=[FakeReferenceSource()],
             event_publisher=FakeEventPublisher(),
+            extraction_repo=FakeExtractionRepository(),
         )
 
         result = service.extract("Test text")
@@ -377,6 +390,7 @@ class TestStringSimilarity:
             nlp=FakeNLPProcessor(),
             reference_sources=[],
             event_publisher=FakeEventPublisher(),
+            extraction_repo=FakeExtractionRepository(),
         )
 
         sim = service._normalized_similarity("Apple", "Apple")
@@ -391,6 +405,7 @@ class TestStringSimilarity:
             nlp=FakeNLPProcessor(),
             reference_sources=[],
             event_publisher=FakeEventPublisher(),
+            extraction_repo=FakeExtractionRepository(),
         )
 
         sim = service._normalized_similarity("apple", "APPLE")
@@ -405,6 +420,7 @@ class TestStringSimilarity:
             nlp=FakeNLPProcessor(),
             reference_sources=[],
             event_publisher=FakeEventPublisher(),
+            extraction_repo=FakeExtractionRepository(),
         )
 
         sim = service._normalized_similarity("", "")
@@ -422,6 +438,7 @@ class TestStringSimilarity:
             nlp=FakeNLPProcessor(),
             reference_sources=[],
             event_publisher=FakeEventPublisher(),
+            extraction_repo=FakeExtractionRepository(),
         )
 
         # "Apple" vs "Apples" - one extra character
@@ -633,6 +650,7 @@ class TestExceptionHandling:
             nlp=FakeNLPProcessor(should_fail=True),  # Layer 2 fails (empty entities)
             reference_sources=[FakeReferenceSource(should_fail=True)],  # Layer 3: no entities to enrich
             event_publisher=FakeEventPublisher(),
+            extraction_repo=FakeExtractionRepository(),
         )
 
         # No entities extracted across all layers should raise ExtractionError
@@ -663,6 +681,7 @@ class TestExceptionHandling:
             nlp=NotReadyNLPProcessor(),  # Layer 2 not ready
             reference_sources=[FakeReferenceSource()],
             event_publisher=FakeEventPublisher(),
+            extraction_repo=FakeExtractionRepository(),
         )
 
         # Should not raise despite NLP not being ready - LLM will extract entities
@@ -693,6 +712,7 @@ class TestExceptionHandling:
             nlp=FakeNLPProcessor(),
             reference_sources=[UnavailableReferenceSource()],  # Layer 3 not available
             event_publisher=FakeEventPublisher(),
+            extraction_repo=FakeExtractionRepository(),
         )
 
         # Should not raise despite reference source not available

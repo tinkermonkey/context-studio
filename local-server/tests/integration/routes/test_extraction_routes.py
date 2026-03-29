@@ -34,6 +34,7 @@ from domain.extraction.services import ExtractionService
 from domain.ontology.entities import Taxonomy, ConceptScheme, Class
 from adapters.persistence.sqlite.models import Base
 from adapters.persistence.sqlite.ontology_repo import SQLiteOntologyRepository
+from adapters.persistence.sqlite.extraction_repo import SQLiteExtractionRepository
 from adapters.embedding.sentence_transformer import SentenceTransformerEmbedding
 from adapters.events.in_process import InProcessEventPublisher
 from adapters.web.extraction_routes import router
@@ -117,7 +118,13 @@ def event_publisher():
 
 
 @pytest.fixture
-def extraction_service(populated_repository, embedding_service, event_publisher):
+def extraction_repository(session_factory):
+    """Create a real SQLiteExtractionRepository with actual persistence."""
+    return SQLiteExtractionRepository(session_factory)
+
+
+@pytest.fixture
+def extraction_service(populated_repository, embedding_service, event_publisher, extraction_repository):
     """Create ExtractionService with fake adapters."""
     service = ExtractionService(
         ontology_repo=populated_repository,
@@ -126,6 +133,7 @@ def extraction_service(populated_repository, embedding_service, event_publisher)
         nlp=FakeNLPProcessor(),
         reference_sources=[FakeReferenceSource()],
         event_publisher=event_publisher,
+        extraction_repo=extraction_repository,
     )
     return service
 

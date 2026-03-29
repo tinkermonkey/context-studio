@@ -24,6 +24,7 @@ from utils.logger import get_logger
 # Import adapters
 from adapters.persistence.sqlite.connection import DatabaseManager
 from adapters.persistence.sqlite.ontology_repo import SQLiteOntologyRepository
+from adapters.persistence.sqlite.extraction_repo import SQLiteExtractionRepository
 from adapters.persistence.sqlite.pipeline_repo import SQLitePipelineRepository
 from adapters.persistence.sqlite.change_repo import SQLiteChangeRepository
 from adapters.embedding.sentence_transformer import SentenceTransformerEmbedding
@@ -109,7 +110,8 @@ async def lifespan(app: FastAPI):
         # Per-request sessions are created in route dependencies.
         local_session_factory = db_manager.get_local_session_factory()
         ontology_repo = SQLiteOntologyRepository(local_session_factory)
-        logger.info("OntologyRepository created")
+        extraction_repo = SQLiteExtractionRepository(local_session_factory)
+        logger.info("OntologyRepository and ExtractionRepository created")
 
         operations_session_factory = db_manager.get_operations_session_factory()
         pipeline_repo = SQLitePipelineRepository(operations_session_factory)
@@ -177,6 +179,7 @@ async def lifespan(app: FastAPI):
             nlp=nlp_processor,
             reference_sources=reference_sources,
             event_publisher=event_publisher,
+            extraction_repo=extraction_repo,
         )
         logger.info("ExtractionService created and wired with adapters")
 
