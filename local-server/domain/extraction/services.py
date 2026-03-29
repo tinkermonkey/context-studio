@@ -396,7 +396,11 @@ class ExtractionService:
             error_msg = str(exc)
 
             _logger.error(
-                f"Layer {layer_num} ({layer_name}) failed: {type(exc).__name__}: {error_msg}",
+                "Layer %d (%s) failed: %s: %s",
+                layer_num,
+                layer_name,
+                type(exc).__name__,
+                error_msg,
                 exc_info=exc,
             )
 

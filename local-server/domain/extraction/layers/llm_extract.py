@@ -109,7 +109,8 @@ JSON Array:"""
             except json.JSONDecodeError as e:
                 parse_error = f"Extracted JSON parse failed: {e}"
                 _logger.warning(
-                    f"Failed to parse extracted JSON from LLM response: {parse_error}",
+                    "Failed to parse extracted JSON from LLM response: %s",
+                    parse_error,
                     extra={"response_sample": response_text[:200]},
                 )
 
@@ -137,7 +138,6 @@ JSON Array:"""
     }
     if parse_error:
         metadata["parse_error"] = parse_error
-        _logger.warning(f"LLM response parsing issue: {parse_error}")
 
     return LayerOutput(
         entities=entities,
