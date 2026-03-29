@@ -15,6 +15,7 @@ from adapters.llm.openai_provider import OpenAIProvider
 from adapters.llm.anthropic_provider import AnthropicProvider
 from domain.extraction.ports import LLMProvider, LLMResponse
 from utils.logger import get_logger
+from utils.async_executor import run_sync_in_executor
 
 logger = get_logger(__name__)
 
@@ -177,8 +178,6 @@ class LLMProviderRouter:
         Raises:
             ValueError: If no provider is available for the requested model
         """
-        from utils.async_executor import run_sync_in_executor
-
         provider = self._route_to_provider(model)
         # Check if provider has async method and use it, otherwise fallback to sync
         if hasattr(provider, 'complete_async'):

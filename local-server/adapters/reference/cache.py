@@ -8,6 +8,7 @@ from typing import Literal, overload
 
 from domain.extraction.ports import ReferenceSource, ReferenceResult, ReferenceRelation
 from utils.logger import get_logger
+from utils.async_executor import run_sync_in_executor
 
 logger = get_logger(__name__)
 
@@ -185,7 +186,6 @@ class CachedReferenceSource(ReferenceSource):
         Returns:
             List of ReferenceResult objects from cache or inner source
         """
-        from utils.async_executor import run_sync_in_executor
         return await run_sync_in_executor(self.search, term, limit)
 
     async def get_relations_async(self, uri: str, limit: int = 10) -> list[ReferenceRelation]:
@@ -202,7 +202,6 @@ class CachedReferenceSource(ReferenceSource):
         Returns:
             List of ReferenceRelation objects from cache or inner source
         """
-        from utils.async_executor import run_sync_in_executor
         return await run_sync_in_executor(self.get_relations, uri, limit)
 
     async def is_available_async(self) -> bool:
@@ -215,7 +214,6 @@ class CachedReferenceSource(ReferenceSource):
         Returns:
             True if the inner source is available, False otherwise
         """
-        from utils.async_executor import run_sync_in_executor
         return await run_sync_in_executor(self.is_available)
 
     @overload
