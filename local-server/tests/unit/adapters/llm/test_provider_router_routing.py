@@ -22,7 +22,7 @@ sys.path.append(
 )
 
 from adapters.llm.provider_router import LLMProviderRouter
-from domain.extraction.ports import LLMResponse
+from domain.ports import LLMResponse
 
 
 class MockLLMProvider:

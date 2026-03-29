@@ -6,8 +6,8 @@ Extracts entities using prompts sent to language models.
 import json
 
 from domain.extraction.entities import ExtractedEntity
-from domain.extraction.ports import LLMProvider
 from domain.extraction.value_objects import LayerInput, LayerOutput
+from domain.ports import LLMProvider
 
 
 def execute(input: LayerInput, llm: LLMProvider) -> LayerOutput:

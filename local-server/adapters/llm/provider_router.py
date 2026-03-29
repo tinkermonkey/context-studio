@@ -13,7 +13,7 @@ from typing import Any
 
 from adapters.llm.openai_provider import OpenAIProvider
 from adapters.llm.anthropic_provider import AnthropicProvider
-from domain.extraction.ports import LLMProvider, LLMResponse
+from domain.ports import LLMProvider, LLMResponse
 from utils.logger import get_logger
 
 logger = get_logger(__name__)

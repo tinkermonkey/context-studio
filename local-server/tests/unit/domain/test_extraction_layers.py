@@ -15,7 +15,8 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(
 from domain.extraction import layers
 from domain.extraction.entities import ExtractedEntity
 from domain.extraction.value_objects import LayerInput
-from domain.extraction.ports import LLMResponse, NLPEntity, ReferenceResult
+from domain.extraction.ports import NLPEntity, ReferenceResult
+from domain.ports import LLMResponse
 from domain.ontology.entities import Class
 from domain.ontology.value_objects import ExternalReference
 

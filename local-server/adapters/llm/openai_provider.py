@@ -14,7 +14,7 @@ except ImportError:
     HAS_OPENAI = False
     openai = None  # type: ignore[assignment]
 
-from domain.extraction.ports import LLMResponse
+from domain.ports import LLMResponse
 from utils.logger import get_logger
 from utils.async_executor import run_sync_in_executor
 

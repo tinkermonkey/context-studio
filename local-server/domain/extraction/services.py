@@ -12,12 +12,12 @@ from datetime import datetime, timezone
 from uuid import uuid4
 
 from domain.ontology.ports import OntologyRepository, EmbeddingService
-from domain.ports import EventPublisher
+from domain.ports import EventPublisher, LLMProvider
 from . import layers
 from .entities import ExtractedEntity, ExtractionResult
 from .events import ExtractionCompleted
 from .exceptions import ExtractionError
-from .ports import LLMProvider, NLPProcessor, ReferenceSource, ExtractionRepository
+from .ports import NLPProcessor, ReferenceSource, ExtractionRepository
 from .value_objects import ExtractionLayerResult, LayerInput, LayerOutput
 
 
