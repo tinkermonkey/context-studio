@@ -199,6 +199,6 @@ class DatabaseManager:
 
         LocalBase.metadata.create_all(self._local_engine)
 
-        # Operations models will be imported when implemented
-        # from adapters.persistence.sqlite.operations.models import OperationsBase
-        # OperationsBase.metadata.create_all(self._operations_engine)
+        # Import operations models and create tables
+        from adapters.persistence.sqlite.operations.models import OperationsBase
+        OperationsBase.metadata.create_all(self._operations_engine)

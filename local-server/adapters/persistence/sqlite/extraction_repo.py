@@ -109,6 +109,9 @@ class SQLiteExtractionRepository:
 
             return result
 
+        except Exception:
+            session.rollback()
+            raise
         finally:
             session.close()
 
