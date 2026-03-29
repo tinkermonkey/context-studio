@@ -11,10 +11,7 @@ import os
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
-from unittest.mock import MagicMock, patch
-from domain.extraction.services import ExtractionService
 from domain.extraction.events import ExtractionCompleted
-from domain.pipeline.services import PipelineService
 from domain.pipeline.events import PipelineExecuted
 from adapters.events.in_process import InProcessEventPublisher
 
