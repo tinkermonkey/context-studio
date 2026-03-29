@@ -31,7 +31,7 @@ class MockLLMProvider:
     def __init__(self, available_models: list[str]):
         self._available_models = available_models
 
-    def complete(self, system_prompt, user_prompt, model, temperature=0.0, max_tokens=2000, response_format=None):
+    def complete(self, system_prompt, user_prompt, model, temperature=0.0, max_tokens=2000, response_format=None, timeout=None):
         """Mock complete method."""
         return LLMResponse(
             content="mock response",
@@ -89,11 +89,11 @@ class TestLLMProviderRouter:
         mock_provider = Mock()
         mock_anthropic_class.return_value = mock_provider
 
-        router = LLMProviderRouter(anthropic_api_key="test-anthropic-key")
+        router = LLMProviderRouter(anthropic_api_key="sk-ant-test-key-123")
 
         # Anthropic provider should be initialized
         assert "anthropic" in router._providers
-        mock_anthropic_class.assert_called_once_with("test-anthropic-key")
+        mock_anthropic_class.assert_called_once_with("sk-ant-test-key-123")
 
     @patch("adapters.llm.provider_router.OpenAIProvider")
     @patch("adapters.llm.provider_router.AnthropicProvider")
@@ -105,7 +105,7 @@ class TestLLMProviderRouter:
         mock_anthropic_class.return_value = mock_anthropic_provider
 
         router = LLMProviderRouter(
-            openai_api_key="sk-test-key", anthropic_api_key="anthropic-key"
+            openai_api_key="sk-test-key", anthropic_api_key="sk-ant-test-key"
         )
 
         # Both providers should be initialized
@@ -268,5 +268,6 @@ class TestLLMProviderRouter:
             temperature=0.7,
             max_tokens=1000,
             response_format={"type": "json_object"},
+            timeout=None,
         )
         assert response is expected_response

@@ -114,6 +114,7 @@ class FakeLLMProvider:
         temperature: float = 0.0,
         max_tokens: int = 2000,
         response_format=None,
+        timeout: float | None = None,
     ) -> LLMResponse:
         """Return mock LLM response."""
         if self.should_fail:

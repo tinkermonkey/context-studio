@@ -39,6 +39,7 @@ class FakeLLMProvider:
         temperature: float = 0.0,
         max_tokens: int = 2000,
         response_format: dict[str, Any] | None = None,
+        timeout: float | None = None,
     ) -> LLMResponse:
         """
         Request a completion from the fake LLM.
@@ -50,6 +51,7 @@ class FakeLLMProvider:
             temperature: Sampling temperature
             max_tokens: Maximum tokens
             response_format: Optional response format
+            timeout: Request timeout in seconds
 
         Returns:
             LLMResponse with canned content and token counts
@@ -62,6 +64,7 @@ class FakeLLMProvider:
             "temperature": temperature,
             "max_tokens": max_tokens,
             "response_format": response_format,
+            "timeout": timeout,
         }
 
         if self.should_raise_error and self.error_to_raise:
