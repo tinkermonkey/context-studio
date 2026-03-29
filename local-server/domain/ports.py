@@ -21,27 +21,6 @@ EventT_contra = TypeVar('EventT_contra', bound=DomainEvent, contravariant=True)
 # Value types used in port contracts
 # ============================================================================
 
-@dataclass(frozen=True)
-class LLMResponse:
-    """
-    Response from an LLM completion request.
-
-    Attributes:
-        content: The generated text response
-        tokens_in: Count of input tokens consumed
-        tokens_out: Count of output tokens generated
-        duration_ms: Time spent processing the request in milliseconds
-        finish_reason: Reason the model stopped (e.g., 'stop', 'length')
-        model: Name of the model that generated the response
-    """
-    content: str
-    tokens_in: int
-    tokens_out: int
-    duration_ms: float
-    finish_reason: str
-    model: str
-
-
 class ChangeRecordPort(Protocol):
     """Port for recording change events to the audit trail."""
 
