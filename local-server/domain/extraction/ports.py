@@ -289,6 +289,50 @@ class ReferenceSource(Protocol):
         """
         ...
 
+    async def search_async(self, term: str, limit: int = 10) -> list[ReferenceResult]:
+        """
+        Search for entities matching a term asynchronously.
+
+        Implementations should delegate to search() via run_sync_in_executor
+        to avoid blocking the event loop.
+
+        Args:
+            term: Search query
+            limit: Maximum number of results
+
+        Returns:
+            List of matching ReferenceResult objects
+        """
+        ...
+
+    async def get_relations_async(self, uri: str, limit: int = 10) -> list[ReferenceRelation]:
+        """
+        Get relationships connected to a URI asynchronously.
+
+        Implementations should delegate to get_relations() via run_sync_in_executor
+        to avoid blocking the event loop.
+
+        Args:
+            uri: URI of the resource to find relations for
+            limit: Maximum number of relations
+
+        Returns:
+            List of ReferenceRelation objects
+        """
+        ...
+
+    async def is_available_async(self) -> bool:
+        """
+        Check if this source is available asynchronously.
+
+        Implementations should delegate to is_available() via run_sync_in_executor
+        to avoid blocking the event loop.
+
+        Returns:
+            True if the source can be queried, False otherwise
+        """
+        ...
+
 
 class ExtractionRepository(Protocol):
     """
