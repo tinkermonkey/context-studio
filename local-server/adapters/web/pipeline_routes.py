@@ -56,8 +56,6 @@ def _handle_domain_error(exc: Exception) -> tuple[int, str]:
         return (status.HTTP_404_NOT_FOUND, str(exc))
     elif isinstance(exc, PipelineError):
         return (status.HTTP_400_BAD_REQUEST, str(exc))
-    elif isinstance(exc, ValueError):
-        return (status.HTTP_400_BAD_REQUEST, str(exc))
     else:
         # Log the original exception for unexpected errors
         _logger.error(f"Unexpected error in pipeline endpoint: {exc}", exc_info=exc)
@@ -139,8 +137,6 @@ async def get_pipeline_configuration(
     """
     try:
         config = service.get_config(pipeline_id)
-        if config is None:
-            raise PipelineNotFoundError(f"Pipeline configuration {pipeline_id} not found")
         return PipelineConfigurationResponse.model_validate(config)
     except Exception as exc:
         status_code, message = _handle_domain_error(exc)
@@ -200,9 +196,7 @@ async def delete_pipeline_configuration(
         HTTPException: 404 if not found
     """
     try:
-        success = service.delete_config(pipeline_id)
-        if not success:
-            raise PipelineNotFoundError(f"Pipeline configuration {pipeline_id} not found")
+        service.delete_config(pipeline_id)
     except Exception as exc:
         status_code, message = _handle_domain_error(exc)
         raise HTTPException(status_code=status_code, detail=message)

@@ -86,10 +86,10 @@ class TestPipelineServiceConfigurationCRUD:
         assert retrieved.created_at == created.created_at
         assert retrieved.last_updated == created.last_updated
 
-    def test_get_config_returns_none_for_missing_config(self):
-        """Getting non-existent config returns None."""
-        result = self.service.get_config("nonexistent-id")
-        assert result is None
+    def test_get_config_raises_if_not_found(self):
+        """Getting non-existent config raises PipelineNotFoundError."""
+        with pytest.raises(PipelineNotFoundError, match="not found"):
+            self.service.get_config("nonexistent-id")
 
     def test_list_configs(self):
         """List all pipeline configurations."""
@@ -192,17 +192,16 @@ class TestPipelineServiceConfigurationCRUD:
             user_prompt="User: {text}",
         )
 
-        result = self.service.delete_config(config.id)
-        assert result is True
+        self.service.delete_config(config.id)
 
-        # Verify it's gone
-        retrieved = self.service.get_config(config.id)
-        assert retrieved is None
+        # Verify it's gone by checking that get_config raises
+        with pytest.raises(PipelineNotFoundError):
+            self.service.get_config(config.id)
 
-    def test_delete_config_returns_false_if_not_found(self):
-        """Deleting non-existent config returns False."""
-        result = self.service.delete_config("nonexistent-id")
-        assert result is False
+    def test_delete_config_raises_if_not_found(self):
+        """Deleting non-existent config raises PipelineNotFoundError."""
+        with pytest.raises(PipelineNotFoundError, match="not found"):
+            self.service.delete_config("nonexistent-id")
 
 
 class TestPipelineServiceExecution:
@@ -330,6 +329,11 @@ class TestPipelineServiceExecution:
         assert len(events) == 1
         event = events[0]
         assert event.status == "error"
+
+    def test_list_executions_raises_if_config_not_found(self):
+        """List executions raises PipelineNotFoundError if config not found."""
+        with pytest.raises(PipelineNotFoundError, match="not found"):
+            self.service.list_executions("nonexistent-id")
 
     def test_execute_pipeline_raises_if_config_not_found(self):
         """Execute pipeline raises PipelineNotFoundError if config not found."""

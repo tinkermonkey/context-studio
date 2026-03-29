@@ -93,7 +93,7 @@ class PipelineService:
         )
         return self._pipeline_repo.save_config(config_obj)
 
-    def get_config(self, config_id: str) -> PipelineConfiguration | None:
+    def get_config(self, config_id: str) -> PipelineConfiguration:
         """
         Retrieve a pipeline configuration by ID.
 
@@ -101,9 +101,15 @@ class PipelineService:
             config_id: Configuration ID
 
         Returns:
-            PipelineConfiguration if found, None otherwise
+            PipelineConfiguration
+
+        Raises:
+            PipelineNotFoundError: If configuration not found
         """
-        return self._pipeline_repo.get_config(config_id)
+        config = self._pipeline_repo.get_config(config_id)
+        if config is None:
+            raise PipelineNotFoundError(f"Pipeline configuration {config_id} not found")
+        return config
 
     def list_configs(self, enabled_only: bool = False) -> list[PipelineConfiguration]:
         """
@@ -168,17 +174,20 @@ class PipelineService:
         )
         return self._pipeline_repo.save_config(updated)
 
-    def delete_config(self, config_id: str) -> bool:
+    def delete_config(self, config_id: str) -> None:
         """
         Delete a pipeline configuration.
 
         Args:
             config_id: Configuration ID
 
-        Returns:
-            True if deletion was successful, False if not found
+        Raises:
+            PipelineNotFoundError: If configuration not found
         """
-        return self._pipeline_repo.delete_config(config_id)
+        config = self._pipeline_repo.get_config(config_id)
+        if config is None:
+            raise PipelineNotFoundError(f"Pipeline configuration {config_id} not found")
+        self._pipeline_repo.delete_config(config_id)
 
     def list_executions(self, config_id: str, limit: int = 50) -> list[Execution]:
         """
