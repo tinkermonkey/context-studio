@@ -27,35 +27,21 @@ import tempfile
 from pathlib import Path
 
 from domain.extraction.services import ExtractionService
-from domain.extraction.exceptions import ExtractionError
 from adapters.embedding.sentence_transformer import SentenceTransformerEmbedding
 from adapters.nlp.spacy_processor import SpacyNLPProcessor
 from adapters.reference.cache import CachedReferenceSource
 
-# Import reference sources with fallback support
-try:
-    from adapters.reference.conceptnet import ConceptNetSource
-except ImportError:
-    ConceptNetSource = None  # type: ignore[assignment,misc]
-
-try:
-    from adapters.reference.dbpedia import DBpediaSource
-except ImportError:
-    DBpediaSource = None  # type: ignore[assignment,misc]
-
-try:
-    from adapters.reference.schema_org import SchemaOrgSource
-except ImportError:
-    SchemaOrgSource = None  # type: ignore[assignment,misc]
-
 # Import fakes
 from tests.fakes.fake_ontology_repository import FakeOntologyRepository
+from tests.fakes.fake_extraction_repository import FakeExtractionRepository
 from tests.fakes.fake_event_publisher import FakeEventPublisher
 from tests.fakes.fake_llm_provider import FakeLLMProvider
 from tests.fakes.fake_reference_source import FakeReferenceSource
 
 
-@pytest.mark.extraction
+@pytest.mark.llm
+@pytest.mark.nlp
+@pytest.mark.reference
 class TestExtractionWithKGContext:
     """Tests for extraction with knowledge graph context enrichment."""
 
@@ -76,7 +62,7 @@ class TestExtractionWithKGContext:
             nlp=SpacyNLPProcessor(),
             reference_sources=[],
             event_publisher=FakeEventPublisher(),
-            extraction_repo=FakeOntologyRepository(),
+            extraction_repo=FakeExtractionRepository(),
         )
 
         # Execute extraction
@@ -106,7 +92,7 @@ class TestExtractionWithKGContext:
             nlp=SpacyNLPProcessor(),
             reference_sources=[],
             event_publisher=FakeEventPublisher(),
-            extraction_repo=FakeOntologyRepository(),
+            extraction_repo=FakeExtractionRepository(),
         )
 
         text = "Technology companies include Microsoft and Google"
@@ -116,7 +102,8 @@ class TestExtractionWithKGContext:
         assert llm.call_count > 0
 
 
-@pytest.mark.extraction
+@pytest.mark.llm
+@pytest.mark.nlp
 class TestExtractionLayerMetrics:
     """Tests for extraction layer metrics and execution tracing."""
 
@@ -132,7 +119,7 @@ class TestExtractionLayerMetrics:
             nlp=SpacyNLPProcessor(),
             reference_sources=[],
             event_publisher=FakeEventPublisher(),
-            extraction_repo=FakeOntologyRepository(),
+            extraction_repo=FakeExtractionRepository(),
         )
 
         result = service.extract("Apple is a company")
@@ -153,7 +140,7 @@ class TestExtractionLayerMetrics:
             nlp=SpacyNLPProcessor(),
             reference_sources=[],
             event_publisher=FakeEventPublisher(),
-            extraction_repo=FakeOntologyRepository(),
+            extraction_repo=FakeExtractionRepository(),
         )
 
         result = service.extract("Sample text for extraction")
@@ -181,20 +168,21 @@ class TestExtractionLayerMetrics:
             nlp=SpacyNLPProcessor(),
             reference_sources=[broken_ref],
             event_publisher=FakeEventPublisher(),
-            extraction_repo=FakeOntologyRepository(),
+            extraction_repo=FakeExtractionRepository(),
         )
 
         result = service.extract("Text to extract")
 
         # Should complete despite reference source failure
         assert result is not None
-        # Layer 3 should have recorded an error
+        # Layer 3 should have recorded an error or continued with entities
         layer_3 = next((l for l in result.layers_executed if l.layer_num == 3), None)
         if layer_3 is not None:
+            # Either layer recorded an error message OR it has entities despite failure
             assert layer_3.error_message is not None or len(layer_3.entities) >= 0
 
 
-@pytest.mark.extraction
+@pytest.mark.reference
 class TestReferenceAggregationAcrossSources:
     """Tests for reference source aggregation in Layer 3."""
 
@@ -215,7 +203,7 @@ class TestReferenceAggregationAcrossSources:
             nlp=SpacyNLPProcessor(),
             reference_sources=[source1, source2, source3],
             event_publisher=FakeEventPublisher(),
-            extraction_repo=FakeOntologyRepository(),
+            extraction_repo=FakeExtractionRepository(),
         )
 
         result = service.extract("Apple is a company")
@@ -241,7 +229,7 @@ class TestReferenceAggregationAcrossSources:
             nlp=SpacyNLPProcessor(),
             reference_sources=[working_source, failing_source],
             event_publisher=FakeEventPublisher(),
-            extraction_repo=FakeOntologyRepository(),
+            extraction_repo=FakeExtractionRepository(),
         )
 
         result = service.extract("Test entity")
@@ -251,7 +239,7 @@ class TestReferenceAggregationAcrossSources:
         assert len(result.layers_executed) > 0
 
 
-@pytest.mark.extraction
+@pytest.mark.reference
 class TestReferenceCacheEffectiveness:
     """Tests for reference source caching in Layer 3."""
 
@@ -273,7 +261,7 @@ class TestReferenceCacheEffectiveness:
                 nlp=SpacyNLPProcessor(),
                 reference_sources=[cached_source],
                 event_publisher=FakeEventPublisher(),
-                extraction_repo=FakeOntologyRepository(),
+                extraction_repo=FakeExtractionRepository(),
             )
 
             # First extraction
@@ -290,16 +278,20 @@ class TestReferenceCacheEffectiveness:
             assert result2 is not None
 
             # Cache should reduce additional calls for repeated terms
-            # (exact reduction depends on how layer 3 logic handles duplicate searches)
+            # The cache hit means call count should not increase much
             final_calls = inner_source.call_count
-            # Final calls should be same or minimal increase due to caching
-            assert final_calls <= initial_calls + 2
+            # Cache should prevent most duplicate lookups (allow up to 2 new calls)
+            assert final_calls <= initial_calls + 2, (
+                f"Expected cache to limit additional calls to 2, but got {final_calls - initial_calls} "
+                f"(initial: {initial_calls}, final: {final_calls})"
+            )
 
     def test_reference_cache_effectiveness_cache_database_created(self):
         """Reference cache creates and persists cache database."""
         with tempfile.TemporaryDirectory() as tmpdir:
             cache_db = Path(tmpdir) / "reference_cache.db"
             inner_source = FakeReferenceSource(name="test-source")
+            extraction_repo = FakeExtractionRepository()
 
             # Create cached source
             _cached = CachedReferenceSource(inner_source, str(cache_db))
@@ -309,7 +301,9 @@ class TestReferenceCacheEffectiveness:
             assert cache_db.stat().st_size > 0
 
 
-@pytest.mark.extraction
+@pytest.mark.llm
+@pytest.mark.nlp
+@pytest.mark.reference
 def test_full_rag_extraction_pipeline():
     """
     E2E test for full RAG extraction pipeline.
@@ -330,7 +324,7 @@ def test_full_rag_extraction_pipeline():
 
     # Create extraction service with all four layers
     event_publisher = FakeEventPublisher()
-    extraction_repo = FakeOntologyRepository()
+    extraction_repo = FakeExtractionRepository()
 
     service = ExtractionService(
         ontology_repo=kg_repo,

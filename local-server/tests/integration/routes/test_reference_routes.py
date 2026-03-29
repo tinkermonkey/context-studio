@@ -23,6 +23,7 @@ from fastapi import FastAPI, status
 from fastapi.testclient import TestClient
 
 from adapters.web.reference_routes import router
+from adapters.web.dependencies import get_reference_sources
 from tests.fakes.fake_reference_source import FakeReferenceSource
 
 
@@ -93,13 +94,22 @@ class TestReferenceStatusEndpoint:
         assert "source-2" in source_names
         assert "source-3-unavailable" in source_names
 
-    def test_reference_status_no_sources_configured(self, client):
+    def test_reference_status_no_sources_configured(self):
         """Status endpoint returns 500 if no sources configured."""
+        # Create app without sources, override dependency to return empty list
+        app = FastAPI()
+        app.include_router(router)
+        app.dependency_overrides[get_reference_sources] = lambda: []
+
+        client = TestClient(app)
         response = client.get("/api/reference/status")
 
         assert response.status_code == status.HTTP_500_INTERNAL_SERVER_ERROR
         data = response.json()
         assert "No reference sources configured" in data["detail"]
+
+        # Clean up dependency override
+        app.dependency_overrides.clear()
 
 
 class TestReferenceSearchEndpoint:
@@ -170,12 +180,21 @@ class TestReferenceSearchEndpoint:
         data = response.json()
         assert "None of the requested sources are available" in data["detail"]
 
-    def test_reference_search_no_sources_configured(self, client):
+    def test_reference_search_no_sources_configured(self):
         """Search endpoint returns 500 if no sources configured."""
+        # Create app without sources, override dependency to return empty list
+        app = FastAPI()
+        app.include_router(router)
+        app.dependency_overrides[get_reference_sources] = lambda: []
+
+        client = TestClient(app)
         request_body = {"term": "test", "limit": 10}
         response = client.post("/api/reference/search", json=request_body)
 
         assert response.status_code == status.HTTP_500_INTERNAL_SERVER_ERROR
+
+        # Clean up dependency override
+        app.dependency_overrides.clear()
 
     def test_reference_search_handles_source_failure_gracefully(
         self, app_with_sources
@@ -251,12 +270,21 @@ class TestReferenceRelationsEndpoint:
 
         assert response.status_code == status.HTTP_400_BAD_REQUEST
 
-    def test_reference_relations_no_sources_configured(self, client):
+    def test_reference_relations_no_sources_configured(self):
         """Relations endpoint returns 500 if no sources configured."""
+        # Create app without sources, override dependency to return empty list
+        app = FastAPI()
+        app.include_router(router)
+        app.dependency_overrides[get_reference_sources] = lambda: []
+
+        client = TestClient(app)
         request_body = {"uri": "fake://test", "limit": 10}
         response = client.post("/api/reference/relations", json=request_body)
 
         assert response.status_code == status.HTTP_500_INTERNAL_SERVER_ERROR
+
+        # Clean up dependency override
+        app.dependency_overrides.clear()
 
     def test_reference_relations_handles_source_failure_gracefully(self, app_with_sources):
         """Relations endpoint continues when a source fails."""
