@@ -29,6 +29,7 @@ from tests.fakes.fake_llm_provider import FakeLLMProvider
 from tests.fakes.fake_nlp_processor import FakeNLPProcessor
 from tests.fakes.fake_reference_source import FakeReferenceSource
 from tests.fakes.fake_event_publisher import FakeEventPublisher
+from tests.fakes.fake_extraction_repository import FakeExtractionRepository
 
 
 class TestFullExtractionPipeline:
@@ -43,6 +44,7 @@ class TestFullExtractionPipeline:
             nlp=FakeNLPProcessor(),
             reference_sources=[FakeReferenceSource("TestSource")],
             event_publisher=FakeEventPublisher(),
+            extraction_repo=FakeExtractionRepository(),
         )
 
         result = service.extract("Apple and Microsoft are technology companies.")
@@ -69,6 +71,7 @@ class TestFullExtractionPipeline:
             nlp=FakeNLPProcessor(),
             reference_sources=[FakeReferenceSource()],
             event_publisher=event_publisher,
+            extraction_repo=FakeExtractionRepository(),
         )
 
         result = service.extract("Test content")
@@ -91,6 +94,7 @@ class TestFullExtractionPipeline:
             nlp=FakeNLPProcessor(),  # Layer 2 still succeeds
             reference_sources=[FakeReferenceSource()],
             event_publisher=FakeEventPublisher(),
+            extraction_repo=FakeExtractionRepository(),
         )
 
         result = service.extract("Test text for extraction")
@@ -113,6 +117,7 @@ class TestFullExtractionPipeline:
             nlp=FakeNLPProcessor(),
             reference_sources=[],
             event_publisher=FakeEventPublisher(),
+            extraction_repo=FakeExtractionRepository(),
         )
 
         # Empty text
@@ -136,6 +141,7 @@ class TestEntityDeduplication:
             nlp=FakeNLPProcessor(),
             reference_sources=[],
             event_publisher=FakeEventPublisher(),
+            extraction_repo=FakeExtractionRepository(),
         )
 
         # Create entities with same label from different layers
@@ -168,6 +174,7 @@ class TestEntityDeduplication:
             nlp=FakeNLPProcessor(),
             reference_sources=[],
             event_publisher=FakeEventPublisher(),
+            extraction_repo=FakeExtractionRepository(),
         )
 
         entities = [
@@ -189,6 +196,7 @@ class TestEntityDeduplication:
             nlp=FakeNLPProcessor(),
             reference_sources=[],
             event_publisher=FakeEventPublisher(),
+            extraction_repo=FakeExtractionRepository(),
         )
 
         entities = [
@@ -213,6 +221,7 @@ class TestLayerPriority:
             nlp=FakeNLPProcessor(),
             reference_sources=[],
             event_publisher=FakeEventPublisher(),
+            extraction_repo=FakeExtractionRepository(),
         )
 
         # Same entity from all layers
@@ -242,6 +251,7 @@ class TestUseCase_AnalyzeText:
             nlp=FakeNLPProcessor(),
             reference_sources=[],
             event_publisher=FakeEventPublisher(),
+            extraction_repo=FakeExtractionRepository(),
         )
 
         result = service.analyze_text("Apple and Microsoft are companies.")
@@ -260,6 +270,7 @@ class TestUseCase_AnalyzeText:
             nlp=FakeNLPProcessor(),
             reference_sources=[],
             event_publisher=FakeEventPublisher(),
+            extraction_repo=FakeExtractionRepository(),
         )
 
         with pytest.raises(ExtractionError):
@@ -281,6 +292,7 @@ class TestUseCase_EnrichFromReferences:
             nlp=FakeNLPProcessor(),
             reference_sources=[FakeReferenceSource("TestSource")],
             event_publisher=FakeEventPublisher(),
+            extraction_repo=FakeExtractionRepository(),
         )
 
         input_entities = [
@@ -321,6 +333,7 @@ class TestUseCase_EnrichFromReferences:
             nlp=FakeNLPProcessor(),
             reference_sources=[],
             event_publisher=FakeEventPublisher(),
+            extraction_repo=FakeExtractionRepository(),
         )
 
         result = service.enrich_from_references("Test text", [])
@@ -338,6 +351,7 @@ class TestUseCase_EnrichFromReferences:
             nlp=FakeNLPProcessor(),
             reference_sources=[],
             event_publisher=FakeEventPublisher(),
+            extraction_repo=FakeExtractionRepository(),
         )
 
         entities = [ExtractedEntity(label="Test", entity_type="ORG", source_layer=1)]
@@ -358,6 +372,7 @@ class TestErrorHandling:
             nlp=FakeNLPProcessor(should_fail=True),
             reference_sources=[FakeReferenceSource(should_fail=True)],
             event_publisher=FakeEventPublisher(),
+            extraction_repo=FakeExtractionRepository(),
         )
 
         with pytest.raises(ExtractionError, match="All extraction layers failed"):
@@ -372,6 +387,7 @@ class TestErrorHandling:
             nlp=FakeNLPProcessor(),  # Layer 2 still runs
             reference_sources=[FakeReferenceSource()],
             event_publisher=FakeEventPublisher(),
+            extraction_repo=FakeExtractionRepository(),
         )
 
         result = service.extract("Test content for extraction")
@@ -403,6 +419,7 @@ class TestErrorHandling:
             nlp=NotReadyNLPProcessor(),
             reference_sources=[FakeReferenceSource()],
             event_publisher=FakeEventPublisher(),
+            extraction_repo=FakeExtractionRepository(),
         )
 
         # Should not raise despite NLP not being ready
@@ -424,6 +441,7 @@ class TestPerformance:
             nlp=FakeNLPProcessor(),
             reference_sources=[FakeReferenceSource()],
             event_publisher=FakeEventPublisher(),
+            extraction_repo=FakeExtractionRepository(),
         )
 
         result = service.extract("Test text for performance measurement")
@@ -441,6 +459,7 @@ class TestPerformance:
             nlp=FakeNLPProcessor(),
             reference_sources=[FakeReferenceSource()],
             event_publisher=FakeEventPublisher(),
+            extraction_repo=FakeExtractionRepository(),
         )
 
         texts = [
