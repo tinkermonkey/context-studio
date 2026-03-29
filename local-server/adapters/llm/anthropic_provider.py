@@ -100,6 +100,7 @@ class AnthropicProvider:
                 content=response.content[0].text if response.content else "",
                 tokens_in=response.usage.input_tokens,
                 tokens_out=response.usage.output_tokens,
+                duration_ms=0.0,
                 finish_reason=response.stop_reason or "unknown",
                 model=model,
             )

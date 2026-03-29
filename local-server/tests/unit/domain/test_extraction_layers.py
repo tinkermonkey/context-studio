@@ -124,6 +124,7 @@ class FakeLLMProvider:
             content=self.response_content,
             tokens_in=50,
             tokens_out=30,
+            duration_ms=0.0,
             finish_reason="stop",
             model=model,
         )

@@ -19,6 +19,7 @@ class ExtractedEntity:
         entity_type: Classification of the entity (e.g., PERSON, ORGANIZATION, LOCATION)
         source_layer: Which layer extracted this entity (0=KG, 1=LLM, 2=NLP, 3=reference)
         confidence: Confidence score from 0.0 to 1.0
+        matched_class_id: Optional ID linking to an existing Class entity when resolved
         uri: Optional URI linking to external knowledge base
         description: Optional free-text description
         properties: Optional key-value metadata associated with the entity
@@ -28,6 +29,7 @@ class ExtractedEntity:
     entity_type: str = ""
     source_layer: int = 0
     confidence: float = 0.0
+    matched_class_id: str | None = None
     uri: str | None = None
     description: str | None = None
     properties: dict = field(default_factory=dict)

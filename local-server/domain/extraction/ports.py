@@ -26,12 +26,14 @@ class LLMResponse:
         content: The generated text response
         tokens_in: Count of input tokens consumed
         tokens_out: Count of output tokens generated
+        duration_ms: Time spent processing the request in milliseconds
         finish_reason: Reason the model stopped (e.g., 'stop', 'length')
         model: Name of the model that generated the response
     """
     content: str
     tokens_in: int
     tokens_out: int
+    duration_ms: float
     finish_reason: str
     model: str
 
@@ -65,10 +67,12 @@ class NLPResult:
     Attributes:
         tokens: List of tokenized words/phrases
         entities: Named entities identified in the text
+        noun_chunks: List of noun phrases extracted from the text
         language: Detected language code (e.g., 'en', 'es')
     """
     tokens: list[str]
     entities: list[NLPEntity]
+    noun_chunks: list[str]
     language: str
 
 

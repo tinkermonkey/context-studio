@@ -72,14 +72,14 @@ class SpacyNLPProcessor:
             Returns empty results if the processor is not ready.
         """
         if not self.is_ready():
-            return NLPResult(tokens=[], entities=[], language="unknown")
+            return NLPResult(tokens=[], entities=[], noun_chunks=[], language="unknown")
 
         assert self._nlp is not None
         doc = self._nlp(text)
         tokens = [token.text for token in doc]
         entities = self._extract_from_doc(doc)
 
-        return NLPResult(tokens=tokens, entities=entities, language="en")
+        return NLPResult(tokens=tokens, entities=entities, noun_chunks=[], language="en")
 
     def extract_entities(self, text: str) -> list[NLPEntity]:
         """

@@ -51,6 +51,7 @@ class FakeNLPProcessor:
         return NLPResult(
             tokens=tokens,
             entities=entities,
+            noun_chunks=[],
             language=self.language,
         )
 

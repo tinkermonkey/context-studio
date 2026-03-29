@@ -37,6 +37,7 @@ class MockLLMProvider:
             content="mock response",
             tokens_in=10,
             tokens_out=20,
+            duration_ms=0.0,
             finish_reason="stop",
             model=model,
         )
@@ -208,6 +209,7 @@ class TestLLMProviderRouter:
                 content="OpenAI response",
                 tokens_in=10,
                 tokens_out=20,
+                duration_ms=0.0,
                 finish_reason="stop",
                 model="gpt-4o",
             )
@@ -246,6 +248,7 @@ class TestLLMProviderRouter:
             content="response",
             tokens_in=10,
             tokens_out=20,
+            duration_ms=0.0,
             finish_reason="stop",
             model="gpt-4o",
         )

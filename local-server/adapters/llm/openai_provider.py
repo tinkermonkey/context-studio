@@ -103,6 +103,7 @@ class OpenAIProvider:
                 content=response.choices[0].message.content or "",
                 tokens_in=response.usage.prompt_tokens,
                 tokens_out=response.usage.completion_tokens,
+                duration_ms=0.0,
                 finish_reason=response.choices[0].finish_reason or "unknown",
                 model=model,
             )
