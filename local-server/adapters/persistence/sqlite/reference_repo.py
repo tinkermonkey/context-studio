@@ -218,6 +218,7 @@ class LocalReferenceRepository:
                 conn.commit()
         except Exception as e:
             logger.warning(f"Failed to import reference {uri}: {e}")
+            raise
 
     def import_relation(
         self,
@@ -252,3 +253,4 @@ class LocalReferenceRepository:
             logger.warning(
                 f"Failed to import relation {subject_uri} -> {object_uri}: {e}"
             )
+            raise

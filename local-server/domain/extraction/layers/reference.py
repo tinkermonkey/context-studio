@@ -7,6 +7,9 @@ knowledge sources.
 from domain.extraction.entities import ExtractedEntity
 from domain.extraction.ports import ReferenceSource
 from domain.extraction.value_objects import LayerInput, LayerOutput
+from utils.logger import get_logger
+
+logger = get_logger(__name__)
 
 
 def execute(input: LayerInput, sources: list[ReferenceSource]) -> LayerOutput:
@@ -51,7 +54,13 @@ def execute(input: LayerInput, sources: list[ReferenceSource]) -> LayerOutput:
 
         # Search for this entity in reference sources
         for source in available_sources:
-            results = source.search(prior_entity.label, limit=5)
+            try:
+                results = source.search(prior_entity.label, limit=5)
+            except Exception as e:
+                logger.warning(
+                    f"Source {source.source_name} failed during search for '{prior_entity.label}': {e}"
+                )
+                continue
 
             if results:
                 # Use the top result to enrich the entity

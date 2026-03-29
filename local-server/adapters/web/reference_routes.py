@@ -17,7 +17,7 @@ by a simple aggregation pattern.
 """
 
 import asyncio
-from datetime import datetime
+from datetime import datetime, timezone
 
 from fastapi import APIRouter, Depends, HTTPException, status
 
@@ -82,7 +82,7 @@ async def reference_status(
                 ReferenceSourceStatusSchema(
                     name=source.source_name,
                     available=is_available,
-                    last_checked=datetime.now().isoformat(),
+                    last_checked=datetime.now(timezone.utc).isoformat(),
                 ),
                 is_available,
             )
@@ -94,7 +94,7 @@ async def reference_status(
                 ReferenceSourceStatusSchema(
                     name=source.source_name,
                     available=False,
-                    last_checked=datetime.now().isoformat(),
+                    last_checked=datetime.now(timezone.utc).isoformat(),
                 ),
                 False,
             )
@@ -110,7 +110,7 @@ async def reference_status(
     return ReferenceStatusResponseSchema(
         sources=source_statuses,
         sources_available=available_count,
-        timestamp=datetime.now().isoformat(),
+        timestamp=datetime.now(timezone.utc).isoformat(),
     )
 
 

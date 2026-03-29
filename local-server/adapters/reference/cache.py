@@ -2,7 +2,7 @@
 
 import json
 import sqlite3
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Literal, overload
 
@@ -215,7 +215,7 @@ class CachedReferenceSource(ReferenceSource):
                 cached_at = datetime.fromisoformat(cached_at_str)
                 expiry_at = cached_at + timedelta(hours=self._ttl_hours)
 
-                if datetime.now() > expiry_at:
+                if datetime.now(timezone.utc) > expiry_at:
                     logger.debug(f"Cache entry expired: {key}")
                     conn.execute(f"DELETE FROM {table} WHERE key = ?", (key,))
                     conn.commit()
@@ -230,6 +230,7 @@ class CachedReferenceSource(ReferenceSource):
                             subject_uri=item["subject_uri"],
                             predicate=item["predicate"],
                             object_uri=item["object_uri"],
+                            weight=item.get("weight"),
                             source=item.get("source", ""),
                         )
                         for item in data
@@ -240,6 +241,7 @@ class CachedReferenceSource(ReferenceSource):
                             uri=item["uri"],
                             label=item["label"],
                             description=item.get("description"),
+                            confidence=item.get("confidence", 1.0),
                             source=item.get("source", ""),
                         )
                         for item in data
@@ -293,6 +295,7 @@ class CachedReferenceSource(ReferenceSource):
                             "subject_uri": item.subject_uri,  # type: ignore[union-attr]
                             "predicate": item.predicate,  # type: ignore[union-attr]
                             "object_uri": item.object_uri,  # type: ignore[union-attr]
+                            "weight": item.weight,  # type: ignore[union-attr]
                             "source": item.source,
                         }
                     )
@@ -302,12 +305,13 @@ class CachedReferenceSource(ReferenceSource):
                             "uri": item.uri,  # type: ignore[union-attr]
                             "label": item.label,  # type: ignore[union-attr]
                             "description": item.description,  # type: ignore[union-attr]
+                            "confidence": item.confidence,  # type: ignore[union-attr]
                             "source": item.source,
                         }
                     )
 
             value_json = json.dumps(serializable_value)
-            cached_at = datetime.now().isoformat()
+            cached_at = datetime.now(timezone.utc).isoformat()
 
             with sqlite3.connect(self._cache_db_path) as conn:
                 conn.execute(
