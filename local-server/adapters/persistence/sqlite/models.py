@@ -352,7 +352,6 @@ class ChangeEvent(Base):
     id = Column(String(36), primary_key=True, nullable=False)
     entity_id = Column(
         String(36),
-        ForeignKey("ontology_entities.id", ondelete="CASCADE"),
         nullable=False,
         index=True,
         doc="Entity that changed"
