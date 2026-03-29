@@ -130,6 +130,7 @@ class LLMProvider(Protocol):
         temperature: float = 0.0,
         max_tokens: int = 2000,
         response_format: dict[str, Any] | None = None,
+        timeout: float | None = None,
     ) -> LLMResponse:
         """
         Request a completion from an LLM.
@@ -141,6 +142,7 @@ class LLMProvider(Protocol):
             temperature: Sampling temperature (0.0–1.0)
             max_tokens: Maximum tokens to generate
             response_format: Optional JSON schema for structured output
+            timeout: Request timeout in seconds (provider-specific behavior)
 
         Returns:
             LLMResponse with generated content and metadata

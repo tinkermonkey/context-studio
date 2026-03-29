@@ -52,6 +52,7 @@ class OpenAIProvider:
         temperature: float = 0.0,
         max_tokens: int = 2000,
         response_format: dict[str, Any] | None = None,
+        timeout: float | None = None,
     ) -> LLMResponse:
         """
         Request a completion from OpenAI.
@@ -63,6 +64,7 @@ class OpenAIProvider:
             temperature: Sampling temperature (0.0–1.0)
             max_tokens: Maximum tokens to generate
             response_format: Optional JSON schema for structured output
+            timeout: Request timeout in seconds (passed to OpenAI client)
 
         Returns:
             LLMResponse with generated content and metadata
@@ -91,6 +93,9 @@ class OpenAIProvider:
 
             if response_format is not None:
                 kwargs["response_format"] = response_format
+
+            if timeout is not None:
+                kwargs["timeout"] = timeout
 
             response = self._client.chat.completions.create(**kwargs)  # type: ignore[union-attr]
 
@@ -134,6 +139,7 @@ class OpenAIProvider:
         temperature: float = 0.0,
         max_tokens: int = 2000,
         response_format: dict[str, Any] | None = None,
+        timeout: float | None = None,
     ) -> LLMResponse:
         """
         Request a completion from OpenAI (async version).
@@ -147,6 +153,7 @@ class OpenAIProvider:
             temperature: Sampling temperature (0.0–1.0)
             max_tokens: Maximum tokens to generate
             response_format: Optional JSON schema for structured output
+            timeout: Request timeout in seconds (passed to OpenAI client)
 
         Returns:
             LLMResponse with generated content and metadata
@@ -162,4 +169,5 @@ class OpenAIProvider:
             temperature,
             max_tokens,
             response_format,
+            timeout,
         )

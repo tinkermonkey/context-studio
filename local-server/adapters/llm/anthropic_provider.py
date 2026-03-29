@@ -56,6 +56,7 @@ class AnthropicProvider:
         temperature: float = 0.0,
         max_tokens: int = 2000,
         response_format: dict[str, Any] | None = None,
+        timeout: float | None = None,
     ) -> LLMResponse:
         """
         Request a completion from Anthropic Claude.
@@ -67,6 +68,7 @@ class AnthropicProvider:
             temperature: Sampling temperature (0.0–1.0)
             max_tokens: Maximum tokens to generate
             response_format: Optional JSON schema for structured output (not used by Anthropic)
+            timeout: Request timeout in seconds (passed to Anthropic client)
 
         Returns:
             LLMResponse with generated content and metadata
@@ -81,13 +83,18 @@ class AnthropicProvider:
             raise ValueError(f"Model {model} is not available from Anthropic provider")
 
         try:
-            response = self._client.messages.create(  # type: ignore[union-attr]
-                model=model,
-                max_tokens=max_tokens,
-                temperature=temperature,
-                system=system_prompt,
-                messages=[{"role": "user", "content": user_prompt}],
-            )
+            kwargs = {
+                "model": model,
+                "max_tokens": max_tokens,
+                "temperature": temperature,
+                "system": system_prompt,
+                "messages": [{"role": "user", "content": user_prompt}],
+            }
+
+            if timeout is not None:
+                kwargs["timeout"] = timeout
+
+            response = self._client.messages.create(**kwargs)  # type: ignore[union-attr]
 
             return LLMResponse(
                 content=response.content[0].text if response.content else "",
@@ -129,6 +136,7 @@ class AnthropicProvider:
         temperature: float = 0.0,
         max_tokens: int = 2000,
         response_format: dict[str, Any] | None = None,
+        timeout: float | None = None,
     ) -> LLMResponse:
         """
         Request a completion from Anthropic Claude (async version).
@@ -142,6 +150,7 @@ class AnthropicProvider:
             temperature: Sampling temperature (0.0–1.0)
             max_tokens: Maximum tokens to generate
             response_format: Optional JSON schema for structured output (not used by Anthropic)
+            timeout: Request timeout in seconds (passed to Anthropic client)
 
         Returns:
             LLMResponse with generated content and metadata
@@ -157,4 +166,5 @@ class AnthropicProvider:
             temperature,
             max_tokens,
             response_format,
+            timeout,
         )

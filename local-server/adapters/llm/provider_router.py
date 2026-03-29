@@ -51,11 +51,16 @@ class LLMProviderRouter:
                     logger.error(f"Failed to initialize OpenAI provider: {str(e)}")
 
         if anthropic_api_key:
-            try:
-                self._providers["anthropic"] = AnthropicProvider(anthropic_api_key)
-                logger.info("Anthropic provider initialized")
-            except Exception as e:
-                logger.error(f"Failed to initialize Anthropic provider: {str(e)}")
+            if not anthropic_api_key.startswith("sk-ant-"):
+                logger.warning(
+                    "Anthropic API key format invalid — provider marked unavailable"
+                )
+            else:
+                try:
+                    self._providers["anthropic"] = AnthropicProvider(anthropic_api_key)
+                    logger.info("Anthropic provider initialized")
+                except Exception as e:
+                    logger.error(f"Failed to initialize Anthropic provider: {str(e)}")
 
     def complete(
         self,
@@ -65,6 +70,7 @@ class LLMProviderRouter:
         temperature: float = 0.0,
         max_tokens: int = 2000,
         response_format: dict[str, Any] | None = None,
+        timeout: float | None = None,
     ) -> LLMResponse:
         """
         Request a completion from an LLM provider.
@@ -78,6 +84,7 @@ class LLMProviderRouter:
             temperature: Sampling temperature (0.0-1.0)
             max_tokens: Maximum tokens in response
             response_format: Optional response format specification
+            timeout: Request timeout in seconds (provider-specific behavior)
 
         Returns:
             LLMResponse with the completion
@@ -93,6 +100,7 @@ class LLMProviderRouter:
             temperature=temperature,
             max_tokens=max_tokens,
             response_format=response_format,
+            timeout=timeout,
         )
 
     def _route_to_provider(self, model: str) -> LLMProvider:
@@ -147,6 +155,7 @@ class LLMProviderRouter:
         temperature: float = 0.0,
         max_tokens: int = 2000,
         response_format: dict[str, Any] | None = None,
+        timeout: float | None = None,
     ) -> LLMResponse:
         """
         Request a completion from an LLM provider (async version).
@@ -160,6 +169,7 @@ class LLMProviderRouter:
             temperature: Sampling temperature (0.0-1.0)
             max_tokens: Maximum tokens in response
             response_format: Optional response format specification
+            timeout: Request timeout in seconds (provider-specific behavior)
 
         Returns:
             LLMResponse with the completion
@@ -177,6 +187,7 @@ class LLMProviderRouter:
                 temperature=temperature,
                 max_tokens=max_tokens,
                 response_format=response_format,
+                timeout=timeout,
             )
         else:
             # Fallback for providers without async support
@@ -187,4 +198,5 @@ class LLMProviderRouter:
                 temperature=temperature,
                 max_tokens=max_tokens,
                 response_format=response_format,
+                timeout=timeout,
             )
