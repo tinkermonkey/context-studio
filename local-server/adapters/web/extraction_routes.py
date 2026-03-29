@@ -19,6 +19,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from domain.extraction.services import ExtractionService
 from domain.extraction.exceptions import ExtractionError, InvalidInputError, LayerExecutionError
 from utils.logger import get_logger
+from utils.async_executor import run_sync_in_executor
 
 from adapters.web.dependencies import get_extraction_service
 from adapters.web.schemas.extraction import (
@@ -127,7 +128,7 @@ async def extract_entities(
         HTTPException: 400 if text is empty/invalid, 500 for internal errors
     """
     try:
-        result = service.extract(request.text)
+        result = await run_sync_in_executor(service.extract, request.text)
         return _to_schema(result)
     except Exception as exc:
         status_code, message = _handle_domain_error(exc)

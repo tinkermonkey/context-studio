@@ -363,8 +363,12 @@ class TestUseCase_EnrichFromReferences:
 class TestErrorHandling:
     """Tests for error handling and resilience."""
 
-    def test_all_layers_fail_raises_error(self):
-        """Extraction raises error if all layers fail."""
+    def test_all_layers_fail_returns_empty_result(self):
+        """Extraction returns empty result if all layers fail.
+
+        Empty results are valid—they indicate the text contains no entities,
+        not that extraction failed.
+        """
         service = ExtractionService(
             ontology_repo=FakeOntologyRepository(),
             embedding_service=FakeEmbeddingService(),
@@ -375,8 +379,10 @@ class TestErrorHandling:
             extraction_repo=FakeExtractionRepository(),
         )
 
-        with pytest.raises(ExtractionError, match="All extraction layers failed"):
-            service.extract("Test text")
+        # Should not raise, but return empty result
+        result = service.extract("Test text")
+        assert result.extracted_entities == []
+        assert len(result.layers_executed) == 4
 
     def test_layer_exception_isolation(self):
         """Single layer exception doesn't stop other layers."""

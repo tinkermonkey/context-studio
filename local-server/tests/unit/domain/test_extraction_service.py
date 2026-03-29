@@ -628,8 +628,12 @@ class TestEnrichFromReferences:
 class TestExceptionHandling:
     """Tests for exception behavior."""
 
-    def test_all_layers_fail_raises_extraction_error(self):
-        """Extraction raises ExtractionError if no entities are extracted."""
+    def test_all_layers_fail_returns_empty_result(self):
+        """Extraction returns empty result even if all layers fail.
+
+        Empty results are valid—they indicate the text contains no entities,
+        not that extraction failed.
+        """
         # All layers fail to extract entities (either by exception or returning no results)
         class ThrowingOntologyRepository:
             def get_all_entities_and_relationships(self):
@@ -653,9 +657,15 @@ class TestExceptionHandling:
             extraction_repo=FakeExtractionRepository(),
         )
 
-        # No entities extracted across all layers should raise ExtractionError
-        with pytest.raises(ExtractionError, match="All extraction layers failed"):
-            service.extract("Test text")
+        # No entities extracted across all layers returns empty result, not error
+        result = service.extract("Test text")
+        assert result.extracted_entities == []
+        assert len(result.layers_executed) == 4
+        # At least layers 0, 1, 2 failed (see logs)
+        # Note: layer 3 (reference enrichment) succeeds but has nothing to enrich
+        assert not result.layers_executed[0].success  # Layer 0 failed
+        assert not result.layers_executed[1].success  # Layer 1 failed
+        assert not result.layers_executed[2].success  # Layer 2 failed
 
     def test_nlp_processor_not_ready_allows_continuation(self):
         """NLP processor not ready doesn't stop extraction."""

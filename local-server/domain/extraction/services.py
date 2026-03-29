@@ -7,6 +7,7 @@ embedding services, LLM providers, NLP processors, and reference sources.
 """
 from __future__ import annotations
 
+import logging
 import time
 from datetime import datetime, timezone
 from uuid import uuid4
@@ -19,6 +20,8 @@ from .events import ExtractionCompleted
 from .exceptions import ExtractionError
 from .ports import NLPProcessor, ReferenceSource, ExtractionRepository
 from .value_objects import ExtractionLayerResult, LayerInput, LayerOutput
+
+_logger = logging.getLogger(__name__)
 
 
 class ExtractionService:
@@ -80,16 +83,18 @@ class ExtractionService:
         - Layer 3: Reference source enrichment (adds URIs and metadata)
 
         If a single layer fails, its error is recorded but subsequent layers
-        continue executing.
+        continue executing. Empty results are valid and do not raise an error;
+        they indicate the text contains no entities.
 
         Args:
             text: Source text to extract entities from
 
         Returns:
             ExtractionResult containing deduplicated entities and layer metadata
+            (may be empty if text contains no entities)
 
         Raises:
-            ExtractionError: If all layers fail or text validation fails
+            ExtractionError: If text validation fails
         """
         if not text or not text.strip():
             raise ExtractionError("Text cannot be empty")
@@ -166,11 +171,8 @@ class ExtractionService:
         # Deduplicate entities across layers
         deduplicated = self._deduplicate(all_entities)
 
-        # Check if no entities were extracted across all layers
-        if not deduplicated:
-            raise ExtractionError("All extraction layers failed to extract entities")
-
-        # Build and return result
+        # Empty results are valid—text may legitimately contain no entities
+        # Build and return result (with or without entities)
         return self._build_result(
             result_id=result_id,
             text=text,
@@ -391,6 +393,12 @@ class ExtractionService:
 
         except Exception as exc:
             duration_ms = int((time.time() - layer_start) * 1000)
+            error_msg = str(exc)
+
+            _logger.error(
+                f"Layer {layer_num} ({layer_name}) failed: {type(exc).__name__}: {error_msg}",
+                exc_info=exc,
+            )
 
             layers_executed.append(ExtractionLayerResult(
                 layer_number=layer_num,
@@ -398,11 +406,11 @@ class ExtractionService:
                 entities_found=0,
                 duration_ms=duration_ms,
                 success=False,
-                error_message=str(exc),
+                error_message=error_msg,
             ))
 
             # Return empty output so subsequent layers can continue
-            return LayerOutput(entities=[], metadata={"error": str(exc)})
+            return LayerOutput(entities=[], metadata={"error": error_msg})
 
     def _deduplicate(self, entities: list[ExtractedEntity]) -> list[ExtractedEntity]:
         """

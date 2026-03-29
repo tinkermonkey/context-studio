@@ -4,10 +4,13 @@ LLM extraction layer (Layer 1).
 Extracts entities using prompts sent to language models.
 """
 import json
+import logging
 
 from domain.extraction.entities import ExtractedEntity
 from domain.extraction.value_objects import LayerInput, LayerOutput
 from domain.ports import LLMProvider
+
+_logger = logging.getLogger(__name__)
 
 
 def execute(input: LayerInput, llm: LLMProvider) -> LayerOutput:
@@ -78,11 +81,12 @@ JSON Array:"""
 
     # Try to parse response as-is first
     entity_list = None
+    parse_error = None
     if response_text.startswith("["):
         try:
             entity_list = json.loads(response_text)
-        except json.JSONDecodeError:
-            pass  # Fall through to extraction logic
+        except json.JSONDecodeError as e:
+            parse_error = f"Direct JSON parse failed: {e}"
 
     # If direct parse failed, extract JSON array from response text
     if entity_list is None:
@@ -96,14 +100,18 @@ JSON Array:"""
                 if end_idx > start_idx:
                     json_match = response_text[start_idx:end_idx]
             except ValueError:
-                pass  # No closing bracket found
+                parse_error = "No closing JSON bracket found in response"
 
         if json_match:
             try:
                 entity_list = json.loads(json_match)
-            except json.JSONDecodeError:
-                # Invalid JSON found - return empty entities
-                pass
+                parse_error = None  # Successfully parsed extracted JSON
+            except json.JSONDecodeError as e:
+                parse_error = f"Extracted JSON parse failed: {e}"
+                _logger.warning(
+                    f"Failed to parse extracted JSON from LLM response: {parse_error}",
+                    extra={"response_sample": response_text[:200]},
+                )
 
     # Parse extracted entity list
     if entity_list and isinstance(entity_list, list):
@@ -120,12 +128,18 @@ JSON Array:"""
                 if extracted.label:  # Only add if label is non-empty
                     entities.append(extracted)
 
+    # Build metadata with parse error info if applicable
+    metadata = {
+        "model": model,
+        "tokens_in": response.tokens_in,
+        "tokens_out": response.tokens_out,
+        "finish_reason": response.finish_reason,
+    }
+    if parse_error:
+        metadata["parse_error"] = parse_error
+        _logger.warning(f"LLM response parsing issue: {parse_error}")
+
     return LayerOutput(
         entities=entities,
-        metadata={
-            "model": model,
-            "tokens_in": response.tokens_in,
-            "tokens_out": response.tokens_out,
-            "finish_reason": response.finish_reason,
-        },
+        metadata=metadata,
     )
