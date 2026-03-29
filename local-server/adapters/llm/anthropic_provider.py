@@ -5,7 +5,7 @@ Provides integration with Anthropic's Claude API for language model completions.
 """
 
 import time
-from typing import Literal
+from typing import Any, Literal
 
 try:
     import anthropic

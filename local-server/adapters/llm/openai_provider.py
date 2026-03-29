@@ -5,7 +5,7 @@ Provides integration with OpenAI's API for language model completions.
 """
 
 import time
-from typing import Literal
+from typing import Any, Literal
 
 try:
     import openai
