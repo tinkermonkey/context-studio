@@ -2,7 +2,7 @@
 Unit tests for extraction domain entities.
 
 Tests cover entity construction, field initialization, and dataclass behavior
-for ExtractedEntity and ExtractionResult, including validation of invariants.
+for ExtractedEntity, ExtractionResult, and ProcessingMetrics, including validation of invariants.
 """
 
 import sys
@@ -13,7 +13,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(
 import pytest
 from datetime import datetime, timezone
 
-from domain.extraction.entities import ExtractedEntity, ExtractionResult
+from domain.extraction.entities import ExtractedEntity, ExtractionResult, ProcessingMetrics
 from domain.extraction.value_objects import ExtractionLayerResult
 
 
@@ -353,3 +353,117 @@ class TestExtractionLayerResult:
             success=True,
         )
         assert result.layer_number == 3
+
+
+class TestProcessingMetrics:
+    """Tests for ProcessingMetrics dataclass."""
+
+    def test_construct_with_all_fields(self):
+        """Create a ProcessingMetrics with all fields."""
+        metrics = ProcessingMetrics(
+            layer_name="LLM Extraction",
+            duration_ms=500,
+            tokens_processed=1000,
+            entities_found=5,
+            relationships_found=3,
+            error_count=1,
+            skipped_count=2,
+        )
+
+        assert metrics.layer_name == "LLM Extraction"
+        assert metrics.duration_ms == 500
+        assert metrics.tokens_processed == 1000
+        assert metrics.entities_found == 5
+        assert metrics.relationships_found == 3
+        assert metrics.error_count == 1
+        assert metrics.skipped_count == 2
+
+    def test_construct_with_minimal_fields(self):
+        """Create a ProcessingMetrics with minimal fields."""
+        metrics = ProcessingMetrics(
+            layer_name="Test Layer",
+            duration_ms=100,
+        )
+
+        assert metrics.layer_name == "Test Layer"
+        assert metrics.duration_ms == 100
+        assert metrics.tokens_processed == 0
+        assert metrics.entities_found == 0
+        assert metrics.relationships_found == 0
+        assert metrics.error_count == 0
+        assert metrics.skipped_count == 0
+
+    def test_processing_metrics_is_frozen(self):
+        """ProcessingMetrics is frozen and immutable."""
+        metrics = ProcessingMetrics(
+            layer_name="Test",
+            duration_ms=100,
+        )
+        with pytest.raises(Exception):
+            metrics.duration_ms = 200
+
+    def test_processing_metrics_invalid_negative_duration(self):
+        """ProcessingMetrics raises ValueError if duration_ms is negative."""
+        with pytest.raises(ValueError, match="duration_ms must be non-negative"):
+            ProcessingMetrics(
+                layer_name="Test",
+                duration_ms=-1,
+            )
+
+    def test_processing_metrics_invalid_negative_tokens(self):
+        """ProcessingMetrics raises ValueError if tokens_processed is negative."""
+        with pytest.raises(ValueError, match="tokens_processed must be non-negative"):
+            ProcessingMetrics(
+                layer_name="Test",
+                duration_ms=100,
+                tokens_processed=-1,
+            )
+
+    def test_processing_metrics_invalid_negative_entities(self):
+        """ProcessingMetrics raises ValueError if entities_found is negative."""
+        with pytest.raises(ValueError, match="entities_found must be non-negative"):
+            ProcessingMetrics(
+                layer_name="Test",
+                duration_ms=100,
+                entities_found=-1,
+            )
+
+    def test_processing_metrics_invalid_negative_relationships(self):
+        """ProcessingMetrics raises ValueError if relationships_found is negative."""
+        with pytest.raises(ValueError, match="relationships_found must be non-negative"):
+            ProcessingMetrics(
+                layer_name="Test",
+                duration_ms=100,
+                relationships_found=-1,
+            )
+
+    def test_processing_metrics_invalid_negative_errors(self):
+        """ProcessingMetrics raises ValueError if error_count is negative."""
+        with pytest.raises(ValueError, match="error_count must be non-negative"):
+            ProcessingMetrics(
+                layer_name="Test",
+                duration_ms=100,
+                error_count=-1,
+            )
+
+    def test_processing_metrics_invalid_negative_skipped(self):
+        """ProcessingMetrics raises ValueError if skipped_count is negative."""
+        with pytest.raises(ValueError, match="skipped_count must be non-negative"):
+            ProcessingMetrics(
+                layer_name="Test",
+                duration_ms=100,
+                skipped_count=-1,
+            )
+
+    def test_processing_metrics_valid_boundary_zero(self):
+        """ProcessingMetrics accepts all zero values."""
+        metrics = ProcessingMetrics(
+            layer_name="Test",
+            duration_ms=0,
+            tokens_processed=0,
+            entities_found=0,
+            relationships_found=0,
+            error_count=0,
+            skipped_count=0,
+        )
+        assert metrics.duration_ms == 0

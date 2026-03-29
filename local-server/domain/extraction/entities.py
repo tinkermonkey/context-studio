@@ -51,7 +51,7 @@ class ExtractedEntity:
             raise ValueError(f"confidence must be 0.0-1.0, got {self.confidence}")
 
 
-@dataclass
+@dataclass(frozen=True)
 class ProcessingMetrics:
     """
     Metrics for an extraction layer or full extraction operation.
@@ -64,6 +64,9 @@ class ProcessingMetrics:
         relationships_found: Number of relationships found in this stage
         error_count: Number of errors encountered
         skipped_count: Number of items skipped
+
+    Raises:
+        ValueError: If any metric is negative
     """
     layer_name: str
     duration_ms: int
@@ -72,6 +75,21 @@ class ProcessingMetrics:
     relationships_found: int = 0
     error_count: int = 0
     skipped_count: int = 0
+
+    def __post_init__(self) -> None:
+        """Validate processing metrics invariants."""
+        if self.duration_ms < 0:
+            raise ValueError(f"duration_ms must be non-negative, got {self.duration_ms}")
+        if self.tokens_processed < 0:
+            raise ValueError(f"tokens_processed must be non-negative, got {self.tokens_processed}")
+        if self.entities_found < 0:
+            raise ValueError(f"entities_found must be non-negative, got {self.entities_found}")
+        if self.relationships_found < 0:
+            raise ValueError(f"relationships_found must be non-negative, got {self.relationships_found}")
+        if self.error_count < 0:
+            raise ValueError(f"error_count must be non-negative, got {self.error_count}")
+        if self.skipped_count < 0:
+            raise ValueError(f"skipped_count must be non-negative, got {self.skipped_count}")
 
 
 @dataclass
