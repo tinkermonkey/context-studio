@@ -9,7 +9,6 @@ The current implementation uses the 'all-MiniLM-L12-v2' model by default,
 which is lightweight and suitable for desktop deployment.
 """
 
-import asyncio
 from typing import TYPE_CHECKING, Optional
 
 from utils.logger import get_logger

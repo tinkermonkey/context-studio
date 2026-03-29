@@ -1,6 +1,5 @@
 """spaCy NLP processor adapter for named entity recognition and tokenization."""
 
-import asyncio
 from typing import Any, Optional
 
 try:

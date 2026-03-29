@@ -4,7 +4,6 @@ Anthropic LLM provider implementation.
 Provides integration with Anthropic's Claude API for language model completions.
 """
 
-import asyncio
 from typing import Any
 
 try:

@@ -27,7 +27,6 @@ Usage in route handlers:
         pass
 """
 
-import asyncio
 from collections.abc import AsyncGenerator
 from typing import cast
 

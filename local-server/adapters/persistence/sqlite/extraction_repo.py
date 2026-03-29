@@ -11,7 +11,6 @@ Key responsibilities:
 """
 
 from typing import Sequence
-from datetime import datetime, timezone
 
 from sqlalchemy.orm import Session, sessionmaker
 from sqlalchemy import desc

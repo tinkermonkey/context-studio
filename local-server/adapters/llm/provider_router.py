@@ -9,7 +9,6 @@ This adapter implements the LLMProvider port and is used by the Knowledge Extrac
 and LLM Pipeline services.
 """
 
-import asyncio
 from typing import Any
 
 from adapters.llm.openai_provider import OpenAIProvider

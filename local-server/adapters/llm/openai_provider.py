@@ -4,7 +4,6 @@ OpenAI LLM provider implementation.
 Provides integration with OpenAI's API for language model completions.
 """
 
-import asyncio
 from typing import Any
 
 try:
