@@ -27,7 +27,10 @@ Usage in route handlers:
         pass
 """
 
-from fastapi import Request, Depends
+from collections.abc import AsyncGenerator
+from typing import cast
+
+from fastapi import Request
 from sqlalchemy.orm import Session
 
 from domain.ontology.services import OntologyService
@@ -133,7 +136,7 @@ async def get_reference_sources(request: Request) -> list[ReferenceSource]:
     return sources
 
 
-async def get_local_db_session(request: Request) -> Session:
+async def get_local_db_session(request: Request) -> AsyncGenerator[Session, None]:
     """
     Create and manage a per-request SQLAlchemy session for local.db.
 
@@ -150,7 +153,9 @@ async def get_local_db_session(request: Request) -> Session:
     Raises:
         RuntimeError: If DatabaseManager is not initialized in app.state
     """
-    db_manager: DatabaseManager = getattr(request.app.state, "db_manager", None)
+    db_manager = cast(
+        DatabaseManager | None, getattr(request.app.state, "db_manager", None)
+    )
     if db_manager is None:
         raise RuntimeError("DatabaseManager not initialized in app.state")
 
@@ -161,7 +166,7 @@ async def get_local_db_session(request: Request) -> Session:
         session.close()
 
 
-async def get_operations_db_session(request: Request) -> Session:
+async def get_operations_db_session(request: Request) -> AsyncGenerator[Session, None]:
     """
     Create and manage a per-request SQLAlchemy session for operations.db.
 
@@ -178,7 +183,9 @@ async def get_operations_db_session(request: Request) -> Session:
     Raises:
         RuntimeError: If DatabaseManager is not initialized in app.state
     """
-    db_manager: DatabaseManager = getattr(request.app.state, "db_manager", None)
+    db_manager = cast(
+        DatabaseManager | None, getattr(request.app.state, "db_manager", None)
+    )
     if db_manager is None:
         raise RuntimeError("DatabaseManager not initialized in app.state")
 
