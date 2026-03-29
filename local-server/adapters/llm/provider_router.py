@@ -177,6 +177,8 @@ class LLMProviderRouter:
         Raises:
             ValueError: If no provider is available for the requested model
         """
+        from utils.async_executor import run_sync_in_executor
+
         provider = self._route_to_provider(model)
         # Check if provider has async method and use it, otherwise fallback to sync
         if hasattr(provider, 'complete_async'):
@@ -190,8 +192,9 @@ class LLMProviderRouter:
                 timeout=timeout,
             )
         else:
-            # Fallback for providers without async support
-            return provider.complete(
+            # Fallback for providers without async support — run sync method in executor
+            return await run_sync_in_executor(
+                provider.complete,
                 system_prompt=system_prompt,
                 user_prompt=user_prompt,
                 model=model,
