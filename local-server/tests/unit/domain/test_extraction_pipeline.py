@@ -1,14 +1,15 @@
 """
-E2E tests for Phase 3: Extraction layer orchestration.
+Unit tests for extraction pipeline orchestration using fakes.
 
-Tests cover end-to-end extraction workflows:
-- Full extraction pipeline with all 4 layers
+Tests cover:
+- Full extraction pipeline execution with all 4 layers
 - Entity deduplication and prioritization
 - Layer failure isolation and graceful degradation
 - Event emission and audit trails
 - Extraction use cases (extract, analyze_text, enrich_from_references)
 
 These tests use in-memory fakes to test business logic without external dependencies.
+All tests complete quickly and provide rapid feedback on core extraction logic.
 """
 
 import sys

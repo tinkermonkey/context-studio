@@ -25,6 +25,15 @@ from adapters.reference.schema_org import SchemaOrgSource
 from adapters.embedding.sentence_transformer import SentenceTransformerEmbedding
 from adapters.nlp.spacy_processor import SpacyNLPProcessor
 
+# Import LLM providers with fallback support
+OpenAIProvider = pytest.importorskip("adapters.llm.openai_provider", minversion=None).OpenAIProvider
+AnthropicProvider = pytest.importorskip("adapters.llm.anthropic_provider", minversion=None).AnthropicProvider
+
+try:
+    from adapters.llm.provider_router import LLMProviderRouter
+except ImportError:
+    LLMProviderRouter = None
+
 
 class TestEmbeddingService:
     """Tests for embedding service integration."""
@@ -262,52 +271,38 @@ class TestLLMProviders:
 
     def test_openai_provider_is_model_available(self):
         """Check if OpenAI models are available."""
-        try:
-            from adapters.llm.openai_provider import OpenAIProvider
-            # OpenAI provider requires API key in initialization
-            import os
-            api_key = os.environ.get("OPENAI_API_KEY")
-            if not api_key:
-                pytest.skip("OpenAI API key not configured")
+        api_key = os.environ.get("OPENAI_API_KEY")
+        if not api_key:
+            pytest.skip("OpenAI API key not configured")
 
+        try:
             provider = OpenAIProvider(api_key=api_key)
             available = provider.is_model_available("gpt-4")
             assert isinstance(available, bool)
-        except ImportError:
-            pytest.skip("OpenAI provider not available")
-        except Exception as e:
-            pytest.skip(f"OpenAI provider initialization failed: {e}")
+        except (ConnectionError, AuthenticationError, ValueError) as e:
+            pytest.skip(f"OpenAI provider connection failed: {e}")
 
     def test_anthropic_provider_is_model_available(self):
         """Check if Anthropic models are available."""
-        try:
-            from adapters.llm.anthropic_provider import AnthropicProvider
-            # Anthropic provider requires API key in initialization
-            import os
-            api_key = os.environ.get("ANTHROPIC_API_KEY")
-            if not api_key:
-                pytest.skip("Anthropic API key not configured")
+        api_key = os.environ.get("ANTHROPIC_API_KEY")
+        if not api_key:
+            pytest.skip("Anthropic API key not configured")
 
+        try:
             provider = AnthropicProvider(api_key=api_key)
             available = provider.is_model_available("claude-opus")
             assert isinstance(available, bool)
-        except ImportError:
-            pytest.skip("Anthropic provider not available")
-        except Exception as e:
-            pytest.skip(f"Anthropic provider initialization failed: {e}")
+        except (ConnectionError, AuthenticationError, ValueError) as e:
+            pytest.skip(f"Anthropic provider connection failed: {e}")
 
     def test_llm_provider_router(self):
         """Test LLM provider routing."""
+        if LLMProviderRouter is None:
+            pytest.skip("LLM provider router not available")
+
         try:
-            from adapters.llm.provider_router import LLMProviderRouter
-
             router = LLMProviderRouter()
-
-            # Should handle routing gracefully even if providers not configured
-            try:
-                providers = router.list_available_models()
-                assert isinstance(providers, list)
-            except Exception:
-                pytest.skip("No LLM providers configured")
-        except (ImportError, TypeError):
-            pytest.skip("LLM provider router not available or requires configuration")
+            providers = router.list_available_models()
+            assert isinstance(providers, list)
+        except (ConnectionError, TypeError, ValueError) as e:
+            pytest.skip(f"LLM provider router unavailable: {e}")
