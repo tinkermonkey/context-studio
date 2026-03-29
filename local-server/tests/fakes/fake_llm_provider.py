@@ -27,7 +27,7 @@ class FakeLLMProvider:
         self.tokens_in = tokens_in
         self.tokens_out = tokens_out
         self.call_count = 0
-        self.last_call_args: dict[str, Any] | None = None
+        self.last_call_args: dict[str, Literal["json", "text"] | None] | None = None
         self.should_raise_error = should_fail
         self.error_to_raise = RuntimeError("LLM provider error") if should_fail else None
         self.available_models = ["test-model", "gpt-4", "claude-opus"]
