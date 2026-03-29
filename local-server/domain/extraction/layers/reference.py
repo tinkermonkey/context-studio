@@ -67,12 +67,9 @@ def execute(input: LayerInput, sources: list[ReferenceSource]) -> LayerOutput:
     enriched_ids = set()
 
     for prior_entity in input.existing_entities:
-        # Skip if we already enriched this entity ID in this pass
         if prior_entity.id in enriched_ids:
             continue
 
-        # Search for this entity in available reference sources
-        # We try sources in order and use the first match
         for source in available_sources:
             try:
                 results = source.search(prior_entity.label, limit=5)
@@ -89,18 +86,18 @@ def execute(input: LayerInput, sources: list[ReferenceSource]) -> LayerOutput:
                 # Create enriched entity with SAME ID as the prior entity
                 # This ensures deduplication can recognize them as the same concept
                 enriched_entity = ExtractedEntity(
-                    id=prior_entity.id,  # SAME ID—critical for dedup to merge them
-                    label=prior_entity.label,  # Keep original label
-                    entity_type=prior_entity.entity_type,  # Keep original type
-                    source_layer=prior_entity.source_layer,  # Keep original layer for priority
-                    confidence=prior_entity.confidence,  # Keep original confidence
-                    uri=top_result.uri or prior_entity.uri,  # Prefer reference URI if available
-                    description=top_result.description or prior_entity.description,  # Add reference description
-                    matched_class_id=prior_entity.matched_class_id,  # Keep original class match
+                    id=prior_entity.id,
+                    label=prior_entity.label,
+                    entity_type=prior_entity.entity_type,
+                    source_layer=3,
+                    confidence=prior_entity.confidence,
+                    uri=top_result.uri or prior_entity.uri,
+                    description=top_result.description or prior_entity.description,
+                    matched_class_id=prior_entity.matched_class_id,
                     properties={
-                        **(prior_entity.properties or {}),  # Start with original properties
-                        "reference_source": source.source_name,  # Track which source enriched this
-                        "reference_label": top_result.label,  # Keep reference's label for comparison
+                        **(prior_entity.properties or {}),
+                        "reference_source": source.source_name,
+                        "reference_label": top_result.label,
                     },
                 )
                 entities.append(enriched_entity)

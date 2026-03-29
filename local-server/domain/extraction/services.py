@@ -486,44 +486,34 @@ class ExtractionService:
 
                 other = sorted_entities[j]
 
-                # First check: same ID means same entity
-                # This is the most reliable way to identify duplicates across layers
                 if entity.id == other.id:
-                    # When we have multiple copies of the same entity (same ID),
-                    # always prefer the one with the most enrichment data.
-                    # Layer 3 (reference enrichment) provides URIs and external metadata.
-                    # Always prefer layer 3 enrichment, even if it comes from lower-priority source.
+                    # When reference enrichment (layer 3) provides additional metadata,
+                    # merge it with the higher-priority entity for maximum data retention
                     if other.source_layer == 3 and not enriched_from_layer_3:
-                        # Enrich: take the higher-priority entity as base, but update with
-                        # enrichment data from layer 3 (URIs, descriptions, properties)
                         entity_to_keep = ExtractedEntity(
-                            id=entity.id,  # Keep original ID
-                            label=entity.label,  # Keep original label
-                            entity_type=entity.entity_type,  # Keep original type
-                            source_layer=entity.source_layer,  # Keep original layer (for priority tracking)
-                            confidence=max(entity.confidence, other.confidence),  # Take best confidence
-                            uri=other.uri or entity.uri,  # Prefer enriched URI from layer 3
-                            description=other.description or entity.description,  # Prefer enriched description
-                            matched_class_id=entity.matched_class_id,  # Keep original class match
+                            id=entity.id,
+                            label=entity.label,
+                            entity_type=entity.entity_type,
+                            source_layer=entity.source_layer,
+                            confidence=max(entity.confidence, other.confidence),
+                            uri=other.uri or entity.uri,
+                            description=other.description or entity.description,
+                            matched_class_id=entity.matched_class_id,
                             properties={
-                                **(entity.properties or {}),  # Start with original properties
-                                **(other.properties or {}),  # Overlay enrichment properties
+                                **(entity.properties or {}),
+                                **(other.properties or {}),
                             },
                         )
                         enriched_from_layer_3 = True
                     used_indices.add(j)
                     continue
 
-                # Second check: label similarity for cross-layer matches
-                # Use this for entities that may have been extracted with slightly different text
                 label_similarity = self._normalized_similarity(entity.label, other.label)
 
                 if label_similarity >= self._similarity_threshold:
-                    # Mark as duplicate of current entity (higher priority)
-                    # Only mark as used; don't merge—keep the higher-priority entity
+                    # Mark as used; higher-priority entity is kept
                     used_indices.add(j)
 
-            # Keep the entity (possibly enriched from layer 3)
             deduplicated.append(entity_to_keep)
 
         return deduplicated

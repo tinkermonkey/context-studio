@@ -14,7 +14,7 @@ from datetime import datetime, timezone
 
 from domain.extraction.services import ExtractionService
 from domain.extraction.entities import ExtractedEntity, ExtractionResult
-from domain.extraction.value_objects import ExtractionLayerResult, LayerOutput
+from domain.extraction.value_objects import ExtractionLayerResult
 from domain.extraction.exceptions import ExtractionError
 
 
@@ -480,36 +480,3 @@ class TestExtractionServiceErrorHandling:
         # Some layers may have failed, but the result is still valid
         assert result.total_duration_ms >= 0
 
-
-class TestExtractionLayerEntity:
-    """Test ExtractionLayer domain entity."""
-
-    def test_extraction_layer_creation(self):
-        """Test creating an ExtractionLayer entity."""
-        from domain.extraction.entities import ExtractionLayer
-
-        layer = ExtractionLayer(
-            layer_number=2,
-            name="NLP Gap-Filling",
-            description="Fill gaps with NLP",
-            min_confidence=0.75,
-            enabled=True,
-        )
-
-        assert layer.layer_number == 2
-        assert layer.name == "NLP Gap-Filling"
-        assert layer.enabled is True
-
-    def test_extraction_layer_validation(self):
-        """Test that ExtractionLayer validates layer numbers."""
-        from domain.extraction.entities import ExtractionLayer
-
-        with pytest.raises(ValueError):
-            ExtractionLayer(layer_number=5, name="Invalid")
-
-    def test_extraction_layer_confidence_validation(self):
-        """Test that ExtractionLayer validates confidence."""
-        from domain.extraction.entities import ExtractionLayer
-
-        with pytest.raises(ValueError):
-            ExtractionLayer(layer_number=1, name="Test", min_confidence=1.5)

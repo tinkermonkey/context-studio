@@ -488,16 +488,16 @@ class TestLayer2NLPGapFilling:
         assert output.metadata["reason"] == "empty_text"
 
     def test_nlp_gap_processor_not_ready(self):
-        """NLP processor not ready returns empty output."""
+        """NLP processor not ready raises exception."""
+        from domain.extraction.exceptions import NLPProcessorNotReadyError
+
         class NotReadyNLP:
             def is_ready(self):
                 return False
 
         input_data = LayerInput(text="Test text", existing_entities=[])
-        output = layers.nlp_gap.execute(input_data, NotReadyNLP())
-
-        assert output.entities == []
-        assert output.metadata["reason"] == "nlp_processor_not_ready"
+        with pytest.raises(NLPProcessorNotReadyError):
+            layers.nlp_gap.execute(input_data, NotReadyNLP())
 
     def test_nlp_gap_extracts_new_entities(self):
         """NLP processor entities are extracted and added."""
@@ -668,8 +668,8 @@ class TestLayer3ReferenceEnrichment:
         # Should have enriched exactly once (first source match)
         assert len(output.entities) == 1
 
-    def test_reference_preserves_original_layer(self):
-        """Original source_layer is preserved."""
+    def test_reference_marks_enriched_with_layer_3(self):
+        """Enriched entities are marked with source_layer=3 for dedup detection."""
         prior_entity = ExtractedEntity(
             label="Apple",
             entity_type="ORG",
@@ -691,7 +691,8 @@ class TestLayer3ReferenceEnrichment:
 
         output = layers.reference.execute(input_data, [source])
 
-        assert output.entities[0].source_layer == 1
+        # Enriched entity is marked with source_layer=3 so dedup can detect it
+        assert output.entities[0].source_layer == 3
 
     def test_reference_no_results_entity_not_enriched(self):
         """Entity with no reference results is not added."""
