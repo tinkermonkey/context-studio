@@ -18,7 +18,7 @@ import uvicorn
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 
-from config import ConfigurationManager
+from config import get_config_manager, get_settings
 from utils.logger import get_logger
 
 # Import adapters
@@ -85,8 +85,8 @@ async def lifespan(app: FastAPI):
     """
     logger.info("Starting Context Studio server")
 
-    # Load configuration
-    config_manager = ConfigurationManager()
+    # Get configuration from global singleton
+    config_manager = get_config_manager()
     settings = config_manager.get_settings()
     logger.info("Configuration loaded from config.json")
 
@@ -226,9 +226,8 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(lifespan=lifespan, title="Context Studio", version="1.0.0")
 
-# Load settings for middleware configuration
-config_manager = ConfigurationManager()
-settings = config_manager.get_settings()
+# Get settings for middleware configuration from global singleton
+settings = get_settings()
 
 # Add CORS middleware
 app.add_middleware(

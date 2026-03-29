@@ -10,9 +10,9 @@ add other event consumers (e.g., notifications, graph cache invalidation)
 without modifying domain code.
 """
 
+from domain.ports import ChangeRecordPort
 from domain.extraction.events import ExtractionCompleted
 from domain.pipeline.events import PipelineExecuted
-from adapters.persistence.sqlite.change_repo import SQLiteChangeRepository
 from utils.logger import get_logger
 
 
@@ -24,16 +24,16 @@ class ChangeEventRecorder:
     Records domain events to the change audit trail.
 
     Subscribes to domain events and persists them as change records using
-    the SQLiteChangeRepository. Designed to be registered with the event
+    a change record port. Designed to be registered with the event
     publisher during application startup.
     """
 
-    def __init__(self, change_repo: SQLiteChangeRepository) -> None:
+    def __init__(self, change_repo: ChangeRecordPort) -> None:
         """
         Initialize the recorder with a change repository.
 
         Args:
-            change_repo: SQLiteChangeRepository instance for persisting changes
+            change_repo: Port implementation for persisting changes
         """
         self.change_repo = change_repo
 

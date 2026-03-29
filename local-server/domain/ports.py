@@ -16,6 +16,39 @@ from .events import DomainEvent
 EventT_contra = TypeVar('EventT_contra', bound=DomainEvent, contravariant=True)
 
 
+class ChangeRecordPort(Protocol):
+    """Port for recording change events to the audit trail."""
+
+    def record_change(
+        self,
+        entity_id: str,
+        entity_type: str,
+        operation: str,
+        new_state: dict,
+        previous_state: dict | None = None,
+        user_id: str | None = None,
+        change_reason: str | None = None,
+        changeset_id: str | None = None,
+    ) -> str:
+        """
+        Record a change event.
+
+        Args:
+            entity_id: ID of the entity that changed
+            entity_type: Type of entity
+            operation: Type of operation ('create', 'update', 'delete')
+            new_state: JSON snapshot after change
+            previous_state: JSON snapshot before change (optional)
+            user_id: Optional user ID
+            change_reason: Optional explanation
+            changeset_id: Optional changeset reference
+
+        Returns:
+            The ID of the recorded change event
+        """
+        ...
+
+
 class EventPublisher(Protocol):
     """
     Port for publishing and subscribing to domain events.
@@ -25,12 +58,16 @@ class EventPublisher(Protocol):
     contexts that need to publish or subscribe to domain events.
     """
 
-    def publish(self, event: DomainEvent) -> None:
+    def publish(self, event: DomainEvent) -> list[tuple[str, Exception]]:
         """
         Publish a domain event.
 
         Args:
             event: The DomainEvent to publish
+
+        Returns:
+            List of tuples (handler_name, exception) for any handlers that failed.
+            Empty list if all handlers succeeded.
         """
         ...
 
