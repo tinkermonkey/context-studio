@@ -179,7 +179,7 @@ class TestExtractionLayerMetrics:
         layer_3 = next((l for l in result.layers_executed if l.layer_num == 3), None)
         if layer_3 is not None:
             # Either layer recorded an error message OR it has entities despite failure
-            assert layer_3.error_message is not None or len(layer_3.entities) >= 0
+            assert layer_3.error_message is not None or len(layer_3.entities) > 0
 
 
 @pytest.mark.reference
@@ -291,7 +291,6 @@ class TestReferenceCacheEffectiveness:
         with tempfile.TemporaryDirectory() as tmpdir:
             cache_db = Path(tmpdir) / "reference_cache.db"
             inner_source = FakeReferenceSource(name="test-source")
-            extraction_repo = FakeExtractionRepository()
 
             # Create cached source
             _cached = CachedReferenceSource(inner_source, str(cache_db))
