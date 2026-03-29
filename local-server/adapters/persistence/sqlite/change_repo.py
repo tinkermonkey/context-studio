@@ -71,8 +71,7 @@ class SQLiteChangeRepository:
         Returns:
             The ID of the recorded change event
         """
-        session = self._get_session()
-        try:
+        with self.session_factory() as session:
             change_event = ChangeEvent(
                 id=str(uuid.uuid4()),
                 entity_id=entity_id,
@@ -90,5 +89,3 @@ class SQLiteChangeRepository:
             session.commit()
 
             return cast(str, change_event.id)
-        finally:
-            session.close()

@@ -73,17 +73,22 @@ class SQLiteOntologyRepository:
 
     # ==================== Taxonomy CRUD ====================
 
-    def get_taxonomy(self, taxonomy_id: str) -> Optional[Taxonomy]:
+    def get_taxonomy(self, taxonomy_id: str, session: Session | None = None) -> Optional[Taxonomy]:
         """
         Retrieve a taxonomy by ID.
 
         Args:
             taxonomy_id: UUID of the taxonomy
+            session: Optional session to reuse (for internal calls from save_* methods)
 
         Returns:
             Taxonomy entity if found, None otherwise
         """
-        session = self._get_session()
+        close_session = False
+        if session is None:
+            session = self._get_session()
+            close_session = True
+
         try:
             orm_entity = (
                 session.query(OntologyEntity)
@@ -97,10 +102,10 @@ class SQLiteOntologyRepository:
             )
             if orm_entity is None:
                 return None
-            session.flush()
             return cast(Taxonomy, map_orm_to_domain(orm_entity))
         finally:
-            session.close()
+            if close_session:
+                session.close()
 
     def list_taxonomies(self) -> list[Taxonomy]:
         """
@@ -109,17 +114,13 @@ class SQLiteOntologyRepository:
         Returns:
             Sequence of Taxonomy entities
         """
-        session = self._get_session()
-        try:
+        with self.session_factory() as session:
             orm_entities = (
                 session.query(OntologyEntity)
                 .filter(OntologyEntity.node_type == NodeType.TAXONOMY)
                 .all()
             )
-            session.flush()
             return [cast(Taxonomy, map_orm_to_domain(e)) for e in orm_entities]
-        finally:
-            session.close()
 
     def save_taxonomy(self, taxonomy: Taxonomy) -> Taxonomy:
         """
@@ -137,8 +138,7 @@ class SQLiteOntologyRepository:
         if not taxonomy.title or not taxonomy.title.strip():
             raise ValueError("Taxonomy title cannot be empty")
 
-        session = self._get_session()
-        try:
+        with self.session_factory() as session:
             orm_entity = (
                 session.query(OntologyEntity)
                 .filter(
@@ -171,8 +171,6 @@ class SQLiteOntologyRepository:
 
             session.commit()
             return cast(Taxonomy, map_orm_to_domain(orm_entity))
-        finally:
-            session.close()
 
     def delete_taxonomy(self, taxonomy_id: str) -> bool:
         """
@@ -184,8 +182,7 @@ class SQLiteOntologyRepository:
         Returns:
             True if deleted, False if not found
         """
-        session = self._get_session()
-        try:
+        with self.session_factory() as session:
             orm_entity = (
                 session.query(OntologyEntity)
                 .filter(
@@ -203,22 +200,25 @@ class SQLiteOntologyRepository:
             session.delete(orm_entity)
             session.commit()
             return True
-        finally:
-            session.close()
 
     # ==================== ConceptScheme CRUD ====================
 
-    def get_concept_scheme(self, concept_scheme_id: str) -> Optional[ConceptScheme]:
+    def get_concept_scheme(self, concept_scheme_id: str, session: Session | None = None) -> Optional[ConceptScheme]:
         """
         Retrieve a concept scheme by ID.
 
         Args:
             concept_scheme_id: UUID of the concept scheme
+            session: Optional session to reuse (for internal calls from save_* methods)
 
         Returns:
             ConceptScheme entity if found, None otherwise
         """
-        session = self._get_session()
+        close_session = False
+        if session is None:
+            session = self._get_session()
+            close_session = True
+
         try:
             orm_entity = (
                 session.query(OntologyEntity)
@@ -232,10 +232,10 @@ class SQLiteOntologyRepository:
             )
             if orm_entity is None:
                 return None
-            session.flush()
             return cast(ConceptScheme, map_orm_to_domain(orm_entity))
         finally:
-            session.close()
+            if close_session:
+                session.close()
 
     def list_concept_schemes(
         self, taxonomy_id: Optional[str] = None
@@ -249,8 +249,7 @@ class SQLiteOntologyRepository:
         Returns:
             Sequence of ConceptScheme entities
         """
-        session = self._get_session()
-        try:
+        with self.session_factory() as session:
             query = session.query(OntologyEntity).filter(
                 OntologyEntity.node_type == NodeType.CONCEPT_SCHEME
             )
@@ -259,10 +258,7 @@ class SQLiteOntologyRepository:
                 query = query.filter(OntologyEntity.taxonomy_id == taxonomy_id)
 
             orm_entities = query.all()
-            session.flush()
             return [cast(ConceptScheme, map_orm_to_domain(e)) for e in orm_entities]
-        finally:
-            session.close()
 
     def save_concept_scheme(self, scheme: ConceptScheme) -> ConceptScheme:
         """
@@ -280,15 +276,14 @@ class SQLiteOntologyRepository:
         if not scheme.title or not scheme.title.strip():
             raise ValueError("ConceptScheme title cannot be empty")
 
-        # Verify parent taxonomy exists
-        parent_taxonomy = self.get_taxonomy(scheme.taxonomy_id)
-        if parent_taxonomy is None:
-            raise ValueError(
-                f"Parent taxonomy {scheme.taxonomy_id} does not exist"
-            )
+        with self.session_factory() as session:
+            # Verify parent taxonomy exists (same session)
+            parent_taxonomy = self.get_taxonomy(scheme.taxonomy_id, session)
+            if parent_taxonomy is None:
+                raise ValueError(
+                    f"Parent taxonomy {scheme.taxonomy_id} does not exist"
+                )
 
-        session = self._get_session()
-        try:
             orm_entity = (
                 session.query(OntologyEntity)
                 .filter(
@@ -322,8 +317,6 @@ class SQLiteOntologyRepository:
 
             session.commit()
             return cast(ConceptScheme, map_orm_to_domain(orm_entity))
-        finally:
-            session.close()
 
     def delete_concept_scheme(self, concept_scheme_id: str) -> bool:
         """
@@ -335,8 +328,7 @@ class SQLiteOntologyRepository:
         Returns:
             True if deleted, False if not found
         """
-        session = self._get_session()
-        try:
+        with self.session_factory() as session:
             orm_entity = (
                 session.query(OntologyEntity)
                 .filter(
@@ -354,22 +346,25 @@ class SQLiteOntologyRepository:
             session.delete(orm_entity)
             session.commit()
             return True
-        finally:
-            session.close()
 
     # ==================== Class CRUD ====================
 
-    def get_class(self, class_id: str) -> Optional[Class]:
+    def get_class(self, class_id: str, session: Session | None = None) -> Optional[Class]:
         """
         Retrieve a class by ID.
 
         Args:
             class_id: UUID of the class
+            session: Optional session to reuse (for internal calls from save_* methods)
 
         Returns:
             Class entity if found, None otherwise
         """
-        session = self._get_session()
+        close_session = False
+        if session is None:
+            session = self._get_session()
+            close_session = True
+
         try:
             orm_entity = (
                 session.query(OntologyEntity)
@@ -383,10 +378,10 @@ class SQLiteOntologyRepository:
             )
             if orm_entity is None:
                 return None
-            session.flush()
             return cast(Class, map_orm_to_domain(orm_entity))
         finally:
-            session.close()
+            if close_session:
+                session.close()
 
     def list_classes(
         self,
@@ -407,8 +402,7 @@ class SQLiteOntologyRepository:
         Returns:
             Sequence of Class entities
         """
-        session = self._get_session()
-        try:
+        with self.session_factory() as session:
             query = session.query(OntologyEntity).filter(
                 OntologyEntity.node_type == NodeType.CLASS
             )
@@ -420,10 +414,7 @@ class SQLiteOntologyRepository:
                 query = query.filter(OntologyEntity.parent_class_id == parent_class_id)
 
             orm_entities = query.limit(limit).offset(offset).all()
-            session.flush()
             return [cast(Class, map_orm_to_domain(e)) for e in orm_entities]
-        finally:
-            session.close()
 
     def count_classes(
         self,
@@ -440,8 +431,7 @@ class SQLiteOntologyRepository:
         Returns:
             Number of matching Class entities
         """
-        session = self._get_session()
-        try:
+        with self.session_factory() as session:
             query = session.query(OntologyEntity).filter(
                 OntologyEntity.node_type == NodeType.CLASS
             )
@@ -452,10 +442,7 @@ class SQLiteOntologyRepository:
             if parent_class_id is not None:
                 query = query.filter(OntologyEntity.parent_class_id == parent_class_id)
 
-            session.flush()
             return query.count()
-        finally:
-            session.close()
 
     def save_class(self, cls: Class) -> Class:
         """
@@ -476,47 +463,46 @@ class SQLiteOntologyRepository:
         if not cls.title or not cls.title.strip():
             raise ValueError("Class title cannot be empty")
 
-        # Verify parent concept scheme exists
-        parent_scheme = self.get_concept_scheme(cls.concept_scheme_id)
-        if parent_scheme is None:
-            raise ValueError(
-                f"Parent concept scheme {cls.concept_scheme_id} does not exist"
-            )
-
-        # Verify parent taxonomy exists
-        parent_taxonomy = self.get_taxonomy(cls.taxonomy_id)
-        if parent_taxonomy is None:
-            raise ValueError(
-                f"Parent taxonomy {cls.taxonomy_id} does not exist"
-            )
-
-        # If parent class is set, verify it exists and check for cycles
-        if cls.parent_class_id is not None:
-            if cls.parent_class_id == cls.id:
-                raise ValueError("A class cannot be its own parent")
-
-            parent_class = self.get_class(cls.parent_class_id)
-            if parent_class is None:
+        with self.session_factory() as session:
+            # Verify parent concept scheme exists (same session)
+            parent_scheme = self.get_concept_scheme(cls.concept_scheme_id, session)
+            if parent_scheme is None:
                 raise ValueError(
-                    f"Parent class {cls.parent_class_id} does not exist"
+                    f"Parent concept scheme {cls.concept_scheme_id} does not exist"
                 )
 
-            # Check for cycles in hierarchy
-            if self._would_create_cycle(cls.id, cls.parent_class_id):
+            # Verify parent taxonomy exists (same session)
+            parent_taxonomy = self.get_taxonomy(cls.taxonomy_id, session)
+            if parent_taxonomy is None:
                 raise ValueError(
-                    f"Setting parent class {cls.parent_class_id} would create a cycle"
+                    f"Parent taxonomy {cls.taxonomy_id} does not exist"
                 )
 
-        # Verify structural property if set
-        if cls.structural_property_id is not None:
-            struct_prop = self.get_property_definition(cls.structural_property_id)
-            if struct_prop is None:
-                raise ValueError(
-                    f"Structural property {cls.structural_property_id} does not exist"
-                )
+            # If parent class is set, verify it exists and check for cycles
+            if cls.parent_class_id is not None:
+                if cls.parent_class_id == cls.id:
+                    raise ValueError("A class cannot be its own parent")
 
-        session = self._get_session()
-        try:
+                parent_class = self.get_class(cls.parent_class_id, session)
+                if parent_class is None:
+                    raise ValueError(
+                        f"Parent class {cls.parent_class_id} does not exist"
+                    )
+
+                # Check for cycles in hierarchy (same session)
+                if self._would_create_cycle(cls.id, cls.parent_class_id, session):
+                    raise ValueError(
+                        f"Setting parent class {cls.parent_class_id} would create a cycle"
+                    )
+
+            # Verify structural property if set (same session)
+            if cls.structural_property_id is not None:
+                struct_prop = self.get_property_definition(cls.structural_property_id, session)
+                if struct_prop is None:
+                    raise ValueError(
+                        f"Structural property {cls.structural_property_id} does not exist"
+                    )
+
             orm_entity = (
                 session.query(OntologyEntity)
                 .filter(
@@ -551,8 +537,6 @@ class SQLiteOntologyRepository:
 
             session.commit()
             return cast(Class, map_orm_to_domain(orm_entity))
-        finally:
-            session.close()
 
     def delete_class(self, class_id: str) -> bool:
         """
@@ -564,8 +548,7 @@ class SQLiteOntologyRepository:
         Returns:
             True if deleted, False if not found
         """
-        session = self._get_session()
-        try:
+        with self.session_factory() as session:
             orm_entity = (
                 session.query(OntologyEntity)
                 .filter(
@@ -583,8 +566,6 @@ class SQLiteOntologyRepository:
             session.delete(orm_entity)
             session.commit()
             return True
-        finally:
-            session.close()
 
     def search_classes(self, criteria: SearchCriteria) -> list[Class]:
         """
@@ -599,8 +580,7 @@ class SQLiteOntologyRepository:
         Returns:
             Sequence of matching Class entities
         """
-        session = self._get_session()
-        try:
+        with self.session_factory() as session:
             query = session.query(OntologyEntity).filter(
                 OntologyEntity.node_type == NodeType.CLASS
             )
@@ -645,24 +625,26 @@ class SQLiteOntologyRepository:
             query = query.limit(criteria.limit).offset(criteria.offset)
 
             orm_entities = query.all()
-            session.flush()
             return [cast(Class, map_orm_to_domain(e)) for e in orm_entities]
-        finally:
-            session.close()
 
     # ==================== Individual CRUD ====================
 
-    def get_individual(self, individual_id: str) -> Optional[Individual]:
+    def get_individual(self, individual_id: str, session: Session | None = None) -> Optional[Individual]:
         """
         Retrieve an individual by ID.
 
         Args:
             individual_id: UUID of the individual
+            session: Optional session to reuse (for internal calls from save_* methods)
 
         Returns:
             Individual entity if found, None otherwise
         """
-        session = self._get_session()
+        close_session = False
+        if session is None:
+            session = self._get_session()
+            close_session = True
+
         try:
             orm_entity = (
                 session.query(OntologyEntity)
@@ -676,10 +658,10 @@ class SQLiteOntologyRepository:
             )
             if orm_entity is None:
                 return None
-            session.flush()
             return cast(Individual, map_orm_to_domain(orm_entity))
         finally:
-            session.close()
+            if close_session:
+                session.close()
 
     def list_individuals(
         self, class_id: Optional[str] = None
@@ -693,8 +675,7 @@ class SQLiteOntologyRepository:
         Returns:
             Sequence of Individual entities
         """
-        session = self._get_session()
-        try:
+        with self.session_factory() as session:
             query = session.query(OntologyEntity).filter(
                 OntologyEntity.node_type == NodeType.INDIVIDUAL
             )
@@ -703,10 +684,7 @@ class SQLiteOntologyRepository:
                 query = query.filter(OntologyEntity.class_id == class_id)
 
             orm_entities = query.all()
-            session.flush()
             return [cast(Individual, map_orm_to_domain(e)) for e in orm_entities]
-        finally:
-            session.close()
 
     def save_individual(self, individual: Individual) -> Individual:
         """
@@ -724,15 +702,14 @@ class SQLiteOntologyRepository:
         if not individual.title or not individual.title.strip():
             raise ValueError("Individual title cannot be empty")
 
-        # Verify parent class exists
-        parent_class = self.get_class(individual.class_id)
-        if parent_class is None:
-            raise ValueError(
-                f"Parent class {individual.class_id} does not exist"
-            )
+        with self.session_factory() as session:
+            # Verify parent class exists (same session)
+            parent_class = self.get_class(individual.class_id, session)
+            if parent_class is None:
+                raise ValueError(
+                    f"Parent class {individual.class_id} does not exist"
+                )
 
-        session = self._get_session()
-        try:
             orm_entity = (
                 session.query(OntologyEntity)
                 .filter(
@@ -763,8 +740,6 @@ class SQLiteOntologyRepository:
 
             session.commit()
             return cast(Individual, map_orm_to_domain(orm_entity))
-        finally:
-            session.close()
 
     def delete_individual(self, individual_id: str) -> bool:
         """
@@ -776,8 +751,7 @@ class SQLiteOntologyRepository:
         Returns:
             True if deleted, False if not found
         """
-        session = self._get_session()
-        try:
+        with self.session_factory() as session:
             orm_entity = (
                 session.query(OntologyEntity)
                 .filter(
@@ -795,22 +769,25 @@ class SQLiteOntologyRepository:
             session.delete(orm_entity)
             session.commit()
             return True
-        finally:
-            session.close()
 
     # ==================== PropertyDefinition CRUD ====================
 
-    def get_property_definition(self, property_id: str) -> Optional[PropertyDefinition]:
+    def get_property_definition(self, property_id: str, session: Session | None = None) -> Optional[PropertyDefinition]:
         """
         Retrieve a property definition by ID.
 
         Args:
             property_id: UUID of the property definition
+            session: Optional session to reuse (for internal calls from save_* methods)
 
         Returns:
             PropertyDefinition entity if found, None otherwise
         """
-        session = self._get_session()
+        close_session = False
+        if session is None:
+            session = self._get_session()
+            close_session = True
+
         try:
             orm_entity = (
                 session.query(OntologyEntity)
@@ -824,10 +801,10 @@ class SQLiteOntologyRepository:
             )
             if orm_entity is None:
                 return None
-            session.flush()
             return cast(PropertyDefinition, map_orm_to_domain(orm_entity))
         finally:
-            session.close()
+            if close_session:
+                session.close()
 
     def list_property_definitions(
         self,
@@ -846,8 +823,7 @@ class SQLiteOntologyRepository:
         Returns:
             Sequence of PropertyDefinition entities
         """
-        session = self._get_session()
-        try:
+        with self.session_factory() as session:
             query = session.query(OntologyEntity).filter(
                 OntologyEntity.node_type == NodeType.PROPERTY_DEFINITION
             )
@@ -856,10 +832,7 @@ class SQLiteOntologyRepository:
                 query = query.filter(OntologyEntity.is_relevant == is_relevant)
 
             orm_entities = query.limit(limit).offset(offset).all()
-            session.flush()
             return [cast(PropertyDefinition, map_orm_to_domain(e)) for e in orm_entities]
-        finally:
-            session.close()
 
     def get_property_definition_by_identifier(
         self, identifier: str
@@ -873,8 +846,7 @@ class SQLiteOntologyRepository:
         Returns:
             PropertyDefinition entity if found, None otherwise
         """
-        session = self._get_session()
-        try:
+        with self.session_factory() as session:
             orm_entity = (
                 session.query(OntologyEntity)
                 .filter(
@@ -887,10 +859,7 @@ class SQLiteOntologyRepository:
             )
             if orm_entity is None:
                 return None
-            session.flush()
             return cast(PropertyDefinition, map_orm_to_domain(orm_entity))
-        finally:
-            session.close()
 
     def save_property_definition(
         self, prop: PropertyDefinition
@@ -913,9 +882,8 @@ class SQLiteOntologyRepository:
         if not prop.identifier or not prop.identifier.strip():
             raise ValueError("PropertyDefinition identifier cannot be empty")
 
-        session = self._get_session()
-        try:
-            # Check identifier uniqueness (excluding self in update case)
+        with self.session_factory() as session:
+            # Check identifier uniqueness (same session)
             existing = (
                 session.query(OntologyEntity)
                 .filter(
@@ -990,8 +958,6 @@ class SQLiteOntologyRepository:
 
             session.commit()
             return cast(PropertyDefinition, map_orm_to_domain(orm_entity))
-        finally:
-            session.close()
 
     def delete_property_definition(self, property_id: str) -> bool:
         """
@@ -1006,8 +972,7 @@ class SQLiteOntologyRepository:
         Returns:
             True if deleted, False if not found
         """
-        session = self._get_session()
-        try:
+        with self.session_factory() as session:
             orm_entity = (
                 session.query(OntologyEntity)
                 .filter(
@@ -1030,8 +995,6 @@ class SQLiteOntologyRepository:
             session.delete(orm_entity)
             session.commit()
             return True
-        finally:
-            session.close()
 
     # ==================== Relationship CRUD ====================
 
@@ -1045,8 +1008,7 @@ class SQLiteOntologyRepository:
         Returns:
             Relationship entity if found, None otherwise
         """
-        session = self._get_session()
-        try:
+        with self.session_factory() as session:
             orm_rel = session.query(RelationshipORM).filter(
                 RelationshipORM.id == relationship_id
             ).first()
@@ -1054,10 +1016,7 @@ class SQLiteOntologyRepository:
             if orm_rel is None:
                 return None
 
-            session.flush()
             return map_relationship_orm_to_domain(orm_rel)
-        finally:
-            session.close()
 
     def list_relationships(
         self,
@@ -1080,8 +1039,7 @@ class SQLiteOntologyRepository:
         Returns:
             Sequence of Relationship entities
         """
-        session = self._get_session()
-        try:
+        with self.session_factory() as session:
             query = session.query(RelationshipORM)
 
             if source_id is not None:
@@ -1094,10 +1052,7 @@ class SQLiteOntologyRepository:
                 query = query.filter(RelationshipORM.property_definition_id == property_id)
 
             orm_rels = query.limit(limit).offset(offset).all()
-            session.flush()
             return [map_relationship_orm_to_domain(r) for r in orm_rels]
-        finally:
-            session.close()
 
     def save_relationship(self, rel: Relationship) -> Relationship:
         """
@@ -1118,24 +1073,23 @@ class SQLiteOntologyRepository:
         if rel.source_id == rel.target_id:
             raise ValueError("A relationship cannot have the same source and target")
 
-        session = self._get_session()
-        try:
-            # Verify source exists
+        with self.session_factory() as session:
+            # Verify source exists (same session)
             source = session.query(OntologyEntity).filter(
                 OntologyEntity.id == rel.source_id
             ).first()
             if source is None:
                 raise ValueError(f"Source entity {rel.source_id} does not exist")
 
-            # Verify target exists
+            # Verify target exists (same session)
             target = session.query(OntologyEntity).filter(
                 OntologyEntity.id == rel.target_id
             ).first()
             if target is None:
                 raise ValueError(f"Target entity {rel.target_id} does not exist")
 
-            # Verify property definition exists
-            prop_def = self.get_property_definition(rel.property_definition_id)
+            # Verify property definition exists (same session)
+            prop_def = self.get_property_definition(rel.property_definition_id, session)
             if prop_def is None:
                 raise ValueError(
                     f"Property definition {rel.property_definition_id} does not exist"
@@ -1157,8 +1111,6 @@ class SQLiteOntologyRepository:
 
             session.commit()
             return map_relationship_orm_to_domain(orm_rel)
-        finally:
-            session.close()
 
     def delete_relationship(self, relationship_id: str) -> bool:
         """
@@ -1170,8 +1122,7 @@ class SQLiteOntologyRepository:
         Returns:
             True if deleted, False if not found
         """
-        session = self._get_session()
-        try:
+        with self.session_factory() as session:
             orm_rel = session.query(RelationshipORM).filter(
                 RelationshipORM.id == relationship_id
             ).first()
@@ -1182,8 +1133,6 @@ class SQLiteOntologyRepository:
             session.delete(orm_rel)
             session.commit()
             return True
-        finally:
-            session.close()
 
     # ==================== Utility Methods ====================
 
@@ -1196,22 +1145,18 @@ class SQLiteOntologyRepository:
         Returns:
             Tuple of (entities sequence, relationships sequence)
         """
-        session = self._get_session()
-        try:
+        with self.session_factory() as session:
             all_orm_entities = session.query(OntologyEntity).all()
             entities = [map_orm_to_domain(e) for e in all_orm_entities]
 
             all_orm_rels = session.query(RelationshipORM).all()
             relationships = [map_relationship_orm_to_domain(r) for r in all_orm_rels]
 
-            session.flush()
             return entities, relationships
-        finally:
-            session.close()
 
     # ==================== Helper Methods ====================
 
-    def _would_create_cycle(self, class_id: str, potential_parent_id: str) -> bool:
+    def _would_create_cycle(self, class_id: str, potential_parent_id: str, session: Session) -> bool:
         """
         Check if adding parent_id as parent of class_id would create a cycle.
 
@@ -1220,6 +1165,7 @@ class SQLiteOntologyRepository:
         Args:
             class_id: ID of the class to be updated
             potential_parent_id: ID of the proposed parent
+            session: SQLAlchemy session to use for lookups
 
         Returns:
             True if adding this parent would create a cycle, False otherwise
@@ -1238,8 +1184,8 @@ class SQLiteOntologyRepository:
 
             visited.add(current)
 
-            # Get parent of current
-            parent_class = self.get_class(current)
+            # Get parent of current (using passed session, not creating new one)
+            parent_class = self.get_class(current, session)
             if parent_class is None:
                 break
 
