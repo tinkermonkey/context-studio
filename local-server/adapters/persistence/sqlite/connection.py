@@ -11,11 +11,14 @@ Key design decisions:
 - Separate engines for local.db and operations.db to support independent lifecycle
 """
 
-from typing import Optional
+from typing import Optional, Any
 
-from sqlalchemy import create_engine, Engine
+from sqlalchemy import create_engine
 from sqlalchemy.pool import StaticPool
 from sqlalchemy.orm import sessionmaker, Session
+
+# Type alias for SQLAlchemy Engine (mypy compatibility)
+Engine = Any  # type: ignore[misc]
 
 
 def create_local_db_engine(database_url: str = "sqlite:///./local.db") -> Engine:
@@ -56,7 +59,7 @@ def create_operations_db_engine(database_url: str = "sqlite:///./operations.db")
     )
 
 
-def create_session_factory(engine: Engine) -> sessionmaker[Session]:
+def create_session_factory(engine: Engine) -> sessionmaker:
     """
     Create a SQLAlchemy session factory for the given engine.
 
@@ -75,7 +78,7 @@ def create_session_factory(engine: Engine) -> sessionmaker[Session]:
     )
 
 
-def create_session(session_factory: sessionmaker[Session]) -> Session:
+def create_session(session_factory: sessionmaker) -> Session:
     """
     Create a new database session.
 
@@ -111,8 +114,8 @@ class DatabaseManager:
         """Initialize the database manager with no engines yet."""
         self._local_engine: Optional[Engine] = None
         self._operations_engine: Optional[Engine] = None
-        self._local_session_factory: Optional[sessionmaker[Session]] = None
-        self._operations_session_factory: Optional[sessionmaker[Session]] = None
+        self._local_session_factory: Optional[sessionmaker] = None
+        self._operations_session_factory: Optional[sessionmaker] = None
 
     def initialize(
         self,
@@ -151,11 +154,23 @@ class DatabaseManager:
             raise RuntimeError("DatabaseManager not initialized. Call initialize() first.")
         return self._local_session_factory()
 
+    def get_local_session_factory(self) -> sessionmaker:
+        """Return the local.db session factory. Must call initialize() first."""
+        if self._local_session_factory is None:
+            raise RuntimeError("DatabaseManager not initialized. Call initialize() first.")
+        return self._local_session_factory
+
     def get_operations_session(self) -> Session:
         """Create a new session for operations.db. Must call initialize() first."""
         if self._operations_session_factory is None:
             raise RuntimeError("DatabaseManager not initialized. Call initialize() first.")
         return self._operations_session_factory()
+
+    def get_operations_session_factory(self) -> sessionmaker:
+        """Return the operations.db session factory. Must call initialize() first."""
+        if self._operations_session_factory is None:
+            raise RuntimeError("DatabaseManager not initialized. Call initialize() first.")
+        return self._operations_session_factory
 
     def dispose(self) -> None:
         """
@@ -184,6 +199,6 @@ class DatabaseManager:
 
         LocalBase.metadata.create_all(self._local_engine)
 
-        # Operations models will be imported when implemented
-        # from adapters.persistence.sqlite.operations.models import OperationsBase
-        # OperationsBase.metadata.create_all(self._operations_engine)
+        # Import operations models and create tables
+        from adapters.persistence.sqlite.operations.models import OperationsBase
+        OperationsBase.metadata.create_all(self._operations_engine)

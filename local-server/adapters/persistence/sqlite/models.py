@@ -31,14 +31,12 @@ from sqlalchemy import (
     JSON,
     LargeBinary,
 )
-from sqlalchemy.orm import DeclarativeBase
+from sqlalchemy.orm import declarative_base
+
+Base = declarative_base()  # type: ignore[name-defined,var-annotated]
 
 
-class Base(DeclarativeBase):
-    pass
-
-
-class OntologyEntity(Base):
+class OntologyEntity(Base):  # type: ignore[misc,valid-type]
     """
     Unified table for all ontology entity types using single-table inheritance.
 
@@ -198,7 +196,7 @@ class OntologyEntity(Base):
         return f"<OntologyEntity(id={self.id}, type={self.node_type}, title={self.title})>"
 
 
-class Relationship(Base):
+class Relationship(Base):  # type: ignore[misc,valid-type]
     """
     A typed, directed edge between two ontology entities.
 
@@ -258,7 +256,7 @@ class Relationship(Base):
         return f"<Relationship(id={self.id}, source={self.source_id}, target={self.target_id})>"
 
 
-class PropertyDefinition(Base):
+class PropertyDefinition(Base):  # type: ignore[misc,valid-type]
     """
     Registry of defined object property types (OWL:ObjectProperty).
 
@@ -327,7 +325,7 @@ class PropertyDefinition(Base):
         return f"<PropertyDefinition(id={self.id}, identifier={self.identifier})>"
 
 
-class ChangeEvent(Base):
+class ChangeEvent(Base):  # type: ignore[misc,valid-type]
     """
     Audit trail of all changes to ontology entities.
 
@@ -352,7 +350,6 @@ class ChangeEvent(Base):
     id = Column(String(36), primary_key=True, nullable=False)
     entity_id = Column(
         String(36),
-        ForeignKey("ontology_entities.id", ondelete="CASCADE"),
         nullable=False,
         index=True,
         doc="Entity that changed"
@@ -408,3 +405,57 @@ class ChangeEvent(Base):
 
     def __repr__(self) -> str:
         return f"<ChangeEvent(id={self.id}, entity_id={self.entity_id}, operation={self.operation})>"
+
+
+class ExtractionResult(Base):  # type: ignore[misc,valid-type]
+    """
+    Persistence model for an extraction operation result.
+
+    Stores the complete output of an extraction pipeline execution including
+    extracted entities, layer execution metadata, and performance metrics.
+
+    Attributes:
+        id: UUID as string, primary key
+        text: The source text that was extracted
+        extracted_entities: JSON list of ExtractedEntity objects
+        layers_executed: JSON list of ExtractionLayerResult metadata
+        total_duration_ms: Total time spent on extraction (milliseconds)
+        created_at: Timestamp when extraction completed (UTC)
+    """
+
+    __tablename__ = "extraction_results"
+
+    id = Column(String(36), primary_key=True, nullable=False)
+    text = Column(Text, nullable=False)
+    extracted_entities = Column(
+        JSON,
+        nullable=False,
+        default=list,
+        doc="JSON list of {id, label, entity_type, source_layer, confidence, uri, description, properties}"
+    )
+    layers_executed = Column(
+        JSON,
+        nullable=False,
+        default=list,
+        doc="JSON list of {layer_number, layer_name, entities_found, duration_ms, success, error_message}"
+    )
+    total_duration_ms = Column(
+        Integer,
+        nullable=False,
+        default=0,
+        doc="Total time spent on extraction (milliseconds)"
+    )
+    created_at = Column(
+        DateTime(timezone=True),
+        nullable=False,
+        default=lambda: datetime.now(timezone.utc),
+        index=True,
+        doc="UTC timestamp of extraction completion"
+    )
+
+    __table_args__ = (
+        Index("idx_created_at", "created_at"),
+    )
+
+    def __repr__(self) -> str:
+        return f"<ExtractionResult(id={self.id}, text_len={len(self.text or '')}, entities={len(self.extracted_entities or [])})>"

@@ -11,6 +11,8 @@ from typing import Any
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
+from uuid import uuid4
+
 from domain.ontology.entities import (
     Class,
     ConceptScheme,
@@ -277,3 +279,45 @@ class FakeOntologyRepository:
             + list(self._property_definitions.values())
         )
         return (all_entities, list(self._relationships.values()))
+
+    def setup_sample_data(self) -> None:
+        """
+        Populate the repository with sample taxonomy, concept scheme, and classes.
+
+        Used by e2e tests to provide initial knowledge graph context for extraction.
+        """
+        # Create sample taxonomy
+        taxonomy = Taxonomy(
+            id=str(uuid4()),
+            title="Technology Concepts",
+            description="Sample taxonomy for tech-related extraction testing"
+        )
+        self.save_taxonomy(taxonomy)
+
+        # Create sample concept scheme
+        scheme = ConceptScheme(
+            id=str(uuid4()),
+            title="Tech Terms",
+            description="Common technology terminology",
+            taxonomy_id=taxonomy.id
+        )
+        self.save_concept_scheme(scheme)
+
+        # Create sample classes
+        classes_data = [
+            ("Microsoft", "American multinational software corporation"),
+            ("Google", "American technology company specializing in search and advertising"),
+            ("Apple", "American technology company known for consumer electronics"),
+            ("Database", "Organized collection of structured data"),
+            ("SQL", "Structured Query Language for database management"),
+        ]
+
+        for title, description in classes_data:
+            cls = Class(
+                id=str(uuid4()),
+                title=title,
+                description=description,
+                concept_scheme_id=scheme.id,
+                taxonomy_id=taxonomy.id
+            )
+            self.save_class(cls)

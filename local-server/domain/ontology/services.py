@@ -12,6 +12,7 @@ from __future__ import annotations
 from datetime import datetime, timezone
 from uuid import uuid4
 
+from domain.ports import EventPublisher
 from .entities import Taxonomy, ConceptScheme, Class, Relationship, PropertyDefinition, Individual
 from .events import (
     TaxonomyCreated, TaxonomyUpdated, TaxonomyDeleted,
@@ -22,7 +23,7 @@ from .events import (
     ConceptSchemeUpdated, GraphInvalidated
 )
 from .exceptions import EntityNotFoundError, CircularReferenceError, DuplicateEntityError, OntologyError
-from .ports import OntologyRepository, EmbeddingService, EventPublisher
+from .ports import OntologyRepository, EmbeddingService
 
 
 class OntologyService:

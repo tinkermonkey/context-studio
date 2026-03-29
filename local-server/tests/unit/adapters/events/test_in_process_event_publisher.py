@@ -15,7 +15,8 @@ import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))))
 
 from adapters.events.in_process import InProcessEventPublisher
-from domain.ontology.events import ClassCreated, ClassUpdated, DomainEvent
+from domain.events import DomainEvent
+from domain.ontology.events import ClassCreated, ClassUpdated
 
 
 class TestInProcessEventPublisher:
@@ -32,7 +33,8 @@ class TestInProcessEventPublisher:
         )
 
         # Should not raise an error even with no handlers
-        publisher.publish(event)
+        failures = publisher.publish(event)
+        assert failures == []
 
     def test_single_handler_receives_event(self):
         """A registered handler receives the published event."""
@@ -50,10 +52,11 @@ class TestInProcessEventPublisher:
         )
 
         publisher.subscribe(ClassCreated, handler)
-        publisher.publish(event)
+        failures = publisher.publish(event)
 
         assert len(received_events) == 1
         assert received_events[0] is event
+        assert failures == []
 
     def test_multiple_handlers_for_same_event_type(self):
         """Multiple handlers for the same event type all receive the event."""
@@ -76,12 +79,13 @@ class TestInProcessEventPublisher:
 
         publisher.subscribe(ClassCreated, handler1)
         publisher.subscribe(ClassCreated, handler2)
-        publisher.publish(event)
+        failures = publisher.publish(event)
 
         assert len(received_by_handler1) == 1
         assert len(received_by_handler2) == 1
         assert received_by_handler1[0] is event
         assert received_by_handler2[0] is event
+        assert failures == []
 
     def test_handlers_execute_in_registration_order(self):
         """Handlers are called in the order they were registered."""
@@ -107,9 +111,10 @@ class TestInProcessEventPublisher:
         publisher.subscribe(ClassCreated, handler1)
         publisher.subscribe(ClassCreated, handler2)
         publisher.subscribe(ClassCreated, handler3)
-        publisher.publish(event)
+        failures = publisher.publish(event)
 
         assert execution_order == [1, 2, 3]
+        assert failures == []
 
     def test_handlers_only_receive_subscribed_event_types(self):
         """A handler only receives events of the type it subscribed to."""
@@ -140,13 +145,15 @@ class TestInProcessEventPublisher:
         publisher.subscribe(ClassCreated, class_created_handler)
         publisher.subscribe(ClassUpdated, class_updated_handler)
 
-        publisher.publish(created_event)
-        publisher.publish(updated_event)
+        failures1 = publisher.publish(created_event)
+        failures2 = publisher.publish(updated_event)
 
         assert len(class_created_events) == 1
         assert class_created_events[0] is created_event
         assert len(class_updated_events) == 1
         assert class_updated_events[0] is updated_event
+        assert failures1 == []
+        assert failures2 == []
 
     def test_multiple_events_dispatched_correctly(self):
         """Multiple published events are all dispatched to their respective handlers."""
@@ -172,12 +179,14 @@ class TestInProcessEventPublisher:
             taxonomy_id="tax-789",
         )
 
-        publisher.publish(event1)
-        publisher.publish(event2)
+        failures1 = publisher.publish(event1)
+        failures2 = publisher.publish(event2)
 
         assert len(received_events) == 2
         assert received_events[0] is event1
         assert received_events[1] is event2
+        assert failures1 == []
+        assert failures2 == []
 
     def test_handler_exception_isolation(self):
         """If one handler raises an exception, other handlers still execute."""
@@ -205,11 +214,16 @@ class TestInProcessEventPublisher:
         publisher.subscribe(ClassCreated, successful_handler_2)
 
         # Publishing should not raise, even though one handler fails
-        publisher.publish(event)
+        failures = publisher.publish(event)
 
         # Both successful handlers should have executed despite the failing handler
         assert len(successful_handlers) == 2
         assert successful_handlers == [1, 2]
+
+        # Verify that the failure is reported
+        assert len(failures) == 1
+        assert failures[0][0] == "failing_handler"
+        assert isinstance(failures[0][1], ValueError)
 
     def test_multiple_handler_exceptions_isolated(self):
         """Multiple failing handlers do not prevent other handlers from executing."""
@@ -237,11 +251,18 @@ class TestInProcessEventPublisher:
         publisher.subscribe(ClassCreated, failing_handler_2)
 
         # Publishing should not raise despite multiple failing handlers
-        publisher.publish(event)
+        failures = publisher.publish(event)
 
         # Successful handler should have executed
         assert len(successful_handlers) == 1
         assert successful_handlers[0] == "success"
+
+        # Both failures should be reported
+        assert len(failures) == 2
+        assert failures[0][0] == "failing_handler_1"
+        assert isinstance(failures[0][1], RuntimeError)
+        assert failures[1][0] == "failing_handler_2"
+        assert isinstance(failures[1][1], ValueError)
 
     def test_exception_does_not_propagate_to_caller(self):
         """Exceptions in handlers do not propagate to the publish() caller."""
@@ -260,4 +281,9 @@ class TestInProcessEventPublisher:
         publisher.subscribe(ClassCreated, failing_handler)
 
         # publish() should not raise even when handler fails
-        publisher.publish(event)
+        failures = publisher.publish(event)
+
+        # Failure should be reported but not raised
+        assert len(failures) == 1
+        assert failures[0][0] == "failing_handler"
+        assert isinstance(failures[0][1], Exception)

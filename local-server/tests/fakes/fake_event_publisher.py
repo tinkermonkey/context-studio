@@ -6,7 +6,7 @@ from typing import Callable, TypeVar
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
-from domain.ontology.events import DomainEvent
+from domain.events import DomainEvent
 from utils.logger import get_logger
 
 

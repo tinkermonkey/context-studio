@@ -49,12 +49,32 @@ class LoggingConfig(BaseModel):
     backup_count: int = Field(default=5, description="Number of backup log files")
 
 
+class LLMConfig(BaseModel):
+    """LLM provider configuration section"""
+
+    openai_api_key: str = Field(default="", description="OpenAI API key")
+    anthropic_api_key: str = Field(default="", description="Anthropic API key")
+
+
+class ReferenceConfig(BaseModel):
+    """Reference data configuration section"""
+
+    cache_db_path: str = Field(
+        default="./reference_api_cache.db", description="Reference API cache database path"
+    )
+    reference_db_path: str = Field(
+        default="./reference.db", description="Reference data database path"
+    )
+
+
 class Settings(BaseModel):
     """Centralized configuration settings"""
 
     server: ServerConfig = Field(default_factory=ServerConfig)
     database: DatabaseConfig = Field(default_factory=DatabaseConfig)
     logging: LoggingConfig = Field(default_factory=LoggingConfig)
+    llm: LLMConfig = Field(default_factory=LLMConfig)
+    reference: ReferenceConfig = Field(default_factory=ReferenceConfig)
 
 
 class ConfigurationManager:

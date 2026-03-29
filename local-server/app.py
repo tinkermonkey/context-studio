@@ -15,31 +15,55 @@ Architecture:
 from contextlib import asynccontextmanager
 
 import uvicorn
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 
-from config import ConfigurationManager
+from config import get_config_manager, get_settings
 from utils.logger import get_logger
 
 # Import adapters
 from adapters.persistence.sqlite.connection import DatabaseManager
 from adapters.persistence.sqlite.ontology_repo import SQLiteOntologyRepository
+from adapters.persistence.sqlite.extraction_repo import SQLiteExtractionRepository
+from adapters.persistence.sqlite.pipeline_repo import SQLitePipelineRepository
+from adapters.persistence.sqlite.change_repo import SQLiteChangeRepository
 from adapters.embedding.sentence_transformer import SentenceTransformerEmbedding
 from adapters.llm.provider_router import LLMProviderRouter
 from adapters.events.in_process import InProcessEventPublisher
+from adapters.events.change_recorder import ChangeEventRecorder
 from adapters.graph.networkx_engine import NetworkXGraphEngine
 from adapters.graph.rdflib_engine import RDFLibQueryEngine
+from adapters.nlp.spacy_processor import SpacyNLPProcessor
+from adapters.reference.conceptnet import ConceptNetSource
+from adapters.reference.dbpedia import DBpediaSource
+from adapters.reference.wikidata import WikidataSource
+from adapters.reference.schema_org import SchemaOrgSource
+from adapters.reference.cache import CachedReferenceSource
 
 # Import domain services
 from domain.ontology.services import OntologyService
 from domain.graph.services import GraphAnalysisService
+from domain.extraction.services import ExtractionService
+from domain.extraction.ports import ReferenceSource
+from domain.pipeline.services import PipelineService
 from domain.ontology.events import GraphInvalidated
+from domain.extraction.events import ExtractionCompleted
+from domain.pipeline.events import PipelineExecuted
 
 # Import routes
 from adapters.web.ontology_routes import router as ontology_router
 from adapters.web.graph_routes import router as graph_router
+from adapters.web.extraction_routes import router as extraction_router
+from adapters.web.pipeline_routes import router as pipeline_router
+from adapters.web.reference_routes import router as reference_router
+from adapters.web.schemas.admin import SystemHealthResponse
 
 logger = get_logger(__name__)
+
+
+# ==================== Event Handlers ====================
+# Note: Event handlers are created and wired during application startup in the lifespan
+# function. See the "Wire event subscriptions" section below.
 
 
 @asynccontextmanager
@@ -62,8 +86,8 @@ async def lifespan(app: FastAPI):
     """
     logger.info("Starting Context Studio server")
 
-    # Load configuration
-    config_manager = ConfigurationManager()
+    # Get configuration from global singleton
+    config_manager = get_config_manager()
     settings = config_manager.get_settings()
     logger.info("Configuration loaded from config.json")
 
@@ -82,22 +106,53 @@ async def lifespan(app: FastAPI):
         # --- Driven Adapters (Infrastructure) ---
 
         # Persistence
-        # Create a new session for the repository
-        local_session = db_manager.get_local_session()
-        ontology_repo = SQLiteOntologyRepository(local_session)
-        logger.info("OntologyRepository created")
+        # Repositories receive session factories, not sessions.
+        # Per-request sessions are created in route dependencies.
+        local_session_factory = db_manager.get_local_session_factory()
+        ontology_repo = SQLiteOntologyRepository(local_session_factory)
+        extraction_repo = SQLiteExtractionRepository(local_session_factory)
+        logger.info("OntologyRepository and ExtractionRepository created")
+
+        operations_session_factory = db_manager.get_operations_session_factory()
+        pipeline_repo = SQLitePipelineRepository(operations_session_factory)
+        logger.info("PipelineRepository created")
 
         # Embedding service
         embedding_service = SentenceTransformerEmbedding(model_name="all-MiniLM-L12-v2")
         logger.info("EmbeddingService created")
 
         # LLM provider router
-        LLMProviderRouter()
+        llm_router = LLMProviderRouter(
+            openai_api_key=settings.llm.openai_api_key,
+            anthropic_api_key=settings.llm.anthropic_api_key,
+        )
         logger.info("LLM provider router created")
+
+        # NLP processor
+        nlp_processor = SpacyNLPProcessor()
+        logger.info("NLP processor created")
+
+        # Reference sources (wrapped in cache)
+        raw_sources: list[ReferenceSource] = [
+            ConceptNetSource(),
+            DBpediaSource(),
+            WikidataSource(),
+            SchemaOrgSource(),
+        ]
+        reference_sources: list[ReferenceSource] = [
+            CachedReferenceSource(src, cache_db_path=settings.reference.cache_db_path)
+            for src in raw_sources
+        ]
+        logger.info("Reference sources created and wrapped with caching")
 
         # Event publisher
         event_publisher = InProcessEventPublisher()
         logger.info("Event publisher created")
+
+        # Change event recorder for audit trail
+        change_repo = SQLiteChangeRepository(local_session_factory)
+        change_recorder = ChangeEventRecorder(change_repo)
+        logger.info("ChangeEventRecorder created")
 
         # --- Domain Services ---
 
@@ -117,16 +172,47 @@ async def lifespan(app: FastAPI):
         )
         logger.info("GraphAnalysisService created and wired with adapters")
 
+        extraction_service = ExtractionService(
+            ontology_repo=ontology_repo,
+            embedding_service=embedding_service,
+            llm=llm_router,
+            nlp=nlp_processor,
+            reference_sources=reference_sources,
+            event_publisher=event_publisher,
+            extraction_repo=extraction_repo,
+        )
+        logger.info("ExtractionService created and wired with adapters")
+
+        pipeline_service = PipelineService(
+            pipeline_repo=pipeline_repo,
+            llm=llm_router,
+            event_publisher=event_publisher,
+        )
+        logger.info("PipelineService created and wired with adapters")
+
         # --- Wire event subscriptions ---
 
         event_publisher.subscribe(GraphInvalidated, graph_service.on_graph_invalidated)
         logger.info("Event subscription: GraphInvalidated -> GraphAnalysisService.on_graph_invalidated")
 
+        event_publisher.subscribe(ExtractionCompleted, change_recorder.on_extraction_completed)
+        logger.info("Event subscription: ExtractionCompleted -> ChangeEventRecorder.on_extraction_completed")
+
+        event_publisher.subscribe(PipelineExecuted, change_recorder.on_pipeline_executed)
+        logger.info("Event subscription: PipelineExecuted -> ChangeEventRecorder.on_pipeline_executed")
+
         # --- Store services in app.state for dependency injection ---
 
         app.state.ontology_service = ontology_service
         app.state.graph_service = graph_service
+        app.state.extraction_service = extraction_service
+        app.state.pipeline_service = pipeline_service
         app.state.db_manager = db_manager
+        app.state.reference_sources = reference_sources
+
+        # Store adapters needed for health checks
+        app.state.nlp_processor = nlp_processor
+        app.state.llm_router = llm_router
 
         logger.info("Services registered in app.state for dependency injection")
 
@@ -136,7 +222,6 @@ async def lifespan(app: FastAPI):
 
     finally:
         # Cleanup
-        local_session.close()
         db_manager.dispose()
         embedding_service.cleanup()
         logger.info("Cleanup completed")
@@ -144,9 +229,8 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(lifespan=lifespan, title="Context Studio", version="1.0.0")
 
-# Load settings for middleware configuration
-config_manager = ConfigurationManager()
-settings = config_manager.get_settings()
+# Get settings for middleware configuration from global singleton
+settings = get_settings()
 
 # Add CORS middleware
 app.add_middleware(
@@ -160,12 +244,48 @@ app.add_middleware(
 # Include routers (these are the FastAPI APIRouter instances)
 app.include_router(ontology_router)
 app.include_router(graph_router)
+app.include_router(extraction_router)
+app.include_router(pipeline_router)
+app.include_router(reference_router)
 
 
-@app.get("/api/health")
-async def health():
-    """Health check endpoint"""
-    return {"status": "ok"}
+@app.get("/api/health", response_model=SystemHealthResponse)
+async def health(request: Request) -> SystemHealthResponse:
+    """
+    Health check endpoint.
+
+    Returns the overall system health status along with the readiness of optional
+    components (NLP pipeline, LLM providers).
+
+    Health status rules:
+    - "healthy": All core systems operational
+    - "degraded": Optional components (NLP, LLM) unavailable but system functional
+    - "unhealthy": Critical systems (database) unavailable
+
+    Returns:
+        SystemHealthResponse with status and component readiness
+    """
+    # Check NLP pipeline readiness
+    nlp_processor = getattr(request.app.state, "nlp_processor", None)
+    nlp_ready = nlp_processor.is_ready() if nlp_processor else False
+
+    # Check available LLM providers
+    llm_router = getattr(request.app.state, "llm_router", None)
+    llm_models = llm_router.list_available_models() if llm_router else []
+
+    # Determine overall status
+    # Core systems are always up if we got this far
+    # Degraded if optional components are missing or unavailable
+    if not nlp_ready or not llm_models:
+        status = "degraded"
+    else:
+        status = "healthy"
+
+    return SystemHealthResponse(
+        status=status,
+        nlp_pipeline_ready=nlp_ready,
+        llm_providers_available=llm_models,
+    )
 
 
 if __name__ == "__main__":

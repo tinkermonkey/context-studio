@@ -23,6 +23,7 @@ from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 
 from domain.ontology.services import OntologyService
+from utils.async_executor import run_sync_in_executor
 from domain.ontology.exceptions import EntityNotFoundError, CircularReferenceError, DuplicateEntityError, OntologyError
 
 from adapters.web.dependencies import get_ontology_service
@@ -95,9 +96,10 @@ async def create_taxonomy(
         HTTPException: 400 if title is empty, 409 if title already exists
     """
     try:
-        taxonomy = service.create_taxonomy(
-            title=request.title,
-            description=request.description,
+        taxonomy = await run_sync_in_executor(
+            service.create_taxonomy,
+            request.title,
+            request.description,
         )
         return TaxonomyResponse.model_validate(taxonomy)
     except (ValueError, DuplicateEntityError) as exc:
@@ -116,7 +118,7 @@ async def list_taxonomies(
         ListResponse containing all taxonomies
     """
     try:
-        taxonomies = service.list_taxonomies()
+        taxonomies = await run_sync_in_executor(service.list_taxonomies)
         return ListResponse(
             items=[TaxonomyResponse.model_validate(t) for t in taxonomies],
             total=len(taxonomies),
@@ -147,7 +149,7 @@ async def get_taxonomy(
         HTTPException: 404 if taxonomy not found
     """
     try:
-        taxonomy = service.get_taxonomy(taxonomy_id)
+        taxonomy = await run_sync_in_executor(service.get_taxonomy, taxonomy_id)
         return TaxonomyResponse.model_validate(taxonomy)
     except EntityNotFoundError as exc:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc))
@@ -174,7 +176,8 @@ async def update_taxonomy(
         HTTPException: 400 if invalid input, 404 if not found, 409 if title exists
     """
     try:
-        taxonomy = service.update_taxonomy(
+        taxonomy = await run_sync_in_executor(
+            service.update_taxonomy,
             taxonomy_id=taxonomy_id,
             title=request.title,
             description=request.description,
@@ -201,7 +204,7 @@ async def delete_taxonomy(
         HTTPException: 404 if not found, 422 if it has concept schemes
     """
     try:
-        service.delete_taxonomy(taxonomy_id)
+        await run_sync_in_executor(service.delete_taxonomy, taxonomy_id)
     except (EntityNotFoundError, OntologyError) as exc:
         status_code, message = _handle_domain_error(exc)
         raise HTTPException(status_code=status_code, detail=message)
@@ -230,7 +233,8 @@ async def create_concept_scheme(
         HTTPException: 400 if invalid, 404 if taxonomy not found, 409 if title exists
     """
     try:
-        scheme = service.create_scheme(
+        scheme = await run_sync_in_executor(
+            service.create_scheme,
             taxonomy_id=taxonomy_id,
             title=request.title,
             description=request.description,
@@ -257,7 +261,7 @@ async def list_concept_schemes(
         ListResponse containing matching concept schemes
     """
     try:
-        schemes = service.list_concept_schemes(taxonomy_id=taxonomy_id)
+        schemes = await run_sync_in_executor(service.list_concept_schemes, taxonomy_id)
         return ListResponse(
             items=[ConceptSchemeResponse.model_validate(s) for s in schemes],
             total=len(schemes),

@@ -1,6 +1,8 @@
-pytest
+pytest>=9.0
+pytest-asyncio>=1.0
 black
 ruff
 mypy
 typing-extensions
 types-networkx
+types-SQLAlchemy
