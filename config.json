@@ -1,0 +1,26 @@
+{
+  "server": {
+    "host": "127.0.0.1",
+    "port": 8000,
+    "cors_origins": [
+      "*"
+    ]
+  },
+  "database": {
+    "local_db_path": "./local.db",
+    "operations_db_path": "./operations.db"
+  },
+  "logging": {
+    "log_level": "INFO",
+    "max_bytes": 10485760,
+    "backup_count": 5
+  },
+  "llm": {
+    "openai_api_key": "",
+    "anthropic_api_key": ""
+  },
+  "reference": {
+    "cache_db_path": "./reference_api_cache.db",
+    "reference_db_path": "./reference.db"
+  }
+}
