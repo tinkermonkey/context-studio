@@ -2,7 +2,9 @@
 FastAPI routes for the Knowledge Extraction bounded context.
 
 This module implements HTTP endpoints for knowledge extraction:
-- POST /api/extract — Extract entities from text
+- POST /api/extract — Extract entities from text through coordinated layers
+- POST /api/analyze_text — Analyze text for linguistic features and named entities
+- POST /api/enrich_from_references — Enrich extracted entities with external knowledge
 
 Each endpoint is a thin adapter that:
 1. Receives HTTP request + parsed Pydantic schema
@@ -23,6 +25,8 @@ from utils.async_executor import run_sync_in_executor
 
 from adapters.web.dependencies import get_extraction_service
 from adapters.web.schemas.extraction import (
+    AnalyzeTextRequest,
+    EnrichFromReferencesRequest,
     ExtractRequest,
     ExtractionResultSchema,
     ExtractedEntitySchema,
@@ -129,6 +133,92 @@ async def extract_entities(
     """
     try:
         result = await run_sync_in_executor(service.extract, request.text)
+        return _to_schema(result)
+    except Exception as exc:
+        status_code, message = _handle_domain_error(exc)
+        raise HTTPException(status_code=status_code, detail=message)
+
+
+@router.post("/analyze_text", response_model=ExtractionResultSchema, status_code=status.HTTP_200_OK)
+async def analyze_text(
+    request: AnalyzeTextRequest,
+    service: ExtractionService = Depends(get_extraction_service),
+) -> ExtractionResultSchema:
+    """
+    Analyze text for linguistic features and named entities.
+
+    This use case focuses on NLP-based analysis including tokenization,
+    entity recognition, language detection, and linguistic features.
+    It may also provide context from the knowledge graph.
+
+    Layers executed:
+    - Layer 0: Knowledge graph context (uses embedding similarity)
+    - Layer 2: NLP gap-filling (focused entity recognition)
+
+    Args:
+        request: AnalyzeTextRequest with text to analyze
+        service: ExtractionService from dependency injection
+
+    Returns:
+        ExtractionResultSchema containing analyzed entities and linguistic metadata
+
+    Raises:
+        HTTPException: 400 if text is empty/invalid, 500 for internal errors
+    """
+    try:
+        result = await run_sync_in_executor(service.analyze_text, request.text)
+        return _to_schema(result)
+    except Exception as exc:
+        status_code, message = _handle_domain_error(exc)
+        raise HTTPException(status_code=status_code, detail=message)
+
+
+@router.post("/enrich_from_references", response_model=ExtractionResultSchema, status_code=status.HTTP_200_OK)
+async def enrich_from_references(
+    request: EnrichFromReferencesRequest,
+    service: ExtractionService = Depends(get_extraction_service),
+) -> ExtractionResultSchema:
+    """
+    Enrich extracted entities with external reference knowledge.
+
+    This use case takes already-extracted entities and enriches them with
+    URIs, metadata, and relationships from external knowledge sources such as
+    ConceptNet, DBpedia, Wikidata, and schema.org.
+
+    Layers executed:
+    - Layer 3: Reference source enrichment (adds URIs and metadata)
+
+    Args:
+        request: EnrichFromReferencesRequest with text and entities to enrich
+        service: ExtractionService from dependency injection
+
+    Returns:
+        ExtractionResultSchema with enriched entities and reference metadata
+
+    Raises:
+        HTTPException: 400 if text is empty/invalid, 500 for internal errors
+    """
+    try:
+        from domain.extraction.entities import ExtractedEntity
+
+        extracted_entities = [
+            ExtractedEntity(
+                id=entity.id,
+                label=entity.label,
+                entity_type=entity.entity_type,
+                source_layer=entity.source_layer,
+                confidence=entity.confidence,
+                uri=entity.uri,
+                description=entity.description,
+                matched_class_id=None,
+                properties=entity.properties,
+            )
+            for entity in request.extracted_entities
+        ]
+
+        result = await run_sync_in_executor(
+            service.enrich_from_references, request.text, extracted_entities
+        )
         return _to_schema(result)
     except Exception as exc:
         status_code, message = _handle_domain_error(exc)

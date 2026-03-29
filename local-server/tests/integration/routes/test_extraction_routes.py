@@ -311,3 +311,171 @@ class TestExtractionRoutes:
             datetime.fromisoformat(body["created_at"])
         except ValueError:
             pytest.fail("created_at is not in valid ISO 8601 format")
+
+    def test_analyze_text_returns_200_with_valid_text(self, client):
+        """POST /api/analyze_text returns 200 with valid text input."""
+        response = client.post(
+            "/api/analyze_text",
+            json={"text": "SQLite is an embedded relational database."}
+        )
+        assert response.status_code == status.HTTP_200_OK
+
+    def test_analyze_text_response_structure(self, client):
+        """POST /api/analyze_text response has correct structure."""
+        response = client.post(
+            "/api/analyze_text",
+            json={"text": "SQLite is an embedded relational database."}
+        )
+        body = response.json()
+
+        # Verify all required fields
+        assert "id" in body
+        assert "text" in body
+        assert "extracted_entities" in body
+        assert "layers_executed" in body
+        assert "total_duration_ms" in body
+        assert "created_at" in body
+
+    def test_analyze_text_layers_executed_count(self, client):
+        """POST /api/analyze_text response includes only 2 layers (KG context and NLP)."""
+        response = client.post(
+            "/api/analyze_text",
+            json={"text": "SQLite is an embedded relational database."}
+        )
+        body = response.json()
+
+        # Should have executed 2 layers: Layer 0 (KG) and Layer 2 (NLP)
+        assert len(body["layers_executed"]) == 2
+
+    def test_analyze_text_with_empty_text_returns_400(self, client):
+        """POST /api/analyze_text with empty text returns 422."""
+        response = client.post(
+            "/api/analyze_text",
+            json={"text": ""}
+        )
+        assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
+
+    def test_analyze_text_with_whitespace_only_returns_400(self, client):
+        """POST /api/analyze_text with whitespace-only text returns 400."""
+        response = client.post(
+            "/api/analyze_text",
+            json={"text": "   \n\t  "}
+        )
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+
+    def test_enrich_from_references_returns_200_with_valid_input(self, client):
+        """POST /api/enrich_from_references returns 200 with valid text and entities."""
+        entities = [
+            {
+                "id": str(uuid4()),
+                "label": "Database",
+                "entity_type": "CONCEPT",
+                "source_layer": 1,
+                "confidence": 0.9,
+                "uri": None,
+                "description": None,
+                "properties": {}
+            }
+        ]
+        response = client.post(
+            "/api/enrich_from_references",
+            json={
+                "text": "SQLite is a database.",
+                "extracted_entities": entities
+            }
+        )
+        assert response.status_code == status.HTTP_200_OK
+
+    def test_enrich_from_references_response_structure(self, client):
+        """POST /api/enrich_from_references response has correct structure."""
+        entities = [
+            {
+                "id": str(uuid4()),
+                "label": "Database",
+                "entity_type": "CONCEPT",
+                "source_layer": 1,
+                "confidence": 0.9,
+                "uri": None,
+                "description": None,
+                "properties": {}
+            }
+        ]
+        response = client.post(
+            "/api/enrich_from_references",
+            json={
+                "text": "SQLite is a database.",
+                "extracted_entities": entities
+            }
+        )
+        body = response.json()
+
+        # Verify all required fields
+        assert "id" in body
+        assert "text" in body
+        assert "extracted_entities" in body
+        assert "layers_executed" in body
+        assert "total_duration_ms" in body
+        assert "created_at" in body
+
+    def test_enrich_from_references_layers_executed_count(self, client):
+        """POST /api/enrich_from_references response includes only Layer 3 (reference enrichment)."""
+        entities = [
+            {
+                "id": str(uuid4()),
+                "label": "Database",
+                "entity_type": "CONCEPT",
+                "source_layer": 1,
+                "confidence": 0.9,
+                "uri": None,
+                "description": None,
+                "properties": {}
+            }
+        ]
+        response = client.post(
+            "/api/enrich_from_references",
+            json={
+                "text": "SQLite is a database.",
+                "extracted_entities": entities
+            }
+        )
+        body = response.json()
+
+        # Should have executed only 1 layer: Layer 3 (Reference enrichment)
+        assert len(body["layers_executed"]) == 1
+        assert body["layers_executed"][0]["layer_number"] == 3
+
+    def test_enrich_from_references_with_empty_text_returns_400(self, client):
+        """POST /api/enrich_from_references with empty text returns 400."""
+        entities = [
+            {
+                "id": str(uuid4()),
+                "label": "Database",
+                "entity_type": "CONCEPT",
+                "source_layer": 1,
+                "confidence": 0.9,
+                "uri": None,
+                "description": None,
+                "properties": {}
+            }
+        ]
+        response = client.post(
+            "/api/enrich_from_references",
+            json={
+                "text": "",
+                "extracted_entities": entities
+            }
+        )
+        assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
+
+    def test_enrich_from_references_with_empty_entities_list(self, client):
+        """POST /api/enrich_from_references with empty entities list returns 200."""
+        response = client.post(
+            "/api/enrich_from_references",
+            json={
+                "text": "SQLite is a database.",
+                "extracted_entities": []
+            }
+        )
+        assert response.status_code == status.HTTP_200_OK
+        body = response.json()
+        assert len(body["extracted_entities"]) == 0
