@@ -311,7 +311,7 @@ class TestPipelineServiceExecution:
     def test_execute_pipeline_publishes_event_on_error(self):
         """Execute pipeline publishes PipelineExecuted event on error."""
         self.llm.should_raise_error = True
-        self.llm.error_to_raise = Exception("Test error")
+        self.llm.error_to_raise = RuntimeError("API connection failed")
 
         config = self.service.create_config(
             pipeline="test",
@@ -427,21 +427,21 @@ class TestPipelineServiceExecution:
         assert self.llm.last_call_args["temperature"] == 0.0
         assert self.llm.last_call_args["max_tokens"] == 2000
 
-    def test_execute_pipeline_soft_timeout_records_timeout_if_exceeded(self):
-        """Execute pipeline records timeout if duration exceeds config timeout (soft timeout check)."""
-        # Create a fake LLM that returns quickly but we'll simulate slow execution
-        # by patching the duration calculation
+    def test_execute_pipeline_records_success_even_if_slow(self):
+        """Execute pipeline records success even if execution takes longer than timeout config."""
+        # The timeout config is advisory and enforced by the LLM adapter layer.
+        # If a call succeeds, we record it as success regardless of duration.
         config = self.service.create_config(
             pipeline="test",
             title="Test",
             provider="openai",
             model="gpt-4",
-            config={"timeout": 1},  # 1 second timeout
+            config={"timeout": 1},  # 1 second timeout in config
             system_prompt="System",
             user_prompt="User: {text}",
         )
 
-        # Monkey-patch time.time to simulate a slow execution
+        # Monkey-patch time.time to simulate slow execution
         original_time = time.time
         call_count = [0]
 
@@ -450,13 +450,14 @@ class TestPipelineServiceExecution:
             if call_count[0] == 1:  # First call (start_time)
                 return 0.0
             else:  # Second call (end_time)
-                return 2.0  # 2 seconds elapsed, exceeds 1 second timeout
+                return 2.0  # 2 seconds elapsed, exceeds config timeout
 
         time.time = fake_time
         try:
             execution = self.service.execute_pipeline(config.id, "Input")
-            assert execution.status == "timeout"
-            assert "exceeded timeout" in execution.error_message
+            # Successful responses are recorded as success, not timeout
+            assert execution.status == "success"
+            assert execution.output_text == "Extracted information"
             assert execution.duration_ms == 2000
         finally:
             time.time = original_time

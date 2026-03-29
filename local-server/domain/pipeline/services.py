@@ -277,8 +277,9 @@ class PipelineService:
                 error_message=str(e),
                 timestamp=datetime.now(timezone.utc),
             )
-        except (ValueError, RuntimeError) as e:
+        except (ValueError, RuntimeError, TypeError, KeyError) as e:
             # Record error execution for expected application-level errors
+            # Excludes system errors (MemoryError, SystemError, etc.) and KeyboardInterrupt
             duration_ms = int((time.time() - start_time) * 1000)
             execution = Execution(
                 id=execution_id,
