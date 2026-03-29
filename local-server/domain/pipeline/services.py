@@ -244,44 +244,41 @@ class PipelineService:
 
             duration_ms = int((time.time() - start_time) * 1000)
 
-            # Soft timeout check: This is a post-hoc check that only applies to completed calls.
-            # It does not interrupt a hanging LLM call; that responsibility belongs to the LLM
-            # adapter layer. If a call returns successfully but took longer than the configured
-            # timeout, we record it as a timeout execution rather than a success.
-            if duration_ms > timeout_seconds * 1000:
-                execution = Execution(
-                    id=execution_id,
-                    pipeline_config_id=config_id,
-                    input_text=input_text,
-                    output_text="",
-                    provider=config.provider,
-                    model=config.model,
-                    tokens_in=0,
-                    tokens_out=0,
-                    duration_ms=duration_ms,
-                    status="timeout",
-                    error_message=f"Execution exceeded timeout of {timeout_seconds} seconds",
-                    timestamp=datetime.now(timezone.utc),
-                )
-            else:
-                # Record successful execution
-                execution = Execution(
-                    id=execution_id,
-                    pipeline_config_id=config_id,
-                    input_text=input_text,
-                    output_text=response.content,
-                    provider=config.provider,
-                    model=response.model,
-                    tokens_in=response.tokens_in,
-                    tokens_out=response.tokens_out,
-                    duration_ms=duration_ms,
-                    status="success",
-                    error_message=None,
-                    timestamp=datetime.now(timezone.utc),
-                )
+            # Record successful execution
+            execution = Execution(
+                id=execution_id,
+                pipeline_config_id=config_id,
+                input_text=input_text,
+                output_text=response.content,
+                provider=config.provider,
+                model=response.model,
+                tokens_in=response.tokens_in,
+                tokens_out=response.tokens_out,
+                duration_ms=duration_ms,
+                status="success",
+                error_message=None,
+                timestamp=datetime.now(timezone.utc),
+            )
 
-        except Exception as e:
-            # Record error execution
+        except TimeoutError as e:
+            # Record timeout execution
+            duration_ms = int((time.time() - start_time) * 1000)
+            execution = Execution(
+                id=execution_id,
+                pipeline_config_id=config_id,
+                input_text=input_text,
+                output_text="",
+                provider=config.provider,
+                model=config.model,
+                tokens_in=0,
+                tokens_out=0,
+                duration_ms=duration_ms,
+                status="timeout",
+                error_message=str(e),
+                timestamp=datetime.now(timezone.utc),
+            )
+        except (ValueError, RuntimeError) as e:
+            # Record error execution for expected application-level errors
             duration_ms = int((time.time() - start_time) * 1000)
             execution = Execution(
                 id=execution_id,

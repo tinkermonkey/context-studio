@@ -75,6 +75,8 @@ class ExecutionResponse(BaseModel):
     id: str = Field(..., description="Unique identifier for this execution")
     pipeline_config_id: str = Field(..., description="ID of the executed PipelineConfiguration")
     output_text: str = Field(..., description="The generated response from the LLM")
+    provider: str = Field(..., description="LLM provider that executed the request")
+    model: str = Field(..., description="Model that generated the response")
     tokens_in: int = Field(..., description="Number of tokens in the input")
     tokens_out: int = Field(..., description="Number of tokens in the output")
     duration_ms: int = Field(..., description="Execution duration in milliseconds")
