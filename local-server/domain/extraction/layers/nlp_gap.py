@@ -5,6 +5,7 @@ Fills gaps in entity extraction using NLP processors to catch entities
 missed by prior layers.
 """
 from domain.extraction.entities import ExtractedEntity
+from domain.extraction.exceptions import NLPProcessorNotReadyError
 from domain.extraction.ports import NLPProcessor
 from domain.extraction.value_objects import LayerInput, LayerOutput
 
@@ -30,9 +31,8 @@ def execute(input: LayerInput, nlp: NLPProcessor) -> LayerOutput:
 
     # Check if NLP processor is ready
     if not nlp.is_ready():
-        return LayerOutput(
-            entities=[],
-            metadata={"reason": "nlp_processor_not_ready"},
+        raise NLPProcessorNotReadyError(
+            "NLP processor is not ready. Model may not be installed or initialization failed."
         )
 
     # Extract entities using NLP
@@ -51,9 +51,7 @@ def execute(input: LayerInput, nlp: NLPProcessor) -> LayerOutput:
             label=nlp_entity.text.strip(),
             entity_type=nlp_entity.label,  # spaCy label
             source_layer=2,
-            # Use 0.75 default for NLP extraction - represents typical reliability
-            # of en_core_web_sm model for general entity recognition
-            confidence=0.75,
+            confidence=nlp_entity.confidence,  # Use adapter-provided confidence
             uri=nlp_entity.linked_uri,
             properties={
                 "char_offset_start": nlp_entity.start,

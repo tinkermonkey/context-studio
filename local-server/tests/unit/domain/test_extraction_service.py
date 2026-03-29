@@ -697,9 +697,15 @@ class TestExceptionHandling:
         # Should not raise despite NLP not being ready - LLM will extract entities
         result = service.extract("Test text")
 
-        assert result.layers_executed[2].success is True
-        assert result.layers_executed[2].entities_found == 0
+        # Layer 2 (NLP) should be recorded as failed since processor not ready
+        # This allows users to distinguish "no entities found" from "processor unavailable"
+        assert result.layers_executed[2].success is False
+        assert result.layers_executed[2].error_message is not None
+        assert "not ready" in result.layers_executed[2].error_message.lower()
+        # But other layers should still execute successfully
         assert result.layers_executed[3].success is True
+        # And we should still get a result with entities from other layers
+        assert result.total_duration_ms >= 0
 
     def test_reference_source_not_available_allows_continuation(self):
         """Reference source not available doesn't stop extraction."""

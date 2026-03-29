@@ -52,6 +52,36 @@ class ExtractedEntity:
 
 
 @dataclass
+class ExtractionLayer:
+    """
+    A first-class domain entity representing an extraction layer.
+
+    Extraction layers are the core components of the extraction pipeline.
+    Each layer has identity (layer_number), behavior (execute as a callable),
+    and metadata describing its purpose and constraints.
+
+    Attributes:
+        layer_number: Numeric identifier for the layer (0–3)
+        name: Human-readable name of the layer
+        description: Purpose and role of this layer in the extraction pipeline
+        min_confidence: Minimum confidence threshold for results from this layer
+        enabled: Whether this layer participates in extraction
+    """
+    layer_number: int
+    name: str
+    description: str = ""
+    min_confidence: float = 0.0
+    enabled: bool = True
+
+    def __post_init__(self) -> None:
+        """Validate extraction layer invariants."""
+        if not 0 <= self.layer_number <= 3:
+            raise ValueError(f"layer_number must be 0-3, got {self.layer_number}")
+        if not 0.0 <= self.min_confidence <= 1.0:
+            raise ValueError(f"min_confidence must be 0.0-1.0, got {self.min_confidence}")
+
+
+@dataclass
 class ProcessingMetrics:
     """
     Metrics for an extraction layer or full extraction operation.

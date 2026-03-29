@@ -40,7 +40,6 @@ class ExtractionService:
     # Deduplication priority: higher source_layer values deprioritized
     # Priority order: 1 > 0 > 2 > 3
     DEDUP_PRIORITY = {1: 0, 0: 1, 2: 2, 3: 3}
-    SIMILARITY_THRESHOLD = 0.85
 
     def __init__(
         self,
@@ -51,6 +50,7 @@ class ExtractionService:
         reference_sources: list[ReferenceSource],
         event_publisher: EventPublisher,
         extraction_repo: ExtractionRepository,
+        similarity_threshold: float = 0.85,
     ) -> None:
         """
         Initialize the service with port dependencies.
@@ -63,7 +63,14 @@ class ExtractionService:
             reference_sources: List of reference source ports
             event_publisher: Port for publishing domain events
             extraction_repo: Port for persisting extraction results
+            similarity_threshold: Threshold for entity label similarity matching (0.0–1.0).
+                Defaults to 0.85. Entities with normalized label similarity >= this value
+                are considered duplicates.
         """
+        if not 0.0 <= similarity_threshold <= 1.0:
+            raise ValueError(
+                f"similarity_threshold must be between 0.0 and 1.0, got {similarity_threshold}"
+            )
         self._ontology_repo = ontology_repo
         self._embedding_service = embedding_service
         self._llm = llm
@@ -71,6 +78,7 @@ class ExtractionService:
         self._reference_sources = reference_sources
         self._event_publisher = event_publisher
         self._extraction_repo = extraction_repo
+        self._similarity_threshold = similarity_threshold
 
     def extract(self, text: str) -> ExtractionResult:
         """
@@ -337,8 +345,19 @@ class ExtractionService:
             created_at=datetime.now(timezone.utc),
         )
 
-        # Persist the result
-        self._extraction_repo.save_extraction_result(result)
+        # Persist the result, but don't fail the entire extraction if persistence fails
+        try:
+            self._extraction_repo.save_extraction_result(result)
+        except Exception as exc:
+            _logger.error(
+                "Failed to persist extraction result %s: %s: %s",
+                result_id,
+                type(exc).__name__,
+                str(exc),
+                exc_info=exc,
+            )
+            # Continue: the result is still returned and the event is still published
+            # Persistence failure should not cause loss of extraction results
 
         # Publish completion event
         self._event_publisher.publish(ExtractionCompleted(
@@ -420,8 +439,10 @@ class ExtractionService:
         Deduplication rules:
         1. Sort by priority: source_layer 1 > 0 > 2 > 3
         2. Group entities by ID first (exact match) - entities with same ID are same entity
-        3. Then group entities with normalized labels matching >= 0.85 similarity
-        4. Keep the highest-priority entity in each group
+           Special case: if one entity is from layer 3 (reference enrichment), prefer it
+           as it contains additional enrichment data from external sources
+        3. Then group entities with normalized labels matching >= threshold similarity
+        4. Keep the highest-priority entity in each group (or enriched version if available)
         5. Return deduplicated entities sorted by priority
 
         Args:
@@ -451,6 +472,8 @@ class ExtractionService:
 
             # Find all entities duplicated with this one
             used_indices.add(i)
+            entity_to_keep = entity
+            found_enrichment = False
 
             for j in range(i + 1, len(sorted_entities)):
                 if j in used_indices:
@@ -460,18 +483,23 @@ class ExtractionService:
 
                 # First check: same ID means same entity
                 if entity.id == other.id:
+                    # Prefer enriched copy from reference layer (layer 3)
+                    # If we have a layer 3 entity, prefer it over the original for its additional data
+                    if other.source_layer == 3 and not found_enrichment:
+                        entity_to_keep = other
+                        found_enrichment = True
                     used_indices.add(j)
                     continue
 
                 # Second check: label similarity for cross-layer matches
                 label_similarity = self._normalized_similarity(entity.label, other.label)
 
-                if label_similarity >= self.SIMILARITY_THRESHOLD:
+                if label_similarity >= self._similarity_threshold:
                     # Mark as duplicate of current entity (higher priority)
                     used_indices.add(j)
 
-            # Keep the highest-priority entity from the group
-            deduplicated.append(entity)
+            # Keep the highest-priority entity from the group (or enriched version if found)
+            deduplicated.append(entity_to_keep)
 
         return deduplicated
 
