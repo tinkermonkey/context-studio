@@ -516,3 +516,52 @@ class TestPipelineServiceExecution:
         assert execution.tokens_in == 0
         assert execution.tokens_out == 0
         assert execution.duration_ms >= 0
+
+    def test_execute_pipeline_records_timeout_execution(self):
+        """Execute pipeline records execution with timeout status when LLM times out."""
+        # Set up LLM to raise TimeoutError
+        self.llm.should_raise_error = True
+        self.llm.error_to_raise = TimeoutError("Request exceeded timeout of 30s")
+
+        config = self.service.create_config(
+            pipeline="extractor",
+            title="Test Extractor",
+            provider="openai",
+            model="gpt-4",
+            config={"timeout": 30},
+            system_prompt="Extract",
+            user_prompt="Input: {text}",
+        )
+
+        execution = self.service.execute_pipeline(config.id, "Test input")
+
+        assert execution.status == "timeout"
+        assert "timeout" in execution.error_message.lower()
+        assert execution.output_text == ""
+        assert execution.tokens_in == 0
+        assert execution.tokens_out == 0
+        assert execution.duration_ms >= 0
+
+    def test_execute_pipeline_publishes_event_on_timeout(self):
+        """Execute pipeline publishes PipelineExecuted event with timeout status on timeout."""
+        self.llm.should_raise_error = True
+        self.llm.error_to_raise = TimeoutError("Request exceeded timeout")
+
+        config = self.service.create_config(
+            pipeline="test",
+            title="Test",
+            provider="openai",
+            model="gpt-4",
+            config={"timeout": 30},
+            system_prompt="System",
+            user_prompt="User: {text}",
+        )
+
+        execution = self.service.execute_pipeline(config.id, "Input")
+
+        events = self.event_pub.get_events_of_type(PipelineExecuted)
+        assert len(events) == 1
+        event = events[0]
+        assert event.status == "timeout"
+        assert event.execution_id == execution.id
+        assert event.pipeline_id == config.id

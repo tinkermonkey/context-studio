@@ -90,6 +90,7 @@ class TestEmbeddingService:
         assert similarity_same > similarity_different
 
 
+@pytest.mark.nlp
 class TestNLPProcessor:
     """Tests for NLP processor integration."""
 

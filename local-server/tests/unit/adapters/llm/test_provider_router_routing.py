@@ -51,6 +51,7 @@ class MockLLMProvider:
         return self._available_models
 
 
+@pytest.mark.llm
 class TestLLMProviderRouter:
     """Tests for LLMProviderRouter adapter."""
 

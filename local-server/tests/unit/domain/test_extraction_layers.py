@@ -11,6 +11,7 @@ import os
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
+import pytest
 
 from domain.extraction import layers
 from domain.extraction.entities import ExtractedEntity
@@ -354,6 +355,7 @@ class TestLayer0KGContext:
 # Tests for Layer 1: LLM Extract
 # ============================================================================
 
+@pytest.mark.llm
 class TestLayer1LLMExtract:
     """Tests for LLM extraction layer."""
 
