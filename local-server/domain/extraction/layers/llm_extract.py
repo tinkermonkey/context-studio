@@ -5,6 +5,7 @@ Extracts entities using prompts sent to language models.
 """
 import json
 import logging
+from types import MappingProxyType
 
 from domain.extraction.entities import ExtractedEntity
 from domain.extraction.value_objects import LayerInput, LayerOutput
@@ -30,14 +31,14 @@ def execute(input: LayerInput, llm: LLMProvider) -> LayerOutput:
     entities: list[ExtractedEntity] = []
 
     if not input.text or not input.text.strip():
-        return LayerOutput(entities=entities, metadata={"reason": "empty_text"})
+        return LayerOutput(entities=tuple(entities), metadata=MappingProxyType({"reason": "empty_text"}))
 
     # Check if LLM is available
     available_models = llm.list_available_models()
     if not available_models:
         return LayerOutput(
-            entities=[],
-            metadata={"reason": "no_models_available"},
+            entities=tuple(),
+            metadata=MappingProxyType({"reason": "no_models_available"}),
         )
 
     model = available_models[0]  # Use first available model
@@ -101,6 +102,12 @@ JSON Array:"""
                     json_match = response_text[start_idx:end_idx]
             except ValueError:
                 parse_error = "No closing JSON bracket found in response"
+        elif response_text:
+            parse_error = "LLM response contained no JSON array"
+            _logger.warning(
+                "LLM response contained no JSON array: %s",
+                response_text[:200],
+            )
 
         if json_match:
             try:
@@ -130,16 +137,16 @@ JSON Array:"""
                     entities.append(extracted)
 
     # Build metadata with parse error info if applicable
-    metadata = {
+    metadata_dict = {
         "model": model,
         "tokens_in": response.tokens_in,
         "tokens_out": response.tokens_out,
         "finish_reason": response.finish_reason,
     }
     if parse_error:
-        metadata["parse_error"] = parse_error
+        metadata_dict["parse_error"] = parse_error
 
     return LayerOutput(
-        entities=entities,
-        metadata=metadata,
+        entities=tuple(entities),
+        metadata=MappingProxyType(metadata_dict),
     )

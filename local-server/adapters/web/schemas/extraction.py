@@ -3,6 +3,8 @@ Pydantic schemas for the Knowledge Extraction bounded context.
 
 Request schemas (for POST):
 - ExtractRequest
+- AnalyzeTextRequest
+- EnrichFromReferencesRequest
 
 Response schemas (for GET/returns):
 - ExtractedEntitySchema
@@ -17,12 +19,6 @@ from typing import Optional
 from pydantic import BaseModel, Field
 
 
-class ExtractRequest(BaseModel):
-    """Request to extract entities from text."""
-
-    text: str = Field(..., description="Text to extract entities from", min_length=1)
-
-
 class ExtractedEntitySchema(BaseModel):
     """Response containing extracted entity data."""
 
@@ -33,6 +29,7 @@ class ExtractedEntitySchema(BaseModel):
     confidence: float = Field(..., description="Confidence score from 0.0 to 1.0")
     uri: Optional[str] = Field(None, description="Optional URI to external knowledge base")
     description: Optional[str] = Field(None, description="Optional description of the entity")
+    matched_class_id: Optional[str] = Field(None, description="ID of matched ontology class, if any")
     properties: dict = Field(default_factory=dict, description="Optional metadata key-value pairs")
 
     class Config:
@@ -71,3 +68,24 @@ class ExtractionResultSchema(BaseModel):
 
     class Config:
         from_attributes = True
+
+
+class ExtractRequest(BaseModel):
+    """Request to extract entities from text."""
+
+    text: str = Field(..., description="Text to extract entities from", min_length=1)
+
+
+class AnalyzeTextRequest(BaseModel):
+    """Request to analyze text for linguistic features and named entities."""
+
+    text: str = Field(..., description="Text to analyze", min_length=1)
+
+
+class EnrichFromReferencesRequest(BaseModel):
+    """Request to enrich extracted entities with external reference knowledge."""
+
+    text: str = Field(..., description="Original source text", min_length=1)
+    extracted_entities: list[ExtractedEntitySchema] = Field(
+        ..., description="Entities to enrich with reference knowledge"
+    )

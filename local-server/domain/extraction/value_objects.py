@@ -5,6 +5,7 @@ Immutable dataclasses representing immutable values in the extraction domain.
 """
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
+from types import MappingProxyType
 
 if TYPE_CHECKING:
     from domain.extraction.entities import ExtractedEntity
@@ -50,8 +51,8 @@ class LayerInput:
         kg_context: Optional knowledge graph context from layer 0
     """
     text: str
-    existing_entities: list["ExtractedEntity"]
-    kg_context: list[str] | None = None
+    existing_entities: tuple["ExtractedEntity", ...]
+    kg_context: tuple[dict, ...] | None = None
 
 
 @dataclass(frozen=True)
@@ -60,8 +61,8 @@ class LayerOutput:
     Output produced by each extraction layer.
 
     Attributes:
-        entities: List of entities found by this layer
-        metadata: Optional key-value metadata about the extraction
+        entities: Tuple of entities found by this layer
+        metadata: Optional immutable key-value metadata about the extraction
     """
-    entities: list["ExtractedEntity"]
-    metadata: dict | None = None
+    entities: tuple["ExtractedEntity", ...]
+    metadata: MappingProxyType | None = None

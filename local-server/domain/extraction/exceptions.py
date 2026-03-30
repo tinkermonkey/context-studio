@@ -16,3 +16,8 @@ class LayerExecutionError(ExtractionError):
 class InvalidInputError(ExtractionError):
     """Raised when extraction input is invalid or malformed."""
     pass
+
+
+class NLPProcessorNotReadyError(ExtractionError):
+    """Raised when NLP processor is not available or not initialized."""
+    pass

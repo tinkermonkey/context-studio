@@ -10,6 +10,7 @@ from __future__ import annotations
 import logging
 import time
 from datetime import datetime, timezone
+from types import MappingProxyType
 from uuid import uuid4
 
 from domain.ontology.ports import OntologyRepository, EmbeddingService
@@ -40,7 +41,6 @@ class ExtractionService:
     # Deduplication priority: higher source_layer values deprioritized
     # Priority order: 1 > 0 > 2 > 3
     DEDUP_PRIORITY = {1: 0, 0: 1, 2: 2, 3: 3}
-    SIMILARITY_THRESHOLD = 0.85
 
     def __init__(
         self,
@@ -51,6 +51,7 @@ class ExtractionService:
         reference_sources: list[ReferenceSource],
         event_publisher: EventPublisher,
         extraction_repo: ExtractionRepository,
+        similarity_threshold: float = 0.85,
     ) -> None:
         """
         Initialize the service with port dependencies.
@@ -63,7 +64,14 @@ class ExtractionService:
             reference_sources: List of reference source ports
             event_publisher: Port for publishing domain events
             extraction_repo: Port for persisting extraction results
+            similarity_threshold: Threshold for entity label similarity matching (0.0–1.0).
+                Defaults to 0.85. Entities with normalized label similarity >= this value
+                are considered duplicates.
         """
+        if not 0.0 <= similarity_threshold <= 1.0:
+            raise ValueError(
+                f"similarity_threshold must be between 0.0 and 1.0, got {similarity_threshold}"
+            )
         self._ontology_repo = ontology_repo
         self._embedding_service = embedding_service
         self._llm = llm
@@ -71,6 +79,7 @@ class ExtractionService:
         self._reference_sources = reference_sources
         self._event_publisher = event_publisher
         self._extraction_repo = extraction_repo
+        self._similarity_threshold = similarity_threshold
 
     def extract(self, text: str) -> ExtractionResult:
         """
@@ -121,7 +130,7 @@ class ExtractionService:
         # Layer 1: LLM extraction
         layer_1_input = LayerInput(
             text=text,
-            existing_entities=all_entities.copy(),
+            existing_entities=tuple(all_entities.copy()),
         )
         layer_1_output = self._execute_layer(
             layer_num=1,
@@ -137,7 +146,7 @@ class ExtractionService:
         # Layer 2: NLP gap-filling
         layer_2_input = LayerInput(
             text=text,
-            existing_entities=all_entities.copy(),
+            existing_entities=tuple(all_entities.copy()),
         )
         layer_2_output = self._execute_layer(
             layer_num=2,
@@ -153,7 +162,7 @@ class ExtractionService:
         # Layer 3: Reference source enrichment
         layer_3_input = LayerInput(
             text=text,
-            existing_entities=all_entities.copy(),
+            existing_entities=tuple(all_entities.copy()),
         )
         layer_3_output = self._execute_layer(
             layer_num=3,
@@ -220,7 +229,7 @@ class ExtractionService:
         # Layer 2: NLP gap-filling (primary for text analysis)
         layer_2_input = LayerInput(
             text=text,
-            existing_entities=all_entities.copy(),
+            existing_entities=tuple(all_entities.copy()),
         )
         layer_2_output = self._execute_layer(
             layer_num=2,
@@ -274,8 +283,8 @@ class ExtractionService:
         # Layer 3: Reference source enrichment
         layer_3_input = LayerInput(
             text=text,
-            existing_entities=all_entities.copy(),
-            kg_context=[],
+            existing_entities=tuple(all_entities.copy()),
+            kg_context=None,
         )
         layer_3_output = self._execute_layer(
             layer_num=3,
@@ -337,15 +346,37 @@ class ExtractionService:
             created_at=datetime.now(timezone.utc),
         )
 
-        # Persist the result
-        self._extraction_repo.save_extraction_result(result)
+        # Persist the result, but don't fail the entire extraction if persistence fails.
+        # This is critical: extraction results from expensive LLM calls must never be
+        # lost due to a persistence layer failure. The result is still returned to the
+        # caller and the domain event is still published even if the database save fails.
+        try:
+            self._extraction_repo.save_extraction_result(result)
+        except Exception as exc:
+            _logger.error(
+                "Failed to persist extraction result %s: %s: %s. Result will still be returned to caller.",
+                result_id,
+                type(exc).__name__,
+                str(exc),
+                exc_info=exc,
+            )
+            # IMPORTANT: Continue execution. The result is still returned to the caller
+            # and the completion event is still published. Persistence is fire-and-forget.
 
         # Publish completion event
-        self._event_publisher.publish(ExtractionCompleted(
+        failures = self._event_publisher.publish(ExtractionCompleted(
             result_id=result_id,
             entity_count=len(deduplicated),
             duration_ms=duration_ms,
         ))
+        if failures:
+            handler_names = ", ".join(name for name, _ in failures)
+            _logger.warning(
+                "Event handlers failed for ExtractionCompleted (result_id=%s): %s. "
+                "Extraction result is returned but audit trail may have gaps.",
+                result_id,
+                handler_names,
+            )
 
         return result
 
@@ -411,7 +442,7 @@ class ExtractionService:
             ))
 
             # Return empty output so subsequent layers can continue
-            return LayerOutput(entities=[], metadata={"error": error_msg})
+            return LayerOutput(entities=tuple(), metadata=MappingProxyType({"error": error_msg}))
 
     def _deduplicate(self, entities: list[ExtractedEntity]) -> list[ExtractedEntity]:
         """
@@ -419,16 +450,19 @@ class ExtractionService:
 
         Deduplication rules:
         1. Sort by priority: source_layer 1 > 0 > 2 > 3
-        2. Group entities by ID first (exact match) - entities with same ID are same entity
-        3. Then group entities with normalized labels matching >= 0.85 similarity
-        4. Keep the highest-priority entity in each group
-        5. Return deduplicated entities sorted by priority
+        2. Group entities by ID first (exact match) - entities with same ID are the same entity
+           Special handling: if multiple entities share an ID, prefer enriched copies from layer 3
+           (reference layer) as they contain additional URIs, descriptions, and metadata from
+           external sources. Never discard enrichment data when deduplicating.
+        3. Then group entities with normalized labels matching >= threshold similarity
+        4. Keep the highest-priority entity in each group, or the enriched version if available
+        5. Return deduplicated entities
 
         Args:
             entities: Unfiltered list of entities from all layers
 
         Returns:
-            Deduplicated list of entities
+            Deduplicated list of entities with enrichment data preserved
         """
         if not entities:
             return []
@@ -437,6 +471,7 @@ class ExtractionService:
             return entities
 
         # Sort by priority (lower value = higher priority)
+        # Layer 1 (LLM) has highest priority, then Layer 0 (KG), then Layer 2 (NLP), then Layer 3 (Reference)
         sorted_entities = sorted(
             entities,
             key=lambda e: self.DEDUP_PRIORITY.get(e.source_layer, 999),
@@ -449,8 +484,10 @@ class ExtractionService:
             if i in used_indices:
                 continue
 
-            # Find all entities duplicated with this one
+            # Find all entities that represent the same concept
             used_indices.add(i)
+            entity_to_keep = entity
+            enriched_from_layer_3 = False
 
             for j in range(i + 1, len(sorted_entities)):
                 if j in used_indices:
@@ -458,20 +495,35 @@ class ExtractionService:
 
                 other = sorted_entities[j]
 
-                # First check: same ID means same entity
                 if entity.id == other.id:
+                    # When reference enrichment (layer 3) provides additional metadata,
+                    # merge it with the higher-priority entity for maximum data retention
+                    if other.source_layer == 3 and not enriched_from_layer_3:
+                        entity_to_keep = ExtractedEntity(
+                            id=entity.id,
+                            label=entity.label,
+                            entity_type=entity.entity_type,
+                            source_layer=entity.source_layer,
+                            confidence=max(entity.confidence, other.confidence),
+                            uri=other.uri or entity.uri,
+                            description=other.description or entity.description,
+                            matched_class_id=entity.matched_class_id,
+                            properties={
+                                **(entity.properties or {}),
+                                **(other.properties or {}),
+                            },
+                        )
+                        enriched_from_layer_3 = True
                     used_indices.add(j)
                     continue
 
-                # Second check: label similarity for cross-layer matches
                 label_similarity = self._normalized_similarity(entity.label, other.label)
 
-                if label_similarity >= self.SIMILARITY_THRESHOLD:
-                    # Mark as duplicate of current entity (higher priority)
+                if label_similarity >= self._similarity_threshold:
+                    # Mark as used; higher-priority entity is kept
                     used_indices.add(j)
 
-            # Keep the highest-priority entity from the group
-            deduplicated.append(entity)
+            deduplicated.append(entity_to_keep)
 
         return deduplicated
 

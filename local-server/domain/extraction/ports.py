@@ -50,6 +50,9 @@ class NLPEntity:
         end: Character offset where entity ends
         confidence: Confidence score from 0.0 to 1.0
         linked_uri: Optional URI linking to external knowledge base
+
+    Raises:
+        ValueError: If confidence is not 0.0-1.0 or end < start
     """
     text: str
     label: str
@@ -57,6 +60,13 @@ class NLPEntity:
     end: int
     confidence: float
     linked_uri: str | None = None
+
+    def __post_init__(self) -> None:
+        """Validate NLP entity invariants."""
+        if not 0.0 <= self.confidence <= 1.0:
+            raise ValueError(f"confidence must be 0.0-1.0, got {self.confidence}")
+        if self.end < self.start:
+            raise ValueError(f"end must be >= start, got start={self.start}, end={self.end}")
 
 
 @dataclass(frozen=True)
@@ -87,12 +97,20 @@ class ReferenceResult:
         description: Optional longer description
         confidence: Confidence score from 0.0 to 1.0
         source: Which reference source returned this result
+
+    Raises:
+        ValueError: If confidence is not 0.0-1.0
     """
     uri: str
     label: str
     description: str | None = None
     confidence: float = 1.0
     source: str = ""
+
+    def __post_init__(self) -> None:
+        """Validate reference result invariants."""
+        if not 0.0 <= self.confidence <= 1.0:
+            raise ValueError(f"confidence must be 0.0-1.0, got {self.confidence}")
 
 
 @dataclass(frozen=True)

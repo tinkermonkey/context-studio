@@ -9,6 +9,7 @@ for event distribution.
 
 from __future__ import annotations
 
+import logging
 from datetime import datetime, timezone
 from uuid import uuid4
 
@@ -24,6 +25,8 @@ from .events import (
 )
 from .exceptions import EntityNotFoundError, CircularReferenceError, DuplicateEntityError, OntologyError
 from .ports import OntologyRepository, EmbeddingService
+
+_logger = logging.getLogger(__name__)
 
 
 class OntologyService:
@@ -91,10 +94,18 @@ class OntologyService:
         )
         taxonomy = self._repository.save_taxonomy(taxonomy)
 
-        self._event_publisher.publish(TaxonomyCreated(
+        failures = self._event_publisher.publish(TaxonomyCreated(
             taxonomy_id=taxonomy_id,
             title=title if title else "",
         ))
+        if failures:
+            handler_names = ", ".join(name for name, _ in failures)
+            _logger.warning(
+                "Event handlers failed for TaxonomyCreated (taxonomy_id=%s): %s. "
+                "Taxonomy is created but audit trail may have gaps.",
+                taxonomy_id,
+                handler_names,
+            )
 
         return taxonomy
 
@@ -189,12 +200,20 @@ class OntologyService:
             old_values["description"] = old_description
             new_values["description"] = description
 
-        self._event_publisher.publish(TaxonomyUpdated(
+        failures = self._event_publisher.publish(TaxonomyUpdated(
             taxonomy_id=taxonomy_id,
             changed_fields=changed,
             old_values=old_values,
             new_values=new_values,
         ))
+        if failures:
+            handler_names = ", ".join(name for name, _ in failures)
+            _logger.warning(
+                "Event handlers failed for TaxonomyUpdated (taxonomy_id=%s): %s. "
+                "Taxonomy is updated but audit trail may have gaps.",
+                taxonomy_id,
+                handler_names,
+            )
 
         return taxonomy
 
@@ -238,12 +257,20 @@ class OntologyService:
         taxonomy.rename(new_title)
         taxonomy = self._repository.save_taxonomy(taxonomy)
 
-        self._event_publisher.publish(TaxonomyUpdated(
+        failures = self._event_publisher.publish(TaxonomyUpdated(
             taxonomy_id=taxonomy_id,
             changed_fields=("title",),
             old_values={"title": old_title},
             new_values={"title": new_title},
         ))
+        if failures:
+            handler_names = ", ".join(name for name, _ in failures)
+            _logger.warning(
+                "Event handlers failed for TaxonomyUpdated (taxonomy_id=%s): %s. "
+                "Taxonomy is updated but audit trail may have gaps.",
+                taxonomy_id,
+                handler_names,
+            )
 
         return taxonomy
 
@@ -271,10 +298,18 @@ class OntologyService:
 
         self._repository.delete_taxonomy(taxonomy_id)
 
-        self._event_publisher.publish(TaxonomyDeleted(
+        failures = self._event_publisher.publish(TaxonomyDeleted(
             taxonomy_id=taxonomy_id,
             title=taxonomy.title,
         ))
+        if failures:
+            handler_names = ", ".join(name for name, _ in failures)
+            _logger.warning(
+                "Event handlers failed for TaxonomyDeleted (taxonomy_id=%s): %s. "
+                "Taxonomy is deleted but audit trail may have gaps.",
+                taxonomy_id,
+                handler_names,
+            )
 
     # ConceptScheme operations
 
@@ -324,11 +359,19 @@ class OntologyService:
         )
         scheme = self._repository.save_concept_scheme(scheme)
 
-        self._event_publisher.publish(SchemeCreated(
+        failures = self._event_publisher.publish(SchemeCreated(
             concept_scheme_id=scheme_id,
             title=title,
             taxonomy_id=taxonomy_id,
         ))
+        if failures:
+            handler_names = ", ".join(name for name, _ in failures)
+            _logger.warning(
+                "Event handlers failed for SchemeCreated (concept_scheme_id=%s): %s. "
+                "Scheme is created but audit trail may have gaps.",
+                scheme_id,
+                handler_names,
+            )
 
         return scheme
 
@@ -402,13 +445,21 @@ class OntologyService:
         scheme.rename(new_title)
         scheme = self._repository.save_concept_scheme(scheme)
 
-        self._event_publisher.publish(SchemeUpdated(
+        failures = self._event_publisher.publish(SchemeUpdated(
             concept_scheme_id=concept_scheme_id,
             taxonomy_id=scheme.taxonomy_id,
             changed_fields=("title",),
             old_values={"title": old_title},
             new_values={"title": new_title},
         ))
+        if failures:
+            handler_names = ", ".join(name for name, _ in failures)
+            _logger.warning(
+                "Event handlers failed for SchemeUpdated (concept_scheme_id=%s): %s. "
+                "Scheme is updated but audit trail may have gaps.",
+                concept_scheme_id,
+                handler_names,
+            )
 
         return scheme
 
@@ -436,11 +487,19 @@ class OntologyService:
 
         self._repository.delete_concept_scheme(concept_scheme_id)
 
-        self._event_publisher.publish(SchemeDeleted(
+        failures = self._event_publisher.publish(SchemeDeleted(
             concept_scheme_id=concept_scheme_id,
             taxonomy_id=scheme.taxonomy_id,
             title=scheme.title,
         ))
+        if failures:
+            handler_names = ", ".join(name for name, _ in failures)
+            _logger.warning(
+                "Event handlers failed for SchemeDeleted (concept_scheme_id=%s): %s. "
+                "Scheme is deleted but audit trail may have gaps.",
+                concept_scheme_id,
+                handler_names,
+            )
 
     # Class operations
 
@@ -516,12 +575,20 @@ class OntologyService:
         )
         cls = self._repository.save_class(cls)
 
-        self._event_publisher.publish(ClassCreated(
+        failures = self._event_publisher.publish(ClassCreated(
             class_id=class_id,
             title=title,
             concept_scheme_id=concept_scheme_id,
             taxonomy_id=scheme.taxonomy_id,
         ))
+        if failures:
+            handler_names = ", ".join(name for name, _ in failures)
+            _logger.warning(
+                "Event handlers failed for ClassCreated (class_id=%s): %s. "
+                "Class is created but audit trail may have gaps.",
+                class_id,
+                handler_names,
+            )
 
         return cls
 
@@ -644,12 +711,20 @@ class OntologyService:
             old_values["description"] = old_description
             new_values["description"] = cls.description
 
-        self._event_publisher.publish(ClassUpdated(
+        failures = self._event_publisher.publish(ClassUpdated(
             class_id=class_id,
             changed_fields=changed,
             old_values=old_values,
             new_values=new_values,
         ))
+        if failures:
+            handler_names = ", ".join(name for name, _ in failures)
+            _logger.warning(
+                "Event handlers failed for ClassUpdated (class_id=%s): %s. "
+                "Class is updated but audit trail may have gaps.",
+                class_id,
+                handler_names,
+            )
 
         return cls
 
@@ -683,24 +758,47 @@ class OntologyService:
 
         for relationship in orphaned_relationships:
             self._repository.delete_relationship(relationship.id)
-            self._event_publisher.publish(RelationshipDeleted(
+            failures = self._event_publisher.publish(RelationshipDeleted(
                 relationship_id=relationship.id,
                 source_id=relationship.source_id,
                 target_id=relationship.target_id,
                 property_definition_id=relationship.property_definition_id,
             ))
+            if failures:
+                handler_names = ", ".join(name for name, _ in failures)
+                _logger.warning(
+                    "Event handlers failed for RelationshipDeleted (relationship_id=%s): %s. "
+                    "Relationship is deleted but audit trail may have gaps.",
+                    relationship.id,
+                    handler_names,
+                )
 
         self._repository.delete_class(class_id)
 
-        self._event_publisher.publish(ClassDeleted(
+        failures = self._event_publisher.publish(ClassDeleted(
             class_id=class_id,
             title=cls.title,
         ))
+        if failures:
+            handler_names = ", ".join(name for name, _ in failures)
+            _logger.warning(
+                "Event handlers failed for ClassDeleted (class_id=%s): %s. "
+                "Class is deleted but audit trail may have gaps.",
+                class_id,
+                handler_names,
+            )
 
-        self._event_publisher.publish(GraphInvalidated(
+        failures = self._event_publisher.publish(GraphInvalidated(
             taxonomy_id=cls.taxonomy_id,
             reason="class_deleted",
         ))
+        if failures:
+            handler_names = ", ".join(name for name, _ in failures)
+            _logger.warning(
+                "Event handlers failed for GraphInvalidated: %s. "
+                "Graph invalidation event may not be recorded in audit trail.",
+                handler_names,
+            )
 
     def move_class(self, class_id: str, new_parent_id: str | None) -> Class:
         """
@@ -777,16 +875,31 @@ class OntologyService:
 
         cls = self._repository.save_class(cls)
 
-        self._event_publisher.publish(ClassMoved(
+        failures = self._event_publisher.publish(ClassMoved(
             class_id=class_id,
             old_parent_id=old_parent_id,
             new_parent_id=new_parent_id,
         ))
+        if failures:
+            handler_names = ", ".join(name for name, _ in failures)
+            _logger.warning(
+                "Event handlers failed for ClassMoved (class_id=%s): %s. "
+                "Class move is recorded but audit trail may have gaps.",
+                class_id,
+                handler_names,
+            )
 
-        self._event_publisher.publish(GraphInvalidated(
+        failures = self._event_publisher.publish(GraphInvalidated(
             taxonomy_id=cls.taxonomy_id,
             reason="class_moved",
         ))
+        if failures:
+            handler_names = ", ".join(name for name, _ in failures)
+            _logger.warning(
+                "Event handlers failed for GraphInvalidated: %s. "
+                "Graph invalidation event may not be recorded in audit trail.",
+                handler_names,
+            )
 
         return cls
 
@@ -863,17 +976,32 @@ class OntologyService:
         # Determine which taxonomy this relationship belongs to using the source class
         taxonomy_id = source_class.taxonomy_id
 
-        self._event_publisher.publish(RelationshipCreated(
+        failures = self._event_publisher.publish(RelationshipCreated(
             relationship_id=relationship_id,
             source_id=source_id,
             target_id=target_id,
             property_definition_id=property_definition_id,
         ))
+        if failures:
+            handler_names = ", ".join(name for name, _ in failures)
+            _logger.warning(
+                "Event handlers failed for RelationshipCreated (relationship_id=%s): %s. "
+                "Relationship is created but audit trail may have gaps.",
+                relationship_id,
+                handler_names,
+            )
 
-        self._event_publisher.publish(GraphInvalidated(
+        failures = self._event_publisher.publish(GraphInvalidated(
             taxonomy_id=taxonomy_id,
             reason="relationship_created",
         ))
+        if failures:
+            handler_names = ", ".join(name for name, _ in failures)
+            _logger.warning(
+                "Event handlers failed for GraphInvalidated: %s. "
+                "Graph invalidation event may not be recorded in audit trail.",
+                handler_names,
+            )
 
         return relationship
 
@@ -930,12 +1058,20 @@ class OntologyService:
 
         self._repository.delete_relationship(relationship_id)
 
-        self._event_publisher.publish(RelationshipDeleted(
+        failures = self._event_publisher.publish(RelationshipDeleted(
             relationship_id=relationship_id,
             source_id=relationship.source_id,
             target_id=relationship.target_id,
             property_definition_id=relationship.property_definition_id,
         ))
+        if failures:
+            handler_names = ", ".join(name for name, _ in failures)
+            _logger.warning(
+                "Event handlers failed for RelationshipDeleted (relationship_id=%s): %s. "
+                "Relationship is deleted but audit trail may have gaps.",
+                relationship_id,
+                handler_names,
+            )
 
         # Determine which taxonomy this relationship belonged to (for graph invalidation)
         # Try source: first as a Class, then as an Individual (get its class then taxonomy)
@@ -968,10 +1104,17 @@ class OntologyService:
 
         # Only emit GraphInvalidated if we found a valid taxonomy
         if taxonomy_id:
-            self._event_publisher.publish(GraphInvalidated(
+            failures = self._event_publisher.publish(GraphInvalidated(
                 taxonomy_id=taxonomy_id,
                 reason="relationship_deleted",
             ))
+            if failures:
+                handler_names = ", ".join(name for name, _ in failures)
+                _logger.warning(
+                    "Event handlers failed for GraphInvalidated: %s. "
+                    "Graph invalidation event may not be recorded in audit trail.",
+                    handler_names,
+                )
 
     # PropertyDefinition operations
 
@@ -1024,11 +1167,19 @@ class OntologyService:
         )
         prop_def = self._repository.save_property_definition(prop_def)
 
-        self._event_publisher.publish(PropertyDefinitionCreated(
+        failures = self._event_publisher.publish(PropertyDefinitionCreated(
             property_id=property_id,
             identifier=identifier,
             title=title,
         ))
+        if failures:
+            handler_names = ", ".join(name for name, _ in failures)
+            _logger.warning(
+                "Event handlers failed for PropertyDefinitionCreated (property_id=%s): %s. "
+                "Property definition is created but audit trail may have gaps.",
+                property_id,
+                handler_names,
+            )
 
         return prop_def
 
@@ -1105,11 +1256,19 @@ class OntologyService:
         prop_def.last_modified = datetime.now(timezone.utc)
         prop_def = self._repository.save_property_definition(prop_def)
 
-        self._event_publisher.publish(PropertyDefinitionUpdated(
+        failures = self._event_publisher.publish(PropertyDefinitionUpdated(
             property_id=property_id,
             title=prop_def.title,
             description=prop_def.description,
         ))
+        if failures:
+            handler_names = ", ".join(name for name, _ in failures)
+            _logger.warning(
+                "Event handlers failed for PropertyDefinitionUpdated (property_id=%s): %s. "
+                "Property definition is updated but audit trail may have gaps.",
+                property_id,
+                handler_names,
+            )
 
         return prop_def
 
@@ -1135,7 +1294,15 @@ class OntologyService:
 
         self._repository.delete_property_definition(property_id)
 
-        self._event_publisher.publish(PropertyDefinitionDeleted(property_id=property_id))
+        failures = self._event_publisher.publish(PropertyDefinitionDeleted(property_id=property_id))
+        if failures:
+            handler_names = ", ".join(name for name, _ in failures)
+            _logger.warning(
+                "Event handlers failed for PropertyDefinitionDeleted (property_id=%s): %s. "
+                "Property definition is deleted but audit trail may have gaps.",
+                property_id,
+                handler_names,
+            )
 
     def update_concept_scheme(
         self,
@@ -1178,10 +1345,18 @@ class OntologyService:
         scheme.last_modified = datetime.now(timezone.utc)
         scheme = self._repository.save_concept_scheme(scheme)
 
-        self._event_publisher.publish(ConceptSchemeUpdated(
+        failures = self._event_publisher.publish(ConceptSchemeUpdated(
             concept_scheme_id=concept_scheme_id,
             title=scheme.title,
         ))
+        if failures:
+            handler_names = ", ".join(name for name, _ in failures)
+            _logger.warning(
+                "Event handlers failed for ConceptSchemeUpdated (concept_scheme_id=%s): %s. "
+                "Scheme is updated but audit trail may have gaps.",
+                concept_scheme_id,
+                handler_names,
+            )
 
         return scheme
 

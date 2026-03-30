@@ -74,6 +74,7 @@ class SQLiteExtractionRepository:
                     "entity_type": entity.entity_type,
                     "source_layer": entity.source_layer,
                     "confidence": entity.confidence,
+                    "matched_class_id": entity.matched_class_id,
                     "uri": entity.uri,
                     "description": entity.description,
                     "properties": entity.properties,
@@ -191,6 +192,7 @@ class SQLiteExtractionRepository:
                 entity_type=entity_data.get("entity_type", ""),  # type: ignore[assignment]
                 source_layer=entity_data.get("source_layer", 0),  # type: ignore[assignment]
                 confidence=entity_data.get("confidence", 0.0),  # type: ignore[assignment]
+                matched_class_id=entity_data.get("matched_class_id"),  # type: ignore[assignment]
                 uri=entity_data.get("uri"),  # type: ignore[assignment]
                 description=entity_data.get("description"),  # type: ignore[assignment]
                 properties=entity_data.get("properties", {}),  # type: ignore[assignment]

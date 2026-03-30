@@ -210,7 +210,7 @@ class TestLayer0KGContext:
             embedding_service=FakeEmbeddingService(),
         )
 
-        assert output.entities == []
+        assert output.entities == ()
         assert output.metadata["reason"] == "empty_text"
 
     def test_kg_context_whitespace_text_returns_empty(self):
@@ -221,7 +221,7 @@ class TestLayer0KGContext:
             embedding_service=FakeEmbeddingService(),
         )
 
-        assert output.entities == []
+        assert output.entities == ()
         assert output.metadata["reason"] == "empty_text"
 
     def test_kg_context_no_entities_in_repo(self):
@@ -232,7 +232,7 @@ class TestLayer0KGContext:
             embedding_service=FakeEmbeddingService(),
         )
 
-        assert output.entities == []
+        assert output.entities == ()
         # When there are no entities in the repo, matches_found is 0
         assert output.metadata["matches_found"] == 0
 
@@ -363,7 +363,7 @@ class TestLayer1LLMExtract:
         input_data = LayerInput(text="", existing_entities=[])
         output = layers.llm_extract.execute(input_data, FakeLLMProvider())
 
-        assert output.entities == []
+        assert output.entities == ()
         assert output.metadata["reason"] == "empty_text"
 
     def test_llm_extract_no_available_models_returns_empty(self):
@@ -375,7 +375,7 @@ class TestLayer1LLMExtract:
         input_data = LayerInput(text="Test text", existing_entities=[])
         output = layers.llm_extract.execute(input_data, NoModelsLLM())
 
-        assert output.entities == []
+        assert output.entities == ()
         assert output.metadata["reason"] == "no_models_available"
 
     def test_llm_extract_simple_json_array(self):
@@ -441,7 +441,7 @@ class TestLayer1LLMExtract:
         input_data = LayerInput(text="Test text", existing_entities=[])
         output = layers.llm_extract.execute(input_data, FakeLLMProvider(json_response))
 
-        assert output.entities == []
+        assert output.entities == ()
 
     def test_llm_extract_missing_label_skipped(self):
         """Entities without label are skipped."""
@@ -449,7 +449,7 @@ class TestLayer1LLMExtract:
         input_data = LayerInput(text="Test text", existing_entities=[])
         output = layers.llm_extract.execute(input_data, FakeLLMProvider(json_response))
 
-        assert output.entities == []
+        assert output.entities == ()
 
     def test_llm_extract_empty_label_skipped(self):
         """Entities with empty label are skipped."""
@@ -457,7 +457,7 @@ class TestLayer1LLMExtract:
         input_data = LayerInput(text="Test text", existing_entities=[])
         output = layers.llm_extract.execute(input_data, FakeLLMProvider(json_response))
 
-        assert output.entities == []
+        assert output.entities == ()
 
     def test_llm_extract_with_context_from_prior_entities(self):
         """LLM receives context about prior entities."""
@@ -484,20 +484,20 @@ class TestLayer2NLPGapFilling:
         input_data = LayerInput(text="", existing_entities=[])
         output = layers.nlp_gap.execute(input_data, FakeNLPProcessor())
 
-        assert output.entities == []
+        assert output.entities == ()
         assert output.metadata["reason"] == "empty_text"
 
     def test_nlp_gap_processor_not_ready(self):
-        """NLP processor not ready returns empty output."""
+        """NLP processor not ready raises exception."""
+        from domain.extraction.exceptions import NLPProcessorNotReadyError
+
         class NotReadyNLP:
             def is_ready(self):
                 return False
 
         input_data = LayerInput(text="Test text", existing_entities=[])
-        output = layers.nlp_gap.execute(input_data, NotReadyNLP())
-
-        assert output.entities == []
-        assert output.metadata["reason"] == "nlp_processor_not_ready"
+        with pytest.raises(NLPProcessorNotReadyError):
+            layers.nlp_gap.execute(input_data, NotReadyNLP())
 
     def test_nlp_gap_extracts_new_entities(self):
         """NLP processor entities are extracted and added."""
@@ -579,7 +579,7 @@ class TestLayer3ReferenceEnrichment:
         input_data = LayerInput(text="", existing_entities=[])
         output = layers.reference.execute(input_data, [])
 
-        assert output.entities == []
+        assert output.entities == ()
         assert output.metadata["reason"] == "empty_text"
 
     def test_reference_no_prior_entities_returns_empty(self):
@@ -587,7 +587,7 @@ class TestLayer3ReferenceEnrichment:
         input_data = LayerInput(text="Test text", existing_entities=[])
         output = layers.reference.execute(input_data, [FakeReferenceSource()])
 
-        assert output.entities == []
+        assert output.entities == ()
         assert output.metadata["reason"] == "no_prior_entities"
 
     def test_reference_no_available_sources_returns_empty(self):
@@ -608,7 +608,7 @@ class TestLayer3ReferenceEnrichment:
 
         output = layers.reference.execute(input_data, [UnavailableSource()])
 
-        assert output.entities == []
+        assert output.entities == ()
         assert output.metadata["reason"] == "no_available_reference_sources"
 
     def test_reference_enriches_entity(self):
@@ -668,8 +668,8 @@ class TestLayer3ReferenceEnrichment:
         # Should have enriched exactly once (first source match)
         assert len(output.entities) == 1
 
-    def test_reference_preserves_original_layer(self):
-        """Original source_layer is preserved."""
+    def test_reference_marks_enriched_with_layer_3(self):
+        """Enriched entities are marked with source_layer=3 for dedup detection."""
         prior_entity = ExtractedEntity(
             label="Apple",
             entity_type="ORG",
@@ -691,7 +691,8 @@ class TestLayer3ReferenceEnrichment:
 
         output = layers.reference.execute(input_data, [source])
 
-        assert output.entities[0].source_layer == 1
+        # Enriched entity is marked with source_layer=3 so dedup can detect it
+        assert output.entities[0].source_layer == 3
 
     def test_reference_no_results_entity_not_enriched(self):
         """Entity with no reference results is not added."""
@@ -733,3 +734,34 @@ class TestLayer3ReferenceEnrichment:
 
         # Should use reference URI instead of prior URI
         assert output.entities[0].uri == ref_result.uri
+
+    def test_reference_continues_past_failing_source(self):
+        """A source that raises during search does not block other sources."""
+        prior_entity = ExtractedEntity(label="Apple", entity_type="ORG")
+        input_data = LayerInput(
+            text="Test text",
+            existing_entities=[prior_entity],
+        )
+
+        ref_result = ReferenceResult(
+            uri="https://dbpedia.org/resource/Apple_Inc.",
+            label="Apple Inc.",
+            description="Technology company",
+            source="DBpedia",
+        )
+
+        # First source raises, second source returns a valid result
+        failing_source = FakeReferenceSource(source_name_val="FailingSource", should_fail=True)
+        working_source = FakeReferenceSource(
+            source_name_val="WorkingSource",
+            results_map={"Apple": [ref_result]},
+        )
+
+        output = layers.reference.execute(input_data, [failing_source, working_source])
+
+        # Enrichment should succeed via the working source
+        assert len(output.entities) == 1
+        assert output.entities[0].uri == ref_result.uri
+        # Failed source name is recorded in metadata
+        assert output.metadata["sources_failed"] == 1
+        assert "FailingSource" in output.metadata["failed_source_names"]
