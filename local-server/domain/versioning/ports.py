@@ -72,6 +72,18 @@ class ChangeRepository(Protocol):
         """
         ...
 
+    def get_changes_by_ids(self, event_ids: list[str]) -> list[ChangeEvent]:
+        """
+        Retrieve change events by their IDs.
+
+        Args:
+            event_ids: List of change event IDs to retrieve
+
+        Returns:
+            List of matching ChangeEvent objects
+        """
+        ...
+
     def mark_processed(self, event_ids: list[str]) -> None:
         """
         Mark change events as processed (synchronized to remote).

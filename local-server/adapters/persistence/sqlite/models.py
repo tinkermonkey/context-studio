@@ -590,6 +590,7 @@ class Proposal(Base):  # type: ignore[misc,valid-type]
         submitted_at: UTC timestamp when proposal was submitted
         reviewed_at: UTC timestamp when proposal was reviewed (None if not reviewed)
         reviewer_notes: Optional notes from the reviewer
+        conflict_resolutions: JSON mapping of entity_id -> {field_name: resolved_value}
     """
 
     __tablename__ = "proposals"
@@ -609,6 +610,12 @@ class Proposal(Base):  # type: ignore[misc,valid-type]
     )
     reviewed_at = Column(DateTime(timezone=True), nullable=True)
     reviewer_notes = Column(Text, nullable=True)
+    conflict_resolutions = Column(
+        JSON,
+        nullable=False,
+        default=dict,
+        doc="JSON mapping of entity_id -> {field_name: resolved_value}"
+    )
 
     __table_args__ = ()
 

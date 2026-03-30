@@ -83,6 +83,10 @@ class FakeChangeRepository:
         events.sort(key=lambda e: e.timestamp, reverse=True)
         return events[:limit]
 
+    def get_changes_by_ids(self, event_ids: list[str]) -> list[ChangeEvent]:
+        """Retrieve change events by their IDs."""
+        return [self._change_events[eid] for eid in event_ids if eid in self._change_events]
+
     def mark_processed(self, event_ids: list[str]) -> None:
         """Mark change events as processed."""
         for event_id in event_ids:

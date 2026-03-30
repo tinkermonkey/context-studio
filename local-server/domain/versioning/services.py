@@ -354,12 +354,8 @@ class VersioningService:
         if not changeset.event_ids:
             return report
 
-        # Get all events in this changeset
-        all_events = self._repo.get_changes(limit=1000)
-        changeset_events = [
-            e for e in all_events
-            if e.changeset_id == changeset.id
-        ]
+        # Get events in this changeset using the changeset's event_ids
+        changeset_events = self._repo.get_changes_by_ids(changeset.event_ids)
 
         # Group events by entity_id and sort by timestamp
         events_by_entity: dict[str, list[ChangeEvent]] = {}
