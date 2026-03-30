@@ -1,0 +1,349 @@
+"""
+Integration tests for SQLiteChangeRepository.
+
+Tests against in-memory SQLite database to verify all persistence operations.
+"""
+
+import sys
+import os
+from datetime import datetime, timezone, timedelta
+
+import pytest
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+
+# Add local-server root to path for imports
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+
+from adapters.persistence.sqlite.models import Base
+from adapters.persistence.sqlite.change_repo import SQLiteChangeRepository
+from domain.versioning.entities import (
+    ChangeEvent,
+    EntityVersion,
+    Changeset,
+    Proposal,
+)
+from domain.versioning.value_objects import ChangeState
+
+
+@pytest.fixture
+def session_factory():
+    """Create an in-memory SQLite database and session factory."""
+    engine = create_engine("sqlite:///:memory:")
+    Base.metadata.create_all(engine)
+    SessionLocal = sessionmaker(bind=engine)
+    return SessionLocal
+
+
+@pytest.fixture
+def repository(session_factory):
+    """Create a repository instance with test database."""
+    return SQLiteChangeRepository(session_factory)
+
+
+class TestChangeEventOperations:
+    """Test ChangeEvent persistence operations."""
+
+    def test_record_change_returns_id(self, repository) -> None:
+        """Test that record_change returns the event ID."""
+        event_id = repository.record_change(
+            entity_id="entity1",
+            entity_type="class",
+            operation="create",
+            new_state={"title": "Test Class"},
+        )
+
+        assert event_id is not None
+        assert len(event_id) > 0
+
+    def test_record_change_stores_all_fields(self, repository) -> None:
+        """Test that all fields are stored correctly."""
+        event_id = repository.record_change(
+            entity_id="entity1",
+            entity_type="class",
+            operation="update",
+            new_state={"title": "Updated"},
+            previous_state={"title": "Old"},
+            user_id="user1",
+            change_reason="Fixed typo",
+            changeset_id="cs1",
+        )
+
+        events = repository.get_changes(entity_id="entity1")
+        assert len(events) == 1
+
+        event = events[0]
+        assert event.id == event_id
+        assert event.entity_id == "entity1"
+        assert event.entity_type == "class"
+        assert event.operation == "update"
+        assert event.new_state == {"title": "Updated"}
+        assert event.previous_state == {"title": "Old"}
+        assert event.user_id == "user1"
+        assert event.change_reason == "Fixed typo"
+        assert event.changeset_id == "cs1"
+
+    def test_get_changes_by_entity_id(self, repository) -> None:
+        """Test filtering changes by entity ID."""
+        repository.record_change(
+            entity_id="entity1", entity_type="class", operation="create", new_state={}
+        )
+        repository.record_change(
+            entity_id="entity2", entity_type="class", operation="create", new_state={}
+        )
+
+        entity1_changes = repository.get_changes(entity_id="entity1")
+        assert len(entity1_changes) == 1
+        assert entity1_changes[0].entity_id == "entity1"
+
+    def test_get_changes_by_timestamp(self, repository) -> None:
+        """Test filtering changes by timestamp."""
+        now = datetime.now(timezone.utc)
+        past = now - timedelta(hours=1)
+        future = now + timedelta(hours=1)
+
+        repository.record_change(
+            entity_id="entity1", entity_type="class", operation="create", new_state={}
+        )
+
+        recent_changes = repository.get_changes(since=past)
+        old_changes = repository.get_changes(since=future)
+
+        assert len(recent_changes) == 1
+        assert len(old_changes) == 0
+
+    def test_get_changes_respects_limit(self, repository) -> None:
+        """Test that get_changes respects the limit parameter."""
+        for i in range(5):
+            repository.record_change(
+                entity_id=f"entity{i}",
+                entity_type="class",
+                operation="create",
+                new_state={},
+            )
+
+        changes = repository.get_changes(limit=3)
+        assert len(changes) == 3
+
+    def test_mark_processed_sets_flag(self, repository) -> None:
+        """Test that mark_processed sets the processed flag."""
+        event_id = repository.record_change(
+            entity_id="entity1", entity_type="class", operation="create", new_state={}
+        )
+
+        repository.mark_processed([event_id])
+
+        events = repository.get_changes(entity_id="entity1")
+        assert events[0].processed is True
+
+    def test_get_unprocessed_returns_unprocessed(self, repository) -> None:
+        """Test that get_unprocessed returns only unprocessed events."""
+        event1_id = repository.record_change(
+            entity_id="entity1", entity_type="class", operation="create", new_state={}
+        )
+        event2_id = repository.record_change(
+            entity_id="entity2", entity_type="class", operation="create", new_state={}
+        )
+
+        repository.mark_processed([event1_id])
+
+        unprocessed = repository.get_unprocessed()
+        assert len(unprocessed) == 1
+        assert unprocessed[0].id == event2_id
+
+
+class TestEntityVersionOperations:
+    """Test EntityVersion persistence operations."""
+
+    def test_save_version_persists(self, repository) -> None:
+        """Test that save_version persists the entity version."""
+        version = EntityVersion(
+            entity_id="entity1",
+            version=1,
+            state="active",
+            snapshot={"title": "Class 1"},
+            created_at=datetime.now(timezone.utc),
+        )
+
+        repository.save_version(version)
+
+        retrieved = repository.get_version("entity1", 1)
+        assert retrieved is not None
+        assert retrieved.entity_id == "entity1"
+        assert retrieved.version == 1
+        assert retrieved.state == "active"
+
+    def test_get_latest_version(self, repository) -> None:
+        """Test getting the latest version."""
+        v1 = EntityVersion(
+            entity_id="entity1",
+            version=1,
+            state="active",
+            snapshot={"title": "V1"},
+            created_at=datetime.now(timezone.utc),
+        )
+        v2 = EntityVersion(
+            entity_id="entity1",
+            version=2,
+            state="active",
+            snapshot={"title": "V2"},
+            created_at=datetime.now(timezone.utc),
+        )
+
+        repository.save_version(v1)
+        repository.save_version(v2)
+
+        latest = repository.get_latest_version("entity1")
+        assert latest is not None
+        assert latest.version == 2
+
+    def test_list_versions_returns_all_in_order(self, repository) -> None:
+        """Test that list_versions returns all versions in order."""
+        for i in range(1, 4):
+            version = EntityVersion(
+                entity_id="entity1",
+                version=i,
+                state="active",
+                snapshot={"v": i},
+                created_at=datetime.now(timezone.utc),
+            )
+            repository.save_version(version)
+
+        versions = repository.list_versions("entity1")
+        assert len(versions) == 3
+        assert versions[0].version == 1
+        assert versions[1].version == 2
+        assert versions[2].version == 3
+
+    def test_get_version_returns_none_if_not_found(self, repository) -> None:
+        """Test that get_version returns None if not found."""
+        retrieved = repository.get_version("nonexistent", 1)
+        assert retrieved is None
+
+    def test_get_latest_version_returns_none_if_empty(self, repository) -> None:
+        """Test that get_latest_version returns None if no versions exist."""
+        latest = repository.get_latest_version("nonexistent")
+        assert latest is None
+
+
+class TestChangesetOperations:
+    """Test Changeset persistence operations."""
+
+    def test_create_changeset(self, repository) -> None:
+        """Test creating a changeset."""
+        changeset = Changeset(
+            id="cs1",
+            name="My Changeset",
+            state=ChangeState.WORKING,
+            created_at=datetime.now(timezone.utc),
+            updated_at=datetime.now(timezone.utc),
+            description="Test changeset",
+        )
+
+        result = repository.create_changeset(changeset)
+        assert result.id == "cs1"
+        assert result.name == "My Changeset"
+
+    def test_get_changeset(self, repository) -> None:
+        """Test retrieving a changeset."""
+        changeset = Changeset(
+            id="cs1",
+            name="My Changeset",
+            state=ChangeState.WORKING,
+            created_at=datetime.now(timezone.utc),
+            updated_at=datetime.now(timezone.utc),
+        )
+
+        repository.create_changeset(changeset)
+        retrieved = repository.get_changeset("cs1")
+
+        assert retrieved is not None
+        assert retrieved.id == "cs1"
+        assert retrieved.name == "My Changeset"
+        assert retrieved.state == ChangeState.WORKING
+
+    def test_update_changeset(self, repository) -> None:
+        """Test updating a changeset."""
+        changeset = Changeset(
+            id="cs1",
+            name="Original",
+            state=ChangeState.WORKING,
+            created_at=datetime.now(timezone.utc),
+            updated_at=datetime.now(timezone.utc),
+        )
+
+        repository.create_changeset(changeset)
+
+        changeset.name = "Updated"
+        changeset.state = ChangeState.STAGED
+        repository.update_changeset(changeset)
+
+        retrieved = repository.get_changeset("cs1")
+        assert retrieved is not None
+        assert retrieved.name == "Updated"
+        assert retrieved.state == ChangeState.STAGED
+
+    def test_get_nonexistent_changeset_returns_none(self, repository) -> None:
+        """Test that getting a nonexistent changeset returns None."""
+        retrieved = repository.get_changeset("nonexistent")
+        assert retrieved is None
+
+
+class TestProposalOperations:
+    """Test Proposal persistence operations."""
+
+    def test_create_proposal(self, repository) -> None:
+        """Test creating a proposal."""
+        proposal = Proposal(
+            id="prop1",
+            changeset_id="cs1",
+            state="open",
+            submitted_at=datetime.now(timezone.utc),
+        )
+
+        result = repository.create_proposal(proposal)
+        assert result.id == "prop1"
+        assert result.changeset_id == "cs1"
+        assert result.state == "open"
+
+    def test_get_proposal(self, repository) -> None:
+        """Test retrieving a proposal."""
+        proposal = Proposal(
+            id="prop1",
+            changeset_id="cs1",
+            state="open",
+            submitted_at=datetime.now(timezone.utc),
+            reviewer_notes="Looks good",
+        )
+
+        repository.create_proposal(proposal)
+        retrieved = repository.get_proposal("prop1")
+
+        assert retrieved is not None
+        assert retrieved.id == "prop1"
+        assert retrieved.reviewer_notes == "Looks good"
+
+    def test_update_proposal(self, repository) -> None:
+        """Test updating a proposal."""
+        proposal = Proposal(
+            id="prop1",
+            changeset_id="cs1",
+            state="open",
+            submitted_at=datetime.now(timezone.utc),
+        )
+
+        repository.create_proposal(proposal)
+
+        proposal.state = "approved"
+        proposal.reviewed_at = datetime.now(timezone.utc)
+        repository.update_proposal(proposal)
+
+        retrieved = repository.get_proposal("prop1")
+        assert retrieved is not None
+        assert retrieved.state == "approved"
+        assert retrieved.reviewed_at is not None
+
+    def test_get_nonexistent_proposal_returns_none(self, repository) -> None:
+        """Test that getting a nonexistent proposal returns None."""
+        retrieved = repository.get_proposal("nonexistent")
+        assert retrieved is None
