@@ -136,7 +136,8 @@ class Proposal:
     A formal request to merge a changeset.
 
     Proposals allow review and discussion before changes are applied.
-    They track submission time, reviewer comments, and approval status.
+    They track submission time, reviewer comments, approval status,
+    and conflict resolutions.
 
     Attributes:
         id: Unique identifier (UUID as string)
@@ -145,6 +146,7 @@ class Proposal:
         submitted_at: When the proposal was submitted
         reviewed_at: When the proposal was reviewed (None if not reviewed)
         reviewer_notes: Optional notes from the reviewer
+        conflict_resolutions: Dict mapping entity_id -> {field_name: resolved_value}
     """
 
     id: str
@@ -153,6 +155,7 @@ class Proposal:
     submitted_at: datetime
     reviewed_at: Optional[datetime] = None
     reviewer_notes: Optional[str] = None
+    conflict_resolutions: dict[str, dict[str, object]] = field(default_factory=dict)
 
 
 @dataclass
