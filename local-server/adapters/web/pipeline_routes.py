@@ -84,7 +84,8 @@ async def create_pipeline_configuration(
         HTTPException: 400 if invalid input, 500 for internal errors
     """
     try:
-        config = service.create_config(
+        config = await run_sync_in_executor(
+            service.create_config,
             pipeline=request.pipeline,
             title=request.title,
             provider=request.provider,
@@ -111,7 +112,7 @@ async def list_pipeline_configurations(
         List of PipelineConfigurationResponse objects
     """
     try:
-        configs = service.list_configs()
+        configs = await run_sync_in_executor(service.list_configs)
         return [PipelineConfigurationResponse.model_validate(c) for c in configs]
     except Exception as exc:
         status_code, message = _handle_domain_error(exc)
@@ -137,7 +138,7 @@ async def get_pipeline_configuration(
         HTTPException: 404 if not found
     """
     try:
-        config = service.get_config(pipeline_id)
+        config = await run_sync_in_executor(service.get_config, pipeline_id)
         return PipelineConfigurationResponse.model_validate(config)
     except Exception as exc:
         status_code, message = _handle_domain_error(exc)
@@ -165,7 +166,8 @@ async def update_pipeline_configuration(
         HTTPException: 400 if invalid, 404 if not found
     """
     try:
-        config = service.update_config(
+        config = await run_sync_in_executor(
+            service.update_config,
             config_id=pipeline_id,
             title=request.title,
             provider=request.provider,
@@ -197,7 +199,7 @@ async def delete_pipeline_configuration(
         HTTPException: 404 if not found
     """
     try:
-        service.delete_config(pipeline_id)
+        await run_sync_in_executor(service.delete_config, pipeline_id)
     except Exception as exc:
         status_code, message = _handle_domain_error(exc)
         raise HTTPException(status_code=status_code, detail=message)
@@ -258,7 +260,7 @@ async def get_pipeline_executions(
         HTTPException: 404 if configuration not found
     """
     try:
-        executions = service.list_executions(pipeline_id, limit=50)
+        executions = await run_sync_in_executor(service.list_executions, pipeline_id, limit=50)
         return [ExecutionResponse.model_validate(e) for e in executions]
     except Exception as exc:
         status_code, message = _handle_domain_error(exc)

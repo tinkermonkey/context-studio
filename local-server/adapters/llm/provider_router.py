@@ -15,6 +15,7 @@ from adapters.llm.openai_provider import OpenAIProvider
 from adapters.llm.anthropic_provider import AnthropicProvider
 from domain.extraction.ports import LLMProvider, LLMResponse
 from utils.logger import get_logger
+from utils.async_executor import run_sync_in_executor
 
 logger = get_logger(__name__)
 
@@ -190,8 +191,9 @@ class LLMProviderRouter:
                 timeout=timeout,
             )
         else:
-            # Fallback for providers without async support
-            return provider.complete(
+            # Fallback for providers without async support — run sync method in executor
+            return await run_sync_in_executor(
+                provider.complete,
                 system_prompt=system_prompt,
                 user_prompt=user_prompt,
                 model=model,

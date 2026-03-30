@@ -8,6 +8,7 @@ from typing import Literal, overload
 
 from domain.extraction.ports import ReferenceSource, ReferenceResult, ReferenceRelation
 from utils.logger import get_logger
+from utils.async_executor import run_sync_in_executor
 
 logger = get_logger(__name__)
 
@@ -170,6 +171,50 @@ class CachedReferenceSource(ReferenceSource):
             True if the inner source is available, False otherwise
         """
         return self._inner.is_available()
+
+    async def search_async(self, term: str, limit: int = 10) -> list[ReferenceResult]:
+        """
+        Search for entities asynchronously, using cache if available.
+
+        Delegates to the synchronous search method via run_sync_in_executor
+        to avoid blocking the event loop.
+
+        Args:
+            term: Search query
+            limit: Maximum number of results
+
+        Returns:
+            List of ReferenceResult objects from cache or inner source
+        """
+        return await run_sync_in_executor(self.search, term, limit)
+
+    async def get_relations_async(self, uri: str, limit: int = 10) -> list[ReferenceRelation]:
+        """
+        Get relationships for a URI asynchronously, using cache if available.
+
+        Delegates to the synchronous get_relations method via run_sync_in_executor
+        to avoid blocking the event loop.
+
+        Args:
+            uri: URI to find relations for
+            limit: Maximum number of relations
+
+        Returns:
+            List of ReferenceRelation objects from cache or inner source
+        """
+        return await run_sync_in_executor(self.get_relations, uri, limit)
+
+    async def is_available_async(self) -> bool:
+        """
+        Check if the wrapped source is available asynchronously.
+
+        Delegates to the synchronous is_available method via run_sync_in_executor
+        to avoid blocking the event loop.
+
+        Returns:
+            True if the inner source is available, False otherwise
+        """
+        return await run_sync_in_executor(self.is_available)
 
     @overload
     def _get_cached(

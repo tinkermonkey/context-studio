@@ -100,3 +100,38 @@ class FakeReferenceSource:
             Always True for the fake implementation
         """
         return True
+
+    async def search_async(self, term: str, limit: int = 10) -> list[ReferenceResult]:
+        """
+        Async search for entities matching a term.
+
+        Args:
+            term: Search query
+            limit: Maximum number of results
+
+        Returns:
+            List of matching ReferenceResult objects
+        """
+        return self.search(term, limit)
+
+    async def get_relations_async(self, uri: str, limit: int = 10) -> list[ReferenceRelation]:
+        """
+        Async get relationships connected to a URI.
+
+        Args:
+            uri: URI of the resource to find relations for
+            limit: Maximum number of relations
+
+        Returns:
+            List of ReferenceRelation objects
+        """
+        return self.get_relations(uri, limit)
+
+    async def is_available_async(self) -> bool:
+        """
+        Async check if this source is available.
+
+        Returns:
+            True for the fake implementation
+        """
+        return self.is_available()

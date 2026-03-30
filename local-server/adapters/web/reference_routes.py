@@ -72,11 +72,7 @@ async def reference_status(
     # Use async availability checks in parallel
     async def check_source(source: ReferenceSource) -> tuple[ReferenceSourceStatusSchema, bool]:
         try:
-            # Try async method first, fallback to sync
-            if hasattr(source, 'is_available_async'):
-                is_available = await source.is_available_async()
-            else:
-                is_available = source.is_available()
+            is_available = await source.is_available_async()
 
             return (
                 ReferenceSourceStatusSchema(
@@ -163,20 +159,12 @@ async def search_references(
     async def search_single_source(source: ReferenceSource) -> tuple[list[ReferenceResultSchema], str, bool]:
         """Search a single source and return results or error."""
         try:
-            # Try async method first, fallback to sync
-            if hasattr(source, 'is_available_async'):
-                is_available = await source.is_available_async()
-            else:
-                is_available = source.is_available()
+            is_available = await source.is_available_async()
 
             if not is_available:
                 return [], source.source_name, False
 
-            # Try async search first, fallback to sync
-            if hasattr(source, 'search_async'):
-                source_results = await source.search_async(request.term, limit=request.limit)
-            else:
-                source_results = source.search(request.term, limit=request.limit)
+            source_results = await source.search_async(request.term, limit=request.limit)
 
             results = [
                 ReferenceResultSchema(
@@ -267,20 +255,12 @@ async def get_reference_relations(
     async def get_relations_from_source(source: ReferenceSource) -> tuple[list[ReferenceRelationSchema], str, bool]:
         """Get relations from a single source."""
         try:
-            # Try async method first, fallback to sync
-            if hasattr(source, 'is_available_async'):
-                is_available = await source.is_available_async()
-            else:
-                is_available = source.is_available()
+            is_available = await source.is_available_async()
 
             if not is_available:
                 return [], source.source_name, False
 
-            # Try async get_relations first, fallback to sync
-            if hasattr(source, 'get_relations_async'):
-                source_relations = await source.get_relations_async(request.uri, limit=request.limit)
-            else:
-                source_relations = source.get_relations(request.uri, limit=request.limit)
+            source_relations = await source.get_relations_async(request.uri, limit=request.limit)
 
             relations = [
                 ReferenceRelationSchema(
