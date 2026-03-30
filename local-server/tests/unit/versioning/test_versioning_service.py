@@ -2,7 +2,7 @@
 Unit tests for the VersioningService domain service.
 
 Tests the change history queries, changeset lifecycle, and proposal workflow
-using FakeChangeRepository and FakeSyncTarget.
+using FakeChangeRepository.
 """
 
 import sys
@@ -21,7 +21,6 @@ from domain.versioning.entities import ChangeEvent, EntityVersion, Changeset, Pr
 from domain.versioning.exceptions import VersionNotFoundError, ChangesetStateError
 from domain.versioning.value_objects import ChangeState
 from tests.fakes.fake_change_repository import FakeChangeRepository
-from tests.fakes.fake_sync_target import FakeSyncTarget
 
 
 # ============================================================================
@@ -36,15 +35,9 @@ def repo() -> FakeChangeRepository:
 
 
 @pytest.fixture
-def sync_target() -> FakeSyncTarget:
-    """Create a fresh sync target for each test."""
-    return FakeSyncTarget()
-
-
-@pytest.fixture
-def service(repo: FakeChangeRepository, sync_target: FakeSyncTarget) -> VersioningService:
+def service(repo: FakeChangeRepository) -> VersioningService:
     """Create a VersioningService with fake dependencies."""
-    return VersioningService(change_repo=repo, sync_target=sync_target)
+    return VersioningService(change_repo=repo)
 
 
 # ============================================================================

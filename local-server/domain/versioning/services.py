@@ -7,14 +7,17 @@ and the proposal approval workflow.
 
 from __future__ import annotations
 
+import logging
 import uuid
 from datetime import datetime, timezone
 from typing import Optional
 
 from .entities import ChangeEvent, EntityVersion, Changeset, Proposal, MergeResult
 from .exceptions import VersionNotFoundError, ChangesetStateError
-from .ports import ChangeRepository, SyncTarget
+from .ports import ChangeRepository
 from .value_objects import ChangeState
+
+_logger = logging.getLogger(__name__)
 
 
 class VersioningService:
@@ -28,17 +31,14 @@ class VersioningService:
     def __init__(
         self,
         change_repo: ChangeRepository,
-        sync_target: SyncTarget,
     ) -> None:
         """
         Initialize the VersioningService.
 
         Args:
             change_repo: Repository for persisting and retrieving versioning entities
-            sync_target: Adapter for synchronizing changes with remote
         """
         self._repo = change_repo
-        self._sync = sync_target
 
     # ============================================================================
     # Change History Query Methods
@@ -139,7 +139,14 @@ class VersioningService:
             description=description,
             event_ids=event_ids or [],
         )
-        return self._repo.create_changeset(changeset)
+        persisted = self._repo.create_changeset(changeset)
+        _logger.info(
+            "Changeset created (changeset_id=%s, name=%s, state=%s)",
+            persisted.id,
+            persisted.name,
+            persisted.state,
+        )
+        return persisted
 
     def stage_changeset(self, changeset_id: str) -> Changeset:
         """
@@ -160,7 +167,13 @@ class VersioningService:
 
         changeset.transition_to(ChangeState.STAGED)
         changeset.updated_at = datetime.now(timezone.utc)
-        return self._repo.update_changeset(changeset)
+        updated = self._repo.update_changeset(changeset)
+        _logger.info(
+            "Changeset staged (changeset_id=%s, state=%s)",
+            updated.id,
+            updated.state,
+        )
+        return updated
 
     def submit_proposal(self, changeset_id: str) -> Proposal:
         """
@@ -182,18 +195,25 @@ class VersioningService:
         if changeset is None:
             raise VersionNotFoundError(f"Changeset {changeset_id} not found")
 
+        now = datetime.now(timezone.utc)
         changeset.transition_to(ChangeState.PROPOSED)
-        changeset.updated_at = datetime.now(timezone.utc)
+        changeset.updated_at = now
         self._repo.update_changeset(changeset)
 
-        now = datetime.now(timezone.utc)
         proposal = Proposal(
             id=str(uuid.uuid4()),
             changeset_id=changeset_id,
             state="open",
             submitted_at=now,
         )
-        return self._repo.create_proposal(proposal)
+        persisted_proposal = self._repo.create_proposal(proposal)
+        _logger.info(
+            "Proposal submitted (proposal_id=%s, changeset_id=%s, state=%s)",
+            persisted_proposal.id,
+            changeset_id,
+            persisted_proposal.state,
+        )
+        return persisted_proposal
 
     # ============================================================================
     # Proposal Workflow Methods
@@ -225,14 +245,21 @@ class VersioningService:
                 f"Changeset {proposal.changeset_id} for proposal {proposal_id} not found"
             )
 
+        now = datetime.now(timezone.utc)
         changeset.transition_to(ChangeState.APPROVED)
-        changeset.updated_at = datetime.now(timezone.utc)
+        changeset.updated_at = now
         self._repo.update_changeset(changeset)
 
-        now = datetime.now(timezone.utc)
         proposal.state = "approved"
         proposal.reviewed_at = now
-        return self._repo.update_proposal(proposal)
+        updated_proposal = self._repo.update_proposal(proposal)
+        _logger.info(
+            "Proposal approved (proposal_id=%s, changeset_id=%s, state=%s)",
+            updated_proposal.id,
+            proposal.changeset_id,
+            updated_proposal.state,
+        )
+        return updated_proposal
 
     def reject_proposal(self, proposal_id: str, reason: str) -> Proposal:
         """
@@ -261,23 +288,31 @@ class VersioningService:
                 f"Changeset {proposal.changeset_id} for proposal {proposal_id} not found"
             )
 
+        now = datetime.now(timezone.utc)
         changeset.transition_to(ChangeState.WORKING)
-        changeset.updated_at = datetime.now(timezone.utc)
+        changeset.updated_at = now
         self._repo.update_changeset(changeset)
 
-        now = datetime.now(timezone.utc)
         proposal.state = "rejected"
         proposal.reviewed_at = now
         proposal.reviewer_notes = reason
-        return self._repo.update_proposal(proposal)
+        updated_proposal = self._repo.update_proposal(proposal)
+        _logger.info(
+            "Proposal rejected (proposal_id=%s, changeset_id=%s, state=%s, reason=%s)",
+            updated_proposal.id,
+            proposal.changeset_id,
+            updated_proposal.state,
+            reason,
+        )
+        return updated_proposal
 
     def merge_proposal(self, proposal_id: str) -> MergeResult:
         """
         Merge an approved proposal.
 
         In this phase, implements the happy path only: proposal must be
-        in 'approved' state. Conflict detection and resolution will be
-        implemented in Phase 4.4c.
+        in 'approved' state. Currently implements the happy path only.
+        Conflict detection and resolution are not yet implemented.
 
         Transitions the changeset from APPROVED to MERGED and updates
         the proposal state to 'merged'.
@@ -297,10 +332,12 @@ class VersioningService:
             raise VersionNotFoundError(f"Proposal {proposal_id} not found")
 
         if proposal.state != "approved":
-            raise ChangesetStateError(
+            error_msg = (
                 f"Cannot merge proposal {proposal_id} in state '{proposal.state}': "
                 "proposal must be in 'approved' state"
             )
+            _logger.error(error_msg)
+            raise ChangesetStateError(error_msg)
 
         changeset = self._repo.get_changeset(proposal.changeset_id)
         if changeset is None:
@@ -308,17 +345,24 @@ class VersioningService:
                 f"Changeset {proposal.changeset_id} for proposal {proposal_id} not found"
             )
 
+        now = datetime.now(timezone.utc)
         changeset.transition_to(ChangeState.MERGED)
-        changeset.updated_at = datetime.now(timezone.utc)
+        changeset.updated_at = now
         self._repo.update_changeset(changeset)
 
-        now = datetime.now(timezone.utc)
         proposal.state = "merged"
         self._repo.update_proposal(proposal)
 
-        return MergeResult(
+        result = MergeResult(
             proposal_id=proposal_id,
             merged_at=now,
             events_applied=len(changeset.event_ids),
             conflicts_resolved=0,
         )
+        _logger.info(
+            "Proposal merged (proposal_id=%s, changeset_id=%s, events_applied=%d)",
+            proposal_id,
+            proposal.changeset_id,
+            result.events_applied,
+        )
+        return result
