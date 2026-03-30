@@ -5,7 +5,7 @@ Provides a simple dict-based storage for testing domain logic without
 database dependencies.
 """
 
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Optional
 
 from domain.versioning.entities import (
@@ -56,7 +56,7 @@ class FakeChangeRepository:
             entity_type=entity_type,
             operation=operation,
             new_state=new_state,
-            timestamp=datetime.now(),
+            timestamp=datetime.now(timezone.utc),
             previous_state=previous_state,
             user_id=user_id,
             change_reason=change_reason,
