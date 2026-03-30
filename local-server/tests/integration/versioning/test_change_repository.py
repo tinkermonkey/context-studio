@@ -18,7 +18,6 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspa
 from adapters.persistence.sqlite.models import Base
 from adapters.persistence.sqlite.change_repo import SQLiteChangeRepository
 from domain.versioning.entities import (
-    ChangeEvent,
     EntityVersion,
     Changeset,
     Proposal,

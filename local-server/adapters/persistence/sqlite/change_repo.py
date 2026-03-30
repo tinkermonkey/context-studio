@@ -158,7 +158,7 @@ class SQLiteChangeRepository:
         with self.session_factory() as session:
             query = (
                 select(ChangeEvent)
-                .where(ChangeEvent.processed == False)
+                .where(not ChangeEvent.processed)
                 .order_by(ChangeEvent.timestamp.asc())
                 .limit(limit)
             )

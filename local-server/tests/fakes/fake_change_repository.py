@@ -14,7 +14,6 @@ from domain.versioning.entities import (
     Changeset,
     Proposal,
 )
-from domain.versioning.value_objects import ChangeState
 
 
 class FakeChangeRepository:

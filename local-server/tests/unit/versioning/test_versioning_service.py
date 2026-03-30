@@ -17,7 +17,7 @@ sys.path.insert(
 )
 
 from domain.versioning.services import VersioningService
-from domain.versioning.entities import ChangeEvent, EntityVersion, Changeset, Proposal
+from domain.versioning.entities import EntityVersion
 from domain.versioning.exceptions import VersionNotFoundError, ChangesetStateError
 from domain.versioning.value_objects import ChangeState
 from tests.fakes.fake_change_repository import FakeChangeRepository
@@ -308,7 +308,6 @@ class TestChangesetLifecycle:
     ) -> None:
         """Test that staging a changeset updates its timestamp."""
         changeset = service.create_changeset(name="Test changeset")
-        original_updated_at = changeset.updated_at
 
         staged = service.stage_changeset(changeset.id)
         # The updated_at should be updated, but we can't guarantee it's strictly
