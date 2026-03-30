@@ -396,17 +396,17 @@ class SQLiteChangeRepository:
     def _to_domain_change_event(self, orm_event: ChangeEvent) -> DomainChangeEvent:
         """Convert ORM ChangeEvent to domain entity."""
         return DomainChangeEvent(
-            id=orm_event.id,
-            entity_id=orm_event.entity_id,
-            entity_type=orm_event.entity_type,
-            operation=orm_event.operation,
-            new_state=orm_event.new_state,
-            timestamp=orm_event.timestamp,
-            previous_state=orm_event.previous_state,
-            user_id=orm_event.user_id,
-            change_reason=orm_event.change_reason,
-            changeset_id=orm_event.changeset_id,
-            processed=orm_event.processed,
+            id=cast(str, orm_event.id),
+            entity_id=cast(str, orm_event.entity_id),
+            entity_type=cast(str, orm_event.entity_type),
+            operation=cast(str, orm_event.operation),
+            new_state=cast(dict, orm_event.new_state),
+            timestamp=cast(datetime, orm_event.timestamp),
+            previous_state=cast(Optional[dict], orm_event.previous_state),
+            user_id=cast(Optional[str], orm_event.user_id),
+            change_reason=cast(Optional[str], orm_event.change_reason),
+            changeset_id=cast(Optional[str], orm_event.changeset_id),
+            processed=cast(bool, orm_event.processed),
         )
 
     def _to_domain_entity_version(
@@ -414,12 +414,12 @@ class SQLiteChangeRepository:
     ) -> DomainEntityVersion:
         """Convert ORM EntityVersion to domain entity."""
         return DomainEntityVersion(
-            entity_id=orm_version.entity_id,
-            version=orm_version.version,
-            state=orm_version.state,
-            snapshot=orm_version.snapshot,
-            created_at=orm_version.created_at,
-            parent_version=orm_version.parent_version,
+            entity_id=cast(str, orm_version.entity_id),
+            version=cast(int, orm_version.version),
+            state=cast(str, orm_version.state),
+            snapshot=cast(dict, orm_version.snapshot),
+            created_at=cast(datetime, orm_version.created_at),
+            parent_version=cast(Optional[int], orm_version.parent_version),
         )
 
     def _to_domain_changeset(
@@ -430,25 +430,25 @@ class SQLiteChangeRepository:
         query = select(ChangesetEvent.change_event_id).where(
             ChangesetEvent.changeset_id == orm_changeset.id
         )
-        event_ids = [r[0] for r in session.execute(query).all()]
+        event_ids = cast(list[str], [r[0] for r in session.execute(query).all()])
 
         return DomainChangeset(
-            id=orm_changeset.id,
-            name=orm_changeset.name,
-            description=orm_changeset.description,
-            state=ChangeState(orm_changeset.state),
-            created_at=orm_changeset.created_at,
-            updated_at=orm_changeset.updated_at,
+            id=cast(str, orm_changeset.id),
+            name=cast(str, orm_changeset.name),
+            description=cast(Optional[str], orm_changeset.description),
+            state=ChangeState(cast(str, orm_changeset.state)),
+            created_at=cast(datetime, orm_changeset.created_at),
+            updated_at=cast(datetime, orm_changeset.updated_at),
             event_ids=event_ids,
         )
 
     def _to_domain_proposal(self, orm_proposal: Proposal) -> DomainProposal:
         """Convert ORM Proposal to domain entity."""
         return DomainProposal(
-            id=orm_proposal.id,
-            changeset_id=orm_proposal.changeset_id,
-            state=orm_proposal.state,
-            submitted_at=orm_proposal.submitted_at,
-            reviewed_at=orm_proposal.reviewed_at,
-            reviewer_notes=orm_proposal.reviewer_notes,
+            id=cast(str, orm_proposal.id),
+            changeset_id=cast(str, orm_proposal.changeset_id),
+            state=cast(str, orm_proposal.state),
+            submitted_at=cast(datetime, orm_proposal.submitted_at),
+            reviewed_at=cast(Optional[datetime], orm_proposal.reviewed_at),
+            reviewer_notes=cast(Optional[str], orm_proposal.reviewer_notes),
         )

@@ -585,22 +585,26 @@ class TestChangesetWorkflow:
         # Submit
         proposal = service.submit_proposal(changeset.id)
         assert proposal.state == "open"
-        changeset = repo.get_changeset(changeset.id)
-        assert changeset.state == ChangeState.PROPOSED
+        retrieved_changeset = repo.get_changeset(changeset.id)
+        assert retrieved_changeset is not None
+        assert retrieved_changeset.state == ChangeState.PROPOSED
 
         # Approve
         proposal = service.approve_proposal(proposal.id)
         assert proposal.state == "approved"
-        changeset = repo.get_changeset(changeset.id)
-        assert changeset.state == ChangeState.APPROVED
+        retrieved_changeset = repo.get_changeset(changeset.id)
+        assert retrieved_changeset is not None
+        assert retrieved_changeset.state == ChangeState.APPROVED
 
         # Merge
         result = service.merge_proposal(proposal.id)
         assert result.proposal_id == proposal.id
-        changeset = repo.get_changeset(changeset.id)
-        assert changeset.state == ChangeState.MERGED
-        proposal = repo.get_proposal(proposal.id)
-        assert proposal.state == "merged"
+        retrieved_changeset = repo.get_changeset(changeset.id)
+        assert retrieved_changeset is not None
+        assert retrieved_changeset.state == ChangeState.MERGED
+        retrieved_proposal = repo.get_proposal(proposal.id)
+        assert retrieved_proposal is not None
+        assert retrieved_proposal.state == "merged"
 
     def test_changeset_workflow_reject_and_rework(
         self, service: VersioningService, repo: FakeChangeRepository
@@ -612,20 +616,23 @@ class TestChangesetWorkflow:
 
         # Submit proposal
         proposal = service.submit_proposal(changeset.id)
-        changeset = repo.get_changeset(changeset.id)
-        assert changeset.state == ChangeState.PROPOSED
+        retrieved_changeset = repo.get_changeset(changeset.id)
+        assert retrieved_changeset is not None
+        assert retrieved_changeset.state == ChangeState.PROPOSED
 
         # Reject
         service.reject_proposal(proposal.id, "Needs revision")
-        changeset = repo.get_changeset(changeset.id)
-        assert changeset.state == ChangeState.WORKING
+        retrieved_changeset = repo.get_changeset(changeset.id)
+        assert retrieved_changeset is not None
+        assert retrieved_changeset.state == ChangeState.WORKING
 
         # Re-stage and re-propose
-        service.stage_changeset(changeset.id)
-        changeset = repo.get_changeset(changeset.id)
-        assert changeset.state == ChangeState.STAGED
+        service.stage_changeset(retrieved_changeset.id)
+        retrieved_changeset = repo.get_changeset(changeset.id)
+        assert retrieved_changeset is not None
+        assert retrieved_changeset.state == ChangeState.STAGED
 
-        proposal2 = service.submit_proposal(changeset.id)
+        proposal2 = service.submit_proposal(retrieved_changeset.id)
         assert proposal2.changeset_id == proposal.changeset_id
         assert proposal2.id != proposal.id
 
@@ -638,8 +645,14 @@ class TestChangesetWorkflow:
 
         service.stage_changeset(cs1.id)
         # cs2 should still be in WORKING
-        assert repo.get_changeset(cs2.id).state == ChangeState.WORKING
+        retrieved_cs2 = repo.get_changeset(cs2.id)
+        assert retrieved_cs2 is not None
+        assert retrieved_cs2.state == ChangeState.WORKING
 
         service.stage_changeset(cs2.id)
-        assert repo.get_changeset(cs1.id).state == ChangeState.STAGED
-        assert repo.get_changeset(cs2.id).state == ChangeState.STAGED
+        retrieved_cs1 = repo.get_changeset(cs1.id)
+        assert retrieved_cs1 is not None
+        assert retrieved_cs1.state == ChangeState.STAGED
+        retrieved_cs2 = repo.get_changeset(cs2.id)
+        assert retrieved_cs2 is not None
+        assert retrieved_cs2.state == ChangeState.STAGED
