@@ -4,11 +4,14 @@ Knowledge Graph context extraction layer (Layer 0).
 Extracts entities and relationships from the existing knowledge graph
 to provide context for subsequent extraction layers.
 """
+import logging
 from types import MappingProxyType
 
 from domain.ontology.entities import Class, Individual
 from domain.extraction.entities import ExtractedEntity
 from domain.extraction.value_objects import LayerOutput
+
+_logger = logging.getLogger(__name__)
 
 
 def execute(text: str, ontology_repo, embedding_service) -> LayerOutput:
@@ -62,8 +65,13 @@ def execute(text: str, ontology_repo, embedding_service) -> LayerOutput:
         if not isinstance(entity, Class) or not entity.embedding:
             continue
 
-        # Compute similarity
-        similarity = embedding_service.similarity(text_embedding, entity.embedding)
+        # Compute similarity — wrap per-entity to prevent one bad embedding
+        # (e.g., wrong dimension after a model change) from failing the whole layer
+        try:
+            similarity = embedding_service.similarity(text_embedding, entity.embedding)
+        except Exception as e:
+            _logger.warning("Skipping entity '%s' due to embedding similarity error: %s", entity.title, e)
+            continue
 
         # Use similarity threshold of 0.7 for KG context
         if similarity >= 0.7:

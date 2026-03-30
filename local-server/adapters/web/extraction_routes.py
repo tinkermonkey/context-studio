@@ -18,6 +18,7 @@ Error handling translates domain exceptions to appropriate HTTP responses.
 
 from fastapi import APIRouter, Depends, HTTPException, status
 
+from domain.extraction.entities import ExtractedEntity
 from domain.extraction.services import ExtractionService
 from domain.extraction.exceptions import ExtractionError, InvalidInputError, LayerExecutionError
 from utils.logger import get_logger
@@ -85,6 +86,7 @@ def _to_schema(result) -> ExtractionResultSchema:
                 confidence=e.confidence,
                 uri=e.uri,
                 description=e.description,
+                matched_class_id=e.matched_class_id,
                 properties=e.properties,
             )
             for e in result.extracted_entities
@@ -199,8 +201,6 @@ async def enrich_from_references(
         HTTPException: 400 if text is empty/invalid, 500 for internal errors
     """
     try:
-        from domain.extraction.entities import ExtractedEntity
-
         extracted_entities = [
             ExtractedEntity(
                 id=entity.id,
@@ -210,7 +210,7 @@ async def enrich_from_references(
                 confidence=entity.confidence,
                 uri=entity.uri,
                 description=entity.description,
-                matched_class_id=None,
+                matched_class_id=entity.matched_class_id,
                 properties=entity.properties,
             )
             for entity in request.extracted_entities

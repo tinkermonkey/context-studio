@@ -122,8 +122,9 @@ class FakeEventPublisher:
     def __init__(self):
         self.published_events = []
 
-    def publish(self, event):
+    def publish(self, event) -> list[tuple[str, Exception]]:
         self.published_events.append(event)
+        return []
 
 
 @pytest.fixture
@@ -443,6 +444,77 @@ class TestExtractionServicePersistence:
         assert any(
             isinstance(e, ExtractionCompleted) for e in event_publisher.published_events
         )
+
+
+    def test_analyze_text_returns_result_even_if_persistence_fails(
+        self, service_with_fakes
+    ):
+        """Test that analyze_text returns result even if persistence fails."""
+        service = service_with_fakes["service"]
+        extraction_repo = service_with_fakes["extraction_repo"]
+
+        extraction_repo.save_extraction_result = Mock(
+            side_effect=RuntimeError("Database connection failed")
+        )
+
+        result = service.analyze_text("Test text about Steve Jobs")
+
+        assert isinstance(result, ExtractionResult)
+        assert len(service_with_fakes["event_publisher"].published_events) > 0
+
+    def test_enrich_from_references_returns_result_even_if_persistence_fails(
+        self, service_with_fakes
+    ):
+        """Test that enrich_from_references returns result even if persistence fails."""
+        service = service_with_fakes["service"]
+        extraction_repo = service_with_fakes["extraction_repo"]
+        from domain.extraction.entities import ExtractedEntity as DomainEntity
+
+        extraction_repo.save_extraction_result = Mock(
+            side_effect=RuntimeError("Database connection failed")
+        )
+
+        entities = [DomainEntity(label="Apple", entity_type="ORG", source_layer=1, confidence=0.9)]
+        result = service.enrich_from_references("Apple is a tech company", entities)
+
+        assert isinstance(result, ExtractionResult)
+        assert len(service_with_fakes["event_publisher"].published_events) > 0
+
+    def test_event_handler_failure_warning_logged(self, service_with_fakes):
+        """Test that a warning is logged when an event handler fails."""
+        from unittest.mock import patch
+
+        fakes = service_with_fakes
+        ontology_repo = fakes["ontology_repo"]
+        embedding_service = fakes["embedding_service"]
+        llm = fakes["llm"]
+        nlp = fakes["nlp"]
+        reference_sources = fakes["reference_sources"]
+        extraction_repo = fakes["extraction_repo"]
+
+        class FailingEventPublisher:
+            """Event publisher that simulates a handler failure."""
+            def publish(self, event) -> list[tuple[str, Exception]]:
+                return [("audit_handler", RuntimeError("handler failed"))]
+
+        service = ExtractionService(
+            ontology_repo=ontology_repo,
+            embedding_service=embedding_service,
+            llm=llm,
+            nlp=nlp,
+            reference_sources=reference_sources,
+            event_publisher=FailingEventPublisher(),
+            extraction_repo=extraction_repo,
+            similarity_threshold=0.85,
+        )
+
+        with patch("domain.extraction.services._logger") as mock_logger:
+            result = service.extract("Test text")
+
+        assert isinstance(result, ExtractionResult)
+        mock_logger.warning.assert_called_once()
+        warning_msg = mock_logger.warning.call_args[0][0]
+        assert "Event handlers failed" in warning_msg
 
 
 class TestExtractionServiceErrorHandling:

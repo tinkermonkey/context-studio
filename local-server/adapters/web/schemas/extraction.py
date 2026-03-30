@@ -29,6 +29,7 @@ class ExtractedEntitySchema(BaseModel):
     confidence: float = Field(..., description="Confidence score from 0.0 to 1.0")
     uri: Optional[str] = Field(None, description="Optional URI to external knowledge base")
     description: Optional[str] = Field(None, description="Optional description of the entity")
+    matched_class_id: Optional[str] = Field(None, description="ID of matched ontology class, if any")
     properties: dict = Field(default_factory=dict, description="Optional metadata key-value pairs")
 
     class Config:

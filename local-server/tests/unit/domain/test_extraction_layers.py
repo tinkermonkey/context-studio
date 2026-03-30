@@ -734,3 +734,34 @@ class TestLayer3ReferenceEnrichment:
 
         # Should use reference URI instead of prior URI
         assert output.entities[0].uri == ref_result.uri
+
+    def test_reference_continues_past_failing_source(self):
+        """A source that raises during search does not block other sources."""
+        prior_entity = ExtractedEntity(label="Apple", entity_type="ORG")
+        input_data = LayerInput(
+            text="Test text",
+            existing_entities=[prior_entity],
+        )
+
+        ref_result = ReferenceResult(
+            uri="https://dbpedia.org/resource/Apple_Inc.",
+            label="Apple Inc.",
+            description="Technology company",
+            source="DBpedia",
+        )
+
+        # First source raises, second source returns a valid result
+        failing_source = FakeReferenceSource(source_name_val="FailingSource", should_fail=True)
+        working_source = FakeReferenceSource(
+            source_name_val="WorkingSource",
+            results_map={"Apple": [ref_result]},
+        )
+
+        output = layers.reference.execute(input_data, [failing_source, working_source])
+
+        # Enrichment should succeed via the working source
+        assert len(output.entities) == 1
+        assert output.entities[0].uri == ref_result.uri
+        # Failed source name is recorded in metadata
+        assert output.metadata["sources_failed"] == 1
+        assert "FailingSource" in output.metadata["failed_source_names"]

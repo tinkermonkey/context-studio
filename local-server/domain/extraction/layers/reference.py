@@ -67,6 +67,7 @@ def execute(input: LayerInput, sources: list[ReferenceSource]) -> LayerOutput:
     # For each entity from prior layers, attempt to enrich with reference data
     enrichment_count = 0
     enriched_ids = set()
+    failed_source_names: list[str] = []
 
     for prior_entity in input.existing_entities:
         if prior_entity.id in enriched_ids:
@@ -77,8 +78,13 @@ def execute(input: LayerInput, sources: list[ReferenceSource]) -> LayerOutput:
                 results = source.search(prior_entity.label, limit=5)
             except Exception as e:
                 _logger.warning(
-                    f"Source {source.source_name} failed during search for '{prior_entity.label}': {e}"
+                    "Source %s failed during search for '%s': %s",
+                    source.source_name,
+                    prior_entity.label,
+                    e,
                 )
+                if source.source_name not in failed_source_names:
+                    failed_source_names.append(source.source_name)
                 continue
 
             if results:
@@ -114,5 +120,7 @@ def execute(input: LayerInput, sources: list[ReferenceSource]) -> LayerOutput:
             "enriched_count": enrichment_count,
             "sources_checked": len(available_sources),
             "sources_available": [s.source_name for s in available_sources],
+            "sources_failed": len(failed_source_names),
+            "failed_source_names": failed_source_names,
         }),
     )

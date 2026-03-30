@@ -102,6 +102,12 @@ JSON Array:"""
                     json_match = response_text[start_idx:end_idx]
             except ValueError:
                 parse_error = "No closing JSON bracket found in response"
+        elif response_text:
+            parse_error = "LLM response contained no JSON array"
+            _logger.warning(
+                "LLM response contained no JSON array: %s",
+                response_text[:200],
+            )
 
         if json_match:
             try:
