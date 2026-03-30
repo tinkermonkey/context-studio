@@ -471,5 +471,5 @@ class SQLiteChangeRepository:
             submitted_at=cast(datetime, orm_proposal.submitted_at),
             reviewed_at=cast(Optional[datetime], orm_proposal.reviewed_at),
             reviewer_notes=cast(Optional[str], orm_proposal.reviewer_notes),
-            conflict_resolutions=cast(dict[str, dict[str, object]], orm_proposal.conflict_resolutions or {}),
+            conflict_resolutions=cast(dict[str, dict[str, str]], orm_proposal.conflict_resolutions or {}),
         )
