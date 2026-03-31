@@ -46,9 +46,15 @@ from domain.graph.services import GraphAnalysisService
 from domain.extraction.services import ExtractionService
 from domain.extraction.ports import ReferenceSource
 from domain.pipeline.services import PipelineService
+from domain.versioning.services import VersioningService
 from domain.ontology.events import GraphInvalidated
 from domain.extraction.events import ExtractionCompleted
 from domain.pipeline.events import PipelineExecuted
+from domain.versioning.events import ChangesetMerged, SyncCompleted
+
+# Import sync adapters
+from adapters.sync.s3_sync import S3SyncAdapter
+from adapters.sync.noop_sync import NoOpSyncTarget
 
 # Import routes
 from adapters.web.ontology_routes import router as ontology_router
@@ -56,6 +62,7 @@ from adapters.web.graph_routes import router as graph_router
 from adapters.web.extraction_routes import router as extraction_router
 from adapters.web.pipeline_routes import router as pipeline_router
 from adapters.web.reference_routes import router as reference_router
+from adapters.web.versioning_routes import router as versioning_router
 from adapters.web.schemas.admin import SystemHealthResponse
 
 logger = get_logger(__name__)
@@ -190,6 +197,31 @@ async def lifespan(app: FastAPI):
         )
         logger.info("PipelineService created and wired with adapters")
 
+        # Versioning service with sync adapter
+        sync_config = settings.sync if hasattr(settings, "sync") else None
+        if sync_config and sync_config.s3_bucket:
+            try:
+                sync_target = S3SyncAdapter(
+                    bucket=sync_config.s3_bucket,
+                    prefix=sync_config.s3_prefix or "context-studio",
+                    aws_access_key=sync_config.s3_access_key or "",
+                    aws_secret_key=sync_config.s3_secret_key or "",
+                    region=sync_config.s3_region or "us-east-1",
+                )
+                logger.info("S3SyncAdapter initialized for remote sync")
+            except Exception as e:
+                logger.warning(f"Failed to initialize S3SyncAdapter, falling back to no-op: {e}")
+                sync_target = NoOpSyncTarget()
+        else:
+            sync_target = NoOpSyncTarget()
+            logger.info("S3 not configured, using no-op sync target")
+
+        versioning_service = VersioningService(
+            change_repo=change_repo,
+            sync_target=sync_target,
+        )
+        logger.info("VersioningService created and wired with sync adapter")
+
         # --- Wire event subscriptions ---
 
         event_publisher.subscribe(GraphInvalidated, graph_service.on_graph_invalidated)
@@ -201,12 +233,19 @@ async def lifespan(app: FastAPI):
         event_publisher.subscribe(PipelineExecuted, change_recorder.on_pipeline_executed)
         logger.info("Event subscription: PipelineExecuted -> ChangeEventRecorder.on_pipeline_executed")
 
+        event_publisher.subscribe(ChangesetMerged, versioning_service.on_changeset_merged)
+        logger.info("Event subscription: ChangesetMerged -> VersioningService.on_changeset_merged")
+
+        event_publisher.subscribe(SyncCompleted, versioning_service.on_sync_completed)
+        logger.info("Event subscription: SyncCompleted -> VersioningService.on_sync_completed")
+
         # --- Store services in app.state for dependency injection ---
 
         app.state.ontology_service = ontology_service
         app.state.graph_service = graph_service
         app.state.extraction_service = extraction_service
         app.state.pipeline_service = pipeline_service
+        app.state.versioning_service = versioning_service
         app.state.db_manager = db_manager
         app.state.reference_sources = reference_sources
 
@@ -247,6 +286,7 @@ app.include_router(graph_router)
 app.include_router(extraction_router)
 app.include_router(pipeline_router)
 app.include_router(reference_router)
+app.include_router(versioning_router)
 
 
 @app.get("/api/health", response_model=SystemHealthResponse)

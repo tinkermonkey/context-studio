@@ -14,8 +14,9 @@ from typing import Optional
 
 from .entities import ChangeEvent, EntityVersion, Changeset, Proposal, MergeResult, Conflict, ConflictReport
 from .exceptions import VersionNotFoundError, ChangesetStateError, ConflictResolutionError
-from .ports import ChangeRepository
-from .value_objects import ChangeState
+from .ports import ChangeRepository, SyncTarget
+from .value_objects import ChangeState, SyncStatus, SyncResult
+from .events import ChangesetMerged, SyncCompleted
 
 _logger = logging.getLogger(__name__)
 
@@ -31,14 +32,17 @@ class VersioningService:
     def __init__(
         self,
         change_repo: ChangeRepository,
+        sync_target: SyncTarget,
     ) -> None:
         """
         Initialize the VersioningService.
 
         Args:
             change_repo: Repository for persisting and retrieving versioning entities
+            sync_target: Adapter for remote synchronization (S3, etc.)
         """
         self._repo = change_repo
+        self._sync = sync_target
 
     # ============================================================================
     # Change History Query Methods
@@ -544,3 +548,136 @@ class VersioningService:
             result.conflicts_resolved,
         )
         return result
+
+    # ============================================================================
+    # Synchronization Methods
+    # ============================================================================
+
+    def push_changes(self) -> SyncResult:
+        """
+        Push unprocessed local changes to the remote sync target.
+
+        Retrieves unprocessed change events, pushes them to the sync target (e.g., S3),
+        and marks them as processed upon successful push.
+
+        Returns:
+            SyncResult with count of pushed events and any errors
+
+        Publishes:
+            SyncCompleted event after completion
+        """
+        events = self._repo.get_unprocessed(limit=500)
+        result = self._sync.push(events)
+
+        # Mark as processed only the events that were actually pushed
+        if result.pushed > 0:
+            pushed_event_ids = [e.id for e in events[: result.pushed]]
+            self._repo.mark_processed(pushed_event_ids)
+            _logger.info(
+                "Marked %d change events as processed after push",
+                result.pushed,
+            )
+
+        _logger.info(
+            "Push completed (pushed=%d, errors=%d)",
+            result.pushed,
+            len(result.errors),
+        )
+        return result
+
+    def pull_changes(self) -> SyncResult:
+        """
+        Pull remote changes from the sync target and record them locally.
+
+        Fetches changes from the sync target (e.g., S3), records each change
+        in the local repository, and publishes a sync completion event.
+
+        Returns:
+            SyncResult with count of pulled events and any errors
+
+        Publishes:
+            SyncCompleted event after completion
+        """
+        events = self._sync.pull()
+
+        # Record each pulled event in the local repository
+        for event in events:
+            self._repo.record_change(
+                entity_id=event.entity_id,
+                entity_type=event.entity_type,
+                operation=event.operation,
+                new_state=event.new_state,
+                previous_state=event.previous_state,
+                user_id=event.user_id,
+                change_reason=event.change_reason,
+            )
+
+        result = SyncResult(pushed=0, pulled=len(events), errors=[])
+        _logger.info(
+            "Pull completed (pulled=%d)",
+            result.pulled,
+        )
+        return result
+
+    def get_sync_status(self) -> SyncStatus:
+        """
+        Get the current synchronization status.
+
+        Returns information about unprocessed changes awaiting push and whether
+        the remote sync target is configured.
+
+        Returns:
+            SyncStatus with unprocessed count and configuration status
+        """
+        unprocessed = self._repo.get_unprocessed(limit=10000)
+        count = len(unprocessed)
+
+        status = SyncStatus(
+            last_pushed_at=None,
+            last_pulled_at=None,
+            unprocessed_count=count,
+            is_configured=self._sync.is_configured(),
+        )
+        _logger.debug(
+            "Sync status: unprocessed=%d, configured=%s",
+            count,
+            self._sync.is_configured(),
+        )
+        return status
+
+    # ============================================================================
+    # Event Handlers (for subscribing to own events)
+    # ============================================================================
+
+    def on_changeset_merged(self, event: ChangesetMerged) -> None:
+        """
+        Handle ChangesetMerged event.
+
+        This handler is subscribed during app startup. It can be used for
+        audit logging, notifications, or other cross-context concerns.
+
+        Args:
+            event: The ChangesetMerged event
+        """
+        _logger.info(
+            "ChangesetMerged event handled (changeset_id=%s, proposal_id=%s, events_applied=%d)",
+            event.changeset_id,
+            event.proposal_id,
+            event.events_applied,
+        )
+
+    def on_sync_completed(self, event: SyncCompleted) -> None:
+        """
+        Handle SyncCompleted event.
+
+        This handler is subscribed during app startup. It can be used for
+        audit logging, notifications, or other cross-context concerns.
+
+        Args:
+            event: The SyncCompleted event
+        """
+        _logger.info(
+            "SyncCompleted event handled (direction=%s, events_count=%d)",
+            event.direction,
+            event.events_count,
+        )

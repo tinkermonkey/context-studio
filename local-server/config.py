@@ -67,6 +67,16 @@ class ReferenceConfig(BaseModel):
     )
 
 
+class S3Config(BaseModel):
+    """S3 synchronization configuration section"""
+
+    s3_bucket: Optional[str] = Field(default=None, description="S3 bucket name")
+    s3_prefix: Optional[str] = Field(default=None, description="S3 key prefix for changes")
+    s3_access_key: Optional[str] = Field(default=None, description="AWS access key ID")
+    s3_secret_key: Optional[str] = Field(default=None, description="AWS secret access key")
+    s3_region: Optional[str] = Field(default="us-east-1", description="AWS region")
+
+
 class Settings(BaseModel):
     """Centralized configuration settings"""
 
@@ -75,6 +85,7 @@ class Settings(BaseModel):
     logging: LoggingConfig = Field(default_factory=LoggingConfig)
     llm: LLMConfig = Field(default_factory=LLMConfig)
     reference: ReferenceConfig = Field(default_factory=ReferenceConfig)
+    sync: Optional[S3Config] = Field(default=None, description="S3 synchronization configuration")
 
 
 class ConfigurationManager:
