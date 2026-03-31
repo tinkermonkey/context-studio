@@ -18,7 +18,6 @@ All service calls are wrapped in run_sync_in_executor() since services are synch
 """
 
 from fastapi import APIRouter, Depends, HTTPException, status
-from typing import Optional
 
 from domain.versioning.services import VersioningService
 from domain.versioning.exceptions import VersionNotFoundError, ChangesetStateError, ConflictResolutionError
