@@ -1,0 +1,185 @@
+
+You are a Senior Software Engineer.
+
+I implement clean, well thought out code with proper error handling and maintainable architecture.
+
+**Issue Title**: Phase 4.5a: Admin domain layer and AdminService
+
+**Description**:
+Build the complete domain layer for the System Administration bounded context and implement `AdminService`. This phase can run in parallel with Phase 4.4a.
+
+## Requirements
+- Create `domain/admin/entities.py` with `SystemHealth`, `BackgroundTask`, `AppConfiguration` as `@dataclass`
+- Create `domain/admin/ports.py` with `ConfigurationStore` and `MetricsCollector` protocols
+- Create `domain/admin/exceptions.py` with `ConfigurationError` and `TaskNotFoundError`
+- Create `domain/admin/services.py` with `AdminService`
+- Create `tests/fakes/fake_configuration_store.py` and `tests/fakes/fake_metrics_collector.py`
+- Write unit tests in `tests/unit/admin/` using fake implementations
+
+## Design Guidance
+**Domain Entities** (`domain/admin/entities.py`):
+```python
+from __future__ import annotations
+from dataclasses import dataclass, field
+from datetime import datetime
+from typing import Optional
+
+@dataclass
+class SystemHealth:
+    status: str            # 'healthy' | 'degraded' | 'unhealthy'
+    database_connected: bool
+    nlp_pipeline_ready: bool
+    embedding_model_loaded: bool
+    llm_providers_available: list[str]
+    uptime_seconds: float
+    checked_at: datetime
+    issues: list[str] = field(default_factory=list)
+
+@dataclass
+class BackgroundTask:
+    id: str
+    name: str
+    status: str            # 'pending' | 'running' | 'completed' | 'failed'
+    created_at: datetime
+    started_at: Optional[datetime] = None
+    completed_at: Optional[datetime] = None
+    error: Optional[str] = None
+    result: Optional[dict] = None
+
+@dataclass
+class AppConfiguration:
+    sections: dict         # {section_name: dict_of_values}
+    # Wraps config sections as plain dicts.
+    # The domain entity does NOT depend on Pydantic.
+    # API key values are unmasked here; masking is a presentation concern.
+```
+
+**Ports** (`domain/admin/ports.py`):
+```python
+from typing import Protocol
+from domain.admin.entities import SystemHealth, AppConfiguration
+
+class MetricsCollector(Protocol):
+    def collect_health(self) -> SystemHealth: ...
+
+class ConfigurationStore(Protocol):
+    def load(self) -> AppConfiguration: ...
+    def save(self, config: AppConfiguration) -> None: ...
+```
+
+**Exceptions** (`domain/admin/exceptions.py`):
+```python
+class ConfigurationError(Exception): pass
+class TaskNotFoundError(Exception): pass
+```
+
+**AdminService** (`domain/admin/services.py`):
+```python
+from datetime import datetime, timezone
+from typing import Optional
+from domain.admin.entities import SystemHealth, BackgroundTask, AppConfiguration
+from domain.admin.ports import MetricsCollector, ConfigurationStore
+from domain.admin.exceptions import TaskNotFoundError, ConfigurationError
+import uuid
+
+class AdminService:
+    def __init__(
+        self,
+        metrics_collector: MetricsCollector,
+        config_store: ConfigurationStore,
+    ) -> None:
+        self._metrics = metrics_collector
+        self._config = config_store
+        self._tasks: dict[str, BackgroundTask] = {}  # in-memory
+
+    def check_health(self) -> SystemHealth:
+        return self._metrics.collect_health()
+
+    def get_configuration(self) -> AppConfiguration:
+        return self._config.load()
+
+    def update_configuration(
+        self, section: str, updates: dict
+    ) -> AppConfiguration:
+        config = self._config.load()
+        if section not in config.sections:
+            raise ConfigurationError(f'Unknown config section: {section}')
+        config.sections[section].update(updates)
+        self._config.save(config)
+        return config
+
+    def register_task(self, name: str) -> BackgroundTask:
+        task = BackgroundTask(
+            id=str(uuid.uuid4()), name=name,
+            status='pending', created_at=datetime.now(timezone.utc)
+        )
+        self._tasks[task.id] = task
+        return task
+
+    def get_task(self, task_id: str) -> BackgroundTask:
+        if task_id not in self._tasks:
+            raise TaskNotFoundError(f'Task {task_id} not found')
+        return self._tasks[task_id]
+
+    def list_tasks(self) -> list[BackgroundTask]:
+        return list(self._tasks.values())
+
+    def update_task_status(
+        self, task_id: str, status: str,
+        error: Optional[str] = None,
+        result: Optional[dict] = None,
+    ) -> BackgroundTask:
+        task = self.get_task(task_id)
+        task.status = status
+        if status == 'running':
+            task.started_at = datetime.now(timezone.utc)
+        elif status in ('completed', 'failed'):
+            task.completed_at = datetime.now(timezone.utc)
+        task.error = error
+        task.result = result
+        return task
+```
+
+**Fake test doubles**:
+```python
+# tests/fakes/fake_metrics_collector.py
+class FakeMetricsCollector:
+    def __init__(self, health: SystemHealth = None):
+        self._health = health or SystemHealth(
+            status='healthy', database_connected=True,
+            nlp_pipeline_ready=True, embedding_model_loaded=True,
+            llm_providers_available=[], uptime_seconds=0.0,
+            checked_at=datetime.now(timezone.utc)
+        )
+    def collect_health(self) -> SystemHealth:
+        return self._health
+
+# tests/fakes/fake_configuration_store.py
+class FakeConfigurationStore:
+    def __init__(self):
+        self._config = AppConfiguration(sections={'llm': {}, 'database': {}})
+    def load(self) -> AppConfiguration:
+        return self._config
+    def save(self, config: AppConfiguration) -> None:
+        self._config = config
+```
+
+## Acceptance Criteria
+- [ ] `domain/admin/entities.py`, `ports.py`, `exceptions.py`, `services.py` all exist with no infrastructure imports
+- [ ] `python scripts/check_domain_imports.py` passes for `domain/admin/`
+- [ ] `AdminService.check_health()` delegates to `MetricsCollector.collect_health()`
+- [ ] `AdminService.get_configuration()` and `update_configuration()` delegate to `ConfigurationStore`
+- [ ] `update_configuration` raises `ConfigurationError` for unknown sections
+- [ ] `register_task`, `get_task`, `list_tasks`, `update_task_status` manage in-memory task state correctly
+- [ ] `get_task` raises `TaskNotFoundError` for unknown IDs
+- [ ] Fake test doubles exist in `tests/fakes/`
+- [ ] Unit tests cover all `AdminService` methods: `pytest tests/unit/admin/`
+
+## Parent Issue
+Part of #446
+
+## Discussion
+This work is detailed in the Re-Architecture Phase 4 issue.
+
+
+
