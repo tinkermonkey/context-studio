@@ -13,7 +13,6 @@ import tempfile
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
-import pytest
 from sqlalchemy import create_engine, text
 
 from adapters.metrics.system_collector import SystemMetricsCollector
