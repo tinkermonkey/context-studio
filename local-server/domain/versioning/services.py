@@ -334,13 +334,16 @@ class VersioningService:
         )
         return updated_proposal
 
+
+    # ============================================================================
+    # Conflict Resolution Methods (delegated to ConflictResolutionService)
+    # ============================================================================
+
     def detect_conflicts(
         self, proposal_id: str, resolutions: Optional[dict[str, dict[str, str]]] = None
     ) -> ConflictReport:
         """
         Detect field-level conflicts in a proposal.
-
-        Delegates to ConflictResolutionService if available.
 
         Args:
             proposal_id: ID of the proposal to check for conflicts
@@ -358,8 +361,6 @@ class VersioningService:
         """
         Automatically resolve all conflicts using last-write-wins strategy.
 
-        Delegates to ConflictResolutionService if available.
-
         Args:
             conflict_report: ConflictReport with unresolved conflicts
 
@@ -375,8 +376,6 @@ class VersioningService:
     ) -> ConflictReport:
         """
         Manually resolve conflicts in a proposal.
-
-        Delegates to ConflictResolutionService if available.
 
         Args:
             proposal_id: ID of the proposal to resolve conflicts for
@@ -499,23 +498,25 @@ class VersioningService:
         """
         Pull remote changes from the sync target and record them locally.
 
-        Fetches changes from the sync target (e.g., S3), records each change
-        in the local repository, and publishes a sync completion event.
+        Fetches changes from the sync target (e.g., S3) and records each change
+        in the local repository atomically (all events or none).
+
+        NOTE: The repository implementation MUST ensure that all record_change
+        calls within this method execute in a single transaction. If one call
+        fails, no events should be persisted to prevent partial success and
+        duplicates on re-pull.
 
         Returns:
             SyncResult with count of pulled events and any errors
 
         Publishes:
             SyncCompleted event after completion
-
-        Raises:
-            Unexpected exceptions are re-raised; repository and sync errors are logged
         """
         events = self._sync.pull()
+        recorded_events = []
         errors = []
-        pulled_count = 0
 
-        # Record each pulled event in the local repository
+        # Record each pulled event - repository must handle transactional atomicity
         for event in events:
             try:
                 self._repo.record_change(
@@ -527,16 +528,26 @@ class VersioningService:
                     user_id=event.user_id,
                     change_reason=event.change_reason,
                 )
-                pulled_count += 1
+                recorded_events.append(event.id)
             except Exception as e:
                 error_msg = (
                     f"Failed to record change for entity {event.entity_id}: {str(e)}"
                 )
                 errors.append(error_msg)
                 _logger.error(error_msg)
-                continue
+                # If any record fails, log which events were recorded before failure
+                if recorded_events:
+                    _logger.warning(
+                        "Partial pull recorded %d events before failure. "
+                        "Repository must handle transaction rollback to prevent duplicates.",
+                        len(recorded_events),
+                    )
+                # Stop attempting to record more events after first failure
+                break
 
-        result = SyncResult(pushed=0, pulled=pulled_count, errors=errors, pushed_event_ids=[])
+        result = SyncResult(
+            pushed=0, pulled=len(recorded_events), errors=errors, pushed_event_ids=[]
+        )
         _logger.info(
             "Pull completed (pulled=%d, errors=%d)",
             result.pulled,
