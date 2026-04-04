@@ -16,13 +16,11 @@ import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))))
 
 import pytest
-from datetime import datetime, timezone
 
 from fastapi import FastAPI, status
 from fastapi.testclient import TestClient
 
 from domain.admin.services import AdminService
-from domain.admin.entities import SystemHealth, AppConfiguration, BackgroundTask
 from adapters.web.admin_routes import router
 from tests.fakes.fake_metrics_collector import FakeMetricsCollector
 from tests.fakes.fake_configuration_store import FakeConfigurationStore
@@ -169,9 +167,6 @@ class TestConfigurationEndpoint:
 
     def test_update_configuration_applies_changes(self, client, config_store):
         """PATCH /api/v1/admin/configuration/{section} applies updates."""
-        # Get initial configuration
-        initial = client.get("/api/v1/admin/configuration").json()
-
         # Update a section
         response = client.patch(
             "/api/v1/admin/configuration/llm",

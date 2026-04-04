@@ -9,14 +9,12 @@ import sys
 import os
 import tempfile
 import json
-import pytest
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 from config import ConfigurationManager
 from adapters.config.json_store import JSONFileConfigStore
 from domain.admin.entities import AppConfiguration
-from domain.admin.exceptions import ConfigurationError
 
 
 def test_load_configuration():
