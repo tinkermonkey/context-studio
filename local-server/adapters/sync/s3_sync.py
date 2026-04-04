@@ -90,7 +90,7 @@ class S3SyncAdapter:
             events: Sequence of ChangeEvent objects to push
 
         Returns:
-            SyncResult with count of pushed events
+            SyncResult with count of pushed events and their IDs
 
         Raises:
             RuntimeError: If S3 put operation fails
@@ -98,12 +98,14 @@ class S3SyncAdapter:
             botocore.exceptions.NoCredentialsError: If AWS credentials are invalid
         """
         if not events:
-            return SyncResult(pushed=0, pulled=0, errors=[])
+            return SyncResult(pushed=0, pulled=0, errors=[], pushed_event_ids=[])
 
+        pushed_event_ids = []
         try:
             # Serialize events as JSON Lines
             lines = []
             for event in events:
+                pushed_event_ids.append(event.id)
                 line = json.dumps(
                     {
                         "id": event.id,
@@ -141,7 +143,7 @@ class S3SyncAdapter:
                 len(events),
                 key,
             )
-            return SyncResult(pushed=len(events), pulled=0, errors=[])
+            return SyncResult(pushed=len(pushed_event_ids), pulled=0, errors=[], pushed_event_ids=pushed_event_ids)
 
         except Exception as e:
             error_msg = f"Failed to push changes to S3: {e}"

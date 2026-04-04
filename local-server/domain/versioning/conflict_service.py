@@ -7,7 +7,7 @@ Handles detection and resolution of field-level conflicts during proposal mergin
 import logging
 from typing import Optional
 
-from .entities import Conflict, ConflictReport
+from .entities import Conflict, ConflictReport, ChangeEvent
 from .exceptions import ConflictResolutionError, VersionNotFoundError
 from .ports import ChangeRepository
 
@@ -80,7 +80,7 @@ class ConflictResolutionService:
         changeset_events = self._repo.get_changes_by_ids(changeset.event_ids)
 
         # Group events by entity_id and sort by timestamp
-        events_by_entity: dict[str, list] = {}
+        events_by_entity: dict[str, list[ChangeEvent]] = {}
         for event in changeset_events:
             if event.entity_id not in events_by_entity:
                 events_by_entity[event.entity_id] = []

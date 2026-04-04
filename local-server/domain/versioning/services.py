@@ -10,7 +10,7 @@ from __future__ import annotations
 import logging
 import uuid
 from datetime import datetime, timezone
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING
 
 from .entities import ChangeEvent, EntityVersion, Changeset, Proposal, MergeResult, ConflictReport
 from .exceptions import VersionNotFoundError, ChangesetStateError, ConflictResolutionError
@@ -36,7 +36,7 @@ class VersioningService:
         self,
         change_repo: ChangeRepository,
         sync_target: SyncTarget,
-        conflict_service: Optional[ConflictResolutionService] = None,
+        conflict_service: ConflictResolutionService,
     ) -> None:
         """
         Initialize the VersioningService.
@@ -44,7 +44,7 @@ class VersioningService:
         Args:
             change_repo: Repository for persisting and retrieving versioning entities
             sync_target: Adapter for remote synchronization (S3, etc.)
-            conflict_service: Service for detecting and resolving conflicts (optional for backwards compatibility)
+            conflict_service: Service for detecting and resolving conflicts
         """
         self._repo = change_repo
         self._sync = sync_target
@@ -352,11 +352,6 @@ class VersioningService:
         Raises:
             VersionNotFoundError: If the proposal or changeset does not exist
         """
-        if self._conflict_service is None:
-            raise RuntimeError(
-                "ConflictResolutionService not configured. "
-                "Provide conflict_service when initializing VersioningService."
-            )
         return self._conflict_service.detect_conflicts(proposal_id, resolutions)
 
     def auto_resolve(self, conflict_report: ConflictReport) -> ConflictReport:
@@ -371,11 +366,6 @@ class VersioningService:
         Returns:
             The same ConflictReport with all conflicts marked as resolved
         """
-        if self._conflict_service is None:
-            raise RuntimeError(
-                "ConflictResolutionService not configured. "
-                "Provide conflict_service when initializing VersioningService."
-            )
         return self._conflict_service.auto_resolve(conflict_report)
 
     def resolve_conflicts(
@@ -399,11 +389,6 @@ class VersioningService:
             ConflictResolutionError: If any conflicts remain unresolved
             VersionNotFoundError: If the proposal or changeset does not exist
         """
-        if self._conflict_service is None:
-            raise RuntimeError(
-                "ConflictResolutionService not configured. "
-                "Provide conflict_service when initializing VersioningService."
-            )
         return self._conflict_service.resolve_conflicts(proposal_id, resolutions)
 
     def merge_proposal(self, proposal_id: str) -> MergeResult:
@@ -522,6 +507,9 @@ class VersioningService:
 
         Publishes:
             SyncCompleted event after completion
+
+        Raises:
+            Unexpected exceptions are re-raised; repository and sync errors are logged
         """
         events = self._sync.pull()
         errors = []
@@ -546,8 +534,9 @@ class VersioningService:
                 )
                 errors.append(error_msg)
                 _logger.error(error_msg)
+                continue
 
-        result = SyncResult(pushed=0, pulled=pulled_count, errors=errors)
+        result = SyncResult(pushed=0, pulled=pulled_count, errors=errors, pushed_event_ids=[])
         _logger.info(
             "Pull completed (pulled=%d, errors=%d)",
             result.pulled,

@@ -1,7 +1,7 @@
 """Value objects and enums for versioning domain."""
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from enum import Enum
 from typing import Optional
 
@@ -64,5 +64,5 @@ class SyncResult:
 
     pushed: int
     pulled: int
-    errors: list[str]
-    pushed_event_ids: list[str] = None  # Specific event IDs that were successfully pushed
+    errors: list[str] = field(default_factory=list)
+    pushed_event_ids: Optional[list[str]] = None  # Specific event IDs that were successfully pushed
