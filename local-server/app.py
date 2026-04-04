@@ -13,6 +13,7 @@ Architecture:
 """
 
 from contextlib import asynccontextmanager
+from datetime import datetime, timezone
 
 import uvicorn
 from fastapi import FastAPI, Request
@@ -64,7 +65,12 @@ from adapters.web.extraction_routes import router as extraction_router
 from adapters.web.pipeline_routes import router as pipeline_router
 from adapters.web.reference_routes import router as reference_router
 from adapters.web.versioning_routes import router as versioning_router
-from adapters.web.schemas.admin import SystemHealthResponse
+from adapters.web.admin_routes import router as admin_router
+
+# Import admin adapters and services
+from adapters.config.json_store import JSONFileConfigStore
+from adapters.metrics.system_collector import SystemMetricsCollector
+from domain.admin.services import AdminService
 
 logger = get_logger(__name__)
 
@@ -93,6 +99,9 @@ async def lifespan(app: FastAPI):
     - Clean up resources
     """
     logger.info("Starting Context Studio server")
+
+    # Capture application start time for uptime calculation
+    app_start_time = datetime.now(timezone.utc)
 
     # Get configuration from global singleton
     config_manager = get_config_manager()
@@ -224,6 +233,25 @@ async def lifespan(app: FastAPI):
         )
         logger.info("VersioningService created and wired with sync adapter")
 
+        # --- System Administration Service ---
+
+        config_store = JSONFileConfigStore(config_manager)
+        logger.info("JSONFileConfigStore created")
+
+        metrics_collector = SystemMetricsCollector(
+            llm_router=llm_router,
+            nlp_processor=nlp_processor,
+            embedding_service=embedding_service,
+            start_time=app_start_time,
+        )
+        logger.info("SystemMetricsCollector created")
+
+        admin_service = AdminService(
+            metrics_collector=metrics_collector,
+            config_store=config_store,
+        )
+        logger.info("AdminService created and wired with metrics and config store")
+
         # --- Wire event subscriptions ---
 
         event_publisher.subscribe(GraphInvalidated, graph_service.on_graph_invalidated)
@@ -248,6 +276,7 @@ async def lifespan(app: FastAPI):
         app.state.extraction_service = extraction_service
         app.state.pipeline_service = pipeline_service
         app.state.versioning_service = versioning_service
+        app.state.admin_service = admin_service
         app.state.db_manager = db_manager
         app.state.reference_sources = reference_sources
 
@@ -289,45 +318,7 @@ app.include_router(extraction_router)
 app.include_router(pipeline_router)
 app.include_router(reference_router)
 app.include_router(versioning_router)
-
-
-@app.get("/api/health", response_model=SystemHealthResponse)
-async def health(request: Request) -> SystemHealthResponse:
-    """
-    Health check endpoint.
-
-    Returns the overall system health status along with the readiness of optional
-    components (NLP pipeline, LLM providers).
-
-    Health status rules:
-    - "healthy": All core systems operational
-    - "degraded": Optional components (NLP, LLM) unavailable but system functional
-    - "unhealthy": Critical systems (database) unavailable
-
-    Returns:
-        SystemHealthResponse with status and component readiness
-    """
-    # Check NLP pipeline readiness
-    nlp_processor = getattr(request.app.state, "nlp_processor", None)
-    nlp_ready = nlp_processor.is_ready() if nlp_processor else False
-
-    # Check available LLM providers
-    llm_router = getattr(request.app.state, "llm_router", None)
-    llm_models = llm_router.list_available_models() if llm_router else []
-
-    # Determine overall status
-    # Core systems are always up if we got this far
-    # Degraded if optional components are missing or unavailable
-    if not nlp_ready or not llm_models:
-        status = "degraded"
-    else:
-        status = "healthy"
-
-    return SystemHealthResponse(
-        status=status,
-        nlp_pipeline_ready=nlp_ready,
-        llm_providers_available=llm_models,
-    )
+app.include_router(admin_router)
 
 
 if __name__ == "__main__":

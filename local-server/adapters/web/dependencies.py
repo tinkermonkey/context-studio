@@ -39,6 +39,7 @@ from domain.extraction.services import ExtractionService
 from domain.extraction.ports import ReferenceSource
 from domain.pipeline.services import PipelineService
 from domain.versioning.services import VersioningService
+from domain.admin.services import AdminService
 from adapters.persistence.sqlite.connection import DatabaseManager
 from utils.async_executor import run_sync_in_executor
 
@@ -216,4 +217,23 @@ async def get_versioning_service(request: Request) -> VersioningService:
     service = getattr(request.app.state, "versioning_service", None)
     if service is None:
         raise RuntimeError("VersioningService not initialized in app.state")
+    return service
+
+
+async def get_admin_service(request: Request) -> AdminService:
+    """
+    Extract the AdminService from app state.
+
+    Args:
+        request: FastAPI request object
+
+    Returns:
+        The AdminService instance from app.state
+
+    Raises:
+        RuntimeError: If service is not initialized in app.state
+    """
+    service = getattr(request.app.state, "admin_service", None)
+    if service is None:
+        raise RuntimeError("AdminService not initialized in app.state")
     return service
