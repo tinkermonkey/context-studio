@@ -99,6 +99,10 @@ class FakeChangeRepository:
         unprocessed.sort(key=lambda e: e.timestamp)
         return unprocessed[:limit]
 
+    def count_unprocessed(self) -> int:
+        """Count total unprocessed change events without loading them."""
+        return sum(1 for e in self._change_events.values() if not e.processed)
+
     # EntityVersion operations
 
     def save_version(self, version: EntityVersion) -> None:
