@@ -21,6 +21,7 @@ from domain.versioning.entities import EntityVersion, Proposal
 from domain.versioning.exceptions import VersionNotFoundError, ChangesetStateError, ConflictResolutionError
 from domain.versioning.value_objects import ChangeState
 from tests.fakes.fake_change_repository import FakeChangeRepository
+from tests.fakes.fake_sync_target import FakeSyncTarget
 
 
 # ============================================================================
@@ -35,9 +36,15 @@ def repo() -> FakeChangeRepository:
 
 
 @pytest.fixture
-def service(repo: FakeChangeRepository) -> VersioningService:
+def sync_target() -> FakeSyncTarget:
+    """Create a fresh fake sync target for each test."""
+    return FakeSyncTarget()
+
+
+@pytest.fixture
+def service(repo: FakeChangeRepository, sync_target: FakeSyncTarget) -> VersioningService:
     """Create a VersioningService with fake dependencies."""
-    return VersioningService(change_repo=repo)
+    return VersioningService(change_repo=repo, sync_target=sync_target)
 
 
 # ============================================================================

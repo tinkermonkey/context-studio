@@ -51,6 +51,7 @@ from domain.ontology.events import GraphInvalidated
 from domain.extraction.events import ExtractionCompleted
 from domain.pipeline.events import PipelineExecuted
 from domain.versioning.events import ChangesetMerged, SyncCompleted
+from domain.versioning.ports import SyncTarget
 
 # Import sync adapters
 from adapters.sync.s3_sync import S3SyncAdapter
@@ -199,6 +200,7 @@ async def lifespan(app: FastAPI):
 
         # Versioning service with sync adapter
         sync_config = settings.sync if hasattr(settings, "sync") else None
+        sync_target: SyncTarget
         if sync_config and sync_config.s3_bucket:
             try:
                 sync_target = S3SyncAdapter(
