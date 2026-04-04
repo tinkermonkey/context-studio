@@ -17,6 +17,7 @@ sys.path.insert(
 )
 
 from domain.versioning.services import VersioningService
+from domain.versioning.conflict_service import ConflictResolutionService
 from domain.versioning.entities import EntityVersion, Proposal
 from domain.versioning.exceptions import VersionNotFoundError, ChangesetStateError, ConflictResolutionError
 from domain.versioning.value_objects import ChangeState, ChangeOperation, ProposalState
@@ -44,7 +45,12 @@ def sync_target() -> FakeSyncTarget:
 @pytest.fixture
 def service(repo: FakeChangeRepository, sync_target: FakeSyncTarget) -> VersioningService:
     """Create a VersioningService with fake dependencies."""
-    return VersioningService(change_repo=repo, sync_target=sync_target)
+    conflict_service = ConflictResolutionService(change_repo=repo)
+    return VersioningService(
+        change_repo=repo,
+        sync_target=sync_target,
+        conflict_service=conflict_service,
+    )
 
 
 # ============================================================================

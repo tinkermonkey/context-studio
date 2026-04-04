@@ -27,6 +27,7 @@ from fastapi import FastAPI, status
 from fastapi.testclient import TestClient
 
 from domain.versioning.services import VersioningService
+from domain.versioning.conflict_service import ConflictResolutionService
 from domain.versioning.value_objects import ChangeOperation
 from adapters.persistence.sqlite.models import Base
 from adapters.persistence.sqlite.change_repo import SQLiteChangeRepository
@@ -70,9 +71,11 @@ def sync_target():
 @pytest.fixture
 def versioning_service(change_repository, sync_target):
     """Create VersioningService with no-op sync adapter."""
+    conflict_service = ConflictResolutionService(change_repo=change_repository)
     return VersioningService(
         change_repo=change_repository,
         sync_target=sync_target,
+        conflict_service=conflict_service,
     )
 
 

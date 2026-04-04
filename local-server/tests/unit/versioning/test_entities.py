@@ -77,8 +77,8 @@ class TestChangesetStateTransitions:
         changeset.transition_to(ChangeState.MERGED)
         assert changeset.state == ChangeState.MERGED
 
-    def test_staged_back_to_working_is_valid(self) -> None:
-        """Test transition back from staged to working."""
+    def test_staged_back_to_working_is_invalid(self) -> None:
+        """Test that transition back from staged to working raises error."""
         changeset = Changeset(
             id="cs1",
             name="Test changeset",
@@ -87,8 +87,8 @@ class TestChangesetStateTransitions:
             updated_at=datetime.now(timezone.utc),
         )
 
-        changeset.transition_to(ChangeState.WORKING)
-        assert changeset.state == ChangeState.WORKING
+        with pytest.raises(ChangesetStateError):
+            changeset.transition_to(ChangeState.WORKING)
 
     def test_proposed_back_to_working_is_valid(self) -> None:
         """Test transition back from proposed to working."""

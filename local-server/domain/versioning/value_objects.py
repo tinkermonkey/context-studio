@@ -53,8 +53,16 @@ class SyncStatus:
 
 @dataclass(frozen=True)
 class SyncResult:
-    """Result of a sync operation."""
+    """Result of a sync operation.
+
+    Attributes:
+        pushed: Count of successfully pushed events
+        pulled: Count of successfully pulled events
+        errors: List of error messages from failed operations
+        pushed_event_ids: Specific IDs of events that were successfully pushed
+    """
 
     pushed: int
     pulled: int
     errors: list[str]
+    pushed_event_ids: list[str] = None  # Specific event IDs that were successfully pushed

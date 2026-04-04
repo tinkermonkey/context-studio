@@ -50,12 +50,20 @@ class Changeset:
     event_ids: list[str] = field(default_factory=list)
 
     def transition_to(self, new_state: ChangeState) -> None:
-        """Enforce valid state transitions; raises ChangesetStateError on invalid."""
+        """Enforce valid state transitions; raises ChangesetStateError on invalid.
+
+        Valid transitions:
+        - WORKING → STAGED (prepare for review)
+        - STAGED → PROPOSED (submit for approval)
+        - PROPOSED → APPROVED (reviewer approves)
+        - PROPOSED → WORKING (reviewer rejects)
+        - APPROVED → MERGED (merge approved changes)
+        """
         from domain.versioning.exceptions import ChangesetStateError
 
         valid: dict[ChangeState, set[ChangeState]] = {
             ChangeState.WORKING: {ChangeState.STAGED},
-            ChangeState.STAGED: {ChangeState.PROPOSED, ChangeState.WORKING},
+            ChangeState.STAGED: {ChangeState.PROPOSED},
             ChangeState.PROPOSED: {ChangeState.APPROVED, ChangeState.WORKING},
             ChangeState.APPROVED: {ChangeState.MERGED},
             ChangeState.MERGED: set(),

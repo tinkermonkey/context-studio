@@ -48,6 +48,7 @@ from domain.extraction.services import ExtractionService
 from domain.extraction.ports import ReferenceSource
 from domain.pipeline.services import PipelineService
 from domain.versioning.services import VersioningService
+from domain.versioning.conflict_service import ConflictResolutionService
 from domain.ontology.events import GraphInvalidated
 from domain.extraction.events import ExtractionCompleted
 from domain.pipeline.events import PipelineExecuted
@@ -227,11 +228,15 @@ async def lifespan(app: FastAPI):
             sync_target = NoOpSyncTarget()
             logger.info("S3 not configured, using no-op sync target")
 
+        conflict_service = ConflictResolutionService(change_repo=change_repo)
+        logger.info("ConflictResolutionService created")
+
         versioning_service = VersioningService(
             change_repo=change_repo,
             sync_target=sync_target,
+            conflict_service=conflict_service,
         )
-        logger.info("VersioningService created and wired with sync adapter")
+        logger.info("VersioningService created and wired with sync adapter and conflict service")
 
         # --- System Administration Service ---
 
