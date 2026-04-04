@@ -1,36 +1,25 @@
-"""
-Exception classes for the Version Control & Collaboration domain.
-
-These exceptions represent domain-specific errors that may occur
-during versioning operations.
-"""
+"""Exceptions for versioning domain."""
 
 
-class VersioningError(Exception):
-    """Base exception for all versioning domain errors."""
-
-    pass
-
-
-class VersionNotFoundError(VersioningError):
+class VersionNotFoundError(Exception):
     """Raised when a requested version does not exist."""
 
     pass
 
 
-class ChangesetStateError(VersioningError):
+class ChangesetStateError(Exception):
     """Raised when an invalid changeset state transition is attempted."""
 
     pass
 
 
-class ConflictResolutionError(VersioningError):
+class ConflictResolutionError(Exception):
     """Raised when conflict resolution fails."""
 
     pass
 
 
-class SyncError(VersioningError):
-    """Raised when a synchronization operation fails."""
+class SyncError(Exception):
+    """Raised when synchronization fails."""
 
     pass
