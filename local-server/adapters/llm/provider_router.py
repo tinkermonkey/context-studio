@@ -25,8 +25,9 @@ class LLMProviderRouter:
     Routes LLM requests to appropriate providers based on model.
 
     Manages multiple LLM providers and routes completion requests to the correct
-    provider based on which models are available. Validates API keys at initialization
-    and logs warnings for invalid configurations without raising exceptions.
+    provider based on which models are available. Initialization errors are logged
+    but do not prevent router initialization — the router will function with any
+    available providers.
     """
 
     def __init__(self, openai_api_key: str = "", anthropic_api_key: str = "") -> None:
@@ -40,28 +41,18 @@ class LLMProviderRouter:
         self._providers: dict[str, LLMProvider] = {}
 
         if openai_api_key:
-            if not openai_api_key.startswith("sk-"):
-                logger.warning(
-                    "OpenAI API key format invalid — provider marked unavailable"
-                )
-            else:
-                try:
-                    self._providers["openai"] = OpenAIProvider(openai_api_key)
-                    logger.info("OpenAI provider initialized")
-                except Exception as e:
-                    logger.error(f"Failed to initialize OpenAI provider: {str(e)}")
+            try:
+                self._providers["openai"] = OpenAIProvider(openai_api_key)
+                logger.info("OpenAI provider initialized")
+            except Exception as e:
+                logger.error(f"Failed to initialize OpenAI provider: {str(e)}")
 
         if anthropic_api_key:
-            if not anthropic_api_key.startswith("sk-ant-"):
-                logger.warning(
-                    "Anthropic API key format invalid — provider marked unavailable"
-                )
-            else:
-                try:
-                    self._providers["anthropic"] = AnthropicProvider(anthropic_api_key)
-                    logger.info("Anthropic provider initialized")
-                except Exception as e:
-                    logger.error(f"Failed to initialize Anthropic provider: {str(e)}")
+            try:
+                self._providers["anthropic"] = AnthropicProvider(anthropic_api_key)
+                logger.info("Anthropic provider initialized")
+            except Exception as e:
+                logger.error(f"Failed to initialize Anthropic provider: {str(e)}")
 
     def complete(
         self,
