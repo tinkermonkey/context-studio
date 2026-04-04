@@ -328,6 +328,59 @@ class TestChangesetOperations:
         with pytest.raises(VersionNotFoundError):
             repository.update_changeset(changeset)
 
+    def test_update_changeset_persists_event_ids_changes(self, repository) -> None:
+        """Verify update_changeset correctly syncs changes to event_ids in junction table."""
+        # Create initial events
+        event_id_1 = repository.record_change(
+            entity_id="entity1", entity_type="TestEntity", operation="create", new_state={"name": "test"}
+        )
+        event_id_2 = repository.record_change(
+            entity_id="entity1", entity_type="TestEntity", operation="update", new_state={"name": "updated"}
+        )
+
+        # Create changeset with first two events
+        changeset = Changeset(
+            id="cs1",
+            name="Initial Changeset",
+            description="Initial description",
+            state=ChangeState.WORKING,
+            created_at=datetime.now(timezone.utc),
+            updated_at=datetime.now(timezone.utc),
+            event_ids=[event_id_1, event_id_2],
+        )
+
+        repository.create_changeset(changeset)
+
+        # Create additional events
+        event_id_3 = repository.record_change(
+            entity_id="entity2", entity_type="TestEntity", operation="create", new_state={"name": "new"}
+        )
+        event_id_4 = repository.record_change(
+            entity_id="entity2", entity_type="TestEntity", operation="update", new_state={"name": "newer"}
+        )
+
+        # Update changeset with new event list (removed event_id_2, added event_id_3 and event_id_4)
+        updated_changeset = Changeset(
+            id="cs1",
+            name="Updated Changeset",
+            description="Updated description",
+            state=ChangeState.STAGED,
+            created_at=changeset.created_at,
+            updated_at=datetime.now(timezone.utc),
+            event_ids=[event_id_1, event_id_3, event_id_4],
+        )
+
+        repository.update_changeset(updated_changeset)
+
+        # Verify the changeset has the updated event_ids
+        retrieved = repository.get_changeset("cs1")
+
+        assert retrieved is not None
+        assert retrieved.name == "Updated Changeset"
+        assert retrieved.description == "Updated description"
+        assert retrieved.state == ChangeState.STAGED
+        assert set(retrieved.event_ids) == {event_id_1, event_id_3, event_id_4}
+
 
 class TestProposalOperations:
     """Test Proposal persistence operations."""

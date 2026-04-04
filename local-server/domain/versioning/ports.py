@@ -39,7 +39,15 @@ class ChangeRepository(Protocol):
         ...
 
     def mark_processed(self, event_ids: list[str]) -> None:
-        """Mark events as processed."""
+        """
+        Mark events as processed.
+
+        Args:
+            event_ids: List of event IDs to mark as processed
+
+        Raises:
+            VersionNotFoundError: If any event IDs don't exist
+        """
         ...
 
     def get_unprocessed(self, limit: int = 500) -> list[ChangeEvent]:
@@ -77,7 +85,18 @@ class ChangeRepository(Protocol):
         ...
 
     def update_changeset(self, changeset: Changeset) -> Changeset:
-        """Update an existing changeset."""
+        """
+        Update an existing changeset.
+
+        Args:
+            changeset: The Changeset domain entity with updated fields
+
+        Returns:
+            The updated Changeset domain entity
+
+        Raises:
+            VersionNotFoundError: If the changeset does not exist
+        """
         ...
 
     def create_proposal(self, proposal: Proposal) -> Proposal:
@@ -89,7 +108,18 @@ class ChangeRepository(Protocol):
         ...
 
     def update_proposal(self, proposal: Proposal) -> Proposal:
-        """Update an existing proposal."""
+        """
+        Update an existing proposal.
+
+        Args:
+            proposal: The Proposal domain entity with updated fields
+
+        Returns:
+            The updated Proposal domain entity
+
+        Raises:
+            VersionNotFoundError: If the proposal does not exist
+        """
         ...
 
 

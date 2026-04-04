@@ -357,7 +357,7 @@ class SQLiteChangeRepository:
 
     def update_changeset(self, changeset: DomainChangeset) -> DomainChangeset:
         """
-        Update an existing changeset.
+        Update an existing changeset and persist associated event IDs to junction table.
 
         Args:
             changeset: The Changeset domain entity to update
@@ -378,6 +378,18 @@ class SQLiteChangeRepository:
             orm_changeset.description = changeset.description
             orm_changeset.state = changeset.state.value
             orm_changeset.updated_at = datetime.now(timezone.utc)
+
+            # Delete existing event associations and re-insert with updated list
+            session.query(ChangesetEvent).filter(
+                ChangesetEvent.changeset_id == changeset.id
+            ).delete()
+
+            for event_id in changeset.event_ids:
+                changeset_event = ChangesetEvent(
+                    changeset_id=changeset.id,
+                    change_event_id=event_id,
+                )
+                session.add(changeset_event)
 
             session.commit()
 
