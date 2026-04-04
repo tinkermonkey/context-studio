@@ -66,3 +66,16 @@ class SyncResult:
     pulled: int
     errors: list[str] = field(default_factory=list)
     pushed_event_ids: Optional[list[str]] = None  # Specific event IDs that were successfully pushed
+
+
+@dataclass(frozen=True)
+class ChangeHistoryResult:
+    """Paginated result of a change history query.
+
+    Attributes:
+        events: List of change events matching the query
+        total: Total count of all matching events (without limit applied)
+    """
+
+    events: list
+    total: int

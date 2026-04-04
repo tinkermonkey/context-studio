@@ -10,7 +10,7 @@ from __future__ import annotations
 import logging
 import uuid
 from datetime import datetime, timezone
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 
 from .entities import ChangeEvent, EntityVersion, Changeset, Proposal, MergeResult, ConflictReport
 from .exceptions import VersionNotFoundError, ChangesetStateError, ConflictResolutionError
@@ -59,7 +59,7 @@ class VersioningService:
         entity_id: Optional[str] = None,
         since: Optional[datetime] = None,
         limit: int = 100,
-    ) -> list[ChangeEvent]:
+    ) -> tuple[list[ChangeEvent], int]:
         """
         Retrieve change events with optional filters.
 
@@ -69,7 +69,7 @@ class VersioningService:
             limit: Maximum number of results to return
 
         Returns:
-            List of matching ChangeEvent objects
+            Tuple of (list of matching ChangeEvent objects, total count without limit)
         """
         return self._repo.get_changes(entity_id=entity_id, since=since, limit=limit)
 

@@ -65,8 +65,9 @@ class TestChangeHistoryQueries:
         self, service: VersioningService, repo: FakeChangeRepository
     ) -> None:
         """Test retrieving change history when no changes exist."""
-        history = service.get_change_history()
+        history, total = service.get_change_history()
         assert history == []
+        assert total == 0
 
     def test_get_change_history_all_events(
         self, service: VersioningService, repo: FakeChangeRepository
@@ -86,8 +87,9 @@ class TestChangeHistoryQueries:
             new_state={"name": "Entity2"},
         )
 
-        history = service.get_change_history()
+        history, total = service.get_change_history()
         assert len(history) == 2
+        assert total == 2
         assert any(e.id == event_id_1 for e in history)
         assert any(e.id == event_id_2 for e in history)
 
@@ -108,8 +110,9 @@ class TestChangeHistoryQueries:
             new_state={"name": "Entity2"},
         )
 
-        history = service.get_change_history(entity_id="entity1")
+        history, total = service.get_change_history(entity_id="entity1")
         assert len(history) == 1
+        assert total == 1
         assert history[0].entity_id == "entity1"
 
     def test_get_change_history_filtered_by_since(
@@ -127,9 +130,10 @@ class TestChangeHistoryQueries:
         # Let's retrieve after a time before now
         since = now - timedelta(seconds=1)
 
-        history = service.get_change_history(since=since)
+        history, total = service.get_change_history(since=since)
         # The recorded event should be after 'since'
         assert len(history) > 0
+        assert total > 0
 
     def test_get_change_history_respects_limit(
         self, service: VersioningService, repo: FakeChangeRepository
@@ -143,8 +147,9 @@ class TestChangeHistoryQueries:
                 new_state={"name": f"Entity{i}"},
             )
 
-        history = service.get_change_history(limit=5)
+        history, total = service.get_change_history(limit=5)
         assert len(history) == 5
+        assert total == 10
 
     def test_get_entity_version_success(
         self, service: VersioningService, repo: FakeChangeRepository

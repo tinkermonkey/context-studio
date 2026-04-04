@@ -90,10 +90,10 @@ class EntityVersionResponse(BaseModel):
 
 
 class ChangeHistoryResponse(BaseModel):
-    """Response with change history results"""
+    """Response with paginated change history results"""
 
-    events: list[ChangeEventResponse] = Field(..., description="List of change events")
-    total: int = Field(..., description="Total number of events matching the query")
+    events: list[ChangeEventResponse] = Field(..., description="List of change events matching the query (limited by limit parameter)")
+    total: int = Field(..., description="Total count of all events matching the query (without limit applied)")
 
 
 class ChangesetResponse(BaseModel):

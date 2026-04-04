@@ -71,8 +71,8 @@ class FakeChangeRepository:
         entity_id: Optional[str] = None,
         since: Optional[datetime] = None,
         limit: int = 100,
-    ) -> list[ChangeEvent]:
-        """Retrieve change events with optional filters."""
+    ) -> tuple[list[ChangeEvent], int]:
+        """Retrieve change events with optional filters and return total count."""
         events = list(self._change_events.values())
 
         if entity_id:
@@ -81,8 +81,9 @@ class FakeChangeRepository:
         if since:
             events = [e for e in events if e.timestamp >= since]
 
+        total_count = len(events)
         events.sort(key=lambda e: e.timestamp, reverse=True)
-        return events[:limit]
+        return events[:limit], total_count
 
     def get_changes_by_ids(self, event_ids: list[str]) -> list[ChangeEvent]:
         """Retrieve change events by their IDs."""

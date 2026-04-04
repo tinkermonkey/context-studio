@@ -104,7 +104,7 @@ class SQLiteChangeRepository:
         entity_id: Optional[str] = None,
         since: Optional[datetime] = None,
         limit: int = 100,
-    ) -> list[DomainChangeEvent]:
+    ) -> tuple[list[DomainChangeEvent], int]:
         """
         Retrieve change events with optional filters.
 
@@ -114,21 +114,29 @@ class SQLiteChangeRepository:
             limit: Maximum number of results to return
 
         Returns:
-            List of matching ChangeEvent domain entities
+            Tuple of (list of matching ChangeEvent domain entities, total count without limit)
         """
         with self.session_factory() as session:
-            query = select(ChangeEvent)
-
+            # Build base query with filters
+            base_query = select(ChangeEvent)
             if entity_id:
-                query = query.where(ChangeEvent.entity_id == entity_id)
+                base_query = base_query.where(ChangeEvent.entity_id == entity_id)
             if since:
-                query = query.where(ChangeEvent.timestamp >= since)
+                base_query = base_query.where(ChangeEvent.timestamp >= since)
 
-            query = query.order_by(ChangeEvent.timestamp.desc()).limit(limit)
+            # Get total count before applying limit
+            count_query = select(func.count(ChangeEvent.id)).select_from(ChangeEvent)
+            if entity_id:
+                count_query = count_query.where(ChangeEvent.entity_id == entity_id)
+            if since:
+                count_query = count_query.where(ChangeEvent.timestamp >= since)
+            total_count = session.execute(count_query).scalar() or 0
 
-            orm_events = session.execute(query).scalars().all()
+            # Apply ordering and limit to get paginated results
+            paginated_query = base_query.order_by(ChangeEvent.timestamp.desc()).limit(limit)
+            orm_events = session.execute(paginated_query).scalars().all()
 
-            return [self._to_domain_change_event(e) for e in orm_events]
+            return [self._to_domain_change_event(e) for e in orm_events], total_count
 
     def get_changes_by_ids(self, event_ids: list[str]) -> list[DomainChangeEvent]:
         """
