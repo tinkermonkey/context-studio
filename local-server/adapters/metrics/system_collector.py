@@ -39,6 +39,11 @@ class SystemMetricsCollector:
             nlp_processor: NLP processor for checking readiness
             embedding_service: Embedding service for checking model load status
             start_time: Application start time for uptime calculation
+
+        Note:
+            TODO: Replace concrete adapter types with port protocols when available.
+            Currently coupled to LLMProviderRouter, SpacyNLPProcessor, and
+            SentenceTransformerEmbedding directly due to lack of defined ports.
         """
         self._llm = llm_router
         self._nlp = nlp_processor
@@ -62,7 +67,8 @@ class SystemMetricsCollector:
         llm_providers = self._llm.list_available_providers()
         nlp_ready = self._nlp.is_ready()
         embedding_loaded = self._embedding.is_loaded()
-        db_connected = True  # If we got here, database is up
+        # TODO: Inject DB session and verify actual connectivity
+        db_connected = True  # If we got here, database is up (known limitation)
 
         # Aggregate issues
         if not nlp_ready:

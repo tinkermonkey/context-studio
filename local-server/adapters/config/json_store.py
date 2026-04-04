@@ -51,7 +51,7 @@ class JSONFileConfigStore:
                 'database': settings.database.model_dump(),
                 'logging': settings.logging.model_dump(),
                 'llm': settings.llm.model_dump(),
-                'reference': settings.reference.model_dump() if hasattr(settings, 'reference') else {},
+                'reference': settings.reference.model_dump() if settings.reference else None,
                 'sync': settings.sync.model_dump() if settings.sync else None,
             }
             logger.debug("Configuration loaded successfully")
@@ -79,8 +79,9 @@ class JSONFileConfigStore:
                 'database': config.sections.get('database', {}),
                 'logging': config.sections.get('logging', {}),
                 'llm': config.sections.get('llm', {}),
-                'reference': config.sections.get('reference', {}),
             }
+            if config.sections.get('reference') is not None:
+                settings_dict['reference'] = config.sections['reference']
             if config.sections.get('sync') is not None:
                 settings_dict['sync'] = config.sections['sync']
 

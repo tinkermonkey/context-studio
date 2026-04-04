@@ -9,6 +9,7 @@ import sys
 import os
 import tempfile
 import json
+import pytest
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
@@ -206,10 +207,5 @@ def test_configuration_error_on_invalid_save():
         )
 
         # Attempting to save invalid config should raise ConfigurationError
-        try:
+        with pytest.raises(ConfigurationError):
             store.save(config)
-            # If no error is raised, the implementation was lenient
-            # which is acceptable for graceful degradation
-        except ConfigurationError:
-            # Expected
-            pass

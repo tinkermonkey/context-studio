@@ -160,8 +160,8 @@ def test_collect_health_issues_list():
 
     # Should have issues for missing providers and possibly embedding
     assert isinstance(health.issues, list)
-    # At minimum, no LLM providers should be reported
-    assert any("LLM" in issue for issue in health.issues) or len(health.issues) >= 0
+    assert len(health.issues) > 0
+    assert any("LLM" in issue for issue in health.issues)
 
 
 def test_collect_health_database_always_connected():
