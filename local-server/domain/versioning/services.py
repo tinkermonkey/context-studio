@@ -12,7 +12,7 @@ import uuid
 from datetime import datetime, timezone
 from typing import TYPE_CHECKING, Optional
 
-from .entities import ChangeEvent, EntityVersion, Changeset, Proposal, MergeResult, ConflictReport
+from .entities import EntityVersion, Changeset, Proposal, MergeResult, ConflictReport
 from .exceptions import VersionNotFoundError, ChangesetStateError, ConflictResolutionError
 from .ports import ChangeRepository, SyncTarget
 from .value_objects import ChangeState, ProposalState, SyncStatus, SyncResult, ChangeHistoryResult

@@ -62,9 +62,8 @@ class TestConflictDetection:
         proposal = Proposal(
             id="proposal1",
             changeset_id="nonexistent_changeset",
-            field_changes={},
-            created_at=datetime.now(timezone.utc),
-            status=ProposalState.OPEN,
+            state=ProposalState.OPEN,
+            submitted_at=datetime.now(timezone.utc),
         )
         repo._proposals["proposal1"] = proposal
 
@@ -75,20 +74,22 @@ class TestConflictDetection:
         self, service: ConflictResolutionService, repo: FakeChangeRepository
     ) -> None:
         """Test detect_conflicts with no events in changeset."""
+        now = datetime.now(timezone.utc)
         changeset = Changeset(
             id="changeset1",
+            name="changeset1",
             event_ids=[],
             state=ChangeState.PROPOSED,
-            created_at=datetime.now(timezone.utc),
+            created_at=now,
+            updated_at=now,
         )
         repo._changesets["changeset1"] = changeset
 
         proposal = Proposal(
             id="proposal1",
             changeset_id="changeset1",
-            field_changes={},
-            created_at=datetime.now(timezone.utc),
-            status=ProposalState.OPEN,
+            state=ProposalState.OPEN,
+            submitted_at=now,
         )
         repo._proposals["proposal1"] = proposal
 
@@ -109,11 +110,14 @@ class TestConflictDetection:
         )
 
         # Create changeset with this event
+        now = datetime.now(timezone.utc)
         changeset = Changeset(
             id="changeset1",
+            name="changeset1",
             event_ids=[event_id],
             state=ChangeState.PROPOSED,
-            created_at=datetime.now(timezone.utc),
+            created_at=now,
+            updated_at=now,
         )
         repo._changesets["changeset1"] = changeset
 
@@ -121,9 +125,8 @@ class TestConflictDetection:
         proposal = Proposal(
             id="proposal1",
             changeset_id="changeset1",
-            field_changes={},
-            created_at=datetime.now(timezone.utc),
-            status=ProposalState.OPEN,
+            state=ProposalState.OPEN,
+            submitted_at=now,
         )
         repo._proposals["proposal1"] = proposal
 
@@ -155,11 +158,14 @@ class TestConflictDetection:
         )
 
         # Create changeset with both events
+        now = datetime.now(timezone.utc)
         changeset = Changeset(
             id="changeset1",
+            name="changeset1",
             event_ids=[event_id_1, event_id_2],
             state=ChangeState.PROPOSED,
-            created_at=datetime.now(timezone.utc),
+            created_at=now,
+            updated_at=now,
         )
         repo._changesets["changeset1"] = changeset
 
@@ -167,9 +173,8 @@ class TestConflictDetection:
         proposal = Proposal(
             id="proposal1",
             changeset_id="changeset1",
-            field_changes={},
-            created_at=datetime.now(timezone.utc),
-            status=ProposalState.OPEN,
+            state=ProposalState.OPEN,
+            submitted_at=now,
         )
         repo._proposals["proposal1"] = proposal
 
@@ -199,20 +204,22 @@ class TestConflictDetection:
             previous_state={"name": "Different"},
         )
 
+        now = datetime.now(timezone.utc)
         changeset = Changeset(
             id="changeset1",
+            name="changeset1",
             event_ids=[event_id_1, event_id_2],
             state=ChangeState.PROPOSED,
-            created_at=datetime.now(timezone.utc),
+            created_at=now,
+            updated_at=now,
         )
         repo._changesets["changeset1"] = changeset
 
         proposal = Proposal(
             id="proposal1",
             changeset_id="changeset1",
-            field_changes={},
-            created_at=datetime.now(timezone.utc),
-            status=ProposalState.OPEN,
+            state=ProposalState.OPEN,
+            submitted_at=now,
         )
         repo._proposals["proposal1"] = proposal
 
@@ -294,20 +301,22 @@ class TestManualResolution:
             previous_state={"status": "different"},
         )
 
+        now = datetime.now(timezone.utc)
         changeset = Changeset(
             id="changeset1",
+            name="changeset1",
             event_ids=[event_id_1, event_id_2],
             state=ChangeState.PROPOSED,
-            created_at=datetime.now(timezone.utc),
+            created_at=now,
+            updated_at=now,
         )
         repo._changesets["changeset1"] = changeset
 
         proposal = Proposal(
             id="proposal1",
             changeset_id="changeset1",
-            field_changes={},
-            created_at=datetime.now(timezone.utc),
-            status=ProposalState.OPEN,
+            state=ProposalState.OPEN,
+            submitted_at=now,
         )
         repo._proposals["proposal1"] = proposal
 
@@ -320,6 +329,7 @@ class TestManualResolution:
 
         # Verify resolutions were persisted
         updated_proposal = repo.get_proposal("proposal1")
+        assert updated_proposal is not None
         assert updated_proposal.conflict_resolutions == resolutions
 
     def test_resolve_conflicts_unresolved_raises_error(
@@ -342,25 +352,27 @@ class TestManualResolution:
             previous_state={"name": "Different"},
         )
 
+        now = datetime.now(timezone.utc)
         changeset = Changeset(
             id="changeset1",
+            name="changeset1",
             event_ids=[event_id_1, event_id_2],
             state=ChangeState.PROPOSED,
-            created_at=datetime.now(timezone.utc),
+            created_at=now,
+            updated_at=now,
         )
         repo._changesets["changeset1"] = changeset
 
         proposal = Proposal(
             id="proposal1",
             changeset_id="changeset1",
-            field_changes={},
-            created_at=datetime.now(timezone.utc),
-            status=ProposalState.OPEN,
+            state=ProposalState.OPEN,
+            submitted_at=now,
         )
         repo._proposals["proposal1"] = proposal
 
         # Provide resolutions that don't cover the conflict
-        resolutions = {"entity1": {}}
+        resolutions: dict = {"entity1": {}}
 
         with pytest.raises(ConflictResolutionError):
             service.resolve_conflicts(proposal_id="proposal1", resolutions=resolutions)
@@ -385,20 +397,22 @@ class TestManualResolution:
             previous_state={"name": "NameOld", "status": "archived"},
         )
 
+        now = datetime.now(timezone.utc)
         changeset = Changeset(
             id="changeset1",
+            name="changeset1",
             event_ids=[event_id_1, event_id_2],
             state=ChangeState.PROPOSED,
-            created_at=datetime.now(timezone.utc),
+            created_at=now,
+            updated_at=now,
         )
         repo._changesets["changeset1"] = changeset
 
         proposal = Proposal(
             id="proposal1",
             changeset_id="changeset1",
-            field_changes={},
-            created_at=datetime.now(timezone.utc),
-            status=ProposalState.OPEN,
+            state=ProposalState.OPEN,
+            submitted_at=now,
         )
         repo._proposals["proposal1"] = proposal
 
