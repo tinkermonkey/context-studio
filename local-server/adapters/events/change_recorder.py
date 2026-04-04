@@ -13,6 +13,7 @@ without modifying domain code.
 from domain.ports import ChangeRecordPort
 from domain.extraction.events import ExtractionCompleted
 from domain.pipeline.events import PipelineExecuted
+from domain.versioning.value_objects import ChangeOperation
 from utils.logger import get_logger
 
 
@@ -51,7 +52,7 @@ class ChangeEventRecorder:
             change_id = self.change_repo.record_change(
                 entity_id=event.result_id,
                 entity_type="extraction_result",
-                operation="create",
+                operation=ChangeOperation.CREATE,
                 new_state={
                     "result_id": event.result_id,
                     "entity_count": event.entity_count,
@@ -84,7 +85,7 @@ class ChangeEventRecorder:
             change_id = self.change_repo.record_change(
                 entity_id=event.execution_id,
                 entity_type="pipeline_execution",
-                operation="create",
+                operation=ChangeOperation.CREATE,
                 new_state={
                     "execution_id": event.execution_id,
                     "pipeline_id": event.pipeline_id,
