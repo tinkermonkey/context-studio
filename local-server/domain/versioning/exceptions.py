@@ -19,6 +19,12 @@ class ChangesetStateError(VersioningError):
     pass
 
 
+class ProposalStateError(VersioningError):
+    """Raised when an invalid proposal state transition is attempted."""
+
+    pass
+
+
 class ConflictResolutionError(VersioningError):
     """Raised when conflict resolution fails."""
 

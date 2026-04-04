@@ -26,7 +26,7 @@ from domain.versioning.entities import (
     Changeset as DomainChangeset,
     Proposal as DomainProposal,
 )
-from domain.versioning.value_objects import ChangeState
+from domain.versioning.value_objects import ChangeState, ProposalState, ChangeOperation
 from domain.versioning.exceptions import VersionNotFoundError
 
 
@@ -411,7 +411,7 @@ class SQLiteChangeRepository:
             orm_proposal = Proposal(
                 id=proposal.id,
                 changeset_id=proposal.changeset_id,
-                state=proposal.state,
+                state=proposal.state.value,
                 submitted_at=proposal.submitted_at,
                 reviewed_at=proposal.reviewed_at,
                 reviewer_notes=proposal.reviewer_notes,
@@ -460,7 +460,7 @@ class SQLiteChangeRepository:
             if not orm_proposal:
                 raise VersionNotFoundError(f"Proposal not found: {proposal.id}")
 
-            orm_proposal.state = proposal.state
+            orm_proposal.state = proposal.state.value
             orm_proposal.reviewed_at = proposal.reviewed_at
             orm_proposal.reviewer_notes = proposal.reviewer_notes
             orm_proposal.conflict_resolutions = proposal.conflict_resolutions
@@ -477,7 +477,7 @@ class SQLiteChangeRepository:
             id=cast(str, orm_event.id),
             entity_id=cast(str, orm_event.entity_id),
             entity_type=cast(str, orm_event.entity_type),
-            operation=cast(str, orm_event.operation),
+            operation=ChangeOperation(orm_event.operation),
             new_state=cast(dict, orm_event.new_state),
             timestamp=cast(datetime, orm_event.timestamp),
             previous_state=cast(Optional[dict], orm_event.previous_state),
@@ -525,7 +525,7 @@ class SQLiteChangeRepository:
         return DomainProposal(
             id=cast(str, orm_proposal.id),
             changeset_id=cast(str, orm_proposal.changeset_id),
-            state=cast(str, orm_proposal.state),
+            state=ProposalState(orm_proposal.state),
             submitted_at=cast(datetime, orm_proposal.submitted_at),
             reviewed_at=cast(Optional[datetime], orm_proposal.reviewed_at),
             reviewer_notes=cast(Optional[str], orm_proposal.reviewer_notes),

@@ -16,6 +16,31 @@ class ChangeState(str, Enum):
     MERGED = "merged"
 
 
+class ProposalState(str, Enum):
+    """Valid states for a proposal."""
+
+    OPEN = "open"
+    APPROVED = "approved"
+    REJECTED = "rejected"
+    MERGED = "merged"
+
+
+class ChangeOperation(str, Enum):
+    """Types of operations on entities."""
+
+    CREATE = "create"
+    UPDATE = "update"
+    DELETE = "delete"
+
+
+class ConflictStatus(str, Enum):
+    """Status of conflict resolution."""
+
+    UNRESOLVED = "unresolved"
+    RESOLVED_MANUAL = "resolved_manual"
+    RESOLVED_AUTO = "resolved_auto"
+
+
 @dataclass(frozen=True)
 class SyncStatus:
     """Status of remote synchronization."""

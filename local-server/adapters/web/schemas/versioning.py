@@ -22,6 +22,8 @@ from pydantic import BaseModel, Field
 from typing import Optional, Any
 from datetime import datetime
 
+from domain.versioning.value_objects import ChangeOperation, ProposalState
+
 
 # ============================================================================
 # Request Schemas
@@ -61,7 +63,7 @@ class ChangeEventResponse(BaseModel):
     id: str = Field(..., description="Unique identifier of the change event")
     entity_id: str = Field(..., description="ID of the entity that changed")
     entity_type: str = Field(..., description="Type of the entity")
-    operation: str = Field(..., description="Type of operation ('create', 'update', 'delete')")
+    operation: ChangeOperation = Field(..., description="Type of operation (create, update, delete)")
     timestamp: datetime = Field(..., description="When the change occurred")
     processed: bool = Field(..., description="Whether change has been synced to remote")
     user_id: Optional[str] = Field(default=None, description="User who made the change")
@@ -113,7 +115,7 @@ class ProposalResponse(BaseModel):
 
     id: str = Field(..., description="Unique identifier of the proposal")
     changeset_id: str = Field(..., description="ID of the associated changeset")
-    state: str = Field(..., description="Current state (open, approved, rejected, merged)")
+    state: ProposalState = Field(..., description="Current state (open, approved, rejected, merged)")
     submitted_at: datetime = Field(..., description="When the proposal was submitted")
     reviewed_at: Optional[datetime] = Field(default=None, description="When the proposal was reviewed")
     reviewer_notes: Optional[str] = Field(default=None, description="Notes from reviewer")

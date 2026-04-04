@@ -5,7 +5,7 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Optional
 
-from domain.versioning.value_objects import ChangeState
+from domain.versioning.value_objects import ChangeState, ProposalState, ChangeOperation
 
 
 @dataclass
@@ -15,7 +15,7 @@ class ChangeEvent:
     id: str
     entity_id: str
     entity_type: str
-    operation: str
+    operation: ChangeOperation
     new_state: dict
     timestamp: datetime
     previous_state: Optional[dict] = None
@@ -73,11 +73,27 @@ class Proposal:
 
     id: str
     changeset_id: str
-    state: str
+    state: ProposalState
     submitted_at: datetime
     reviewed_at: Optional[datetime] = None
     reviewer_notes: Optional[str] = None
     conflict_resolutions: dict[str, dict[str, str]] = field(default_factory=dict)
+
+    def transition_to(self, new_state: ProposalState) -> None:
+        """Enforce valid state transitions; raises ProposalStateError on invalid."""
+        from domain.versioning.exceptions import ProposalStateError
+
+        valid: dict[ProposalState, set[ProposalState]] = {
+            ProposalState.OPEN: {ProposalState.APPROVED, ProposalState.REJECTED},
+            ProposalState.APPROVED: {ProposalState.MERGED, ProposalState.REJECTED},
+            ProposalState.REJECTED: {ProposalState.OPEN},
+            ProposalState.MERGED: set(),
+        }
+        if new_state not in valid[self.state]:
+            raise ProposalStateError(
+                f"Cannot transition Proposal from {self.state} to {new_state}"
+            )
+        self.state = new_state
 
 
 @dataclass

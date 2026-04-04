@@ -13,9 +13,9 @@ from datetime import datetime, timezone
 from typing import Optional
 
 from .entities import ChangeEvent, EntityVersion, Changeset, Proposal, MergeResult, Conflict, ConflictReport
-from .exceptions import VersionNotFoundError, ChangesetStateError, ConflictResolutionError
+from .exceptions import VersionNotFoundError, ChangesetStateError, ConflictResolutionError, ProposalStateError
 from .ports import ChangeRepository, SyncTarget
-from .value_objects import ChangeState, SyncStatus, SyncResult
+from .value_objects import ChangeState, ProposalState, ChangeOperation, SyncStatus, SyncResult
 from .events import ChangesetMerged, SyncCompleted
 
 _logger = logging.getLogger(__name__)
@@ -225,7 +225,7 @@ class VersioningService:
         proposal = Proposal(
             id=str(uuid.uuid4()),
             changeset_id=changeset_id,
-            state="open",
+            state=ProposalState.OPEN,
             submitted_at=now,
         )
         persisted_proposal = self._repo.create_proposal(proposal)
@@ -272,7 +272,7 @@ class VersioningService:
         changeset.updated_at = now
         self._repo.update_changeset(changeset)
 
-        proposal.state = "approved"
+        proposal.transition_to(ProposalState.APPROVED)
         proposal.reviewed_at = now
         updated_proposal = self._repo.update_proposal(proposal)
         _logger.info(
@@ -315,7 +315,7 @@ class VersioningService:
         changeset.updated_at = now
         self._repo.update_changeset(changeset)
 
-        proposal.state = "rejected"
+        proposal.transition_to(ProposalState.REJECTED)
         proposal.reviewed_at = now
         proposal.reviewer_notes = reason
         updated_proposal = self._repo.update_proposal(proposal)
@@ -521,7 +521,7 @@ class VersioningService:
         if proposal is None:
             raise VersionNotFoundError(f"Proposal {proposal_id} not found")
 
-        if proposal.state != "approved":
+        if proposal.state != ProposalState.APPROVED:
             error_msg = (
                 f"Cannot merge proposal {proposal_id} in state '{proposal.state}': "
                 "proposal must be in 'approved' state"
@@ -549,7 +549,7 @@ class VersioningService:
         changeset.updated_at = now
         self._repo.update_changeset(changeset)
 
-        proposal.state = "merged"
+        proposal.transition_to(ProposalState.MERGED)
         self._repo.update_proposal(proposal)
 
         result = MergeResult(
