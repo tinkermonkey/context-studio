@@ -137,12 +137,9 @@ async def update_configuration(
             service.update_configuration, section, request.updates
         )
         return AppConfigurationResponse.from_domain(config)
-    except ConfigurationError as e:
-        logger.warning(f"Configuration update failed: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=str(e),
-        )
+    except Exception as exc:
+        status_code, message = _handle_admin_error(exc)
+        raise HTTPException(status_code=status_code, detail=message)
 
 
 @router.get("/tasks", response_model=list[BackgroundTaskResponse])
@@ -192,9 +189,6 @@ async def get_task(
     try:
         task = await run_sync_in_executor(service.get_task, task_id)
         return BackgroundTaskResponse.model_validate(task.__dict__)
-    except TaskNotFoundError as e:
-        logger.warning(f"Task lookup failed: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=str(e),
-        )
+    except Exception as exc:
+        status_code, message = _handle_admin_error(exc)
+        raise HTTPException(status_code=status_code, detail=message)

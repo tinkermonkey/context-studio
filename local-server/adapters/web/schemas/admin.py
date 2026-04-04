@@ -93,7 +93,7 @@ class AppConfigurationResponse(BaseModel):
             AppConfigurationResponse with masked API keys
         """
         sections = copy.deepcopy(config.sections)
-        key_fields = {'openai_api_key', 'anthropic_api_key', 's3_secret_key'}
+        key_fields = {'openai_api_key', 'anthropic_api_key', 's3_secret_key', 's3_access_key'}
 
         for section in sections.values():
             if isinstance(section, dict):

@@ -6,9 +6,10 @@ the readiness and availability of LLM providers, NLP pipeline, and embedding mod
 """
 
 from datetime import datetime, timezone
-from typing import Optional, Any
+from typing import Optional
 
 from sqlalchemy import text
+from sqlalchemy.engine import Engine
 
 from domain.admin.entities import SystemHealth
 from adapters.llm.provider_router import LLMProviderRouter
@@ -17,9 +18,6 @@ from adapters.embedding.sentence_transformer import SentenceTransformerEmbedding
 from utils.logger import get_logger
 
 logger = get_logger(__name__)
-
-# Type alias for SQLAlchemy Engine (mypy compatibility)
-Engine = Any  # type: ignore[misc]
 
 
 class SystemMetricsCollector:
@@ -96,6 +94,9 @@ class SystemMetricsCollector:
         if not db_connected:
             issues.append('Database not accessible')
 
+        # Track which components had errors during checks
+        error_components = set()
+
         # Check LLM providers with error handling
         llm_providers = []
         try:
@@ -103,6 +104,7 @@ class SystemMetricsCollector:
         except Exception as e:
             logger.warning(f"Failed to check LLM providers: {e}")
             issues.append('Error checking LLM providers')
+            error_components.add('llm')
 
         # Check NLP pipeline readiness with error handling
         nlp_ready = False
@@ -111,6 +113,7 @@ class SystemMetricsCollector:
         except Exception as e:
             logger.warning(f"Failed to check NLP pipeline: {e}")
             issues.append('Error checking NLP pipeline')
+            error_components.add('nlp')
 
         # Check embedding model with error handling
         embedding_loaded = False
@@ -119,13 +122,14 @@ class SystemMetricsCollector:
         except Exception as e:
             logger.warning(f"Failed to check embedding model: {e}")
             issues.append('Error checking embedding model')
+            error_components.add('embedding')
 
-        # Aggregate issues
-        if not nlp_ready:
+        # Aggregate issues for components that didn't have errors
+        if 'nlp' not in error_components and not nlp_ready:
             issues.append('NLP pipeline not ready')
-        if not embedding_loaded:
+        if 'embedding' not in error_components and not embedding_loaded:
             issues.append('Embedding model not loaded')
-        if not llm_providers:
+        if 'llm' not in error_components and not llm_providers:
             issues.append('No LLM providers configured')
 
         # Calculate uptime in seconds

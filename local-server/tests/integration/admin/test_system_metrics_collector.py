@@ -9,8 +9,12 @@ import sys
 import os
 import time
 from datetime import datetime, timezone, timedelta
+import tempfile
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+
+import pytest
+from sqlalchemy import create_engine, text
 
 from adapters.metrics.system_collector import SystemMetricsCollector
 from adapters.llm.provider_router import LLMProviderRouter
@@ -183,3 +187,40 @@ def test_collect_health_database_check_with_no_engine():
     # Database should be reported as not connected when no engine is provided
     assert health.database_connected is False
     assert "Database not accessible" in health.issues
+
+
+def test_collect_health_database_connected_with_real_engine():
+    """Test that database_connected is True when a real SQLite engine is provided."""
+    start_time = datetime.now(timezone.utc)
+
+    # Create a temporary SQLite database for testing
+    with tempfile.NamedTemporaryFile(suffix=".db", delete=False) as tmp:
+        db_path = tmp.name
+
+    try:
+        # Create a real SQLite engine
+        db_engine = create_engine(f"sqlite:///{db_path}")
+
+        # Verify the engine is functional by executing a test query
+        with db_engine.connect() as conn:
+            conn.execute(text("SELECT 1"))
+
+        llm_router = LLMProviderRouter(openai_api_key="", anthropic_api_key="")
+        nlp_processor = SpacyNLPProcessor()
+        embedding_service = SentenceTransformerEmbedding()
+
+        # Collector with real db_engine should report database connected
+        collector = SystemMetricsCollector(llm_router, nlp_processor, embedding_service, start_time, db_engine=db_engine)
+        health = collector.collect_health()
+
+        # Database should be reported as connected
+        assert health.database_connected is True
+        assert "Database not accessible" not in health.issues
+        # Status should be degraded (not healthy) due to missing providers, but not unhealthy
+        assert health.status in ("healthy", "degraded")
+        assert health.status != "unhealthy"
+    finally:
+        # Cleanup
+        import os as os_module
+        if os_module.path.exists(db_path):
+            os_module.unlink(db_path)
