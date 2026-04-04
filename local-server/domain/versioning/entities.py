@@ -77,6 +77,7 @@ class Proposal:
     submitted_at: datetime
     reviewed_at: Optional[datetime] = None
     reviewer_notes: Optional[str] = None
+    conflict_resolutions: dict[str, dict[str, str]] = field(default_factory=dict)
 
 
 @dataclass
