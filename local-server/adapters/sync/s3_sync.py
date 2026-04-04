@@ -5,7 +5,8 @@ The S3SyncAdapter implements the SyncTarget port, enabling workspaces to synchro
 changes with remote S3 locations. Changes are serialized as JSON Lines and stored
 with a key pattern: {prefix}/changes/{date}/{uuid}.jsonl
 
-This adapter gracefully handles S3 configuration errors and network failures.
+This adapter uses fail-fast error handling: S3 configuration errors and network
+failures are propagated to the caller as RuntimeError, never suppressed.
 """
 
 from __future__ import annotations
@@ -29,8 +30,9 @@ class S3SyncAdapter:
     Changes are serialized as JSON Lines (one event per line) and stored in S3
     with a predictable key structure that enables date-based filtering.
 
-    This adapter is fault-tolerant: S3 errors are caught and returned in SyncResult,
-    never propagated to the caller.
+    This adapter uses fail-fast error handling: S3 configuration errors and access
+    failures are propagated to the caller as RuntimeError. The caller (app.py) handles
+    initialization failures by falling back to NoOpSyncTarget.
     """
 
     def __init__(
@@ -76,7 +78,6 @@ class S3SyncAdapter:
             prefix,
             region,
         )
-        self._configured = True
 
     def push(self, events: Sequence[ChangeEvent]) -> SyncResult:
         """
@@ -89,13 +90,13 @@ class S3SyncAdapter:
             events: Sequence of ChangeEvent objects to push
 
         Returns:
-            SyncResult with count of pushed events and any errors
-        """
-        if not self._configured or self._s3_client is None:
-            error_msg = "S3 sync adapter is not configured"
-            _logger.error(error_msg)
-            return SyncResult(pushed=0, pulled=0, errors=[error_msg])
+            SyncResult with count of pushed events
 
+        Raises:
+            RuntimeError: If S3 put operation fails
+            botocore.exceptions.ClientError: If S3 put operation fails
+            botocore.exceptions.NoCredentialsError: If AWS credentials are invalid
+        """
         if not events:
             return SyncResult(pushed=0, pulled=0, errors=[])
 
@@ -145,7 +146,7 @@ class S3SyncAdapter:
         except Exception as e:
             error_msg = f"Failed to push changes to S3: {e}"
             _logger.error(error_msg)
-            return SyncResult(pushed=0, pulled=0, errors=[error_msg])
+            raise RuntimeError(error_msg) from e
 
     def pull(self, since: Optional[datetime] = None) -> list[ChangeEvent]:
         """
@@ -162,95 +163,99 @@ class S3SyncAdapter:
             List of deduplicated ChangeEvent objects from S3
 
         Raises:
-            Exception: If S3 access fails (permission denied, bucket missing, network error, etc.)
+            RuntimeError: If S3 listing fails (permission denied, bucket missing, network error, etc.)
+            botocore.exceptions.ClientError: If S3 operations fail
+            botocore.exceptions.NoCredentialsError: If AWS credentials are invalid
         """
-        if not self._configured or self._s3_client is None:
-            _logger.debug("S3 not configured, skipping pull")
-            return []
-
         events: list[ChangeEvent] = []
         seen_ids: set[str] = set()
         failed_keys: list[str] = []
         prefix = f"{self._prefix}/changes/"
 
-        # List all objects with the changes prefix
-        paginator = self._s3_client.get_paginator("list_objects_v2")
-        pages = paginator.paginate(Bucket=self._bucket, Prefix=prefix)
+        try:
+            # List all objects with the changes prefix
+            paginator = self._s3_client.get_paginator("list_objects_v2")
+            pages = paginator.paginate(Bucket=self._bucket, Prefix=prefix)
 
-        for page in pages:
-            if "Contents" not in page:
-                continue
+            for page in pages:
+                if "Contents" not in page:
+                    continue
 
-            for obj in page["Contents"]:
-                key = obj["Key"]
-                # Filter by date if since provided
-                if since:
-                    # Extract date from key: {prefix}/changes/{yyyy-mm-dd}/{uuid}.jsonl
-                    parts = key.split("/")
-                    if len(parts) >= 3:
-                        try:
-                            date_str = parts[-2]
-                            file_date = datetime.strptime(date_str, "%Y-%m-%d").replace(
-                                tzinfo=timezone.utc
-                            )
-                            if file_date < since:
+                for obj in page["Contents"]:
+                    key = obj["Key"]
+                    # Filter by date if since provided
+                    if since:
+                        # Extract date from key: {prefix}/changes/{yyyy-mm-dd}/{uuid}.jsonl
+                        parts = key.split("/")
+                        if len(parts) >= 3:
+                            try:
+                                date_str = parts[-2]
+                                file_date = datetime.strptime(date_str, "%Y-%m-%d").replace(
+                                    tzinfo=timezone.utc
+                                )
+                                if file_date < since:
+                                    continue
+                            except (ValueError, IndexError):
                                 continue
-                        except (ValueError, IndexError):
-                            continue
 
-                # Download and deserialize the file
-                try:
-                    response = self._s3_client.get_object(Bucket=self._bucket, Key=key)
-                    content = response["Body"].read().decode("utf-8")
+                    # Download and deserialize the file
+                    try:
+                        response = self._s3_client.get_object(Bucket=self._bucket, Key=key)
+                        content = response["Body"].read().decode("utf-8")
 
-                    # Parse JSON Lines
-                    for line in content.strip().split("\n"):
-                        if not line:
-                            continue
-                        data = json.loads(line)
-                        event_id = data["id"]
+                        # Parse JSON Lines
+                        for line in content.strip().split("\n"):
+                            if not line:
+                                continue
+                            data = json.loads(line)
+                            event_id = data["id"]
 
-                        # Skip duplicate events
-                        if event_id in seen_ids:
-                            _logger.debug(f"Skipping duplicate event {event_id}")
-                            continue
+                            # Skip duplicate events
+                            if event_id in seen_ids:
+                                _logger.debug(f"Skipping duplicate event {event_id}")
+                                continue
 
-                        seen_ids.add(event_id)
-                        event = ChangeEvent(
-                            id=event_id,
-                            entity_id=data["entity_id"],
-                            entity_type=data["entity_type"],
-                            operation=data["operation"],
-                            timestamp=datetime.fromisoformat(data["timestamp"]),
-                            processed=data.get("processed", False),
-                            user_id=data.get("user_id"),
-                            change_reason=data.get("change_reason"),
-                            new_state=data.get("new_state"),
-                            previous_state=data.get("previous_state"),
-                        )
-                        events.append(event)
-                except Exception as e:
-                    _logger.error(f"Failed to parse S3 object {key}: {e}")
-                    failed_keys.append(key)
+                            seen_ids.add(event_id)
+                            event = ChangeEvent(
+                                id=event_id,
+                                entity_id=data["entity_id"],
+                                entity_type=data["entity_type"],
+                                operation=data["operation"],
+                                timestamp=datetime.fromisoformat(data["timestamp"]),
+                                processed=data.get("processed", False),
+                                user_id=data.get("user_id"),
+                                change_reason=data.get("change_reason"),
+                                new_state=data.get("new_state"),
+                                previous_state=data.get("previous_state"),
+                            )
+                            events.append(event)
+                    except Exception as e:
+                        _logger.error(f"Failed to parse S3 object {key}: {e}")
+                        failed_keys.append(key)
 
-        # Report pulled events and any failures
-        if failed_keys:
-            _logger.warning(
-                "Pulled %d change events from S3 (deduplicated), but failed to parse %d files: %s",
-                len(events),
-                len(failed_keys),
-                ", ".join(failed_keys),
-            )
-        else:
-            _logger.info("Pulled %d change events from S3 (deduplicated)", len(events))
+            # Report pulled events and any failures
+            if failed_keys:
+                _logger.warning(
+                    "Pulled %d change events from S3 (deduplicated), but failed to parse %d files: %s",
+                    len(events),
+                    len(failed_keys),
+                    ", ".join(failed_keys),
+                )
+            else:
+                _logger.info("Pulled %d change events from S3 (deduplicated)", len(events))
 
-        return events
+            return events
+
+        except Exception as e:
+            error_msg = f"Failed to list S3 objects: {e}"
+            _logger.error(error_msg)
+            raise RuntimeError(error_msg) from e
 
     def is_configured(self) -> bool:
         """
         Check if S3 sync target is properly configured.
 
         Returns:
-            True if S3 client is initialized and bucket is accessible, False otherwise
+            True if S3 client is initialized, False otherwise
         """
-        return self._configured
+        return self._s3_client is not None
