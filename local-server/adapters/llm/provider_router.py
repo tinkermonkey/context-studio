@@ -148,6 +148,15 @@ class LLMProviderRouter:
             models.extend(provider.list_available_models())
         return models
 
+    def list_available_providers(self) -> list[str]:
+        """
+        List all configured LLM provider names.
+
+        Returns:
+            List of provider names (e.g., ['openai', 'anthropic'])
+        """
+        return list(self._providers.keys())
+
     async def complete_async(
         self,
         system_prompt: str,
