@@ -647,8 +647,7 @@ class VersioningService:
         Returns:
             SyncStatus with unprocessed count and configuration status
         """
-        unprocessed = self._repo.get_unprocessed(limit=10000)
-        count = len(unprocessed)
+        count = self._repo.count_unprocessed()
 
         status = SyncStatus(
             last_pushed_at=None,

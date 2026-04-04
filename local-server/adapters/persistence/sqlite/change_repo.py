@@ -10,7 +10,7 @@ import uuid
 from datetime import datetime, timezone
 from typing import Optional, cast
 
-from sqlalchemy import select
+from sqlalchemy import select, func
 from sqlalchemy.orm import Session, sessionmaker
 
 from adapters.persistence.sqlite.models import (
@@ -184,6 +184,18 @@ class SQLiteChangeRepository:
             orm_events = session.execute(query).scalars().all()
 
             return [self._to_domain_change_event(e) for e in orm_events]
+
+    def count_unprocessed(self) -> int:
+        """
+        Count total unprocessed change events without loading them.
+
+        Returns:
+            Count of unprocessed ChangeEvent records
+        """
+        with self.session_factory() as session:
+            query = select(func.count()).select_from(ChangeEvent).where(~ChangeEvent.processed)
+            count = session.scalar(query)
+            return count or 0
 
     # EntityVersion operations
 

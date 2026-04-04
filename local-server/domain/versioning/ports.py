@@ -46,6 +46,10 @@ class ChangeRepository(Protocol):
         """Get unprocessed change events."""
         ...
 
+    def count_unprocessed(self) -> int:
+        """Count total unprocessed change events without loading them."""
+        ...
+
     def save_version(self, version: EntityVersion) -> None:
         """Save an entity version snapshot."""
         ...

@@ -76,7 +76,12 @@ class EntityVersionResponse(BaseModel):
 
     entity_id: str = Field(..., description="ID of the entity")
     version: int = Field(..., description="Version number")
-    state: str = Field(..., description="Snapshot of entity state")
+    state: str = Field(..., description="State of the entity at this version")
+    snapshot: dict = Field(..., description="Snapshot of entity data at this version")
+    created_at: datetime = Field(..., description="When this version was created")
+    parent_version: Optional[int] = Field(
+        default=None, description="Version number of parent; None if this is the first version"
+    )
 
     class Config:
         from_attributes = True
