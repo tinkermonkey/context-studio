@@ -14,7 +14,7 @@ from domain.versioning.entities import (
     Changeset,
     Proposal,
 )
-from domain.versioning.value_objects import ChangeOperation
+from domain.versioning.value_objects import ChangeOperation, ChangeHistoryResult
 
 
 class FakeChangeRepository:
@@ -71,7 +71,7 @@ class FakeChangeRepository:
         entity_id: Optional[str] = None,
         since: Optional[datetime] = None,
         limit: int = 100,
-    ) -> tuple[list[ChangeEvent], int]:
+    ) -> ChangeHistoryResult:
         """Retrieve change events with optional filters and return total count."""
         events = list(self._change_events.values())
 
@@ -83,7 +83,7 @@ class FakeChangeRepository:
 
         total_count = len(events)
         events.sort(key=lambda e: e.timestamp, reverse=True)
-        return events[:limit], total_count
+        return ChangeHistoryResult(events=events[:limit], total=total_count)
 
     def get_changes_by_ids(self, event_ids: list[str]) -> list[ChangeEvent]:
         """Retrieve change events by their IDs."""

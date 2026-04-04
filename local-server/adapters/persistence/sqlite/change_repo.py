@@ -26,7 +26,7 @@ from domain.versioning.entities import (
     Changeset as DomainChangeset,
     Proposal as DomainProposal,
 )
-from domain.versioning.value_objects import ChangeState, ProposalState, ChangeOperation
+from domain.versioning.value_objects import ChangeState, ProposalState, ChangeOperation, ChangeHistoryResult
 from domain.versioning.exceptions import VersionNotFoundError
 
 
@@ -104,7 +104,7 @@ class SQLiteChangeRepository:
         entity_id: Optional[str] = None,
         since: Optional[datetime] = None,
         limit: int = 100,
-    ) -> tuple[list[DomainChangeEvent], int]:
+    ) -> ChangeHistoryResult:
         """
         Retrieve change events with optional filters.
 
@@ -114,29 +114,33 @@ class SQLiteChangeRepository:
             limit: Maximum number of results to return
 
         Returns:
-            Tuple of (list of matching ChangeEvent domain entities, total count without limit)
+            ChangeHistoryResult with paginated events and total count without limit
         """
         with self.session_factory() as session:
-            # Build base query with filters
-            base_query = select(ChangeEvent)
+            # Build filter conditions once
+            conditions = []
             if entity_id:
-                base_query = base_query.where(ChangeEvent.entity_id == entity_id)
+                conditions.append(ChangeEvent.entity_id == entity_id)
             if since:
-                base_query = base_query.where(ChangeEvent.timestamp >= since)
+                conditions.append(ChangeEvent.timestamp >= since)
+
+            # Apply filters to base query
+            base_query = select(ChangeEvent)
+            for condition in conditions:
+                base_query = base_query.where(condition)
 
             # Get total count before applying limit
             count_query = select(func.count(ChangeEvent.id)).select_from(ChangeEvent)
-            if entity_id:
-                count_query = count_query.where(ChangeEvent.entity_id == entity_id)
-            if since:
-                count_query = count_query.where(ChangeEvent.timestamp >= since)
+            for condition in conditions:
+                count_query = count_query.where(condition)
             total_count = session.execute(count_query).scalar() or 0
 
             # Apply ordering and limit to get paginated results
             paginated_query = base_query.order_by(ChangeEvent.timestamp.desc()).limit(limit)
             orm_events = session.execute(paginated_query).scalars().all()
 
-            return [self._to_domain_change_event(e) for e in orm_events], total_count
+            events = [self._to_domain_change_event(e) for e in orm_events]
+            return ChangeHistoryResult(events=events, total=total_count)
 
     def get_changes_by_ids(self, event_ids: list[str]) -> list[DomainChangeEvent]:
         """

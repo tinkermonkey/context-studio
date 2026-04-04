@@ -3,7 +3,10 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Optional
+from typing import TYPE_CHECKING, Optional
+
+if TYPE_CHECKING:
+    from domain.versioning.entities import ChangeEvent
 
 
 class ChangeState(str, Enum):
@@ -77,5 +80,5 @@ class ChangeHistoryResult:
         total: Total count of all matching events (without limit applied)
     """
 
-    events: list
+    events: list[ChangeEvent]
     total: int

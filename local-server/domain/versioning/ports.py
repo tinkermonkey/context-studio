@@ -5,7 +5,7 @@ from datetime import datetime
 from typing import Optional, Protocol, Sequence
 
 from domain.versioning.entities import ChangeEvent, Changeset, EntityVersion, Proposal
-from domain.versioning.value_objects import SyncResult, ChangeOperation
+from domain.versioning.value_objects import SyncResult, ChangeOperation, ChangeHistoryResult
 
 
 class ChangeRepository(Protocol):
@@ -30,8 +30,8 @@ class ChangeRepository(Protocol):
         entity_id: Optional[str] = None,
         since: Optional[datetime] = None,
         limit: int = 100,
-    ) -> list[ChangeEvent]:
-        """Get change events with optional filters."""
+    ) -> ChangeHistoryResult:
+        """Get change events with optional filters, returning paginated results with total count."""
         ...
 
     def get_changes_by_ids(self, event_ids: list[str]) -> list[ChangeEvent]:

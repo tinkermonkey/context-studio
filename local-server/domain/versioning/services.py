@@ -15,7 +15,7 @@ from typing import TYPE_CHECKING, Optional
 from .entities import ChangeEvent, EntityVersion, Changeset, Proposal, MergeResult, ConflictReport
 from .exceptions import VersionNotFoundError, ChangesetStateError, ConflictResolutionError
 from .ports import ChangeRepository, SyncTarget
-from .value_objects import ChangeState, ProposalState, SyncStatus, SyncResult
+from .value_objects import ChangeState, ProposalState, SyncStatus, SyncResult, ChangeHistoryResult
 from .events import ChangesetMerged, SyncCompleted
 
 if TYPE_CHECKING:
@@ -59,7 +59,7 @@ class VersioningService:
         entity_id: Optional[str] = None,
         since: Optional[datetime] = None,
         limit: int = 100,
-    ) -> tuple[list[ChangeEvent], int]:
+    ) -> ChangeHistoryResult:
         """
         Retrieve change events with optional filters.
 
@@ -69,7 +69,7 @@ class VersioningService:
             limit: Maximum number of results to return
 
         Returns:
-            Tuple of (list of matching ChangeEvent objects, total count without limit)
+            ChangeHistoryResult with paginated events and total count without limit
         """
         return self._repo.get_changes(entity_id=entity_id, since=since, limit=limit)
 

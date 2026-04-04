@@ -92,10 +92,10 @@ async def get_change_history_all(
         HTTPException: 500 for internal errors
     """
     try:
-        events, total = await run_sync_in_executor(service.get_change_history, limit=limit)
+        result = await run_sync_in_executor(service.get_change_history, limit=limit)
         return ChangeHistoryResponse(
-            events=[ChangeEventResponse.model_validate(e) for e in events],
-            total=total,
+            events=[ChangeEventResponse.model_validate(e) for e in result.events],
+            total=result.total,
         )
     except Exception as exc:
         status_code, message = _handle_domain_error(exc)
@@ -123,12 +123,12 @@ async def get_change_history_by_entity(
         HTTPException: 500 for internal errors
     """
     try:
-        events, total = await run_sync_in_executor(
+        result = await run_sync_in_executor(
             service.get_change_history, entity_id=entity_id, limit=limit
         )
         return ChangeHistoryResponse(
-            events=[ChangeEventResponse.model_validate(e) for e in events],
-            total=total,
+            events=[ChangeEventResponse.model_validate(e) for e in result.events],
+            total=result.total,
         )
     except Exception as exc:
         status_code, message = _handle_domain_error(exc)

@@ -69,11 +69,11 @@ class TestChangeEventOperations:
             changeset_id="cs1",
         )
 
-        events, total = repository.get_changes(entity_id="entity1")
-        assert len(events) == 1
-        assert total == 1
+        result = repository.get_changes(entity_id="entity1")
+        assert len(result.events) == 1
+        assert result.total == 1
 
-        event = events[0]
+        event = result.events[0]
         assert event.id == event_id
         assert event.entity_id == "entity1"
         assert event.entity_type == "class"
@@ -93,10 +93,10 @@ class TestChangeEventOperations:
             entity_id="entity2", entity_type="class", operation=ChangeOperation.CREATE, new_state={}
         )
 
-        entity1_changes, total = repository.get_changes(entity_id="entity1")
-        assert len(entity1_changes) == 1
-        assert total == 1
-        assert entity1_changes[0].entity_id == "entity1"
+        result = repository.get_changes(entity_id="entity1")
+        assert len(result.events) == 1
+        assert result.total == 1
+        assert result.events[0].entity_id == "entity1"
 
     def test_get_changes_by_timestamp(self, repository) -> None:
         """Test filtering changes by timestamp."""
@@ -108,13 +108,13 @@ class TestChangeEventOperations:
             entity_id="entity1", entity_type="class", operation=ChangeOperation.CREATE, new_state={}
         )
 
-        recent_changes, recent_total = repository.get_changes(since=past)
-        old_changes, old_total = repository.get_changes(since=future)
+        recent_result = repository.get_changes(since=past)
+        old_result = repository.get_changes(since=future)
 
-        assert len(recent_changes) == 1
-        assert recent_total == 1
-        assert len(old_changes) == 0
-        assert old_total == 0
+        assert len(recent_result.events) == 1
+        assert recent_result.total == 1
+        assert len(old_result.events) == 0
+        assert old_result.total == 0
 
     def test_get_changes_respects_limit(self, repository) -> None:
         """Test that get_changes respects the limit parameter."""
@@ -126,9 +126,9 @@ class TestChangeEventOperations:
                 new_state={},
             )
 
-        changes, total = repository.get_changes(limit=3)
-        assert len(changes) == 3
-        assert total == 5
+        result = repository.get_changes(limit=3)
+        assert len(result.events) == 3
+        assert result.total == 5
 
     def test_mark_processed_sets_flag(self, repository) -> None:
         """Test that mark_processed sets the processed flag."""
@@ -138,8 +138,8 @@ class TestChangeEventOperations:
 
         repository.mark_processed([event_id])
 
-        events, total = repository.get_changes(entity_id="entity1")
-        assert events[0].processed is True
+        result = repository.get_changes(entity_id="entity1")
+        assert result.events[0].processed is True
 
     def test_get_unprocessed_returns_unprocessed(self, repository) -> None:
         """Test that get_unprocessed returns only unprocessed events."""
