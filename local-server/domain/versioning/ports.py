@@ -5,7 +5,7 @@ from datetime import datetime
 from typing import Optional, Protocol, Sequence
 
 from domain.versioning.entities import ChangeEvent, Changeset, EntityVersion, Proposal
-from domain.versioning.value_objects import SyncResult
+from domain.versioning.value_objects import SyncResult, ChangeOperation
 
 
 class ChangeRepository(Protocol):
@@ -15,7 +15,7 @@ class ChangeRepository(Protocol):
         self,
         entity_id: str,
         entity_type: str,
-        operation: str,
+        operation: ChangeOperation,
         new_state: dict,
         previous_state: Optional[dict] = None,
         user_id: Optional[str] = None,

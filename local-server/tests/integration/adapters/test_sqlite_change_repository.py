@@ -10,6 +10,7 @@ from sqlalchemy.orm import sessionmaker
 
 from adapters.persistence.sqlite.models import Base, ChangeEvent
 from adapters.persistence.sqlite.change_repo import SQLiteChangeRepository
+from domain.versioning.value_objects import ChangeOperation
 
 
 @pytest.fixture
@@ -40,7 +41,7 @@ class TestSQLiteChangeRepository:
         change_id = change_repo.record_change(
             entity_id="entity-123",
             entity_type="extraction_result",
-            operation="create",
+            operation=ChangeOperation.CREATE,
             new_state={"result_id": "entity-123", "count": 42},
             change_reason="Test creation",
         )
@@ -65,7 +66,7 @@ class TestSQLiteChangeRepository:
         change_id = change_repo.record_change(
             entity_id="entity-456",
             entity_type="pipeline_execution",
-            operation="update",
+            operation=ChangeOperation.UPDATE,
             new_state={"status": "complete"},
             previous_state={"status": "running"},
             user_id="user-789",
@@ -87,13 +88,13 @@ class TestSQLiteChangeRepository:
         id1 = change_repo.record_change(
             entity_id="entity-1",
             entity_type="extraction_result",
-            operation="create",
+            operation=ChangeOperation.CREATE,
             new_state={},
         )
         id2 = change_repo.record_change(
             entity_id="entity-2",
             entity_type="extraction_result",
-            operation="create",
+            operation=ChangeOperation.CREATE,
             new_state={},
         )
 

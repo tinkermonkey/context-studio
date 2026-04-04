@@ -27,6 +27,7 @@ from fastapi import FastAPI, status
 from fastapi.testclient import TestClient
 
 from domain.versioning.services import VersioningService
+from domain.versioning.value_objects import ChangeOperation
 from adapters.persistence.sqlite.models import Base
 from adapters.persistence.sqlite.change_repo import SQLiteChangeRepository
 from adapters.sync.noop_sync import NoOpSyncTarget
@@ -104,7 +105,7 @@ class TestVersioningRoutes:
         change_repository.record_change(
             entity_id="entity-1",
             entity_type="Class",
-            operation="create",
+            operation=ChangeOperation.CREATE,
             new_state={"name": "Test"},
         )
 
@@ -121,13 +122,13 @@ class TestVersioningRoutes:
         change_repository.record_change(
             entity_id="entity-1",
             entity_type="Class",
-            operation="create",
+            operation=ChangeOperation.CREATE,
             new_state={"name": "Test1"},
         )
         change_repository.record_change(
             entity_id="entity-2",
             entity_type="Class",
-            operation="create",
+            operation=ChangeOperation.CREATE,
             new_state={"name": "Test2"},
         )
 
@@ -143,7 +144,7 @@ class TestVersioningRoutes:
         change_repository.record_change(
             entity_id="entity-1",
             entity_type="Class",
-            operation="create",
+            operation=ChangeOperation.CREATE,
             new_state={"name": "Test"},
         )
 

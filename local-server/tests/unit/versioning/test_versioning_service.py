@@ -19,7 +19,7 @@ sys.path.insert(
 from domain.versioning.services import VersioningService
 from domain.versioning.entities import EntityVersion, Proposal
 from domain.versioning.exceptions import VersionNotFoundError, ChangesetStateError, ConflictResolutionError
-from domain.versioning.value_objects import ChangeState
+from domain.versioning.value_objects import ChangeState, ChangeOperation, ProposalState
 from tests.fakes.fake_change_repository import FakeChangeRepository
 from tests.fakes.fake_sync_target import FakeSyncTarget
 
@@ -70,13 +70,13 @@ class TestChangeHistoryQueries:
         event_id_1 = repo.record_change(
             entity_id="entity1",
             entity_type="class",
-            operation="create",
+            operation=ChangeOperation.CREATE,
             new_state={"name": "Entity1"},
         )
         event_id_2 = repo.record_change(
             entity_id="entity2",
             entity_type="taxonomy",
-            operation="create",
+            operation=ChangeOperation.CREATE,
             new_state={"name": "Entity2"},
         )
 
@@ -92,13 +92,13 @@ class TestChangeHistoryQueries:
         repo.record_change(
             entity_id="entity1",
             entity_type="class",
-            operation="create",
+            operation=ChangeOperation.CREATE,
             new_state={"name": "Entity1"},
         )
         repo.record_change(
             entity_id="entity2",
             entity_type="taxonomy",
-            operation="create",
+            operation=ChangeOperation.CREATE,
             new_state={"name": "Entity2"},
         )
 
@@ -114,7 +114,7 @@ class TestChangeHistoryQueries:
         repo.record_change(
             entity_id="entity1",
             entity_type="class",
-            operation="create",
+            operation=ChangeOperation.CREATE,
             new_state={"name": "Entity1"},
         )
         # This event is recorded with current time, so it will be after 'now'
@@ -133,7 +133,7 @@ class TestChangeHistoryQueries:
             repo.record_change(
                 entity_id=f"entity{i}",
                 entity_type="class",
-                operation="create",
+                operation=ChangeOperation.CREATE,
                 new_state={"name": f"Entity{i}"},
             )
 
@@ -271,13 +271,13 @@ class TestChangesetLifecycle:
         event_id_1 = repo.record_change(
             entity_id="entity1",
             entity_type="class",
-            operation="create",
+            operation=ChangeOperation.CREATE,
             new_state={"name": "Entity1"},
         )
         event_id_2 = repo.record_change(
             entity_id="entity2",
             entity_type="taxonomy",
-            operation="create",
+            operation=ChangeOperation.CREATE,
             new_state={"name": "Entity2"},
         )
 
@@ -514,13 +514,13 @@ class TestProposalWorkflow:
         event_id_1 = repo.record_change(
             entity_id="entity1",
             entity_type="class",
-            operation="create",
+            operation=ChangeOperation.CREATE,
             new_state={"name": "Entity1"},
         )
         event_id_2 = repo.record_change(
             entity_id="entity2",
             entity_type="taxonomy",
-            operation="create",
+            operation=ChangeOperation.CREATE,
             new_state={"name": "Entity2"},
         )
 
@@ -697,14 +697,14 @@ class TestConflictDetection:
         event_id_1 = repo.record_change(
             entity_id="entity1",
             entity_type="class",
-            operation="create",
+            operation=ChangeOperation.CREATE,
             new_state={"name": "Entity1", "description": "Desc1"},
             changeset_id="test-changeset",
         )
         event_id_2 = repo.record_change(
             entity_id="entity2",
             entity_type="class",
-            operation="create",
+            operation=ChangeOperation.CREATE,
             new_state={"name": "Entity2", "description": "Desc2"},
             changeset_id="test-changeset",
         )
@@ -731,7 +731,7 @@ class TestConflictDetection:
         event_id = repo.record_change(
             entity_id="entity1",
             entity_type="class",
-            operation="create",
+            operation=ChangeOperation.CREATE,
             new_state={"name": "Entity1"},
             changeset_id="test-changeset",
         )
@@ -756,7 +756,7 @@ class TestConflictDetection:
         event_id_1 = repo.record_change(
             entity_id="entity1",
             entity_type="class",
-            operation="update",
+            operation=ChangeOperation.UPDATE,
             previous_state={"name": "old_name"},
             new_state={"name": "new_name_1"},
             changeset_id="test-changeset",
@@ -767,7 +767,7 @@ class TestConflictDetection:
         event_id_2 = repo.record_change(
             entity_id="entity1",
             entity_type="class",
-            operation="update",
+            operation=ChangeOperation.UPDATE,
             previous_state={"name": "different_name"},  # External change detected!
             new_state={"name": "new_name_2"},
             changeset_id="test-changeset",
@@ -800,7 +800,7 @@ class TestConflictDetection:
         event_id_1 = repo.record_change(
             entity_id="entity1",
             entity_type="class",
-            operation="update",
+            operation=ChangeOperation.UPDATE,
             previous_state={"name": "old", "description": "old_desc", "status": "active"},
             new_state={"name": "new1", "description": "desc1", "status": "active"},
             changeset_id="test-changeset",
@@ -809,7 +809,7 @@ class TestConflictDetection:
         event_id_2 = repo.record_change(
             entity_id="entity1",
             entity_type="class",
-            operation="update",
+            operation=ChangeOperation.UPDATE,
             previous_state={"name": "external_name", "description": "external_desc", "status": "active"},
             new_state={"name": "new2", "description": "desc2", "status": "inactive"},
             changeset_id="test-changeset",
@@ -847,7 +847,7 @@ class TestConflictDetection:
         proposal = Proposal(
             id="test-proposal",
             changeset_id="nonexistent-changeset",
-            state="approved",
+            state=ProposalState.APPROVED,
             submitted_at=datetime.now(timezone.utc),
         )
         repo.create_proposal(proposal)
@@ -946,7 +946,7 @@ class TestManualConflictResolution:
         event_id_1 = repo.record_change(
             entity_id="entity1",
             entity_type="class",
-            operation="update",
+            operation=ChangeOperation.UPDATE,
             previous_state={"name": "old"},
             new_state={"name": "new1"},
             changeset_id="test-changeset",
@@ -954,7 +954,7 @@ class TestManualConflictResolution:
         event_id_2 = repo.record_change(
             entity_id="entity1",
             entity_type="class",
-            operation="update",
+            operation=ChangeOperation.UPDATE,
             previous_state={"name": "external"},
             new_state={"name": "new2"},
             changeset_id="test-changeset",
@@ -987,7 +987,7 @@ class TestManualConflictResolution:
         event_id_1 = repo.record_change(
             entity_id="entity1",
             entity_type="class",
-            operation="update",
+            operation=ChangeOperation.UPDATE,
             previous_state={"name": "old", "description": "old_desc"},
             new_state={"name": "new1", "description": "desc1"},
             changeset_id="test-changeset",
@@ -995,7 +995,7 @@ class TestManualConflictResolution:
         event_id_2 = repo.record_change(
             entity_id="entity1",
             entity_type="class",
-            operation="update",
+            operation=ChangeOperation.UPDATE,
             previous_state={"name": "external_name", "description": "external_desc"},
             new_state={"name": "new2", "description": "desc2"},
             changeset_id="test-changeset",
@@ -1029,7 +1029,7 @@ class TestManualConflictResolution:
         event_id_1 = repo.record_change(
             entity_id="entity1",
             entity_type="class",
-            operation="update",
+            operation=ChangeOperation.UPDATE,
             previous_state={"name": "old"},
             new_state={"name": "new1"},
             changeset_id="test-changeset",
@@ -1037,7 +1037,7 @@ class TestManualConflictResolution:
         event_id_2 = repo.record_change(
             entity_id="entity1",
             entity_type="class",
-            operation="update",
+            operation=ChangeOperation.UPDATE,
             previous_state={"name": "external"},
             new_state={"name": "new2"},
             changeset_id="test-changeset",
@@ -1071,7 +1071,7 @@ class TestMergeWithConflictDetection:
         event_id_1 = repo.record_change(
             entity_id="entity1",
             entity_type="class",
-            operation="update",
+            operation=ChangeOperation.UPDATE,
             previous_state={"name": "old"},
             new_state={"name": "new1"},
             changeset_id="test-changeset",
@@ -1079,7 +1079,7 @@ class TestMergeWithConflictDetection:
         event_id_2 = repo.record_change(
             entity_id="entity1",
             entity_type="class",
-            operation="update",
+            operation=ChangeOperation.UPDATE,
             previous_state={"name": "external"},
             new_state={"name": "new2"},
             changeset_id="test-changeset",
@@ -1106,7 +1106,7 @@ class TestMergeWithConflictDetection:
         event_id = repo.record_change(
             entity_id="entity1",
             entity_type="class",
-            operation="create",
+            operation=ChangeOperation.CREATE,
             new_state={"name": "Entity1"},
             changeset_id="test-changeset",
         )
@@ -1131,7 +1131,7 @@ class TestMergeWithConflictDetection:
         event_id_1 = repo.record_change(
             entity_id="entity1",
             entity_type="class",
-            operation="update",
+            operation=ChangeOperation.UPDATE,
             previous_state={"name": "old"},
             new_state={"name": "new1"},
             changeset_id="test-changeset",
@@ -1139,7 +1139,7 @@ class TestMergeWithConflictDetection:
         event_id_2 = repo.record_change(
             entity_id="entity1",
             entity_type="class",
-            operation="update",
+            operation=ChangeOperation.UPDATE,
             previous_state={"name": "external"},
             new_state={"name": "new2"},
             changeset_id="test-changeset",

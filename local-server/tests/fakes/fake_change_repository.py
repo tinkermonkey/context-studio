@@ -14,6 +14,7 @@ from domain.versioning.entities import (
     Changeset,
     Proposal,
 )
+from domain.versioning.value_objects import ChangeOperation
 
 
 class FakeChangeRepository:
@@ -38,7 +39,7 @@ class FakeChangeRepository:
         self,
         entity_id: str,
         entity_type: str,
-        operation: str,
+        operation: ChangeOperation,
         new_state: dict,
         previous_state: Optional[dict] = None,
         user_id: Optional[str] = None,
