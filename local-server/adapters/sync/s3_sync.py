@@ -64,24 +64,19 @@ class S3SyncAdapter:
         self._prefix = prefix.rstrip("/")
         self._region = region
 
-        try:
-            self._s3_client = boto3.client(
-                "s3",
-                region_name=region,
-                aws_access_key_id=aws_access_key,
-                aws_secret_access_key=aws_secret_key,
-            )
-            _logger.info(
-                "S3SyncAdapter initialized (bucket=%s, prefix=%s, region=%s)",
-                bucket,
-                prefix,
-                region,
-            )
-            self._configured = True
-        except Exception as e:
-            _logger.error(f"Failed to initialize S3 client: {e}")
-            self._configured = False
-            self._s3_client = None
+        self._s3_client = boto3.client(
+            "s3",
+            region_name=region,
+            aws_access_key_id=aws_access_key,
+            aws_secret_access_key=aws_secret_key,
+        )
+        _logger.info(
+            "S3SyncAdapter initialized (bucket=%s, prefix=%s, region=%s)",
+            bucket,
+            prefix,
+            region,
+        )
+        self._configured = True
 
     def push(self, events: Sequence[ChangeEvent]) -> SyncResult:
         """
@@ -97,8 +92,9 @@ class S3SyncAdapter:
             SyncResult with count of pushed events and any errors
         """
         if not self._configured or self._s3_client is None:
-            _logger.debug("S3 not configured, skipping push")
-            return SyncResult(pushed=0, pulled=0, errors=[])
+            error_msg = "S3 sync adapter is not configured"
+            _logger.error(error_msg)
+            return SyncResult(pushed=0, pulled=0, errors=[error_msg])
 
         if not events:
             return SyncResult(pushed=0, pulled=0, errors=[])
@@ -164,83 +160,91 @@ class S3SyncAdapter:
 
         Returns:
             List of deduplicated ChangeEvent objects from S3
+
+        Raises:
+            Exception: If S3 access fails (permission denied, bucket missing, network error, etc.)
         """
         if not self._configured or self._s3_client is None:
             _logger.debug("S3 not configured, skipping pull")
             return []
 
-        try:
-            events: list[ChangeEvent] = []
-            seen_ids: set[str] = set()
-            prefix = f"{self._prefix}/changes/"
+        events: list[ChangeEvent] = []
+        seen_ids: set[str] = set()
+        failed_keys: list[str] = []
+        prefix = f"{self._prefix}/changes/"
 
-            # List all objects with the changes prefix
-            paginator = self._s3_client.get_paginator("list_objects_v2")
-            pages = paginator.paginate(Bucket=self._bucket, Prefix=prefix)
+        # List all objects with the changes prefix
+        paginator = self._s3_client.get_paginator("list_objects_v2")
+        pages = paginator.paginate(Bucket=self._bucket, Prefix=prefix)
 
-            for page in pages:
-                if "Contents" not in page:
-                    continue
+        for page in pages:
+            if "Contents" not in page:
+                continue
 
-                for obj in page["Contents"]:
-                    key = obj["Key"]
-                    # Filter by date if since provided
-                    if since:
-                        # Extract date from key: {prefix}/changes/{yyyy-mm-dd}/{uuid}.jsonl
-                        parts = key.split("/")
-                        if len(parts) >= 3:
-                            try:
-                                date_str = parts[-2]
-                                file_date = datetime.strptime(date_str, "%Y-%m-%d").replace(
-                                    tzinfo=timezone.utc
-                                )
-                                if file_date < since:
-                                    continue
-                            except (ValueError, IndexError):
-                                continue
-
-                    # Download and deserialize the file
-                    try:
-                        response = self._s3_client.get_object(Bucket=self._bucket, Key=key)
-                        content = response["Body"].read().decode("utf-8")
-
-                        # Parse JSON Lines
-                        for line in content.strip().split("\n"):
-                            if not line:
-                                continue
-                            data = json.loads(line)
-                            event_id = data["id"]
-
-                            # Skip duplicate events
-                            if event_id in seen_ids:
-                                _logger.debug(f"Skipping duplicate event {event_id}")
-                                continue
-
-                            seen_ids.add(event_id)
-                            event = ChangeEvent(
-                                id=event_id,
-                                entity_id=data["entity_id"],
-                                entity_type=data["entity_type"],
-                                operation=data["operation"],
-                                timestamp=datetime.fromisoformat(data["timestamp"]),
-                                processed=data.get("processed", False),
-                                user_id=data.get("user_id"),
-                                change_reason=data.get("change_reason"),
-                                new_state=data.get("new_state"),
-                                previous_state=data.get("previous_state"),
+            for obj in page["Contents"]:
+                key = obj["Key"]
+                # Filter by date if since provided
+                if since:
+                    # Extract date from key: {prefix}/changes/{yyyy-mm-dd}/{uuid}.jsonl
+                    parts = key.split("/")
+                    if len(parts) >= 3:
+                        try:
+                            date_str = parts[-2]
+                            file_date = datetime.strptime(date_str, "%Y-%m-%d").replace(
+                                tzinfo=timezone.utc
                             )
-                            events.append(event)
-                    except Exception as e:
-                        _logger.error(f"Failed to parse S3 object {key}: {e}")
-                        continue
+                            if file_date < since:
+                                continue
+                        except (ValueError, IndexError):
+                            continue
 
+                # Download and deserialize the file
+                try:
+                    response = self._s3_client.get_object(Bucket=self._bucket, Key=key)
+                    content = response["Body"].read().decode("utf-8")
+
+                    # Parse JSON Lines
+                    for line in content.strip().split("\n"):
+                        if not line:
+                            continue
+                        data = json.loads(line)
+                        event_id = data["id"]
+
+                        # Skip duplicate events
+                        if event_id in seen_ids:
+                            _logger.debug(f"Skipping duplicate event {event_id}")
+                            continue
+
+                        seen_ids.add(event_id)
+                        event = ChangeEvent(
+                            id=event_id,
+                            entity_id=data["entity_id"],
+                            entity_type=data["entity_type"],
+                            operation=data["operation"],
+                            timestamp=datetime.fromisoformat(data["timestamp"]),
+                            processed=data.get("processed", False),
+                            user_id=data.get("user_id"),
+                            change_reason=data.get("change_reason"),
+                            new_state=data.get("new_state"),
+                            previous_state=data.get("previous_state"),
+                        )
+                        events.append(event)
+                except Exception as e:
+                    _logger.error(f"Failed to parse S3 object {key}: {e}")
+                    failed_keys.append(key)
+
+        # Report pulled events and any failures
+        if failed_keys:
+            _logger.warning(
+                "Pulled %d change events from S3 (deduplicated), but failed to parse %d files: %s",
+                len(events),
+                len(failed_keys),
+                ", ".join(failed_keys),
+            )
+        else:
             _logger.info("Pulled %d change events from S3 (deduplicated)", len(events))
-            return events
 
-        except Exception as e:
-            error_msg = f"Failed to pull changes from S3: {e}"
-            _logger.error(error_msg)
-            return []
+        return events
 
     def is_configured(self) -> bool:
         """
