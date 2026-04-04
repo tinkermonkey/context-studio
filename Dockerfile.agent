@@ -1,7 +1,7 @@
 # ============================================================================
 # Stage 1: Base Environment Setup
 # ============================================================================
-# Last dependency refresh: 2026-03-27
+# Last dependency refresh: 2026-04-04
 FROM switchyard-orchestrator:latest
 
 # The base image already includes:
