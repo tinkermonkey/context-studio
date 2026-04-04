@@ -243,6 +243,7 @@ async def lifespan(app: FastAPI):
             nlp_processor=nlp_processor,
             embedding_service=embedding_service,
             start_time=app_start_time,
+            db_engine=db_manager.get_local_engine(),
         )
         logger.info("SystemMetricsCollector created")
 

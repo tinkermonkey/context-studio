@@ -14,7 +14,7 @@ when calling synchronous domain service methods.
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from domain.admin.services import AdminService
-from domain.admin.exceptions import ConfigurationError, TaskNotFoundError
+from domain.admin.exceptions import ConfigurationError, TaskNotFoundError, AdminError
 from adapters.web.dependencies import get_admin_service
 from adapters.web.schemas.admin import (
     SystemHealthResponse,
@@ -28,6 +28,28 @@ from utils.logger import get_logger
 logger = get_logger(__name__)
 
 router = APIRouter(prefix="/api/v1/admin", tags=["admin"])
+
+
+def _handle_admin_error(exc: Exception) -> tuple[int, str]:
+    """
+    Map admin domain exceptions to HTTP status codes and error messages.
+
+    Args:
+        exc: The domain exception
+
+    Returns:
+        Tuple of (status_code, error_message)
+    """
+    if isinstance(exc, ConfigurationError):
+        return (status.HTTP_400_BAD_REQUEST, str(exc))
+    elif isinstance(exc, TaskNotFoundError):
+        return (status.HTTP_404_NOT_FOUND, str(exc))
+    elif isinstance(exc, AdminError):
+        logger.warning(f"Admin error: {exc}")
+        return (status.HTTP_400_BAD_REQUEST, str(exc))
+    else:
+        logger.error(f"Unexpected error in admin endpoint: {exc}", exc_info=exc)
+        return (status.HTTP_500_INTERNAL_SERVER_ERROR, "An unexpected error occurred")
 
 
 @router.get("/health", response_model=SystemHealthResponse)
@@ -47,9 +69,16 @@ async def check_health(
 
     Returns:
         SystemHealthResponse with status and component readiness
+
+    Raises:
+        HTTPException: 500 for internal errors
     """
-    health = await run_sync_in_executor(service.check_health)
-    return SystemHealthResponse.model_validate(health.__dict__)
+    try:
+        health = await run_sync_in_executor(service.check_health)
+        return SystemHealthResponse.model_validate(health.__dict__)
+    except Exception as exc:
+        status_code, message = _handle_admin_error(exc)
+        raise HTTPException(status_code=status_code, detail=message)
 
 
 @router.get("/configuration", response_model=AppConfigurationResponse)
@@ -64,9 +93,16 @@ async def get_configuration(
 
     Returns:
         AppConfigurationResponse with configuration sections and masked API keys
+
+    Raises:
+        HTTPException: 500 for internal errors
     """
-    config = await run_sync_in_executor(service.get_configuration)
-    return AppConfigurationResponse.from_domain(config)
+    try:
+        config = await run_sync_in_executor(service.get_configuration)
+        return AppConfigurationResponse.from_domain(config)
+    except Exception as exc:
+        status_code, message = _handle_admin_error(exc)
+        raise HTTPException(status_code=status_code, detail=message)
 
 
 @router.patch(
@@ -121,9 +157,16 @@ async def list_tasks(
 
     Returns:
         List of BackgroundTaskResponse objects
+
+    Raises:
+        HTTPException: 500 for internal errors
     """
-    tasks = await run_sync_in_executor(service.list_tasks)
-    return [BackgroundTaskResponse.model_validate(task.__dict__) for task in tasks]
+    try:
+        tasks = await run_sync_in_executor(service.list_tasks)
+        return [BackgroundTaskResponse.model_validate(task.__dict__) for task in tasks]
+    except Exception as exc:
+        status_code, message = _handle_admin_error(exc)
+        raise HTTPException(status_code=status_code, detail=message)
 
 
 @router.get("/tasks/{task_id}", response_model=BackgroundTaskResponse)

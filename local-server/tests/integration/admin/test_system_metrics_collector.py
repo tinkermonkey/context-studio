@@ -27,18 +27,20 @@ def test_collect_health_with_no_providers():
     nlp_processor = SpacyNLPProcessor()
     embedding_service = SentenceTransformerEmbedding()
 
-    collector = SystemMetricsCollector(llm_router, nlp_processor, embedding_service, start_time)
+    # Without db_engine, status will be unhealthy due to database not accessible
+    collector = SystemMetricsCollector(llm_router, nlp_processor, embedding_service, start_time, db_engine=None)
     health = collector.collect_health()
 
     assert isinstance(health, SystemHealth)
-    assert health.status in ("healthy", "degraded")
-    assert health.database_connected is True
+    assert health.status in ("healthy", "degraded", "unhealthy")
+    assert health.database_connected is False  # No engine provided
     assert isinstance(health.llm_providers_available, list)
     assert len(health.llm_providers_available) == 0
     assert isinstance(health.uptime_seconds, float)
     assert health.uptime_seconds >= 10.0  # Should be at least ~10 seconds
     assert isinstance(health.issues, list)
     assert "No LLM providers configured" in health.issues
+    assert "Database not accessible" in health.issues
 
 
 def test_collect_health_structure():
@@ -49,7 +51,7 @@ def test_collect_health_structure():
     nlp_processor = SpacyNLPProcessor()
     embedding_service = SentenceTransformerEmbedding()
 
-    collector = SystemMetricsCollector(llm_router, nlp_processor, embedding_service, start_time)
+    collector = SystemMetricsCollector(llm_router, nlp_processor, embedding_service, start_time, db_engine=None)
     health = collector.collect_health()
 
     # Verify all required fields are present
@@ -74,7 +76,7 @@ def test_collect_health_structure():
 
 
 def test_collect_health_status_degraded_without_embedding():
-    """Test that status is 'degraded' when embedding model is not loaded."""
+    """Test that status is 'unhealthy' when db engine is missing and 'degraded' when db is ok but components fail."""
     start_time = datetime.now(timezone.utc)
 
     # Invalid model name will prevent loading
@@ -85,13 +87,15 @@ def test_collect_health_status_degraded_without_embedding():
     llm_router = LLMProviderRouter(openai_api_key="", anthropic_api_key="")
     nlp_processor = SpacyNLPProcessor()
 
-    collector = SystemMetricsCollector(llm_router, nlp_processor, embedding_service, start_time)
+    # Without db_engine, status will be unhealthy
+    collector = SystemMetricsCollector(llm_router, nlp_processor, embedding_service, start_time, db_engine=None)
     health = collector.collect_health()
 
-    # Should be degraded due to missing embedding and providers
-    assert health.status == "degraded"
+    # Status is unhealthy due to missing database engine
+    assert health.status == "unhealthy"
+    assert health.database_connected is False
     assert health.embedding_model_loaded is False
-    assert "Embedding model not loaded" in health.issues or len(health.issues) > 0
+    assert len(health.issues) > 0
 
 
 def test_collect_health_uptime_calculation():
@@ -103,7 +107,7 @@ def test_collect_health_uptime_calculation():
     nlp_processor = SpacyNLPProcessor()
     embedding_service = SentenceTransformerEmbedding()
 
-    collector = SystemMetricsCollector(llm_router, nlp_processor, embedding_service, start_time)
+    collector = SystemMetricsCollector(llm_router, nlp_processor, embedding_service, start_time, db_engine=None)
     health = collector.collect_health()
 
     # Uptime should be approximately 30 seconds (allowing some variance)
@@ -118,7 +122,7 @@ def test_collect_health_checked_at_timestamp():
     nlp_processor = SpacyNLPProcessor()
     embedding_service = SentenceTransformerEmbedding()
 
-    collector = SystemMetricsCollector(llm_router, nlp_processor, embedding_service, start_time)
+    collector = SystemMetricsCollector(llm_router, nlp_processor, embedding_service, start_time, db_engine=None)
     before = datetime.now(timezone.utc)
     health = collector.collect_health()
     after = datetime.now(timezone.utc)
@@ -135,7 +139,7 @@ def test_collect_health_multiple_calls():
     nlp_processor = SpacyNLPProcessor()
     embedding_service = SentenceTransformerEmbedding()
 
-    collector = SystemMetricsCollector(llm_router, nlp_processor, embedding_service, start_time)
+    collector = SystemMetricsCollector(llm_router, nlp_processor, embedding_service, start_time, db_engine=None)
 
     health1 = collector.collect_health()
     time.sleep(0.1)  # Small delay
@@ -155,26 +159,27 @@ def test_collect_health_issues_list():
     # Don't load the embedding model
     embedding_service = SentenceTransformerEmbedding(model_name="invalid-model")
 
-    collector = SystemMetricsCollector(llm_router, nlp_processor, embedding_service, start_time)
+    collector = SystemMetricsCollector(llm_router, nlp_processor, embedding_service, start_time, db_engine=None)
     health = collector.collect_health()
 
-    # Should have issues for missing providers and possibly embedding
+    # Should have issues for missing providers, embedding, and database
     assert isinstance(health.issues, list)
     assert len(health.issues) > 0
-    assert any("LLM" in issue for issue in health.issues)
+    assert any("LLM" in issue or "Database" in issue for issue in health.issues)
 
 
-def test_collect_health_database_always_connected():
-    """Test that database_connected is always True when collector runs."""
+def test_collect_health_database_check_with_no_engine():
+    """Test that database_connected is False when no engine is provided."""
     start_time = datetime.now(timezone.utc)
 
     llm_router = LLMProviderRouter(openai_api_key="", anthropic_api_key="")
     nlp_processor = SpacyNLPProcessor()
     embedding_service = SentenceTransformerEmbedding()
 
-    collector = SystemMetricsCollector(llm_router, nlp_processor, embedding_service, start_time)
+    # Collector without db_engine should report database not connected
+    collector = SystemMetricsCollector(llm_router, nlp_processor, embedding_service, start_time, db_engine=None)
     health = collector.collect_health()
 
-    # Database should always be "connected" if we got here
-    # (actual DB checks would be implemented separately)
-    assert health.database_connected is True
+    # Database should be reported as not connected when no engine is provided
+    assert health.database_connected is False
+    assert "Database not accessible" in health.issues

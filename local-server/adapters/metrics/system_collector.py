@@ -6,6 +6,9 @@ the readiness and availability of LLM providers, NLP pipeline, and embedding mod
 """
 
 from datetime import datetime, timezone
+from typing import Optional, Any
+
+from sqlalchemy import text
 
 from domain.admin.entities import SystemHealth
 from adapters.llm.provider_router import LLMProviderRouter
@@ -14,6 +17,9 @@ from adapters.embedding.sentence_transformer import SentenceTransformerEmbedding
 from utils.logger import get_logger
 
 logger = get_logger(__name__)
+
+# Type alias for SQLAlchemy Engine (mypy compatibility)
+Engine = Any  # type: ignore[misc]
 
 
 class SystemMetricsCollector:
@@ -30,6 +36,7 @@ class SystemMetricsCollector:
         nlp_processor: SpacyNLPProcessor,
         embedding_service: SentenceTransformerEmbedding,
         start_time: datetime,
+        db_engine: Optional[Engine] = None,
     ) -> None:
         """
         Initialize the system metrics collector.
@@ -39,6 +46,7 @@ class SystemMetricsCollector:
             nlp_processor: NLP processor for checking readiness
             embedding_service: Embedding service for checking model load status
             start_time: Application start time for uptime calculation
+            db_engine: SQLAlchemy engine for database connectivity checks
 
         Note:
             TODO: Replace concrete adapter types with port protocols when available.
@@ -49,6 +57,26 @@ class SystemMetricsCollector:
         self._nlp = nlp_processor
         self._embedding = embedding_service
         self._start_time = start_time
+        self._db_engine = db_engine
+
+    def _check_database_connected(self) -> bool:
+        """
+        Check database connectivity by executing a simple query.
+
+        Returns:
+            True if database is accessible, False otherwise
+        """
+        if self._db_engine is None:
+            logger.warning("Database engine not provided to metrics collector")
+            return False
+
+        try:
+            with self._db_engine.connect() as connection:
+                connection.execute(text("SELECT 1"))
+            return True
+        except Exception as e:
+            logger.warning(f"Database connectivity check failed: {e}")
+            return False
 
     def collect_health(self) -> SystemHealth:
         """
@@ -63,12 +91,34 @@ class SystemMetricsCollector:
         """
         issues: list[str] = []
 
-        # Check component readiness
-        llm_providers = self._llm.list_available_providers()
-        nlp_ready = self._nlp.is_ready()
-        embedding_loaded = self._embedding.is_loaded()
-        # TODO: Inject DB session and verify actual connectivity
-        db_connected = True  # If we got here, database is up (known limitation)
+        # Check database connectivity
+        db_connected = self._check_database_connected()
+        if not db_connected:
+            issues.append('Database not accessible')
+
+        # Check LLM providers with error handling
+        llm_providers = []
+        try:
+            llm_providers = self._llm.list_available_providers()
+        except Exception as e:
+            logger.warning(f"Failed to check LLM providers: {e}")
+            issues.append('Error checking LLM providers')
+
+        # Check NLP pipeline readiness with error handling
+        nlp_ready = False
+        try:
+            nlp_ready = self._nlp.is_ready()
+        except Exception as e:
+            logger.warning(f"Failed to check NLP pipeline: {e}")
+            issues.append('Error checking NLP pipeline')
+
+        # Check embedding model with error handling
+        embedding_loaded = False
+        try:
+            embedding_loaded = self._embedding.is_loaded()
+        except Exception as e:
+            logger.warning(f"Failed to check embedding model: {e}")
+            issues.append('Error checking embedding model')
 
         # Aggregate issues
         if not nlp_ready:
@@ -85,14 +135,16 @@ class SystemMetricsCollector:
         # Determine overall status
         # "healthy" if all optional components are available
         # "degraded" if some optional components are missing
-        # "unhealthy" if database is down (shouldn't happen if we got here)
-        if issues:
+        # "unhealthy" if database is down
+        if not db_connected:
+            status = 'unhealthy'
+        elif issues:
             status = 'degraded'
         else:
             status = 'healthy'
 
         logger.debug(
-            f"Health check: status={status}, nlp_ready={nlp_ready}, "
+            f"Health check: status={status}, db_connected={db_connected}, nlp_ready={nlp_ready}, "
             f"embedding_loaded={embedding_loaded}, providers={len(llm_providers)}, "
             f"issues={len(issues)}"
         )
