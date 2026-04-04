@@ -2,6 +2,7 @@
 
 import sys
 import os
+from typing import Optional
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
@@ -15,7 +16,7 @@ class FakeConfigurationStore:
     Stores configuration in memory with optional initialization.
     """
 
-    def __init__(self, initial_config: AppConfiguration = None):
+    def __init__(self, initial_config: Optional[AppConfiguration] = None):
         """
         Initialize with optional pre-configured state.
 

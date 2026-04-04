@@ -6,6 +6,8 @@ import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 from datetime import datetime, timezone
+from typing import Optional
+
 from domain.admin.entities import SystemHealth
 
 
@@ -16,7 +18,7 @@ class FakeMetricsCollector:
     Allows test code to specify health state or use sensible defaults.
     """
 
-    def __init__(self, health: SystemHealth = None):
+    def __init__(self, health: Optional[SystemHealth] = None):
         """
         Initialize with optional pre-configured health state.
 
