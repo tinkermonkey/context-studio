@@ -27,6 +27,7 @@ from domain.versioning.entities import (
     Proposal as DomainProposal,
 )
 from domain.versioning.value_objects import ChangeState
+from domain.versioning.exceptions import VersionNotFoundError
 
 
 class SQLiteChangeRepository:
@@ -153,10 +154,23 @@ class SQLiteChangeRepository:
 
         Args:
             event_ids: List of change event IDs to mark as processed
+
+        Raises:
+            VersionNotFoundError: If any event IDs don't exist
         """
+        if not event_ids:
+            return
+
         with self.session_factory() as session:
             query = select(ChangeEvent).where(ChangeEvent.id.in_(event_ids))
             events = session.execute(query).scalars().all()
+            found_ids = {cast(str, e.id) for e in events}
+
+            missing_ids = set(event_ids) - found_ids
+            if missing_ids:
+                raise VersionNotFoundError(
+                    f"Change events not found: {', '.join(sorted(missing_ids))}"
+                )
 
             for event in events:
                 event.processed = True
@@ -290,7 +304,7 @@ class SQLiteChangeRepository:
 
     def create_changeset(self, changeset: DomainChangeset) -> DomainChangeset:
         """
-        Create a new changeset.
+        Create a new changeset and persist associated event IDs to junction table.
 
         Args:
             changeset: The Changeset domain entity to create
@@ -309,6 +323,16 @@ class SQLiteChangeRepository:
             )
 
             session.add(orm_changeset)
+            session.flush()
+
+            # Persist event IDs to junction table
+            for event_id in changeset.event_ids:
+                changeset_event = ChangesetEvent(
+                    changeset_id=changeset.id,
+                    change_event_id=event_id,
+                )
+                session.add(changeset_event)
+
             session.commit()
 
             return changeset
@@ -340,17 +364,22 @@ class SQLiteChangeRepository:
 
         Returns:
             The updated Changeset domain entity
+
+        Raises:
+            VersionNotFoundError: If the changeset does not exist
         """
         with self.session_factory() as session:
             orm_changeset = session.get(Changeset, changeset.id)
 
-            if orm_changeset:
-                orm_changeset.name = changeset.name
-                orm_changeset.description = changeset.description
-                orm_changeset.state = changeset.state.value
-                orm_changeset.updated_at = datetime.now(timezone.utc)
+            if not orm_changeset:
+                raise VersionNotFoundError(f"Changeset not found: {changeset.id}")
 
-                session.commit()
+            orm_changeset.name = changeset.name
+            orm_changeset.description = changeset.description
+            orm_changeset.state = changeset.state.value
+            orm_changeset.updated_at = datetime.now(timezone.utc)
+
+            session.commit()
 
             return changeset
 
@@ -409,17 +438,22 @@ class SQLiteChangeRepository:
 
         Returns:
             The updated Proposal domain entity
+
+        Raises:
+            VersionNotFoundError: If the proposal does not exist
         """
         with self.session_factory() as session:
             orm_proposal = session.get(Proposal, proposal.id)
 
-            if orm_proposal:
-                orm_proposal.state = proposal.state
-                orm_proposal.reviewed_at = proposal.reviewed_at
-                orm_proposal.reviewer_notes = proposal.reviewer_notes
-                orm_proposal.conflict_resolutions = proposal.conflict_resolutions
+            if not orm_proposal:
+                raise VersionNotFoundError(f"Proposal not found: {proposal.id}")
 
-                session.commit()
+            orm_proposal.state = proposal.state
+            orm_proposal.reviewed_at = proposal.reviewed_at
+            orm_proposal.reviewer_notes = proposal.reviewer_notes
+            orm_proposal.conflict_resolutions = proposal.conflict_resolutions
+
+            session.commit()
 
             return proposal
 

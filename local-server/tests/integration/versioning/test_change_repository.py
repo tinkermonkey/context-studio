@@ -23,6 +23,7 @@ from domain.versioning.entities import (
     Proposal,
 )
 from domain.versioning.value_objects import ChangeState
+from domain.versioning.exceptions import VersionNotFoundError
 
 
 @pytest.fixture
@@ -287,6 +288,46 @@ class TestChangesetOperations:
         retrieved = repository.get_changeset("nonexistent")
         assert retrieved is None
 
+    def test_create_changeset_persists_event_ids(self, repository) -> None:
+        """Test that create_changeset persists event IDs to junction table."""
+        # Create some change events first
+        event1_id = repository.record_change(
+            entity_id="entity1", entity_type="class", operation="create", new_state={}
+        )
+        event2_id = repository.record_change(
+            entity_id="entity2", entity_type="class", operation="create", new_state={}
+        )
+
+        # Create a changeset with these event IDs
+        changeset = Changeset(
+            id="cs1",
+            name="My Changeset",
+            state=ChangeState.WORKING,
+            created_at=datetime.now(timezone.utc),
+            updated_at=datetime.now(timezone.utc),
+            event_ids=[event1_id, event2_id],
+        )
+
+        repository.create_changeset(changeset)
+
+        # Retrieve the changeset and verify event_ids are persisted
+        retrieved = repository.get_changeset("cs1")
+        assert retrieved is not None
+        assert sorted(retrieved.event_ids) == sorted([event1_id, event2_id])
+
+    def test_update_changeset_raises_if_not_found(self, repository) -> None:
+        """Test that update_changeset raises VersionNotFoundError if not found."""
+        changeset = Changeset(
+            id="nonexistent",
+            name="Ghost Changeset",
+            state=ChangeState.WORKING,
+            created_at=datetime.now(timezone.utc),
+            updated_at=datetime.now(timezone.utc),
+        )
+
+        with pytest.raises(VersionNotFoundError):
+            repository.update_changeset(changeset)
+
 
 class TestProposalOperations:
     """Test Proposal persistence operations."""
@@ -346,3 +387,51 @@ class TestProposalOperations:
         """Test that getting a nonexistent proposal returns None."""
         retrieved = repository.get_proposal("nonexistent")
         assert retrieved is None
+
+    def test_update_proposal_raises_if_not_found(self, repository) -> None:
+        """Test that update_proposal raises VersionNotFoundError if not found."""
+        proposal = Proposal(
+            id="nonexistent",
+            changeset_id="cs1",
+            state="open",
+            submitted_at=datetime.now(timezone.utc),
+        )
+
+        with pytest.raises(VersionNotFoundError):
+            repository.update_proposal(proposal)
+
+
+class TestMarkProcessedOperations:
+    """Test mark_processed exception handling."""
+
+    def test_mark_processed_raises_if_event_not_found(self, repository) -> None:
+        """Test that mark_processed raises VersionNotFoundError if event ID doesn't exist."""
+        with pytest.raises(VersionNotFoundError):
+            repository.mark_processed(["nonexistent-event-id"])
+
+    def test_mark_processed_raises_if_any_event_not_found(self, repository) -> None:
+        """Test that mark_processed raises if any of multiple event IDs don't exist."""
+        # Create one valid event
+        event_id = repository.record_change(
+            entity_id="entity1", entity_type="class", operation="create", new_state={}
+        )
+
+        # Try to mark both valid and invalid IDs
+        with pytest.raises(VersionNotFoundError):
+            repository.mark_processed([event_id, "nonexistent-id"])
+
+    def test_mark_processed_succeeds_with_all_valid_ids(self, repository) -> None:
+        """Test that mark_processed succeeds when all IDs exist."""
+        event1_id = repository.record_change(
+            entity_id="entity1", entity_type="class", operation="create", new_state={}
+        )
+        event2_id = repository.record_change(
+            entity_id="entity2", entity_type="class", operation="create", new_state={}
+        )
+
+        # Should not raise
+        repository.mark_processed([event1_id, event2_id])
+
+        # Verify both are marked as processed
+        unprocessed = repository.get_unprocessed()
+        assert len(unprocessed) == 0
