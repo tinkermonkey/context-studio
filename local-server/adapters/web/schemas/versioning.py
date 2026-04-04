@@ -71,6 +71,17 @@ class ChangeEventResponse(BaseModel):
         from_attributes = True
 
 
+class EntityVersionResponse(BaseModel):
+    """Response representing an entity version"""
+
+    entity_id: str = Field(..., description="ID of the entity")
+    version: int = Field(..., description="Version number")
+    state: str = Field(..., description="Snapshot of entity state")
+
+    class Config:
+        from_attributes = True
+
+
 class ChangeHistoryResponse(BaseModel):
     """Response with change history results"""
 

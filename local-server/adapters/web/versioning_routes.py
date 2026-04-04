@@ -30,6 +30,7 @@ from adapters.web.schemas.versioning import (
     ChangesetResponse,
     ChangeHistoryResponse,
     ChangeEventResponse,
+    EntityVersionResponse,
     ProposalResponse,
     RejectProposalRequest,
     ConflictReportResponse,
@@ -134,11 +135,11 @@ async def get_change_history_by_entity(
         raise HTTPException(status_code=status_code, detail=message)
 
 
-@router.get("/versioning/versions/{entity_id}")
+@router.get("/versioning/versions/{entity_id}", response_model=list[EntityVersionResponse])
 async def list_versions(
     entity_id: str,
     service: VersioningService = Depends(get_versioning_service),
-):
+) -> list[EntityVersionResponse]:
     """
     List all versions of an entity.
 
@@ -154,19 +155,18 @@ async def list_versions(
     """
     try:
         versions = await run_sync_in_executor(service.list_versions, entity_id)
-        return [{"entity_id": v.entity_id, "version": v.version, "state": v.state}
-                for v in versions]
+        return [EntityVersionResponse.model_validate(v) for v in versions]
     except Exception as exc:
         status_code, message = _handle_domain_error(exc)
         raise HTTPException(status_code=status_code, detail=message)
 
 
-@router.get("/versioning/versions/{entity_id}/{version}")
+@router.get("/versioning/versions/{entity_id}/{version}", response_model=EntityVersionResponse)
 async def get_entity_version(
     entity_id: str,
     version: int,
     service: VersioningService = Depends(get_versioning_service),
-):
+) -> EntityVersionResponse:
     """
     Get a specific version of an entity.
 
@@ -185,9 +185,7 @@ async def get_entity_version(
         entity_version = await run_sync_in_executor(
             service.get_entity_version, entity_id, version
         )
-        return {"entity_id": entity_version.entity_id,
-                "version": entity_version.version,
-                "state": entity_version.state}
+        return EntityVersionResponse.model_validate(entity_version)
     except Exception as exc:
         status_code, message = _handle_domain_error(exc)
         raise HTTPException(status_code=status_code, detail=message)
@@ -246,9 +244,7 @@ async def get_changeset(
         HTTPException: 404 if not found, 500 for internal errors
     """
     try:
-        changeset = await run_sync_in_executor(service._repo.get_changeset, changeset_id)
-        if changeset is None:
-            raise VersionNotFoundError(f"Changeset {changeset_id} not found")
+        changeset = await run_sync_in_executor(service.get_changeset, changeset_id)
         return ChangesetResponse.model_validate(changeset)
     except Exception as exc:
         status_code, message = _handle_domain_error(exc)
@@ -511,8 +507,8 @@ async def get_sync_status(
         HTTPException: 500 for internal errors
     """
     try:
-        status = await run_sync_in_executor(service.get_sync_status)
-        return SyncStatusResponse.model_validate(status)
+        sync_status = await run_sync_in_executor(service.get_sync_status)
+        return SyncStatusResponse.model_validate(sync_status)
     except Exception as exc:
         status_code, message = _handle_domain_error(exc)
         raise HTTPException(status_code=status_code, detail=message)

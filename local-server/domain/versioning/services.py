@@ -116,6 +116,24 @@ class VersioningService:
     # Changeset Lifecycle Methods
     # ============================================================================
 
+    def get_changeset(self, changeset_id: str) -> Changeset:
+        """
+        Retrieve a changeset by ID.
+
+        Args:
+            changeset_id: ID of the changeset to retrieve
+
+        Returns:
+            The Changeset entity
+
+        Raises:
+            VersionNotFoundError: If the changeset does not exist
+        """
+        changeset = self._repo.get_changeset(changeset_id)
+        if changeset is None:
+            raise VersionNotFoundError(f"Changeset {changeset_id} not found")
+        return changeset
+
     def create_changeset(
         self,
         name: str,

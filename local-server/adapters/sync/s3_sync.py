@@ -71,8 +71,6 @@ class S3SyncAdapter:
                 aws_access_key_id=aws_access_key,
                 aws_secret_access_key=aws_secret_key,
             )
-            # Test connectivity
-            self._s3_client.head_bucket(Bucket=bucket)
             _logger.info(
                 "S3SyncAdapter initialized (bucket=%s, prefix=%s, region=%s)",
                 bucket,
@@ -158,13 +156,14 @@ class S3SyncAdapter:
         Pull change events from S3.
 
         Lists objects in {prefix}/changes/ directory, filters by date if since provided,
-        downloads and deserializes JSON Lines files.
+        downloads and deserializes JSON Lines files. Deduplicates events by ID to prevent
+        processing the same change multiple times.
 
         Args:
             since: Optional timestamp to fetch changes after
 
         Returns:
-            List of deserialized ChangeEvent objects from S3
+            List of deduplicated ChangeEvent objects from S3
         """
         if not self._configured or self._s3_client is None:
             _logger.debug("S3 not configured, skipping pull")
@@ -172,6 +171,7 @@ class S3SyncAdapter:
 
         try:
             events: list[ChangeEvent] = []
+            seen_ids: set[str] = set()
             prefix = f"{self._prefix}/changes/"
 
             # List all objects with the changes prefix
@@ -209,8 +209,16 @@ class S3SyncAdapter:
                             if not line:
                                 continue
                             data = json.loads(line)
+                            event_id = data["id"]
+
+                            # Skip duplicate events
+                            if event_id in seen_ids:
+                                _logger.debug(f"Skipping duplicate event {event_id}")
+                                continue
+
+                            seen_ids.add(event_id)
                             event = ChangeEvent(
-                                id=data["id"],
+                                id=event_id,
                                 entity_id=data["entity_id"],
                                 entity_type=data["entity_type"],
                                 operation=data["operation"],
@@ -226,7 +234,7 @@ class S3SyncAdapter:
                         _logger.error(f"Failed to parse S3 object {key}: {e}")
                         continue
 
-            _logger.info("Pulled %d change events from S3", len(events))
+            _logger.info("Pulled %d change events from S3 (deduplicated)", len(events))
             return events
 
         except Exception as e:
