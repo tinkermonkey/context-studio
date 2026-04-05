@@ -2904,7 +2904,7 @@
           "versioning"
         ],
         "summary": "Auto Resolve Conflicts",
-        "description": "Automatically resolve conflicts in a proposal using the specified merge strategy.\n\nDetects conflicts and applies the requested resolution strategy.\n\nArgs:\n    proposal_id: ID of the proposal to auto-resolve conflicts for\n    request: AutoResolveConflictsRequest with merge strategy\n    service: VersioningService from dependency injection\n\nReturns:\n    ConflictReportResponse with conflicts resolved according to the strategy\n\nRaises:\n    HTTPException: 404 if not found, 409 for invalid state, 500 for internal errors",
+        "description": "Automatically resolve conflicts in a proposal using the specified merge strategy.\n\nDetects conflicts and applies the requested resolution strategy, then persists\nthe resolutions so they are available for the merge workflow.\n\nArgs:\n    proposal_id: ID of the proposal to auto-resolve conflicts for\n    request: AutoResolveConflictsRequest with merge strategy\n    service: VersioningService from dependency injection\n\nReturns:\n    ConflictReportResponse with conflicts resolved according to the strategy\n\nRaises:\n    HTTPException: 404 if not found, 409 for invalid state, 500 for internal errors",
         "operationId": "auto_resolve_conflicts_api_v1_versioning_proposals__proposal_id__auto_resolve_post",
         "parameters": [
           {
