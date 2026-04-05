@@ -6,7 +6,7 @@ import os
 import json
 import logging
 from typing import Optional, List
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ValidationError
 from enum import Enum
 from dotenv import load_dotenv
 
@@ -113,22 +113,22 @@ class ConfigurationManager:
             except json.JSONDecodeError as e:
                 _config_logger.error(
                     f"Failed to parse {self.config_file}: Invalid JSON at line {e.lineno}, "
-                    f"column {e.colno}. {e.msg}. Using default configuration."
+                    f"column {e.colno}. {e.msg}. Using default configuration. "
+                    f"Fix the file and reload the application."
                 )
                 self.settings = Settings()
-                self.save()
+            except ValidationError as e:
+                _config_logger.error(
+                    f"Configuration validation failed: Invalid values in {self.config_file}. "
+                    f"Errors: {e.errors()}. Using default configuration."
+                )
+                self.settings = Settings()
             except PermissionError as e:
                 _config_logger.error(
                     f"Permission denied reading {self.config_file}: {e}. Using default configuration."
                 )
                 self.settings = Settings()
-            except FileNotFoundError as e:
-                _config_logger.error(
-                    f"Configuration file not found: {e}. Using default configuration."
-                )
-                self.settings = Settings()
-                self.save()
-            except (IOError, OSError) as e:
+            except OSError as e:
                 _config_logger.error(
                     f"I/O error reading {self.config_file}: {e}. Using default configuration."
                 )
