@@ -25,10 +25,7 @@ import {
 } from "lucide-react";
 import { usePipelineComparison } from "@/api/hooks/ragExperiments";
 import { useButterToast } from "@/hooks/useButterToast";
-import type {
-  PipelineComparisonResponse,
-  PipelineComparisonItem,
-} from "@/api/services/ragExperiments";
+import type { PipelineComparisonItem } from "@/api/services/ragExperiments";
 
 export interface TestResultsViewerProps {
   paragraphId: string;
@@ -44,8 +41,6 @@ export const TestResultsViewer: React.FC<TestResultsViewerProps> = ({
   const [sorting, setSorting] = useState<SortingState>([
     { id: "f1_score", desc: true },
   ]);
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [setExpandedRows] = useState<Set<string>>(new Set());
   const toast = useButterToast();
 
   const { data, isLoading, error } = usePipelineComparison({
@@ -129,18 +124,19 @@ export const TestResultsViewer: React.FC<TestResultsViewerProps> = ({
           );
         },
       }),
-      columnHelper.accessor("executed_at" as any, {
-        header: "Executed At",
-        cell: (info) => {
-          const dateValue = info.getValue() as string | undefined;
-          const dateStr = dateValue ? new Date(dateValue).toLocaleString() : "Unknown";
-          return (
-            <span className="text-sm text-gray-600">
-              {dateStr}
-            </span>
-          );
+      columnHelper.accessor(
+        (row) => (row as PipelineComparisonItem & { executed_at?: string }).executed_at,
+        {
+          header: "Executed At",
+          cell: (info) => {
+            const dateValue = info.getValue() as string | undefined;
+            const dateStr = dateValue
+              ? new Date(dateValue).toLocaleString()
+              : "Unknown";
+            return <span className="text-sm text-gray-600">{dateStr}</span>;
+          },
         },
-      }),
+      ),
     ],
     [],
   );

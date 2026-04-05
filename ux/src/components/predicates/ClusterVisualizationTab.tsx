@@ -19,6 +19,7 @@ import {
 import { GitBranch, Plus } from "lucide-react";
 import { useClusterPredicates } from "@/api/hooks/predicates";
 import { useButterToast } from "@/hooks/useButterToast";
+import type { ClusterResult } from "@/api/services/missingTypes";
 
 export interface ClusterVisualizationTabProps {
   onCreateGlobalPredicate?: (clusterPredicates: string[]) => void;
@@ -30,21 +31,22 @@ export const ClusterVisualizationTab: React.FC<
   const [minSamples, setMinSamples] = useState<number>(2);
   const [eps, setEps] = useState<number>(0.3);
   const [sourceFilter, setSourceFilter] = useState<string>("");
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [clusters, setClusters] = useState<any>(null);
+  const [clusters, setClusters] = useState<ClusterResult | null>(null);
   const toast = useButterToast();
 
   // Cluster predicates mutation
   const clusterMutation = useClusterPredicates({
     onSuccess: (result) => {
-      setClusters(result);
-      const clustersArray = (result.clusters as any[]) || [];
+      const clusterResult = result as ClusterResult;
+      setClusters(clusterResult);
+      const clustersArray =
+        (clusterResult.clusters as Array<{ size?: number }>) || [];
       const clusteredCount = clustersArray.reduce(
-        (sum: number, c: any) => sum + (c.size || 0),
+        (sum: number, c: { size?: number }) => sum + (c.size || 0),
         0,
       );
       toast.success(
-        `Found ${(result as any).total_clusters || 0} clusters with ${clusteredCount} clustered predicates`,
+        `Found ${(clusterResult.total_clusters as number) || 0} clusters with ${clusteredCount} clustered predicates`,
       );
     },
     onError: (error: Error) => {
@@ -69,9 +71,10 @@ export const ClusterVisualizationTab: React.FC<
   };
 
   // Calculate cluster quality based on size and cohesion
-  const getClusterQuality = (
-    cluster: any, // eslint-disable-line @typescript-eslint/no-explicit-any
-  ): { color: string; label: string } => {
+  const getClusterQuality = (cluster: {
+    predicate_ids: string[];
+    avg_similarity?: number;
+  }): { color: string; label: string } => {
     const size = cluster.predicate_ids.length;
     const avgSimilarity = cluster.avg_similarity || 0;
 
@@ -185,7 +188,7 @@ export const ClusterVisualizationTab: React.FC<
             <div className="grid grid-cols-3 gap-4 text-center">
               <div>
                 <div className="text-3xl font-bold text-blue-600 dark:text-blue-400">
-                  {clusters.total_clusters}
+                  {clusters.total_clusters as number}
                 </div>
                 <div className="text-sm text-gray-600 dark:text-gray-400">
                   Clusters Found
@@ -193,10 +196,9 @@ export const ClusterVisualizationTab: React.FC<
               </div>
               <div>
                 <div className="text-3xl font-bold text-green-600 dark:text-green-400">
-                  {clusters.clusters.reduce(
-                    (sum: number, c: any) => sum + c.size, // eslint-disable-line @typescript-eslint/no-explicit-any
-                    0,
-                  )}
+                  {(
+                    clusters.clusters as Array<{ size?: number }>
+                  ).reduce((sum: number, c: { size?: number }) => sum + (c.size || 0), 0)}
                 </div>
                 <div className="text-sm text-gray-600 dark:text-gray-400">
                   Clustered Predicates
@@ -204,9 +206,12 @@ export const ClusterVisualizationTab: React.FC<
               </div>
               <div>
                 <div className="text-3xl font-bold text-gray-600 dark:text-gray-400">
-                  {clusters.total_predicates -
-                    clusters.clusters.reduce(
-                      (sum: number, c: any) => sum + c.size, // eslint-disable-line @typescript-eslint/no-explicit-any
+                  {((clusters.total_predicates as number) ?? 0) -
+                    (
+                      clusters.clusters as Array<{ size?: number }>
+                    ).reduce(
+                      (sum: number, c: { size?: number }) =>
+                        sum + (c.size || 0),
                       0,
                     )}
                 </div>
@@ -219,13 +224,20 @@ export const ClusterVisualizationTab: React.FC<
 
           {/* Clusters */}
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            {clusters.clusters.map(
-              (
-                cluster: any, // eslint-disable-line @typescript-eslint/no-explicit-any
-                index: number,
-              ) => {
-                const quality = getClusterQuality(cluster);
+            {(
+              clusters.clusters as Array<{
+                cluster_id?: string;
+                predicate_ids: string[];
+                size?: number;
+                avg_similarity?: number;
+                representative_predicate?: {
+                  title?: string;
+                  definition?: string;
+                };
+                sources?: string[];
+              }>
+            ).map((cluster, index) => {
+              const quality = getClusterQuality(cluster);
                 return (
                   <Card key={index}>
                     <div className="flex items-start justify-between">
