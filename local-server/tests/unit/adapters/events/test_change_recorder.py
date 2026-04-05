@@ -16,15 +16,10 @@ from domain.ontology.events import (
     ClassCreated,
     ClassUpdated,
     ClassDeleted,
-    RelationshipCreated,
     RelationshipDeleted,
     PropertyDefinitionCreated,
     PropertyDefinitionUpdated,
     PropertyDefinitionDeleted,
-    SchemeCreated,
-    SchemeUpdated,
-    SchemeDeleted,
-    ClassMoved,
     ConceptSchemeUpdated,
 )
 from adapters.events.change_recorder import ChangeEventRecorder
