@@ -16,8 +16,6 @@ from collections import defaultdict
 from datetime import datetime, timezone
 from typing import Optional
 
-from sqlalchemy.exc import SQLAlchemyError
-
 from .entities import (
     EntityVersion,
     Changeset,
@@ -998,7 +996,7 @@ class VersioningService:
                     change_reason=change_event.change_reason,
                 )
                 recorded_events.append(event_id)
-            except (SQLAlchemyError, RuntimeError, OSError, ValueError, KeyError, TypeError, AttributeError) as e:
+            except (RuntimeError, OSError, ValueError) as e:
                 error_msg = f"Failed to record change for entity {change_event.entity_id}: {str(e)}"
                 errors.append(error_msg)
                 _logger.error(error_msg)
@@ -1011,7 +1009,7 @@ class VersioningService:
                             "Rolled back %d recorded events due to failure",
                             len(recorded_events),
                         )
-                    except (SQLAlchemyError, RuntimeError, OSError, ValueError, KeyError, TypeError, AttributeError) as rollback_error:
+                    except (RuntimeError, OSError, ValueError) as rollback_error:
                         _logger.error(
                             "Failed to rollback recorded events: %s",
                             str(rollback_error),

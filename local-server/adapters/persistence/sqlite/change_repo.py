@@ -11,6 +11,7 @@ from datetime import datetime, timezone
 from typing import Optional, cast
 
 from sqlalchemy import select, func
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session, sessionmaker
 
 from adapters.persistence.sqlite.models import (
@@ -79,26 +80,32 @@ class SQLiteChangeRepository:
 
         Returns:
             The ID of the recorded change event
+
+        Raises:
+            RuntimeError: If database operation fails
         """
-        with self.session_factory() as session:
-            change_event = ChangeEvent(
-                id=str(uuid.uuid4()),
-                entity_id=entity_id,
-                entity_type=entity_type,
-                operation=operation,
-                new_state=new_state,
-                previous_state=previous_state,
-                timestamp=datetime.now(timezone.utc),
-                user_id=user_id,
-                change_reason=change_reason,
-                changeset_id=changeset_id,
-                processed=False,
-            )
+        try:
+            with self.session_factory() as session:
+                change_event = ChangeEvent(
+                    id=str(uuid.uuid4()),
+                    entity_id=entity_id,
+                    entity_type=entity_type,
+                    operation=operation,
+                    new_state=new_state,
+                    previous_state=previous_state,
+                    timestamp=datetime.now(timezone.utc),
+                    user_id=user_id,
+                    change_reason=change_reason,
+                    changeset_id=changeset_id,
+                    processed=False,
+                )
 
-            session.add(change_event)
-            session.commit()
+                session.add(change_event)
+                session.commit()
 
-            return cast(str, change_event.id)
+                return cast(str, change_event.id)
+        except SQLAlchemyError as e:
+            raise RuntimeError(f"Failed to record change event: {str(e)}") from e
 
     def get_changes(
         self,
@@ -199,25 +206,29 @@ class SQLiteChangeRepository:
 
         Raises:
             VersionNotFoundError: If any event IDs don't exist
+            RuntimeError: If database operation fails
         """
         if not event_ids:
             return
 
-        with self.session_factory() as session:
-            query = select(ChangeEvent).where(ChangeEvent.id.in_(event_ids))
-            events = session.execute(query).scalars().all()
-            found_ids = {cast(str, e.id) for e in events}
+        try:
+            with self.session_factory() as session:
+                query = select(ChangeEvent).where(ChangeEvent.id.in_(event_ids))
+                events = session.execute(query).scalars().all()
+                found_ids = {cast(str, e.id) for e in events}
 
-            missing_ids = set(event_ids) - found_ids
-            if missing_ids:
-                raise VersionNotFoundError(
-                    f"Change events not found: {', '.join(sorted(missing_ids))}"
-                )
+                missing_ids = set(event_ids) - found_ids
+                if missing_ids:
+                    raise VersionNotFoundError(
+                        f"Change events not found: {', '.join(sorted(missing_ids))}"
+                    )
 
-            for event in events:
-                session.delete(event)
+                for event in events:
+                    session.delete(event)
 
-            session.commit()
+                session.commit()
+        except SQLAlchemyError as e:
+            raise RuntimeError(f"Failed to delete change events: {str(e)}") from e
 
     def get_unprocessed(self, limit: int = 500) -> list[DomainChangeEvent]:
         """
@@ -247,11 +258,17 @@ class SQLiteChangeRepository:
 
         Returns:
             Count of unprocessed ChangeEvent records
+
+        Raises:
+            RuntimeError: If database query fails
         """
-        with self.session_factory() as session:
-            query = select(func.count()).select_from(ChangeEvent).where(~ChangeEvent.processed)
-            count = session.scalar(query)
-            return count or 0
+        try:
+            with self.session_factory() as session:
+                query = select(func.count()).select_from(ChangeEvent).where(~ChangeEvent.processed)
+                count = session.scalar(query)
+                return count or 0
+        except SQLAlchemyError as e:
+            raise RuntimeError(f"Failed to count unprocessed changes: {str(e)}") from e
 
     # EntityVersion operations
 

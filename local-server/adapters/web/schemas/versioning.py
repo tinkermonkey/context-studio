@@ -169,6 +169,7 @@ class SyncStatusResponse(BaseModel):
 
     unprocessed_count: int = Field(..., description="Number of unprocessed (unsynced) changes")
     is_configured: bool = Field(..., description="Whether remote sync is configured")
+    is_degraded: bool = Field(..., description="Whether sync status information is incomplete due to adapter errors")
     last_pushed_at: Optional[datetime] = Field(
         default=None, description="ISO timestamp of last successful push"
     )
