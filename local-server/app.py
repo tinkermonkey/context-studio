@@ -20,12 +20,8 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from config import get_config_manager, get_settings, SyncAdapterType
+from domain.admin.exceptions import ConfigurationError
 from utils.logger import get_logger
-
-
-class ConfigurationError(Exception):
-    """Raised when application configuration is invalid or incomplete"""
-    pass
 
 # Import adapters
 from adapters.persistence.sqlite.connection import DatabaseManager
