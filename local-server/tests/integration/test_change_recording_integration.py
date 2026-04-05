@@ -22,7 +22,6 @@ from adapters.persistence.sqlite.ontology_repo import SQLiteOntologyRepository
 from adapters.persistence.sqlite.change_repo import SQLiteChangeRepository
 from adapters.events.in_process import InProcessEventPublisher
 from adapters.events.change_recorder import ChangeEventRecorder
-from adapters.embedding.sentence_transformer import SentenceTransformerEmbedding
 from domain.ontology.services import OntologyService
 from domain.versioning.value_objects import ChangeOperation
 from domain.ontology.events import (
@@ -45,6 +44,7 @@ from domain.ontology.events import (
 )
 from domain.extraction.events import ExtractionCompleted
 from domain.pipeline.events import PipelineExecuted
+from tests.fakes.fake_embedding_service import FakeEmbeddingService
 
 
 @pytest.fixture
@@ -84,13 +84,19 @@ def change_repo(session_factory):
 
 @pytest.fixture
 def embedding_service():
-    """Create an embedding service for testing."""
-    return SentenceTransformerEmbedding()
+    """Create a lightweight fake embedding service for testing."""
+    return FakeEmbeddingService()
 
 
 @pytest.fixture
 def change_recorder(change_repo, event_publisher):
-    """Create and wire up the change event recorder."""
+    """Create and wire up the change event recorder.
+
+    Note: This fixture manually subscribes to events for testing the recorder's
+    ability to handle these events. This wiring duplicates the application's
+    composition root in app.py. These tests verify the recorder + repo integration,
+    not the application's event wiring setup.
+    """
     recorder = ChangeEventRecorder(change_repo)
 
     # Subscribe to all ontology events
@@ -128,15 +134,20 @@ def ontology_service(change_recorder, ontology_repo, embedding_service, event_pu
 
 
 @pytest.fixture
-def session_factory_for_assertions(session_factory):
-    """Provide session factory for direct database assertions."""
-    return session_factory
+def session(session_factory):
+    """Provide a session with automatic lifecycle management.
+
+    Ensures the session is closed after the test, preventing resource leaks.
+    """
+    sess = session_factory()
+    yield sess
+    sess.close()
 
 
 class TestChangeRecordingIntegration:
     """Integration tests for ontology change recording."""
 
-    def test_taxonomy_creation_records_change(self, ontology_service, session_factory_for_assertions):
+    def test_taxonomy_creation_records_change(self, ontology_service, session):
         """Test that creating a taxonomy produces a change event."""
         # Create taxonomy
         taxonomy = ontology_service.create_taxonomy(
@@ -145,23 +156,19 @@ class TestChangeRecordingIntegration:
         )
 
         # Verify change was recorded
-        session = session_factory_for_assertions()
-        try:
-            change_events = session.query(ChangeEvent).filter_by(
-                entity_id=taxonomy.id,
-                entity_type="taxonomy",
-            ).all()
+        change_events = session.query(ChangeEvent).filter_by(
+            entity_id=taxonomy.id,
+            entity_type="taxonomy",
+        ).all()
 
-            assert len(change_events) == 1
-            change_event = change_events[0]
-            assert change_event.operation == ChangeOperation.CREATE
-            assert change_event.new_state["taxonomy_id"] == taxonomy.id
-            assert change_event.new_state["title"] == "Test Taxonomy"
-            assert change_event.change_reason == "Taxonomy created"
-        finally:
-            session.close()
+        assert len(change_events) == 1
+        change_event = change_events[0]
+        assert change_event.operation == ChangeOperation.CREATE
+        assert change_event.new_state["taxonomy_id"] == taxonomy.id
+        assert change_event.new_state["title"] == "Test Taxonomy"
+        assert change_event.change_reason == "Taxonomy created"
 
-    def test_concept_scheme_creation_records_change(self, ontology_service, session_factory_for_assertions):
+    def test_concept_scheme_creation_records_change(self, ontology_service, session):
         """Test that creating a concept scheme produces a change event."""
         # Create taxonomy first
         taxonomy = ontology_service.create_taxonomy("Biology")
@@ -174,24 +181,20 @@ class TestChangeRecordingIntegration:
         )
 
         # Verify change was recorded
-        session = session_factory_for_assertions()
-        try:
-            change_events = session.query(ChangeEvent).filter_by(
-                entity_id=scheme.id,
-                entity_type="concept_scheme",
-            ).all()
+        change_events = session.query(ChangeEvent).filter_by(
+            entity_id=scheme.id,
+            entity_type="concept_scheme",
+        ).all()
 
-            assert len(change_events) == 1
-            change_event = change_events[0]
-            assert change_event.operation == ChangeOperation.CREATE
-            assert change_event.new_state["concept_scheme_id"] == scheme.id
-            assert change_event.new_state["title"] == "Organisms"
-            assert change_event.new_state["taxonomy_id"] == taxonomy.id
-            assert change_event.change_reason == "Concept scheme created"
-        finally:
-            session.close()
+        assert len(change_events) == 1
+        change_event = change_events[0]
+        assert change_event.operation == ChangeOperation.CREATE
+        assert change_event.new_state["concept_scheme_id"] == scheme.id
+        assert change_event.new_state["title"] == "Organisms"
+        assert change_event.new_state["taxonomy_id"] == taxonomy.id
+        assert change_event.change_reason == "Concept scheme created"
 
-    def test_class_creation_records_change(self, ontology_service, session_factory_for_assertions):
+    def test_class_creation_records_change(self, ontology_service, session):
         """Test that creating a class produces a change event."""
         # Create taxonomy and scheme first
         taxonomy = ontology_service.create_taxonomy("Biology")
@@ -208,23 +211,19 @@ class TestChangeRecordingIntegration:
         )
 
         # Verify change was recorded
-        session = session_factory_for_assertions()
-        try:
-            change_events = session.query(ChangeEvent).filter_by(
-                entity_id=clazz.id,
-                entity_type="class",
-            ).all()
+        change_events = session.query(ChangeEvent).filter_by(
+            entity_id=clazz.id,
+            entity_type="class",
+        ).all()
 
-            assert len(change_events) == 1
-            change_event = change_events[0]
-            assert change_event.operation == ChangeOperation.CREATE
-            assert change_event.new_state["class_id"] == clazz.id
-            assert change_event.new_state["title"] == "Mammal"
-            assert change_event.change_reason == "Class created"
-        finally:
-            session.close()
+        assert len(change_events) == 1
+        change_event = change_events[0]
+        assert change_event.operation == ChangeOperation.CREATE
+        assert change_event.new_state["class_id"] == clazz.id
+        assert change_event.new_state["title"] == "Mammal"
+        assert change_event.change_reason == "Class created"
 
-    def test_class_hierarchy_change_records_class_moved(self, ontology_service, session_factory_for_assertions):
+    def test_class_hierarchy_change_records_class_moved(self, ontology_service, session_factory):
         """Test that moving a class in the hierarchy records a ClassMoved event."""
         # Setup hierarchy
         taxonomy = ontology_service.create_taxonomy("Biology")
@@ -248,7 +247,7 @@ class TestChangeRecordingIntegration:
         )
 
         # Clear any creation changes
-        session = session_factory_for_assertions()
+        session = session_factory()
         try:
             session.query(ChangeEvent).delete()
             session.commit()
@@ -262,7 +261,7 @@ class TestChangeRecordingIntegration:
         )
 
         # Verify ClassMoved was recorded
-        session = session_factory_for_assertions()
+        session = session_factory()
         try:
             change_events = session.query(ChangeEvent).filter_by(
                 entity_id=child.id,
@@ -288,7 +287,7 @@ class TestChangeRecordingIntegration:
         finally:
             session.close()
 
-    def test_property_definition_creation_records_change(self, ontology_service, session_factory_for_assertions):
+    def test_property_definition_creation_records_change(self, ontology_service, session):
         """Test that creating a property definition produces a change event."""
         # Create property definition
         prop_def = ontology_service.create_property_definition(
@@ -298,23 +297,19 @@ class TestChangeRecordingIntegration:
         )
 
         # Verify change was recorded
-        session = session_factory_for_assertions()
-        try:
-            change_events = session.query(ChangeEvent).filter_by(
-                entity_id=prop_def.id,
-                entity_type="property_definition",
-            ).all()
+        change_events = session.query(ChangeEvent).filter_by(
+            entity_id=prop_def.id,
+            entity_type="property_definition",
+        ).all()
 
-            assert len(change_events) == 1
-            change_event = change_events[0]
-            assert change_event.operation == ChangeOperation.CREATE
-            assert change_event.new_state["property_id"] == prop_def.id
-            assert change_event.new_state["identifier"] == "hasChild"
-            assert change_event.change_reason == "Property definition created"
-        finally:
-            session.close()
+        assert len(change_events) == 1
+        change_event = change_events[0]
+        assert change_event.operation == ChangeOperation.CREATE
+        assert change_event.new_state["property_id"] == prop_def.id
+        assert change_event.new_state["identifier"] == "hasChild"
+        assert change_event.change_reason == "Property definition created"
 
-    def test_relationship_creation_records_change(self, ontology_service, session_factory_for_assertions):
+    def test_relationship_creation_records_change(self, ontology_service, session_factory):
         """Test that creating a relationship produces a change event."""
         # Setup: create entities and property definition
         taxonomy = ontology_service.create_taxonomy("Biology")
@@ -336,7 +331,7 @@ class TestChangeRecordingIntegration:
         )
 
         # Clear creation changes
-        session = session_factory_for_assertions()
+        session = session_factory()
         try:
             session.query(ChangeEvent).delete()
             session.commit()
@@ -351,7 +346,7 @@ class TestChangeRecordingIntegration:
         )
 
         # Verify change was recorded
-        session = session_factory_for_assertions()
+        session = session_factory()
         try:
             change_events = session.query(ChangeEvent).filter_by(
                 entity_id=relationship.id,
@@ -368,7 +363,7 @@ class TestChangeRecordingIntegration:
         finally:
             session.close()
 
-    def test_taxonomy_update_records_change(self, ontology_service, session_factory_for_assertions):
+    def test_taxonomy_update_records_change(self, ontology_service, session_factory):
         """Test that updating a taxonomy produces a change event."""
         # Create taxonomy
         taxonomy = ontology_service.create_taxonomy(
@@ -377,7 +372,7 @@ class TestChangeRecordingIntegration:
         )
 
         # Clear creation change
-        session = session_factory_for_assertions()
+        session = session_factory()
         try:
             session.query(ChangeEvent).delete()
             session.commit()
@@ -392,7 +387,7 @@ class TestChangeRecordingIntegration:
         )
 
         # Verify change was recorded
-        session = session_factory_for_assertions()
+        session = session_factory()
         try:
             change_events = session.query(ChangeEvent).filter_by(
                 entity_id=taxonomy.id,
@@ -408,14 +403,14 @@ class TestChangeRecordingIntegration:
         finally:
             session.close()
 
-    def test_taxonomy_deletion_records_change(self, ontology_service, session_factory_for_assertions):
+    def test_taxonomy_deletion_records_change(self, ontology_service, session_factory):
         """Test that deleting a taxonomy produces a change event."""
         # Create taxonomy
         taxonomy = ontology_service.create_taxonomy("Biology")
         taxonomy_id = taxonomy.id
 
         # Clear creation change
-        session = session_factory_for_assertions()
+        session = session_factory()
         try:
             session.query(ChangeEvent).delete()
             session.commit()
@@ -426,7 +421,7 @@ class TestChangeRecordingIntegration:
         ontology_service.delete_taxonomy(taxonomy_id)
 
         # Verify change was recorded
-        session = session_factory_for_assertions()
+        session = session_factory()
         try:
             change_events = session.query(ChangeEvent).filter_by(
                 entity_id=taxonomy_id,
