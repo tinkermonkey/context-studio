@@ -448,21 +448,10 @@ async def auto_resolve_conflicts(
         HTTPException: 404 if not found, 409 for invalid state, 500 for internal errors
     """
     try:
-        report = await run_sync_in_executor(service.detect_conflicts, proposal_id)
+        # Use the service method that handles detection, resolution, and persistence
         resolved_report = await run_sync_in_executor(
-            service.auto_resolve, report, request.strategy
+            service.auto_resolve_and_persist, proposal_id, request.strategy
         )
-
-        # Persist resolutions so merge_proposal can retrieve them
-        if resolved_report.all_resolved:
-            resolutions = {}
-            for conflict in resolved_report.conflicts:
-                if conflict.entity_id not in resolutions:
-                    resolutions[conflict.entity_id] = {}
-                resolutions[conflict.entity_id][conflict.field_name] = conflict.resolved_value
-            await run_sync_in_executor(
-                service._repo.save_conflict_resolutions, proposal_id, resolutions
-            )
 
         return ConflictReportResponse(
             proposal_id=proposal_id,

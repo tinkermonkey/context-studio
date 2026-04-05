@@ -497,6 +497,52 @@ class VersioningService:
         )
         return conflict_report
 
+    def auto_resolve_and_persist(
+        self,
+        proposal_id: str,
+        strategy: MergeStrategy = MergeStrategy.LAST_WRITE_WINS,
+    ) -> ConflictReport:
+        """
+        Automatically resolve and persist conflicts in a proposal.
+
+        This is a convenience method that combines detect_conflicts, auto_resolve,
+        and persistence in a single service call. The route layer should use this
+        method instead of accessing service internals.
+
+        Args:
+            proposal_id: ID of the proposal to resolve conflicts for
+            strategy: MergeStrategy to use for resolution (default: LAST_WRITE_WINS)
+
+        Returns:
+            ConflictReport with conflicts resolved according to the strategy
+
+        Raises:
+            VersionNotFoundError: If the proposal or changeset does not exist
+        """
+        # Detect conflicts without any manual resolutions
+        report = self.detect_conflicts(proposal_id)
+
+        # Apply automatic resolution based on strategy
+        resolved_report = self.auto_resolve(report, strategy)
+
+        # Extract resolutions and persist them (unconditionally, matching resolve_conflicts pattern)
+        resolutions = {}
+        for conflict in resolved_report.conflicts:
+            if conflict.entity_id not in resolutions:
+                resolutions[conflict.entity_id] = {}
+            resolutions[conflict.entity_id][conflict.field_name] = conflict.resolved_value
+
+        # Only persist if there are resolutions (handles all_resolved=False case for MANUAL strategy)
+        if resolutions:
+            self._repo.save_conflict_resolutions(proposal_id, resolutions)
+
+        _logger.info(
+            "Auto-resolved and persisted conflicts (proposal_id=%s, strategy=%s)",
+            proposal_id,
+            strategy.value,
+        )
+        return resolved_report
+
     def resolve_conflicts(
         self,
         proposal_id: str,
