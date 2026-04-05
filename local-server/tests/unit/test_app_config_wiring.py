@@ -12,7 +12,6 @@ Tests cover:
 import sys
 import os
 import pytest
-from unittest.mock import patch, MagicMock
 
 # Add local-server root to path for imports
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
@@ -54,7 +53,7 @@ class TestSyncAdapterInitializationErrors:
 
     def test_missing_s3_config_raises_configuration_error(self) -> None:
         """Test that missing S3 sub-config raises ConfigurationError."""
-        sync_config = SyncConfig(adapter="s3")  # No s3 sub-config
+        sync_config = SyncConfig(adapter=SyncAdapterType.S3)  # No s3 sub-config
 
         # Simulate the wiring logic from app.py
         if sync_config.adapter == SyncAdapterType.S3:
@@ -82,7 +81,7 @@ class TestSyncAdapterInitializationErrors:
 
     def test_missing_duckdb_config_raises_configuration_error(self) -> None:
         """Test that missing DuckDB sub-config raises ConfigurationError."""
-        sync_config = SyncConfig(adapter="duckdb")  # No duckdb sub-config
+        sync_config = SyncConfig(adapter=SyncAdapterType.DUCKDB)  # No duckdb sub-config
 
         # Simulate the wiring logic from app.py
         if sync_config.adapter == SyncAdapterType.DUCKDB:

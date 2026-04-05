@@ -104,7 +104,7 @@ class SyncConfig(BaseModel):
 
     @field_validator("adapter", mode="before")
     @classmethod
-    def validate_adapter(cls, v):
+    def validate_adapter(cls, v: str | SyncAdapterType) -> str | SyncAdapterType:
         """Validate adapter type and convert to lowercase for case-insensitive matching"""
         if isinstance(v, str):
             v = v.lower()
