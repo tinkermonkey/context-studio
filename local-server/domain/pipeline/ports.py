@@ -4,13 +4,104 @@ Port interfaces (protocols) for the LLM Pipeline Management bounded context.
 PipelineRepository defines the contract for persisting and retrieving pipeline
 configurations and execution records. Using typing.Protocol enables structural
 subtyping — implementations do not explicitly inherit from these protocols.
+
+LLMProvider is a driven port for language model completion and introspection,
+shared across pipeline and extraction bounded contexts as a cross-context dependency.
 """
 
 from __future__ import annotations
 
-from typing import Protocol
+from dataclasses import dataclass
+from typing import Literal, Protocol
 
 from .entities import Execution, PipelineConfiguration
+
+
+# ============================================================================
+# Value types used in port contracts
+# ============================================================================
+
+@dataclass(frozen=True)
+class LLMResponse:
+    """
+    Response from an LLM completion request.
+
+    Attributes:
+        content: The generated text response
+        tokens_in: Count of input tokens consumed
+        tokens_out: Count of output tokens generated
+        duration_ms: Time spent processing the request in milliseconds
+        finish_reason: Reason the model stopped (e.g., 'stop', 'length')
+        model: Name of the model that generated the response
+    """
+    content: str
+    tokens_in: int
+    tokens_out: int
+    duration_ms: float
+    finish_reason: str
+    model: str
+
+
+# ============================================================================
+# Port interfaces (Protocols)
+# ============================================================================
+
+class LLMProvider(Protocol):
+    """
+    Port for LLM completion and model introspection.
+
+    Implementations provide access to language models for text generation
+    and information about available models. This port is used by both
+    the extraction and pipeline bounded contexts.
+    """
+
+    def complete(
+        self,
+        system_prompt: str,
+        user_prompt: str,
+        model: str,
+        temperature: float = 0.0,
+        max_tokens: int = 2000,
+        response_format: Literal["json", "text"] | None = None,
+        timeout: float | None = None,
+    ) -> LLMResponse:
+        """
+        Request a completion from an LLM.
+
+        Args:
+            system_prompt: System context for the model
+            user_prompt: User message to respond to
+            model: Model identifier
+            temperature: Sampling temperature (0.0–1.0)
+            max_tokens: Maximum tokens to generate
+            response_format: Optional response format ("json" for JSON output, "text" for plain text)
+            timeout: Request timeout in seconds (provider-specific behavior)
+
+        Returns:
+            LLMResponse with generated content and metadata
+        """
+        ...
+
+    def is_model_available(self, model: str) -> bool:
+        """
+        Check if a specific model is available.
+
+        Args:
+            model: Model identifier
+
+        Returns:
+            True if the model can be used, False otherwise
+        """
+        ...
+
+    def list_available_models(self) -> list[str]:
+        """
+        Get list of available model identifiers.
+
+        Returns:
+            List of model names that can be used with complete()
+        """
+        ...
 
 
 class PipelineRepository(Protocol):

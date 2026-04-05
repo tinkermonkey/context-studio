@@ -14,7 +14,7 @@ except ImportError:
     HAS_ANTHROPIC = False
     anthropic = None  # type: ignore[assignment]
 
-from domain.extraction.ports import LLMResponse
+from domain.pipeline.ports import LLMResponse
 from utils.logger import get_logger
 from utils.async_executor import run_sync_in_executor
 

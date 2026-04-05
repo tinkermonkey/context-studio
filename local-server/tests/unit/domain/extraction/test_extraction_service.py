@@ -31,7 +31,7 @@ class FakeEmbeddingService:
 class FakeLLMProvider:
     """Fake LLM provider for testing."""
     def complete(self, system_prompt, user_prompt, model, **kwargs):
-        from domain.extraction.ports import LLMResponse
+        from domain.pipeline.ports import LLMResponse
         # Simple response for testing
         return LLMResponse(
             content='[{"label": "Apple", "type": "ORG", "confidence": 0.9}]',

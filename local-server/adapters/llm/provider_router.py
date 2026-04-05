@@ -13,7 +13,7 @@ from typing import Literal
 
 from adapters.llm.openai_provider import OpenAIProvider
 from adapters.llm.anthropic_provider import AnthropicProvider
-from domain.extraction.ports import LLMProvider, LLMResponse
+from domain.pipeline.ports import LLMProvider, LLMResponse
 from utils.logger import get_logger
 from utils.async_executor import run_sync_in_executor
 

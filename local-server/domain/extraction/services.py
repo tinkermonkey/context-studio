@@ -15,7 +15,7 @@ from uuid import uuid4
 
 from domain.ontology.ports import OntologyRepository, EmbeddingService
 from domain.ports import EventPublisher
-from domain.extraction.ports import LLMProvider
+from domain.pipeline.ports import LLMProvider
 from . import layers
 from .entities import ExtractedEntity, ExtractionResult
 from .events import ExtractionCompleted
