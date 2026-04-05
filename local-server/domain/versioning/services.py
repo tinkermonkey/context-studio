@@ -334,7 +334,7 @@ class VersioningService:
             SyncCompleted event after completion with direction='push'
         """
         events = self._repo.get_unprocessed(limit=500)
-        sent_event_ids = {event.id for event in events}
+        sent_event_ids = {change_event.id for change_event in events}
         result = self._sync.push(events)
 
         # Validate that pushed_event_ids correspond to actually sent events
@@ -400,21 +400,21 @@ class VersioningService:
         errors = []
 
         # Record each pulled event, rolling back on first failure
-        for event in events:
+        for change_event in events:
             try:
                 event_id = self._repo.record_change(
-                    entity_id=event.entity_id,
-                    entity_type=event.entity_type,
-                    operation=event.operation,
-                    new_state=event.new_state,
-                    previous_state=event.previous_state,
-                    user_id=event.user_id,
-                    change_reason=event.change_reason,
+                    entity_id=change_event.entity_id,
+                    entity_type=change_event.entity_type,
+                    operation=change_event.operation,
+                    new_state=change_event.new_state,
+                    previous_state=change_event.previous_state,
+                    user_id=change_event.user_id,
+                    change_reason=change_event.change_reason,
                 )
                 recorded_events.append(event_id)
             except Exception as e:
                 error_msg = (
-                    f"Failed to record change for entity {event.entity_id}: {str(e)}"
+                    f"Failed to record change for entity {change_event.entity_id}: {str(e)}"
                 )
                 errors.append(error_msg)
                 _logger.error(error_msg)

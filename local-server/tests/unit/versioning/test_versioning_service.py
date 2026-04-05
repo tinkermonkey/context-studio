@@ -1228,9 +1228,9 @@ class TestSyncMethods:
 
         # Verify events are marked as processed
         history = repo.get_changes()
-        for event in history.events:
-            if event.id in [event_id_1, event_id_2]:
-                assert event.processed
+        for change_event in history.events:
+            if change_event.id in [event_id_1, event_id_2]:
+                assert change_event.processed
 
         # Verify SyncCompleted event was published
         events = event_publisher.get_events_of_type(SyncCompleted)
