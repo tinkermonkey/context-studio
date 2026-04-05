@@ -23,6 +23,16 @@ from domain.versioning.value_objects import SyncResult
 _logger = logging.getLogger(__name__)
 
 
+class _S3FileParseError(RuntimeError):
+    """
+    Internal exception used to distinguish file parsing errors from S3 listing errors.
+
+    This exception is raised when a downloaded S3 object fails to parse as JSON Lines,
+    and is caught by the outer exception handler to be re-raised as RuntimeError.
+    """
+    pass
+
+
 class S3SyncAdapter:
     """
     Implements SyncTarget using AWS S3 for push/pull synchronization.
@@ -233,15 +243,15 @@ class S3SyncAdapter:
                     except Exception as e:
                         error_msg = f"Failed to parse S3 object {key}: {e}"
                         _logger.error(error_msg)
-                        raise RuntimeError(error_msg) from e
+                        raise _S3FileParseError(error_msg) from e
 
             _logger.info("Pulled %d change events from S3 (deduplicated)", len(events))
             return events
 
         except Exception as e:
-            if isinstance(e, RuntimeError):
-                # File parsing error already wrapped as RuntimeError
-                raise
+            if isinstance(e, _S3FileParseError):
+                # File parsing error already wrapped and logged
+                raise RuntimeError(str(e)) from e.__cause__
             error_msg = f"Failed to list S3 objects: {e}"
             _logger.error(error_msg)
             raise RuntimeError(error_msg) from e
