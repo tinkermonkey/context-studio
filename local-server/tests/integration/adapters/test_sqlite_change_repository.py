@@ -222,13 +222,13 @@ class TestSQLiteChangeRepository:
             operation=ChangeOperation.CREATE,
             new_state={"id": "entity-1"},
         )
-        id2 = change_repo.record_change(
+        change_repo.record_change(
             entity_id="entity-2",
             entity_type="extraction_result",
             operation=ChangeOperation.CREATE,
             new_state={"id": "entity-2"},
         )
-        id3 = change_repo.record_change(
+        change_repo.record_change(
             entity_id="entity-3",
             entity_type="extraction_result",
             operation=ChangeOperation.CREATE,
