@@ -3318,7 +3318,7 @@
         "properties": {
           "strategy": {
             "$ref": "#/components/schemas/MergeStrategy",
-            "description": "Merge strategy to use (last_write_wins, base_value_wins, manual)",
+            "description": "Merge strategy to use (last_write_wins, base_value_wins, merge_both, manual)",
             "default": "last_write_wins"
           }
         },
@@ -4131,6 +4131,18 @@
             ],
             "title": "Resolved Value",
             "description": "The resolved value if conflict is resolved"
+          },
+          "resolution_strategy": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Resolution Strategy",
+            "description": "Strategy used for resolving this conflict"
           }
         },
         "type": "object",
@@ -4892,6 +4904,7 @@
         "enum": [
           "last_write_wins",
           "base_value_wins",
+          "merge_both",
           "manual"
         ],
         "title": "MergeStrategy",
@@ -6006,6 +6019,32 @@
             "type": "array",
             "title": "Errors",
             "description": "Any errors encountered"
+          },
+          "started_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Started At",
+            "description": "ISO timestamp when sync operation started"
+          },
+          "completed_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Completed At",
+            "description": "ISO timestamp when sync operation completed"
           }
         },
         "type": "object",

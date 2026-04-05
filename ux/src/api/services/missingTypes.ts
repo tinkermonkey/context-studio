@@ -29,19 +29,19 @@ export interface DatasetResponse {
   };
 }
 
-export type CreateDatasetRequest = Record<string, unknown> & {
+export interface CreateDatasetRequest {
   name?: string;
   title?: string;
   filename?: string;
   description?: string | null;
-};
+}
 
-export type AddExistingDatasetRequest = Record<string, unknown> & {
+export interface AddExistingDatasetRequest {
   path?: string;
   title?: string;
   file_path?: string;
   name?: string | null;
-};
+}
 
 export interface UpdateDatasetDirectoryRequest {
   path?: string;
@@ -91,17 +91,17 @@ export interface NeighborsRequest {
   depth?: number;
 }
 
-// Pipeline-related types - allowing any property for compatibility
-export type PipelineExecutionRequest = Record<string, unknown> & {
+// Pipeline-related types
+export interface PipelineExecutionRequest {
   pipeline_type?: string;
   flavor_id?: string;
   context_data?: Record<string, unknown>;
   pipeline_id?: string;
   input?: Record<string, unknown>;
   parameters?: Record<string, unknown>;
-};
+}
 
-export type PipelineExecutionResponse = Record<string, unknown> & {
+export interface PipelineExecutionResponse {
   execution_id?: string;
   pipeline_id?: string;
   status?: string;
@@ -111,7 +111,7 @@ export type PipelineExecutionResponse = Record<string, unknown> & {
   completed_at?: string | null;
   response_content?: unknown;
   token_usage?: unknown;
-};
+}
 
 export interface LlmConfigType {
   temperature: number;
@@ -123,7 +123,7 @@ export interface LlmConfigType {
   [key: string]: unknown;
 }
 
-export type PipelineFlavor = Record<string, unknown> & {
+export interface PipelineFlavor {
   id: string;
   name?: string;
   title: string;
@@ -138,9 +138,9 @@ export type PipelineFlavor = Record<string, unknown> & {
   user_prompt: string;
   enabled: boolean;
   version?: number;
-};
+}
 
-export type CreatePipelineFlavorRequest = Record<string, unknown> & {
+export interface CreatePipelineFlavorRequest {
   name?: string;
   title: string;
   type?: string;
@@ -152,7 +152,7 @@ export type CreatePipelineFlavorRequest = Record<string, unknown> & {
   system_prompt: string;
   user_prompt: string;
   enabled: boolean;
-};
+}
 
 export interface UpdatePipelineFlavorRequest {
   name?: string;
@@ -202,13 +202,13 @@ export interface PredicateUpdate {
   definition?: string;
 }
 
-export type PaginatedPredicatesResponse = Record<string, unknown> & {
+export interface PaginatedPredicatesResponse {
   items?: PredicateOut[];
   data: PredicateOut[];
   total?: number;
   page?: number;
   page_size?: number;
-};
+}
 
 export interface ExternalPredicateOut {
   id: string;
@@ -262,10 +262,10 @@ export interface ModelInfo {
   [key: string]: unknown;
 }
 
-export type SupportedModelsResponse = Record<string, unknown> & {
+export interface SupportedModelsResponse {
   models: ModelInfo[];
   default_model?: string;
-};
+}
 
 // NLP Reference types
 export interface ResponseFormat {
@@ -299,15 +299,15 @@ export interface MultiSourceSearchResponse {
   sources: string[];
 }
 
-export type DBpediaSparqlRequest = Record<string, unknown> & {
+export interface DBpediaSparqlRequest {
   sparql_query?: string;
   query?: string;
-};
+}
 
-export type WikidataSparqlRequest = Record<string, unknown> & {
+export interface WikidataSparqlRequest {
   sparql_query?: string;
   query?: string;
-};
+}
 
 // RAG Experiment types
 export interface Annotation {
