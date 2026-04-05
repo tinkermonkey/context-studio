@@ -19,8 +19,13 @@ import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from config import get_config_manager, get_settings
+from config import get_config_manager, get_settings, SyncAdapterType
 from utils.logger import get_logger
+
+
+class ConfigurationError(Exception):
+    """Raised when application configuration is invalid or incomplete"""
+    pass
 
 # Import adapters
 from adapters.persistence.sqlite.connection import DatabaseManager
@@ -231,43 +236,57 @@ async def lifespan(app: FastAPI):
         sync_target: SyncTarget
 
         if sync_config:
-            adapter_type = sync_config.adapter.lower()
+            adapter_type = sync_config.adapter
 
-            if adapter_type == "s3":
+            if adapter_type == SyncAdapterType.S3:
                 s3_config = sync_config.s3
-                if s3_config and s3_config.s3_bucket:
-                    try:
-                        sync_target = S3SyncAdapter(
-                            bucket=s3_config.s3_bucket,
-                            prefix=s3_config.s3_prefix or "context-studio",
-                            aws_access_key=s3_config.s3_access_key or "",
-                            aws_secret_key=s3_config.s3_secret_key or "",
-                            region=s3_config.s3_region or "us-east-1",
-                        )
-                        logger.info("S3SyncAdapter initialized for remote sync")
-                    except Exception as e:
-                        logger.warning(f"Failed to initialize S3SyncAdapter, falling back to no-op: {e}")
-                        sync_target = NoOpSyncTarget()
-                else:
-                    logger.warning("S3 adapter configured but missing required settings, using no-op sync target")
-                    sync_target = NoOpSyncTarget()
+                if not s3_config or not s3_config.s3_bucket:
+                    raise ConfigurationError(
+                        "S3 adapter configured but required settings missing: "
+                        "sync.s3.s3_bucket is required when adapter is 's3'"
+                    )
+                try:
+                    sync_target = S3SyncAdapter(
+                        bucket=s3_config.s3_bucket,
+                        prefix=s3_config.s3_prefix or "context-studio",
+                        aws_access_key=s3_config.s3_access_key or "",
+                        aws_secret_key=s3_config.s3_secret_key or "",
+                        region=s3_config.s3_region or "us-east-1",
+                    )
+                    logger.info("S3SyncAdapter initialized for remote sync")
+                except ConfigurationError:
+                    raise
+                except Exception as e:
+                    raise ConfigurationError(
+                        f"Failed to initialize S3SyncAdapter: {type(e).__name__}: {e}"
+                    ) from e
 
-            elif adapter_type == "duckdb":
+            elif adapter_type == SyncAdapterType.DUCKDB:
                 duckdb_config = sync_config.duckdb
-                if duckdb_config and duckdb_config.output_dir:
-                    try:
-                        sync_target = DuckDBSyncAdapter(output_dir=duckdb_config.output_dir)
-                        logger.info("DuckDBSyncAdapter initialized for remote sync")
-                    except Exception as e:
-                        logger.warning(f"Failed to initialize DuckDBSyncAdapter, falling back to no-op: {e}")
-                        sync_target = NoOpSyncTarget()
-                else:
-                    logger.warning("DuckDB adapter configured but missing required settings, using no-op sync target")
-                    sync_target = NoOpSyncTarget()
+                if not duckdb_config:
+                    raise ConfigurationError(
+                        "DuckDB adapter configured but required settings missing: "
+                        "sync.duckdb configuration is required when adapter is 'duckdb'"
+                    )
+                try:
+                    sync_target = DuckDBSyncAdapter(output_dir=duckdb_config.output_dir)
+                    logger.info("DuckDBSyncAdapter initialized for remote sync")
+                except ConfigurationError:
+                    raise
+                except Exception as e:
+                    raise ConfigurationError(
+                        f"Failed to initialize DuckDBSyncAdapter: {type(e).__name__}: {e}"
+                    ) from e
 
-            else:
+            elif adapter_type == SyncAdapterType.NONE:
                 sync_target = NoOpSyncTarget()
-                logger.info("Sync adapter not configured or 'none', using no-op sync target")
+                logger.info("Sync adapter set to 'none', using no-op sync target")
+            else:
+                # This should never happen due to enum validation, but kept as defense-in-depth
+                raise ConfigurationError(
+                    f"Invalid sync adapter type: '{adapter_type}'. "
+                    f"Must be one of: {', '.join(t.value for t in SyncAdapterType)}"
+                )
         else:
             sync_target = NoOpSyncTarget()
             logger.info("Sync configuration not provided, using no-op sync target")

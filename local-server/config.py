@@ -6,7 +6,7 @@ import os
 import json
 import logging
 from typing import Optional, List
-from pydantic import BaseModel, Field, ValidationError
+from pydantic import BaseModel, Field, ValidationError, field_validator
 from enum import Enum
 from dotenv import load_dotenv
 
@@ -22,6 +22,14 @@ class LogLevel(str, Enum):
     WARNING = "WARNING"
     ERROR = "ERROR"
     CRITICAL = "CRITICAL"
+
+
+class SyncAdapterType(str, Enum):
+    """Sync adapter type options"""
+
+    S3 = "s3"
+    DUCKDB = "duckdb"
+    NONE = "none"
 
 
 class ServerConfig(BaseModel):
@@ -84,15 +92,23 @@ class S3Config(BaseModel):
 class DuckDBConfig(BaseModel):
     """DuckDB synchronization configuration section"""
 
-    output_dir: Optional[str] = Field(default=None, description="Local directory for Parquet files")
+    output_dir: str = Field(description="Local directory for Parquet files")
 
 
 class SyncConfig(BaseModel):
     """Synchronization configuration with adapter selection"""
 
-    adapter: str = Field(default="none", description="Sync adapter type: 's3', 'duckdb', or 'none'")
+    adapter: SyncAdapterType = Field(default=SyncAdapterType.NONE, description="Sync adapter type: 's3', 'duckdb', or 'none'")
     s3: Optional[S3Config] = Field(default=None, description="S3-specific configuration")
     duckdb: Optional[DuckDBConfig] = Field(default=None, description="DuckDB-specific configuration")
+
+    @field_validator("adapter", mode="before")
+    @classmethod
+    def validate_adapter(cls, v):
+        """Validate adapter type and convert to lowercase for case-insensitive matching"""
+        if isinstance(v, str):
+            v = v.lower()
+        return v
 
 
 class Settings(BaseModel):
