@@ -81,6 +81,20 @@ class S3Config(BaseModel):
     s3_region: Optional[str] = Field(default="us-east-1", description="AWS region")
 
 
+class DuckDBConfig(BaseModel):
+    """DuckDB synchronization configuration section"""
+
+    output_dir: Optional[str] = Field(default=None, description="Local directory for Parquet files")
+
+
+class SyncConfig(BaseModel):
+    """Synchronization configuration with adapter selection"""
+
+    adapter: str = Field(default="none", description="Sync adapter type: 's3', 'duckdb', or 'none'")
+    s3: Optional[S3Config] = Field(default=None, description="S3-specific configuration")
+    duckdb: Optional[DuckDBConfig] = Field(default=None, description="DuckDB-specific configuration")
+
+
 class Settings(BaseModel):
     """Centralized configuration settings"""
 
@@ -89,7 +103,7 @@ class Settings(BaseModel):
     logging: LoggingConfig = Field(default_factory=LoggingConfig)
     llm: LLMConfig = Field(default_factory=LLMConfig)
     reference: ReferenceConfig = Field(default_factory=ReferenceConfig)
-    sync: Optional[S3Config] = Field(default=None, description="S3 synchronization configuration")
+    sync: Optional[SyncConfig] = Field(default=None, description="Synchronization configuration")
 
 
 class ConfigurationManager:

@@ -1,0 +1,290 @@
+"""
+DuckDB-based synchronization adapter for the Version Control & Collaboration bounded context.
+
+The DuckDBSyncAdapter implements the SyncTarget port, enabling workspaces to synchronize
+changes with local DuckDB instances over date-partitioned Parquet files. This provides
+an efficient batch-query sync mechanism for local-first scenarios.
+
+Changes are serialized as Parquet with a directory structure: {output_dir}/changes/{date}/
+
+This adapter uses fail-fast error handling: I/O errors and DuckDB failures are propagated
+to the caller as RuntimeError, never suppressed. The service layer wraps these into
+domain-level SyncError exceptions.
+"""
+
+from __future__ import annotations
+
+import json
+import logging
+from datetime import datetime, timezone
+from pathlib import Path
+from typing import Optional, Sequence
+
+from domain.versioning.entities import ChangeEvent
+from domain.versioning.value_objects import SyncResult, ChangeOperation
+
+_logger = logging.getLogger(__name__)
+
+
+class DuckDBSyncAdapter:
+    """
+    Implements SyncTarget using DuckDB and date-partitioned Parquet files.
+
+    Changes are serialized as Parquet files and stored in date-partitioned
+    directories, enabling efficient querying and batch synchronization.
+
+    This adapter uses fail-fast error handling: I/O and DuckDB errors are
+    propagated to the caller as RuntimeError. The caller (service layer) wraps
+    these into SyncError domain exceptions.
+    """
+
+    def __init__(self, output_dir: str) -> None:
+        """
+        Initialize the DuckDB sync adapter.
+
+        Args:
+            output_dir: Local directory path for storing Parquet files
+
+        Raises:
+            ImportError: If duckdb or pyarrow is not installed
+        """
+        try:
+            import duckdb
+            import pyarrow
+        except ImportError as e:
+            _logger.error(f"duckdb and pyarrow are required for DuckDB sync adapter. Install with: pip install duckdb pyarrow")
+            raise
+
+        self._output_dir = Path(output_dir).resolve()
+        self._changes_dir = self._output_dir / "changes"
+
+        # Create directory structure if needed
+        try:
+            self._changes_dir.mkdir(parents=True, exist_ok=True)
+        except OSError as e:
+            error_msg = f"Failed to create sync directory {self._changes_dir}: {e}"
+            _logger.error(error_msg)
+            raise RuntimeError(error_msg) from e
+
+        _logger.info(
+            "DuckDBSyncAdapter initialized (output_dir=%s)",
+            self._output_dir,
+        )
+
+    def push(self, events: Sequence[ChangeEvent]) -> SyncResult:
+        """
+        Push local change events to Parquet files.
+
+        Serializes events as Parquet and writes to date-partitioned directories
+        with directory structure: {output_dir}/changes/{yyyy-mm-dd}/
+
+        Args:
+            events: Sequence of ChangeEvent objects to push
+
+        Returns:
+            SyncResult with count of pushed events and their IDs
+
+        Raises:
+            RuntimeError: If file I/O or DuckDB operations fail
+        """
+        if not events:
+            return SyncResult(pushed=0, pulled=0, errors=(), pushed_event_ids=())
+
+        try:
+            import duckdb
+            import pyarrow as pa
+            import pyarrow.parquet as pq
+        except ImportError:
+            raise RuntimeError("duckdb and pyarrow are required for DuckDB sync adapter")
+
+        pushed_event_ids = []
+        errors = []
+
+        try:
+            # Group events by date
+            events_by_date: dict[str, list[dict]] = {}
+            for event in events:
+                pushed_event_ids.append(event.id)
+                date_str = event.timestamp.strftime("%Y-%m-%d")
+
+                if date_str not in events_by_date:
+                    events_by_date[date_str] = []
+
+                event_dict = {
+                    "id": event.id,
+                    "entity_id": event.entity_id,
+                    "entity_type": event.entity_type,
+                    "operation": event.operation.value,
+                    "timestamp": event.timestamp.isoformat(),
+                    "processed": event.processed,
+                    "user_id": event.user_id,
+                    "change_reason": event.change_reason,
+                    "new_state": json.dumps(event.new_state) if event.new_state else None,
+                    "previous_state": json.dumps(event.previous_state) if event.previous_state else None,
+                }
+                events_by_date[date_str].append(event_dict)
+
+            # Write each date's events to its own Parquet file
+            for date_str, date_events in events_by_date.items():
+                date_dir = self._changes_dir / date_str
+                date_dir.mkdir(parents=True, exist_ok=True)
+
+                # Create table from events
+                table = pa.table(
+                    {
+                        "id": [e["id"] for e in date_events],
+                        "entity_id": [e["entity_id"] for e in date_events],
+                        "entity_type": [e["entity_type"] for e in date_events],
+                        "operation": [e["operation"] for e in date_events],
+                        "timestamp": [e["timestamp"] for e in date_events],
+                        "processed": [e["processed"] for e in date_events],
+                        "user_id": [e["user_id"] for e in date_events],
+                        "change_reason": [e["change_reason"] for e in date_events],
+                        "new_state": [e["new_state"] for e in date_events],
+                        "previous_state": [e["previous_state"] for e in date_events],
+                    }
+                )
+
+                # Write Parquet file
+                parquet_file = date_dir / f"{date_str}.parquet"
+                pq.write_table(table, str(parquet_file))
+
+            _logger.info(
+                "Pushed %d change events to Parquet files (dates=%d)",
+                len(events),
+                len(events_by_date),
+            )
+            return SyncResult(pushed=len(pushed_event_ids), pulled=0, errors=tuple(errors), pushed_event_ids=tuple(pushed_event_ids))
+
+        except Exception as e:
+            error_msg = f"Failed to push changes to DuckDB/Parquet: {e}"
+            _logger.error(error_msg)
+            raise RuntimeError(error_msg) from e
+
+    def pull(self, since: Optional[datetime] = None) -> list[ChangeEvent]:
+        """
+        Pull change events from Parquet files.
+
+        Lists date directories in {output_dir}/changes/, filters by date if since provided,
+        reads and deserializes Parquet files. Deduplicates events by ID.
+
+        Args:
+            since: Optional timestamp to fetch changes after
+
+        Returns:
+            List of deduplicated ChangeEvent objects from Parquet files
+
+        Raises:
+            RuntimeError: If file listing fails, file read fails, or parsing fails
+        """
+        try:
+            import pyarrow.parquet as pq
+        except ImportError:
+            raise RuntimeError("pyarrow is required for DuckDB sync adapter")
+
+        events: list[ChangeEvent] = []
+        seen_ids: set[str] = set()
+
+        try:
+            # List all date directories
+            if not self._changes_dir.exists():
+                _logger.debug("Changes directory does not exist: %s", self._changes_dir)
+                return events
+
+            for date_dir in sorted(self._changes_dir.iterdir()):
+                if not date_dir.is_dir():
+                    continue
+
+                date_str = date_dir.name
+
+                # Filter by date if since provided
+                if since:
+                    try:
+                        # Parse directory date and compare with since date
+                        # Include all files on or after the since date (by date only)
+                        file_date = datetime.strptime(date_str, "%Y-%m-%d").replace(
+                            tzinfo=timezone.utc
+                        )
+                        # Only skip if file date is before the date part of since
+                        # (file_date is at midnight, so compare dates not times)
+                        if file_date.date() < since.date():
+                            continue
+                    except ValueError:
+                        _logger.warning(
+                            "Skipping directory with unparseable date (dir=%s)",
+                            date_str,
+                        )
+                        continue
+
+                # Read all Parquet files in this date directory
+                for parquet_file in date_dir.glob("*.parquet"):
+                    try:
+                        table = pq.read_table(str(parquet_file))
+
+                        for row_idx in range(len(table)):
+                            row = {col: table[col][row_idx].as_py() for col in table.column_names}
+
+                            event_id = row["id"]
+
+                            # Skip duplicate events
+                            if event_id in seen_ids:
+                                _logger.debug(f"Skipping duplicate event {event_id}")
+                                continue
+
+                            seen_ids.add(event_id)
+
+                            # Parse JSON fields
+                            new_state = None
+                            if row["new_state"]:
+                                try:
+                                    new_state = json.loads(row["new_state"])
+                                except (json.JSONDecodeError, TypeError):
+                                    new_state = {}
+
+                            previous_state = None
+                            if row["previous_state"]:
+                                try:
+                                    previous_state = json.loads(row["previous_state"])
+                                except (json.JSONDecodeError, TypeError):
+                                    previous_state = None
+
+                            event = ChangeEvent(
+                                id=event_id,
+                                entity_id=row["entity_id"],
+                                entity_type=row["entity_type"],
+                                operation=ChangeOperation(row["operation"]),
+                                timestamp=datetime.fromisoformat(row["timestamp"]),
+                                processed=row.get("processed", False),
+                                user_id=row.get("user_id"),
+                                change_reason=row.get("change_reason"),
+                                new_state=new_state,
+                                previous_state=previous_state,
+                            )
+                            events.append(event)
+
+                    except Exception as e:
+                        error_msg = f"Failed to parse Parquet file {parquet_file}: {e}"
+                        _logger.error(error_msg)
+                        raise RuntimeError(error_msg) from e
+
+            _logger.info("Pulled %d change events from Parquet files (deduplicated)", len(events))
+            return events
+
+        except Exception as e:
+            if isinstance(e, RuntimeError):
+                raise
+            error_msg = f"Failed to read Parquet files: {e}"
+            _logger.error(error_msg)
+            raise RuntimeError(error_msg) from e
+
+    def is_configured(self) -> bool:
+        """
+        Check if DuckDB sync target is properly configured.
+
+        Returns:
+            True if output directory is accessible, False otherwise
+        """
+        try:
+            return self._changes_dir.exists() and self._changes_dir.is_dir()
+        except OSError:
+            return False

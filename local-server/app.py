@@ -56,6 +56,7 @@ from domain.versioning.ports import SyncTarget
 
 # Import sync adapters
 from adapters.sync.s3_sync import S3SyncAdapter
+from adapters.sync.duckdb_sync import DuckDBSyncAdapter
 from adapters.sync.noop_sync import NoOpSyncTarget
 
 # Import routes
@@ -210,22 +211,48 @@ async def lifespan(app: FastAPI):
         # Versioning service with sync adapter
         sync_config = settings.sync if hasattr(settings, "sync") else None
         sync_target: SyncTarget
-        if sync_config and sync_config.s3_bucket:
-            try:
-                sync_target = S3SyncAdapter(
-                    bucket=sync_config.s3_bucket,
-                    prefix=sync_config.s3_prefix or "context-studio",
-                    aws_access_key=sync_config.s3_access_key or "",
-                    aws_secret_key=sync_config.s3_secret_key or "",
-                    region=sync_config.s3_region or "us-east-1",
-                )
-                logger.info("S3SyncAdapter initialized for remote sync")
-            except Exception as e:
-                logger.warning(f"Failed to initialize S3SyncAdapter, falling back to no-op: {e}")
+
+        if sync_config:
+            adapter_type = getattr(sync_config, "adapter", "none").lower()
+
+            if adapter_type == "s3":
+                s3_config = getattr(sync_config, "s3", None)
+                if s3_config and s3_config.s3_bucket:
+                    try:
+                        sync_target = S3SyncAdapter(
+                            bucket=s3_config.s3_bucket,
+                            prefix=s3_config.s3_prefix or "context-studio",
+                            aws_access_key=s3_config.s3_access_key or "",
+                            aws_secret_key=s3_config.s3_secret_key or "",
+                            region=s3_config.s3_region or "us-east-1",
+                        )
+                        logger.info("S3SyncAdapter initialized for remote sync")
+                    except Exception as e:
+                        logger.warning(f"Failed to initialize S3SyncAdapter, falling back to no-op: {e}")
+                        sync_target = NoOpSyncTarget()
+                else:
+                    logger.warning("S3 adapter configured but missing required settings, using no-op sync target")
+                    sync_target = NoOpSyncTarget()
+
+            elif adapter_type == "duckdb":
+                duckdb_config = getattr(sync_config, "duckdb", None)
+                if duckdb_config and duckdb_config.output_dir:
+                    try:
+                        sync_target = DuckDBSyncAdapter(output_dir=duckdb_config.output_dir)
+                        logger.info("DuckDBSyncAdapter initialized for remote sync")
+                    except Exception as e:
+                        logger.warning(f"Failed to initialize DuckDBSyncAdapter, falling back to no-op: {e}")
+                        sync_target = NoOpSyncTarget()
+                else:
+                    logger.warning("DuckDB adapter configured but missing required settings, using no-op sync target")
+                    sync_target = NoOpSyncTarget()
+
+            else:
                 sync_target = NoOpSyncTarget()
+                logger.info("Sync adapter not configured or 'none', using no-op sync target")
         else:
             sync_target = NoOpSyncTarget()
-            logger.info("S3 not configured, using no-op sync target")
+            logger.info("Sync configuration not provided, using no-op sync target")
 
         versioning_service = VersioningService(
             change_repo=change_repo,
