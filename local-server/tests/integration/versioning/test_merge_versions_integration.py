@@ -10,11 +10,9 @@ import os
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))))
 
-import pytest
 from fastapi import status
-from fastapi.testclient import TestClient
 
-from domain.versioning.value_objects import ChangeOperation, EntityVersionState
+from domain.versioning.value_objects import ChangeOperation
 
 
 class TestMergeVersionsIntegration:

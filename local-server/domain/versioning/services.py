@@ -441,9 +441,9 @@ class VersioningService:
                 for field_name, later_prev_value in later_prev.items():
                     earlier_new_value = earlier_new.get(field_name)
                     if earlier_new_value != later_prev_value:
-                        # Use the previous_state of the first event that modified this field as the base_value
+                        # Use the new_state of the first event that modified this field as the base_value
                         first_event = field_first_event.get(field_name, earlier)
-                        base_value = first_event.previous_state.get(field_name) if first_event.previous_state else None
+                        base_value = first_event.new_state.get(field_name) if first_event.new_state else None
 
                         conflict = Conflict(
                             entity_id=entity_id,

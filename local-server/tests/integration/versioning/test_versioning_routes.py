@@ -417,7 +417,7 @@ class TestVersioningRoutes:
         assert data["has_conflicts"] is True
         assert len(data["conflicts"]) == 1
         assert data["conflicts"][0]["is_resolved"] is True
-        assert data["conflicts"][0]["resolved_value"] == "original"
+        assert data["conflicts"][0]["resolved_value"] == "modified1"
 
     def test_auto_resolve_conflicts_with_manual(self, client, change_repository):
         """POST /api/v1/versioning/proposals/{id}/auto-resolve with MANUAL strategy."""
