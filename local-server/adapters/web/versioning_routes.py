@@ -433,7 +433,8 @@ async def auto_resolve_conflicts(
     """
     Automatically resolve conflicts in a proposal using the specified merge strategy.
 
-    Detects conflicts and applies the requested resolution strategy.
+    Detects conflicts and applies the requested resolution strategy, then persists
+    the resolutions so they are available for the merge workflow.
 
     Args:
         proposal_id: ID of the proposal to auto-resolve conflicts for
@@ -451,6 +452,18 @@ async def auto_resolve_conflicts(
         resolved_report = await run_sync_in_executor(
             service.auto_resolve, report, request.strategy
         )
+
+        # Persist resolutions so merge_proposal can retrieve them
+        if resolved_report.all_resolved:
+            resolutions = {}
+            for conflict in resolved_report.conflicts:
+                if conflict.entity_id not in resolutions:
+                    resolutions[conflict.entity_id] = {}
+                resolutions[conflict.entity_id][conflict.field_name] = conflict.resolved_value
+            await run_sync_in_executor(
+                service._repo.save_conflict_resolutions, proposal_id, resolutions
+            )
+
         return ConflictReportResponse(
             proposal_id=proposal_id,
             conflicts=[

@@ -335,6 +335,71 @@ class TestVersioningRoutes:
         data = response.json()
         assert data["proposal_id"] == proposal_id
 
+    def test_auto_resolve_conflicts_with_last_write_wins(self, client):
+        """POST /api/v1/versioning/proposals/{id}/auto-resolve resolves with LAST_WRITE_WINS."""
+        # Create, stage, and submit a changeset
+        create_response = client.post(
+            "/api/v1/versioning/changesets",
+            json={"name": "Auto-resolve Test"},
+        )
+        changeset_id = create_response.json()["id"]
+        client.post(f"/api/v1/versioning/changesets/{changeset_id}/stage")
+        submit_response = client.post(f"/api/v1/versioning/changesets/{changeset_id}/submit")
+        proposal_id = submit_response.json()["id"]
+
+        # Auto-resolve conflicts with default LAST_WRITE_WINS strategy
+        response = client.post(
+            f"/api/v1/versioning/proposals/{proposal_id}/auto-resolve",
+            json={"strategy": "last_write_wins"},
+        )
+        assert response.status_code == status.HTTP_200_OK
+        data = response.json()
+        assert data["proposal_id"] == proposal_id
+        assert "conflicts" in data
+        assert "has_conflicts" in data
+
+    def test_auto_resolve_conflicts_with_base_value_wins(self, client):
+        """POST /api/v1/versioning/proposals/{id}/auto-resolve with BASE_VALUE_WINS."""
+        # Create, stage, and submit a changeset
+        create_response = client.post(
+            "/api/v1/versioning/changesets",
+            json={"name": "Auto-resolve Test"},
+        )
+        changeset_id = create_response.json()["id"]
+        client.post(f"/api/v1/versioning/changesets/{changeset_id}/stage")
+        submit_response = client.post(f"/api/v1/versioning/changesets/{changeset_id}/submit")
+        proposal_id = submit_response.json()["id"]
+
+        # Auto-resolve with BASE_VALUE_WINS strategy
+        response = client.post(
+            f"/api/v1/versioning/proposals/{proposal_id}/auto-resolve",
+            json={"strategy": "base_value_wins"},
+        )
+        assert response.status_code == status.HTTP_200_OK
+        data = response.json()
+        assert data["proposal_id"] == proposal_id
+
+    def test_auto_resolve_conflicts_with_manual(self, client):
+        """POST /api/v1/versioning/proposals/{id}/auto-resolve with MANUAL strategy."""
+        # Create, stage, and submit a changeset
+        create_response = client.post(
+            "/api/v1/versioning/changesets",
+            json={"name": "Auto-resolve Test"},
+        )
+        changeset_id = create_response.json()["id"]
+        client.post(f"/api/v1/versioning/changesets/{changeset_id}/stage")
+        submit_response = client.post(f"/api/v1/versioning/changesets/{changeset_id}/submit")
+        proposal_id = submit_response.json()["id"]
+
+        # Auto-resolve with MANUAL strategy (leaves unresolved)
+        response = client.post(
+            f"/api/v1/versioning/proposals/{proposal_id}/auto-resolve",
+            json={"strategy": "manual"},
+        )
+        assert response.status_code == status.HTTP_200_OK
+        data = response.json()
+        assert data["proposal_id"] == proposal_id
+
     def test_merge_proposal_returns_200(self, client):
         """POST /api/v1/versioning/proposals/{id}/merge merges approved proposal."""
         # Create, stage, submit, and approve a changeset

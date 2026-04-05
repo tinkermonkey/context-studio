@@ -17,10 +17,10 @@ sys.path.insert(
 )
 
 from domain.versioning.services import VersioningService
-from domain.versioning.entities import EntityVersion, Proposal, ChangeEvent
+from domain.versioning.entities import EntityVersion, Proposal, ChangeEvent, Conflict, ConflictReport
 from domain.versioning.events import ChangesetMerged, SyncCompleted
 from domain.versioning.exceptions import VersionNotFoundError, ChangesetStateError, ConflictResolutionError
-from domain.versioning.value_objects import ChangeState, ChangeOperation, ProposalState, SyncResult, EntityVersionState
+from domain.versioning.value_objects import ChangeState, ChangeOperation, ProposalState, SyncResult, EntityVersionState, MergeStrategy
 from tests.fakes.fake_change_repository import FakeChangeRepository
 from tests.fakes.fake_sync_target import FakeSyncTarget
 from tests.fakes.fake_event_publisher import FakeEventPublisher
@@ -940,9 +940,6 @@ class TestMergeStrategies:
         self, service: VersioningService
     ) -> None:
         """Test auto_resolve with LAST_WRITE_WINS strategy uses incoming_value."""
-        from domain.versioning.entities import Conflict, ConflictReport
-        from domain.versioning.value_objects import MergeStrategy
-
         report = ConflictReport(proposal_id="test-proposal")
         report.conflicts = [
             Conflict(
@@ -969,9 +966,6 @@ class TestMergeStrategies:
         self, service: VersioningService
     ) -> None:
         """Test auto_resolve with BASE_VALUE_WINS strategy uses base_value."""
-        from domain.versioning.entities import Conflict, ConflictReport
-        from domain.versioning.value_objects import MergeStrategy
-
         report = ConflictReport(proposal_id="test-proposal")
         report.conflicts = [
             Conflict(
@@ -998,9 +992,6 @@ class TestMergeStrategies:
         self, service: VersioningService
     ) -> None:
         """Test auto_resolve with MANUAL strategy leaves conflicts unresolved."""
-        from domain.versioning.entities import Conflict, ConflictReport
-        from domain.versioning.value_objects import MergeStrategy
-
         report = ConflictReport(proposal_id="test-proposal")
         report.conflicts = [
             Conflict(
@@ -1022,8 +1013,6 @@ class TestMergeStrategies:
         self, service: VersioningService
     ) -> None:
         """Test that auto_resolve defaults to LAST_WRITE_WINS when no strategy specified."""
-        from domain.versioning.entities import Conflict, ConflictReport
-
         report = ConflictReport(proposal_id="test-proposal")
         report.conflicts = [
             Conflict(
@@ -1069,6 +1058,54 @@ class TestMergeStrategies:
         # Merge should fail because conflicts are unresolved
         with pytest.raises(ConflictResolutionError):
             service.merge_proposal(proposal.id)
+
+    def test_auto_resolve_then_merge_succeeds_with_last_write_wins(
+        self, service: VersioningService, repo: FakeChangeRepository
+    ) -> None:
+        """Test that auto_resolve with LAST_WRITE_WINS followed by merge succeeds."""
+        event_id_1 = repo.record_change(
+            entity_id="entity1",
+            entity_type="class",
+            operation=ChangeOperation.UPDATE,
+            previous_state={"name": "old"},
+            new_state={"name": "new1"},
+        )
+        event_id_2 = repo.record_change(
+            entity_id="entity1",
+            entity_type="class",
+            operation=ChangeOperation.UPDATE,
+            previous_state={"name": "external"},
+            new_state={"name": "new2"},
+        )
+
+        changeset = service.create_changeset(
+            name="Auto-resolve test", event_ids=[event_id_1, event_id_2]
+        )
+        service.stage_changeset(changeset.id)
+        proposal = service.submit_proposal(changeset.id)
+        service.approve_proposal(proposal.id)
+
+        # Auto-resolve the conflicts
+        report = service.detect_conflicts(proposal.id)
+        assert report.has_conflicts is True
+        assert report.all_resolved is False
+
+        resolved_report = service.auto_resolve(report, strategy=MergeStrategy.LAST_WRITE_WINS)
+        assert resolved_report.all_resolved is True
+
+        # Now manually persist the resolutions (simulating what the route should do)
+        resolutions = {}
+        for conflict in resolved_report.conflicts:
+            if conflict.entity_id not in resolutions:
+                resolutions[conflict.entity_id] = {}
+            resolutions[conflict.entity_id][conflict.field_name] = conflict.resolved_value
+
+        repo.save_conflict_resolutions(proposal.id, resolutions)
+
+        # Merge should now succeed
+        result = service.merge_proposal(proposal.id)
+        assert result.proposal_id == proposal.id
+        assert result.conflicts_resolved == 1
 
 
 class TestManualConflictResolution:
