@@ -481,7 +481,7 @@ class VersioningService:
 
         # Mark as processed only the events that were actually pushed
         if result.pushed > 0 and result.pushed_event_ids:
-            self._repo.mark_processed(result.pushed_event_ids)
+            self._repo.mark_processed(list(result.pushed_event_ids))
             _logger.info(
                 "Marked %d change events as processed after push",
                 result.pushed,
