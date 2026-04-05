@@ -631,13 +631,14 @@ class VersioningService:
         # Get all change events for this changeset
         changeset_events = self._repo.get_changes_by_ids(changeset.event_ids)
 
-        # Validate that all requested events were found
-        if len(changeset_events) != len(changeset.event_ids):
-            missing_count = len(changeset.event_ids) - len(changeset_events)
+        # Validate that all requested events were found, using set-based comparison
+        # to handle duplicate IDs in event_ids list
+        requested_ids = set(changeset.event_ids)
+        returned_ids = {e.id for e in changeset_events}
+        if requested_ids != returned_ids:
+            missing = requested_ids - returned_ids
             error_msg = (
-                f"Event count mismatch for changeset {changeset.id}: "
-                f"requested {len(changeset.event_ids)} events but only found {len(changeset_events)} "
-                f"({missing_count} missing)"
+                f"Missing events for changeset {changeset.id}: {missing}"
             )
             _logger.error(error_msg)
             raise ValueError(error_msg)
@@ -793,14 +794,14 @@ class VersioningService:
             _logger.error(error_msg)
             raise ConflictResolutionError(error_msg)
 
+        # Build EntityVersion snapshots for all affected entities (BEFORE state transitions)
+        versions = self._create_merge_versions(changeset, stored_resolutions)
+
+        # Transition state only after version creation succeeds
         now = datetime.now(timezone.utc)
         changeset.transition_to(ChangeState.MERGED)
         changeset.updated_at = now
-
         proposal.transition_to(ProposalState.MERGED)
-
-        # Build EntityVersion snapshots for all affected entities
-        versions = self._create_merge_versions(changeset, stored_resolutions)
 
         # Atomically update changeset, proposal, and save all versions in a single transaction
         updated_changeset, updated_proposal = self._repo.atomic_update_on_merge(
