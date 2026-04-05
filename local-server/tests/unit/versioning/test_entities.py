@@ -192,18 +192,21 @@ class TestConflictReport:
 
     def test_all_resolved_is_true_with_resolved_conflicts(self) -> None:
         """Test that all_resolved is true when all conflicts are resolved."""
+        from domain.versioning.value_objects import MergeStrategy
         conflict = Conflict(
             entity_id="entity1",
             field_name="title",
             base_value="Old",
             incoming_value="New",
             resolved_value="Resolved",
+            resolution_strategy=MergeStrategy.LAST_WRITE_WINS,
         )
         report = ConflictReport(proposal_id="prop1", conflicts=[conflict])
         assert report.all_resolved
 
     def test_all_resolved_with_multiple_conflicts(self) -> None:
         """Test all_resolved with multiple conflicts."""
+        from domain.versioning.value_objects import MergeStrategy
         conflicts = [
             Conflict(
                 entity_id="entity1",
@@ -211,6 +214,7 @@ class TestConflictReport:
                 base_value="Old",
                 incoming_value="New",
                 resolved_value="Resolved Title",
+                resolution_strategy=MergeStrategy.LAST_WRITE_WINS,
             ),
             Conflict(
                 entity_id="entity1",
@@ -218,6 +222,7 @@ class TestConflictReport:
                 base_value="Old desc",
                 incoming_value="New desc",
                 resolved_value="Resolved desc",
+                resolution_strategy=MergeStrategy.BASE_VALUE_WINS,
             ),
         ]
         report = ConflictReport(proposal_id="prop1", conflicts=conflicts)

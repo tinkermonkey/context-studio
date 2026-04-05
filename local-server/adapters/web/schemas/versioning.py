@@ -141,7 +141,7 @@ class ConflictResponse(BaseModel):
     incoming_value: Any = Field(..., description="Value from the incoming changeset")
     is_resolved: bool = Field(..., description="Whether this conflict has been resolved")
     resolved_value: Optional[Any] = Field(default=None, description="The resolved value if conflict is resolved")
-    resolution_strategy: Optional[str] = Field(default=None, description="Strategy used for resolving this conflict")
+    resolution_strategy: Optional[MergeStrategy] = Field(default=None, description="Strategy used for resolving this conflict")
 
 
 class ConflictReportResponse(BaseModel):

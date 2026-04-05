@@ -5,7 +5,7 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Optional
 
-from domain.versioning.value_objects import ChangeState, ProposalState, ChangeOperation, EntityVersionState
+from domain.versioning.value_objects import ChangeState, ProposalState, ChangeOperation, EntityVersionState, MergeStrategy
 
 
 @dataclass
@@ -144,12 +144,12 @@ class Conflict:
     base_value: object
     incoming_value: object
     resolved_value: object = None
-    resolution_strategy: Optional[str] = None
+    resolution_strategy: Optional[MergeStrategy] = None
 
     @property
     def is_resolved(self) -> bool:
-        """True if conflict is resolved (resolved_value is set)."""
-        return self.resolved_value is not None
+        """True if conflict is resolved (resolution_strategy is set)."""
+        return self.resolution_strategy is not None
 
 
 @dataclass

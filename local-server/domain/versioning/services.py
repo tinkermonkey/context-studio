@@ -459,6 +459,7 @@ class VersioningService:
                 entity_resolutions = resolutions.get(conflict.entity_id, {})
                 if conflict.field_name in entity_resolutions:
                     conflict.resolved_value = entity_resolutions[conflict.field_name]
+                    conflict.resolution_strategy = MergeStrategy.MANUAL
 
         _logger.info(
             "Conflict detection complete (proposal_id=%s, conflicts_found=%d, resolved=%d)",
@@ -508,15 +509,14 @@ class VersioningService:
                 resolved = self._merge_both_values(conflict.base_value, conflict.incoming_value)
                 conflict.resolved_value = resolved
 
-            # Populate the resolution_strategy field on resolved conflicts
-            if conflict.is_resolved:
-                conflict.resolution_strategy = strategy.value
+            # Populate the resolution_strategy field to mark conflict as resolved
+            conflict.resolution_strategy = strategy
 
         _logger.info(
             "Auto-resolved conflicts using %s strategy (proposal_id=%s, conflicts_resolved=%d)",
             strategy.value,
             conflict_report.proposal_id,
-            len(conflict_report.conflicts),
+            sum(1 for c in conflict_report.conflicts if c.is_resolved),
         )
         return conflict_report
 
