@@ -42,6 +42,7 @@ from adapters.web.schemas.versioning import (
     ConflictReportResponse,
     ConflictResponse,
     ResolveConflictsRequest,
+    AutoResolveConflictsRequest,
     MergeResultResponse,
     SyncStatusResponse,
     SyncResultResponse,
@@ -417,6 +418,53 @@ async def detect_conflicts(
                 for c in report.conflicts
             ],
             has_conflicts=report.has_conflicts,
+        )
+    except Exception as exc:
+        status_code, message = _handle_domain_error(exc)
+        raise HTTPException(status_code=status_code, detail=message)
+
+
+@router.post("/versioning/proposals/{proposal_id}/auto-resolve", response_model=ConflictReportResponse)
+async def auto_resolve_conflicts(
+    proposal_id: str,
+    request: AutoResolveConflictsRequest,
+    service: VersioningService = Depends(get_versioning_service),
+) -> ConflictReportResponse:
+    """
+    Automatically resolve conflicts in a proposal using the specified merge strategy.
+
+    Detects conflicts and applies the requested resolution strategy.
+
+    Args:
+        proposal_id: ID of the proposal to auto-resolve conflicts for
+        request: AutoResolveConflictsRequest with merge strategy
+        service: VersioningService from dependency injection
+
+    Returns:
+        ConflictReportResponse with conflicts resolved according to the strategy
+
+    Raises:
+        HTTPException: 404 if not found, 409 for invalid state, 500 for internal errors
+    """
+    try:
+        report = await run_sync_in_executor(service.detect_conflicts, proposal_id)
+        resolved_report = await run_sync_in_executor(
+            service.auto_resolve, report, request.strategy
+        )
+        return ConflictReportResponse(
+            proposal_id=proposal_id,
+            conflicts=[
+                ConflictResponse(
+                    entity_id=c.entity_id,
+                    field_name=c.field_name,
+                    base_value=c.base_value,
+                    incoming_value=c.incoming_value,
+                    is_resolved=c.is_resolved,
+                    resolved_value=c.resolved_value,
+                )
+                for c in resolved_report.conflicts
+            ],
+            has_conflicts=resolved_report.has_conflicts,
         )
     except Exception as exc:
         status_code, message = _handle_domain_error(exc)

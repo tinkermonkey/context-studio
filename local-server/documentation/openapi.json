@@ -2898,6 +2898,59 @@
         }
       }
     },
+    "/api/v1/versioning/proposals/{proposal_id}/auto-resolve": {
+      "post": {
+        "tags": [
+          "versioning"
+        ],
+        "summary": "Auto Resolve Conflicts",
+        "description": "Automatically resolve conflicts in a proposal using the specified merge strategy.\n\nDetects conflicts and applies the requested resolution strategy.\n\nArgs:\n    proposal_id: ID of the proposal to auto-resolve conflicts for\n    request: AutoResolveConflictsRequest with merge strategy\n    service: VersioningService from dependency injection\n\nReturns:\n    ConflictReportResponse with conflicts resolved according to the strategy\n\nRaises:\n    HTTPException: 404 if not found, 409 for invalid state, 500 for internal errors",
+        "operationId": "auto_resolve_conflicts_api_v1_versioning_proposals__proposal_id__auto_resolve_post",
+        "parameters": [
+          {
+            "name": "proposal_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Proposal Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AutoResolveConflictsRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConflictReportResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/versioning/proposals/{proposal_id}/resolve": {
       "post": {
         "tags": [
@@ -3066,7 +3119,7 @@
           "admin"
         ],
         "summary": "Check Health",
-        "description": "Check system health and component readiness.\n\nReturns the overall system health status along with the readiness of optional\ncomponents (NLP pipeline, embedding model, LLM providers).\n\nHealth status rules:\n- \"healthy\": All core systems operational\n- \"degraded\": Optional components unavailable but system functional\n- \"unhealthy\": Critical systems (database) unavailable\n\nReturns:\n    SystemHealthResponse with status and component readiness",
+        "description": "Check system health and component readiness.\n\nReturns the overall system health status along with the readiness of optional\ncomponents (NLP pipeline, embedding model, LLM providers).\n\nHealth status rules:\n- \"healthy\": All core systems operational\n- \"degraded\": Optional components unavailable but system functional\n- \"unhealthy\": Critical systems (database) unavailable\n\nReturns:\n    SystemHealthResponse with status and component readiness\n\nRaises:\n    HTTPException: 500 for internal errors",
         "operationId": "check_health_api_v1_admin_health_get",
         "responses": {
           "200": {
@@ -3088,7 +3141,7 @@
           "admin"
         ],
         "summary": "Get Configuration",
-        "description": "Retrieve current application configuration.\n\nReturns all configuration sections with sensitive values (API keys)\nmasked to prevent exposure in logs.\n\nReturns:\n    AppConfigurationResponse with configuration sections and masked API keys",
+        "description": "Retrieve current application configuration.\n\nReturns all configuration sections with sensitive values (API keys)\nmasked to prevent exposure in logs.\n\nReturns:\n    AppConfigurationResponse with configuration sections and masked API keys\n\nRaises:\n    HTTPException: 500 for internal errors",
         "operationId": "get_configuration_api_v1_admin_configuration_get",
         "responses": {
           "200": {
@@ -3163,7 +3216,7 @@
           "admin"
         ],
         "summary": "List Tasks",
-        "description": "List all background tasks.\n\nReturns metadata and status for all registered background tasks,\nwhether pending, running, completed, or failed.\n\nReturns:\n    List of BackgroundTaskResponse objects",
+        "description": "List all background tasks.\n\nReturns metadata and status for all registered background tasks,\nwhether pending, running, completed, or failed.\n\nReturns:\n    List of BackgroundTaskResponse objects\n\nRaises:\n    HTTPException: 500 for internal errors",
         "operationId": "list_tasks_api_v1_admin_tasks_get",
         "responses": {
           "200": {
@@ -3260,6 +3313,18 @@
         ],
         "title": "AppConfigurationResponse",
         "description": "Response containing application configuration with masked API keys."
+      },
+      "AutoResolveConflictsRequest": {
+        "properties": {
+          "strategy": {
+            "$ref": "#/components/schemas/MergeStrategy",
+            "description": "Merge strategy to use (last_write_wins, base_value_wins, manual)",
+            "default": "last_write_wins"
+          }
+        },
+        "type": "object",
+        "title": "AutoResolveConflictsRequest",
+        "description": "Request to automatically resolve conflicts in a proposal"
       },
       "BackgroundTaskResponse": {
         "properties": {
@@ -3388,9 +3453,14 @@
             "description": "Type of the entity"
           },
           "operation": {
-            "type": "string",
-            "title": "Operation",
-            "description": "Type of operation ('create', 'update', 'delete')"
+            "$ref": "#/components/schemas/ChangeOperation",
+            "description": "Type of operation (create, update, delete)"
+          },
+          "new_state": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "New State",
+            "description": "New state of the entity after this change"
           },
           "timestamp": {
             "type": "string",
@@ -3426,6 +3496,19 @@
             ],
             "title": "Change Reason",
             "description": "Why the change was made"
+          },
+          "previous_state": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Previous State",
+            "description": "Previous state of the entity before this change"
           }
         },
         "type": "object",
@@ -3434,6 +3517,7 @@
           "entity_id",
           "entity_type",
           "operation",
+          "new_state",
           "timestamp",
           "processed"
         ],
@@ -3448,12 +3532,12 @@
             },
             "type": "array",
             "title": "Events",
-            "description": "List of change events"
+            "description": "List of change events matching the query (limited by limit parameter)"
           },
           "total": {
             "type": "integer",
             "title": "Total",
-            "description": "Total number of events matching the query"
+            "description": "Total count of all events matching the query (without limit applied)"
           }
         },
         "type": "object",
@@ -3462,7 +3546,29 @@
           "total"
         ],
         "title": "ChangeHistoryResponse",
-        "description": "Response with change history results"
+        "description": "Response with paginated change history results"
+      },
+      "ChangeOperation": {
+        "type": "string",
+        "enum": [
+          "create",
+          "update",
+          "delete"
+        ],
+        "title": "ChangeOperation",
+        "description": "Types of operations on entities."
+      },
+      "ChangeState": {
+        "type": "string",
+        "enum": [
+          "working",
+          "staged",
+          "proposed",
+          "approved",
+          "merged"
+        ],
+        "title": "ChangeState",
+        "description": "Valid states for a changeset."
       },
       "ChangesetCreateRequest": {
         "properties": {
@@ -3525,8 +3631,7 @@
             "description": "Detailed description"
           },
           "state": {
-            "type": "string",
-            "title": "State",
+            "$ref": "#/components/schemas/ChangeState",
             "description": "Current state (working, staged, proposed, approved, merged)"
           },
           "created_at": {
@@ -3540,6 +3645,14 @@
             "format": "date-time",
             "title": "Updated At",
             "description": "Last update timestamp"
+          },
+          "event_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Event Ids",
+            "description": "IDs of change events in this changeset"
           }
         },
         "type": "object",
@@ -4003,6 +4116,21 @@
           "incoming_value": {
             "title": "Incoming Value",
             "description": "Value from the incoming changeset"
+          },
+          "is_resolved": {
+            "type": "boolean",
+            "title": "Is Resolved",
+            "description": "Whether this conflict has been resolved"
+          },
+          "resolved_value": {
+            "anyOf": [
+              {},
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Resolved Value",
+            "description": "The resolved value if conflict is resolved"
           }
         },
         "type": "object",
@@ -4010,7 +4138,8 @@
           "entity_id",
           "field_name",
           "base_value",
-          "incoming_value"
+          "incoming_value",
+          "is_resolved"
         ],
         "title": "ConflictResponse",
         "description": "Response representing a detected conflict"
@@ -4725,6 +4854,11 @@
             "title": "Proposal Id",
             "description": "ID of the merged proposal"
           },
+          "changeset_id": {
+            "type": "string",
+            "title": "Changeset Id",
+            "description": "ID of the merged changeset"
+          },
           "merged_at": {
             "type": "string",
             "format": "date-time",
@@ -4745,12 +4879,23 @@
         "type": "object",
         "required": [
           "proposal_id",
+          "changeset_id",
           "merged_at",
           "events_applied",
           "conflicts_resolved"
         ],
         "title": "MergeResultResponse",
         "description": "Response with merge operation results"
+      },
+      "MergeStrategy": {
+        "type": "string",
+        "enum": [
+          "last_write_wins",
+          "base_value_wins",
+          "manual"
+        ],
+        "title": "MergeStrategy",
+        "description": "Strategy for resolving conflicts during merge."
       },
       "NeighborsResponse": {
         "properties": {
@@ -5249,8 +5394,7 @@
             "description": "ID of the associated changeset"
           },
           "state": {
-            "type": "string",
-            "title": "State",
+            "$ref": "#/components/schemas/ProposalState",
             "description": "Current state (open, approved, rejected, merged)"
           },
           "submitted_at": {
@@ -5294,6 +5438,17 @@
         ],
         "title": "ProposalResponse",
         "description": "Response representing a proposal"
+      },
+      "ProposalState": {
+        "type": "string",
+        "enum": [
+          "open",
+          "approved",
+          "rejected",
+          "merged"
+        ],
+        "title": "ProposalState",
+        "description": "Valid states for a proposal."
       },
       "ReferenceRelationSchema": {
         "properties": {
@@ -5876,7 +6031,8 @@
           "last_pushed_at": {
             "anyOf": [
               {
-                "type": "string"
+                "type": "string",
+                "format": "date-time"
               },
               {
                 "type": "null"
@@ -5888,7 +6044,8 @@
           "last_pulled_at": {
             "anyOf": [
               {
-                "type": "string"
+                "type": "string",
+                "format": "date-time"
               },
               {
                 "type": "null"

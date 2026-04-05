@@ -31,7 +31,7 @@ from .exceptions import (
     SyncError,
 )
 from .ports import ChangeRepository, SyncTarget
-from .value_objects import SyncStatus, SyncResult, ChangeHistoryResult, SyncDirection, ChangeState, ProposalState
+from .value_objects import SyncStatus, SyncResult, ChangeHistoryResult, SyncDirection, ChangeState, ProposalState, MergeStrategy
 from .events import ChangesetMerged, SyncCompleted
 from domain.ports import EventPublisher
 
@@ -455,23 +455,43 @@ class VersioningService:
         )
         return report
 
-    def auto_resolve(self, conflict_report: ConflictReport) -> ConflictReport:
+    def auto_resolve(
+        self,
+        conflict_report: ConflictReport,
+        strategy: MergeStrategy = MergeStrategy.LAST_WRITE_WINS,
+    ) -> ConflictReport:
         """
-        Automatically resolve all conflicts using last-write-wins strategy.
-
-        Sets resolved_value=incoming_value for all conflicts.
+        Automatically resolve all conflicts using the specified merge strategy.
 
         Args:
             conflict_report: ConflictReport with unresolved conflicts
+            strategy: MergeStrategy to use for resolution (default: LAST_WRITE_WINS)
 
         Returns:
             The same ConflictReport with all conflicts marked as resolved
+
+        Strategies:
+            - LAST_WRITE_WINS: Sets resolved_value=incoming_value (preserves current behavior)
+            - BASE_VALUE_WINS: Sets resolved_value=base_value
+            - MANUAL: Leaves conflicts unresolved, deferring to explicit resolve_conflicts() calls
         """
+        if strategy == MergeStrategy.MANUAL:
+            # Leave conflicts unresolved for explicit resolution
+            _logger.info(
+                "Manual strategy selected; conflicts left unresolved for explicit resolution (proposal_id=%s)",
+                conflict_report.proposal_id,
+            )
+            return conflict_report
+
         for conflict in conflict_report.conflicts:
-            conflict.resolved_value = conflict.incoming_value
+            if strategy == MergeStrategy.LAST_WRITE_WINS:
+                conflict.resolved_value = conflict.incoming_value
+            elif strategy == MergeStrategy.BASE_VALUE_WINS:
+                conflict.resolved_value = conflict.base_value
 
         _logger.info(
-            "Auto-resolved conflicts (proposal_id=%s, conflicts_resolved=%d)",
+            "Auto-resolved conflicts using %s strategy (proposal_id=%s, conflicts_resolved=%d)",
+            strategy.value,
             conflict_report.proposal_id,
             len(conflict_report.conflicts),
         )

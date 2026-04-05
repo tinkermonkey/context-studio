@@ -933,6 +933,144 @@ class TestAutoResolveConflicts:
         assert len(resolved.conflicts) == 0
 
 
+class TestMergeStrategies:
+    """Test different merge strategies for conflict resolution."""
+
+    def test_auto_resolve_last_write_wins_strategy(
+        self, service: VersioningService
+    ) -> None:
+        """Test auto_resolve with LAST_WRITE_WINS strategy uses incoming_value."""
+        from domain.versioning.entities import Conflict, ConflictReport
+        from domain.versioning.value_objects import MergeStrategy
+
+        report = ConflictReport(proposal_id="test-proposal")
+        report.conflicts = [
+            Conflict(
+                entity_id="entity1",
+                field_name="name",
+                base_value="base_name",
+                incoming_value="incoming_name",
+            ),
+            Conflict(
+                entity_id="entity2",
+                field_name="description",
+                base_value="base_desc",
+                incoming_value="incoming_desc",
+            ),
+        ]
+
+        resolved = service.auto_resolve(report, strategy=MergeStrategy.LAST_WRITE_WINS)
+
+        assert resolved.all_resolved is True
+        assert resolved.conflicts[0].resolved_value == "incoming_name"
+        assert resolved.conflicts[1].resolved_value == "incoming_desc"
+
+    def test_auto_resolve_base_value_wins_strategy(
+        self, service: VersioningService
+    ) -> None:
+        """Test auto_resolve with BASE_VALUE_WINS strategy uses base_value."""
+        from domain.versioning.entities import Conflict, ConflictReport
+        from domain.versioning.value_objects import MergeStrategy
+
+        report = ConflictReport(proposal_id="test-proposal")
+        report.conflicts = [
+            Conflict(
+                entity_id="entity1",
+                field_name="name",
+                base_value="base_name",
+                incoming_value="incoming_name",
+            ),
+            Conflict(
+                entity_id="entity2",
+                field_name="description",
+                base_value="base_desc",
+                incoming_value="incoming_desc",
+            ),
+        ]
+
+        resolved = service.auto_resolve(report, strategy=MergeStrategy.BASE_VALUE_WINS)
+
+        assert resolved.all_resolved is True
+        assert resolved.conflicts[0].resolved_value == "base_name"
+        assert resolved.conflicts[1].resolved_value == "base_desc"
+
+    def test_auto_resolve_manual_strategy_leaves_unresolved(
+        self, service: VersioningService
+    ) -> None:
+        """Test auto_resolve with MANUAL strategy leaves conflicts unresolved."""
+        from domain.versioning.entities import Conflict, ConflictReport
+        from domain.versioning.value_objects import MergeStrategy
+
+        report = ConflictReport(proposal_id="test-proposal")
+        report.conflicts = [
+            Conflict(
+                entity_id="entity1",
+                field_name="name",
+                base_value="base_name",
+                incoming_value="incoming_name",
+            ),
+        ]
+
+        resolved = service.auto_resolve(report, strategy=MergeStrategy.MANUAL)
+
+        # Manual strategy should not resolve conflicts
+        assert resolved.all_resolved is False
+        assert resolved.conflicts[0].is_resolved is False
+        assert resolved.conflicts[0].resolved_value is None
+
+    def test_auto_resolve_default_strategy_is_last_write_wins(
+        self, service: VersioningService
+    ) -> None:
+        """Test that auto_resolve defaults to LAST_WRITE_WINS when no strategy specified."""
+        from domain.versioning.entities import Conflict, ConflictReport
+
+        report = ConflictReport(proposal_id="test-proposal")
+        report.conflicts = [
+            Conflict(
+                entity_id="entity1",
+                field_name="name",
+                base_value="base_value",
+                incoming_value="incoming_value",
+            ),
+        ]
+
+        # Call without specifying strategy (should default to LAST_WRITE_WINS)
+        resolved = service.auto_resolve(report)
+
+        assert resolved.all_resolved is True
+        assert resolved.conflicts[0].resolved_value == "incoming_value"
+
+    def test_merge_proposal_with_unresolved_conflicts_raises(
+        self, service: VersioningService, repo: FakeChangeRepository
+    ) -> None:
+        """Test that merge_proposal raises ConflictResolutionError with unresolved conflicts."""
+        event_id_1 = repo.record_change(
+            entity_id="entity1",
+            entity_type="class",
+            operation=ChangeOperation.UPDATE,
+            previous_state={"name": "old"},
+            new_state={"name": "new1"},
+        )
+        event_id_2 = repo.record_change(
+            entity_id="entity1",
+            entity_type="class",
+            operation=ChangeOperation.UPDATE,
+            previous_state={"name": "external"},
+            new_state={"name": "new2"},
+        )
+
+        changeset = service.create_changeset(
+            name="Conflict to resolve", event_ids=[event_id_1, event_id_2]
+        )
+        service.stage_changeset(changeset.id)
+        proposal = service.submit_proposal(changeset.id)
+        service.approve_proposal(proposal.id)
+
+        # Merge should fail because conflicts are unresolved
+        with pytest.raises(ConflictResolutionError):
+            service.merge_proposal(proposal.id)
+
+
 class TestManualConflictResolution:
     """Test manual conflict resolution."""
 

@@ -51,6 +51,14 @@ class SyncDirection(str, Enum):
     PULL = "pull"
 
 
+class MergeStrategy(str, Enum):
+    """Strategy for resolving conflicts during merge."""
+
+    LAST_WRITE_WINS = "last_write_wins"
+    BASE_VALUE_WINS = "base_value_wins"
+    MANUAL = "manual"
+
+
 @dataclass(frozen=True)
 class SyncStatus:
     """Status of remote synchronization."""

@@ -22,7 +22,7 @@ from pydantic import BaseModel, ConfigDict, Field
 from typing import Optional, Any
 from datetime import datetime
 
-from domain.versioning.value_objects import ChangeOperation, ChangeState, ProposalState
+from domain.versioning.value_objects import ChangeOperation, ChangeState, ProposalState, MergeStrategy
 
 
 # ============================================================================
@@ -49,6 +49,15 @@ class ResolveConflictsRequest(BaseModel):
 
     resolutions: dict[str, dict[str, Any]] = Field(
         ..., description="Mapping of entity_id -> {field_name: resolved_value}"
+    )
+
+
+class AutoResolveConflictsRequest(BaseModel):
+    """Request to automatically resolve conflicts in a proposal"""
+
+    strategy: MergeStrategy = Field(
+        default=MergeStrategy.LAST_WRITE_WINS,
+        description="Merge strategy to use (last_write_wins, base_value_wins, manual)",
     )
 
 
