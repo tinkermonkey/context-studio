@@ -337,6 +337,9 @@ class VersioningService:
         sent_event_ids = {change_event.id for change_event in events}
         result = self._sync.push(events)
 
+        # Track validated IDs that were actually marked as processed
+        processed_ids = ()
+
         # Validate that pushed_event_ids correspond to actually sent events
         if result.pushed > 0 and result.pushed_event_ids:
             # Ensure returned IDs are a subset of sent IDs to prevent marking wrong events
@@ -353,6 +356,7 @@ class VersioningService:
 
             if valid_ids:
                 self._repo.mark_processed(list(valid_ids))
+                processed_ids = tuple(sorted(valid_ids))
                 _logger.info(
                     "Marked %d change events as processed after push",
                     len(valid_ids),
@@ -375,7 +379,13 @@ class VersioningService:
         if failures:
             _logger.warning("Handler failures while publishing SyncCompleted event: %s", failures)
 
-        return result
+        # Return SyncResult with validated event IDs to surface any discrepancies to API consumer
+        return SyncResult(
+            pushed=result.pushed,
+            pulled=result.pulled,
+            errors=result.errors,
+            pushed_event_ids=processed_ids if processed_ids else None,
+        )
 
     def pull_changes(self) -> SyncResult:
         """

@@ -20,7 +20,12 @@ All service calls are wrapped in run_sync_in_executor() since services are synch
 from fastapi import APIRouter, Depends, HTTPException, status
 
 from domain.versioning.services import VersioningService
-from domain.versioning.exceptions import VersionNotFoundError, ChangesetStateError, ConflictResolutionError
+from domain.versioning.exceptions import (
+    VersionNotFoundError,
+    ChangesetStateError,
+    ConflictResolutionError,
+    ProposalStateError,
+)
 from utils.logger import get_logger
 from utils.async_executor import run_sync_in_executor
 
@@ -62,6 +67,8 @@ def _handle_domain_error(exc: Exception) -> tuple[int, str]:
     if isinstance(exc, VersionNotFoundError):
         return (status.HTTP_404_NOT_FOUND, str(exc))
     elif isinstance(exc, ChangesetStateError):
+        return (status.HTTP_409_CONFLICT, str(exc))
+    elif isinstance(exc, ProposalStateError):
         return (status.HTTP_409_CONFLICT, str(exc))
     elif isinstance(exc, ConflictResolutionError):
         return (status.HTTP_409_CONFLICT, str(exc))
