@@ -488,7 +488,6 @@ class VersioningService:
         Strategies:
             - LAST_WRITE_WINS: Sets resolved_value=incoming_value (preserves current behavior)
             - BASE_VALUE_WINS: Sets resolved_value=base_value
-            - MERGE_BOTH: For collections, merges both values; for scalars, uses LAST_WRITE_WINS
             - MANUAL: Leaves conflicts unresolved, deferring to explicit resolve_conflicts() calls
         """
         if strategy == MergeStrategy.MANUAL:
@@ -504,10 +503,6 @@ class VersioningService:
                 conflict.resolved_value = conflict.incoming_value
             elif strategy == MergeStrategy.BASE_VALUE_WINS:
                 conflict.resolved_value = conflict.base_value
-            elif strategy == MergeStrategy.MERGE_BOTH:
-                # For collections, merge both values; for scalars, use incoming_value
-                resolved = self._merge_both_values(conflict.base_value, conflict.incoming_value)
-                conflict.resolved_value = resolved
 
             # Populate the resolution_strategy field to mark conflict as resolved
             conflict.resolution_strategy = strategy
@@ -519,38 +514,6 @@ class VersioningService:
             sum(1 for c in conflict_report.conflicts if c.is_resolved),
         )
         return conflict_report
-
-    def _merge_both_values(self, base_value: object, incoming_value: object) -> object:
-        """
-        Merge two values for the MERGE_BOTH strategy.
-
-        For collections (list, set), performs a union. For other types, returns incoming_value.
-
-        Args:
-            base_value: The base/original value
-            incoming_value: The incoming/current value
-
-        Returns:
-            The merged value
-        """
-        # If both are lists, merge them and remove duplicates while preserving order
-        if isinstance(base_value, list) and isinstance(incoming_value, list):
-            seen = set()
-            merged = []
-            for item in base_value + incoming_value:
-                # Convert unhashable types to str for deduplication
-                key = item if isinstance(item, (int, str, float, bool, type(None))) else str(item)
-                if key not in seen:
-                    seen.add(key)
-                    merged.append(item)
-            return merged
-
-        # If both are sets, perform set union
-        if isinstance(base_value, set) and isinstance(incoming_value, set):
-            return base_value | incoming_value
-
-        # For non-collections or mismatched types, default to incoming_value
-        return incoming_value
 
     def auto_resolve_and_persist(
         self,

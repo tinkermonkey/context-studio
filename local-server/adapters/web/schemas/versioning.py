@@ -57,7 +57,7 @@ class AutoResolveConflictsRequest(BaseModel):
 
     strategy: MergeStrategy = Field(
         default=MergeStrategy.LAST_WRITE_WINS,
-        description="Merge strategy to use (last_write_wins, base_value_wins, merge_both, manual)",
+        description="Merge strategy to use (last_write_wins, base_value_wins, manual)",
     )
 
 

@@ -414,6 +414,7 @@ async def detect_conflicts(
                     incoming_value=c.incoming_value,
                     is_resolved=c.is_resolved,
                     resolved_value=c.resolved_value,
+                    resolution_strategy=c.resolution_strategy,
                 )
                 for c in report.conflicts
             ],
@@ -463,6 +464,7 @@ async def auto_resolve_conflicts(
                     incoming_value=c.incoming_value,
                     is_resolved=c.is_resolved,
                     resolved_value=c.resolved_value,
+                    resolution_strategy=c.resolution_strategy,
                 )
                 for c in resolved_report.conflicts
             ],
@@ -510,6 +512,7 @@ async def resolve_conflicts(
                     incoming_value=c.incoming_value,
                     is_resolved=c.is_resolved,
                     resolved_value=c.resolved_value,
+                    resolution_strategy=c.resolution_strategy,
                 )
                 for c in report.conflicts
             ],
