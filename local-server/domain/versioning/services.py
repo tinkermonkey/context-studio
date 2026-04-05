@@ -338,7 +338,7 @@ class VersioningService:
         result = self._sync.push(events)
 
         # Track validated IDs that were actually marked as processed
-        processed_ids = ()
+        processed_ids: tuple[str, ...] = ()
 
         # Validate that pushed_event_ids correspond to actually sent events
         if result.pushed > 0 and result.pushed_event_ids:
@@ -375,9 +375,14 @@ class VersioningService:
             completed_at=datetime.now(timezone.utc),
         )
         failures = self._event_publisher.publish(event)
-        _logger.debug("Published SyncCompleted event (direction=push, events_count=%d)", result.pushed)
+        _logger.debug(
+            "Published SyncCompleted event (direction=push, events_count=%d)",
+            result.pushed,
+        )
         if failures:
-            _logger.warning("Handler failures while publishing SyncCompleted event: %s", failures)
+            _logger.warning(
+                "Handler failures while publishing SyncCompleted event: %s", failures
+            )
 
         # Return SyncResult with validated event IDs to surface any discrepancies to API consumer
         return SyncResult(
@@ -423,9 +428,7 @@ class VersioningService:
                 )
                 recorded_events.append(event_id)
             except Exception as e:
-                error_msg = (
-                    f"Failed to record change for entity {change_event.entity_id}: {str(e)}"
-                )
+                error_msg = f"Failed to record change for entity {change_event.entity_id}: {str(e)}"
                 errors.append(error_msg)
                 _logger.error(error_msg)
 
@@ -449,7 +452,10 @@ class VersioningService:
                 break
 
         result = SyncResult(
-            pushed=0, pulled=len(recorded_events), errors=tuple(errors), pushed_event_ids=()
+            pushed=0,
+            pulled=len(recorded_events),
+            errors=tuple(errors),
+            pushed_event_ids=(),
         )
         _logger.info(
             "Pull completed (pulled=%d, errors=%d)",
@@ -464,9 +470,14 @@ class VersioningService:
             completed_at=datetime.now(timezone.utc),
         )
         failures = self._event_publisher.publish(event)
-        _logger.debug("Published SyncCompleted event (direction=pull, events_count=%d)", result.pulled)
+        _logger.debug(
+            "Published SyncCompleted event (direction=pull, events_count=%d)",
+            result.pulled,
+        )
         if failures:
-            _logger.warning("Handler failures while publishing SyncCompleted event: %s", failures)
+            _logger.warning(
+                "Handler failures while publishing SyncCompleted event: %s", failures
+            )
 
         return result
 
