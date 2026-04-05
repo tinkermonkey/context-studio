@@ -33,6 +33,7 @@ class FakeChangeRepository:
         self._changesets: dict[str, Changeset] = {}
         self._changeset_events: dict[tuple[str, str], bool] = {}
         self._proposals: dict[str, Proposal] = {}
+        self._conflict_resolutions: dict[str, dict[str, dict[str, str]]] = {}
 
     # ChangeEvent operations
 
@@ -196,3 +197,29 @@ class FakeChangeRepository:
         """
         self._proposals[proposal.id] = deepcopy(proposal)
         return proposal
+
+    def save_conflict_resolutions(
+        self, proposal_id: str, resolutions: dict[str, dict[str, str]]
+    ) -> None:
+        """
+        Persist conflict resolutions for a proposal.
+
+        Args:
+            proposal_id: ID of the proposal
+            resolutions: Dict mapping entity_id -> {field_name: resolved_value}
+        """
+        self._conflict_resolutions[proposal_id] = deepcopy(resolutions)
+
+    def get_conflict_resolutions(
+        self, proposal_id: str
+    ) -> dict[str, dict[str, str]]:
+        """
+        Retrieve persisted conflict resolutions for a proposal.
+
+        Args:
+            proposal_id: ID of the proposal
+
+        Returns:
+            Dict mapping entity_id -> {field_name: resolved_value}
+        """
+        return deepcopy(self._conflict_resolutions.get(proposal_id, {}))

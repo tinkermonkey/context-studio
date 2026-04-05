@@ -134,6 +134,32 @@ class ChangeRepository(Protocol):
         """
         ...
 
+    def save_conflict_resolutions(
+        self, proposal_id: str, resolutions: dict[str, dict[str, str]]
+    ) -> None:
+        """
+        Persist conflict resolutions for a proposal.
+
+        Args:
+            proposal_id: ID of the proposal
+            resolutions: Dict mapping entity_id -> {field_name: resolved_value}
+        """
+        ...
+
+    def get_conflict_resolutions(
+        self, proposal_id: str
+    ) -> dict[str, dict[str, str]]:
+        """
+        Retrieve persisted conflict resolutions for a proposal.
+
+        Args:
+            proposal_id: ID of the proposal
+
+        Returns:
+            Dict mapping entity_id -> {field_name: resolved_value}
+        """
+        ...
+
 
 class SyncTarget(Protocol):
     """Port for remote synchronization."""

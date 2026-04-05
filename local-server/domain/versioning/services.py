@@ -478,7 +478,7 @@ class VersioningService:
         Manually resolve conflicts in a proposal.
 
         Detects conflicts, applies the provided resolutions, validates that
-        all conflicts are covered.
+        all conflicts are covered, and persists the resolutions for later use.
 
         Args:
             proposal_id: ID of the proposal to resolve conflicts for
@@ -501,6 +501,9 @@ class VersioningService:
             error_msg = f"Unresolved conflicts: {unresolved}"
             _logger.error(error_msg)
             raise ConflictResolutionError(error_msg)
+
+        # Persist the resolutions so merge_proposal can retrieve them
+        self._repo.save_conflict_resolutions(proposal_id, resolutions)
 
         _logger.info(
             "Manually resolved conflicts (proposal_id=%s, conflicts_resolved=%d)",
@@ -550,8 +553,9 @@ class VersioningService:
                 f"Changeset {proposal.changeset_id} for proposal {proposal_id} not found"
             )
 
-        # Detect conflicts without any stored resolutions
-        report = self.detect_conflicts(proposal_id)
+        # Detect conflicts, using any previously persisted resolutions
+        stored_resolutions = self._repo.get_conflict_resolutions(proposal_id)
+        report = self.detect_conflicts(proposal_id, stored_resolutions)
         if report.has_conflicts and not report.all_resolved:
             error_msg = (
                 f"Proposal {proposal_id} has {len(report.conflicts)} unresolved conflicts"

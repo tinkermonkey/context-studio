@@ -19,6 +19,7 @@ from adapters.persistence.sqlite.models import (
     Changeset,
     ChangesetEvent,
     Proposal,
+    ConflictResolution,
 )
 from domain.versioning.entities import (
     ChangeEvent as DomainChangeEvent,
@@ -569,3 +570,65 @@ class SQLiteChangeRepository:
             reviewed_at=cast(Optional[datetime], orm_proposal.reviewed_at),
             reviewer_notes=cast(Optional[str], orm_proposal.reviewer_notes),
         )
+
+    def save_conflict_resolutions(
+        self, proposal_id: str, resolutions: dict[str, dict[str, str]]
+    ) -> None:
+        """
+        Persist conflict resolutions for a proposal.
+
+        Args:
+            proposal_id: ID of the proposal
+            resolutions: Dict mapping entity_id -> {field_name: resolved_value}
+        """
+        with self.session_factory() as session:
+            # Delete existing resolutions for this proposal
+            delete_query = select(ConflictResolution).where(
+                ConflictResolution.proposal_id == proposal_id
+            )
+            existing = session.execute(delete_query).scalars().all()
+            for resolution in existing:
+                session.delete(resolution)
+
+            # Insert new resolutions
+            for entity_id, fields in resolutions.items():
+                for field_name, resolved_value in fields.items():
+                    resolution = ConflictResolution(
+                        id=str(uuid.uuid4()),
+                        proposal_id=proposal_id,
+                        entity_id=entity_id,
+                        field_name=field_name,
+                        resolved_value=str(resolved_value),
+                    )
+                    session.add(resolution)
+
+            session.commit()
+
+    def get_conflict_resolutions(
+        self, proposal_id: str
+    ) -> dict[str, dict[str, str]]:
+        """
+        Retrieve persisted conflict resolutions for a proposal.
+
+        Args:
+            proposal_id: ID of the proposal
+
+        Returns:
+            Dict mapping entity_id -> {field_name: resolved_value}
+        """
+        with self.session_factory() as session:
+            query = select(ConflictResolution).where(
+                ConflictResolution.proposal_id == proposal_id
+            )
+            resolutions = session.execute(query).scalars().all()
+
+            result: dict[str, dict[str, str]] = {}
+            for resolution in resolutions:
+                entity_id = cast(str, resolution.entity_id)
+                if entity_id not in result:
+                    result[entity_id] = {}
+                result[entity_id][cast(str, resolution.field_name)] = cast(
+                    str, resolution.resolved_value
+                )
+
+            return result

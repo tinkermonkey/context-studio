@@ -617,3 +617,37 @@ class Proposal(Base):  # type: ignore[misc,valid-type]
 
     def __repr__(self) -> str:
         return f"<Proposal(id={self.id}, changeset_id={self.changeset_id}, state={self.state})>"
+
+
+class ConflictResolution(Base):  # type: ignore[misc,valid-type]
+    """
+    A stored resolution for a conflict in a proposal.
+
+    Conflict resolutions are persisted when resolve_conflicts() is called,
+    allowing the resolution information to be retrieved when merge_proposal() executes.
+
+    Attributes:
+        id: UUID as string, primary key
+        proposal_id: ID of the proposal containing the conflict
+        entity_id: ID of the entity with the conflict
+        field_name: Name of the field with the conflict
+        resolved_value: The resolved value for this field
+    """
+
+    __tablename__ = "conflict_resolutions"
+
+    id = Column(String(36), primary_key=True, nullable=False)
+    proposal_id = Column(
+        String(36),
+        ForeignKey("proposals.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    entity_id = Column(String(36), nullable=False, index=True)
+    field_name = Column(String(255), nullable=False)
+    resolved_value = Column(Text, nullable=False)
+
+    __table_args__ = ()
+
+    def __repr__(self) -> str:
+        return f"<ConflictResolution(proposal_id={self.proposal_id}, entity_id={self.entity_id}, field_name={self.field_name})>"

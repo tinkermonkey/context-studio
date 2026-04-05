@@ -1119,28 +1119,45 @@ class TestMergeWithConflictDetection:
     def test_merge_proposal_counts_conflicts_resolved(
         self, service: VersioningService, repo: FakeChangeRepository
     ) -> None:
-        """Test that merge result correctly counts resolved conflicts when no conflicts exist."""
-        # Create a changeset with events but no conflicts
-        event_id = repo.record_change(
+        """Test resolve-then-merge workflow: resolve conflicts, then merge successfully."""
+        # Create two conflicting events on the same entity/field
+        event_id_1 = repo.record_change(
             entity_id="entity1",
             entity_type="class",
-            operation=ChangeOperation.CREATE,
+            operation=ChangeOperation.UPDATE,
+            previous_state={"name": "old"},
             new_state={"name": "new1"},
         )
+        event_id_2 = repo.record_change(
+            entity_id="entity1",
+            entity_type="class",
+            operation=ChangeOperation.UPDATE,
+            previous_state={"name": "external"},
+            new_state={"name": "new2"},
+        )
 
+        # Create changeset with conflicting events
         changeset = service.create_changeset(
-            name="No conflicts", event_ids=[event_id]
+            name="With conflicts", event_ids=[event_id_1, event_id_2]
         )
         service.stage_changeset(changeset.id)
         proposal = service.submit_proposal(changeset.id)
         service.approve_proposal(proposal.id)
 
-        # Merge should succeed with no conflicts
+        # First, resolve the conflicts
+        conflict_report = service.resolve_conflicts(
+            proposal_id=proposal.id,
+            resolutions={"entity1": {"name": "resolved_name"}},
+        )
+        assert conflict_report.has_conflicts
+        assert conflict_report.all_resolved
+
+        # Now merge should succeed with conflicts counted
         result = service.merge_proposal(proposal.id)
 
         assert result.proposal_id == proposal.id
-        assert result.conflicts_resolved == 0
-        assert result.events_applied == 1
+        assert result.conflicts_resolved == 1
+        assert result.events_applied == 2
 
     def test_merge_proposal_transitions_changeset_to_merged(
         self, service: VersioningService, repo: FakeChangeRepository
