@@ -158,10 +158,10 @@ class SyncStatusResponse(BaseModel):
 
     unprocessed_count: int = Field(..., description="Number of unprocessed (unsynced) changes")
     is_configured: bool = Field(..., description="Whether remote sync is configured")
-    last_pushed_at: Optional[str] = Field(
+    last_pushed_at: Optional[datetime] = Field(
         default=None, description="ISO timestamp of last successful push"
     )
-    last_pulled_at: Optional[str] = Field(
+    last_pulled_at: Optional[datetime] = Field(
         default=None, description="ISO timestamp of last successful pull"
     )
 
