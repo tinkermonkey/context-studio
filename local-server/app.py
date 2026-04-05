@@ -49,6 +49,8 @@ from domain.extraction.ports import ReferenceSource
 from domain.pipeline.services import PipelineService
 from domain.versioning.services import VersioningService
 from domain.versioning.conflict_service import ConflictResolutionService
+from domain.versioning.proposal_service import ProposalWorkflowService
+from domain.versioning.changeset_service import ChangesetManagementService
 from domain.ontology.events import GraphInvalidated
 from domain.extraction.events import ExtractionCompleted
 from domain.pipeline.events import PipelineExecuted
@@ -231,10 +233,21 @@ async def lifespan(app: FastAPI):
         conflict_service = ConflictResolutionService(change_repo=change_repo)
         logger.info("ConflictResolutionService created")
 
+        proposal_service = ProposalWorkflowService(
+            change_repo=change_repo,
+            conflict_service=conflict_service,
+        )
+        logger.info("ProposalWorkflowService created")
+
+        changeset_service = ChangesetManagementService(change_repo=change_repo)
+        logger.info("ChangesetManagementService created")
+
         versioning_service = VersioningService(
             change_repo=change_repo,
             sync_target=sync_target,
             conflict_service=conflict_service,
+            proposal_service=proposal_service,
+            changeset_service=changeset_service,
         )
         logger.info("VersioningService created and wired with sync adapter and conflict service")
 

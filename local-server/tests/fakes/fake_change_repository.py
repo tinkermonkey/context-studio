@@ -96,6 +96,11 @@ class FakeChangeRepository:
             if event_id in self._change_events:
                 self._change_events[event_id].processed = True
 
+    def delete_changes(self, event_ids: list[str]) -> None:
+        """Delete change events by their IDs (used for rollback on pull failure)."""
+        for event_id in event_ids:
+            self._change_events.pop(event_id, None)
+
     def get_unprocessed(self, limit: int = 500) -> list[ChangeEvent]:
         """Retrieve unprocessed change events."""
         unprocessed = [e for e in self._change_events.values() if not e.processed]

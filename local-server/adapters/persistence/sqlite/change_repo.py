@@ -189,6 +189,35 @@ class SQLiteChangeRepository:
 
             session.commit()
 
+    def delete_changes(self, event_ids: list[str]) -> None:
+        """
+        Delete change events by their IDs (used for rollback on pull failure).
+
+        Args:
+            event_ids: List of change event IDs to delete
+
+        Raises:
+            VersionNotFoundError: If any event IDs don't exist
+        """
+        if not event_ids:
+            return
+
+        with self.session_factory() as session:
+            query = select(ChangeEvent).where(ChangeEvent.id.in_(event_ids))
+            events = session.execute(query).scalars().all()
+            found_ids = {cast(str, e.id) for e in events}
+
+            missing_ids = set(event_ids) - found_ids
+            if missing_ids:
+                raise VersionNotFoundError(
+                    f"Change events not found: {', '.join(sorted(missing_ids))}"
+                )
+
+            for event in events:
+                session.delete(event)
+
+            session.commit()
+
     def get_unprocessed(self, limit: int = 500) -> list[DomainChangeEvent]:
         """
         Retrieve change events not yet synchronized to remote.

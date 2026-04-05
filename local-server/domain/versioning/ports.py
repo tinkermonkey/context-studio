@@ -122,6 +122,18 @@ class ChangeRepository(Protocol):
         """
         ...
 
+    def delete_changes(self, event_ids: list[str]) -> None:
+        """
+        Delete change events by their IDs (used for rollback on pull failure).
+
+        Args:
+            event_ids: List of event IDs to delete
+
+        Raises:
+            VersionNotFoundError: If any event IDs don't exist
+        """
+        ...
+
 
 class SyncTarget(Protocol):
     """Port for remote synchronization."""

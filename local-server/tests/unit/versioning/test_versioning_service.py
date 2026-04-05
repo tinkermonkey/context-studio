@@ -18,9 +18,11 @@ sys.path.insert(
 
 from domain.versioning.services import VersioningService
 from domain.versioning.conflict_service import ConflictResolutionService
+from domain.versioning.proposal_service import ProposalWorkflowService
+from domain.versioning.changeset_service import ChangesetManagementService
 from domain.versioning.entities import EntityVersion, Proposal, ChangeEvent
 from domain.versioning.exceptions import VersionNotFoundError, ChangesetStateError, ConflictResolutionError
-from domain.versioning.value_objects import ChangeState, ChangeOperation, ProposalState, ChangeHistoryResult
+from domain.versioning.value_objects import ChangeState, ChangeOperation, ProposalState, ChangeHistoryResult, SyncResult
 from tests.fakes.fake_change_repository import FakeChangeRepository
 from tests.fakes.fake_sync_target import FakeSyncTarget
 
@@ -46,10 +48,17 @@ def sync_target() -> FakeSyncTarget:
 def service(repo: FakeChangeRepository, sync_target: FakeSyncTarget) -> VersioningService:
     """Create a VersioningService with fake dependencies."""
     conflict_service = ConflictResolutionService(change_repo=repo)
+    proposal_service = ProposalWorkflowService(
+        change_repo=repo,
+        conflict_service=conflict_service,
+    )
+    changeset_service = ChangesetManagementService(change_repo=repo)
     return VersioningService(
         change_repo=repo,
         sync_target=sync_target,
         conflict_service=conflict_service,
+        proposal_service=proposal_service,
+        changeset_service=changeset_service,
     )
 
 
@@ -1238,10 +1247,17 @@ class TestSyncMethods:
         """Test push_changes when sync target is not configured."""
         sync_target = FakeSyncTarget(configured=False)
         conflict_service = ConflictResolutionService(change_repo=repo)
+        proposal_service = ProposalWorkflowService(
+            change_repo=repo,
+            conflict_service=conflict_service,
+        )
+        changeset_service = ChangesetManagementService(change_repo=repo)
         service = VersioningService(
             change_repo=repo,
             sync_target=sync_target,
             conflict_service=conflict_service,
+            proposal_service=proposal_service,
+            changeset_service=changeset_service,
         )
 
         # Record an event
@@ -1326,14 +1342,13 @@ class TestSyncMethods:
                 return [remote_event]
 
             def push(self, events):
-                from domain.versioning.value_objects import SyncResult
                 return SyncResult(pushed=0, pulled=0, errors=())
 
             def is_configured(self):
                 return True
 
-        # Create a repository that fails on record_change
-        class FailingRepository:
+        # Create a repository that fails on record_change by extending FakeChangeRepository
+        class FailingRepository(FakeChangeRepository):
             def record_change(
                 self,
                 entity_id: str,
@@ -1347,56 +1362,19 @@ class TestSyncMethods:
             ):
                 raise RuntimeError("Database error")
 
-            def mark_processed(self, event_ids):
-                pass
-
-            def get_unprocessed(self, limit=500):
-                return []
-
-            def get_changes(self, entity_id=None, since=None, limit=100):
-                return ChangeHistoryResult(events=[], total=0)
-
-            def get_changes_by_ids(self, event_ids):
-                return []
-
-            def count_unprocessed(self):
-                return 0
-
-            def save_version(self, version):
-                pass
-
-            def get_version(self, entity_id, version):
-                return None
-
-            def get_latest_version(self, entity_id):
-                return None
-
-            def list_versions(self, entity_id):
-                return []
-
-            def create_changeset(self, changeset):
-                return changeset
-
-            def get_changeset(self, changeset_id):
-                return None
-
-            def update_changeset(self, changeset):
-                return changeset
-
-            def create_proposal(self, proposal):
-                return proposal
-
-            def get_proposal(self, proposal_id):
-                return None
-
-            def update_proposal(self, proposal):
-                return proposal
-
-        conflict_service = ConflictResolutionService(change_repo=FailingRepository())
+        failing_repo = FailingRepository()
+        conflict_service = ConflictResolutionService(change_repo=failing_repo)
+        proposal_service = ProposalWorkflowService(
+            change_repo=failing_repo,
+            conflict_service=conflict_service,
+        )
+        changeset_service = ChangesetManagementService(change_repo=failing_repo)
         service = VersioningService(
-            change_repo=FailingRepository(),
+            change_repo=failing_repo,
             sync_target=FailingSyncTarget(),
             conflict_service=conflict_service,
+            proposal_service=proposal_service,
+            changeset_service=changeset_service,
         )
 
         result = service.pull_changes()
