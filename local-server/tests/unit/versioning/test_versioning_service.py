@@ -1383,3 +1383,93 @@ class TestSyncMethods:
         assert result.pulled == 0
         assert len(result.errors) > 0
         assert "Database error" in result.errors[0]
+
+    def test_pull_changes_rolls_back_on_partial_failure(
+        self, service: VersioningService, repo: FakeChangeRepository
+    ) -> None:
+        """Test pull_changes rolls back all recorded events when one fails mid-pull."""
+        # Create remote events to be pulled
+        remote_event_1 = ChangeEvent(
+            id="remote-1",
+            entity_id="remote_entity1",
+            entity_type="class",
+            operation=ChangeOperation.CREATE,
+            new_state={"name": "RemoteEntity1"},
+            timestamp=datetime.now(timezone.utc),
+        )
+        remote_event_2 = ChangeEvent(
+            id="remote-2",
+            entity_id="remote_entity2",
+            entity_type="class",
+            operation=ChangeOperation.CREATE,
+            new_state={"name": "RemoteEntity2"},
+            timestamp=datetime.now(timezone.utc),
+        )
+
+        class PartialFailingSyncTarget:
+            def pull(self, since=None):
+                return [remote_event_1, remote_event_2]
+
+            def push(self, events):
+                return SyncResult(pushed=0, pulled=0, errors=())
+
+            def is_configured(self):
+                return True
+
+        # Create a repository that succeeds once, then fails on second record_change
+        class PartialFailingRepository(FakeChangeRepository):
+            def __init__(self):
+                super().__init__()
+                self.record_change_count = 0
+
+            def record_change(
+                self,
+                entity_id: str,
+                entity_type: str,
+                operation: ChangeOperation,
+                new_state: dict,
+                previous_state=None,
+                user_id=None,
+                change_reason=None,
+                changeset_id=None,
+            ):
+                self.record_change_count += 1
+                if self.record_change_count > 1:
+                    raise RuntimeError("Second record failed")
+                # First call succeeds - call parent implementation
+                return super().record_change(
+                    entity_id,
+                    entity_type,
+                    operation,
+                    new_state,
+                    previous_state,
+                    user_id,
+                    change_reason,
+                    changeset_id,
+                )
+
+        failing_repo = PartialFailingRepository()
+        conflict_service = ConflictResolutionService(change_repo=failing_repo)
+        proposal_service = ProposalWorkflowService(
+            change_repo=failing_repo,
+            conflict_service=conflict_service,
+        )
+        changeset_service = ChangesetManagementService(change_repo=failing_repo)
+        service = VersioningService(
+            change_repo=failing_repo,
+            sync_target=PartialFailingSyncTarget(),
+            conflict_service=conflict_service,
+            proposal_service=proposal_service,
+            changeset_service=changeset_service,
+        )
+
+        # Pull should fail after recording first event
+        result = service.pull_changes()
+
+        # Should have error
+        assert len(result.errors) > 0
+        assert "Second record failed" in result.errors[0]
+
+        # Verify no events remain (first was recorded but then deleted during rollback)
+        history = failing_repo.get_changes()
+        assert len(history.events) == 0

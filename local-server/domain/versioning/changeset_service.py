@@ -14,7 +14,7 @@ from typing import Optional
 from .entities import Changeset
 from .exceptions import VersionNotFoundError, ChangesetStateError
 from .ports import ChangeRepository
-from .value_objects import ChangeState, ChangeOperation
+from .value_objects import ChangeState
 
 _logger = logging.getLogger(__name__)
 
