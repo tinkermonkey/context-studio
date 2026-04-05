@@ -380,7 +380,7 @@ class TestChangeRecordingIntegration:
             session.close()
 
         # Update taxonomy
-        updated = ontology_service.update_taxonomy(
+        ontology_service.update_taxonomy(
             taxonomy_id=taxonomy.id,
             title="Updated Title",
             description="Updated description",
