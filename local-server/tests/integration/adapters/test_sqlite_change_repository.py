@@ -7,12 +7,12 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '../../../'))
 import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
+import uuid
 
 from adapters.persistence.sqlite.models import Base, ChangeEvent, Changeset, Proposal, ConflictResolution
 from adapters.persistence.sqlite.change_repo import SQLiteChangeRepository
-from domain.versioning.value_objects import ChangeOperation, ProposalState
+from domain.versioning.value_objects import ChangeOperation
 from domain.versioning.exceptions import VersionNotFoundError
-from datetime import datetime, timezone
 
 
 @pytest.fixture
@@ -37,6 +37,34 @@ def change_repo(session_factory):
 
 class TestSQLiteChangeRepository:
     """Tests for SQLiteChangeRepository."""
+
+    def _create_proposal(self, session_factory):
+        """Helper method to create a Changeset and Proposal for testing."""
+        session = session_factory()
+        try:
+            changeset_id = str(uuid.uuid4())
+            proposal_id = str(uuid.uuid4())
+
+            changeset = Changeset(
+                id=changeset_id,
+                name="Test Changeset",
+                description="Test changeset for conflict resolution",
+                state="working"
+            )
+            session.add(changeset)
+            session.flush()
+
+            proposal = Proposal(
+                id=proposal_id,
+                changeset_id=changeset_id,
+                state="open"
+            )
+            session.add(proposal)
+            session.commit()
+
+            return proposal_id
+        finally:
+            session.close()
 
     def test_record_change_creates_record(self, change_repo, session_factory):
         """Test that record_change persists a change event."""
@@ -235,7 +263,7 @@ class TestSQLiteChangeRepository:
 
     def test_save_conflict_resolutions_persists_resolutions(self, change_repo, session_factory):
         """Test that save_conflict_resolutions persists conflict resolution data."""
-        proposal_id = "proposal-123"
+        proposal_id = self._create_proposal(session_factory)
         resolutions = {
             "entity-1": {
                 "field_a": "resolved_value_a",
@@ -269,9 +297,9 @@ class TestSQLiteChangeRepository:
         finally:
             session.close()
 
-    def test_get_conflict_resolutions_retrieves_resolutions(self, change_repo):
+    def test_get_conflict_resolutions_retrieves_resolutions(self, change_repo, session_factory):
         """Test that get_conflict_resolutions retrieves persisted resolutions."""
-        proposal_id = "proposal-456"
+        proposal_id = self._create_proposal(session_factory)
         resolutions = {
             "entity-1": {
                 "field_a": "value_a",
@@ -292,9 +320,9 @@ class TestSQLiteChangeRepository:
         assert retrieved["entity-1"]["field_b"] == "value_b"
         assert retrieved["entity-2"]["field_c"] == "value_c"
 
-    def test_save_conflict_resolutions_overwrites_existing(self, change_repo):
-        """Test that save_conflict_resolutions deletes and reinsets (overwrites) existing resolutions."""
-        proposal_id = "proposal-789"
+    def test_save_conflict_resolutions_overwrites_existing(self, change_repo, session_factory):
+        """Test that save_conflict_resolutions deletes and reinserts (overwrites) existing resolutions."""
+        proposal_id = self._create_proposal(session_factory)
 
         # Save initial resolutions
         initial_resolutions = {
