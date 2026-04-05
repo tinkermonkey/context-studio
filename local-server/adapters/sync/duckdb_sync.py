@@ -1,15 +1,15 @@
 """
-DuckDB-based synchronization adapter for the Version Control & Collaboration bounded context.
+PyArrow-based synchronization adapter for the Version Control & Collaboration bounded context.
 
 The DuckDBSyncAdapter implements the SyncTarget port, enabling workspaces to synchronize
-changes with local DuckDB instances over date-partitioned Parquet files. This provides
-an efficient batch-query sync mechanism for local-first scenarios.
+changes via date-partitioned Parquet files. This provides an efficient batch-query sync
+mechanism for local-first scenarios.
 
 Changes are serialized as Parquet with a directory structure: {output_dir}/changes/{date}/
 
-This adapter uses fail-fast error handling: I/O errors and DuckDB failures are propagated
-to the caller as RuntimeError, never suppressed. The service layer wraps these into
-domain-level SyncError exceptions.
+This adapter uses fail-fast error handling: I/O errors are propagated to the caller as
+RuntimeError, never suppressed. The service layer wraps these into domain-level SyncError
+exceptions.
 """
 
 from __future__ import annotations
@@ -30,32 +30,30 @@ _logger = logging.getLogger(__name__)
 
 class DuckDBSyncAdapter:
     """
-    Implements SyncTarget using DuckDB and date-partitioned Parquet files.
+    Implements SyncTarget using PyArrow and date-partitioned Parquet files.
 
     Changes are serialized as Parquet files and stored in date-partitioned
     directories, enabling efficient querying and batch synchronization.
 
-    This adapter uses fail-fast error handling: I/O and DuckDB errors are
-    propagated to the caller as RuntimeError. The caller (service layer) wraps
-    these into SyncError domain exceptions.
+    This adapter uses fail-fast error handling: I/O errors are propagated to
+    the caller as RuntimeError. The caller (service layer) wraps these into
+    SyncError domain exceptions.
     """
 
     def __init__(self, output_dir: str) -> None:
         """
-        Initialize the DuckDB sync adapter.
+        Initialize the sync adapter.
 
         Args:
             output_dir: Local directory path for storing Parquet files
 
         Raises:
-            ImportError: If duckdb or pyarrow is not installed
+            ImportError: If pyarrow is not installed
+            RuntimeError: If sync directory cannot be created
         """
-        if importlib.util.find_spec("duckdb") is None:
-            _logger.error("duckdb is required for DuckDB sync adapter. Install with: pip install duckdb")
-            raise ImportError("duckdb is required for DuckDB sync adapter")
         if importlib.util.find_spec("pyarrow") is None:
-            _logger.error("pyarrow is required for DuckDB sync adapter. Install with: pip install pyarrow")
-            raise ImportError("pyarrow is required for DuckDB sync adapter")
+            _logger.error("pyarrow is required for sync adapter. Install with: pip install pyarrow")
+            raise ImportError("pyarrow is required for sync adapter")
 
         self._output_dir = Path(output_dir).resolve()
         self._changes_dir = self._output_dir / "changes"
@@ -87,7 +85,7 @@ class DuckDBSyncAdapter:
             SyncResult with count of pushed events and their IDs
 
         Raises:
-            RuntimeError: If file I/O or DuckDB operations fail
+            RuntimeError: If file I/O or serialization fails
         """
         if not events:
             return SyncResult(pushed=0, pulled=0, errors=(), pushed_event_ids=())
@@ -99,7 +97,6 @@ class DuckDBSyncAdapter:
             raise RuntimeError("pyarrow is required for DuckDB sync adapter")
 
         pushed_event_ids = []
-        errors: list[str] = []
 
         try:
             # Group events by date
@@ -156,10 +153,14 @@ class DuckDBSyncAdapter:
                 len(events),
                 len(events_by_date),
             )
-            return SyncResult(pushed=len(pushed_event_ids), pulled=0, errors=tuple(errors), pushed_event_ids=tuple(pushed_event_ids))
+            return SyncResult(pushed=len(pushed_event_ids), pulled=0, errors=(), pushed_event_ids=tuple(pushed_event_ids))
 
+        except OSError as e:
+            error_msg = f"Failed to write Parquet files: {e}"
+            _logger.error(error_msg)
+            raise RuntimeError(error_msg) from e
         except Exception as e:
-            error_msg = f"Failed to push changes to DuckDB/Parquet: {e}"
+            error_msg = f"Failed to push change events: {e}"
             _logger.error(error_msg)
             raise RuntimeError(error_msg) from e
 
@@ -235,27 +236,36 @@ class DuckDBSyncAdapter:
 
                             seen_ids.add(event_id)
 
+                            # Filter by timestamp if since provided
+                            event_timestamp = datetime.fromisoformat(row["timestamp"])
+                            if since and event_timestamp < since:
+                                continue
+
                             # Parse JSON fields
                             new_state: dict[str, object] = {}
                             if row["new_state"]:
                                 try:
                                     new_state = json.loads(row["new_state"])
-                                except (json.JSONDecodeError, TypeError):
-                                    new_state = {}
+                                except (json.JSONDecodeError, TypeError) as e:
+                                    error_msg = f"Failed to parse new_state JSON for event {event_id} in {parquet_file}: {e}"
+                                    _logger.error(error_msg)
+                                    raise RuntimeError(error_msg) from e
 
                             previous_state = None
                             if row["previous_state"]:
                                 try:
                                     previous_state = json.loads(row["previous_state"])
-                                except (json.JSONDecodeError, TypeError):
-                                    previous_state = None
+                                except (json.JSONDecodeError, TypeError) as e:
+                                    error_msg = f"Failed to parse previous_state JSON for event {event_id} in {parquet_file}: {e}"
+                                    _logger.error(error_msg)
+                                    raise RuntimeError(error_msg) from e
 
                             event = ChangeEvent(
                                 id=event_id,
                                 entity_id=row["entity_id"],
                                 entity_type=row["entity_type"],
                                 operation=ChangeOperation(row["operation"]),
-                                timestamp=datetime.fromisoformat(row["timestamp"]),
+                                timestamp=event_timestamp,
                                 processed=row.get("processed", False),
                                 user_id=row.get("user_id"),
                                 change_reason=row.get("change_reason"),
@@ -264,8 +274,10 @@ class DuckDBSyncAdapter:
                             )
                             events.append(event)
 
+                    except RuntimeError:
+                        raise
                     except Exception as e:
-                        error_msg = f"Failed to parse Parquet file {parquet_file}: {e}"
+                        error_msg = f"Failed to read Parquet file {parquet_file}: {e}"
                         _logger.error(error_msg)
                         raise RuntimeError(error_msg) from e
 
@@ -281,12 +293,17 @@ class DuckDBSyncAdapter:
 
     def is_configured(self) -> bool:
         """
-        Check if DuckDB sync target is properly configured.
+        Check if sync target is properly configured.
 
         Returns:
             True if output directory is accessible, False otherwise
         """
         try:
             return self._changes_dir.exists() and self._changes_dir.is_dir()
-        except OSError:
+        except OSError as e:
+            _logger.warning(
+                "Failed to check sync directory status (dir=%s): %s",
+                self._changes_dir,
+                e,
+            )
             return False
