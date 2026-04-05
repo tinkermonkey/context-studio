@@ -1107,6 +1107,132 @@ class TestMergeStrategies:
         assert result.proposal_id == proposal.id
         assert result.conflicts_resolved == 1
 
+    def test_auto_resolve_merge_both_strategy_with_lists(
+        self, service: VersioningService
+    ) -> None:
+        """Test auto_resolve with MERGE_BOTH strategy merges list values."""
+        report = ConflictReport(proposal_id="test-proposal")
+        report.conflicts = [
+            Conflict(
+                entity_id="entity1",
+                field_name="tags",
+                base_value=["tag1", "tag2"],
+                incoming_value=["tag2", "tag3"],
+            ),
+        ]
+
+        resolved = service.auto_resolve(report, strategy=MergeStrategy.MERGE_BOTH)
+
+        assert resolved.all_resolved is True
+        assert resolved.conflicts[0].is_resolved is True
+        # Should have merged both lists with duplicates removed
+        resolved_value = resolved.conflicts[0].resolved_value
+        assert isinstance(resolved_value, list)
+        assert set(resolved_value) == {"tag1", "tag2", "tag3"}
+        # Check that resolution_strategy is populated
+        assert resolved.conflicts[0].resolution_strategy == "merge_both"
+
+    def test_auto_resolve_merge_both_strategy_with_sets(
+        self, service: VersioningService
+    ) -> None:
+        """Test auto_resolve with MERGE_BOTH strategy merges set values."""
+        report = ConflictReport(proposal_id="test-proposal")
+        report.conflicts = [
+            Conflict(
+                entity_id="entity1",
+                field_name="categories",
+                base_value={"cat1", "cat2"},
+                incoming_value={"cat2", "cat3"},
+            ),
+        ]
+
+        resolved = service.auto_resolve(report, strategy=MergeStrategy.MERGE_BOTH)
+
+        assert resolved.all_resolved is True
+        resolved_value = resolved.conflicts[0].resolved_value
+        assert isinstance(resolved_value, set)
+        assert resolved_value == {"cat1", "cat2", "cat3"}
+        # Check that resolution_strategy is populated
+        assert resolved.conflicts[0].resolution_strategy == "merge_both"
+
+    def test_auto_resolve_merge_both_strategy_with_scalar_values(
+        self, service: VersioningService
+    ) -> None:
+        """Test auto_resolve with MERGE_BOTH strategy falls back to LAST_WRITE_WINS for scalars."""
+        report = ConflictReport(proposal_id="test-proposal")
+        report.conflicts = [
+            Conflict(
+                entity_id="entity1",
+                field_name="name",
+                base_value="base_name",
+                incoming_value="incoming_name",
+            ),
+        ]
+
+        resolved = service.auto_resolve(report, strategy=MergeStrategy.MERGE_BOTH)
+
+        assert resolved.all_resolved is True
+        # For scalar values, should use incoming_value
+        assert resolved.conflicts[0].resolved_value == "incoming_name"
+        # Check that resolution_strategy is populated
+        assert resolved.conflicts[0].resolution_strategy == "merge_both"
+
+    def test_auto_resolve_mixed_strategies_populate_resolution_strategy(
+        self, service: VersioningService
+    ) -> None:
+        """Test that resolution_strategy field is populated for all strategies."""
+        # Test LAST_WRITE_WINS
+        report1 = ConflictReport(proposal_id="test-proposal-1")
+        report1.conflicts = [
+            Conflict(
+                entity_id="entity1",
+                field_name="field1",
+                base_value="base1",
+                incoming_value="incoming1",
+            ),
+        ]
+        resolved = service.auto_resolve(report1, strategy=MergeStrategy.LAST_WRITE_WINS)
+        assert resolved.conflicts[0].resolution_strategy == "last_write_wins"
+
+        # Test BASE_VALUE_WINS
+        report2 = ConflictReport(proposal_id="test-proposal-2")
+        report2.conflicts = [
+            Conflict(
+                entity_id="entity1",
+                field_name="field1",
+                base_value="base1",
+                incoming_value="incoming1",
+            ),
+        ]
+        resolved = service.auto_resolve(report2, strategy=MergeStrategy.BASE_VALUE_WINS)
+        assert resolved.conflicts[0].resolution_strategy == "base_value_wins"
+
+        # Test MERGE_BOTH
+        report3 = ConflictReport(proposal_id="test-proposal-3")
+        report3.conflicts = [
+            Conflict(
+                entity_id="entity1",
+                field_name="field1",
+                base_value="base1",
+                incoming_value="incoming1",
+            ),
+        ]
+        resolved = service.auto_resolve(report3, strategy=MergeStrategy.MERGE_BOTH)
+        assert resolved.conflicts[0].resolution_strategy == "merge_both"
+
+        # MANUAL strategy should not populate resolution_strategy (not resolved)
+        report4 = ConflictReport(proposal_id="test-proposal-4")
+        report4.conflicts = [
+            Conflict(
+                entity_id="entity1",
+                field_name="field1",
+                base_value="base1",
+                incoming_value="incoming1",
+            ),
+        ]
+        resolved = service.auto_resolve(report4, strategy=MergeStrategy.MANUAL)
+        assert resolved.conflicts[0].resolution_strategy is None
+
 
 class TestManualConflictResolution:
     """Test manual conflict resolution."""

@@ -283,23 +283,24 @@ class S3SyncAdapter:
             RuntimeError: If unable to check S3 connectivity
         """
         try:
-            # Check S3 connectivity by listing objects
+            # Check S3 connectivity by listing objects to find most recent sync
             prefix = f"{self._prefix}/changes/"
             paginator = self._s3_client.get_paginator("list_objects_v2")
-            pages = paginator.paginate(Bucket=self._bucket, Prefix=prefix, MaxKeys=1)
+            pages = paginator.paginate(Bucket=self._bucket, Prefix=prefix)
 
-            remote_reachable = False
             last_sync = None
             unprocessed_count = 0
 
+            # Iterate through all pages to find the most recent object
+            all_objects = []
             for page in pages:
-                remote_reachable = True
                 if "Contents" in page:
-                    # Get the most recent object (last_sync)
-                    objects = page["Contents"]
-                    if objects:
-                        most_recent = max(objects, key=lambda x: x["LastModified"])
-                        last_sync = most_recent["LastModified"]
+                    all_objects.extend(page["Contents"])
+
+            # Find the most recent object by modification time
+            if all_objects:
+                most_recent = max(all_objects, key=lambda x: x["LastModified"])
+                last_sync = most_recent["LastModified"]
 
             _logger.info("Retrieved sync status from S3")
             return SyncStatus(
