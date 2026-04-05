@@ -814,7 +814,10 @@ class VersioningService:
         """
         try:
             count = self._repo.count_unprocessed()
-        except Exception as e:
+        except (RuntimeError, OSError) as e:
+            # Adapter errors are expected in degraded states; we return a safe default
+            # rather than propagating the error since sync status is a diagnostic endpoint.
+            # Programming errors (TypeError, AttributeError, etc.) will bubble up for development visibility.
             _logger.warning(
                 "Failed to count unprocessed changes in sync status: %s", str(e)
             )
@@ -822,7 +825,8 @@ class VersioningService:
 
         try:
             is_configured = self._sync.is_configured()
-        except Exception as e:
+        except (RuntimeError, OSError) as e:
+            # Same rationale: adapter errors degrade gracefully, but programming errors bubble up
             _logger.warning(
                 "Failed to check sync configuration status: %s", str(e)
             )

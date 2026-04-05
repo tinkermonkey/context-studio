@@ -1476,3 +1476,97 @@ class TestSyncMethods:
         # Verify no events remain (first was recorded but then deleted during rollback)
         history = failing_repo.get_changes()
         assert len(history.events) == 0
+
+
+# ============================================================================
+# Sync Status Error Handling Tests
+# ============================================================================
+
+
+class TestSyncStatusErrorHandling:
+    """Test get_sync_status error handling and graceful degradation."""
+
+    def test_get_sync_status_count_unprocessed_error(
+        self, sync_target: FakeSyncTarget, event_publisher: FakeEventPublisher
+    ) -> None:
+        """Test that count_unprocessed errors degrade to unprocessed_count=0."""
+
+        class FailingCountRepository(FakeChangeRepository):
+            def count_unprocessed(self) -> int:
+                raise RuntimeError("Database connection failed")
+
+        failing_repo = FailingCountRepository()
+        service = VersioningService(
+            change_repo=failing_repo,
+            sync_target=sync_target,
+            event_publisher=event_publisher,
+        )
+
+        status = service.get_sync_status()
+
+        assert status.unprocessed_count == 0
+        assert status.is_configured == sync_target.is_configured()
+
+    def test_get_sync_status_is_configured_error(
+        self, repo: FakeChangeRepository, event_publisher: FakeEventPublisher
+    ) -> None:
+        """Test that is_configured errors degrade to is_configured=False."""
+
+        class FailingConfigSyncTarget(FakeSyncTarget):
+            def is_configured(self) -> bool:
+                raise OSError("Configuration file not accessible")
+
+        failing_sync = FailingConfigSyncTarget()
+        service = VersioningService(
+            change_repo=repo,
+            sync_target=failing_sync,
+            event_publisher=event_publisher,
+        )
+
+        status = service.get_sync_status()
+
+        assert status.is_configured is False
+        assert status.unprocessed_count == repo.count_unprocessed()
+
+    def test_get_sync_status_both_errors(
+        self, event_publisher: FakeEventPublisher
+    ) -> None:
+        """Test that both count_unprocessed and is_configured errors degrade gracefully."""
+
+        class FailingCountRepository(FakeChangeRepository):
+            def count_unprocessed(self) -> int:
+                raise RuntimeError("Database connection failed")
+
+        class FailingConfigSyncTarget(FakeSyncTarget):
+            def is_configured(self) -> bool:
+                raise OSError("Configuration file not accessible")
+
+        failing_repo = FailingCountRepository()
+        failing_sync = FailingConfigSyncTarget()
+        service = VersioningService(
+            change_repo=failing_repo,
+            sync_target=failing_sync,
+            event_publisher=event_publisher,
+        )
+
+        status = service.get_sync_status()
+
+        assert status.unprocessed_count == 0
+        assert status.is_configured is False
+
+    def test_get_sync_status_success_path(
+        self, service: VersioningService, repo: FakeChangeRepository, sync_target: FakeSyncTarget
+    ) -> None:
+        """Test that get_sync_status returns correct values when no errors occur."""
+        # Record a change to have an unprocessed event
+        repo.record_change(
+            entity_id="test-entity",
+            entity_type="class",
+            operation=ChangeOperation.CREATE,
+            new_state={"name": "Test"},
+        )
+
+        status = service.get_sync_status()
+
+        assert status.unprocessed_count == 1
+        assert status.is_configured == sync_target.is_configured()
