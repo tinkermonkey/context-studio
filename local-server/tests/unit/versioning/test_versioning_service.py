@@ -84,7 +84,7 @@ class TestChangeHistoryQueries:
     ) -> None:
         """Test retrieving change history when no changes exist."""
         result = service.get_change_history()
-        assert result.events == []
+        assert result.events == ()
         assert result.total == 0
 
     def test_get_change_history_all_events(
