@@ -31,7 +31,7 @@ class TestChangesetStateTransitions:
         changeset = Changeset(
             id="cs1",
             name="Test changeset",
-            state=ChangeState.WORKING,
+            _state=ChangeState.WORKING,
             created_at=datetime.now(timezone.utc),
             updated_at=datetime.now(timezone.utc),
         )
@@ -44,7 +44,7 @@ class TestChangesetStateTransitions:
         changeset = Changeset(
             id="cs1",
             name="Test changeset",
-            state=ChangeState.STAGED,
+            _state=ChangeState.STAGED,
             created_at=datetime.now(timezone.utc),
             updated_at=datetime.now(timezone.utc),
         )
@@ -57,7 +57,7 @@ class TestChangesetStateTransitions:
         changeset = Changeset(
             id="cs1",
             name="Test changeset",
-            state=ChangeState.PROPOSED,
+            _state=ChangeState.PROPOSED,
             created_at=datetime.now(timezone.utc),
             updated_at=datetime.now(timezone.utc),
         )
@@ -70,7 +70,7 @@ class TestChangesetStateTransitions:
         changeset = Changeset(
             id="cs1",
             name="Test changeset",
-            state=ChangeState.APPROVED,
+            _state=ChangeState.APPROVED,
             created_at=datetime.now(timezone.utc),
             updated_at=datetime.now(timezone.utc),
         )
@@ -83,7 +83,7 @@ class TestChangesetStateTransitions:
         changeset = Changeset(
             id="cs1",
             name="Test changeset",
-            state=ChangeState.STAGED,
+            _state=ChangeState.STAGED,
             created_at=datetime.now(timezone.utc),
             updated_at=datetime.now(timezone.utc),
         )
@@ -96,7 +96,7 @@ class TestChangesetStateTransitions:
         changeset = Changeset(
             id="cs1",
             name="Test changeset",
-            state=ChangeState.PROPOSED,
+            _state=ChangeState.PROPOSED,
             created_at=datetime.now(timezone.utc),
             updated_at=datetime.now(timezone.utc),
         )
@@ -109,7 +109,7 @@ class TestChangesetStateTransitions:
         changeset = Changeset(
             id="cs1",
             name="Test changeset",
-            state=ChangeState.WORKING,
+            _state=ChangeState.WORKING,
             created_at=datetime.now(timezone.utc),
             updated_at=datetime.now(timezone.utc),
         )
@@ -122,7 +122,7 @@ class TestChangesetStateTransitions:
         changeset = Changeset(
             id="cs1",
             name="Test changeset",
-            state=ChangeState.WORKING,
+            _state=ChangeState.WORKING,
             created_at=datetime.now(timezone.utc),
             updated_at=datetime.now(timezone.utc),
         )
@@ -135,7 +135,7 @@ class TestChangesetStateTransitions:
         changeset = Changeset(
             id="cs1",
             name="Test changeset",
-            state=ChangeState.MERGED,
+            _state=ChangeState.MERGED,
             created_at=datetime.now(timezone.utc),
             updated_at=datetime.now(timezone.utc),
         )
@@ -148,7 +148,7 @@ class TestChangesetStateTransitions:
         changeset = Changeset(
             id="cs1",
             name="Test changeset",
-            state=ChangeState.WORKING,
+            _state=ChangeState.WORKING,
             created_at=datetime.now(timezone.utc),
             updated_at=datetime.now(timezone.utc),
         )
@@ -255,7 +255,7 @@ class TestProposalStateTransitions:
         proposal = Proposal(
             id="prop1",
             changeset_id="cs1",
-            state=ProposalState.OPEN,
+            _state=ProposalState.OPEN,
             submitted_at=datetime.now(timezone.utc),
         )
 
@@ -267,7 +267,7 @@ class TestProposalStateTransitions:
         proposal = Proposal(
             id="prop1",
             changeset_id="cs1",
-            state=ProposalState.OPEN,
+            _state=ProposalState.OPEN,
             submitted_at=datetime.now(timezone.utc),
         )
 
@@ -279,7 +279,7 @@ class TestProposalStateTransitions:
         proposal = Proposal(
             id="prop1",
             changeset_id="cs1",
-            state=ProposalState.APPROVED,
+            _state=ProposalState.APPROVED,
             submitted_at=datetime.now(timezone.utc),
         )
 
@@ -291,7 +291,7 @@ class TestProposalStateTransitions:
         proposal = Proposal(
             id="prop1",
             changeset_id="cs1",
-            state=ProposalState.APPROVED,
+            _state=ProposalState.APPROVED,
             submitted_at=datetime.now(timezone.utc),
         )
 
@@ -303,7 +303,7 @@ class TestProposalStateTransitions:
         proposal = Proposal(
             id="prop1",
             changeset_id="cs1",
-            state=ProposalState.REJECTED,
+            _state=ProposalState.REJECTED,
             submitted_at=datetime.now(timezone.utc),
         )
 
@@ -315,7 +315,7 @@ class TestProposalStateTransitions:
         proposal = Proposal(
             id="prop1",
             changeset_id="cs1",
-            state=ProposalState.OPEN,
+            _state=ProposalState.OPEN,
             submitted_at=datetime.now(timezone.utc),
         )
 
@@ -327,7 +327,7 @@ class TestProposalStateTransitions:
         proposal = Proposal(
             id="prop1",
             changeset_id="cs1",
-            state=ProposalState.MERGED,
+            _state=ProposalState.MERGED,
             submitted_at=datetime.now(timezone.utc),
         )
 
@@ -339,7 +339,7 @@ class TestProposalStateTransitions:
         proposal = Proposal(
             id="prop1",
             changeset_id="cs1",
-            state=ProposalState.MERGED,
+            _state=ProposalState.MERGED,
             submitted_at=datetime.now(timezone.utc),
         )
 
@@ -352,7 +352,7 @@ class TestProposalStateTransitions:
         proposal = Proposal(
             id="prop1",
             changeset_id="cs1",
-            state=ProposalState.REJECTED,
+            _state=ProposalState.REJECTED,
             submitted_at=datetime.now(timezone.utc),
         )
 
@@ -364,7 +364,7 @@ class TestProposalStateTransitions:
         proposal = Proposal(
             id="prop1",
             changeset_id="cs1",
-            state=ProposalState.REJECTED,
+            _state=ProposalState.REJECTED,
             submitted_at=datetime.now(timezone.utc),
         )
 
@@ -376,7 +376,7 @@ class TestProposalStateTransitions:
         proposal = Proposal(
             id="prop1",
             changeset_id="cs1",
-            state=ProposalState.OPEN,
+            _state=ProposalState.OPEN,
             submitted_at=datetime.now(timezone.utc),
         )
 

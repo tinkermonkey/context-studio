@@ -43,11 +43,16 @@ class Changeset:
 
     id: str
     name: str
-    state: ChangeState
+    _state: ChangeState
     created_at: datetime
     updated_at: datetime
     description: Optional[str] = None
     event_ids: list[str] = field(default_factory=list)
+
+    @property
+    def state(self) -> ChangeState:
+        """Get the current state. State can only be changed via transition_to()."""
+        return self._state
 
     def transition_to(self, new_state: ChangeState) -> None:
         """Enforce valid state transitions; raises ChangesetStateError on invalid.
@@ -68,11 +73,11 @@ class Changeset:
             ChangeState.APPROVED: {ChangeState.MERGED},
             ChangeState.MERGED: set(),
         }
-        if new_state not in valid[self.state]:
+        if new_state not in valid[self._state]:
             raise ChangesetStateError(
-                f"Cannot transition Changeset from {self.state} to {new_state}"
+                f"Cannot transition Changeset from {self._state} to {new_state}"
             )
-        self.state = new_state
+        self._state = new_state
 
 
 @dataclass
@@ -81,10 +86,15 @@ class Proposal:
 
     id: str
     changeset_id: str
-    state: ProposalState
+    _state: ProposalState
     submitted_at: datetime
     reviewed_at: Optional[datetime] = None
     reviewer_notes: Optional[str] = None
+
+    @property
+    def state(self) -> ProposalState:
+        """Get the current state. State can only be changed via transition_to()."""
+        return self._state
 
     def transition_to(self, new_state: ProposalState) -> None:
         """Enforce valid state transitions; raises ProposalStateError on invalid."""
@@ -96,11 +106,11 @@ class Proposal:
             ProposalState.REJECTED: {ProposalState.OPEN},
             ProposalState.MERGED: set(),
         }
-        if new_state not in valid[self.state]:
+        if new_state not in valid[self._state]:
             raise ProposalStateError(
-                f"Cannot transition Proposal from {self.state} to {new_state}"
+                f"Cannot transition Proposal from {self._state} to {new_state}"
             )
-        self.state = new_state
+        self._state = new_state
 
 
 @dataclass

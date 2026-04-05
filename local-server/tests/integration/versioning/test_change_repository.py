@@ -239,7 +239,7 @@ class TestChangesetOperations:
         changeset = Changeset(
             id="cs1",
             name="My Changeset",
-            state=ChangeState.WORKING,
+            _state=ChangeState.WORKING,
             created_at=datetime.now(timezone.utc),
             updated_at=datetime.now(timezone.utc),
             description="Test changeset",
@@ -254,7 +254,7 @@ class TestChangesetOperations:
         changeset = Changeset(
             id="cs1",
             name="My Changeset",
-            state=ChangeState.WORKING,
+            _state=ChangeState.WORKING,
             created_at=datetime.now(timezone.utc),
             updated_at=datetime.now(timezone.utc),
         )
@@ -272,7 +272,7 @@ class TestChangesetOperations:
         changeset = Changeset(
             id="cs1",
             name="Original",
-            state=ChangeState.WORKING,
+            _state=ChangeState.WORKING,
             created_at=datetime.now(timezone.utc),
             updated_at=datetime.now(timezone.utc),
         )
@@ -280,7 +280,7 @@ class TestChangesetOperations:
         repository.create_changeset(changeset)
 
         changeset.name = "Updated"
-        changeset.state = ChangeState.STAGED
+        changeset.transition_to(ChangeState.STAGED)
         repository.update_changeset(changeset)
 
         retrieved = repository.get_changeset("cs1")
@@ -307,7 +307,7 @@ class TestChangesetOperations:
         changeset = Changeset(
             id="cs1",
             name="My Changeset",
-            state=ChangeState.WORKING,
+            _state=ChangeState.WORKING,
             created_at=datetime.now(timezone.utc),
             updated_at=datetime.now(timezone.utc),
             event_ids=[event1_id, event2_id],
@@ -325,7 +325,7 @@ class TestChangesetOperations:
         changeset = Changeset(
             id="nonexistent",
             name="Ghost Changeset",
-            state=ChangeState.WORKING,
+            _state=ChangeState.WORKING,
             created_at=datetime.now(timezone.utc),
             updated_at=datetime.now(timezone.utc),
         )
@@ -348,7 +348,7 @@ class TestChangesetOperations:
             id="cs1",
             name="Initial Changeset",
             description="Initial description",
-            state=ChangeState.WORKING,
+            _state=ChangeState.WORKING,
             created_at=datetime.now(timezone.utc),
             updated_at=datetime.now(timezone.utc),
             event_ids=[event_id_1, event_id_2],
@@ -369,7 +369,7 @@ class TestChangesetOperations:
             id="cs1",
             name="Updated Changeset",
             description="Updated description",
-            state=ChangeState.STAGED,
+            _state=ChangeState.STAGED,
             created_at=changeset.created_at,
             updated_at=datetime.now(timezone.utc),
             event_ids=[event_id_1, event_id_3, event_id_4],
@@ -395,7 +395,7 @@ class TestProposalOperations:
         proposal = Proposal(
             id="prop1",
             changeset_id="cs1",
-            state=ProposalState.OPEN,
+            _state=ProposalState.OPEN,
             submitted_at=datetime.now(timezone.utc),
         )
 
@@ -409,7 +409,7 @@ class TestProposalOperations:
         proposal = Proposal(
             id="prop1",
             changeset_id="cs1",
-            state=ProposalState.OPEN,
+            _state=ProposalState.OPEN,
             submitted_at=datetime.now(timezone.utc),
             reviewer_notes="Looks good",
         )
@@ -426,13 +426,13 @@ class TestProposalOperations:
         proposal = Proposal(
             id="prop1",
             changeset_id="cs1",
-            state=ProposalState.OPEN,
+            _state=ProposalState.OPEN,
             submitted_at=datetime.now(timezone.utc),
         )
 
         repository.create_proposal(proposal)
 
-        proposal.state = ProposalState.APPROVED
+        proposal.transition_to(ProposalState.APPROVED)
         proposal.reviewed_at = datetime.now(timezone.utc)
         repository.update_proposal(proposal)
 
@@ -451,7 +451,7 @@ class TestProposalOperations:
         proposal = Proposal(
             id="nonexistent",
             changeset_id="cs1",
-            state=ProposalState.OPEN,
+            _state=ProposalState.OPEN,
             submitted_at=datetime.now(timezone.utc),
         )
 

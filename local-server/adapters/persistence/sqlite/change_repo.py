@@ -509,6 +509,199 @@ class SQLiteChangeRepository:
 
             return proposal
 
+    def update_changeset_and_proposal_on_submit(
+        self, changeset: DomainChangeset, proposal: DomainProposal
+    ) -> tuple[DomainChangeset, DomainProposal]:
+        """
+        Atomically update changeset and create proposal on submit.
+
+        Both operations succeed or both fail together within a single transaction.
+
+        Args:
+            changeset: The Changeset domain entity to update
+            proposal: The Proposal domain entity to create
+
+        Returns:
+            Tuple of (updated Changeset, created Proposal)
+
+        Raises:
+            VersionNotFoundError: If the changeset does not exist
+        """
+        with self.session_factory() as session:
+            orm_changeset = session.get(Changeset, changeset.id)
+
+            if not orm_changeset:
+                raise VersionNotFoundError(f"Changeset not found: {changeset.id}")
+
+            # Update changeset
+            orm_changeset.name = changeset.name
+            orm_changeset.description = changeset.description
+            orm_changeset.state = changeset.state.value
+            orm_changeset.updated_at = changeset.updated_at
+
+            # Delete existing event associations and re-insert with updated list
+            session.query(ChangesetEvent).filter(
+                ChangesetEvent.changeset_id == changeset.id
+            ).delete()
+
+            for event_id in changeset.event_ids:
+                changeset_event = ChangesetEvent(
+                    changeset_id=changeset.id,
+                    change_event_id=event_id,
+                )
+                session.add(changeset_event)
+
+            # Create proposal
+            orm_proposal = Proposal(
+                id=proposal.id,
+                changeset_id=proposal.changeset_id,
+                state=proposal.state.value,
+                submitted_at=proposal.submitted_at,
+                reviewed_at=proposal.reviewed_at,
+                reviewer_notes=proposal.reviewer_notes,
+            )
+            session.add(orm_proposal)
+
+            # Commit both changes atomically
+            session.commit()
+
+            return changeset, proposal
+
+    def update_changeset_and_proposal_on_approve(
+        self, changeset: DomainChangeset, proposal: DomainProposal
+    ) -> tuple[DomainChangeset, DomainProposal]:
+        """
+        Atomically update changeset and proposal on approve.
+
+        Both operations succeed or both fail together within a single transaction.
+
+        Args:
+            changeset: The Changeset domain entity to update
+            proposal: The Proposal domain entity to update
+
+        Returns:
+            Tuple of (updated Changeset, updated Proposal)
+
+        Raises:
+            VersionNotFoundError: If the changeset or proposal does not exist
+        """
+        with self.session_factory() as session:
+            orm_changeset = session.get(Changeset, changeset.id)
+
+            if not orm_changeset:
+                raise VersionNotFoundError(f"Changeset not found: {changeset.id}")
+
+            orm_proposal = session.get(Proposal, proposal.id)
+
+            if not orm_proposal:
+                raise VersionNotFoundError(f"Proposal not found: {proposal.id}")
+
+            # Update changeset
+            orm_changeset.name = changeset.name
+            orm_changeset.description = changeset.description
+            orm_changeset.state = changeset.state.value
+            orm_changeset.updated_at = changeset.updated_at
+
+            # Update proposal
+            orm_proposal.state = proposal.state.value
+            orm_proposal.reviewed_at = proposal.reviewed_at
+            orm_proposal.reviewer_notes = proposal.reviewer_notes
+
+            # Commit both changes atomically
+            session.commit()
+
+            return changeset, proposal
+
+    def update_changeset_and_proposal_on_reject(
+        self, changeset: DomainChangeset, proposal: DomainProposal
+    ) -> tuple[DomainChangeset, DomainProposal]:
+        """
+        Atomically update changeset and proposal on reject.
+
+        Both operations succeed or both fail together within a single transaction.
+
+        Args:
+            changeset: The Changeset domain entity to update
+            proposal: The Proposal domain entity to update
+
+        Returns:
+            Tuple of (updated Changeset, updated Proposal)
+
+        Raises:
+            VersionNotFoundError: If the changeset or proposal does not exist
+        """
+        with self.session_factory() as session:
+            orm_changeset = session.get(Changeset, changeset.id)
+
+            if not orm_changeset:
+                raise VersionNotFoundError(f"Changeset not found: {changeset.id}")
+
+            orm_proposal = session.get(Proposal, proposal.id)
+
+            if not orm_proposal:
+                raise VersionNotFoundError(f"Proposal not found: {proposal.id}")
+
+            # Update changeset
+            orm_changeset.name = changeset.name
+            orm_changeset.description = changeset.description
+            orm_changeset.state = changeset.state.value
+            orm_changeset.updated_at = changeset.updated_at
+
+            # Update proposal
+            orm_proposal.state = proposal.state.value
+            orm_proposal.reviewed_at = proposal.reviewed_at
+            orm_proposal.reviewer_notes = proposal.reviewer_notes
+
+            # Commit both changes atomically
+            session.commit()
+
+            return changeset, proposal
+
+    def update_changeset_and_proposal_on_merge(
+        self, changeset: DomainChangeset, proposal: DomainProposal
+    ) -> tuple[DomainChangeset, DomainProposal]:
+        """
+        Atomically update changeset and proposal on merge.
+
+        Both operations succeed or both fail together within a single transaction.
+
+        Args:
+            changeset: The Changeset domain entity to update
+            proposal: The Proposal domain entity to update
+
+        Returns:
+            Tuple of (updated Changeset, updated Proposal)
+
+        Raises:
+            VersionNotFoundError: If the changeset or proposal does not exist
+        """
+        with self.session_factory() as session:
+            orm_changeset = session.get(Changeset, changeset.id)
+
+            if not orm_changeset:
+                raise VersionNotFoundError(f"Changeset not found: {changeset.id}")
+
+            orm_proposal = session.get(Proposal, proposal.id)
+
+            if not orm_proposal:
+                raise VersionNotFoundError(f"Proposal not found: {proposal.id}")
+
+            # Update changeset
+            orm_changeset.name = changeset.name
+            orm_changeset.description = changeset.description
+            orm_changeset.state = changeset.state.value
+            orm_changeset.updated_at = changeset.updated_at
+
+            # Update proposal
+            orm_proposal.state = proposal.state.value
+            orm_proposal.reviewed_at = proposal.reviewed_at
+            orm_proposal.reviewer_notes = proposal.reviewer_notes
+
+            # Commit both changes atomically
+            session.commit()
+
+            return changeset, proposal
+
     # Helper methods for domain conversion
 
     def _to_domain_change_event(self, orm_event: ChangeEvent) -> DomainChangeEvent:
@@ -554,7 +747,7 @@ class SQLiteChangeRepository:
             id=cast(str, orm_changeset.id),
             name=cast(str, orm_changeset.name),
             description=cast(Optional[str], orm_changeset.description),
-            state=ChangeState(cast(str, orm_changeset.state)),
+            _state=ChangeState(cast(str, orm_changeset.state)),
             created_at=cast(datetime, orm_changeset.created_at),
             updated_at=cast(datetime, orm_changeset.updated_at),
             event_ids=event_ids,
@@ -565,7 +758,7 @@ class SQLiteChangeRepository:
         return DomainProposal(
             id=cast(str, orm_proposal.id),
             changeset_id=cast(str, orm_proposal.changeset_id),
-            state=ProposalState(orm_proposal.state),
+            _state=ProposalState(orm_proposal.state),
             submitted_at=cast(datetime, orm_proposal.submitted_at),
             reviewed_at=cast(Optional[datetime], orm_proposal.reviewed_at),
             reviewer_notes=cast(Optional[str], orm_proposal.reviewer_notes),

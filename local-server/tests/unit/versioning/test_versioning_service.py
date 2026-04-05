@@ -858,7 +858,7 @@ class TestConflictDetection:
         proposal = Proposal(
             id="test-proposal",
             changeset_id="nonexistent-changeset",
-            state=ProposalState.APPROVED,
+            _state=ProposalState.APPROVED,
             submitted_at=datetime.now(timezone.utc),
         )
         repo.create_proposal(proposal)

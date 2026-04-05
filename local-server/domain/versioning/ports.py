@@ -122,6 +122,94 @@ class ChangeRepository(Protocol):
         """
         ...
 
+    def update_changeset_and_proposal_on_submit(
+        self, changeset: Changeset, proposal: Proposal
+    ) -> tuple[Changeset, Proposal]:
+        """
+        Atomically update changeset and create proposal on submit.
+
+        Ensures both operations succeed or both fail together. This atomic operation
+        prevents leaving the system in an inconsistent state where the changeset is
+        PROPOSED but no proposal exists, or vice versa.
+
+        Args:
+            changeset: The Changeset domain entity with updated state
+            proposal: The new Proposal domain entity to create
+
+        Returns:
+            Tuple of (updated Changeset, created Proposal)
+
+        Raises:
+            VersionNotFoundError: If the changeset does not exist
+        """
+        ...
+
+    def update_changeset_and_proposal_on_approve(
+        self, changeset: Changeset, proposal: Proposal
+    ) -> tuple[Changeset, Proposal]:
+        """
+        Atomically update changeset and proposal on approve.
+
+        Ensures both operations succeed or both fail together. This atomic operation
+        prevents leaving the system in an inconsistent state where the changeset is
+        APPROVED but the proposal is still OPEN, or vice versa.
+
+        Args:
+            changeset: The Changeset domain entity with state transitioned to APPROVED
+            proposal: The Proposal domain entity with state transitioned to APPROVED
+
+        Returns:
+            Tuple of (updated Changeset, updated Proposal)
+
+        Raises:
+            VersionNotFoundError: If the changeset or proposal does not exist
+        """
+        ...
+
+    def update_changeset_and_proposal_on_reject(
+        self, changeset: Changeset, proposal: Proposal
+    ) -> tuple[Changeset, Proposal]:
+        """
+        Atomically update changeset and proposal on reject.
+
+        Ensures both operations succeed or both fail together. This atomic operation
+        prevents leaving the system in an inconsistent state where the changeset is
+        WORKING but the proposal is still OPEN, or vice versa.
+
+        Args:
+            changeset: The Changeset domain entity with state transitioned to WORKING
+            proposal: The Proposal domain entity with state transitioned to REJECTED
+
+        Returns:
+            Tuple of (updated Changeset, updated Proposal)
+
+        Raises:
+            VersionNotFoundError: If the changeset or proposal does not exist
+        """
+        ...
+
+    def update_changeset_and_proposal_on_merge(
+        self, changeset: Changeset, proposal: Proposal
+    ) -> tuple[Changeset, Proposal]:
+        """
+        Atomically update changeset and proposal on merge.
+
+        Ensures both operations succeed or both fail together. This atomic operation
+        prevents leaving the system in an inconsistent state where the changeset is
+        MERGED but the proposal is still APPROVED, or vice versa.
+
+        Args:
+            changeset: The Changeset domain entity with state transitioned to MERGED
+            proposal: The Proposal domain entity with state transitioned to MERGED
+
+        Returns:
+            Tuple of (updated Changeset, updated Proposal)
+
+        Raises:
+            VersionNotFoundError: If the changeset or proposal does not exist
+        """
+        ...
+
     def delete_changes(self, event_ids: list[str]) -> None:
         """
         Delete change events by their IDs (used for rollback on pull failure).

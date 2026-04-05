@@ -179,7 +179,7 @@ class VersioningService:
         changeset = Changeset(
             id=str(uuid.uuid4()),
             name=name,
-            state=ChangeState.WORKING,
+            _state=ChangeState.WORKING,
             created_at=now,
             updated_at=now,
             description=description,
@@ -246,15 +246,18 @@ class VersioningService:
         now = datetime.now(timezone.utc)
         changeset.transition_to(ChangeState.PROPOSED)
         changeset.updated_at = now
-        self._repo.update_changeset(changeset)
 
         proposal = Proposal(
             id=str(uuid.uuid4()),
             changeset_id=changeset_id,
-            state=ProposalState.OPEN,
+            _state=ProposalState.OPEN,
             submitted_at=now,
         )
-        persisted_proposal = self._repo.create_proposal(proposal)
+
+        # Atomically update changeset and create proposal to prevent inconsistent state
+        updated_changeset, persisted_proposal = self._repo.update_changeset_and_proposal_on_submit(
+            changeset, proposal
+        )
         _logger.info(
             "Proposal submitted (proposal_id=%s, changeset_id=%s, state=%s)",
             persisted_proposal.id,
@@ -292,11 +295,14 @@ class VersioningService:
         now = datetime.now(timezone.utc)
         changeset.transition_to(ChangeState.APPROVED)
         changeset.updated_at = now
-        self._repo.update_changeset(changeset)
 
         proposal.transition_to(ProposalState.APPROVED)
         proposal.reviewed_at = now
-        updated_proposal = self._repo.update_proposal(proposal)
+
+        # Atomically update both entities to prevent inconsistent state
+        updated_changeset, updated_proposal = self._repo.update_changeset_and_proposal_on_approve(
+            changeset, proposal
+        )
         _logger.info(
             "Proposal approved (proposal_id=%s, changeset_id=%s, state=%s)",
             updated_proposal.id,
@@ -335,12 +341,15 @@ class VersioningService:
         now = datetime.now(timezone.utc)
         changeset.transition_to(ChangeState.WORKING)
         changeset.updated_at = now
-        self._repo.update_changeset(changeset)
 
         proposal.transition_to(ProposalState.REJECTED)
         proposal.reviewed_at = now
         proposal.reviewer_notes = reason
-        updated_proposal = self._repo.update_proposal(proposal)
+
+        # Atomically update both entities to prevent inconsistent state
+        updated_changeset, updated_proposal = self._repo.update_changeset_and_proposal_on_reject(
+            changeset, proposal
+        )
         _logger.info(
             "Proposal rejected (proposal_id=%s, changeset_id=%s, state=%s, reason=%s)",
             updated_proposal.id,
@@ -567,10 +576,13 @@ class VersioningService:
         now = datetime.now(timezone.utc)
         changeset.transition_to(ChangeState.MERGED)
         changeset.updated_at = now
-        self._repo.update_changeset(changeset)
 
         proposal.transition_to(ProposalState.MERGED)
-        self._repo.update_proposal(proposal)
+
+        # Atomically update both entities to prevent inconsistent state
+        updated_changeset, updated_proposal = self._repo.update_changeset_and_proposal_on_merge(
+            changeset, proposal
+        )
 
         result = MergeResult(
             proposal_id=proposal_id,
