@@ -94,8 +94,6 @@ class S3SyncAdapter:
 
         Raises:
             RuntimeError: If S3 put operation fails
-            botocore.exceptions.ClientError: If S3 put operation fails
-            botocore.exceptions.NoCredentialsError: If AWS credentials are invalid
         """
         if not events:
             return SyncResult(pushed=0, pulled=0, errors=(), pushed_event_ids=())
@@ -165,13 +163,10 @@ class S3SyncAdapter:
             List of deduplicated ChangeEvent objects from S3
 
         Raises:
-            RuntimeError: If S3 listing fails (permission denied, bucket missing, network error, etc.)
-            botocore.exceptions.ClientError: If S3 operations fail
-            botocore.exceptions.NoCredentialsError: If AWS credentials are invalid
+            RuntimeError: If S3 listing fails, file download fails, or JSON parsing fails
         """
         events: list[ChangeEvent] = []
         seen_ids: set[str] = set()
-        failed_keys: list[str] = []
         prefix = f"{self._prefix}/changes/"
 
         try:
@@ -198,6 +193,10 @@ class S3SyncAdapter:
                                 if file_date < since:
                                     continue
                             except (ValueError, IndexError):
+                                _logger.warning(
+                                    "Skipping S3 object with unparseable date path (key=%s)",
+                                    key,
+                                )
                                 continue
 
                     # Download and deserialize the file
@@ -232,23 +231,17 @@ class S3SyncAdapter:
                             )
                             events.append(event)
                     except Exception as e:
-                        _logger.error(f"Failed to parse S3 object {key}: {e}")
-                        failed_keys.append(key)
+                        error_msg = f"Failed to parse S3 object {key}: {e}"
+                        _logger.error(error_msg)
+                        raise RuntimeError(error_msg) from e
 
-            # Report pulled events and any failures
-            if failed_keys:
-                _logger.warning(
-                    "Pulled %d change events from S3 (deduplicated), but failed to parse %d files: %s",
-                    len(events),
-                    len(failed_keys),
-                    ", ".join(failed_keys),
-                )
-            else:
-                _logger.info("Pulled %d change events from S3 (deduplicated)", len(events))
-
+            _logger.info("Pulled %d change events from S3 (deduplicated)", len(events))
             return events
 
         except Exception as e:
+            if isinstance(e, RuntimeError):
+                # File parsing error already wrapped as RuntimeError
+                raise
             error_msg = f"Failed to list S3 objects: {e}"
             _logger.error(error_msg)
             raise RuntimeError(error_msg) from e

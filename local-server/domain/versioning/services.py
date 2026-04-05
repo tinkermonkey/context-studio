@@ -397,11 +397,12 @@ class VersioningService:
         Pull remote changes from the sync target and record them locally.
 
         Fetches changes from the sync target (e.g., S3) and records each change
-        in the local repository atomically (all events or none).
+        in the local repository using best-effort semantics.
 
         If any change fails to record, all previously recorded changes are rolled back
-        to ensure all-or-nothing semantics. This prevents partial success and
-        duplicates on re-pull. Publishes SyncCompleted event with direction 'pull'
+        to prevent partial success and duplicates on re-pull. If rollback itself fails,
+        the error is logged but the method continues, returning a SyncResult with
+        errors populated. Publishes SyncCompleted event with direction 'pull'
         after completion.
 
         Returns:
