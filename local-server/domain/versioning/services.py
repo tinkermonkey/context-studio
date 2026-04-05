@@ -446,7 +446,6 @@ class VersioningService:
                 entity_resolutions = resolutions.get(conflict.entity_id, {})
                 if conflict.field_name in entity_resolutions:
                     conflict.resolved_value = entity_resolutions[conflict.field_name]
-                    conflict.is_resolved = True
 
         _logger.info(
             "Conflict detection complete (proposal_id=%s, conflicts_found=%d, resolved=%d)",
@@ -460,7 +459,7 @@ class VersioningService:
         """
         Automatically resolve all conflicts using last-write-wins strategy.
 
-        Sets is_resolved=True and resolved_value=incoming_value for all conflicts.
+        Sets resolved_value=incoming_value for all conflicts.
 
         Args:
             conflict_report: ConflictReport with unresolved conflicts
@@ -470,7 +469,6 @@ class VersioningService:
         """
         for conflict in conflict_report.conflicts:
             conflict.resolved_value = conflict.incoming_value
-            conflict.is_resolved = True
 
         _logger.info(
             "Auto-resolved conflicts (proposal_id=%s, conflicts_resolved=%d)",
@@ -808,23 +806,38 @@ class VersioningService:
         Get the current synchronization status.
 
         Returns information about unprocessed changes awaiting push and whether
-        the remote sync target is configured.
+        the remote sync target is configured. On any error, returns degraded status
+        with is_configured=False and unprocessed_count=0.
 
         Returns:
             SyncStatus with unprocessed count and configuration status
         """
-        count = self._repo.count_unprocessed()
+        try:
+            count = self._repo.count_unprocessed()
+        except Exception as e:
+            _logger.warning(
+                "Failed to count unprocessed changes in sync status: %s", str(e)
+            )
+            count = 0
+
+        try:
+            is_configured = self._sync.is_configured()
+        except Exception as e:
+            _logger.warning(
+                "Failed to check sync configuration status: %s", str(e)
+            )
+            is_configured = False
 
         status = SyncStatus(
             last_pushed_at=None,
             last_pulled_at=None,
             unprocessed_count=count,
-            is_configured=self._sync.is_configured(),
+            is_configured=is_configured,
         )
         _logger.debug(
             "Sync status: unprocessed=%d, configured=%s",
             count,
-            self._sync.is_configured(),
+            is_configured,
         )
         return status
 

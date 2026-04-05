@@ -144,7 +144,11 @@ class Conflict:
     base_value: object
     incoming_value: object
     resolved_value: object = None
-    is_resolved: bool = False
+
+    @property
+    def is_resolved(self) -> bool:
+        """True if conflict is resolved (resolved_value is set)."""
+        return self.resolved_value is not None
 
 
 @dataclass

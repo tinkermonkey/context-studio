@@ -186,7 +186,6 @@ class TestConflictReport:
             field_name="title",
             base_value="Old",
             incoming_value="New",
-            is_resolved=False,
         )
         report = ConflictReport(proposal_id="prop1", conflicts=[conflict])
         assert not report.all_resolved
@@ -199,7 +198,6 @@ class TestConflictReport:
             base_value="Old",
             incoming_value="New",
             resolved_value="Resolved",
-            is_resolved=True,
         )
         report = ConflictReport(proposal_id="prop1", conflicts=[conflict])
         assert report.all_resolved
@@ -212,14 +210,14 @@ class TestConflictReport:
                 field_name="title",
                 base_value="Old",
                 incoming_value="New",
-                is_resolved=True,
+                resolved_value="Resolved Title",
             ),
             Conflict(
                 entity_id="entity1",
                 field_name="description",
                 base_value="Old desc",
                 incoming_value="New desc",
-                is_resolved=True,
+                resolved_value="Resolved desc",
             ),
         ]
         report = ConflictReport(proposal_id="prop1", conflicts=conflicts)
@@ -233,14 +231,13 @@ class TestConflictReport:
                 field_name="title",
                 base_value="Old",
                 incoming_value="New",
-                is_resolved=True,
+                resolved_value="Resolved Title",
             ),
             Conflict(
                 entity_id="entity1",
                 field_name="description",
                 base_value="Old desc",
                 incoming_value="New desc",
-                is_resolved=False,
             ),
         ]
         report = ConflictReport(proposal_id="prop1", conflicts=conflicts)
