@@ -23,7 +23,7 @@ from typing import Optional, Sequence
 from uuid import uuid4
 
 from domain.versioning.entities import ChangeEvent
-from domain.versioning.value_objects import SyncResult, ChangeOperation
+from domain.versioning.value_objects import SyncResult, ChangeOperation, SyncStatus
 
 _logger = logging.getLogger(__name__)
 
@@ -87,8 +87,10 @@ class DuckDBSyncAdapter:
         Raises:
             RuntimeError: If file I/O or serialization fails
         """
+        started_at = datetime.now(timezone.utc)
         if not events:
-            return SyncResult(pushed=0, pulled=0, errors=(), pushed_event_ids=())
+            completed_at = datetime.now(timezone.utc)
+            return SyncResult(pushed=0, pulled=0, errors=(), pushed_event_ids=(), started_at=started_at, completed_at=completed_at)
 
         try:
             import pyarrow as pa
@@ -153,7 +155,8 @@ class DuckDBSyncAdapter:
                 len(events),
                 len(events_by_date),
             )
-            return SyncResult(pushed=len(pushed_event_ids), pulled=0, errors=(), pushed_event_ids=tuple(pushed_event_ids))
+            completed_at = datetime.now(timezone.utc)
+            return SyncResult(pushed=len(pushed_event_ids), pulled=0, errors=(), pushed_event_ids=tuple(pushed_event_ids), started_at=started_at, completed_at=completed_at)
 
         except OSError as e:
             error_msg = f"Failed to write Parquet files: {e}"
@@ -307,3 +310,42 @@ class DuckDBSyncAdapter:
                 e,
             )
             return False
+
+    def get_sync_status(self) -> SyncStatus:
+        """
+        Get the status of remote synchronization.
+
+        Returns:
+            SyncStatus with last sync timestamps, pending changes count, and remote connectivity
+
+        Raises:
+            RuntimeError: If unable to check directory status
+        """
+        try:
+            last_sync = None
+            unprocessed_count = 0
+
+            if self._changes_dir.exists() and self._changes_dir.is_dir():
+                # Get the most recent file timestamp
+                most_recent_mtime = None
+                for date_dir in self._changes_dir.iterdir():
+                    if date_dir.is_dir():
+                        for parquet_file in date_dir.glob("*.parquet"):
+                            mtime = datetime.fromtimestamp(parquet_file.stat().st_mtime, tz=timezone.utc)
+                            if most_recent_mtime is None or mtime > most_recent_mtime:
+                                most_recent_mtime = mtime
+
+                last_sync = most_recent_mtime
+
+            _logger.info("Retrieved sync status from local Parquet files")
+            return SyncStatus(
+                last_pushed_at=last_sync,
+                last_pulled_at=last_sync,
+                unprocessed_count=unprocessed_count,
+                is_configured=self.is_configured(),
+            )
+
+        except Exception as e:
+            error_msg = f"Failed to get sync status: {e}"
+            _logger.error(error_msg)
+            raise RuntimeError(error_msg) from e

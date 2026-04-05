@@ -5,7 +5,7 @@ from datetime import datetime
 from typing import Optional, Protocol, Sequence
 
 from domain.versioning.entities import ChangeEvent, Changeset, EntityVersion, Proposal
-from domain.versioning.value_objects import SyncResult, ChangeOperation, ChangeHistoryResult
+from domain.versioning.value_objects import SyncResult, ChangeOperation, ChangeHistoryResult, SyncStatus
 
 
 class ChangeRepository(Protocol):
@@ -245,4 +245,8 @@ class SyncTarget(Protocol):
 
     def is_configured(self) -> bool:
         """Check if sync is configured."""
+        ...
+
+    def get_sync_status(self) -> SyncStatus:
+        """Get the status of remote synchronization."""
         ...

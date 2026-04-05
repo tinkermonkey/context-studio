@@ -865,6 +865,7 @@ class VersioningService:
         Raises:
             SyncError: If the sync target fails to push changes
         """
+        started_at = datetime.now(timezone.utc)
         events = self._repo.get_unprocessed(limit=500)
         sent_event_ids = {change_event.id for change_event in events}
 
@@ -899,6 +900,7 @@ class VersioningService:
                     len(valid_ids),
                 )
 
+        completed_at = datetime.now(timezone.utc)
         _logger.info(
             "Push completed (pushed=%d, errors=%d)",
             result.pushed,
@@ -909,7 +911,7 @@ class VersioningService:
         event = SyncCompleted(
             direction=SyncDirection.PUSH,
             events_count=result.pushed,
-            completed_at=datetime.now(timezone.utc),
+            completed_at=completed_at,
         )
         failures = self._event_publisher.publish(event)
         _logger.debug(
@@ -927,6 +929,8 @@ class VersioningService:
             pulled=result.pulled,
             errors=result.errors,
             pushed_event_ids=processed_ids if processed_ids else None,
+            started_at=started_at,
+            completed_at=completed_at,
         )
 
     def pull_changes(self) -> SyncResult:
@@ -952,6 +956,7 @@ class VersioningService:
         Raises:
             SyncError: If the sync target fails to pull changes
         """
+        started_at = datetime.now(timezone.utc)
         try:
             events = self._sync.pull()
         except RuntimeError as e:
@@ -997,11 +1002,14 @@ class VersioningService:
                 # Stop attempting to record more events after first failure
                 break
 
+        completed_at = datetime.now(timezone.utc)
         result = SyncResult(
             pushed=0,
             pulled=len(recorded_events),
             errors=tuple(errors),
             pushed_event_ids=(),
+            started_at=started_at,
+            completed_at=completed_at,
         )
         _logger.info(
             "Pull completed (pulled=%d, errors=%d)",
@@ -1013,7 +1021,7 @@ class VersioningService:
         event = SyncCompleted(
             direction=SyncDirection.PULL,
             events_count=result.pulled,
-            completed_at=datetime.now(timezone.utc),
+            completed_at=completed_at,
         )
         failures = self._event_publisher.publish(event)
         _logger.debug(

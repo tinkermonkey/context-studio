@@ -56,6 +56,7 @@ class MergeStrategy(str, Enum):
 
     LAST_WRITE_WINS = "last_write_wins"
     BASE_VALUE_WINS = "base_value_wins"
+    MERGE_BOTH = "merge_both"
     MANUAL = "manual"
 
 
@@ -78,12 +79,16 @@ class SyncResult:
         pulled: Count of successfully pulled events
         errors: Tuple of error messages from failed operations
         pushed_event_ids: Specific IDs of events that were successfully pushed
+        started_at: Timestamp when the sync operation started
+        completed_at: Timestamp when the sync operation completed
     """
 
     pushed: int
     pulled: int
     errors: tuple[str, ...] = field(default_factory=tuple)
     pushed_event_ids: Optional[tuple[str, ...]] = None  # Specific event IDs that were successfully pushed
+    started_at: Optional[datetime] = None
+    completed_at: Optional[datetime] = None
 
 
 @dataclass(frozen=True)

@@ -19,7 +19,7 @@ from typing import Optional, Sequence
 from uuid import uuid4
 
 from domain.versioning.entities import ChangeEvent
-from domain.versioning.value_objects import SyncResult, ChangeOperation
+from domain.versioning.value_objects import SyncResult, ChangeOperation, SyncStatus
 
 _logger = logging.getLogger(__name__)
 
@@ -107,8 +107,10 @@ class S3SyncAdapter:
         Raises:
             RuntimeError: If S3 put operation fails
         """
+        started_at = datetime.now(timezone.utc)
         if not events:
-            return SyncResult(pushed=0, pulled=0, errors=(), pushed_event_ids=())
+            completed_at = datetime.now(timezone.utc)
+            return SyncResult(pushed=0, pulled=0, errors=(), pushed_event_ids=(), started_at=started_at, completed_at=completed_at)
 
         pushed_event_ids = []
         try:
@@ -153,7 +155,8 @@ class S3SyncAdapter:
                 len(events),
                 key,
             )
-            return SyncResult(pushed=len(pushed_event_ids), pulled=0, errors=(), pushed_event_ids=tuple(pushed_event_ids))
+            completed_at = datetime.now(timezone.utc)
+            return SyncResult(pushed=len(pushed_event_ids), pulled=0, errors=(), pushed_event_ids=tuple(pushed_event_ids), started_at=started_at, completed_at=completed_at)
 
         except Exception as e:
             error_msg = f"Failed to push changes to S3: {e}"
@@ -268,3 +271,45 @@ class S3SyncAdapter:
             True if S3 client is initialized, False otherwise
         """
         return self._s3_client is not None
+
+    def get_sync_status(self) -> SyncStatus:
+        """
+        Get the status of remote synchronization.
+
+        Returns:
+            SyncStatus with last sync timestamps, pending changes count, and remote connectivity
+
+        Raises:
+            RuntimeError: If unable to check S3 connectivity
+        """
+        try:
+            # Check S3 connectivity by listing objects
+            prefix = f"{self._prefix}/changes/"
+            paginator = self._s3_client.get_paginator("list_objects_v2")
+            pages = paginator.paginate(Bucket=self._bucket, Prefix=prefix, MaxKeys=1)
+
+            remote_reachable = False
+            last_sync = None
+            unprocessed_count = 0
+
+            for page in pages:
+                remote_reachable = True
+                if "Contents" in page:
+                    # Get the most recent object (last_sync)
+                    objects = page["Contents"]
+                    if objects:
+                        most_recent = max(objects, key=lambda x: x["LastModified"])
+                        last_sync = most_recent["LastModified"]
+
+            _logger.info("Retrieved sync status from S3")
+            return SyncStatus(
+                last_pushed_at=last_sync,
+                last_pulled_at=last_sync,
+                unprocessed_count=unprocessed_count,
+                is_configured=self.is_configured(),
+            )
+
+        except Exception as e:
+            error_msg = f"Failed to get sync status from S3: {e}"
+            _logger.error(error_msg)
+            raise RuntimeError(error_msg) from e

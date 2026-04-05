@@ -1536,10 +1536,20 @@ class TestSyncMethods:
                 return [remote_event]
 
             def push(self, events):
-                return SyncResult(pushed=0, pulled=0, errors=())
+                now = datetime.now(timezone.utc)
+                return SyncResult(pushed=0, pulled=0, errors=(), started_at=now, completed_at=now)
 
             def is_configured(self):
                 return True
+
+            def get_sync_status(self):
+                from domain.versioning.value_objects import SyncStatus
+                return SyncStatus(
+                    last_pushed_at=None,
+                    last_pulled_at=None,
+                    unprocessed_count=0,
+                    is_configured=True,
+                )
 
         # Create a repository that fails on record_change by extending FakeChangeRepository
         class FailingRepository(FakeChangeRepository):
@@ -1597,10 +1607,20 @@ class TestSyncMethods:
                 return [remote_event_1, remote_event_2]
 
             def push(self, events):
-                return SyncResult(pushed=0, pulled=0, errors=())
+                now = datetime.now(timezone.utc)
+                return SyncResult(pushed=0, pulled=0, errors=(), started_at=now, completed_at=now)
 
             def is_configured(self):
                 return True
+
+            def get_sync_status(self):
+                from domain.versioning.value_objects import SyncStatus
+                return SyncStatus(
+                    last_pushed_at=None,
+                    last_pulled_at=None,
+                    unprocessed_count=0,
+                    is_configured=True,
+                )
 
         # Create a repository that succeeds once, then fails on second record_change
         class PartialFailingRepository(FakeChangeRepository):

@@ -8,11 +8,11 @@ in single-workspace mode without remote synchronization.
 
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Optional, Sequence
 
 from domain.versioning.entities import ChangeEvent
-from domain.versioning.value_objects import SyncResult
+from domain.versioning.value_objects import SyncResult, SyncStatus
 
 
 class NoOpSyncTarget:
@@ -34,7 +34,8 @@ class NoOpSyncTarget:
         Returns:
             SyncResult indicating no events were pushed
         """
-        return SyncResult(pushed=0, pulled=0, errors=(), pushed_event_ids=())
+        now = datetime.now(timezone.utc)
+        return SyncResult(pushed=0, pulled=0, errors=(), pushed_event_ids=(), started_at=now, completed_at=now)
 
     def pull(self, since: Optional[datetime] = None) -> list[ChangeEvent]:
         """
@@ -56,3 +57,17 @@ class NoOpSyncTarget:
             False, as no-op sync is not a real remote target
         """
         return False
+
+    def get_sync_status(self) -> SyncStatus:
+        """
+        Get the status of remote synchronization.
+
+        Returns:
+            SyncStatus indicating no remote connectivity
+        """
+        return SyncStatus(
+            last_pushed_at=None,
+            last_pulled_at=None,
+            unprocessed_count=0,
+            is_configured=False,
+        )

@@ -57,7 +57,7 @@ class AutoResolveConflictsRequest(BaseModel):
 
     strategy: MergeStrategy = Field(
         default=MergeStrategy.LAST_WRITE_WINS,
-        description="Merge strategy to use (last_write_wins, base_value_wins, manual)",
+        description="Merge strategy to use (last_write_wins, base_value_wins, merge_both, manual)",
     )
 
 
@@ -141,6 +141,7 @@ class ConflictResponse(BaseModel):
     incoming_value: Any = Field(..., description="Value from the incoming changeset")
     is_resolved: bool = Field(..., description="Whether this conflict has been resolved")
     resolved_value: Optional[Any] = Field(default=None, description="The resolved value if conflict is resolved")
+    resolution_strategy: Optional[str] = Field(default=None, description="Strategy used for resolving this conflict")
 
 
 class ConflictReportResponse(BaseModel):
@@ -184,5 +185,7 @@ class SyncResultResponse(BaseModel):
     pushed: int = Field(..., description="Number of events pushed")
     pulled: int = Field(..., description="Number of events pulled")
     errors: list[str] = Field(default_factory=list, description="Any errors encountered")
+    started_at: Optional[datetime] = Field(default=None, description="ISO timestamp when sync operation started")
+    completed_at: Optional[datetime] = Field(default=None, description="ISO timestamp when sync operation completed")
 
     model_config = ConfigDict(from_attributes=True)

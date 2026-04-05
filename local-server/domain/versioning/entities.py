@@ -144,6 +144,7 @@ class Conflict:
     base_value: object
     incoming_value: object
     resolved_value: object = None
+    resolution_strategy: Optional[str] = None
 
     @property
     def is_resolved(self) -> bool:
