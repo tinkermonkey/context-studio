@@ -25,6 +25,7 @@ from domain.versioning.exceptions import VersionNotFoundError, ChangesetStateErr
 from domain.versioning.value_objects import ChangeState, ChangeOperation, ProposalState, SyncResult
 from tests.fakes.fake_change_repository import FakeChangeRepository
 from tests.fakes.fake_sync_target import FakeSyncTarget
+from tests.fakes.fake_event_publisher import FakeEventPublisher
 
 
 # ============================================================================
@@ -45,7 +46,13 @@ def sync_target() -> FakeSyncTarget:
 
 
 @pytest.fixture
-def service(repo: FakeChangeRepository, sync_target: FakeSyncTarget) -> VersioningService:
+def event_publisher() -> FakeEventPublisher:
+    """Create a fresh fake event publisher for each test."""
+    return FakeEventPublisher()
+
+
+@pytest.fixture
+def service(repo: FakeChangeRepository, sync_target: FakeSyncTarget, event_publisher: FakeEventPublisher) -> VersioningService:
     """Create a VersioningService with fake dependencies."""
     conflict_service = ConflictResolutionService(change_repo=repo)
     proposal_service = ProposalWorkflowService(
@@ -59,6 +66,7 @@ def service(repo: FakeChangeRepository, sync_target: FakeSyncTarget) -> Versioni
         conflict_service=conflict_service,
         proposal_service=proposal_service,
         changeset_service=changeset_service,
+        event_publisher=event_publisher,
     )
 
 
@@ -1242,7 +1250,7 @@ class TestSyncMethods:
         assert len(unprocessed_events) == 100
 
     def test_push_changes_with_sync_target_not_configured(
-        self, repo: FakeChangeRepository
+        self, repo: FakeChangeRepository, event_publisher: FakeEventPublisher
     ) -> None:
         """Test push_changes when sync target is not configured."""
         sync_target = FakeSyncTarget(configured=False)
@@ -1258,6 +1266,7 @@ class TestSyncMethods:
             conflict_service=conflict_service,
             proposal_service=proposal_service,
             changeset_service=changeset_service,
+            event_publisher=event_publisher,
         )
 
         # Record an event
@@ -1324,7 +1333,7 @@ class TestSyncMethods:
         assert any(e.entity_id == "remote_entity2" for e in history.events)
 
     def test_pull_changes_stops_on_first_error(
-        self, service: VersioningService, repo: FakeChangeRepository
+        self, service: VersioningService, repo: FakeChangeRepository, event_publisher: FakeEventPublisher
     ) -> None:
         """Test pull_changes stops on first record error and logs partial success."""
         # Create a mock sync target that returns events
@@ -1375,6 +1384,7 @@ class TestSyncMethods:
             conflict_service=conflict_service,
             proposal_service=proposal_service,
             changeset_service=changeset_service,
+            event_publisher=event_publisher,
         )
 
         result = service.pull_changes()
@@ -1385,7 +1395,7 @@ class TestSyncMethods:
         assert "Database error" in result.errors[0]
 
     def test_pull_changes_rolls_back_on_partial_failure(
-        self, service: VersioningService, repo: FakeChangeRepository
+        self, service: VersioningService, repo: FakeChangeRepository, event_publisher: FakeEventPublisher
     ) -> None:
         """Test pull_changes rolls back all recorded events when one fails mid-pull."""
         # Create remote events to be pulled
@@ -1461,6 +1471,7 @@ class TestSyncMethods:
             conflict_service=conflict_service,
             proposal_service=proposal_service,
             changeset_service=changeset_service,
+            event_publisher=event_publisher,
         )
 
         # Pull should fail after recording first event

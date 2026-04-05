@@ -64,6 +64,10 @@ class SyncCompleted(DomainEvent):
 
     def __post_init__(self) -> None:
         """Validate required fields and sync direction."""
+        # Set aggregate_id to a fixed value since sync operations are system-wide
+        if not self.aggregate_id:
+            object.__setattr__(self, "aggregate_id", "sync")
+
         super().__post_init__()
         if self.direction not in ("push", "pull"):
             raise ValueError(f"SyncCompleted event direction must be 'push' or 'pull', got '{self.direction}'")

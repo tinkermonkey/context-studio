@@ -8,7 +8,7 @@ and the proposal approval workflow.
 from __future__ import annotations
 
 import logging
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import TYPE_CHECKING, Optional
 
 from .entities import EntityVersion, Changeset, Proposal, MergeResult, ConflictReport
@@ -18,6 +18,7 @@ from .value_objects import SyncStatus, SyncResult, ChangeHistoryResult
 from .events import ChangesetMerged, SyncCompleted
 from .proposal_service import ProposalWorkflowService
 from .changeset_service import ChangesetManagementService
+from domain.ports import EventPublisher
 
 if TYPE_CHECKING:
     from .conflict_service import ConflictResolutionService
@@ -40,6 +41,7 @@ class VersioningService:
         conflict_service: ConflictResolutionService,
         proposal_service: ProposalWorkflowService,
         changeset_service: ChangesetManagementService,
+        event_publisher: EventPublisher,
     ) -> None:
         """
         Initialize the VersioningService.
@@ -50,12 +52,14 @@ class VersioningService:
             conflict_service: Service for detecting and resolving conflicts
             proposal_service: Service for proposal workflow management
             changeset_service: Service for changeset management
+            event_publisher: Publisher for domain events
         """
         self._repo = change_repo
         self._sync = sync_target
         self._conflict_service = conflict_service
         self._proposal_service = proposal_service
         self._changeset_service = changeset_service
+        self._event_publisher = event_publisher
 
     # ============================================================================
     # Change History Query Methods
@@ -276,15 +280,41 @@ class VersioningService:
         """
         Merge an approved proposal.
 
-        Delegates to ProposalWorkflowService.
+        Delegates to ProposalWorkflowService and publishes ChangesetMerged event
+        upon successful completion.
 
         Args:
             proposal_id: ID of the proposal to merge
 
         Returns:
             MergeResult with details of the merge operation
+
+        Publishes:
+            ChangesetMerged event after successful merge
         """
-        return self._proposal_service.merge_proposal(proposal_id)
+        # Fetch the proposal to get changeset_id for the event
+        proposal = self._repo.get_proposal(proposal_id)
+        if proposal is None:
+            raise VersionNotFoundError(f"Proposal {proposal_id} not found")
+        changeset_id = proposal.changeset_id
+
+        result = self._proposal_service.merge_proposal(proposal_id)
+
+        # Publish event after successful merge
+        event = ChangesetMerged(
+            changeset_id=changeset_id,
+            proposal_id=proposal_id,
+            merged_at=result.merged_at,
+            events_applied=result.events_applied,
+        )
+        self._event_publisher.publish(event)
+        _logger.debug(
+            "Published ChangesetMerged event (changeset_id=%s, proposal_id=%s)",
+            changeset_id,
+            proposal_id,
+        )
+
+        return result
 
     # ============================================================================
     # Synchronization Methods
@@ -295,13 +325,14 @@ class VersioningService:
         Push unprocessed local changes to the remote sync target.
 
         Retrieves unprocessed change events, pushes them to the sync target (e.g., S3),
-        and marks them as processed upon successful push.
+        and marks them as processed upon successful push. Publishes SyncCompleted event
+        with direction 'push' after completion.
 
         Returns:
             SyncResult with count of pushed events and any errors
 
         Publishes:
-            SyncCompleted event after completion
+            SyncCompleted event after completion with direction='push'
         """
         events = self._repo.get_unprocessed(limit=500)
         sent_event_ids = {event.id for event in events}
@@ -333,6 +364,16 @@ class VersioningService:
             result.pushed,
             len(result.errors),
         )
+
+        # Publish completion event
+        event = SyncCompleted(
+            direction="push",
+            events_count=result.pushed,
+            completed_at=datetime.now(timezone.utc),
+        )
+        self._event_publisher.publish(event)
+        _logger.debug("Published SyncCompleted event (direction=push, events_count=%d)", result.pushed)
+
         return result
 
     def pull_changes(self) -> SyncResult:
@@ -344,13 +385,14 @@ class VersioningService:
 
         If any change fails to record, all previously recorded changes are rolled back
         to ensure all-or-nothing semantics. This prevents partial success and
-        duplicates on re-pull.
+        duplicates on re-pull. Publishes SyncCompleted event with direction 'pull'
+        after completion.
 
         Returns:
             SyncResult with count of pulled events and any errors
 
         Publishes:
-            SyncCompleted event after completion
+            SyncCompleted event after completion with direction='pull'
         """
         events = self._sync.pull()
         recorded_events = []
@@ -403,6 +445,16 @@ class VersioningService:
             result.pulled,
             len(result.errors),
         )
+
+        # Publish completion event
+        event = SyncCompleted(
+            direction="pull",
+            events_count=result.pulled,
+            completed_at=datetime.now(timezone.utc),
+        )
+        self._event_publisher.publish(event)
+        _logger.debug("Published SyncCompleted event (direction=pull, events_count=%d)", result.pulled)
+
         return result
 
     def get_sync_status(self) -> SyncStatus:

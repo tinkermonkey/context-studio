@@ -248,8 +248,9 @@ async def lifespan(app: FastAPI):
             conflict_service=conflict_service,
             proposal_service=proposal_service,
             changeset_service=changeset_service,
+            event_publisher=event_publisher,
         )
-        logger.info("VersioningService created and wired with sync adapter and conflict service")
+        logger.info("VersioningService created and wired with sync adapter, conflict service, and event publisher")
 
         # --- System Administration Service ---
 
