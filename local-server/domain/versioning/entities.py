@@ -139,6 +139,7 @@ class MergeResult:
     """Result of a successful merge."""
 
     proposal_id: str
+    changeset_id: str
     merged_at: datetime
     events_applied: int
     conflicts_resolved: int

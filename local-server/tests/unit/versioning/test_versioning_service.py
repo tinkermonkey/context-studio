@@ -490,7 +490,7 @@ class TestProposalWorkflow:
             service.reject_proposal("nonexistent-id", "Test reason")
 
     def test_merge_proposal_success(
-        self, service: VersioningService
+        self, service: VersioningService, event_publisher: FakeEventPublisher
     ) -> None:
         """Test merging an approved proposal."""
         changeset = service.create_changeset(name="Test changeset")
@@ -501,9 +501,19 @@ class TestProposalWorkflow:
         result = service.merge_proposal(proposal.id)
 
         assert result.proposal_id == proposal.id
+        assert result.changeset_id == changeset.id
         assert result.merged_at is not None
         assert result.events_applied == 0
         assert result.conflicts_resolved == 0
+
+        # Verify ChangesetMerged event was published
+        from domain.versioning.events import ChangesetMerged
+        events = event_publisher.get_events_of_type(ChangesetMerged)
+        assert len(events) == 1
+        event = events[0]
+        assert event.changeset_id == changeset.id
+        assert event.proposal_id == proposal.id
+        assert event.events_applied == 0
 
     def test_merge_proposal_transitions_changeset(
         self, service: VersioningService, repo: FakeChangeRepository
@@ -1189,7 +1199,7 @@ class TestSyncMethods:
         assert len(result.errors) == 0
 
     def test_push_changes_marks_events_as_processed(
-        self, service: VersioningService, repo: FakeChangeRepository, sync_target: FakeSyncTarget
+        self, service: VersioningService, repo: FakeChangeRepository, sync_target: FakeSyncTarget, event_publisher: FakeEventPublisher
     ) -> None:
         """Test push_changes marks successfully pushed events as processed."""
         # Record some unprocessed events
@@ -1221,6 +1231,14 @@ class TestSyncMethods:
         for event in history.events:
             if event.id in [event_id_1, event_id_2]:
                 assert event.processed
+
+        # Verify SyncCompleted event was published
+        from domain.versioning.events import SyncCompleted
+        events = event_publisher.get_events_of_type(SyncCompleted)
+        assert len(events) == 1
+        event = events[0]
+        assert event.direction == "push"
+        assert event.events_count == 2
 
     def test_push_changes_respects_500_event_limit(
         self, service: VersioningService, repo: FakeChangeRepository, sync_target: FakeSyncTarget
@@ -1297,7 +1315,7 @@ class TestSyncMethods:
         assert len(repo.get_changes().events) == 0
 
     def test_pull_changes_records_events_locally(
-        self, service: VersioningService, repo: FakeChangeRepository, sync_target: FakeSyncTarget
+        self, service: VersioningService, repo: FakeChangeRepository, sync_target: FakeSyncTarget, event_publisher: FakeEventPublisher
     ) -> None:
         """Test pull_changes records remote events in local repository."""
         # Add remote events
@@ -1331,6 +1349,14 @@ class TestSyncMethods:
         assert len(history.events) == 2
         assert any(e.entity_id == "remote_entity1" for e in history.events)
         assert any(e.entity_id == "remote_entity2" for e in history.events)
+
+        # Verify SyncCompleted event was published
+        from domain.versioning.events import SyncCompleted
+        events = event_publisher.get_events_of_type(SyncCompleted)
+        assert len(events) == 1
+        event = events[0]
+        assert event.direction == "pull"
+        assert event.events_count == 2
 
     def test_pull_changes_stops_on_first_error(
         self, service: VersioningService, repo: FakeChangeRepository, event_publisher: FakeEventPublisher

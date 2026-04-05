@@ -292,27 +292,26 @@ class VersioningService:
         Publishes:
             ChangesetMerged event after successful merge
         """
-        # Fetch the proposal to get changeset_id for the event
-        proposal = self._repo.get_proposal(proposal_id)
-        if proposal is None:
-            raise VersionNotFoundError(f"Proposal {proposal_id} not found")
-        changeset_id = proposal.changeset_id
-
         result = self._proposal_service.merge_proposal(proposal_id)
 
         # Publish event after successful merge
         event = ChangesetMerged(
-            changeset_id=changeset_id,
+            changeset_id=result.changeset_id,
             proposal_id=proposal_id,
             merged_at=result.merged_at,
             events_applied=result.events_applied,
         )
-        self._event_publisher.publish(event)
+        failures = self._event_publisher.publish(event)
         _logger.debug(
             "Published ChangesetMerged event (changeset_id=%s, proposal_id=%s)",
-            changeset_id,
+            result.changeset_id,
             proposal_id,
         )
+        if failures:
+            _logger.warning(
+                "Handler failures while publishing ChangesetMerged event: %s",
+                failures,
+            )
 
         return result
 
@@ -371,8 +370,10 @@ class VersioningService:
             events_count=result.pushed,
             completed_at=datetime.now(timezone.utc),
         )
-        self._event_publisher.publish(event)
+        failures = self._event_publisher.publish(event)
         _logger.debug("Published SyncCompleted event (direction=push, events_count=%d)", result.pushed)
+        if failures:
+            _logger.warning("Handler failures while publishing SyncCompleted event: %s", failures)
 
         return result
 
@@ -452,8 +453,10 @@ class VersioningService:
             events_count=result.pulled,
             completed_at=datetime.now(timezone.utc),
         )
-        self._event_publisher.publish(event)
+        failures = self._event_publisher.publish(event)
         _logger.debug("Published SyncCompleted event (direction=pull, events_count=%d)", result.pulled)
+        if failures:
+            _logger.warning("Handler failures while publishing SyncCompleted event: %s", failures)
 
         return result
 

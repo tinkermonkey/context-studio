@@ -228,6 +228,7 @@ class ProposalWorkflowService:
 
         result = MergeResult(
             proposal_id=proposal_id,
+            changeset_id=proposal.changeset_id,
             merged_at=now,
             events_applied=len(changeset.event_ids),
             conflicts_resolved=len(report.conflicts),
