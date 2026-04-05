@@ -130,11 +130,7 @@ export class GraphService extends BaseService {
     return this.withErrorContext(() => {
       this.validateRequired(data, "SPARQL query data");
       this.validateRequired(data.query, "SPARQL query");
-      this.sanitizeString(
-        (data.query as unknown as string) || "",
-        "SPARQL query",
-        10000,
-      );
+      this.sanitizeString(data.query, "SPARQL query", 10000);
 
       return this.postResource<SPARQLResult[]>(
         `${ENDPOINTS.GRAPH}/sparql/query`,
@@ -178,11 +174,7 @@ export class GraphService extends BaseService {
     return this.withErrorContext(() => {
       this.validateRequired(params, "Search parameters");
       this.validateRequired(params.title, "Search title");
-      this.sanitizeString(
-        (params.title as unknown as string) || "",
-        "Search title",
-        1000,
-      );
+      this.sanitizeString(params.title, "Search title", 1000);
 
       return this.getResource<Array<{ [key: string]: unknown }>>(
         `${ENDPOINTS.GRAPH}/search/terms`,
@@ -198,11 +190,7 @@ export class GraphService extends BaseService {
     return this.withErrorContext(() => {
       this.validateRequired(data, "Search request data");
       this.validateRequired(data.term, "Search term");
-      this.sanitizeString(
-        (data.term as unknown as string) || "",
-        "Search term",
-        1000,
-      );
+      this.sanitizeString(data.term, "Search term", 1000);
 
       return this.postResource<SearchAnalysisResult>(
         `${ENDPOINTS.GRAPH}/search/analyze`,

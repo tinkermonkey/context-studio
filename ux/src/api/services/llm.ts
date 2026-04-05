@@ -87,7 +87,7 @@ export class LLMService extends BaseService {
           flavor_id: legacyRequest.flavor || "default",
           context_data: {
             term: this.sanitizeString(
-              (legacyRequest.term as unknown as string) || "",
+              String(legacyRequest.term || ""),
               "term",
             ),
             domain_title: legacyRequest.domain_title,

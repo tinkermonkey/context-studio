@@ -184,7 +184,7 @@ export class StructureNodeService extends BaseService {
   ): Promise<FindStructureNodeResult[]> {
     return this.withErrorContext(async () => {
       this.validateRequired(params.query, "query");
-      this.sanitizeString((params.query as unknown as string) || "", "query");
+      this.sanitizeString(params.query, "query");
 
       return this.postResource<FindStructureNodeResult[]>(
         `${ENDPOINTS.STRUCTURE_NODES}/find`,

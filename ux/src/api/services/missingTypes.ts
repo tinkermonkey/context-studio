@@ -30,22 +30,22 @@ export interface DatasetResponse {
 }
 
 export interface CreateDatasetRequest {
-  name?: string;
-  title?: string;
-  filename?: string;
+  name: string;
+  title: string;
+  filename: string;
   description?: string | null;
 }
 
 export interface AddExistingDatasetRequest {
   path?: string;
-  title?: string;
-  file_path?: string;
+  title: string;
+  file_path: string;
   name?: string | null;
 }
 
 export interface UpdateDatasetDirectoryRequest {
   path?: string;
-  datasets_directory?: string;
+  datasets_directory: string;
 }
 
 export interface ActionLogResponse {
@@ -69,7 +69,7 @@ export interface SPARQLQuery {
 
 export interface SearchRequest {
   query?: string;
-  term?: string;
+  term: string;
   limit?: number;
 }
 
@@ -120,7 +120,6 @@ export interface LlmConfigType {
   top_k?: number;
   frequency_penalty: number;
   presence_penalty: number;
-  [key: string]: unknown;
 }
 
 export interface PipelineFlavor {
@@ -151,7 +150,7 @@ export interface CreatePipelineFlavorRequest {
   llm_model: string;
   system_prompt: string;
   user_prompt: string;
-  enabled: boolean;
+  enabled?: boolean;
 }
 
 export interface UpdatePipelineFlavorRequest {
@@ -189,7 +188,7 @@ export interface PredicateOut {
 export interface PredicateCreate {
   name: string;
   type: string;
-  title?: string;
+  title: string;
   identifier?: string;
   definition: string;
 }
@@ -235,7 +234,9 @@ export interface PaginatedExternalPredicatesResponse {
 export interface NodeOut {
   id: string;
   name?: string;
-  [key: string]: unknown;
+  node_type?: string;
+  title?: string;
+  definition?: string;
 }
 
 export interface NodeLinkOut {
@@ -243,23 +244,20 @@ export interface NodeLinkOut {
   source_node_id?: string;
   target_node_id?: string;
   relationship_type?: string;
-  [key: string]: unknown;
 }
 
 // Model capabilities types
 export interface ModelCapabilitiesResponse {
-  models?: Record<string, unknown> | ModelInfo[];
+  models?: ModelInfo[];
   capabilities?: Record<string, unknown>;
   name?: string;
   provider?: string;
-  [key: string]: unknown;
 }
 
 export interface ModelInfo {
   name: string;
   provider: string;
   capabilities: Record<string, unknown>;
-  [key: string]: unknown;
 }
 
 export interface SupportedModelsResponse {
@@ -284,13 +282,11 @@ export interface SimilarPredicateResult {
   name: string;
   source: string;
   similarity_score: number;
-  [key: string]: unknown;
 }
 
 export interface SearchResultsResponse {
   results: SimilarPredicateResult[];
   total_count?: number;
-  [key: string]: unknown;
 }
 
 export interface MultiSourceSearchResponse {
@@ -301,19 +297,21 @@ export interface MultiSourceSearchResponse {
 
 export interface DBpediaSparqlRequest {
   sparql_query?: string;
-  query?: string;
+  query: string;
 }
 
 export interface WikidataSparqlRequest {
   sparql_query?: string;
-  query?: string;
+  query: string;
 }
 
 // RAG Experiment types
 export interface Annotation {
+  id?: string;
   start_char: number;
   end_char: number;
-  [key: string]: unknown;
+  structure_node_id?: string;
+  text?: string;
 }
 
 export interface TestParagraphResponse {
@@ -350,20 +348,18 @@ export interface PipelineComparisonItem {
   f1_score?: number;
   execution_time_ms?: number;
   entities_extracted?: number;
-  [key: string]: unknown;
+  executed_at?: string;
 }
 
 export interface PipelineComparisonSummary {
   total_pipelines: number;
   best_pipeline: string;
   best_f1_score: number;
-  [key: string]: unknown;
 }
 
 export interface PipelineComparisonResponse {
   runs: PipelineComparisonItem[];
   summary: PipelineComparisonSummary;
-  [key: string]: unknown;
 }
 
 // Pipeline run types
@@ -375,4 +371,85 @@ export interface PipelineResult {
   error?: string;
   startTime?: number;
   endTime?: number;
+}
+
+// RAG Extraction types
+export interface ExtractedEntity {
+  id: string;
+  label: string;
+  entity_type: string;
+  source_layer: number;
+  confidence: number;
+  uri?: string;
+  description?: string;
+  matched_class_id?: string;
+  properties: Record<string, unknown>;
+}
+
+export interface ExtractionLayerResult {
+  layer_number: number;
+  layer_name: string;
+  entities_found: number;
+  duration_ms: number;
+  success: boolean;
+  error_message?: string;
+}
+
+export interface ExtractionResult {
+  id: string;
+  text: string;
+  extracted_entities: ExtractedEntity[];
+  layers_executed: ExtractionLayerResult[];
+  total_duration_ms: number;
+  created_at: string;
+  [key: string]: unknown;
+}
+
+export interface ExtractRequest {
+  text: string;
+}
+
+export interface AnalyzeTextRequest {
+  text: string;
+}
+
+export interface EnrichFromReferencesRequest {
+  text: string;
+  extracted_entities: ExtractedEntity[];
+}
+
+export interface ProcessingMetrics {
+  layer_number: number;
+  layer_name: string;
+  duration_ms: number;
+  entities_found: number;
+}
+
+export interface MetricsResponse {
+  request_id: string;
+  metrics: ProcessingMetrics[];
+  total_duration_ms: number;
+}
+
+export interface TraceEntry {
+  timestamp: string;
+  layer: string;
+  message: string;
+  details?: Record<string, unknown>;
+}
+
+export interface TraceResponse {
+  request_id: string;
+  entries: TraceEntry[];
+}
+
+export interface LayerTraceResponse {
+  request_id: string;
+  layer: string;
+  entries: TraceEntry[];
+}
+
+export interface DeleteTraceResponse {
+  deleted_count: number;
+  message: string;
 }

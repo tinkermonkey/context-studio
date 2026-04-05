@@ -38,14 +38,8 @@ export class LLMTraceabilityService extends BaseService {
 
     const sanitizedRequest = {
       ...request,
-      execution_id: this.sanitizeString(
-        (request.execution_id as unknown as string) || "",
-        "execution_id",
-      ),
-      record_id: this.sanitizeString(
-        (request.record_id as unknown as string) || "",
-        "record_id",
-      ),
+      execution_id: this.sanitizeString(request.execution_id, "execution_id"),
+      record_id: this.sanitizeString(request.record_id, "record_id"),
       suggestion_field: this.sanitizeString(
         request.suggestion_field,
         "suggestion_field",
@@ -80,7 +74,7 @@ export class LLMTraceabilityService extends BaseService {
           ...filters,
           pipeline_type: filters.pipeline_type
             ? this.sanitizeString(
-                (filters.pipeline_type as unknown as string) || "",
+                String(filters.pipeline_type),
                 "pipeline_type",
               )
             : undefined,
@@ -90,13 +84,13 @@ export class LLMTraceabilityService extends BaseService {
               : undefined,
           start_date: filters.start_date
             ? this.sanitizeString(
-                (filters.start_date as unknown as string) || "",
+                String(filters.start_date),
                 "start_date",
               )
             : undefined,
           end_date: filters.end_date
             ? this.sanitizeString(
-                (filters.end_date as unknown as string) || "",
+                String(filters.end_date),
                 "end_date",
               )
             : undefined,
@@ -154,26 +148,26 @@ export class LLMTraceabilityService extends BaseService {
       ...filters,
       execution_id: filters.execution_id
         ? this.sanitizeString(
-            (filters.execution_id as unknown as string) || "",
+            String(filters.execution_id),
             "execution_id",
           )
         : undefined,
       pipeline_type: filters.pipeline_type
         ? this.sanitizeString(
-            (filters.pipeline_type as unknown as string) || "",
+            String(filters.pipeline_type),
             "pipeline_type",
           )
         : undefined,
       status: filters.status,
       start_date: filters.start_date
         ? this.sanitizeString(
-            (filters.start_date as unknown as string) || "",
+            String(filters.start_date),
             "start_date",
           )
         : undefined,
       end_date: filters.end_date
         ? this.sanitizeString(
-            (filters.end_date as unknown as string) || "",
+            String(filters.end_date),
             "end_date",
           )
         : undefined,
@@ -184,7 +178,7 @@ export class LLMTraceabilityService extends BaseService {
       offset:
         filters.offset && filters.offset >= 0 ? filters.offset : undefined,
       flavor_id: this.sanitizeString(
-        (filters.flavor_id as unknown as string) || "",
+        String(filters.flavor_id),
         "flavor_id",
       ),
     };
@@ -271,7 +265,7 @@ export class LLMTraceabilityService extends BaseService {
     this.validateRequired(filters.flavor_id, "flavor_id");
     const sanitizedFilters = {
       flavor_id: this.sanitizeString(
-        (filters.flavor_id as unknown as string) || "",
+        String(filters.flavor_id),
         "flavor_id",
       ),
       limit:

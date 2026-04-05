@@ -86,11 +86,7 @@ export class NLPReferenceService extends BaseService {
     return this.withErrorContext(() => {
       this.validateRequired(params, "DBpedia parameters");
       this.validateRequired(params.resource_url, "Resource URL");
-      this.sanitizeString(
-        (params.resource_url as unknown as string) || "",
-        "Resource URL",
-        2000,
-      );
+      this.sanitizeString(params.resource_url, "Resource URL", 2000);
 
       return this.getResource<MultiSourceSearchResponse>(
         `${ENDPOINTS.NLP_REFERENCE}/dbpedia/resource`,
@@ -108,11 +104,7 @@ export class NLPReferenceService extends BaseService {
     return this.withErrorContext(() => {
       this.validateRequired(params, "DBpedia search parameters");
       this.validateRequired(params.query, "Search query");
-      this.sanitizeString(
-        (params.query as unknown as string) || "",
-        "Search query",
-        1000,
-      );
+      this.sanitizeString(params.query, "Search query", 1000);
 
       return this.getResource<MultiSourceSearchResponse>(
         `${ENDPOINTS.NLP_REFERENCE}/dbpedia/search`,
@@ -130,11 +122,7 @@ export class NLPReferenceService extends BaseService {
     return this.withErrorContext(() => {
       this.validateRequired(data, "SPARQL request data");
       this.validateRequired(data.query, "SPARQL query");
-      this.sanitizeString(
-        (data.query as unknown as string) || "",
-        "SPARQL query",
-        10000,
-      );
+      this.sanitizeString(data.query, "SPARQL query", 10000);
 
       return this.postResource<MultiSourceSearchResponse>(
         `${ENDPOINTS.NLP_REFERENCE}/dbpedia/sparql`,
@@ -204,11 +192,7 @@ export class NLPReferenceService extends BaseService {
     return this.withErrorContext(() => {
       this.validateRequired(data, "Wikidata SPARQL request data");
       this.validateRequired(data.query, "SPARQL query");
-      this.sanitizeString(
-        (data.query as unknown as string) || "",
-        "SPARQL query",
-        10000,
-      );
+      this.sanitizeString(data.query, "SPARQL query", 10000);
 
       return this.postResource<MultiSourceSearchResponse>(
         `${ENDPOINTS.NLP_REFERENCE}/wikidata/sparql`,
@@ -226,11 +210,7 @@ export class NLPReferenceService extends BaseService {
     return this.withErrorContext(() => {
       this.validateRequired(params, "Wikidata entity parameters");
       this.validateRequired(params.entity_url, "Entity URL");
-      this.sanitizeString(
-        (params.entity_url as unknown as string) || "",
-        "Entity URL",
-        2000,
-      );
+      this.sanitizeString(params.entity_url, "Entity URL", 2000);
 
       return this.getResource<MultiSourceSearchResponse>(
         `${ENDPOINTS.NLP_REFERENCE}/wikidata/entity`,
@@ -285,11 +265,7 @@ export class NLPReferenceService extends BaseService {
     return this.withErrorContext(() => {
       this.validateRequired(params, "Schema.org search parameters");
       this.validateRequired(params.query, "Search query");
-      this.sanitizeString(
-        (params.query as unknown as string) || "",
-        "Search query",
-        1000,
-      );
+      this.sanitizeString(params.query, "Search query", 1000);
 
       return this.getResource<MultiSourceSearchResponse>(
         `${ENDPOINTS.NLP_REFERENCE}/schema-org/search`,

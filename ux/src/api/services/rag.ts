@@ -6,21 +6,21 @@
 
 import { BaseService } from "./base";
 import { ENDPOINTS } from "../config";
-
-// Type definitions - using generic types for RAG operations
-// RAG endpoints are not yet in the OpenAPI spec
-export type RAGExtractionRequest = Record<string, unknown>;
-export type RAGExtractionResponse = Record<string, unknown>;
-export type ExtractedEntity = Record<string, unknown>;
-export type ProcessingMetrics = Record<string, unknown>;
-export type LayerMetrics = Record<string, unknown>;
+import {
+  ExtractRequest,
+  ExtractionResult,
+  MetricsResponse,
+  TraceResponse,
+  LayerTraceResponse,
+  DeleteTraceResponse as DeleteTraceResponseType,
+} from "./missingTypes";
 
 // Response types for RAG operations
-type ExtractEntitiesResponse = Record<string, unknown>;
-type GetMetricsResponse = Record<string, unknown>;
-type GetTraceResponse = Record<string, unknown>;
-type GetTraceByLayerResponse = Record<string, unknown>;
-type DeleteTraceResponse = Record<string, unknown>;
+type ExtractEntitiesResponse = ExtractionResult;
+type GetMetricsResponse = MetricsResponse;
+type GetTraceResponse = TraceResponse;
+type GetTraceByLayerResponse = LayerTraceResponse;
+type DeleteTraceResponse = DeleteTraceResponseType;
 type UpdateConfigResponse = Record<string, unknown>;
 
 export interface RAGConfigUpdate {
@@ -48,13 +48,12 @@ export class RAGService extends BaseService {
     const sanitizedText = this.sanitizeString(text, "text");
 
     return this.withErrorContext(async () => {
+      const request: ExtractRequest = {
+        text: sanitizedText,
+      };
       const response = await this.postResource<ExtractEntitiesResponse>(
         ENDPOINTS.RAG.EXTRACT,
-        {
-          text: sanitizedText,
-          enable_trace: enableTrace,
-          enable_llm_layer: enableLlmLayer,
-        } as RAGExtractionRequest,
+        request,
       );
       return response;
     }, "extracting entities");

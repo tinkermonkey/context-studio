@@ -28,11 +28,7 @@ export class UnifiedReferenceService extends BaseService {
     return this.withErrorContext(async () => {
       this.validateRequired(request, "Search request");
       this.validateRequired(request.query, "Search query");
-      this.sanitizeString(
-        (request.query as unknown as string) || "",
-        "Search query",
-        1000,
-      );
+      this.sanitizeString(request.query, "Search query", 1000);
 
       if (request.query.trim().length < 2) {
         throw new UnifiedReferenceError(
@@ -137,11 +133,7 @@ export class UnifiedReferenceService extends BaseService {
     return this.withErrorContext(async () => {
       this.validateRequired(request, "Search request");
       this.validateRequired(request.query, "Search query");
-      this.sanitizeString(
-        (request.query as unknown as string) || "",
-        "Search query",
-        1000,
-      );
+      this.sanitizeString(request.query, "Search query", 1000);
 
       if (request.query.trim().length < 2) {
         throw new UnifiedReferenceError(

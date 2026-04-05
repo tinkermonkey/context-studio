@@ -74,11 +74,7 @@ export class SchemaService extends BaseService {
     return this.withErrorContext(() => {
       this.validateRequired(params, "Migration parameters");
       this.validateRequired(params.description, "Migration description");
-      this.sanitizeString(
-        (params.description as unknown as string) || "",
-        "Migration description",
-        255,
-      );
+      this.sanitizeString(params.description, "Migration description", 255);
 
       return this.postResource<unknown>(
         `${ENDPOINTS.SCHEMA}/generate-migration`,
