@@ -1294,7 +1294,11 @@ class OntologyService:
 
         self._repository.delete_property_definition(property_id)
 
-        failures = self._event_publisher.publish(PropertyDefinitionDeleted(property_id=property_id))
+        failures = self._event_publisher.publish(PropertyDefinitionDeleted(
+            property_id=property_id,
+            identifier=prop_def.identifier,
+            title=prop_def.title,
+        ))
         if failures:
             handler_names = ", ".join(name for name, _ in failures)
             _logger.warning(

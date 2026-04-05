@@ -304,7 +304,7 @@ class ChangeEventRecorder:
                 "title": event.title,
                 "description": event.description,
             },
-            change_reason="Property definition updated",
+            change_reason="Property definition updated: title, description",
         )
 
     def on_concept_scheme_updated(self, event: ConceptSchemeUpdated) -> None:
@@ -316,7 +316,7 @@ class ChangeEventRecorder:
             new_state={
                 "title": event.title,
             },
-            change_reason="Concept scheme updated",
+            change_reason="Concept scheme updated: title",
         )
 
     # --- DELETE Pattern Handlers ---
@@ -378,6 +378,10 @@ class ChangeEventRecorder:
             entity_id=event.property_id,
             entity_type="property_definition",
             operation=ChangeOperation.DELETE,
-            previous_state={"property_id": event.property_id},
+            previous_state={
+                "property_id": event.property_id,
+                "identifier": event.identifier,
+                "title": event.title,
+            },
             change_reason="Property definition deleted",
         )
