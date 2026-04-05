@@ -168,6 +168,16 @@ class TestSyncCompleted:
                 completed_at=now,
             )
 
+    def test_sync_completed_rejects_invalid_direction_string(self):
+        """SyncCompleted raises ValueError if direction is an invalid string value."""
+        now = datetime.now(timezone.utc)
+        with pytest.raises(ValueError, match="requires direction to be a valid SyncDirection"):
+            SyncCompleted(
+                direction="invalid",  # type: ignore
+                events_count=5,
+                completed_at=now,
+            )
+
     def test_sync_completed_rejects_none_completed_at(self):
         """SyncCompleted raises ValueError if completed_at is None."""
         with pytest.raises(ValueError, match="SyncCompleted event requires completed_at timestamp"):

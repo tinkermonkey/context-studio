@@ -84,7 +84,7 @@ class FakeChangeRepository:
 
         total_count = len(events)
         events.sort(key=lambda e: e.timestamp, reverse=True)
-        return ChangeHistoryResult(events=events[:limit], total=total_count)
+        return ChangeHistoryResult(events=tuple(events[:limit]), total=total_count)
 
     def get_changes_by_ids(self, event_ids: list[str]) -> list[ChangeEvent]:
         """Retrieve change events by their IDs."""

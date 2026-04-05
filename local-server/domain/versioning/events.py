@@ -70,7 +70,7 @@ class SyncCompleted(DomainEvent):
             object.__setattr__(self, "aggregate_id", "sync")
 
         super().__post_init__()
-        if self.direction is None:
-            raise ValueError("SyncCompleted event requires direction")
+        if not isinstance(self.direction, SyncDirection):
+            raise ValueError("SyncCompleted event requires direction to be a valid SyncDirection")
         if self.completed_at is None:
             raise ValueError("SyncCompleted event requires completed_at timestamp")
