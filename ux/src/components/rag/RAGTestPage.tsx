@@ -100,11 +100,8 @@ export default function RAGTestPage() {
   } = useExtractEntities({
     onSuccess: (data) => {
       setResult(data);
-      // Set request ID to trigger trace fetch if trace is available
-      const typedData = data as Record<string, unknown>;
-      if (typedData.trace_available && typedData.request_id) {
-        setRequestId(typedData.request_id as string);
-      }
+      // Set request ID to trigger trace fetch
+      setRequestId(data.id);
     },
     onError: (err) => {
       console.error("RAG extraction failed:", err);

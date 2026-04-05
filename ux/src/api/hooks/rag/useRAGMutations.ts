@@ -9,6 +9,7 @@ import { ragService, type RAGConfigUpdate } from "@/api/services/rag";
 import type {
   ExtractionResult,
   DeleteTraceResponse,
+  UpdateConfigResponse,
 } from "@/api/services/missingTypes";
 
 export interface ExtractEntitiesParams {
@@ -42,7 +43,7 @@ export const useExtractEntities = (
  * Hook to update RAG pipeline configuration
  */
 export const useUpdateRAGConfig = (
-  options?: UseMutationOptions<Record<string, unknown>, Error, RAGConfigUpdate>,
+  options?: UseMutationOptions<UpdateConfigResponse, Error, RAGConfigUpdate>,
 ) => {
   return useMutation({
     mutationFn: (config: RAGConfigUpdate) => ragService.updateConfig(config),

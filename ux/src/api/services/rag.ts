@@ -12,16 +12,9 @@ import {
   MetricsResponse,
   TraceResponse,
   LayerTraceResponse,
-  DeleteTraceResponse as DeleteTraceResponseType,
+  DeleteTraceResponse,
+  UpdateConfigResponse,
 } from "./missingTypes";
-
-// Response types for RAG operations
-type ExtractEntitiesResponse = ExtractionResult;
-type GetMetricsResponse = MetricsResponse;
-type GetTraceResponse = TraceResponse;
-type GetTraceByLayerResponse = LayerTraceResponse;
-type DeleteTraceResponse = DeleteTraceResponseType;
-type UpdateConfigResponse = Record<string, unknown>;
 
 export interface RAGConfigUpdate {
   timeout_layer_0?: number;
@@ -44,14 +37,16 @@ export class RAGService extends BaseService {
     text: string,
     enableTrace: boolean = false,
     enableLlmLayer?: boolean,
-  ): Promise<ExtractEntitiesResponse> {
+  ): Promise<ExtractionResult> {
     const sanitizedText = this.sanitizeString(text, "text");
 
     return this.withErrorContext(async () => {
       const request: ExtractRequest = {
         text: sanitizedText,
+        enable_trace: enableTrace,
+        ...(enableLlmLayer !== undefined && { enable_llm_layer: enableLlmLayer }),
       };
-      const response = await this.postResource<ExtractEntitiesResponse>(
+      const response = await this.postResource<ExtractionResult>(
         ENDPOINTS.RAG.EXTRACT,
         request,
       );
@@ -64,11 +59,11 @@ export class RAGService extends BaseService {
    * @param requestId Unique identifier for the extraction request
    * @returns Processing metrics for all pipeline layers
    */
-  async getMetrics(requestId: string): Promise<GetMetricsResponse> {
+  async getMetrics(requestId: string): Promise<MetricsResponse> {
     this.validateRequired(requestId, "requestId");
 
     return this.withErrorContext(async () => {
-      const response = await this.getResource<GetMetricsResponse>(
+      const response = await this.getResource<MetricsResponse>(
         ENDPOINTS.RAG.METRICS(requestId),
       );
       return response;
@@ -80,11 +75,11 @@ export class RAGService extends BaseService {
    * @param requestId Unique identifier for the extraction request
    * @returns List of trace entries ordered by sentence index and timestamp
    */
-  async getTrace(requestId: string): Promise<GetTraceResponse> {
+  async getTrace(requestId: string): Promise<TraceResponse> {
     this.validateRequired(requestId, "requestId");
 
     return this.withErrorContext(async () => {
-      const response = await this.getResource<GetTraceResponse>(
+      const response = await this.getResource<TraceResponse>(
         ENDPOINTS.RAG.TRACE(requestId),
       );
       return response;
@@ -100,12 +95,12 @@ export class RAGService extends BaseService {
   async getTraceByLayer(
     requestId: string,
     layerName: string,
-  ): Promise<GetTraceByLayerResponse> {
+  ): Promise<LayerTraceResponse> {
     this.validateRequired(requestId, "requestId");
     this.validateRequired(layerName, "layerName");
 
     return this.withErrorContext(async () => {
-      const response = await this.getResource<GetTraceByLayerResponse>(
+      const response = await this.getResource<LayerTraceResponse>(
         ENDPOINTS.RAG.TRACE_BY_LAYER(requestId, layerName),
       );
       return response;
@@ -125,7 +120,7 @@ export class RAGService extends BaseService {
         ENDPOINTS.RAG.TRACE(requestId),
       );
       return response;
-    }, "deleting trace");
+    }, "deleting trace data");
   }
 
   /**

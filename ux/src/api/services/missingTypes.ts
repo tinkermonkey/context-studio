@@ -402,11 +402,12 @@ export interface ExtractionResult {
   layers_executed: ExtractionLayerResult[];
   total_duration_ms: number;
   created_at: string;
-  [key: string]: unknown;
 }
 
 export interface ExtractRequest {
   text: string;
+  enable_trace?: boolean;
+  enable_llm_layer?: boolean;
 }
 
 export interface AnalyzeTextRequest {
@@ -416,6 +417,15 @@ export interface AnalyzeTextRequest {
 export interface EnrichFromReferencesRequest {
   text: string;
   extracted_entities: ExtractedEntity[];
+}
+
+export interface UpdateConfigResponse {
+  timeout_layer_0?: number;
+  timeout_layer_1?: number;
+  timeout_layer_2?: number;
+  timeout_layer_3?: number;
+  dedup_similarity_threshold?: number;
+  kg_top_k?: number;
 }
 
 export interface ProcessingMetrics {
