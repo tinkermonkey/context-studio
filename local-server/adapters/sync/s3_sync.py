@@ -6,7 +6,7 @@ changes with remote S3 locations. Changes are serialized as JSON Lines and store
 with a key pattern: {prefix}/changes/{date}/{uuid}.jsonl
 
 This adapter uses fail-fast error handling: S3 configuration errors and network
-failures are propagated to the caller as RuntimeError, never suppressed.
+failures are propagated to the caller as SyncError, never suppressed.
 """
 
 from __future__ import annotations
@@ -18,7 +18,8 @@ from typing import Optional, Sequence
 from uuid import uuid4
 
 from domain.versioning.entities import ChangeEvent
-from domain.versioning.value_objects import SyncResult
+from domain.versioning.value_objects import SyncResult, ChangeOperation
+from domain.versioning.exceptions import SyncError
 
 _logger = logging.getLogger(__name__)
 
@@ -28,7 +29,7 @@ class _S3FileParseError(RuntimeError):
     Internal exception used to distinguish file parsing errors from S3 listing errors.
 
     This exception is raised when a downloaded S3 object fails to parse as JSON Lines,
-    and is caught by the outer exception handler to be re-raised as RuntimeError.
+    and is caught by the outer exception handler to be re-raised as SyncError.
     """
     pass
 
@@ -41,7 +42,7 @@ class S3SyncAdapter:
     with a predictable key structure that enables date-based filtering.
 
     This adapter uses fail-fast error handling: S3 configuration errors and access
-    failures are propagated to the caller as RuntimeError. The caller (app.py) handles
+    failures are propagated to the caller as SyncError. The caller (app.py) handles
     initialization failures by falling back to NoOpSyncTarget.
     """
 
@@ -103,7 +104,7 @@ class S3SyncAdapter:
             SyncResult with count of pushed events and their IDs
 
         Raises:
-            RuntimeError: If S3 put operation fails
+            SyncError: If S3 put operation fails
         """
         if not events:
             return SyncResult(pushed=0, pulled=0, errors=(), pushed_event_ids=())
@@ -119,7 +120,7 @@ class S3SyncAdapter:
                         "id": event.id,
                         "entity_id": event.entity_id,
                         "entity_type": event.entity_type,
-                        "operation": event.operation,
+                        "operation": event.operation.value,
                         "timestamp": event.timestamp.isoformat(),
                         "processed": event.processed,
                         "user_id": event.user_id,
@@ -156,7 +157,7 @@ class S3SyncAdapter:
         except Exception as e:
             error_msg = f"Failed to push changes to S3: {e}"
             _logger.error(error_msg)
-            raise RuntimeError(error_msg) from e
+            raise SyncError(error_msg) from e
 
     def pull(self, since: Optional[datetime] = None) -> list[ChangeEvent]:
         """
@@ -173,7 +174,7 @@ class S3SyncAdapter:
             List of deduplicated ChangeEvent objects from S3
 
         Raises:
-            RuntimeError: If S3 listing fails, file download fails, or JSON parsing fails
+            SyncError: If S3 listing fails, file download fails, or JSON parsing fails
         """
         events: list[ChangeEvent] = []
         seen_ids: set[str] = set()
@@ -231,7 +232,7 @@ class S3SyncAdapter:
                                 id=event_id,
                                 entity_id=data["entity_id"],
                                 entity_type=data["entity_type"],
-                                operation=data["operation"],
+                                operation=ChangeOperation(data["operation"]),
                                 timestamp=datetime.fromisoformat(data["timestamp"]),
                                 processed=data.get("processed", False),
                                 user_id=data.get("user_id"),
@@ -251,10 +252,10 @@ class S3SyncAdapter:
         except Exception as e:
             if isinstance(e, _S3FileParseError):
                 # File parsing error already wrapped and logged
-                raise RuntimeError(str(e)) from e.__cause__
+                raise SyncError(str(e)) from e.__cause__
             error_msg = f"Failed to list S3 objects: {e}"
             _logger.error(error_msg)
-            raise RuntimeError(error_msg) from e
+            raise SyncError(error_msg) from e
 
     def is_configured(self) -> bool:
         """

@@ -28,6 +28,7 @@ from .exceptions import (
     VersionNotFoundError,
     ChangesetStateError,
     ConflictResolutionError,
+    SyncError,
 )
 from .ports import ChangeRepository, SyncTarget
 from .value_objects import SyncStatus, SyncResult, ChangeHistoryResult, SyncDirection, ChangeState, ProposalState
@@ -624,10 +625,18 @@ class VersioningService:
 
         Publishes:
             SyncCompleted event after completion with direction='push'
+
+        Raises:
+            SyncError: If the sync target fails to push changes
         """
         events = self._repo.get_unprocessed(limit=500)
         sent_event_ids = {change_event.id for change_event in events}
-        result = self._sync.push(events)
+
+        try:
+            result = self._sync.push(events)
+        except RuntimeError as e:
+            # Wrap any RuntimeError from sync adapter into SyncError
+            raise SyncError(f"Failed to push changes: {e}") from e
 
         # Track validated IDs that were actually marked as processed
         processed_ids: tuple[str, ...] = ()
@@ -703,8 +712,15 @@ class VersioningService:
 
         Publishes:
             SyncCompleted event after completion with direction='pull'
+
+        Raises:
+            SyncError: If the sync target fails to pull changes
         """
-        events = self._sync.pull()
+        try:
+            events = self._sync.pull()
+        except RuntimeError as e:
+            # Wrap any RuntimeError from sync adapter into SyncError
+            raise SyncError(f"Failed to pull changes: {e}") from e
         recorded_events = []
         errors = []
 

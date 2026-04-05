@@ -25,6 +25,7 @@ from domain.versioning.exceptions import (
     ChangesetStateError,
     ConflictResolutionError,
     ProposalStateError,
+    SyncError,
 )
 from utils.logger import get_logger
 from utils.async_executor import run_sync_in_executor
@@ -72,6 +73,9 @@ def _handle_domain_error(exc: Exception) -> tuple[int, str]:
         return (status.HTTP_409_CONFLICT, str(exc))
     elif isinstance(exc, ConflictResolutionError):
         return (status.HTTP_409_CONFLICT, str(exc))
+    elif isinstance(exc, SyncError):
+        _logger.error(f"Sync operation failed: {exc}", exc_info=exc)
+        return (status.HTTP_500_INTERNAL_SERVER_ERROR, str(exc))
     else:
         _logger.error(f"Unexpected error in versioning endpoint: {exc}", exc_info=exc)
         return (status.HTTP_500_INTERNAL_SERVER_ERROR, "An unexpected error occurred")
