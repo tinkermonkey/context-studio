@@ -3318,7 +3318,7 @@
         "properties": {
           "strategy": {
             "$ref": "#/components/schemas/MergeStrategy",
-            "description": "Merge strategy to use (last_write_wins, base_value_wins, merge_both, manual)",
+            "description": "Merge strategy to use (last_write_wins, base_value_wins, manual)",
             "default": "last_write_wins"
           }
         },
@@ -4135,13 +4135,12 @@
           "resolution_strategy": {
             "anyOf": [
               {
-                "type": "string"
+                "$ref": "#/components/schemas/MergeStrategy"
               },
               {
                 "type": "null"
               }
             ],
-            "title": "Resolution Strategy",
             "description": "Strategy used for resolving this conflict"
           }
         },
@@ -4904,7 +4903,6 @@
         "enum": [
           "last_write_wins",
           "base_value_wins",
-          "merge_both",
           "manual"
         ],
         "title": "MergeStrategy",

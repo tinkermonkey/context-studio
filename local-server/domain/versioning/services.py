@@ -503,6 +503,8 @@ class VersioningService:
                 conflict.resolved_value = conflict.incoming_value
             elif strategy == MergeStrategy.BASE_VALUE_WINS:
                 conflict.resolved_value = conflict.base_value
+            else:
+                raise ValueError(f"Unrecognized merge strategy: {strategy}")
 
             # Populate the resolution_strategy field to mark conflict as resolved
             conflict.resolution_strategy = strategy
