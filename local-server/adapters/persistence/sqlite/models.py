@@ -570,7 +570,10 @@ class ChangesetEvent(Base):  # type: ignore[misc,valid-type]
         nullable=False,
     )
 
-    __table_args__ = ()
+    __table_args__ = (
+        Index("ix_changeset_events_changeset_id", "changeset_id"),
+        Index("ix_changeset_events_change_event_id", "change_event_id"),
+    )
 
     def __repr__(self) -> str:
         return f"<ChangesetEvent(changeset_id={self.changeset_id}, change_event_id={self.change_event_id})>"
