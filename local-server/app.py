@@ -13,9 +13,10 @@ Architecture:
 """
 
 from contextlib import asynccontextmanager
+from datetime import datetime, timezone
 
 import uvicorn
-from fastapi import FastAPI, Request
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from config import get_config_manager, get_settings
@@ -46,9 +47,16 @@ from domain.graph.services import GraphAnalysisService
 from domain.extraction.services import ExtractionService
 from domain.extraction.ports import ReferenceSource
 from domain.pipeline.services import PipelineService
+from domain.versioning.services import VersioningService
 from domain.ontology.events import GraphInvalidated
 from domain.extraction.events import ExtractionCompleted
 from domain.pipeline.events import PipelineExecuted
+from domain.versioning.events import ChangesetMerged, SyncCompleted
+from domain.versioning.ports import SyncTarget
+
+# Import sync adapters
+from adapters.sync.s3_sync import S3SyncAdapter
+from adapters.sync.noop_sync import NoOpSyncTarget
 
 # Import routes
 from adapters.web.ontology_routes import router as ontology_router
@@ -56,7 +64,13 @@ from adapters.web.graph_routes import router as graph_router
 from adapters.web.extraction_routes import router as extraction_router
 from adapters.web.pipeline_routes import router as pipeline_router
 from adapters.web.reference_routes import router as reference_router
-from adapters.web.schemas.admin import SystemHealthResponse
+from adapters.web.versioning_routes import router as versioning_router
+from adapters.web.admin_routes import router as admin_router
+
+# Import admin adapters and services
+from adapters.config.json_store import JSONFileConfigStore
+from adapters.metrics.system_collector import SystemMetricsCollector
+from domain.admin.services import AdminService
 
 logger = get_logger(__name__)
 
@@ -85,6 +99,9 @@ async def lifespan(app: FastAPI):
     - Clean up resources
     """
     logger.info("Starting Context Studio server")
+
+    # Capture application start time for uptime calculation
+    app_start_time = datetime.now(timezone.utc)
 
     # Get configuration from global singleton
     config_manager = get_config_manager()
@@ -190,6 +207,53 @@ async def lifespan(app: FastAPI):
         )
         logger.info("PipelineService created and wired with adapters")
 
+        # Versioning service with sync adapter
+        sync_config = settings.sync if hasattr(settings, "sync") else None
+        sync_target: SyncTarget
+        if sync_config and sync_config.s3_bucket:
+            try:
+                sync_target = S3SyncAdapter(
+                    bucket=sync_config.s3_bucket,
+                    prefix=sync_config.s3_prefix or "context-studio",
+                    aws_access_key=sync_config.s3_access_key or "",
+                    aws_secret_key=sync_config.s3_secret_key or "",
+                    region=sync_config.s3_region or "us-east-1",
+                )
+                logger.info("S3SyncAdapter initialized for remote sync")
+            except Exception as e:
+                logger.warning(f"Failed to initialize S3SyncAdapter, falling back to no-op: {e}")
+                sync_target = NoOpSyncTarget()
+        else:
+            sync_target = NoOpSyncTarget()
+            logger.info("S3 not configured, using no-op sync target")
+
+        versioning_service = VersioningService(
+            change_repo=change_repo,
+            sync_target=sync_target,
+            event_publisher=event_publisher,
+        )
+        logger.info("VersioningService created and wired with repository, sync adapter, and event publisher")
+
+        # --- System Administration Service ---
+
+        config_store = JSONFileConfigStore(config_manager)
+        logger.info("JSONFileConfigStore created")
+
+        metrics_collector = SystemMetricsCollector(
+            llm_router=llm_router,
+            nlp_processor=nlp_processor,
+            embedding_service=embedding_service,
+            start_time=app_start_time,
+            db_engine=db_manager.get_local_engine(),
+        )
+        logger.info("SystemMetricsCollector created")
+
+        admin_service = AdminService(
+            metrics_collector=metrics_collector,
+            config_store=config_store,
+        )
+        logger.info("AdminService created and wired with metrics and config store")
+
         # --- Wire event subscriptions ---
 
         event_publisher.subscribe(GraphInvalidated, graph_service.on_graph_invalidated)
@@ -201,12 +265,20 @@ async def lifespan(app: FastAPI):
         event_publisher.subscribe(PipelineExecuted, change_recorder.on_pipeline_executed)
         logger.info("Event subscription: PipelineExecuted -> ChangeEventRecorder.on_pipeline_executed")
 
+        event_publisher.subscribe(ChangesetMerged, versioning_service.on_changeset_merged)
+        logger.info("Event subscription: ChangesetMerged -> VersioningService.on_changeset_merged")
+
+        event_publisher.subscribe(SyncCompleted, versioning_service.on_sync_completed)
+        logger.info("Event subscription: SyncCompleted -> VersioningService.on_sync_completed")
+
         # --- Store services in app.state for dependency injection ---
 
         app.state.ontology_service = ontology_service
         app.state.graph_service = graph_service
         app.state.extraction_service = extraction_service
         app.state.pipeline_service = pipeline_service
+        app.state.versioning_service = versioning_service
+        app.state.admin_service = admin_service
         app.state.db_manager = db_manager
         app.state.reference_sources = reference_sources
 
@@ -221,9 +293,18 @@ async def lifespan(app: FastAPI):
         logger.info("Shutting down Context Studio server")
 
     finally:
-        # Cleanup
-        db_manager.dispose()
-        embedding_service.cleanup()
+        # Cleanup resources independently to ensure all cleanup operations complete
+        # even if one raises an exception
+        try:
+            db_manager.dispose()
+        except Exception as e:
+            logger.error(f"Error disposing database manager: {e}")
+
+        try:
+            embedding_service.cleanup()
+        except Exception as e:
+            logger.error(f"Error cleaning up embedding service: {e}")
+
         logger.info("Cleanup completed")
 
 
@@ -247,45 +328,8 @@ app.include_router(graph_router)
 app.include_router(extraction_router)
 app.include_router(pipeline_router)
 app.include_router(reference_router)
-
-
-@app.get("/api/health", response_model=SystemHealthResponse)
-async def health(request: Request) -> SystemHealthResponse:
-    """
-    Health check endpoint.
-
-    Returns the overall system health status along with the readiness of optional
-    components (NLP pipeline, LLM providers).
-
-    Health status rules:
-    - "healthy": All core systems operational
-    - "degraded": Optional components (NLP, LLM) unavailable but system functional
-    - "unhealthy": Critical systems (database) unavailable
-
-    Returns:
-        SystemHealthResponse with status and component readiness
-    """
-    # Check NLP pipeline readiness
-    nlp_processor = getattr(request.app.state, "nlp_processor", None)
-    nlp_ready = nlp_processor.is_ready() if nlp_processor else False
-
-    # Check available LLM providers
-    llm_router = getattr(request.app.state, "llm_router", None)
-    llm_models = llm_router.list_available_models() if llm_router else []
-
-    # Determine overall status
-    # Core systems are always up if we got this far
-    # Degraded if optional components are missing or unavailable
-    if not nlp_ready or not llm_models:
-        status = "degraded"
-    else:
-        status = "healthy"
-
-    return SystemHealthResponse(
-        status=status,
-        nlp_pipeline_ready=nlp_ready,
-        llm_providers_available=llm_models,
-    )
+app.include_router(versioning_router)
+app.include_router(admin_router)
 
 
 if __name__ == "__main__":

@@ -1,0 +1,347 @@
+"""
+Integration tests for System Administration API routes.
+
+Tests verify the full admin API workflow with:
+- AdminService with faked metrics and configuration
+- HTTP routes via TestClient
+- End-to-end request/response validation
+- Error handling for configuration and task not found scenarios
+
+These tests exercise the complete stack: routes → domain service → adapters.
+"""
+
+import sys
+import os
+
+sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))))
+
+import pytest
+
+from fastapi import FastAPI, status
+from fastapi.testclient import TestClient
+
+from domain.admin.services import AdminService
+from adapters.web.admin_routes import router
+from tests.fakes.fake_metrics_collector import FakeMetricsCollector
+from tests.fakes.fake_configuration_store import FakeConfigurationStore
+
+
+@pytest.fixture
+def metrics_collector():
+    """Create a fake metrics collector for testing."""
+    return FakeMetricsCollector()
+
+
+@pytest.fixture
+def config_store():
+    """Create a fake configuration store for testing."""
+    return FakeConfigurationStore()
+
+
+@pytest.fixture
+def admin_service(metrics_collector, config_store):
+    """Create AdminService with fake adapters."""
+    return AdminService(
+        metrics_collector=metrics_collector,
+        config_store=config_store,
+    )
+
+
+@pytest.fixture
+def client(admin_service):
+    """Create a TestClient with admin service."""
+    app = FastAPI()
+    app.include_router(router)
+    app.state.admin_service = admin_service
+    return TestClient(app)
+
+
+class TestHealthEndpoint:
+    """Tests for GET /api/v1/admin/health endpoint."""
+
+    def test_check_health_returns_200(self, client):
+        """GET /api/v1/admin/health returns 200."""
+        response = client.get("/api/v1/admin/health")
+        assert response.status_code == status.HTTP_200_OK
+
+    def test_check_health_response_structure(self, client):
+        """GET /api/v1/admin/health response has correct structure."""
+        response = client.get("/api/v1/admin/health")
+        body = response.json()
+
+        # Verify required fields
+        assert "status" in body
+        assert "database_connected" in body
+        assert "nlp_pipeline_ready" in body
+        assert "embedding_model_loaded" in body
+        assert "llm_providers_available" in body
+        assert "uptime_seconds" in body
+        assert "issues" in body
+        assert "checked_at" in body
+
+    def test_check_health_response_types(self, client):
+        """GET /api/v1/admin/health response has correct types."""
+        response = client.get("/api/v1/admin/health")
+        body = response.json()
+
+        # Verify types
+        assert isinstance(body["status"], str)
+        assert isinstance(body["database_connected"], bool)
+        assert isinstance(body["nlp_pipeline_ready"], bool)
+        assert isinstance(body["embedding_model_loaded"], bool)
+        assert isinstance(body["llm_providers_available"], list)
+        assert isinstance(body["uptime_seconds"], (int, float))
+        assert isinstance(body["issues"], list)
+        assert isinstance(body["checked_at"], str)
+
+    def test_check_health_status_is_valid(self, client):
+        """GET /api/v1/admin/health status is one of valid values."""
+        response = client.get("/api/v1/admin/health")
+        body = response.json()
+
+        assert body["status"] in ["healthy", "degraded", "unhealthy"]
+
+    def test_check_health_includes_providers_list(self, client):
+        """GET /api/v1/admin/health includes LLM providers."""
+        response = client.get("/api/v1/admin/health")
+        body = response.json()
+
+        # Response should include providers (may be empty list)
+        assert isinstance(body["llm_providers_available"], list)
+
+
+class TestConfigurationEndpoint:
+    """Tests for configuration endpoints."""
+
+    def test_get_configuration_returns_200(self, client):
+        """GET /api/v1/admin/configuration returns 200."""
+        response = client.get("/api/v1/admin/configuration")
+        assert response.status_code == status.HTTP_200_OK
+
+    def test_get_configuration_response_has_sections(self, client):
+        """GET /api/v1/admin/configuration response has sections dict."""
+        response = client.get("/api/v1/admin/configuration")
+        body = response.json()
+
+        assert "sections" in body
+        assert isinstance(body["sections"], dict)
+
+    def test_get_configuration_masks_api_keys(self, client, config_store):
+        """GET /api/v1/admin/configuration masks API keys."""
+        # Ensure config has API keys
+        config = config_store.load()
+        if 'llm' not in config.sections:
+            config.sections['llm'] = {}
+        config.sections['llm']['openai_api_key'] = 'sk-1234567890abcdef1234567890'
+        config_store.save(config)
+
+        # Get configuration
+        response = client.get("/api/v1/admin/configuration")
+        body = response.json()
+
+        # API key should be masked
+        llm_section = body["sections"].get("llm", {})
+        assert "openai_api_key" in llm_section, "openai_api_key should be present in llm section"
+        masked = llm_section["openai_api_key"]
+        assert masked.startswith("***"), "API key should be masked with ***"
+        assert masked != 'sk-1234567890abcdef1234567890', "Masked key should not be the original key"
+
+    def test_update_configuration_section_returns_200(self, client):
+        """PATCH /api/v1/admin/configuration/{section} returns 200."""
+        response = client.patch(
+            "/api/v1/admin/configuration/llm",
+            json={"updates": {"temperature": 0.7}}
+        )
+        assert response.status_code == status.HTTP_200_OK
+
+    def test_update_configuration_response_structure(self, client):
+        """PATCH /api/v1/admin/configuration/{section} response has sections."""
+        response = client.patch(
+            "/api/v1/admin/configuration/llm",
+            json={"updates": {"temperature": 0.7}}
+        )
+        body = response.json()
+
+        assert "sections" in body
+        assert isinstance(body["sections"], dict)
+
+    def test_update_configuration_applies_changes(self, client, config_store):
+        """PATCH /api/v1/admin/configuration/{section} applies updates."""
+        # Update a section
+        response = client.patch(
+            "/api/v1/admin/configuration/llm",
+            json={"updates": {"test_key": "test_value"}}
+        )
+        body = response.json()
+
+        # Verify update is in response
+        if "llm" in body["sections"]:
+            assert body["sections"]["llm"].get("test_key") == "test_value"
+
+    def test_update_configuration_nonexistent_section_returns_400(self, client):
+        """PATCH /api/v1/admin/configuration/{section} returns 400 for nonexistent section."""
+        response = client.patch(
+            "/api/v1/admin/configuration/nonexistent_section",
+            json={"updates": {"key": "value"}}
+        )
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+
+    def test_update_configuration_error_includes_message(self, client):
+        """PATCH /api/v1/admin/configuration/{section} error includes detail."""
+        response = client.patch(
+            "/api/v1/admin/configuration/nonexistent_section",
+            json={"updates": {"key": "value"}}
+        )
+        body = response.json()
+
+        assert "detail" in body
+        assert isinstance(body["detail"], str)
+
+
+class TestTasksEndpoint:
+    """Tests for background task endpoints."""
+
+    def test_list_tasks_returns_200(self, client):
+        """GET /api/v1/admin/tasks returns 200."""
+        response = client.get("/api/v1/admin/tasks")
+        assert response.status_code == status.HTTP_200_OK
+
+    def test_list_tasks_response_is_list(self, client):
+        """GET /api/v1/admin/tasks response is a list."""
+        response = client.get("/api/v1/admin/tasks")
+        body = response.json()
+
+        assert isinstance(body, list)
+
+    def test_list_tasks_includes_registered_task(self, client, admin_service):
+        """GET /api/v1/admin/tasks includes previously registered tasks."""
+        # Register a task
+        task = admin_service.register_task("test_task")
+
+        # List tasks
+        response = client.get("/api/v1/admin/tasks")
+        body = response.json()
+
+        # Registered task should be in list
+        ids = [t["id"] for t in body]
+        assert task.id in ids
+
+    def test_list_tasks_includes_task_details(self, client, admin_service):
+        """GET /api/v1/admin/tasks includes task details."""
+        # Register a task
+        task = admin_service.register_task("detailed_task")
+
+        # List tasks
+        response = client.get("/api/v1/admin/tasks")
+        body = response.json()
+
+        # Find the task in the response
+        task_response = next((t for t in body if t["id"] == task.id), None)
+        assert task_response is not None
+        assert task_response["name"] == "detailed_task"
+        assert task_response["status"] == "pending"
+
+    def test_get_task_returns_200(self, client, admin_service):
+        """GET /api/v1/admin/tasks/{task_id} returns 200 for existing task."""
+        # Register a task
+        task = admin_service.register_task("get_test_task")
+
+        # Get the task
+        response = client.get(f"/api/v1/admin/tasks/{task.id}")
+        assert response.status_code == status.HTTP_200_OK
+
+    def test_get_task_response_structure(self, client, admin_service):
+        """GET /api/v1/admin/tasks/{task_id} response has correct structure."""
+        # Register a task
+        task = admin_service.register_task("structure_test")
+
+        # Get the task
+        response = client.get(f"/api/v1/admin/tasks/{task.id}")
+        body = response.json()
+
+        # Verify required fields
+        assert "id" in body
+        assert "name" in body
+        assert "status" in body
+        assert "created_at" in body
+        assert "started_at" in body
+        assert "completed_at" in body
+        assert "error" in body
+        assert "result" in body
+
+    def test_get_task_response_types(self, client, admin_service):
+        """GET /api/v1/admin/tasks/{task_id} response has correct types."""
+        # Register a task
+        task = admin_service.register_task("type_test")
+
+        # Get the task
+        response = client.get(f"/api/v1/admin/tasks/{task.id}")
+        body = response.json()
+
+        # Verify types
+        assert isinstance(body["id"], str)
+        assert isinstance(body["name"], str)
+        assert isinstance(body["status"], str)
+        assert isinstance(body["created_at"], str)
+        assert body["started_at"] is None or isinstance(body["started_at"], str)
+        assert body["completed_at"] is None or isinstance(body["completed_at"], str)
+
+    def test_get_task_returns_correct_data(self, client, admin_service):
+        """GET /api/v1/admin/tasks/{task_id} returns correct task data."""
+        # Register a task
+        task = admin_service.register_task("data_test")
+
+        # Get the task
+        response = client.get(f"/api/v1/admin/tasks/{task.id}")
+        body = response.json()
+
+        # Data should match
+        assert body["id"] == task.id
+        assert body["name"] == "data_test"
+        assert body["status"] == "pending"
+
+    def test_get_task_nonexistent_returns_404(self, client):
+        """GET /api/v1/admin/tasks/{task_id} returns 404 for nonexistent task."""
+        response = client.get("/api/v1/admin/tasks/nonexistent-task-id")
+        assert response.status_code == status.HTTP_404_NOT_FOUND
+
+    def test_get_task_error_includes_message(self, client):
+        """GET /api/v1/admin/tasks/{task_id} error includes detail."""
+        response = client.get("/api/v1/admin/tasks/nonexistent-task-id")
+        body = response.json()
+
+        assert "detail" in body
+        assert isinstance(body["detail"], str)
+
+    def test_get_task_with_status_update(self, client, admin_service):
+        """GET /api/v1/admin/tasks/{task_id} reflects task status changes."""
+        # Register and update task
+        task = admin_service.register_task("status_test")
+        admin_service.update_task_status(task.id, "running")
+
+        # Get the task
+        response = client.get(f"/api/v1/admin/tasks/{task.id}")
+        body = response.json()
+
+        # Status should reflect update
+        assert body["status"] == "running"
+        assert body["started_at"] is not None
+
+    def test_get_task_with_completion(self, client, admin_service):
+        """GET /api/v1/admin/tasks/{task_id} includes result data."""
+        # Register, run, and complete task
+        task = admin_service.register_task("completion_test")
+        admin_service.update_task_status(
+            task.id,
+            "completed",
+            result={"output": "task completed"}
+        )
+
+        # Get the task
+        response = client.get(f"/api/v1/admin/tasks/{task.id}")
+        body = response.json()
+
+        # Result should be in response
+        assert body["status"] == "completed"
+        assert body["result"] == {"output": "task completed"}
+        assert body["completed_at"] is not None

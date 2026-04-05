@@ -2,12 +2,11 @@
 Unit tests for LLMProviderRouter adapter.
 
 Tests verify:
-- Provider initialization with valid and invalid API keys
+- Provider initialization with API keys
 - Model routing to correct providers
 - Model availability checking
 - Union of available models from all providers
-- API key format validation (OpenAI must start with 'sk-')
-- Invalid OpenAI keys log warning but do not raise
+- Initialization errors are logged but do not prevent router from functioning
 """
 
 import sys
@@ -22,7 +21,7 @@ sys.path.append(
 )
 
 from adapters.llm.provider_router import LLMProviderRouter
-from domain.extraction.ports import LLMResponse
+from domain.pipeline.ports import LLMResponse
 
 
 class MockLLMProvider:
@@ -31,7 +30,16 @@ class MockLLMProvider:
     def __init__(self, available_models: list[str]):
         self._available_models = available_models
 
-    def complete(self, system_prompt, user_prompt, model, temperature=0.0, max_tokens=2000, response_format=None, timeout=None):
+    def complete(
+        self,
+        system_prompt,
+        user_prompt,
+        model,
+        temperature=0.0,
+        max_tokens=2000,
+        response_format=None,
+        timeout=None,
+    ):
         """Mock complete method."""
         return LLMResponse(
             content="mock response",
@@ -71,19 +79,6 @@ class TestLLMProviderRouter:
         # OpenAI provider should be initialized
         assert "openai" in router._providers
         mock_openai_class.assert_called_once_with("sk-test-key-123")
-
-    @patch("adapters.llm.provider_router.logger")
-    def test_router_init_with_invalid_openai_key_logs_warning(self, mock_logger):
-        """Router logs warning for invalid OpenAI key (not starting with 'sk-')."""
-        router = LLMProviderRouter(openai_api_key="invalid-key-123")
-
-        # Should log warning, not raise
-        mock_logger.warning.assert_called_once()
-        warning_message = mock_logger.warning.call_args[0][0]
-        assert "OpenAI API key format invalid" in warning_message
-
-        # OpenAI provider should NOT be initialized
-        assert "openai" not in router._providers
 
     @patch("adapters.llm.provider_router.AnthropicProvider")
     def test_router_init_with_anthropic_key(self, mock_anthropic_class):

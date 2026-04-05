@@ -4,10 +4,14 @@ Configuration settings for the Context Studio Local Server.
 
 import os
 import json
+import logging
 from typing import Optional, List
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ValidationError
 from enum import Enum
 from dotenv import load_dotenv
+
+# Configure a dedicated logger for config module to avoid circular dependencies
+_config_logger = logging.getLogger(__name__)
 
 
 class LogLevel(str, Enum):
@@ -67,6 +71,16 @@ class ReferenceConfig(BaseModel):
     )
 
 
+class S3Config(BaseModel):
+    """S3 synchronization configuration section"""
+
+    s3_bucket: Optional[str] = Field(default=None, description="S3 bucket name")
+    s3_prefix: Optional[str] = Field(default=None, description="S3 key prefix for changes")
+    s3_access_key: Optional[str] = Field(default=None, description="AWS access key ID")
+    s3_secret_key: Optional[str] = Field(default=None, description="AWS secret access key")
+    s3_region: Optional[str] = Field(default="us-east-1", description="AWS region")
+
+
 class Settings(BaseModel):
     """Centralized configuration settings"""
 
@@ -75,6 +89,7 @@ class Settings(BaseModel):
     logging: LoggingConfig = Field(default_factory=LoggingConfig)
     llm: LLMConfig = Field(default_factory=LLMConfig)
     reference: ReferenceConfig = Field(default_factory=ReferenceConfig)
+    sync: Optional[S3Config] = Field(default=None, description="S3 synchronization configuration")
 
 
 class ConfigurationManager:
@@ -90,9 +105,40 @@ class ConfigurationManager:
         load_dotenv()
 
         if os.path.exists(self.config_file) and os.path.getsize(self.config_file) > 0:
-            with open(self.config_file, "r") as f:
-                config_data = json.load(f)
-            self.settings = Settings(**config_data)
+            try:
+                with open(self.config_file, "r") as f:
+                    config_data = json.load(f)
+                self.settings = Settings(**config_data)
+                _config_logger.info(f"Successfully loaded configuration from {self.config_file}")
+            except json.JSONDecodeError as e:
+                _config_logger.error(
+                    f"Failed to parse {self.config_file}: Invalid JSON at line {e.lineno}, "
+                    f"column {e.colno}. {e.msg}. Using default configuration. "
+                    f"Fix the file and reload the application."
+                )
+                self.settings = Settings()
+            except ValidationError as e:
+                _config_logger.error(
+                    f"Configuration validation failed: Invalid values in {self.config_file}. "
+                    f"Errors: {e.errors()}. Using default configuration."
+                )
+                self.settings = Settings()
+            except PermissionError as e:
+                _config_logger.error(
+                    f"Permission denied reading {self.config_file}: {e}. Using default configuration."
+                )
+                self.settings = Settings()
+            except OSError as e:
+                _config_logger.error(
+                    f"I/O error reading {self.config_file}: {e}. Using default configuration."
+                )
+                self.settings = Settings()
+            except Exception as e:
+                _config_logger.error(
+                    f"Unexpected error loading configuration from {self.config_file}: {type(e).__name__}: {e}. "
+                    f"Using default configuration."
+                )
+                self.settings = Settings()
         else:
             self.settings = Settings()
             self.save()
@@ -101,16 +147,36 @@ class ConfigurationManager:
 
     def save(self) -> bool:
         """Save current configuration to file"""
+        if self.settings is None:
+            _config_logger.error("Cannot save configuration: settings not initialized")
+            return False
+
         try:
-            if self.settings is None:
-                return False
             config_dir = os.path.dirname(self.config_file)
             if config_dir:
                 os.makedirs(config_dir, exist_ok=True)
             with open(self.config_file, "w") as f:
                 json.dump(self.settings.model_dump(), f, indent=2)
+            _config_logger.info(f"Successfully saved configuration to {self.config_file}")
             return True
-        except Exception:
+        except PermissionError as e:
+            _config_logger.error(f"Permission denied writing to {self.config_file}: {e}")
+            return False
+        except FileNotFoundError as e:
+            _config_logger.error(f"Configuration file path not found: {e}")
+            return False
+        except OSError as e:
+            _config_logger.error(f"I/O error writing to {self.config_file}: {e}")
+            return False
+        except TypeError as e:
+            _config_logger.error(
+                f"Failed to serialize configuration: {e}. Configuration contains non-serializable objects."
+            )
+            return False
+        except Exception as e:
+            _config_logger.error(
+                f"Unexpected error saving configuration to {self.config_file}: {type(e).__name__}: {e}"
+            )
             return False
 
     def get_settings(self) -> Settings:

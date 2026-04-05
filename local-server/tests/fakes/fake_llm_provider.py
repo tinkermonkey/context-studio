@@ -7,7 +7,7 @@ from typing import Any
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 from typing import Literal
-from domain.extraction.ports import LLMResponse
+from domain.pipeline.ports import LLMResponse
 
 
 class FakeLLMProvider:

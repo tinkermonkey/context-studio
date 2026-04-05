@@ -1824,6 +1824,86 @@
         }
       }
     },
+    "/api/analyze_text": {
+      "post": {
+        "tags": ["extraction"],
+        "summary": "Analyze Text",
+        "description": "Analyze text for linguistic features and named entities.\n\nThis use case focuses on NLP-based analysis including tokenization,\nentity recognition, language detection, and linguistic features.\nIt may also provide context from the knowledge graph.\n\nLayers executed:\n- Layer 0: Knowledge graph context (uses embedding similarity)\n- Layer 2: NLP gap-filling (focused entity recognition)\n\nArgs:\n    request: AnalyzeTextRequest with text to analyze\n    service: ExtractionService from dependency injection\n\nReturns:\n    ExtractionResultSchema containing analyzed entities and linguistic metadata\n\nRaises:\n    HTTPException: 400 if text is empty/invalid, 500 for internal errors",
+        "operationId": "analyze_text_api_analyze_text_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AnalyzeTextRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExtractionResultSchema"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/enrich_from_references": {
+      "post": {
+        "tags": ["extraction"],
+        "summary": "Enrich From References",
+        "description": "Enrich extracted entities with external reference knowledge.\n\nThis use case takes already-extracted entities and enriches them with\nURIs, metadata, and relationships from external knowledge sources such as\nConceptNet, DBpedia, Wikidata, and schema.org.\n\nLayers executed:\n- Layer 3: Reference source enrichment (adds URIs and metadata)\n\nArgs:\n    request: EnrichFromReferencesRequest with text and entities to enrich\n    service: ExtractionService from dependency injection\n\nReturns:\n    ExtractionResultSchema with enriched entities and reference metadata\n\nRaises:\n    HTTPException: 400 if text is empty/invalid, 500 for internal errors",
+        "operationId": "enrich_from_references_api_enrich_from_references_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EnrichFromReferencesRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExtractionResultSchema"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/pipelines": {
       "get": {
         "tags": ["pipeline"],
@@ -2104,11 +2184,748 @@
         }
       }
     },
-    "/api/health": {
+    "/api/reference/status": {
       "get": {
-        "summary": "Health",
-        "description": "Health check endpoint.\n\nReturns the overall system health status along with the readiness of optional\ncomponents (NLP pipeline, LLM providers).\n\nHealth status rules:\n- \"healthy\": All core systems operational\n- \"degraded\": Optional components (NLP, LLM) unavailable but system functional\n- \"unhealthy\": Critical systems (database) unavailable\n\nReturns:\n    SystemHealthResponse with status and component readiness",
-        "operationId": "health_api_health_get",
+        "tags": ["reference"],
+        "summary": "Reference Status",
+        "description": "Check availability of all reference sources.\n\nReturns:\n    ReferenceStatusResponseSchema with status of each source\n\nRaises:\n    HTTPException: 500 if no sources are configured",
+        "operationId": "reference_status_api_reference_status_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReferenceStatusResponseSchema"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/reference/search": {
+      "post": {
+        "tags": ["reference"],
+        "summary": "Search References",
+        "description": "Search for references across multiple sources.\n\nAggregates results from all available sources (or specified sources).\nSources that fail or are unavailable are tracked but don't block the response.\n\nArgs:\n    request: ReferenceSearchRequest with search parameters\n    sources: List of reference sources from dependency injection\n\nReturns:\n    ReferenceSearchResponseSchema with aggregated results from all sources\n\nRaises:\n    HTTPException: 400 if search term is invalid, 500 if no sources configured",
+        "operationId": "search_references_api_reference_search_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReferenceSearchRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReferenceSearchResponseSchema"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/reference/relations": {
+      "post": {
+        "tags": ["reference"],
+        "summary": "Get Reference Relations",
+        "description": "Get relationships for a reference URI across multiple sources.\n\nAggregates relationships from all available sources (or specified sources).\nSources that fail or are unavailable are tracked but don't block the response.\n\nArgs:\n    request: ReferenceRelationsRequest with URI to query\n    sources: List of reference sources from dependency injection\n\nReturns:\n    ReferenceRelationsResponseSchema with aggregated relationships\n\nRaises:\n    HTTPException: 400 if URI is invalid, 500 if no sources configured",
+        "operationId": "get_reference_relations_api_reference_relations_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReferenceRelationsRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReferenceRelationsResponseSchema"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/versioning/changes": {
+      "get": {
+        "tags": ["versioning"],
+        "summary": "Get Change History All",
+        "description": "Get all change history events.\n\nArgs:\n    service: VersioningService from dependency injection\n    limit: Maximum number of results to return\n\nReturns:\n    ChangeHistoryResponse with all changes\n\nRaises:\n    HTTPException: 500 for internal errors",
+        "operationId": "get_change_history_all_api_v1_versioning_changes_get",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 100,
+              "title": "Limit"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChangeHistoryResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/versioning/changes/{entity_id}": {
+      "get": {
+        "tags": ["versioning"],
+        "summary": "Get Change History By Entity",
+        "description": "Get change history for a specific entity.\n\nArgs:\n    entity_id: ID of the entity to get changes for\n    service: VersioningService from dependency injection\n    limit: Maximum number of results to return\n\nReturns:\n    ChangeHistoryResponse with filtered changes\n\nRaises:\n    HTTPException: 500 for internal errors",
+        "operationId": "get_change_history_by_entity_api_v1_versioning_changes__entity_id__get",
+        "parameters": [
+          {
+            "name": "entity_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Entity Id"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 100,
+              "title": "Limit"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChangeHistoryResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/versioning/versions/{entity_id}": {
+      "get": {
+        "tags": ["versioning"],
+        "summary": "List Versions",
+        "description": "List all versions of an entity.\n\nArgs:\n    entity_id: ID of the entity\n    service: VersioningService from dependency injection\n\nReturns:\n    List of entity versions\n\nRaises:\n    HTTPException: 500 for internal errors",
+        "operationId": "list_versions_api_v1_versioning_versions__entity_id__get",
+        "parameters": [
+          {
+            "name": "entity_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Entity Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/EntityVersionResponse"
+                  },
+                  "title": "Response List Versions Api V1 Versioning Versions  Entity Id  Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/versioning/versions/{entity_id}/{version}": {
+      "get": {
+        "tags": ["versioning"],
+        "summary": "Get Entity Version",
+        "description": "Get a specific version of an entity.\n\nArgs:\n    entity_id: ID of the entity\n    version: Version number\n    service: VersioningService from dependency injection\n\nReturns:\n    The specific entity version\n\nRaises:\n    HTTPException: 404 if version not found, 500 for internal errors",
+        "operationId": "get_entity_version_api_v1_versioning_versions__entity_id___version__get",
+        "parameters": [
+          {
+            "name": "entity_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Entity Id"
+            }
+          },
+          {
+            "name": "version",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Version"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EntityVersionResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/versioning/changesets": {
+      "post": {
+        "tags": ["versioning"],
+        "summary": "Create Changeset",
+        "description": "Create a new changeset.\n\nArgs:\n    request: ChangesetCreateRequest with changeset details\n    service: VersioningService from dependency injection\n\nReturns:\n    Created ChangesetResponse with server-generated id\n\nRaises:\n    HTTPException: 400 for invalid input, 500 for internal errors",
+        "operationId": "create_changeset_api_v1_versioning_changesets_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChangesetCreateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChangesetResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/versioning/changesets/{changeset_id}": {
+      "get": {
+        "tags": ["versioning"],
+        "summary": "Get Changeset",
+        "description": "Retrieve a changeset by ID.\n\nArgs:\n    changeset_id: ID of the changeset\n    service: VersioningService from dependency injection\n\nReturns:\n    ChangesetResponse\n\nRaises:\n    HTTPException: 404 if not found, 500 for internal errors",
+        "operationId": "get_changeset_api_v1_versioning_changesets__changeset_id__get",
+        "parameters": [
+          {
+            "name": "changeset_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Changeset Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChangesetResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/versioning/changesets/{changeset_id}/stage": {
+      "post": {
+        "tags": ["versioning"],
+        "summary": "Stage Changeset",
+        "description": "Transition a changeset from WORKING to STAGED.\n\nArgs:\n    changeset_id: ID of the changeset to stage\n    service: VersioningService from dependency injection\n\nReturns:\n    Updated ChangesetResponse in STAGED state\n\nRaises:\n    HTTPException: 404 if not found, 409 for invalid state, 500 for internal errors",
+        "operationId": "stage_changeset_api_v1_versioning_changesets__changeset_id__stage_post",
+        "parameters": [
+          {
+            "name": "changeset_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Changeset Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChangesetResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/versioning/changesets/{changeset_id}/submit": {
+      "post": {
+        "tags": ["versioning"],
+        "summary": "Submit Proposal",
+        "description": "Submit a changeset as a proposal for review.\n\nTransitions the changeset from STAGED to PROPOSED and creates a Proposal in 'open' state.\n\nArgs:\n    changeset_id: ID of the changeset to propose\n    service: VersioningService from dependency injection\n\nReturns:\n    Created ProposalResponse\n\nRaises:\n    HTTPException: 404 if not found, 409 for invalid state, 500 for internal errors",
+        "operationId": "submit_proposal_api_v1_versioning_changesets__changeset_id__submit_post",
+        "parameters": [
+          {
+            "name": "changeset_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Changeset Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProposalResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/versioning/proposals/{proposal_id}/approve": {
+      "post": {
+        "tags": ["versioning"],
+        "summary": "Approve Proposal",
+        "description": "Approve a proposal.\n\nTransitions the linked changeset from PROPOSED to APPROVED\nand updates the proposal state to 'approved'.\n\nArgs:\n    proposal_id: ID of the proposal to approve\n    service: VersioningService from dependency injection\n\nReturns:\n    Updated ProposalResponse in 'approved' state\n\nRaises:\n    HTTPException: 404 if not found, 409 for invalid state, 500 for internal errors",
+        "operationId": "approve_proposal_api_v1_versioning_proposals__proposal_id__approve_post",
+        "parameters": [
+          {
+            "name": "proposal_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Proposal Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProposalResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/versioning/proposals/{proposal_id}/reject": {
+      "post": {
+        "tags": ["versioning"],
+        "summary": "Reject Proposal",
+        "description": "Reject a proposal.\n\nTransitions the linked changeset back to WORKING state,\nrecords the rejection reason, and updates the proposal state to 'rejected'.\n\nArgs:\n    proposal_id: ID of the proposal to reject\n    request: RejectProposalRequest with rejection reason\n    service: VersioningService from dependency injection\n\nReturns:\n    Updated ProposalResponse in 'rejected' state\n\nRaises:\n    HTTPException: 404 if not found, 409 for invalid state, 500 for internal errors",
+        "operationId": "reject_proposal_api_v1_versioning_proposals__proposal_id__reject_post",
+        "parameters": [
+          {
+            "name": "proposal_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Proposal Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RejectProposalRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProposalResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/versioning/proposals/{proposal_id}/conflicts": {
+      "get": {
+        "tags": ["versioning"],
+        "summary": "Detect Conflicts",
+        "description": "Detect field-level conflicts in a proposal.\n\nCompares change events in the changeset to identify conflicts.\n\nArgs:\n    proposal_id: ID of the proposal to check for conflicts\n    service: VersioningService from dependency injection\n\nReturns:\n    ConflictReportResponse with detected conflicts\n\nRaises:\n    HTTPException: 404 if not found, 500 for internal errors",
+        "operationId": "detect_conflicts_api_v1_versioning_proposals__proposal_id__conflicts_get",
+        "parameters": [
+          {
+            "name": "proposal_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Proposal Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConflictReportResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/versioning/proposals/{proposal_id}/resolve": {
+      "post": {
+        "tags": ["versioning"],
+        "summary": "Resolve Conflicts",
+        "description": "Manually resolve conflicts in a proposal.\n\nDetects conflicts, applies the provided resolutions, and validates that\nall conflicts are covered.\n\nArgs:\n    proposal_id: ID of the proposal to resolve conflicts for\n    request: ResolveConflictsRequest with conflict resolutions\n    service: VersioningService from dependency injection\n\nReturns:\n    ConflictReportResponse with all conflicts marked as resolved\n\nRaises:\n    HTTPException: 404 if not found, 409 if unresolved conflicts remain, 500 for internal errors",
+        "operationId": "resolve_conflicts_api_v1_versioning_proposals__proposal_id__resolve_post",
+        "parameters": [
+          {
+            "name": "proposal_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Proposal Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResolveConflictsRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConflictReportResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/versioning/proposals/{proposal_id}/merge": {
+      "post": {
+        "tags": ["versioning"],
+        "summary": "Merge Proposal",
+        "description": "Merge an approved proposal.\n\nDetects conflicts using any stored resolutions, and blocks the merge\nif unresolved conflicts exist. Transitions the changeset from APPROVED\nto MERGED.\n\nArgs:\n    proposal_id: ID of the proposal to merge\n    service: VersioningService from dependency injection\n\nReturns:\n    MergeResultResponse with details of the merge operation\n\nRaises:\n    HTTPException: 404 if not found, 409 for invalid state or unresolved conflicts, 500 for internal errors",
+        "operationId": "merge_proposal_api_v1_versioning_proposals__proposal_id__merge_post",
+        "parameters": [
+          {
+            "name": "proposal_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Proposal Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MergeResultResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/versioning/sync/status": {
+      "get": {
+        "tags": ["versioning"],
+        "summary": "Get Sync Status",
+        "description": "Get the current synchronization status.\n\nReturns information about unprocessed changes and sync configuration.\n\nArgs:\n    service: VersioningService from dependency injection\n\nReturns:\n    SyncStatusResponse with sync status\n\nRaises:\n    HTTPException: 500 for internal errors",
+        "operationId": "get_sync_status_api_v1_versioning_sync_status_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SyncStatusResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/versioning/sync/push": {
+      "post": {
+        "tags": ["versioning"],
+        "summary": "Push Changes",
+        "description": "Push local unprocessed changes to the remote sync target.\n\nArgs:\n    service: VersioningService from dependency injection\n\nReturns:\n    SyncResultResponse with push results\n\nRaises:\n    HTTPException: 500 for internal errors",
+        "operationId": "push_changes_api_v1_versioning_sync_push_post",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SyncResultResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/versioning/sync/pull": {
+      "post": {
+        "tags": ["versioning"],
+        "summary": "Pull Changes",
+        "description": "Pull remote changes and record them locally.\n\nArgs:\n    service: VersioningService from dependency injection\n\nReturns:\n    SyncResultResponse with pull results\n\nRaises:\n    HTTPException: 500 for internal errors",
+        "operationId": "pull_changes_api_v1_versioning_sync_pull_post",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SyncResultResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/health": {
+      "get": {
+        "tags": ["admin"],
+        "summary": "Check Health",
+        "description": "Check system health and component readiness.\n\nReturns the overall system health status along with the readiness of optional\ncomponents (NLP pipeline, embedding model, LLM providers).\n\nHealth status rules:\n- \"healthy\": All core systems operational\n- \"degraded\": Optional components unavailable but system functional\n- \"unhealthy\": Critical systems (database) unavailable\n\nReturns:\n    SystemHealthResponse with status and component readiness",
+        "operationId": "check_health_api_v1_admin_health_get",
         "responses": {
           "200": {
             "description": "Successful Response",
@@ -2122,10 +2939,254 @@
           }
         }
       }
+    },
+    "/api/v1/admin/configuration": {
+      "get": {
+        "tags": ["admin"],
+        "summary": "Get Configuration",
+        "description": "Retrieve current application configuration.\n\nReturns all configuration sections with sensitive values (API keys)\nmasked to prevent exposure in logs.\n\nReturns:\n    AppConfigurationResponse with configuration sections and masked API keys",
+        "operationId": "get_configuration_api_v1_admin_configuration_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AppConfigurationResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/configuration/{section}": {
+      "patch": {
+        "tags": ["admin"],
+        "summary": "Update Configuration",
+        "description": "Update a configuration section.\n\nLoads the current configuration, updates the specified section with new values,\nand persists the changes. Returns the updated configuration with masked API keys.\n\nArgs:\n    section: Name of the configuration section to update (e.g., \"llm\", \"server\")\n    request: ConfigSectionUpdateRequest with key-value pairs to update\n    service: Injected AdminService\n\nReturns:\n    AppConfigurationResponse with updated configuration and masked API keys\n\nRaises:\n    HTTPException 400: If the section does not exist",
+        "operationId": "update_configuration_api_v1_admin_configuration__section__patch",
+        "parameters": [
+          {
+            "name": "section",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Section"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ConfigSectionUpdateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AppConfigurationResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/tasks": {
+      "get": {
+        "tags": ["admin"],
+        "summary": "List Tasks",
+        "description": "List all background tasks.\n\nReturns metadata and status for all registered background tasks,\nwhether pending, running, completed, or failed.\n\nReturns:\n    List of BackgroundTaskResponse objects",
+        "operationId": "list_tasks_api_v1_admin_tasks_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/BackgroundTaskResponse"
+                  },
+                  "type": "array",
+                  "title": "Response List Tasks Api V1 Admin Tasks Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/tasks/{task_id}": {
+      "get": {
+        "tags": ["admin"],
+        "summary": "Get Task",
+        "description": "Retrieve background task details by ID.\n\nReturns metadata and current status for a specific background task.\n\nArgs:\n    task_id: Unique identifier of the task\n    service: Injected AdminService\n\nReturns:\n    BackgroundTaskResponse with task details and status\n\nRaises:\n    HTTPException 404: If task_id does not exist",
+        "operationId": "get_task_api_v1_admin_tasks__task_id__get",
+        "parameters": [
+          {
+            "name": "task_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Task Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BackgroundTaskResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
     "schemas": {
+      "AnalyzeTextRequest": {
+        "properties": {
+          "text": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Text",
+            "description": "Text to analyze"
+          }
+        },
+        "type": "object",
+        "required": ["text"],
+        "title": "AnalyzeTextRequest",
+        "description": "Request to analyze text for linguistic features and named entities."
+      },
+      "AppConfigurationResponse": {
+        "properties": {
+          "sections": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Sections",
+            "description": "Configuration sections with sensitive values masked"
+          }
+        },
+        "type": "object",
+        "required": ["sections"],
+        "title": "AppConfigurationResponse",
+        "description": "Response containing application configuration with masked API keys."
+      },
+      "BackgroundTaskResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id",
+            "description": "Unique task identifier"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name",
+            "description": "Human-readable task name"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "description": "Task status: \"pending\", \"running\", \"completed\", or \"failed\""
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At",
+            "description": "Timestamp when task was registered"
+          },
+          "started_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Started At",
+            "description": "Timestamp when task execution began"
+          },
+          "completed_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Completed At",
+            "description": "Timestamp when task finished"
+          },
+          "error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error",
+            "description": "Error message if task failed"
+          },
+          "result": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Result",
+            "description": "Result data if task completed successfully"
+          }
+        },
+        "type": "object",
+        "required": ["id", "name", "status", "created_at"],
+        "title": "BackgroundTaskResponse",
+        "description": "Response containing background task status and metadata."
+      },
       "CentralityResponse": {
         "properties": {
           "algorithm": {
@@ -2146,6 +3207,178 @@
         "required": ["algorithm", "scores"],
         "title": "CentralityResponse",
         "description": "Response containing centrality scores."
+      },
+      "ChangeEventResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id",
+            "description": "Unique identifier of the change event"
+          },
+          "entity_id": {
+            "type": "string",
+            "title": "Entity Id",
+            "description": "ID of the entity that changed"
+          },
+          "entity_type": {
+            "type": "string",
+            "title": "Entity Type",
+            "description": "Type of the entity"
+          },
+          "operation": {
+            "type": "string",
+            "title": "Operation",
+            "description": "Type of operation ('create', 'update', 'delete')"
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Timestamp",
+            "description": "When the change occurred"
+          },
+          "processed": {
+            "type": "boolean",
+            "title": "Processed",
+            "description": "Whether change has been synced to remote"
+          },
+          "user_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "User Id",
+            "description": "User who made the change"
+          },
+          "change_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Change Reason",
+            "description": "Why the change was made"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "entity_id",
+          "entity_type",
+          "operation",
+          "timestamp",
+          "processed"
+        ],
+        "title": "ChangeEventResponse",
+        "description": "Response representing a change event"
+      },
+      "ChangeHistoryResponse": {
+        "properties": {
+          "events": {
+            "items": {
+              "$ref": "#/components/schemas/ChangeEventResponse"
+            },
+            "type": "array",
+            "title": "Events",
+            "description": "List of change events"
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total",
+            "description": "Total number of events matching the query"
+          }
+        },
+        "type": "object",
+        "required": ["events", "total"],
+        "title": "ChangeHistoryResponse",
+        "description": "Response with change history results"
+      },
+      "ChangesetCreateRequest": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Name",
+            "description": "Human-readable name for the changeset"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description",
+            "description": "Detailed description"
+          },
+          "event_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Event Ids",
+            "description": "Change event IDs to include"
+          }
+        },
+        "type": "object",
+        "required": ["name"],
+        "title": "ChangesetCreateRequest",
+        "description": "Request to create a new changeset"
+      },
+      "ChangesetResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id",
+            "description": "Unique identifier of the changeset"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name",
+            "description": "Human-readable name"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description",
+            "description": "Detailed description"
+          },
+          "state": {
+            "type": "string",
+            "title": "State",
+            "description": "Current state (working, staged, proposed, approved, merged)"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At",
+            "description": "When the changeset was created"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At",
+            "description": "Last update timestamp"
+          }
+        },
+        "type": "object",
+        "required": ["id", "name", "state", "created_at", "updated_at"],
+        "title": "ChangesetResponse",
+        "description": "Response representing a changeset"
       },
       "ClassCreateRequest": {
         "properties": {
@@ -2517,6 +3750,72 @@
         "title": "ConceptSchemeUpdateRequest",
         "description": "Request to update a concept scheme."
       },
+      "ConfigSectionUpdateRequest": {
+        "properties": {
+          "updates": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Updates",
+            "description": "Dictionary of key-value pairs to update in the section"
+          }
+        },
+        "type": "object",
+        "required": ["updates"],
+        "title": "ConfigSectionUpdateRequest",
+        "description": "Request to update a configuration section."
+      },
+      "ConflictReportResponse": {
+        "properties": {
+          "proposal_id": {
+            "type": "string",
+            "title": "Proposal Id",
+            "description": "ID of the proposal"
+          },
+          "conflicts": {
+            "items": {
+              "$ref": "#/components/schemas/ConflictResponse"
+            },
+            "type": "array",
+            "title": "Conflicts",
+            "description": "List of conflicts"
+          },
+          "has_conflicts": {
+            "type": "boolean",
+            "title": "Has Conflicts",
+            "description": "Whether any conflicts were detected"
+          }
+        },
+        "type": "object",
+        "required": ["proposal_id", "has_conflicts"],
+        "title": "ConflictReportResponse",
+        "description": "Response with conflict detection results"
+      },
+      "ConflictResponse": {
+        "properties": {
+          "entity_id": {
+            "type": "string",
+            "title": "Entity Id",
+            "description": "ID of the entity with the conflict"
+          },
+          "field_name": {
+            "type": "string",
+            "title": "Field Name",
+            "description": "Name of the field in conflict"
+          },
+          "base_value": {
+            "title": "Base Value",
+            "description": "Value from the base changeset"
+          },
+          "incoming_value": {
+            "title": "Incoming Value",
+            "description": "Value from the incoming changeset"
+          }
+        },
+        "type": "object",
+        "required": ["entity_id", "field_name", "base_value", "incoming_value"],
+        "title": "ConflictResponse",
+        "description": "Response representing a detected conflict"
+      },
       "CycleCheckRequest": {
         "properties": {
           "source_id": {
@@ -2626,6 +3925,75 @@
         "title": "DegreeDistributionResponse",
         "description": "Response containing degree distribution for all nodes."
       },
+      "EnrichFromReferencesRequest": {
+        "properties": {
+          "text": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Text",
+            "description": "Original source text"
+          },
+          "extracted_entities": {
+            "items": {
+              "$ref": "#/components/schemas/ExtractedEntitySchema"
+            },
+            "type": "array",
+            "title": "Extracted Entities",
+            "description": "Entities to enrich with reference knowledge"
+          }
+        },
+        "type": "object",
+        "required": ["text", "extracted_entities"],
+        "title": "EnrichFromReferencesRequest",
+        "description": "Request to enrich extracted entities with external reference knowledge."
+      },
+      "EntityVersionResponse": {
+        "properties": {
+          "entity_id": {
+            "type": "string",
+            "title": "Entity Id",
+            "description": "ID of the entity"
+          },
+          "version": {
+            "type": "integer",
+            "title": "Version",
+            "description": "Version number"
+          },
+          "state": {
+            "type": "string",
+            "title": "State",
+            "description": "State of the entity at this version"
+          },
+          "snapshot": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Snapshot",
+            "description": "Snapshot of entity data at this version"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At",
+            "description": "When this version was created"
+          },
+          "parent_version": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Parent Version",
+            "description": "Version number of parent; None if this is the first version"
+          }
+        },
+        "type": "object",
+        "required": ["entity_id", "version", "state", "snapshot", "created_at"],
+        "title": "EntityVersionResponse",
+        "description": "Response representing an entity version"
+      },
       "ExecutionResponse": {
         "properties": {
           "id": {
@@ -2642,6 +4010,16 @@
             "type": "string",
             "title": "Output Text",
             "description": "The generated response from the LLM"
+          },
+          "provider": {
+            "type": "string",
+            "title": "Provider",
+            "description": "LLM provider that executed the request"
+          },
+          "model": {
+            "type": "string",
+            "title": "Model",
+            "description": "Model that generated the response"
           },
           "tokens_in": {
             "type": "integer",
@@ -2687,6 +4065,8 @@
           "id",
           "pipeline_config_id",
           "output_text",
+          "provider",
+          "model",
           "tokens_in",
           "tokens_out",
           "duration_ms",
@@ -2803,6 +4183,18 @@
             ],
             "title": "Description",
             "description": "Optional description of the entity"
+          },
+          "matched_class_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Matched Class Id",
+            "description": "ID of matched ontology class, if any"
           },
           "properties": {
             "additionalProperties": true,
@@ -3080,6 +4472,40 @@
         "required": ["items", "total", "limit", "offset"],
         "title": "ListResponse",
         "description": "Generic paginated list response."
+      },
+      "MergeResultResponse": {
+        "properties": {
+          "proposal_id": {
+            "type": "string",
+            "title": "Proposal Id",
+            "description": "ID of the merged proposal"
+          },
+          "merged_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Merged At",
+            "description": "When the merge occurred"
+          },
+          "events_applied": {
+            "type": "integer",
+            "title": "Events Applied",
+            "description": "Number of change events applied"
+          },
+          "conflicts_resolved": {
+            "type": "integer",
+            "title": "Conflicts Resolved",
+            "description": "Number of conflicts resolved"
+          }
+        },
+        "type": "object",
+        "required": [
+          "proposal_id",
+          "merged_at",
+          "events_applied",
+          "conflicts_resolved"
+        ],
+        "title": "MergeResultResponse",
+        "description": "Response with merge operation results"
       },
       "NeighborsResponse": {
         "properties": {
@@ -3552,6 +4978,372 @@
         "title": "PropertyDefinitionUpdateRequest",
         "description": "Request to update a property definition."
       },
+      "ProposalResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id",
+            "description": "Unique identifier of the proposal"
+          },
+          "changeset_id": {
+            "type": "string",
+            "title": "Changeset Id",
+            "description": "ID of the associated changeset"
+          },
+          "state": {
+            "type": "string",
+            "title": "State",
+            "description": "Current state (open, approved, rejected, merged)"
+          },
+          "submitted_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Submitted At",
+            "description": "When the proposal was submitted"
+          },
+          "reviewed_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reviewed At",
+            "description": "When the proposal was reviewed"
+          },
+          "reviewer_notes": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reviewer Notes",
+            "description": "Notes from reviewer"
+          }
+        },
+        "type": "object",
+        "required": ["id", "changeset_id", "state", "submitted_at"],
+        "title": "ProposalResponse",
+        "description": "Response representing a proposal"
+      },
+      "ReferenceRelationSchema": {
+        "properties": {
+          "subject_uri": {
+            "type": "string",
+            "title": "Subject Uri",
+            "description": "Source concept URI"
+          },
+          "predicate": {
+            "type": "string",
+            "title": "Predicate",
+            "description": "Relationship type"
+          },
+          "object_uri": {
+            "type": "string",
+            "title": "Object Uri",
+            "description": "Target concept URI"
+          },
+          "weight": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Weight",
+            "description": "Optional relationship weight"
+          },
+          "source": {
+            "type": "string",
+            "title": "Source",
+            "description": "Reference source name"
+          }
+        },
+        "type": "object",
+        "required": ["subject_uri", "predicate", "object_uri", "source"],
+        "title": "ReferenceRelationSchema",
+        "description": "Response containing a single reference relationship."
+      },
+      "ReferenceRelationsRequest": {
+        "properties": {
+          "uri": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Uri",
+            "description": "Reference URI"
+          },
+          "limit": {
+            "type": "integer",
+            "maximum": 100.0,
+            "minimum": 1.0,
+            "title": "Limit",
+            "description": "Maximum relations to return",
+            "default": 10
+          },
+          "sources": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sources",
+            "description": "Specific sources to query (if None, queries all available)"
+          }
+        },
+        "type": "object",
+        "required": ["uri"],
+        "title": "ReferenceRelationsRequest",
+        "description": "Request to retrieve relationships for a reference URI."
+      },
+      "ReferenceRelationsResponseSchema": {
+        "properties": {
+          "uri": {
+            "type": "string",
+            "title": "Uri",
+            "description": "The URI that was queried"
+          },
+          "relations": {
+            "items": {
+              "$ref": "#/components/schemas/ReferenceRelationSchema"
+            },
+            "type": "array",
+            "title": "Relations",
+            "description": "Aggregated relationships from all sources"
+          },
+          "sources_queried": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Sources Queried",
+            "description": "Names of sources that were queried"
+          },
+          "sources_failed": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Sources Failed",
+            "description": "Names of sources that failed or were unavailable"
+          },
+          "total_relations": {
+            "type": "integer",
+            "title": "Total Relations",
+            "description": "Total number of relations returned",
+            "default": 0
+          }
+        },
+        "type": "object",
+        "required": ["uri"],
+        "title": "ReferenceRelationsResponseSchema",
+        "description": "Response containing relationships aggregated from multiple sources."
+      },
+      "ReferenceResultSchema": {
+        "properties": {
+          "uri": {
+            "type": "string",
+            "title": "Uri",
+            "description": "Unique URI for this resource"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label",
+            "description": "Human-readable label"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description",
+            "description": "Optional description"
+          },
+          "confidence": {
+            "type": "number",
+            "title": "Confidence",
+            "description": "Confidence score (0.0-1.0)",
+            "default": 1.0
+          },
+          "source": {
+            "type": "string",
+            "title": "Source",
+            "description": "Reference source name"
+          }
+        },
+        "type": "object",
+        "required": ["uri", "label", "source"],
+        "title": "ReferenceResultSchema",
+        "description": "Response containing a single reference search result."
+      },
+      "ReferenceSearchRequest": {
+        "properties": {
+          "term": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Term",
+            "description": "Search term"
+          },
+          "limit": {
+            "type": "integer",
+            "maximum": 100.0,
+            "minimum": 1.0,
+            "title": "Limit",
+            "description": "Maximum results per source",
+            "default": 10
+          },
+          "sources": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sources",
+            "description": "Specific sources to search (if None, searches all available)"
+          }
+        },
+        "type": "object",
+        "required": ["term"],
+        "title": "ReferenceSearchRequest",
+        "description": "Request to search for references across available sources."
+      },
+      "ReferenceSearchResponseSchema": {
+        "properties": {
+          "term": {
+            "type": "string",
+            "title": "Term",
+            "description": "The search term that was executed"
+          },
+          "results": {
+            "items": {
+              "$ref": "#/components/schemas/ReferenceResultSchema"
+            },
+            "type": "array",
+            "title": "Results",
+            "description": "Aggregated results from all sources"
+          },
+          "sources_searched": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Sources Searched",
+            "description": "Names of sources that were searched"
+          },
+          "sources_failed": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Sources Failed",
+            "description": "Names of sources that failed or were unavailable"
+          },
+          "total_results": {
+            "type": "integer",
+            "title": "Total Results",
+            "description": "Total number of results returned",
+            "default": 0
+          }
+        },
+        "type": "object",
+        "required": ["term"],
+        "title": "ReferenceSearchResponseSchema",
+        "description": "Response containing search results aggregated from multiple sources."
+      },
+      "ReferenceSourceStatusSchema": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name",
+            "description": "Source name"
+          },
+          "available": {
+            "type": "boolean",
+            "title": "Available",
+            "description": "Whether source is currently available"
+          },
+          "last_checked": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Checked",
+            "description": "ISO 8601 timestamp of last availability check"
+          }
+        },
+        "type": "object",
+        "required": ["name", "available"],
+        "title": "ReferenceSourceStatusSchema",
+        "description": "Status information for a single reference source."
+      },
+      "ReferenceStatusResponseSchema": {
+        "properties": {
+          "sources": {
+            "items": {
+              "$ref": "#/components/schemas/ReferenceSourceStatusSchema"
+            },
+            "type": "array",
+            "title": "Sources",
+            "description": "Status of each reference source"
+          },
+          "sources_available": {
+            "type": "integer",
+            "title": "Sources Available",
+            "description": "Count of available sources",
+            "default": 0
+          },
+          "timestamp": {
+            "type": "string",
+            "title": "Timestamp",
+            "description": "ISO 8601 timestamp of this status check"
+          }
+        },
+        "type": "object",
+        "required": ["timestamp"],
+        "title": "ReferenceStatusResponseSchema",
+        "description": "Response containing status of all reference sources."
+      },
+      "RejectProposalRequest": {
+        "properties": {
+          "reason": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Reason",
+            "description": "Reason for rejection"
+          }
+        },
+        "type": "object",
+        "required": ["reason"],
+        "title": "RejectProposalRequest",
+        "description": "Request to reject a proposal"
+      },
       "RelationshipCreateRequest": {
         "properties": {
           "source_id": {
@@ -3615,6 +5407,23 @@
         "required": ["id", "source_id", "target_id", "property_definition_id"],
         "title": "RelationshipResponse",
         "description": "Response containing relationship data."
+      },
+      "ResolveConflictsRequest": {
+        "properties": {
+          "resolutions": {
+            "additionalProperties": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "type": "object",
+            "title": "Resolutions",
+            "description": "Mapping of entity_id -> {field_name: resolved_value}"
+          }
+        },
+        "type": "object",
+        "required": ["resolutions"],
+        "title": "ResolveConflictsRequest",
+        "description": "Request to resolve conflicts in a proposal"
       },
       "SPARQLRequest": {
         "properties": {
@@ -3720,6 +5529,74 @@
         "title": "SubgraphResultResponse",
         "description": "Response containing depth-based subgraph extraction result."
       },
+      "SyncResultResponse": {
+        "properties": {
+          "pushed": {
+            "type": "integer",
+            "title": "Pushed",
+            "description": "Number of events pushed"
+          },
+          "pulled": {
+            "type": "integer",
+            "title": "Pulled",
+            "description": "Number of events pulled"
+          },
+          "errors": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Errors",
+            "description": "Any errors encountered"
+          }
+        },
+        "type": "object",
+        "required": ["pushed", "pulled"],
+        "title": "SyncResultResponse",
+        "description": "Response with synchronization operation results"
+      },
+      "SyncStatusResponse": {
+        "properties": {
+          "unprocessed_count": {
+            "type": "integer",
+            "title": "Unprocessed Count",
+            "description": "Number of unprocessed (unsynced) changes"
+          },
+          "is_configured": {
+            "type": "boolean",
+            "title": "Is Configured",
+            "description": "Whether remote sync is configured"
+          },
+          "last_pushed_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Pushed At",
+            "description": "ISO timestamp of last successful push"
+          },
+          "last_pulled_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Pulled At",
+            "description": "ISO timestamp of last successful pull"
+          }
+        },
+        "type": "object",
+        "required": ["unprocessed_count", "is_configured"],
+        "title": "SyncStatusResponse",
+        "description": "Response with synchronization status"
+      },
       "SystemHealthResponse": {
         "properties": {
           "status": {
@@ -3727,10 +5604,20 @@
             "title": "Status",
             "description": "Overall health status: \"healthy\", \"degraded\", or \"unhealthy\""
           },
+          "database_connected": {
+            "type": "boolean",
+            "title": "Database Connected",
+            "description": "Whether database is accessible"
+          },
           "nlp_pipeline_ready": {
             "type": "boolean",
             "title": "Nlp Pipeline Ready",
             "description": "Whether spaCy NLP model is loaded and ready"
+          },
+          "embedding_model_loaded": {
+            "type": "boolean",
+            "title": "Embedding Model Loaded",
+            "description": "Whether embedding model is loaded in memory"
           },
           "llm_providers_available": {
             "items": {
@@ -3738,13 +5625,39 @@
             },
             "type": "array",
             "title": "Llm Providers Available",
-            "description": "List of available LLM model identifiers"
+            "description": "List of available LLM provider names"
+          },
+          "uptime_seconds": {
+            "type": "number",
+            "title": "Uptime Seconds",
+            "description": "System uptime in seconds since startup"
+          },
+          "issues": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Issues",
+            "description": "List of identified health issues (if any)"
+          },
+          "checked_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Checked At",
+            "description": "Timestamp when health check was performed"
           }
         },
         "type": "object",
-        "required": ["status", "nlp_pipeline_ready"],
+        "required": [
+          "status",
+          "database_connected",
+          "nlp_pipeline_ready",
+          "embedding_model_loaded",
+          "uptime_seconds",
+          "checked_at"
+        ],
         "title": "SystemHealthResponse",
-        "description": "Response containing system health status and capabilities."
+        "description": "Response containing system health status and component readiness."
       },
       "TaxonomyCreateRequest": {
         "properties": {

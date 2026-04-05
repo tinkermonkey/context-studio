@@ -145,6 +145,15 @@ class SentenceTransformerEmbedding:
             logger.error(f"Failed to compute similarity: {e}")
             raise
 
+    def is_loaded(self) -> bool:
+        """
+        Check if the embedding model is currently loaded.
+
+        Returns:
+            True if the model is loaded, False otherwise
+        """
+        return self._model is not None
+
     def cleanup(self) -> None:
         """
         Clean up resources (e.g., unload model).

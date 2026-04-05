@@ -14,11 +14,10 @@ from datetime import datetime, timezone
 from uuid import uuid4
 
 from domain.ports import EventPublisher
-from domain.extraction.ports import LLMProvider
 from .entities import Execution, PipelineConfiguration
+from .ports import PipelineRepository, LLMProvider
 from .events import PipelineExecuted
 from .exceptions import PipelineNotFoundError
-from .ports import PipelineRepository
 
 
 _logger = logging.getLogger(__name__)

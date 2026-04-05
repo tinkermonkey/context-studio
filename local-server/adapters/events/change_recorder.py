@@ -13,6 +13,7 @@ without modifying domain code.
 from domain.ports import ChangeRecordPort
 from domain.extraction.events import ExtractionCompleted
 from domain.pipeline.events import PipelineExecuted
+from domain.versioning.value_objects import ChangeOperation
 from utils.logger import get_logger
 
 
@@ -44,31 +45,31 @@ class ChangeEventRecorder:
         Records extraction completion to the audit trail, capturing the
         result ID, entity count, and duration.
 
+        Exceptions are allowed to propagate to the event publisher so they
+        can be reported to the caller for visibility and recovery.
+
         Args:
             event: The ExtractionCompleted event to record
+
+        Raises:
+            Any exception from the change repository is propagated to allow
+            the event publisher to include it in the failures list.
         """
-        try:
-            change_id = self.change_repo.record_change(
-                entity_id=event.result_id,
-                entity_type="extraction_result",
-                operation="create",
-                new_state={
-                    "result_id": event.result_id,
-                    "entity_count": event.entity_count,
-                    "duration_ms": event.duration_ms,
-                },
-                change_reason="Extraction processing completed",
-            )
-            logger.debug(
-                f"Recorded extraction completion: result_id={event.result_id}, "
-                f"change_event_id={change_id}"
-            )
-        except Exception as e:
-            logger.error(
-                f"Failed to record extraction completion for result_id={event.result_id}: "
-                f"{type(e).__name__}: {str(e)}",
-                exc_info=True,
-            )
+        change_id = self.change_repo.record_change(
+            entity_id=event.result_id,
+            entity_type="extraction_result",
+            operation=ChangeOperation.CREATE,
+            new_state={
+                "result_id": event.result_id,
+                "entity_count": event.entity_count,
+                "duration_ms": event.duration_ms,
+            },
+            change_reason="Extraction processing completed",
+        )
+        logger.debug(
+            f"Recorded extraction completion: result_id={event.result_id}, "
+            f"change_event_id={change_id}"
+        )
 
     def on_pipeline_executed(self, event: PipelineExecuted) -> None:
         """
@@ -77,29 +78,29 @@ class ChangeEventRecorder:
         Records pipeline execution completion to the audit trail, capturing
         the execution ID, pipeline ID, and status.
 
+        Exceptions are allowed to propagate to the event publisher so they
+        can be reported to the caller for visibility and recovery.
+
         Args:
             event: The PipelineExecuted event to record
+
+        Raises:
+            Any exception from the change repository is propagated to allow
+            the event publisher to include it in the failures list.
         """
-        try:
-            change_id = self.change_repo.record_change(
-                entity_id=event.execution_id,
-                entity_type="pipeline_execution",
-                operation="create",
-                new_state={
-                    "execution_id": event.execution_id,
-                    "pipeline_id": event.pipeline_id,
-                    "status": event.status,
-                },
-                change_reason="Pipeline execution completed",
-            )
-            logger.debug(
-                f"Recorded pipeline execution: execution_id={event.execution_id}, "
-                f"pipeline_id={event.pipeline_id}, status={event.status}, "
-                f"change_event_id={change_id}"
-            )
-        except Exception as e:
-            logger.error(
-                f"Failed to record pipeline execution for execution_id={event.execution_id}: "
-                f"{type(e).__name__}: {str(e)}",
-                exc_info=True,
-            )
+        change_id = self.change_repo.record_change(
+            entity_id=event.execution_id,
+            entity_type="pipeline_execution",
+            operation=ChangeOperation.CREATE,
+            new_state={
+                "execution_id": event.execution_id,
+                "pipeline_id": event.pipeline_id,
+                "status": event.status,
+            },
+            change_reason="Pipeline execution completed",
+        )
+        logger.debug(
+            f"Recorded pipeline execution: execution_id={event.execution_id}, "
+            f"pipeline_id={event.pipeline_id}, status={event.status}, "
+            f"change_event_id={change_id}"
+        )

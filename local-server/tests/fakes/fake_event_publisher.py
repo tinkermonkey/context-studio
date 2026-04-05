@@ -2,7 +2,7 @@
 
 import sys
 import os
-from typing import Callable, TypeVar
+from typing import Callable, TypeVar, cast
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
@@ -14,6 +14,9 @@ logger = get_logger(__name__)
 
 # Contravariant TypeVar allows handlers typed for specific event subclasses
 EventT_contra = TypeVar('EventT_contra', bound=DomainEvent, contravariant=True)
+
+# Covariant TypeVar for get_events_of_type to preserve specific event types
+EventT = TypeVar('EventT', bound=DomainEvent)
 
 
 class FakeEventPublisher:
@@ -61,8 +64,17 @@ class FakeEventPublisher:
     def get_events(self) -> list[DomainEvent]:
         return list(self._events)
 
-    def get_events_of_type(self, event_type: type) -> list[DomainEvent]:
-        return [e for e in self._events if isinstance(e, event_type)]
+    def get_events_of_type(self, event_type: type[EventT]) -> list[EventT]:
+        """
+        Get all events of a specific type.
+
+        Args:
+            event_type: The event type to filter by (e.g., ChangesetMerged)
+
+        Returns:
+            List of events of the specified type with proper type preservation.
+        """
+        return cast(list[EventT], [e for e in self._events if isinstance(e, event_type)])
 
     def clear(self) -> None:
         self._events.clear()

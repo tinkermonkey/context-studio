@@ -398,9 +398,16 @@ class ChangeEvent(Base):  # type: ignore[misc,valid-type]
         index=True,
         doc="Optional changeset this event belongs to"
     )
+    processed = Column(
+        Boolean,
+        nullable=False,
+        default=False,
+        doc="Whether this change has been synchronized to remote"
+    )
 
     __table_args__ = (
         Index("idx_entity_id_timestamp", "entity_id", "timestamp"),
+        Index("idx_processed", "processed"),
     )
 
     def __repr__(self) -> str:
@@ -459,3 +466,188 @@ class ExtractionResult(Base):  # type: ignore[misc,valid-type]
 
     def __repr__(self) -> str:
         return f"<ExtractionResult(id={self.id}, text_len={len(self.text or '')}, entities={len(self.extracted_entities or [])})>"
+
+
+class EntityVersion(Base):  # type: ignore[misc,valid-type]
+    """
+    Point-in-time snapshot of an entity's state.
+
+    Tracks versioning history for entities, where each version represents
+    a distinct state in the entity's lifecycle.
+
+    Attributes:
+        entity_id: ID of the entity being versioned
+        version: Version number (increments with each change)
+        state: State code or label (e.g., 'active', 'archived')
+        snapshot: Full JSON snapshot of entity at this version
+        created_at: UTC timestamp when this version was created
+        parent_version: Version number of parent (for tracking lineage)
+    """
+
+    __tablename__ = "entity_versions"
+
+    entity_id = Column(String(36), primary_key=True, nullable=False)
+    version = Column(Integer, primary_key=True, nullable=False)
+    state = Column(String(20), nullable=False)
+    snapshot = Column(JSON, nullable=False)
+    created_at = Column(
+        DateTime(timezone=True),
+        nullable=False,
+        default=lambda: datetime.now(timezone.utc),
+    )
+    parent_version = Column(Integer, nullable=True)
+
+    __table_args__ = ()
+
+    def __repr__(self) -> str:
+        return f"<EntityVersion(entity_id={self.entity_id}, version={self.version})>"
+
+
+class Changeset(Base):  # type: ignore[misc,valid-type]
+    """
+    A grouped set of related change events (a transaction).
+
+    Changesets progress through a workflow: working → staged → proposed → approved → merged.
+    They represent a logical unit of work that can be reviewed and applied as a whole.
+
+    Attributes:
+        id: UUID as string, primary key
+        name: Human-readable name for the changeset
+        description: Optional detailed description
+        state: Current state ('working', 'staged', 'proposed', 'approved', 'merged')
+        created_at: UTC timestamp of creation
+        updated_at: UTC timestamp of last modification
+    """
+
+    __tablename__ = "changesets"
+
+    id = Column(String(36), primary_key=True, nullable=False)
+    name = Column(String(255), nullable=False)
+    description = Column(Text, nullable=True)
+    state = Column(String(20), nullable=False, default="working")
+    created_at = Column(
+        DateTime(timezone=True),
+        nullable=False,
+        default=lambda: datetime.now(timezone.utc),
+    )
+    updated_at = Column(
+        DateTime(timezone=True),
+        nullable=False,
+        default=lambda: datetime.now(timezone.utc),
+        onupdate=lambda: datetime.now(timezone.utc),
+    )
+
+    __table_args__ = ()
+
+    def __repr__(self) -> str:
+        return f"<Changeset(id={self.id}, name={self.name}, state={self.state})>"
+
+
+class ChangesetEvent(Base):  # type: ignore[misc,valid-type]
+    """
+    Junction table linking change events to changesets.
+
+    Represents the many-to-many relationship between changesets
+    and the change events they contain.
+
+    Attributes:
+        changeset_id: ID of the changeset
+        change_event_id: ID of the change event
+    """
+
+    __tablename__ = "changeset_events"
+
+    changeset_id = Column(
+        String(36),
+        ForeignKey("changesets.id", ondelete="CASCADE"),
+        primary_key=True,
+        nullable=False,
+    )
+    change_event_id = Column(
+        String(36),
+        ForeignKey("change_events.id", ondelete="CASCADE"),
+        primary_key=True,
+        nullable=False,
+    )
+
+    __table_args__ = (
+        Index("ix_changeset_events_changeset_id", "changeset_id"),
+        Index("ix_changeset_events_change_event_id", "change_event_id"),
+    )
+
+    def __repr__(self) -> str:
+        return f"<ChangesetEvent(changeset_id={self.changeset_id}, change_event_id={self.change_event_id})>"
+
+
+class Proposal(Base):  # type: ignore[misc,valid-type]
+    """
+    A formal request to merge a changeset.
+
+    Proposals allow review and discussion before changes are applied.
+    They track submission time, reviewer comments, and approval status.
+
+    Attributes:
+        id: UUID as string, primary key
+        changeset_id: ID of the changeset being proposed
+        state: Current state ('open', 'approved', 'rejected', 'merged')
+        submitted_at: UTC timestamp when proposal was submitted
+        reviewed_at: UTC timestamp when proposal was reviewed (None if not reviewed)
+        reviewer_notes: Optional notes from the reviewer
+    """
+
+    __tablename__ = "proposals"
+
+    id = Column(String(36), primary_key=True, nullable=False)
+    changeset_id = Column(
+        String(36),
+        ForeignKey("changesets.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    state = Column(String(20), nullable=False, default="open")
+    submitted_at = Column(
+        DateTime(timezone=True),
+        nullable=False,
+        default=lambda: datetime.now(timezone.utc),
+    )
+    reviewed_at = Column(DateTime(timezone=True), nullable=True)
+    reviewer_notes = Column(Text, nullable=True)
+
+    __table_args__ = ()
+
+    def __repr__(self) -> str:
+        return f"<Proposal(id={self.id}, changeset_id={self.changeset_id}, state={self.state})>"
+
+
+class ConflictResolution(Base):  # type: ignore[misc,valid-type]
+    """
+    A stored resolution for a conflict in a proposal.
+
+    Conflict resolutions are persisted when resolve_conflicts() is called,
+    allowing the resolution information to be retrieved when merge_proposal() executes.
+
+    Attributes:
+        id: UUID as string, primary key
+        proposal_id: ID of the proposal containing the conflict
+        entity_id: ID of the entity with the conflict
+        field_name: Name of the field with the conflict
+        resolved_value: The resolved value for this field
+    """
+
+    __tablename__ = "conflict_resolutions"
+
+    id = Column(String(36), primary_key=True, nullable=False)
+    proposal_id = Column(
+        String(36),
+        ForeignKey("proposals.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    entity_id = Column(String(36), nullable=False, index=True)
+    field_name = Column(String(255), nullable=False)
+    resolved_value = Column(Text, nullable=False)
+
+    __table_args__ = ()
+
+    def __repr__(self) -> str:
+        return f"<ConflictResolution(proposal_id={self.proposal_id}, entity_id={self.entity_id}, field_name={self.field_name})>"

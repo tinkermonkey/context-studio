@@ -11,6 +11,7 @@ from __future__ import annotations
 from typing import Callable, Protocol, TypeVar
 
 from .events import DomainEvent
+from .versioning.value_objects import ChangeOperation
 
 # Contravariant TypeVar for event handlers
 EventT_contra = TypeVar('EventT_contra', bound=DomainEvent, contravariant=True)
@@ -27,7 +28,7 @@ class ChangeRecordPort(Protocol):
         self,
         entity_id: str,
         entity_type: str,
-        operation: str,
+        operation: ChangeOperation,
         new_state: dict,
         previous_state: dict | None = None,
         user_id: str | None = None,
@@ -40,7 +41,7 @@ class ChangeRecordPort(Protocol):
         Args:
             entity_id: ID of the entity that changed
             entity_type: Type of entity
-            operation: Type of operation ('create', 'update', 'delete')
+            operation: Type of operation (ChangeOperation enum)
             new_state: JSON snapshot after change
             previous_state: JSON snapshot before change (optional)
             user_id: Optional user ID
