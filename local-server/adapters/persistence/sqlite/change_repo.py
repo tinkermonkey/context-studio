@@ -418,7 +418,7 @@ class SQLiteChangeRepository:
             orm_changeset.name = changeset.name
             orm_changeset.description = changeset.description
             orm_changeset.state = changeset.state.value
-            orm_changeset.updated_at = datetime.now(timezone.utc)
+            orm_changeset.updated_at = changeset.updated_at
 
             # Delete existing event associations and re-insert with updated list
             session.query(ChangesetEvent).filter(
