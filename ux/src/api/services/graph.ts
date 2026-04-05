@@ -6,14 +6,22 @@
 
 import { BaseService } from "./base";
 import { ENDPOINTS } from "../config";
-import type { components } from "../client/types";
+import type {
+  SPARQLQuery,
+  SearchRequest,
+  CentralityRequest,
+  PathRequest,
+  NeighborsRequest,
+} from "./missingTypes";
 
-// Type aliases for better readability
-export type SPARQLQuery = components["schemas"]["SPARQLQuery"];
-export type SearchRequest = components["schemas"]["SearchRequest"];
-export type CentralityRequest = components["schemas"]["CentralityRequest"];
-export type PathRequest = components["schemas"]["PathRequest"];
-export type NeighborsRequest = components["schemas"]["NeighborsRequest"];
+// Re-export types for use in hooks and components
+export type {
+  SPARQLQuery,
+  SearchRequest,
+  CentralityRequest,
+  PathRequest,
+  NeighborsRequest,
+};
 
 export interface GraphStats {
   [key: string]: unknown;
@@ -122,7 +130,7 @@ export class GraphService extends BaseService {
     return this.withErrorContext(() => {
       this.validateRequired(data, "SPARQL query data");
       this.validateRequired(data.query, "SPARQL query");
-      this.sanitizeString(data.query, "SPARQL query", 10000);
+      this.sanitizeString((data.query as unknown as string) || '', "SPARQL query", 10000);
 
       return this.postResource<SPARQLResult[]>(
         `${ENDPOINTS.GRAPH}/sparql/query`,
@@ -166,7 +174,7 @@ export class GraphService extends BaseService {
     return this.withErrorContext(() => {
       this.validateRequired(params, "Search parameters");
       this.validateRequired(params.title, "Search title");
-      this.sanitizeString(params.title, "Search title", 1000);
+      this.sanitizeString((params.title as unknown as string) || '', "Search title", 1000);
 
       return this.getResource<Array<{ [key: string]: unknown }>>(
         `${ENDPOINTS.GRAPH}/search/terms`,
@@ -182,7 +190,7 @@ export class GraphService extends BaseService {
     return this.withErrorContext(() => {
       this.validateRequired(data, "Search request data");
       this.validateRequired(data.term, "Search term");
-      this.sanitizeString(data.term, "Search term", 1000);
+      this.sanitizeString((data.term as unknown as string) || '', "Search term", 1000);
 
       return this.postResource<SearchAnalysisResult>(
         `${ENDPOINTS.GRAPH}/search/analyze`,

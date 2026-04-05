@@ -1,26 +1,31 @@
 import { BaseService } from "./base";
 import { ENDPOINTS } from "../config";
-import type { components } from "@/api/client/types";
+import type {
+  PredicateOut,
+  PredicateCreate,
+  PredicateUpdate,
+  PaginatedPredicatesResponse,
+  ExternalPredicateOut,
+  PaginatedExternalPredicatesResponse,
+} from "./missingTypes";
+
+// Re-export types for use in hooks and components
+export type {
+  PredicateOut,
+  PredicateCreate,
+  PredicateUpdate,
+  PaginatedPredicatesResponse,
+  ExternalPredicateOut,
+  PaginatedExternalPredicatesResponse,
+};
 
 // Type aliases for better readability
-export type PredicateOut = components["schemas"]["PredicateOut"];
-export type PredicateCreate = components["schemas"]["PredicateCreate"];
-export type PredicateUpdate = components["schemas"]["PredicateUpdate"];
-export type PaginatedPredicatesResponse =
-  components["schemas"]["PaginatedPredicatesResponse"];
-export type ExternalPredicateOut =
-  components["schemas"]["ExternalPredicateOut"];
-export type PaginatedExternalPredicatesResponse =
-  components["schemas"]["PaginatedExternalPredicatesResponse"];
-export type PredicateDiscoveryResponse =
-  components["schemas"]["PredicateDiscoveryResponse"];
-export type PredicateDiscoveryStatus =
-  components["schemas"]["PredicateDiscoveryStatus"];
-export type SimilarPredicateOut = components["schemas"]["SimilarPredicateOut"];
-export type FindSimilarResponse = components["schemas"]["FindSimilarResponse"];
-export type ClusterOut = components["schemas"]["ClusterOut"];
-export type ClusterPredicatesResponse =
-  components["schemas"]["ClusterPredicatesResponse"];
+export type PredicateDiscoveryResponse = Record<string, unknown>;
+export type PredicateDiscoveryStatus = Record<string, unknown>;
+export type SimilarPredicateOut = Record<string, unknown>;
+export type FindSimilarResponse = Record<string, unknown>;
+export type ClusterOut = Record<string, unknown>;
+export type ClusterPredicatesResponse = Record<string, unknown>;
 
 export interface PredicateListParams {
   skip?: number;
@@ -91,7 +96,7 @@ export class PredicateService extends BaseService {
     return this.withErrorContext(() => {
       this.validateRequired(data, "Predicate data");
       this.validateRequired(data.title, "Predicate title");
-      this.sanitizeString(data.title, "Predicate title", 255);
+      this.sanitizeString((data.title as unknown as string) || '', "Predicate title", 255);
 
       return this.postResource<PredicateOut>(ENDPOINTS.PREDICATES + "/", data);
     }, "create predicate");
@@ -122,7 +127,7 @@ export class PredicateService extends BaseService {
       this.validateRequired(data, "Predicate update data");
 
       if (data.title) {
-        this.sanitizeString(data.title, "Predicate title", 255);
+        this.sanitizeString((data.title as unknown as string) || '', "Predicate title", 255);
       }
 
       return this.putResource<PredicateOut>(

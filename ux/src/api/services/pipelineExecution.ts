@@ -6,20 +6,21 @@
 
 import { BaseService } from "./base";
 import { ENDPOINTS } from "../config";
-import type { components } from "@/api/client/types";
+import type {
+  PipelineExecutionRequest,
+  PipelineExecutionResponse,
+} from "./missingTypes";
+
+// Re-export types for use in hooks and components
+export type { PipelineExecutionRequest, PipelineExecutionResponse };
 
 // Type aliases for the new pipeline execution system
-export type PipelineExecutionRequest =
-  components["schemas"]["PipelineExecutionRequest"];
-
 // Legacy alias for backward compatibility
 export type GenericPipelineExecutionRequest = PipelineExecutionRequest;
-export type PipelineExecutionResponse =
-  components["schemas"]["PipelineExecutionResponse"];
 
 // Legacy alias for backward compatibility
 export type GenericPipelineExecutionResponse = PipelineExecutionResponse;
-export type { PipelineType } from "./pipelineFlavors";
+export type { PipelineType } from "./missingTypes";
 
 // Legacy compatibility types for easier migration
 export interface LegacyTermDefinitionRequest {

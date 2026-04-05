@@ -6,18 +6,24 @@
 
 import { BaseService } from "./base";
 import { ENDPOINTS } from "../config";
-import type { components } from "../client/types";
+import type {
+  DatasetResponse,
+  CreateDatasetRequest,
+  AddExistingDatasetRequest,
+  UpdateDatasetDirectoryRequest,
+  ActionLogResponse,
+  ActionLogEntry,
+} from "./missingTypes";
 
-// Type aliases for better readability
-export type DatasetResponse = components["schemas"]["DatasetResponse"];
-export type CreateDatasetRequest =
-  components["schemas"]["CreateDatasetRequest"];
-export type AddExistingDatasetRequest =
-  components["schemas"]["AddExistingDatasetRequest"];
-export type UpdateDatasetDirectoryRequest =
-  components["schemas"]["UpdateDatasetDirectoryRequest"];
-export type ActionLogResponse = components["schemas"]["ActionLogResponse"];
-export type ActionLogEntry = components["schemas"]["ActionLogEntry"];
+// Re-export types for use in hooks and components
+export type {
+  DatasetResponse,
+  CreateDatasetRequest,
+  AddExistingDatasetRequest,
+  UpdateDatasetDirectoryRequest,
+  ActionLogResponse,
+  ActionLogEntry,
+};
 
 export interface ActionLogParams extends Record<string, unknown> {
   days?: number;
@@ -52,8 +58,8 @@ export class DatasetService extends BaseService {
       this.validateRequired(data, "Dataset data");
       this.validateRequired(data.title, "Dataset title");
       this.validateRequired(data.filename, "Dataset filename");
-      this.sanitizeString(data.title, "Dataset title", 255);
-      this.sanitizeString(data.filename, "Dataset filename", 255);
+      this.sanitizeString((data.title as unknown as string) || '', "Dataset title", 255);
+      this.sanitizeString((data.filename as unknown as string) || '', "Dataset filename", 255);
 
       return this.postResource<DatasetResponse>(ENDPOINTS.DATASETS, data);
     }, "create dataset");
@@ -107,8 +113,8 @@ export class DatasetService extends BaseService {
       this.validateRequired(data, "Dataset data");
       this.validateRequired(data.title, "Dataset title");
       this.validateRequired(data.file_path, "Dataset file path");
-      this.sanitizeString(data.title, "Dataset title", 255);
-      this.sanitizeString(data.file_path, "Dataset file path", 1000);
+      this.sanitizeString((data.title as unknown as string) || '', "Dataset title", 255);
+      this.sanitizeString((data.file_path as unknown as string) || '', "Dataset file path", 1000);
 
       return this.postResource<DatasetResponse>(
         `${ENDPOINTS.DATASETS}/add-existing`,
@@ -136,7 +142,7 @@ export class DatasetService extends BaseService {
     return this.withErrorContext(() => {
       this.validateRequired(data, "Directory data");
       this.validateRequired(data.datasets_directory, "Datasets directory");
-      this.sanitizeString(data.datasets_directory, "Datasets directory", 1000);
+      this.sanitizeString((data.datasets_directory as unknown as string) || '', "Datasets directory", 1000);
 
       return this.postResource<{ success: boolean; message: string }>(
         `${ENDPOINTS.DATASETS}/directory`,

@@ -9,17 +9,15 @@ import {
   useQueryClient,
   UseMutationOptions,
 } from "@tanstack/react-query";
-import { datasetService } from "../../services/datasets";
+import {
+  datasetService,
+  type DatasetResponse,
+  type CreateDatasetRequest,
+  type AddExistingDatasetRequest,
+  type UpdateDatasetDirectoryRequest,
+} from "../../services/datasets";
 import { QUERY_KEYS } from "../../config";
 import { createQueryKey } from "../../utils/queryClient";
-import type { components } from "../../client/types";
-
-type DatasetResponse = components["schemas"]["DatasetResponse"];
-type CreateDatasetRequest = components["schemas"]["CreateDatasetRequest"];
-type AddExistingDatasetRequest =
-  components["schemas"]["AddExistingDatasetRequest"];
-type UpdateDatasetDirectoryRequest =
-  components["schemas"]["UpdateDatasetDirectoryRequest"];
 
 /**
  * Hook to create a new dataset

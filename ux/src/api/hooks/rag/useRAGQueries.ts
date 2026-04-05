@@ -8,15 +8,12 @@ import { useQuery, UseQueryOptions } from "@tanstack/react-query";
 import { ragService } from "@/api/services/rag";
 import { QUERY_KEYS } from "@/api/config";
 import { createQueryKey } from "@/api/utils/queryClient";
-import { operations } from "@/api/client/types";
 
-// Infer response types from operations
-type GetMetricsResponse =
-  operations["get_metrics_api_rag_metrics__request_id__get"]["responses"]["200"]["content"]["application/json"];
-type GetTraceResponse =
-  operations["get_trace_api_rag_trace__request_id__get"]["responses"]["200"]["content"]["application/json"];
-type GetTraceByLayerResponse =
-  operations["get_trace_by_layer_api_rag_trace__request_id__layer__layer_name__get"]["responses"]["200"]["content"]["application/json"];
+// Response types for RAG operations
+// These operations are not yet in the OpenAPI spec, so we use generic types
+type GetMetricsResponse = Record<string, unknown>;
+type GetTraceResponse = Record<string, unknown>;
+type GetTraceByLayerResponse = Record<string, unknown>;
 
 /**
  * Hook to retrieve processing metrics for a RAG extraction request

@@ -7,50 +7,41 @@
 
 import { BaseService } from "./base";
 import { ENDPOINTS } from "../config";
-import { components, operations } from "../client/types";
+import type {
+  CreateTestParagraphRequest,
+  UpdateTestParagraphRequest,
+  TestParagraphResponse,
+  TestParagraphListResponse,
+} from "./missingTypes";
 
-// Type definitions from OpenAPI schema
-export type CreateTestParagraphRequest =
-  components["schemas"]["CreateTestParagraphRequest"];
-export type UpdateTestParagraphRequest =
-  components["schemas"]["UpdateTestParagraphRequest"];
-export type CreateAnnotationRequest =
-  components["schemas"]["CreateAnnotationRequest"];
-export type RunPipelineTestRequest =
-  components["schemas"]["RunPipelineTestRequest"];
-export type TestParagraphResponse =
-  components["schemas"]["TestParagraphResponse"];
-export type TestParagraphListResponse =
-  components["schemas"]["TestParagraphListResponse"];
-export type AnnotationResponse = components["schemas"]["AnnotationResponse"];
-export type RunPipelineTestResponse =
-  components["schemas"]["RunPipelineTestResponse"];
-export type PipelineRunResultResponse =
-  components["schemas"]["PipelineRunResultResponse"];
-export type PipelineComparisonResponse =
-  components["schemas"]["PipelineComparisonResponse"];
-export type PipelineRunDetailsResponse =
-  components["schemas"]["PipelineRunDetailsResponse"];
-export type ScoringDetailsResponse =
-  components["schemas"]["ScoringDetailsResponse"];
+// Re-export types for use in hooks and components
+export type {
+  CreateTestParagraphRequest,
+  UpdateTestParagraphRequest,
+  TestParagraphResponse,
+  TestParagraphListResponse,
+};
 
-// Infer response types from operations
-type CreateParagraphResponse =
-  operations["create_test_paragraph_api_rag_experiments_paragraphs_post"]["responses"]["201"]["content"]["application/json"];
-type ListParagraphsResponse =
-  operations["list_test_paragraphs_api_rag_experiments_paragraphs_get"]["responses"]["200"]["content"]["application/json"];
-type GetParagraphResponse =
-  operations["get_test_paragraph_api_rag_experiments_paragraphs__paragraph_id__get"]["responses"]["200"]["content"]["application/json"];
-type UpdateParagraphResponse =
-  operations["update_test_paragraph_api_rag_experiments_paragraphs__paragraph_id__put"]["responses"]["200"]["content"]["application/json"];
-type CreateAnnotationResponse =
-  operations["create_annotation_api_rag_experiments_paragraphs__paragraph_id__annotations_post"]["responses"]["201"]["content"]["application/json"];
-type RunTestResponse =
-  operations["run_pipeline_test_api_rag_experiments_run_post"]["responses"]["200"]["content"]["application/json"];
-type GetComparisonResponse =
-  operations["get_pipeline_comparison_api_rag_experiments_results_paragraphs__paragraph_id__get"]["responses"]["200"]["content"]["application/json"];
-type GetRunDetailsResponse =
-  operations["get_pipeline_run_details_api_rag_experiments_results_runs__run_id__get"]["responses"]["200"]["content"]["application/json"];
+// Type definitions for RAG experiments - using generic types for unavailable schemas
+export type CreateAnnotationRequest = Record<string, unknown>;
+export type RunPipelineTestRequest = Record<string, unknown>;
+export type AnnotationResponse = Record<string, unknown>;
+export type RunPipelineTestResponse = Record<string, unknown>;
+export type PipelineRunResultResponse = Record<string, unknown>;
+export type PipelineComparisonResponse = Record<string, unknown>;
+export type PipelineRunDetailsResponse = Record<string, unknown>;
+export type ScoringDetailsResponse = Record<string, unknown>;
+
+// Response types for RAG experiment operations
+// These operations are not yet in the OpenAPI spec, so we use generic types
+type CreateParagraphResponse = Record<string, unknown>;
+type ListParagraphsResponse = Record<string, unknown>;
+type GetParagraphResponse = Record<string, unknown>;
+type UpdateParagraphResponse = Record<string, unknown>;
+type CreateAnnotationResponse = Record<string, unknown>;
+type RunTestResponse = Record<string, unknown>;
+type GetComparisonResponse = Record<string, unknown>;
+type GetRunDetailsResponse = Record<string, unknown>;
 
 export interface ListParagraphsParams {
   limit?: number;

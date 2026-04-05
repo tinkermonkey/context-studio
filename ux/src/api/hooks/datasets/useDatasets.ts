@@ -5,13 +5,13 @@
  */
 
 import { useQuery, UseQueryOptions } from "@tanstack/react-query";
-import { datasetService } from "../../services/datasets";
+import {
+  datasetService,
+  type DatasetResponse,
+  type ActionLogResponse,
+} from "../../services/datasets";
 import { QUERY_KEYS } from "../../config";
 import { createQueryKey } from "../../utils/queryClient";
-import type { components } from "../../client/types";
-
-type DatasetResponse = components["schemas"]["DatasetResponse"];
-type ActionLogResponse = components["schemas"]["ActionLogResponse"];
 
 /**
  * Hook to fetch all datasets

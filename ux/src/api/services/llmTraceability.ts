@@ -38,8 +38,8 @@ export class LLMTraceabilityService extends BaseService {
 
     const sanitizedRequest = {
       ...request,
-      execution_id: this.sanitizeString(request.execution_id, "execution_id"),
-      record_id: this.sanitizeString(request.record_id, "record_id"),
+      execution_id: this.sanitizeString((request.execution_id as unknown as string) || '', "execution_id"),
+      record_id: this.sanitizeString((request.record_id as unknown as string) || '', "record_id"),
       suggestion_field: this.sanitizeString(
         request.suggestion_field,
         "suggestion_field",
@@ -73,17 +73,17 @@ export class LLMTraceabilityService extends BaseService {
       ? {
           ...filters,
           pipeline_type: filters.pipeline_type
-            ? this.sanitizeString(filters.pipeline_type, "pipeline_type")
+            ? this.sanitizeString((filters.pipeline_type as unknown as string) || '', "pipeline_type")
             : undefined,
           days_back:
             filters.days_back && filters.days_back > 0
               ? Math.min(filters.days_back, 365)
               : undefined,
           start_date: filters.start_date
-            ? this.sanitizeString(filters.start_date, "start_date")
+            ? this.sanitizeString((filters.start_date as unknown as string) || '', "start_date")
             : undefined,
           end_date: filters.end_date
-            ? this.sanitizeString(filters.end_date, "end_date")
+            ? this.sanitizeString((filters.end_date as unknown as string) || '', "end_date")
             : undefined,
         }
       : undefined;
@@ -138,17 +138,17 @@ export class LLMTraceabilityService extends BaseService {
     const sanitizedFilters = {
       ...filters,
       execution_id: filters.execution_id
-        ? this.sanitizeString(filters.execution_id, "execution_id")
+        ? this.sanitizeString((filters.execution_id as unknown as string) || '', "execution_id")
         : undefined,
       pipeline_type: filters.pipeline_type
-        ? this.sanitizeString(filters.pipeline_type, "pipeline_type")
+        ? this.sanitizeString((filters.pipeline_type as unknown as string) || '', "pipeline_type")
         : undefined,
       status: filters.status,
       start_date: filters.start_date
-        ? this.sanitizeString(filters.start_date, "start_date")
+        ? this.sanitizeString((filters.start_date as unknown as string) || '', "start_date")
         : undefined,
       end_date: filters.end_date
-        ? this.sanitizeString(filters.end_date, "end_date")
+        ? this.sanitizeString((filters.end_date as unknown as string) || '', "end_date")
         : undefined,
       limit:
         filters.limit && filters.limit > 0
@@ -156,7 +156,7 @@ export class LLMTraceabilityService extends BaseService {
           : undefined,
       offset:
         filters.offset && filters.offset >= 0 ? filters.offset : undefined,
-      flavor_id: this.sanitizeString(filters.flavor_id, "flavor_id"),
+      flavor_id: this.sanitizeString((filters.flavor_id as unknown as string) || '', "flavor_id"),
     };
 
     return this.withErrorContext(
@@ -240,7 +240,7 @@ export class LLMTraceabilityService extends BaseService {
   ): Promise<ExecutionHistoryByFlavorResponse> {
     this.validateRequired(filters.flavor_id, "flavor_id");
     const sanitizedFilters = {
-      flavor_id: this.sanitizeString(filters.flavor_id, "flavor_id"),
+      flavor_id: this.sanitizeString((filters.flavor_id as unknown as string) || '', "flavor_id"),
       limit:
         filters.limit && filters.limit > 0
           ? Math.min(filters.limit, 100)

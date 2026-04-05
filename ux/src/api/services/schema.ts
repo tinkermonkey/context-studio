@@ -6,10 +6,9 @@
 
 import { BaseService } from "./base";
 import { ENDPOINTS } from "../config";
-import type { components } from "../client/types";
 
 // Type aliases for better readability
-export type MigrationStatus = components["schemas"]["MigrationStatus"];
+export type MigrationStatus = Record<string, unknown>;
 
 export interface MigrateParams extends Record<string, unknown> {
   skip_on_error?: boolean;
@@ -75,7 +74,7 @@ export class SchemaService extends BaseService {
     return this.withErrorContext(() => {
       this.validateRequired(params, "Migration parameters");
       this.validateRequired(params.description, "Migration description");
-      this.sanitizeString(params.description, "Migration description", 255);
+      this.sanitizeString((params.description as unknown as string) || '', "Migration description", 255);
 
       return this.postResource<unknown>(
         `${ENDPOINTS.SCHEMA}/generate-migration`,

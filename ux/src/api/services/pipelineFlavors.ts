@@ -6,17 +6,22 @@
 
 import { BaseService } from "./base";
 import { ENDPOINTS } from "../config";
-import type { components } from "@/api/client/types";
+import type {
+  PipelineFlavor,
+  CreatePipelineFlavorRequest,
+  UpdatePipelineFlavorRequest,
+  PipelineFlavorListResponse,
+  PipelineType,
+} from "./missingTypes";
 
-// Type aliases for better readability
-export type PipelineFlavor = components["schemas"]["PipelineFlavor"];
-export type CreatePipelineFlavorRequest =
-  components["schemas"]["CreatePipelineFlavorRequest"];
-export type UpdatePipelineFlavorRequest =
-  components["schemas"]["UpdatePipelineFlavorRequest"];
-export type PipelineFlavorListResponse =
-  components["schemas"]["PipelineFlavorListResponse"];
-export type PipelineType = components["schemas"]["PipelineType"];
+// Re-export types for use in hooks and components
+export type {
+  PipelineFlavor,
+  CreatePipelineFlavorRequest,
+  UpdatePipelineFlavorRequest,
+  PipelineFlavorListResponse,
+  PipelineType,
+};
 
 export interface ListFlavorsParams extends Record<string, unknown> {
   pipeline?: PipelineType;
@@ -50,11 +55,11 @@ export class PipelineFlavorService extends BaseService {
       this.validateRequired(data.system_prompt, "System prompt");
       this.validateRequired(data.user_prompt, "User prompt");
 
-      this.sanitizeString(data.title, "Flavor title", 255);
-      this.sanitizeString(data.llm_provider, "LLM provider", 100);
-      this.sanitizeString(data.llm_model, "LLM model", 255);
-      this.sanitizeString(data.system_prompt, "System prompt", 10000);
-      this.sanitizeString(data.user_prompt, "User prompt", 10000);
+      this.sanitizeString((data.title as unknown as string) || '', "Flavor title", 255);
+      this.sanitizeString((data.llm_provider as unknown as string) || '', "LLM provider", 100);
+      this.sanitizeString((data.llm_model as unknown as string) || '', "LLM model", 255);
+      this.sanitizeString((data.system_prompt as unknown as string) || '', "System prompt", 10000);
+      this.sanitizeString((data.user_prompt as unknown as string) || '', "User prompt", 10000);
 
       return this.postResource<PipelineFlavor>(
         ENDPOINTS.PIPELINE_FLAVORS,
@@ -87,19 +92,19 @@ export class PipelineFlavorService extends BaseService {
       this.validateRequired(data, "Pipeline flavor update data");
 
       if (data.title) {
-        this.sanitizeString(data.title, "Flavor title", 255);
+        this.sanitizeString((data.title as unknown as string) || '', "Flavor title", 255);
       }
       if (data.llm_provider) {
-        this.sanitizeString(data.llm_provider, "LLM provider", 100);
+        this.sanitizeString((data.llm_provider as unknown as string) || '', "LLM provider", 100);
       }
       if (data.llm_model) {
-        this.sanitizeString(data.llm_model, "LLM model", 255);
+        this.sanitizeString((data.llm_model as unknown as string) || '', "LLM model", 255);
       }
       if (data.system_prompt) {
-        this.sanitizeString(data.system_prompt, "System prompt", 10000);
+        this.sanitizeString((data.system_prompt as unknown as string) || '', "System prompt", 10000);
       }
       if (data.user_prompt) {
-        this.sanitizeString(data.user_prompt, "User prompt", 10000);
+        this.sanitizeString((data.user_prompt as unknown as string) || '', "User prompt", 10000);
       }
 
       return this.putResource<PipelineFlavor>(

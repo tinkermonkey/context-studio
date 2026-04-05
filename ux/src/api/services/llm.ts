@@ -6,22 +6,22 @@
 
 import { BaseService } from "./base";
 import { ENDPOINTS } from "../config";
-import type { components } from "@/api/client/types";
+import type {
+  PipelineExecutionRequest,
+  PipelineExecutionResponse,
+} from "./missingTypes";
 import { pipelineExecutionService } from "./pipelineExecution";
 
 // Type aliases for better readability - using the latest OpenAPI schema
-export type DefinitionSuggestionRequest =
-  components["schemas"]["PipelineExecutionRequest"];
-export type DefinitionSuggestionResponse =
-  components["schemas"]["PipelineExecutionResponse"];
-export type DomainDefinitionRequest =
-  components["schemas"]["PipelineExecutionRequest"];
-export type DomainDefinitionResponse =
-  components["schemas"]["PipelineExecutionResponse"];
-export type LayerDefinitionRequest =
-  components["schemas"]["PipelineExecutionRequest"];
-export type LayerDefinitionResponse =
-  components["schemas"]["PipelineExecutionResponse"];
+export type DefinitionSuggestionRequest = PipelineExecutionRequest;
+export type DefinitionSuggestionResponse = PipelineExecutionResponse;
+export type DomainDefinitionRequest = PipelineExecutionRequest;
+export type DomainDefinitionResponse = PipelineExecutionResponse;
+export type LayerDefinitionRequest = PipelineExecutionRequest;
+export type LayerDefinitionResponse = PipelineExecutionResponse;
+
+// Re-export request/response types
+export type { PipelineExecutionRequest, PipelineExecutionResponse };
 
 // Legacy compatibility: Define ComponentTerm locally since it may not exist in new schema
 export interface ComponentTerm {
@@ -86,7 +86,7 @@ export class LLMService extends BaseService {
           pipeline_type: "suggest_term_definition",
           flavor_id: legacyRequest.flavor || "default",
           context_data: {
-            term: this.sanitizeString(legacyRequest.term, "term"),
+            term: this.sanitizeString((legacyRequest.term as unknown as string) || '', "term"),
             domain_title: legacyRequest.domain_title,
             domain_definition: legacyRequest.domain_definition,
             parent_term_title: legacyRequest.parent_term_title,

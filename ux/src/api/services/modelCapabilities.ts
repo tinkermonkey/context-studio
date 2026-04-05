@@ -5,12 +5,13 @@
  */
 
 import { BaseService } from "./base";
-import type { components } from "@/api/client/types";
+import type {
+  ModelCapabilitiesResponse,
+  SupportedModelsResponse,
+} from "./missingTypes";
 
-export type ModelCapabilitiesResponse =
-  components["schemas"]["ModelCapabilitiesResponse"];
-export type SupportedModelsResponse =
-  components["schemas"]["SupportedModelsResponse"];
+// Re-export types for use in hooks and components
+export type { ModelCapabilitiesResponse, SupportedModelsResponse };
 
 export interface ModelCapabilities {
   supports_temperature: boolean;
