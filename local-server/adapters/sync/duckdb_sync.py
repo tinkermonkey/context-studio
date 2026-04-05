@@ -52,12 +52,15 @@ class DuckDBSyncAdapter:
             change_repo: Optional ChangeRepository for querying unprocessed changes
 
         Raises:
-            ImportError: If duckdb is not installed
+            ImportError: If duckdb or pyarrow is not installed
             RuntimeError: If sync directory cannot be created
         """
         if importlib.util.find_spec("duckdb") is None:
             _logger.error("duckdb is required for sync adapter. Install with: pip install duckdb")
             raise ImportError("duckdb is required for sync adapter")
+        if importlib.util.find_spec("pyarrow") is None:
+            _logger.error("pyarrow is required for sync adapter. Install with: pip install pyarrow")
+            raise ImportError("pyarrow is required for sync adapter")
 
         self._output_dir = Path(output_dir).resolve()
         self._changes_dir = self._output_dir / "changes"
@@ -100,9 +103,8 @@ class DuckDBSyncAdapter:
         try:
             import pyarrow as pa
             import pyarrow.parquet as pq
-            import duckdb
         except ImportError as e:
-            raise RuntimeError(f"pyarrow and duckdb are required for sync adapter: {e}")
+            raise RuntimeError(f"pyarrow is required for sync adapter: {e}")
 
         pushed_event_ids = []
 

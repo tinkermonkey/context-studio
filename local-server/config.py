@@ -118,7 +118,6 @@ class SyncConfig(BaseModel):
         Ensures:
         - If adapter=s3, then s3 configuration must be provided
         - If adapter=duckdb, then duckdb configuration must be provided
-        - If adapter=none, both sub-configs must be None
 
         Returns:
             The validated SyncConfig instance
