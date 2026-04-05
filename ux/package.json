@@ -19,13 +19,13 @@
     "test:e2e:report": "playwright show-report",
     "typecheck": "tsc --noEmit",
     "dev": "vite --port=3100",
-    "build": "vite build",
+    "build": "vite build && prettier --write .flowbite-react/class-list.json src/routeTree.gen.ts",
     "serve": "vite preview",
     "start": "vite",
     "format": "prettier . --write",
     "format:check": "prettier . --check",
     "postinstall": "flowbite-react patch",
-    "generate-types": "openapi-typescript documentation/openapi.json -o src/api/client/types.ts"
+    "generate-types": "openapi-typescript documentation/openapi.json -o src/api/client/types.ts && prettier --write src/api/client/types.ts documentation/openapi.json"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
