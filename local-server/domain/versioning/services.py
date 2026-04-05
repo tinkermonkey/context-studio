@@ -546,7 +546,7 @@ class VersioningService:
                 break
 
         result = SyncResult(
-            pushed=0, pulled=len(recorded_events), errors=errors, pushed_event_ids=[]
+            pushed=0, pulled=len(recorded_events), errors=tuple(errors), pushed_event_ids=()
         )
         _logger.info(
             "Pull completed (pulled=%d, errors=%d)",

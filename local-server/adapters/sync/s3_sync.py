@@ -98,7 +98,7 @@ class S3SyncAdapter:
             botocore.exceptions.NoCredentialsError: If AWS credentials are invalid
         """
         if not events:
-            return SyncResult(pushed=0, pulled=0, errors=[], pushed_event_ids=[])
+            return SyncResult(pushed=0, pulled=0, errors=(), pushed_event_ids=())
 
         pushed_event_ids = []
         try:
@@ -143,7 +143,7 @@ class S3SyncAdapter:
                 len(events),
                 key,
             )
-            return SyncResult(pushed=len(pushed_event_ids), pulled=0, errors=[], pushed_event_ids=pushed_event_ids)
+            return SyncResult(pushed=len(pushed_event_ids), pulled=0, errors=(), pushed_event_ids=tuple(pushed_event_ids))
 
         except Exception as e:
             error_msg = f"Failed to push changes to S3: {e}"

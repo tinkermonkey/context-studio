@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from datetime import datetime
 from enum import Enum
 from typing import TYPE_CHECKING, Optional
 
@@ -48,8 +49,8 @@ class ConflictStatus(str, Enum):
 class SyncStatus:
     """Status of remote synchronization."""
 
-    last_pushed_at: Optional[str]
-    last_pulled_at: Optional[str]
+    last_pushed_at: Optional[datetime]
+    last_pulled_at: Optional[datetime]
     unprocessed_count: int
     is_configured: bool
 
@@ -61,14 +62,14 @@ class SyncResult:
     Attributes:
         pushed: Count of successfully pushed events
         pulled: Count of successfully pulled events
-        errors: List of error messages from failed operations
+        errors: Tuple of error messages from failed operations
         pushed_event_ids: Specific IDs of events that were successfully pushed
     """
 
     pushed: int
     pulled: int
-    errors: list[str] = field(default_factory=list)
-    pushed_event_ids: Optional[list[str]] = None  # Specific event IDs that were successfully pushed
+    errors: tuple[str, ...] = field(default_factory=tuple)
+    pushed_event_ids: Optional[tuple[str, ...]] = None  # Specific event IDs that were successfully pushed
 
 
 @dataclass(frozen=True)

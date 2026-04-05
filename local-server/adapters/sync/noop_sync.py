@@ -34,7 +34,7 @@ class NoOpSyncTarget:
         Returns:
             SyncResult indicating no events were pushed
         """
-        return SyncResult(pushed=0, pulled=0, errors=[], pushed_event_ids=[])
+        return SyncResult(pushed=0, pulled=0, errors=(), pushed_event_ids=())
 
     def pull(self, since: Optional[datetime] = None) -> list[ChangeEvent]:
         """

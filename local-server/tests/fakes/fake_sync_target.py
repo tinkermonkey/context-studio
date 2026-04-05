@@ -41,11 +41,11 @@ class FakeSyncTarget:
             SyncResult with count of pushed events and their IDs
         """
         if not self._configured:
-            return SyncResult(pushed=0, pulled=0, errors=["Sync target not configured"], pushed_event_ids=[])
+            return SyncResult(pushed=0, pulled=0, errors=("Sync target not configured",), pushed_event_ids=())
 
         self._pushed_events.extend(events)
-        pushed_event_ids = [event.id for event in events]
-        return SyncResult(pushed=len(events), pulled=0, errors=[], pushed_event_ids=pushed_event_ids)
+        pushed_event_ids = tuple(event.id for event in events)
+        return SyncResult(pushed=len(events), pulled=0, errors=(), pushed_event_ids=pushed_event_ids)
 
     def pull(self, since: Optional[datetime] = None) -> list[ChangeEvent]:
         """
