@@ -583,7 +583,7 @@ class VersioningService:
         # Extract resolutions and persist them only for resolved conflicts
         resolutions: dict[str, dict[str, object]] = {}
         for conflict in resolved_report.conflicts:
-            # Only include conflicts that have been resolved (resolved_value is not None)
+            # Only include conflicts that have been resolved (resolution_strategy is not None)
             if conflict.is_resolved:
                 if conflict.entity_id not in resolutions:
                     resolutions[conflict.entity_id] = {}

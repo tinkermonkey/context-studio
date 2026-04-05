@@ -20,7 +20,7 @@ from domain.versioning.entities import (
     Proposal,
 )
 from domain.versioning.exceptions import ChangesetStateError, ProposalStateError
-from domain.versioning.value_objects import ChangeState, ProposalState
+from domain.versioning.value_objects import ChangeState, ProposalState, MergeStrategy
 
 
 class TestChangesetStateTransitions:
@@ -192,7 +192,6 @@ class TestConflictReport:
 
     def test_all_resolved_is_true_with_resolved_conflicts(self) -> None:
         """Test that all_resolved is true when all conflicts are resolved."""
-        from domain.versioning.value_objects import MergeStrategy
         conflict = Conflict(
             entity_id="entity1",
             field_name="title",
@@ -206,7 +205,6 @@ class TestConflictReport:
 
     def test_all_resolved_with_multiple_conflicts(self) -> None:
         """Test all_resolved with multiple conflicts."""
-        from domain.versioning.value_objects import MergeStrategy
         conflicts = [
             Conflict(
                 entity_id="entity1",
@@ -237,6 +235,7 @@ class TestConflictReport:
                 base_value="Old",
                 incoming_value="New",
                 resolved_value="Resolved Title",
+                resolution_strategy=MergeStrategy.LAST_WRITE_WINS,
             ),
             Conflict(
                 entity_id="entity1",
@@ -247,6 +246,18 @@ class TestConflictReport:
         ]
         report = ConflictReport(proposal_id="prop1", conflicts=conflicts)
         assert not report.all_resolved
+
+    def test_conflict_resolved_to_none_with_strategy(self) -> None:
+        """Test that is_resolved is true when resolved_value is None but resolution_strategy is set."""
+        conflict = Conflict(
+            entity_id="entity1",
+            field_name="optional_field",
+            base_value=None,
+            incoming_value="New Value",
+            resolved_value=None,
+            resolution_strategy=MergeStrategy.BASE_VALUE_WINS,
+        )
+        assert conflict.is_resolved is True
 
 
 class TestProposalStateTransitions:
