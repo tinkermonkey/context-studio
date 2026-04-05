@@ -18,11 +18,11 @@ Response schemas (for HTTP responses):
 - SyncResultResponse
 """
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 from typing import Optional, Any
 from datetime import datetime
 
-from domain.versioning.value_objects import ChangeOperation, ProposalState
+from domain.versioning.value_objects import ChangeOperation, ChangeState, ProposalState
 
 
 # ============================================================================
@@ -69,8 +69,7 @@ class ChangeEventResponse(BaseModel):
     user_id: Optional[str] = Field(default=None, description="User who made the change")
     change_reason: Optional[str] = Field(default=None, description="Why the change was made")
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class EntityVersionResponse(BaseModel):
@@ -85,8 +84,7 @@ class EntityVersionResponse(BaseModel):
         default=None, description="Version number of parent; None if this is the first version"
     )
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class ChangeHistoryResponse(BaseModel):
@@ -102,12 +100,11 @@ class ChangesetResponse(BaseModel):
     id: str = Field(..., description="Unique identifier of the changeset")
     name: str = Field(..., description="Human-readable name")
     description: Optional[str] = Field(default=None, description="Detailed description")
-    state: str = Field(..., description="Current state (working, staged, proposed, approved, merged)")
+    state: ChangeState = Field(..., description="Current state (working, staged, proposed, approved, merged)")
     created_at: datetime = Field(..., description="When the changeset was created")
     updated_at: datetime = Field(..., description="Last update timestamp")
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class ProposalResponse(BaseModel):
@@ -120,8 +117,7 @@ class ProposalResponse(BaseModel):
     reviewed_at: Optional[datetime] = Field(default=None, description="When the proposal was reviewed")
     reviewer_notes: Optional[str] = Field(default=None, description="Notes from reviewer")
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class ConflictResponse(BaseModel):
@@ -149,8 +145,7 @@ class MergeResultResponse(BaseModel):
     events_applied: int = Field(..., description="Number of change events applied")
     conflicts_resolved: int = Field(..., description="Number of conflicts resolved")
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class SyncStatusResponse(BaseModel):
@@ -165,8 +160,7 @@ class SyncStatusResponse(BaseModel):
         default=None, description="ISO timestamp of last successful pull"
     )
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class SyncResultResponse(BaseModel):
@@ -176,5 +170,4 @@ class SyncResultResponse(BaseModel):
     pulled: int = Field(..., description="Number of events pulled")
     errors: list[str] = Field(default_factory=list, description="Any errors encountered")
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
