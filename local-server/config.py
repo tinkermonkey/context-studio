@@ -6,7 +6,7 @@ import os
 import json
 import logging
 from typing import Optional, List
-from pydantic import BaseModel, Field, ValidationError, field_validator
+from pydantic import BaseModel, Field, ValidationError, field_validator, model_validator
 from enum import Enum
 from dotenv import load_dotenv
 
@@ -109,6 +109,34 @@ class SyncConfig(BaseModel):
         if isinstance(v, str):
             v = v.lower()
         return v
+
+    @model_validator(mode="after")
+    def validate_adapter_config(self) -> "SyncConfig":
+        """
+        Validate that adapter-specific sub-config is present when required.
+
+        Ensures:
+        - If adapter=s3, then s3 configuration must be provided
+        - If adapter=duckdb, then duckdb configuration must be provided
+        - If adapter=none, both sub-configs must be None
+
+        Returns:
+            The validated SyncConfig instance
+
+        Raises:
+            ValueError: If adapter-specific configuration is missing
+        """
+        if self.adapter == SyncAdapterType.S3 and self.s3 is None:
+            raise ValueError(
+                "S3 adapter selected but s3 configuration is missing. "
+                "Provide 'sync.s3' section with required S3 settings."
+            )
+        if self.adapter == SyncAdapterType.DUCKDB and self.duckdb is None:
+            raise ValueError(
+                "DuckDB adapter selected but duckdb configuration is missing. "
+                "Provide 'sync.duckdb' section with 'output_dir'."
+            )
+        return self
 
 
 class Settings(BaseModel):

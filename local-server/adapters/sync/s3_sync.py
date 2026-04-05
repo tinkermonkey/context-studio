@@ -15,11 +15,14 @@ from __future__ import annotations
 import json
 import logging
 from datetime import datetime, timezone
-from typing import Optional, Sequence
+from typing import Optional, Sequence, TYPE_CHECKING
 from uuid import uuid4
 
 from domain.versioning.entities import ChangeEvent
 from domain.versioning.value_objects import SyncResult, ChangeOperation, SyncStatus
+
+if TYPE_CHECKING:
+    from domain.versioning.ports import ChangeRepository
 
 _logger = logging.getLogger(__name__)
 
@@ -54,6 +57,7 @@ class S3SyncAdapter:
         aws_access_key: str,
         aws_secret_key: str,
         region: str,
+        change_repo: "ChangeRepository | None" = None,
     ) -> None:
         """
         Initialize the S3 sync adapter.
@@ -64,6 +68,7 @@ class S3SyncAdapter:
             aws_access_key: AWS access key ID
             aws_secret_key: AWS secret access key
             region: AWS region (e.g., 'us-east-1')
+            change_repo: Optional ChangeRepository for querying unprocessed changes
 
         Raises:
             ImportError: If boto3 is not installed
@@ -77,6 +82,7 @@ class S3SyncAdapter:
         self._bucket = bucket
         self._prefix = prefix.rstrip("/")
         self._region = region
+        self._change_repo = change_repo
 
         self._s3_client = boto3.client(
             "s3",
@@ -210,11 +216,13 @@ class S3SyncAdapter:
                                 if file_date.date() < since.date():
                                     continue
                             except (ValueError, IndexError):
+                                # When since is provided, skip S3 objects with unparseable date paths
                                 _logger.warning(
                                     "Skipping S3 object with unparseable date path (key=%s)",
                                     key,
                                 )
                                 continue
+                    # If since is None, process all objects regardless of date format
 
                     # Download and deserialize the file
                     try:
@@ -301,6 +309,14 @@ class S3SyncAdapter:
             if all_objects:
                 most_recent = max(all_objects, key=lambda x: x["LastModified"])
                 last_sync = most_recent["LastModified"]
+
+            # Query repository for actual unprocessed count
+            if self._change_repo:
+                try:
+                    unprocessed_count = self._change_repo.count_unprocessed()
+                except (RuntimeError, OSError) as e:
+                    _logger.warning("Failed to count unprocessed changes: %s", str(e))
+                    unprocessed_count = 0
 
             _logger.info("Retrieved sync status from S3")
             return SyncStatus(

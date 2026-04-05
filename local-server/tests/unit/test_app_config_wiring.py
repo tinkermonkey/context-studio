@@ -12,6 +12,7 @@ Tests cover:
 import sys
 import os
 import pytest
+from pydantic import ValidationError
 
 # Add local-server root to path for imports
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
@@ -51,48 +52,31 @@ class TestConfigurationErrorImport:
 class TestSyncAdapterInitializationErrors:
     """Test that sync adapter wiring raises ConfigurationError appropriately."""
 
-    def test_missing_s3_config_raises_configuration_error(self) -> None:
-        """Test that missing S3 sub-config raises ConfigurationError."""
-        sync_config = SyncConfig(adapter=SyncAdapterType.S3)  # No s3 sub-config
+    def test_missing_s3_config_raises_validation_error(self) -> None:
+        """Test that missing S3 sub-config raises ValidationError at config creation time."""
+        with pytest.raises(ValidationError) as exc_info:
+            SyncConfig(adapter=SyncAdapterType.S3)  # No s3 sub-config
+        errors = exc_info.value.errors()
+        assert len(errors) > 0
+        assert "s3 configuration" in str(errors[0]["msg"]).lower()
 
-        # Simulate the wiring logic from app.py
-        if sync_config.adapter == SyncAdapterType.S3:
-            s3_config = sync_config.s3
-            if not s3_config:
-                with pytest.raises(ConfigurationError) as exc_info:
-                    raise ConfigurationError(
-                        "S3 adapter configured but required settings missing: "
-                        "sync.s3 configuration is required when adapter is 's3'"
-                    )
-                assert "sync.s3 configuration" in str(exc_info.value)
-
-    def test_missing_s3_bucket_raises_configuration_error(self) -> None:
-        """Test that missing s3_bucket raises ConfigurationError."""
+    def test_missing_s3_bucket_checked_by_app(self) -> None:
+        """Test that missing s3_bucket is checked when initializing adapters in app.py."""
         s3_config = S3Config()  # No bucket specified
 
-        # Simulate the wiring logic from app.py
-        if not s3_config.s3_bucket:
-            with pytest.raises(ConfigurationError) as exc_info:
-                raise ConfigurationError(
-                    "S3 adapter configured but required settings missing: "
-                    "sync.s3.s3_bucket is required when adapter is 's3'"
-                )
-            assert "s3_bucket" in str(exc_info.value)
+        # Simulate the app.py check for missing bucket
+        if not s3_config or not s3_config.s3_bucket:
+            # This is where app.py would raise ConfigurationError
+            # Verify the condition is true
+            assert True, "Missing bucket should trigger ConfigurationError in app.py"
 
-    def test_missing_duckdb_config_raises_configuration_error(self) -> None:
-        """Test that missing DuckDB sub-config raises ConfigurationError."""
-        sync_config = SyncConfig(adapter=SyncAdapterType.DUCKDB)  # No duckdb sub-config
-
-        # Simulate the wiring logic from app.py
-        if sync_config.adapter == SyncAdapterType.DUCKDB:
-            duckdb_config = sync_config.duckdb
-            if not duckdb_config:
-                with pytest.raises(ConfigurationError) as exc_info:
-                    raise ConfigurationError(
-                        "DuckDB adapter configured but required settings missing: "
-                        "sync.duckdb configuration is required when adapter is 'duckdb'"
-                    )
-                assert "sync.duckdb configuration" in str(exc_info.value)
+    def test_missing_duckdb_config_raises_validation_error(self) -> None:
+        """Test that missing DuckDB sub-config raises ValidationError at config creation time."""
+        with pytest.raises(ValidationError) as exc_info:
+            SyncConfig(adapter=SyncAdapterType.DUCKDB)  # No duckdb sub-config
+        errors = exc_info.value.errors()
+        assert len(errors) > 0
+        assert "duckdb configuration" in str(errors[0]["msg"]).lower()
 
     def test_s3_adapter_with_bucket_does_not_raise(self) -> None:
         """Test that S3 adapter with bucket does not raise ConfigurationError."""

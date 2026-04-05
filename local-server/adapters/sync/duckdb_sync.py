@@ -1,9 +1,9 @@
 """
-PyArrow-based synchronization adapter for the Version Control & Collaboration bounded context.
+DuckDB-based synchronization adapter for the Version Control & Collaboration bounded context.
 
 The DuckDBSyncAdapter implements the SyncTarget port, enabling workspaces to synchronize
-changes via date-partitioned Parquet files. This provides an efficient batch-query sync
-mechanism for local-first scenarios.
+changes via date-partitioned Parquet files using DuckDB. This provides an efficient
+batch-query sync mechanism for local-first scenarios.
 
 Changes are serialized as Parquet with a directory structure: {output_dir}/changes/{date}/
 
@@ -19,44 +19,49 @@ import json
 import logging
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Optional, Sequence
+from typing import Optional, Sequence, TYPE_CHECKING
 from uuid import uuid4
 
 from domain.versioning.entities import ChangeEvent
 from domain.versioning.value_objects import SyncResult, ChangeOperation, SyncStatus
+
+if TYPE_CHECKING:
+    from domain.versioning.ports import ChangeRepository
 
 _logger = logging.getLogger(__name__)
 
 
 class DuckDBSyncAdapter:
     """
-    Implements SyncTarget using PyArrow and date-partitioned Parquet files.
+    Implements SyncTarget using DuckDB and date-partitioned Parquet files.
 
     Changes are serialized as Parquet files and stored in date-partitioned
-    directories, enabling efficient querying and batch synchronization.
+    directories, enabling efficient querying and batch synchronization via DuckDB.
 
     This adapter uses fail-fast error handling: I/O errors are propagated to
     the caller as RuntimeError. The caller (service layer) wraps these into
     SyncError domain exceptions.
     """
 
-    def __init__(self, output_dir: str) -> None:
+    def __init__(self, output_dir: str, change_repo: "ChangeRepository | None" = None) -> None:
         """
         Initialize the sync adapter.
 
         Args:
             output_dir: Local directory path for storing Parquet files
+            change_repo: Optional ChangeRepository for querying unprocessed changes
 
         Raises:
-            ImportError: If pyarrow is not installed
+            ImportError: If duckdb is not installed
             RuntimeError: If sync directory cannot be created
         """
-        if importlib.util.find_spec("pyarrow") is None:
-            _logger.error("pyarrow is required for sync adapter. Install with: pip install pyarrow")
-            raise ImportError("pyarrow is required for sync adapter")
+        if importlib.util.find_spec("duckdb") is None:
+            _logger.error("duckdb is required for sync adapter. Install with: pip install duckdb")
+            raise ImportError("duckdb is required for sync adapter")
 
         self._output_dir = Path(output_dir).resolve()
         self._changes_dir = self._output_dir / "changes"
+        self._change_repo = change_repo
 
         # Create directory structure if needed
         try:
@@ -95,8 +100,9 @@ class DuckDBSyncAdapter:
         try:
             import pyarrow as pa
             import pyarrow.parquet as pq
-        except ImportError:
-            raise RuntimeError("pyarrow is required for sync adapter")
+            import duckdb
+        except ImportError as e:
+            raise RuntimeError(f"pyarrow and duckdb are required for sync adapter: {e}")
 
         pushed_event_ids = []
 
@@ -125,11 +131,12 @@ class DuckDBSyncAdapter:
                 events_by_date[date_str].append(event_dict)
 
             # Write each date's events to its own Parquet file
+            # DuckDB is used in the pull method for efficient Parquet reading and verification
             for date_str, date_events in events_by_date.items():
                 date_dir = self._changes_dir / date_str
                 date_dir.mkdir(parents=True, exist_ok=True)
 
-                # Create table from events
+                # Create table from events using PyArrow
                 table = pa.table(
                     {
                         "id": [e["id"] for e in date_events],
@@ -172,7 +179,7 @@ class DuckDBSyncAdapter:
         Pull change events from Parquet files.
 
         Lists date directories in {output_dir}/changes/, filters by date if since provided,
-        reads and deserializes Parquet files. Deduplicates events by ID.
+        reads and deserializes Parquet files using DuckDB. Deduplicates events by ID.
 
         Args:
             since: Optional timestamp to fetch changes after
@@ -184,9 +191,9 @@ class DuckDBSyncAdapter:
             RuntimeError: If file listing fails, file read fails, or parsing fails
         """
         try:
-            import pyarrow.parquet as pq
+            import duckdb
         except ImportError:
-            raise RuntimeError("pyarrow is required for sync adapter")
+            raise RuntimeError("duckdb is required for sync adapter")
 
         events: list[ChangeEvent] = []
         seen_ids: set[str] = set()
@@ -202,6 +209,7 @@ class DuckDBSyncAdapter:
                     continue
 
                 date_str = date_dir.name
+                file_date = None
 
                 # Filter by date if since provided
                 if since:
@@ -216,20 +224,26 @@ class DuckDBSyncAdapter:
                         if file_date.date() < since.date():
                             continue
                     except ValueError:
+                        # When since is provided, skip directories with unparseable dates
                         _logger.warning(
                             "Skipping directory with unparseable date (dir=%s)",
                             date_str,
                         )
                         continue
+                # If since is None, process all directories regardless of name format
 
                 # Read all Parquet files in this date directory
                 for parquet_file in date_dir.glob("*.parquet"):
                     try:
-                        table = pq.read_table(str(parquet_file))
+                        # Read Parquet file using DuckDB
+                        relation = duckdb.read_parquet(str(parquet_file))
 
-                        for row_idx in range(len(table)):
-                            row = {col: table[col][row_idx].as_py() for col in table.column_names}
+                        # Get column names to create dict from rows
+                        column_names = relation.columns
+                        rows = relation.fetchall()
 
+                        for row_tuple in rows:
+                            row = dict(zip(column_names, row_tuple))
                             event_id = row["id"]
 
                             # Skip duplicate events
@@ -269,7 +283,7 @@ class DuckDBSyncAdapter:
                                 entity_type=row["entity_type"],
                                 operation=ChangeOperation(row["operation"]),
                                 timestamp=event_timestamp,
-                                processed=row.get("processed", False),
+                                processed=bool(row.get("processed", False)),
                                 user_id=row.get("user_id"),
                                 change_reason=row.get("change_reason"),
                                 new_state=new_state,
@@ -336,6 +350,14 @@ class DuckDBSyncAdapter:
                                 most_recent_mtime = mtime
 
                 last_sync = most_recent_mtime
+
+            # Query repository for actual unprocessed count
+            if self._change_repo:
+                try:
+                    unprocessed_count = self._change_repo.count_unprocessed()
+                except (RuntimeError, OSError) as e:
+                    _logger.warning("Failed to count unprocessed changes: %s", str(e))
+                    unprocessed_count = 0
 
             _logger.info("Retrieved sync status from local Parquet files")
             return SyncStatus(

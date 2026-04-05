@@ -40,35 +40,44 @@ class TestSyncConfigAdapterValidation:
 
     def test_lowercase_adapter_type_accepted(self) -> None:
         """Test that lowercase adapter types are accepted."""
-        config = SyncConfig(adapter=SyncAdapterType.S3)
-        assert config.adapter == SyncAdapterType.S3
+        config = SyncConfig(adapter=SyncAdapterType.NONE)
+        assert config.adapter == SyncAdapterType.NONE
 
     def test_uppercase_adapter_type_converted_to_lowercase(self) -> None:
         """Test that uppercase adapter types are converted to lowercase."""
-        config = SyncConfig(adapter=SyncAdapterType.S3)
+        config = SyncConfig(
+            adapter=SyncAdapterType.S3,
+            s3=S3Config(s3_bucket="test-bucket")
+        )
         assert config.adapter == SyncAdapterType.S3
 
     def test_mixed_case_adapter_type_converted(self) -> None:
         """Test that mixed case adapter types are converted to lowercase."""
-        config = SyncConfig(adapter=SyncAdapterType.DUCKDB)
+        config = SyncConfig(
+            adapter=SyncAdapterType.DUCKDB,
+            duckdb=DuckDBConfig(output_dir="/tmp")
+        )
         assert config.adapter == SyncAdapterType.DUCKDB
 
     def test_all_valid_adapter_types_case_insensitive(self) -> None:
         """Test that all valid adapter types work case-insensitively."""
-        test_cases = [
-            (SyncAdapterType.S3, SyncAdapterType.S3),
-            (SyncAdapterType.S3, SyncAdapterType.S3),
-            (SyncAdapterType.S3, SyncAdapterType.S3),
-            (SyncAdapterType.DUCKDB, SyncAdapterType.DUCKDB),
-            (SyncAdapterType.DUCKDB, SyncAdapterType.DUCKDB),
-            (SyncAdapterType.DUCKDB, SyncAdapterType.DUCKDB),
-            (SyncAdapterType.NONE, SyncAdapterType.NONE),
-            (SyncAdapterType.NONE, SyncAdapterType.NONE),
-            (SyncAdapterType.NONE, SyncAdapterType.NONE),
-        ]
-        for input_val, expected_enum in test_cases:
-            config = SyncConfig(adapter=input_val)
-            assert config.adapter == expected_enum, f"Failed for input: {input_val}"
+        # Test NONE adapter (doesn't require sub-config)
+        config = SyncConfig(adapter=SyncAdapterType.NONE)
+        assert config.adapter == SyncAdapterType.NONE
+
+        # Test S3 adapter with config
+        config = SyncConfig(
+            adapter=SyncAdapterType.S3,
+            s3=S3Config(s3_bucket="test-bucket")
+        )
+        assert config.adapter == SyncAdapterType.S3
+
+        # Test DUCKDB adapter with config
+        config = SyncConfig(
+            adapter=SyncAdapterType.DUCKDB,
+            duckdb=DuckDBConfig(output_dir="/tmp")
+        )
+        assert config.adapter == SyncAdapterType.DUCKDB
 
     def test_invalid_adapter_type_rejected(self) -> None:
         """Test that invalid adapter types are rejected."""
@@ -121,8 +130,11 @@ class TestDuckDBConfigValidation:
             assert config.output_dir == path
 
     def test_duckdb_config_is_optional_in_sync_config(self) -> None:
-        """Test that DuckDBConfig is optional in SyncConfig."""
-        config = SyncConfig(adapter=SyncAdapterType.S3)
+        """Test that DuckDBConfig is optional in SyncConfig when using different adapter."""
+        config = SyncConfig(
+            adapter=SyncAdapterType.S3,
+            s3=S3Config(s3_bucket="test-bucket")
+        )
         assert config.duckdb is None
 
 
@@ -148,6 +160,40 @@ class TestS3ConfigValidation:
         """Test that S3Config is optional in SyncConfig."""
         config = SyncConfig(adapter=SyncAdapterType.DUCKDB, duckdb=DuckDBConfig(output_dir="/tmp"))
         assert config.s3 is None
+
+
+class TestSyncConfigCrossFieldValidation:
+    """Test SyncConfig cross-field validation."""
+
+    def test_s3_adapter_requires_s3_config(self) -> None:
+        """Test that S3 adapter requires s3 configuration."""
+        with pytest.raises(ValidationError) as exc_info:
+            SyncConfig(adapter=SyncAdapterType.S3)  # Missing s3 config
+        errors = exc_info.value.errors()
+        assert len(errors) > 0
+        assert "s3 configuration is missing" in str(errors[0]["msg"]).lower()
+
+    def test_duckdb_adapter_requires_duckdb_config(self) -> None:
+        """Test that DuckDB adapter requires duckdb configuration."""
+        with pytest.raises(ValidationError) as exc_info:
+            SyncConfig(adapter=SyncAdapterType.DUCKDB)  # Missing duckdb config
+        errors = exc_info.value.errors()
+        assert len(errors) > 0
+        assert "duckdb configuration is missing" in str(errors[0]["msg"]).lower()
+
+    def test_none_adapter_allows_no_config(self) -> None:
+        """Test that NONE adapter allows no sub-config."""
+        config = SyncConfig(adapter=SyncAdapterType.NONE)
+        assert config.adapter == SyncAdapterType.NONE
+        assert config.s3 is None
+        assert config.duckdb is None
+
+    def test_default_none_adapter_allows_no_config(self) -> None:
+        """Test that default NONE adapter allows no sub-config."""
+        config = SyncConfig()
+        assert config.adapter == SyncAdapterType.NONE
+        assert config.s3 is None
+        assert config.duckdb is None
 
 
 class TestSyncConfigIntegration:

@@ -248,6 +248,7 @@ async def lifespan(app: FastAPI):
                         aws_access_key=s3_config.s3_access_key or "",
                         aws_secret_key=s3_config.s3_secret_key or "",
                         region=s3_config.s3_region or "us-east-1",
+                        change_repo=change_repo,
                     )
                     logger.info("S3SyncAdapter initialized for remote sync")
                 except ConfigurationError:
@@ -265,7 +266,10 @@ async def lifespan(app: FastAPI):
                         "sync.duckdb configuration is required when adapter is 'duckdb'"
                     )
                 try:
-                    sync_target = DuckDBSyncAdapter(output_dir=duckdb_config.output_dir)
+                    sync_target = DuckDBSyncAdapter(
+                        output_dir=duckdb_config.output_dir,
+                        change_repo=change_repo,
+                    )
                     logger.info("DuckDBSyncAdapter initialized for remote sync")
                 except ConfigurationError:
                     raise
