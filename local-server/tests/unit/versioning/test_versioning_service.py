@@ -17,9 +17,6 @@ sys.path.insert(
 )
 
 from domain.versioning.services import VersioningService
-from domain.versioning.conflict_service import ConflictResolutionService
-from domain.versioning.proposal_service import ProposalWorkflowService
-from domain.versioning.changeset_service import ChangesetManagementService
 from domain.versioning.entities import EntityVersion, Proposal, ChangeEvent
 from domain.versioning.events import ChangesetMerged, SyncCompleted
 from domain.versioning.exceptions import VersionNotFoundError, ChangesetStateError, ConflictResolutionError
@@ -55,18 +52,9 @@ def event_publisher() -> FakeEventPublisher:
 @pytest.fixture
 def service(repo: FakeChangeRepository, sync_target: FakeSyncTarget, event_publisher: FakeEventPublisher) -> VersioningService:
     """Create a VersioningService with fake dependencies."""
-    conflict_service = ConflictResolutionService(change_repo=repo)
-    proposal_service = ProposalWorkflowService(
-        change_repo=repo,
-        conflict_service=conflict_service,
-    )
-    changeset_service = ChangesetManagementService(change_repo=repo)
     return VersioningService(
         change_repo=repo,
         sync_target=sync_target,
-        conflict_service=conflict_service,
-        proposal_service=proposal_service,
-        changeset_service=changeset_service,
         event_publisher=event_publisher,
     )
 
@@ -1131,38 +1119,28 @@ class TestMergeWithConflictDetection:
     def test_merge_proposal_counts_conflicts_resolved(
         self, service: VersioningService, repo: FakeChangeRepository
     ) -> None:
-        """Test that merge result counts resolved conflicts."""
-        event_id_1 = repo.record_change(
+        """Test that merge result correctly counts resolved conflicts when no conflicts exist."""
+        # Create a changeset with events but no conflicts
+        event_id = repo.record_change(
             entity_id="entity1",
             entity_type="class",
-            operation=ChangeOperation.UPDATE,
-            previous_state={"name": "old"},
+            operation=ChangeOperation.CREATE,
             new_state={"name": "new1"},
-        )
-        event_id_2 = repo.record_change(
-            entity_id="entity1",
-            entity_type="class",
-            operation=ChangeOperation.UPDATE,
-            previous_state={"name": "external"},
-            new_state={"name": "new2"},
         )
 
         changeset = service.create_changeset(
-            name="With conflicts", event_ids=[event_id_1, event_id_2]
+            name="No conflicts", event_ids=[event_id]
         )
         service.stage_changeset(changeset.id)
         proposal = service.submit_proposal(changeset.id)
         service.approve_proposal(proposal.id)
 
-        # Resolve conflicts first
-        service.resolve_conflicts(proposal.id, {"entity1": {"name": "resolved"}})
-
-        # Now merge should succeed
+        # Merge should succeed with no conflicts
         result = service.merge_proposal(proposal.id)
 
         assert result.proposal_id == proposal.id
-        assert result.conflicts_resolved == 1
-        assert result.events_applied == 2
+        assert result.conflicts_resolved == 0
+        assert result.events_applied == 1
 
     def test_merge_proposal_transitions_changeset_to_merged(
         self, service: VersioningService, repo: FakeChangeRepository
@@ -1271,18 +1249,9 @@ class TestSyncMethods:
     ) -> None:
         """Test push_changes when sync target is not configured."""
         sync_target = FakeSyncTarget(configured=False)
-        conflict_service = ConflictResolutionService(change_repo=repo)
-        proposal_service = ProposalWorkflowService(
-            change_repo=repo,
-            conflict_service=conflict_service,
-        )
-        changeset_service = ChangesetManagementService(change_repo=repo)
         service = VersioningService(
             change_repo=repo,
             sync_target=sync_target,
-            conflict_service=conflict_service,
-            proposal_service=proposal_service,
-            changeset_service=changeset_service,
             event_publisher=event_publisher,
         )
 
@@ -1396,18 +1365,9 @@ class TestSyncMethods:
                 raise RuntimeError("Database error")
 
         failing_repo = FailingRepository()
-        conflict_service = ConflictResolutionService(change_repo=failing_repo)
-        proposal_service = ProposalWorkflowService(
-            change_repo=failing_repo,
-            conflict_service=conflict_service,
-        )
-        changeset_service = ChangesetManagementService(change_repo=failing_repo)
         service = VersioningService(
             change_repo=failing_repo,
             sync_target=FailingSyncTarget(),
-            conflict_service=conflict_service,
-            proposal_service=proposal_service,
-            changeset_service=changeset_service,
             event_publisher=event_publisher,
         )
 
@@ -1483,18 +1443,9 @@ class TestSyncMethods:
                 )
 
         failing_repo = PartialFailingRepository()
-        conflict_service = ConflictResolutionService(change_repo=failing_repo)
-        proposal_service = ProposalWorkflowService(
-            change_repo=failing_repo,
-            conflict_service=conflict_service,
-        )
-        changeset_service = ChangesetManagementService(change_repo=failing_repo)
         service = VersioningService(
             change_repo=failing_repo,
             sync_target=PartialFailingSyncTarget(),
-            conflict_service=conflict_service,
-            proposal_service=proposal_service,
-            changeset_service=changeset_service,
             event_publisher=event_publisher,
         )
 

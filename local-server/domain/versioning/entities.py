@@ -85,7 +85,6 @@ class Proposal:
     submitted_at: datetime
     reviewed_at: Optional[datetime] = None
     reviewer_notes: Optional[str] = None
-    conflict_resolutions: dict[str, dict[str, str]] = field(default_factory=dict)
 
     def transition_to(self, new_state: ProposalState) -> None:
         """Enforce valid state transitions; raises ProposalStateError on invalid."""

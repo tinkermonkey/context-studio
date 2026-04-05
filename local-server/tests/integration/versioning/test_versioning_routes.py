@@ -27,9 +27,6 @@ from fastapi import FastAPI, status
 from fastapi.testclient import TestClient
 
 from domain.versioning.services import VersioningService
-from domain.versioning.conflict_service import ConflictResolutionService
-from domain.versioning.proposal_service import ProposalWorkflowService
-from domain.versioning.changeset_service import ChangesetManagementService
 from domain.versioning.value_objects import ChangeOperation
 from adapters.persistence.sqlite.models import Base
 from adapters.persistence.sqlite.change_repo import SQLiteChangeRepository
@@ -72,41 +69,17 @@ def sync_target():
 
 
 @pytest.fixture
-def conflict_service(change_repository):
-    """Create a ConflictResolutionService for testing."""
-    return ConflictResolutionService(change_repo=change_repository)
-
-
-@pytest.fixture
-def proposal_service(change_repository, conflict_service):
-    """Create a ProposalWorkflowService for testing."""
-    return ProposalWorkflowService(
-        change_repo=change_repository,
-        conflict_service=conflict_service,
-    )
-
-
-@pytest.fixture
-def changeset_service(change_repository):
-    """Create a ChangesetManagementService for testing."""
-    return ChangesetManagementService(change_repo=change_repository)
-
-
-@pytest.fixture
 def event_publisher():
     """Create a FakeEventPublisher for testing."""
     return FakeEventPublisher()
 
 
 @pytest.fixture
-def versioning_service(change_repository, sync_target, conflict_service, proposal_service, changeset_service, event_publisher):
+def versioning_service(change_repository, sync_target, event_publisher):
     """Create VersioningService with no-op sync adapter."""
     return VersioningService(
         change_repo=change_repository,
         sync_target=sync_target,
-        conflict_service=conflict_service,
-        proposal_service=proposal_service,
-        changeset_service=changeset_service,
         event_publisher=event_publisher,
     )
 

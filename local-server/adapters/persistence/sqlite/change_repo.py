@@ -456,7 +456,6 @@ class SQLiteChangeRepository:
                 submitted_at=proposal.submitted_at,
                 reviewed_at=proposal.reviewed_at,
                 reviewer_notes=proposal.reviewer_notes,
-                conflict_resolutions=proposal.conflict_resolutions,
             )
 
             session.add(orm_proposal)
@@ -504,7 +503,6 @@ class SQLiteChangeRepository:
             orm_proposal.state = proposal.state.value
             orm_proposal.reviewed_at = proposal.reviewed_at
             orm_proposal.reviewer_notes = proposal.reviewer_notes
-            orm_proposal.conflict_resolutions = proposal.conflict_resolutions
 
             session.commit()
 
@@ -570,5 +568,4 @@ class SQLiteChangeRepository:
             submitted_at=cast(datetime, orm_proposal.submitted_at),
             reviewed_at=cast(Optional[datetime], orm_proposal.reviewed_at),
             reviewer_notes=cast(Optional[str], orm_proposal.reviewer_notes),
-            conflict_resolutions=cast(dict[str, dict[str, str]], orm_proposal.conflict_resolutions or {}),
         )
