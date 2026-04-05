@@ -293,9 +293,18 @@ async def lifespan(app: FastAPI):
         logger.info("Shutting down Context Studio server")
 
     finally:
-        # Cleanup
-        db_manager.dispose()
-        embedding_service.cleanup()
+        # Cleanup resources independently to ensure all cleanup operations complete
+        # even if one raises an exception
+        try:
+            db_manager.dispose()
+        except Exception as e:
+            logger.error(f"Error disposing database manager: {e}")
+
+        try:
+            embedding_service.cleanup()
+        except Exception as e:
+            logger.error(f"Error cleaning up embedding service: {e}")
+
         logger.info("Cleanup completed")
 
 
