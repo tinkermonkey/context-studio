@@ -586,3 +586,4 @@ class TestVersioningRoutes:
             json={"resolutions": {}},
         )
         assert response.status_code == status.HTTP_409_CONFLICT
+        assert "conflict" in response.json()["detail"].lower()

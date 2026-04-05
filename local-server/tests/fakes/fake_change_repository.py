@@ -7,7 +7,7 @@ database dependencies.
 
 from datetime import datetime, timezone
 from typing import Optional
-from copy import copy
+from copy import deepcopy
 
 from domain.versioning.entities import (
     ChangeEvent,
@@ -146,14 +146,14 @@ class FakeChangeRepository:
 
         Stores a copy to prevent tests from relying on by-reference mutations.
         """
-        self._changesets[changeset.id] = copy(changeset)
+        self._changesets[changeset.id] = deepcopy(changeset)
         return changeset
 
     def get_changeset(self, changeset_id: str) -> Optional[Changeset]:
         """Retrieve a changeset by ID."""
         stored = self._changesets.get(changeset_id)
         if stored is not None:
-            return copy(stored)
+            return deepcopy(stored)
         return None
 
     def update_changeset(self, changeset: Changeset) -> Changeset:
@@ -162,7 +162,7 @@ class FakeChangeRepository:
 
         Stores a copy to prevent tests from relying on by-reference mutations.
         """
-        self._changesets[changeset.id] = copy(changeset)
+        self._changesets[changeset.id] = deepcopy(changeset)
         return changeset
 
     # Proposal operations
@@ -173,14 +173,14 @@ class FakeChangeRepository:
 
         Stores a copy to prevent tests from relying on by-reference mutations.
         """
-        self._proposals[proposal.id] = copy(proposal)
+        self._proposals[proposal.id] = deepcopy(proposal)
         return proposal
 
     def get_proposal(self, proposal_id: str) -> Optional[Proposal]:
         """Retrieve a proposal by ID."""
         stored = self._proposals.get(proposal_id)
         if stored is not None:
-            return copy(stored)
+            return deepcopy(stored)
         return None
 
     def update_proposal(self, proposal: Proposal) -> Proposal:
@@ -189,5 +189,5 @@ class FakeChangeRepository:
 
         Stores a copy to prevent tests from relying on by-reference mutations.
         """
-        self._proposals[proposal.id] = copy(proposal)
+        self._proposals[proposal.id] = deepcopy(proposal)
         return proposal
