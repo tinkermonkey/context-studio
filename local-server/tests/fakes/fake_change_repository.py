@@ -16,6 +16,7 @@ from domain.versioning.entities import (
     Proposal,
 )
 from domain.versioning.value_objects import ChangeOperation, ChangeHistoryResult
+from domain.versioning.exceptions import VersionNotFoundError
 
 
 class FakeChangeRepository:
@@ -92,15 +93,46 @@ class FakeChangeRepository:
         return [self._change_events[eid] for eid in event_ids if eid in self._change_events]
 
     def mark_processed(self, event_ids: list[str]) -> None:
-        """Mark change events as processed."""
+        """
+        Mark change events as processed.
+
+        Raises:
+            VersionNotFoundError: If any event IDs don't exist
+        """
+        if not event_ids:
+            return
+
+        # Check all IDs exist first
+        missing_ids = [eid for eid in event_ids if eid not in self._change_events]
+        if missing_ids:
+            raise VersionNotFoundError(
+                f"Change events not found: {', '.join(sorted(missing_ids))}"
+            )
+
+        # Mark all as processed
         for event_id in event_ids:
-            if event_id in self._change_events:
-                self._change_events[event_id].processed = True
+            self._change_events[event_id].processed = True
 
     def delete_changes(self, event_ids: list[str]) -> None:
-        """Delete change events by their IDs (used for rollback on pull failure)."""
+        """
+        Delete change events by their IDs (used for rollback on pull failure).
+
+        Raises:
+            VersionNotFoundError: If any event IDs don't exist
+        """
+        if not event_ids:
+            return
+
+        # Check all IDs exist first
+        missing_ids = [eid for eid in event_ids if eid not in self._change_events]
+        if missing_ids:
+            raise VersionNotFoundError(
+                f"Change events not found: {', '.join(sorted(missing_ids))}"
+            )
+
+        # Delete all
         for event_id in event_ids:
-            self._change_events.pop(event_id, None)
+            self._change_events.pop(event_id)
 
     def get_unprocessed(self, limit: int = 500) -> list[ChangeEvent]:
         """Retrieve unprocessed change events."""
