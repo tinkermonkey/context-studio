@@ -141,10 +141,10 @@ class TestConfigurationEndpoint:
 
         # API key should be masked
         llm_section = body["sections"].get("llm", {})
-        if "openai_api_key" in llm_section:
-            masked = llm_section["openai_api_key"]
-            assert masked.startswith("***")
-            assert masked != 'sk-1234567890abcdef1234567890'
+        assert "openai_api_key" in llm_section, "openai_api_key should be present in llm section"
+        masked = llm_section["openai_api_key"]
+        assert masked.startswith("***"), "API key should be masked with ***"
+        assert masked != 'sk-1234567890abcdef1234567890', "Masked key should not be the original key"
 
     def test_update_configuration_section_returns_200(self, client):
         """PATCH /api/v1/admin/configuration/{section} returns 200."""

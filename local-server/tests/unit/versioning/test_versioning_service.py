@@ -18,9 +18,9 @@ sys.path.insert(
 
 from domain.versioning.services import VersioningService
 from domain.versioning.conflict_service import ConflictResolutionService
-from domain.versioning.entities import EntityVersion, Proposal
+from domain.versioning.entities import EntityVersion, Proposal, ChangeEvent
 from domain.versioning.exceptions import VersionNotFoundError, ChangesetStateError, ConflictResolutionError
-from domain.versioning.value_objects import ChangeState, ChangeOperation, ProposalState
+from domain.versioning.value_objects import ChangeState, ChangeOperation, ProposalState, ChangeHistoryResult
 from tests.fakes.fake_change_repository import FakeChangeRepository
 from tests.fakes.fake_sync_target import FakeSyncTarget
 
@@ -710,21 +710,17 @@ class TestConflictDetection:
             entity_type="class",
             operation=ChangeOperation.CREATE,
             new_state={"name": "Entity1", "description": "Desc1"},
-            changeset_id="test-changeset",
         )
         event_id_2 = repo.record_change(
             entity_id="entity2",
             entity_type="class",
             operation=ChangeOperation.CREATE,
             new_state={"name": "Entity2", "description": "Desc2"},
-            changeset_id="test-changeset",
         )
 
         changeset = service.create_changeset(
             name="Non-overlapping changes", event_ids=[event_id_1, event_id_2]
         )
-        changeset.id = "test-changeset"
-        repo.update_changeset(changeset)
         service.stage_changeset(changeset.id)
         proposal = service.submit_proposal(changeset.id)
         service.approve_proposal(proposal.id)
@@ -744,12 +740,9 @@ class TestConflictDetection:
             entity_type="class",
             operation=ChangeOperation.CREATE,
             new_state={"name": "Entity1"},
-            changeset_id="test-changeset",
         )
 
         changeset = service.create_changeset(name="Single event", event_ids=[event_id])
-        changeset.id = "test-changeset"
-        repo.update_changeset(changeset)
         service.stage_changeset(changeset.id)
         proposal = service.submit_proposal(changeset.id)
         service.approve_proposal(proposal.id)
@@ -770,7 +763,6 @@ class TestConflictDetection:
             operation=ChangeOperation.UPDATE,
             previous_state={"name": "old_name"},
             new_state={"name": "new_name_1"},
-            changeset_id="test-changeset",
         )
 
         # Second update: entity1, name should be new_name_1, but it's actually different
@@ -781,14 +773,11 @@ class TestConflictDetection:
             operation=ChangeOperation.UPDATE,
             previous_state={"name": "different_name"},  # External change detected!
             new_state={"name": "new_name_2"},
-            changeset_id="test-changeset",
         )
 
         changeset = service.create_changeset(
             name="Conflicting updates", event_ids=[event_id_1, event_id_2]
         )
-        changeset.id = "test-changeset"
-        repo.update_changeset(changeset)
         service.stage_changeset(changeset.id)
         proposal = service.submit_proposal(changeset.id)
         service.approve_proposal(proposal.id)
@@ -814,7 +803,6 @@ class TestConflictDetection:
             operation=ChangeOperation.UPDATE,
             previous_state={"name": "old", "description": "old_desc", "status": "active"},
             new_state={"name": "new1", "description": "desc1", "status": "active"},
-            changeset_id="test-changeset",
         )
 
         event_id_2 = repo.record_change(
@@ -823,14 +811,11 @@ class TestConflictDetection:
             operation=ChangeOperation.UPDATE,
             previous_state={"name": "external_name", "description": "external_desc", "status": "active"},
             new_state={"name": "new2", "description": "desc2", "status": "inactive"},
-            changeset_id="test-changeset",
         )
 
         changeset = service.create_changeset(
             name="Multiple field conflicts", event_ids=[event_id_1, event_id_2]
         )
-        changeset.id = "test-changeset"
-        repo.update_changeset(changeset)
         service.stage_changeset(changeset.id)
         proposal = service.submit_proposal(changeset.id)
         service.approve_proposal(proposal.id)
@@ -960,7 +945,6 @@ class TestManualConflictResolution:
             operation=ChangeOperation.UPDATE,
             previous_state={"name": "old"},
             new_state={"name": "new1"},
-            changeset_id="test-changeset",
         )
         event_id_2 = repo.record_change(
             entity_id="entity1",
@@ -968,14 +952,11 @@ class TestManualConflictResolution:
             operation=ChangeOperation.UPDATE,
             previous_state={"name": "external"},
             new_state={"name": "new2"},
-            changeset_id="test-changeset",
         )
 
         changeset = service.create_changeset(
             name="Conflict to resolve", event_ids=[event_id_1, event_id_2]
         )
-        changeset.id = "test-changeset"
-        repo.update_changeset(changeset)
         service.stage_changeset(changeset.id)
         proposal = service.submit_proposal(changeset.id)
         service.approve_proposal(proposal.id)
@@ -1001,7 +982,6 @@ class TestManualConflictResolution:
             operation=ChangeOperation.UPDATE,
             previous_state={"name": "old", "description": "old_desc"},
             new_state={"name": "new1", "description": "desc1"},
-            changeset_id="test-changeset",
         )
         event_id_2 = repo.record_change(
             entity_id="entity1",
@@ -1009,14 +989,11 @@ class TestManualConflictResolution:
             operation=ChangeOperation.UPDATE,
             previous_state={"name": "external_name", "description": "external_desc"},
             new_state={"name": "new2", "description": "desc2"},
-            changeset_id="test-changeset",
         )
 
         changeset = service.create_changeset(
             name="Multiple conflicts", event_ids=[event_id_1, event_id_2]
         )
-        changeset.id = "test-changeset"
-        repo.update_changeset(changeset)
         service.stage_changeset(changeset.id)
         proposal = service.submit_proposal(changeset.id)
         service.approve_proposal(proposal.id)
@@ -1043,7 +1020,6 @@ class TestManualConflictResolution:
             operation=ChangeOperation.UPDATE,
             previous_state={"name": "old"},
             new_state={"name": "new1"},
-            changeset_id="test-changeset",
         )
         event_id_2 = repo.record_change(
             entity_id="entity1",
@@ -1051,14 +1027,11 @@ class TestManualConflictResolution:
             operation=ChangeOperation.UPDATE,
             previous_state={"name": "external"},
             new_state={"name": "new2"},
-            changeset_id="test-changeset",
         )
 
         changeset = service.create_changeset(
             name="Conflict to resolve", event_ids=[event_id_1, event_id_2]
         )
-        changeset.id = "test-changeset"
-        repo.update_changeset(changeset)
         service.stage_changeset(changeset.id)
         proposal = service.submit_proposal(changeset.id)
         service.approve_proposal(proposal.id)
@@ -1085,7 +1058,6 @@ class TestMergeWithConflictDetection:
             operation=ChangeOperation.UPDATE,
             previous_state={"name": "old"},
             new_state={"name": "new1"},
-            changeset_id="test-changeset",
         )
         event_id_2 = repo.record_change(
             entity_id="entity1",
@@ -1093,14 +1065,11 @@ class TestMergeWithConflictDetection:
             operation=ChangeOperation.UPDATE,
             previous_state={"name": "external"},
             new_state={"name": "new2"},
-            changeset_id="test-changeset",
         )
 
         changeset = service.create_changeset(
             name="Conflicted changeset", event_ids=[event_id_1, event_id_2]
         )
-        changeset.id = "test-changeset"
-        repo.update_changeset(changeset)
         service.stage_changeset(changeset.id)
         proposal = service.submit_proposal(changeset.id)
         service.approve_proposal(proposal.id)
@@ -1119,12 +1088,9 @@ class TestMergeWithConflictDetection:
             entity_type="class",
             operation=ChangeOperation.CREATE,
             new_state={"name": "Entity1"},
-            changeset_id="test-changeset",
         )
 
         changeset = service.create_changeset(name="Clean changeset", event_ids=[event_id])
-        changeset.id = "test-changeset"
-        repo.update_changeset(changeset)
         service.stage_changeset(changeset.id)
         proposal = service.submit_proposal(changeset.id)
         service.approve_proposal(proposal.id)
@@ -1145,7 +1111,6 @@ class TestMergeWithConflictDetection:
             operation=ChangeOperation.UPDATE,
             previous_state={"name": "old"},
             new_state={"name": "new1"},
-            changeset_id="test-changeset",
         )
         event_id_2 = repo.record_change(
             entity_id="entity1",
@@ -1153,14 +1118,11 @@ class TestMergeWithConflictDetection:
             operation=ChangeOperation.UPDATE,
             previous_state={"name": "external"},
             new_state={"name": "new2"},
-            changeset_id="test-changeset",
         )
 
         changeset = service.create_changeset(
             name="With conflicts", event_ids=[event_id_1, event_id_2]
         )
-        changeset.id = "test-changeset"
-        repo.update_changeset(changeset)
         service.stage_changeset(changeset.id)
         proposal = service.submit_proposal(changeset.id)
         service.approve_proposal(proposal.id)
@@ -1189,3 +1151,243 @@ class TestMergeWithConflictDetection:
         retrieved = repo.get_changeset(changeset.id)
         assert retrieved is not None
         assert retrieved.state == ChangeState.MERGED
+
+
+# ============================================================================
+# Synchronization Tests
+# ============================================================================
+
+
+class TestSyncMethods:
+    """Test sync methods (push/pull) with event slicing and transaction handling."""
+
+    def test_push_changes_empty_returns_zero_pushed(
+        self, service: VersioningService, repo: FakeChangeRepository, sync_target: FakeSyncTarget
+    ) -> None:
+        """Test push_changes with no unprocessed events returns 0 pushed."""
+        result = service.push_changes()
+
+        assert result.pushed == 0
+        assert len(result.pushed_event_ids) == 0
+        assert len(result.errors) == 0
+
+    def test_push_changes_marks_events_as_processed(
+        self, service: VersioningService, repo: FakeChangeRepository, sync_target: FakeSyncTarget
+    ) -> None:
+        """Test push_changes marks successfully pushed events as processed."""
+        # Record some unprocessed events
+        event_id_1 = repo.record_change(
+            entity_id="entity1",
+            entity_type="class",
+            operation=ChangeOperation.CREATE,
+            new_state={"name": "Entity1"},
+        )
+        event_id_2 = repo.record_change(
+            entity_id="entity2",
+            entity_type="class",
+            operation=ChangeOperation.CREATE,
+            new_state={"name": "Entity2"},
+        )
+
+        # Push changes
+        result = service.push_changes()
+
+        # Verify push succeeded
+        assert result.pushed == 2
+        assert event_id_1 in result.pushed_event_ids
+        assert event_id_2 in result.pushed_event_ids
+        assert len(result.errors) == 0
+
+        # Verify events are marked as processed
+        history = repo.get_changes()
+        for event in history.events:
+            if event.id in [event_id_1, event_id_2]:
+                assert event.processed
+
+    def test_push_changes_respects_500_event_limit(
+        self, service: VersioningService, repo: FakeChangeRepository, sync_target: FakeSyncTarget
+    ) -> None:
+        """Test push_changes slices events to 500 limit."""
+        # Record 600 unprocessed events
+        event_ids = []
+        for i in range(600):
+            event_id = repo.record_change(
+                entity_id=f"entity{i}",
+                entity_type="class",
+                operation=ChangeOperation.CREATE,
+                new_state={"name": f"Entity{i}"},
+            )
+            event_ids.append(event_id)
+
+        # Push changes
+        result = service.push_changes()
+
+        # Should push only 500 (the limit)
+        assert result.pushed == 500
+        assert len(result.pushed_event_ids) == 500
+
+        # Verify 500 were marked processed, 100 remain unprocessed
+        unprocessed_events = repo.get_unprocessed()
+        assert len(unprocessed_events) == 100
+
+    def test_push_changes_with_sync_target_not_configured(
+        self, repo: FakeChangeRepository
+    ) -> None:
+        """Test push_changes when sync target is not configured."""
+        sync_target = FakeSyncTarget(configured=False)
+        service = VersioningService(
+            change_repo=repo,
+            sync_target=sync_target,
+            conflict_service=None,
+        )
+
+        # Record an event
+        repo.record_change(
+            entity_id="entity1",
+            entity_type="class",
+            operation=ChangeOperation.CREATE,
+            new_state={"name": "Entity1"},
+        )
+
+        # Push should return error
+        result = service.push_changes()
+
+        assert result.pushed == 0
+        assert len(result.errors) > 0
+        # Event should not be marked as processed
+        unprocessed = repo.get_unprocessed()
+        assert len(unprocessed) == 1
+
+    def test_pull_changes_empty_returns_zero_pulled(
+        self, service: VersioningService, repo: FakeChangeRepository, sync_target: FakeSyncTarget
+    ) -> None:
+        """Test pull_changes with no remote events returns 0 pulled."""
+        result = service.pull_changes()
+
+        assert result.pulled == 0
+        assert len(result.errors) == 0
+        assert len(repo.get_changes().events) == 0
+
+    def test_pull_changes_records_events_locally(
+        self, service: VersioningService, repo: FakeChangeRepository, sync_target: FakeSyncTarget
+    ) -> None:
+        """Test pull_changes records remote events in local repository."""
+        # Add remote events
+        remote_event_1 = ChangeEvent(
+            id="remote-1",
+            entity_id="remote_entity1",
+            entity_type="class",
+            operation=ChangeOperation.CREATE,
+            new_state={"name": "RemoteEntity1"},
+            timestamp=datetime.now(timezone.utc),
+        )
+        remote_event_2 = ChangeEvent(
+            id="remote-2",
+            entity_id="remote_entity2",
+            entity_type="class",
+            operation=ChangeOperation.CREATE,
+            new_state={"name": "RemoteEntity2"},
+            timestamp=datetime.now(timezone.utc),
+        )
+        sync_target.add_remote_events([remote_event_1, remote_event_2])
+
+        # Pull changes
+        result = service.pull_changes()
+
+        # Verify pull recorded events
+        assert result.pulled == 2
+        assert len(result.errors) == 0
+
+        # Verify events are in repository
+        history = repo.get_changes()
+        assert len(history.events) == 2
+        assert any(e.entity_id == "remote_entity1" for e in history.events)
+        assert any(e.entity_id == "remote_entity2" for e in history.events)
+
+    def test_pull_changes_stops_on_first_error(
+        self, service: VersioningService, repo: FakeChangeRepository
+    ) -> None:
+        """Test pull_changes stops on first record error and logs partial success."""
+        # Create a mock sync target that returns events
+        remote_event = ChangeEvent(
+            id="remote-1",
+            entity_id="remote_entity1",
+            entity_type="class",
+            operation=ChangeOperation.CREATE,
+            new_state={"name": "RemoteEntity1"},
+            timestamp=datetime.now(timezone.utc),
+        )
+
+        class FailingSyncTarget:
+            def pull(self):
+                return [remote_event]
+
+            def is_configured(self):
+                return True
+
+        # Create a repository that fails on record_change
+        class FailingRepository:
+            def record_change(self, **kwargs):
+                raise RuntimeError("Database error")
+
+            def mark_processed(self, event_ids):
+                pass
+
+            def get_unprocessed(self, limit=500):
+                return []
+
+            def get_changes(self, entity_id=None, since=None, limit=100):
+                return ChangeHistoryResult(events=[], total=0)
+
+        service = VersioningService(
+            change_repo=FailingRepository(),
+            sync_target=FailingSyncTarget(),
+            conflict_service=None,
+        )
+
+        result = service.pull_changes()
+
+        # Should have error, zero pulled
+        assert result.pulled == 0
+        assert len(result.errors) > 0
+        assert "Database error" in result.errors[0]
+
+    def test_push_changes_publishes_sync_completed_event(
+        self, service: VersioningService, repo: FakeChangeRepository, sync_target: FakeSyncTarget
+    ) -> None:
+        """Test push_changes publishes SyncCompleted event (integration check)."""
+        # Record an event
+        repo.record_change(
+            entity_id="entity1",
+            entity_type="class",
+            operation=ChangeOperation.CREATE,
+            new_state={"name": "Entity1"},
+        )
+
+        # Push should complete and publish event
+        result = service.push_changes()
+
+        assert result.pushed == 1
+        # In a unit test with fakes, we can't verify the event was published,
+        # but we can verify the result is correct
+
+    def test_pull_changes_publishes_sync_completed_event(
+        self, service: VersioningService, repo: FakeChangeRepository, sync_target: FakeSyncTarget
+    ) -> None:
+        """Test pull_changes publishes SyncCompleted event (integration check)."""
+        remote_event = ChangeEvent(
+            id="remote-1",
+            entity_id="remote_entity1",
+            entity_type="class",
+            operation=ChangeOperation.CREATE,
+            new_state={"name": "RemoteEntity1"},
+            timestamp=datetime.now(timezone.utc),
+        )
+        sync_target.add_remote_events([remote_event])
+
+        # Pull should complete and publish event
+        result = service.pull_changes()
+
+        assert result.pulled == 1
+        # In a unit test with fakes, we can't verify the event was published,
+        # but we can verify the result is correct

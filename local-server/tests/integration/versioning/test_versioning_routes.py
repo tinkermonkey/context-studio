@@ -450,3 +450,139 @@ class TestVersioningRoutes:
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
         assert data["pushed"] == 0
+
+    # ==================== 409 Conflict Error Tests ====================
+
+    def test_stage_changeset_returns_409_when_already_staged(self, client):
+        """Test stage_changeset returns 409 when changeset is already staged."""
+        # Create and stage a changeset
+        create_response = client.post(
+            "/api/v1/versioning/changesets",
+            json={"name": "Test", "description": "Test changeset"},
+        )
+        changeset_id = create_response.json()["id"]
+
+        # Stage it once
+        client.post(f"/api/v1/versioning/changesets/{changeset_id}/stage")
+
+        # Try to stage again - should return 409
+        response = client.post(f"/api/v1/versioning/changesets/{changeset_id}/stage")
+        assert response.status_code == status.HTTP_409_CONFLICT
+
+    def test_submit_proposal_returns_409_when_not_staged(self, client):
+        """Test submit_proposal returns 409 when changeset is not staged."""
+        # Create a changeset but don't stage it
+        create_response = client.post(
+            "/api/v1/versioning/changesets",
+            json={"name": "Test", "description": "Test changeset"},
+        )
+        changeset_id = create_response.json()["id"]
+
+        # Try to submit without staging - should return 409
+        response = client.post(f"/api/v1/versioning/changesets/{changeset_id}/submit")
+        assert response.status_code == status.HTTP_409_CONFLICT
+
+    def test_approve_proposal_returns_409_when_not_proposed(self, client):
+        """Test approve_proposal returns 409 when proposal is not in open state."""
+        # Create, stage, and submit a proposal
+        create_response = client.post(
+            "/api/v1/versioning/changesets",
+            json={"name": "Test", "description": "Test changeset"},
+        )
+        changeset_id = create_response.json()["id"]
+
+        client.post(f"/api/v1/versioning/changesets/{changeset_id}/stage")
+        submit_response = client.post(f"/api/v1/versioning/changesets/{changeset_id}/submit")
+        proposal_id = submit_response.json()["id"]
+
+        # Approve it
+        client.post(f"/api/v1/versioning/proposals/{proposal_id}/approve")
+
+        # Try to approve again - should return 409
+        response = client.post(f"/api/v1/versioning/proposals/{proposal_id}/approve")
+        assert response.status_code == status.HTTP_409_CONFLICT
+
+    def test_reject_proposal_returns_409_when_not_proposed(self, client):
+        """Test reject_proposal returns 409 when proposal is not in open state."""
+        # Create, stage, and submit a proposal
+        create_response = client.post(
+            "/api/v1/versioning/changesets",
+            json={"name": "Test", "description": "Test changeset"},
+        )
+        changeset_id = create_response.json()["id"]
+
+        client.post(f"/api/v1/versioning/changesets/{changeset_id}/stage")
+        submit_response = client.post(f"/api/v1/versioning/changesets/{changeset_id}/submit")
+        proposal_id = submit_response.json()["id"]
+
+        # Approve it
+        client.post(f"/api/v1/versioning/proposals/{proposal_id}/approve")
+
+        # Try to reject an approved proposal - should return 409
+        response = client.post(
+            f"/api/v1/versioning/proposals/{proposal_id}/reject",
+            json={"reason": "Not needed anymore"},
+        )
+        assert response.status_code == status.HTTP_409_CONFLICT
+
+    def test_merge_proposal_returns_409_when_not_approved(self, client):
+        """Test merge_proposal returns 409 when changeset is not in APPROVED state."""
+        # Create, stage, and submit a proposal (but don't approve)
+        create_response = client.post(
+            "/api/v1/versioning/changesets",
+            json={"name": "Test", "description": "Test changeset"},
+        )
+        changeset_id = create_response.json()["id"]
+
+        client.post(f"/api/v1/versioning/changesets/{changeset_id}/stage")
+        submit_response = client.post(f"/api/v1/versioning/changesets/{changeset_id}/submit")
+        proposal_id = submit_response.json()["id"]
+
+        # Try to merge without approving - should return 409
+        response = client.post(f"/api/v1/versioning/proposals/{proposal_id}/merge")
+        assert response.status_code == status.HTTP_409_CONFLICT
+
+    def test_resolve_conflicts_returns_409_when_conflicts_remain(
+        self, client, change_repository
+    ):
+        """Test resolve_conflicts returns 409 when conflicts are not fully resolved."""
+        # Create and record conflicting events
+        event_id_1 = change_repository.record_change(
+            entity_id="entity1",
+            entity_type="class",
+            operation=ChangeOperation.UPDATE,
+            previous_state={"name": "old_name"},
+            new_state={"name": "new_name_1"},
+        )
+        event_id_2 = change_repository.record_change(
+            entity_id="entity1",
+            entity_type="class",
+            operation=ChangeOperation.UPDATE,
+            previous_state={"name": "different_name"},
+            new_state={"name": "new_name_2"},
+        )
+
+        # Create changeset with these conflicting events
+        changeset_response = client.post(
+            "/api/v1/versioning/changesets",
+            json={
+                "name": "Conflicting",
+                "description": "Has conflicts",
+                "event_ids": [event_id_1, event_id_2],
+            },
+        )
+        changeset_id = changeset_response.json()["id"]
+
+        # Stage, submit, approve
+        client.post(f"/api/v1/versioning/changesets/{changeset_id}/stage")
+        proposal_response = client.post(f"/api/v1/versioning/changesets/{changeset_id}/submit")
+        proposal_id = proposal_response.json()["id"]
+        client.post(f"/api/v1/versioning/proposals/{proposal_id}/approve")
+
+        # Try to resolve without actually resolving conflicts - should return 409
+        # (empty resolutions dict leaves conflicts unresolved)
+        response = client.post(
+            f"/api/v1/versioning/proposals/{proposal_id}/resolve",
+            json={"resolutions": {}},
+        )
+        assert response.status_code == status.HTTP_409_CONFLICT

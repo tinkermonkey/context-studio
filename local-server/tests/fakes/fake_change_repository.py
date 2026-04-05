@@ -7,6 +7,7 @@ database dependencies.
 
 from datetime import datetime, timezone
 from typing import Optional
+from copy import copy
 
 from domain.versioning.entities import (
     ChangeEvent,
@@ -140,31 +141,53 @@ class FakeChangeRepository:
     # Changeset operations
 
     def create_changeset(self, changeset: Changeset) -> Changeset:
-        """Create a new changeset."""
-        self._changesets[changeset.id] = changeset
+        """
+        Create a new changeset.
+
+        Stores a copy to prevent tests from relying on by-reference mutations.
+        """
+        self._changesets[changeset.id] = copy(changeset)
         return changeset
 
     def get_changeset(self, changeset_id: str) -> Optional[Changeset]:
         """Retrieve a changeset by ID."""
-        return self._changesets.get(changeset_id)
+        stored = self._changesets.get(changeset_id)
+        if stored is not None:
+            return copy(stored)
+        return None
 
     def update_changeset(self, changeset: Changeset) -> Changeset:
-        """Update an existing changeset."""
-        self._changesets[changeset.id] = changeset
+        """
+        Update an existing changeset.
+
+        Stores a copy to prevent tests from relying on by-reference mutations.
+        """
+        self._changesets[changeset.id] = copy(changeset)
         return changeset
 
     # Proposal operations
 
     def create_proposal(self, proposal: Proposal) -> Proposal:
-        """Create a new proposal."""
-        self._proposals[proposal.id] = proposal
+        """
+        Create a new proposal.
+
+        Stores a copy to prevent tests from relying on by-reference mutations.
+        """
+        self._proposals[proposal.id] = copy(proposal)
         return proposal
 
     def get_proposal(self, proposal_id: str) -> Optional[Proposal]:
         """Retrieve a proposal by ID."""
-        return self._proposals.get(proposal_id)
+        stored = self._proposals.get(proposal_id)
+        if stored is not None:
+            return copy(stored)
+        return None
 
     def update_proposal(self, proposal: Proposal) -> Proposal:
-        """Update an existing proposal."""
-        self._proposals[proposal.id] = proposal
+        """
+        Update an existing proposal.
+
+        Stores a copy to prevent tests from relying on by-reference mutations.
+        """
+        self._proposals[proposal.id] = copy(proposal)
         return proposal
