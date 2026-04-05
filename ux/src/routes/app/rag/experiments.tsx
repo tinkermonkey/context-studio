@@ -37,18 +37,20 @@ function RAGExperimentsPage() {
 
   const handleTestComplete = (results: RunPipelineTestResponse) => {
     // Extract unique paragraph IDs and pipeline names from results
+    if (!results.results) return;
+
     const paragraphIds = Array.from(
-      new Set(results.results.map((r) => r.paragraph_id)),
-    );
+      new Set(results.results.map((r) => r.paragraph_id).filter((id) => id)),
+    ) as string[];
     const pipelineNames = Array.from(
-      new Set(results.results.map((r) => r.pipeline_name)),
-    );
+      new Set(results.results.map((r) => r.pipeline_name).filter((name) => name)),
+    ) as string[];
 
     // For now, show results for the first paragraph
     // In a full implementation, we might want to show results for all paragraphs
     if (paragraphIds.length > 0) {
       setTestResults({
-        paragraphId: paragraphIds[0],
+        paragraphId: paragraphIds[0] || "",
         pipelineNames,
       });
     }

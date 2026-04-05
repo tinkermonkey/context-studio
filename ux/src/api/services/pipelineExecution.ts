@@ -12,7 +12,7 @@ import type {
 } from "./missingTypes";
 
 // Re-export types for use in hooks and components
-export type { PipelineExecutionRequest, PipelineExecutionResponse };
+export type { PipelineExecutionRequest, PipelineExecutionResponse, PipelineComparisonItem } from "./missingTypes";
 
 // Type aliases for the new pipeline execution system
 // Legacy alias for backward compatibility

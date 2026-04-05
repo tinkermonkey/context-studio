@@ -1,9 +1,6 @@
 import { Badge } from "flowbite-react";
 import React from "react";
-// removed import;
-import type { components } from "@/api/client/types";
-
-type NodeLinkOut = components["schemas"]["NodeLinkOut"];
+import type { NodeLinkOut } from "@/api/services/missingTypes";
 
 interface RelationshipTermsDisplayProps {
   relationships: NodeLinkOut[];

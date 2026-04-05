@@ -34,7 +34,6 @@ import {
   CsSidebarSection,
 } from "@/components/layout/cs_sidebar";
 import { CsMain, CsMainTitle, CsMainHeader } from "@/components/layout/cs_main";
-import type { components } from "@/api/client/types";
 import { NlpAnalysisPanel } from "@/components/nlp/NlpAnalysisPanel";
 import { TreeChartPanel } from "@/components/panels/TreeChartPanel";
 import type { StructureNode } from "@/api/types/structureNodes";
@@ -47,8 +46,7 @@ import { NodeLinkPanel } from "@/components/node_links";
 import { DomainMoveForm } from "@/components/forms/domain_move_form";
 import { TermMoveForm } from "@/components/forms/term_move_form";
 import { AttributePanel } from "@/components/structure_nodes/AttributePanel";
-
-type NodeOut = components["schemas"]["NodeOut"];
+import type { NodeOut } from "@/api/services/missingTypes";
 
 interface StructureNodeDetailsProps {
   node: StructureNode;
@@ -173,7 +171,7 @@ export const StructureNodeDetails: React.FC<StructureNodeDetailsProps> = ({
                   if (lineage.length <= 4) {
                     return lineage.map((ancestorNode, index) => {
                       const isLast = index === lineage.length - 1;
-                      const icon = getIconForType(ancestorNode.node_type);
+                      const icon = getIconForType(ancestorNode.node_type as string);
                       return (
                         <BreadcrumbItem
                           key={ancestorNode.id}
@@ -184,7 +182,7 @@ export const StructureNodeDetails: React.FC<StructureNodeDetailsProps> = ({
                           }
                           icon={icon}
                         >
-                          {ancestorNode.title}
+                          {ancestorNode.title as string}
                         </BreadcrumbItem>
                       );
                     });
@@ -199,9 +197,9 @@ export const StructureNodeDetails: React.FC<StructureNodeDetailsProps> = ({
                     <BreadcrumbItem
                       key={first.id}
                       href={`/app/structure_nodes/${first.id}`}
-                      icon={getIconForType(first.node_type)}
+                      icon={getIconForType(first.node_type as string)}
                     >
-                      {first.title}
+                      {first.title as string}
                     </BreadcrumbItem>,
                   );
 
@@ -212,9 +210,9 @@ export const StructureNodeDetails: React.FC<StructureNodeDetailsProps> = ({
                   breadcrumbItems.push(
                     <BreadcrumbItem
                       key={last.id}
-                      icon={getIconForType(last.node_type)}
+                      icon={getIconForType(last.node_type as string)}
                     >
-                      {last.title}
+                      {last.title as string}
                     </BreadcrumbItem>,
                   );
 
@@ -288,16 +286,16 @@ export const StructureNodeDetails: React.FC<StructureNodeDetailsProps> = ({
             domainContext={
               parentDomain
                 ? {
-                    title: parentDomain.title,
-                    definition: parentDomain.definition || "",
+                    title: parentDomain.title as string,
+                    definition: (parentDomain.definition || "") as string,
                   }
                 : null
             }
             parentTermContext={
               parentTerm
                 ? {
-                    title: parentTerm.title,
-                    definition: parentTerm.definition || "",
+                    title: parentTerm.title as string,
+                    definition: (parentTerm.definition || "") as string,
                     relationshipPredicate: "child_of",
                   }
                 : null

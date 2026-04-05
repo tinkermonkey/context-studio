@@ -22,8 +22,14 @@ export type {
 // Type aliases for better readability
 export type PredicateDiscoveryResponse = Record<string, unknown>;
 export type PredicateDiscoveryStatus = Record<string, unknown>;
-export type SimilarPredicateOut = Record<string, unknown>;
-export type FindSimilarResponse = Record<string, unknown>;
+export type SimilarPredicateOut = ExternalPredicateOut;
+
+export interface FindSimilarResponse {
+  results: ExternalPredicateOut[];
+  total_count?: number;
+  [key: string]: unknown;
+}
+
 export type ClusterOut = Record<string, unknown>;
 export type ClusterPredicatesResponse = Record<string, unknown>;
 

@@ -101,8 +101,9 @@ export default function RAGTestPage() {
     onSuccess: (data) => {
       setResult(data);
       // Set request ID to trigger trace fetch if trace is available
-      if (data.trace_available && data.request_id) {
-        setRequestId(data.request_id);
+      const typedData = data as Record<string, unknown>;
+      if (typedData.trace_available && typedData.request_id) {
+        setRequestId(typedData.request_id as string);
       }
     },
     onError: (err) => {

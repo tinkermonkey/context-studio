@@ -2,12 +2,9 @@ import React from "react";
 import { useForm } from "@tanstack/react-form";
 import { TextInput, Button, Alert, Label, Card } from "flowbite-react";
 import { Info, FolderOpen } from "lucide-react";
-import type { components } from "@/api/client/types";
+import type { AddExistingDatasetRequest } from "@/api/services/datasets";
 import { useAddExistingDataset } from "@/api/hooks/datasets/useDatasetMutations";
 import { useDatasetsDirectory } from "@/api/hooks/datasets";
-
-type AddExistingDatasetRequest =
-  components["schemas"]["AddExistingDatasetRequest"];
 
 interface AddExistingDatasetFormProps {
   onSuccess?: (dataset: any) => void; // eslint-disable-line @typescript-eslint/no-explicit-any

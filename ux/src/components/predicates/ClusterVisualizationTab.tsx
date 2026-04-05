@@ -38,12 +38,13 @@ export const ClusterVisualizationTab: React.FC<
   const clusterMutation = useClusterPredicates({
     onSuccess: (result) => {
       setClusters(result);
-      const clusteredCount = result.clusters.reduce(
-        (sum, c) => sum + c.size,
+      const clustersArray = (result.clusters as any[]) || [];
+      const clusteredCount = clustersArray.reduce(
+        (sum: number, c: any) => sum + (c.size || 0),
         0,
       );
       toast.success(
-        `Found ${result.total_clusters} clusters with ${clusteredCount} clustered predicates`,
+        `Found ${(result as any).total_clusters || 0} clusters with ${clusteredCount} clustered predicates`,
       );
     },
     onError: (error: Error) => {

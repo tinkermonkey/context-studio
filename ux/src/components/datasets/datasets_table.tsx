@@ -26,10 +26,7 @@ import {
   useActivateDataset,
   useForgetDataset,
 } from "@/api/hooks/datasets";
-import type { components } from "@/api/client/types";
-
-// Type alias for DatasetResponse
-type DatasetResponse = components["schemas"]["DatasetResponse"];
+import type { DatasetResponse } from "@/api/services/datasets";
 
 // Props interface
 interface DatasetsTableProps {
@@ -114,14 +111,18 @@ const columns = [
   }),
   columnHelper.accessor("created_at", {
     header: "Created",
-    cell: (info) => (
-      <div className="flex items-center space-x-2">
-        <Calendar className="h-4 w-4 text-gray-400" />
-        <span className="text-sm text-gray-900 dark:text-white">
-          {new Date(info.getValue()).toLocaleDateString()}
-        </span>
-      </div>
-    ),
+    cell: (info) => {
+      const dateValue = info.getValue();
+      const dateStr = dateValue ? new Date(dateValue).toLocaleDateString() : "Unknown";
+      return (
+        <div className="flex items-center space-x-2">
+          <Calendar className="h-4 w-4 text-gray-400" />
+          <span className="text-sm text-gray-900 dark:text-white">
+            {dateStr}
+          </span>
+        </div>
+      );
+    },
   }),
   columnHelper.accessor("metrics", {
     header: "Statistics",
@@ -259,7 +260,7 @@ export const DatasetsTable: React.FC<DatasetsTableProps> = ({
             dataset.is_active
               ? "cursor-default text-gray-400"
               : "cursor-pointer text-green-600 hover:underline",
-          disabled: (dataset: DatasetResponse) => dataset.is_active,
+          disabled: (dataset: DatasetResponse) => dataset.is_active || false,
         }}
         customBulkActions={[
           {

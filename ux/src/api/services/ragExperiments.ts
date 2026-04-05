@@ -12,6 +12,9 @@ import type {
   UpdateTestParagraphRequest,
   TestParagraphResponse,
   TestParagraphListResponse,
+  PipelineComparisonResponse,
+  PipelineComparisonItem,
+  PipelineComparisonSummary,
 } from "./missingTypes";
 
 // Re-export types for use in hooks and components
@@ -20,27 +23,44 @@ export type {
   UpdateTestParagraphRequest,
   TestParagraphResponse,
   TestParagraphListResponse,
+  PipelineComparisonResponse,
+  PipelineComparisonItem,
+  PipelineComparisonSummary,
 };
 
-// Type definitions for RAG experiments - using generic types for unavailable schemas
+// Type definitions for RAG experiments
 export type CreateAnnotationRequest = Record<string, unknown>;
 export type RunPipelineTestRequest = Record<string, unknown>;
 export type AnnotationResponse = Record<string, unknown>;
-export type RunPipelineTestResponse = Record<string, unknown>;
+
+export interface PipelineRunResult {
+  paragraph_id?: string;
+  pipeline_name?: string;
+  status?: string;
+  result?: Record<string, unknown>;
+  [key: string]: unknown;
+}
+
+export type RunPipelineTestResponse = Record<string, unknown> & {
+  results?: PipelineRunResult[];
+};
+
 export type PipelineRunResultResponse = Record<string, unknown>;
-export type PipelineComparisonResponse = Record<string, unknown>;
+
 export type PipelineRunDetailsResponse = Record<string, unknown>;
 export type ScoringDetailsResponse = Record<string, unknown>;
 
 // Response types for RAG experiment operations
-// These operations are not yet in the OpenAPI spec, so we use generic types
-type CreateParagraphResponse = Record<string, unknown>;
-type ListParagraphsResponse = Record<string, unknown>;
-type GetParagraphResponse = Record<string, unknown>;
-type UpdateParagraphResponse = Record<string, unknown>;
+type CreateParagraphResponse = TestParagraphResponse;
+type ListParagraphsResponse = Record<string, unknown> & {
+  paragraphs?: TestParagraphResponse[];
+  total?: number;
+};
+type GetParagraphResponse = TestParagraphResponse;
+type UpdateParagraphResponse = TestParagraphResponse;
 type CreateAnnotationResponse = Record<string, unknown>;
 type RunTestResponse = Record<string, unknown>;
-type GetComparisonResponse = Record<string, unknown>;
+type GetComparisonResponse = PipelineComparisonResponse;
 type GetRunDetailsResponse = Record<string, unknown>;
 
 export interface ListParagraphsParams {

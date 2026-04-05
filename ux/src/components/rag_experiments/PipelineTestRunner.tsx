@@ -92,7 +92,8 @@ export const PipelineTestRunner: React.FC<PipelineTestRunnerProps> = ({
   let progress = 0;
   let completedCount = 0;
   if (runTestMutation.data) {
-    completedCount = runTestMutation.data.results.length;
+    const resultsArray = ((runTestMutation.data as any)?.results as any[]) || [];
+    completedCount = resultsArray.length;
     progress = totalTests > 0 ? (completedCount / totalTests) * 100 : 0;
   }
 
@@ -287,9 +288,9 @@ export const PipelineTestRunner: React.FC<PipelineTestRunnerProps> = ({
                 <span className="font-medium">Tests Completed!</span>
               </div>
               <div className="mt-2 space-y-1 text-sm text-green-700">
-                <p>Total Runs: {runTestMutation.data.total_runs}</p>
-                <p>Successful: {runTestMutation.data.successful_runs}</p>
-                <p>Failed: {runTestMutation.data.failed_runs}</p>
+                <p>Total Runs: {(runTestMutation.data as any)?.total_runs as string}</p>
+                <p>Successful: {(runTestMutation.data as any)?.successful_runs as string}</p>
+                <p>Failed: {(runTestMutation.data as any)?.failed_runs as string}</p>
               </div>
             </div>
           )}
