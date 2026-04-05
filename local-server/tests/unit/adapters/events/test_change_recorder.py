@@ -46,8 +46,8 @@ class TestChangeEventRecorder:
         assert call_args.kwargs['new_state']['entity_count'] == 42
         assert call_args.kwargs['new_state']['duration_ms'] == 1250.5
 
-    def test_on_extraction_completed_handles_exception(self, recorder, mock_change_repo):
-        """Test that repo exceptions are caught and logged."""
+    def test_on_extraction_completed_propagates_exception(self, recorder, mock_change_repo):
+        """Test that repo exceptions propagate to the event publisher."""
         mock_change_repo.record_change.side_effect = RuntimeError("DB error")
         event = ExtractionCompleted(
             result_id="result-456",
@@ -55,8 +55,8 @@ class TestChangeEventRecorder:
             duration_ms=1250.5,
         )
 
-        # Should not raise
-        recorder.on_extraction_completed(event)
+        with pytest.raises(RuntimeError, match="DB error"):
+            recorder.on_extraction_completed(event)
 
         mock_change_repo.record_change.assert_called_once()
 
@@ -79,8 +79,8 @@ class TestChangeEventRecorder:
         assert call_args.kwargs['new_state']['pipeline_id'] == "pipeline-456"
         assert call_args.kwargs['new_state']['status'] == "success"
 
-    def test_on_pipeline_executed_handles_exception(self, recorder, mock_change_repo):
-        """Test that repo exceptions are caught and logged."""
+    def test_on_pipeline_executed_propagates_exception(self, recorder, mock_change_repo):
+        """Test that repo exceptions propagate to the event publisher."""
         mock_change_repo.record_change.side_effect = RuntimeError("DB error")
         event = PipelineExecuted(
             execution_id="exec-123",
@@ -88,7 +88,7 @@ class TestChangeEventRecorder:
             status="success",
         )
 
-        # Should not raise
-        recorder.on_pipeline_executed(event)
+        with pytest.raises(RuntimeError, match="DB error"):
+            recorder.on_pipeline_executed(event)
 
         mock_change_repo.record_change.assert_called_once()
