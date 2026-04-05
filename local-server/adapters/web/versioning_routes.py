@@ -411,6 +411,8 @@ async def detect_conflicts(
                     field_name=c.field_name,
                     base_value=c.base_value,
                     incoming_value=c.incoming_value,
+                    is_resolved=c.is_resolved,
+                    resolved_value=c.resolved_value,
                 )
                 for c in report.conflicts
             ],
@@ -456,6 +458,8 @@ async def resolve_conflicts(
                     field_name=c.field_name,
                     base_value=c.base_value,
                     incoming_value=c.incoming_value,
+                    is_resolved=c.is_resolved,
+                    resolved_value=c.resolved_value,
                 )
                 for c in report.conflicts
             ],

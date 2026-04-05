@@ -64,10 +64,12 @@ class ChangeEventResponse(BaseModel):
     entity_id: str = Field(..., description="ID of the entity that changed")
     entity_type: str = Field(..., description="Type of the entity")
     operation: ChangeOperation = Field(..., description="Type of operation (create, update, delete)")
+    new_state: dict = Field(..., description="New state of the entity after this change")
     timestamp: datetime = Field(..., description="When the change occurred")
     processed: bool = Field(..., description="Whether change has been synced to remote")
     user_id: Optional[str] = Field(default=None, description="User who made the change")
     change_reason: Optional[str] = Field(default=None, description="Why the change was made")
+    previous_state: Optional[dict] = Field(default=None, description="Previous state of the entity before this change")
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -103,6 +105,7 @@ class ChangesetResponse(BaseModel):
     state: ChangeState = Field(..., description="Current state (working, staged, proposed, approved, merged)")
     created_at: datetime = Field(..., description="When the changeset was created")
     updated_at: datetime = Field(..., description="Last update timestamp")
+    event_ids: list[str] = Field(default_factory=list, description="IDs of change events in this changeset")
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -127,6 +130,8 @@ class ConflictResponse(BaseModel):
     field_name: str = Field(..., description="Name of the field in conflict")
     base_value: Any = Field(..., description="Value from the base changeset")
     incoming_value: Any = Field(..., description="Value from the incoming changeset")
+    is_resolved: bool = Field(..., description="Whether this conflict has been resolved")
+    resolved_value: Optional[Any] = Field(default=None, description="The resolved value if conflict is resolved")
 
 
 class ConflictReportResponse(BaseModel):
@@ -141,6 +146,7 @@ class MergeResultResponse(BaseModel):
     """Response with merge operation results"""
 
     proposal_id: str = Field(..., description="ID of the merged proposal")
+    changeset_id: str = Field(..., description="ID of the merged changeset")
     merged_at: datetime = Field(..., description="When the merge occurred")
     events_applied: int = Field(..., description="Number of change events applied")
     conflicts_resolved: int = Field(..., description="Number of conflicts resolved")
