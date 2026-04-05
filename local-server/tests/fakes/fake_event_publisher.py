@@ -2,7 +2,7 @@
 
 import sys
 import os
-from typing import Callable, TypeVar, overload, cast
+from typing import Callable, TypeVar, cast
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 

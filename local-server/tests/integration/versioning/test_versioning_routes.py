@@ -35,6 +35,7 @@ from adapters.persistence.sqlite.models import Base
 from adapters.persistence.sqlite.change_repo import SQLiteChangeRepository
 from adapters.sync.noop_sync import NoOpSyncTarget
 from adapters.web.versioning_routes import router
+from tests.fakes.fake_event_publisher import FakeEventPublisher
 
 
 @pytest.fixture
@@ -92,7 +93,13 @@ def changeset_service(change_repository):
 
 
 @pytest.fixture
-def versioning_service(change_repository, sync_target, conflict_service, proposal_service, changeset_service):
+def event_publisher():
+    """Create a FakeEventPublisher for testing."""
+    return FakeEventPublisher()
+
+
+@pytest.fixture
+def versioning_service(change_repository, sync_target, conflict_service, proposal_service, changeset_service, event_publisher):
     """Create VersioningService with no-op sync adapter."""
     return VersioningService(
         change_repo=change_repository,
@@ -100,6 +107,7 @@ def versioning_service(change_repository, sync_target, conflict_service, proposa
         conflict_service=conflict_service,
         proposal_service=proposal_service,
         changeset_service=changeset_service,
+        event_publisher=event_publisher,
     )
 
 
