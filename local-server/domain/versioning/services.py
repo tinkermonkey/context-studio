@@ -422,21 +422,33 @@ class VersioningService:
 
         # Detect conflicts: compare consecutive events for same entity
         for entity_id, entity_events in events_by_entity.items():
+            # Track the first event that modified each field (for base_value determination)
+            field_first_event: dict[str, ChangeEvent] = {}
+
             for i in range(1, len(entity_events)):
                 earlier = entity_events[i - 1]
                 later = entity_events[i]
 
-                # Compare previous_state of later event to new_state of earlier event
+                # Track which event first modified each field in this entity
                 earlier_new = earlier.new_state or {}
+                for field_name in earlier_new.keys():
+                    if field_name not in field_first_event:
+                        field_first_event[field_name] = earlier
+
+                # Compare previous_state of later event to new_state of earlier event
                 later_prev = later.previous_state or {}
 
                 for field_name, later_prev_value in later_prev.items():
                     earlier_new_value = earlier_new.get(field_name)
                     if earlier_new_value != later_prev_value:
+                        # Use the previous_state of the first event that modified this field as the base_value
+                        first_event = field_first_event.get(field_name, earlier)
+                        base_value = first_event.previous_state.get(field_name) if first_event.previous_state else None
+
                         conflict = Conflict(
                             entity_id=entity_id,
                             field_name=field_name,
-                            base_value=earlier_new_value,
+                            base_value=base_value,
                             incoming_value=later.new_state.get(field_name),
                         )
                         report.conflicts.append(conflict)
