@@ -1168,7 +1168,7 @@ class TestSyncMethods:
         result = service.push_changes()
 
         assert result.pushed == 0
-        assert len(result.pushed_event_ids) == 0
+        assert result.pushed_event_ids is None or len(result.pushed_event_ids) == 0
         assert len(result.errors) == 0
 
     def test_push_changes_marks_events_as_processed(
@@ -1194,6 +1194,7 @@ class TestSyncMethods:
 
         # Verify push succeeded
         assert result.pushed == 2
+        assert result.pushed_event_ids is not None
         assert event_id_1 in result.pushed_event_ids
         assert event_id_2 in result.pushed_event_ids
         assert len(result.errors) == 0
@@ -1224,6 +1225,7 @@ class TestSyncMethods:
 
         # Should push only 500 (the limit)
         assert result.pushed == 500
+        assert result.pushed_event_ids is not None
         assert len(result.pushed_event_ids) == 500
 
         # Verify 500 were marked processed, 100 remain unprocessed
@@ -1235,10 +1237,11 @@ class TestSyncMethods:
     ) -> None:
         """Test push_changes when sync target is not configured."""
         sync_target = FakeSyncTarget(configured=False)
+        conflict_service = ConflictResolutionService(change_repo=repo)
         service = VersioningService(
             change_repo=repo,
             sync_target=sync_target,
-            conflict_service=None,
+            conflict_service=conflict_service,
         )
 
         # Record an event
@@ -1319,15 +1322,29 @@ class TestSyncMethods:
         )
 
         class FailingSyncTarget:
-            def pull(self):
+            def pull(self, since=None):
                 return [remote_event]
+
+            def push(self, events):
+                from domain.versioning.value_objects import SyncResult
+                return SyncResult(pushed=0, pulled=0, errors=())
 
             def is_configured(self):
                 return True
 
         # Create a repository that fails on record_change
         class FailingRepository:
-            def record_change(self, **kwargs):
+            def record_change(
+                self,
+                entity_id: str,
+                entity_type: str,
+                operation: ChangeOperation,
+                new_state: dict,
+                previous_state=None,
+                user_id=None,
+                change_reason=None,
+                changeset_id=None,
+            ):
                 raise RuntimeError("Database error")
 
             def mark_processed(self, event_ids):
@@ -1339,10 +1356,47 @@ class TestSyncMethods:
             def get_changes(self, entity_id=None, since=None, limit=100):
                 return ChangeHistoryResult(events=[], total=0)
 
+            def get_changes_by_ids(self, event_ids):
+                return []
+
+            def count_unprocessed(self):
+                return 0
+
+            def save_version(self, version):
+                pass
+
+            def get_version(self, entity_id, version):
+                return None
+
+            def get_latest_version(self, entity_id):
+                return None
+
+            def list_versions(self, entity_id):
+                return []
+
+            def create_changeset(self, changeset):
+                return changeset
+
+            def get_changeset(self, changeset_id):
+                return None
+
+            def update_changeset(self, changeset):
+                return changeset
+
+            def create_proposal(self, proposal):
+                return proposal
+
+            def get_proposal(self, proposal_id):
+                return None
+
+            def update_proposal(self, proposal):
+                return proposal
+
+        conflict_service = ConflictResolutionService(change_repo=FailingRepository())
         service = VersioningService(
             change_repo=FailingRepository(),
             sync_target=FailingSyncTarget(),
-            conflict_service=None,
+            conflict_service=conflict_service,
         )
 
         result = service.pull_changes()
