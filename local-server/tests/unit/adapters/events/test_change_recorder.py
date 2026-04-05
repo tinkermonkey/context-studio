@@ -13,9 +13,14 @@ from domain.ontology.events import (
     TaxonomyCreated,
     TaxonomyUpdated,
     TaxonomyDeleted,
+    SchemeCreated,
+    SchemeUpdated,
+    SchemeDeleted,
     ClassCreated,
     ClassUpdated,
     ClassDeleted,
+    ClassMoved,
+    RelationshipCreated,
     RelationshipDeleted,
     PropertyDefinitionCreated,
     PropertyDefinitionUpdated,
@@ -162,6 +167,48 @@ class TestOntologyHandlers:
 
     # --- CREATE Pattern Tests ---
 
+    def test_on_scheme_created(self, recorder, mock_change_repo):
+        """Test SchemeCreated event recording."""
+        mock_change_repo.record_change.return_value = "change-123"
+        event = SchemeCreated(
+            concept_scheme_id="scheme-1",
+            title="My Concept Scheme",
+            taxonomy_id="tax-1",
+        )
+
+        recorder.on_scheme_created(event)
+
+        mock_change_repo.record_change.assert_called_once()
+        call_args = mock_change_repo.record_change.call_args
+        assert call_args.kwargs['entity_id'] == "scheme-1"
+        assert call_args.kwargs['entity_type'] == "concept_scheme"
+        assert call_args.kwargs['operation'] == "create"
+        assert call_args.kwargs['new_state']['concept_scheme_id'] == "scheme-1"
+        assert call_args.kwargs['new_state']['title'] == "My Concept Scheme"
+        assert call_args.kwargs['new_state']['taxonomy_id'] == "tax-1"
+
+    def test_on_relationship_created(self, recorder, mock_change_repo):
+        """Test RelationshipCreated event recording."""
+        mock_change_repo.record_change.return_value = "change-789"
+        event = RelationshipCreated(
+            relationship_id="rel-1",
+            source_id="source-1",
+            target_id="target-1",
+            property_definition_id="prop-1",
+        )
+
+        recorder.on_relationship_created(event)
+
+        mock_change_repo.record_change.assert_called_once()
+        call_args = mock_change_repo.record_change.call_args
+        assert call_args.kwargs['entity_id'] == "rel-1"
+        assert call_args.kwargs['entity_type'] == "relationship"
+        assert call_args.kwargs['operation'] == "create"
+        assert call_args.kwargs['new_state']['relationship_id'] == "rel-1"
+        assert call_args.kwargs['new_state']['source_id'] == "source-1"
+        assert call_args.kwargs['new_state']['target_id'] == "target-1"
+        assert call_args.kwargs['new_state']['property_definition_id'] == "prop-1"
+
     def test_on_taxonomy_created(self, recorder, mock_change_repo):
         """Test TaxonomyCreated event recording."""
         mock_change_repo.record_change.return_value = "change-123"
@@ -215,6 +262,68 @@ class TestOntologyHandlers:
         assert call_args.kwargs['new_state']['identifier'] == "hasChild"
 
     # --- UPDATE Pattern Tests ---
+
+    def test_on_scheme_updated(self, recorder, mock_change_repo):
+        """Test SchemeUpdated event recording with change tracking."""
+        mock_change_repo.record_change.return_value = "change-123"
+        event = SchemeUpdated(
+            concept_scheme_id="scheme-1",
+            taxonomy_id="tax-1",
+            changed_fields=("title", "description"),
+            old_values={"title": "Old Scheme", "description": "Old Desc"},
+            new_values={"title": "New Scheme", "description": "New Desc"},
+        )
+
+        recorder.on_scheme_updated(event)
+
+        mock_change_repo.record_change.assert_called_once()
+        call_args = mock_change_repo.record_change.call_args
+        assert call_args.kwargs['entity_id'] == "scheme-1"
+        assert call_args.kwargs['entity_type'] == "concept_scheme"
+        assert call_args.kwargs['operation'] == "update"
+        assert call_args.kwargs['new_state'] == event.new_values
+        assert call_args.kwargs['previous_state'] == event.old_values
+        assert "title" in call_args.kwargs['change_reason']
+        assert "description" in call_args.kwargs['change_reason']
+
+    def test_on_class_moved(self, recorder, mock_change_repo):
+        """Test ClassMoved event recording with parent mapping logic."""
+        mock_change_repo.record_change.return_value = "change-456"
+        event = ClassMoved(
+            class_id="class-1",
+            old_parent_id="parent-1",
+            new_parent_id="parent-2",
+        )
+
+        recorder.on_class_moved(event)
+
+        mock_change_repo.record_change.assert_called_once()
+        call_args = mock_change_repo.record_change.call_args
+        assert call_args.kwargs['entity_id'] == "class-1"
+        assert call_args.kwargs['entity_type'] == "class"
+        assert call_args.kwargs['operation'] == "update"
+        # Verify the unique mapping logic: parent IDs are captured in state
+        assert call_args.kwargs['new_state']['parent_id'] == "parent-2"
+        assert call_args.kwargs['previous_state']['parent_id'] == "parent-1"
+        # Verify the change reason mentions both old and new parent
+        assert "parent-1" in call_args.kwargs['change_reason']
+        assert "parent-2" in call_args.kwargs['change_reason']
+
+    def test_on_class_moved_with_none_parents(self, recorder, mock_change_repo):
+        """Test ClassMoved event with None parent IDs (root movements)."""
+        mock_change_repo.record_change.return_value = "change-456"
+        event = ClassMoved(
+            class_id="class-1",
+            old_parent_id=None,
+            new_parent_id="parent-2",
+        )
+
+        recorder.on_class_moved(event)
+
+        mock_change_repo.record_change.assert_called_once()
+        call_args = mock_change_repo.record_change.call_args
+        assert call_args.kwargs['new_state']['parent_id'] == "parent-2"
+        assert call_args.kwargs['previous_state']['parent_id'] is None
 
     def test_on_taxonomy_updated(self, recorder, mock_change_repo):
         """Test TaxonomyUpdated event recording with change tracking."""
@@ -293,6 +402,26 @@ class TestOntologyHandlers:
         assert "title" in call_args.kwargs['change_reason']
 
     # --- DELETE Pattern Tests ---
+
+    def test_on_scheme_deleted(self, recorder, mock_change_repo):
+        """Test SchemeDeleted event recording."""
+        mock_change_repo.record_change.return_value = "change-123"
+        event = SchemeDeleted(
+            concept_scheme_id="scheme-1",
+            title="My Concept Scheme",
+            taxonomy_id="tax-1",
+        )
+
+        recorder.on_scheme_deleted(event)
+
+        mock_change_repo.record_change.assert_called_once()
+        call_args = mock_change_repo.record_change.call_args
+        assert call_args.kwargs['entity_id'] == "scheme-1"
+        assert call_args.kwargs['entity_type'] == "concept_scheme"
+        assert call_args.kwargs['operation'] == "delete"
+        assert call_args.kwargs['previous_state']['concept_scheme_id'] == "scheme-1"
+        assert call_args.kwargs['previous_state']['title'] == "My Concept Scheme"
+        assert call_args.kwargs['previous_state']['taxonomy_id'] == "tax-1"
 
     def test_on_taxonomy_deleted(self, recorder, mock_change_repo):
         """Test TaxonomyDeleted event recording."""
