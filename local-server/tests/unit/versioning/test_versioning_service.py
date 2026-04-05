@@ -21,6 +21,7 @@ from domain.versioning.conflict_service import ConflictResolutionService
 from domain.versioning.proposal_service import ProposalWorkflowService
 from domain.versioning.changeset_service import ChangesetManagementService
 from domain.versioning.entities import EntityVersion, Proposal, ChangeEvent
+from domain.versioning.events import ChangesetMerged, SyncCompleted
 from domain.versioning.exceptions import VersionNotFoundError, ChangesetStateError, ConflictResolutionError
 from domain.versioning.value_objects import ChangeState, ChangeOperation, ProposalState, SyncResult
 from tests.fakes.fake_change_repository import FakeChangeRepository
@@ -507,7 +508,6 @@ class TestProposalWorkflow:
         assert result.conflicts_resolved == 0
 
         # Verify ChangesetMerged event was published
-        from domain.versioning.events import ChangesetMerged
         events = event_publisher.get_events_of_type(ChangesetMerged)
         assert len(events) == 1
         event = events[0]
@@ -1233,7 +1233,6 @@ class TestSyncMethods:
                 assert event.processed
 
         # Verify SyncCompleted event was published
-        from domain.versioning.events import SyncCompleted
         events = event_publisher.get_events_of_type(SyncCompleted)
         assert len(events) == 1
         event = events[0]
@@ -1351,7 +1350,6 @@ class TestSyncMethods:
         assert any(e.entity_id == "remote_entity2" for e in history.events)
 
         # Verify SyncCompleted event was published
-        from domain.versioning.events import SyncCompleted
         events = event_publisher.get_events_of_type(SyncCompleted)
         assert len(events) == 1
         event = events[0]
