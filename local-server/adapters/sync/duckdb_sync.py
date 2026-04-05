@@ -171,7 +171,7 @@ class DuckDBSyncAdapter:
             error_msg = f"Failed to write Parquet files: {e}"
             _logger.error(error_msg)
             raise RuntimeError(error_msg) from e
-        except Exception as e:
+        except (ValueError, TypeError, KeyError) as e:
             error_msg = f"Failed to push change events: {e}"
             _logger.error(error_msg)
             raise RuntimeError(error_msg) from e
@@ -295,7 +295,7 @@ class DuckDBSyncAdapter:
 
                     except RuntimeError:
                         raise
-                    except Exception as e:
+                    except (ValueError, TypeError, KeyError, OSError) as e:
                         error_msg = f"Failed to read Parquet file {parquet_file}: {e}"
                         _logger.error(error_msg)
                         raise RuntimeError(error_msg) from e
@@ -303,9 +303,9 @@ class DuckDBSyncAdapter:
             _logger.info("Pulled %d change events from Parquet files (deduplicated)", len(events))
             return events
 
-        except Exception as e:
-            if isinstance(e, RuntimeError):
-                raise
+        except RuntimeError:
+            raise
+        except (ValueError, TypeError, KeyError, OSError) as e:
             error_msg = f"Failed to read Parquet files: {e}"
             _logger.error(error_msg)
             raise RuntimeError(error_msg) from e
@@ -340,6 +340,7 @@ class DuckDBSyncAdapter:
         try:
             last_sync = None
             unprocessed_count = 0
+            is_degraded = False
 
             if self._changes_dir.exists() and self._changes_dir.is_dir():
                 # Get the most recent file timestamp
@@ -359,7 +360,7 @@ class DuckDBSyncAdapter:
                     unprocessed_count = self._change_repo.count_unprocessed()
                 except (RuntimeError, OSError) as e:
                     _logger.warning("Failed to count unprocessed changes: %s", str(e))
-                    unprocessed_count = 0
+                    is_degraded = True
 
             _logger.info("Retrieved sync status from local Parquet files")
             return SyncStatus(
@@ -367,9 +368,10 @@ class DuckDBSyncAdapter:
                 last_pulled_at=last_sync,
                 unprocessed_count=unprocessed_count,
                 is_configured=self.is_configured(),
+                is_degraded=is_degraded,
             )
 
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, OSError) as e:
             error_msg = f"Failed to get sync status: {e}"
             _logger.error(error_msg)
             raise RuntimeError(error_msg) from e

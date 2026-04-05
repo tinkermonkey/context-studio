@@ -16,6 +16,8 @@ from collections import defaultdict
 from datetime import datetime, timezone
 from typing import Optional
 
+from sqlalchemy.exc import SQLAlchemyError
+
 from .entities import (
     EntityVersion,
     Changeset,
@@ -996,7 +998,7 @@ class VersioningService:
                     change_reason=change_event.change_reason,
                 )
                 recorded_events.append(event_id)
-            except Exception as e:
+            except (SQLAlchemyError, RuntimeError, OSError, ValueError, KeyError, TypeError, AttributeError) as e:
                 error_msg = f"Failed to record change for entity {change_event.entity_id}: {str(e)}"
                 errors.append(error_msg)
                 _logger.error(error_msg)
@@ -1009,7 +1011,7 @@ class VersioningService:
                             "Rolled back %d recorded events due to failure",
                             len(recorded_events),
                         )
-                    except Exception as rollback_error:
+                    except (SQLAlchemyError, RuntimeError, OSError, ValueError, KeyError, TypeError, AttributeError) as rollback_error:
                         _logger.error(
                             "Failed to rollback recorded events: %s",
                             str(rollback_error),
@@ -1058,22 +1060,25 @@ class VersioningService:
         Get the current synchronization status.
 
         Returns information about unprocessed changes awaiting push and whether
-        the remote sync target is configured. On any error, returns degraded status
-        with is_configured=False and unprocessed_count=0.
+        the remote sync target is configured. If errors occur checking sync status,
+        returns a degraded status indicator.
 
         Returns:
-            SyncStatus with unprocessed count and configuration status
+            SyncStatus with unprocessed count, configuration status, and degraded flag
         """
+        is_degraded = False
+        count = 0
+        is_configured = False
+
         try:
             count = self._repo.count_unprocessed()
         except (RuntimeError, OSError) as e:
-            # Adapter errors are expected in degraded states; we return a safe default
-            # rather than propagating the error since sync status is a diagnostic endpoint.
-            # Programming errors (TypeError, AttributeError, etc.) will bubble up for development visibility.
+            # Adapter errors indicate degraded state; mark it and use safe defaults
+            # Programming errors (TypeError, AttributeError, etc.) bubble up for visibility.
             _logger.warning(
                 "Failed to count unprocessed changes in sync status: %s", str(e)
             )
-            count = 0
+            is_degraded = True
 
         try:
             is_configured = self._sync.is_configured()
@@ -1082,18 +1087,20 @@ class VersioningService:
             _logger.warning(
                 "Failed to check sync configuration status: %s", str(e)
             )
-            is_configured = False
+            is_degraded = True
 
         status = SyncStatus(
             last_pushed_at=None,
             last_pulled_at=None,
             unprocessed_count=count,
             is_configured=is_configured,
+            is_degraded=is_degraded,
         )
         _logger.debug(
-            "Sync status: unprocessed=%d, configured=%s",
+            "Sync status: unprocessed=%d, configured=%s, degraded=%s",
             count,
             is_configured,
+            is_degraded,
         )
         return status
 

@@ -67,6 +67,7 @@ class SyncStatus:
     last_pulled_at: Optional[datetime]
     unprocessed_count: int
     is_configured: bool
+    is_degraded: bool = False
 
 
 @dataclass(frozen=True)

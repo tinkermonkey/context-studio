@@ -164,7 +164,7 @@ class S3SyncAdapter:
             completed_at = datetime.now(timezone.utc)
             return SyncResult(pushed=len(pushed_event_ids), pulled=0, errors=(), pushed_event_ids=tuple(pushed_event_ids), started_at=started_at, completed_at=completed_at)
 
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, OSError) as e:
             error_msg = f"Failed to push changes to S3: {e}"
             _logger.error(error_msg)
             raise RuntimeError(error_msg) from e
@@ -255,7 +255,7 @@ class S3SyncAdapter:
                                 previous_state=data.get("previous_state"),
                             )
                             events.append(event)
-                    except Exception as e:
+                    except (ValueError, TypeError, KeyError, OSError) as e:
                         error_msg = f"Failed to parse S3 object {key}: {e}"
                         _logger.error(error_msg)
                         raise _S3FileParseError(error_msg) from e
@@ -263,10 +263,10 @@ class S3SyncAdapter:
             _logger.info("Pulled %d change events from S3 (deduplicated)", len(events))
             return events
 
-        except Exception as e:
-            if isinstance(e, _S3FileParseError):
-                # File parsing error already wrapped and logged
-                raise RuntimeError(str(e)) from e.__cause__
+        except _S3FileParseError as e:
+            # File parsing error already wrapped and logged
+            raise RuntimeError(str(e)) from e.__cause__
+        except (ValueError, TypeError, KeyError, OSError) as e:
             error_msg = f"Failed to list S3 objects: {e}"
             _logger.error(error_msg)
             raise RuntimeError(error_msg) from e
@@ -298,6 +298,7 @@ class S3SyncAdapter:
 
             last_sync = None
             unprocessed_count = 0
+            is_degraded = False
 
             # Iterate through all pages to find the most recent object
             all_objects = []
@@ -316,7 +317,7 @@ class S3SyncAdapter:
                     unprocessed_count = self._change_repo.count_unprocessed()
                 except (RuntimeError, OSError) as e:
                     _logger.warning("Failed to count unprocessed changes: %s", str(e))
-                    unprocessed_count = 0
+                    is_degraded = True
 
             _logger.info("Retrieved sync status from S3")
             return SyncStatus(
@@ -324,9 +325,10 @@ class S3SyncAdapter:
                 last_pulled_at=last_sync,
                 unprocessed_count=unprocessed_count,
                 is_configured=self.is_configured(),
+                is_degraded=is_degraded,
             )
 
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, OSError) as e:
             error_msg = f"Failed to get sync status from S3: {e}"
             _logger.error(error_msg)
             raise RuntimeError(error_msg) from e
