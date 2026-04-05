@@ -26,7 +26,7 @@ from domain.versioning.entities import (
     Changeset as DomainChangeset,
     Proposal as DomainProposal,
 )
-from domain.versioning.value_objects import ChangeState, ProposalState, ChangeOperation, ChangeHistoryResult
+from domain.versioning.value_objects import ChangeState, ProposalState, ChangeOperation, EntityVersionState, ChangeHistoryResult
 from domain.versioning.exceptions import VersionNotFoundError
 
 
@@ -140,7 +140,7 @@ class SQLiteChangeRepository:
             orm_events = session.execute(paginated_query).scalars().all()
 
             events = [self._to_domain_change_event(e) for e in orm_events]
-            return ChangeHistoryResult(events=events, total=total_count)
+            return ChangeHistoryResult(events=tuple(events), total=total_count)
 
     def get_changes_by_ids(self, event_ids: list[str]) -> list[DomainChangeEvent]:
         """
@@ -265,7 +265,7 @@ class SQLiteChangeRepository:
             orm_version = EntityVersion(
                 entity_id=version.entity_id,
                 version=version.version,
-                state=version.state,
+                state=version.state.value,
                 snapshot=version.snapshot,
                 created_at=version.created_at,
                 parent_version=version.parent_version,
@@ -535,7 +535,7 @@ class SQLiteChangeRepository:
         return DomainEntityVersion(
             entity_id=cast(str, orm_version.entity_id),
             version=cast(int, orm_version.version),
-            state=cast(str, orm_version.state),
+            state=EntityVersionState(cast(str, orm_version.state)),
             snapshot=cast(dict, orm_version.snapshot),
             created_at=cast(datetime, orm_version.created_at),
             parent_version=cast(Optional[int], orm_version.parent_version),

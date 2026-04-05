@@ -12,6 +12,7 @@ from sqlalchemy import text
 from sqlalchemy.engine import Engine
 
 from domain.admin.entities import SystemHealth
+from domain.admin.value_objects import SystemHealthStatus
 from adapters.llm.provider_router import LLMProviderRouter
 from adapters.nlp.spacy_processor import SpacyNLPProcessor
 from adapters.embedding.sentence_transformer import SentenceTransformerEmbedding
@@ -137,15 +138,15 @@ class SystemMetricsCollector:
         uptime = (now - self._start_time).total_seconds()
 
         # Determine overall status
-        # "healthy" if all optional components are available
-        # "degraded" if some optional components are missing
-        # "unhealthy" if database is down
+        # HEALTHY if all optional components are available
+        # DEGRADED if some optional components are missing
+        # UNHEALTHY if database is down
         if not db_connected:
-            status = 'unhealthy'
+            status = SystemHealthStatus.UNHEALTHY
         elif issues:
-            status = 'degraded'
+            status = SystemHealthStatus.DEGRADED
         else:
-            status = 'healthy'
+            status = SystemHealthStatus.HEALTHY
 
         logger.debug(
             f"Health check: status={status}, db_connected={db_connected}, nlp_ready={nlp_ready}, "

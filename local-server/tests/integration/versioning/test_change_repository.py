@@ -22,7 +22,7 @@ from domain.versioning.entities import (
     Changeset,
     Proposal,
 )
-from domain.versioning.value_objects import ChangeState, ChangeOperation, ProposalState
+from domain.versioning.value_objects import ChangeState, ChangeOperation, ProposalState, EntityVersionState
 from domain.versioning.exceptions import VersionNotFoundError
 
 
@@ -165,7 +165,7 @@ class TestEntityVersionOperations:
         version = EntityVersion(
             entity_id="entity1",
             version=1,
-            state="active",
+            state=EntityVersionState.ACTIVE,
             snapshot={"title": "Class 1"},
             created_at=datetime.now(timezone.utc),
         )
@@ -183,14 +183,14 @@ class TestEntityVersionOperations:
         v1 = EntityVersion(
             entity_id="entity1",
             version=1,
-            state="active",
+            state=EntityVersionState.ACTIVE,
             snapshot={"title": "V1"},
             created_at=datetime.now(timezone.utc),
         )
         v2 = EntityVersion(
             entity_id="entity1",
             version=2,
-            state="active",
+            state=EntityVersionState.ACTIVE,
             snapshot={"title": "V2"},
             created_at=datetime.now(timezone.utc),
         )
@@ -208,7 +208,7 @@ class TestEntityVersionOperations:
             version = EntityVersion(
                 entity_id="entity1",
                 version=i,
-                state="active",
+                state=EntityVersionState.ACTIVE,
                 snapshot={"v": i},
                 created_at=datetime.now(timezone.utc),
             )

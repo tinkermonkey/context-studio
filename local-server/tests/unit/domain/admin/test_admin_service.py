@@ -15,6 +15,7 @@ from datetime import datetime, timezone
 
 from domain.admin.services import AdminService
 from domain.admin.entities import SystemHealth, AppConfiguration
+from domain.admin.value_objects import SystemHealthStatus, BackgroundTaskStatus
 from domain.admin.exceptions import ConfigurationError, TaskNotFoundError
 from tests.fakes.fake_metrics_collector import FakeMetricsCollector
 from tests.fakes.fake_configuration_store import FakeConfigurationStore
@@ -33,7 +34,7 @@ class TestAdminServiceHealthMonitoring:
         """Check health returns healthy status from metrics collector."""
         health = self.service.check_health()
 
-        assert health.status == "healthy"
+        assert health.status == SystemHealthStatus.HEALTHY
         assert health.database_connected is True
         assert health.nlp_pipeline_ready is True
         assert health.embedding_model_loaded is True
@@ -45,7 +46,7 @@ class TestAdminServiceHealthMonitoring:
     def test_check_health_with_degraded_status(self):
         """Check health can return degraded status."""
         degraded_health = SystemHealth(
-            status="degraded",
+            status=SystemHealthStatus.DEGRADED,
             database_connected=True,
             nlp_pipeline_ready=False,
             embedding_model_loaded=True,
@@ -59,14 +60,14 @@ class TestAdminServiceHealthMonitoring:
 
         health = service.check_health()
 
-        assert health.status == "degraded"
+        assert health.status == SystemHealthStatus.DEGRADED
         assert health.nlp_pipeline_ready is False
         assert health.issues == ["NLP pipeline not responding"]
 
     def test_check_health_with_unhealthy_status(self):
         """Check health can return unhealthy status."""
         unhealthy_health = SystemHealth(
-            status="unhealthy",
+            status=SystemHealthStatus.UNHEALTHY,
             database_connected=False,
             nlp_pipeline_ready=False,
             embedding_model_loaded=False,
@@ -80,7 +81,7 @@ class TestAdminServiceHealthMonitoring:
 
         health = service.check_health()
 
-        assert health.status == "unhealthy"
+        assert health.status == SystemHealthStatus.UNHEALTHY
         assert health.database_connected is False
         assert len(health.issues) == 2
 
@@ -177,7 +178,7 @@ class TestAdminServiceTaskManagement:
 
         assert task.id is not None
         assert task.name == "extract-data"
-        assert task.status == "pending"
+        assert task.status == BackgroundTaskStatus.PENDING
         assert task.created_at is not None
         assert task.started_at is None
         assert task.completed_at is None
@@ -198,7 +199,7 @@ class TestAdminServiceTaskManagement:
 
         assert retrieved.id == registered.id
         assert retrieved.name == "process-embeddings"
-        assert retrieved.status == "pending"
+        assert retrieved.status == BackgroundTaskStatus.PENDING
 
     def test_get_task_raises_error_for_unknown_id(self):
         """Get task raises TaskNotFoundError for unknown ID."""
@@ -232,10 +233,10 @@ class TestAdminServiceTaskManagement:
         task = self.service.register_task("long-running")
         before = datetime.now(timezone.utc)
 
-        updated = self.service.update_task_status(task.id, "running")
+        updated = self.service.update_task_status(task.id, BackgroundTaskStatus.RUNNING)
 
         after = datetime.now(timezone.utc)
-        assert updated.status == "running"
+        assert updated.status == BackgroundTaskStatus.RUNNING
         assert updated.started_at is not None
         assert before <= updated.started_at <= after
 
@@ -245,11 +246,11 @@ class TestAdminServiceTaskManagement:
         before = datetime.now(timezone.utc)
 
         updated = self.service.update_task_status(
-            task.id, "completed", result={"processed": 100}
+            task.id, BackgroundTaskStatus.COMPLETED, result={"processed": 100}
         )
 
         after = datetime.now(timezone.utc)
-        assert updated.status == "completed"
+        assert updated.status == BackgroundTaskStatus.COMPLETED
         assert updated.completed_at is not None
         assert before <= updated.completed_at <= after
         assert updated.result == {"processed": 100}
@@ -261,11 +262,11 @@ class TestAdminServiceTaskManagement:
         before = datetime.now(timezone.utc)
 
         updated = self.service.update_task_status(
-            task.id, "failed", error="Connection timeout"
+            task.id, BackgroundTaskStatus.FAILED, error="Connection timeout"
         )
 
         after = datetime.now(timezone.utc)
-        assert updated.status == "failed"
+        assert updated.status == BackgroundTaskStatus.FAILED
         assert updated.completed_at is not None
         assert before <= updated.completed_at <= after
         assert updated.error == "Connection timeout"
@@ -290,15 +291,15 @@ class TestAdminServiceTaskManagement:
     def test_task_lifecycle_pending_to_running_to_completed(self):
         """Full task lifecycle: pending → running → completed."""
         task = self.service.register_task("full-lifecycle")
-        assert task.status == "pending"
+        assert task.status == BackgroundTaskStatus.PENDING
 
-        running = self.service.update_task_status(task.id, "running")
-        assert running.status == "running"
+        running = self.service.update_task_status(task.id, BackgroundTaskStatus.RUNNING)
+        assert running.status == BackgroundTaskStatus.RUNNING
         assert running.started_at is not None
 
         completed = self.service.update_task_status(
-            task.id, "completed", result={"status": "success"}
+            task.id, BackgroundTaskStatus.COMPLETED, result={"status": "success"}
         )
-        assert completed.status == "completed"
+        assert completed.status == BackgroundTaskStatus.COMPLETED
         assert completed.completed_at is not None
         assert completed.result == {"status": "success"}

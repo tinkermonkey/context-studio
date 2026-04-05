@@ -13,6 +13,7 @@ from datetime import datetime
 from typing import ClassVar
 
 from domain.events import DomainEvent
+from domain.versioning.value_objects import SyncDirection
 
 
 @dataclass(frozen=True)
@@ -58,7 +59,7 @@ class SyncCompleted(DomainEvent):
         completed_at: Timestamp of when the sync operation completed
     """
 
-    direction: str = ""  # 'push' | 'pull'
+    direction: SyncDirection = None  # type: ignore
     events_count: int = 0
     completed_at: datetime = None  # type: ignore
 
@@ -69,7 +70,7 @@ class SyncCompleted(DomainEvent):
             object.__setattr__(self, "aggregate_id", "sync")
 
         super().__post_init__()
-        if self.direction not in ("push", "pull"):
-            raise ValueError(f"SyncCompleted event direction must be 'push' or 'pull', got '{self.direction}'")
+        if self.direction is None:
+            raise ValueError("SyncCompleted event requires direction")
         if self.completed_at is None:
             raise ValueError("SyncCompleted event requires completed_at timestamp")

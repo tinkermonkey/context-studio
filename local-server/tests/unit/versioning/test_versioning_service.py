@@ -23,7 +23,7 @@ from domain.versioning.changeset_service import ChangesetManagementService
 from domain.versioning.entities import EntityVersion, Proposal, ChangeEvent
 from domain.versioning.events import ChangesetMerged, SyncCompleted
 from domain.versioning.exceptions import VersionNotFoundError, ChangesetStateError, ConflictResolutionError
-from domain.versioning.value_objects import ChangeState, ChangeOperation, ProposalState, SyncResult
+from domain.versioning.value_objects import ChangeState, ChangeOperation, ProposalState, SyncResult, EntityVersionState
 from tests.fakes.fake_change_repository import FakeChangeRepository
 from tests.fakes.fake_sync_target import FakeSyncTarget
 from tests.fakes.fake_event_publisher import FakeEventPublisher
@@ -176,7 +176,7 @@ class TestChangeHistoryQueries:
         version = EntityVersion(
             entity_id="entity1",
             version=1,
-            state="active",
+            state=EntityVersionState.ACTIVE,
             snapshot={"name": "Entity1"},
             created_at=datetime.now(timezone.utc),
         )
@@ -201,14 +201,14 @@ class TestChangeHistoryQueries:
         v1 = EntityVersion(
             entity_id="entity1",
             version=1,
-            state="active",
+            state=EntityVersionState.ACTIVE,
             snapshot={"name": "Entity1"},
             created_at=datetime.now(timezone.utc),
         )
         v2 = EntityVersion(
             entity_id="entity1",
             version=2,
-            state="active",
+            state=EntityVersionState.ACTIVE,
             snapshot={"name": "Entity1 Updated"},
             created_at=datetime.now(timezone.utc),
         )
@@ -233,14 +233,14 @@ class TestChangeHistoryQueries:
         v1 = EntityVersion(
             entity_id="entity1",
             version=1,
-            state="active",
+            state=EntityVersionState.ACTIVE,
             snapshot={"name": "Entity1"},
             created_at=datetime.now(timezone.utc),
         )
         v2 = EntityVersion(
             entity_id="entity1",
             version=2,
-            state="active",
+            state=EntityVersionState.ACTIVE,
             snapshot={"name": "Entity1 Updated"},
             created_at=datetime.now(timezone.utc),
         )

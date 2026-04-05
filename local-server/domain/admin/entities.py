@@ -11,6 +11,8 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Optional
 
+from domain.admin.value_objects import SystemHealthStatus, BackgroundTaskStatus
+
 
 @dataclass
 class SystemHealth:
@@ -28,7 +30,7 @@ class SystemHealth:
         issues: List of health issues identified (if any)
     """
 
-    status: str
+    status: SystemHealthStatus
     database_connected: bool
     nlp_pipeline_ready: bool
     embedding_model_loaded: bool
@@ -56,7 +58,7 @@ class BackgroundTask:
 
     id: str
     name: str
-    status: str
+    status: BackgroundTaskStatus
     created_at: datetime
     started_at: Optional[datetime] = None
     completed_at: Optional[datetime] = None

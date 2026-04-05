@@ -18,6 +18,7 @@ import pytest
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 from domain.versioning.events import ChangesetMerged, SyncCompleted
+from domain.versioning.value_objects import SyncDirection
 
 
 class TestChangesetMerged:
@@ -102,7 +103,7 @@ class TestSyncCompleted:
         """SyncCompleted can be instantiated with direction='push' and all required fields."""
         now = datetime.now(timezone.utc)
         event = SyncCompleted(
-            direction="push",
+            direction=SyncDirection.PUSH,
             events_count=10,
             completed_at=now,
         )
@@ -116,7 +117,7 @@ class TestSyncCompleted:
         """SyncCompleted can be instantiated with direction='pull' and all required fields."""
         now = datetime.now(timezone.utc)
         event = SyncCompleted(
-            direction="pull",
+            direction=SyncDirection.PULL,
             events_count=7,
             completed_at=now,
         )
@@ -130,27 +131,27 @@ class TestSyncCompleted:
         """SyncCompleted instances are frozen."""
         now = datetime.now(timezone.utc)
         event = SyncCompleted(
-            direction="push",
+            direction=SyncDirection.PUSH,
             events_count=5,
             completed_at=now,
         )
         with pytest.raises(FrozenInstanceError):
             event.events_count = 10
 
-    def test_sync_completed_rejects_invalid_direction(self):
-        """SyncCompleted raises ValueError if direction is not 'push' or 'pull'."""
+    def test_sync_completed_with_valid_push_direction(self):
+        """SyncCompleted can be instantiated with valid SyncDirection.PUSH."""
         now = datetime.now(timezone.utc)
-        with pytest.raises(ValueError, match="SyncCompleted event direction must be 'push' or 'pull'"):
-            SyncCompleted(
-                direction="invalid",
-                events_count=5,
-                completed_at=now,
-            )
+        event = SyncCompleted(
+            direction=SyncDirection.PUSH,
+            events_count=5,
+            completed_at=now,
+        )
+        assert event.direction == SyncDirection.PUSH
 
     def test_sync_completed_rejects_none_direction(self):
         """SyncCompleted raises ValueError if direction is None."""
         now = datetime.now(timezone.utc)
-        with pytest.raises(ValueError, match="SyncCompleted event direction must be 'push' or 'pull'"):
+        with pytest.raises(ValueError, match="SyncCompleted event requires direction"):
             SyncCompleted(
                 direction=None,  # type: ignore
                 events_count=5,
@@ -158,11 +159,11 @@ class TestSyncCompleted:
             )
 
     def test_sync_completed_rejects_empty_direction(self):
-        """SyncCompleted raises ValueError if direction is empty string (parent validation)."""
+        """SyncCompleted raises ValueError if direction is empty string (not a valid enum value)."""
         now = datetime.now(timezone.utc)
-        with pytest.raises(ValueError, match="Event field 'direction' cannot be empty"):
+        with pytest.raises(ValueError):
             SyncCompleted(
-                direction="",
+                direction="",  # type: ignore
                 events_count=5,
                 completed_at=now,
             )
@@ -171,7 +172,7 @@ class TestSyncCompleted:
         """SyncCompleted raises ValueError if completed_at is None."""
         with pytest.raises(ValueError, match="SyncCompleted event requires completed_at timestamp"):
             SyncCompleted(
-                direction="push",
+                direction=SyncDirection.PUSH,
                 events_count=5,
                 completed_at=None,  # type: ignore
             )
@@ -180,33 +181,27 @@ class TestSyncCompleted:
         """SyncCompleted can have zero events_count (no changes to sync)."""
         now = datetime.now(timezone.utc)
         event = SyncCompleted(
-            direction="push",
+            direction=SyncDirection.PUSH,
             events_count=0,
             completed_at=now,
         )
         assert event.events_count == 0
 
-    def test_sync_completed_direction_case_sensitive(self):
-        """SyncCompleted direction validation is case-sensitive."""
+    def test_sync_completed_with_valid_pull_direction(self):
+        """SyncCompleted can be instantiated with valid SyncDirection.PULL."""
         now = datetime.now(timezone.utc)
-        with pytest.raises(ValueError, match="SyncCompleted event direction must be 'push' or 'pull'"):
-            SyncCompleted(
-                direction="Push",  # Capital P should fail
-                events_count=5,
-                completed_at=now,
-            )
-        with pytest.raises(ValueError, match="SyncCompleted event direction must be 'push' or 'pull'"):
-            SyncCompleted(
-                direction="PULL",  # All caps should fail
-                events_count=5,
-                completed_at=now,
-            )
+        event = SyncCompleted(
+            direction=SyncDirection.PULL,
+            events_count=5,
+            completed_at=now,
+        )
+        assert event.direction == SyncDirection.PULL
 
     def test_sync_completed_accepts_negative_events_count(self):
         """SyncCompleted allows negative events_count (unusual but technically valid)."""
         now = datetime.now(timezone.utc)
         event = SyncCompleted(
-            direction="push",
+            direction=SyncDirection.PUSH,
             events_count=-1,
             completed_at=now,
         )

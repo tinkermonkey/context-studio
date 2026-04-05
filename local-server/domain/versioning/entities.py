@@ -5,7 +5,7 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Optional
 
-from domain.versioning.value_objects import ChangeState, ProposalState, ChangeOperation
+from domain.versioning.value_objects import ChangeState, ProposalState, ChangeOperation, EntityVersionState
 
 
 @dataclass
@@ -31,7 +31,7 @@ class EntityVersion:
 
     entity_id: str
     version: int
-    state: str
+    state: EntityVersionState
     snapshot: dict
     created_at: datetime
     parent_version: Optional[int] = None

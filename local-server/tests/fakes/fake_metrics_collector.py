@@ -9,6 +9,7 @@ from datetime import datetime, timezone
 from typing import Optional
 
 from domain.admin.entities import SystemHealth
+from domain.admin.value_objects import SystemHealthStatus
 
 
 class FakeMetricsCollector:
@@ -26,7 +27,7 @@ class FakeMetricsCollector:
             health: Optional SystemHealth to return. If None, returns a healthy default.
         """
         self._health = health or SystemHealth(
-            status="healthy",
+            status=SystemHealthStatus.HEALTHY,
             database_connected=True,
             nlp_pipeline_ready=True,
             embedding_model_loaded=True,

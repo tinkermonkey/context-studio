@@ -37,12 +37,18 @@ class ChangeOperation(str, Enum):
     DELETE = "delete"
 
 
-class ConflictStatus(str, Enum):
-    """Status of conflict resolution."""
+class EntityVersionState(str, Enum):
+    """Valid states for an entity version."""
 
-    UNRESOLVED = "unresolved"
-    RESOLVED_MANUAL = "resolved_manual"
-    RESOLVED_AUTO = "resolved_auto"
+    ACTIVE = "active"
+    ARCHIVED = "archived"
+
+
+class SyncDirection(str, Enum):
+    """Direction of a synchronization operation."""
+
+    PUSH = "push"
+    PULL = "pull"
 
 
 @dataclass(frozen=True)
@@ -77,9 +83,9 @@ class ChangeHistoryResult:
     """Paginated result of a change history query.
 
     Attributes:
-        events: List of change events matching the query
+        events: Tuple of change events matching the query
         total: Total count of all matching events (without limit applied)
     """
 
-    events: list[ChangeEvent]
+    events: tuple[ChangeEvent, ...]
     total: int

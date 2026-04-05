@@ -12,6 +12,7 @@ from datetime import datetime, timezone
 from typing import Optional
 
 from .entities import SystemHealth, BackgroundTask, AppConfiguration
+from .value_objects import BackgroundTaskStatus
 from .ports import MetricsCollector, ConfigurationStore
 from .exceptions import TaskNotFoundError, ConfigurationError
 
@@ -103,7 +104,7 @@ class AdminService:
         task = BackgroundTask(
             id=str(uuid.uuid4()),
             name=name,
-            status="pending",
+            status=BackgroundTaskStatus.PENDING,
             created_at=datetime.now(timezone.utc),
         )
         self._tasks[task.id] = task
@@ -138,7 +139,7 @@ class AdminService:
     def update_task_status(
         self,
         task_id: str,
-        status: str,
+        status: BackgroundTaskStatus,
         error: Optional[str] = None,
         result: Optional[dict] = None,
     ) -> BackgroundTask:
@@ -146,12 +147,12 @@ class AdminService:
         Update the status of a background task.
 
         Updates task status and sets started_at or completed_at timestamps
-        as appropriate. If status is 'running', sets started_at to current time.
-        If status is 'completed' or 'failed', sets completed_at to current time.
+        as appropriate. If status is RUNNING, sets started_at to current time.
+        If status is COMPLETED or FAILED, sets completed_at to current time.
 
         Args:
             task_id: ID of the task to update
-            status: New status value ('running', 'completed', or 'failed')
+            status: New status value (RUNNING, COMPLETED, or FAILED)
             error: Error message if task failed
             result: Result data if task completed successfully
 
@@ -163,9 +164,9 @@ class AdminService:
         """
         task = self.get_task(task_id)
         task.status = status
-        if status == "running":
+        if status == BackgroundTaskStatus.RUNNING:
             task.started_at = datetime.now(timezone.utc)
-        elif status in ("completed", "failed"):
+        elif status in (BackgroundTaskStatus.COMPLETED, BackgroundTaskStatus.FAILED):
             task.completed_at = datetime.now(timezone.utc)
         task.error = error
         task.result = result

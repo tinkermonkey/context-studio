@@ -14,7 +14,7 @@ from typing import TYPE_CHECKING, Optional
 from .entities import EntityVersion, Changeset, Proposal, MergeResult, ConflictReport
 from .exceptions import VersionNotFoundError
 from .ports import ChangeRepository, SyncTarget
-from .value_objects import SyncStatus, SyncResult, ChangeHistoryResult
+from .value_objects import SyncStatus, SyncResult, ChangeHistoryResult, SyncDirection
 from .events import ChangesetMerged, SyncCompleted
 from .proposal_service import ProposalWorkflowService
 from .changeset_service import ChangesetManagementService
@@ -370,7 +370,7 @@ class VersioningService:
 
         # Publish completion event
         event = SyncCompleted(
-            direction="push",
+            direction=SyncDirection.PUSH,
             events_count=result.pushed,
             completed_at=datetime.now(timezone.utc),
         )
@@ -467,7 +467,7 @@ class VersioningService:
 
         # Publish completion event
         event = SyncCompleted(
-            direction="pull",
+            direction=SyncDirection.PULL,
             events_count=result.pulled,
             completed_at=datetime.now(timezone.utc),
         )
