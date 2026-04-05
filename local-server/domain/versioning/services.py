@@ -469,7 +469,8 @@ class VersioningService:
             strategy: MergeStrategy to use for resolution (default: LAST_WRITE_WINS)
 
         Returns:
-            The same ConflictReport with all conflicts marked as resolved
+            The same ConflictReport with conflicts marked as resolved (except for MANUAL strategy,
+            which leaves all conflicts unresolved)
 
         Strategies:
             - LAST_WRITE_WINS: Sets resolved_value=incoming_value (preserves current behavior)
@@ -526,14 +527,16 @@ class VersioningService:
         # Apply automatic resolution based on strategy
         resolved_report = self.auto_resolve(report, strategy)
 
-        # Extract resolutions and persist them (unconditionally, matching resolve_conflicts pattern)
+        # Extract resolutions and persist them only for resolved conflicts
         resolutions: dict[str, dict[str, object]] = {}
         for conflict in resolved_report.conflicts:
-            if conflict.entity_id not in resolutions:
-                resolutions[conflict.entity_id] = {}
-            resolutions[conflict.entity_id][conflict.field_name] = conflict.resolved_value
+            # Only include conflicts that have been resolved (resolved_value is not None)
+            if conflict.is_resolved:
+                if conflict.entity_id not in resolutions:
+                    resolutions[conflict.entity_id] = {}
+                resolutions[conflict.entity_id][conflict.field_name] = conflict.resolved_value
 
-        # Only persist if there are resolutions (handles all_resolved=False case for MANUAL strategy)
+        # Only persist if there are resolutions (handles MANUAL strategy with unresolved conflicts)
         if resolutions:
             self._repo.save_conflict_resolutions(proposal_id, resolutions)
 
@@ -614,9 +617,10 @@ class VersioningService:
             List of EntityVersion objects ready to persist
 
         Raises:
-            Any exception propagates up to merge_proposal, where it will trigger
-            rollback of both the merge state transition and version snapshots
-            within the atomic transaction.
+            ValueError: If the number of returned events does not match the number requested
+            Any exception propagates up to merge_proposal before the atomic transaction
+            starts. In-memory state transitions (changeset and proposal) have already been
+            applied but will not be persisted, since atomic_update_on_merge will not execute.
         """
         if not changeset.event_ids:
             _logger.debug(
@@ -626,6 +630,17 @@ class VersioningService:
 
         # Get all change events for this changeset
         changeset_events = self._repo.get_changes_by_ids(changeset.event_ids)
+
+        # Validate that all requested events were found
+        if len(changeset_events) != len(changeset.event_ids):
+            missing_count = len(changeset.event_ids) - len(changeset_events)
+            error_msg = (
+                f"Event count mismatch for changeset {changeset.id}: "
+                f"requested {len(changeset.event_ids)} events but only found {len(changeset_events)} "
+                f"({missing_count} missing)"
+            )
+            _logger.error(error_msg)
+            raise ValueError(error_msg)
 
         # Group events by entity_id using defaultdict
         events_by_entity: dict[str, list[ChangeEvent]] = defaultdict(list)
@@ -742,6 +757,10 @@ class VersioningService:
             VersionNotFoundError: If the proposal or changeset does not exist
             ChangesetStateError: If the proposal is not in 'approved' state
             ConflictResolutionError: If unresolved conflicts exist
+            Exception: Exceptions from _create_merge_versions will propagate before
+                the atomic transaction starts, leaving in-memory state transitions
+                applied (changeset and proposal are transitioned but not persisted).
+                The atomic transaction in atomic_update_on_merge will not occur.
 
         Publishes:
             ChangesetMerged event after successful merge
