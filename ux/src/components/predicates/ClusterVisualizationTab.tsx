@@ -196,9 +196,10 @@ export const ClusterVisualizationTab: React.FC<
               </div>
               <div>
                 <div className="text-3xl font-bold text-green-600 dark:text-green-400">
-                  {(
-                    clusters.clusters as Array<{ size?: number }>
-                  ).reduce((sum: number, c: { size?: number }) => sum + (c.size || 0), 0)}
+                  {(clusters.clusters as Array<{ size?: number }>).reduce(
+                    (sum: number, c: { size?: number }) => sum + (c.size || 0),
+                    0,
+                  )}
                 </div>
                 <div className="text-sm text-gray-600 dark:text-gray-400">
                   Clustered Predicates
@@ -207,9 +208,7 @@ export const ClusterVisualizationTab: React.FC<
               <div>
                 <div className="text-3xl font-bold text-gray-600 dark:text-gray-400">
                   {((clusters.total_predicates as number) ?? 0) -
-                    (
-                      clusters.clusters as Array<{ size?: number }>
-                    ).reduce(
+                    (clusters.clusters as Array<{ size?: number }>).reduce(
                       (sum: number, c: { size?: number }) =>
                         sum + (c.size || 0),
                       0,
@@ -238,65 +237,64 @@ export const ClusterVisualizationTab: React.FC<
               }>
             ).map((cluster, index) => {
               const quality = getClusterQuality(cluster);
-                return (
-                  <Card key={index}>
-                    <div className="flex items-start justify-between">
-                      <div>
-                        <h5 className="mb-2 text-lg font-bold text-gray-900 dark:text-white">
-                          Cluster {cluster.cluster_id}
-                        </h5>
-                        <div className="mb-2 flex items-center gap-2">
-                          <Badge color="info" size="sm">
-                            {cluster.predicate_ids.length} predicates
-                          </Badge>
-                          <Badge color={quality.color} size="sm">
-                            {quality.label}
-                          </Badge>
-                        </div>
+              return (
+                <Card key={index}>
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <h5 className="mb-2 text-lg font-bold text-gray-900 dark:text-white">
+                        Cluster {cluster.cluster_id}
+                      </h5>
+                      <div className="mb-2 flex items-center gap-2">
+                        <Badge color="info" size="sm">
+                          {cluster.predicate_ids.length} predicates
+                        </Badge>
+                        <Badge color={quality.color} size="sm">
+                          {quality.label}
+                        </Badge>
                       </div>
-                      <Button
-                        size="xs"
-                        onClick={() =>
-                          handleCreateGlobalPredicate(cluster.predicate_ids)
-                        }
-                      >
-                        <Plus className="h-3 w-3" />
-                      </Button>
                     </div>
+                    <Button
+                      size="xs"
+                      onClick={() =>
+                        handleCreateGlobalPredicate(cluster.predicate_ids)
+                      }
+                    >
+                      <Plus className="h-3 w-3" />
+                    </Button>
+                  </div>
 
-                    {cluster.representative_predicate && (
-                      <div className="mt-2 rounded-lg bg-gray-50 p-2 dark:bg-gray-700">
-                        <p className="text-sm font-medium text-gray-900 dark:text-white">
-                          {cluster.representative_predicate.title}
+                  {cluster.representative_predicate && (
+                    <div className="mt-2 rounded-lg bg-gray-50 p-2 dark:bg-gray-700">
+                      <p className="text-sm font-medium text-gray-900 dark:text-white">
+                        {cluster.representative_predicate.title}
+                      </p>
+                      {cluster.representative_predicate.definition && (
+                        <p className="mt-1 text-xs text-gray-600 dark:text-gray-400">
+                          {cluster.representative_predicate.definition}
                         </p>
-                        {cluster.representative_predicate.definition && (
-                          <p className="mt-1 text-xs text-gray-600 dark:text-gray-400">
-                            {cluster.representative_predicate.definition}
-                          </p>
-                        )}
-                      </div>
-                    )}
+                      )}
+                    </div>
+                  )}
 
-                    {cluster.avg_similarity && (
-                      <div className="mt-2 text-xs text-gray-600 dark:text-gray-400">
-                        Avg. Similarity:{" "}
-                        {(cluster.avg_similarity * 100).toFixed(1)}%
-                      </div>
-                    )}
+                  {cluster.avg_similarity && (
+                    <div className="mt-2 text-xs text-gray-600 dark:text-gray-400">
+                      Avg. Similarity:{" "}
+                      {(cluster.avg_similarity * 100).toFixed(1)}%
+                    </div>
+                  )}
 
-                    {cluster.sources && cluster.sources.length > 0 && (
-                      <div className="mt-2 flex flex-wrap gap-1">
-                        {cluster.sources.map((source: string) => (
-                          <Badge key={source} color="gray" size="xs">
-                            {source}
-                          </Badge>
-                        ))}
-                      </div>
-                    )}
-                  </Card>
-                );
-              },
-            )}
+                  {cluster.sources && cluster.sources.length > 0 && (
+                    <div className="mt-2 flex flex-wrap gap-1">
+                      {cluster.sources.map((source: string) => (
+                        <Badge key={source} color="gray" size="xs">
+                          {source}
+                        </Badge>
+                      ))}
+                    </div>
+                  )}
+                </Card>
+              );
+            })}
           </div>
 
           {clusters.total_clusters === 0 && (

@@ -113,7 +113,9 @@ const columns = [
     header: "Created",
     cell: (info) => {
       const dateValue = info.getValue();
-      const dateStr = dateValue ? new Date(dateValue).toLocaleDateString() : "Unknown";
+      const dateStr = dateValue
+        ? new Date(dateValue).toLocaleDateString()
+        : "Unknown";
       return (
         <div className="flex items-center space-x-2">
           <Calendar className="h-4 w-4 text-gray-400" />

@@ -304,7 +304,8 @@ export const AnnotationSelector: React.FC<AnnotationSelectorProps> = ({
           <div className="space-y-2">
             {paragraph.annotations.map((annotation) => {
               const nodeInfo = (structureNodes || []).find(
-                (n: StructureNode) => n.id === (annotation.structure_node_id as string),
+                (n: StructureNode) =>
+                  n.id === (annotation.structure_node_id as string),
               );
               return (
                 <div
@@ -316,7 +317,9 @@ export const AnnotationSelector: React.FC<AnnotationSelectorProps> = ({
                       "{annotation.text as string}"
                     </p>
                     <p className="text-xs text-gray-600">
-                      → {nodeInfo?.title || (annotation.structure_node_id as string)}
+                      →{" "}
+                      {nodeInfo?.title ||
+                        (annotation.structure_node_id as string)}
                     </p>
                     <p className="text-xs text-gray-500">
                       Position: {annotation.start_char} - {annotation.end_char}
@@ -325,7 +328,9 @@ export const AnnotationSelector: React.FC<AnnotationSelectorProps> = ({
                   <Button
                     size="xs"
                     color="failure"
-                    onClick={() => handleDeleteAnnotation(annotation.id as string)}
+                    onClick={() =>
+                      handleDeleteAnnotation(annotation.id as string)
+                    }
                     disabled={deleteAnnotationMutation.isPending}
                   >
                     <Trash2 className="h-3 w-3" />

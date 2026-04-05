@@ -58,8 +58,16 @@ export class DatasetService extends BaseService {
       this.validateRequired(data, "Dataset data");
       this.validateRequired(data.title, "Dataset title");
       this.validateRequired(data.filename, "Dataset filename");
-      this.sanitizeString((data.title as unknown as string) || '', "Dataset title", 255);
-      this.sanitizeString((data.filename as unknown as string) || '', "Dataset filename", 255);
+      this.sanitizeString(
+        (data.title as unknown as string) || "",
+        "Dataset title",
+        255,
+      );
+      this.sanitizeString(
+        (data.filename as unknown as string) || "",
+        "Dataset filename",
+        255,
+      );
 
       return this.postResource<DatasetResponse>(ENDPOINTS.DATASETS, data);
     }, "create dataset");
@@ -113,8 +121,16 @@ export class DatasetService extends BaseService {
       this.validateRequired(data, "Dataset data");
       this.validateRequired(data.title, "Dataset title");
       this.validateRequired(data.file_path, "Dataset file path");
-      this.sanitizeString((data.title as unknown as string) || '', "Dataset title", 255);
-      this.sanitizeString((data.file_path as unknown as string) || '', "Dataset file path", 1000);
+      this.sanitizeString(
+        (data.title as unknown as string) || "",
+        "Dataset title",
+        255,
+      );
+      this.sanitizeString(
+        (data.file_path as unknown as string) || "",
+        "Dataset file path",
+        1000,
+      );
 
       return this.postResource<DatasetResponse>(
         `${ENDPOINTS.DATASETS}/add-existing`,
@@ -142,7 +158,11 @@ export class DatasetService extends BaseService {
     return this.withErrorContext(() => {
       this.validateRequired(data, "Directory data");
       this.validateRequired(data.datasets_directory, "Datasets directory");
-      this.sanitizeString((data.datasets_directory as unknown as string) || '', "Datasets directory", 1000);
+      this.sanitizeString(
+        (data.datasets_directory as unknown as string) || "",
+        "Datasets directory",
+        1000,
+      );
 
       return this.postResource<{ success: boolean; message: string }>(
         `${ENDPOINTS.DATASETS}/directory`,

@@ -43,7 +43,9 @@ function RAGExperimentsPage() {
       new Set(results.results.map((r) => r.paragraph_id).filter((id) => id)),
     ) as string[];
     const pipelineNames = Array.from(
-      new Set(results.results.map((r) => r.pipeline_name).filter((name) => name)),
+      new Set(
+        results.results.map((r) => r.pipeline_name).filter((name) => name),
+      ),
     ) as string[];
 
     // For now, show results for the first paragraph

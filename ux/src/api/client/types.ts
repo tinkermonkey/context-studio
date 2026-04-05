@@ -4,6303 +4,6300 @@
  */
 
 export interface paths {
-    "/api/taxonomies": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * List Taxonomies
-         * @description Retrieve all taxonomies.
-         *
-         *     Returns:
-         *         ListResponse containing all taxonomies
-         */
-        get: operations["list_taxonomies_api_taxonomies_get"];
-        put?: never;
-        /**
-         * Create Taxonomy
-         * @description Create a new taxonomy.
-         *
-         *     Args:
-         *         request: TaxonomyCreateRequest with title and optional description
-         *         service: OntologyService from dependency injection
-         *
-         *     Returns:
-         *         Created taxonomy as TaxonomyResponse
-         *
-         *     Raises:
-         *         HTTPException: 400 if title is empty, 409 if title already exists
-         */
-        post: operations["create_taxonomy_api_taxonomies_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+  "/api/taxonomies": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/taxonomies/{taxonomy_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get Taxonomy
-         * @description Retrieve a taxonomy by ID.
-         *
-         *     Args:
-         *         taxonomy_id: The taxonomy ID
-         *         service: OntologyService from dependency injection
-         *
-         *     Returns:
-         *         TaxonomyResponse
-         *
-         *     Raises:
-         *         HTTPException: 404 if taxonomy not found
-         */
-        get: operations["get_taxonomy_api_taxonomies__taxonomy_id__get"];
-        /**
-         * Update Taxonomy
-         * @description Update a taxonomy's title and/or description.
-         *
-         *     Args:
-         *         taxonomy_id: The taxonomy ID
-         *         request: TaxonomyUpdateRequest with optional fields to update
-         *         service: OntologyService from dependency injection
-         *
-         *     Returns:
-         *         Updated TaxonomyResponse
-         *
-         *     Raises:
-         *         HTTPException: 400 if invalid input, 404 if not found, 409 if title exists
-         */
-        put: operations["update_taxonomy_api_taxonomies__taxonomy_id__put"];
-        post?: never;
-        /**
-         * Delete Taxonomy
-         * @description Delete a taxonomy.
-         *
-         *     Args:
-         *         taxonomy_id: The taxonomy ID
-         *         service: OntologyService from dependency injection
-         *
-         *     Raises:
-         *         HTTPException: 404 if not found, 422 if it has concept schemes
-         */
-        delete: operations["delete_taxonomy_api_taxonomies__taxonomy_id__delete"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    /**
+     * List Taxonomies
+     * @description Retrieve all taxonomies.
+     *
+     *     Returns:
+     *         ListResponse containing all taxonomies
+     */
+    get: operations["list_taxonomies_api_taxonomies_get"];
+    put?: never;
+    /**
+     * Create Taxonomy
+     * @description Create a new taxonomy.
+     *
+     *     Args:
+     *         request: TaxonomyCreateRequest with title and optional description
+     *         service: OntologyService from dependency injection
+     *
+     *     Returns:
+     *         Created taxonomy as TaxonomyResponse
+     *
+     *     Raises:
+     *         HTTPException: 400 if title is empty, 409 if title already exists
+     */
+    post: operations["create_taxonomy_api_taxonomies_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/taxonomies/{taxonomy_id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/taxonomies/{taxonomy_id}/schemes": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Create Concept Scheme
-         * @description Create a new concept scheme within a taxonomy.
-         *
-         *     Args:
-         *         taxonomy_id: The parent taxonomy ID
-         *         request: ConceptSchemeCreateRequest with title and optional description
-         *         service: OntologyService from dependency injection
-         *
-         *     Returns:
-         *         Created ConceptSchemeResponse
-         *
-         *     Raises:
-         *         HTTPException: 400 if invalid, 404 if taxonomy not found, 409 if title exists
-         */
-        post: operations["create_concept_scheme_api_taxonomies__taxonomy_id__schemes_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    /**
+     * Get Taxonomy
+     * @description Retrieve a taxonomy by ID.
+     *
+     *     Args:
+     *         taxonomy_id: The taxonomy ID
+     *         service: OntologyService from dependency injection
+     *
+     *     Returns:
+     *         TaxonomyResponse
+     *
+     *     Raises:
+     *         HTTPException: 404 if taxonomy not found
+     */
+    get: operations["get_taxonomy_api_taxonomies__taxonomy_id__get"];
+    /**
+     * Update Taxonomy
+     * @description Update a taxonomy's title and/or description.
+     *
+     *     Args:
+     *         taxonomy_id: The taxonomy ID
+     *         request: TaxonomyUpdateRequest with optional fields to update
+     *         service: OntologyService from dependency injection
+     *
+     *     Returns:
+     *         Updated TaxonomyResponse
+     *
+     *     Raises:
+     *         HTTPException: 400 if invalid input, 404 if not found, 409 if title exists
+     */
+    put: operations["update_taxonomy_api_taxonomies__taxonomy_id__put"];
+    post?: never;
+    /**
+     * Delete Taxonomy
+     * @description Delete a taxonomy.
+     *
+     *     Args:
+     *         taxonomy_id: The taxonomy ID
+     *         service: OntologyService from dependency injection
+     *
+     *     Raises:
+     *         HTTPException: 404 if not found, 422 if it has concept schemes
+     */
+    delete: operations["delete_taxonomy_api_taxonomies__taxonomy_id__delete"];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/taxonomies/{taxonomy_id}/schemes": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/schemes": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * List Concept Schemes
-         * @description Retrieve concept schemes, optionally filtered by taxonomy.
-         *
-         *     Args:
-         *         taxonomy_id: Optional taxonomy ID to filter by
-         *         service: OntologyService from dependency injection
-         *
-         *     Returns:
-         *         ListResponse containing matching concept schemes
-         */
-        get: operations["list_concept_schemes_api_schemes_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get?: never;
+    put?: never;
+    /**
+     * Create Concept Scheme
+     * @description Create a new concept scheme within a taxonomy.
+     *
+     *     Args:
+     *         taxonomy_id: The parent taxonomy ID
+     *         request: ConceptSchemeCreateRequest with title and optional description
+     *         service: OntologyService from dependency injection
+     *
+     *     Returns:
+     *         Created ConceptSchemeResponse
+     *
+     *     Raises:
+     *         HTTPException: 400 if invalid, 404 if taxonomy not found, 409 if title exists
+     */
+    post: operations["create_concept_scheme_api_taxonomies__taxonomy_id__schemes_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/schemes": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/schemes/{scheme_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get Concept Scheme
-         * @description Retrieve a concept scheme by ID.
-         *
-         *     Args:
-         *         scheme_id: The concept scheme ID
-         *         service: OntologyService from dependency injection
-         *
-         *     Returns:
-         *         ConceptSchemeResponse
-         *
-         *     Raises:
-         *         HTTPException: 404 if not found
-         */
-        get: operations["get_concept_scheme_api_schemes__scheme_id__get"];
-        /**
-         * Update Concept Scheme
-         * @description Update a concept scheme's title and/or description.
-         *
-         *     Args:
-         *         scheme_id: The concept scheme ID
-         *         request: ConceptSchemeUpdateRequest with optional fields to update
-         *         service: OntologyService from dependency injection
-         *
-         *     Returns:
-         *         Updated ConceptSchemeResponse
-         *
-         *     Raises:
-         *         HTTPException: 400 if invalid, 404 if not found, 409 if title exists
-         */
-        put: operations["update_concept_scheme_api_schemes__scheme_id__put"];
-        post?: never;
-        /**
-         * Delete Concept Scheme
-         * @description Delete a concept scheme.
-         *
-         *     Args:
-         *         scheme_id: The concept scheme ID
-         *         service: OntologyService from dependency injection
-         *
-         *     Raises:
-         *         HTTPException: 404 if not found, 422 if it has classes
-         */
-        delete: operations["delete_concept_scheme_api_schemes__scheme_id__delete"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    /**
+     * List Concept Schemes
+     * @description Retrieve concept schemes, optionally filtered by taxonomy.
+     *
+     *     Args:
+     *         taxonomy_id: Optional taxonomy ID to filter by
+     *         service: OntologyService from dependency injection
+     *
+     *     Returns:
+     *         ListResponse containing matching concept schemes
+     */
+    get: operations["list_concept_schemes_api_schemes_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/schemes/{scheme_id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/schemes/{scheme_id}/classes": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Create Class
-         * @description Create a new class within a concept scheme.
-         *
-         *     Args:
-         *         scheme_id: The parent concept scheme ID
-         *         request: ClassCreateRequest with title and optional description/parent
-         *         service: OntologyService from dependency injection
-         *
-         *     Returns:
-         *         Created ClassResponse
-         *
-         *     Raises:
-         *         HTTPException: 400 if invalid, 404 if scheme/parent not found, 409 if title exists
-         */
-        post: operations["create_class_api_schemes__scheme_id__classes_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    /**
+     * Get Concept Scheme
+     * @description Retrieve a concept scheme by ID.
+     *
+     *     Args:
+     *         scheme_id: The concept scheme ID
+     *         service: OntologyService from dependency injection
+     *
+     *     Returns:
+     *         ConceptSchemeResponse
+     *
+     *     Raises:
+     *         HTTPException: 404 if not found
+     */
+    get: operations["get_concept_scheme_api_schemes__scheme_id__get"];
+    /**
+     * Update Concept Scheme
+     * @description Update a concept scheme's title and/or description.
+     *
+     *     Args:
+     *         scheme_id: The concept scheme ID
+     *         request: ConceptSchemeUpdateRequest with optional fields to update
+     *         service: OntologyService from dependency injection
+     *
+     *     Returns:
+     *         Updated ConceptSchemeResponse
+     *
+     *     Raises:
+     *         HTTPException: 400 if invalid, 404 if not found, 409 if title exists
+     */
+    put: operations["update_concept_scheme_api_schemes__scheme_id__put"];
+    post?: never;
+    /**
+     * Delete Concept Scheme
+     * @description Delete a concept scheme.
+     *
+     *     Args:
+     *         scheme_id: The concept scheme ID
+     *         service: OntologyService from dependency injection
+     *
+     *     Raises:
+     *         HTTPException: 404 if not found, 422 if it has classes
+     */
+    delete: operations["delete_concept_scheme_api_schemes__scheme_id__delete"];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/schemes/{scheme_id}/classes": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/classes": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * List Classes
-         * @description Retrieve classes with optional filtering and pagination.
-         *
-         *     Args:
-         *         concept_scheme_id: Optional concept scheme ID to filter by
-         *         parent_class_id: Optional parent class ID to filter by
-         *         limit: Maximum number of results (1-1000, default 100)
-         *         offset: Number of results to skip (default 0)
-         *         service: OntologyService from dependency injection
-         *
-         *     Returns:
-         *         ListResponse containing matching classes
-         */
-        get: operations["list_classes_api_classes_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get?: never;
+    put?: never;
+    /**
+     * Create Class
+     * @description Create a new class within a concept scheme.
+     *
+     *     Args:
+     *         scheme_id: The parent concept scheme ID
+     *         request: ClassCreateRequest with title and optional description/parent
+     *         service: OntologyService from dependency injection
+     *
+     *     Returns:
+     *         Created ClassResponse
+     *
+     *     Raises:
+     *         HTTPException: 400 if invalid, 404 if scheme/parent not found, 409 if title exists
+     */
+    post: operations["create_class_api_schemes__scheme_id__classes_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/classes": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/classes/{class_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get Class
-         * @description Retrieve a class by ID.
-         *
-         *     Args:
-         *         class_id: The class ID
-         *         service: OntologyService from dependency injection
-         *
-         *     Returns:
-         *         ClassResponse
-         *
-         *     Raises:
-         *         HTTPException: 404 if not found
-         */
-        get: operations["get_class_api_classes__class_id__get"];
-        /**
-         * Update Class
-         * @description Update a class's title and/or description.
-         *
-         *     Args:
-         *         class_id: The class ID
-         *         request: ClassUpdateRequest with optional fields to update
-         *         service: OntologyService from dependency injection
-         *
-         *     Returns:
-         *         Updated ClassResponse
-         *
-         *     Raises:
-         *         HTTPException: 400 if invalid, 404 if not found, 409 if title exists
-         */
-        put: operations["update_class_api_classes__class_id__put"];
-        post?: never;
-        /**
-         * Delete Class
-         * @description Delete a class.
-         *
-         *     Args:
-         *         class_id: The class ID
-         *         service: OntologyService from dependency injection
-         *
-         *     Raises:
-         *         HTTPException: 404 if not found, 422 if it has subclasses
-         */
-        delete: operations["delete_class_api_classes__class_id__delete"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    /**
+     * List Classes
+     * @description Retrieve classes with optional filtering and pagination.
+     *
+     *     Args:
+     *         concept_scheme_id: Optional concept scheme ID to filter by
+     *         parent_class_id: Optional parent class ID to filter by
+     *         limit: Maximum number of results (1-1000, default 100)
+     *         offset: Number of results to skip (default 0)
+     *         service: OntologyService from dependency injection
+     *
+     *     Returns:
+     *         ListResponse containing matching classes
+     */
+    get: operations["list_classes_api_classes_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/classes/{class_id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/classes/{class_id}/move": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Move Class
-         * @description Move a class to a different parent in the hierarchy.
-         *
-         *     Args:
-         *         class_id: The class ID
-         *         request: ClassMoveRequest with new_parent_id (or None to make root)
-         *         service: OntologyService from dependency injection
-         *
-         *     Returns:
-         *         Updated ClassResponse
-         *
-         *     Raises:
-         *         HTTPException: 400 if invalid, 404 if not found, 422 if circular reference
-         */
-        post: operations["move_class_api_classes__class_id__move_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    /**
+     * Get Class
+     * @description Retrieve a class by ID.
+     *
+     *     Args:
+     *         class_id: The class ID
+     *         service: OntologyService from dependency injection
+     *
+     *     Returns:
+     *         ClassResponse
+     *
+     *     Raises:
+     *         HTTPException: 404 if not found
+     */
+    get: operations["get_class_api_classes__class_id__get"];
+    /**
+     * Update Class
+     * @description Update a class's title and/or description.
+     *
+     *     Args:
+     *         class_id: The class ID
+     *         request: ClassUpdateRequest with optional fields to update
+     *         service: OntologyService from dependency injection
+     *
+     *     Returns:
+     *         Updated ClassResponse
+     *
+     *     Raises:
+     *         HTTPException: 400 if invalid, 404 if not found, 409 if title exists
+     */
+    put: operations["update_class_api_classes__class_id__put"];
+    post?: never;
+    /**
+     * Delete Class
+     * @description Delete a class.
+     *
+     *     Args:
+     *         class_id: The class ID
+     *         service: OntologyService from dependency injection
+     *
+     *     Raises:
+     *         HTTPException: 404 if not found, 422 if it has subclasses
+     */
+    delete: operations["delete_class_api_classes__class_id__delete"];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/classes/{class_id}/move": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/relationships": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * List Relationships
-         * @description Retrieve relationships with optional filtering.
-         *
-         *     Args:
-         *         source_id: Optional source entity ID to filter by
-         *         target_id: Optional target entity ID to filter by
-         *         property_id: Optional property definition ID to filter by
-         *         service: OntologyService from dependency injection
-         *
-         *     Returns:
-         *         ListResponse containing matching relationships
-         */
-        get: operations["list_relationships_api_relationships_get"];
-        put?: never;
-        /**
-         * Create Relationship
-         * @description Create a new typed relationship between two entities.
-         *
-         *     Args:
-         *         request: RelationshipCreateRequest with source, target, and property definition IDs
-         *         service: OntologyService from dependency injection
-         *
-         *     Returns:
-         *         Created RelationshipResponse
-         *
-         *     Raises:
-         *         HTTPException: 400 if invalid (self-loop), 404 if entities not found, 409 if duplicate
-         */
-        post: operations["create_relationship_api_relationships_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get?: never;
+    put?: never;
+    /**
+     * Move Class
+     * @description Move a class to a different parent in the hierarchy.
+     *
+     *     Args:
+     *         class_id: The class ID
+     *         request: ClassMoveRequest with new_parent_id (or None to make root)
+     *         service: OntologyService from dependency injection
+     *
+     *     Returns:
+     *         Updated ClassResponse
+     *
+     *     Raises:
+     *         HTTPException: 400 if invalid, 404 if not found, 422 if circular reference
+     */
+    post: operations["move_class_api_classes__class_id__move_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/relationships": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/relationships/{relationship_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get Relationship
-         * @description Retrieve a relationship by ID.
-         *
-         *     Args:
-         *         relationship_id: The relationship ID
-         *         service: OntologyService from dependency injection
-         *
-         *     Returns:
-         *         RelationshipResponse
-         *
-         *     Raises:
-         *         HTTPException: 404 if not found
-         */
-        get: operations["get_relationship_api_relationships__relationship_id__get"];
-        put?: never;
-        post?: never;
-        /**
-         * Delete Relationship
-         * @description Delete a relationship.
-         *
-         *     Args:
-         *         relationship_id: The relationship ID
-         *         service: OntologyService from dependency injection
-         *
-         *     Raises:
-         *         HTTPException: 404 if not found
-         */
-        delete: operations["delete_relationship_api_relationships__relationship_id__delete"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    /**
+     * List Relationships
+     * @description Retrieve relationships with optional filtering.
+     *
+     *     Args:
+     *         source_id: Optional source entity ID to filter by
+     *         target_id: Optional target entity ID to filter by
+     *         property_id: Optional property definition ID to filter by
+     *         service: OntologyService from dependency injection
+     *
+     *     Returns:
+     *         ListResponse containing matching relationships
+     */
+    get: operations["list_relationships_api_relationships_get"];
+    put?: never;
+    /**
+     * Create Relationship
+     * @description Create a new typed relationship between two entities.
+     *
+     *     Args:
+     *         request: RelationshipCreateRequest with source, target, and property definition IDs
+     *         service: OntologyService from dependency injection
+     *
+     *     Returns:
+     *         Created RelationshipResponse
+     *
+     *     Raises:
+     *         HTTPException: 400 if invalid (self-loop), 404 if entities not found, 409 if duplicate
+     */
+    post: operations["create_relationship_api_relationships_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/relationships/{relationship_id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/properties": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * List Property Definitions
-         * @description Retrieve property definitions, optionally filtered by relevance.
-         *
-         *     Args:
-         *         is_relevant: Optional filter for relevant properties
-         *         service: OntologyService from dependency injection
-         *
-         *     Returns:
-         *         ListResponse containing property definitions
-         */
-        get: operations["list_property_definitions_api_properties_get"];
-        put?: never;
-        /**
-         * Create Property Definition
-         * @description Create a new property definition (relationship type).
-         *
-         *     Args:
-         *         request: PropertyDefinitionCreateRequest with identifier and title
-         *         service: OntologyService from dependency injection
-         *
-         *     Returns:
-         *         Created PropertyDefinitionResponse
-         *
-         *     Raises:
-         *         HTTPException: 400 if invalid, 409 if identifier or title exists
-         */
-        post: operations["create_property_definition_api_properties_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    /**
+     * Get Relationship
+     * @description Retrieve a relationship by ID.
+     *
+     *     Args:
+     *         relationship_id: The relationship ID
+     *         service: OntologyService from dependency injection
+     *
+     *     Returns:
+     *         RelationshipResponse
+     *
+     *     Raises:
+     *         HTTPException: 404 if not found
+     */
+    get: operations["get_relationship_api_relationships__relationship_id__get"];
+    put?: never;
+    post?: never;
+    /**
+     * Delete Relationship
+     * @description Delete a relationship.
+     *
+     *     Args:
+     *         relationship_id: The relationship ID
+     *         service: OntologyService from dependency injection
+     *
+     *     Raises:
+     *         HTTPException: 404 if not found
+     */
+    delete: operations["delete_relationship_api_relationships__relationship_id__delete"];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/properties": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/properties/{property_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get Property Definition
-         * @description Retrieve a property definition by ID.
-         *
-         *     Args:
-         *         property_id: The property definition ID
-         *         service: OntologyService from dependency injection
-         *
-         *     Returns:
-         *         PropertyDefinitionResponse
-         *
-         *     Raises:
-         *         HTTPException: 404 if not found
-         */
-        get: operations["get_property_definition_api_properties__property_id__get"];
-        /**
-         * Update Property Definition
-         * @description Update a property definition's title and/or description.
-         *
-         *     Note: identifier cannot be changed after creation.
-         *
-         *     Args:
-         *         property_id: The property definition ID
-         *         request: PropertyDefinitionUpdateRequest with optional fields to update
-         *         service: OntologyService from dependency injection
-         *
-         *     Returns:
-         *         Updated PropertyDefinitionResponse
-         *
-         *     Raises:
-         *         HTTPException: 400 if invalid, 404 if not found
-         */
-        put: operations["update_property_definition_api_properties__property_id__put"];
-        post?: never;
-        /**
-         * Delete Property Definition
-         * @description Delete a property definition.
-         *
-         *     Args:
-         *         property_id: The property definition ID
-         *         service: OntologyService from dependency injection
-         *
-         *     Raises:
-         *         HTTPException: 404 if not found
-         */
-        delete: operations["delete_property_definition_api_properties__property_id__delete"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    /**
+     * List Property Definitions
+     * @description Retrieve property definitions, optionally filtered by relevance.
+     *
+     *     Args:
+     *         is_relevant: Optional filter for relevant properties
+     *         service: OntologyService from dependency injection
+     *
+     *     Returns:
+     *         ListResponse containing property definitions
+     */
+    get: operations["list_property_definitions_api_properties_get"];
+    put?: never;
+    /**
+     * Create Property Definition
+     * @description Create a new property definition (relationship type).
+     *
+     *     Args:
+     *         request: PropertyDefinitionCreateRequest with identifier and title
+     *         service: OntologyService from dependency injection
+     *
+     *     Returns:
+     *         Created PropertyDefinitionResponse
+     *
+     *     Raises:
+     *         HTTPException: 400 if invalid, 409 if identifier or title exists
+     */
+    post: operations["create_property_definition_api_properties_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/properties/{property_id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/graph/build": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Build Graph
-         * @description Explicitly build the in-memory graph from current ontology data.
-         *
-         *     This endpoint allows clients to trigger graph construction on demand. Graph building
-         *     normally happens lazily on first query, but this endpoint enables explicit control
-         *     over graph refresh timing and validates that the graph can be built without errors.
-         *
-         *     Args:
-         *         service: GraphAnalysisService from dependency injection
-         *
-         *     Returns:
-         *         KnowledgeGraphResponse containing node count, edge count, and build timestamp
-         *
-         *     Raises:
-         *         HTTPException: 422 if graph construction fails
-         */
-        post: operations["build_graph_api_graph_build_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    /**
+     * Get Property Definition
+     * @description Retrieve a property definition by ID.
+     *
+     *     Args:
+     *         property_id: The property definition ID
+     *         service: OntologyService from dependency injection
+     *
+     *     Returns:
+     *         PropertyDefinitionResponse
+     *
+     *     Raises:
+     *         HTTPException: 404 if not found
+     */
+    get: operations["get_property_definition_api_properties__property_id__get"];
+    /**
+     * Update Property Definition
+     * @description Update a property definition's title and/or description.
+     *
+     *     Note: identifier cannot be changed after creation.
+     *
+     *     Args:
+     *         property_id: The property definition ID
+     *         request: PropertyDefinitionUpdateRequest with optional fields to update
+     *         service: OntologyService from dependency injection
+     *
+     *     Returns:
+     *         Updated PropertyDefinitionResponse
+     *
+     *     Raises:
+     *         HTTPException: 400 if invalid, 404 if not found
+     */
+    put: operations["update_property_definition_api_properties__property_id__put"];
+    post?: never;
+    /**
+     * Delete Property Definition
+     * @description Delete a property definition.
+     *
+     *     Args:
+     *         property_id: The property definition ID
+     *         service: OntologyService from dependency injection
+     *
+     *     Raises:
+     *         HTTPException: 404 if not found
+     */
+    delete: operations["delete_property_definition_api_properties__property_id__delete"];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/graph/build": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/graph/metrics": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get Metrics
-         * @description Get structural metrics for the entire graph.
-         *
-         *     Args:
-         *         algorithm: Centrality algorithm to use (betweenness, pagerank, closeness, degree)
-         *         service: GraphAnalysisService from dependency injection
-         *
-         *     Returns:
-         *         GraphMetricsResponse containing density, average degree, connected components, degree distribution, centrality scores, communities, algorithm, and computed timestamp
-         *
-         *     Raises:
-         *         HTTPException: 400 if algorithm is invalid or community detection fails, 422 if graph error occurs
-         */
-        get: operations["get_metrics_api_graph_metrics_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get?: never;
+    put?: never;
+    /**
+     * Build Graph
+     * @description Explicitly build the in-memory graph from current ontology data.
+     *
+     *     This endpoint allows clients to trigger graph construction on demand. Graph building
+     *     normally happens lazily on first query, but this endpoint enables explicit control
+     *     over graph refresh timing and validates that the graph can be built without errors.
+     *
+     *     Args:
+     *         service: GraphAnalysisService from dependency injection
+     *
+     *     Returns:
+     *         KnowledgeGraphResponse containing node count, edge count, and build timestamp
+     *
+     *     Raises:
+     *         HTTPException: 422 if graph construction fails
+     */
+    post: operations["build_graph_api_graph_build_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/graph/metrics": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/graph/degree-distribution": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get Degree Distribution
-         * @description Get the degree distribution across all nodes in the graph.
-         *
-         *     The degree of a node is the number of edges connected to it. This endpoint
-         *     provides the raw degree counts for each node, useful for network analysis
-         *     and topology studies.
-         *
-         *     Args:
-         *         service: GraphAnalysisService from dependency injection
-         *
-         *     Returns:
-         *         DegreeDistributionResponse containing node ID to degree mapping and computed timestamp
-         *
-         *     Raises:
-         *         HTTPException: 422 if graph error occurs
-         */
-        get: operations["get_degree_distribution_api_graph_degree_distribution_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    /**
+     * Get Metrics
+     * @description Get structural metrics for the entire graph.
+     *
+     *     Args:
+     *         algorithm: Centrality algorithm to use (betweenness, pagerank, closeness, degree)
+     *         service: GraphAnalysisService from dependency injection
+     *
+     *     Returns:
+     *         GraphMetricsResponse containing density, average degree, connected components, degree distribution, centrality scores, communities, algorithm, and computed timestamp
+     *
+     *     Raises:
+     *         HTTPException: 400 if algorithm is invalid or community detection fails, 422 if graph error occurs
+     */
+    get: operations["get_metrics_api_graph_metrics_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/graph/degree-distribution": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/graph/paths/shortest": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get Shortest Path
-         * @description Find the shortest path between two nodes.
-         *
-         *     Args:
-         *         source_id: ID of the starting node
-         *         target_id: ID of the ending node
-         *         service: GraphAnalysisService from dependency injection
-         *
-         *     Returns:
-         *         PathResultResponse if a path exists
-         *
-         *     Raises:
-         *         HTTPException: 404 if either node is not found or no path exists, 422 if graph error occurs
-         */
-        get: operations["get_shortest_path_api_graph_paths_shortest_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    /**
+     * Get Degree Distribution
+     * @description Get the degree distribution across all nodes in the graph.
+     *
+     *     The degree of a node is the number of edges connected to it. This endpoint
+     *     provides the raw degree counts for each node, useful for network analysis
+     *     and topology studies.
+     *
+     *     Args:
+     *         service: GraphAnalysisService from dependency injection
+     *
+     *     Returns:
+     *         DegreeDistributionResponse containing node ID to degree mapping and computed timestamp
+     *
+     *     Raises:
+     *         HTTPException: 422 if graph error occurs
+     */
+    get: operations["get_degree_distribution_api_graph_degree_distribution_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/graph/paths/shortest": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/graph/paths/all": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get All Paths
-         * @description Find all simple paths between two nodes up to a maximum depth.
-         *
-         *     Args:
-         *         source_id: ID of the starting node
-         *         target_id: ID of the ending node
-         *         max_depth: Maximum path length to explore (minimum 1, maximum 20)
-         *         service: GraphAnalysisService from dependency injection
-         *
-         *     Returns:
-         *         List of PathResultResponse objects, one for each found path
-         *
-         *     Raises:
-         *         HTTPException: 404 if either node is not found, 422 if graph error occurs
-         */
-        get: operations["get_all_paths_api_graph_paths_all_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    /**
+     * Get Shortest Path
+     * @description Find the shortest path between two nodes.
+     *
+     *     Args:
+     *         source_id: ID of the starting node
+     *         target_id: ID of the ending node
+     *         service: GraphAnalysisService from dependency injection
+     *
+     *     Returns:
+     *         PathResultResponse if a path exists
+     *
+     *     Raises:
+     *         HTTPException: 404 if either node is not found or no path exists, 422 if graph error occurs
+     */
+    get: operations["get_shortest_path_api_graph_paths_shortest_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/graph/paths/all": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/graph/centrality": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get Centrality
-         * @description Compute centrality scores for all nodes using the specified algorithm.
-         *
-         *     Args:
-         *         algorithm: Name of the centrality algorithm (betweenness, pagerank, closeness, degree)
-         *         service: GraphAnalysisService from dependency injection
-         *
-         *     Returns:
-         *         CentralityResponse mapping node IDs to centrality scores
-         *
-         *     Raises:
-         *         HTTPException: 400 if algorithm is not recognized, 422 if graph error occurs
-         */
-        get: operations["get_centrality_api_graph_centrality_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    /**
+     * Get All Paths
+     * @description Find all simple paths between two nodes up to a maximum depth.
+     *
+     *     Args:
+     *         source_id: ID of the starting node
+     *         target_id: ID of the ending node
+     *         max_depth: Maximum path length to explore (minimum 1, maximum 20)
+     *         service: GraphAnalysisService from dependency injection
+     *
+     *     Returns:
+     *         List of PathResultResponse objects, one for each found path
+     *
+     *     Raises:
+     *         HTTPException: 404 if either node is not found, 422 if graph error occurs
+     */
+    get: operations["get_all_paths_api_graph_paths_all_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/graph/centrality": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/graph/communities": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get Communities
-         * @description Partition the graph into communities using the specified algorithm.
-         *
-         *     Args:
-         *         algorithm: Name of the community detection algorithm (louvain, label_propagation)
-         *         service: GraphAnalysisService from dependency injection
-         *
-         *     Returns:
-         *         CommunitiesResponse containing detected communities as lists of node IDs
-         *
-         *     Raises:
-         *         HTTPException: 400 if algorithm is not recognized or community detection fails, 422 if graph error occurs
-         */
-        get: operations["get_communities_api_graph_communities_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    /**
+     * Get Centrality
+     * @description Compute centrality scores for all nodes using the specified algorithm.
+     *
+     *     Args:
+     *         algorithm: Name of the centrality algorithm (betweenness, pagerank, closeness, degree)
+     *         service: GraphAnalysisService from dependency injection
+     *
+     *     Returns:
+     *         CentralityResponse mapping node IDs to centrality scores
+     *
+     *     Raises:
+     *         HTTPException: 400 if algorithm is not recognized, 422 if graph error occurs
+     */
+    get: operations["get_centrality_api_graph_centrality_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/graph/communities": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/graph/nodes/{node_id}/neighbors": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get Neighbors
-         * @description Get all neighbors of a node up to a specified depth with optional directional filtering.
-         *
-         *     Args:
-         *         node_id: ID of the queried node
-         *         direction: Direction of traversal (in, out, or both)
-         *         depth: Maximum distance from center node (minimum 1, maximum 10, default 1)
-         *         service: GraphAnalysisService from dependency injection
-         *
-         *     Returns:
-         *         NeighborsResponse containing list of neighboring node IDs
-         *
-         *     Raises:
-         *         HTTPException: 404 if node is not found, 400 if direction is invalid, 422 if graph error occurs
-         */
-        get: operations["get_neighbors_api_graph_nodes__node_id__neighbors_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    /**
+     * Get Communities
+     * @description Partition the graph into communities using the specified algorithm.
+     *
+     *     Args:
+     *         algorithm: Name of the community detection algorithm (louvain, label_propagation)
+     *         service: GraphAnalysisService from dependency injection
+     *
+     *     Returns:
+     *         CommunitiesResponse containing detected communities as lists of node IDs
+     *
+     *     Raises:
+     *         HTTPException: 400 if algorithm is not recognized or community detection fails, 422 if graph error occurs
+     */
+    get: operations["get_communities_api_graph_communities_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/graph/nodes/{node_id}/neighbors": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/graph/subgraph": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get Subgraph
-         * @description Extract a subgraph containing the specified nodes and all edges between them.
-         *
-         *     This endpoint extracts a subgraph from a pre-computed list of node IDs.
-         *     For depth-based neighborhood extraction, use GET /nodes/{node_id}/subgraph instead.
-         *
-         *     Args:
-         *         nodes: Comma-separated list of node IDs (e.g., "id1,id2,id3")
-         *         service: GraphAnalysisService from dependency injection
-         *
-         *     Returns:
-         *         KnowledgeGraphResponse describing the extracted subgraph
-         *
-         *     Raises:
-         *         HTTPException: 404 if any node is not found, 400 if nodes parameter is invalid, 422 if graph error occurs
-         */
-        get: operations["get_subgraph_api_graph_subgraph_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    /**
+     * Get Neighbors
+     * @description Get all neighbors of a node up to a specified depth with optional directional filtering.
+     *
+     *     Args:
+     *         node_id: ID of the queried node
+     *         direction: Direction of traversal (in, out, or both)
+     *         depth: Maximum distance from center node (minimum 1, maximum 10, default 1)
+     *         service: GraphAnalysisService from dependency injection
+     *
+     *     Returns:
+     *         NeighborsResponse containing list of neighboring node IDs
+     *
+     *     Raises:
+     *         HTTPException: 404 if node is not found, 400 if direction is invalid, 422 if graph error occurs
+     */
+    get: operations["get_neighbors_api_graph_nodes__node_id__neighbors_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/graph/subgraph": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/graph/nodes/{node_id}/subgraph": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get Subgraph By Depth
-         * @description Extract a subgraph containing a center node and all nodes within a specified depth (FR-9).
-         *
-         *     This implements depth-based subgraph extraction where depth 1 returns the center node
-         *     and its immediate neighbors, depth 2 returns two hops away, etc.
-         *
-         *     Args:
-         *         node_id: ID of the center node
-         *         depth: Maximum distance from center node (minimum 1, maximum 10, default 1)
-         *         service: GraphAnalysisService from dependency injection
-         *
-         *     Returns:
-         *         SubgraphResultResponse containing center node ID, node count, edge count, depth, and extraction timestamp
-         *
-         *     Raises:
-         *         HTTPException: 404 if center node is not found, 400 if depth is invalid, 422 if graph error occurs
-         */
-        get: operations["get_subgraph_by_depth_api_graph_nodes__node_id__subgraph_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    /**
+     * Get Subgraph
+     * @description Extract a subgraph containing the specified nodes and all edges between them.
+     *
+     *     This endpoint extracts a subgraph from a pre-computed list of node IDs.
+     *     For depth-based neighborhood extraction, use GET /nodes/{node_id}/subgraph instead.
+     *
+     *     Args:
+     *         nodes: Comma-separated list of node IDs (e.g., "id1,id2,id3")
+     *         service: GraphAnalysisService from dependency injection
+     *
+     *     Returns:
+     *         KnowledgeGraphResponse describing the extracted subgraph
+     *
+     *     Raises:
+     *         HTTPException: 404 if any node is not found, 400 if nodes parameter is invalid, 422 if graph error occurs
+     */
+    get: operations["get_subgraph_api_graph_subgraph_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/graph/nodes/{node_id}/subgraph": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/graph/cycle-check": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Check Cycle
-         * @description Check if adding an edge from source to target would create a cycle.
-         *
-         *     Args:
-         *         request: CycleCheckRequest with source_id and target_id
-         *         service: GraphAnalysisService from dependency injection
-         *
-         *     Returns:
-         *         CycleCheckResponse indicating whether a cycle would be created
-         *
-         *     Raises:
-         *         HTTPException: 404 if either node is not found, 422 if graph error occurs
-         */
-        post: operations["check_cycle_api_graph_cycle_check_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    /**
+     * Get Subgraph By Depth
+     * @description Extract a subgraph containing a center node and all nodes within a specified depth (FR-9).
+     *
+     *     This implements depth-based subgraph extraction where depth 1 returns the center node
+     *     and its immediate neighbors, depth 2 returns two hops away, etc.
+     *
+     *     Args:
+     *         node_id: ID of the center node
+     *         depth: Maximum distance from center node (minimum 1, maximum 10, default 1)
+     *         service: GraphAnalysisService from dependency injection
+     *
+     *     Returns:
+     *         SubgraphResultResponse containing center node ID, node count, edge count, depth, and extraction timestamp
+     *
+     *     Raises:
+     *         HTTPException: 404 if center node is not found, 400 if depth is invalid, 422 if graph error occurs
+     */
+    get: operations["get_subgraph_by_depth_api_graph_nodes__node_id__subgraph_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/graph/cycle-check": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/graph/sparql": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Execute Sparql
-         * @description Execute a SPARQL SELECT query against the RDF graph.
-         *
-         *     Args:
-         *         request: SPARQLRequest containing the query string
-         *         service: GraphAnalysisService from dependency injection
-         *
-         *     Returns:
-         *         SPARQLResponse containing query results and triple count
-         *
-         *     Raises:
-         *         HTTPException: 400 if query is invalid, 422 if graph error occurs
-         */
-        post: operations["execute_sparql_api_graph_sparql_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get?: never;
+    put?: never;
+    /**
+     * Check Cycle
+     * @description Check if adding an edge from source to target would create a cycle.
+     *
+     *     Args:
+     *         request: CycleCheckRequest with source_id and target_id
+     *         service: GraphAnalysisService from dependency injection
+     *
+     *     Returns:
+     *         CycleCheckResponse indicating whether a cycle would be created
+     *
+     *     Raises:
+     *         HTTPException: 404 if either node is not found, 422 if graph error occurs
+     */
+    post: operations["check_cycle_api_graph_cycle_check_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/graph/sparql": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/graph/rdf/triples": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get Rdf Triples
-         * @description Retrieve RDF triples matching optional subject/predicate/object patterns.
-         *
-         *     Args:
-         *         subject: Optional subject to match
-         *         predicate: Optional predicate to match
-         *         object_param: Optional object to match
-         *         service: GraphAnalysisService from dependency injection
-         *
-         *     Returns:
-         *         TriplesResponse containing matching triples and count
-         *
-         *     Raises:
-         *         HTTPException: 422 if graph error occurs
-         */
-        get: operations["get_rdf_triples_api_graph_rdf_triples_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get?: never;
+    put?: never;
+    /**
+     * Execute Sparql
+     * @description Execute a SPARQL SELECT query against the RDF graph.
+     *
+     *     Args:
+     *         request: SPARQLRequest containing the query string
+     *         service: GraphAnalysisService from dependency injection
+     *
+     *     Returns:
+     *         SPARQLResponse containing query results and triple count
+     *
+     *     Raises:
+     *         HTTPException: 400 if query is invalid, 422 if graph error occurs
+     */
+    post: operations["execute_sparql_api_graph_sparql_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/graph/rdf/triples": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/graph/rdf/count": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get Rdf Triple Count
-         * @description Get the number of RDF triples in the graph.
-         *
-         *     Args:
-         *         service: GraphAnalysisService from dependency injection
-         *
-         *     Returns:
-         *         TripleCountResponse containing the triple count
-         *
-         *     Raises:
-         *         HTTPException: 422 if graph error occurs
-         */
-        get: operations["get_rdf_triple_count_api_graph_rdf_count_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    /**
+     * Get Rdf Triples
+     * @description Retrieve RDF triples matching optional subject/predicate/object patterns.
+     *
+     *     Args:
+     *         subject: Optional subject to match
+     *         predicate: Optional predicate to match
+     *         object_param: Optional object to match
+     *         service: GraphAnalysisService from dependency injection
+     *
+     *     Returns:
+     *         TriplesResponse containing matching triples and count
+     *
+     *     Raises:
+     *         HTTPException: 422 if graph error occurs
+     */
+    get: operations["get_rdf_triples_api_graph_rdf_triples_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/graph/rdf/count": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/extract": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Extract Entities
-         * @description Extract entities from text through coordinated extraction layers.
-         *
-         *     Four layers execute sequentially:
-         *     - Layer 0: Knowledge graph context (uses embedding similarity)
-         *     - Layer 1: LLM extraction (structured JSON output)
-         *     - Layer 2: NLP gap-filling (catches missed entities)
-         *     - Layer 3: Reference source enrichment (adds URIs and metadata)
-         *
-         *     Args:
-         *         request: ExtractRequest with text to extract from
-         *         service: ExtractionService from dependency injection
-         *
-         *     Returns:
-         *         ExtractionResultSchema containing extracted entities and layer metadata
-         *
-         *     Raises:
-         *         HTTPException: 400 if text is empty/invalid, 500 for internal errors
-         */
-        post: operations["extract_entities_api_extract_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    /**
+     * Get Rdf Triple Count
+     * @description Get the number of RDF triples in the graph.
+     *
+     *     Args:
+     *         service: GraphAnalysisService from dependency injection
+     *
+     *     Returns:
+     *         TripleCountResponse containing the triple count
+     *
+     *     Raises:
+     *         HTTPException: 422 if graph error occurs
+     */
+    get: operations["get_rdf_triple_count_api_graph_rdf_count_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/extract": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/analyze_text": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Analyze Text
-         * @description Analyze text for linguistic features and named entities.
-         *
-         *     This use case focuses on NLP-based analysis including tokenization,
-         *     entity recognition, language detection, and linguistic features.
-         *     It may also provide context from the knowledge graph.
-         *
-         *     Layers executed:
-         *     - Layer 0: Knowledge graph context (uses embedding similarity)
-         *     - Layer 2: NLP gap-filling (focused entity recognition)
-         *
-         *     Args:
-         *         request: AnalyzeTextRequest with text to analyze
-         *         service: ExtractionService from dependency injection
-         *
-         *     Returns:
-         *         ExtractionResultSchema containing analyzed entities and linguistic metadata
-         *
-         *     Raises:
-         *         HTTPException: 400 if text is empty/invalid, 500 for internal errors
-         */
-        post: operations["analyze_text_api_analyze_text_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get?: never;
+    put?: never;
+    /**
+     * Extract Entities
+     * @description Extract entities from text through coordinated extraction layers.
+     *
+     *     Four layers execute sequentially:
+     *     - Layer 0: Knowledge graph context (uses embedding similarity)
+     *     - Layer 1: LLM extraction (structured JSON output)
+     *     - Layer 2: NLP gap-filling (catches missed entities)
+     *     - Layer 3: Reference source enrichment (adds URIs and metadata)
+     *
+     *     Args:
+     *         request: ExtractRequest with text to extract from
+     *         service: ExtractionService from dependency injection
+     *
+     *     Returns:
+     *         ExtractionResultSchema containing extracted entities and layer metadata
+     *
+     *     Raises:
+     *         HTTPException: 400 if text is empty/invalid, 500 for internal errors
+     */
+    post: operations["extract_entities_api_extract_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/analyze_text": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/enrich_from_references": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Enrich From References
-         * @description Enrich extracted entities with external reference knowledge.
-         *
-         *     This use case takes already-extracted entities and enriches them with
-         *     URIs, metadata, and relationships from external knowledge sources such as
-         *     ConceptNet, DBpedia, Wikidata, and schema.org.
-         *
-         *     Layers executed:
-         *     - Layer 3: Reference source enrichment (adds URIs and metadata)
-         *
-         *     Args:
-         *         request: EnrichFromReferencesRequest with text and entities to enrich
-         *         service: ExtractionService from dependency injection
-         *
-         *     Returns:
-         *         ExtractionResultSchema with enriched entities and reference metadata
-         *
-         *     Raises:
-         *         HTTPException: 400 if text is empty/invalid, 500 for internal errors
-         */
-        post: operations["enrich_from_references_api_enrich_from_references_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get?: never;
+    put?: never;
+    /**
+     * Analyze Text
+     * @description Analyze text for linguistic features and named entities.
+     *
+     *     This use case focuses on NLP-based analysis including tokenization,
+     *     entity recognition, language detection, and linguistic features.
+     *     It may also provide context from the knowledge graph.
+     *
+     *     Layers executed:
+     *     - Layer 0: Knowledge graph context (uses embedding similarity)
+     *     - Layer 2: NLP gap-filling (focused entity recognition)
+     *
+     *     Args:
+     *         request: AnalyzeTextRequest with text to analyze
+     *         service: ExtractionService from dependency injection
+     *
+     *     Returns:
+     *         ExtractionResultSchema containing analyzed entities and linguistic metadata
+     *
+     *     Raises:
+     *         HTTPException: 400 if text is empty/invalid, 500 for internal errors
+     */
+    post: operations["analyze_text_api_analyze_text_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/enrich_from_references": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/pipelines": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * List Pipeline Configurations
-         * @description Retrieve all pipeline configurations.
-         *
-         *     Returns:
-         *         List of PipelineConfigurationResponse objects
-         */
-        get: operations["list_pipeline_configurations_api_pipelines_get"];
-        put?: never;
-        /**
-         * Create Pipeline Configuration
-         * @description Create a new pipeline configuration.
-         *
-         *     Args:
-         *         request: PipelineConfigurationCreate with configuration details
-         *         service: PipelineService from dependency injection
-         *
-         *     Returns:
-         *         Created PipelineConfigurationResponse with server-generated id
-         *
-         *     Raises:
-         *         HTTPException: 400 if invalid input, 500 for internal errors
-         */
-        post: operations["create_pipeline_configuration_api_pipelines_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get?: never;
+    put?: never;
+    /**
+     * Enrich From References
+     * @description Enrich extracted entities with external reference knowledge.
+     *
+     *     This use case takes already-extracted entities and enriches them with
+     *     URIs, metadata, and relationships from external knowledge sources such as
+     *     ConceptNet, DBpedia, Wikidata, and schema.org.
+     *
+     *     Layers executed:
+     *     - Layer 3: Reference source enrichment (adds URIs and metadata)
+     *
+     *     Args:
+     *         request: EnrichFromReferencesRequest with text and entities to enrich
+     *         service: ExtractionService from dependency injection
+     *
+     *     Returns:
+     *         ExtractionResultSchema with enriched entities and reference metadata
+     *
+     *     Raises:
+     *         HTTPException: 400 if text is empty/invalid, 500 for internal errors
+     */
+    post: operations["enrich_from_references_api_enrich_from_references_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/pipelines": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/pipelines/{pipeline_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get Pipeline Configuration
-         * @description Retrieve a pipeline configuration by ID.
-         *
-         *     Args:
-         *         pipeline_id: The pipeline configuration ID
-         *         service: PipelineService from dependency injection
-         *
-         *     Returns:
-         *         PipelineConfigurationResponse
-         *
-         *     Raises:
-         *         HTTPException: 404 if not found
-         */
-        get: operations["get_pipeline_configuration_api_pipelines__pipeline_id__get"];
-        /**
-         * Update Pipeline Configuration
-         * @description Update a pipeline configuration's properties.
-         *
-         *     Args:
-         *         pipeline_id: The pipeline configuration ID
-         *         request: PipelineConfigurationUpdate with optional fields to update
-         *         service: PipelineService from dependency injection
-         *
-         *     Returns:
-         *         Updated PipelineConfigurationResponse
-         *
-         *     Raises:
-         *         HTTPException: 400 if invalid, 404 if not found
-         */
-        put: operations["update_pipeline_configuration_api_pipelines__pipeline_id__put"];
-        post?: never;
-        /**
-         * Delete Pipeline Configuration
-         * @description Delete a pipeline configuration.
-         *
-         *     Args:
-         *         pipeline_id: The pipeline configuration ID
-         *         service: PipelineService from dependency injection
-         *
-         *     Raises:
-         *         HTTPException: 404 if not found
-         */
-        delete: operations["delete_pipeline_configuration_api_pipelines__pipeline_id__delete"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    /**
+     * List Pipeline Configurations
+     * @description Retrieve all pipeline configurations.
+     *
+     *     Returns:
+     *         List of PipelineConfigurationResponse objects
+     */
+    get: operations["list_pipeline_configurations_api_pipelines_get"];
+    put?: never;
+    /**
+     * Create Pipeline Configuration
+     * @description Create a new pipeline configuration.
+     *
+     *     Args:
+     *         request: PipelineConfigurationCreate with configuration details
+     *         service: PipelineService from dependency injection
+     *
+     *     Returns:
+     *         Created PipelineConfigurationResponse with server-generated id
+     *
+     *     Raises:
+     *         HTTPException: 400 if invalid input, 500 for internal errors
+     */
+    post: operations["create_pipeline_configuration_api_pipelines_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/pipelines/{pipeline_id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/pipelines/{pipeline_id}/execute": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Execute Pipeline
-         * @description Execute a pipeline configuration with the given input.
-         *
-         *     Args:
-         *         pipeline_id: The pipeline configuration ID
-         *         request: PipelineExecuteRequest with input_text
-         *         service: PipelineService from dependency injection
-         *
-         *     Returns:
-         *         ExecutionResponse with output, tokens, duration, and status
-         *
-         *     Raises:
-         *         HTTPException: 400 if invalid, 404 if configuration not found
-         */
-        post: operations["execute_pipeline_api_pipelines__pipeline_id__execute_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    /**
+     * Get Pipeline Configuration
+     * @description Retrieve a pipeline configuration by ID.
+     *
+     *     Args:
+     *         pipeline_id: The pipeline configuration ID
+     *         service: PipelineService from dependency injection
+     *
+     *     Returns:
+     *         PipelineConfigurationResponse
+     *
+     *     Raises:
+     *         HTTPException: 404 if not found
+     */
+    get: operations["get_pipeline_configuration_api_pipelines__pipeline_id__get"];
+    /**
+     * Update Pipeline Configuration
+     * @description Update a pipeline configuration's properties.
+     *
+     *     Args:
+     *         pipeline_id: The pipeline configuration ID
+     *         request: PipelineConfigurationUpdate with optional fields to update
+     *         service: PipelineService from dependency injection
+     *
+     *     Returns:
+     *         Updated PipelineConfigurationResponse
+     *
+     *     Raises:
+     *         HTTPException: 400 if invalid, 404 if not found
+     */
+    put: operations["update_pipeline_configuration_api_pipelines__pipeline_id__put"];
+    post?: never;
+    /**
+     * Delete Pipeline Configuration
+     * @description Delete a pipeline configuration.
+     *
+     *     Args:
+     *         pipeline_id: The pipeline configuration ID
+     *         service: PipelineService from dependency injection
+     *
+     *     Raises:
+     *         HTTPException: 404 if not found
+     */
+    delete: operations["delete_pipeline_configuration_api_pipelines__pipeline_id__delete"];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/pipelines/{pipeline_id}/execute": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/pipelines/{pipeline_id}/executions": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get Pipeline Executions
-         * @description Retrieve execution history for a pipeline configuration.
-         *
-         *     Results are returned in reverse chronological order (most recent first).
-         *
-         *     Args:
-         *         pipeline_id: The pipeline configuration ID
-         *         service: PipelineService from dependency injection
-         *
-         *     Returns:
-         *         List of ExecutionResponse objects, up to 50 most recent
-         *
-         *     Raises:
-         *         HTTPException: 404 if configuration not found
-         */
-        get: operations["get_pipeline_executions_api_pipelines__pipeline_id__executions_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get?: never;
+    put?: never;
+    /**
+     * Execute Pipeline
+     * @description Execute a pipeline configuration with the given input.
+     *
+     *     Args:
+     *         pipeline_id: The pipeline configuration ID
+     *         request: PipelineExecuteRequest with input_text
+     *         service: PipelineService from dependency injection
+     *
+     *     Returns:
+     *         ExecutionResponse with output, tokens, duration, and status
+     *
+     *     Raises:
+     *         HTTPException: 400 if invalid, 404 if configuration not found
+     */
+    post: operations["execute_pipeline_api_pipelines__pipeline_id__execute_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/pipelines/{pipeline_id}/executions": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/reference/status": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Reference Status
-         * @description Check availability of all reference sources.
-         *
-         *     Returns:
-         *         ReferenceStatusResponseSchema with status of each source
-         *
-         *     Raises:
-         *         HTTPException: 500 if no sources are configured
-         */
-        get: operations["reference_status_api_reference_status_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    /**
+     * Get Pipeline Executions
+     * @description Retrieve execution history for a pipeline configuration.
+     *
+     *     Results are returned in reverse chronological order (most recent first).
+     *
+     *     Args:
+     *         pipeline_id: The pipeline configuration ID
+     *         service: PipelineService from dependency injection
+     *
+     *     Returns:
+     *         List of ExecutionResponse objects, up to 50 most recent
+     *
+     *     Raises:
+     *         HTTPException: 404 if configuration not found
+     */
+    get: operations["get_pipeline_executions_api_pipelines__pipeline_id__executions_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/reference/status": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/reference/search": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Search References
-         * @description Search for references across multiple sources.
-         *
-         *     Aggregates results from all available sources (or specified sources).
-         *     Sources that fail or are unavailable are tracked but don't block the response.
-         *
-         *     Args:
-         *         request: ReferenceSearchRequest with search parameters
-         *         sources: List of reference sources from dependency injection
-         *
-         *     Returns:
-         *         ReferenceSearchResponseSchema with aggregated results from all sources
-         *
-         *     Raises:
-         *         HTTPException: 400 if search term is invalid, 500 if no sources configured
-         */
-        post: operations["search_references_api_reference_search_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    /**
+     * Reference Status
+     * @description Check availability of all reference sources.
+     *
+     *     Returns:
+     *         ReferenceStatusResponseSchema with status of each source
+     *
+     *     Raises:
+     *         HTTPException: 500 if no sources are configured
+     */
+    get: operations["reference_status_api_reference_status_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/reference/search": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/reference/relations": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Get Reference Relations
-         * @description Get relationships for a reference URI across multiple sources.
-         *
-         *     Aggregates relationships from all available sources (or specified sources).
-         *     Sources that fail or are unavailable are tracked but don't block the response.
-         *
-         *     Args:
-         *         request: ReferenceRelationsRequest with URI to query
-         *         sources: List of reference sources from dependency injection
-         *
-         *     Returns:
-         *         ReferenceRelationsResponseSchema with aggregated relationships
-         *
-         *     Raises:
-         *         HTTPException: 400 if URI is invalid, 500 if no sources configured
-         */
-        post: operations["get_reference_relations_api_reference_relations_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get?: never;
+    put?: never;
+    /**
+     * Search References
+     * @description Search for references across multiple sources.
+     *
+     *     Aggregates results from all available sources (or specified sources).
+     *     Sources that fail or are unavailable are tracked but don't block the response.
+     *
+     *     Args:
+     *         request: ReferenceSearchRequest with search parameters
+     *         sources: List of reference sources from dependency injection
+     *
+     *     Returns:
+     *         ReferenceSearchResponseSchema with aggregated results from all sources
+     *
+     *     Raises:
+     *         HTTPException: 400 if search term is invalid, 500 if no sources configured
+     */
+    post: operations["search_references_api_reference_search_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/reference/relations": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/v1/versioning/changes": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get Change History All
-         * @description Get all change history events.
-         *
-         *     Args:
-         *         service: VersioningService from dependency injection
-         *         limit: Maximum number of results to return
-         *
-         *     Returns:
-         *         ChangeHistoryResponse with all changes
-         *
-         *     Raises:
-         *         HTTPException: 500 for internal errors
-         */
-        get: operations["get_change_history_all_api_v1_versioning_changes_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get?: never;
+    put?: never;
+    /**
+     * Get Reference Relations
+     * @description Get relationships for a reference URI across multiple sources.
+     *
+     *     Aggregates relationships from all available sources (or specified sources).
+     *     Sources that fail or are unavailable are tracked but don't block the response.
+     *
+     *     Args:
+     *         request: ReferenceRelationsRequest with URI to query
+     *         sources: List of reference sources from dependency injection
+     *
+     *     Returns:
+     *         ReferenceRelationsResponseSchema with aggregated relationships
+     *
+     *     Raises:
+     *         HTTPException: 400 if URI is invalid, 500 if no sources configured
+     */
+    post: operations["get_reference_relations_api_reference_relations_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/versioning/changes": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/v1/versioning/changes/{entity_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get Change History By Entity
-         * @description Get change history for a specific entity.
-         *
-         *     Args:
-         *         entity_id: ID of the entity to get changes for
-         *         service: VersioningService from dependency injection
-         *         limit: Maximum number of results to return
-         *
-         *     Returns:
-         *         ChangeHistoryResponse with filtered changes
-         *
-         *     Raises:
-         *         HTTPException: 500 for internal errors
-         */
-        get: operations["get_change_history_by_entity_api_v1_versioning_changes__entity_id__get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    /**
+     * Get Change History All
+     * @description Get all change history events.
+     *
+     *     Args:
+     *         service: VersioningService from dependency injection
+     *         limit: Maximum number of results to return
+     *
+     *     Returns:
+     *         ChangeHistoryResponse with all changes
+     *
+     *     Raises:
+     *         HTTPException: 500 for internal errors
+     */
+    get: operations["get_change_history_all_api_v1_versioning_changes_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/versioning/changes/{entity_id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/v1/versioning/versions/{entity_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * List Versions
-         * @description List all versions of an entity.
-         *
-         *     Args:
-         *         entity_id: ID of the entity
-         *         service: VersioningService from dependency injection
-         *
-         *     Returns:
-         *         List of entity versions
-         *
-         *     Raises:
-         *         HTTPException: 500 for internal errors
-         */
-        get: operations["list_versions_api_v1_versioning_versions__entity_id__get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    /**
+     * Get Change History By Entity
+     * @description Get change history for a specific entity.
+     *
+     *     Args:
+     *         entity_id: ID of the entity to get changes for
+     *         service: VersioningService from dependency injection
+     *         limit: Maximum number of results to return
+     *
+     *     Returns:
+     *         ChangeHistoryResponse with filtered changes
+     *
+     *     Raises:
+     *         HTTPException: 500 for internal errors
+     */
+    get: operations["get_change_history_by_entity_api_v1_versioning_changes__entity_id__get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/versioning/versions/{entity_id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/v1/versioning/versions/{entity_id}/{version}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get Entity Version
-         * @description Get a specific version of an entity.
-         *
-         *     Args:
-         *         entity_id: ID of the entity
-         *         version: Version number
-         *         service: VersioningService from dependency injection
-         *
-         *     Returns:
-         *         The specific entity version
-         *
-         *     Raises:
-         *         HTTPException: 404 if version not found, 500 for internal errors
-         */
-        get: operations["get_entity_version_api_v1_versioning_versions__entity_id___version__get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    /**
+     * List Versions
+     * @description List all versions of an entity.
+     *
+     *     Args:
+     *         entity_id: ID of the entity
+     *         service: VersioningService from dependency injection
+     *
+     *     Returns:
+     *         List of entity versions
+     *
+     *     Raises:
+     *         HTTPException: 500 for internal errors
+     */
+    get: operations["list_versions_api_v1_versioning_versions__entity_id__get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/versioning/versions/{entity_id}/{version}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/v1/versioning/changesets": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Create Changeset
-         * @description Create a new changeset.
-         *
-         *     Args:
-         *         request: ChangesetCreateRequest with changeset details
-         *         service: VersioningService from dependency injection
-         *
-         *     Returns:
-         *         Created ChangesetResponse with server-generated id
-         *
-         *     Raises:
-         *         HTTPException: 400 for invalid input, 500 for internal errors
-         */
-        post: operations["create_changeset_api_v1_versioning_changesets_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    /**
+     * Get Entity Version
+     * @description Get a specific version of an entity.
+     *
+     *     Args:
+     *         entity_id: ID of the entity
+     *         version: Version number
+     *         service: VersioningService from dependency injection
+     *
+     *     Returns:
+     *         The specific entity version
+     *
+     *     Raises:
+     *         HTTPException: 404 if version not found, 500 for internal errors
+     */
+    get: operations["get_entity_version_api_v1_versioning_versions__entity_id___version__get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/versioning/changesets": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/v1/versioning/changesets/{changeset_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get Changeset
-         * @description Retrieve a changeset by ID.
-         *
-         *     Args:
-         *         changeset_id: ID of the changeset
-         *         service: VersioningService from dependency injection
-         *
-         *     Returns:
-         *         ChangesetResponse
-         *
-         *     Raises:
-         *         HTTPException: 404 if not found, 500 for internal errors
-         */
-        get: operations["get_changeset_api_v1_versioning_changesets__changeset_id__get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get?: never;
+    put?: never;
+    /**
+     * Create Changeset
+     * @description Create a new changeset.
+     *
+     *     Args:
+     *         request: ChangesetCreateRequest with changeset details
+     *         service: VersioningService from dependency injection
+     *
+     *     Returns:
+     *         Created ChangesetResponse with server-generated id
+     *
+     *     Raises:
+     *         HTTPException: 400 for invalid input, 500 for internal errors
+     */
+    post: operations["create_changeset_api_v1_versioning_changesets_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/versioning/changesets/{changeset_id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/v1/versioning/changesets/{changeset_id}/stage": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Stage Changeset
-         * @description Transition a changeset from WORKING to STAGED.
-         *
-         *     Args:
-         *         changeset_id: ID of the changeset to stage
-         *         service: VersioningService from dependency injection
-         *
-         *     Returns:
-         *         Updated ChangesetResponse in STAGED state
-         *
-         *     Raises:
-         *         HTTPException: 404 if not found, 409 for invalid state, 500 for internal errors
-         */
-        post: operations["stage_changeset_api_v1_versioning_changesets__changeset_id__stage_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    /**
+     * Get Changeset
+     * @description Retrieve a changeset by ID.
+     *
+     *     Args:
+     *         changeset_id: ID of the changeset
+     *         service: VersioningService from dependency injection
+     *
+     *     Returns:
+     *         ChangesetResponse
+     *
+     *     Raises:
+     *         HTTPException: 404 if not found, 500 for internal errors
+     */
+    get: operations["get_changeset_api_v1_versioning_changesets__changeset_id__get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/versioning/changesets/{changeset_id}/stage": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/v1/versioning/changesets/{changeset_id}/submit": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Submit Proposal
-         * @description Submit a changeset as a proposal for review.
-         *
-         *     Transitions the changeset from STAGED to PROPOSED and creates a Proposal in 'open' state.
-         *
-         *     Args:
-         *         changeset_id: ID of the changeset to propose
-         *         service: VersioningService from dependency injection
-         *
-         *     Returns:
-         *         Created ProposalResponse
-         *
-         *     Raises:
-         *         HTTPException: 404 if not found, 409 for invalid state, 500 for internal errors
-         */
-        post: operations["submit_proposal_api_v1_versioning_changesets__changeset_id__submit_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get?: never;
+    put?: never;
+    /**
+     * Stage Changeset
+     * @description Transition a changeset from WORKING to STAGED.
+     *
+     *     Args:
+     *         changeset_id: ID of the changeset to stage
+     *         service: VersioningService from dependency injection
+     *
+     *     Returns:
+     *         Updated ChangesetResponse in STAGED state
+     *
+     *     Raises:
+     *         HTTPException: 404 if not found, 409 for invalid state, 500 for internal errors
+     */
+    post: operations["stage_changeset_api_v1_versioning_changesets__changeset_id__stage_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/versioning/changesets/{changeset_id}/submit": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/v1/versioning/proposals/{proposal_id}/approve": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Approve Proposal
-         * @description Approve a proposal.
-         *
-         *     Transitions the linked changeset from PROPOSED to APPROVED
-         *     and updates the proposal state to 'approved'.
-         *
-         *     Args:
-         *         proposal_id: ID of the proposal to approve
-         *         service: VersioningService from dependency injection
-         *
-         *     Returns:
-         *         Updated ProposalResponse in 'approved' state
-         *
-         *     Raises:
-         *         HTTPException: 404 if not found, 409 for invalid state, 500 for internal errors
-         */
-        post: operations["approve_proposal_api_v1_versioning_proposals__proposal_id__approve_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get?: never;
+    put?: never;
+    /**
+     * Submit Proposal
+     * @description Submit a changeset as a proposal for review.
+     *
+     *     Transitions the changeset from STAGED to PROPOSED and creates a Proposal in 'open' state.
+     *
+     *     Args:
+     *         changeset_id: ID of the changeset to propose
+     *         service: VersioningService from dependency injection
+     *
+     *     Returns:
+     *         Created ProposalResponse
+     *
+     *     Raises:
+     *         HTTPException: 404 if not found, 409 for invalid state, 500 for internal errors
+     */
+    post: operations["submit_proposal_api_v1_versioning_changesets__changeset_id__submit_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/versioning/proposals/{proposal_id}/approve": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/v1/versioning/proposals/{proposal_id}/reject": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Reject Proposal
-         * @description Reject a proposal.
-         *
-         *     Transitions the linked changeset back to WORKING state,
-         *     records the rejection reason, and updates the proposal state to 'rejected'.
-         *
-         *     Args:
-         *         proposal_id: ID of the proposal to reject
-         *         request: RejectProposalRequest with rejection reason
-         *         service: VersioningService from dependency injection
-         *
-         *     Returns:
-         *         Updated ProposalResponse in 'rejected' state
-         *
-         *     Raises:
-         *         HTTPException: 404 if not found, 409 for invalid state, 500 for internal errors
-         */
-        post: operations["reject_proposal_api_v1_versioning_proposals__proposal_id__reject_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get?: never;
+    put?: never;
+    /**
+     * Approve Proposal
+     * @description Approve a proposal.
+     *
+     *     Transitions the linked changeset from PROPOSED to APPROVED
+     *     and updates the proposal state to 'approved'.
+     *
+     *     Args:
+     *         proposal_id: ID of the proposal to approve
+     *         service: VersioningService from dependency injection
+     *
+     *     Returns:
+     *         Updated ProposalResponse in 'approved' state
+     *
+     *     Raises:
+     *         HTTPException: 404 if not found, 409 for invalid state, 500 for internal errors
+     */
+    post: operations["approve_proposal_api_v1_versioning_proposals__proposal_id__approve_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/versioning/proposals/{proposal_id}/reject": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/v1/versioning/proposals/{proposal_id}/conflicts": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Detect Conflicts
-         * @description Detect field-level conflicts in a proposal.
-         *
-         *     Compares change events in the changeset to identify conflicts.
-         *
-         *     Args:
-         *         proposal_id: ID of the proposal to check for conflicts
-         *         service: VersioningService from dependency injection
-         *
-         *     Returns:
-         *         ConflictReportResponse with detected conflicts
-         *
-         *     Raises:
-         *         HTTPException: 404 if not found, 500 for internal errors
-         */
-        get: operations["detect_conflicts_api_v1_versioning_proposals__proposal_id__conflicts_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get?: never;
+    put?: never;
+    /**
+     * Reject Proposal
+     * @description Reject a proposal.
+     *
+     *     Transitions the linked changeset back to WORKING state,
+     *     records the rejection reason, and updates the proposal state to 'rejected'.
+     *
+     *     Args:
+     *         proposal_id: ID of the proposal to reject
+     *         request: RejectProposalRequest with rejection reason
+     *         service: VersioningService from dependency injection
+     *
+     *     Returns:
+     *         Updated ProposalResponse in 'rejected' state
+     *
+     *     Raises:
+     *         HTTPException: 404 if not found, 409 for invalid state, 500 for internal errors
+     */
+    post: operations["reject_proposal_api_v1_versioning_proposals__proposal_id__reject_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/versioning/proposals/{proposal_id}/conflicts": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/v1/versioning/proposals/{proposal_id}/auto-resolve": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Auto Resolve Conflicts
-         * @description Automatically resolve conflicts in a proposal using the specified merge strategy.
-         *
-         *     Detects conflicts and applies the requested resolution strategy, then persists
-         *     the resolutions so they are available for the merge workflow.
-         *
-         *     Args:
-         *         proposal_id: ID of the proposal to auto-resolve conflicts for
-         *         request: AutoResolveConflictsRequest with merge strategy
-         *         service: VersioningService from dependency injection
-         *
-         *     Returns:
-         *         ConflictReportResponse with conflicts resolved according to the strategy
-         *
-         *     Raises:
-         *         HTTPException: 404 if not found, 409 for invalid state, 500 for internal errors
-         */
-        post: operations["auto_resolve_conflicts_api_v1_versioning_proposals__proposal_id__auto_resolve_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    /**
+     * Detect Conflicts
+     * @description Detect field-level conflicts in a proposal.
+     *
+     *     Compares change events in the changeset to identify conflicts.
+     *
+     *     Args:
+     *         proposal_id: ID of the proposal to check for conflicts
+     *         service: VersioningService from dependency injection
+     *
+     *     Returns:
+     *         ConflictReportResponse with detected conflicts
+     *
+     *     Raises:
+     *         HTTPException: 404 if not found, 500 for internal errors
+     */
+    get: operations["detect_conflicts_api_v1_versioning_proposals__proposal_id__conflicts_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/versioning/proposals/{proposal_id}/auto-resolve": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/v1/versioning/proposals/{proposal_id}/resolve": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Resolve Conflicts
-         * @description Manually resolve conflicts in a proposal.
-         *
-         *     Detects conflicts, applies the provided resolutions, and validates that
-         *     all conflicts are covered.
-         *
-         *     Args:
-         *         proposal_id: ID of the proposal to resolve conflicts for
-         *         request: ResolveConflictsRequest with conflict resolutions
-         *         service: VersioningService from dependency injection
-         *
-         *     Returns:
-         *         ConflictReportResponse with all conflicts marked as resolved
-         *
-         *     Raises:
-         *         HTTPException: 404 if not found, 409 if unresolved conflicts remain, 500 for internal errors
-         */
-        post: operations["resolve_conflicts_api_v1_versioning_proposals__proposal_id__resolve_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get?: never;
+    put?: never;
+    /**
+     * Auto Resolve Conflicts
+     * @description Automatically resolve conflicts in a proposal using the specified merge strategy.
+     *
+     *     Detects conflicts and applies the requested resolution strategy, then persists
+     *     the resolutions so they are available for the merge workflow.
+     *
+     *     Args:
+     *         proposal_id: ID of the proposal to auto-resolve conflicts for
+     *         request: AutoResolveConflictsRequest with merge strategy
+     *         service: VersioningService from dependency injection
+     *
+     *     Returns:
+     *         ConflictReportResponse with conflicts resolved according to the strategy
+     *
+     *     Raises:
+     *         HTTPException: 404 if not found, 409 for invalid state, 500 for internal errors
+     */
+    post: operations["auto_resolve_conflicts_api_v1_versioning_proposals__proposal_id__auto_resolve_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/versioning/proposals/{proposal_id}/resolve": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/v1/versioning/proposals/{proposal_id}/merge": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Merge Proposal
-         * @description Merge an approved proposal.
-         *
-         *     Detects conflicts using any stored resolutions, and blocks the merge
-         *     if unresolved conflicts exist. Transitions the changeset from APPROVED
-         *     to MERGED.
-         *
-         *     Args:
-         *         proposal_id: ID of the proposal to merge
-         *         service: VersioningService from dependency injection
-         *
-         *     Returns:
-         *         MergeResultResponse with details of the merge operation
-         *
-         *     Raises:
-         *         HTTPException: 404 if not found, 409 for invalid state or unresolved conflicts, 500 for internal errors
-         */
-        post: operations["merge_proposal_api_v1_versioning_proposals__proposal_id__merge_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get?: never;
+    put?: never;
+    /**
+     * Resolve Conflicts
+     * @description Manually resolve conflicts in a proposal.
+     *
+     *     Detects conflicts, applies the provided resolutions, and validates that
+     *     all conflicts are covered.
+     *
+     *     Args:
+     *         proposal_id: ID of the proposal to resolve conflicts for
+     *         request: ResolveConflictsRequest with conflict resolutions
+     *         service: VersioningService from dependency injection
+     *
+     *     Returns:
+     *         ConflictReportResponse with all conflicts marked as resolved
+     *
+     *     Raises:
+     *         HTTPException: 404 if not found, 409 if unresolved conflicts remain, 500 for internal errors
+     */
+    post: operations["resolve_conflicts_api_v1_versioning_proposals__proposal_id__resolve_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/versioning/proposals/{proposal_id}/merge": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/v1/versioning/sync/status": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get Sync Status
-         * @description Get the current synchronization status.
-         *
-         *     Returns information about unprocessed changes and sync configuration.
-         *
-         *     Args:
-         *         service: VersioningService from dependency injection
-         *
-         *     Returns:
-         *         SyncStatusResponse with sync status
-         *
-         *     Raises:
-         *         HTTPException: 500 for internal errors
-         */
-        get: operations["get_sync_status_api_v1_versioning_sync_status_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get?: never;
+    put?: never;
+    /**
+     * Merge Proposal
+     * @description Merge an approved proposal.
+     *
+     *     Detects conflicts using any stored resolutions, and blocks the merge
+     *     if unresolved conflicts exist. Transitions the changeset from APPROVED
+     *     to MERGED.
+     *
+     *     Args:
+     *         proposal_id: ID of the proposal to merge
+     *         service: VersioningService from dependency injection
+     *
+     *     Returns:
+     *         MergeResultResponse with details of the merge operation
+     *
+     *     Raises:
+     *         HTTPException: 404 if not found, 409 for invalid state or unresolved conflicts, 500 for internal errors
+     */
+    post: operations["merge_proposal_api_v1_versioning_proposals__proposal_id__merge_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/versioning/sync/status": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/v1/versioning/sync/push": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Push Changes
-         * @description Push local unprocessed changes to the remote sync target.
-         *
-         *     Args:
-         *         service: VersioningService from dependency injection
-         *
-         *     Returns:
-         *         SyncResultResponse with push results
-         *
-         *     Raises:
-         *         HTTPException: 500 for internal errors
-         */
-        post: operations["push_changes_api_v1_versioning_sync_push_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    /**
+     * Get Sync Status
+     * @description Get the current synchronization status.
+     *
+     *     Returns information about unprocessed changes and sync configuration.
+     *
+     *     Args:
+     *         service: VersioningService from dependency injection
+     *
+     *     Returns:
+     *         SyncStatusResponse with sync status
+     *
+     *     Raises:
+     *         HTTPException: 500 for internal errors
+     */
+    get: operations["get_sync_status_api_v1_versioning_sync_status_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/versioning/sync/push": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/v1/versioning/sync/pull": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Pull Changes
-         * @description Pull remote changes and record them locally.
-         *
-         *     Args:
-         *         service: VersioningService from dependency injection
-         *
-         *     Returns:
-         *         SyncResultResponse with pull results
-         *
-         *     Raises:
-         *         HTTPException: 500 for internal errors
-         */
-        post: operations["pull_changes_api_v1_versioning_sync_pull_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get?: never;
+    put?: never;
+    /**
+     * Push Changes
+     * @description Push local unprocessed changes to the remote sync target.
+     *
+     *     Args:
+     *         service: VersioningService from dependency injection
+     *
+     *     Returns:
+     *         SyncResultResponse with push results
+     *
+     *     Raises:
+     *         HTTPException: 500 for internal errors
+     */
+    post: operations["push_changes_api_v1_versioning_sync_push_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/versioning/sync/pull": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/v1/admin/health": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Check Health
-         * @description Check system health and component readiness.
-         *
-         *     Returns the overall system health status along with the readiness of optional
-         *     components (NLP pipeline, embedding model, LLM providers).
-         *
-         *     Health status rules:
-         *     - "healthy": All core systems operational
-         *     - "degraded": Optional components unavailable but system functional
-         *     - "unhealthy": Critical systems (database) unavailable
-         *
-         *     Returns:
-         *         SystemHealthResponse with status and component readiness
-         *
-         *     Raises:
-         *         HTTPException: 500 for internal errors
-         */
-        get: operations["check_health_api_v1_admin_health_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get?: never;
+    put?: never;
+    /**
+     * Pull Changes
+     * @description Pull remote changes and record them locally.
+     *
+     *     Args:
+     *         service: VersioningService from dependency injection
+     *
+     *     Returns:
+     *         SyncResultResponse with pull results
+     *
+     *     Raises:
+     *         HTTPException: 500 for internal errors
+     */
+    post: operations["pull_changes_api_v1_versioning_sync_pull_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/admin/health": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/v1/admin/configuration": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get Configuration
-         * @description Retrieve current application configuration.
-         *
-         *     Returns all configuration sections with sensitive values (API keys)
-         *     masked to prevent exposure in logs.
-         *
-         *     Returns:
-         *         AppConfigurationResponse with configuration sections and masked API keys
-         *
-         *     Raises:
-         *         HTTPException: 500 for internal errors
-         */
-        get: operations["get_configuration_api_v1_admin_configuration_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    /**
+     * Check Health
+     * @description Check system health and component readiness.
+     *
+     *     Returns the overall system health status along with the readiness of optional
+     *     components (NLP pipeline, embedding model, LLM providers).
+     *
+     *     Health status rules:
+     *     - "healthy": All core systems operational
+     *     - "degraded": Optional components unavailable but system functional
+     *     - "unhealthy": Critical systems (database) unavailable
+     *
+     *     Returns:
+     *         SystemHealthResponse with status and component readiness
+     *
+     *     Raises:
+     *         HTTPException: 500 for internal errors
+     */
+    get: operations["check_health_api_v1_admin_health_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/admin/configuration": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/v1/admin/configuration/{section}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        /**
-         * Update Configuration
-         * @description Update a configuration section.
-         *
-         *     Loads the current configuration, updates the specified section with new values,
-         *     and persists the changes. Returns the updated configuration with masked API keys.
-         *
-         *     Args:
-         *         section: Name of the configuration section to update (e.g., "llm", "server")
-         *         request: ConfigSectionUpdateRequest with key-value pairs to update
-         *         service: Injected AdminService
-         *
-         *     Returns:
-         *         AppConfigurationResponse with updated configuration and masked API keys
-         *
-         *     Raises:
-         *         HTTPException 400: If the section does not exist
-         */
-        patch: operations["update_configuration_api_v1_admin_configuration__section__patch"];
-        trace?: never;
+    /**
+     * Get Configuration
+     * @description Retrieve current application configuration.
+     *
+     *     Returns all configuration sections with sensitive values (API keys)
+     *     masked to prevent exposure in logs.
+     *
+     *     Returns:
+     *         AppConfigurationResponse with configuration sections and masked API keys
+     *
+     *     Raises:
+     *         HTTPException: 500 for internal errors
+     */
+    get: operations["get_configuration_api_v1_admin_configuration_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/admin/configuration/{section}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/v1/admin/tasks": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * List Tasks
-         * @description List all background tasks.
-         *
-         *     Returns metadata and status for all registered background tasks,
-         *     whether pending, running, completed, or failed.
-         *
-         *     Returns:
-         *         List of BackgroundTaskResponse objects
-         *
-         *     Raises:
-         *         HTTPException: 500 for internal errors
-         */
-        get: operations["list_tasks_api_v1_admin_tasks_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get?: never;
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    /**
+     * Update Configuration
+     * @description Update a configuration section.
+     *
+     *     Loads the current configuration, updates the specified section with new values,
+     *     and persists the changes. Returns the updated configuration with masked API keys.
+     *
+     *     Args:
+     *         section: Name of the configuration section to update (e.g., "llm", "server")
+     *         request: ConfigSectionUpdateRequest with key-value pairs to update
+     *         service: Injected AdminService
+     *
+     *     Returns:
+     *         AppConfigurationResponse with updated configuration and masked API keys
+     *
+     *     Raises:
+     *         HTTPException 400: If the section does not exist
+     */
+    patch: operations["update_configuration_api_v1_admin_configuration__section__patch"];
+    trace?: never;
+  };
+  "/api/v1/admin/tasks": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/v1/admin/tasks/{task_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get Task
-         * @description Retrieve background task details by ID.
-         *
-         *     Returns metadata and current status for a specific background task.
-         *
-         *     Args:
-         *         task_id: Unique identifier of the task
-         *         service: Injected AdminService
-         *
-         *     Returns:
-         *         BackgroundTaskResponse with task details and status
-         *
-         *     Raises:
-         *         HTTPException 404: If task_id does not exist
-         */
-        get: operations["get_task_api_v1_admin_tasks__task_id__get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    /**
+     * List Tasks
+     * @description List all background tasks.
+     *
+     *     Returns metadata and status for all registered background tasks,
+     *     whether pending, running, completed, or failed.
+     *
+     *     Returns:
+     *         List of BackgroundTaskResponse objects
+     *
+     *     Raises:
+     *         HTTPException: 500 for internal errors
+     */
+    get: operations["list_tasks_api_v1_admin_tasks_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/admin/tasks/{task_id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
+    /**
+     * Get Task
+     * @description Retrieve background task details by ID.
+     *
+     *     Returns metadata and current status for a specific background task.
+     *
+     *     Args:
+     *         task_id: Unique identifier of the task
+     *         service: Injected AdminService
+     *
+     *     Returns:
+     *         BackgroundTaskResponse with task details and status
+     *
+     *     Raises:
+     *         HTTPException 404: If task_id does not exist
+     */
+    get: operations["get_task_api_v1_admin_tasks__task_id__get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
 }
 export type webhooks = Record<string, never>;
 export interface components {
-    schemas: {
-        /**
-         * AnalyzeTextRequest
-         * @description Request to analyze text for linguistic features and named entities.
-         */
-        AnalyzeTextRequest: {
-            /**
-             * Text
-             * @description Text to analyze
-             */
-            text: string;
-        };
-        /**
-         * AppConfigurationResponse
-         * @description Response containing application configuration with masked API keys.
-         */
-        AppConfigurationResponse: {
-            /**
-             * Sections
-             * @description Configuration sections with sensitive values masked
-             */
-            sections: {
-                [key: string]: unknown;
-            };
-        };
-        /**
-         * AutoResolveConflictsRequest
-         * @description Request to automatically resolve conflicts in a proposal
-         */
-        AutoResolveConflictsRequest: {
-            /**
-             * @description Merge strategy to use (last_write_wins, base_value_wins, manual)
-             * @default last_write_wins
-             */
-            strategy: components["schemas"]["MergeStrategy"];
-        };
-        /**
-         * BackgroundTaskResponse
-         * @description Response containing background task status and metadata.
-         */
-        BackgroundTaskResponse: {
-            /**
-             * Id
-             * @description Unique task identifier
-             */
-            id: string;
-            /**
-             * Name
-             * @description Human-readable task name
-             */
-            name: string;
-            /**
-             * Status
-             * @description Task status: "pending", "running", "completed", or "failed"
-             */
-            status: string;
-            /**
-             * Created At
-             * Format: date-time
-             * @description Timestamp when task was registered
-             */
-            created_at: string;
-            /**
-             * Started At
-             * @description Timestamp when task execution began
-             */
-            started_at?: string | null;
-            /**
-             * Completed At
-             * @description Timestamp when task finished
-             */
-            completed_at?: string | null;
-            /**
-             * Error
-             * @description Error message if task failed
-             */
-            error?: string | null;
-            /**
-             * Result
-             * @description Result data if task completed successfully
-             */
-            result?: {
-                [key: string]: unknown;
-            } | null;
-        };
-        /**
-         * CentralityResponse
-         * @description Response containing centrality scores.
-         */
-        CentralityResponse: {
-            /**
-             * Algorithm
-             * @description Name of the centrality algorithm
-             */
-            algorithm: string;
-            /**
-             * Scores
-             * @description Centrality scores mapped by node ID
-             */
-            scores: {
-                [key: string]: number;
-            };
-        };
-        /**
-         * ChangeEventResponse
-         * @description Response representing a change event
-         */
-        ChangeEventResponse: {
-            /**
-             * Id
-             * @description Unique identifier of the change event
-             */
-            id: string;
-            /**
-             * Entity Id
-             * @description ID of the entity that changed
-             */
-            entity_id: string;
-            /**
-             * Entity Type
-             * @description Type of the entity
-             */
-            entity_type: string;
-            /** @description Type of operation (create, update, delete) */
-            operation: components["schemas"]["ChangeOperation"];
-            /**
-             * New State
-             * @description New state of the entity after this change
-             */
-            new_state: {
-                [key: string]: unknown;
-            };
-            /**
-             * Timestamp
-             * Format: date-time
-             * @description When the change occurred
-             */
-            timestamp: string;
-            /**
-             * Processed
-             * @description Whether change has been synced to remote
-             */
-            processed: boolean;
-            /**
-             * User Id
-             * @description User who made the change
-             */
-            user_id?: string | null;
-            /**
-             * Change Reason
-             * @description Why the change was made
-             */
-            change_reason?: string | null;
-            /**
-             * Previous State
-             * @description Previous state of the entity before this change
-             */
-            previous_state?: {
-                [key: string]: unknown;
-            } | null;
-        };
-        /**
-         * ChangeHistoryResponse
-         * @description Response with paginated change history results
-         */
-        ChangeHistoryResponse: {
-            /**
-             * Events
-             * @description List of change events matching the query (limited by limit parameter)
-             */
-            events: components["schemas"]["ChangeEventResponse"][];
-            /**
-             * Total
-             * @description Total count of all events matching the query (without limit applied)
-             */
-            total: number;
-        };
-        /**
-         * ChangeOperation
-         * @description Types of operations on entities.
-         * @enum {string}
-         */
-        ChangeOperation: "create" | "update" | "delete";
-        /**
-         * ChangeState
-         * @description Valid states for a changeset.
-         * @enum {string}
-         */
-        ChangeState: "working" | "staged" | "proposed" | "approved" | "merged";
-        /**
-         * ChangesetCreateRequest
-         * @description Request to create a new changeset
-         */
-        ChangesetCreateRequest: {
-            /**
-             * Name
-             * @description Human-readable name for the changeset
-             */
-            name: string;
-            /**
-             * Description
-             * @description Detailed description
-             */
-            description?: string | null;
-            /**
-             * Event Ids
-             * @description Change event IDs to include
-             */
-            event_ids?: string[];
-        };
-        /**
-         * ChangesetResponse
-         * @description Response representing a changeset
-         */
-        ChangesetResponse: {
-            /**
-             * Id
-             * @description Unique identifier of the changeset
-             */
-            id: string;
-            /**
-             * Name
-             * @description Human-readable name
-             */
-            name: string;
-            /**
-             * Description
-             * @description Detailed description
-             */
-            description?: string | null;
-            /** @description Current state (working, staged, proposed, approved, merged) */
-            state: components["schemas"]["ChangeState"];
-            /**
-             * Created At
-             * Format: date-time
-             * @description When the changeset was created
-             */
-            created_at: string;
-            /**
-             * Updated At
-             * Format: date-time
-             * @description Last update timestamp
-             */
-            updated_at: string;
-            /**
-             * Event Ids
-             * @description IDs of change events in this changeset
-             */
-            event_ids?: string[];
-        };
-        /**
-         * ClassCreateRequest
-         * @description Request to create a new class.
-         */
-        ClassCreateRequest: {
-            /**
-             * Title
-             * @description Display name for the class
-             */
-            title: string;
-            /**
-             * Description
-             * @description Optional longer description
-             */
-            description?: string | null;
-            /**
-             * Parent Class Id
-             * @description Optional ID of parent class for hierarchy
-             */
-            parent_class_id?: string | null;
-        };
-        /**
-         * ClassMoveRequest
-         * @description Request to move a class to a different parent.
-         */
-        ClassMoveRequest: {
-            /**
-             * New Parent Id
-             * @description ID of new parent class, or null to make root
-             */
-            new_parent_id?: string | null;
-        };
-        /**
-         * ClassResponse
-         * @description Response containing class data.
-         */
-        ClassResponse: {
-            /**
-             * Id
-             * @description Unique identifier
-             */
-            id: string;
-            /**
-             * Concept Scheme Id
-             * @description Parent concept scheme ID
-             */
-            concept_scheme_id: string;
-            /**
-             * Taxonomy Id
-             * @description Parent taxonomy ID
-             */
-            taxonomy_id: string;
-            /**
-             * Title
-             * @description Display name
-             */
-            title: string;
-            /**
-             * Description
-             * @description Optional description
-             */
-            description?: string | null;
-            /**
-             * Parent Class Id
-             * @description Optional parent class ID
-             */
-            parent_class_id?: string | null;
-            /**
-             * Structural Property Id
-             * @description Optional structural property ID
-             */
-            structural_property_id?: string | null;
-            /** External References */
-            external_references?: components["schemas"]["ExternalReferenceResponse"][];
-            /** Lexical Senses */
-            lexical_senses?: components["schemas"]["LexicalSenseResponse"][];
-            /** Data Properties */
-            data_properties?: components["schemas"]["DataPropertyValueResponse"][];
-            /**
-             * Embedding
-             * @description Optional semantic embedding
-             */
-            embedding?: number[] | null;
-            /**
-             * Created At
-             * @description Creation timestamp
-             */
-            created_at?: string | null;
-            /**
-             * Last Modified
-             * @description Last modification timestamp
-             */
-            last_modified?: string | null;
-            /**
-             * Version
-             * @description Version number for optimistic concurrency control
-             * @default 1
-             */
-            version: number;
-        };
-        /**
-         * ClassUpdateRequest
-         * @description Request to update a class.
-         */
-        ClassUpdateRequest: {
-            /**
-             * Title
-             * @description New title
-             */
-            title?: string | null;
-            /**
-             * Description
-             * @description New description
-             */
-            description?: string | null;
-        };
-        /**
-         * CommunitiesResponse
-         * @description Response containing community detection results.
-         */
-        CommunitiesResponse: {
-            /**
-             * Algorithm
-             * @description Name of the community detection algorithm
-             */
-            algorithm: string;
-            /**
-             * Communities
-             * @description Communities as sorted lists of node IDs
-             */
-            communities: string[][];
-        };
-        /**
-         * ConceptSchemeCreateRequest
-         * @description Request to create a new concept scheme.
-         */
-        ConceptSchemeCreateRequest: {
-            /**
-             * Title
-             * @description Display name for the concept scheme
-             */
-            title: string;
-            /**
-             * Description
-             * @description Optional longer description
-             */
-            description?: string | null;
-        };
-        /**
-         * ConceptSchemeResponse
-         * @description Response containing concept scheme data.
-         */
-        ConceptSchemeResponse: {
-            /**
-             * Id
-             * @description Unique identifier
-             */
-            id: string;
-            /**
-             * Taxonomy Id
-             * @description Parent taxonomy ID
-             */
-            taxonomy_id: string;
-            /**
-             * Title
-             * @description Display name
-             */
-            title: string;
-            /**
-             * Description
-             * @description Optional description
-             */
-            description?: string | null;
-            /**
-             * Created At
-             * @description Creation timestamp
-             */
-            created_at?: string | null;
-            /**
-             * Last Modified
-             * @description Last modification timestamp
-             */
-            last_modified?: string | null;
-            /**
-             * Version
-             * @description Version number for optimistic concurrency control
-             * @default 1
-             */
-            version: number;
-        };
-        /**
-         * ConceptSchemeUpdateRequest
-         * @description Request to update a concept scheme.
-         */
-        ConceptSchemeUpdateRequest: {
-            /**
-             * Title
-             * @description New title
-             */
-            title?: string | null;
-            /**
-             * Description
-             * @description New description
-             */
-            description?: string | null;
-        };
-        /**
-         * ConfigSectionUpdateRequest
-         * @description Request to update a configuration section.
-         */
-        ConfigSectionUpdateRequest: {
-            /**
-             * Updates
-             * @description Dictionary of key-value pairs to update in the section
-             */
-            updates: {
-                [key: string]: unknown;
-            };
-        };
-        /**
-         * ConflictReportResponse
-         * @description Response with conflict detection results
-         */
-        ConflictReportResponse: {
-            /**
-             * Proposal Id
-             * @description ID of the proposal
-             */
-            proposal_id: string;
-            /**
-             * Conflicts
-             * @description List of conflicts
-             */
-            conflicts?: components["schemas"]["ConflictResponse"][];
-            /**
-             * Has Conflicts
-             * @description Whether any conflicts were detected
-             */
-            has_conflicts: boolean;
-        };
-        /**
-         * ConflictResponse
-         * @description Response representing a detected conflict
-         */
-        ConflictResponse: {
-            /**
-             * Entity Id
-             * @description ID of the entity with the conflict
-             */
-            entity_id: string;
-            /**
-             * Field Name
-             * @description Name of the field in conflict
-             */
-            field_name: string;
-            /**
-             * Base Value
-             * @description Value from the base changeset
-             */
-            base_value: unknown;
-            /**
-             * Incoming Value
-             * @description Value from the incoming changeset
-             */
-            incoming_value: unknown;
-            /**
-             * Is Resolved
-             * @description Whether this conflict has been resolved
-             */
-            is_resolved: boolean;
-            /**
-             * Resolved Value
-             * @description The resolved value if conflict is resolved
-             */
-            resolved_value?: unknown | null;
-        };
-        /**
-         * CycleCheckRequest
-         * @description Request to check if adding an edge would create a cycle.
-         */
-        CycleCheckRequest: {
-            /**
-             * Source Id
-             * @description ID of the proposed edge source
-             */
-            source_id: string;
-            /**
-             * Target Id
-             * @description ID of the proposed edge target
-             */
-            target_id: string;
-        };
-        /**
-         * CycleCheckResponse
-         * @description Response from cycle detection check.
-         */
-        CycleCheckResponse: {
-            /**
-             * Source Id
-             * @description ID of the proposed edge source
-             */
-            source_id: string;
-            /**
-             * Target Id
-             * @description ID of the proposed edge target
-             */
-            target_id: string;
-            /**
-             * Would Create Cycle
-             * @description Whether adding this edge would create a cycle
-             */
-            would_create_cycle: boolean;
-        };
-        /**
-         * DataPropertyValueResponse
-         * @description Response containing data property value.
-         */
-        DataPropertyValueResponse: {
-            /**
-             * Property Identifier
-             * @description Property identifier
-             */
-            property_identifier: string;
-            /**
-             * Value
-             * @description Value of the property
-             */
-            value: string | number | boolean | null;
-            /**
-             * Datatype
-             * @description Type of the value
-             */
-            datatype?: string | null;
-        };
-        /**
-         * DegreeDistributionResponse
-         * @description Response containing degree distribution for all nodes.
-         */
-        DegreeDistributionResponse: {
-            /**
-             * Distribution
-             * @description Mapping of node IDs to their degrees
-             */
-            distribution: {
-                [key: string]: number;
-            };
-            /**
-             * Computed At
-             * Format: date-time
-             * @description Timestamp when distribution was computed
-             */
-            computed_at: string;
-        };
-        /**
-         * EnrichFromReferencesRequest
-         * @description Request to enrich extracted entities with external reference knowledge.
-         */
-        EnrichFromReferencesRequest: {
-            /**
-             * Text
-             * @description Original source text
-             */
-            text: string;
-            /**
-             * Extracted Entities
-             * @description Entities to enrich with reference knowledge
-             */
-            extracted_entities: components["schemas"]["ExtractedEntitySchema"][];
-        };
-        /**
-         * EntityVersionResponse
-         * @description Response representing an entity version
-         */
-        EntityVersionResponse: {
-            /**
-             * Entity Id
-             * @description ID of the entity
-             */
-            entity_id: string;
-            /**
-             * Version
-             * @description Version number
-             */
-            version: number;
-            /**
-             * State
-             * @description State of the entity at this version
-             */
-            state: string;
-            /**
-             * Snapshot
-             * @description Snapshot of entity data at this version
-             */
-            snapshot: {
-                [key: string]: unknown;
-            };
-            /**
-             * Created At
-             * Format: date-time
-             * @description When this version was created
-             */
-            created_at: string;
-            /**
-             * Parent Version
-             * @description Version number of parent; None if this is the first version
-             */
-            parent_version?: number | null;
-        };
-        /**
-         * ExecutionResponse
-         * @description Response containing pipeline execution record data.
-         */
-        ExecutionResponse: {
-            /**
-             * Id
-             * @description Unique identifier for this execution
-             */
-            id: string;
-            /**
-             * Pipeline Config Id
-             * @description ID of the executed PipelineConfiguration
-             */
-            pipeline_config_id: string;
-            /**
-             * Output Text
-             * @description The generated response from the LLM
-             */
-            output_text: string;
-            /**
-             * Provider
-             * @description LLM provider that executed the request
-             */
-            provider: string;
-            /**
-             * Model
-             * @description Model that generated the response
-             */
-            model: string;
-            /**
-             * Tokens In
-             * @description Number of tokens in the input
-             */
-            tokens_in: number;
-            /**
-             * Tokens Out
-             * @description Number of tokens in the output
-             */
-            tokens_out: number;
-            /**
-             * Duration Ms
-             * @description Execution duration in milliseconds
-             */
-            duration_ms: number;
-            /**
-             * Status
-             * @description Completion status (success, error, timeout)
-             */
-            status: string;
-            /**
-             * Error Message
-             * @description Error description if applicable
-             */
-            error_message?: string | null;
-            /**
-             * Timestamp
-             * Format: date-time
-             * @description ISO 8601 execution timestamp
-             */
-            timestamp: string;
-        };
-        /**
-         * ExternalReferenceResponse
-         * @description Response containing external reference data.
-         */
-        ExternalReferenceResponse: {
-            /**
-             * Source
-             * @description Source of the reference
-             */
-            source: string;
-            /**
-             * Identifier
-             * @description External identifier
-             */
-            identifier: string;
-            /**
-             * Uri
-             * @description External URI
-             */
-            uri?: string | null;
-            /**
-             * Metadata
-             * @description Source-specific metadata
-             */
-            metadata?: {
-                [key: string]: unknown;
-            } | null;
-        };
-        /**
-         * ExtractRequest
-         * @description Request to extract entities from text.
-         */
-        ExtractRequest: {
-            /**
-             * Text
-             * @description Text to extract entities from
-             */
-            text: string;
-        };
-        /**
-         * ExtractedEntitySchema
-         * @description Response containing extracted entity data.
-         */
-        ExtractedEntitySchema: {
-            /**
-             * Id
-             * @description Unique identifier for the entity
-             */
-            id: string;
-            /**
-             * Label
-             * @description The extracted entity label/name
-             */
-            label: string;
-            /**
-             * Entity Type
-             * @description Classification of the entity
-             */
-            entity_type: string;
-            /**
-             * Source Layer
-             * @description Which layer extracted this entity (0-3)
-             */
-            source_layer: number;
-            /**
-             * Confidence
-             * @description Confidence score from 0.0 to 1.0
-             */
-            confidence: number;
-            /**
-             * Uri
-             * @description Optional URI to external knowledge base
-             */
-            uri?: string | null;
-            /**
-             * Description
-             * @description Optional description of the entity
-             */
-            description?: string | null;
-            /**
-             * Matched Class Id
-             * @description ID of matched ontology class, if any
-             */
-            matched_class_id?: string | null;
-            /**
-             * Properties
-             * @description Optional metadata key-value pairs
-             */
-            properties?: {
-                [key: string]: unknown;
-            };
-        };
-        /**
-         * ExtractionLayerResultSchema
-         * @description Response containing execution metadata for a single extraction layer.
-         */
-        ExtractionLayerResultSchema: {
-            /**
-             * Layer Number
-             * @description Layer index (0-3)
-             */
-            layer_number: number;
-            /**
-             * Layer Name
-             * @description Human-readable name of the layer
-             */
-            layer_name: string;
-            /**
-             * Entities Found
-             * @description Count of entities extracted by this layer
-             */
-            entities_found: number;
-            /**
-             * Duration Ms
-             * @description Execution time in milliseconds
-             */
-            duration_ms: number;
-            /**
-             * Success
-             * @description Whether layer completed successfully
-             */
-            success: boolean;
-            /**
-             * Error Message
-             * @description Error message if layer failed
-             */
-            error_message?: string | null;
-        };
-        /**
-         * ExtractionResultSchema
-         * @description Response containing the complete output of an extraction operation.
-         */
-        ExtractionResultSchema: {
-            /**
-             * Id
-             * @description Unique identifier for this extraction result
-             */
-            id: string;
-            /**
-             * Text
-             * @description The source text that was extracted
-             */
-            text: string;
-            /**
-             * Extracted Entities
-             * @description Deduplicated list of extracted entities
-             */
-            extracted_entities?: components["schemas"]["ExtractedEntitySchema"][];
-            /**
-             * Layers Executed
-             * @description Execution details for each layer that ran
-             */
-            layers_executed?: components["schemas"]["ExtractionLayerResultSchema"][];
-            /**
-             * Total Duration Ms
-             * @description Total extraction time in milliseconds
-             */
-            total_duration_ms: number;
-            /**
-             * Created At
-             * @description ISO 8601 timestamp when extraction completed
-             */
-            created_at: string;
-        };
-        /**
-         * GraphMetricsResponse
-         * @description Response containing computed graph metrics.
-         */
-        GraphMetricsResponse: {
-            /**
-             * Density
-             * @description Edge density of the graph
-             */
-            density: number;
-            /**
-             * Average Degree
-             * @description Average degree of nodes
-             */
-            average_degree: number;
-            /**
-             * Connected Components
-             * @description Number of connected components
-             */
-            connected_components: number;
-            /**
-             * Degree Distribution
-             * @description Distribution of node degrees
-             */
-            degree_distribution: {
-                [key: string]: number;
-            };
-            /**
-             * Centrality
-             * @description Centrality scores for all nodes
-             */
-            centrality: {
-                [key: string]: number;
-            };
-            /**
-             * Communities
-             * @description Detected communities as lists of node IDs
-             */
-            communities: string[][];
-            /**
-             * Algorithm
-             * @description Name of the centrality algorithm used
-             */
-            algorithm: string;
-            /**
-             * Computed At
-             * Format: date-time
-             * @description Timestamp when metrics were computed
-             */
-            computed_at: string;
-        };
-        /** HTTPValidationError */
-        HTTPValidationError: {
-            /** Detail */
-            detail?: components["schemas"]["ValidationError"][];
-        };
-        /**
-         * KnowledgeGraphResponse
-         * @description Response containing knowledge graph metadata.
-         */
-        KnowledgeGraphResponse: {
-            /**
-             * Node Count
-             * @description Number of nodes in the graph
-             */
-            node_count: number;
-            /**
-             * Edge Count
-             * @description Number of edges in the graph
-             */
-            edge_count: number;
-            /**
-             * Is Directed
-             * @description Whether the graph is directed
-             */
-            is_directed: boolean;
-            /**
-             * Last Built
-             * Format: date-time
-             * @description Timestamp when the graph was last built
-             */
-            last_built: string;
-        };
-        /**
-         * LexicalSenseResponse
-         * @description Response containing lexical sense data.
-         */
-        LexicalSenseResponse: {
-            /**
-             * Label
-             * @description The sense label or term
-             */
-            label: string;
-            /**
-             * Language Code
-             * @description ISO 639-1 language code
-             */
-            language_code: string;
-            /**
-             * Sense Type
-             * @description Type of sense
-             */
-            sense_type: string;
-        };
-        /**
-         * ListResponse
-         * @description Generic paginated list response.
-         */
-        ListResponse: {
-            /**
-             * Items
-             * @description List of items
-             */
-            items: unknown[];
-            /**
-             * Total
-             * @description Total number of items
-             */
-            total: number;
-            /**
-             * Limit
-             * @description Limit applied
-             */
-            limit: number;
-            /**
-             * Offset
-             * @description Offset applied
-             */
-            offset: number;
-        };
-        /**
-         * MergeResultResponse
-         * @description Response with merge operation results
-         */
-        MergeResultResponse: {
-            /**
-             * Proposal Id
-             * @description ID of the merged proposal
-             */
-            proposal_id: string;
-            /**
-             * Changeset Id
-             * @description ID of the merged changeset
-             */
-            changeset_id: string;
-            /**
-             * Merged At
-             * Format: date-time
-             * @description When the merge occurred
-             */
-            merged_at: string;
-            /**
-             * Events Applied
-             * @description Number of change events applied
-             */
-            events_applied: number;
-            /**
-             * Conflicts Resolved
-             * @description Number of conflicts resolved
-             */
-            conflicts_resolved: number;
-        };
-        /**
-         * MergeStrategy
-         * @description Strategy for resolving conflicts during merge.
-         * @enum {string}
-         */
-        MergeStrategy: "last_write_wins" | "base_value_wins" | "manual";
-        /**
-         * NeighborsResponse
-         * @description Response containing neighbor nodes.
-         */
-        NeighborsResponse: {
-            /**
-             * Node Id
-             * @description ID of the queried node
-             */
-            node_id: string;
-            /**
-             * Direction
-             * @description Direction of traversal: 'in', 'out', or 'both'
-             */
-            direction: string;
-            /**
-             * Neighbors
-             * @description List of neighboring node IDs
-             */
-            neighbors: string[];
-        };
-        /**
-         * PathResultResponse
-         * @description Response containing a single path between two nodes.
-         */
-        PathResultResponse: {
-            /**
-             * Source Id
-             * @description ID of the starting node
-             */
-            source_id: string;
-            /**
-             * Target Id
-             * @description ID of the ending node
-             */
-            target_id: string;
-            /**
-             * Nodes
-             * @description Ordered list of node IDs from source to target
-             */
-            nodes: string[];
-            /**
-             * Distance
-             * @description Number of edges in the path
-             */
-            distance: number;
-            /**
-             * Relationships
-             * @description Relationship types traversed along the path
-             */
-            relationships: string[];
-        };
-        /**
-         * PipelineConfigurationCreate
-         * @description Request to create a new pipeline configuration.
-         */
-        PipelineConfigurationCreate: {
-            /**
-             * Pipeline
-             * @description Pipeline identifier/slug for categorization
-             */
-            pipeline: string;
-            /**
-             * Title
-             * @description Human-readable title for the pipeline
-             */
-            title: string;
-            /**
-             * Provider
-             * @description LLM provider name (openai, anthropic)
-             */
-            provider: string;
-            /**
-             * Model
-             * @description Model identifier (e.g., gpt-4, claude-opus)
-             */
-            model: string;
-            /**
-             * Config
-             * @description Provider-specific configuration
-             */
-            config?: {
-                [key: string]: unknown;
-            };
-            /**
-             * System Prompt
-             * @description System prompt to guide model behavior
-             */
-            system_prompt: string;
-            /**
-             * User Prompt
-             * @description User message template with {text} placeholder
-             */
-            user_prompt: string;
-            /**
-             * Enabled
-             * @description Whether this configuration is active
-             * @default true
-             */
-            enabled: boolean;
-        };
-        /**
-         * PipelineConfigurationResponse
-         * @description Response containing pipeline configuration data.
-         */
-        PipelineConfigurationResponse: {
-            /**
-             * Id
-             * @description Unique identifier
-             */
-            id: string;
-            /**
-             * Pipeline
-             * @description Pipeline identifier/slug
-             */
-            pipeline: string;
-            /**
-             * Title
-             * @description Human-readable title
-             */
-            title: string;
-            /**
-             * Provider
-             * @description LLM provider name
-             */
-            provider: string;
-            /**
-             * Model
-             * @description Model identifier
-             */
-            model: string;
-            /**
-             * Config
-             * @description Provider-specific configuration
-             */
-            config?: {
-                [key: string]: unknown;
-            };
-            /**
-             * System Prompt
-             * @description System prompt
-             */
-            system_prompt: string;
-            /**
-             * User Prompt
-             * @description User message template
-             */
-            user_prompt: string;
-            /**
-             * Version
-             * @description Configuration version number
-             */
-            version: number;
-            /**
-             * Enabled
-             * @description Whether this configuration is active
-             */
-            enabled: boolean;
-            /**
-             * Created At
-             * Format: date-time
-             * @description ISO 8601 creation timestamp
-             */
-            created_at: string;
-            /**
-             * Last Updated
-             * Format: date-time
-             * @description ISO 8601 last update timestamp
-             */
-            last_updated: string;
-        };
-        /**
-         * PipelineConfigurationUpdate
-         * @description Request to update a pipeline configuration.
-         */
-        PipelineConfigurationUpdate: {
-            /**
-             * Title
-             * @description Updated title
-             */
-            title?: string | null;
-            /**
-             * Provider
-             * @description Updated provider
-             */
-            provider?: string | null;
-            /**
-             * Model
-             * @description Updated model
-             */
-            model?: string | null;
-            /**
-             * Config
-             * @description Updated configuration
-             */
-            config?: {
-                [key: string]: unknown;
-            } | null;
-            /**
-             * System Prompt
-             * @description Updated system prompt
-             */
-            system_prompt?: string | null;
-            /**
-             * User Prompt
-             * @description Updated user prompt
-             */
-            user_prompt?: string | null;
-            /**
-             * Enabled
-             * @description Updated enabled status
-             */
-            enabled?: boolean | null;
-        };
-        /**
-         * PipelineExecuteRequest
-         * @description Request to execute a pipeline.
-         */
-        PipelineExecuteRequest: {
-            /**
-             * Input Text
-             * @description Input text to process
-             */
-            input_text: string;
-        };
-        /**
-         * PropertyDefinitionCreateRequest
-         * @description Request to create a new property definition.
-         */
-        PropertyDefinitionCreateRequest: {
-            /**
-             * Identifier
-             * @description Machine-readable identifier
-             */
-            identifier: string;
-            /**
-             * Title
-             * @description Display name for the property
-             */
-            title: string;
-            /**
-             * Description
-             * @description Optional longer description
-             */
-            description?: string | null;
-        };
-        /**
-         * PropertyDefinitionResponse
-         * @description Response containing property definition data.
-         */
-        PropertyDefinitionResponse: {
-            /**
-             * Id
-             * @description Unique identifier
-             */
-            id: string;
-            /**
-             * Identifier
-             * @description Machine-readable identifier
-             */
-            identifier: string;
-            /**
-             * Title
-             * @description Display name
-             */
-            title: string;
-            /**
-             * Description
-             * @description Optional description
-             */
-            description?: string | null;
-            /**
-             * Is Relevant
-             * @description Relevance flag (None=not evaluated, True=relevant, False=irrelevant)
-             */
-            is_relevant?: boolean | null;
-            /**
-             * Created At
-             * @description Creation timestamp
-             */
-            created_at?: string | null;
-            /**
-             * Last Modified
-             * @description Last modification timestamp
-             */
-            last_modified?: string | null;
-            /**
-             * Version
-             * @description Version number for optimistic concurrency control
-             * @default 1
-             */
-            version: number;
-        };
-        /**
-         * PropertyDefinitionUpdateRequest
-         * @description Request to update a property definition.
-         */
-        PropertyDefinitionUpdateRequest: {
-            /**
-             * Title
-             * @description New title
-             */
-            title?: string | null;
-            /**
-             * Description
-             * @description New description
-             */
-            description?: string | null;
-        };
-        /**
-         * ProposalResponse
-         * @description Response representing a proposal
-         */
-        ProposalResponse: {
-            /**
-             * Id
-             * @description Unique identifier of the proposal
-             */
-            id: string;
-            /**
-             * Changeset Id
-             * @description ID of the associated changeset
-             */
-            changeset_id: string;
-            /** @description Current state (open, approved, rejected, merged) */
-            state: components["schemas"]["ProposalState"];
-            /**
-             * Submitted At
-             * Format: date-time
-             * @description When the proposal was submitted
-             */
-            submitted_at: string;
-            /**
-             * Reviewed At
-             * @description When the proposal was reviewed
-             */
-            reviewed_at?: string | null;
-            /**
-             * Reviewer Notes
-             * @description Notes from reviewer
-             */
-            reviewer_notes?: string | null;
-        };
-        /**
-         * ProposalState
-         * @description Valid states for a proposal.
-         * @enum {string}
-         */
-        ProposalState: "open" | "approved" | "rejected" | "merged";
-        /**
-         * ReferenceRelationSchema
-         * @description Response containing a single reference relationship.
-         */
-        ReferenceRelationSchema: {
-            /**
-             * Subject Uri
-             * @description Source concept URI
-             */
-            subject_uri: string;
-            /**
-             * Predicate
-             * @description Relationship type
-             */
-            predicate: string;
-            /**
-             * Object Uri
-             * @description Target concept URI
-             */
-            object_uri: string;
-            /**
-             * Weight
-             * @description Optional relationship weight
-             */
-            weight?: number | null;
-            /**
-             * Source
-             * @description Reference source name
-             */
-            source: string;
-        };
-        /**
-         * ReferenceRelationsRequest
-         * @description Request to retrieve relationships for a reference URI.
-         */
-        ReferenceRelationsRequest: {
-            /**
-             * Uri
-             * @description Reference URI
-             */
-            uri: string;
-            /**
-             * Limit
-             * @description Maximum relations to return
-             * @default 10
-             */
-            limit: number;
-            /**
-             * Sources
-             * @description Specific sources to query (if None, queries all available)
-             */
-            sources?: string[] | null;
-        };
-        /**
-         * ReferenceRelationsResponseSchema
-         * @description Response containing relationships aggregated from multiple sources.
-         */
-        ReferenceRelationsResponseSchema: {
-            /**
-             * Uri
-             * @description The URI that was queried
-             */
-            uri: string;
-            /**
-             * Relations
-             * @description Aggregated relationships from all sources
-             */
-            relations?: components["schemas"]["ReferenceRelationSchema"][];
-            /**
-             * Sources Queried
-             * @description Names of sources that were queried
-             */
-            sources_queried?: string[];
-            /**
-             * Sources Failed
-             * @description Names of sources that failed or were unavailable
-             */
-            sources_failed?: string[];
-            /**
-             * Total Relations
-             * @description Total number of relations returned
-             * @default 0
-             */
-            total_relations: number;
-        };
-        /**
-         * ReferenceResultSchema
-         * @description Response containing a single reference search result.
-         */
-        ReferenceResultSchema: {
-            /**
-             * Uri
-             * @description Unique URI for this resource
-             */
-            uri: string;
-            /**
-             * Label
-             * @description Human-readable label
-             */
-            label: string;
-            /**
-             * Description
-             * @description Optional description
-             */
-            description?: string | null;
-            /**
-             * Confidence
-             * @description Confidence score (0.0-1.0)
-             * @default 1
-             */
-            confidence: number;
-            /**
-             * Source
-             * @description Reference source name
-             */
-            source: string;
-        };
-        /**
-         * ReferenceSearchRequest
-         * @description Request to search for references across available sources.
-         */
-        ReferenceSearchRequest: {
-            /**
-             * Term
-             * @description Search term
-             */
-            term: string;
-            /**
-             * Limit
-             * @description Maximum results per source
-             * @default 10
-             */
-            limit: number;
-            /**
-             * Sources
-             * @description Specific sources to search (if None, searches all available)
-             */
-            sources?: string[] | null;
-        };
-        /**
-         * ReferenceSearchResponseSchema
-         * @description Response containing search results aggregated from multiple sources.
-         */
-        ReferenceSearchResponseSchema: {
-            /**
-             * Term
-             * @description The search term that was executed
-             */
-            term: string;
-            /**
-             * Results
-             * @description Aggregated results from all sources
-             */
-            results?: components["schemas"]["ReferenceResultSchema"][];
-            /**
-             * Sources Searched
-             * @description Names of sources that were searched
-             */
-            sources_searched?: string[];
-            /**
-             * Sources Failed
-             * @description Names of sources that failed or were unavailable
-             */
-            sources_failed?: string[];
-            /**
-             * Total Results
-             * @description Total number of results returned
-             * @default 0
-             */
-            total_results: number;
-        };
-        /**
-         * ReferenceSourceStatusSchema
-         * @description Status information for a single reference source.
-         */
-        ReferenceSourceStatusSchema: {
-            /**
-             * Name
-             * @description Source name
-             */
-            name: string;
-            /**
-             * Available
-             * @description Whether source is currently available
-             */
-            available: boolean;
-            /**
-             * Last Checked
-             * @description ISO 8601 timestamp of last availability check
-             */
-            last_checked?: string | null;
-        };
-        /**
-         * ReferenceStatusResponseSchema
-         * @description Response containing status of all reference sources.
-         */
-        ReferenceStatusResponseSchema: {
-            /**
-             * Sources
-             * @description Status of each reference source
-             */
-            sources?: components["schemas"]["ReferenceSourceStatusSchema"][];
-            /**
-             * Sources Available
-             * @description Count of available sources
-             * @default 0
-             */
-            sources_available: number;
-            /**
-             * Timestamp
-             * @description ISO 8601 timestamp of this status check
-             */
-            timestamp: string;
-        };
-        /**
-         * RejectProposalRequest
-         * @description Request to reject a proposal
-         */
-        RejectProposalRequest: {
-            /**
-             * Reason
-             * @description Reason for rejection
-             */
-            reason: string;
-        };
-        /**
-         * RelationshipCreateRequest
-         * @description Request to create a new relationship.
-         */
-        RelationshipCreateRequest: {
-            /**
-             * Source Id
-             * @description ID of source entity
-             */
-            source_id: string;
-            /**
-             * Target Id
-             * @description ID of target entity
-             */
-            target_id: string;
-            /**
-             * Property Definition Id
-             * @description ID of property definition (relationship type)
-             */
-            property_definition_id: string;
-        };
-        /**
-         * RelationshipResponse
-         * @description Response containing relationship data.
-         */
-        RelationshipResponse: {
-            /**
-             * Id
-             * @description Unique identifier
-             */
-            id: string;
-            /**
-             * Source Id
-             * @description Source entity ID
-             */
-            source_id: string;
-            /**
-             * Target Id
-             * @description Target entity ID
-             */
-            target_id: string;
-            /**
-             * Property Definition Id
-             * @description Property definition ID (relationship type)
-             */
-            property_definition_id: string;
-            /**
-             * Created At
-             * @description Creation timestamp
-             */
-            created_at?: string | null;
-        };
-        /**
-         * ResolveConflictsRequest
-         * @description Request to resolve conflicts in a proposal
-         */
-        ResolveConflictsRequest: {
-            /**
-             * Resolutions
-             * @description Mapping of entity_id -> {field_name: resolved_value}
-             */
-            resolutions: {
-                [key: string]: {
-                    [key: string]: unknown;
-                };
-            };
-        };
-        /**
-         * SPARQLRequest
-         * @description Request to execute a SPARQL query.
-         */
-        SPARQLRequest: {
-            /**
-             * Query
-             * @description SPARQL SELECT query string (max 10000 characters)
-             */
-            query: string;
-        };
-        /**
-         * SPARQLResponse
-         * @description Response from SPARQL query execution.
-         */
-        SPARQLResponse: {
-            /**
-             * Results
-             * @description Query result bindings
-             */
-            results: {
-                [key: string]: unknown;
-            }[];
-            /**
-             * Triple Count
-             * @description Total number of triples in the graph
-             */
-            triple_count: number;
-        };
-        /**
-         * SubgraphResultResponse
-         * @description Response containing depth-based subgraph extraction result.
-         */
-        SubgraphResultResponse: {
-            /**
-             * Center Node Id
-             * @description ID of the center node
-             */
-            center_node_id: string;
-            /**
-             * Node Ids
-             * @description IDs of all nodes in the subgraph
-             */
-            node_ids: string[];
-            /**
-             * Edge Ids
-             * @description Edges connecting nodes in the subgraph as (source, target) tuples
-             */
-            edge_ids: [
-                string,
-                string
-            ][];
-            /**
-             * Node Count
-             * @description Number of nodes in the subgraph
-             */
-            node_count: number;
-            /**
-             * Edge Count
-             * @description Number of edges in the subgraph
-             */
-            edge_count: number;
-            /**
-             * Depth
-             * @description Maximum traversal depth from center node
-             */
-            depth: number;
-            /**
-             * Extracted At
-             * Format: date-time
-             * @description Timestamp when the subgraph was extracted
-             */
-            extracted_at: string;
-        };
-        /**
-         * SyncResultResponse
-         * @description Response with synchronization operation results
-         */
-        SyncResultResponse: {
-            /**
-             * Pushed
-             * @description Number of events pushed
-             */
-            pushed: number;
-            /**
-             * Pulled
-             * @description Number of events pulled
-             */
-            pulled: number;
-            /**
-             * Errors
-             * @description Any errors encountered
-             */
-            errors?: string[];
-        };
-        /**
-         * SyncStatusResponse
-         * @description Response with synchronization status
-         */
-        SyncStatusResponse: {
-            /**
-             * Unprocessed Count
-             * @description Number of unprocessed (unsynced) changes
-             */
-            unprocessed_count: number;
-            /**
-             * Is Configured
-             * @description Whether remote sync is configured
-             */
-            is_configured: boolean;
-            /**
-             * Last Pushed At
-             * @description ISO timestamp of last successful push
-             */
-            last_pushed_at?: string | null;
-            /**
-             * Last Pulled At
-             * @description ISO timestamp of last successful pull
-             */
-            last_pulled_at?: string | null;
-        };
-        /**
-         * SystemHealthResponse
-         * @description Response containing system health status and component readiness.
-         */
-        SystemHealthResponse: {
-            /**
-             * Status
-             * @description Overall health status: "healthy", "degraded", or "unhealthy"
-             */
-            status: string;
-            /**
-             * Database Connected
-             * @description Whether database is accessible
-             */
-            database_connected: boolean;
-            /**
-             * Nlp Pipeline Ready
-             * @description Whether spaCy NLP model is loaded and ready
-             */
-            nlp_pipeline_ready: boolean;
-            /**
-             * Embedding Model Loaded
-             * @description Whether embedding model is loaded in memory
-             */
-            embedding_model_loaded: boolean;
-            /**
-             * Llm Providers Available
-             * @description List of available LLM provider names
-             */
-            llm_providers_available?: string[];
-            /**
-             * Uptime Seconds
-             * @description System uptime in seconds since startup
-             */
-            uptime_seconds: number;
-            /**
-             * Issues
-             * @description List of identified health issues (if any)
-             */
-            issues?: string[];
-            /**
-             * Checked At
-             * Format: date-time
-             * @description Timestamp when health check was performed
-             */
-            checked_at: string;
-        };
-        /**
-         * TaxonomyCreateRequest
-         * @description Request to create a new taxonomy.
-         */
-        TaxonomyCreateRequest: {
-            /**
-             * Title
-             * @description Display name for the taxonomy
-             */
-            title: string;
-            /**
-             * Description
-             * @description Optional longer description
-             */
-            description?: string | null;
-        };
-        /**
-         * TaxonomyResponse
-         * @description Response containing taxonomy data.
-         */
-        TaxonomyResponse: {
-            /**
-             * Id
-             * @description Unique identifier
-             */
-            id: string;
-            /**
-             * Title
-             * @description Display name
-             */
-            title: string;
-            /**
-             * Description
-             * @description Optional description
-             */
-            description?: string | null;
-            /**
-             * Created At
-             * @description Creation timestamp
-             */
-            created_at?: string | null;
-            /**
-             * Last Modified
-             * @description Last modification timestamp
-             */
-            last_modified?: string | null;
-            /**
-             * Version
-             * @description Version number for optimistic concurrency control
-             * @default 1
-             */
-            version: number;
-        };
-        /**
-         * TaxonomyUpdateRequest
-         * @description Request to update a taxonomy.
-         */
-        TaxonomyUpdateRequest: {
-            /**
-             * Title
-             * @description New title for the taxonomy
-             */
-            title?: string | null;
-            /**
-             * Description
-             * @description New description
-             */
-            description?: string | null;
-        };
-        /**
-         * TripleCountResponse
-         * @description Response containing RDF triple count.
-         */
-        TripleCountResponse: {
-            /**
-             * Count
-             * @description Number of RDF triples in the graph
-             */
-            count: number;
-        };
-        /**
-         * TripleResponse
-         * @description Response containing a single RDF triple.
-         */
-        TripleResponse: {
-            /**
-             * Subject
-             * @description RDF subject
-             */
-            subject: string;
-            /**
-             * Predicate
-             * @description RDF predicate
-             */
-            predicate: string;
-            /**
-             * Object
-             * @description RDF object
-             */
-            object: string;
-        };
-        /**
-         * TriplesResponse
-         * @description Response containing RDF triples.
-         */
-        TriplesResponse: {
-            /**
-             * Triples
-             * @description List of RDF triples
-             */
-            triples: components["schemas"]["TripleResponse"][];
-            /**
-             * Count
-             * @description Number of triples returned
-             */
-            count: number;
-        };
-        /** ValidationError */
-        ValidationError: {
-            /** Location */
-            loc: (string | number)[];
-            /** Message */
-            msg: string;
-            /** Error Type */
-            type: string;
-            /** Input */
-            input?: unknown;
-            /** Context */
-            ctx?: Record<string, never>;
-        };
+  schemas: {
+    /**
+     * AnalyzeTextRequest
+     * @description Request to analyze text for linguistic features and named entities.
+     */
+    AnalyzeTextRequest: {
+      /**
+       * Text
+       * @description Text to analyze
+       */
+      text: string;
     };
-    responses: never;
-    parameters: never;
-    requestBodies: never;
-    headers: never;
-    pathItems: never;
+    /**
+     * AppConfigurationResponse
+     * @description Response containing application configuration with masked API keys.
+     */
+    AppConfigurationResponse: {
+      /**
+       * Sections
+       * @description Configuration sections with sensitive values masked
+       */
+      sections: {
+        [key: string]: unknown;
+      };
+    };
+    /**
+     * AutoResolveConflictsRequest
+     * @description Request to automatically resolve conflicts in a proposal
+     */
+    AutoResolveConflictsRequest: {
+      /**
+       * @description Merge strategy to use (last_write_wins, base_value_wins, manual)
+       * @default last_write_wins
+       */
+      strategy: components["schemas"]["MergeStrategy"];
+    };
+    /**
+     * BackgroundTaskResponse
+     * @description Response containing background task status and metadata.
+     */
+    BackgroundTaskResponse: {
+      /**
+       * Id
+       * @description Unique task identifier
+       */
+      id: string;
+      /**
+       * Name
+       * @description Human-readable task name
+       */
+      name: string;
+      /**
+       * Status
+       * @description Task status: "pending", "running", "completed", or "failed"
+       */
+      status: string;
+      /**
+       * Created At
+       * Format: date-time
+       * @description Timestamp when task was registered
+       */
+      created_at: string;
+      /**
+       * Started At
+       * @description Timestamp when task execution began
+       */
+      started_at?: string | null;
+      /**
+       * Completed At
+       * @description Timestamp when task finished
+       */
+      completed_at?: string | null;
+      /**
+       * Error
+       * @description Error message if task failed
+       */
+      error?: string | null;
+      /**
+       * Result
+       * @description Result data if task completed successfully
+       */
+      result?: {
+        [key: string]: unknown;
+      } | null;
+    };
+    /**
+     * CentralityResponse
+     * @description Response containing centrality scores.
+     */
+    CentralityResponse: {
+      /**
+       * Algorithm
+       * @description Name of the centrality algorithm
+       */
+      algorithm: string;
+      /**
+       * Scores
+       * @description Centrality scores mapped by node ID
+       */
+      scores: {
+        [key: string]: number;
+      };
+    };
+    /**
+     * ChangeEventResponse
+     * @description Response representing a change event
+     */
+    ChangeEventResponse: {
+      /**
+       * Id
+       * @description Unique identifier of the change event
+       */
+      id: string;
+      /**
+       * Entity Id
+       * @description ID of the entity that changed
+       */
+      entity_id: string;
+      /**
+       * Entity Type
+       * @description Type of the entity
+       */
+      entity_type: string;
+      /** @description Type of operation (create, update, delete) */
+      operation: components["schemas"]["ChangeOperation"];
+      /**
+       * New State
+       * @description New state of the entity after this change
+       */
+      new_state: {
+        [key: string]: unknown;
+      };
+      /**
+       * Timestamp
+       * Format: date-time
+       * @description When the change occurred
+       */
+      timestamp: string;
+      /**
+       * Processed
+       * @description Whether change has been synced to remote
+       */
+      processed: boolean;
+      /**
+       * User Id
+       * @description User who made the change
+       */
+      user_id?: string | null;
+      /**
+       * Change Reason
+       * @description Why the change was made
+       */
+      change_reason?: string | null;
+      /**
+       * Previous State
+       * @description Previous state of the entity before this change
+       */
+      previous_state?: {
+        [key: string]: unknown;
+      } | null;
+    };
+    /**
+     * ChangeHistoryResponse
+     * @description Response with paginated change history results
+     */
+    ChangeHistoryResponse: {
+      /**
+       * Events
+       * @description List of change events matching the query (limited by limit parameter)
+       */
+      events: components["schemas"]["ChangeEventResponse"][];
+      /**
+       * Total
+       * @description Total count of all events matching the query (without limit applied)
+       */
+      total: number;
+    };
+    /**
+     * ChangeOperation
+     * @description Types of operations on entities.
+     * @enum {string}
+     */
+    ChangeOperation: "create" | "update" | "delete";
+    /**
+     * ChangeState
+     * @description Valid states for a changeset.
+     * @enum {string}
+     */
+    ChangeState: "working" | "staged" | "proposed" | "approved" | "merged";
+    /**
+     * ChangesetCreateRequest
+     * @description Request to create a new changeset
+     */
+    ChangesetCreateRequest: {
+      /**
+       * Name
+       * @description Human-readable name for the changeset
+       */
+      name: string;
+      /**
+       * Description
+       * @description Detailed description
+       */
+      description?: string | null;
+      /**
+       * Event Ids
+       * @description Change event IDs to include
+       */
+      event_ids?: string[];
+    };
+    /**
+     * ChangesetResponse
+     * @description Response representing a changeset
+     */
+    ChangesetResponse: {
+      /**
+       * Id
+       * @description Unique identifier of the changeset
+       */
+      id: string;
+      /**
+       * Name
+       * @description Human-readable name
+       */
+      name: string;
+      /**
+       * Description
+       * @description Detailed description
+       */
+      description?: string | null;
+      /** @description Current state (working, staged, proposed, approved, merged) */
+      state: components["schemas"]["ChangeState"];
+      /**
+       * Created At
+       * Format: date-time
+       * @description When the changeset was created
+       */
+      created_at: string;
+      /**
+       * Updated At
+       * Format: date-time
+       * @description Last update timestamp
+       */
+      updated_at: string;
+      /**
+       * Event Ids
+       * @description IDs of change events in this changeset
+       */
+      event_ids?: string[];
+    };
+    /**
+     * ClassCreateRequest
+     * @description Request to create a new class.
+     */
+    ClassCreateRequest: {
+      /**
+       * Title
+       * @description Display name for the class
+       */
+      title: string;
+      /**
+       * Description
+       * @description Optional longer description
+       */
+      description?: string | null;
+      /**
+       * Parent Class Id
+       * @description Optional ID of parent class for hierarchy
+       */
+      parent_class_id?: string | null;
+    };
+    /**
+     * ClassMoveRequest
+     * @description Request to move a class to a different parent.
+     */
+    ClassMoveRequest: {
+      /**
+       * New Parent Id
+       * @description ID of new parent class, or null to make root
+       */
+      new_parent_id?: string | null;
+    };
+    /**
+     * ClassResponse
+     * @description Response containing class data.
+     */
+    ClassResponse: {
+      /**
+       * Id
+       * @description Unique identifier
+       */
+      id: string;
+      /**
+       * Concept Scheme Id
+       * @description Parent concept scheme ID
+       */
+      concept_scheme_id: string;
+      /**
+       * Taxonomy Id
+       * @description Parent taxonomy ID
+       */
+      taxonomy_id: string;
+      /**
+       * Title
+       * @description Display name
+       */
+      title: string;
+      /**
+       * Description
+       * @description Optional description
+       */
+      description?: string | null;
+      /**
+       * Parent Class Id
+       * @description Optional parent class ID
+       */
+      parent_class_id?: string | null;
+      /**
+       * Structural Property Id
+       * @description Optional structural property ID
+       */
+      structural_property_id?: string | null;
+      /** External References */
+      external_references?: components["schemas"]["ExternalReferenceResponse"][];
+      /** Lexical Senses */
+      lexical_senses?: components["schemas"]["LexicalSenseResponse"][];
+      /** Data Properties */
+      data_properties?: components["schemas"]["DataPropertyValueResponse"][];
+      /**
+       * Embedding
+       * @description Optional semantic embedding
+       */
+      embedding?: number[] | null;
+      /**
+       * Created At
+       * @description Creation timestamp
+       */
+      created_at?: string | null;
+      /**
+       * Last Modified
+       * @description Last modification timestamp
+       */
+      last_modified?: string | null;
+      /**
+       * Version
+       * @description Version number for optimistic concurrency control
+       * @default 1
+       */
+      version: number;
+    };
+    /**
+     * ClassUpdateRequest
+     * @description Request to update a class.
+     */
+    ClassUpdateRequest: {
+      /**
+       * Title
+       * @description New title
+       */
+      title?: string | null;
+      /**
+       * Description
+       * @description New description
+       */
+      description?: string | null;
+    };
+    /**
+     * CommunitiesResponse
+     * @description Response containing community detection results.
+     */
+    CommunitiesResponse: {
+      /**
+       * Algorithm
+       * @description Name of the community detection algorithm
+       */
+      algorithm: string;
+      /**
+       * Communities
+       * @description Communities as sorted lists of node IDs
+       */
+      communities: string[][];
+    };
+    /**
+     * ConceptSchemeCreateRequest
+     * @description Request to create a new concept scheme.
+     */
+    ConceptSchemeCreateRequest: {
+      /**
+       * Title
+       * @description Display name for the concept scheme
+       */
+      title: string;
+      /**
+       * Description
+       * @description Optional longer description
+       */
+      description?: string | null;
+    };
+    /**
+     * ConceptSchemeResponse
+     * @description Response containing concept scheme data.
+     */
+    ConceptSchemeResponse: {
+      /**
+       * Id
+       * @description Unique identifier
+       */
+      id: string;
+      /**
+       * Taxonomy Id
+       * @description Parent taxonomy ID
+       */
+      taxonomy_id: string;
+      /**
+       * Title
+       * @description Display name
+       */
+      title: string;
+      /**
+       * Description
+       * @description Optional description
+       */
+      description?: string | null;
+      /**
+       * Created At
+       * @description Creation timestamp
+       */
+      created_at?: string | null;
+      /**
+       * Last Modified
+       * @description Last modification timestamp
+       */
+      last_modified?: string | null;
+      /**
+       * Version
+       * @description Version number for optimistic concurrency control
+       * @default 1
+       */
+      version: number;
+    };
+    /**
+     * ConceptSchemeUpdateRequest
+     * @description Request to update a concept scheme.
+     */
+    ConceptSchemeUpdateRequest: {
+      /**
+       * Title
+       * @description New title
+       */
+      title?: string | null;
+      /**
+       * Description
+       * @description New description
+       */
+      description?: string | null;
+    };
+    /**
+     * ConfigSectionUpdateRequest
+     * @description Request to update a configuration section.
+     */
+    ConfigSectionUpdateRequest: {
+      /**
+       * Updates
+       * @description Dictionary of key-value pairs to update in the section
+       */
+      updates: {
+        [key: string]: unknown;
+      };
+    };
+    /**
+     * ConflictReportResponse
+     * @description Response with conflict detection results
+     */
+    ConflictReportResponse: {
+      /**
+       * Proposal Id
+       * @description ID of the proposal
+       */
+      proposal_id: string;
+      /**
+       * Conflicts
+       * @description List of conflicts
+       */
+      conflicts?: components["schemas"]["ConflictResponse"][];
+      /**
+       * Has Conflicts
+       * @description Whether any conflicts were detected
+       */
+      has_conflicts: boolean;
+    };
+    /**
+     * ConflictResponse
+     * @description Response representing a detected conflict
+     */
+    ConflictResponse: {
+      /**
+       * Entity Id
+       * @description ID of the entity with the conflict
+       */
+      entity_id: string;
+      /**
+       * Field Name
+       * @description Name of the field in conflict
+       */
+      field_name: string;
+      /**
+       * Base Value
+       * @description Value from the base changeset
+       */
+      base_value: unknown;
+      /**
+       * Incoming Value
+       * @description Value from the incoming changeset
+       */
+      incoming_value: unknown;
+      /**
+       * Is Resolved
+       * @description Whether this conflict has been resolved
+       */
+      is_resolved: boolean;
+      /**
+       * Resolved Value
+       * @description The resolved value if conflict is resolved
+       */
+      resolved_value?: unknown | null;
+    };
+    /**
+     * CycleCheckRequest
+     * @description Request to check if adding an edge would create a cycle.
+     */
+    CycleCheckRequest: {
+      /**
+       * Source Id
+       * @description ID of the proposed edge source
+       */
+      source_id: string;
+      /**
+       * Target Id
+       * @description ID of the proposed edge target
+       */
+      target_id: string;
+    };
+    /**
+     * CycleCheckResponse
+     * @description Response from cycle detection check.
+     */
+    CycleCheckResponse: {
+      /**
+       * Source Id
+       * @description ID of the proposed edge source
+       */
+      source_id: string;
+      /**
+       * Target Id
+       * @description ID of the proposed edge target
+       */
+      target_id: string;
+      /**
+       * Would Create Cycle
+       * @description Whether adding this edge would create a cycle
+       */
+      would_create_cycle: boolean;
+    };
+    /**
+     * DataPropertyValueResponse
+     * @description Response containing data property value.
+     */
+    DataPropertyValueResponse: {
+      /**
+       * Property Identifier
+       * @description Property identifier
+       */
+      property_identifier: string;
+      /**
+       * Value
+       * @description Value of the property
+       */
+      value: string | number | boolean | null;
+      /**
+       * Datatype
+       * @description Type of the value
+       */
+      datatype?: string | null;
+    };
+    /**
+     * DegreeDistributionResponse
+     * @description Response containing degree distribution for all nodes.
+     */
+    DegreeDistributionResponse: {
+      /**
+       * Distribution
+       * @description Mapping of node IDs to their degrees
+       */
+      distribution: {
+        [key: string]: number;
+      };
+      /**
+       * Computed At
+       * Format: date-time
+       * @description Timestamp when distribution was computed
+       */
+      computed_at: string;
+    };
+    /**
+     * EnrichFromReferencesRequest
+     * @description Request to enrich extracted entities with external reference knowledge.
+     */
+    EnrichFromReferencesRequest: {
+      /**
+       * Text
+       * @description Original source text
+       */
+      text: string;
+      /**
+       * Extracted Entities
+       * @description Entities to enrich with reference knowledge
+       */
+      extracted_entities: components["schemas"]["ExtractedEntitySchema"][];
+    };
+    /**
+     * EntityVersionResponse
+     * @description Response representing an entity version
+     */
+    EntityVersionResponse: {
+      /**
+       * Entity Id
+       * @description ID of the entity
+       */
+      entity_id: string;
+      /**
+       * Version
+       * @description Version number
+       */
+      version: number;
+      /**
+       * State
+       * @description State of the entity at this version
+       */
+      state: string;
+      /**
+       * Snapshot
+       * @description Snapshot of entity data at this version
+       */
+      snapshot: {
+        [key: string]: unknown;
+      };
+      /**
+       * Created At
+       * Format: date-time
+       * @description When this version was created
+       */
+      created_at: string;
+      /**
+       * Parent Version
+       * @description Version number of parent; None if this is the first version
+       */
+      parent_version?: number | null;
+    };
+    /**
+     * ExecutionResponse
+     * @description Response containing pipeline execution record data.
+     */
+    ExecutionResponse: {
+      /**
+       * Id
+       * @description Unique identifier for this execution
+       */
+      id: string;
+      /**
+       * Pipeline Config Id
+       * @description ID of the executed PipelineConfiguration
+       */
+      pipeline_config_id: string;
+      /**
+       * Output Text
+       * @description The generated response from the LLM
+       */
+      output_text: string;
+      /**
+       * Provider
+       * @description LLM provider that executed the request
+       */
+      provider: string;
+      /**
+       * Model
+       * @description Model that generated the response
+       */
+      model: string;
+      /**
+       * Tokens In
+       * @description Number of tokens in the input
+       */
+      tokens_in: number;
+      /**
+       * Tokens Out
+       * @description Number of tokens in the output
+       */
+      tokens_out: number;
+      /**
+       * Duration Ms
+       * @description Execution duration in milliseconds
+       */
+      duration_ms: number;
+      /**
+       * Status
+       * @description Completion status (success, error, timeout)
+       */
+      status: string;
+      /**
+       * Error Message
+       * @description Error description if applicable
+       */
+      error_message?: string | null;
+      /**
+       * Timestamp
+       * Format: date-time
+       * @description ISO 8601 execution timestamp
+       */
+      timestamp: string;
+    };
+    /**
+     * ExternalReferenceResponse
+     * @description Response containing external reference data.
+     */
+    ExternalReferenceResponse: {
+      /**
+       * Source
+       * @description Source of the reference
+       */
+      source: string;
+      /**
+       * Identifier
+       * @description External identifier
+       */
+      identifier: string;
+      /**
+       * Uri
+       * @description External URI
+       */
+      uri?: string | null;
+      /**
+       * Metadata
+       * @description Source-specific metadata
+       */
+      metadata?: {
+        [key: string]: unknown;
+      } | null;
+    };
+    /**
+     * ExtractRequest
+     * @description Request to extract entities from text.
+     */
+    ExtractRequest: {
+      /**
+       * Text
+       * @description Text to extract entities from
+       */
+      text: string;
+    };
+    /**
+     * ExtractedEntitySchema
+     * @description Response containing extracted entity data.
+     */
+    ExtractedEntitySchema: {
+      /**
+       * Id
+       * @description Unique identifier for the entity
+       */
+      id: string;
+      /**
+       * Label
+       * @description The extracted entity label/name
+       */
+      label: string;
+      /**
+       * Entity Type
+       * @description Classification of the entity
+       */
+      entity_type: string;
+      /**
+       * Source Layer
+       * @description Which layer extracted this entity (0-3)
+       */
+      source_layer: number;
+      /**
+       * Confidence
+       * @description Confidence score from 0.0 to 1.0
+       */
+      confidence: number;
+      /**
+       * Uri
+       * @description Optional URI to external knowledge base
+       */
+      uri?: string | null;
+      /**
+       * Description
+       * @description Optional description of the entity
+       */
+      description?: string | null;
+      /**
+       * Matched Class Id
+       * @description ID of matched ontology class, if any
+       */
+      matched_class_id?: string | null;
+      /**
+       * Properties
+       * @description Optional metadata key-value pairs
+       */
+      properties?: {
+        [key: string]: unknown;
+      };
+    };
+    /**
+     * ExtractionLayerResultSchema
+     * @description Response containing execution metadata for a single extraction layer.
+     */
+    ExtractionLayerResultSchema: {
+      /**
+       * Layer Number
+       * @description Layer index (0-3)
+       */
+      layer_number: number;
+      /**
+       * Layer Name
+       * @description Human-readable name of the layer
+       */
+      layer_name: string;
+      /**
+       * Entities Found
+       * @description Count of entities extracted by this layer
+       */
+      entities_found: number;
+      /**
+       * Duration Ms
+       * @description Execution time in milliseconds
+       */
+      duration_ms: number;
+      /**
+       * Success
+       * @description Whether layer completed successfully
+       */
+      success: boolean;
+      /**
+       * Error Message
+       * @description Error message if layer failed
+       */
+      error_message?: string | null;
+    };
+    /**
+     * ExtractionResultSchema
+     * @description Response containing the complete output of an extraction operation.
+     */
+    ExtractionResultSchema: {
+      /**
+       * Id
+       * @description Unique identifier for this extraction result
+       */
+      id: string;
+      /**
+       * Text
+       * @description The source text that was extracted
+       */
+      text: string;
+      /**
+       * Extracted Entities
+       * @description Deduplicated list of extracted entities
+       */
+      extracted_entities?: components["schemas"]["ExtractedEntitySchema"][];
+      /**
+       * Layers Executed
+       * @description Execution details for each layer that ran
+       */
+      layers_executed?: components["schemas"]["ExtractionLayerResultSchema"][];
+      /**
+       * Total Duration Ms
+       * @description Total extraction time in milliseconds
+       */
+      total_duration_ms: number;
+      /**
+       * Created At
+       * @description ISO 8601 timestamp when extraction completed
+       */
+      created_at: string;
+    };
+    /**
+     * GraphMetricsResponse
+     * @description Response containing computed graph metrics.
+     */
+    GraphMetricsResponse: {
+      /**
+       * Density
+       * @description Edge density of the graph
+       */
+      density: number;
+      /**
+       * Average Degree
+       * @description Average degree of nodes
+       */
+      average_degree: number;
+      /**
+       * Connected Components
+       * @description Number of connected components
+       */
+      connected_components: number;
+      /**
+       * Degree Distribution
+       * @description Distribution of node degrees
+       */
+      degree_distribution: {
+        [key: string]: number;
+      };
+      /**
+       * Centrality
+       * @description Centrality scores for all nodes
+       */
+      centrality: {
+        [key: string]: number;
+      };
+      /**
+       * Communities
+       * @description Detected communities as lists of node IDs
+       */
+      communities: string[][];
+      /**
+       * Algorithm
+       * @description Name of the centrality algorithm used
+       */
+      algorithm: string;
+      /**
+       * Computed At
+       * Format: date-time
+       * @description Timestamp when metrics were computed
+       */
+      computed_at: string;
+    };
+    /** HTTPValidationError */
+    HTTPValidationError: {
+      /** Detail */
+      detail?: components["schemas"]["ValidationError"][];
+    };
+    /**
+     * KnowledgeGraphResponse
+     * @description Response containing knowledge graph metadata.
+     */
+    KnowledgeGraphResponse: {
+      /**
+       * Node Count
+       * @description Number of nodes in the graph
+       */
+      node_count: number;
+      /**
+       * Edge Count
+       * @description Number of edges in the graph
+       */
+      edge_count: number;
+      /**
+       * Is Directed
+       * @description Whether the graph is directed
+       */
+      is_directed: boolean;
+      /**
+       * Last Built
+       * Format: date-time
+       * @description Timestamp when the graph was last built
+       */
+      last_built: string;
+    };
+    /**
+     * LexicalSenseResponse
+     * @description Response containing lexical sense data.
+     */
+    LexicalSenseResponse: {
+      /**
+       * Label
+       * @description The sense label or term
+       */
+      label: string;
+      /**
+       * Language Code
+       * @description ISO 639-1 language code
+       */
+      language_code: string;
+      /**
+       * Sense Type
+       * @description Type of sense
+       */
+      sense_type: string;
+    };
+    /**
+     * ListResponse
+     * @description Generic paginated list response.
+     */
+    ListResponse: {
+      /**
+       * Items
+       * @description List of items
+       */
+      items: unknown[];
+      /**
+       * Total
+       * @description Total number of items
+       */
+      total: number;
+      /**
+       * Limit
+       * @description Limit applied
+       */
+      limit: number;
+      /**
+       * Offset
+       * @description Offset applied
+       */
+      offset: number;
+    };
+    /**
+     * MergeResultResponse
+     * @description Response with merge operation results
+     */
+    MergeResultResponse: {
+      /**
+       * Proposal Id
+       * @description ID of the merged proposal
+       */
+      proposal_id: string;
+      /**
+       * Changeset Id
+       * @description ID of the merged changeset
+       */
+      changeset_id: string;
+      /**
+       * Merged At
+       * Format: date-time
+       * @description When the merge occurred
+       */
+      merged_at: string;
+      /**
+       * Events Applied
+       * @description Number of change events applied
+       */
+      events_applied: number;
+      /**
+       * Conflicts Resolved
+       * @description Number of conflicts resolved
+       */
+      conflicts_resolved: number;
+    };
+    /**
+     * MergeStrategy
+     * @description Strategy for resolving conflicts during merge.
+     * @enum {string}
+     */
+    MergeStrategy: "last_write_wins" | "base_value_wins" | "manual";
+    /**
+     * NeighborsResponse
+     * @description Response containing neighbor nodes.
+     */
+    NeighborsResponse: {
+      /**
+       * Node Id
+       * @description ID of the queried node
+       */
+      node_id: string;
+      /**
+       * Direction
+       * @description Direction of traversal: 'in', 'out', or 'both'
+       */
+      direction: string;
+      /**
+       * Neighbors
+       * @description List of neighboring node IDs
+       */
+      neighbors: string[];
+    };
+    /**
+     * PathResultResponse
+     * @description Response containing a single path between two nodes.
+     */
+    PathResultResponse: {
+      /**
+       * Source Id
+       * @description ID of the starting node
+       */
+      source_id: string;
+      /**
+       * Target Id
+       * @description ID of the ending node
+       */
+      target_id: string;
+      /**
+       * Nodes
+       * @description Ordered list of node IDs from source to target
+       */
+      nodes: string[];
+      /**
+       * Distance
+       * @description Number of edges in the path
+       */
+      distance: number;
+      /**
+       * Relationships
+       * @description Relationship types traversed along the path
+       */
+      relationships: string[];
+    };
+    /**
+     * PipelineConfigurationCreate
+     * @description Request to create a new pipeline configuration.
+     */
+    PipelineConfigurationCreate: {
+      /**
+       * Pipeline
+       * @description Pipeline identifier/slug for categorization
+       */
+      pipeline: string;
+      /**
+       * Title
+       * @description Human-readable title for the pipeline
+       */
+      title: string;
+      /**
+       * Provider
+       * @description LLM provider name (openai, anthropic)
+       */
+      provider: string;
+      /**
+       * Model
+       * @description Model identifier (e.g., gpt-4, claude-opus)
+       */
+      model: string;
+      /**
+       * Config
+       * @description Provider-specific configuration
+       */
+      config?: {
+        [key: string]: unknown;
+      };
+      /**
+       * System Prompt
+       * @description System prompt to guide model behavior
+       */
+      system_prompt: string;
+      /**
+       * User Prompt
+       * @description User message template with {text} placeholder
+       */
+      user_prompt: string;
+      /**
+       * Enabled
+       * @description Whether this configuration is active
+       * @default true
+       */
+      enabled: boolean;
+    };
+    /**
+     * PipelineConfigurationResponse
+     * @description Response containing pipeline configuration data.
+     */
+    PipelineConfigurationResponse: {
+      /**
+       * Id
+       * @description Unique identifier
+       */
+      id: string;
+      /**
+       * Pipeline
+       * @description Pipeline identifier/slug
+       */
+      pipeline: string;
+      /**
+       * Title
+       * @description Human-readable title
+       */
+      title: string;
+      /**
+       * Provider
+       * @description LLM provider name
+       */
+      provider: string;
+      /**
+       * Model
+       * @description Model identifier
+       */
+      model: string;
+      /**
+       * Config
+       * @description Provider-specific configuration
+       */
+      config?: {
+        [key: string]: unknown;
+      };
+      /**
+       * System Prompt
+       * @description System prompt
+       */
+      system_prompt: string;
+      /**
+       * User Prompt
+       * @description User message template
+       */
+      user_prompt: string;
+      /**
+       * Version
+       * @description Configuration version number
+       */
+      version: number;
+      /**
+       * Enabled
+       * @description Whether this configuration is active
+       */
+      enabled: boolean;
+      /**
+       * Created At
+       * Format: date-time
+       * @description ISO 8601 creation timestamp
+       */
+      created_at: string;
+      /**
+       * Last Updated
+       * Format: date-time
+       * @description ISO 8601 last update timestamp
+       */
+      last_updated: string;
+    };
+    /**
+     * PipelineConfigurationUpdate
+     * @description Request to update a pipeline configuration.
+     */
+    PipelineConfigurationUpdate: {
+      /**
+       * Title
+       * @description Updated title
+       */
+      title?: string | null;
+      /**
+       * Provider
+       * @description Updated provider
+       */
+      provider?: string | null;
+      /**
+       * Model
+       * @description Updated model
+       */
+      model?: string | null;
+      /**
+       * Config
+       * @description Updated configuration
+       */
+      config?: {
+        [key: string]: unknown;
+      } | null;
+      /**
+       * System Prompt
+       * @description Updated system prompt
+       */
+      system_prompt?: string | null;
+      /**
+       * User Prompt
+       * @description Updated user prompt
+       */
+      user_prompt?: string | null;
+      /**
+       * Enabled
+       * @description Updated enabled status
+       */
+      enabled?: boolean | null;
+    };
+    /**
+     * PipelineExecuteRequest
+     * @description Request to execute a pipeline.
+     */
+    PipelineExecuteRequest: {
+      /**
+       * Input Text
+       * @description Input text to process
+       */
+      input_text: string;
+    };
+    /**
+     * PropertyDefinitionCreateRequest
+     * @description Request to create a new property definition.
+     */
+    PropertyDefinitionCreateRequest: {
+      /**
+       * Identifier
+       * @description Machine-readable identifier
+       */
+      identifier: string;
+      /**
+       * Title
+       * @description Display name for the property
+       */
+      title: string;
+      /**
+       * Description
+       * @description Optional longer description
+       */
+      description?: string | null;
+    };
+    /**
+     * PropertyDefinitionResponse
+     * @description Response containing property definition data.
+     */
+    PropertyDefinitionResponse: {
+      /**
+       * Id
+       * @description Unique identifier
+       */
+      id: string;
+      /**
+       * Identifier
+       * @description Machine-readable identifier
+       */
+      identifier: string;
+      /**
+       * Title
+       * @description Display name
+       */
+      title: string;
+      /**
+       * Description
+       * @description Optional description
+       */
+      description?: string | null;
+      /**
+       * Is Relevant
+       * @description Relevance flag (None=not evaluated, True=relevant, False=irrelevant)
+       */
+      is_relevant?: boolean | null;
+      /**
+       * Created At
+       * @description Creation timestamp
+       */
+      created_at?: string | null;
+      /**
+       * Last Modified
+       * @description Last modification timestamp
+       */
+      last_modified?: string | null;
+      /**
+       * Version
+       * @description Version number for optimistic concurrency control
+       * @default 1
+       */
+      version: number;
+    };
+    /**
+     * PropertyDefinitionUpdateRequest
+     * @description Request to update a property definition.
+     */
+    PropertyDefinitionUpdateRequest: {
+      /**
+       * Title
+       * @description New title
+       */
+      title?: string | null;
+      /**
+       * Description
+       * @description New description
+       */
+      description?: string | null;
+    };
+    /**
+     * ProposalResponse
+     * @description Response representing a proposal
+     */
+    ProposalResponse: {
+      /**
+       * Id
+       * @description Unique identifier of the proposal
+       */
+      id: string;
+      /**
+       * Changeset Id
+       * @description ID of the associated changeset
+       */
+      changeset_id: string;
+      /** @description Current state (open, approved, rejected, merged) */
+      state: components["schemas"]["ProposalState"];
+      /**
+       * Submitted At
+       * Format: date-time
+       * @description When the proposal was submitted
+       */
+      submitted_at: string;
+      /**
+       * Reviewed At
+       * @description When the proposal was reviewed
+       */
+      reviewed_at?: string | null;
+      /**
+       * Reviewer Notes
+       * @description Notes from reviewer
+       */
+      reviewer_notes?: string | null;
+    };
+    /**
+     * ProposalState
+     * @description Valid states for a proposal.
+     * @enum {string}
+     */
+    ProposalState: "open" | "approved" | "rejected" | "merged";
+    /**
+     * ReferenceRelationSchema
+     * @description Response containing a single reference relationship.
+     */
+    ReferenceRelationSchema: {
+      /**
+       * Subject Uri
+       * @description Source concept URI
+       */
+      subject_uri: string;
+      /**
+       * Predicate
+       * @description Relationship type
+       */
+      predicate: string;
+      /**
+       * Object Uri
+       * @description Target concept URI
+       */
+      object_uri: string;
+      /**
+       * Weight
+       * @description Optional relationship weight
+       */
+      weight?: number | null;
+      /**
+       * Source
+       * @description Reference source name
+       */
+      source: string;
+    };
+    /**
+     * ReferenceRelationsRequest
+     * @description Request to retrieve relationships for a reference URI.
+     */
+    ReferenceRelationsRequest: {
+      /**
+       * Uri
+       * @description Reference URI
+       */
+      uri: string;
+      /**
+       * Limit
+       * @description Maximum relations to return
+       * @default 10
+       */
+      limit: number;
+      /**
+       * Sources
+       * @description Specific sources to query (if None, queries all available)
+       */
+      sources?: string[] | null;
+    };
+    /**
+     * ReferenceRelationsResponseSchema
+     * @description Response containing relationships aggregated from multiple sources.
+     */
+    ReferenceRelationsResponseSchema: {
+      /**
+       * Uri
+       * @description The URI that was queried
+       */
+      uri: string;
+      /**
+       * Relations
+       * @description Aggregated relationships from all sources
+       */
+      relations?: components["schemas"]["ReferenceRelationSchema"][];
+      /**
+       * Sources Queried
+       * @description Names of sources that were queried
+       */
+      sources_queried?: string[];
+      /**
+       * Sources Failed
+       * @description Names of sources that failed or were unavailable
+       */
+      sources_failed?: string[];
+      /**
+       * Total Relations
+       * @description Total number of relations returned
+       * @default 0
+       */
+      total_relations: number;
+    };
+    /**
+     * ReferenceResultSchema
+     * @description Response containing a single reference search result.
+     */
+    ReferenceResultSchema: {
+      /**
+       * Uri
+       * @description Unique URI for this resource
+       */
+      uri: string;
+      /**
+       * Label
+       * @description Human-readable label
+       */
+      label: string;
+      /**
+       * Description
+       * @description Optional description
+       */
+      description?: string | null;
+      /**
+       * Confidence
+       * @description Confidence score (0.0-1.0)
+       * @default 1
+       */
+      confidence: number;
+      /**
+       * Source
+       * @description Reference source name
+       */
+      source: string;
+    };
+    /**
+     * ReferenceSearchRequest
+     * @description Request to search for references across available sources.
+     */
+    ReferenceSearchRequest: {
+      /**
+       * Term
+       * @description Search term
+       */
+      term: string;
+      /**
+       * Limit
+       * @description Maximum results per source
+       * @default 10
+       */
+      limit: number;
+      /**
+       * Sources
+       * @description Specific sources to search (if None, searches all available)
+       */
+      sources?: string[] | null;
+    };
+    /**
+     * ReferenceSearchResponseSchema
+     * @description Response containing search results aggregated from multiple sources.
+     */
+    ReferenceSearchResponseSchema: {
+      /**
+       * Term
+       * @description The search term that was executed
+       */
+      term: string;
+      /**
+       * Results
+       * @description Aggregated results from all sources
+       */
+      results?: components["schemas"]["ReferenceResultSchema"][];
+      /**
+       * Sources Searched
+       * @description Names of sources that were searched
+       */
+      sources_searched?: string[];
+      /**
+       * Sources Failed
+       * @description Names of sources that failed or were unavailable
+       */
+      sources_failed?: string[];
+      /**
+       * Total Results
+       * @description Total number of results returned
+       * @default 0
+       */
+      total_results: number;
+    };
+    /**
+     * ReferenceSourceStatusSchema
+     * @description Status information for a single reference source.
+     */
+    ReferenceSourceStatusSchema: {
+      /**
+       * Name
+       * @description Source name
+       */
+      name: string;
+      /**
+       * Available
+       * @description Whether source is currently available
+       */
+      available: boolean;
+      /**
+       * Last Checked
+       * @description ISO 8601 timestamp of last availability check
+       */
+      last_checked?: string | null;
+    };
+    /**
+     * ReferenceStatusResponseSchema
+     * @description Response containing status of all reference sources.
+     */
+    ReferenceStatusResponseSchema: {
+      /**
+       * Sources
+       * @description Status of each reference source
+       */
+      sources?: components["schemas"]["ReferenceSourceStatusSchema"][];
+      /**
+       * Sources Available
+       * @description Count of available sources
+       * @default 0
+       */
+      sources_available: number;
+      /**
+       * Timestamp
+       * @description ISO 8601 timestamp of this status check
+       */
+      timestamp: string;
+    };
+    /**
+     * RejectProposalRequest
+     * @description Request to reject a proposal
+     */
+    RejectProposalRequest: {
+      /**
+       * Reason
+       * @description Reason for rejection
+       */
+      reason: string;
+    };
+    /**
+     * RelationshipCreateRequest
+     * @description Request to create a new relationship.
+     */
+    RelationshipCreateRequest: {
+      /**
+       * Source Id
+       * @description ID of source entity
+       */
+      source_id: string;
+      /**
+       * Target Id
+       * @description ID of target entity
+       */
+      target_id: string;
+      /**
+       * Property Definition Id
+       * @description ID of property definition (relationship type)
+       */
+      property_definition_id: string;
+    };
+    /**
+     * RelationshipResponse
+     * @description Response containing relationship data.
+     */
+    RelationshipResponse: {
+      /**
+       * Id
+       * @description Unique identifier
+       */
+      id: string;
+      /**
+       * Source Id
+       * @description Source entity ID
+       */
+      source_id: string;
+      /**
+       * Target Id
+       * @description Target entity ID
+       */
+      target_id: string;
+      /**
+       * Property Definition Id
+       * @description Property definition ID (relationship type)
+       */
+      property_definition_id: string;
+      /**
+       * Created At
+       * @description Creation timestamp
+       */
+      created_at?: string | null;
+    };
+    /**
+     * ResolveConflictsRequest
+     * @description Request to resolve conflicts in a proposal
+     */
+    ResolveConflictsRequest: {
+      /**
+       * Resolutions
+       * @description Mapping of entity_id -> {field_name: resolved_value}
+       */
+      resolutions: {
+        [key: string]: {
+          [key: string]: unknown;
+        };
+      };
+    };
+    /**
+     * SPARQLRequest
+     * @description Request to execute a SPARQL query.
+     */
+    SPARQLRequest: {
+      /**
+       * Query
+       * @description SPARQL SELECT query string (max 10000 characters)
+       */
+      query: string;
+    };
+    /**
+     * SPARQLResponse
+     * @description Response from SPARQL query execution.
+     */
+    SPARQLResponse: {
+      /**
+       * Results
+       * @description Query result bindings
+       */
+      results: {
+        [key: string]: unknown;
+      }[];
+      /**
+       * Triple Count
+       * @description Total number of triples in the graph
+       */
+      triple_count: number;
+    };
+    /**
+     * SubgraphResultResponse
+     * @description Response containing depth-based subgraph extraction result.
+     */
+    SubgraphResultResponse: {
+      /**
+       * Center Node Id
+       * @description ID of the center node
+       */
+      center_node_id: string;
+      /**
+       * Node Ids
+       * @description IDs of all nodes in the subgraph
+       */
+      node_ids: string[];
+      /**
+       * Edge Ids
+       * @description Edges connecting nodes in the subgraph as (source, target) tuples
+       */
+      edge_ids: [string, string][];
+      /**
+       * Node Count
+       * @description Number of nodes in the subgraph
+       */
+      node_count: number;
+      /**
+       * Edge Count
+       * @description Number of edges in the subgraph
+       */
+      edge_count: number;
+      /**
+       * Depth
+       * @description Maximum traversal depth from center node
+       */
+      depth: number;
+      /**
+       * Extracted At
+       * Format: date-time
+       * @description Timestamp when the subgraph was extracted
+       */
+      extracted_at: string;
+    };
+    /**
+     * SyncResultResponse
+     * @description Response with synchronization operation results
+     */
+    SyncResultResponse: {
+      /**
+       * Pushed
+       * @description Number of events pushed
+       */
+      pushed: number;
+      /**
+       * Pulled
+       * @description Number of events pulled
+       */
+      pulled: number;
+      /**
+       * Errors
+       * @description Any errors encountered
+       */
+      errors?: string[];
+    };
+    /**
+     * SyncStatusResponse
+     * @description Response with synchronization status
+     */
+    SyncStatusResponse: {
+      /**
+       * Unprocessed Count
+       * @description Number of unprocessed (unsynced) changes
+       */
+      unprocessed_count: number;
+      /**
+       * Is Configured
+       * @description Whether remote sync is configured
+       */
+      is_configured: boolean;
+      /**
+       * Last Pushed At
+       * @description ISO timestamp of last successful push
+       */
+      last_pushed_at?: string | null;
+      /**
+       * Last Pulled At
+       * @description ISO timestamp of last successful pull
+       */
+      last_pulled_at?: string | null;
+    };
+    /**
+     * SystemHealthResponse
+     * @description Response containing system health status and component readiness.
+     */
+    SystemHealthResponse: {
+      /**
+       * Status
+       * @description Overall health status: "healthy", "degraded", or "unhealthy"
+       */
+      status: string;
+      /**
+       * Database Connected
+       * @description Whether database is accessible
+       */
+      database_connected: boolean;
+      /**
+       * Nlp Pipeline Ready
+       * @description Whether spaCy NLP model is loaded and ready
+       */
+      nlp_pipeline_ready: boolean;
+      /**
+       * Embedding Model Loaded
+       * @description Whether embedding model is loaded in memory
+       */
+      embedding_model_loaded: boolean;
+      /**
+       * Llm Providers Available
+       * @description List of available LLM provider names
+       */
+      llm_providers_available?: string[];
+      /**
+       * Uptime Seconds
+       * @description System uptime in seconds since startup
+       */
+      uptime_seconds: number;
+      /**
+       * Issues
+       * @description List of identified health issues (if any)
+       */
+      issues?: string[];
+      /**
+       * Checked At
+       * Format: date-time
+       * @description Timestamp when health check was performed
+       */
+      checked_at: string;
+    };
+    /**
+     * TaxonomyCreateRequest
+     * @description Request to create a new taxonomy.
+     */
+    TaxonomyCreateRequest: {
+      /**
+       * Title
+       * @description Display name for the taxonomy
+       */
+      title: string;
+      /**
+       * Description
+       * @description Optional longer description
+       */
+      description?: string | null;
+    };
+    /**
+     * TaxonomyResponse
+     * @description Response containing taxonomy data.
+     */
+    TaxonomyResponse: {
+      /**
+       * Id
+       * @description Unique identifier
+       */
+      id: string;
+      /**
+       * Title
+       * @description Display name
+       */
+      title: string;
+      /**
+       * Description
+       * @description Optional description
+       */
+      description?: string | null;
+      /**
+       * Created At
+       * @description Creation timestamp
+       */
+      created_at?: string | null;
+      /**
+       * Last Modified
+       * @description Last modification timestamp
+       */
+      last_modified?: string | null;
+      /**
+       * Version
+       * @description Version number for optimistic concurrency control
+       * @default 1
+       */
+      version: number;
+    };
+    /**
+     * TaxonomyUpdateRequest
+     * @description Request to update a taxonomy.
+     */
+    TaxonomyUpdateRequest: {
+      /**
+       * Title
+       * @description New title for the taxonomy
+       */
+      title?: string | null;
+      /**
+       * Description
+       * @description New description
+       */
+      description?: string | null;
+    };
+    /**
+     * TripleCountResponse
+     * @description Response containing RDF triple count.
+     */
+    TripleCountResponse: {
+      /**
+       * Count
+       * @description Number of RDF triples in the graph
+       */
+      count: number;
+    };
+    /**
+     * TripleResponse
+     * @description Response containing a single RDF triple.
+     */
+    TripleResponse: {
+      /**
+       * Subject
+       * @description RDF subject
+       */
+      subject: string;
+      /**
+       * Predicate
+       * @description RDF predicate
+       */
+      predicate: string;
+      /**
+       * Object
+       * @description RDF object
+       */
+      object: string;
+    };
+    /**
+     * TriplesResponse
+     * @description Response containing RDF triples.
+     */
+    TriplesResponse: {
+      /**
+       * Triples
+       * @description List of RDF triples
+       */
+      triples: components["schemas"]["TripleResponse"][];
+      /**
+       * Count
+       * @description Number of triples returned
+       */
+      count: number;
+    };
+    /** ValidationError */
+    ValidationError: {
+      /** Location */
+      loc: (string | number)[];
+      /** Message */
+      msg: string;
+      /** Error Type */
+      type: string;
+      /** Input */
+      input?: unknown;
+      /** Context */
+      ctx?: Record<string, never>;
+    };
+  };
+  responses: never;
+  parameters: never;
+  requestBodies: never;
+  headers: never;
+  pathItems: never;
 }
 export type $defs = Record<string, never>;
 export interface operations {
-    list_taxonomies_api_taxonomies_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ListResponse"];
-                };
-            };
-        };
-    };
-    create_taxonomy_api_taxonomies_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["TaxonomyCreateRequest"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["TaxonomyResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    get_taxonomy_api_taxonomies__taxonomy_id__get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                taxonomy_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["TaxonomyResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    update_taxonomy_api_taxonomies__taxonomy_id__put: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                taxonomy_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["TaxonomyUpdateRequest"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["TaxonomyResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    delete_taxonomy_api_taxonomies__taxonomy_id__delete: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                taxonomy_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    create_concept_scheme_api_taxonomies__taxonomy_id__schemes_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                taxonomy_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["ConceptSchemeCreateRequest"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ConceptSchemeResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    list_concept_schemes_api_schemes_get: {
-        parameters: {
-            query?: {
-                /** @description Optional taxonomy ID to filter by */
-                taxonomy_id?: string | null;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ListResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    get_concept_scheme_api_schemes__scheme_id__get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                scheme_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ConceptSchemeResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    update_concept_scheme_api_schemes__scheme_id__put: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                scheme_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["ConceptSchemeUpdateRequest"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ConceptSchemeResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    delete_concept_scheme_api_schemes__scheme_id__delete: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                scheme_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    create_class_api_schemes__scheme_id__classes_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                scheme_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["ClassCreateRequest"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ClassResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    list_classes_api_classes_get: {
-        parameters: {
-            query?: {
-                /** @description Optional concept scheme ID to filter by */
-                concept_scheme_id?: string | null;
-                /** @description Optional parent class ID to filter by */
-                parent_class_id?: string | null;
-                /** @description Maximum number of results */
-                limit?: number;
-                /** @description Number of results to skip */
-                offset?: number;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ListResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    get_class_api_classes__class_id__get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                class_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ClassResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    update_class_api_classes__class_id__put: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                class_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["ClassUpdateRequest"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ClassResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    delete_class_api_classes__class_id__delete: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                class_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    move_class_api_classes__class_id__move_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                class_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["ClassMoveRequest"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ClassResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    list_relationships_api_relationships_get: {
-        parameters: {
-            query?: {
-                /** @description Optional source entity ID to filter by */
-                source_id?: string | null;
-                /** @description Optional target entity ID to filter by */
-                target_id?: string | null;
-                /** @description Optional property definition ID to filter by */
-                property_id?: string | null;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ListResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    create_relationship_api_relationships_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["RelationshipCreateRequest"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["RelationshipResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    get_relationship_api_relationships__relationship_id__get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                relationship_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["RelationshipResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    delete_relationship_api_relationships__relationship_id__delete: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                relationship_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    list_property_definitions_api_properties_get: {
-        parameters: {
-            query?: {
-                /** @description Optional filter for relevant properties */
-                is_relevant?: boolean | null;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ListResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    create_property_definition_api_properties_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["PropertyDefinitionCreateRequest"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["PropertyDefinitionResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    get_property_definition_api_properties__property_id__get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                property_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["PropertyDefinitionResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    update_property_definition_api_properties__property_id__put: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                property_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["PropertyDefinitionUpdateRequest"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["PropertyDefinitionResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    delete_property_definition_api_properties__property_id__delete: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                property_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    build_graph_api_graph_build_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["KnowledgeGraphResponse"];
-                };
-            };
-        };
-    };
-    get_metrics_api_graph_metrics_get: {
-        parameters: {
-            query?: {
-                /** @description Centrality algorithm to use */
-                algorithm?: string;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["GraphMetricsResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    get_degree_distribution_api_graph_degree_distribution_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["DegreeDistributionResponse"];
-                };
-            };
-        };
-    };
-    get_shortest_path_api_graph_paths_shortest_get: {
-        parameters: {
-            query: {
-                /** @description ID of the starting node */
-                source_id: string;
-                /** @description ID of the ending node */
-                target_id: string;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["PathResultResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    get_all_paths_api_graph_paths_all_get: {
-        parameters: {
-            query: {
-                /** @description ID of the starting node */
-                source_id: string;
-                /** @description ID of the ending node */
-                target_id: string;
-                /** @description Maximum path length to explore */
-                max_depth?: number;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["PathResultResponse"][];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    get_centrality_api_graph_centrality_get: {
-        parameters: {
-            query?: {
-                /** @description Centrality algorithm to use */
-                algorithm?: string;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["CentralityResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    get_communities_api_graph_communities_get: {
-        parameters: {
-            query?: {
-                /** @description Community detection algorithm to use */
-                algorithm?: string;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["CommunitiesResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    get_neighbors_api_graph_nodes__node_id__neighbors_get: {
-        parameters: {
-            query?: {
-                /** @description Direction: 'in', 'out', or 'both' */
-                direction?: "in" | "out" | "both";
-                /** @description Maximum traversal depth from center node */
-                depth?: number;
-            };
-            header?: never;
-            path: {
-                node_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["NeighborsResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    get_subgraph_api_graph_subgraph_get: {
-        parameters: {
-            query: {
-                /** @description Comma-separated list of node IDs to extract subgraph for */
-                nodes: string;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["KnowledgeGraphResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    get_subgraph_by_depth_api_graph_nodes__node_id__subgraph_get: {
-        parameters: {
-            query?: {
-                /** @description Maximum traversal depth from center node */
-                depth?: number;
-            };
-            header?: never;
-            path: {
-                node_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["SubgraphResultResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    check_cycle_api_graph_cycle_check_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["CycleCheckRequest"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["CycleCheckResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    execute_sparql_api_graph_sparql_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["SPARQLRequest"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["SPARQLResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    get_rdf_triples_api_graph_rdf_triples_get: {
-        parameters: {
-            query?: {
-                /** @description Optional RDF subject to filter */
-                subject?: string | null;
-                /** @description Optional RDF predicate to filter */
-                predicate?: string | null;
-                /** @description Optional RDF object to filter */
-                object?: string | null;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["TriplesResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    get_rdf_triple_count_api_graph_rdf_count_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["TripleCountResponse"];
-                };
-            };
-        };
-    };
-    extract_entities_api_extract_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["ExtractRequest"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ExtractionResultSchema"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    analyze_text_api_analyze_text_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["AnalyzeTextRequest"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ExtractionResultSchema"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    enrich_from_references_api_enrich_from_references_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["EnrichFromReferencesRequest"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ExtractionResultSchema"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    list_pipeline_configurations_api_pipelines_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["PipelineConfigurationResponse"][];
-                };
-            };
-        };
-    };
-    create_pipeline_configuration_api_pipelines_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["PipelineConfigurationCreate"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["PipelineConfigurationResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    get_pipeline_configuration_api_pipelines__pipeline_id__get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                pipeline_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["PipelineConfigurationResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    update_pipeline_configuration_api_pipelines__pipeline_id__put: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                pipeline_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["PipelineConfigurationUpdate"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["PipelineConfigurationResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    delete_pipeline_configuration_api_pipelines__pipeline_id__delete: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                pipeline_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    execute_pipeline_api_pipelines__pipeline_id__execute_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                pipeline_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["PipelineExecuteRequest"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ExecutionResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    get_pipeline_executions_api_pipelines__pipeline_id__executions_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                pipeline_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ExecutionResponse"][];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    reference_status_api_reference_status_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ReferenceStatusResponseSchema"];
-                };
-            };
-        };
-    };
-    search_references_api_reference_search_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["ReferenceSearchRequest"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ReferenceSearchResponseSchema"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    get_reference_relations_api_reference_relations_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["ReferenceRelationsRequest"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ReferenceRelationsResponseSchema"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    get_change_history_all_api_v1_versioning_changes_get: {
-        parameters: {
-            query?: {
-                limit?: number;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ChangeHistoryResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    get_change_history_by_entity_api_v1_versioning_changes__entity_id__get: {
-        parameters: {
-            query?: {
-                limit?: number;
-            };
-            header?: never;
-            path: {
-                entity_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ChangeHistoryResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    list_versions_api_v1_versioning_versions__entity_id__get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                entity_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["EntityVersionResponse"][];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    get_entity_version_api_v1_versioning_versions__entity_id___version__get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                entity_id: string;
-                version: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["EntityVersionResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    create_changeset_api_v1_versioning_changesets_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["ChangesetCreateRequest"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ChangesetResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    get_changeset_api_v1_versioning_changesets__changeset_id__get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                changeset_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ChangesetResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    stage_changeset_api_v1_versioning_changesets__changeset_id__stage_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                changeset_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ChangesetResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    submit_proposal_api_v1_versioning_changesets__changeset_id__submit_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                changeset_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ProposalResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    approve_proposal_api_v1_versioning_proposals__proposal_id__approve_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                proposal_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ProposalResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    reject_proposal_api_v1_versioning_proposals__proposal_id__reject_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                proposal_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["RejectProposalRequest"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ProposalResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    detect_conflicts_api_v1_versioning_proposals__proposal_id__conflicts_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                proposal_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ConflictReportResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    auto_resolve_conflicts_api_v1_versioning_proposals__proposal_id__auto_resolve_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                proposal_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["AutoResolveConflictsRequest"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ConflictReportResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    resolve_conflicts_api_v1_versioning_proposals__proposal_id__resolve_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                proposal_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["ResolveConflictsRequest"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ConflictReportResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    merge_proposal_api_v1_versioning_proposals__proposal_id__merge_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                proposal_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["MergeResultResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    get_sync_status_api_v1_versioning_sync_status_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["SyncStatusResponse"];
-                };
-            };
-        };
-    };
-    push_changes_api_v1_versioning_sync_push_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["SyncResultResponse"];
-                };
-            };
-        };
-    };
-    pull_changes_api_v1_versioning_sync_pull_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["SyncResultResponse"];
-                };
-            };
-        };
-    };
-    check_health_api_v1_admin_health_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["SystemHealthResponse"];
-                };
-            };
-        };
-    };
-    get_configuration_api_v1_admin_configuration_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["AppConfigurationResponse"];
-                };
-            };
-        };
-    };
-    update_configuration_api_v1_admin_configuration__section__patch: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                section: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["ConfigSectionUpdateRequest"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["AppConfigurationResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    list_tasks_api_v1_admin_tasks_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["BackgroundTaskResponse"][];
-                };
-            };
-        };
-    };
-    get_task_api_v1_admin_tasks__task_id__get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                task_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["BackgroundTaskResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
+  list_taxonomies_api_taxonomies_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ListResponse"];
+        };
+      };
+    };
+  };
+  create_taxonomy_api_taxonomies_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["TaxonomyCreateRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["TaxonomyResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  get_taxonomy_api_taxonomies__taxonomy_id__get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        taxonomy_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["TaxonomyResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  update_taxonomy_api_taxonomies__taxonomy_id__put: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        taxonomy_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["TaxonomyUpdateRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["TaxonomyResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  delete_taxonomy_api_taxonomies__taxonomy_id__delete: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        taxonomy_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  create_concept_scheme_api_taxonomies__taxonomy_id__schemes_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        taxonomy_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["ConceptSchemeCreateRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ConceptSchemeResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  list_concept_schemes_api_schemes_get: {
+    parameters: {
+      query?: {
+        /** @description Optional taxonomy ID to filter by */
+        taxonomy_id?: string | null;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ListResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  get_concept_scheme_api_schemes__scheme_id__get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        scheme_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ConceptSchemeResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  update_concept_scheme_api_schemes__scheme_id__put: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        scheme_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["ConceptSchemeUpdateRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ConceptSchemeResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  delete_concept_scheme_api_schemes__scheme_id__delete: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        scheme_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  create_class_api_schemes__scheme_id__classes_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        scheme_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["ClassCreateRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ClassResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  list_classes_api_classes_get: {
+    parameters: {
+      query?: {
+        /** @description Optional concept scheme ID to filter by */
+        concept_scheme_id?: string | null;
+        /** @description Optional parent class ID to filter by */
+        parent_class_id?: string | null;
+        /** @description Maximum number of results */
+        limit?: number;
+        /** @description Number of results to skip */
+        offset?: number;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ListResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  get_class_api_classes__class_id__get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        class_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ClassResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  update_class_api_classes__class_id__put: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        class_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["ClassUpdateRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ClassResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  delete_class_api_classes__class_id__delete: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        class_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  move_class_api_classes__class_id__move_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        class_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["ClassMoveRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ClassResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  list_relationships_api_relationships_get: {
+    parameters: {
+      query?: {
+        /** @description Optional source entity ID to filter by */
+        source_id?: string | null;
+        /** @description Optional target entity ID to filter by */
+        target_id?: string | null;
+        /** @description Optional property definition ID to filter by */
+        property_id?: string | null;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ListResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  create_relationship_api_relationships_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["RelationshipCreateRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["RelationshipResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  get_relationship_api_relationships__relationship_id__get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        relationship_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["RelationshipResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  delete_relationship_api_relationships__relationship_id__delete: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        relationship_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  list_property_definitions_api_properties_get: {
+    parameters: {
+      query?: {
+        /** @description Optional filter for relevant properties */
+        is_relevant?: boolean | null;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ListResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  create_property_definition_api_properties_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["PropertyDefinitionCreateRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["PropertyDefinitionResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  get_property_definition_api_properties__property_id__get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        property_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["PropertyDefinitionResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  update_property_definition_api_properties__property_id__put: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        property_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["PropertyDefinitionUpdateRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["PropertyDefinitionResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  delete_property_definition_api_properties__property_id__delete: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        property_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  build_graph_api_graph_build_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["KnowledgeGraphResponse"];
+        };
+      };
+    };
+  };
+  get_metrics_api_graph_metrics_get: {
+    parameters: {
+      query?: {
+        /** @description Centrality algorithm to use */
+        algorithm?: string;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["GraphMetricsResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  get_degree_distribution_api_graph_degree_distribution_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["DegreeDistributionResponse"];
+        };
+      };
+    };
+  };
+  get_shortest_path_api_graph_paths_shortest_get: {
+    parameters: {
+      query: {
+        /** @description ID of the starting node */
+        source_id: string;
+        /** @description ID of the ending node */
+        target_id: string;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["PathResultResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  get_all_paths_api_graph_paths_all_get: {
+    parameters: {
+      query: {
+        /** @description ID of the starting node */
+        source_id: string;
+        /** @description ID of the ending node */
+        target_id: string;
+        /** @description Maximum path length to explore */
+        max_depth?: number;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["PathResultResponse"][];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  get_centrality_api_graph_centrality_get: {
+    parameters: {
+      query?: {
+        /** @description Centrality algorithm to use */
+        algorithm?: string;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["CentralityResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  get_communities_api_graph_communities_get: {
+    parameters: {
+      query?: {
+        /** @description Community detection algorithm to use */
+        algorithm?: string;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["CommunitiesResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  get_neighbors_api_graph_nodes__node_id__neighbors_get: {
+    parameters: {
+      query?: {
+        /** @description Direction: 'in', 'out', or 'both' */
+        direction?: "in" | "out" | "both";
+        /** @description Maximum traversal depth from center node */
+        depth?: number;
+      };
+      header?: never;
+      path: {
+        node_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["NeighborsResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  get_subgraph_api_graph_subgraph_get: {
+    parameters: {
+      query: {
+        /** @description Comma-separated list of node IDs to extract subgraph for */
+        nodes: string;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["KnowledgeGraphResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  get_subgraph_by_depth_api_graph_nodes__node_id__subgraph_get: {
+    parameters: {
+      query?: {
+        /** @description Maximum traversal depth from center node */
+        depth?: number;
+      };
+      header?: never;
+      path: {
+        node_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["SubgraphResultResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  check_cycle_api_graph_cycle_check_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["CycleCheckRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["CycleCheckResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  execute_sparql_api_graph_sparql_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["SPARQLRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["SPARQLResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  get_rdf_triples_api_graph_rdf_triples_get: {
+    parameters: {
+      query?: {
+        /** @description Optional RDF subject to filter */
+        subject?: string | null;
+        /** @description Optional RDF predicate to filter */
+        predicate?: string | null;
+        /** @description Optional RDF object to filter */
+        object?: string | null;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["TriplesResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  get_rdf_triple_count_api_graph_rdf_count_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["TripleCountResponse"];
+        };
+      };
+    };
+  };
+  extract_entities_api_extract_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["ExtractRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ExtractionResultSchema"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  analyze_text_api_analyze_text_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["AnalyzeTextRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ExtractionResultSchema"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  enrich_from_references_api_enrich_from_references_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["EnrichFromReferencesRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ExtractionResultSchema"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  list_pipeline_configurations_api_pipelines_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["PipelineConfigurationResponse"][];
+        };
+      };
+    };
+  };
+  create_pipeline_configuration_api_pipelines_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["PipelineConfigurationCreate"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["PipelineConfigurationResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  get_pipeline_configuration_api_pipelines__pipeline_id__get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        pipeline_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["PipelineConfigurationResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  update_pipeline_configuration_api_pipelines__pipeline_id__put: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        pipeline_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["PipelineConfigurationUpdate"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["PipelineConfigurationResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  delete_pipeline_configuration_api_pipelines__pipeline_id__delete: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        pipeline_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  execute_pipeline_api_pipelines__pipeline_id__execute_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        pipeline_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["PipelineExecuteRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ExecutionResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  get_pipeline_executions_api_pipelines__pipeline_id__executions_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        pipeline_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ExecutionResponse"][];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  reference_status_api_reference_status_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ReferenceStatusResponseSchema"];
+        };
+      };
+    };
+  };
+  search_references_api_reference_search_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["ReferenceSearchRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ReferenceSearchResponseSchema"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  get_reference_relations_api_reference_relations_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["ReferenceRelationsRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ReferenceRelationsResponseSchema"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  get_change_history_all_api_v1_versioning_changes_get: {
+    parameters: {
+      query?: {
+        limit?: number;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ChangeHistoryResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  get_change_history_by_entity_api_v1_versioning_changes__entity_id__get: {
+    parameters: {
+      query?: {
+        limit?: number;
+      };
+      header?: never;
+      path: {
+        entity_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ChangeHistoryResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  list_versions_api_v1_versioning_versions__entity_id__get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        entity_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["EntityVersionResponse"][];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  get_entity_version_api_v1_versioning_versions__entity_id___version__get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        entity_id: string;
+        version: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["EntityVersionResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  create_changeset_api_v1_versioning_changesets_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["ChangesetCreateRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ChangesetResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  get_changeset_api_v1_versioning_changesets__changeset_id__get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        changeset_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ChangesetResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  stage_changeset_api_v1_versioning_changesets__changeset_id__stage_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        changeset_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ChangesetResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  submit_proposal_api_v1_versioning_changesets__changeset_id__submit_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        changeset_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ProposalResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  approve_proposal_api_v1_versioning_proposals__proposal_id__approve_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        proposal_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ProposalResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  reject_proposal_api_v1_versioning_proposals__proposal_id__reject_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        proposal_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["RejectProposalRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ProposalResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  detect_conflicts_api_v1_versioning_proposals__proposal_id__conflicts_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        proposal_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ConflictReportResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  auto_resolve_conflicts_api_v1_versioning_proposals__proposal_id__auto_resolve_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        proposal_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["AutoResolveConflictsRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ConflictReportResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  resolve_conflicts_api_v1_versioning_proposals__proposal_id__resolve_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        proposal_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["ResolveConflictsRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ConflictReportResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  merge_proposal_api_v1_versioning_proposals__proposal_id__merge_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        proposal_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["MergeResultResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  get_sync_status_api_v1_versioning_sync_status_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["SyncStatusResponse"];
+        };
+      };
+    };
+  };
+  push_changes_api_v1_versioning_sync_push_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["SyncResultResponse"];
+        };
+      };
+    };
+  };
+  pull_changes_api_v1_versioning_sync_pull_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["SyncResultResponse"];
+        };
+      };
+    };
+  };
+  check_health_api_v1_admin_health_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["SystemHealthResponse"];
+        };
+      };
+    };
+  };
+  get_configuration_api_v1_admin_configuration_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["AppConfigurationResponse"];
+        };
+      };
+    };
+  };
+  update_configuration_api_v1_admin_configuration__section__patch: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        section: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["ConfigSectionUpdateRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["AppConfigurationResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  list_tasks_api_v1_admin_tasks_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["BackgroundTaskResponse"][];
+        };
+      };
+    };
+  };
+  get_task_api_v1_admin_tasks__task_id__get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        task_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["BackgroundTaskResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
 }

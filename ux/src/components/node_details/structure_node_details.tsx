@@ -171,7 +171,9 @@ export const StructureNodeDetails: React.FC<StructureNodeDetailsProps> = ({
                   if (lineage.length <= 4) {
                     return lineage.map((ancestorNode, index) => {
                       const isLast = index === lineage.length - 1;
-                      const icon = getIconForType(ancestorNode.node_type as string);
+                      const icon = getIconForType(
+                        ancestorNode.node_type as string,
+                      );
                       return (
                         <BreadcrumbItem
                           key={ancestorNode.id}

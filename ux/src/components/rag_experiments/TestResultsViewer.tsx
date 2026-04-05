@@ -125,7 +125,9 @@ export const TestResultsViewer: React.FC<TestResultsViewerProps> = ({
         },
       }),
       columnHelper.accessor(
-        (row) => (row as PipelineComparisonItem & { executed_at?: string }).executed_at,
+        (row) =>
+          (row as PipelineComparisonItem & { executed_at?: string })
+            .executed_at,
         {
           header: "Executed At",
           cell: (info) => {
@@ -188,7 +190,9 @@ export const TestResultsViewer: React.FC<TestResultsViewerProps> = ({
         result.f1_score !== null && result.f1_score !== undefined
           ? (result.f1_score * 100).toFixed(1) + "%"
           : "N/A",
-        (result.executed_at as string | undefined) ? new Date(result.executed_at as string).toISOString() : "Unknown",
+        (result.executed_at as string | undefined)
+          ? new Date(result.executed_at as string).toISOString()
+          : "Unknown",
       ]);
 
       const csvContent = [

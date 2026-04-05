@@ -265,7 +265,7 @@ export interface ModelInfo {
 export type SupportedModelsResponse = Record<string, unknown> & {
   models: ModelInfo[];
   default_model?: string;
-}
+};
 
 // NLP Reference types
 export interface ResponseFormat {

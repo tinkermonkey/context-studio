@@ -102,7 +102,11 @@ export class PredicateService extends BaseService {
     return this.withErrorContext(() => {
       this.validateRequired(data, "Predicate data");
       this.validateRequired(data.title, "Predicate title");
-      this.sanitizeString((data.title as unknown as string) || '', "Predicate title", 255);
+      this.sanitizeString(
+        (data.title as unknown as string) || "",
+        "Predicate title",
+        255,
+      );
 
       return this.postResource<PredicateOut>(ENDPOINTS.PREDICATES + "/", data);
     }, "create predicate");
@@ -133,7 +137,11 @@ export class PredicateService extends BaseService {
       this.validateRequired(data, "Predicate update data");
 
       if (data.title) {
-        this.sanitizeString((data.title as unknown as string) || '', "Predicate title", 255);
+        this.sanitizeString(
+          (data.title as unknown as string) || "",
+          "Predicate title",
+          255,
+        );
       }
 
       return this.putResource<PredicateOut>(

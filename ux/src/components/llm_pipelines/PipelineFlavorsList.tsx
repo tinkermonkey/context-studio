@@ -136,7 +136,9 @@ export const PipelineFlavorsList: React.FC<PipelineFlavorsListProps> = ({
                   data-testid={`pipeline-flavor-status-${flavor.id}`}
                 >
                   {flavor.enabled ? "Enabled" : "Disabled"} | Created:{" "}
-                  {flavor.created_at ? new Date(flavor.created_at).toLocaleDateString() : "Unknown"}
+                  {flavor.created_at
+                    ? new Date(flavor.created_at).toLocaleDateString()
+                    : "Unknown"}
                 </p>
               </div>
               <div className="flex gap-2">

@@ -225,7 +225,9 @@ export const SimilaritySearchTab: React.FC<SimilaritySearchTabProps> = ({
                 className="ml-4"
                 onClick={() =>
                   onClusterSelect(
-                    filteredResults.map((item) => item.predicate_id || "").filter(Boolean),
+                    filteredResults
+                      .map((item) => item.predicate_id || "")
+                      .filter(Boolean),
                   )
                 }
               >
