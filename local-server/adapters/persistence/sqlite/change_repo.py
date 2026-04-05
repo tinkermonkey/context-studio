@@ -596,6 +596,68 @@ class SQLiteChangeRepository:
 
             return changeset, proposal
 
+    def atomic_update_on_merge(
+        self,
+        changeset: DomainChangeset,
+        proposal: DomainProposal,
+        versions: list[DomainEntityVersion],
+    ) -> tuple[DomainChangeset, DomainProposal]:
+        """
+        Atomically update changeset, proposal, and save entity versions on merge.
+
+        The changeset and proposal state transition, along with all entity version
+        snapshots, are persisted within a single transaction. If any operation fails,
+        all changes are rolled back to maintain consistency between the merge state
+        and version snapshots.
+
+        Args:
+            changeset: The Changeset domain entity with transitioned state
+            proposal: The Proposal domain entity with transitioned state
+            versions: List of EntityVersion snapshots to persist for merged entities
+
+        Returns:
+            Tuple of (updated Changeset, updated Proposal)
+
+        Raises:
+            VersionNotFoundError: If the changeset or proposal does not exist
+        """
+        with self.session_factory() as session:
+            orm_changeset = session.get(Changeset, changeset.id)
+
+            if not orm_changeset:
+                raise VersionNotFoundError(f"Changeset not found: {changeset.id}")
+
+            orm_proposal = session.get(Proposal, proposal.id)
+
+            if not orm_proposal:
+                raise VersionNotFoundError(f"Proposal not found: {proposal.id}")
+
+            # Update changeset
+            orm_changeset.state = changeset.state.value
+            orm_changeset.updated_at = changeset.updated_at
+
+            # Update proposal
+            orm_proposal.state = proposal.state.value
+            orm_proposal.reviewed_at = proposal.reviewed_at
+            orm_proposal.reviewer_notes = proposal.reviewer_notes
+
+            # Save all entity versions within the same transaction
+            for version in versions:
+                orm_version = EntityVersion(
+                    entity_id=version.entity_id,
+                    version=version.version,
+                    state=version.state.value,
+                    snapshot=version.snapshot,
+                    created_at=version.created_at,
+                    parent_version=version.parent_version,
+                )
+                session.add(orm_version)
+
+            # Commit all changes atomically
+            session.commit()
+
+            return changeset, proposal
+
     # Helper methods for domain conversion
 
     def _to_domain_change_event(self, orm_event: ChangeEvent) -> DomainChangeEvent:

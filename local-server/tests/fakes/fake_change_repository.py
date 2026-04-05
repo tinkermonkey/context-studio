@@ -254,6 +254,23 @@ class FakeChangeRepository:
         self._proposals[proposal.id] = deepcopy(proposal)
         return deepcopy(changeset), deepcopy(proposal)
 
+    def atomic_update_on_merge(
+        self,
+        changeset: Changeset,
+        proposal: Proposal,
+        versions: list[EntityVersion],
+    ) -> tuple[Changeset, Proposal]:
+        """
+        Atomically update changeset, proposal, and save entity versions on merge.
+
+        Stores copies to prevent tests from relying on by-reference mutations.
+        """
+        self._changesets[changeset.id] = deepcopy(changeset)
+        self._proposals[proposal.id] = deepcopy(proposal)
+        for version in versions:
+            self._entity_versions[(version.entity_id, version.version)] = deepcopy(version)
+        return deepcopy(changeset), deepcopy(proposal)
+
     def save_conflict_resolutions(
         self, proposal_id: str, resolutions: dict[str, dict[str, object]]
     ) -> None:

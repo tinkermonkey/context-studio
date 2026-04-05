@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import logging
 import uuid
+from collections import defaultdict
 from datetime import datetime, timezone
 from typing import Optional
 
@@ -589,14 +590,13 @@ class VersioningService:
     def _create_merge_versions(
         self,
         changeset: Changeset,
-        proposal_id: str,
         stored_resolutions: dict[str, dict[str, object]],
-    ) -> None:
+    ) -> list[EntityVersion]:
         """
-        Create EntityVersion snapshots for all entities affected by a merged changeset.
+        Build EntityVersion snapshots for all entities affected by a merged changeset.
 
         Retrieves all change events in the changeset, groups them by entity_id,
-        and creates version snapshots by applying events in chronological order,
+        and builds version snapshots by applying events in chronological order,
         overlaying conflict resolutions for resolved fields.
 
         For each entity:
@@ -608,60 +608,72 @@ class VersioningService:
 
         Args:
             changeset: The Changeset entity being merged
-            proposal_id: ID of the proposal for looking up conflict resolutions
             stored_resolutions: Persisted conflict resolutions from detect_conflicts
 
+        Returns:
+            List of EntityVersion objects ready to persist
+
         Raises:
-            Any exception during version creation will propagate up to merge_proposal,
-            causing the merge to fail and rollback (at the adapter/transaction level)
+            Any exception propagates up to merge_proposal, where it will trigger
+            rollback of both the merge state transition and version snapshots
+            within the atomic transaction.
         """
         if not changeset.event_ids:
             _logger.debug(
                 "No events in changeset %s; skipping version creation", changeset.id
             )
-            return
+            return []
 
         # Get all change events for this changeset
         changeset_events = self._repo.get_changes_by_ids(changeset.event_ids)
 
-        # Group events by entity_id
-        events_by_entity: dict[str, list[ChangeEvent]] = {}
+        # Group events by entity_id using defaultdict
+        events_by_entity: dict[str, list[ChangeEvent]] = defaultdict(list)
         for event in changeset_events:
-            if event.entity_id not in events_by_entity:
-                events_by_entity[event.entity_id] = []
             events_by_entity[event.entity_id].append(event)
 
         # Sort events by timestamp within each entity
-        for entity_id in events_by_entity:
-            events_by_entity[entity_id].sort(key=lambda e: e.timestamp)
+        for entity_events in events_by_entity.values():
+            entity_events.sort(key=lambda e: e.timestamp)
 
-        # Create versions for each entity
+        # Build versions for each entity
+        versions = []
         for entity_id, entity_events in events_by_entity.items():
-            self._create_entity_version(entity_id, entity_events, stored_resolutions)
+            version = self._create_entity_version(entity_id, entity_events, stored_resolutions)
+            if version:
+                versions.append(version)
 
         _logger.info(
-            "Created entity version snapshots for %d entities in changeset %s",
-            len(events_by_entity),
+            "Built entity version snapshots for %d entities in changeset %s",
+            len(versions),
             changeset.id,
         )
+        return versions
 
     def _create_entity_version(
         self,
         entity_id: str,
         events: list[ChangeEvent],
         stored_resolutions: dict[str, dict[str, object]],
-    ) -> None:
+    ) -> Optional[EntityVersion]:
         """
-        Create a version snapshot for a single entity by applying all its events.
+        Build a version snapshot for a single entity by applying all its events.
 
         Fetches the latest existing version (if any), applies each event's new_state
-        in order, overlays conflict resolutions, and persists the new version.
+        in order, and overlays conflict resolutions. Returns the built version without
+        persisting it (persistence happens in the atomic transaction).
 
         Args:
             entity_id: ID of the entity
             events: List of ChangeEvent objects for this entity, sorted by timestamp
             stored_resolutions: Conflict resolutions from detect_conflicts
+
+        Returns:
+            The built EntityVersion object, or None if no events to process
         """
+        if not events:
+            return None
+
         # Get the latest existing version
         latest_version = self._repo.get_latest_version(entity_id)
         previous_version_num = latest_version.version if latest_version else None
@@ -691,7 +703,7 @@ class VersioningService:
             else EntityVersionState.ACTIVE
         )
 
-        # Create and persist the new version
+        # Build the new version (persistence happens in atomic transaction)
         version = EntityVersion(
             entity_id=entity_id,
             version=new_version_num,
@@ -701,14 +713,14 @@ class VersioningService:
             parent_version=previous_version_num,
         )
 
-        self._repo.save_version(version)
         _logger.debug(
-            "Created entity version (entity_id=%s, version=%d, state=%s, parent_version=%s)",
+            "Built entity version (entity_id=%s, version=%d, state=%s, parent_version=%s)",
             entity_id,
             new_version_num,
             version_state.value,
             previous_version_num,
         )
+        return version
 
     def merge_proposal(self, proposal_id: str) -> MergeResult:
         """
@@ -768,13 +780,13 @@ class VersioningService:
 
         proposal.transition_to(ProposalState.MERGED)
 
-        # Atomically update both entities to prevent inconsistent state
-        updated_changeset, updated_proposal = self._repo.atomic_update_changeset_and_proposal(
-            changeset, proposal
-        )
+        # Build EntityVersion snapshots for all affected entities
+        versions = self._create_merge_versions(changeset, stored_resolutions)
 
-        # Create EntityVersion snapshots for all affected entities
-        self._create_merge_versions(changeset, proposal_id, stored_resolutions)
+        # Atomically update changeset, proposal, and save all versions in a single transaction
+        updated_changeset, updated_proposal = self._repo.atomic_update_on_merge(
+            changeset, proposal, versions
+        )
 
         result = MergeResult(
             proposal_id=proposal_id,

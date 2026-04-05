@@ -166,6 +166,33 @@ class ChangeRepository(Protocol):
         """
         ...
 
+    def atomic_update_on_merge(
+        self,
+        changeset: Changeset,
+        proposal: Proposal,
+        versions: list[EntityVersion],
+    ) -> tuple[Changeset, Proposal]:
+        """
+        Atomically update changeset, proposal, and save entity versions on merge.
+
+        The changeset and proposal state transition, along with all entity version
+        snapshots, are persisted within a single transaction. If any operation fails,
+        all changes are rolled back to maintain consistency between the merge state
+        and version snapshots.
+
+        Args:
+            changeset: The Changeset domain entity with transitioned state
+            proposal: The Proposal domain entity with transitioned state
+            versions: List of EntityVersion snapshots to persist for merged entities
+
+        Returns:
+            Tuple of (updated Changeset, updated Proposal)
+
+        Raises:
+            VersionNotFoundError: If the changeset or proposal does not exist
+        """
+        ...
+
     def delete_changes(self, event_ids: list[str]) -> None:
         """
         Delete change events by their IDs (used for rollback on pull failure).
