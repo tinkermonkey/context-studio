@@ -8,13 +8,13 @@ and the proposal approval workflow.
 from __future__ import annotations
 
 import logging
-from datetime import datetime, timezone
+from datetime import datetime
 from typing import TYPE_CHECKING, Optional
 
 from .entities import EntityVersion, Changeset, Proposal, MergeResult, ConflictReport
-from .exceptions import VersionNotFoundError, ChangesetStateError, ConflictResolutionError
+from .exceptions import VersionNotFoundError
 from .ports import ChangeRepository, SyncTarget
-from .value_objects import ChangeState, ProposalState, SyncStatus, SyncResult, ChangeHistoryResult
+from .value_objects import SyncStatus, SyncResult, ChangeHistoryResult
 from .events import ChangesetMerged, SyncCompleted
 from .proposal_service import ProposalWorkflowService
 from .changeset_service import ChangesetManagementService

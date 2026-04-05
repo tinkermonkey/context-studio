@@ -9,9 +9,9 @@ from __future__ import annotations
 import logging
 import uuid
 from datetime import datetime, timezone
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING
 
-from .entities import Proposal, Changeset, MergeResult, ConflictReport
+from .entities import Proposal, MergeResult
 from .exceptions import VersionNotFoundError, ChangesetStateError, ConflictResolutionError
 from .ports import ChangeRepository
 from .value_objects import ProposalState, ChangeState

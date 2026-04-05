@@ -22,7 +22,7 @@ from domain.versioning.proposal_service import ProposalWorkflowService
 from domain.versioning.changeset_service import ChangesetManagementService
 from domain.versioning.entities import EntityVersion, Proposal, ChangeEvent
 from domain.versioning.exceptions import VersionNotFoundError, ChangesetStateError, ConflictResolutionError
-from domain.versioning.value_objects import ChangeState, ChangeOperation, ProposalState, ChangeHistoryResult, SyncResult
+from domain.versioning.value_objects import ChangeState, ChangeOperation, ProposalState, SyncResult
 from tests.fakes.fake_change_repository import FakeChangeRepository
 from tests.fakes.fake_sync_target import FakeSyncTarget
 

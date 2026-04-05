@@ -12,7 +12,7 @@ from datetime import datetime, timezone
 from typing import Optional
 
 from .entities import Changeset
-from .exceptions import VersionNotFoundError, ChangesetStateError
+from .exceptions import VersionNotFoundError
 from .ports import ChangeRepository
 from .value_objects import ChangeState
 
