@@ -34,7 +34,7 @@ class FakeChangeRepository:
         self._changesets: dict[str, Changeset] = {}
         self._changeset_events: dict[tuple[str, str], bool] = {}
         self._proposals: dict[str, Proposal] = {}
-        self._conflict_resolutions: dict[str, dict[str, dict[str, str]]] = {}
+        self._conflict_resolutions: dict[str, dict[str, dict[str, object]]] = {}
 
     # ChangeEvent operations
 
@@ -255,7 +255,7 @@ class FakeChangeRepository:
         return deepcopy(changeset), deepcopy(proposal)
 
     def save_conflict_resolutions(
-        self, proposal_id: str, resolutions: dict[str, dict[str, str]]
+        self, proposal_id: str, resolutions: dict[str, dict[str, object]]
     ) -> None:
         """
         Persist conflict resolutions for a proposal.
@@ -268,7 +268,7 @@ class FakeChangeRepository:
 
     def get_conflict_resolutions(
         self, proposal_id: str
-    ) -> dict[str, dict[str, str]]:
+    ) -> dict[str, dict[str, object]]:
         """
         Retrieve persisted conflict resolutions for a proposal.
 

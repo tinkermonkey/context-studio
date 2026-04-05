@@ -1094,7 +1094,7 @@ class TestMergeStrategies:
         assert resolved_report.all_resolved is True
 
         # Now manually persist the resolutions (simulating what the route should do)
-        resolutions = {}
+        resolutions: dict[str, dict[str, object]] = {}
         for conflict in resolved_report.conflicts:
             if conflict.entity_id not in resolutions:
                 resolutions[conflict.entity_id] = {}
@@ -1151,7 +1151,7 @@ class TestManualConflictResolution:
         proposal = service.submit_proposal(changeset.id)
         service.approve_proposal(proposal.id)
 
-        resolutions = {
+        resolutions: dict[str, dict[str, object]] = {
             "entity1": {"name": "resolved_name"}
         }
 
@@ -1189,7 +1189,7 @@ class TestManualConflictResolution:
         service.approve_proposal(proposal.id)
 
         # Only resolve one of two conflicts
-        resolutions = {
+        resolutions: dict[str, dict[str, object]] = {
             "entity1": {"name": "resolved_name"}
             # description not resolved
         }
@@ -1227,7 +1227,7 @@ class TestManualConflictResolution:
         service.approve_proposal(proposal.id)
 
         # Try to resolve with wrong entity ID
-        resolutions = {
+        resolutions: dict[str, dict[str, object]] = {
             "wrong_entity": {"name": "resolved_name"}
         }
 

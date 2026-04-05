@@ -179,7 +179,7 @@ class ChangeRepository(Protocol):
         ...
 
     def save_conflict_resolutions(
-        self, proposal_id: str, resolutions: dict[str, dict[str, str]]
+        self, proposal_id: str, resolutions: dict[str, dict[str, object]]
     ) -> None:
         """
         Persist conflict resolutions for a proposal.
@@ -192,7 +192,7 @@ class ChangeRepository(Protocol):
 
     def get_conflict_resolutions(
         self, proposal_id: str
-    ) -> dict[str, dict[str, str]]:
+    ) -> dict[str, dict[str, object]]:
         """
         Retrieve persisted conflict resolutions for a proposal.
 

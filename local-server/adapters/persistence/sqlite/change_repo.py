@@ -659,7 +659,7 @@ class SQLiteChangeRepository:
         )
 
     def save_conflict_resolutions(
-        self, proposal_id: str, resolutions: dict[str, dict[str, str]]
+        self, proposal_id: str, resolutions: dict[str, dict[str, object]]
     ) -> None:
         """
         Persist conflict resolutions for a proposal.
@@ -693,7 +693,7 @@ class SQLiteChangeRepository:
 
     def get_conflict_resolutions(
         self, proposal_id: str
-    ) -> dict[str, dict[str, str]]:
+    ) -> dict[str, dict[str, object]]:
         """
         Retrieve persisted conflict resolutions for a proposal.
 
@@ -709,7 +709,7 @@ class SQLiteChangeRepository:
             )
             resolutions = session.execute(query).scalars().all()
 
-            result: dict[str, dict[str, str]] = {}
+            result: dict[str, dict[str, object]] = {}
             for resolution in resolutions:
                 entity_id = cast(str, resolution.entity_id)
                 if entity_id not in result:

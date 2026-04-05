@@ -360,7 +360,7 @@ class VersioningService:
         return updated_proposal
 
     def detect_conflicts(
-        self, proposal_id: str, resolutions: Optional[dict[str, dict[str, str]]] = None
+        self, proposal_id: str, resolutions: Optional[dict[str, dict[str, object]]] = None
     ) -> ConflictReport:
         """
         Detect field-level conflicts in a proposal.
@@ -526,7 +526,7 @@ class VersioningService:
         resolved_report = self.auto_resolve(report, strategy)
 
         # Extract resolutions and persist them (unconditionally, matching resolve_conflicts pattern)
-        resolutions = {}
+        resolutions: dict[str, dict[str, object]] = {}
         for conflict in resolved_report.conflicts:
             if conflict.entity_id not in resolutions:
                 resolutions[conflict.entity_id] = {}
@@ -546,7 +546,7 @@ class VersioningService:
     def resolve_conflicts(
         self,
         proposal_id: str,
-        resolutions: dict[str, dict[str, str]],
+        resolutions: dict[str, dict[str, object]],
     ) -> ConflictReport:
         """
         Manually resolve conflicts in a proposal.
