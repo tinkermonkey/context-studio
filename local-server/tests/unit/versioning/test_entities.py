@@ -17,9 +17,10 @@ from domain.versioning.entities import (
     Changeset,
     ConflictReport,
     Conflict,
+    Proposal,
 )
-from domain.versioning.exceptions import ChangesetStateError
-from domain.versioning.value_objects import ChangeState
+from domain.versioning.exceptions import ChangesetStateError, ProposalStateError
+from domain.versioning.value_objects import ChangeState, ProposalState
 
 
 class TestChangesetStateTransitions:
@@ -244,3 +245,143 @@ class TestConflictReport:
         ]
         report = ConflictReport(proposal_id="prop1", conflicts=conflicts)
         assert not report.all_resolved
+
+
+class TestProposalStateTransitions:
+    """Test valid and invalid proposal state transitions."""
+
+    def test_open_to_approved_is_valid(self) -> None:
+        """Test transition from open to approved."""
+        proposal = Proposal(
+            id="prop1",
+            changeset_id="cs1",
+            state=ProposalState.OPEN,
+            submitted_at=datetime.now(timezone.utc),
+        )
+
+        proposal.transition_to(ProposalState.APPROVED)
+        assert proposal.state == ProposalState.APPROVED
+
+    def test_open_to_rejected_is_valid(self) -> None:
+        """Test transition from open to rejected."""
+        proposal = Proposal(
+            id="prop1",
+            changeset_id="cs1",
+            state=ProposalState.OPEN,
+            submitted_at=datetime.now(timezone.utc),
+        )
+
+        proposal.transition_to(ProposalState.REJECTED)
+        assert proposal.state == ProposalState.REJECTED
+
+    def test_approved_to_merged_is_valid(self) -> None:
+        """Test transition from approved to merged."""
+        proposal = Proposal(
+            id="prop1",
+            changeset_id="cs1",
+            state=ProposalState.APPROVED,
+            submitted_at=datetime.now(timezone.utc),
+        )
+
+        proposal.transition_to(ProposalState.MERGED)
+        assert proposal.state == ProposalState.MERGED
+
+    def test_approved_to_rejected_is_valid(self) -> None:
+        """Test transition from approved to rejected."""
+        proposal = Proposal(
+            id="prop1",
+            changeset_id="cs1",
+            state=ProposalState.APPROVED,
+            submitted_at=datetime.now(timezone.utc),
+        )
+
+        proposal.transition_to(ProposalState.REJECTED)
+        assert proposal.state == ProposalState.REJECTED
+
+    def test_rejected_to_open_is_valid(self) -> None:
+        """Test transition from rejected back to open."""
+        proposal = Proposal(
+            id="prop1",
+            changeset_id="cs1",
+            state=ProposalState.REJECTED,
+            submitted_at=datetime.now(timezone.utc),
+        )
+
+        proposal.transition_to(ProposalState.OPEN)
+        assert proposal.state == ProposalState.OPEN
+
+    def test_open_to_merged_is_invalid(self) -> None:
+        """Test that direct transition from open to merged raises error."""
+        proposal = Proposal(
+            id="prop1",
+            changeset_id="cs1",
+            state=ProposalState.OPEN,
+            submitted_at=datetime.now(timezone.utc),
+        )
+
+        with pytest.raises(ProposalStateError):
+            proposal.transition_to(ProposalState.MERGED)
+
+    def test_merged_cannot_transition(self) -> None:
+        """Test that merged proposals cannot transition."""
+        proposal = Proposal(
+            id="prop1",
+            changeset_id="cs1",
+            state=ProposalState.MERGED,
+            submitted_at=datetime.now(timezone.utc),
+        )
+
+        with pytest.raises(ProposalStateError):
+            proposal.transition_to(ProposalState.OPEN)
+
+    def test_merged_is_terminal(self) -> None:
+        """Test that MERGED is a terminal state."""
+        proposal = Proposal(
+            id="prop1",
+            changeset_id="cs1",
+            state=ProposalState.MERGED,
+            submitted_at=datetime.now(timezone.utc),
+        )
+
+        for state in [ProposalState.OPEN, ProposalState.APPROVED, ProposalState.REJECTED]:
+            with pytest.raises(ProposalStateError):
+                proposal.transition_to(state)
+
+    def test_rejected_to_approved_is_invalid(self) -> None:
+        """Test that transition from rejected to approved raises error."""
+        proposal = Proposal(
+            id="prop1",
+            changeset_id="cs1",
+            state=ProposalState.REJECTED,
+            submitted_at=datetime.now(timezone.utc),
+        )
+
+        with pytest.raises(ProposalStateError):
+            proposal.transition_to(ProposalState.APPROVED)
+
+    def test_rejected_to_merged_is_invalid(self) -> None:
+        """Test that transition from rejected to merged raises error."""
+        proposal = Proposal(
+            id="prop1",
+            changeset_id="cs1",
+            state=ProposalState.REJECTED,
+            submitted_at=datetime.now(timezone.utc),
+        )
+
+        with pytest.raises(ProposalStateError):
+            proposal.transition_to(ProposalState.MERGED)
+
+    def test_transition_raises_descriptive_error(self) -> None:
+        """Test that error messages are descriptive."""
+        proposal = Proposal(
+            id="prop1",
+            changeset_id="cs1",
+            state=ProposalState.OPEN,
+            submitted_at=datetime.now(timezone.utc),
+        )
+
+        with pytest.raises(ProposalStateError) as exc_info:
+            proposal.transition_to(ProposalState.MERGED)
+
+        assert "open" in str(exc_info.value).lower()
+        assert "merged" in str(exc_info.value).lower()
