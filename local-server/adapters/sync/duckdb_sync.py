@@ -14,6 +14,7 @@ domain-level SyncError exceptions.
 
 from __future__ import annotations
 
+import importlib.util
 import json
 import logging
 from datetime import datetime, timezone
@@ -49,12 +50,12 @@ class DuckDBSyncAdapter:
         Raises:
             ImportError: If duckdb or pyarrow is not installed
         """
-        try:
-            import duckdb
-            import pyarrow
-        except ImportError as e:
-            _logger.error(f"duckdb and pyarrow are required for DuckDB sync adapter. Install with: pip install duckdb pyarrow")
-            raise
+        if importlib.util.find_spec("duckdb") is None:
+            _logger.error("duckdb is required for DuckDB sync adapter. Install with: pip install duckdb")
+            raise ImportError("duckdb is required for DuckDB sync adapter")
+        if importlib.util.find_spec("pyarrow") is None:
+            _logger.error("pyarrow is required for DuckDB sync adapter. Install with: pip install pyarrow")
+            raise ImportError("pyarrow is required for DuckDB sync adapter")
 
         self._output_dir = Path(output_dir).resolve()
         self._changes_dir = self._output_dir / "changes"
@@ -92,14 +93,13 @@ class DuckDBSyncAdapter:
             return SyncResult(pushed=0, pulled=0, errors=(), pushed_event_ids=())
 
         try:
-            import duckdb
             import pyarrow as pa
             import pyarrow.parquet as pq
         except ImportError:
-            raise RuntimeError("duckdb and pyarrow are required for DuckDB sync adapter")
+            raise RuntimeError("pyarrow is required for DuckDB sync adapter")
 
         pushed_event_ids = []
-        errors = []
+        errors: list[str] = []
 
         try:
             # Group events by date
@@ -236,7 +236,7 @@ class DuckDBSyncAdapter:
                             seen_ids.add(event_id)
 
                             # Parse JSON fields
-                            new_state = None
+                            new_state: dict[str, object] = {}
                             if row["new_state"]:
                                 try:
                                     new_state = json.loads(row["new_state"])
