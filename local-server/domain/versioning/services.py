@@ -635,8 +635,8 @@ class VersioningService:
         try:
             result = self._sync.push(events)
         except RuntimeError as e:
-            # Wrap any RuntimeError from sync adapter into SyncError
-            raise SyncError(f"Failed to push changes: {e}") from e
+            # Wrap infrastructure-level error from adapter into domain exception
+            raise SyncError(str(e)) from e
 
         # Track validated IDs that were actually marked as processed
         processed_ids: tuple[str, ...] = ()
@@ -719,8 +719,8 @@ class VersioningService:
         try:
             events = self._sync.pull()
         except RuntimeError as e:
-            # Wrap any RuntimeError from sync adapter into SyncError
-            raise SyncError(f"Failed to pull changes: {e}") from e
+            # Wrap infrastructure-level error from adapter into domain exception
+            raise SyncError(str(e)) from e
         recorded_events = []
         errors = []
 

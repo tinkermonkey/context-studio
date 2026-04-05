@@ -6,7 +6,8 @@ changes with remote S3 locations. Changes are serialized as JSON Lines and store
 with a key pattern: {prefix}/changes/{date}/{uuid}.jsonl
 
 This adapter uses fail-fast error handling: S3 configuration errors and network
-failures are propagated to the caller as SyncError, never suppressed.
+failures are propagated to the caller as RuntimeError, never suppressed.
+The service layer wraps these into domain-level SyncError exceptions.
 """
 
 from __future__ import annotations
@@ -19,7 +20,6 @@ from uuid import uuid4
 
 from domain.versioning.entities import ChangeEvent
 from domain.versioning.value_objects import SyncResult, ChangeOperation
-from domain.versioning.exceptions import SyncError
 
 _logger = logging.getLogger(__name__)
 
@@ -42,8 +42,9 @@ class S3SyncAdapter:
     with a predictable key structure that enables date-based filtering.
 
     This adapter uses fail-fast error handling: S3 configuration errors and access
-    failures are propagated to the caller as SyncError. The caller (app.py) handles
-    initialization failures by falling back to NoOpSyncTarget.
+    failures are propagated to the caller as RuntimeError. The caller (service layer)
+    wraps these into SyncError domain exceptions. The app.py handles initialization
+    failures by falling back to NoOpSyncTarget.
     """
 
     def __init__(
@@ -104,7 +105,7 @@ class S3SyncAdapter:
             SyncResult with count of pushed events and their IDs
 
         Raises:
-            SyncError: If S3 put operation fails
+            RuntimeError: If S3 put operation fails
         """
         if not events:
             return SyncResult(pushed=0, pulled=0, errors=(), pushed_event_ids=())
@@ -157,7 +158,7 @@ class S3SyncAdapter:
         except Exception as e:
             error_msg = f"Failed to push changes to S3: {e}"
             _logger.error(error_msg)
-            raise SyncError(error_msg) from e
+            raise RuntimeError(error_msg) from e
 
     def pull(self, since: Optional[datetime] = None) -> list[ChangeEvent]:
         """
@@ -174,7 +175,7 @@ class S3SyncAdapter:
             List of deduplicated ChangeEvent objects from S3
 
         Raises:
-            SyncError: If S3 listing fails, file download fails, or JSON parsing fails
+            RuntimeError: If S3 listing fails, file download fails, or JSON parsing fails
         """
         events: list[ChangeEvent] = []
         seen_ids: set[str] = set()
@@ -252,10 +253,10 @@ class S3SyncAdapter:
         except Exception as e:
             if isinstance(e, _S3FileParseError):
                 # File parsing error already wrapped and logged
-                raise SyncError(str(e)) from e.__cause__
+                raise RuntimeError(str(e)) from e.__cause__
             error_msg = f"Failed to list S3 objects: {e}"
             _logger.error(error_msg)
-            raise SyncError(error_msg) from e
+            raise RuntimeError(error_msg) from e
 
     def is_configured(self) -> bool:
         """
