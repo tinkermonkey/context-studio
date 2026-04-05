@@ -1745,3 +1745,313 @@ class TestSyncStatusErrorHandling:
 
         assert status.unprocessed_count == 1
         assert status.is_configured == sync_target.is_configured()
+
+
+# ============================================================================
+# EntityVersion Snapshots on Merge Tests
+# ============================================================================
+
+
+class TestEntityVersionCreationOnMerge:
+    """Test that merge_proposal creates EntityVersion snapshots."""
+
+    def test_merge_creates_version_for_single_entity(
+        self, service: VersioningService, repo: FakeChangeRepository
+    ) -> None:
+        """Test that merge creates an EntityVersion for a single entity."""
+        # Record a change
+        event_id = repo.record_change(
+            entity_id="entity1",
+            entity_type="class",
+            operation=ChangeOperation.CREATE,
+            new_state={"name": "Entity1", "description": "First entity"},
+        )
+
+        # Create, stage, and propose a changeset with this event
+        changeset = service.create_changeset("Test Changeset", event_ids=[event_id])
+        service.stage_changeset(changeset.id)
+        proposal = service.submit_proposal(changeset.id)
+        service.approve_proposal(proposal.id)
+
+        # Merge the proposal
+        service.merge_proposal(proposal.id)
+
+        # Verify EntityVersion was created
+        version = repo.get_latest_version("entity1")
+        assert version is not None
+        assert version.version == 1
+        assert version.entity_id == "entity1"
+        assert version.parent_version is None
+        assert version.state == EntityVersionState.ACTIVE
+        assert version.snapshot == {"name": "Entity1", "description": "First entity"}
+
+    def test_merge_creates_versions_for_multiple_entities(
+        self, service: VersioningService, repo: FakeChangeRepository
+    ) -> None:
+        """Test that merge creates EntityVersions for multiple entities."""
+        # Record changes for two different entities
+        event_id_1 = repo.record_change(
+            entity_id="entity1",
+            entity_type="class",
+            operation=ChangeOperation.CREATE,
+            new_state={"name": "Entity1"},
+        )
+        event_id_2 = repo.record_change(
+            entity_id="entity2",
+            entity_type="class",
+            operation=ChangeOperation.CREATE,
+            new_state={"name": "Entity2"},
+        )
+
+        # Create and merge a changeset with both events
+        changeset = service.create_changeset(
+            "Test Changeset", event_ids=[event_id_1, event_id_2]
+        )
+        service.stage_changeset(changeset.id)
+        proposal = service.submit_proposal(changeset.id)
+        service.approve_proposal(proposal.id)
+        service.merge_proposal(proposal.id)
+
+        # Verify versions were created for both entities
+        version1 = repo.get_latest_version("entity1")
+        version2 = repo.get_latest_version("entity2")
+
+        assert version1 is not None
+        assert version1.version == 1
+        assert version1.snapshot == {"name": "Entity1"}
+
+        assert version2 is not None
+        assert version2.version == 1
+        assert version2.snapshot == {"name": "Entity2"}
+
+    def test_merge_increments_version_number_on_subsequent_merges(
+        self, service: VersioningService, repo: FakeChangeRepository
+    ) -> None:
+        """Test that subsequent merges increment the version number."""
+        entity_id = "entity1"
+
+        # First merge: Create version 1
+        event_id_1 = repo.record_change(
+            entity_id=entity_id,
+            entity_type="class",
+            operation=ChangeOperation.CREATE,
+            new_state={"name": "Entity1", "version": 1},
+        )
+        changeset1 = service.create_changeset("First Change", event_ids=[event_id_1])
+        service.stage_changeset(changeset1.id)
+        proposal1 = service.submit_proposal(changeset1.id)
+        service.approve_proposal(proposal1.id)
+        service.merge_proposal(proposal1.id)
+
+        version1 = repo.get_latest_version(entity_id)
+        assert version1.version == 1
+        assert version1.parent_version is None
+
+        # Second merge: Create version 2
+        event_id_2 = repo.record_change(
+            entity_id=entity_id,
+            entity_type="class",
+            operation=ChangeOperation.UPDATE,
+            new_state={"name": "Entity1 Updated", "version": 2},
+        )
+        changeset2 = service.create_changeset("Second Change", event_ids=[event_id_2])
+        service.stage_changeset(changeset2.id)
+        proposal2 = service.submit_proposal(changeset2.id)
+        service.approve_proposal(proposal2.id)
+        service.merge_proposal(proposal2.id)
+
+        version2 = repo.get_latest_version(entity_id)
+        assert version2.version == 2
+        assert version2.parent_version == 1
+        assert version2.snapshot == {"name": "Entity1 Updated", "version": 2}
+
+    def test_merge_sets_archived_state_for_deleted_entity(
+        self, service: VersioningService, repo: FakeChangeRepository
+    ) -> None:
+        """Test that DELETE operation results in ARCHIVED EntityVersion state."""
+        entity_id = "entity1"
+
+        # Create initial version
+        event_id_1 = repo.record_change(
+            entity_id=entity_id,
+            entity_type="class",
+            operation=ChangeOperation.CREATE,
+            new_state={"name": "Entity1"},
+        )
+        changeset1 = service.create_changeset("Create", event_ids=[event_id_1])
+        service.stage_changeset(changeset1.id)
+        proposal1 = service.submit_proposal(changeset1.id)
+        service.approve_proposal(proposal1.id)
+        service.merge_proposal(proposal1.id)
+
+        # Delete the entity
+        event_id_2 = repo.record_change(
+            entity_id=entity_id,
+            entity_type="class",
+            operation=ChangeOperation.DELETE,
+            new_state={},
+        )
+        changeset2 = service.create_changeset("Delete", event_ids=[event_id_2])
+        service.stage_changeset(changeset2.id)
+        proposal2 = service.submit_proposal(changeset2.id)
+        service.approve_proposal(proposal2.id)
+        service.merge_proposal(proposal2.id)
+
+        version2 = repo.get_latest_version(entity_id)
+        assert version2.version == 2
+        assert version2.state == EntityVersionState.ARCHIVED
+
+    def test_merge_applies_events_in_chronological_order(
+        self, service: VersioningService, repo: FakeChangeRepository
+    ) -> None:
+        """Test that multiple events for the same entity are applied in order."""
+        entity_id = "entity1"
+
+        # Create two events for the same entity, with the second updating a field
+        event_id_1 = repo.record_change(
+            entity_id=entity_id,
+            entity_type="class",
+            operation=ChangeOperation.CREATE,
+            new_state={"name": "Original", "status": "active"},
+        )
+        event_id_2 = repo.record_change(
+            entity_id=entity_id,
+            entity_type="class",
+            operation=ChangeOperation.UPDATE,
+            new_state={"name": "Updated"},
+        )
+
+        changeset = service.create_changeset(
+            "Multi-event Change", event_ids=[event_id_1, event_id_2]
+        )
+        service.stage_changeset(changeset.id)
+        proposal = service.submit_proposal(changeset.id)
+        service.approve_proposal(proposal.id)
+        service.merge_proposal(proposal.id)
+
+        version = repo.get_latest_version(entity_id)
+        # Should have original "status" and updated "name"
+        assert version.snapshot == {"name": "Updated", "status": "active"}
+
+    def test_merge_overlays_conflict_resolutions_on_snapshot(
+        self, service: VersioningService, repo: FakeChangeRepository
+    ) -> None:
+        """Test that conflict resolutions are overlaid on the version snapshot."""
+        entity_id = "entity1"
+
+        # Create events that will have a conflict
+        event_id_1 = repo.record_change(
+            entity_id=entity_id,
+            entity_type="class",
+            operation=ChangeOperation.CREATE,
+            new_state={"name": "Original", "value": 100},
+        )
+        event_id_2 = repo.record_change(
+            entity_id=entity_id,
+            entity_type="class",
+            operation=ChangeOperation.UPDATE,
+            previous_state={"name": "Original", "value": 100},
+            new_state={"value": 200},
+        )
+
+        changeset = service.create_changeset(
+            "Conflicting Changes", event_ids=[event_id_1, event_id_2]
+        )
+        service.stage_changeset(changeset.id)
+        proposal = service.submit_proposal(changeset.id)
+        service.approve_proposal(proposal.id)
+
+        # Manually resolve the conflict
+        service.resolve_conflicts(
+            proposal.id,
+            {entity_id: {"value": 250}},  # Resolved value differs from incoming
+        )
+
+        service.merge_proposal(proposal.id)
+
+        version = repo.get_latest_version(entity_id)
+        # Snapshot should have the resolved value, not the incoming one
+        assert version.snapshot["value"] == 250
+        assert version.snapshot["name"] == "Original"
+
+    def test_merge_with_no_events_creates_no_versions(
+        self, service: VersioningService, repo: FakeChangeRepository
+    ) -> None:
+        """Test that merge with no events in changeset creates no versions."""
+        changeset = service.create_changeset("Empty Changeset", event_ids=[])
+        service.stage_changeset(changeset.id)
+        proposal = service.submit_proposal(changeset.id)
+        service.approve_proposal(proposal.id)
+
+        service.merge_proposal(proposal.id)
+
+        # Verify no versions were created
+        # Since there are no entities, list_versions should work for any entity
+        assert repo.list_versions("any-entity") == []
+
+    def test_merge_failed_due_to_unresolved_conflicts_writes_no_versions(
+        self, service: VersioningService, repo: FakeChangeRepository
+    ) -> None:
+        """Test that failed merge (unresolved conflicts) writes no version records."""
+        entity_id = "entity1"
+
+        # Create conflicting events where first event expects field=value1
+        # but second event's previous_state has field=value1_modified
+        event_id_1 = repo.record_change(
+            entity_id=entity_id,
+            entity_type="class",
+            operation=ChangeOperation.CREATE,
+            new_state={"field": "value1"},
+        )
+        # Second event assumes field was unchanged, but we'll make previous_state different
+        event_id_2 = repo.record_change(
+            entity_id=entity_id,
+            entity_type="class",
+            operation=ChangeOperation.UPDATE,
+            previous_state={"field": "value1_modified"},  # Conflict: doesn't match first event's new_state
+            new_state={"field": "value2"},
+        )
+
+        changeset = service.create_changeset(
+            "Conflicting", event_ids=[event_id_1, event_id_2]
+        )
+        service.stage_changeset(changeset.id)
+        proposal = service.submit_proposal(changeset.id)
+        service.approve_proposal(proposal.id)
+
+        # Try to merge without resolving conflicts
+        with pytest.raises(ConflictResolutionError):
+            service.merge_proposal(proposal.id)
+
+        # Verify no version was created
+        version = repo.get_latest_version(entity_id)
+        assert version is None
+
+    def test_list_versions_returns_all_entity_versions_after_merge(
+        self, service: VersioningService, repo: FakeChangeRepository
+    ) -> None:
+        """Test that list_versions returns all historical versions after merge."""
+        entity_id = "entity1"
+
+        # Perform two merges to create two versions
+        for i in range(2):
+            event_id = repo.record_change(
+                entity_id=entity_id,
+                entity_type="class",
+                operation=ChangeOperation.UPDATE if i > 0 else ChangeOperation.CREATE,
+                new_state={"version": i + 1},
+            )
+            changeset = service.create_changeset(
+                f"Change {i + 1}", event_ids=[event_id]
+            )
+            service.stage_changeset(changeset.id)
+            proposal = service.submit_proposal(changeset.id)
+            service.approve_proposal(proposal.id)
+            service.merge_proposal(proposal.id)
+
+        versions = repo.list_versions(entity_id)
+        assert len(versions) == 2
+        assert versions[0].version == 1
+        assert versions[1].version == 2
+        assert versions[0].parent_version is None
+        assert versions[1].parent_version == 1
