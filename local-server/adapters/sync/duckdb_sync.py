@@ -94,7 +94,7 @@ class DuckDBSyncAdapter:
             import pyarrow as pa
             import pyarrow.parquet as pq
         except ImportError:
-            raise RuntimeError("pyarrow is required for DuckDB sync adapter")
+            raise RuntimeError("pyarrow is required for sync adapter")
 
         pushed_event_ids = []
 
@@ -183,7 +183,7 @@ class DuckDBSyncAdapter:
         try:
             import pyarrow.parquet as pq
         except ImportError:
-            raise RuntimeError("pyarrow is required for DuckDB sync adapter")
+            raise RuntimeError("pyarrow is required for sync adapter")
 
         events: list[ChangeEvent] = []
         seen_ids: set[str] = set()
@@ -231,7 +231,7 @@ class DuckDBSyncAdapter:
 
                             # Skip duplicate events
                             if event_id in seen_ids:
-                                _logger.debug(f"Skipping duplicate event {event_id}")
+                                _logger.debug("Skipping duplicate event %s", event_id)
                                 continue
 
                             seen_ids.add(event_id)

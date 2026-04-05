@@ -11,6 +11,7 @@ import tempfile
 import shutil
 from datetime import datetime, timezone, timedelta
 from pathlib import Path
+import json
 
 # Add parent directory to path for imports
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
@@ -292,6 +293,74 @@ class TestDuckDBSyncAdapterPull:
         assert pulled_event.user_id is None
         assert pulled_event.change_reason is None
         assert pulled_event.previous_state is None
+
+    def test_pull_fails_on_malformed_json_in_new_state(self, duckdb_adapter, temp_output_dir):
+        """Test that pull raises RuntimeError on malformed JSON in new_state instead of silently returning empty dict."""
+        import pyarrow as pa
+        import pyarrow.parquet as pq
+
+        # Create date directory
+        changes_dir = Path(temp_output_dir) / "changes"
+        date_dir = changes_dir / "2024-01-01"
+        date_dir.mkdir(parents=True, exist_ok=True)
+
+        # Create a Parquet file with malformed JSON in new_state column
+        malformed_json = "{ invalid json }"
+        table = pa.table({
+            "id": ["event-malformed"],
+            "entity_id": ["entity-1"],
+            "entity_type": ["Class"],
+            "operation": ["CREATE"],
+            "timestamp": ["2024-01-01T12:00:00+00:00"],
+            "processed": [False],
+            "user_id": ["user-1"],
+            "change_reason": ["test"],
+            "new_state": [malformed_json],  # Intentionally malformed JSON
+            "previous_state": [None],
+        })
+
+        parquet_file = date_dir / "malformed.parquet"
+        pq.write_table(table, str(parquet_file))
+
+        # Verify that pull() raises RuntimeError instead of silently returning empty dict
+        with pytest.raises(RuntimeError) as exc_info:
+            duckdb_adapter.pull()
+
+        assert "Failed to parse new_state JSON" in str(exc_info.value)
+
+    def test_pull_fails_on_malformed_json_in_previous_state(self, duckdb_adapter, temp_output_dir):
+        """Test that pull raises RuntimeError on malformed JSON in previous_state instead of silently returning None."""
+        import pyarrow as pa
+        import pyarrow.parquet as pq
+
+        # Create date directory
+        changes_dir = Path(temp_output_dir) / "changes"
+        date_dir = changes_dir / "2024-01-01"
+        date_dir.mkdir(parents=True, exist_ok=True)
+
+        # Create a Parquet file with malformed JSON in previous_state column
+        malformed_json = "{ invalid json }"
+        table = pa.table({
+            "id": ["event-malformed"],
+            "entity_id": ["entity-1"],
+            "entity_type": ["Class"],
+            "operation": ["UPDATE"],
+            "timestamp": ["2024-01-01T12:00:00+00:00"],
+            "processed": [False],
+            "user_id": ["user-1"],
+            "change_reason": ["test"],
+            "new_state": [json.dumps({"name": "Test"})],
+            "previous_state": [malformed_json],  # Intentionally malformed JSON
+        })
+
+        parquet_file = date_dir / "malformed.parquet"
+        pq.write_table(table, str(parquet_file))
+
+        # Verify that pull() raises RuntimeError instead of silently returning None
+        with pytest.raises(RuntimeError) as exc_info:
+            duckdb_adapter.pull()
+
+        assert "Failed to parse previous_state JSON" in str(exc_info.value)
 
 
 class TestDuckDBSyncAdapterRoundTrip:
