@@ -210,35 +210,11 @@ class FakeChangeRepository:
         self._proposals[proposal.id] = deepcopy(proposal)
         return deepcopy(changeset), deepcopy(proposal)
 
-    def update_changeset_and_proposal_on_approve(
+    def atomic_update_changeset_and_proposal(
         self, changeset: Changeset, proposal: Proposal
     ) -> tuple[Changeset, Proposal]:
         """
-        Atomically update changeset and proposal on approve.
-
-        Stores copies to prevent tests from relying on by-reference mutations.
-        """
-        self._changesets[changeset.id] = deepcopy(changeset)
-        self._proposals[proposal.id] = deepcopy(proposal)
-        return deepcopy(changeset), deepcopy(proposal)
-
-    def update_changeset_and_proposal_on_reject(
-        self, changeset: Changeset, proposal: Proposal
-    ) -> tuple[Changeset, Proposal]:
-        """
-        Atomically update changeset and proposal on reject.
-
-        Stores copies to prevent tests from relying on by-reference mutations.
-        """
-        self._changesets[changeset.id] = deepcopy(changeset)
-        self._proposals[proposal.id] = deepcopy(proposal)
-        return deepcopy(changeset), deepcopy(proposal)
-
-    def update_changeset_and_proposal_on_merge(
-        self, changeset: Changeset, proposal: Proposal
-    ) -> tuple[Changeset, Proposal]:
-        """
-        Atomically update changeset and proposal on merge.
+        Atomically update changeset and proposal on approve, reject, or merge.
 
         Stores copies to prevent tests from relying on by-reference mutations.
         """

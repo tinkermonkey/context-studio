@@ -49,6 +49,17 @@ class Changeset:
     description: Optional[str] = None
     event_ids: list[str] = field(default_factory=list)
 
+    def __setattr__(self, name: str, value: object) -> None:
+        """Prevent direct assignment to _state after initialization.
+
+        State can only be changed via transition_to() to enforce state machine validity.
+        """
+        if name == "_state" and hasattr(self, "_state"):
+            raise AttributeError(
+                "Cannot modify state directly. Use transition_to() to change state."
+            )
+        object.__setattr__(self, name, value)
+
     @property
     def state(self) -> ChangeState:
         """Get the current state. State can only be changed via transition_to()."""
@@ -77,7 +88,7 @@ class Changeset:
             raise ChangesetStateError(
                 f"Cannot transition Changeset from {self._state} to {new_state}"
             )
-        self._state = new_state
+        object.__setattr__(self, "_state", new_state)
 
 
 @dataclass
@@ -90,6 +101,17 @@ class Proposal:
     submitted_at: datetime
     reviewed_at: Optional[datetime] = None
     reviewer_notes: Optional[str] = None
+
+    def __setattr__(self, name: str, value: object) -> None:
+        """Prevent direct assignment to _state after initialization.
+
+        State can only be changed via transition_to() to enforce state machine validity.
+        """
+        if name == "_state" and hasattr(self, "_state"):
+            raise AttributeError(
+                "Cannot modify state directly. Use transition_to() to change state."
+            )
+        object.__setattr__(self, name, value)
 
     @property
     def state(self) -> ProposalState:
@@ -110,7 +132,7 @@ class Proposal:
             raise ProposalStateError(
                 f"Cannot transition Proposal from {self._state} to {new_state}"
             )
-        self._state = new_state
+        object.__setattr__(self, "_state", new_state)
 
 
 @dataclass

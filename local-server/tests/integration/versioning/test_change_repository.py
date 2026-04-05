@@ -493,3 +493,170 @@ class TestMarkProcessedOperations:
         # Verify both are marked as processed
         unprocessed = repository.get_unprocessed()
         assert len(unprocessed) == 0
+
+
+class TestAtomicUpdateOperations:
+    """Test atomic update operations for changesets and proposals."""
+
+    def test_update_changeset_and_proposal_on_submit_persists_both(self, repository) -> None:
+        """Test that both changeset and proposal are persisted in one operation."""
+        # Create and persist a changeset
+        changeset = Changeset(
+            id="cs1",
+            name="Test Changeset",
+            _state=ChangeState.WORKING,
+            created_at=datetime.now(timezone.utc),
+            updated_at=datetime.now(timezone.utc),
+        )
+        repository.create_changeset(changeset)
+
+        # Transition through valid states to PROPOSED
+        changeset.transition_to(ChangeState.STAGED)
+        changeset.transition_to(ChangeState.PROPOSED)
+        now = datetime.now(timezone.utc)
+        changeset.updated_at = now
+
+        # Create proposal
+        proposal = Proposal(
+            id="prop1",
+            changeset_id="cs1",
+            _state=ProposalState.OPEN,
+            submitted_at=now,
+        )
+
+        # Atomically update changeset and create proposal
+        updated_cs, updated_prop = repository.update_changeset_and_proposal_on_submit(
+            changeset, proposal
+        )
+
+        # Verify changeset was updated
+        retrieved_cs = repository.get_changeset("cs1")
+        assert retrieved_cs is not None
+        assert retrieved_cs.state == ChangeState.PROPOSED
+
+        # Verify proposal was created
+        retrieved_prop = repository.get_proposal("prop1")
+        assert retrieved_prop is not None
+        assert retrieved_prop.state == ProposalState.OPEN
+
+    def test_atomic_update_changeset_and_proposal_updates_both(self, repository) -> None:
+        """Test that both entities are updated atomically on approve/reject/merge."""
+        # Create and persist both entities
+        changeset = Changeset(
+            id="cs1",
+            name="Test Changeset",
+            _state=ChangeState.PROPOSED,
+            created_at=datetime.now(timezone.utc),
+            updated_at=datetime.now(timezone.utc),
+        )
+        repository.create_changeset(changeset)
+
+        proposal = Proposal(
+            id="prop1",
+            changeset_id="cs1",
+            _state=ProposalState.OPEN,
+            submitted_at=datetime.now(timezone.utc),
+        )
+        repository.create_proposal(proposal)
+
+        # Transition both entities
+        changeset.transition_to(ChangeState.APPROVED)
+        proposal.transition_to(ProposalState.APPROVED)
+        now = datetime.now(timezone.utc)
+        changeset.updated_at = now
+        proposal.reviewed_at = now
+
+        # Atomically update both
+        updated_cs, updated_prop = repository.atomic_update_changeset_and_proposal(
+            changeset, proposal
+        )
+
+        # Verify both were updated
+        retrieved_cs = repository.get_changeset("cs1")
+        assert retrieved_cs is not None
+        assert retrieved_cs.state == ChangeState.APPROVED
+
+        retrieved_prop = repository.get_proposal("prop1")
+        assert retrieved_prop is not None
+        assert retrieved_prop.state == ProposalState.APPROVED
+        assert retrieved_prop.reviewed_at is not None
+
+    def test_atomic_update_raises_if_changeset_not_found(self, repository) -> None:
+        """Test that atomic update raises if changeset doesn't exist."""
+        proposal = Proposal(
+            id="prop1",
+            changeset_id="cs1",
+            _state=ProposalState.OPEN,
+            submitted_at=datetime.now(timezone.utc),
+        )
+        repository.create_proposal(proposal)
+
+        changeset = Changeset(
+            id="nonexistent",
+            name="Ghost",
+            _state=ChangeState.PROPOSED,
+            created_at=datetime.now(timezone.utc),
+            updated_at=datetime.now(timezone.utc),
+        )
+
+        with pytest.raises(VersionNotFoundError):
+            repository.atomic_update_changeset_and_proposal(changeset, proposal)
+
+    def test_atomic_update_raises_if_proposal_not_found(self, repository) -> None:
+        """Test that atomic update raises if proposal doesn't exist."""
+        changeset = Changeset(
+            id="cs1",
+            name="Test",
+            _state=ChangeState.PROPOSED,
+            created_at=datetime.now(timezone.utc),
+            updated_at=datetime.now(timezone.utc),
+        )
+        repository.create_changeset(changeset)
+
+        proposal = Proposal(
+            id="nonexistent",
+            changeset_id="cs1",
+            _state=ProposalState.OPEN,
+            submitted_at=datetime.now(timezone.utc),
+        )
+
+        with pytest.raises(VersionNotFoundError):
+            repository.atomic_update_changeset_and_proposal(changeset, proposal)
+
+    def test_update_changeset_and_proposal_on_submit_only_updates_state_and_timestamp(
+        self, repository
+    ) -> None:
+        """Test that submit only updates state and updated_at, not other changeset fields."""
+        changeset = Changeset(
+            id="cs1",
+            name="Original Name",
+            description="Original Description",
+            _state=ChangeState.WORKING,
+            created_at=datetime.now(timezone.utc),
+            updated_at=datetime.now(timezone.utc),
+        )
+        repository.create_changeset(changeset)
+
+        # Transition through valid states to PROPOSED
+        changeset.transition_to(ChangeState.STAGED)
+        changeset.transition_to(ChangeState.PROPOSED)
+        now = datetime.now(timezone.utc)
+        changeset.updated_at = now
+
+        # Create proposal
+        proposal = Proposal(
+            id="prop1",
+            changeset_id="cs1",
+            _state=ProposalState.OPEN,
+            submitted_at=now,
+        )
+
+        # Atomically update
+        repository.update_changeset_and_proposal_on_submit(changeset, proposal)
+
+        # Verify only state and updated_at changed
+        retrieved_cs = repository.get_changeset("cs1")
+        assert retrieved_cs is not None
+        assert retrieved_cs.state == ChangeState.PROPOSED
+        assert retrieved_cs.name == "Original Name"
+        assert retrieved_cs.description == "Original Description"

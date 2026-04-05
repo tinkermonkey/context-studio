@@ -300,7 +300,7 @@ class VersioningService:
         proposal.reviewed_at = now
 
         # Atomically update both entities to prevent inconsistent state
-        updated_changeset, updated_proposal = self._repo.update_changeset_and_proposal_on_approve(
+        updated_changeset, updated_proposal = self._repo.atomic_update_changeset_and_proposal(
             changeset, proposal
         )
         _logger.info(
@@ -347,7 +347,7 @@ class VersioningService:
         proposal.reviewer_notes = reason
 
         # Atomically update both entities to prevent inconsistent state
-        updated_changeset, updated_proposal = self._repo.update_changeset_and_proposal_on_reject(
+        updated_changeset, updated_proposal = self._repo.atomic_update_changeset_and_proposal(
             changeset, proposal
         )
         _logger.info(
@@ -580,7 +580,7 @@ class VersioningService:
         proposal.transition_to(ProposalState.MERGED)
 
         # Atomically update both entities to prevent inconsistent state
-        updated_changeset, updated_proposal = self._repo.update_changeset_and_proposal_on_merge(
+        updated_changeset, updated_proposal = self._repo.atomic_update_changeset_and_proposal(
             changeset, proposal
         )
 
