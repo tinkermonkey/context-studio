@@ -19,6 +19,7 @@ import logging
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Optional, Sequence
+from uuid import uuid4
 
 from domain.versioning.entities import ChangeEvent
 from domain.versioning.value_objects import SyncResult, ChangeOperation
@@ -145,8 +146,9 @@ class DuckDBSyncAdapter:
                     }
                 )
 
-                # Write Parquet file
-                parquet_file = date_dir / f"{date_str}.parquet"
+                # Write Parquet file with UUID to prevent overwrites on repeated pushes
+                uuid_str = str(uuid4())
+                parquet_file = date_dir / f"{uuid_str}.parquet"
                 pq.write_table(table, str(parquet_file))
 
             _logger.info(

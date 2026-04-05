@@ -209,14 +209,14 @@ async def lifespan(app: FastAPI):
         logger.info("PipelineService created and wired with adapters")
 
         # Versioning service with sync adapter
-        sync_config = settings.sync if hasattr(settings, "sync") else None
+        sync_config = settings.sync
         sync_target: SyncTarget
 
         if sync_config:
-            adapter_type = getattr(sync_config, "adapter", "none").lower()
+            adapter_type = sync_config.adapter.lower()
 
             if adapter_type == "s3":
-                s3_config = getattr(sync_config, "s3", None)
+                s3_config = sync_config.s3
                 if s3_config and s3_config.s3_bucket:
                     try:
                         sync_target = S3SyncAdapter(
@@ -235,7 +235,7 @@ async def lifespan(app: FastAPI):
                     sync_target = NoOpSyncTarget()
 
             elif adapter_type == "duckdb":
-                duckdb_config = getattr(sync_config, "duckdb", None)
+                duckdb_config = sync_config.duckdb
                 if duckdb_config and duckdb_config.output_dir:
                     try:
                         sync_target = DuckDBSyncAdapter(output_dir=duckdb_config.output_dir)

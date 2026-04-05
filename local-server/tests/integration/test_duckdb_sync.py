@@ -130,9 +130,12 @@ class TestDuckDBSyncAdapterPush:
         assert (changes_dir / date_str).exists()
         assert (changes_dir / tomorrow_date_str).exists()
 
-        # Verify Parquet files exist
-        assert (changes_dir / date_str / f"{date_str}.parquet").exists()
-        assert (changes_dir / tomorrow_date_str / f"{tomorrow_date_str}.parquet").exists()
+        # Verify Parquet files exist in the date directories (UUID filenames)
+        date_parquet_files = list((changes_dir / date_str).glob("*.parquet"))
+        tomorrow_parquet_files = list((changes_dir / tomorrow_date_str).glob("*.parquet"))
+
+        assert len(date_parquet_files) > 0, f"No Parquet files in {date_str} directory"
+        assert len(tomorrow_parquet_files) > 0, f"No Parquet files in {tomorrow_date_str} directory"
 
     def test_push_events_with_complex_state(self, duckdb_adapter):
         """Test pushing events with complex nested state objects."""
@@ -222,15 +225,17 @@ class TestDuckDBSyncAdapterPull:
         assert pulled[0].id == sample_events[2].id
 
     def test_pull_deduplicates_events(self, duckdb_adapter, sample_events):
-        """Test that pull deduplicates events by ID."""
+        """Test that pull deduplicates events by ID across multiple Parquet files."""
         event = sample_events[0]
 
-        # Push the same event twice (simulating duplicate Parquet files)
+        # Push the same event twice in separate calls to create duplicate Parquet files
+        # This simulates the case where the same event appears in multiple files
+        duckdb_adapter.push([event])
         duckdb_adapter.push([event])
 
         pulled = duckdb_adapter.pull()
 
-        # Should only get one copy of the event
+        # Should only get one copy of the event, proving deduplication works
         assert len(pulled) == 1
         assert pulled[0].id == event.id
 

@@ -202,7 +202,9 @@ class S3SyncAdapter:
                                 file_date = datetime.strptime(date_str, "%Y-%m-%d").replace(
                                     tzinfo=timezone.utc
                                 )
-                                if file_date < since:
+                                # Only skip if file date is before the date part of since
+                                # (file_date is at midnight, so compare dates not times)
+                                if file_date.date() < since.date():
                                     continue
                             except (ValueError, IndexError):
                                 _logger.warning(
