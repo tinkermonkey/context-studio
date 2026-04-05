@@ -1844,6 +1844,7 @@ class TestEntityVersionCreationOnMerge:
         service.merge_proposal(proposal1.id)
 
         version1 = repo.get_latest_version(entity_id)
+        assert version1 is not None
         assert version1.version == 1
         assert version1.parent_version is None
 
@@ -1861,6 +1862,7 @@ class TestEntityVersionCreationOnMerge:
         service.merge_proposal(proposal2.id)
 
         version2 = repo.get_latest_version(entity_id)
+        assert version2 is not None
         assert version2.version == 2
         assert version2.parent_version == 1
         assert version2.snapshot == {"name": "Entity1 Updated", "version": 2}
@@ -1898,6 +1900,7 @@ class TestEntityVersionCreationOnMerge:
         service.merge_proposal(proposal2.id)
 
         version2 = repo.get_latest_version(entity_id)
+        assert version2 is not None
         assert version2.version == 2
         assert version2.state == EntityVersionState.ARCHIVED
 
@@ -1930,6 +1933,7 @@ class TestEntityVersionCreationOnMerge:
         service.merge_proposal(proposal.id)
 
         version = repo.get_latest_version(entity_id)
+        assert version is not None
         # Should have original "status" and updated "name"
         assert version.snapshot == {"name": "Updated", "status": "active"}
 
@@ -1970,6 +1974,7 @@ class TestEntityVersionCreationOnMerge:
         service.merge_proposal(proposal.id)
 
         version = repo.get_latest_version(entity_id)
+        assert version is not None
         # Snapshot should have the resolved value, not the incoming one
         assert version.snapshot["value"] == 250
         assert version.snapshot["name"] == "Original"
