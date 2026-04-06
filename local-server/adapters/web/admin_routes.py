@@ -2,11 +2,17 @@
 HTTP route handlers for the System Administration bounded context.
 
 Endpoints:
-- GET  /api/v1/admin/health          - Check system health
-- GET  /api/v1/admin/configuration   - Retrieve configuration
+- GET  /api/v1/admin/health                 - Check system health
+- GET  /api/v1/admin/health/database        - Get database component health
+- GET  /api/v1/admin/health/services        - Get service-level metrics
+- GET  /api/v1/admin/health/embedding       - Get embedding model component status
+- GET  /api/v1/admin/health/nlp             - Get NLP pipeline component status
+- GET  /api/v1/admin/health/tasks           - Get background task summary
+- GET  /api/v1/admin/configuration          - Retrieve configuration
 - PATCH /api/v1/admin/configuration/{section} - Update configuration section
-- GET  /api/v1/admin/tasks           - List background tasks
-- GET  /api/v1/admin/tasks/{task_id} - Get background task details
+- POST /api/v1/admin/configuration/reset    - Reset configuration to defaults
+- GET  /api/v1/admin/tasks                  - List background tasks
+- GET  /api/v1/admin/tasks/{task_id}        - Get background task details
 
 All route handlers use run_sync_in_executor to prevent blocking the async event loop
 when calling synchronous domain service methods.
@@ -148,8 +154,8 @@ async def get_embedding_status(
         HTTPException: 500 for internal errors
     """
     try:
-        status = await run_sync_in_executor(service.get_embedding_model_status)
-        return ComponentStatusResponse.model_validate(status.__dict__)
+        component_status = await run_sync_in_executor(service.get_embedding_model_status)
+        return ComponentStatusResponse.model_validate(component_status.__dict__)
     except Exception as exc:
         status_code, message = _handle_admin_error(exc)
         raise HTTPException(status_code=status_code, detail=message)
@@ -171,8 +177,8 @@ async def get_nlp_status(
         HTTPException: 500 for internal errors
     """
     try:
-        status = await run_sync_in_executor(service.get_nlp_pipeline_status)
-        return ComponentStatusResponse.model_validate(status.__dict__)
+        component_status = await run_sync_in_executor(service.get_nlp_pipeline_status)
+        return ComponentStatusResponse.model_validate(component_status.__dict__)
     except Exception as exc:
         status_code, message = _handle_admin_error(exc)
         raise HTTPException(status_code=status_code, detail=message)

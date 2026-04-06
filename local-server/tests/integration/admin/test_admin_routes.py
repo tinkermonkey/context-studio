@@ -487,9 +487,9 @@ class TestConfigurationResetEndpoint:
 
         # Credentials should be masked
         llm_section = body["sections"].get("llm", {})
-        if "openai_api_key" in llm_section:
-            masked = llm_section["openai_api_key"]
-            assert masked.startswith("***"), "Credential should be masked"
+        assert "openai_api_key" in llm_section, "openai_api_key should be present in reset response"
+        masked = llm_section["openai_api_key"]
+        assert masked.startswith("***"), "Credential should be masked"
 
     def test_reset_configuration_restores_defaults(self, client, config_store, admin_service):
         """POST /api/v1/admin/configuration/reset restores default values."""

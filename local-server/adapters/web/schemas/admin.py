@@ -26,6 +26,31 @@ from pydantic import BaseModel, ConfigDict, Field
 from domain.admin.value_objects import CREDENTIAL_FIELD_NAMES
 
 
+def _mask_credential_sections(sections: dict) -> dict:
+    """
+    Mask sensitive credential fields in configuration sections.
+
+    Replaces credential values with '***<last4>' format to prevent exposure
+    in logs and API responses.
+
+    Args:
+        sections: Dictionary of configuration sections
+
+    Returns:
+        Deep copy of sections with credential fields masked
+    """
+    masked_sections = copy.deepcopy(sections)
+
+    for section in masked_sections.values():
+        if isinstance(section, dict):
+            for field_name in list(section.keys()):
+                if field_name in CREDENTIAL_FIELD_NAMES and section[field_name]:
+                    val = str(section[field_name])
+                    section[field_name] = f'***{val[-4:]}' if len(val) >= 4 else '***'
+
+    return masked_sections
+
+
 class SystemHealthResponse(BaseModel):
     """Response containing system health status and component readiness."""
 
@@ -158,15 +183,7 @@ class AppConfigurationResponse(BaseModel):
         Returns:
             AppConfigurationResponse with masked credential fields
         """
-        sections = copy.deepcopy(config.sections)
-
-        for section in sections.values():
-            if isinstance(section, dict):
-                for field_name in list(section.keys()):
-                    if field_name in CREDENTIAL_FIELD_NAMES and section[field_name]:
-                        val = str(section[field_name])
-                        section[field_name] = f'***{val[-4:]}' if len(val) >= 4 else '***'
-
+        sections = _mask_credential_sections(config.sections)
         return cls(sections=sections)
 
 
@@ -194,15 +211,7 @@ class ConfigResetResponse(BaseModel):
         Returns:
             ConfigResetResponse with masked credential fields
         """
-        sections = copy.deepcopy(config.sections)
-
-        for section in sections.values():
-            if isinstance(section, dict):
-                for field_name in list(section.keys()):
-                    if field_name in CREDENTIAL_FIELD_NAMES and section[field_name]:
-                        val = str(section[field_name])
-                        section[field_name] = f'***{val[-4:]}' if len(val) >= 4 else '***'
-
+        sections = _mask_credential_sections(config.sections)
         return cls(sections=sections)
 
 
