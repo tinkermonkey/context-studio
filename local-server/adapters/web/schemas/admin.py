@@ -24,6 +24,9 @@ from datetime import datetime
 
 from pydantic import BaseModel, ConfigDict, Field
 from domain.admin.value_objects import CREDENTIAL_FIELD_NAMES
+from utils.logger import get_logger
+
+logger = get_logger(__name__)
 
 
 def _mask_credential_sections(sections: dict) -> dict:
@@ -38,15 +41,25 @@ def _mask_credential_sections(sections: dict) -> dict:
 
     Returns:
         Deep copy of sections with credential fields masked
+
+    Raises:
+        ValueError: If a section value is not a dict or None
     """
     masked_sections = copy.deepcopy(sections)
 
-    for section in masked_sections.values():
-        if isinstance(section, dict):
-            for field_name in list(section.keys()):
-                if field_name in CREDENTIAL_FIELD_NAMES and section[field_name]:
-                    val = str(section[field_name])
-                    section[field_name] = f'***{val[-4:]}' if len(val) >= 4 else '***'
+    for section_name, section in masked_sections.items():
+        if section is None:
+            continue
+        if not isinstance(section, dict):
+            logger.warning(
+                f"Configuration section '{section_name}' is not a dict: {type(section).__name__}. "
+                "Credential masking may not be applied."
+            )
+            continue
+        for field_name in list(section.keys()):
+            if field_name in CREDENTIAL_FIELD_NAMES and section[field_name]:
+                val = str(section[field_name])
+                section[field_name] = f'***{val[-4:]}' if len(val) >= 4 else '***'
 
     return masked_sections
 

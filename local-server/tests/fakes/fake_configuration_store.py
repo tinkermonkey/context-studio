@@ -23,13 +23,27 @@ class FakeConfigurationStore:
 
         Args:
             initial_config: Optional AppConfiguration to use. If None, initializes with
-                          default sections (llm and database).
+                          default sections matching the real ConfigurationStore.
         """
         self._config = initial_config or AppConfiguration(
-            sections={"llm": {}, "database": {}}
+            sections={
+                "server": {},
+                "database": {},
+                "logging": {},
+                "llm": {},
+                "reference": None,
+                "sync": None,
+            }
         )
-        # Store default sections for reset operation
-        self._default_sections: dict[str, dict[str, Any]] = {"llm": {}, "database": {}}
+        # Store default sections for reset operation, matching real implementation
+        self._default_sections: dict[str, Any] = {
+            "server": {},
+            "database": {},
+            "logging": {},
+            "llm": {},
+            "reference": None,
+            "sync": None,
+        }
 
     def load(self) -> AppConfiguration:
         """
@@ -55,21 +69,26 @@ class FakeConfigurationStore:
 
         Creates a fresh configuration from defaults, then copies any credential
         fields from the current configuration to preserve API keys and secrets.
+        Only preserves credentials for sections that exist in the defaults.
 
         Returns:
             AppConfiguration reset to defaults with credentials preserved
         """
-        # Start with fresh defaults
+        # Start with fresh defaults, handling None values
         reset_config = AppConfiguration(
-            sections={section: dict(defaults) for section, defaults in self._default_sections.items()}
+            sections={
+                section: dict(defaults) if defaults is not None else None
+                for section, defaults in self._default_sections.items()
+            }
         )
 
-        # Preserve credentials from current config
-        for section in self._config.sections:
-            if section not in reset_config.sections:
-                reset_config.sections[section] = {}
-            current_section = self._config.sections[section]
-            reset_section = reset_config.sections[section]
+        # Preserve credentials from current config, only for sections in defaults
+        for section_name, current_section in self._config.sections.items():
+            if section_name not in reset_config.sections or current_section is None:
+                continue
+            reset_section = reset_config.sections[section_name]
+            if reset_section is None:
+                continue
             for key, value in current_section.items():
                 if key in CREDENTIAL_FIELD_NAMES:
                     reset_section[key] = value

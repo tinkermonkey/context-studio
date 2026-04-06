@@ -390,7 +390,7 @@ class TestAdminServiceConfigurationReset:
         assert "path" not in reset_config.sections["database"]
 
     def test_reset_configuration_preserves_credentials(self):
-        """Reset configuration preserves credential fields."""
+        """Reset configuration preserves credential fields for sections in defaults."""
         initial = AppConfiguration(
             sections={
                 "llm": {
@@ -410,10 +410,11 @@ class TestAdminServiceConfigurationReset:
 
         reset_config = service.reset_configuration()
 
+        # Credentials for sections in defaults are preserved
         assert reset_config.sections["llm"]["openai_api_key"] == "sk-secret-key"
         assert reset_config.sections["llm"]["anthropic_api_key"] == "sk-ant-secret"
-        assert reset_config.sections["sync"]["s3_access_key"] == "access-key"
-        assert reset_config.sections["sync"]["s3_secret_key"] == "secret-key"
+        # sync is not in defaults (sync: None in Settings), so it should not be in reset config
+        assert reset_config.sections["sync"] is None
 
     def test_reset_configuration_uses_credential_field_names_constant(self):
         """Reset configuration uses CREDENTIAL_FIELD_NAMES to determine which fields to preserve."""
@@ -426,10 +427,9 @@ class TestAdminServiceConfigurationReset:
                     "openai_api_key": "sk-secret",  # Credential field
                     "anthropic_api_key": "sk-ant",  # Credential field
                 },
-                "sync": {
-                    "bucket": "my-bucket",  # Non-credential field
-                    "s3_access_key": "access-key",  # Credential field
-                    "s3_secret_key": "secret-key",  # Credential field
+                "database": {
+                    "path": "/custom.db",  # Non-credential field
+                    "host": "localhost",  # Non-credential field
                 },
             }
         )
@@ -442,13 +442,12 @@ class TestAdminServiceConfigurationReset:
         # Verify non-credential fields are cleared
         assert "provider" not in reset_config.sections["llm"]
         assert "model" not in reset_config.sections["llm"]
-        assert "bucket" not in reset_config.sections["sync"]
+        assert "path" not in reset_config.sections["database"]
+        assert "host" not in reset_config.sections["database"]
 
         # Verify credential fields (in CREDENTIAL_FIELD_NAMES) are preserved
         assert reset_config.sections["llm"]["openai_api_key"] == "sk-secret"
         assert reset_config.sections["llm"]["anthropic_api_key"] == "sk-ant"
-        assert reset_config.sections["sync"]["s3_access_key"] == "access-key"
-        assert reset_config.sections["sync"]["s3_secret_key"] == "secret-key"
 
     def test_reset_configuration_delegatesto_config_store(self):
         """Reset configuration delegates to ConfigurationStore.reset_to_defaults()."""

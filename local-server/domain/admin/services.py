@@ -220,11 +220,13 @@ class AdminService:
             Updated AppConfiguration object
 
         Raises:
-            ConfigurationError: If the section does not exist
+            ConfigurationError: If the section does not exist or is not configured
         """
         config = self._config.load()
         if section not in config.sections:
             raise ConfigurationError(f"Unknown config section: {section}")
+        if config.sections[section] is None:
+            raise ConfigurationError(f"Configuration section '{section}' is not configured")
         config.sections[section].update(updates)
         self._config.save(config)
         return config
