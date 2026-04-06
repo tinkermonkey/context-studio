@@ -10,12 +10,11 @@ Response schemas:
 - ServiceMetricsResponse - Service-level metrics
 - ComponentStatusResponse - Individual component status
 - BackgroundTaskSummaryResponse - Summary of background task execution
-- AppConfigurationResponse - Full application configuration
-- ConfigResetResponse - Configuration reset operation response
+- AppConfigurationResponse - Full application configuration (reused for retrieval and reset)
 - BackgroundTaskResponse - Background task status and metadata
 
 These schemas handle serialization/deserialization between HTTP and domain models.
-API key masking is applied at serialization time in AppConfigurationResponse and ConfigResetResponse.
+API key masking is applied at serialization time in AppConfigurationResponse.
 """
 
 import copy
@@ -172,7 +171,12 @@ class ConfigSectionUpdateRequest(BaseModel):
 
 
 class AppConfigurationResponse(BaseModel):
-    """Response containing application configuration with masked API keys."""
+    """Response containing application configuration with masked API keys.
+
+    Used for both configuration retrieval and reset operations. Sensitive values
+    (API keys and other credentials) are masked to prevent exposure in logs and
+    API responses.
+    """
 
     sections: dict = Field(
         ...,
@@ -194,34 +198,6 @@ class AppConfigurationResponse(BaseModel):
 
         Returns:
             AppConfigurationResponse with masked credential fields
-        """
-        sections = _mask_credential_sections(config.sections)
-        return cls(sections=sections)
-
-
-class ConfigResetResponse(BaseModel):
-    """Response from configuration reset operation."""
-
-    sections: dict = Field(
-        ...,
-        description="Configuration sections after reset with sensitive values masked"
-    )
-
-    model_config = ConfigDict(from_attributes=True)
-
-    @classmethod
-    def from_domain(cls, config) -> 'ConfigResetResponse':
-        """
-        Convert domain AppConfiguration to response, masking sensitive values.
-
-        Credential fields are replaced with '***<last4>' to prevent exposure in logs
-        and API responses.
-
-        Args:
-            config: Domain AppConfiguration entity after reset
-
-        Returns:
-            ConfigResetResponse with masked credential fields
         """
         sections = _mask_credential_sections(config.sections)
         return cls(sections=sections)

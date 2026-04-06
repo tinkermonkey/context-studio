@@ -30,7 +30,6 @@ from adapters.web.schemas.admin import (
     BackgroundTaskSummaryResponse,
     AppConfigurationResponse,
     ConfigSectionUpdateRequest,
-    ConfigResetResponse,
     BackgroundTaskResponse,
 )
 from utils.async_executor import run_sync_in_executor
@@ -268,10 +267,10 @@ async def update_configuration(
         raise HTTPException(status_code=status_code, detail=message)
 
 
-@router.post("/configuration/reset", response_model=ConfigResetResponse)
+@router.post("/configuration/reset", response_model=AppConfigurationResponse)
 async def reset_configuration(
     service: AdminService = Depends(get_admin_service),
-) -> ConfigResetResponse:
+) -> AppConfigurationResponse:
     """
     Reset configuration to defaults while preserving credentials.
 
@@ -279,14 +278,14 @@ async def reset_configuration(
     (API keys, secrets) are preserved. Returns configuration with masked credentials.
 
     Returns:
-        ConfigResetResponse with reset configuration and masked credentials
+        AppConfigurationResponse with reset configuration and masked credentials
 
     Raises:
         HTTPException: 500 for internal errors
     """
     try:
         config = await run_sync_in_executor(service.reset_configuration)
-        return ConfigResetResponse.from_domain(config)
+        return AppConfigurationResponse.from_domain(config)
     except Exception as exc:
         status_code, message = _handle_admin_error(exc)
         raise HTTPException(status_code=status_code, detail=message)
