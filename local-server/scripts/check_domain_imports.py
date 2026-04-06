@@ -23,6 +23,7 @@ BANNED_IMPORTS = {
     "anthropic",
     "httpx",
     "uvicorn",
+    "utils",
 }
 
 

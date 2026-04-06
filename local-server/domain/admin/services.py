@@ -15,9 +15,6 @@ from .entities import SystemHealth, BackgroundTask, AppConfiguration
 from .value_objects import BackgroundTaskStatus, SystemHealthStatus, DatabaseHealth, ServiceMetrics, ComponentStatus, BackgroundTaskSummary
 from .ports import MetricsCollector, ConfigurationStore
 from .exceptions import TaskNotFoundError, ConfigurationError
-from utils.logger import get_logger
-
-logger = get_logger(__name__)
 
 
 class AdminService:
@@ -77,7 +74,6 @@ class AdminService:
             service_metrics = self._metrics.get_service_metrics()
         except Exception as e:
             service_metrics_error = str(e)
-            logger.warning(f"Failed to collect service metrics: {e}")
             service_metrics = ServiceMetrics(
                 uptime_seconds=0.0, llm_providers_available=[]
             )
@@ -99,7 +95,6 @@ class AdminService:
         try:
             task_summary = self._metrics.get_background_task_summary()
         except Exception as e:
-            logger.warning(f"Failed to collect background task summary: {e}")
             task_summary = BackgroundTaskSummary(by_status={})
 
         # Aggregate all issues

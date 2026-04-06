@@ -36,28 +36,11 @@ class SystemMetricsCollector:
     models. Tracks uptime since application start. Implements the MetricsCollector
     protocol to provide granular health checks.
 
-    ERROR HANDLING STRATEGY (Defense-in-Depth):
-    ============================================
-    This adapter uses a two-layer error handling pattern to maximize system resilience:
-
-    1. ADAPTER LAYER (this class):
-       - For ComponentStatus methods (embedding, NLP): Catch exceptions, log them,
-         and return ComponentStatus with error details. This allows safe degradation
-         when individual components fail.
-       - For ServiceMetrics: Log exceptions and re-raise them to signal error
-         conditions to the caller. This allows the service layer to distinguish
-         between "no providers configured" (empty list) and "failed to check" (exception).
-
-    2. SERVICE LAYER (AdminService.check_health()):
-       - Wraps all adapter calls in try-except blocks
-       - Catches exceptions that escape the adapter layer
-       - Creates safe default values and logs errors
-       - Aggregates all errors into the final SystemHealth status
-
-    This pattern ensures:
-    - Robustness: Individual component failures don't cascade
-    - Observability: All errors are logged at the point where they occur
-    - Caller clarity: Errors are distinguishable from empty/default states
+    Error handling follows a two-layer pattern: this adapter catches and logs
+    errors for ComponentStatus methods (returning safe defaults), but re-raises
+    exceptions from get_service_metrics() so the caller can distinguish "no
+    providers" from "check failed". AdminService.check_health() catches any
+    exceptions that escape this layer.
     """
 
     def __init__(
