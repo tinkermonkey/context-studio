@@ -1852,6 +1852,7 @@ class TestSyncStatusErrorHandling:
 
         assert status.unprocessed_count == 0
         assert status.is_configured == sync_target.is_configured()
+        assert status.is_degraded is True
 
     def test_get_sync_status_is_configured_error(
         self, repo: FakeChangeRepository, event_publisher: FakeEventPublisher
@@ -1873,6 +1874,7 @@ class TestSyncStatusErrorHandling:
 
         assert status.is_configured is False
         assert status.unprocessed_count == repo.count_unprocessed()
+        assert status.is_degraded is False
 
     def test_get_sync_status_both_errors(
         self, event_publisher: FakeEventPublisher
@@ -1899,6 +1901,7 @@ class TestSyncStatusErrorHandling:
 
         assert status.unprocessed_count == 0
         assert status.is_configured is False
+        assert status.is_degraded is True
 
     def test_get_sync_status_success_path(
         self, service: VersioningService, repo: FakeChangeRepository, sync_target: FakeSyncTarget
@@ -1916,6 +1919,7 @@ class TestSyncStatusErrorHandling:
 
         assert status.unprocessed_count == 1
         assert status.is_configured == sync_target.is_configured()
+        assert status.is_degraded is False
 
 
 # ============================================================================

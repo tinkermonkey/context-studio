@@ -1072,6 +1072,7 @@ class VersioningService:
         """
         count = 0
         is_configured = False
+        is_degraded = False
 
         try:
             count = self._repo.count_unprocessed()
@@ -1079,6 +1080,7 @@ class VersioningService:
             _logger.warning(
                 "Failed to count unprocessed changes in sync status: %s", str(e)
             )
+            is_degraded = True
 
         try:
             is_configured = self._sync.is_configured()
@@ -1092,11 +1094,13 @@ class VersioningService:
             last_pulled_at=None,
             unprocessed_count=count,
             is_configured=is_configured,
+            is_degraded=is_degraded,
         )
         _logger.debug(
-            "Sync status: unprocessed=%d, configured=%s",
+            "Sync status: unprocessed=%d, configured=%s, degraded=%s",
             count,
             is_configured,
+            is_degraded,
         )
         return status
 
