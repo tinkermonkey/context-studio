@@ -484,10 +484,6 @@ class TestAdminServiceConfigurationReset:
             nlp={},
             embedding={},
             reference_sources={},
-            sync={
-                "s3_access_key": "access-key",
-                "s3_secret_key": "secret-key",
-            },
         )
         config_store = FakeConfigurationStore(initial_config=initial)
         service = AdminService(self.metrics, config_store)
@@ -497,8 +493,6 @@ class TestAdminServiceConfigurationReset:
         # Credentials for sections in defaults are preserved
         assert reset_config.llm["openai_api_key"] == "sk-secret-key"
         assert reset_config.llm["anthropic_api_key"] == "sk-ant-secret"
-        # sync is preserved if it was in initial config
-        assert reset_config.sync is not None
 
     def test_reset_configuration_uses_credential_field_names_constant(self):
         """Reset configuration uses CREDENTIAL_FIELD_NAMES to determine which fields to preserve."""

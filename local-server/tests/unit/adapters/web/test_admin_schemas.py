@@ -34,7 +34,7 @@ class TestAppConfigurationResponseMasking:
 
         response = AppConfigurationResponse.from_domain(config)
 
-        assert response.llm["openai_api_key"] == "***1234"
+        assert response.sections["llm"]["openai_api_key"] == "***1234"
 
     def test_anthropic_api_key_is_masked(self) -> None:
         """Test that Anthropic API key is masked with last 4 characters."""
@@ -52,7 +52,7 @@ class TestAppConfigurationResponseMasking:
 
         response = AppConfigurationResponse.from_domain(config)
 
-        assert response.llm["anthropic_api_key"] == "***1234"
+        assert response.sections["llm"]["anthropic_api_key"] == "***1234"
 
     def test_s3_secret_key_is_masked(self) -> None:
         """Test that S3 secret key is masked with last 4 characters."""
@@ -71,8 +71,8 @@ class TestAppConfigurationResponseMasking:
 
         response = AppConfigurationResponse.from_domain(config)
 
-        assert response.sync is not None
-        assert response.sync["s3_secret_key"] == "***EKEY"
+        assert response.sections["sync"] is not None
+        assert response.sections["sync"]["s3_secret_key"] == "***EKEY"
 
     def test_s3_access_key_is_masked(self) -> None:
         """Test that S3 access key is masked with last 4 characters."""
@@ -91,8 +91,8 @@ class TestAppConfigurationResponseMasking:
 
         response = AppConfigurationResponse.from_domain(config)
 
-        assert response.sync is not None
-        assert response.sync["s3_access_key"] == "***MPLE"
+        assert response.sections["sync"] is not None
+        assert response.sections["sync"]["s3_access_key"] == "***MPLE"
 
     def test_short_api_key_is_masked_as_three_asterisks(self) -> None:
         """Test that API keys shorter than 4 characters are masked as ***."""
@@ -110,7 +110,7 @@ class TestAppConfigurationResponseMasking:
 
         response = AppConfigurationResponse.from_domain(config)
 
-        assert response.llm["openai_api_key"] == "***"
+        assert response.sections["llm"]["openai_api_key"] == "***"
 
     def test_empty_api_key_is_not_masked(self) -> None:
         """Test that empty API keys remain unchanged."""
@@ -128,7 +128,7 @@ class TestAppConfigurationResponseMasking:
 
         response = AppConfigurationResponse.from_domain(config)
 
-        assert response.llm["openai_api_key"] == ""
+        assert response.sections["llm"]["openai_api_key"] == ""
 
     def test_none_api_key_is_not_masked(self) -> None:
         """Test that None API keys remain unchanged."""
@@ -146,7 +146,7 @@ class TestAppConfigurationResponseMasking:
 
         response = AppConfigurationResponse.from_domain(config)
 
-        assert response.llm["openai_api_key"] is None
+        assert response.sections["llm"]["openai_api_key"] is None
 
     def test_multiple_api_keys_are_masked(self) -> None:
         """Test masking multiple API keys in same section."""
@@ -165,8 +165,8 @@ class TestAppConfigurationResponseMasking:
 
         response = AppConfigurationResponse.from_domain(config)
 
-        assert response.llm["openai_api_key"] == "***7890"
-        assert response.llm["anthropic_api_key"] == "***7890"
+        assert response.sections["llm"]["openai_api_key"] == "***7890"
+        assert response.sections["llm"]["anthropic_api_key"] == "***7890"
 
     def test_s3_keys_in_sync_section_are_masked(self) -> None:
         """Test masking S3 keys in sync section."""
@@ -186,9 +186,9 @@ class TestAppConfigurationResponseMasking:
 
         response = AppConfigurationResponse.from_domain(config)
 
-        assert response.sync is not None
-        assert response.sync["s3_access_key"] == "***MPLE"
-        assert response.sync["s3_secret_key"] == "***EKEY"
+        assert response.sections["sync"] is not None
+        assert response.sections["sync"]["s3_access_key"] == "***MPLE"
+        assert response.sections["sync"]["s3_secret_key"] == "***EKEY"
 
     def test_non_key_fields_are_not_masked(self) -> None:
         """Test that non-sensitive fields are not masked."""
@@ -208,9 +208,9 @@ class TestAppConfigurationResponseMasking:
 
         response = AppConfigurationResponse.from_domain(config)
 
-        assert response.llm["provider"] == "openai"
-        assert response.llm["model"] == "gpt-4"
-        assert response.llm["openai_api_key"] == "***7890"
+        assert response.sections["llm"]["provider"] == "openai"
+        assert response.sections["llm"]["model"] == "gpt-4"
+        assert response.sections["llm"]["openai_api_key"] == "***7890"
 
     def test_original_config_is_not_modified(self) -> None:
         """Test that the original config object is not modified by masking."""
@@ -251,10 +251,10 @@ class TestAppConfigurationResponseMasking:
 
         response = AppConfigurationResponse.from_domain(config)
 
-        assert response.llm["openai_api_key"] == "***7890"
-        assert response.sync is not None
-        assert response.sync["s3_access_key"] == "***MPLE"
-        assert response.sync["s3_secret_key"] == "***EKEY"
+        assert response.sections["llm"]["openai_api_key"] == "***7890"
+        assert response.sections["sync"] is not None
+        assert response.sections["sync"]["s3_access_key"] == "***MPLE"
+        assert response.sections["sync"]["s3_secret_key"] == "***EKEY"
 
     def test_exactly_4_character_key_shows_last_4(self) -> None:
         """Test that a 4-character key shows all 4 characters."""
@@ -272,7 +272,7 @@ class TestAppConfigurationResponseMasking:
 
         response = AppConfigurationResponse.from_domain(config)
 
-        assert response.llm["openai_api_key"] == "***abcd"
+        assert response.sections["llm"]["openai_api_key"] == "***abcd"
 
     def test_non_string_api_key_is_converted_and_masked(self) -> None:
         """Test that non-string API keys are converted to string before masking."""
@@ -291,7 +291,7 @@ class TestAppConfigurationResponseMasking:
         response = AppConfigurationResponse.from_domain(config)
 
         # 12345678901234 converted to string "12345678901234", last 4 is "1234"
-        assert response.llm["openai_api_key"] == "***1234"
+        assert response.sections["llm"]["openai_api_key"] == "***1234"
 
     def test_none_sync_section_remains_none(self) -> None:
         """Test that None section values remain as None."""
@@ -310,5 +310,5 @@ class TestAppConfigurationResponseMasking:
 
         response = AppConfigurationResponse.from_domain(config)
 
-        assert response.llm["openai_api_key"] == "***7890"
-        assert response.sync is None
+        assert response.sections["llm"]["openai_api_key"] == "***7890"
+        assert response.sections.get("sync") is None

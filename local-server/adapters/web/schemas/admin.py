@@ -188,13 +188,9 @@ class AppConfigurationResponse(BaseModel):
     API responses.
     """
 
-    llm: dict[str, Any] = Field(
+    sections: dict[str, dict[str, Any]] = Field(
         default_factory=dict,
-        description="LLM configuration with masked credentials"
-    )
-    sync: Optional[dict[str, Any]] = Field(
-        default=None,
-        description="Sync configuration with masked credentials"
+        description="All configuration sections with masked credentials"
     )
 
     model_config = ConfigDict(from_attributes=True)
@@ -211,12 +207,13 @@ class AppConfigurationResponse(BaseModel):
             config: Domain AppConfiguration entity
 
         Returns:
-            AppConfigurationResponse with masked credential fields
+            AppConfigurationResponse with masked credential fields in sections
         """
-        llm_masked = _mask_credentials(config.llm) if config.llm else {}
-        sync_masked = _mask_credentials(config.sync) if config.sync else None
+        sections_masked = {}
+        for section_name, section_config in config.sections.items():
+            sections_masked[section_name] = _mask_credentials(section_config)
 
-        return cls(llm=llm_masked, sync=sync_masked)
+        return cls(sections=sections_masked)
 
 
 class BackgroundTaskResponse(BaseModel):
