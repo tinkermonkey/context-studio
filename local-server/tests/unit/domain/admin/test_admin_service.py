@@ -89,7 +89,7 @@ class TestAdminServiceCompositeHealthAggregation:
             service_metrics=ServiceMetrics(uptime_seconds=3600.0, llm_providers_available=["openai"]),
             embedding_status=ComponentStatus(available=True, details="Loaded"),
             nlp_status=ComponentStatus(available=True, details="Ready"),
-            task_summary=BackgroundTaskSummary(total=0, by_status={}),
+            task_summary=BackgroundTaskSummary(by_status={}),
         )
         service = AdminService(metrics, self.config_store)
 
@@ -107,7 +107,7 @@ class TestAdminServiceCompositeHealthAggregation:
             service_metrics=ServiceMetrics(uptime_seconds=3600.0, llm_providers_available=["openai"]),
             embedding_status=ComponentStatus(available=True, details="Loaded"),
             nlp_status=ComponentStatus(available=True, details="Ready"),
-            task_summary=BackgroundTaskSummary(total=0, by_status={}),
+            task_summary=BackgroundTaskSummary(by_status={}),
         )
         service = AdminService(metrics, self.config_store)
 
@@ -123,7 +123,7 @@ class TestAdminServiceCompositeHealthAggregation:
             service_metrics=ServiceMetrics(uptime_seconds=3600.0, llm_providers_available=["openai"]),
             embedding_status=ComponentStatus(available=False, details="Model not loaded"),
             nlp_status=ComponentStatus(available=True, details="Ready"),
-            task_summary=BackgroundTaskSummary(total=0, by_status={}),
+            task_summary=BackgroundTaskSummary(by_status={}),
         )
         service = AdminService(metrics, self.config_store)
 
@@ -140,7 +140,7 @@ class TestAdminServiceCompositeHealthAggregation:
             service_metrics=ServiceMetrics(uptime_seconds=3600.0, llm_providers_available=["openai"]),
             embedding_status=ComponentStatus(available=True, details="Loaded"),
             nlp_status=ComponentStatus(available=False, details="Pipeline not ready"),
-            task_summary=BackgroundTaskSummary(total=0, by_status={}),
+            task_summary=BackgroundTaskSummary(by_status={}),
         )
         service = AdminService(metrics, self.config_store)
 
@@ -159,7 +159,7 @@ class TestAdminServiceCompositeHealthAggregation:
             service_metrics=ServiceMetrics(uptime_seconds=3600.0, llm_providers_available=["openai"]),
             embedding_status=ComponentStatus(available=True, details="Loaded"),
             nlp_status=ComponentStatus(available=True, details="Ready"),
-            task_summary=BackgroundTaskSummary(total=0, by_status={}),
+            task_summary=BackgroundTaskSummary(by_status={}),
         )
         service = AdminService(metrics, self.config_store)
 
@@ -175,7 +175,7 @@ class TestAdminServiceCompositeHealthAggregation:
             service_metrics=ServiceMetrics(uptime_seconds=7200.0, llm_providers_available=["openai", "anthropic"]),
             embedding_status=ComponentStatus(available=True, details="Loaded"),
             nlp_status=ComponentStatus(available=True, details="Ready"),
-            task_summary=BackgroundTaskSummary(total=0, by_status={}),
+            task_summary=BackgroundTaskSummary(by_status={}),
         )
         service = AdminService(metrics, self.config_store)
 
@@ -201,7 +201,7 @@ class TestAdminServiceHealthErrorHandling:
             service_metrics=ServiceMetrics(uptime_seconds=0.0, llm_providers_available=["openai"]),
             embedding_status=ComponentStatus(available=True, details="OK"),
             nlp_status=ComponentStatus(available=True, details="OK"),
-            task_summary=BackgroundTaskSummary(total=0, by_status={}),
+            task_summary=BackgroundTaskSummary(by_status={}),
             database_health_error=RuntimeError("Database check failed"),
         )
         service = AdminService(metrics, self.config_store)
@@ -217,7 +217,7 @@ class TestAdminServiceHealthErrorHandling:
             database_health=DatabaseHealth(connected=True, issues=[]),
             embedding_status=ComponentStatus(available=True, details="OK"),
             nlp_status=ComponentStatus(available=True, details="OK"),
-            task_summary=BackgroundTaskSummary(total=0, by_status={}),
+            task_summary=BackgroundTaskSummary(by_status={}),
             service_metrics_error=RuntimeError("LLM provider check failed"),
         )
         service = AdminService(metrics, self.config_store)
@@ -234,7 +234,7 @@ class TestAdminServiceHealthErrorHandling:
             database_health=DatabaseHealth(connected=True, issues=[]),
             service_metrics=ServiceMetrics(uptime_seconds=0.0, llm_providers_available=["openai"]),
             nlp_status=ComponentStatus(available=True, details="OK"),
-            task_summary=BackgroundTaskSummary(total=0, by_status={}),
+            task_summary=BackgroundTaskSummary(by_status={}),
             embedding_status_error=RuntimeError("Embedding check failed"),
         )
         service = AdminService(metrics, self.config_store)
@@ -250,7 +250,7 @@ class TestAdminServiceHealthErrorHandling:
             database_health=DatabaseHealth(connected=True, issues=[]),
             service_metrics=ServiceMetrics(uptime_seconds=0.0, llm_providers_available=["openai"]),
             embedding_status=ComponentStatus(available=True, details="OK"),
-            task_summary=BackgroundTaskSummary(total=0, by_status={}),
+            task_summary=BackgroundTaskSummary(by_status={}),
             nlp_status_error=RuntimeError("NLP check failed"),
         )
         service = AdminService(metrics, self.config_store)
@@ -286,7 +286,7 @@ class TestAdminServiceBackgroundTaskSummary:
         """Health check reports issues when tasks have failed."""
         metrics = FakeMetricsCollector(
             service_metrics=ServiceMetrics(uptime_seconds=0.0, llm_providers_available=["openai"]),
-            task_summary=BackgroundTaskSummary(total=3, by_status={"completed": 2, "failed": 1}),
+            task_summary=BackgroundTaskSummary(by_status={"completed": 2, "failed": 1}),
         )
         service = AdminService(metrics, self.config_store)
 
@@ -299,7 +299,7 @@ class TestAdminServiceBackgroundTaskSummary:
         """Health check is healthy when all tasks completed successfully."""
         metrics = FakeMetricsCollector(
             service_metrics=ServiceMetrics(uptime_seconds=0.0, llm_providers_available=["openai"]),
-            task_summary=BackgroundTaskSummary(total=3, by_status={"completed": 3}),
+            task_summary=BackgroundTaskSummary(by_status={"completed": 3}),
         )
         service = AdminService(metrics, self.config_store)
 
@@ -312,7 +312,7 @@ class TestAdminServiceBackgroundTaskSummary:
         """Health check reports correct count of multiple failed tasks."""
         metrics = FakeMetricsCollector(
             service_metrics=ServiceMetrics(uptime_seconds=0.0, llm_providers_available=["openai"]),
-            task_summary=BackgroundTaskSummary(total=5, by_status={"completed": 3, "failed": 2}),
+            task_summary=BackgroundTaskSummary(by_status={"completed": 3, "failed": 2}),
         )
         service = AdminService(metrics, self.config_store)
 

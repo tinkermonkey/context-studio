@@ -59,7 +59,7 @@ class AdminService:
         service_metrics = ServiceMetrics(uptime_seconds=0.0, llm_providers_available=[])
         embedding_status = ComponentStatus(available=False, details="Health check not performed")
         nlp_status = ComponentStatus(available=False, details="Health check not performed")
-        task_summary = BackgroundTaskSummary(total=0, by_status={})
+        task_summary = BackgroundTaskSummary(by_status={})
 
         # Call each port method with individual error handling
         try:
@@ -95,7 +95,7 @@ class AdminService:
         try:
             task_summary = self._metrics.get_background_task_summary()
         except Exception:
-            task_summary = BackgroundTaskSummary(total=0, by_status={})
+            task_summary = BackgroundTaskSummary(by_status={})
 
         # Aggregate all issues
         issues: list[str] = []

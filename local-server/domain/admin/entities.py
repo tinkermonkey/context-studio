@@ -49,6 +49,7 @@ class BackgroundTask:
         id: Unique identifier for the task
         name: Human-readable task name
         status: Task status ('pending', 'running', 'completed', or 'failed')
+        progress: Task progress as a float between 0.0 and 1.0
         created_at: Timestamp when task was registered
         started_at: Timestamp when task started execution
         completed_at: Timestamp when task finished
@@ -62,6 +63,7 @@ class BackgroundTask:
     created_at: datetime
     started_at: Optional[datetime] = None
     completed_at: Optional[datetime] = None
+    progress: Optional[float] = None
     error: Optional[str] = None
     result: Optional[dict] = None
 

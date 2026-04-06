@@ -201,7 +201,7 @@ async def get_task_summary(
     """
     try:
         summary = await run_sync_in_executor(service.get_background_task_summary)
-        return BackgroundTaskSummaryResponse.model_validate(summary.__dict__)
+        return BackgroundTaskSummaryResponse.model_validate(summary)
     except Exception as exc:
         status_code, message = _handle_admin_error(exc)
         raise HTTPException(status_code=status_code, detail=message)
@@ -310,7 +310,7 @@ async def list_tasks(
     """
     try:
         tasks = await run_sync_in_executor(service.list_tasks)
-        return [BackgroundTaskResponse.model_validate(task.__dict__) for task in tasks]
+        return [BackgroundTaskResponse.model_validate(task) for task in tasks]
     except Exception as exc:
         status_code, message = _handle_admin_error(exc)
         raise HTTPException(status_code=status_code, detail=message)
@@ -338,7 +338,7 @@ async def get_task(
     """
     try:
         task = await run_sync_in_executor(service.get_task, task_id)
-        return BackgroundTaskResponse.model_validate(task.__dict__)
+        return BackgroundTaskResponse.model_validate(task)
     except Exception as exc:
         status_code, message = _handle_admin_error(exc)
         raise HTTPException(status_code=status_code, detail=message)

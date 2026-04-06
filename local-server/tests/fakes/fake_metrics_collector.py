@@ -64,7 +64,7 @@ class FakeMetricsCollector:
             available=True, details="NLP pipeline ready"
         )
         self._task_summary = task_summary or BackgroundTaskSummary(
-            total=0, by_status={}
+            by_status={}
         )
         self._database_health_error = database_health_error
         self._service_metrics_error = service_metrics_error

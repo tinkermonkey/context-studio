@@ -77,9 +77,12 @@ class BackgroundTaskSummary:
     Summary of background task execution status.
 
     Attributes:
-        total: Total number of background tasks registered
         by_status: Count of tasks grouped by status
     """
 
-    total: int
     by_status: dict[str, int] = field(default_factory=dict)
+
+    @property
+    def total(self) -> int:
+        """Total number of background tasks, computed from by_status counts."""
+        return sum(self.by_status.values())

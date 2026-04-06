@@ -150,4 +150,4 @@ class SystemMetricsCollector:
             BackgroundTaskSummary with task counts by status
         """
         # Currently no background task tracking in the system
-        return BackgroundTaskSummary(total=0, by_status={})
+        return BackgroundTaskSummary(by_status={})

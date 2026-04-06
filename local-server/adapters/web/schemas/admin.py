@@ -254,6 +254,10 @@ class BackgroundTaskResponse(BaseModel):
         default=None,
         description="Timestamp when task finished"
     )
+    progress: Optional[float] = Field(
+        default=None,
+        description="Task progress as a float between 0.0 and 1.0"
+    )
     error: Optional[str] = Field(
         default=None,
         description="Error message if task failed"
