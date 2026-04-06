@@ -495,7 +495,7 @@ class TestConfigurationResetEndpoint:
         """POST /api/v1/admin/configuration/reset restores default values."""
         # Get baseline config
         reset_config = admin_service.reset_configuration()
-        original_defaults = dict(reset_config.sections)
+        dict(reset_config.sections)
 
         # Modify config
         response = client.patch(
