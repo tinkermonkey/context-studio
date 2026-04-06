@@ -154,7 +154,7 @@ def test_load_and_save_preserves_sections():
         store = JSONFileConfigStore(config_mgr)
 
         # Load, modify all sections, update, and reload
-        config = store.get_config()
+        store.get_config()
         updates = {
             "logging": {"log_level": "WARNING"},
             "server": {"port": 9999},
