@@ -44,7 +44,9 @@ export class RAGService extends BaseService {
       const request: ExtractRequest = {
         text: sanitizedText,
         enable_trace: enableTrace,
-        ...(enableLlmLayer !== undefined && { enable_llm_layer: enableLlmLayer }),
+        ...(enableLlmLayer !== undefined && {
+          enable_llm_layer: enableLlmLayer,
+        }),
       };
       const response = await this.postResource<ExtractionResult>(
         ENDPOINTS.RAG.EXTRACT,

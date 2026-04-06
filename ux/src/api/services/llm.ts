@@ -86,10 +86,7 @@ export class LLMService extends BaseService {
           pipeline_type: "suggest_term_definition",
           flavor_id: legacyRequest.flavor || "default",
           context_data: {
-            term: this.sanitizeString(
-              String(legacyRequest.term || ""),
-              "term",
-            ),
+            term: this.sanitizeString(String(legacyRequest.term || ""), "term"),
             domain_title: legacyRequest.domain_title,
             domain_definition: legacyRequest.domain_definition,
             parent_term_title: legacyRequest.parent_term_title,

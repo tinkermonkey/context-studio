@@ -22,11 +22,7 @@ export interface ExtractEntitiesParams {
  * Hook to extract entities from text using the RAG pipeline
  */
 export const useExtractEntities = (
-  options?: UseMutationOptions<
-    ExtractionResult,
-    Error,
-    ExtractEntitiesParams
-  >,
+  options?: UseMutationOptions<ExtractionResult, Error, ExtractEntitiesParams>,
 ) => {
   return useMutation({
     mutationFn: ({
