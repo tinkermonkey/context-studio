@@ -14,15 +14,13 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(
 
 import pytest
 from fastapi.testclient import TestClient
-from fastapi import FastAPI
 
 
 @pytest.fixture(scope="module")
 def temp_db_dir():
     """Create a temporary directory for test databases."""
-    temp_dir = tempfile.mkdtemp(prefix="e2e_test_")
-    yield Path(temp_dir)
-    # Cleanup is handled by tempfile
+    with tempfile.TemporaryDirectory(prefix="e2e_test_") as temp_dir:
+        yield Path(temp_dir)
 
 
 @pytest.fixture(scope="module")
@@ -102,12 +100,8 @@ def init_db(setup_e2e_config, temp_db_dir):
     the app is created.
     """
     import subprocess
-    from pathlib import Path
 
     local_server_dir = Path(__file__).parent.parent.parent
-
-    # Run migrations using the helper script
-    from pathlib import Path
 
     # Run migrations for both databases
     # Set PYTHONPATH to include the local-server directory so alembic can import modules

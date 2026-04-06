@@ -1,26 +1,28 @@
 """
-E2E tests for Phase 4: System Administration, Pipeline, and Versioning contexts.
+E2E tests for Phase 4: System Administration context.
 
-Test Suite: test_phase4_admin.py
-
-This module tests the System Administration bounded context through the HTTP API
-with a fully initialized application using real databases and real adapters.
+This module tests the System Administration bounded context through both the HTTP API
+and direct service calls with a fully initialized application using real databases
+and real adapters.
 
 Tests verify:
 - Health check reporting real system status
 - System metrics accuracy and consistency
-- Configuration persistence across restart cycles
-- Background task lifecycle and state transitions
+- Configuration read and update operations with file persistence
+- Background task lifecycle and state transitions (PENDING → RUNNING → COMPLETED)
 """
 
 import sys
 import os
 import time
+import json
+from pathlib import Path
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 import pytest
 from fastapi import status
+from domain.admin.value_objects import BackgroundTaskStatus
 
 
 @pytest.mark.e2e
@@ -118,15 +120,15 @@ class TestSystemMetrics:
 class TestConfigurationManagement:
     """Tests for configuration reading, updating, and persistence."""
 
-    def test_configuration_read_and_update(self, e2e_client):
+    def test_configuration_read_and_update(self, e2e_client, temp_db_dir):
         """
-        Configuration can be read, updated, and returned correctly.
+        Configuration can be read, updated, and persisted correctly.
 
         Verifies:
         - All expected configuration sections are present
         - Configuration can be updated via PATCH endpoint
-        - Updated value is returned in response
-        - Update endpoint returns the full updated configuration
+        - Updated values are reflected in the response immediately
+        - Updated configuration persists in the config file for app restart
         """
         # Read current configuration
         response = e2e_client.get("/api/v1/admin/configuration")
@@ -142,10 +144,10 @@ class TestConfigurationManagement:
             assert section in config["sections"], \
                 f"Configuration should have '{section}' section"
 
-        # Update a non-sensitive setting (e.g., add a new key to server section)
+        # Update a non-sensitive setting (e.g., update CORS origins in server section)
         test_section = "server"
-        test_key = "test_config_key"
-        test_value = "test_value_12345"
+        test_key = "cors_origins"
+        test_value = ["http://localhost:3000", "http://localhost:5173"]
 
         update_payload = {
             "updates": {
@@ -169,6 +171,20 @@ class TestConfigurationManagement:
         assert "host" in updated_config["sections"][test_section], \
             "Standard configuration fields should be preserved"
 
+        # Verify the update is written to the config file on disk
+        # This ensures the configuration survives an application restart
+        config_file = temp_db_dir / "config.json"
+        assert config_file.exists(), f"Config file should exist at {config_file}"
+
+        with open(config_file, "r") as f:
+            persisted_config = json.load(f)
+
+        # Verify the update was written to the file (for app restart persistence)
+        assert test_section in persisted_config, \
+            f"Configuration file should have '{test_section}' section"
+        assert persisted_config[test_section].get(test_key) == test_value, \
+            "Updated value should be persisted to config file for restart"
+
 
 @pytest.mark.e2e
 class TestBackgroundTaskLifecycle:
@@ -179,11 +195,11 @@ class TestBackgroundTaskLifecycle:
         Background task lifecycle transitions correctly through states.
 
         Verifies:
-        - Task can be registered and transitions from PENDING
-        - Task can transition to RUNNING with started_at timestamp
-        - Task can transition to COMPLETED with completed_at timestamp
-        - Task result is persisted and retrievable
-        - Task appears in task list
+        - Task registers in PENDING state with no timestamps or result
+        - Task transitions to RUNNING with started_at timestamp
+        - Task transitions to COMPLETED with completed_at timestamp and result
+        - Task result is persisted and retrievable with correct values
+        - Task appears in task list after registration
         """
         # Register a background task by directly calling the admin service
         # First, get the admin service from app.state
@@ -197,34 +213,40 @@ class TestBackgroundTaskLifecycle:
         # Let's test the task lifecycle by directly calling service methods
         # and verifying through HTTP endpoints.
 
-        # For now, we'll verify the task endpoints are available and work
-        # List tasks should return empty or existing tasks
-        response = e2e_client.get("/api/v1/admin/tasks")
-        assert response.status_code == status.HTTP_200_OK
-        initial_tasks = response.json()
-        assert isinstance(initial_tasks, list)
+        # Get the admin service from the app for direct task lifecycle testing
+        admin_service = e2e_client.app.state.admin_service
 
-        # Since we can't directly register tasks through HTTP API in the current design,
-        # we'll test the task lifecycle through the service that's already wired up
-        # in the app.state.admin_service.
+        # Register a background task (PENDING state)
+        task = admin_service.register_task("test_task")
 
-        # Get the admin service from the app context
-        from domain.admin.services import AdminService
-        admin_service = None
+        # Verify initial PENDING state
+        task_id = task.id
+        assert task.status == BackgroundTaskStatus.PENDING
+        assert task.started_at is None
+        assert task.completed_at is None
+        assert task.result is None
 
-        # We need to access app.state, but TestClient doesn't directly expose it
-        # Instead, we'll test by verifying the endpoints work correctly
+        # Transition to RUNNING (with started_at)
+        task = admin_service.update_task_status(task_id, BackgroundTaskStatus.RUNNING)
+        assert task.status == BackgroundTaskStatus.RUNNING
+        assert task.started_at is not None
+        assert task.completed_at is None
+        assert task.result is None
 
-        # The E2E test can verify:
-        # 1. Task listing works (returns a list)
-        # 2. Task details endpoint works (returns 404 for non-existent task)
-        # 3. Task status transitions are possible
+        # Transition to COMPLETED (with completed_at and result)
+        result_data = {"output": "test_result"}
+        task = admin_service.update_task_status(task_id, BackgroundTaskStatus.COMPLETED, result=result_data)
+        assert task.status == BackgroundTaskStatus.COMPLETED
+        assert task.started_at is not None
+        assert task.completed_at is not None
+        assert task.result == result_data
 
-        # Test getting a non-existent task returns 404
-        response = e2e_client.get("/api/v1/admin/tasks/nonexistent-task-id")
-        assert response.status_code == status.HTTP_404_NOT_FOUND
+        # Verify task appears in list
+        tasks = admin_service.list_tasks()
+        task_ids = [t.id for t in tasks]
+        assert task_id in task_ids
 
-        # Test list_tasks returns a valid list
-        response = e2e_client.get("/api/v1/admin/tasks")
-        assert response.status_code == status.HTTP_200_OK
-        assert isinstance(response.json(), list)
+        # Verify task is retrievable by ID
+        retrieved_task = admin_service.get_task(task_id)
+        assert retrieved_task.status == BackgroundTaskStatus.COMPLETED
+        assert retrieved_task.result == result_data
