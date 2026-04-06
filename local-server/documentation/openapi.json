@@ -3135,6 +3135,116 @@
         }
       }
     },
+    "/api/v1/admin/health/database": {
+      "get": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "Get Database Health",
+        "description": "Get database component health status.\n\nReturns detailed health information about the database connection and any issues.\n\nReturns:\n    DatabaseHealthResponse with connectivity status and issues list\n\nRaises:\n    HTTPException: 500 for internal errors",
+        "operationId": "get_database_health_api_v1_admin_health_database_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DatabaseHealthResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/health/services": {
+      "get": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "Get Service Metrics",
+        "description": "Get service-level metrics.\n\nReturns system uptime and list of available LLM providers.\n\nReturns:\n    ServiceMetricsResponse with uptime and available providers\n\nRaises:\n    HTTPException: 500 for internal errors",
+        "operationId": "get_service_metrics_api_v1_admin_health_services_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServiceMetricsResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/health/embedding": {
+      "get": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "Get Embedding Status",
+        "description": "Get embedding model component status.\n\nReturns availability and status details for the embedding model.\n\nReturns:\n    ComponentStatusResponse with availability and details\n\nRaises:\n    HTTPException: 500 for internal errors",
+        "operationId": "get_embedding_status_api_v1_admin_health_embedding_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ComponentStatusResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/health/nlp": {
+      "get": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "Get Nlp Status",
+        "description": "Get NLP pipeline component status.\n\nReturns availability and status details for the NLP pipeline.\n\nReturns:\n    ComponentStatusResponse with availability and details\n\nRaises:\n    HTTPException: 500 for internal errors",
+        "operationId": "get_nlp_status_api_v1_admin_health_nlp_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ComponentStatusResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/health/tasks": {
+      "get": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "Get Task Summary",
+        "description": "Get summary of background task execution status.\n\nReturns counts of tasks grouped by status (pending, running, completed, failed).\n\nReturns:\n    BackgroundTaskSummaryResponse with task counts by status\n\nRaises:\n    HTTPException: 500 for internal errors",
+        "operationId": "get_task_summary_api_v1_admin_health_tasks_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BackgroundTaskSummaryResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/admin/configuration": {
       "get": {
         "tags": [
@@ -3203,6 +3313,28 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/configuration/reset": {
+      "post": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "Reset Configuration",
+        "description": "Reset configuration to defaults while preserving credentials.\n\nResets all configuration values to their defaults. Credential fields\n(API keys, secrets) are preserved. Returns configuration with masked credentials.\n\nReturns:\n    ConfigResetResponse with reset configuration and masked credentials\n\nRaises:\n    HTTPException: 500 for internal errors",
+        "operationId": "reset_configuration_api_v1_admin_configuration_reset_post",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConfigResetResponse"
                 }
               }
             }
@@ -3410,6 +3542,29 @@
         ],
         "title": "BackgroundTaskResponse",
         "description": "Response containing background task status and metadata."
+      },
+      "BackgroundTaskSummaryResponse": {
+        "properties": {
+          "total": {
+            "type": "integer",
+            "title": "Total",
+            "description": "Total number of background tasks registered"
+          },
+          "by_status": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "type": "object",
+            "title": "By Status",
+            "description": "Count of tasks grouped by status"
+          }
+        },
+        "type": "object",
+        "required": [
+          "total"
+        ],
+        "title": "BackgroundTaskSummaryResponse",
+        "description": "Response containing summary of background task execution status."
       },
       "CentralityResponse": {
         "properties": {
@@ -3921,6 +4076,27 @@
         "title": "CommunitiesResponse",
         "description": "Response containing community detection results."
       },
+      "ComponentStatusResponse": {
+        "properties": {
+          "available": {
+            "type": "boolean",
+            "title": "Available",
+            "description": "Whether the component is available/ready"
+          },
+          "details": {
+            "type": "string",
+            "title": "Details",
+            "description": "Human-readable detail about component status",
+            "default": ""
+          }
+        },
+        "type": "object",
+        "required": [
+          "available"
+        ],
+        "title": "ComponentStatusResponse",
+        "description": "Response containing individual component status."
+      },
       "ConceptSchemeCreateRequest": {
         "properties": {
           "title": {
@@ -4051,6 +4227,22 @@
         "type": "object",
         "title": "ConceptSchemeUpdateRequest",
         "description": "Request to update a concept scheme."
+      },
+      "ConfigResetResponse": {
+        "properties": {
+          "sections": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Sections",
+            "description": "Configuration sections after reset with sensitive values masked"
+          }
+        },
+        "type": "object",
+        "required": [
+          "sections"
+        ],
+        "title": "ConfigResetResponse",
+        "description": "Response from configuration reset operation."
       },
       "ConfigSectionUpdateRequest": {
         "properties": {
@@ -4251,6 +4443,29 @@
         ],
         "title": "DataPropertyValueResponse",
         "description": "Response containing data property value."
+      },
+      "DatabaseHealthResponse": {
+        "properties": {
+          "connected": {
+            "type": "boolean",
+            "title": "Connected",
+            "description": "Whether database is accessible"
+          },
+          "issues": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Issues",
+            "description": "List of any database issues encountered"
+          }
+        },
+        "type": "object",
+        "required": [
+          "connected"
+        ],
+        "title": "DatabaseHealthResponse",
+        "description": "Response containing database health status details."
       },
       "DegreeDistributionResponse": {
         "properties": {
@@ -4903,6 +5118,7 @@
         "enum": [
           "last_write_wins",
           "base_value_wins",
+          "merge_both",
           "manual"
         ],
         "title": "MergeStrategy",
@@ -5930,6 +6146,29 @@
         "title": "SPARQLResponse",
         "description": "Response from SPARQL query execution."
       },
+      "ServiceMetricsResponse": {
+        "properties": {
+          "uptime_seconds": {
+            "type": "number",
+            "title": "Uptime Seconds",
+            "description": "System uptime in seconds since startup"
+          },
+          "llm_providers_available": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Llm Providers Available",
+            "description": "List of available LLM provider names"
+          }
+        },
+        "type": "object",
+        "required": [
+          "uptime_seconds"
+        ],
+        "title": "ServiceMetricsResponse",
+        "description": "Response containing service-level metrics."
+      },
       "SubgraphResultResponse": {
         "properties": {
           "center_node_id": {
@@ -6065,6 +6304,11 @@
             "title": "Is Configured",
             "description": "Whether remote sync is configured"
           },
+          "is_degraded": {
+            "type": "boolean",
+            "title": "Is Degraded",
+            "description": "Whether sync status information is incomplete due to adapter errors"
+          },
           "last_pushed_at": {
             "anyOf": [
               {
@@ -6095,7 +6339,8 @@
         "type": "object",
         "required": [
           "unprocessed_count",
-          "is_configured"
+          "is_configured",
+          "is_degraded"
         ],
         "title": "SyncStatusResponse",
         "description": "Response with synchronization status"
