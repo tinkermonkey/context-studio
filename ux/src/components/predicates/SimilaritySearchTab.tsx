@@ -211,7 +211,7 @@ export const SimilaritySearchTab: React.FC<SimilaritySearchTabProps> = ({
               <span className="font-semibold">
                 Searching for predicates similar to:
               </span>{" "}
-              {data.predicate_title}
+              {selectedPredicate?.title || "Selected Predicate"}
             </p>
           </div>
 
@@ -225,7 +225,9 @@ export const SimilaritySearchTab: React.FC<SimilaritySearchTabProps> = ({
                 className="ml-4"
                 onClick={() =>
                   onClusterSelect(
-                    filteredResults.map((item) => item.predicate_id),
+                    filteredResults
+                      .map((item) => item.predicate_id || "")
+                      .filter(Boolean),
                   )
                 }
               >

@@ -335,6 +335,130 @@ class TestVersioningRoutes:
         data = response.json()
         assert data["proposal_id"] == proposal_id
 
+    def test_auto_resolve_conflicts_with_last_write_wins(self, client, change_repository):
+        """POST /api/v1/versioning/proposals/{id}/auto-resolve resolves with LAST_WRITE_WINS."""
+        # Record conflicting changes
+        event_id_1 = change_repository.record_change(
+            entity_id="entity1",
+            entity_type="class",
+            operation=ChangeOperation.UPDATE,
+            previous_state={"name": "old"},
+            new_state={"name": "new1"},
+        )
+        event_id_2 = change_repository.record_change(
+            entity_id="entity1",
+            entity_type="class",
+            operation=ChangeOperation.UPDATE,
+            previous_state={"name": "external"},
+            new_state={"name": "new2"},
+        )
+
+        # Create changeset with conflicting events
+        create_response = client.post(
+            "/api/v1/versioning/changesets",
+            json={"name": "Auto-resolve Test", "event_ids": [event_id_1, event_id_2]},
+        )
+        changeset_id = create_response.json()["id"]
+        client.post(f"/api/v1/versioning/changesets/{changeset_id}/stage")
+        submit_response = client.post(f"/api/v1/versioning/changesets/{changeset_id}/submit")
+        proposal_id = submit_response.json()["id"]
+
+        # Auto-resolve conflicts with default LAST_WRITE_WINS strategy
+        response = client.post(
+            f"/api/v1/versioning/proposals/{proposal_id}/auto-resolve",
+            json={"strategy": "last_write_wins"},
+        )
+        assert response.status_code == status.HTTP_200_OK
+        data = response.json()
+        assert data["proposal_id"] == proposal_id
+        assert data["has_conflicts"] is True
+        assert len(data["conflicts"]) == 1
+        assert data["conflicts"][0]["entity_id"] == "entity1"
+        assert data["conflicts"][0]["field_name"] == "name"
+        assert data["conflicts"][0]["is_resolved"] is True
+        assert data["conflicts"][0]["resolved_value"] == "new2"
+
+    def test_auto_resolve_conflicts_with_base_value_wins(self, client, change_repository):
+        """POST /api/v1/versioning/proposals/{id}/auto-resolve with BASE_VALUE_WINS."""
+        # Record conflicting changes
+        event_id_1 = change_repository.record_change(
+            entity_id="entity1",
+            entity_type="class",
+            operation=ChangeOperation.UPDATE,
+            previous_state={"description": "original"},
+            new_state={"description": "modified1"},
+        )
+        event_id_2 = change_repository.record_change(
+            entity_id="entity1",
+            entity_type="class",
+            operation=ChangeOperation.UPDATE,
+            previous_state={"description": "external"},
+            new_state={"description": "modified2"},
+        )
+
+        # Create changeset with conflicting events
+        create_response = client.post(
+            "/api/v1/versioning/changesets",
+            json={"name": "Auto-resolve Test", "event_ids": [event_id_1, event_id_2]},
+        )
+        changeset_id = create_response.json()["id"]
+        client.post(f"/api/v1/versioning/changesets/{changeset_id}/stage")
+        submit_response = client.post(f"/api/v1/versioning/changesets/{changeset_id}/submit")
+        proposal_id = submit_response.json()["id"]
+
+        # Auto-resolve with BASE_VALUE_WINS strategy
+        response = client.post(
+            f"/api/v1/versioning/proposals/{proposal_id}/auto-resolve",
+            json={"strategy": "base_value_wins"},
+        )
+        assert response.status_code == status.HTTP_200_OK
+        data = response.json()
+        assert data["proposal_id"] == proposal_id
+        assert data["has_conflicts"] is True
+        assert len(data["conflicts"]) == 1
+        assert data["conflicts"][0]["is_resolved"] is True
+        assert data["conflicts"][0]["resolved_value"] == "modified1"
+
+    def test_auto_resolve_conflicts_with_manual(self, client, change_repository):
+        """POST /api/v1/versioning/proposals/{id}/auto-resolve with MANUAL strategy."""
+        # Record conflicting changes
+        event_id_1 = change_repository.record_change(
+            entity_id="entity1",
+            entity_type="taxonomy",
+            operation=ChangeOperation.UPDATE,
+            previous_state={"label": "base"},
+            new_state={"label": "version1"},
+        )
+        event_id_2 = change_repository.record_change(
+            entity_id="entity1",
+            entity_type="taxonomy",
+            operation=ChangeOperation.UPDATE,
+            previous_state={"label": "other"},
+            new_state={"label": "version2"},
+        )
+
+        # Create changeset with conflicting events
+        create_response = client.post(
+            "/api/v1/versioning/changesets",
+            json={"name": "Auto-resolve Test", "event_ids": [event_id_1, event_id_2]},
+        )
+        changeset_id = create_response.json()["id"]
+        client.post(f"/api/v1/versioning/changesets/{changeset_id}/stage")
+        submit_response = client.post(f"/api/v1/versioning/changesets/{changeset_id}/submit")
+        proposal_id = submit_response.json()["id"]
+
+        # Auto-resolve with MANUAL strategy (leaves unresolved)
+        response = client.post(
+            f"/api/v1/versioning/proposals/{proposal_id}/auto-resolve",
+            json={"strategy": "manual"},
+        )
+        assert response.status_code == status.HTTP_200_OK
+        data = response.json()
+        assert data["proposal_id"] == proposal_id
+        assert data["has_conflicts"] is True
+        assert len(data["conflicts"]) == 1
+        assert data["conflicts"][0]["is_resolved"] is False
+
     def test_merge_proposal_returns_200(self, client):
         """POST /api/v1/versioning/proposals/{id}/merge merges approved proposal."""
         # Create, stage, submit, and approve a changeset

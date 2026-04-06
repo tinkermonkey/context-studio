@@ -6,14 +6,22 @@
 
 import { BaseService } from "./base";
 import { ENDPOINTS } from "../config";
-import type { components } from "../client/types";
+import type {
+  SPARQLQuery,
+  SearchRequest,
+  CentralityRequest,
+  PathRequest,
+  NeighborsRequest,
+} from "./missingTypes";
 
-// Type aliases for better readability
-export type SPARQLQuery = components["schemas"]["SPARQLQuery"];
-export type SearchRequest = components["schemas"]["SearchRequest"];
-export type CentralityRequest = components["schemas"]["CentralityRequest"];
-export type PathRequest = components["schemas"]["PathRequest"];
-export type NeighborsRequest = components["schemas"]["NeighborsRequest"];
+// Re-export types for use in hooks and components
+export type {
+  SPARQLQuery,
+  SearchRequest,
+  CentralityRequest,
+  PathRequest,
+  NeighborsRequest,
+};
 
 export interface GraphStats {
   [key: string]: unknown;

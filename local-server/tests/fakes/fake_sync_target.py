@@ -4,11 +4,11 @@ Minimal fake implementation of the SyncTarget protocol for testing.
 Useful for testing synchronization logic without external dependencies.
 """
 
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Optional, Sequence
 
 from domain.versioning.entities import ChangeEvent
-from domain.versioning.value_objects import SyncResult
+from domain.versioning.value_objects import SyncResult, SyncStatus
 
 
 class FakeSyncTarget:
@@ -40,12 +40,13 @@ class FakeSyncTarget:
         Returns:
             SyncResult with count of pushed events and their IDs
         """
+        now = datetime.now(timezone.utc)
         if not self._configured:
-            return SyncResult(pushed=0, pulled=0, errors=("Sync target not configured",), pushed_event_ids=())
+            return SyncResult(pushed=0, pulled=0, errors=("Sync target not configured",), pushed_event_ids=(), started_at=now, completed_at=now)
 
         self._pushed_events.extend(events)
         pushed_event_ids = tuple(event.id for event in events)
-        return SyncResult(pushed=len(events), pulled=0, errors=(), pushed_event_ids=pushed_event_ids)
+        return SyncResult(pushed=len(events), pulled=0, errors=(), pushed_event_ids=pushed_event_ids, started_at=now, completed_at=now)
 
     def pull(self, since: Optional[datetime] = None) -> list[ChangeEvent]:
         """
@@ -69,6 +70,25 @@ class FakeSyncTarget:
             True if configured, False otherwise
         """
         return self._configured
+
+    def get_sync_status(self) -> SyncStatus:
+        """
+        Get the status of remote synchronization.
+
+        Returns:
+            SyncStatus with sync status information
+        """
+        last_sync = None
+        if self._pushed_events or self._remote_events:
+            all_events = self._pushed_events + self._remote_events
+            last_sync = max((e.timestamp for e in all_events), default=None)
+
+        return SyncStatus(
+            last_pushed_at=last_sync,
+            last_pulled_at=last_sync,
+            unprocessed_count=len(self._pushed_events),
+            is_configured=self._configured,
+        )
 
     # Test helpers
 

@@ -15,11 +15,14 @@ from __future__ import annotations
 import json
 import logging
 from datetime import datetime, timezone
-from typing import Optional, Sequence
+from typing import Optional, Sequence, TYPE_CHECKING
 from uuid import uuid4
 
 from domain.versioning.entities import ChangeEvent
-from domain.versioning.value_objects import SyncResult, ChangeOperation
+from domain.versioning.value_objects import SyncResult, ChangeOperation, SyncStatus
+
+if TYPE_CHECKING:
+    from domain.versioning.ports import ChangeRepository
 
 _logger = logging.getLogger(__name__)
 
@@ -54,6 +57,7 @@ class S3SyncAdapter:
         aws_access_key: str,
         aws_secret_key: str,
         region: str,
+        change_repo: "ChangeRepository | None" = None,
     ) -> None:
         """
         Initialize the S3 sync adapter.
@@ -64,12 +68,14 @@ class S3SyncAdapter:
             aws_access_key: AWS access key ID
             aws_secret_key: AWS secret access key
             region: AWS region (e.g., 'us-east-1')
+            change_repo: Optional ChangeRepository for querying unprocessed changes
 
         Raises:
             ImportError: If boto3 is not installed
         """
         try:
             import boto3
+            import botocore.exceptions
         except ImportError:
             _logger.error("boto3 is required for S3 sync adapter. Install with: pip install boto3")
             raise
@@ -77,6 +83,8 @@ class S3SyncAdapter:
         self._bucket = bucket
         self._prefix = prefix.rstrip("/")
         self._region = region
+        self._change_repo = change_repo
+        self._client_error = botocore.exceptions.ClientError
 
         self._s3_client = boto3.client(
             "s3",
@@ -107,8 +115,10 @@ class S3SyncAdapter:
         Raises:
             RuntimeError: If S3 put operation fails
         """
+        started_at = datetime.now(timezone.utc)
         if not events:
-            return SyncResult(pushed=0, pulled=0, errors=(), pushed_event_ids=())
+            completed_at = datetime.now(timezone.utc)
+            return SyncResult(pushed=0, pulled=0, errors=(), pushed_event_ids=(), started_at=started_at, completed_at=completed_at)
 
         pushed_event_ids = []
         try:
@@ -153,9 +163,10 @@ class S3SyncAdapter:
                 len(events),
                 key,
             )
-            return SyncResult(pushed=len(pushed_event_ids), pulled=0, errors=(), pushed_event_ids=tuple(pushed_event_ids))
+            completed_at = datetime.now(timezone.utc)
+            return SyncResult(pushed=len(pushed_event_ids), pulled=0, errors=(), pushed_event_ids=tuple(pushed_event_ids), started_at=started_at, completed_at=completed_at)
 
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, OSError, self._client_error) as e:
             error_msg = f"Failed to push changes to S3: {e}"
             _logger.error(error_msg)
             raise RuntimeError(error_msg) from e
@@ -202,21 +213,30 @@ class S3SyncAdapter:
                                 file_date = datetime.strptime(date_str, "%Y-%m-%d").replace(
                                     tzinfo=timezone.utc
                                 )
-                                if file_date < since:
+                                # Only skip if file date is before the date part of since
+                                # (file_date is at midnight, so compare dates not times)
+                                if file_date.date() < since.date():
                                     continue
                             except (ValueError, IndexError):
+                                # When since is provided, skip S3 objects with unparseable date paths
                                 _logger.warning(
                                     "Skipping S3 object with unparseable date path (key=%s)",
                                     key,
                                 )
                                 continue
+                    # If since is None, process all objects regardless of date format
 
-                    # Download and deserialize the file
+                    # Download the file
                     try:
                         response = self._s3_client.get_object(Bucket=self._bucket, Key=key)
                         content = response["Body"].read().decode("utf-8")
+                    except (OSError, self._client_error) as e:
+                        error_msg = f"Failed to download S3 object {key}: {e}"
+                        _logger.error(error_msg)
+                        raise _S3FileParseError(error_msg) from e
 
-                        # Parse JSON Lines
+                    # Parse JSON Lines
+                    try:
                         for line in content.strip().split("\n"):
                             if not line:
                                 continue
@@ -242,7 +262,7 @@ class S3SyncAdapter:
                                 previous_state=data.get("previous_state"),
                             )
                             events.append(event)
-                    except Exception as e:
+                    except (ValueError, TypeError, KeyError) as e:
                         error_msg = f"Failed to parse S3 object {key}: {e}"
                         _logger.error(error_msg)
                         raise _S3FileParseError(error_msg) from e
@@ -250,10 +270,10 @@ class S3SyncAdapter:
             _logger.info("Pulled %d change events from S3 (deduplicated)", len(events))
             return events
 
-        except Exception as e:
-            if isinstance(e, _S3FileParseError):
-                # File parsing error already wrapped and logged
-                raise RuntimeError(str(e)) from e.__cause__
+        except _S3FileParseError as e:
+            # File parsing error already wrapped and logged
+            raise RuntimeError(str(e)) from e.__cause__
+        except (ValueError, TypeError, KeyError, OSError, self._client_error) as e:
             error_msg = f"Failed to list S3 objects: {e}"
             _logger.error(error_msg)
             raise RuntimeError(error_msg) from e
@@ -266,3 +286,56 @@ class S3SyncAdapter:
             True if S3 client is initialized, False otherwise
         """
         return self._s3_client is not None
+
+    def get_sync_status(self) -> SyncStatus:
+        """
+        Get the status of remote synchronization.
+
+        Returns:
+            SyncStatus with last sync timestamps, pending changes count, and remote connectivity
+
+        Raises:
+            RuntimeError: If unable to check S3 connectivity
+        """
+        try:
+            # Check S3 connectivity by listing objects to find most recent sync
+            prefix = f"{self._prefix}/changes/"
+            paginator = self._s3_client.get_paginator("list_objects_v2")
+            pages = paginator.paginate(Bucket=self._bucket, Prefix=prefix)
+
+            last_sync = None
+            unprocessed_count = 0
+            is_degraded = False
+
+            # Iterate through all pages to find the most recent object
+            all_objects = []
+            for page in pages:
+                if "Contents" in page:
+                    all_objects.extend(page["Contents"])
+
+            # Find the most recent object by modification time
+            if all_objects:
+                most_recent = max(all_objects, key=lambda x: x["LastModified"])
+                last_sync = most_recent["LastModified"]
+
+            # Query repository for actual unprocessed count
+            if self._change_repo:
+                try:
+                    unprocessed_count = self._change_repo.count_unprocessed()
+                except (RuntimeError, OSError) as e:
+                    _logger.warning("Failed to count unprocessed changes: %s", str(e))
+                    is_degraded = True
+
+            _logger.info("Retrieved sync status from S3")
+            return SyncStatus(
+                last_pushed_at=last_sync,
+                last_pulled_at=last_sync,
+                unprocessed_count=unprocessed_count,
+                is_configured=self.is_configured(),
+                is_degraded=is_degraded,
+            )
+
+        except (ValueError, TypeError, KeyError, OSError, self._client_error) as e:
+            error_msg = f"Failed to get sync status from S3: {e}"
+            _logger.error(error_msg)
+            raise RuntimeError(error_msg) from e

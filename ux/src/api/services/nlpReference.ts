@@ -6,16 +6,20 @@
 
 import { BaseService } from "./base";
 import { ENDPOINTS } from "../config";
-import type { components } from "@/api/client/types";
+import type {
+  ResponseFormat,
+  MultiSourceSearchResponse,
+  DBpediaSparqlRequest,
+  WikidataSparqlRequest,
+} from "./missingTypes";
 
-// Type aliases for better readability
-export type ResponseFormat = components["schemas"]["ResponseFormat"];
-export type MultiSourceSearchResponse =
-  components["schemas"]["MultiSourceSearchResponse"];
-export type DBpediaSparqlRequest =
-  components["schemas"]["DBpediaSparqlRequest"];
-export type WikidataSparqlRequest =
-  components["schemas"]["WikidataSparqlRequest"];
+// Re-export types for use in hooks and components
+export type {
+  ResponseFormat,
+  MultiSourceSearchResponse,
+  DBpediaSparqlRequest,
+  WikidataSparqlRequest,
+};
 
 // DBpedia parameters
 export interface DBpediaResourceParams extends Record<string, unknown> {

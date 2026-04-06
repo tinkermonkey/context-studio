@@ -20,7 +20,7 @@ from domain.versioning.entities import (
     Proposal,
 )
 from domain.versioning.exceptions import ChangesetStateError, ProposalStateError
-from domain.versioning.value_objects import ChangeState, ProposalState
+from domain.versioning.value_objects import ChangeState, ProposalState, MergeStrategy
 
 
 class TestChangesetStateTransitions:
@@ -172,6 +172,7 @@ class TestConflictReport:
         """Test that report with conflicts reports has_conflicts."""
         conflict = Conflict(
             entity_id="entity1",
+            entity_type="class",
             field_name="title",
             base_value="Old",
             incoming_value="New",
@@ -183,6 +184,7 @@ class TestConflictReport:
         """Test that all_resolved is false when conflicts are unresolved."""
         conflict = Conflict(
             entity_id="entity1",
+            entity_type="class",
             field_name="title",
             base_value="Old",
             incoming_value="New",
@@ -194,10 +196,12 @@ class TestConflictReport:
         """Test that all_resolved is true when all conflicts are resolved."""
         conflict = Conflict(
             entity_id="entity1",
+            entity_type="class",
             field_name="title",
             base_value="Old",
             incoming_value="New",
             resolved_value="Resolved",
+            resolution_strategy=MergeStrategy.LAST_WRITE_WINS,
         )
         report = ConflictReport(proposal_id="prop1", conflicts=[conflict])
         assert report.all_resolved
@@ -207,17 +211,21 @@ class TestConflictReport:
         conflicts = [
             Conflict(
                 entity_id="entity1",
+                entity_type="class",
                 field_name="title",
                 base_value="Old",
                 incoming_value="New",
                 resolved_value="Resolved Title",
+                resolution_strategy=MergeStrategy.LAST_WRITE_WINS,
             ),
             Conflict(
                 entity_id="entity1",
+                entity_type="class",
                 field_name="description",
                 base_value="Old desc",
                 incoming_value="New desc",
                 resolved_value="Resolved desc",
+                resolution_strategy=MergeStrategy.BASE_VALUE_WINS,
             ),
         ]
         report = ConflictReport(proposal_id="prop1", conflicts=conflicts)
@@ -228,13 +236,16 @@ class TestConflictReport:
         conflicts = [
             Conflict(
                 entity_id="entity1",
+                entity_type="class",
                 field_name="title",
                 base_value="Old",
                 incoming_value="New",
                 resolved_value="Resolved Title",
+                resolution_strategy=MergeStrategy.LAST_WRITE_WINS,
             ),
             Conflict(
                 entity_id="entity1",
+                entity_type="class",
                 field_name="description",
                 base_value="Old desc",
                 incoming_value="New desc",
@@ -242,6 +253,19 @@ class TestConflictReport:
         ]
         report = ConflictReport(proposal_id="prop1", conflicts=conflicts)
         assert not report.all_resolved
+
+    def test_conflict_resolved_to_none_with_strategy(self) -> None:
+        """Test that is_resolved is true when resolved_value is None but resolution_strategy is set."""
+        conflict = Conflict(
+            entity_id="entity1",
+            entity_type="class",
+            field_name="optional_field",
+            base_value=None,
+            incoming_value="New Value",
+            resolved_value=None,
+            resolution_strategy=MergeStrategy.BASE_VALUE_WINS,
+        )
+        assert conflict.is_resolved is True
 
 
 class TestProposalStateTransitions:

@@ -6,10 +6,9 @@
 
 import { BaseService } from "./base";
 import { ENDPOINTS } from "../config";
-import type { components } from "../client/types";
 
 // Type aliases for better readability
-export type MigrationStatus = components["schemas"]["MigrationStatus"];
+export type MigrationStatus = Record<string, unknown>;
 
 export interface MigrateParams extends Record<string, unknown> {
   skip_on_error?: boolean;

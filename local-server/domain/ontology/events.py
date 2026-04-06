@@ -266,10 +266,14 @@ class PropertyDefinitionDeleted(DomainEvent):
 
     Attributes:
         property_id: ID of the deleted property definition
+        identifier: Identifier/name of the deleted property definition
+        title: Title of the deleted property definition
     """
 
     _aggregate_id_field: ClassVar[str] = "property_id"
     property_id: str = ""
+    identifier: str = ""
+    title: str = ""
 
 
 @dataclass(frozen=True)

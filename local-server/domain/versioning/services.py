@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import logging
 import uuid
+from collections import defaultdict
 from datetime import datetime, timezone
 from typing import Optional
 
@@ -31,7 +32,7 @@ from .exceptions import (
     SyncError,
 )
 from .ports import ChangeRepository, SyncTarget
-from .value_objects import SyncStatus, SyncResult, ChangeHistoryResult, SyncDirection, ChangeState, ProposalState
+from .value_objects import SyncStatus, SyncResult, ChangeHistoryResult, SyncDirection, ChangeState, ProposalState, MergeStrategy, ChangeOperation, EntityVersionState
 from .events import ChangesetMerged, SyncCompleted
 from domain.ports import EventPublisher
 
@@ -359,8 +360,35 @@ class VersioningService:
         )
         return updated_proposal
 
+    def _group_and_sort_events(
+        self, event_ids: list[str], events: Optional[list[ChangeEvent]] = None
+    ) -> dict[str, list[ChangeEvent]]:
+        """
+        Group change events by entity_id with timestamp ordering.
+
+        Args:
+            event_ids: List of change event IDs (used for fetching if events not provided)
+            events: Optional pre-fetched list of ChangeEvent objects. If not provided,
+                   events will be fetched from the repository using event_ids.
+
+        Returns:
+            Dictionary mapping entity_id to list of ChangeEvent objects sorted by timestamp
+        """
+        if events is None:
+            events = self._repo.get_changes_by_ids(event_ids)
+
+        events_by_entity: dict[str, list[ChangeEvent]] = defaultdict(list)
+        for event in events:
+            events_by_entity[event.entity_id].append(event)
+
+        # Sort events by timestamp within each entity
+        for entity_events in events_by_entity.values():
+            entity_events.sort(key=lambda e: e.timestamp)
+
+        return dict(events_by_entity)
+
     def detect_conflicts(
-        self, proposal_id: str, resolutions: Optional[dict[str, dict[str, str]]] = None
+        self, proposal_id: str, resolutions: Optional[dict[str, dict[str, object]]] = None
     ) -> ConflictReport:
         """
         Detect field-level conflicts in a proposal.
@@ -405,37 +433,39 @@ class VersioningService:
         if not changeset.event_ids:
             return report
 
-        # Get events in this changeset using the changeset's event_ids
-        changeset_events = self._repo.get_changes_by_ids(changeset.event_ids)
-
-        # Group events by entity_id and sort by timestamp
-        events_by_entity: dict[str, list[ChangeEvent]] = {}
-        for event in changeset_events:
-            if event.entity_id not in events_by_entity:
-                events_by_entity[event.entity_id] = []
-            events_by_entity[event.entity_id].append(event)
-
-        # Sort events by timestamp within each entity
-        for entity_id in events_by_entity:
-            events_by_entity[entity_id].sort(key=lambda e: e.timestamp)
+        # Get events and group by entity_id with timestamp ordering
+        events_by_entity = self._group_and_sort_events(changeset.event_ids)
 
         # Detect conflicts: compare consecutive events for same entity
         for entity_id, entity_events in events_by_entity.items():
+            # Track the first event that modified each field (for base_value determination)
+            field_first_event: dict[str, ChangeEvent] = {}
+
             for i in range(1, len(entity_events)):
                 earlier = entity_events[i - 1]
                 later = entity_events[i]
 
-                # Compare previous_state of later event to new_state of earlier event
+                # Track which event first modified each field in this entity
                 earlier_new = earlier.new_state or {}
+                for field_name in earlier_new.keys():
+                    if field_name not in field_first_event:
+                        field_first_event[field_name] = earlier
+
+                # Compare previous_state of later event to new_state of earlier event
                 later_prev = later.previous_state or {}
 
                 for field_name, later_prev_value in later_prev.items():
                     earlier_new_value = earlier_new.get(field_name)
                     if earlier_new_value != later_prev_value:
+                        # Use the new_state of the first event that modified this field as the base_value
+                        first_event = field_first_event.get(field_name, earlier)
+                        base_value = first_event.new_state.get(field_name) if first_event.new_state else None
+
                         conflict = Conflict(
                             entity_id=entity_id,
+                            entity_type=later.entity_type,
                             field_name=field_name,
-                            base_value=earlier_new_value,
+                            base_value=base_value,
                             incoming_value=later.new_state.get(field_name),
                         )
                         report.conflicts.append(conflict)
@@ -445,7 +475,10 @@ class VersioningService:
             for conflict in report.conflicts:
                 entity_resolutions = resolutions.get(conflict.entity_id, {})
                 if conflict.field_name in entity_resolutions:
-                    conflict.resolved_value = entity_resolutions[conflict.field_name]
+                    conflict.resolve(
+                        entity_resolutions[conflict.field_name],
+                        MergeStrategy.MANUAL
+                    )
 
         _logger.info(
             "Conflict detection complete (proposal_id=%s, conflicts_found=%d, resolved=%d)",
@@ -455,32 +488,128 @@ class VersioningService:
         )
         return report
 
-    def auto_resolve(self, conflict_report: ConflictReport) -> ConflictReport:
+    def auto_resolve(
+        self,
+        conflict_report: ConflictReport,
+        strategy: MergeStrategy = MergeStrategy.LAST_WRITE_WINS,
+    ) -> ConflictReport:
         """
-        Automatically resolve all conflicts using last-write-wins strategy.
-
-        Sets resolved_value=incoming_value for all conflicts.
+        Automatically resolve all conflicts using the specified merge strategy.
 
         Args:
             conflict_report: ConflictReport with unresolved conflicts
+            strategy: MergeStrategy to use for resolution (default: LAST_WRITE_WINS)
 
         Returns:
-            The same ConflictReport with all conflicts marked as resolved
+            The same ConflictReport with conflicts marked as resolved (except for MANUAL strategy,
+            which leaves all conflicts unresolved)
+
+        Strategies:
+            - LAST_WRITE_WINS: Sets resolved_value=incoming_value (preserves current behavior)
+            - BASE_VALUE_WINS: Sets resolved_value=base_value
+            - MERGE_BOTH: For collection-typed fields, combines both value sets; for other types, uses incoming_value
+            - MANUAL: Leaves conflicts unresolved, deferring to explicit resolve_conflicts() calls
         """
+        if strategy == MergeStrategy.MANUAL:
+            # Leave conflicts unresolved for explicit resolution
+            _logger.info(
+                "Manual strategy selected; conflicts left unresolved for explicit resolution (proposal_id=%s)",
+                conflict_report.proposal_id,
+            )
+            return conflict_report
+
         for conflict in conflict_report.conflicts:
-            conflict.resolved_value = conflict.incoming_value
+            if strategy == MergeStrategy.LAST_WRITE_WINS:
+                conflict.resolve(conflict.incoming_value, strategy)
+            elif strategy == MergeStrategy.BASE_VALUE_WINS:
+                conflict.resolve(conflict.base_value, strategy)
+            elif strategy == MergeStrategy.MERGE_BOTH:
+                # For list-typed fields (JSON only produces lists), combine both value sets.
+                # Non-list types fall back to incoming_value.
+                base = conflict.base_value
+                incoming = conflict.incoming_value
+
+                # Handle collection merging if both values are lists
+                if isinstance(base, list) and isinstance(incoming, list):
+                    # Convert to sets for combination, then sort for deterministic ordering
+                    base_set = set(base)
+                    incoming_set = set(incoming)
+                    merged = base_set | incoming_set
+                    resolved_value = sorted(merged)
+                elif isinstance(base, list) and incoming is None:
+                    # If only base is a list, use base
+                    resolved_value = base
+                elif isinstance(incoming, list) and base is None:
+                    # If only incoming is a list, use incoming
+                    resolved_value = incoming
+                else:
+                    # For non-list types or mixed types, fall back to incoming_value
+                    resolved_value = incoming
+
+                conflict.resolve(resolved_value, strategy)
+            else:
+                raise ValueError(f"Unrecognized merge strategy: {strategy}")
 
         _logger.info(
-            "Auto-resolved conflicts (proposal_id=%s, conflicts_resolved=%d)",
+            "Auto-resolved conflicts using %s strategy (proposal_id=%s, conflicts_resolved=%d)",
+            strategy.value,
             conflict_report.proposal_id,
-            len(conflict_report.conflicts),
+            sum(1 for c in conflict_report.conflicts if c.is_resolved),
         )
         return conflict_report
+
+    def auto_resolve_and_persist(
+        self,
+        proposal_id: str,
+        strategy: MergeStrategy = MergeStrategy.LAST_WRITE_WINS,
+    ) -> ConflictReport:
+        """
+        Automatically resolve and persist conflicts in a proposal.
+
+        This is a convenience method that combines detect_conflicts, auto_resolve,
+        and persistence in a single service call. The route layer should use this
+        method instead of accessing service internals.
+
+        Args:
+            proposal_id: ID of the proposal to resolve conflicts for
+            strategy: MergeStrategy to use for resolution (default: LAST_WRITE_WINS)
+
+        Returns:
+            ConflictReport with conflicts resolved according to the strategy
+
+        Raises:
+            VersionNotFoundError: If the proposal or changeset does not exist
+        """
+        # Detect conflicts without any manual resolutions
+        report = self.detect_conflicts(proposal_id)
+
+        # Apply automatic resolution based on strategy
+        resolved_report = self.auto_resolve(report, strategy)
+
+        # Extract resolutions and persist them only for resolved conflicts
+        resolutions: dict[str, dict[str, object]] = {}
+        for conflict in resolved_report.conflicts:
+            # Only include conflicts that have been resolved (resolution_strategy is not None)
+            if conflict.is_resolved:
+                if conflict.entity_id not in resolutions:
+                    resolutions[conflict.entity_id] = {}
+                resolutions[conflict.entity_id][conflict.field_name] = conflict.resolved_value
+
+        # Only persist if there are resolutions (handles MANUAL strategy with unresolved conflicts)
+        if resolutions:
+            self._repo.save_conflict_resolutions(proposal_id, resolutions)
+
+        _logger.info(
+            "Auto-resolved and persisted conflicts (proposal_id=%s, strategy=%s)",
+            proposal_id,
+            strategy.value,
+        )
+        return resolved_report
 
     def resolve_conflicts(
         self,
         proposal_id: str,
-        resolutions: dict[str, dict[str, str]],
+        resolutions: dict[str, dict[str, object]],
     ) -> ConflictReport:
         """
         Manually resolve conflicts in a proposal.
@@ -520,14 +649,155 @@ class VersioningService:
         )
         return report
 
+    def _create_merge_versions(
+        self,
+        changeset: Changeset,
+        stored_resolutions: dict[str, dict[str, object]],
+    ) -> list[EntityVersion]:
+        """
+        Build EntityVersion snapshots for all entities affected by a merged changeset.
+
+        Retrieves all change events in the changeset, groups them by entity_id,
+        and builds version snapshots by applying events in chronological order,
+        overlaying conflict resolutions for resolved fields.
+
+        For each entity:
+        - Fetches the latest existing EntityVersion (if any)
+        - Applies each event's new_state in timestamp order
+        - Overlays conflict resolutions for any resolved fields
+        - Creates a new EntityVersion with incremented version number
+        - Sets state to ARCHIVED for final DELETE operations, ACTIVE otherwise
+
+        Args:
+            changeset: The Changeset entity being merged
+            stored_resolutions: Persisted conflict resolutions from detect_conflicts
+
+        Returns:
+            List of EntityVersion objects ready to persist
+
+        Raises:
+            ValueError: If the number of returned events does not match the number requested.
+                This exception propagates before any state transitions in merge_proposal,
+                preventing in-memory state changes from being persisted.
+        """
+        if not changeset.event_ids:
+            _logger.debug(
+                "No events in changeset %s; skipping version creation", changeset.id
+            )
+            return []
+
+        # Get all change events for this changeset (single fetch)
+        changeset_events = self._repo.get_changes_by_ids(changeset.event_ids)
+
+        # Validate that all requested events were found, using set-based comparison
+        # to handle duplicate IDs in event_ids list
+        requested_ids = set(changeset.event_ids)
+        returned_ids = {e.id for e in changeset_events}
+        if requested_ids != returned_ids:
+            missing = requested_ids - returned_ids
+            error_msg = (
+                f"Missing events for changeset {changeset.id}: {missing}"
+            )
+            _logger.error(error_msg)
+            raise ValueError(error_msg)
+
+        # Group events by entity_id with timestamp ordering (reuse fetched events to avoid double-fetch)
+        events_by_entity = self._group_and_sort_events(changeset.event_ids, changeset_events)
+
+        # Build versions for each entity
+        versions = []
+        for entity_id, entity_events in events_by_entity.items():
+            version = self._create_entity_version(entity_id, entity_events, stored_resolutions)
+            if version:
+                versions.append(version)
+
+        _logger.info(
+            "Built entity version snapshots for %d entities in changeset %s",
+            len(versions),
+            changeset.id,
+        )
+        return versions
+
+    def _create_entity_version(
+        self,
+        entity_id: str,
+        events: list[ChangeEvent],
+        stored_resolutions: dict[str, dict[str, object]],
+    ) -> Optional[EntityVersion]:
+        """
+        Build a version snapshot for a single entity by applying all its events.
+
+        Fetches the latest existing version (if any), applies each event's new_state
+        in order, and overlays conflict resolutions. Returns the built version without
+        persisting it (persistence happens in the atomic transaction).
+
+        Args:
+            entity_id: ID of the entity
+            events: List of ChangeEvent objects for this entity, sorted by timestamp
+            stored_resolutions: Conflict resolutions from detect_conflicts
+
+        Returns:
+            The built EntityVersion object, or None if no events to process
+        """
+        if not events:
+            return None
+
+        # Get the latest existing version
+        latest_version = self._repo.get_latest_version(entity_id)
+        previous_version_num = latest_version.version if latest_version else None
+        new_version_num = (previous_version_num + 1) if previous_version_num else 1
+
+        # Build the entity state by applying each event in order
+        entity_state: dict = {}
+        if latest_version:
+            # Start with the snapshot from the latest version
+            entity_state = dict(latest_version.snapshot)
+
+        # Apply each event's new_state in order
+        for event in events:
+            if event.new_state:
+                entity_state.update(event.new_state)
+
+        # Overlay conflict resolutions for this entity
+        entity_resolutions = stored_resolutions.get(entity_id, {})
+        if entity_resolutions:
+            entity_state.update(entity_resolutions)
+
+        # Determine the version state based on the final operation
+        final_operation = events[-1].operation if events else None
+        version_state = (
+            EntityVersionState.ARCHIVED
+            if final_operation == ChangeOperation.DELETE
+            else EntityVersionState.ACTIVE
+        )
+
+        # Build the new version (persistence happens in atomic transaction)
+        version = EntityVersion(
+            entity_id=entity_id,
+            version=new_version_num,
+            state=version_state,
+            snapshot=entity_state,
+            created_at=datetime.now(timezone.utc),
+            parent_version=previous_version_num,
+        )
+
+        _logger.debug(
+            "Built entity version (entity_id=%s, version=%d, state=%s, parent_version=%s)",
+            entity_id,
+            new_version_num,
+            version_state.value,
+            previous_version_num,
+        )
+        return version
+
     def merge_proposal(self, proposal_id: str) -> MergeResult:
         """
         Merge an approved proposal.
 
         Detects conflicts and blocks the merge if unresolved conflicts exist.
-        Transitions the changeset from APPROVED to MERGED and updates the
-        proposal state to 'merged'. Publishes ChangesetMerged event upon
-        successful completion.
+        Creates EntityVersion snapshots for all affected entities. Then transitions
+        the changeset from APPROVED to MERGED and updates the proposal state to 'merged'.
+        Publishes ChangesetMerged event upon successful completion.
 
         Args:
             proposal_id: ID of the proposal to merge
@@ -539,6 +809,9 @@ class VersioningService:
             VersionNotFoundError: If the proposal or changeset does not exist
             ChangesetStateError: If the proposal is not in 'approved' state
             ConflictResolutionError: If unresolved conflicts exist
+            ValueError: If _create_merge_versions cannot find all required events.
+                This exception propagates before any state transitions, preventing
+                in-memory state changes from being persisted.
 
         Publishes:
             ChangesetMerged event after successful merge
@@ -571,15 +844,18 @@ class VersioningService:
             _logger.error(error_msg)
             raise ConflictResolutionError(error_msg)
 
+        # Build EntityVersion snapshots for all affected entities (BEFORE state transitions)
+        versions = self._create_merge_versions(changeset, stored_resolutions)
+
+        # Transition state only after version creation succeeds
         now = datetime.now(timezone.utc)
         changeset.transition_to(ChangeState.MERGED)
         changeset.updated_at = now
-
         proposal.transition_to(ProposalState.MERGED)
 
-        # Atomically update both entities to prevent inconsistent state
-        updated_changeset, updated_proposal = self._repo.atomic_update_changeset_and_proposal(
-            changeset, proposal
+        # Atomically update changeset, proposal, and save all versions in a single transaction
+        updated_changeset, updated_proposal = self._repo.atomic_update_on_merge(
+            changeset, proposal, versions
         )
 
         result = MergeResult(
@@ -639,6 +915,7 @@ class VersioningService:
         Raises:
             SyncError: If the sync target fails to push changes
         """
+        started_at = datetime.now(timezone.utc)
         events = self._repo.get_unprocessed(limit=500)
         sent_event_ids = {change_event.id for change_event in events}
 
@@ -673,6 +950,7 @@ class VersioningService:
                     len(valid_ids),
                 )
 
+        completed_at = datetime.now(timezone.utc)
         _logger.info(
             "Push completed (pushed=%d, errors=%d)",
             result.pushed,
@@ -683,7 +961,7 @@ class VersioningService:
         event = SyncCompleted(
             direction=SyncDirection.PUSH,
             events_count=result.pushed,
-            completed_at=datetime.now(timezone.utc),
+            completed_at=completed_at,
         )
         failures = self._event_publisher.publish(event)
         _logger.debug(
@@ -701,6 +979,8 @@ class VersioningService:
             pulled=result.pulled,
             errors=result.errors,
             pushed_event_ids=processed_ids if processed_ids else None,
+            started_at=started_at,
+            completed_at=completed_at,
         )
 
     def pull_changes(self) -> SyncResult:
@@ -726,6 +1006,7 @@ class VersioningService:
         Raises:
             SyncError: If the sync target fails to pull changes
         """
+        started_at = datetime.now(timezone.utc)
         try:
             events = self._sync.pull()
         except RuntimeError as e:
@@ -747,7 +1028,7 @@ class VersioningService:
                     change_reason=change_event.change_reason,
                 )
                 recorded_events.append(event_id)
-            except Exception as e:
+            except (RuntimeError, OSError, ValueError) as e:
                 error_msg = f"Failed to record change for entity {change_event.entity_id}: {str(e)}"
                 errors.append(error_msg)
                 _logger.error(error_msg)
@@ -760,7 +1041,7 @@ class VersioningService:
                             "Rolled back %d recorded events due to failure",
                             len(recorded_events),
                         )
-                    except Exception as rollback_error:
+                    except (RuntimeError, OSError, ValueError) as rollback_error:
                         _logger.error(
                             "Failed to rollback recorded events: %s",
                             str(rollback_error),
@@ -771,11 +1052,14 @@ class VersioningService:
                 # Stop attempting to record more events after first failure
                 break
 
+        completed_at = datetime.now(timezone.utc)
         result = SyncResult(
             pushed=0,
             pulled=len(recorded_events),
             errors=tuple(errors),
             pushed_event_ids=(),
+            started_at=started_at,
+            completed_at=completed_at,
         )
         _logger.info(
             "Pull completed (pulled=%d, errors=%d)",
@@ -787,7 +1071,7 @@ class VersioningService:
         event = SyncCompleted(
             direction=SyncDirection.PULL,
             events_count=result.pulled,
-            completed_at=datetime.now(timezone.utc),
+            completed_at=completed_at,
         )
         failures = self._event_publisher.publish(event)
         _logger.debug(
@@ -806,22 +1090,25 @@ class VersioningService:
         Get the current synchronization status.
 
         Returns information about unprocessed changes awaiting push and whether
-        the remote sync target is configured. On any error, returns degraded status
-        with is_configured=False and unprocessed_count=0.
+        the remote sync target is configured. If errors occur checking sync status,
+        returns a degraded status indicator.
 
         Returns:
-            SyncStatus with unprocessed count and configuration status
+            SyncStatus with unprocessed count, configuration status, and degraded flag
         """
+        is_degraded = False
+        count = 0
+        is_configured = False
+
         try:
             count = self._repo.count_unprocessed()
         except (RuntimeError, OSError) as e:
-            # Adapter errors are expected in degraded states; we return a safe default
-            # rather than propagating the error since sync status is a diagnostic endpoint.
-            # Programming errors (TypeError, AttributeError, etc.) will bubble up for development visibility.
+            # Adapter errors indicate degraded state; mark it and use safe defaults
+            # Programming errors (TypeError, AttributeError, etc.) bubble up for visibility.
             _logger.warning(
                 "Failed to count unprocessed changes in sync status: %s", str(e)
             )
-            count = 0
+            is_degraded = True
 
         try:
             is_configured = self._sync.is_configured()
@@ -830,18 +1117,20 @@ class VersioningService:
             _logger.warning(
                 "Failed to check sync configuration status: %s", str(e)
             )
-            is_configured = False
+            is_degraded = True
 
         status = SyncStatus(
             last_pushed_at=None,
             last_pulled_at=None,
             unprocessed_count=count,
             is_configured=is_configured,
+            is_degraded=is_degraded,
         )
         _logger.debug(
-            "Sync status: unprocessed=%d, configured=%s",
+            "Sync status: unprocessed=%d, configured=%s, degraded=%s",
             count,
             is_configured,
+            is_degraded,
         )
         return status
 

@@ -22,7 +22,7 @@ from pydantic import BaseModel, ConfigDict, Field
 from typing import Optional, Any
 from datetime import datetime
 
-from domain.versioning.value_objects import ChangeOperation, ChangeState, ProposalState
+from domain.versioning.value_objects import ChangeOperation, ChangeState, ProposalState, MergeStrategy
 
 
 # ============================================================================
@@ -49,6 +49,15 @@ class ResolveConflictsRequest(BaseModel):
 
     resolutions: dict[str, dict[str, Any]] = Field(
         ..., description="Mapping of entity_id -> {field_name: resolved_value}"
+    )
+
+
+class AutoResolveConflictsRequest(BaseModel):
+    """Request to automatically resolve conflicts in a proposal"""
+
+    strategy: MergeStrategy = Field(
+        default=MergeStrategy.LAST_WRITE_WINS,
+        description="Merge strategy to use (last_write_wins, base_value_wins, manual)",
     )
 
 
@@ -132,6 +141,7 @@ class ConflictResponse(BaseModel):
     incoming_value: Any = Field(..., description="Value from the incoming changeset")
     is_resolved: bool = Field(..., description="Whether this conflict has been resolved")
     resolved_value: Optional[Any] = Field(default=None, description="The resolved value if conflict is resolved")
+    resolution_strategy: Optional[MergeStrategy] = Field(default=None, description="Strategy used for resolving this conflict")
 
 
 class ConflictReportResponse(BaseModel):
@@ -159,6 +169,7 @@ class SyncStatusResponse(BaseModel):
 
     unprocessed_count: int = Field(..., description="Number of unprocessed (unsynced) changes")
     is_configured: bool = Field(..., description="Whether remote sync is configured")
+    is_degraded: bool = Field(..., description="Whether sync status information is incomplete due to adapter errors")
     last_pushed_at: Optional[datetime] = Field(
         default=None, description="ISO timestamp of last successful push"
     )
@@ -175,5 +186,7 @@ class SyncResultResponse(BaseModel):
     pushed: int = Field(..., description="Number of events pushed")
     pulled: int = Field(..., description="Number of events pulled")
     errors: list[str] = Field(default_factory=list, description="Any errors encountered")
+    started_at: Optional[datetime] = Field(default=None, description="ISO timestamp when sync operation started")
+    completed_at: Optional[datetime] = Field(default=None, description="ISO timestamp when sync operation completed")
 
     model_config = ConfigDict(from_attributes=True)

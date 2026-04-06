@@ -6,17 +6,22 @@
 
 import { BaseService } from "./base";
 import { ENDPOINTS } from "../config";
-import type { components } from "@/api/client/types";
+import type {
+  PipelineFlavor,
+  CreatePipelineFlavorRequest,
+  UpdatePipelineFlavorRequest,
+  PipelineFlavorListResponse,
+  PipelineType,
+} from "./missingTypes";
 
-// Type aliases for better readability
-export type PipelineFlavor = components["schemas"]["PipelineFlavor"];
-export type CreatePipelineFlavorRequest =
-  components["schemas"]["CreatePipelineFlavorRequest"];
-export type UpdatePipelineFlavorRequest =
-  components["schemas"]["UpdatePipelineFlavorRequest"];
-export type PipelineFlavorListResponse =
-  components["schemas"]["PipelineFlavorListResponse"];
-export type PipelineType = components["schemas"]["PipelineType"];
+// Re-export types for use in hooks and components
+export type {
+  PipelineFlavor,
+  CreatePipelineFlavorRequest,
+  UpdatePipelineFlavorRequest,
+  PipelineFlavorListResponse,
+  PipelineType,
+};
 
 export interface ListFlavorsParams extends Record<string, unknown> {
   pipeline?: PipelineType;

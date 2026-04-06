@@ -25,11 +25,7 @@ import {
 } from "lucide-react";
 import { usePipelineComparison } from "@/api/hooks/ragExperiments";
 import { useButterToast } from "@/hooks/useButterToast";
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-import type { PipelineComparisonResponse } from "@/api/services/ragExperiments";
-import type { components } from "@/api/client/types";
-
-type PipelineComparisonItem = components["schemas"]["PipelineComparisonItem"];
+import type { PipelineComparisonItem } from "@/api/services/ragExperiments";
 
 export interface TestResultsViewerProps {
   paragraphId: string;
@@ -45,8 +41,6 @@ export const TestResultsViewer: React.FC<TestResultsViewerProps> = ({
   const [sorting, setSorting] = useState<SortingState>([
     { id: "f1_score", desc: true },
   ]);
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [setExpandedRows] = useState<Set<string>>(new Set());
   const toast = useButterToast();
 
   const { data, isLoading, error } = usePipelineComparison({
@@ -130,14 +124,21 @@ export const TestResultsViewer: React.FC<TestResultsViewerProps> = ({
           );
         },
       }),
-      columnHelper.accessor("executed_at", {
-        header: "Executed At",
-        cell: (info) => (
-          <span className="text-sm text-gray-600">
-            {new Date(info.getValue()).toLocaleString()}
-          </span>
-        ),
-      }),
+      columnHelper.accessor(
+        (row) =>
+          (row as PipelineComparisonItem & { executed_at?: string })
+            .executed_at,
+        {
+          header: "Executed At",
+          cell: (info) => {
+            const dateValue = info.getValue() as string | undefined;
+            const dateStr = dateValue
+              ? new Date(dateValue).toLocaleString()
+              : "Unknown";
+            return <span className="text-sm text-gray-600">{dateStr}</span>;
+          },
+        },
+      ),
     ],
     [],
   );
@@ -189,7 +190,9 @@ export const TestResultsViewer: React.FC<TestResultsViewerProps> = ({
         result.f1_score !== null && result.f1_score !== undefined
           ? (result.f1_score * 100).toFixed(1) + "%"
           : "N/A",
-        new Date(result.executed_at).toISOString(),
+        (result.executed_at as string | undefined)
+          ? new Date(result.executed_at as string).toISOString()
+          : "Unknown",
       ]);
 
       const csvContent = [

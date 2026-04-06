@@ -3,9 +3,9 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Optional
+from typing import Any, Optional
 
-from domain.versioning.value_objects import ChangeState, ProposalState, ChangeOperation, EntityVersionState
+from domain.versioning.value_objects import ChangeState, ProposalState, ChangeOperation, EntityVersionState, MergeStrategy
 
 
 @dataclass
@@ -140,15 +140,36 @@ class Conflict:
     """A merge conflict on a single field."""
 
     entity_id: str
+    entity_type: str
     field_name: str
-    base_value: object
-    incoming_value: object
-    resolved_value: object = None
+    base_value: Any
+    incoming_value: Any
+    resolved_value: Any = None
+    resolution_strategy: Optional[MergeStrategy] = None
+
+    def resolve(self, resolved_value: Any, strategy: MergeStrategy) -> None:
+        """
+        Atomically set the resolved value and strategy.
+
+        This method ensures the conflict cannot be left in a half-resolved state
+        where resolved_value is set but resolution_strategy is None (or vice versa).
+
+        Args:
+            resolved_value: The resolved value for this field
+            strategy: The MergeStrategy used to resolve the conflict
+        """
+        self.resolved_value = resolved_value
+        self.resolution_strategy = strategy
 
     @property
     def is_resolved(self) -> bool:
-        """True if conflict is resolved (resolved_value is set)."""
-        return self.resolved_value is not None
+        """True if conflict is resolved (resolution_strategy is set).
+
+        A conflict is considered resolved when a resolution_strategy has been applied,
+        even if the resolved_value is None (representing an intentional null/empty resolution).
+        This semantic supports resolving conflicts to empty collections or null values.
+        """
+        return self.resolution_strategy is not None
 
 
 @dataclass

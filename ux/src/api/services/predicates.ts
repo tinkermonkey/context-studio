@@ -1,26 +1,37 @@
 import { BaseService } from "./base";
 import { ENDPOINTS } from "../config";
-import type { components } from "@/api/client/types";
+import type {
+  PredicateOut,
+  PredicateCreate,
+  PredicateUpdate,
+  PaginatedPredicatesResponse,
+  ExternalPredicateOut,
+  PaginatedExternalPredicatesResponse,
+} from "./missingTypes";
+
+// Re-export types for use in hooks and components
+export type {
+  PredicateOut,
+  PredicateCreate,
+  PredicateUpdate,
+  PaginatedPredicatesResponse,
+  ExternalPredicateOut,
+  PaginatedExternalPredicatesResponse,
+};
 
 // Type aliases for better readability
-export type PredicateOut = components["schemas"]["PredicateOut"];
-export type PredicateCreate = components["schemas"]["PredicateCreate"];
-export type PredicateUpdate = components["schemas"]["PredicateUpdate"];
-export type PaginatedPredicatesResponse =
-  components["schemas"]["PaginatedPredicatesResponse"];
-export type ExternalPredicateOut =
-  components["schemas"]["ExternalPredicateOut"];
-export type PaginatedExternalPredicatesResponse =
-  components["schemas"]["PaginatedExternalPredicatesResponse"];
-export type PredicateDiscoveryResponse =
-  components["schemas"]["PredicateDiscoveryResponse"];
-export type PredicateDiscoveryStatus =
-  components["schemas"]["PredicateDiscoveryStatus"];
-export type SimilarPredicateOut = components["schemas"]["SimilarPredicateOut"];
-export type FindSimilarResponse = components["schemas"]["FindSimilarResponse"];
-export type ClusterOut = components["schemas"]["ClusterOut"];
-export type ClusterPredicatesResponse =
-  components["schemas"]["ClusterPredicatesResponse"];
+export type PredicateDiscoveryResponse = Record<string, unknown>;
+export type PredicateDiscoveryStatus = Record<string, unknown>;
+export type SimilarPredicateOut = ExternalPredicateOut;
+
+export interface FindSimilarResponse {
+  results: ExternalPredicateOut[];
+  total_count?: number;
+  [key: string]: unknown;
+}
+
+export type ClusterOut = Record<string, unknown>;
+export type ClusterPredicatesResponse = Record<string, unknown>;
 
 export interface PredicateListParams {
   skip?: number;

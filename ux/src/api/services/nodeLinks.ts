@@ -108,6 +108,7 @@ export class NodeLinkService extends BaseService {
       // Validate required fields
       this.validateRequired(data.source_node_id, "source_node_id");
       this.validateRequired(data.target_node_id, "target_node_id");
+      this.validateRequired(data.predicate, "predicate");
       this.sanitizeString(data.predicate, "predicate");
 
       // Validate that source and target are different

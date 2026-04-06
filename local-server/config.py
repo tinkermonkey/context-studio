@@ -6,7 +6,7 @@ import os
 import json
 import logging
 from typing import Optional, List
-from pydantic import BaseModel, Field, ValidationError
+from pydantic import BaseModel, Field, ValidationError, field_validator, model_validator
 from enum import Enum
 from dotenv import load_dotenv
 
@@ -22,6 +22,14 @@ class LogLevel(str, Enum):
     WARNING = "WARNING"
     ERROR = "ERROR"
     CRITICAL = "CRITICAL"
+
+
+class SyncAdapterType(str, Enum):
+    """Sync adapter type options"""
+
+    S3 = "s3"
+    DUCKDB = "duckdb"
+    NONE = "none"
 
 
 class ServerConfig(BaseModel):
@@ -81,6 +89,55 @@ class S3Config(BaseModel):
     s3_region: Optional[str] = Field(default="us-east-1", description="AWS region")
 
 
+class DuckDBConfig(BaseModel):
+    """DuckDB synchronization configuration section"""
+
+    output_dir: str = Field(description="Local directory for Parquet files")
+
+
+class SyncConfig(BaseModel):
+    """Synchronization configuration with adapter selection"""
+
+    adapter: SyncAdapterType = Field(default=SyncAdapterType.NONE, description="Sync adapter type: 's3', 'duckdb', or 'none'")
+    s3: Optional[S3Config] = Field(default=None, description="S3-specific configuration")
+    duckdb: Optional[DuckDBConfig] = Field(default=None, description="DuckDB-specific configuration")
+
+    @field_validator("adapter", mode="before")
+    @classmethod
+    def validate_adapter(cls, v: str | SyncAdapterType) -> str | SyncAdapterType:
+        """Validate adapter type and convert to lowercase for case-insensitive matching"""
+        if isinstance(v, str):
+            v = v.lower()
+        return v
+
+    @model_validator(mode="after")
+    def validate_adapter_config(self) -> "SyncConfig":
+        """
+        Validate that adapter-specific sub-config is present when required.
+
+        Ensures:
+        - If adapter=s3, then s3 configuration must be provided
+        - If adapter=duckdb, then duckdb configuration must be provided
+
+        Returns:
+            The validated SyncConfig instance
+
+        Raises:
+            ValueError: If adapter-specific configuration is missing
+        """
+        if self.adapter == SyncAdapterType.S3 and self.s3 is None:
+            raise ValueError(
+                "S3 adapter selected but s3 configuration is missing. "
+                "Provide 'sync.s3' section with required S3 settings."
+            )
+        if self.adapter == SyncAdapterType.DUCKDB and self.duckdb is None:
+            raise ValueError(
+                "DuckDB adapter selected but duckdb configuration is missing. "
+                "Provide 'sync.duckdb' section with 'output_dir'."
+            )
+        return self
+
+
 class Settings(BaseModel):
     """Centralized configuration settings"""
 
@@ -89,7 +146,7 @@ class Settings(BaseModel):
     logging: LoggingConfig = Field(default_factory=LoggingConfig)
     llm: LLMConfig = Field(default_factory=LLMConfig)
     reference: ReferenceConfig = Field(default_factory=ReferenceConfig)
-    sync: Optional[S3Config] = Field(default=None, description="S3 synchronization configuration")
+    sync: Optional[SyncConfig] = Field(default=None, description="Synchronization configuration")
 
 
 class ConfigurationManager:

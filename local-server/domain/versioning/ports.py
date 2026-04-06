@@ -5,7 +5,7 @@ from datetime import datetime
 from typing import Optional, Protocol, Sequence
 
 from domain.versioning.entities import ChangeEvent, Changeset, EntityVersion, Proposal
-from domain.versioning.value_objects import SyncResult, ChangeOperation, ChangeHistoryResult
+from domain.versioning.value_objects import SyncResult, ChangeOperation, ChangeHistoryResult, SyncStatus
 
 
 class ChangeRepository(Protocol):
@@ -166,6 +166,33 @@ class ChangeRepository(Protocol):
         """
         ...
 
+    def atomic_update_on_merge(
+        self,
+        changeset: Changeset,
+        proposal: Proposal,
+        versions: list[EntityVersion],
+    ) -> tuple[Changeset, Proposal]:
+        """
+        Atomically update changeset, proposal, and save entity versions on merge.
+
+        The changeset and proposal state transition, along with all entity version
+        snapshots, are persisted within a single transaction. If any operation fails,
+        all changes are rolled back to maintain consistency between the merge state
+        and version snapshots.
+
+        Args:
+            changeset: The Changeset domain entity with transitioned state
+            proposal: The Proposal domain entity with transitioned state
+            versions: List of EntityVersion snapshots to persist for merged entities
+
+        Returns:
+            Tuple of (updated Changeset, updated Proposal)
+
+        Raises:
+            VersionNotFoundError: If the changeset or proposal does not exist
+        """
+        ...
+
     def delete_changes(self, event_ids: list[str]) -> None:
         """
         Delete change events by their IDs (used for rollback on pull failure).
@@ -179,7 +206,7 @@ class ChangeRepository(Protocol):
         ...
 
     def save_conflict_resolutions(
-        self, proposal_id: str, resolutions: dict[str, dict[str, str]]
+        self, proposal_id: str, resolutions: dict[str, dict[str, object]]
     ) -> None:
         """
         Persist conflict resolutions for a proposal.
@@ -192,7 +219,7 @@ class ChangeRepository(Protocol):
 
     def get_conflict_resolutions(
         self, proposal_id: str
-    ) -> dict[str, dict[str, str]]:
+    ) -> dict[str, dict[str, object]]:
         """
         Retrieve persisted conflict resolutions for a proposal.
 
@@ -218,4 +245,8 @@ class SyncTarget(Protocol):
 
     def is_configured(self) -> bool:
         """Check if sync is configured."""
+        ...
+
+    def get_sync_status(self) -> SyncStatus:
+        """Get the status of remote synchronization."""
         ...

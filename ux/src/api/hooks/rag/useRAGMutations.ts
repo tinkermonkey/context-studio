@@ -6,15 +6,11 @@
 
 import { useMutation, UseMutationOptions } from "@tanstack/react-query";
 import { ragService, type RAGConfigUpdate } from "@/api/services/rag";
-import { operations } from "@/api/client/types";
-
-// Infer response types from operations
-type ExtractEntitiesResponse =
-  operations["extract_entities_api_rag_extract_post"]["responses"]["200"]["content"]["application/json"];
-type UpdateConfigResponse =
-  operations["update_config_api_rag_config_update_post"]["responses"]["200"]["content"]["application/json"];
-type DeleteTraceResponse =
-  operations["delete_trace_api_rag_trace__request_id__delete"]["responses"]["200"]["content"]["application/json"];
+import type {
+  ExtractionResult,
+  DeleteTraceResponse,
+  UpdateConfigResponse,
+} from "@/api/services/missingTypes";
 
 export interface ExtractEntitiesParams {
   text: string;
@@ -26,11 +22,7 @@ export interface ExtractEntitiesParams {
  * Hook to extract entities from text using the RAG pipeline
  */
 export const useExtractEntities = (
-  options?: UseMutationOptions<
-    ExtractEntitiesResponse,
-    Error,
-    ExtractEntitiesParams
-  >,
+  options?: UseMutationOptions<ExtractionResult, Error, ExtractEntitiesParams>,
 ) => {
   return useMutation({
     mutationFn: ({

@@ -34,7 +34,7 @@ class FakeChangeRepository:
         self._changesets: dict[str, Changeset] = {}
         self._changeset_events: dict[tuple[str, str], bool] = {}
         self._proposals: dict[str, Proposal] = {}
-        self._conflict_resolutions: dict[str, dict[str, dict[str, str]]] = {}
+        self._conflict_resolutions: dict[str, dict[str, dict[str, object]]] = {}
 
     # ChangeEvent operations
 
@@ -254,8 +254,25 @@ class FakeChangeRepository:
         self._proposals[proposal.id] = deepcopy(proposal)
         return deepcopy(changeset), deepcopy(proposal)
 
+    def atomic_update_on_merge(
+        self,
+        changeset: Changeset,
+        proposal: Proposal,
+        versions: list[EntityVersion],
+    ) -> tuple[Changeset, Proposal]:
+        """
+        Atomically update changeset, proposal, and save entity versions on merge.
+
+        Stores copies to prevent tests from relying on by-reference mutations.
+        """
+        self._changesets[changeset.id] = deepcopy(changeset)
+        self._proposals[proposal.id] = deepcopy(proposal)
+        for version in versions:
+            self._entity_versions[(version.entity_id, version.version)] = deepcopy(version)
+        return deepcopy(changeset), deepcopy(proposal)
+
     def save_conflict_resolutions(
-        self, proposal_id: str, resolutions: dict[str, dict[str, str]]
+        self, proposal_id: str, resolutions: dict[str, dict[str, object]]
     ) -> None:
         """
         Persist conflict resolutions for a proposal.
@@ -268,7 +285,7 @@ class FakeChangeRepository:
 
     def get_conflict_resolutions(
         self, proposal_id: str
-    ) -> dict[str, dict[str, str]]:
+    ) -> dict[str, dict[str, object]]:
         """
         Retrieve persisted conflict resolutions for a proposal.
 

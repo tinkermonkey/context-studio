@@ -192,7 +192,7 @@ export const AnnotationSelector: React.FC<AnnotationSelectorProps> = ({
         >
           <span
             className="cursor-pointer rounded bg-yellow-200 px-1 hover:bg-yellow-300"
-            onClick={() => handleDeleteAnnotation(annotation.id)}
+            onClick={() => handleDeleteAnnotation(annotation.id as string)}
           >
             {annotatedText}
           </span>
@@ -304,19 +304,22 @@ export const AnnotationSelector: React.FC<AnnotationSelectorProps> = ({
           <div className="space-y-2">
             {paragraph.annotations.map((annotation) => {
               const nodeInfo = (structureNodes || []).find(
-                (n: StructureNode) => n.id === annotation.structure_node_id,
+                (n: StructureNode) =>
+                  n.id === (annotation.structure_node_id as string),
               );
               return (
                 <div
-                  key={annotation.id}
+                  key={annotation.id as string | number | undefined}
                   className="flex items-start justify-between rounded border border-gray-300 bg-white p-2 text-sm"
                 >
                   <div className="flex-1">
                     <p className="font-medium text-gray-900">
-                      "{annotation.text}"
+                      "{annotation.text as string}"
                     </p>
                     <p className="text-xs text-gray-600">
-                      → {nodeInfo?.title || annotation.structure_node_id}
+                      →{" "}
+                      {nodeInfo?.title ||
+                        (annotation.structure_node_id as string)}
                     </p>
                     <p className="text-xs text-gray-500">
                       Position: {annotation.start_char} - {annotation.end_char}
@@ -325,7 +328,9 @@ export const AnnotationSelector: React.FC<AnnotationSelectorProps> = ({
                   <Button
                     size="xs"
                     color="failure"
-                    onClick={() => handleDeleteAnnotation(annotation.id)}
+                    onClick={() =>
+                      handleDeleteAnnotation(annotation.id as string)
+                    }
                     disabled={deleteAnnotationMutation.isPending}
                   >
                     <Trash2 className="h-3 w-3" />

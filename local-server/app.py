@@ -19,7 +19,8 @@ import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from config import get_config_manager, get_settings
+from config import get_config_manager, get_settings, SyncAdapterType
+from domain.admin.exceptions import ConfigurationError
 from utils.logger import get_logger
 
 # Import adapters
@@ -48,7 +49,25 @@ from domain.extraction.services import ExtractionService
 from domain.extraction.ports import ReferenceSource
 from domain.pipeline.services import PipelineService
 from domain.versioning.services import VersioningService
-from domain.ontology.events import GraphInvalidated
+from domain.ontology.events import (
+    GraphInvalidated,
+    TaxonomyCreated,
+    SchemeCreated,
+    ClassCreated,
+    ClassUpdated,
+    ClassDeleted,
+    ClassMoved,
+    RelationshipCreated,
+    RelationshipDeleted,
+    PropertyDefinitionCreated,
+    PropertyDefinitionUpdated,
+    PropertyDefinitionDeleted,
+    TaxonomyUpdated,
+    TaxonomyDeleted,
+    SchemeUpdated,
+    SchemeDeleted,
+    ConceptSchemeUpdated,
+)
 from domain.extraction.events import ExtractionCompleted
 from domain.pipeline.events import PipelineExecuted
 from domain.versioning.events import ChangesetMerged, SyncCompleted
@@ -56,6 +75,7 @@ from domain.versioning.ports import SyncTarget
 
 # Import sync adapters
 from adapters.sync.s3_sync import S3SyncAdapter
+from adapters.sync.duckdb_sync import DuckDBSyncAdapter
 from adapters.sync.noop_sync import NoOpSyncTarget
 
 # Import routes
@@ -208,24 +228,68 @@ async def lifespan(app: FastAPI):
         logger.info("PipelineService created and wired with adapters")
 
         # Versioning service with sync adapter
-        sync_config = settings.sync if hasattr(settings, "sync") else None
+        sync_config = settings.sync
         sync_target: SyncTarget
-        if sync_config and sync_config.s3_bucket:
-            try:
-                sync_target = S3SyncAdapter(
-                    bucket=sync_config.s3_bucket,
-                    prefix=sync_config.s3_prefix or "context-studio",
-                    aws_access_key=sync_config.s3_access_key or "",
-                    aws_secret_key=sync_config.s3_secret_key or "",
-                    region=sync_config.s3_region or "us-east-1",
-                )
-                logger.info("S3SyncAdapter initialized for remote sync")
-            except Exception as e:
-                logger.warning(f"Failed to initialize S3SyncAdapter, falling back to no-op: {e}")
+
+        if sync_config:
+            adapter_type = sync_config.adapter
+
+            if adapter_type == SyncAdapterType.S3:
+                s3_config = sync_config.s3
+                if not s3_config or not s3_config.s3_bucket:
+                    raise ConfigurationError(
+                        "S3 adapter configured but required settings missing: "
+                        "sync.s3.s3_bucket is required when adapter is 's3'"
+                    )
+                try:
+                    sync_target = S3SyncAdapter(
+                        bucket=s3_config.s3_bucket,
+                        prefix=s3_config.s3_prefix or "context-studio",
+                        aws_access_key=s3_config.s3_access_key or "",
+                        aws_secret_key=s3_config.s3_secret_key or "",
+                        region=s3_config.s3_region or "us-east-1",
+                        change_repo=change_repo,
+                    )
+                    logger.info("S3SyncAdapter initialized for remote sync")
+                except ConfigurationError:
+                    raise
+                except Exception as e:
+                    raise ConfigurationError(
+                        f"Failed to initialize S3SyncAdapter: {type(e).__name__}: {e}"
+                    ) from e
+
+            elif adapter_type == SyncAdapterType.DUCKDB:
+                duckdb_config = sync_config.duckdb
+                if not duckdb_config:
+                    raise ConfigurationError(
+                        "DuckDB adapter configured but required settings missing: "
+                        "sync.duckdb configuration is required when adapter is 'duckdb'"
+                    )
+                try:
+                    sync_target = DuckDBSyncAdapter(
+                        output_dir=duckdb_config.output_dir,
+                        change_repo=change_repo,
+                    )
+                    logger.info("DuckDBSyncAdapter initialized for remote sync")
+                except ConfigurationError:
+                    raise
+                except Exception as e:
+                    raise ConfigurationError(
+                        f"Failed to initialize DuckDBSyncAdapter: {type(e).__name__}: {e}"
+                    ) from e
+
+            elif adapter_type == SyncAdapterType.NONE:
                 sync_target = NoOpSyncTarget()
+                logger.info("Sync adapter set to 'none', using no-op sync target")
+            else:
+                # This should never happen due to enum validation, but kept as defense-in-depth
+                raise ConfigurationError(
+                    f"Invalid sync adapter type: '{adapter_type}'. "
+                    f"Must be one of: {', '.join(t.value for t in SyncAdapterType)}"
+                )
         else:
             sync_target = NoOpSyncTarget()
-            logger.info("S3 not configured, using no-op sync target")
+            logger.info("Sync configuration not provided, using no-op sync target")
 
         versioning_service = VersioningService(
             change_repo=change_repo,
@@ -270,6 +334,56 @@ async def lifespan(app: FastAPI):
 
         event_publisher.subscribe(SyncCompleted, versioning_service.on_sync_completed)
         logger.info("Event subscription: SyncCompleted -> VersioningService.on_sync_completed")
+
+        # --- Ontology change event subscriptions ---
+
+        event_publisher.subscribe(TaxonomyCreated, change_recorder.on_taxonomy_created)
+        logger.info("Event subscription: TaxonomyCreated -> ChangeEventRecorder.on_taxonomy_created")
+
+        event_publisher.subscribe(SchemeCreated, change_recorder.on_scheme_created)
+        logger.info("Event subscription: SchemeCreated -> ChangeEventRecorder.on_scheme_created")
+
+        event_publisher.subscribe(ClassCreated, change_recorder.on_class_created)
+        logger.info("Event subscription: ClassCreated -> ChangeEventRecorder.on_class_created")
+
+        event_publisher.subscribe(ClassUpdated, change_recorder.on_class_updated)
+        logger.info("Event subscription: ClassUpdated -> ChangeEventRecorder.on_class_updated")
+
+        event_publisher.subscribe(ClassDeleted, change_recorder.on_class_deleted)
+        logger.info("Event subscription: ClassDeleted -> ChangeEventRecorder.on_class_deleted")
+
+        event_publisher.subscribe(ClassMoved, change_recorder.on_class_moved)
+        logger.info("Event subscription: ClassMoved -> ChangeEventRecorder.on_class_moved")
+
+        event_publisher.subscribe(RelationshipCreated, change_recorder.on_relationship_created)
+        logger.info("Event subscription: RelationshipCreated -> ChangeEventRecorder.on_relationship_created")
+
+        event_publisher.subscribe(RelationshipDeleted, change_recorder.on_relationship_deleted)
+        logger.info("Event subscription: RelationshipDeleted -> ChangeEventRecorder.on_relationship_deleted")
+
+        event_publisher.subscribe(PropertyDefinitionCreated, change_recorder.on_property_definition_created)
+        logger.info("Event subscription: PropertyDefinitionCreated -> ChangeEventRecorder.on_property_definition_created")
+
+        event_publisher.subscribe(PropertyDefinitionUpdated, change_recorder.on_property_definition_updated)
+        logger.info("Event subscription: PropertyDefinitionUpdated -> ChangeEventRecorder.on_property_definition_updated")
+
+        event_publisher.subscribe(PropertyDefinitionDeleted, change_recorder.on_property_definition_deleted)
+        logger.info("Event subscription: PropertyDefinitionDeleted -> ChangeEventRecorder.on_property_definition_deleted")
+
+        event_publisher.subscribe(TaxonomyUpdated, change_recorder.on_taxonomy_updated)
+        logger.info("Event subscription: TaxonomyUpdated -> ChangeEventRecorder.on_taxonomy_updated")
+
+        event_publisher.subscribe(TaxonomyDeleted, change_recorder.on_taxonomy_deleted)
+        logger.info("Event subscription: TaxonomyDeleted -> ChangeEventRecorder.on_taxonomy_deleted")
+
+        event_publisher.subscribe(SchemeUpdated, change_recorder.on_scheme_updated)
+        logger.info("Event subscription: SchemeUpdated -> ChangeEventRecorder.on_scheme_updated")
+
+        event_publisher.subscribe(SchemeDeleted, change_recorder.on_scheme_deleted)
+        logger.info("Event subscription: SchemeDeleted -> ChangeEventRecorder.on_scheme_deleted")
+
+        event_publisher.subscribe(ConceptSchemeUpdated, change_recorder.on_concept_scheme_updated)
+        logger.info("Event subscription: ConceptSchemeUpdated -> ChangeEventRecorder.on_concept_scheme_updated")
 
         # --- Store services in app.state for dependency injection ---
 

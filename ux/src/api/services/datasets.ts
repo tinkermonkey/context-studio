@@ -6,18 +6,24 @@
 
 import { BaseService } from "./base";
 import { ENDPOINTS } from "../config";
-import type { components } from "../client/types";
+import type {
+  DatasetResponse,
+  CreateDatasetRequest,
+  AddExistingDatasetRequest,
+  UpdateDatasetDirectoryRequest,
+  ActionLogResponse,
+  ActionLogEntry,
+} from "./missingTypes";
 
-// Type aliases for better readability
-export type DatasetResponse = components["schemas"]["DatasetResponse"];
-export type CreateDatasetRequest =
-  components["schemas"]["CreateDatasetRequest"];
-export type AddExistingDatasetRequest =
-  components["schemas"]["AddExistingDatasetRequest"];
-export type UpdateDatasetDirectoryRequest =
-  components["schemas"]["UpdateDatasetDirectoryRequest"];
-export type ActionLogResponse = components["schemas"]["ActionLogResponse"];
-export type ActionLogEntry = components["schemas"]["ActionLogEntry"];
+// Re-export types for use in hooks and components
+export type {
+  DatasetResponse,
+  CreateDatasetRequest,
+  AddExistingDatasetRequest,
+  UpdateDatasetDirectoryRequest,
+  ActionLogResponse,
+  ActionLogEntry,
+};
 
 export interface ActionLogParams extends Record<string, unknown> {
   days?: number;
@@ -50,6 +56,7 @@ export class DatasetService extends BaseService {
   async create(data: CreateDatasetRequest): Promise<DatasetResponse> {
     return this.withErrorContext(() => {
       this.validateRequired(data, "Dataset data");
+      this.validateRequired(data.name, "Dataset name");
       this.validateRequired(data.title, "Dataset title");
       this.validateRequired(data.filename, "Dataset filename");
       this.sanitizeString(data.title, "Dataset title", 255);

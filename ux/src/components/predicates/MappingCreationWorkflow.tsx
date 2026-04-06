@@ -127,8 +127,10 @@ export const MappingCreationWorkflow: React.FC<
 
       // Create the predicate
       createMutation.mutate({
-        title,
-        definition: definition.trim() || undefined,
+        name: identifier || generateIdentifier(title.trim()),
+        type: "relationship",
+        title: title.trim(),
+        definition: definition.trim() || "",
         identifier: identifier || undefined,
       });
     }

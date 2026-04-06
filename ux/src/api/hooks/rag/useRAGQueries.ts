@@ -8,22 +8,18 @@ import { useQuery, UseQueryOptions } from "@tanstack/react-query";
 import { ragService } from "@/api/services/rag";
 import { QUERY_KEYS } from "@/api/config";
 import { createQueryKey } from "@/api/utils/queryClient";
-import { operations } from "@/api/client/types";
-
-// Infer response types from operations
-type GetMetricsResponse =
-  operations["get_metrics_api_rag_metrics__request_id__get"]["responses"]["200"]["content"]["application/json"];
-type GetTraceResponse =
-  operations["get_trace_api_rag_trace__request_id__get"]["responses"]["200"]["content"]["application/json"];
-type GetTraceByLayerResponse =
-  operations["get_trace_by_layer_api_rag_trace__request_id__layer__layer_name__get"]["responses"]["200"]["content"]["application/json"];
+import type {
+  MetricsResponse,
+  TraceResponse,
+  LayerTraceResponse,
+} from "@/api/services/missingTypes";
 
 /**
  * Hook to retrieve processing metrics for a RAG extraction request
  */
 export const useRAGMetrics = (
   requestId: string | null,
-  options?: UseQueryOptions<GetMetricsResponse, Error>,
+  options?: UseQueryOptions<MetricsResponse, Error>,
 ) => {
   return useQuery({
     queryKey: createQueryKey(QUERY_KEYS.RAG, "metrics", {
@@ -47,7 +43,7 @@ export const useRAGMetrics = (
  */
 export const useRAGTrace = (
   requestId: string | null,
-  options?: UseQueryOptions<GetTraceResponse, Error>,
+  options?: UseQueryOptions<TraceResponse, Error>,
 ) => {
   return useQuery({
     queryKey: createQueryKey(QUERY_KEYS.RAG, "trace", {
@@ -72,7 +68,7 @@ export const useRAGTrace = (
 export const useRAGTraceByLayer = (
   requestId: string | null,
   layerName: string | null,
-  options?: UseQueryOptions<GetTraceByLayerResponse, Error>,
+  options?: UseQueryOptions<LayerTraceResponse, Error>,
 ) => {
   return useQuery({
     queryKey: createQueryKey(QUERY_KEYS.RAG, "trace-layer", {
