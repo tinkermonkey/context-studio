@@ -271,12 +271,39 @@ class TestAdminServiceConfigurationReset:
         assert reset_config.sections["sync"]["s3_secret_key"] == "secret-key"
 
     def test_reset_configuration_uses_credential_field_names_constant(self):
-        """Reset configuration uses CREDENTIAL_FIELD_NAMES constant."""
-        # Verify the constant contains the expected credential fields
-        assert "openai_api_key" in CREDENTIAL_FIELD_NAMES
-        assert "anthropic_api_key" in CREDENTIAL_FIELD_NAMES
-        assert "s3_access_key" in CREDENTIAL_FIELD_NAMES
-        assert "s3_secret_key" in CREDENTIAL_FIELD_NAMES
+        """Reset configuration uses CREDENTIAL_FIELD_NAMES to determine which fields to preserve."""
+        # Create config with both credential fields (in CREDENTIAL_FIELD_NAMES) and non-credential fields
+        initial = AppConfiguration(
+            sections={
+                "llm": {
+                    "provider": "openai",  # Non-credential field
+                    "model": "gpt-4",  # Non-credential field
+                    "openai_api_key": "sk-secret",  # Credential field
+                    "anthropic_api_key": "sk-ant",  # Credential field
+                },
+                "sync": {
+                    "bucket": "my-bucket",  # Non-credential field
+                    "s3_access_key": "access-key",  # Credential field
+                    "s3_secret_key": "secret-key",  # Credential field
+                },
+            }
+        )
+        config_store = FakeConfigurationStore(initial_config=initial)
+        service = AdminService(self.metrics, config_store)
+
+        # Reset configuration
+        reset_config = service.reset_configuration()
+
+        # Verify non-credential fields are cleared
+        assert "provider" not in reset_config.sections["llm"]
+        assert "model" not in reset_config.sections["llm"]
+        assert "bucket" not in reset_config.sections["sync"]
+
+        # Verify credential fields (in CREDENTIAL_FIELD_NAMES) are preserved
+        assert reset_config.sections["llm"]["openai_api_key"] == "sk-secret"
+        assert reset_config.sections["llm"]["anthropic_api_key"] == "sk-ant"
+        assert reset_config.sections["sync"]["s3_access_key"] == "access-key"
+        assert reset_config.sections["sync"]["s3_secret_key"] == "secret-key"
 
     def test_reset_configuration_delegatesto_config_store(self):
         """Reset configuration delegates to ConfigurationStore.reset_to_defaults()."""

@@ -5,10 +5,8 @@ import os
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
-from datetime import datetime, timezone
 from typing import Optional
 
-from domain.admin.entities import SystemHealth
 from domain.admin.value_objects import (
     SystemHealthStatus,
     DatabaseHealth,
@@ -27,7 +25,6 @@ class FakeMetricsCollector:
 
     def __init__(
         self,
-        health: Optional[SystemHealth] = None,
         database_health: Optional[DatabaseHealth] = None,
         service_metrics: Optional[ServiceMetrics] = None,
         embedding_status: Optional[ComponentStatus] = None,
@@ -38,14 +35,12 @@ class FakeMetricsCollector:
         Initialize with optional pre-configured health components.
 
         Args:
-            health: Optional SystemHealth (deprecated, for backward compatibility)
             database_health: Optional DatabaseHealth. If None, defaults to connected.
             service_metrics: Optional ServiceMetrics. If None, defaults to 0 uptime and no providers.
             embedding_status: Optional ComponentStatus. If None, defaults to available.
             nlp_status: Optional ComponentStatus. If None, defaults to available.
             task_summary: Optional BackgroundTaskSummary. If None, defaults to 0 tasks.
         """
-        self._health = health
         self._database_health = database_health or DatabaseHealth(
             connected=True, issues=[]
         )
