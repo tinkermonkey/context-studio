@@ -93,9 +93,11 @@ class AdminService:
                 available=False, details=f"Error checking NLP pipeline: {e}"
             )
 
+        task_summary_error = None
         try:
             task_summary = self._metrics.get_background_task_summary()
-        except Exception:
+        except Exception as e:
+            task_summary_error = str(e)
             task_summary = BackgroundTaskSummary(by_status={})
 
         # Aggregate all issues
@@ -112,10 +114,13 @@ class AdminService:
         elif not service_metrics.llm_providers_available:
             issues.append("No LLM providers configured")
 
-        # Check for failed background tasks
-        failed_tasks = task_summary.by_status.get(BackgroundTaskStatus.FAILED, 0)
-        if failed_tasks > 0:
-            issues.append(f"{failed_tasks} background task(s) failed")
+        # Check for background task errors or failures
+        if task_summary_error:
+            issues.append(f"Error checking background tasks: {task_summary_error}")
+        else:
+            failed_tasks = task_summary.by_status.get(BackgroundTaskStatus.FAILED, 0)
+            if failed_tasks > 0:
+                issues.append(f"{failed_tasks} background task(s) failed")
 
         # Derive overall status based on business rules
         if not db_health.connected:

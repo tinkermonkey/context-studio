@@ -87,7 +87,7 @@ class TestSystemMetrics:
         - Uptime and LLM provider information are accessible
         """
         # Check database health endpoint to verify database is connected and responsive
-        response = e2e_client.get("/api/v1/admin/metrics/database")
+        response = e2e_client.get("/api/v1/admin/health/database")
         assert response.status_code == status.HTTP_200_OK
 
         db_body = response.json()
@@ -95,7 +95,7 @@ class TestSystemMetrics:
         assert db_body["connected"] is True, "Database should be connected and responsive"
 
         # Check service metrics endpoint
-        response = e2e_client.get("/api/v1/admin/metrics/services")
+        response = e2e_client.get("/api/v1/admin/health/services")
         assert response.status_code == status.HTTP_200_OK
 
         body = response.json()
@@ -112,7 +112,7 @@ class TestSystemMetrics:
         assert body["uptime_seconds"] >= 0
 
         # Check embedding model status
-        response = e2e_client.get("/api/v1/admin/metrics/embedding")
+        response = e2e_client.get("/api/v1/admin/health/embedding")
         assert response.status_code == status.HTTP_200_OK
 
         embedding_body = response.json()

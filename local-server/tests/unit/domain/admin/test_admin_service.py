@@ -283,7 +283,7 @@ class TestAdminServiceHealthErrorHandling:
         assert any("Error checking NLP" in issue for issue in health.issues)
 
     def test_check_health_resilient_to_task_summary_failure(self):
-        """Health check continues despite background task summary check failure."""
+        """Health check continues despite background task summary check failure and reports the error."""
         metrics = FakeMetricsCollector(
             database_health=DatabaseHealth(connected=True, issues=[]),
             service_metrics=ServiceMetrics(
@@ -296,7 +296,9 @@ class TestAdminServiceHealthErrorHandling:
         service = AdminService(metrics, self.config_store)
         health = service.check_health()
 
-        assert health.status == SystemHealthStatus.HEALTHY
+        # Health check continues despite the failure and reports it
+        assert health.status == SystemHealthStatus.DEGRADED
+        assert any("Error checking background tasks" in issue for issue in health.issues)
 
 
 class TestBackgroundTaskSummaryValueObject:

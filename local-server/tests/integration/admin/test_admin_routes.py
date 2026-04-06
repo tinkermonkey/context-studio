@@ -348,105 +348,105 @@ class TestGranularHealthEndpoints:
     """Tests for granular health check endpoints."""
 
     def test_database_health_returns_200(self, client):
-        """GET /api/v1/admin/metrics/database returns 200."""
-        response = client.get("/api/v1/admin/metrics/database")
+        """GET /api/v1/admin/health/database returns 200."""
+        response = client.get("/api/v1/admin/health/database")
         assert response.status_code == status.HTTP_200_OK
 
     def test_database_health_response_structure(self, client):
-        """GET /api/v1/admin/metrics/database response has correct structure."""
-        response = client.get("/api/v1/admin/metrics/database")
+        """GET /api/v1/admin/health/database response has correct structure."""
+        response = client.get("/api/v1/admin/health/database")
         body = response.json()
 
         assert "connected" in body
         assert "issues" in body
 
     def test_database_health_response_types(self, client):
-        """GET /api/v1/admin/metrics/database response has correct types."""
-        response = client.get("/api/v1/admin/metrics/database")
+        """GET /api/v1/admin/health/database response has correct types."""
+        response = client.get("/api/v1/admin/health/database")
         body = response.json()
 
         assert isinstance(body["connected"], bool)
         assert isinstance(body["issues"], list)
 
     def test_service_metrics_returns_200(self, client):
-        """GET /api/v1/admin/metrics/services returns 200."""
-        response = client.get("/api/v1/admin/metrics/services")
+        """GET /api/v1/admin/health/services returns 200."""
+        response = client.get("/api/v1/admin/health/services")
         assert response.status_code == status.HTTP_200_OK
 
     def test_service_metrics_response_structure(self, client):
-        """GET /api/v1/admin/metrics/services response has correct structure."""
-        response = client.get("/api/v1/admin/metrics/services")
+        """GET /api/v1/admin/health/services response has correct structure."""
+        response = client.get("/api/v1/admin/health/services")
         body = response.json()
 
         assert "uptime_seconds" in body
         assert "llm_providers_available" in body
 
     def test_service_metrics_response_types(self, client):
-        """GET /api/v1/admin/metrics/services response has correct types."""
-        response = client.get("/api/v1/admin/metrics/services")
+        """GET /api/v1/admin/health/services response has correct types."""
+        response = client.get("/api/v1/admin/health/services")
         body = response.json()
 
         assert isinstance(body["uptime_seconds"], (int, float))
         assert isinstance(body["llm_providers_available"], list)
 
     def test_embedding_health_returns_200(self, client):
-        """GET /api/v1/admin/metrics/embedding returns 200."""
-        response = client.get("/api/v1/admin/metrics/embedding")
+        """GET /api/v1/admin/health/embedding returns 200."""
+        response = client.get("/api/v1/admin/health/embedding")
         assert response.status_code == status.HTTP_200_OK
 
     def test_embedding_health_response_structure(self, client):
-        """GET /api/v1/admin/metrics/embedding response has correct structure."""
-        response = client.get("/api/v1/admin/metrics/embedding")
+        """GET /api/v1/admin/health/embedding response has correct structure."""
+        response = client.get("/api/v1/admin/health/embedding")
         body = response.json()
 
         assert "available" in body
         assert "details" in body
 
     def test_embedding_health_response_types(self, client):
-        """GET /api/v1/admin/metrics/embedding response has correct types."""
-        response = client.get("/api/v1/admin/metrics/embedding")
+        """GET /api/v1/admin/health/embedding response has correct types."""
+        response = client.get("/api/v1/admin/health/embedding")
         body = response.json()
 
         assert isinstance(body["available"], bool)
         assert isinstance(body["details"], str)
 
     def test_nlp_health_returns_200(self, client):
-        """GET /api/v1/admin/metrics/nlp returns 200."""
-        response = client.get("/api/v1/admin/metrics/nlp")
+        """GET /api/v1/admin/health/nlp returns 200."""
+        response = client.get("/api/v1/admin/health/nlp")
         assert response.status_code == status.HTTP_200_OK
 
     def test_nlp_health_response_structure(self, client):
-        """GET /api/v1/admin/metrics/nlp response has correct structure."""
-        response = client.get("/api/v1/admin/metrics/nlp")
+        """GET /api/v1/admin/health/nlp response has correct structure."""
+        response = client.get("/api/v1/admin/health/nlp")
         body = response.json()
 
         assert "available" in body
         assert "details" in body
 
     def test_nlp_health_response_types(self, client):
-        """GET /api/v1/admin/metrics/nlp response has correct types."""
-        response = client.get("/api/v1/admin/metrics/nlp")
+        """GET /api/v1/admin/health/nlp response has correct types."""
+        response = client.get("/api/v1/admin/health/nlp")
         body = response.json()
 
         assert isinstance(body["available"], bool)
         assert isinstance(body["details"], str)
 
     def test_task_summary_returns_200(self, client):
-        """GET /api/v1/admin/metrics/tasks returns 200."""
-        response = client.get("/api/v1/admin/metrics/tasks")
+        """GET /api/v1/admin/health/tasks returns 200."""
+        response = client.get("/api/v1/admin/health/tasks")
         assert response.status_code == status.HTTP_200_OK
 
     def test_task_summary_response_structure(self, client):
-        """GET /api/v1/admin/metrics/tasks response has correct structure."""
-        response = client.get("/api/v1/admin/metrics/tasks")
+        """GET /api/v1/admin/health/tasks response has correct structure."""
+        response = client.get("/api/v1/admin/health/tasks")
         body = response.json()
 
         assert "total" in body
         assert "by_status" in body
 
     def test_task_summary_response_types(self, client):
-        """GET /api/v1/admin/metrics/tasks response has correct types."""
-        response = client.get("/api/v1/admin/metrics/tasks")
+        """GET /api/v1/admin/health/tasks response has correct types."""
+        response = client.get("/api/v1/admin/health/tasks")
         body = response.json()
 
         assert isinstance(body["total"], int)
