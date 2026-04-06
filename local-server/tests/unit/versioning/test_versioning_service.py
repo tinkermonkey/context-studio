@@ -1248,7 +1248,7 @@ class TestMergeStrategies:
     def test_auto_resolve_merge_both_combines_lists(
         self, service: VersioningService
     ) -> None:
-        """Test MERGE_BOTH strategy combines list values from base and incoming."""
+        """Test MERGE_BOTH strategy combines list values from base and incoming with deterministic ordering."""
         report = ConflictReport(proposal_id="test-proposal")
         report.conflicts = [
             Conflict(
@@ -1263,30 +1263,8 @@ class TestMergeStrategies:
 
         assert resolved.all_resolved is True
         assert resolved.conflicts[0].resolution_strategy == MergeStrategy.MERGE_BOTH
-        # Result should contain union of both lists
-        result_set = set(resolved.conflicts[0].resolved_value)
-        assert result_set == {"tag1", "tag2", "tag3"}
-
-    def test_auto_resolve_merge_both_combines_sets(
-        self, service: VersioningService
-    ) -> None:
-        """Test MERGE_BOTH strategy combines set values from base and incoming."""
-        report = ConflictReport(proposal_id="test-proposal")
-        report.conflicts = [
-            Conflict(
-                entity_id="entity1",
-                field_name="categories",
-                base_value={"cat1", "cat2"},
-                incoming_value={"cat2", "cat3"},
-            ),
-        ]
-
-        resolved = service.auto_resolve(report, strategy=MergeStrategy.MERGE_BOTH)
-
-        assert resolved.all_resolved is True
-        assert resolved.conflicts[0].resolution_strategy == MergeStrategy.MERGE_BOTH
-        # Result should be union of both sets
-        assert resolved.conflicts[0].resolved_value == {"cat1", "cat2", "cat3"}
+        # Result should contain union of both lists in sorted order for determinism
+        assert resolved.conflicts[0].resolved_value == ["tag1", "tag2", "tag3"]
 
     def test_auto_resolve_merge_both_fallback_non_collection(
         self, service: VersioningService

@@ -361,18 +361,22 @@ class VersioningService:
         return updated_proposal
 
     def _group_and_sort_events(
-        self, event_ids: list[str]
+        self, event_ids: list[str], events: Optional[list[ChangeEvent]] = None
     ) -> dict[str, list[ChangeEvent]]:
         """
-        Fetch events by IDs and group them by entity_id with timestamp ordering.
+        Group change events by entity_id with timestamp ordering.
 
         Args:
-            event_ids: List of change event IDs to fetch
+            event_ids: List of change event IDs (used for fetching if events not provided)
+            events: Optional pre-fetched list of ChangeEvent objects. If not provided,
+                   events will be fetched from the repository using event_ids.
 
         Returns:
             Dictionary mapping entity_id to list of ChangeEvent objects sorted by timestamp
         """
-        events = self._repo.get_changes_by_ids(event_ids)
+        if events is None:
+            events = self._repo.get_changes_by_ids(event_ids)
+
         events_by_entity: dict[str, list[ChangeEvent]] = defaultdict(list)
         for event in events:
             events_by_entity[event.entity_id].append(event)
@@ -517,31 +521,26 @@ class VersioningService:
             elif strategy == MergeStrategy.BASE_VALUE_WINS:
                 conflict.resolved_value = conflict.base_value
             elif strategy == MergeStrategy.MERGE_BOTH:
-                # For collection-typed fields, combine both value sets
+                # For list-typed fields (JSON only produces lists), combine both value sets.
+                # Non-list types fall back to incoming_value.
                 base = conflict.base_value
                 incoming = conflict.incoming_value
 
-                # Handle collection merging if both values are collections
-                if (isinstance(base, (list, set, tuple)) and isinstance(incoming, (list, set, tuple))):
-                    # Convert to sets for combination
+                # Handle collection merging if both values are lists
+                if isinstance(base, list) and isinstance(incoming, list):
+                    # Convert to sets for combination, then sort for deterministic ordering
                     base_set = set(base)
                     incoming_set = set(incoming)
                     merged = base_set | incoming_set
-                    # Preserve the original type of incoming_value for the result
-                    if isinstance(incoming, list):
-                        conflict.resolved_value = list(merged)
-                    elif isinstance(incoming, tuple):
-                        conflict.resolved_value = tuple(sorted(merged))
-                    else:
-                        conflict.resolved_value = merged
-                elif isinstance(base, (list, set, tuple)) and incoming is None:
-                    # If only base is a collection, use base
+                    conflict.resolved_value = sorted(merged)
+                elif isinstance(base, list) and incoming is None:
+                    # If only base is a list, use base
                     conflict.resolved_value = base
-                elif isinstance(incoming, (list, set, tuple)) and base is None:
-                    # If only incoming is a collection, use incoming
+                elif isinstance(incoming, list) and base is None:
+                    # If only incoming is a list, use incoming
                     conflict.resolved_value = incoming
                 else:
-                    # For non-collection types or mixed types, fall back to incoming_value
+                    # For non-list types or mixed types, fall back to incoming_value
                     conflict.resolved_value = incoming
             else:
                 raise ValueError(f"Unrecognized merge strategy: {strategy}")
@@ -685,7 +684,7 @@ class VersioningService:
             )
             return []
 
-        # Get all change events for this changeset
+        # Get all change events for this changeset (single fetch)
         changeset_events = self._repo.get_changes_by_ids(changeset.event_ids)
 
         # Validate that all requested events were found, using set-based comparison
@@ -700,8 +699,8 @@ class VersioningService:
             _logger.error(error_msg)
             raise ValueError(error_msg)
 
-        # Group events by entity_id with timestamp ordering
-        events_by_entity = self._group_and_sort_events(changeset.event_ids)
+        # Group events by entity_id with timestamp ordering (reuse fetched events to avoid double-fetch)
+        events_by_entity = self._group_and_sort_events(changeset.event_ids, changeset_events)
 
         # Build versions for each entity
         versions = []
