@@ -60,20 +60,8 @@ class JSONFileConfigStore:
                 reference_sources=settings.reference.model_dump() if settings.reference else {},
                 sync=settings.sync.model_dump() if settings.sync else None,
             )
-        except RuntimeError as e:
+        except (RuntimeError, AttributeError, TypeError) as e:
             raise ConfigurationError(f'Failed to load configuration: {e}') from e
-
-    def get_config(self) -> AppConfiguration:
-        """
-        Get current application configuration.
-
-        Returns:
-            AppConfiguration with all configuration sections
-
-        Raises:
-            ConfigurationError: If loading fails
-        """
-        return self.load()
 
     def save(self, config: AppConfiguration) -> AppConfiguration:
         """
@@ -190,7 +178,7 @@ class JSONFileConfigStore:
             return default_config
         except ConfigurationError:
             raise
-        except ValidationError as e:
+        except (ValidationError, TypeError) as e:
             raise ConfigurationError(f'Failed to reset configuration: {e}') from e
 
     def _preserve_credentials_recursive(self, current: dict, default: dict) -> None:
@@ -247,5 +235,5 @@ class JSONFileConfigStore:
                 raise ConfigurationError("ConfigurationManager.save() returned False")
         except ConfigurationError:
             raise
-        except ValidationError as e:
+        except (ValidationError, TypeError) as e:
             raise ConfigurationError(f'Failed to persist configuration: {e}') from e

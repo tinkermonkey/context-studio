@@ -70,15 +70,6 @@ class FakeConfigurationStore:
         self._config = config
         return config
 
-    def get_config(self) -> AppConfiguration:
-        """
-        Get the current configuration.
-
-        Returns:
-            AppConfiguration object
-        """
-        return copy.deepcopy(self._config)
-
     def update_config(self, updates: dict[str, dict]) -> AppConfiguration:
         """
         Update configuration with partial updates.

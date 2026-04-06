@@ -45,7 +45,7 @@ def test_load_configuration():
         store = JSONFileConfigStore(config_mgr)
 
         # Load and verify
-        config = store.get_config()
+        config = store.load()
         assert isinstance(config, AppConfiguration)
         assert "server" in config.sections
         assert "database" in config.sections
@@ -79,7 +79,7 @@ def test_load_and_save_roundtrip():
         # First load
         config_mgr = ConfigurationManager(config_file=config_file)
         store = JSONFileConfigStore(config_mgr)
-        config = store.get_config()
+        config = store.load()
         assert config.sections["server"]["port"] == 8000
 
         # Modify config
@@ -89,7 +89,7 @@ def test_load_and_save_roundtrip():
         # Create a new manager and verify changes persisted
         config_mgr2 = ConfigurationManager(config_file=config_file)
         store2 = JSONFileConfigStore(config_mgr2)
-        config2 = store2.get_config()
+        config2 = store2.load()
         assert config2.sections["server"]["port"] == 9000
 
 
@@ -154,7 +154,7 @@ def test_load_and_save_preserves_sections():
         store = JSONFileConfigStore(config_mgr)
 
         # Load, modify all sections, update, and reload
-        store.get_config()
+        store.load()
         updates = {
             "logging": {"log_level": "WARNING"},
             "server": {"port": 9999},
@@ -168,7 +168,7 @@ def test_load_and_save_preserves_sections():
         # Reload and verify all sections
         config_mgr2 = ConfigurationManager(config_file=config_file)
         store2 = JSONFileConfigStore(config_mgr2)
-        config2 = store2.get_config()
+        config2 = store2.load()
 
         assert config2.sections["logging"]["log_level"] == "WARNING"
         assert config2.sections["server"]["port"] == 9999
@@ -249,7 +249,7 @@ def test_reset_to_defaults_persists_changes():
         # Create a new manager and verify changes were persisted
         config_mgr2 = ConfigurationManager(config_file=config_file)
         store2 = JSONFileConfigStore(config_mgr2)
-        reloaded_config = store2.get_config()
+        reloaded_config = store2.load()
 
         # Verify defaults and preserved credentials
         assert reloaded_config.sections["server"]["host"] == "127.0.0.1"
@@ -397,7 +397,7 @@ def test_update_config_silently_skips_unknown_section():
         # Verify changes persisted by reloading from disk
         config_mgr2 = ConfigurationManager(config_file=config_file)
         store2 = JSONFileConfigStore(config_mgr2)
-        reloaded_config = store2.get_config()
+        reloaded_config = store2.load()
 
         # Verify only the valid update persisted
         assert reloaded_config.server["port"] == 9000

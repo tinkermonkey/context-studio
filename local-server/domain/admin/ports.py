@@ -148,15 +148,6 @@ class ConfigurationStore(Protocol):
         """
         ...
 
-    def get_config(self) -> AppConfiguration:
-        """
-        Get current application configuration.
-
-        Returns:
-            AppConfiguration object with all configuration sections
-        """
-        ...
-
     def update_config(self, updates: dict[str, dict[str, Any]]) -> AppConfiguration:
         """
         Update application configuration with partial updates.
