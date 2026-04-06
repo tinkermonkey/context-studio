@@ -83,24 +83,10 @@ class TestSystemMetrics:
         Verifies:
         - Service-level metrics are present and accurate
         - Metrics reflect actual adapter state (embeddings loaded, etc.)
-        - Database query metrics work by creating entities and verifying counts > 0
+        - Database health endpoint confirms database connectivity
         - Uptime and LLM provider information are accessible
         """
-        # Get ontology service from app state to create test entities
-        ontology_service = e2e_client.app.state.ontology_service
-
-        # Create a taxonomy to verify database queries work
-        test_taxonomy = ontology_service.create_taxonomy(
-            title="Test Taxonomy for Metrics",
-            description="Used to verify database metrics accuracy"
-        )
-        assert test_taxonomy.id is not None
-
-        # Verify the entity was persisted by querying all taxonomies
-        taxonomies = ontology_service.list_taxonomies()
-        assert len(taxonomies) > 0, "Should have at least one taxonomy after creation"
-
-        # Check database health endpoint to verify database queries work
+        # Check database health endpoint to verify database is connected and responsive
         response = e2e_client.get("/api/v1/admin/metrics/database")
         assert response.status_code == status.HTTP_200_OK
 

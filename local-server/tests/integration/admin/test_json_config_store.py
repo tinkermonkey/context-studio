@@ -302,8 +302,8 @@ def test_reset_to_defaults_removes_sync_not_in_defaults():
         assert reset_config.sections.get("sync") is None
 
 
-def test_update_config_with_dict_merging():
-    """Test that update_config merges nested dictionary updates correctly."""
+def test_update_config_silently_skips_unknown_section():
+    """Test that update_config silently skips unknown section names."""
     with tempfile.TemporaryDirectory() as tmpdir:
         config_file = os.path.join(tmpdir, "config.json")
 
@@ -328,23 +328,27 @@ def test_update_config_with_dict_merging():
         config_mgr = ConfigurationManager(config_file=config_file)
         store = JSONFileConfigStore(config_mgr)
 
-        # Load initial config
+        # Load initial config to capture server port
         initial_config = store.get_config()
-        initial_host = initial_config.server["host"]
+        initial_port = initial_config.server["port"]
 
-        # Update existing section - this tests the dict.update() path at line 123
-        updated = store.update_config({"server": {"host": "192.168.1.1"}})
+        # Try to update with an unknown section - this tests the silent-skip behavior at line 120
+        # The update should be silently ignored since "unknown_section" doesn't exist
+        updated = store.update_config({
+            "unknown_section": {"some_key": "some_value"},
+            "server": {"port": 9000}  # This valid update should still be applied
+        })
 
-        # Verify nested dict was updated (merging not replacing)
-        assert updated.server["host"] == "192.168.1.1"
-        # Verify other fields in the section are preserved
-        assert updated.server["port"] == 8000
-        assert updated.server["cors_origins"] == ["*"]
+        # Verify that the valid update (server.port) was applied
+        assert updated.server["port"] == 9000
+        # Verify the unknown section was silently skipped (not added to config)
+        assert not hasattr(updated, "unknown_section")
 
         # Verify changes persisted by reloading from disk
         config_mgr2 = ConfigurationManager(config_file=config_file)
         store2 = JSONFileConfigStore(config_mgr2)
         reloaded_config = store2.get_config()
 
-        assert reloaded_config.server["host"] == "192.168.1.1"
-        assert reloaded_config.server["port"] == 8000
+        # Verify only the valid update persisted
+        assert reloaded_config.server["port"] == 9000
+        assert not hasattr(reloaded_config, "unknown_section")
