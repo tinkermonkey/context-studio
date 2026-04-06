@@ -3326,7 +3326,7 @@
           "admin"
         ],
         "summary": "Reset Configuration",
-        "description": "Reset configuration to defaults while preserving credentials.\n\nResets all configuration values to their defaults. Credential fields\n(API keys, secrets) are preserved. Returns configuration with masked credentials.\n\nReturns:\n    ConfigResetResponse with reset configuration and masked credentials\n\nRaises:\n    HTTPException: 500 for internal errors",
+        "description": "Reset configuration to defaults while preserving credentials.\n\nResets all configuration values to their defaults. Credential fields\n(API keys, secrets) are preserved. Returns configuration with masked credentials.\n\nReturns:\n    AppConfigurationResponse with reset configuration and masked credentials\n\nRaises:\n    HTTPException: 500 for internal errors",
         "operationId": "reset_configuration_api_v1_admin_configuration_reset_post",
         "responses": {
           "200": {
@@ -3334,7 +3334,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ConfigResetResponse"
+                  "$ref": "#/components/schemas/AppConfigurationResponse"
                 }
               }
             }
@@ -3444,7 +3444,7 @@
           "sections"
         ],
         "title": "AppConfigurationResponse",
-        "description": "Response containing application configuration with masked API keys."
+        "description": "Response containing application configuration with masked API keys.\n\nUsed for both configuration retrieval and reset operations. Sensitive values\n(API keys and other credentials) are masked to prevent exposure in logs and\nAPI responses."
       },
       "AutoResolveConflictsRequest": {
         "properties": {
@@ -4241,22 +4241,6 @@
         "type": "object",
         "title": "ConceptSchemeUpdateRequest",
         "description": "Request to update a concept scheme."
-      },
-      "ConfigResetResponse": {
-        "properties": {
-          "sections": {
-            "additionalProperties": true,
-            "type": "object",
-            "title": "Sections",
-            "description": "Configuration sections after reset with sensitive values masked"
-          }
-        },
-        "type": "object",
-        "required": [
-          "sections"
-        ],
-        "title": "ConfigResetResponse",
-        "description": "Response from configuration reset operation."
       },
       "ConfigSectionUpdateRequest": {
         "properties": {

@@ -1908,6 +1908,146 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/v1/admin/metrics/database": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get Database Health
+     * @description Get database component health status.
+     *
+     *     Returns detailed health information about the database connection and any issues.
+     *
+     *     Returns:
+     *         DatabaseHealthResponse with connectivity status and issues list
+     *
+     *     Raises:
+     *         HTTPException: 500 for internal errors
+     */
+    get: operations["get_database_health_api_v1_admin_metrics_database_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/admin/metrics/services": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get Service Metrics
+     * @description Get service-level metrics.
+     *
+     *     Returns system uptime and list of available LLM providers.
+     *
+     *     Returns:
+     *         ServiceMetricsResponse with uptime and available providers
+     *
+     *     Raises:
+     *         HTTPException: 500 for internal errors
+     */
+    get: operations["get_service_metrics_api_v1_admin_metrics_services_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/admin/metrics/embedding": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get Embedding Status
+     * @description Get embedding model component status.
+     *
+     *     Returns availability and status details for the embedding model.
+     *
+     *     Returns:
+     *         ComponentStatusResponse with availability and details
+     *
+     *     Raises:
+     *         HTTPException: 500 for internal errors
+     */
+    get: operations["get_embedding_status_api_v1_admin_metrics_embedding_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/admin/metrics/nlp": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get Nlp Status
+     * @description Get NLP pipeline component status.
+     *
+     *     Returns availability and status details for the NLP pipeline.
+     *
+     *     Returns:
+     *         ComponentStatusResponse with availability and details
+     *
+     *     Raises:
+     *         HTTPException: 500 for internal errors
+     */
+    get: operations["get_nlp_status_api_v1_admin_metrics_nlp_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/admin/metrics/tasks": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get Task Summary
+     * @description Get summary of background task execution status.
+     *
+     *     Returns counts of tasks grouped by status (pending, running, completed, failed).
+     *
+     *     Returns:
+     *         BackgroundTaskSummaryResponse with task counts by status
+     *
+     *     Raises:
+     *         HTTPException: 500 for internal errors
+     */
+    get: operations["get_task_summary_api_v1_admin_metrics_tasks_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/v1/admin/configuration": {
     parameters: {
       query?: never;
@@ -1969,6 +2109,35 @@ export interface paths {
      *         HTTPException 400: If the section does not exist
      */
     patch: operations["update_configuration_api_v1_admin_configuration__section__patch"];
+    trace?: never;
+  };
+  "/api/v1/admin/configuration/reset": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Reset Configuration
+     * @description Reset configuration to defaults while preserving credentials.
+     *
+     *     Resets all configuration values to their defaults. Credential fields
+     *     (API keys, secrets) are preserved. Returns configuration with masked credentials.
+     *
+     *     Returns:
+     *         AppConfigurationResponse with reset configuration and masked credentials
+     *
+     *     Raises:
+     *         HTTPException: 500 for internal errors
+     */
+    post: operations["reset_configuration_api_v1_admin_configuration_reset_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
     trace?: never;
   };
   "/api/v1/admin/tasks": {
@@ -2050,6 +2219,10 @@ export interface components {
     /**
      * AppConfigurationResponse
      * @description Response containing application configuration with masked API keys.
+     *
+     *     Used for both configuration retrieval and reset operations. Sensitive values
+     *     (API keys and other credentials) are masked to prevent exposure in logs and
+     *     API responses.
      */
     AppConfigurationResponse: {
       /**
@@ -2108,6 +2281,11 @@ export interface components {
        */
       completed_at?: string | null;
       /**
+       * Progress
+       * @description Task progress as a float between 0.0 and 1.0
+       */
+      progress?: number | null;
+      /**
        * Error
        * @description Error message if task failed
        */
@@ -2119,6 +2297,24 @@ export interface components {
       result?: {
         [key: string]: unknown;
       } | null;
+    };
+    /**
+     * BackgroundTaskSummaryResponse
+     * @description Response containing summary of background task execution status.
+     */
+    BackgroundTaskSummaryResponse: {
+      /**
+       * Total
+       * @description Total number of background tasks registered
+       */
+      total: number;
+      /**
+       * By Status
+       * @description Count of tasks grouped by status
+       */
+      by_status?: {
+        [key: string]: number;
+      };
     };
     /**
      * CentralityResponse
@@ -2418,6 +2614,23 @@ export interface components {
       communities: string[][];
     };
     /**
+     * ComponentStatusResponse
+     * @description Response containing individual component status.
+     */
+    ComponentStatusResponse: {
+      /**
+       * Available
+       * @description Whether the component is available/ready
+       */
+      available: boolean;
+      /**
+       * Details
+       * @description Human-readable detail about component status
+       * @default
+       */
+      details: string;
+    };
+    /**
      * ConceptSchemeCreateRequest
      * @description Request to create a new concept scheme.
      */
@@ -2620,6 +2833,22 @@ export interface components {
        * @description Type of the value
        */
       datatype?: string | null;
+    };
+    /**
+     * DatabaseHealthResponse
+     * @description Response containing database health status details.
+     */
+    DatabaseHealthResponse: {
+      /**
+       * Connected
+       * @description Whether database is accessible
+       */
+      connected: boolean;
+      /**
+       * Issues
+       * @description List of any database issues encountered
+       */
+      issues?: string[];
     };
     /**
      * DegreeDistributionResponse
@@ -3758,6 +3987,22 @@ export interface components {
        * @description Total number of triples in the graph
        */
       triple_count: number;
+    };
+    /**
+     * ServiceMetricsResponse
+     * @description Response containing service-level metrics.
+     */
+    ServiceMetricsResponse: {
+      /**
+       * Uptime Seconds
+       * @description System uptime in seconds since startup
+       */
+      uptime_seconds: number;
+      /**
+       * Llm Providers Available
+       * @description List of available LLM provider names
+       */
+      llm_providers_available?: string[];
     };
     /**
      * SubgraphResultResponse
@@ -6206,6 +6451,106 @@ export interface operations {
       };
     };
   };
+  get_database_health_api_v1_admin_metrics_database_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["DatabaseHealthResponse"];
+        };
+      };
+    };
+  };
+  get_service_metrics_api_v1_admin_metrics_services_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ServiceMetricsResponse"];
+        };
+      };
+    };
+  };
+  get_embedding_status_api_v1_admin_metrics_embedding_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ComponentStatusResponse"];
+        };
+      };
+    };
+  };
+  get_nlp_status_api_v1_admin_metrics_nlp_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ComponentStatusResponse"];
+        };
+      };
+    };
+  };
+  get_task_summary_api_v1_admin_metrics_tasks_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["BackgroundTaskSummaryResponse"];
+        };
+      };
+    };
+  };
   get_configuration_api_v1_admin_configuration_get: {
     parameters: {
       query?: never;
@@ -6257,6 +6602,26 @@ export interface operations {
         };
         content: {
           "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  reset_configuration_api_v1_admin_configuration_reset_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["AppConfigurationResponse"];
         };
       };
     };
