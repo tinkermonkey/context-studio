@@ -18,8 +18,6 @@ from datetime import datetime, timezone
 from typing import Optional, Sequence, TYPE_CHECKING
 from uuid import uuid4
 
-import botocore.exceptions
-
 from domain.versioning.entities import ChangeEvent
 from domain.versioning.value_objects import SyncResult, ChangeOperation, SyncStatus
 
@@ -77,6 +75,7 @@ class S3SyncAdapter:
         """
         try:
             import boto3
+            import botocore.exceptions
         except ImportError:
             _logger.error("boto3 is required for S3 sync adapter. Install with: pip install boto3")
             raise
@@ -85,6 +84,7 @@ class S3SyncAdapter:
         self._prefix = prefix.rstrip("/")
         self._region = region
         self._change_repo = change_repo
+        self._client_error = botocore.exceptions.ClientError
 
         self._s3_client = boto3.client(
             "s3",
@@ -166,7 +166,7 @@ class S3SyncAdapter:
             completed_at = datetime.now(timezone.utc)
             return SyncResult(pushed=len(pushed_event_ids), pulled=0, errors=(), pushed_event_ids=tuple(pushed_event_ids), started_at=started_at, completed_at=completed_at)
 
-        except (ValueError, TypeError, KeyError, OSError, botocore.exceptions.ClientError) as e:
+        except (ValueError, TypeError, KeyError, OSError, self._client_error) as e:
             error_msg = f"Failed to push changes to S3: {e}"
             _logger.error(error_msg)
             raise RuntimeError(error_msg) from e
@@ -226,12 +226,17 @@ class S3SyncAdapter:
                                 continue
                     # If since is None, process all objects regardless of date format
 
-                    # Download and deserialize the file
+                    # Download the file
                     try:
                         response = self._s3_client.get_object(Bucket=self._bucket, Key=key)
                         content = response["Body"].read().decode("utf-8")
+                    except (OSError, self._client_error) as e:
+                        error_msg = f"Failed to download S3 object {key}: {e}"
+                        _logger.error(error_msg)
+                        raise _S3FileParseError(error_msg) from e
 
-                        # Parse JSON Lines
+                    # Parse JSON Lines
+                    try:
                         for line in content.strip().split("\n"):
                             if not line:
                                 continue
@@ -257,7 +262,7 @@ class S3SyncAdapter:
                                 previous_state=data.get("previous_state"),
                             )
                             events.append(event)
-                    except (ValueError, TypeError, KeyError, OSError, botocore.exceptions.ClientError) as e:
+                    except (ValueError, TypeError, KeyError) as e:
                         error_msg = f"Failed to parse S3 object {key}: {e}"
                         _logger.error(error_msg)
                         raise _S3FileParseError(error_msg) from e
@@ -268,7 +273,7 @@ class S3SyncAdapter:
         except _S3FileParseError as e:
             # File parsing error already wrapped and logged
             raise RuntimeError(str(e)) from e.__cause__
-        except (ValueError, TypeError, KeyError, OSError, botocore.exceptions.ClientError) as e:
+        except (ValueError, TypeError, KeyError, OSError, self._client_error) as e:
             error_msg = f"Failed to list S3 objects: {e}"
             _logger.error(error_msg)
             raise RuntimeError(error_msg) from e
@@ -330,7 +335,7 @@ class S3SyncAdapter:
                 is_degraded=is_degraded,
             )
 
-        except (ValueError, TypeError, KeyError, OSError, botocore.exceptions.ClientError) as e:
+        except (ValueError, TypeError, KeyError, OSError, self._client_error) as e:
             error_msg = f"Failed to get sync status from S3: {e}"
             _logger.error(error_msg)
             raise RuntimeError(error_msg) from e
