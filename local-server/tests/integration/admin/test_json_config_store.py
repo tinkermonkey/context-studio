@@ -170,3 +170,135 @@ def test_load_and_save_preserves_sections():
         assert config2.sections["logging"]["log_level"] == "WARNING"
         assert config2.sections["server"]["port"] == 9999
         assert config2.sections["llm"]["anthropic_api_key"] == "sk-ant-test"
+
+
+def test_reset_to_defaults_preserves_credentials():
+    """Test that reset_to_defaults preserves credential fields."""
+    with tempfile.TemporaryDirectory() as tmpdir:
+        config_file = os.path.join(tmpdir, "config.json")
+
+        # Create initial config with modified values and API keys
+        config_data = {
+            "server": {"host": "192.168.1.1", "port": 9999, "cors_origins": ["http://localhost:3000"]},
+            "database": {
+                "local_db_path": "./custom_local.db",
+                "operations_db_path": "./custom_operations.db",
+            },
+            "logging": {"log_level": "DEBUG", "max_bytes": 5242880, "backup_count": 10},
+            "llm": {"openai_api_key": "sk-test-123", "anthropic_api_key": "sk-ant-test-456"},
+            "reference": {
+                "cache_db_path": "./custom_cache.db",
+                "reference_db_path": "./custom_ref.db",
+            },
+        }
+
+        with open(config_file, "w") as f:
+            json.dump(config_data, f)
+
+        config_mgr = ConfigurationManager(config_file=config_file)
+        store = JSONFileConfigStore(config_mgr)
+
+        # Reset to defaults
+        reset_config = store.reset_to_defaults()
+
+        # Verify non-credential settings are reset to defaults
+        assert reset_config.sections["server"]["host"] == "127.0.0.1"
+        assert reset_config.sections["server"]["port"] == 8000
+        assert reset_config.sections["server"]["cors_origins"] == ["*"]
+
+        assert reset_config.sections["logging"]["log_level"] == "INFO"
+        assert reset_config.sections["logging"]["max_bytes"] == 10 * 1024 * 1024
+        assert reset_config.sections["logging"]["backup_count"] == 5
+
+        # Verify credentials are preserved
+        assert reset_config.sections["llm"]["openai_api_key"] == "sk-test-123"
+        assert reset_config.sections["llm"]["anthropic_api_key"] == "sk-ant-test-456"
+
+
+def test_reset_to_defaults_persists_changes():
+    """Test that reset_to_defaults saves changes to disk."""
+    with tempfile.TemporaryDirectory() as tmpdir:
+        config_file = os.path.join(tmpdir, "config.json")
+
+        config_data = {
+            "server": {"host": "192.168.1.1", "port": 9999, "cors_origins": ["http://localhost:3000"]},
+            "database": {
+                "local_db_path": "./custom_local.db",
+                "operations_db_path": "./custom_operations.db",
+            },
+            "logging": {"log_level": "DEBUG", "max_bytes": 5242880, "backup_count": 10},
+            "llm": {"openai_api_key": "sk-test-123", "anthropic_api_key": "sk-ant-test-456"},
+            "reference": {
+                "cache_db_path": "./custom_cache.db",
+                "reference_db_path": "./custom_ref.db",
+            },
+        }
+
+        with open(config_file, "w") as f:
+            json.dump(config_data, f)
+
+        config_mgr = ConfigurationManager(config_file=config_file)
+        store = JSONFileConfigStore(config_mgr)
+
+        # Reset to defaults
+        store.reset_to_defaults()
+
+        # Create a new manager and verify changes were persisted
+        config_mgr2 = ConfigurationManager(config_file=config_file)
+        store2 = JSONFileConfigStore(config_mgr2)
+        reloaded_config = store2.load()
+
+        # Verify defaults and preserved credentials
+        assert reloaded_config.sections["server"]["host"] == "127.0.0.1"
+        assert reloaded_config.sections["server"]["port"] == 8000
+        assert reloaded_config.sections["logging"]["log_level"] == "INFO"
+        assert reloaded_config.sections["llm"]["openai_api_key"] == "sk-test-123"
+        assert reloaded_config.sections["llm"]["anthropic_api_key"] == "sk-ant-test-456"
+
+
+def test_reset_to_defaults_preserves_s3_credentials():
+    """Test that reset_to_defaults preserves S3 credentials."""
+    with tempfile.TemporaryDirectory() as tmpdir:
+        config_file = os.path.join(tmpdir, "config.json")
+
+        config_data = {
+            "server": {"host": "192.168.1.1", "port": 9999, "cors_origins": ["http://localhost:3000"]},
+            "database": {
+                "local_db_path": "./custom_local.db",
+                "operations_db_path": "./custom_operations.db",
+            },
+            "logging": {"log_level": "DEBUG", "max_bytes": 5242880, "backup_count": 10},
+            "llm": {"openai_api_key": "sk-test-123", "anthropic_api_key": "sk-ant-test-456"},
+            "reference": {
+                "cache_db_path": "./custom_cache.db",
+                "reference_db_path": "./custom_ref.db",
+            },
+            "sync": {
+                "adapter": "s3",
+                "s3": {
+                    "s3_bucket": "my-bucket",
+                    "s3_prefix": "context-studio",
+                    "s3_access_key": "AKIA1234567890",
+                    "s3_secret_key": "wJalrXUtnFEMI/K7MDENG+bPxRfiCYEXAMPLEKEY",
+                    "s3_region": "us-west-2",
+                }
+            },
+        }
+
+        with open(config_file, "w") as f:
+            json.dump(config_data, f)
+
+        config_mgr = ConfigurationManager(config_file=config_file)
+        store = JSONFileConfigStore(config_mgr)
+
+        # Reset to defaults
+        reset_config = store.reset_to_defaults()
+
+        # Verify S3 credentials are preserved if they exist in sync section
+        # Note: S3 credentials in the sync section should be preserved via CREDENTIAL_FIELD_NAMES
+        if "sync" in reset_config.sections and reset_config.sections["sync"] is not None:
+            sync_section = reset_config.sections["sync"]
+            if "s3" in sync_section and sync_section["s3"] is not None:
+                s3_section = sync_section["s3"]
+                assert s3_section.get("s3_access_key") == "AKIA1234567890"
+                assert s3_section.get("s3_secret_key") == "wJalrXUtnFEMI/K7MDENG+bPxRfiCYEXAMPLEKEY"

@@ -6,20 +6,21 @@ the readiness and availability of LLM providers, NLP pipeline, and embedding mod
 """
 
 from datetime import datetime, timezone
-from typing import Optional
 
 from sqlalchemy import text
 from sqlalchemy.engine import Engine
 
+from domain.admin.ports import (
+    HealthCheckableNLP,
+    HealthCheckableEmbedding,
+    HealthCheckableLLM,
+)
 from domain.admin.value_objects import (
     DatabaseHealth,
     ServiceMetrics,
     ComponentStatus,
     BackgroundTaskSummary,
 )
-from adapters.llm.provider_router import LLMProviderRouter
-from adapters.nlp.spacy_processor import SpacyNLPProcessor
-from adapters.embedding.sentence_transformer import SentenceTransformerEmbedding
 from utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -36,30 +37,25 @@ class SystemMetricsCollector:
 
     def __init__(
         self,
-        llm_router: LLMProviderRouter,
-        nlp_processor: SpacyNLPProcessor,
-        embedding_service: SentenceTransformerEmbedding,
-        start_time: datetime,
-        db_engine: Optional[Engine] = None,
+        llm: HealthCheckableLLM,
+        nlp: HealthCheckableNLP,
+        embedding: HealthCheckableEmbedding,
+        db_engine: Engine,
+        start_time: float,
     ) -> None:
         """
         Initialize the system metrics collector.
 
         Args:
-            llm_router: LLM provider router for checking available providers
-            nlp_processor: NLP processor for checking readiness
-            embedding_service: Embedding service for checking model load status
-            start_time: Application start time for uptime calculation
+            llm: LLM component for checking available providers
+            nlp: NLP component for checking readiness
+            embedding: Embedding component for checking model load status
             db_engine: SQLAlchemy engine for database connectivity checks
-
-        Note:
-            TODO: Replace concrete adapter types with port protocols when available.
-            Currently coupled to LLMProviderRouter, SpacyNLPProcessor, and
-            SentenceTransformerEmbedding directly due to lack of defined ports.
+            start_time: Application start time as Unix timestamp (seconds since epoch)
         """
-        self._llm = llm_router
-        self._nlp = nlp_processor
-        self._embedding = embedding_service
+        self._llm = llm
+        self._nlp = nlp
+        self._embedding = embedding
         self._start_time = start_time
         self._db_engine = db_engine
 
@@ -102,8 +98,8 @@ class SystemMetricsCollector:
         Returns:
             ServiceMetrics with uptime and available LLM providers
         """
-        now = datetime.now(timezone.utc)
-        uptime = (now - self._start_time).total_seconds()
+        now = datetime.now(timezone.utc).timestamp()
+        uptime = now - self._start_time
 
         llm_providers = []
         try:
