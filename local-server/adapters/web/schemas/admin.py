@@ -34,32 +34,21 @@ def _mask_credential_sections(sections: dict) -> dict:
     Mask sensitive credential fields in configuration sections.
 
     Replaces credential values with '***<last4>' format to prevent exposure
-    in API responses. Raises ConfigurationError if a section is corrupted
-    (not a dict), as this indicates a configuration storage problem that
-    should not be silently ignored.
+    in API responses. Assumes sections are pre-validated (either None or dict
+    instances) by the domain service.
 
     Args:
-        sections: Dictionary of configuration sections
+        sections: Dictionary of configuration sections (pre-validated)
 
     Returns:
         Deep copy of sections with credential fields masked
-
-    Raises:
-        ConfigurationError: If a configuration section is corrupted (not a dict)
     """
     masked_sections = copy.deepcopy(sections)
 
     for section_name, section in masked_sections.items():
         if section is None:
             continue
-        if not isinstance(section, dict):
-            error_msg = (
-                f"Configuration section '{section_name}' is corrupted: "
-                f"expected dict but found {type(section).__name__}. "
-                "This indicates a configuration storage problem."
-            )
-            logger.error(error_msg)
-            raise ConfigurationError(error_msg)
+        # Section is guaranteed to be a dict by domain service validation
         for field_name in list(section.keys()):
             if field_name in CREDENTIAL_FIELD_NAMES and section[field_name]:
                 val = str(section[field_name])

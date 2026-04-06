@@ -673,6 +673,58 @@ class TestAdminServiceConfigurationManagement:
         assert config.sections["llm"]["provider"] == "openai"
         assert config.sections["llm"]["model"] == "gpt-4"
 
+    def test_get_configuration_validates_section_types(self):
+        """Get configuration validates that sections are dicts or None."""
+        # Valid configuration with dict sections and None
+        valid_config = AppConfiguration(
+            sections={
+                "llm": {"provider": "openai"},
+                "database": None,
+            }
+        )
+        config_store = FakeConfigurationStore(initial_config=valid_config)
+        service = AdminService(self.metrics, config_store)
+
+        config = service.get_configuration()
+
+        assert config.sections["llm"]["provider"] == "openai"
+        assert config.sections["database"] is None
+
+    def test_get_configuration_raises_error_for_string_section(self):
+        """Get configuration raises ConfigurationError for string section."""
+        corrupted_config = AppConfiguration(
+            sections={
+                "llm": {"provider": "openai"},
+                "corrupted": "string-value"
+            }
+        )
+        config_store = FakeConfigurationStore(initial_config=corrupted_config)
+        service = AdminService(self.metrics, config_store)
+
+        with pytest.raises(ConfigurationError) as exc_info:
+            service.get_configuration()
+
+        assert "corrupted" in str(exc_info.value)
+        assert "str" in str(exc_info.value)
+        assert "configuration storage problem" in str(exc_info.value)
+
+    def test_get_configuration_raises_error_for_integer_section(self):
+        """Get configuration raises ConfigurationError for integer section."""
+        corrupted_config = AppConfiguration(
+            sections={
+                "llm": {"provider": "openai"},
+                "bad_section": 12345
+            }
+        )
+        config_store = FakeConfigurationStore(initial_config=corrupted_config)
+        service = AdminService(self.metrics, config_store)
+
+        with pytest.raises(ConfigurationError) as exc_info:
+            service.get_configuration()
+
+        assert "bad_section" in str(exc_info.value)
+        assert "int" in str(exc_info.value)
+
 
 class TestAdminServiceTaskManagement:
     """Tests for background task lifecycle management."""

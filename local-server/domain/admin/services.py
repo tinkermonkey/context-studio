@@ -184,12 +184,28 @@ class AdminService:
         """
         Retrieve current application configuration.
 
-        Delegates to ConfigurationStore to load configuration.
+        Delegates to ConfigurationStore to load configuration, then validates
+        that all sections are properly formed (either None or dict instances).
 
         Returns:
             AppConfiguration object with all configuration sections
+
+        Raises:
+            ConfigurationError: If a configuration section is corrupted (not a dict)
         """
-        return self._config.get_config()
+        config = self._config.get_config()
+
+        # Validate that all sections are either None or dict instances
+        for section_name, section in config.sections.items():
+            if section is not None and not isinstance(section, dict):
+                error_msg = (
+                    f"Configuration section '{section_name}' is corrupted: "
+                    f"expected dict but found {type(section).__name__}. "
+                    "This indicates a configuration storage problem."
+                )
+                raise ConfigurationError(error_msg)
+
+        return config
 
     def reset_configuration(self) -> AppConfiguration:
         """
