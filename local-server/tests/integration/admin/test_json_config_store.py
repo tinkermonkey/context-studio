@@ -328,10 +328,6 @@ def test_update_config_silently_skips_unknown_section():
         config_mgr = ConfigurationManager(config_file=config_file)
         store = JSONFileConfigStore(config_mgr)
 
-        # Load initial config to capture server port
-        initial_config = store.get_config()
-        initial_port = initial_config.server["port"]
-
         # Try to update with an unknown section - this tests the silent-skip behavior at line 120
         # The update should be silently ignored since "unknown_section" doesn't exist
         updated = store.update_config({
