@@ -8,7 +8,6 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(
 from typing import Optional
 
 from domain.admin.value_objects import (
-    SystemHealthStatus,
     DatabaseHealth,
     ServiceMetrics,
     ComponentStatus,

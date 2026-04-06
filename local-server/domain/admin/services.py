@@ -57,7 +57,7 @@ class AdminService:
         service_metrics = self._metrics.get_service_metrics()
         embedding_status = self._metrics.get_embedding_model_status()
         nlp_status = self._metrics.get_nlp_pipeline_status()
-        task_summary = self._metrics.get_background_task_summary()
+        self._metrics.get_background_task_summary()
 
         # Aggregate all issues
         issues: list[str] = []
