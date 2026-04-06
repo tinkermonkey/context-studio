@@ -26,26 +26,28 @@ class FakeConfigurationStore:
                           default sections matching the real ConfigurationStore.
         """
         self._config = initial_config or AppConfiguration(
-            sections={
-                "server": {},
-                "database": {},
-                "logging": {},
-                "llm": {},
-                "reference": None,
-                "sync": None,
-            }
+            server={},
+            database={},
+            logging={},
+            llm={},
+            nlp={},
+            embedding={},
+            reference_sources={},
+            sync=None,
         )
         # Store default sections for reset operation, matching real implementation
-        self._default_sections: dict[str, Any] = {
-            "server": {},
-            "database": {},
-            "logging": {},
-            "llm": {},
-            "reference": None,
-            "sync": None,
-        }
+        self._defaults = AppConfiguration(
+            server={},
+            database={},
+            logging={},
+            llm={},
+            nlp={},
+            embedding={},
+            reference_sources={},
+            sync=None,
+        )
 
-    def get_config(self) -> AppConfiguration:
+    def load(self) -> AppConfiguration:
         """
         Load the current configuration.
 
@@ -54,23 +56,18 @@ class FakeConfigurationStore:
         """
         return self._config
 
-    def update_config(self, updates: dict) -> AppConfiguration:
+    def save(self, config: AppConfiguration) -> AppConfiguration:
         """
-        Update configuration with partial updates.
+        Save configuration.
 
         Args:
-            updates: Dictionary with section names as keys and section updates as values
+            config: AppConfiguration object to save
 
         Returns:
-            AppConfiguration object with updated configuration
+            AppConfiguration object that was saved
         """
-        for section_name, section_updates in updates.items():
-            current_section = self._config.sections.get(section_name)
-            if current_section is not None:
-                current_section.update(section_updates)
-            else:
-                self._config.sections[section_name] = section_updates
-        return self._config
+        self._config = config
+        return config
 
     def reset_to_defaults(self) -> AppConfiguration:
         """
@@ -78,26 +75,24 @@ class FakeConfigurationStore:
 
         Creates a fresh configuration from defaults, then copies any credential
         fields from the current configuration to preserve API keys and secrets.
-        Only preserves credentials for sections that exist in the defaults.
 
         Returns:
             AppConfiguration reset to defaults with credentials preserved
         """
-        # Start with fresh defaults, handling None values
-        reset_config = AppConfiguration(
-            sections={
-                section: dict(defaults) if defaults is not None else None
-                for section, defaults in self._default_sections.items()
-            }
-        )
+        # Create a deep copy of the defaults
+        import copy
+        reset_config = copy.deepcopy(self._defaults)
 
-        # Preserve credentials from current config, only for sections in defaults
-        for section_name, current_section in self._config.sections.items():
-            if section_name not in reset_config.sections or current_section is None:
+        # Preserve credentials from current config
+        for attr_name in ["server", "database", "logging", "llm", "nlp", "embedding", "reference_sources", "sync"]:
+            current_section = getattr(self._config, attr_name, None)
+            reset_section = getattr(reset_config, attr_name, None)
+
+            if current_section is None or reset_section is None:
                 continue
-            reset_section = reset_config.sections[section_name]
-            if reset_section is None:
+            if not isinstance(current_section, dict) or not isinstance(reset_section, dict):
                 continue
+
             for key, value in current_section.items():
                 if key in CREDENTIAL_FIELD_NAMES:
                     reset_section[key] = value

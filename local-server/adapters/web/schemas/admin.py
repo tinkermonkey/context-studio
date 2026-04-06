@@ -29,37 +29,27 @@ from utils.logger import get_logger
 logger = get_logger(__name__)
 
 
-def _mask_credential_sections(sections: dict) -> dict:
+def _mask_credentials(section: dict) -> dict:
     """
-    Mask sensitive credential fields in configuration sections.
+    Mask sensitive credential fields in a configuration section.
 
     Replaces credential values with '***<last4>' format to prevent exposure
-    in API responses. Handles both valid dict sections and invalid non-dict
-    sections by replacing the latter with None.
+    in API responses.
 
     Args:
-        sections: Dictionary of configuration sections
+        section: Dictionary of configuration
 
     Returns:
-        Deep copy of sections with credential fields masked and invalid
-        sections replaced with None
+        Deep copy of section with credential fields masked
     """
-    masked_sections = copy.deepcopy(sections)
+    masked_section = copy.deepcopy(section)
 
-    for section_name, section in masked_sections.items():
-        if section is None:
-            continue
-        # Replace non-dict sections with None
-        if not isinstance(section, dict):
-            masked_sections[section_name] = None
-            continue
-        # Section is a dict, proceed with credential masking
-        for field_name in list(section.keys()):
-            if field_name in CREDENTIAL_FIELD_NAMES and section[field_name]:
-                val = str(section[field_name])
-                section[field_name] = f'***{val[-4:]}' if len(val) >= 4 else '***'
+    for field_name in list(masked_section.keys()):
+        if field_name in CREDENTIAL_FIELD_NAMES and masked_section[field_name]:
+            val = str(masked_section[field_name])
+            masked_section[field_name] = f'***{val[-4:]}' if len(val) >= 4 else '***'
 
-    return masked_sections
+    return masked_section
 
 
 class SystemHealthResponse(BaseModel):
@@ -198,9 +188,37 @@ class AppConfigurationResponse(BaseModel):
     API responses.
     """
 
-    sections: dict = Field(
+    server: dict = Field(
         ...,
-        description="Configuration sections with sensitive values masked"
+        description="Server configuration section"
+    )
+    database: dict = Field(
+        ...,
+        description="Database configuration section"
+    )
+    logging: dict = Field(
+        ...,
+        description="Logging configuration section"
+    )
+    llm: dict = Field(
+        ...,
+        description="LLM provider configuration section"
+    )
+    nlp: dict = Field(
+        default_factory=dict,
+        description="NLP pipeline configuration section"
+    )
+    embedding: dict = Field(
+        default_factory=dict,
+        description="Embedding model configuration section"
+    )
+    reference_sources: dict = Field(
+        default_factory=dict,
+        description="Reference sources configuration section"
+    )
+    sync: Optional[dict] = Field(
+        default=None,
+        description="Sync configuration section"
     )
 
     model_config = ConfigDict(from_attributes=True)
@@ -219,8 +237,16 @@ class AppConfigurationResponse(BaseModel):
         Returns:
             AppConfigurationResponse with masked credential fields
         """
-        sections = _mask_credential_sections(config.sections)
-        return cls(sections=sections)
+        return cls(
+            server=_mask_credentials(config.server) if config.server else {},
+            database=_mask_credentials(config.database) if config.database else {},
+            logging=_mask_credentials(config.logging) if config.logging else {},
+            llm=_mask_credentials(config.llm) if config.llm else {},
+            nlp=_mask_credentials(config.nlp) if config.nlp else {},
+            embedding=_mask_credentials(config.embedding) if config.embedding else {},
+            reference_sources=_mask_credentials(config.reference_sources) if config.reference_sources else {},
+            sync=_mask_credentials(config.sync) if config.sync else None,
+        )
 
 
 class BackgroundTaskResponse(BaseModel):
@@ -249,12 +275,6 @@ class BackgroundTaskResponse(BaseModel):
     completed_at: Optional[datetime] = Field(
         default=None,
         description="Timestamp when task finished"
-    )
-    progress: Optional[float] = Field(
-        default=None,
-        ge=0.0,
-        le=1.0,
-        description="Task progress as a float between 0.0 and 1.0"
     )
     error: Optional[str] = Field(
         default=None,

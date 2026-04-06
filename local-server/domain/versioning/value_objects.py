@@ -56,6 +56,7 @@ class MergeStrategy(str, Enum):
 
     LAST_WRITE_WINS = "last_write_wins"
     BASE_VALUE_WINS = "base_value_wins"
+    MERGE_BOTH = "merge_both"
     MANUAL = "manual"
 
 

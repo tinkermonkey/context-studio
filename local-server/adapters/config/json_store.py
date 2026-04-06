@@ -34,7 +34,7 @@ class JSONFileConfigStore:
         """
         self._mgr = config_manager
 
-    def get_config(self) -> AppConfiguration:
+    def load(self) -> AppConfiguration:
         """
         Load application configuration from file.
 
@@ -49,51 +49,38 @@ class JSONFileConfigStore:
         """
         try:
             settings = self._mgr.get_settings()
-            sections = {
-                'server': settings.server.model_dump(),
-                'database': settings.database.model_dump(),
-                'logging': settings.logging.model_dump(),
-                'llm': settings.llm.model_dump(),
-                'reference': settings.reference.model_dump() if settings.reference else None,
-                'sync': settings.sync.model_dump() if settings.sync else None,
-            }
             logger.debug("Configuration loaded successfully")
-            return AppConfiguration(sections=sections)
+            return AppConfiguration(
+                server=settings.server.model_dump(),
+                database=settings.database.model_dump(),
+                logging=settings.logging.model_dump(),
+                llm=settings.llm.model_dump(),
+                nlp=settings.nlp.model_dump() if hasattr(settings, 'nlp') and settings.nlp else {},
+                embedding=settings.embedding.model_dump() if hasattr(settings, 'embedding') and settings.embedding else {},
+                reference_sources=settings.reference.model_dump() if hasattr(settings, 'reference') and settings.reference else {},
+                sync=settings.sync.model_dump() if hasattr(settings, 'sync') and settings.sync else None,
+            )
         except RuntimeError as e:
             raise ConfigurationError(f'Failed to load configuration: {e}') from e
 
-    def update_config(self, updates: dict) -> AppConfiguration:
+    def save(self, config: AppConfiguration) -> AppConfiguration:
         """
-        Update application configuration with partial updates.
+        Save application configuration.
 
-        Takes a dict of updates keyed by section name, merges them with the
-        current configuration, reconstructs Pydantic Settings, and persists.
+        Takes an AppConfiguration object and persists it to storage.
 
         Args:
-            updates: Dictionary with section names as keys and section updates as values
+            config: AppConfiguration object to save
 
         Returns:
-            AppConfiguration object with updated configuration
+            AppConfiguration object that was saved
 
         Raises:
-            ConfigurationError: If update fails
+            ConfigurationError: If save fails
         """
-        # Get current configuration (may raise ConfigurationError)
-        current_config = self.get_config()
-
-        # Merge updates into current configuration
-        updated_sections = dict(current_config.sections)
-        for section_name, section_updates in updates.items():
-            current_section = updated_sections.get(section_name)
-            if current_section is not None:
-                current_section.update(section_updates)
-            else:
-                updated_sections[section_name] = section_updates
-
-        updated_config = AppConfiguration(sections=updated_sections)
-        self._persist_config(updated_config)
-        logger.debug("Configuration updated successfully")
-        return updated_config
+        self._persist_config(config)
+        logger.debug("Configuration saved successfully")
+        return config
 
     def reset_to_defaults(self) -> AppConfiguration:
         """
@@ -110,34 +97,50 @@ class JSONFileConfigStore:
         """
         try:
             # Get current configuration to preserve credentials
-            current_config = self.get_config()
+            current_config = self.load()
 
             # Create fresh defaults
             default_settings = Settings()
-            default_sections = {
-                'server': default_settings.server.model_dump(),
-                'database': default_settings.database.model_dump(),
-                'logging': default_settings.logging.model_dump(),
-                'llm': default_settings.llm.model_dump(),
-                'reference': default_settings.reference.model_dump() if default_settings.reference else None,
-                'sync': default_settings.sync.model_dump() if default_settings.sync else None,
+            default_config = AppConfiguration(
+                server=default_settings.server.model_dump(),
+                database=default_settings.database.model_dump(),
+                logging=default_settings.logging.model_dump(),
+                llm=default_settings.llm.model_dump(),
+                nlp=default_settings.nlp.model_dump() if hasattr(default_settings, 'nlp') and default_settings.nlp else {},
+                embedding=default_settings.embedding.model_dump() if hasattr(default_settings, 'embedding') and default_settings.embedding else {},
+                reference_sources=default_settings.reference.model_dump() if hasattr(default_settings, 'reference') and default_settings.reference else {},
+                sync=default_settings.sync.model_dump() if hasattr(default_settings, 'sync') and default_settings.sync else None,
+            )
+
+            # Map of section names to their config attributes for preserving credentials
+            section_mapping = {
+                'server': 'server',
+                'database': 'database',
+                'logging': 'logging',
+                'llm': 'llm',
+                'nlp': 'nlp',
+                'embedding': 'embedding',
+                'reference_sources': 'reference_sources',
+                'sync': 'sync',
             }
 
             # Preserve credentials from current config
-            for section_name, section_data in current_config.sections.items():
-                if section_name not in default_sections or section_data is None:
+            for section_name, attr_name in section_mapping.items():
+                current_section = getattr(current_config, attr_name, None)
+                default_section = getattr(default_config, attr_name, None)
+
+                if current_section is None or default_section is None:
                     continue
-                default_section = default_sections[section_name]
-                if default_section is None:
+                if not isinstance(default_section, dict) or not isinstance(current_section, dict):
                     continue
-                for key, value in section_data.items():
+
+                for key, value in current_section.items():
                     if key in CREDENTIAL_FIELD_NAMES:
                         default_section[key] = value
 
-            reset_config = AppConfiguration(sections=default_sections)
-            self._persist_config(reset_config)
+            self._persist_config(default_config)
             logger.debug("Configuration reset to defaults with credentials preserved")
-            return reset_config
+            return default_config
         except ConfigurationError:
             raise
         except ValidationError as e:
@@ -155,21 +158,25 @@ class JSONFileConfigStore:
         """
         try:
             # Reconstruct Settings object from config sections
-            # Use empty dicts as defaults for required sections
+            # Map AppConfiguration fields to Settings constructor arguments
             settings_dict = {
-                'server': config.sections.get('server') or {},
-                'database': config.sections.get('database') or {},
-                'logging': config.sections.get('logging') or {},
-                'llm': config.sections.get('llm') or {},
+                'server': config.server or {},
+                'database': config.database or {},
+                'logging': config.logging or {},
+                'llm': config.llm or {},
             }
             # Add optional sections only if they exist
-            reference_section = config.sections.get('reference')
-            if reference_section is not None:
-                settings_dict['reference'] = reference_section
+            if config.reference_sources is not None:
+                settings_dict['reference'] = config.reference_sources
 
-            sync_section = config.sections.get('sync')
-            if sync_section is not None:
-                settings_dict['sync'] = sync_section
+            if config.sync is not None:
+                settings_dict['sync'] = config.sync
+
+            # Add nlp and embedding if they exist and have handlers in Settings
+            if hasattr(config, 'nlp') and config.nlp is not None:
+                settings_dict['nlp'] = config.nlp
+            if hasattr(config, 'embedding') and config.embedding is not None:
+                settings_dict['embedding'] = config.embedding
 
             # Pydantic will convert dicts to config classes
             new_settings = Settings(**settings_dict)  # type: ignore[arg-type]

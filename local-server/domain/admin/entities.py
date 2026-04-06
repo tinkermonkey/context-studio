@@ -49,7 +49,6 @@ class BackgroundTask:
         id: Unique identifier for the task
         name: Human-readable task name
         status: Task status ('pending', 'running', 'completed', or 'failed')
-        progress: Task progress as a float between 0.0 and 1.0
         created_at: Timestamp when task was registered
         started_at: Timestamp when task started execution
         completed_at: Timestamp when task finished
@@ -63,21 +62,8 @@ class BackgroundTask:
     created_at: datetime
     started_at: Optional[datetime] = None
     completed_at: Optional[datetime] = None
-    progress: Optional[float] = None
     error: Optional[str] = None
     result: Optional[dict] = None
-
-    def __setattr__(self, name: str, value: Any) -> None:
-        """Validate progress on any assignment to ensure invariants are maintained."""
-        if name == "progress":
-            self._validate_progress(value)
-        super().__setattr__(name, value)
-
-    @staticmethod
-    def _validate_progress(progress: Optional[float]) -> None:
-        """Validate that progress is within valid range [0.0, 1.0]."""
-        if progress is not None and not (0.0 <= progress <= 1.0):
-            raise ValueError(f"progress must be between 0.0 and 1.0, got {progress}")
 
 
 @dataclass
@@ -85,12 +71,26 @@ class AppConfiguration:
     """
     Represents the application configuration.
 
-    Wraps configuration sections as plain dicts. The domain entity
+    Configuration is organized into explicit sections. The domain entity
     does NOT depend on Pydantic. API key values are unmasked here;
     masking is a presentation concern.
 
     Attributes:
-        sections: Dictionary mapping section names to their configuration dicts
+        server: Server configuration (host, port, cors settings)
+        database: Database configuration (paths, pool settings)
+        llm: LLM configuration (provider keys, default models)
+        nlp: NLP pipeline configuration (model name, components)
+        embedding: Embedding model configuration (model name)
+        reference_sources: External reference sources configuration (enabled sources, rate limits)
+        sync: Optional S3/remote sync settings
+        logging: Logging configuration (level, handlers, etc.)
     """
 
-    sections: dict[str, Optional[dict[str, Any]]]
+    server: dict[str, Any]
+    database: dict[str, Any]
+    llm: dict[str, Any]
+    nlp: dict[str, Any]
+    embedding: dict[str, Any]
+    reference_sources: dict[str, Any]
+    logging: dict[str, Any] = field(default_factory=lambda: {"level": "INFO"})
+    sync: Optional[dict[str, Any]] = None

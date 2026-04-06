@@ -299,170 +299,6 @@ class TestAdminServiceHealthErrorHandling:
         assert health.status == SystemHealthStatus.HEALTHY
 
 
-class TestBackgroundTaskProgressValidation:
-    """Tests for BackgroundTask progress field validation."""
-
-    def test_background_task_with_valid_progress(self):
-        """BackgroundTask accepts progress values between 0.0 and 1.0."""
-        task = BackgroundTask(
-            id="task-1",
-            name="test-task",
-            status=BackgroundTaskStatus.RUNNING,
-            created_at=datetime.now(timezone.utc),
-            progress=0.5,
-        )
-
-        assert task.progress == 0.5
-
-    def test_background_task_with_progress_zero(self):
-        """BackgroundTask accepts progress=0.0."""
-        task = BackgroundTask(
-            id="task-1",
-            name="test-task",
-            status=BackgroundTaskStatus.RUNNING,
-            created_at=datetime.now(timezone.utc),
-            progress=0.0,
-        )
-
-        assert task.progress == 0.0
-
-    def test_background_task_with_progress_one(self):
-        """BackgroundTask accepts progress=1.0."""
-        task = BackgroundTask(
-            id="task-1",
-            name="test-task",
-            status=BackgroundTaskStatus.COMPLETED,
-            created_at=datetime.now(timezone.utc),
-            progress=1.0,
-        )
-
-        assert task.progress == 1.0
-
-    def test_background_task_with_progress_none(self):
-        """BackgroundTask accepts progress=None."""
-        task = BackgroundTask(
-            id="task-1",
-            name="test-task",
-            status=BackgroundTaskStatus.PENDING,
-            created_at=datetime.now(timezone.utc),
-            progress=None,
-        )
-
-        assert task.progress is None
-
-    def test_background_task_rejects_progress_above_one(self):
-        """BackgroundTask rejects progress > 1.0."""
-        with pytest.raises(ValueError) as exc_info:
-            BackgroundTask(
-                id="task-1",
-                name="test-task",
-                status=BackgroundTaskStatus.RUNNING,
-                created_at=datetime.now(timezone.utc),
-                progress=1.5,
-            )
-
-        assert "progress must be between 0.0 and 1.0" in str(exc_info.value)
-
-    def test_background_task_rejects_negative_progress(self):
-        """BackgroundTask rejects negative progress."""
-        with pytest.raises(ValueError) as exc_info:
-            BackgroundTask(
-                id="task-1",
-                name="test-task",
-                status=BackgroundTaskStatus.RUNNING,
-                created_at=datetime.now(timezone.utc),
-                progress=-0.5,
-            )
-
-        assert "progress must be between 0.0 and 1.0" in str(exc_info.value)
-
-
-class TestBackgroundTaskProgressMutation:
-    """Tests for BackgroundTask progress field validation via mutation."""
-
-    def test_mutate_progress_to_valid_value(self):
-        """Mutating progress to a valid value persists the change."""
-        task = BackgroundTask(
-            id="task-1",
-            name="test-task",
-            status=BackgroundTaskStatus.RUNNING,
-            created_at=datetime.now(timezone.utc),
-            progress=0.5,
-        )
-
-        task.progress = 0.75
-        assert task.progress == 0.75
-
-    def test_mutate_progress_to_zero(self):
-        """Mutating progress to 0.0 is accepted."""
-        task = BackgroundTask(
-            id="task-1",
-            name="test-task",
-            status=BackgroundTaskStatus.RUNNING,
-            created_at=datetime.now(timezone.utc),
-            progress=0.5,
-        )
-
-        task.progress = 0.0
-        assert task.progress == 0.0
-
-    def test_mutate_progress_to_one(self):
-        """Mutating progress to 1.0 is accepted."""
-        task = BackgroundTask(
-            id="task-1",
-            name="test-task",
-            status=BackgroundTaskStatus.RUNNING,
-            created_at=datetime.now(timezone.utc),
-            progress=0.5,
-        )
-
-        task.progress = 1.0
-        assert task.progress == 1.0
-
-    def test_mutate_progress_to_none(self):
-        """Mutating progress to None is accepted."""
-        task = BackgroundTask(
-            id="task-1",
-            name="test-task",
-            status=BackgroundTaskStatus.RUNNING,
-            created_at=datetime.now(timezone.utc),
-            progress=0.5,
-        )
-
-        task.progress = None
-        assert task.progress is None
-
-    def test_mutate_progress_to_above_one_raises_error(self):
-        """Mutating progress to > 1.0 raises ValueError."""
-        task = BackgroundTask(
-            id="task-1",
-            name="test-task",
-            status=BackgroundTaskStatus.RUNNING,
-            created_at=datetime.now(timezone.utc),
-            progress=0.5,
-        )
-
-        with pytest.raises(ValueError) as exc_info:
-            task.progress = 1.5
-
-        assert "progress must be between 0.0 and 1.0" in str(exc_info.value)
-
-    def test_mutate_progress_to_below_zero_raises_error(self):
-        """Mutating progress to < 0.0 raises ValueError."""
-        task = BackgroundTask(
-            id="task-1",
-            name="test-task",
-            status=BackgroundTaskStatus.RUNNING,
-            created_at=datetime.now(timezone.utc),
-            progress=0.5,
-        )
-
-        with pytest.raises(ValueError) as exc_info:
-            task.progress = -0.1
-
-        assert "progress must be between 0.0 and 1.0" in str(exc_info.value)
-
-
 class TestBackgroundTaskSummaryValueObject:
     """Tests for BackgroundTaskSummary value object."""
 
@@ -611,41 +447,47 @@ class TestAdminServiceConfigurationReset:
     def test_reset_configuration_clears_non_credential_fields(self):
         """Reset configuration removes non-credential fields."""
         initial = AppConfiguration(
-            sections={
-                "llm": {
-                    "provider": "openai",
-                    "model": "gpt-4",
-                    "openai_api_key": "sk-secret-key",
-                    "temperature": 0.7,
-                },
-                "database": {"path": "/tmp/test.db"},
-            }
+            server={},
+            database={"path": "/tmp/test.db"},
+            logging={},
+            llm={
+                "provider": "openai",
+                "model": "gpt-4",
+                "openai_api_key": "sk-secret-key",
+                "temperature": 0.7,
+            },
+            nlp={},
+            embedding={},
+            reference_sources={},
         )
         config_store = FakeConfigurationStore(initial_config=initial)
         service = AdminService(self.metrics, config_store)
 
         reset_config = service.reset_configuration()
 
-        assert "provider" not in reset_config.sections["llm"]
-        assert "model" not in reset_config.sections["llm"]
-        assert "temperature" not in reset_config.sections["llm"]
-        assert "path" not in reset_config.sections["database"]
+        assert "provider" not in reset_config.llm
+        assert "model" not in reset_config.llm
+        assert "temperature" not in reset_config.llm
+        assert "path" not in reset_config.database
 
     def test_reset_configuration_preserves_credentials(self):
         """Reset configuration preserves credential fields for sections in defaults."""
         initial = AppConfiguration(
-            sections={
-                "llm": {
-                    "provider": "openai",
-                    "openai_api_key": "sk-secret-key",
-                    "anthropic_api_key": "sk-ant-secret",
-                },
-                "database": {"path": "/tmp/test.db"},
-                "sync": {
-                    "s3_access_key": "access-key",
-                    "s3_secret_key": "secret-key",
-                },
-            }
+            server={},
+            database={"path": "/tmp/test.db"},
+            logging={},
+            llm={
+                "provider": "openai",
+                "openai_api_key": "sk-secret-key",
+                "anthropic_api_key": "sk-ant-secret",
+            },
+            nlp={},
+            embedding={},
+            reference_sources={},
+            sync={
+                "s3_access_key": "access-key",
+                "s3_secret_key": "secret-key",
+            },
         )
         config_store = FakeConfigurationStore(initial_config=initial)
         service = AdminService(self.metrics, config_store)
@@ -653,27 +495,30 @@ class TestAdminServiceConfigurationReset:
         reset_config = service.reset_configuration()
 
         # Credentials for sections in defaults are preserved
-        assert reset_config.sections["llm"]["openai_api_key"] == "sk-secret-key"
-        assert reset_config.sections["llm"]["anthropic_api_key"] == "sk-ant-secret"
-        # sync is not in defaults (sync: None in Settings), so it should not be in reset config
-        assert reset_config.sections["sync"] is None
+        assert reset_config.llm["openai_api_key"] == "sk-secret-key"
+        assert reset_config.llm["anthropic_api_key"] == "sk-ant-secret"
+        # sync is preserved if it was in initial config
+        assert reset_config.sync is not None
 
     def test_reset_configuration_uses_credential_field_names_constant(self):
         """Reset configuration uses CREDENTIAL_FIELD_NAMES to determine which fields to preserve."""
         # Create config with both credential fields (in CREDENTIAL_FIELD_NAMES) and non-credential fields
         initial = AppConfiguration(
-            sections={
-                "llm": {
-                    "provider": "openai",  # Non-credential field
-                    "model": "gpt-4",  # Non-credential field
-                    "openai_api_key": "sk-secret",  # Credential field
-                    "anthropic_api_key": "sk-ant",  # Credential field
-                },
-                "database": {
-                    "path": "/custom.db",  # Non-credential field
-                    "host": "localhost",  # Non-credential field
-                },
-            }
+            server={},
+            database={
+                "path": "/custom.db",  # Non-credential field
+                "host": "localhost",  # Non-credential field
+            },
+            logging={},
+            llm={
+                "provider": "openai",  # Non-credential field
+                "model": "gpt-4",  # Non-credential field
+                "openai_api_key": "sk-secret",  # Credential field
+                "anthropic_api_key": "sk-ant",  # Credential field
+            },
+            nlp={},
+            embedding={},
+            reference_sources={},
         )
         config_store = FakeConfigurationStore(initial_config=initial)
         service = AdminService(self.metrics, config_store)
@@ -682,14 +527,14 @@ class TestAdminServiceConfigurationReset:
         reset_config = service.reset_configuration()
 
         # Verify non-credential fields are cleared
-        assert "provider" not in reset_config.sections["llm"]
-        assert "model" not in reset_config.sections["llm"]
-        assert "path" not in reset_config.sections["database"]
-        assert "host" not in reset_config.sections["database"]
+        assert "provider" not in reset_config.llm
+        assert "model" not in reset_config.llm
+        assert "path" not in reset_config.database
+        assert "host" not in reset_config.database
 
         # Verify credential fields (in CREDENTIAL_FIELD_NAMES) are preserved
-        assert reset_config.sections["llm"]["openai_api_key"] == "sk-secret"
-        assert reset_config.sections["llm"]["anthropic_api_key"] == "sk-ant"
+        assert reset_config.llm["openai_api_key"] == "sk-secret"
+        assert reset_config.llm["anthropic_api_key"] == "sk-ant"
 
     def test_reset_configuration_delegatesto_config_store(self):
         """Reset configuration delegates to ConfigurationStore.reset_to_defaults()."""
@@ -699,19 +544,22 @@ class TestAdminServiceConfigurationReset:
         result = service.reset_configuration()
 
         assert isinstance(result, AppConfiguration)
-        assert "llm" in result.sections
-        assert "database" in result.sections
+        assert hasattr(result, "llm")
+        assert hasattr(result, "database")
 
     def test_reset_configuration_persists_changes(self):
         """Reset configuration persists the reset state."""
         initial = AppConfiguration(
-            sections={
-                "llm": {
-                    "provider": "openai",
-                    "openai_api_key": "sk-secret",
-                },
-                "database": {"path": "/tmp/test.db"},
-            }
+            server={},
+            database={"path": "/tmp/test.db"},
+            logging={},
+            llm={
+                "provider": "openai",
+                "openai_api_key": "sk-secret",
+            },
+            nlp={},
+            embedding={},
+            reference_sources={},
         )
         config_store = FakeConfigurationStore(initial_config=initial)
         service = AdminService(self.metrics, config_store)
@@ -719,8 +567,8 @@ class TestAdminServiceConfigurationReset:
         service.reset_configuration()
         loaded = service.get_configuration()
 
-        assert "provider" not in loaded.sections["llm"]
-        assert loaded.sections["llm"]["openai_api_key"] == "sk-secret"
+        assert "provider" not in loaded.llm
+        assert loaded.llm["openai_api_key"] == "sk-secret"
 
 
 class TestAdminServiceConfigurationManagement:
@@ -737,25 +585,28 @@ class TestAdminServiceConfigurationManagement:
         config = self.service.get_configuration()
 
         assert isinstance(config, AppConfiguration)
-        assert "llm" in config.sections
-        assert "database" in config.sections
+        assert hasattr(config, "llm")
+        assert hasattr(config, "database")
 
     def test_get_configuration_with_custom_sections(self):
         """Get configuration returns custom sections if provided."""
         initial = AppConfiguration(
-            sections={
-                "llm": {"provider": "openai", "model": "gpt-4"},
-                "database": {"path": "/tmp/test.db"},
-            }
+            server={},
+            database={"path": "/tmp/test.db"},
+            logging={},
+            llm={"provider": "openai", "model": "gpt-4"},
+            nlp={},
+            embedding={},
+            reference_sources={},
         )
         config_store = FakeConfigurationStore(initial_config=initial)
         service = AdminService(self.metrics, config_store)
 
         config = service.get_configuration()
 
-        assert config.sections["llm"]["provider"] == "openai"
-        assert config.sections["llm"]["model"] == "gpt-4"
-        assert config.sections["database"]["path"] == "/tmp/test.db"
+        assert config.llm["provider"] == "openai"
+        assert config.llm["model"] == "gpt-4"
+        assert config.database["path"] == "/tmp/test.db"
 
     def test_update_configuration_updates_existing_section(self):
         """Update configuration modifies an existing section."""
@@ -763,23 +614,23 @@ class TestAdminServiceConfigurationManagement:
             "llm", {"provider": "anthropic", "model": "claude-opus"}
         )
 
-        assert config.sections["llm"]["provider"] == "anthropic"
-        assert config.sections["llm"]["model"] == "claude-opus"
+        assert config.llm["provider"] == "anthropic"
+        assert config.llm["model"] == "claude-opus"
 
     def test_update_configuration_persists_changes(self):
         """Update configuration persists changes to the store."""
         self.service.update_configuration("llm", {"temperature": 0.7})
         loaded = self.service.get_configuration()
 
-        assert loaded.sections["llm"]["temperature"] == 0.7
+        assert loaded.llm["temperature"] == 0.7
 
     def test_update_configuration_preserves_other_sections(self):
         """Update configuration does not affect other sections."""
         self.service.update_configuration("database", {"max_connections": 50})
         config = self.service.get_configuration()
 
-        assert "llm" in config.sections
-        assert config.sections["database"]["max_connections"] == 50
+        assert config.llm is not None
+        assert config.database["max_connections"] == 50
 
     def test_update_configuration_raises_error_for_unknown_section(self):
         """Update configuration raises ConfigurationError for unknown section."""
@@ -801,25 +652,29 @@ class TestAdminServiceConfigurationManagement:
         self.service.update_configuration("llm", {"model": "gpt-4"})
         config = self.service.get_configuration()
 
-        assert config.sections["llm"]["provider"] == "openai"
-        assert config.sections["llm"]["model"] == "gpt-4"
+        assert config.llm["provider"] == "openai"
+        assert config.llm["model"] == "gpt-4"
 
     def test_get_configuration_validates_section_types(self):
-        """Get configuration validates that sections are dicts or None."""
-        # Valid configuration with dict sections and None
+        """Get configuration validates that sections are dicts."""
+        # Valid configuration with dict sections
         valid_config = AppConfiguration(
-            sections={
-                "llm": {"provider": "openai"},
-                "database": None,
-            }
+            server={},
+            database={},
+            logging={},
+            llm={"provider": "openai"},
+            nlp={},
+            embedding={},
+            reference_sources={},
+            sync=None,
         )
         config_store = FakeConfigurationStore(initial_config=valid_config)
         service = AdminService(self.metrics, config_store)
 
         config = service.get_configuration()
 
-        assert config.sections["llm"]["provider"] == "openai"
-        assert config.sections["database"] is None
+        assert config.llm["provider"] == "openai"
+        assert config.sync is None
 
 
 class TestAdminServiceTaskManagement:

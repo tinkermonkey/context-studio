@@ -184,14 +184,12 @@ class AdminService:
         """
         Retrieve current application configuration.
 
-        Delegates to ConfigurationStore to load configuration. Configuration
-        sections are guaranteed to be either None or dict instances by the
-        type system.
+        Delegates to ConfigurationStore to load configuration.
 
         Returns:
             AppConfiguration object with all configuration sections
         """
-        return self._config.get_config()
+        return self._config.load()
 
     def reset_configuration(self) -> AppConfiguration:
         """
@@ -211,8 +209,8 @@ class AdminService:
         """
         Update a configuration section.
 
-        Validates the section exists, then calls ConfigurationStore to update
-        and persist the result.
+        Validates the section exists, updates it with new values,
+        and persists the result via ConfigurationStore.
 
         Args:
             section: Name of the configuration section to update
@@ -224,12 +222,26 @@ class AdminService:
         Raises:
             ConfigurationError: If the section does not exist or is not configured
         """
-        config = self._config.get_config()
-        if section not in config.sections:
+        config = self._config.load()
+
+        # Valid configuration sections
+        valid_sections = {"server", "database", "llm", "nlp", "embedding", "reference_sources", "logging", "sync"}
+        if section not in valid_sections:
             raise ConfigurationError(f"Unknown config section: {section}")
-        if config.sections[section] is None:
+
+        # Get the current section value
+        section_value = getattr(config, section, None)
+        if section_value is None:
             raise ConfigurationError(f"Configuration section '{section}' is not configured")
-        return self._config.update_config({section: updates})
+
+        # Update the section with the provided updates
+        if isinstance(section_value, dict):
+            section_value.update(updates)
+            setattr(config, section, section_value)
+        else:
+            raise ConfigurationError(f"Configuration section '{section}' is not a dictionary")
+
+        return self._config.save(config)
 
     def register_task(self, name: str) -> BackgroundTask:
         """

@@ -127,7 +127,7 @@ class ConfigurationStore(Protocol):
     storage, and updating configuration changes.
     """
 
-    def get_config(self) -> AppConfiguration:
+    def load(self) -> AppConfiguration:
         """
         Load application configuration.
 
@@ -136,15 +136,15 @@ class ConfigurationStore(Protocol):
         """
         ...
 
-    def update_config(self, updates: dict) -> AppConfiguration:
+    def save(self, config: AppConfiguration) -> AppConfiguration:
         """
-        Update application configuration with partial updates.
+        Save application configuration.
 
         Args:
-            updates: Dictionary with section names as keys and section updates as values
+            config: AppConfiguration object with updated configuration
 
         Returns:
-            AppConfiguration object with updated configuration
+            AppConfiguration object that was saved
         """
         ...
 

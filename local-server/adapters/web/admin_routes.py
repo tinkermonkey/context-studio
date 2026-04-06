@@ -3,11 +3,11 @@ HTTP route handlers for the System Administration bounded context.
 
 Endpoints:
 - GET  /api/v1/admin/health                 - Check system health
-- GET  /api/v1/admin/metrics/database       - Get database component health
-- GET  /api/v1/admin/metrics/services       - Get service-level metrics
-- GET  /api/v1/admin/metrics/embedding      - Get embedding model component status
-- GET  /api/v1/admin/metrics/nlp            - Get NLP pipeline component status
-- GET  /api/v1/admin/metrics/tasks          - Get background task summary
+- GET  /api/v1/admin/health/database        - Get database component health
+- GET  /api/v1/admin/health/services        - Get service-level metrics
+- GET  /api/v1/admin/health/embedding       - Get embedding model component status
+- GET  /api/v1/admin/health/nlp             - Get NLP pipeline component status
+- GET  /api/v1/admin/health/tasks           - Get background task summary
 - GET  /api/v1/admin/configuration          - Retrieve configuration
 - PATCH /api/v1/admin/configuration/{section} - Update configuration section
 - POST /api/v1/admin/configuration/reset    - Reset configuration to defaults
@@ -94,7 +94,7 @@ async def check_health(
         raise HTTPException(status_code=status_code, detail=message)
 
 
-@router.get("/metrics/database", response_model=DatabaseHealthResponse)
+@router.get("/health/database", response_model=DatabaseHealthResponse)
 async def get_database_health(
     service: AdminService = Depends(get_admin_service),
 ) -> DatabaseHealthResponse:
@@ -117,7 +117,7 @@ async def get_database_health(
         raise HTTPException(status_code=status_code, detail=message)
 
 
-@router.get("/metrics/services", response_model=ServiceMetricsResponse)
+@router.get("/health/services", response_model=ServiceMetricsResponse)
 async def get_service_metrics(
     service: AdminService = Depends(get_admin_service),
 ) -> ServiceMetricsResponse:
@@ -140,7 +140,7 @@ async def get_service_metrics(
         raise HTTPException(status_code=status_code, detail=message)
 
 
-@router.get("/metrics/embedding", response_model=ComponentStatusResponse)
+@router.get("/health/embedding", response_model=ComponentStatusResponse)
 async def get_embedding_status(
     service: AdminService = Depends(get_admin_service),
 ) -> ComponentStatusResponse:
@@ -163,7 +163,7 @@ async def get_embedding_status(
         raise HTTPException(status_code=status_code, detail=message)
 
 
-@router.get("/metrics/nlp", response_model=ComponentStatusResponse)
+@router.get("/health/nlp", response_model=ComponentStatusResponse)
 async def get_nlp_status(
     service: AdminService = Depends(get_admin_service),
 ) -> ComponentStatusResponse:
@@ -186,7 +186,7 @@ async def get_nlp_status(
         raise HTTPException(status_code=status_code, detail=message)
 
 
-@router.get("/metrics/tasks", response_model=BackgroundTaskSummaryResponse)
+@router.get("/health/tasks", response_model=BackgroundTaskSummaryResponse)
 async def get_task_summary(
     service: AdminService = Depends(get_admin_service),
 ) -> BackgroundTaskSummaryResponse:
