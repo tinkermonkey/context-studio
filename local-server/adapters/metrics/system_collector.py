@@ -12,7 +12,6 @@ from sqlalchemy import text
 from sqlalchemy.engine import Engine
 
 from domain.admin.value_objects import (
-    SystemHealthStatus,
     DatabaseHealth,
     ServiceMetrics,
     ComponentStatus,
