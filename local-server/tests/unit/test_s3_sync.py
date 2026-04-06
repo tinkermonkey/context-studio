@@ -8,7 +8,7 @@ and get_sync_status() methods, as well as normal operation flows.
 import sys
 import os
 from datetime import datetime, timezone
-from unittest.mock import Mock, MagicMock, patch
+from unittest.mock import Mock
 import pytest
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '../..'))
@@ -46,7 +46,6 @@ class TestS3SyncAdapterClientErrorHandling:
 
     def test_push_raises_runtime_error_on_client_error(self, adapter):
         """Test that push() raises RuntimeError when S3 put_object raises ClientError."""
-        from adapters.sync.s3_sync import S3SyncAdapter
 
         adapter._s3_client.put_object.side_effect = MockClientError(
             {'Error': {'Code': 'AccessDenied'}},
