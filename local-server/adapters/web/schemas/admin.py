@@ -33,21 +33,26 @@ def _mask_credential_sections(sections: dict) -> dict:
     Mask sensitive credential fields in configuration sections.
 
     Replaces credential values with '***<last4>' format to prevent exposure
-    in API responses. Assumes sections are pre-validated (either None or dict
-    instances) by the domain service.
+    in API responses. Handles both valid dict sections and invalid non-dict
+    sections by replacing the latter with None.
 
     Args:
-        sections: Dictionary of configuration sections (pre-validated)
+        sections: Dictionary of configuration sections
 
     Returns:
-        Deep copy of sections with credential fields masked
+        Deep copy of sections with credential fields masked and invalid
+        sections replaced with None
     """
     masked_sections = copy.deepcopy(sections)
 
     for section_name, section in masked_sections.items():
         if section is None:
             continue
-        # Section is guaranteed to be a dict by domain service validation
+        # Replace non-dict sections with None
+        if not isinstance(section, dict):
+            masked_sections[section_name] = None
+            continue
+        # Section is a dict, proceed with credential masking
         for field_name in list(section.keys()):
             if field_name in CREDENTIAL_FIELD_NAMES and section[field_name]:
                 val = str(section[field_name])
