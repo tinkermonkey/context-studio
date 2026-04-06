@@ -80,7 +80,7 @@ class BackgroundTaskSummary:
         by_status: Count of tasks grouped by status
     """
 
-    by_status: dict[str, int] = field(default_factory=dict)
+    by_status: dict[BackgroundTaskStatus, int] = field(default_factory=dict)
 
     @property
     def total(self) -> int:

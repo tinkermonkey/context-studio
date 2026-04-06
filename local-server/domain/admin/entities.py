@@ -9,7 +9,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Optional
+from typing import Any, Optional
 
 from domain.admin.value_objects import SystemHealthStatus, BackgroundTaskStatus
 
@@ -69,8 +69,19 @@ class BackgroundTask:
 
     def __post_init__(self):
         """Validate progress field is within valid range."""
-        if self.progress is not None and not (0.0 <= self.progress <= 1.0):
-            raise ValueError(f"progress must be between 0.0 and 1.0, got {self.progress}")
+        self._validate_progress(self.progress)
+
+    def __setattr__(self, name: str, value: Any) -> None:
+        """Validate progress on any assignment to ensure invariants are maintained."""
+        if name == "progress":
+            self._validate_progress(value)
+        super().__setattr__(name, value)
+
+    @staticmethod
+    def _validate_progress(progress: Optional[float]) -> None:
+        """Validate that progress is within valid range [0.0, 1.0]."""
+        if progress is not None and not (0.0 <= progress <= 1.0):
+            raise ValueError(f"progress must be between 0.0 and 1.0, got {progress}")
 
 
 @dataclass
@@ -86,4 +97,4 @@ class AppConfiguration:
         sections: Dictionary mapping section names to their configuration dicts
     """
 
-    sections: dict
+    sections: dict[str, Optional[dict[str, Any]]]

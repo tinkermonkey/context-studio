@@ -22,7 +22,7 @@ from typing import Optional
 from datetime import datetime
 
 from pydantic import BaseModel, ConfigDict, Field
-from domain.admin.value_objects import CREDENTIAL_FIELD_NAMES
+from domain.admin.value_objects import CREDENTIAL_FIELD_NAMES, BackgroundTaskStatus
 from utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -158,6 +158,26 @@ class BackgroundTaskSummaryResponse(BaseModel):
     )
 
     model_config = ConfigDict(from_attributes=True)
+
+    @classmethod
+    def from_domain(cls, summary) -> 'BackgroundTaskSummaryResponse':
+        """
+        Convert domain BackgroundTaskSummary to response, converting enum keys to strings.
+
+        Domain objects use BackgroundTaskStatus enum keys, but JSON responses
+        require string keys. This method handles the conversion.
+
+        Args:
+            summary: Domain BackgroundTaskSummary entity
+
+        Returns:
+            BackgroundTaskSummaryResponse with enum keys converted to string values
+        """
+        by_status_strings = {
+            status.value if isinstance(status, BackgroundTaskStatus) else status: count
+            for status, count in summary.by_status.items()
+        }
+        return cls(total=summary.total, by_status=by_status_strings)
 
 
 class ConfigSectionUpdateRequest(BaseModel):

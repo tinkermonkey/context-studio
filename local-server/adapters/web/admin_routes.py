@@ -203,7 +203,7 @@ async def get_task_summary(
     """
     try:
         summary = await run_sync_in_executor(service.get_background_task_summary)
-        return BackgroundTaskSummaryResponse.model_validate(summary)
+        return BackgroundTaskSummaryResponse.from_domain(summary)
     except Exception as exc:
         status_code, message = _handle_admin_error(exc)
         raise HTTPException(status_code=status_code, detail=message)

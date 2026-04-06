@@ -112,7 +112,7 @@ class AdminService:
             issues.append("No LLM providers configured")
 
         # Check for failed background tasks
-        failed_tasks = task_summary.by_status.get(BackgroundTaskStatus.FAILED.value, 0)
+        failed_tasks = task_summary.by_status.get(BackgroundTaskStatus.FAILED, 0)
         if failed_tasks > 0:
             issues.append(f"{failed_tasks} background task(s) failed")
 
