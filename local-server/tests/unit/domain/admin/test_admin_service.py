@@ -15,10 +15,178 @@ from datetime import datetime, timezone
 
 from domain.admin.services import AdminService
 from domain.admin.entities import SystemHealth, AppConfiguration
-from domain.admin.value_objects import SystemHealthStatus, BackgroundTaskStatus
+from domain.admin.value_objects import (
+    SystemHealthStatus,
+    BackgroundTaskStatus,
+    DatabaseHealth,
+    ServiceMetrics,
+    ComponentStatus,
+    BackgroundTaskSummary,
+    CREDENTIAL_FIELD_NAMES,
+)
 from domain.admin.exceptions import ConfigurationError, TaskNotFoundError
 from tests.fakes.fake_metrics_collector import FakeMetricsCollector
 from tests.fakes.fake_configuration_store import FakeConfigurationStore
+
+
+class TestAdminServiceGranularHealthMethods:
+    """Tests for granular health check delegation methods."""
+
+    def setup_method(self):
+        """Set up test fixtures."""
+        self.metrics = FakeMetricsCollector()
+        self.config_store = FakeConfigurationStore()
+        self.service = AdminService(self.metrics, self.config_store)
+
+    def test_get_database_health_delegation(self):
+        """get_database_health delegates to metrics collector."""
+        db_health = self.service.get_database_health()
+
+        assert isinstance(db_health, DatabaseHealth)
+        assert db_health.connected is True
+        assert db_health.issues == []
+
+    def test_get_service_metrics_delegation(self):
+        """get_service_metrics delegates to metrics collector."""
+        metrics = self.service.get_service_metrics()
+
+        assert isinstance(metrics, ServiceMetrics)
+        assert metrics.uptime_seconds == 0.0
+        assert metrics.llm_providers_available == []
+
+    def test_get_embedding_model_status_delegation(self):
+        """get_embedding_model_status delegates to metrics collector."""
+        status = self.service.get_embedding_model_status()
+
+        assert isinstance(status, ComponentStatus)
+        assert status.available is True
+
+    def test_get_nlp_pipeline_status_delegation(self):
+        """get_nlp_pipeline_status delegates to metrics collector."""
+        status = self.service.get_nlp_pipeline_status()
+
+        assert isinstance(status, ComponentStatus)
+        assert status.available is True
+
+    def test_get_background_task_summary_delegation(self):
+        """get_background_task_summary delegates to metrics collector."""
+        summary = self.service.get_background_task_summary()
+
+        assert isinstance(summary, BackgroundTaskSummary)
+        assert summary.total == 0
+
+
+class TestAdminServiceCompositeHealthAggregation:
+    """Tests for health status aggregation business rules."""
+
+    def setup_method(self):
+        """Set up test fixtures."""
+        self.config_store = FakeConfigurationStore()
+
+    def test_check_health_healthy_when_all_components_ok(self):
+        """Status is HEALTHY when all components are operational."""
+        metrics = FakeMetricsCollector(
+            database_health=DatabaseHealth(connected=True, issues=[]),
+            service_metrics=ServiceMetrics(uptime_seconds=3600.0, llm_providers_available=["openai"]),
+            embedding_status=ComponentStatus(available=True, details="Loaded"),
+            nlp_status=ComponentStatus(available=True, details="Ready"),
+            task_summary=BackgroundTaskSummary(total=0, by_status={}),
+        )
+        service = AdminService(metrics, self.config_store)
+
+        health = service.check_health()
+
+        assert health.status == SystemHealthStatus.HEALTHY
+        assert health.issues == []
+
+    def test_check_health_unhealthy_when_database_disconnected(self):
+        """Status is UNHEALTHY when database is disconnected."""
+        metrics = FakeMetricsCollector(
+            database_health=DatabaseHealth(
+                connected=False, issues=["Connection timeout"]
+            ),
+            service_metrics=ServiceMetrics(uptime_seconds=3600.0, llm_providers_available=["openai"]),
+            embedding_status=ComponentStatus(available=True, details="Loaded"),
+            nlp_status=ComponentStatus(available=True, details="Ready"),
+            task_summary=BackgroundTaskSummary(total=0, by_status={}),
+        )
+        service = AdminService(metrics, self.config_store)
+
+        health = service.check_health()
+
+        assert health.status == SystemHealthStatus.UNHEALTHY
+        assert health.database_connected is False
+
+    def test_check_health_degraded_when_embedding_unavailable(self):
+        """Status is DEGRADED when embedding model is unavailable."""
+        metrics = FakeMetricsCollector(
+            database_health=DatabaseHealth(connected=True, issues=[]),
+            service_metrics=ServiceMetrics(uptime_seconds=3600.0, llm_providers_available=["openai"]),
+            embedding_status=ComponentStatus(available=False, details="Model not loaded"),
+            nlp_status=ComponentStatus(available=True, details="Ready"),
+            task_summary=BackgroundTaskSummary(total=0, by_status={}),
+        )
+        service = AdminService(metrics, self.config_store)
+
+        health = service.check_health()
+
+        assert health.status == SystemHealthStatus.DEGRADED
+        assert health.embedding_model_loaded is False
+        assert any("Embedding model" in issue for issue in health.issues)
+
+    def test_check_health_degraded_when_nlp_unavailable(self):
+        """Status is DEGRADED when NLP pipeline is unavailable."""
+        metrics = FakeMetricsCollector(
+            database_health=DatabaseHealth(connected=True, issues=[]),
+            service_metrics=ServiceMetrics(uptime_seconds=3600.0, llm_providers_available=["openai"]),
+            embedding_status=ComponentStatus(available=True, details="Loaded"),
+            nlp_status=ComponentStatus(available=False, details="Pipeline not ready"),
+            task_summary=BackgroundTaskSummary(total=0, by_status={}),
+        )
+        service = AdminService(metrics, self.config_store)
+
+        health = service.check_health()
+
+        assert health.status == SystemHealthStatus.DEGRADED
+        assert health.nlp_pipeline_ready is False
+        assert any("NLP pipeline" in issue for issue in health.issues)
+
+    def test_check_health_degraded_when_database_has_issues(self):
+        """Status is DEGRADED when database reports issues."""
+        metrics = FakeMetricsCollector(
+            database_health=DatabaseHealth(
+                connected=True, issues=["Slow queries detected"]
+            ),
+            service_metrics=ServiceMetrics(uptime_seconds=3600.0, llm_providers_available=["openai"]),
+            embedding_status=ComponentStatus(available=True, details="Loaded"),
+            nlp_status=ComponentStatus(available=True, details="Ready"),
+            task_summary=BackgroundTaskSummary(total=0, by_status={}),
+        )
+        service = AdminService(metrics, self.config_store)
+
+        health = service.check_health()
+
+        assert health.status == SystemHealthStatus.DEGRADED
+        assert "Slow queries detected" in health.issues
+
+    def test_check_health_aggregates_all_component_data(self):
+        """check_health aggregates data from all components."""
+        metrics = FakeMetricsCollector(
+            database_health=DatabaseHealth(connected=True, issues=[]),
+            service_metrics=ServiceMetrics(uptime_seconds=7200.0, llm_providers_available=["openai", "anthropic"]),
+            embedding_status=ComponentStatus(available=True, details="Loaded"),
+            nlp_status=ComponentStatus(available=True, details="Ready"),
+            task_summary=BackgroundTaskSummary(total=0, by_status={}),
+        )
+        service = AdminService(metrics, self.config_store)
+
+        health = service.check_health()
+
+        assert health.database_connected is True
+        assert health.nlp_pipeline_ready is True
+        assert health.embedding_model_loaded is True
+        assert health.llm_providers_available == ["openai", "anthropic"]
+        assert health.uptime_seconds == 7200.0
 
 
 class TestAdminServiceHealthMonitoring:
@@ -43,47 +211,103 @@ class TestAdminServiceHealthMonitoring:
         assert health.checked_at is not None
         assert health.issues == []
 
-    def test_check_health_with_degraded_status(self):
-        """Check health can return degraded status."""
-        degraded_health = SystemHealth(
-            status=SystemHealthStatus.DEGRADED,
-            database_connected=True,
-            nlp_pipeline_ready=False,
-            embedding_model_loaded=True,
-            llm_providers_available=["openai"],
-            uptime_seconds=3600.0,
-            checked_at=datetime.now(timezone.utc),
-            issues=["NLP pipeline not responding"],
+
+class TestAdminServiceConfigurationReset:
+    """Tests for configuration reset functionality."""
+
+    def setup_method(self):
+        """Set up test fixtures."""
+        self.metrics = FakeMetricsCollector()
+        self.config_store = FakeConfigurationStore()
+        self.service = AdminService(self.metrics, self.config_store)
+
+    def test_reset_configuration_clears_non_credential_fields(self):
+        """Reset configuration removes non-credential fields."""
+        initial = AppConfiguration(
+            sections={
+                "llm": {
+                    "provider": "openai",
+                    "model": "gpt-4",
+                    "openai_api_key": "sk-secret-key",
+                    "temperature": 0.7,
+                },
+                "database": {"path": "/tmp/test.db"},
+            }
         )
-        metrics = FakeMetricsCollector(health=degraded_health)
-        service = AdminService(metrics, self.config_store)
+        config_store = FakeConfigurationStore(initial_config=initial)
+        service = AdminService(self.metrics, config_store)
 
-        health = service.check_health()
+        reset_config = service.reset_configuration()
 
-        assert health.status == SystemHealthStatus.DEGRADED
-        assert health.nlp_pipeline_ready is False
-        assert health.issues == ["NLP pipeline not responding"]
+        assert "provider" not in reset_config.sections["llm"]
+        assert "model" not in reset_config.sections["llm"]
+        assert "temperature" not in reset_config.sections["llm"]
+        assert "path" not in reset_config.sections["database"]
 
-    def test_check_health_with_unhealthy_status(self):
-        """Check health can return unhealthy status."""
-        unhealthy_health = SystemHealth(
-            status=SystemHealthStatus.UNHEALTHY,
-            database_connected=False,
-            nlp_pipeline_ready=False,
-            embedding_model_loaded=False,
-            llm_providers_available=[],
-            uptime_seconds=0.0,
-            checked_at=datetime.now(timezone.utc),
-            issues=["Database disconnected", "No LLM providers available"],
+    def test_reset_configuration_preserves_credentials(self):
+        """Reset configuration preserves credential fields."""
+        initial = AppConfiguration(
+            sections={
+                "llm": {
+                    "provider": "openai",
+                    "openai_api_key": "sk-secret-key",
+                    "anthropic_api_key": "sk-ant-secret",
+                },
+                "database": {"path": "/tmp/test.db"},
+                "sync": {
+                    "s3_access_key": "access-key",
+                    "s3_secret_key": "secret-key",
+                },
+            }
         )
-        metrics = FakeMetricsCollector(health=unhealthy_health)
-        service = AdminService(metrics, self.config_store)
+        config_store = FakeConfigurationStore(initial_config=initial)
+        service = AdminService(self.metrics, config_store)
 
-        health = service.check_health()
+        reset_config = service.reset_configuration()
 
-        assert health.status == SystemHealthStatus.UNHEALTHY
-        assert health.database_connected is False
-        assert len(health.issues) == 2
+        assert reset_config.sections["llm"]["openai_api_key"] == "sk-secret-key"
+        assert reset_config.sections["llm"]["anthropic_api_key"] == "sk-ant-secret"
+        assert reset_config.sections["sync"]["s3_access_key"] == "access-key"
+        assert reset_config.sections["sync"]["s3_secret_key"] == "secret-key"
+
+    def test_reset_configuration_uses_credential_field_names_constant(self):
+        """Reset configuration uses CREDENTIAL_FIELD_NAMES constant."""
+        # Verify the constant contains the expected credential fields
+        assert "openai_api_key" in CREDENTIAL_FIELD_NAMES
+        assert "anthropic_api_key" in CREDENTIAL_FIELD_NAMES
+        assert "s3_access_key" in CREDENTIAL_FIELD_NAMES
+        assert "s3_secret_key" in CREDENTIAL_FIELD_NAMES
+
+    def test_reset_configuration_delegatesto_config_store(self):
+        """Reset configuration delegates to ConfigurationStore.reset_to_defaults()."""
+        config_store = FakeConfigurationStore()
+        service = AdminService(self.metrics, config_store)
+
+        result = service.reset_configuration()
+
+        assert isinstance(result, AppConfiguration)
+        assert "llm" in result.sections
+        assert "database" in result.sections
+
+    def test_reset_configuration_persists_changes(self):
+        """Reset configuration persists the reset state."""
+        initial = AppConfiguration(
+            sections={
+                "llm": {
+                    "provider": "openai",
+                    "openai_api_key": "sk-secret",
+                },
+                "database": {"path": "/tmp/test.db"},
+            }
+        )
+        config_store = FakeConfigurationStore(initial_config=initial)
+        service = AdminService(self.metrics, config_store)
+
+        service.reset_configuration()
+        loaded = service.get_configuration()
+
+        assert "provider" not in loaded.sections["llm"]
+        assert loaded.sections["llm"]["openai_api_key"] == "sk-secret"
 
 
 class TestAdminServiceConfigurationManagement:

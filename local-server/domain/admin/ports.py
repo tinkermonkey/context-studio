@@ -10,7 +10,8 @@ from __future__ import annotations
 
 from typing import Protocol
 
-from .entities import SystemHealth, AppConfiguration
+from .entities import AppConfiguration
+from .value_objects import DatabaseHealth, ServiceMetrics, ComponentStatus, BackgroundTaskSummary
 
 
 class MetricsCollector(Protocol):
@@ -21,12 +22,99 @@ class MetricsCollector(Protocol):
     database connectivity, pipeline readiness, model loading status, etc.
     """
 
-    def collect_health(self) -> SystemHealth:
+    def get_database_health(self) -> DatabaseHealth:
         """
-        Collect current system health metrics.
+        Get database health status.
 
         Returns:
-            SystemHealth object with current system state
+            DatabaseHealth with connectivity and issue details
+        """
+        ...
+
+    def get_service_metrics(self) -> ServiceMetrics:
+        """
+        Get service-level metrics.
+
+        Returns:
+            ServiceMetrics with uptime and available LLM providers
+        """
+        ...
+
+    def get_embedding_model_status(self) -> ComponentStatus:
+        """
+        Get embedding model component status.
+
+        Returns:
+            ComponentStatus of the embedding model
+        """
+        ...
+
+    def get_nlp_pipeline_status(self) -> ComponentStatus:
+        """
+        Get NLP pipeline component status.
+
+        Returns:
+            ComponentStatus of the NLP pipeline
+        """
+        ...
+
+    def get_background_task_summary(self) -> BackgroundTaskSummary:
+        """
+        Get summary of background task statuses.
+
+        Returns:
+            BackgroundTaskSummary with task counts by status
+        """
+        ...
+
+
+class HealthCheckableNLP(Protocol):
+    """
+    Narrow protocol for health-checking NLP components.
+
+    Defines the minimal interface needed for health checks.
+    """
+
+    def is_ready(self) -> bool:
+        """
+        Check if NLP component is ready.
+
+        Returns:
+            True if ready, False otherwise
+        """
+        ...
+
+
+class HealthCheckableEmbedding(Protocol):
+    """
+    Narrow protocol for health-checking embedding components.
+
+    Defines the minimal interface needed for health checks.
+    """
+
+    def is_loaded(self) -> bool:
+        """
+        Check if embedding model is loaded.
+
+        Returns:
+            True if loaded, False otherwise
+        """
+        ...
+
+
+class HealthCheckableLLM(Protocol):
+    """
+    Narrow protocol for health-checking LLM components.
+
+    Defines the minimal interface needed for health checks.
+    """
+
+    def list_available_providers(self) -> list[str]:
+        """
+        List available LLM providers.
+
+        Returns:
+            List of provider names
         """
         ...
 
@@ -54,5 +142,14 @@ class ConfigurationStore(Protocol):
 
         Args:
             config: AppConfiguration object to persist
+        """
+        ...
+
+    def reset_to_defaults(self) -> AppConfiguration:
+        """
+        Reset configuration to defaults while preserving credentials.
+
+        Returns:
+            AppConfiguration reset to defaults with credentials preserved
         """
         ...
