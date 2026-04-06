@@ -188,6 +188,164 @@ class TestAdminServiceCompositeHealthAggregation:
         assert health.uptime_seconds == 7200.0
 
 
+class TestAdminServiceHealthErrorHandling:
+    """Tests for health check error resilience."""
+
+    def setup_method(self):
+        """Set up test fixtures."""
+        self.config_store = FakeConfigurationStore()
+
+    def test_check_health_resilient_to_database_health_failure(self):
+        """Health check continues despite database health check failure."""
+        class FailingMetricsCollector:
+            def get_database_health(self):
+                raise RuntimeError("Database check failed")
+            def get_service_metrics(self):
+                return ServiceMetrics(uptime_seconds=0.0, llm_providers_available=["openai"])
+            def get_embedding_model_status(self):
+                return ComponentStatus(available=True, details="OK")
+            def get_nlp_pipeline_status(self):
+                return ComponentStatus(available=True, details="OK")
+            def get_background_task_summary(self):
+                return BackgroundTaskSummary(total=0, by_status={})
+
+        service = AdminService(FailingMetricsCollector(), self.config_store)
+        health = service.check_health()
+
+        assert health.status == SystemHealthStatus.UNHEALTHY
+        assert health.database_connected is False
+        assert any("Error checking database" in issue for issue in health.issues)
+
+    def test_check_health_resilient_to_llm_check_failure(self):
+        """Health check continues despite LLM provider check failure."""
+        class FailingMetricsCollector:
+            def get_database_health(self):
+                return DatabaseHealth(connected=True, issues=[])
+            def get_service_metrics(self):
+                raise RuntimeError("LLM provider check failed")
+            def get_embedding_model_status(self):
+                return ComponentStatus(available=True, details="OK")
+            def get_nlp_pipeline_status(self):
+                return ComponentStatus(available=True, details="OK")
+            def get_background_task_summary(self):
+                return BackgroundTaskSummary(total=0, by_status={})
+
+        service = AdminService(FailingMetricsCollector(), self.config_store)
+        health = service.check_health()
+
+        assert health.status == SystemHealthStatus.DEGRADED
+        assert health.database_connected is True
+        assert health.llm_providers_available == []
+
+    def test_check_health_resilient_to_embedding_check_failure(self):
+        """Health check continues despite embedding model check failure."""
+        class FailingMetricsCollector:
+            def get_database_health(self):
+                return DatabaseHealth(connected=True, issues=[])
+            def get_service_metrics(self):
+                return ServiceMetrics(uptime_seconds=0.0, llm_providers_available=["openai"])
+            def get_embedding_model_status(self):
+                raise RuntimeError("Embedding check failed")
+            def get_nlp_pipeline_status(self):
+                return ComponentStatus(available=True, details="OK")
+            def get_background_task_summary(self):
+                return BackgroundTaskSummary(total=0, by_status={})
+
+        service = AdminService(FailingMetricsCollector(), self.config_store)
+        health = service.check_health()
+
+        assert health.status == SystemHealthStatus.DEGRADED
+        assert health.embedding_model_loaded is False
+        assert any("Error checking embedding" in issue for issue in health.issues)
+
+    def test_check_health_resilient_to_nlp_check_failure(self):
+        """Health check continues despite NLP pipeline check failure."""
+        class FailingMetricsCollector:
+            def get_database_health(self):
+                return DatabaseHealth(connected=True, issues=[])
+            def get_service_metrics(self):
+                return ServiceMetrics(uptime_seconds=0.0, llm_providers_available=["openai"])
+            def get_embedding_model_status(self):
+                return ComponentStatus(available=True, details="OK")
+            def get_nlp_pipeline_status(self):
+                raise RuntimeError("NLP check failed")
+            def get_background_task_summary(self):
+                return BackgroundTaskSummary(total=0, by_status={})
+
+        service = AdminService(FailingMetricsCollector(), self.config_store)
+        health = service.check_health()
+
+        assert health.status == SystemHealthStatus.DEGRADED
+        assert health.nlp_pipeline_ready is False
+        assert any("Error checking NLP" in issue for issue in health.issues)
+
+    def test_check_health_resilient_to_task_summary_failure(self):
+        """Health check continues despite background task summary check failure."""
+        class FailingMetricsCollector:
+            def get_database_health(self):
+                return DatabaseHealth(connected=True, issues=[])
+            def get_service_metrics(self):
+                return ServiceMetrics(uptime_seconds=0.0, llm_providers_available=["openai"])
+            def get_embedding_model_status(self):
+                return ComponentStatus(available=True, details="OK")
+            def get_nlp_pipeline_status(self):
+                return ComponentStatus(available=True, details="OK")
+            def get_background_task_summary(self):
+                raise RuntimeError("Task summary check failed")
+
+        service = AdminService(FailingMetricsCollector(), self.config_store)
+        health = service.check_health()
+
+        assert health.status == SystemHealthStatus.HEALTHY
+
+
+class TestAdminServiceBackgroundTaskSummary:
+    """Tests for background task summary integration."""
+
+    def setup_method(self):
+        """Set up test fixtures."""
+        self.config_store = FakeConfigurationStore()
+
+    def test_check_health_reports_failed_tasks(self):
+        """Health check reports issues when tasks have failed."""
+        metrics = FakeMetricsCollector(
+            service_metrics=ServiceMetrics(uptime_seconds=0.0, llm_providers_available=["openai"]),
+            task_summary=BackgroundTaskSummary(total=3, by_status={"COMPLETED": 2, "FAILED": 1}),
+        )
+        service = AdminService(metrics, self.config_store)
+
+        health = service.check_health()
+
+        assert health.status == SystemHealthStatus.DEGRADED
+        assert any("1 background task(s) failed" in issue for issue in health.issues)
+
+    def test_check_health_healthy_with_no_failed_tasks(self):
+        """Health check is healthy when all tasks completed successfully."""
+        metrics = FakeMetricsCollector(
+            service_metrics=ServiceMetrics(uptime_seconds=0.0, llm_providers_available=["openai"]),
+            task_summary=BackgroundTaskSummary(total=3, by_status={"COMPLETED": 3}),
+        )
+        service = AdminService(metrics, self.config_store)
+
+        health = service.check_health()
+
+        assert health.status == SystemHealthStatus.HEALTHY
+        assert not any("failed" in issue.lower() for issue in health.issues)
+
+    def test_check_health_reports_multiple_failed_tasks(self):
+        """Health check reports correct count of multiple failed tasks."""
+        metrics = FakeMetricsCollector(
+            service_metrics=ServiceMetrics(uptime_seconds=0.0, llm_providers_available=["openai"]),
+            task_summary=BackgroundTaskSummary(total=5, by_status={"COMPLETED": 3, "FAILED": 2}),
+        )
+        service = AdminService(metrics, self.config_store)
+
+        health = service.check_health()
+
+        assert health.status == SystemHealthStatus.DEGRADED
+        assert any("2 background task(s) failed" in issue for issue in health.issues)
+
+
 class TestAdminServiceHealthMonitoring:
     """Tests for system health monitoring functionality."""
 
@@ -199,16 +357,28 @@ class TestAdminServiceHealthMonitoring:
 
     def test_check_health_returns_healthy_status(self):
         """Check health returns healthy status from metrics collector."""
-        health = self.service.check_health()
+        metrics = FakeMetricsCollector(
+            service_metrics=ServiceMetrics(uptime_seconds=0.0, llm_providers_available=["openai"])
+        )
+        service = AdminService(metrics, self.config_store)
+        health = service.check_health()
 
         assert health.status == SystemHealthStatus.HEALTHY
         assert health.database_connected is True
         assert health.nlp_pipeline_ready is True
         assert health.embedding_model_loaded is True
-        assert health.llm_providers_available == []
+        assert health.llm_providers_available == ["openai"]
         assert health.uptime_seconds == 0.0
         assert health.checked_at is not None
         assert health.issues == []
+
+    def test_check_health_degraded_when_no_llm_providers(self):
+        """Status is DEGRADED when no LLM providers are configured."""
+        health = self.service.check_health()
+
+        assert health.status == SystemHealthStatus.DEGRADED
+        assert health.llm_providers_available == []
+        assert any("No LLM providers configured" in issue for issue in health.issues)
 
 
 class TestAdminServiceConfigurationReset:

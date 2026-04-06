@@ -45,7 +45,8 @@ class AdminService:
         """
         Check current system health by aggregating granular health checks.
 
-        Calls all 5 granular port methods and computes overall system health status:
+        Calls all 5 granular port methods with resilience to individual failures
+        and computes overall system health status:
         - UNHEALTHY if database is not connected
         - DEGRADED if any issues are reported
         - HEALTHY otherwise
@@ -53,11 +54,46 @@ class AdminService:
         Returns:
             SystemHealth object describing current system status
         """
-        db_health = self._metrics.get_database_health()
-        service_metrics = self._metrics.get_service_metrics()
-        embedding_status = self._metrics.get_embedding_model_status()
-        nlp_status = self._metrics.get_nlp_pipeline_status()
-        self._metrics.get_background_task_summary()
+        # Initialize defaults for safe fallback on any component failure
+        db_health = DatabaseHealth(connected=False, issues=[])
+        service_metrics = ServiceMetrics(uptime_seconds=0.0, llm_providers_available=[])
+        embedding_status = ComponentStatus(available=False, details="Health check not performed")
+        nlp_status = ComponentStatus(available=False, details="Health check not performed")
+        task_summary = BackgroundTaskSummary(total=0, by_status={})
+
+        # Call each port method with individual error handling
+        try:
+            db_health = self._metrics.get_database_health()
+        except Exception as e:
+            db_health = DatabaseHealth(
+                connected=False, issues=[f"Error checking database health: {e}"]
+            )
+
+        try:
+            service_metrics = self._metrics.get_service_metrics()
+        except Exception as e:
+            service_metrics = ServiceMetrics(
+                uptime_seconds=0.0, llm_providers_available=[]
+            )
+
+        try:
+            embedding_status = self._metrics.get_embedding_model_status()
+        except Exception as e:
+            embedding_status = ComponentStatus(
+                available=False, details=f"Error checking embedding model: {e}"
+            )
+
+        try:
+            nlp_status = self._metrics.get_nlp_pipeline_status()
+        except Exception as e:
+            nlp_status = ComponentStatus(
+                available=False, details=f"Error checking NLP pipeline: {e}"
+            )
+
+        try:
+            task_summary = self._metrics.get_background_task_summary()
+        except Exception as e:
+            task_summary = BackgroundTaskSummary(total=0, by_status={})
 
         # Aggregate all issues
         issues: list[str] = []
@@ -66,6 +102,15 @@ class AdminService:
             issues.append(f"Embedding model: {embedding_status.details}")
         if not nlp_status.available:
             issues.append(f"NLP pipeline: {nlp_status.details}")
+
+        # Check LLM providers: either none configured or error during check
+        if not service_metrics.llm_providers_available:
+            issues.append("No LLM providers configured")
+
+        # Check for failed background tasks
+        failed_tasks = task_summary.by_status.get("FAILED", 0)
+        if failed_tasks > 0:
+            issues.append(f"{failed_tasks} background task(s) failed")
 
         # Derive overall status based on business rules
         if not db_health.connected:
