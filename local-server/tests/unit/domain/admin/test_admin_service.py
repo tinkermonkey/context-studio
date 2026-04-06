@@ -353,6 +353,92 @@ class TestBackgroundTaskProgressValidation:
         assert "progress must be between 0.0 and 1.0" in str(exc_info.value)
 
 
+class TestBackgroundTaskProgressMutation:
+    """Tests for BackgroundTask progress field validation via mutation."""
+
+    def test_mutate_progress_to_valid_value(self):
+        """Mutating progress to a valid value persists the change."""
+        task = BackgroundTask(
+            id="task-1",
+            name="test-task",
+            status=BackgroundTaskStatus.RUNNING,
+            created_at=datetime.now(timezone.utc),
+            progress=0.5,
+        )
+
+        task.progress = 0.75
+        assert task.progress == 0.75
+
+    def test_mutate_progress_to_zero(self):
+        """Mutating progress to 0.0 is accepted."""
+        task = BackgroundTask(
+            id="task-1",
+            name="test-task",
+            status=BackgroundTaskStatus.RUNNING,
+            created_at=datetime.now(timezone.utc),
+            progress=0.5,
+        )
+
+        task.progress = 0.0
+        assert task.progress == 0.0
+
+    def test_mutate_progress_to_one(self):
+        """Mutating progress to 1.0 is accepted."""
+        task = BackgroundTask(
+            id="task-1",
+            name="test-task",
+            status=BackgroundTaskStatus.RUNNING,
+            created_at=datetime.now(timezone.utc),
+            progress=0.5,
+        )
+
+        task.progress = 1.0
+        assert task.progress == 1.0
+
+    def test_mutate_progress_to_none(self):
+        """Mutating progress to None is accepted."""
+        task = BackgroundTask(
+            id="task-1",
+            name="test-task",
+            status=BackgroundTaskStatus.RUNNING,
+            created_at=datetime.now(timezone.utc),
+            progress=0.5,
+        )
+
+        task.progress = None
+        assert task.progress is None
+
+    def test_mutate_progress_to_above_one_raises_error(self):
+        """Mutating progress to > 1.0 raises ValueError."""
+        task = BackgroundTask(
+            id="task-1",
+            name="test-task",
+            status=BackgroundTaskStatus.RUNNING,
+            created_at=datetime.now(timezone.utc),
+            progress=0.5,
+        )
+
+        with pytest.raises(ValueError) as exc_info:
+            task.progress = 1.5
+
+        assert "progress must be between 0.0 and 1.0" in str(exc_info.value)
+
+    def test_mutate_progress_to_below_zero_raises_error(self):
+        """Mutating progress to < 0.0 raises ValueError."""
+        task = BackgroundTask(
+            id="task-1",
+            name="test-task",
+            status=BackgroundTaskStatus.RUNNING,
+            created_at=datetime.now(timezone.utc),
+            progress=0.5,
+        )
+
+        with pytest.raises(ValueError) as exc_info:
+            task.progress = -0.1
+
+        assert "progress must be between 0.0 and 1.0" in str(exc_info.value)
+
+
 class TestBackgroundTaskSummaryValueObject:
     """Tests for BackgroundTaskSummary value object."""
 
@@ -365,7 +451,7 @@ class TestBackgroundTaskSummaryValueObject:
     def test_total_with_non_empty_by_status(self):
         """BackgroundTaskSummary.total sums all tasks by status."""
         summary = BackgroundTaskSummary(
-            by_status={"completed": 2, "failed": 1}
+            by_status={BackgroundTaskStatus.COMPLETED: 2, BackgroundTaskStatus.FAILED: 1}
         )
 
         assert summary.total == 3
@@ -374,10 +460,10 @@ class TestBackgroundTaskSummaryValueObject:
         """BackgroundTaskSummary.total correctly sums multiple status groups."""
         summary = BackgroundTaskSummary(
             by_status={
-                "pending": 1,
-                "running": 2,
-                "completed": 5,
-                "failed": 1,
+                BackgroundTaskStatus.PENDING: 1,
+                BackgroundTaskStatus.RUNNING: 2,
+                BackgroundTaskStatus.COMPLETED: 5,
+                BackgroundTaskStatus.FAILED: 1,
             }
         )
 
@@ -395,7 +481,7 @@ class TestAdminServiceBackgroundTaskSummary:
         """Health check reports issues when tasks have failed."""
         metrics = FakeMetricsCollector(
             service_metrics=ServiceMetrics(uptime_seconds=0.0, llm_providers_available=["openai"]),
-            task_summary=BackgroundTaskSummary(by_status={"completed": 2, "failed": 1}),
+            task_summary=BackgroundTaskSummary(by_status={BackgroundTaskStatus.COMPLETED: 2, BackgroundTaskStatus.FAILED: 1}),
         )
         service = AdminService(metrics, self.config_store)
 
@@ -408,7 +494,7 @@ class TestAdminServiceBackgroundTaskSummary:
         """Health check is healthy when all tasks completed successfully."""
         metrics = FakeMetricsCollector(
             service_metrics=ServiceMetrics(uptime_seconds=0.0, llm_providers_available=["openai"]),
-            task_summary=BackgroundTaskSummary(by_status={"completed": 3}),
+            task_summary=BackgroundTaskSummary(by_status={BackgroundTaskStatus.COMPLETED: 3}),
         )
         service = AdminService(metrics, self.config_store)
 
@@ -421,7 +507,7 @@ class TestAdminServiceBackgroundTaskSummary:
         """Health check reports correct count of multiple failed tasks."""
         metrics = FakeMetricsCollector(
             service_metrics=ServiceMetrics(uptime_seconds=0.0, llm_providers_available=["openai"]),
-            task_summary=BackgroundTaskSummary(by_status={"completed": 3, "failed": 2}),
+            task_summary=BackgroundTaskSummary(by_status={BackgroundTaskStatus.COMPLETED: 3, BackgroundTaskStatus.FAILED: 2}),
         )
         service = AdminService(metrics, self.config_store)
 

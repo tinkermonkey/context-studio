@@ -22,7 +22,8 @@ from typing import Optional
 from datetime import datetime
 
 from pydantic import BaseModel, ConfigDict, Field
-from domain.admin.value_objects import CREDENTIAL_FIELD_NAMES, BackgroundTaskStatus
+from domain.admin.entities import AppConfiguration, BackgroundTask
+from domain.admin.value_objects import CREDENTIAL_FIELD_NAMES, BackgroundTaskStatus, BackgroundTaskSummary
 from utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -160,7 +161,7 @@ class BackgroundTaskSummaryResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     @classmethod
-    def from_domain(cls, summary) -> 'BackgroundTaskSummaryResponse':
+    def from_domain(cls, summary: BackgroundTaskSummary) -> 'BackgroundTaskSummaryResponse':
         """
         Convert domain BackgroundTaskSummary to response, converting enum keys to strings.
 
@@ -205,7 +206,7 @@ class AppConfigurationResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     @classmethod
-    def from_domain(cls, config) -> 'AppConfigurationResponse':
+    def from_domain(cls, config: AppConfiguration) -> 'AppConfigurationResponse':
         """
         Convert domain AppConfiguration to response, masking sensitive values.
 

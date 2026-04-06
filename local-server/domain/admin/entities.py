@@ -67,10 +67,6 @@ class BackgroundTask:
     error: Optional[str] = None
     result: Optional[dict] = None
 
-    def __post_init__(self):
-        """Validate progress field is within valid range."""
-        self._validate_progress(self.progress)
-
     def __setattr__(self, name: str, value: Any) -> None:
         """Validate progress on any assignment to ensure invariants are maintained."""
         if name == "progress":
