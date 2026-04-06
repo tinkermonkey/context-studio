@@ -7,7 +7,6 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '../../../'))
 import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from unittest.mock import Mock, patch
 import uuid
 
 from adapters.persistence.sqlite.models import Base, ChangeEvent, Changeset, Proposal, ConflictResolution, EntityVersion
