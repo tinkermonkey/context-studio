@@ -171,18 +171,44 @@ class TestConfigurationManagement:
             "Standard configuration fields should be preserved"
 
         # Verify the update is written to the config file on disk
-        # This ensures the configuration survives an application restart
         config_file = temp_db_dir / "config.json"
         assert config_file.exists(), f"Config file should exist at {config_file}"
 
         with open(config_file, "r") as f:
             persisted_config = json.load(f)
 
-        # Verify the update was written to the file (for app restart persistence)
+        # Verify the update was written to the file
         assert test_section in persisted_config, \
             f"Configuration file should have '{test_section}' section"
         assert persisted_config[test_section].get(test_key) == test_value, \
             "Updated value should be persisted to config file for restart"
+
+        # Simulate server restart by recreating the app with fresh config manager
+        # This verifies the configuration survives a full application restart
+        from fastapi.testclient import TestClient
+        from importlib import reload
+        import config
+        import app as app_module
+
+        # Clear the config cache to simulate a fresh app startup
+        config._config_manager = None
+
+        # Reload the app module to get fresh app instance with reloaded config
+        reload(app_module)
+        restarted_app = app_module.app
+
+        # Create new test client with restarted app
+        with TestClient(restarted_app) as restarted_client:
+            # Re-read configuration via API after restart
+            response = restarted_client.get("/api/v1/admin/configuration")
+            assert response.status_code == status.HTTP_200_OK
+
+            restarted_config = response.json()
+            assert test_section in restarted_config["sections"]
+
+            # Verify the persisted update is still present after restart
+            assert restarted_config["sections"][test_section].get(test_key) == test_value, \
+                "Updated configuration should persist across application restart"
 
 
 @pytest.mark.e2e
@@ -191,61 +217,74 @@ class TestBackgroundTaskLifecycle:
 
     def test_background_task_lifecycle(self, e2e_client):
         """
-        Background task lifecycle transitions correctly through states.
+        Background task lifecycle transitions correctly through HTTP endpoints.
 
         Verifies:
-        - Task registers in PENDING state with no timestamps or result
-        - Task transitions to RUNNING with started_at timestamp
-        - Task transitions to COMPLETED with completed_at timestamp and result
-        - Task result is persisted and retrievable with correct values
-        - Task appears in task list after registration
+        - Task can be listed (empty initially)
+        - Task registration succeeds (via direct service call for setup)
+        - Task initial state is PENDING with no timestamps or result
+        - Task transitions to RUNNING (via direct service call)
+        - Task RUNNING state is reflected in HTTP GET
+        - Task transitions to COMPLETED with result (via direct service call)
+        - Task COMPLETED state with result is reflected in HTTP GET
+        - Task appears in task list HTTP endpoint
         """
-        # Register a background task by directly calling the admin service
-        # First, get the admin service from app.state
-        # For E2E testing through HTTP, we need to trigger task creation through an API call
+        # Get initial task list
+        response = e2e_client.get("/api/v1/admin/tasks")
+        assert response.status_code == status.HTTP_200_OK
+        initial_tasks = response.json()
+        assert isinstance(initial_tasks, list)
 
-        # Since there's no dedicated endpoint to register a task directly,
-        # we'll use the fact that the AdminService has register_task, get_task, list_tasks
-        # and update_task_status methods that can be called.
-
-        # For E2E testing through HTTP, we need a way to trigger task creation.
-        # Let's test the task lifecycle by directly calling service methods
-        # and verifying through HTTP endpoints.
-
-        # Get the admin service from the app for direct task lifecycle testing
+        # Get the admin service to register task (no direct HTTP registration endpoint exists)
+        # The E2E validates the task lifecycle through HTTP GET endpoints
         admin_service = e2e_client.app.state.admin_service
 
-        # Register a background task (PENDING state)
+        # Register a background task
         task = admin_service.register_task("test_task")
-
-        # Verify initial PENDING state
         task_id = task.id
-        assert task.status == BackgroundTaskStatus.PENDING
-        assert task.started_at is None
-        assert task.completed_at is None
-        assert task.result is None
 
-        # Transition to RUNNING (with started_at)
-        task = admin_service.update_task_status(task_id, BackgroundTaskStatus.RUNNING)
-        assert task.status == BackgroundTaskStatus.RUNNING
-        assert task.started_at is not None
-        assert task.completed_at is None
-        assert task.result is None
+        # Verify initial PENDING state via HTTP GET
+        response = e2e_client.get(f"/api/v1/admin/tasks/{task_id}")
+        assert response.status_code == status.HTTP_200_OK
+        task_response = response.json()
+        assert task_response["status"] == BackgroundTaskStatus.PENDING
+        assert task_response["started_at"] is None
+        assert task_response["completed_at"] is None
+        assert task_response["result"] is None
 
-        # Transition to COMPLETED (with completed_at and result)
+        # Transition to RUNNING and verify via HTTP GET
+        admin_service.update_task_status(task_id, BackgroundTaskStatus.RUNNING)
+
+        response = e2e_client.get(f"/api/v1/admin/tasks/{task_id}")
+        assert response.status_code == status.HTTP_200_OK
+        task_response = response.json()
+        assert task_response["status"] == BackgroundTaskStatus.RUNNING
+        assert task_response["started_at"] is not None
+        assert task_response["completed_at"] is None
+        assert task_response["result"] is None
+
+        # Transition to COMPLETED with result and verify via HTTP GET
         result_data = {"output": "test_result"}
-        task = admin_service.update_task_status(task_id, BackgroundTaskStatus.COMPLETED, result=result_data)
-        assert task.status == BackgroundTaskStatus.COMPLETED
-        assert task.started_at is not None
-        assert task.completed_at is not None
-        assert task.result == result_data
+        admin_service.update_task_status(
+            task_id, BackgroundTaskStatus.COMPLETED, result=result_data
+        )
 
-        # Verify task appears in list
-        tasks = admin_service.list_tasks()
-        task_ids = [t.id for t in tasks]
+        response = e2e_client.get(f"/api/v1/admin/tasks/{task_id}")
+        assert response.status_code == status.HTTP_200_OK
+        task_response = response.json()
+        assert task_response["status"] == BackgroundTaskStatus.COMPLETED
+        assert task_response["started_at"] is not None
+        assert task_response["completed_at"] is not None
+        assert task_response["result"] == result_data
+
+        # Verify task appears in task list via HTTP GET
+        response = e2e_client.get("/api/v1/admin/tasks")
+        assert response.status_code == status.HTTP_200_OK
+        tasks = response.json()
+        task_ids = [t["id"] for t in tasks]
         assert task_id in task_ids
 
-        # Verify task is retrievable by ID
-        retrieved_task = admin_service.get_task(task_id)
-        assert retrieved_task.status == BackgroundTaskStatus.COMPLETED
-        assert retrieved_task.result == result_data
+        # Verify the task in list has correct status
+        task_in_list = next((t for t in tasks if t["id"] == task_id), None)
+        assert task_in_list is not None
+        assert task_in_list["status"] == BackgroundTaskStatus.COMPLETED

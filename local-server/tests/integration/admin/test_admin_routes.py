@@ -511,3 +511,107 @@ class TestConfigurationResetEndpoint:
         # Custom field should be removed in reset
         llm_section = body["sections"].get("llm", {})
         assert "custom_field" not in llm_section
+
+
+class TestAdminErrorHandling:
+    """Tests for error handling in admin routes."""
+
+    def test_generic_exception_returns_500(self, client, admin_service):
+        """Test that non-AdminError exceptions return 500 Internal Server Error."""
+        # Mock the service method to raise a non-AdminError exception
+        original_check_health = admin_service.check_health
+
+        def failing_check_health():
+            raise RuntimeError("Unexpected database connection error")
+
+        admin_service.check_health = failing_check_health
+
+        try:
+            # Call health endpoint which should handle the RuntimeError
+            response = client.get("/api/v1/admin/health")
+
+            # Should return 500 for unexpected exceptions
+            assert response.status_code == status.HTTP_500_INTERNAL_SERVER_ERROR
+
+            # Response should have error detail
+            body = response.json()
+            assert "detail" in body
+            assert body["detail"] == "An unexpected error occurred"
+        finally:
+            # Restore original method
+            admin_service.check_health = original_check_health
+
+    def test_admin_error_returns_400(self, client, admin_service):
+        """Test that AdminError exceptions return 400 Bad Request."""
+        from domain.admin.exceptions import AdminError
+
+        # Mock the service method to raise an AdminError
+        original_check_health = admin_service.check_health
+
+        def failing_check_health():
+            raise AdminError("Configuration incomplete")
+
+        admin_service.check_health = failing_check_health
+
+        try:
+            response = client.get("/api/v1/admin/health")
+
+            # Should return 400 for AdminError
+            assert response.status_code == status.HTTP_400_BAD_REQUEST
+
+            body = response.json()
+            assert "detail" in body
+            assert "Configuration incomplete" in body["detail"]
+        finally:
+            admin_service.check_health = original_check_health
+
+    def test_configuration_error_returns_400(self, client, admin_service):
+        """Test that ConfigurationError exceptions return 400 Bad Request."""
+        from domain.admin.exceptions import ConfigurationError
+
+        # Mock the service method to raise a ConfigurationError
+        original_update_config = admin_service.update_configuration
+
+        def failing_update_config(section, updates):
+            raise ConfigurationError(f"Invalid section: {section}")
+
+        admin_service.update_configuration = failing_update_config
+
+        try:
+            response = client.patch(
+                "/api/v1/admin/configuration/invalid",
+                json={"updates": {"key": "value"}}
+            )
+
+            # Should return 400 for ConfigurationError
+            assert response.status_code == status.HTTP_400_BAD_REQUEST
+
+            body = response.json()
+            assert "detail" in body
+            assert "Invalid section" in body["detail"]
+        finally:
+            admin_service.update_configuration = original_update_config
+
+    def test_task_not_found_returns_404(self, client, admin_service):
+        """Test that TaskNotFoundError exceptions return 404 Not Found."""
+        from domain.admin.exceptions import TaskNotFoundError
+
+        # Mock the service method to raise a TaskNotFoundError
+        original_get_task = admin_service.get_task
+
+        def failing_get_task(task_id):
+            raise TaskNotFoundError(f"Task {task_id} not found")
+
+        admin_service.get_task = failing_get_task
+
+        try:
+            response = client.get("/api/v1/admin/tasks/nonexistent")
+
+            # Should return 404 for TaskNotFoundError
+            assert response.status_code == status.HTTP_404_NOT_FOUND
+
+            body = response.json()
+            assert "detail" in body
+            assert "not found" in body["detail"].lower()
+        finally:
+            admin_service.get_task = original_get_task
