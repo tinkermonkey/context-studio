@@ -204,6 +204,8 @@ class SQLiteChangeRepository:
                     event.processed = True
 
                 session.commit()
+        except VersionNotFoundError:
+            raise
         except SQLAlchemyError as e:
             raise RuntimeError(f"Failed to mark change events as processed: {str(e)}") from e
 
@@ -288,19 +290,25 @@ class SQLiteChangeRepository:
 
         Args:
             version: The EntityVersion domain entity to save
-        """
-        with self.session_factory() as session:
-            orm_version = EntityVersion(
-                entity_id=version.entity_id,
-                version=version.version,
-                state=version.state.value,
-                snapshot=version.snapshot,
-                created_at=version.created_at,
-                parent_version=version.parent_version,
-            )
 
-            session.add(orm_version)
-            session.commit()
+        Raises:
+            RuntimeError: If database operation fails
+        """
+        try:
+            with self.session_factory() as session:
+                orm_version = EntityVersion(
+                    entity_id=version.entity_id,
+                    version=version.version,
+                    state=version.state.value,
+                    snapshot=version.snapshot,
+                    created_at=version.created_at,
+                    parent_version=version.parent_version,
+                )
+
+                session.add(orm_version)
+                session.commit()
+        except SQLAlchemyError as e:
+            raise RuntimeError(f"Failed to save entity version: {str(e)}") from e
 
     def get_version(
         self, entity_id: str, version: int
@@ -380,31 +388,37 @@ class SQLiteChangeRepository:
 
         Returns:
             The persisted Changeset domain entity
+
+        Raises:
+            RuntimeError: If database operation fails
         """
-        with self.session_factory() as session:
-            orm_changeset = Changeset(
-                id=changeset.id,
-                name=changeset.name,
-                description=changeset.description,
-                state=changeset.state.value,
-                created_at=changeset.created_at,
-                updated_at=changeset.updated_at,
-            )
-
-            session.add(orm_changeset)
-            session.flush()
-
-            # Persist event IDs to junction table
-            for event_id in changeset.event_ids:
-                changeset_event = ChangesetEvent(
-                    changeset_id=changeset.id,
-                    change_event_id=event_id,
+        try:
+            with self.session_factory() as session:
+                orm_changeset = Changeset(
+                    id=changeset.id,
+                    name=changeset.name,
+                    description=changeset.description,
+                    state=changeset.state.value,
+                    created_at=changeset.created_at,
+                    updated_at=changeset.updated_at,
                 )
-                session.add(changeset_event)
 
-            session.commit()
+                session.add(orm_changeset)
+                session.flush()
 
-            return changeset
+                # Persist event IDs to junction table
+                for event_id in changeset.event_ids:
+                    changeset_event = ChangesetEvent(
+                        changeset_id=changeset.id,
+                        change_event_id=event_id,
+                    )
+                    session.add(changeset_event)
+
+                session.commit()
+
+                return changeset
+        except SQLAlchemyError as e:
+            raise RuntimeError(f"Failed to create changeset: {str(e)}") from e
 
     def get_changeset(self, changeset_id: str) -> Optional[DomainChangeset]:
         """
@@ -436,33 +450,39 @@ class SQLiteChangeRepository:
 
         Raises:
             VersionNotFoundError: If the changeset does not exist
+            RuntimeError: If database operation fails
         """
-        with self.session_factory() as session:
-            orm_changeset = session.get(Changeset, changeset.id)
+        try:
+            with self.session_factory() as session:
+                orm_changeset = session.get(Changeset, changeset.id)
 
-            if not orm_changeset:
-                raise VersionNotFoundError(f"Changeset not found: {changeset.id}")
+                if not orm_changeset:
+                    raise VersionNotFoundError(f"Changeset not found: {changeset.id}")
 
-            orm_changeset.name = changeset.name
-            orm_changeset.description = changeset.description
-            orm_changeset.state = changeset.state.value
-            orm_changeset.updated_at = changeset.updated_at
+                orm_changeset.name = changeset.name
+                orm_changeset.description = changeset.description
+                orm_changeset.state = changeset.state.value
+                orm_changeset.updated_at = changeset.updated_at
 
-            # Delete existing event associations and re-insert with updated list
-            session.query(ChangesetEvent).filter(
-                ChangesetEvent.changeset_id == changeset.id
-            ).delete()
+                # Delete existing event associations and re-insert with updated list
+                session.query(ChangesetEvent).filter(
+                    ChangesetEvent.changeset_id == changeset.id
+                ).delete()
 
-            for event_id in changeset.event_ids:
-                changeset_event = ChangesetEvent(
-                    changeset_id=changeset.id,
-                    change_event_id=event_id,
-                )
-                session.add(changeset_event)
+                for event_id in changeset.event_ids:
+                    changeset_event = ChangesetEvent(
+                        changeset_id=changeset.id,
+                        change_event_id=event_id,
+                    )
+                    session.add(changeset_event)
 
-            session.commit()
+                session.commit()
 
-            return changeset
+                return changeset
+        except VersionNotFoundError:
+            raise
+        except SQLAlchemyError as e:
+            raise RuntimeError(f"Failed to update changeset: {str(e)}") from e
 
     # Proposal operations
 
@@ -475,21 +495,27 @@ class SQLiteChangeRepository:
 
         Returns:
             The persisted Proposal domain entity
+
+        Raises:
+            RuntimeError: If database operation fails
         """
-        with self.session_factory() as session:
-            orm_proposal = Proposal(
-                id=proposal.id,
-                changeset_id=proposal.changeset_id,
-                state=proposal.state.value,
-                submitted_at=proposal.submitted_at,
-                reviewed_at=proposal.reviewed_at,
-                reviewer_notes=proposal.reviewer_notes,
-            )
+        try:
+            with self.session_factory() as session:
+                orm_proposal = Proposal(
+                    id=proposal.id,
+                    changeset_id=proposal.changeset_id,
+                    state=proposal.state.value,
+                    submitted_at=proposal.submitted_at,
+                    reviewed_at=proposal.reviewed_at,
+                    reviewer_notes=proposal.reviewer_notes,
+                )
 
-            session.add(orm_proposal)
-            session.commit()
+                session.add(orm_proposal)
+                session.commit()
 
-            return proposal
+                return proposal
+        except SQLAlchemyError as e:
+            raise RuntimeError(f"Failed to create proposal: {str(e)}") from e
 
     def get_proposal(self, proposal_id: str) -> Optional[DomainProposal]:
         """
@@ -521,20 +547,26 @@ class SQLiteChangeRepository:
 
         Raises:
             VersionNotFoundError: If the proposal does not exist
+            RuntimeError: If database operation fails
         """
-        with self.session_factory() as session:
-            orm_proposal = session.get(Proposal, proposal.id)
+        try:
+            with self.session_factory() as session:
+                orm_proposal = session.get(Proposal, proposal.id)
 
-            if not orm_proposal:
-                raise VersionNotFoundError(f"Proposal not found: {proposal.id}")
+                if not orm_proposal:
+                    raise VersionNotFoundError(f"Proposal not found: {proposal.id}")
 
-            orm_proposal.state = proposal.state.value
-            orm_proposal.reviewed_at = proposal.reviewed_at
-            orm_proposal.reviewer_notes = proposal.reviewer_notes
+                orm_proposal.state = proposal.state.value
+                orm_proposal.reviewed_at = proposal.reviewed_at
+                orm_proposal.reviewer_notes = proposal.reviewer_notes
 
-            session.commit()
+                session.commit()
 
-            return proposal
+                return proposal
+        except VersionNotFoundError:
+            raise
+        except SQLAlchemyError as e:
+            raise RuntimeError(f"Failed to update proposal: {str(e)}") from e
 
     def update_changeset_and_proposal_on_submit(
         self, changeset: DomainChangeset, proposal: DomainProposal
@@ -553,32 +585,38 @@ class SQLiteChangeRepository:
 
         Raises:
             VersionNotFoundError: If the changeset does not exist
+            RuntimeError: If database operation fails
         """
-        with self.session_factory() as session:
-            orm_changeset = session.get(Changeset, changeset.id)
+        try:
+            with self.session_factory() as session:
+                orm_changeset = session.get(Changeset, changeset.id)
 
-            if not orm_changeset:
-                raise VersionNotFoundError(f"Changeset not found: {changeset.id}")
+                if not orm_changeset:
+                    raise VersionNotFoundError(f"Changeset not found: {changeset.id}")
 
-            # Update changeset state and timestamp only (submit doesn't change other fields)
-            orm_changeset.state = changeset.state.value
-            orm_changeset.updated_at = changeset.updated_at
+                # Update changeset state and timestamp only (submit doesn't change other fields)
+                orm_changeset.state = changeset.state.value
+                orm_changeset.updated_at = changeset.updated_at
 
-            # Create proposal
-            orm_proposal = Proposal(
-                id=proposal.id,
-                changeset_id=proposal.changeset_id,
-                state=proposal.state.value,
-                submitted_at=proposal.submitted_at,
-                reviewed_at=proposal.reviewed_at,
-                reviewer_notes=proposal.reviewer_notes,
-            )
-            session.add(orm_proposal)
+                # Create proposal
+                orm_proposal = Proposal(
+                    id=proposal.id,
+                    changeset_id=proposal.changeset_id,
+                    state=proposal.state.value,
+                    submitted_at=proposal.submitted_at,
+                    reviewed_at=proposal.reviewed_at,
+                    reviewer_notes=proposal.reviewer_notes,
+                )
+                session.add(orm_proposal)
 
-            # Commit both changes atomically
-            session.commit()
+                # Commit both changes atomically
+                session.commit()
 
-            return changeset, proposal
+                return changeset, proposal
+        except VersionNotFoundError:
+            raise
+        except SQLAlchemyError as e:
+            raise RuntimeError(f"Failed to submit changeset: {str(e)}") from e
 
     def atomic_update_changeset_and_proposal(
         self, changeset: DomainChangeset, proposal: DomainProposal
@@ -597,31 +635,37 @@ class SQLiteChangeRepository:
 
         Raises:
             VersionNotFoundError: If the changeset or proposal does not exist
+            RuntimeError: If database operation fails
         """
-        with self.session_factory() as session:
-            orm_changeset = session.get(Changeset, changeset.id)
+        try:
+            with self.session_factory() as session:
+                orm_changeset = session.get(Changeset, changeset.id)
 
-            if not orm_changeset:
-                raise VersionNotFoundError(f"Changeset not found: {changeset.id}")
+                if not orm_changeset:
+                    raise VersionNotFoundError(f"Changeset not found: {changeset.id}")
 
-            orm_proposal = session.get(Proposal, proposal.id)
+                orm_proposal = session.get(Proposal, proposal.id)
 
-            if not orm_proposal:
-                raise VersionNotFoundError(f"Proposal not found: {proposal.id}")
+                if not orm_proposal:
+                    raise VersionNotFoundError(f"Proposal not found: {proposal.id}")
 
-            # Update changeset
-            orm_changeset.state = changeset.state.value
-            orm_changeset.updated_at = changeset.updated_at
+                # Update changeset
+                orm_changeset.state = changeset.state.value
+                orm_changeset.updated_at = changeset.updated_at
 
-            # Update proposal
-            orm_proposal.state = proposal.state.value
-            orm_proposal.reviewed_at = proposal.reviewed_at
-            orm_proposal.reviewer_notes = proposal.reviewer_notes
+                # Update proposal
+                orm_proposal.state = proposal.state.value
+                orm_proposal.reviewed_at = proposal.reviewed_at
+                orm_proposal.reviewer_notes = proposal.reviewer_notes
 
-            # Commit both changes atomically
-            session.commit()
+                # Commit both changes atomically
+                session.commit()
 
-            return changeset, proposal
+                return changeset, proposal
+        except VersionNotFoundError:
+            raise
+        except SQLAlchemyError as e:
+            raise RuntimeError(f"Failed to update changeset and proposal: {str(e)}") from e
 
     def atomic_update_on_merge(
         self,
@@ -686,6 +730,8 @@ class SQLiteChangeRepository:
                 session.commit()
 
                 return changeset, proposal
+        except VersionNotFoundError:
+            raise
         except SQLAlchemyError as e:
             raise RuntimeError(f"Failed to complete merge transaction: {str(e)}") from e
 
@@ -760,29 +806,35 @@ class SQLiteChangeRepository:
         Args:
             proposal_id: ID of the proposal
             resolutions: Dict mapping entity_id -> {field_name: resolved_value}
+
+        Raises:
+            RuntimeError: If database operation fails
         """
-        with self.session_factory() as session:
-            # Delete existing resolutions for this proposal
-            delete_query = select(ConflictResolution).where(
-                ConflictResolution.proposal_id == proposal_id
-            )
-            existing = session.execute(delete_query).scalars().all()
-            for resolution in existing:
-                session.delete(resolution)
+        try:
+            with self.session_factory() as session:
+                # Delete existing resolutions for this proposal
+                delete_query = select(ConflictResolution).where(
+                    ConflictResolution.proposal_id == proposal_id
+                )
+                existing = session.execute(delete_query).scalars().all()
+                for resolution in existing:
+                    session.delete(resolution)
 
-            # Insert new resolutions
-            for entity_id, fields in resolutions.items():
-                for field_name, resolved_value in fields.items():
-                    resolution = ConflictResolution(
-                        id=str(uuid.uuid4()),
-                        proposal_id=proposal_id,
-                        entity_id=entity_id,
-                        field_name=field_name,
-                        resolved_value=str(resolved_value),
-                    )
-                    session.add(resolution)
+                # Insert new resolutions
+                for entity_id, fields in resolutions.items():
+                    for field_name, resolved_value in fields.items():
+                        resolution = ConflictResolution(
+                            id=str(uuid.uuid4()),
+                            proposal_id=proposal_id,
+                            entity_id=entity_id,
+                            field_name=field_name,
+                            resolved_value=str(resolved_value),
+                        )
+                        session.add(resolution)
 
-            session.commit()
+                session.commit()
+        except SQLAlchemyError as e:
+            raise RuntimeError(f"Failed to save conflict resolutions: {str(e)}") from e
 
     def get_conflict_resolutions(
         self, proposal_id: str
