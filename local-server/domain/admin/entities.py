@@ -9,7 +9,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Any, Optional
+from typing import Any, Optional, ClassVar
 
 from domain.admin.value_objects import SystemHealthStatus, BackgroundTaskStatus
 from domain.admin.exceptions import InvalidStateTransitionError
@@ -67,7 +67,7 @@ class BackgroundTask:
     result: Optional[dict] = None
 
     # Valid state transitions for background tasks
-    _VALID_TRANSITIONS = {
+    _VALID_TRANSITIONS: ClassVar[dict[BackgroundTaskStatus, set[BackgroundTaskStatus]]] = {
         BackgroundTaskStatus.PENDING: {
             BackgroundTaskStatus.RUNNING,
             BackgroundTaskStatus.COMPLETED,

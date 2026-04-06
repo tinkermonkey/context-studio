@@ -5,6 +5,7 @@ import os
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
+from types import MappingProxyType
 from typing import Optional
 
 from domain.admin.value_objects import (
@@ -52,10 +53,10 @@ class FakeMetricsCollector:
             task_summary_error: Optional Exception to raise from get_background_task_summary().
         """
         self._database_health = database_health or DatabaseHealth(
-            connected=True, issues=[]
+            connected=True, issues=()
         )
         self._service_metrics = service_metrics or ServiceMetrics(
-            uptime_seconds=0.0, llm_providers_available=[]
+            uptime_seconds=0.0, llm_providers_available=()
         )
         self._embedding_status = embedding_status or ComponentStatus(
             available=True, details="Embedding model loaded"
@@ -64,7 +65,7 @@ class FakeMetricsCollector:
             available=True, details="NLP pipeline ready"
         )
         self._task_summary = task_summary or BackgroundTaskSummary(
-            by_status={}
+            by_status=MappingProxyType({})
         )
         self._database_health_error = database_health_error
         self._service_metrics_error = service_metrics_error

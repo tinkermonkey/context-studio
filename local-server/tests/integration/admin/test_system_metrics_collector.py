@@ -121,7 +121,7 @@ def test_get_service_metrics():
 
     metrics = collector.get_service_metrics()
     assert metrics.uptime_seconds >= 0.01
-    assert metrics.llm_providers_available == ["openai", "anthropic"]
+    assert metrics.llm_providers_available == ("openai", "anthropic")
 
 
 def test_get_embedding_model_status_loaded():

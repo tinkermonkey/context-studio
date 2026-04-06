@@ -7,6 +7,7 @@ handled by AdminService.check_health().
 """
 
 from datetime import datetime, timezone
+from types import MappingProxyType
 
 from sqlalchemy import text
 from sqlalchemy.engine import Engine
@@ -90,9 +91,9 @@ class SystemMetricsCollector:
             DatabaseHealth with connectivity and issue details
         """
         connected = self._check_database_connected()
-        issues = []
+        issues: tuple[str, ...] = ()
         if not connected:
-            issues.append("Database not accessible")
+            issues = ("Database not accessible",)
         return DatabaseHealth(connected=connected, issues=issues)
 
     def get_service_metrics(self) -> ServiceMetrics:
@@ -117,7 +118,7 @@ class SystemMetricsCollector:
             raise
 
         return ServiceMetrics(
-            uptime_seconds=uptime, llm_providers_available=llm_providers
+            uptime_seconds=uptime, llm_providers_available=tuple(llm_providers)
         )
 
     def get_embedding_model_status(self) -> ComponentStatus:
@@ -162,4 +163,4 @@ class SystemMetricsCollector:
             BackgroundTaskSummary with task counts by status
         """
         # Currently no background task tracking in the system
-        return BackgroundTaskSummary(by_status={})
+        return BackgroundTaskSummary(by_status=MappingProxyType({}))

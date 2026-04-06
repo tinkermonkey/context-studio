@@ -14,6 +14,7 @@ sys.path.append(
 
 import pytest
 from datetime import datetime, timezone
+from types import MappingProxyType
 
 from domain.admin.services import AdminService
 from domain.admin.entities import AppConfiguration
@@ -25,7 +26,7 @@ from domain.admin.value_objects import (
     ComponentStatus,
     BackgroundTaskSummary,
 )
-from domain.admin.exceptions import ConfigurationError, TaskNotFoundError
+from domain.admin.exceptions import ConfigurationError, TaskNotFoundError, InvalidStateTransitionError
 from tests.fakes.fake_metrics_collector import FakeMetricsCollector
 from tests.fakes.fake_configuration_store import FakeConfigurationStore
 
@@ -45,7 +46,7 @@ class TestAdminServiceGranularHealthMethods:
 
         assert isinstance(db_health, DatabaseHealth)
         assert db_health.connected is True
-        assert db_health.issues == []
+        assert db_health.issues == ()
 
     def test_get_service_metrics_delegation(self):
         """get_service_metrics delegates to metrics collector."""
@@ -53,7 +54,7 @@ class TestAdminServiceGranularHealthMethods:
 
         assert isinstance(metrics, ServiceMetrics)
         assert metrics.uptime_seconds == 0.0
-        assert metrics.llm_providers_available == []
+        assert metrics.llm_providers_available == ()
 
     def test_get_embedding_model_status_delegation(self):
         """get_embedding_model_status delegates to metrics collector."""
@@ -87,13 +88,13 @@ class TestAdminServiceCompositeHealthAggregation:
     def test_check_health_healthy_when_all_components_ok(self):
         """Status is HEALTHY when all components are operational."""
         metrics = FakeMetricsCollector(
-            database_health=DatabaseHealth(connected=True, issues=[]),
+            database_health=DatabaseHealth(connected=True, issues=()),
             service_metrics=ServiceMetrics(
-                uptime_seconds=3600.0, llm_providers_available=["openai"]
+                uptime_seconds=3600.0, llm_providers_available=("openai",)
             ),
             embedding_status=ComponentStatus(available=True, details="Loaded"),
             nlp_status=ComponentStatus(available=True, details="Ready"),
-            task_summary=BackgroundTaskSummary(by_status={}),
+            task_summary=BackgroundTaskSummary(by_status=MappingProxyType({})),
         )
         service = AdminService(metrics, self.config_store)
 
@@ -106,14 +107,14 @@ class TestAdminServiceCompositeHealthAggregation:
         """Status is UNHEALTHY when database is disconnected."""
         metrics = FakeMetricsCollector(
             database_health=DatabaseHealth(
-                connected=False, issues=["Connection timeout"]
+                connected=False, issues=("Connection timeout",)
             ),
             service_metrics=ServiceMetrics(
-                uptime_seconds=3600.0, llm_providers_available=["openai"]
+                uptime_seconds=3600.0, llm_providers_available=("openai",)
             ),
             embedding_status=ComponentStatus(available=True, details="Loaded"),
             nlp_status=ComponentStatus(available=True, details="Ready"),
-            task_summary=BackgroundTaskSummary(by_status={}),
+            task_summary=BackgroundTaskSummary(by_status=MappingProxyType({})),
         )
         service = AdminService(metrics, self.config_store)
 
@@ -125,15 +126,15 @@ class TestAdminServiceCompositeHealthAggregation:
     def test_check_health_degraded_when_embedding_unavailable(self):
         """Status is DEGRADED when embedding model is unavailable."""
         metrics = FakeMetricsCollector(
-            database_health=DatabaseHealth(connected=True, issues=[]),
+            database_health=DatabaseHealth(connected=True, issues=()),
             service_metrics=ServiceMetrics(
-                uptime_seconds=3600.0, llm_providers_available=["openai"]
+                uptime_seconds=3600.0, llm_providers_available=("openai",)
             ),
             embedding_status=ComponentStatus(
                 available=False, details="Model not loaded"
             ),
             nlp_status=ComponentStatus(available=True, details="Ready"),
-            task_summary=BackgroundTaskSummary(by_status={}),
+            task_summary=BackgroundTaskSummary(by_status=MappingProxyType({})),
         )
         service = AdminService(metrics, self.config_store)
 
@@ -146,13 +147,13 @@ class TestAdminServiceCompositeHealthAggregation:
     def test_check_health_degraded_when_nlp_unavailable(self):
         """Status is DEGRADED when NLP pipeline is unavailable."""
         metrics = FakeMetricsCollector(
-            database_health=DatabaseHealth(connected=True, issues=[]),
+            database_health=DatabaseHealth(connected=True, issues=()),
             service_metrics=ServiceMetrics(
-                uptime_seconds=3600.0, llm_providers_available=["openai"]
+                uptime_seconds=3600.0, llm_providers_available=("openai",)
             ),
             embedding_status=ComponentStatus(available=True, details="Loaded"),
             nlp_status=ComponentStatus(available=False, details="Pipeline not ready"),
-            task_summary=BackgroundTaskSummary(by_status={}),
+            task_summary=BackgroundTaskSummary(by_status=MappingProxyType({})),
         )
         service = AdminService(metrics, self.config_store)
 
@@ -169,11 +170,11 @@ class TestAdminServiceCompositeHealthAggregation:
                 connected=True, issues=["Slow queries detected"]
             ),
             service_metrics=ServiceMetrics(
-                uptime_seconds=3600.0, llm_providers_available=["openai"]
+                uptime_seconds=3600.0, llm_providers_available=("openai",)
             ),
             embedding_status=ComponentStatus(available=True, details="Loaded"),
             nlp_status=ComponentStatus(available=True, details="Ready"),
-            task_summary=BackgroundTaskSummary(by_status={}),
+            task_summary=BackgroundTaskSummary(by_status=MappingProxyType({})),
         )
         service = AdminService(metrics, self.config_store)
 
@@ -185,13 +186,13 @@ class TestAdminServiceCompositeHealthAggregation:
     def test_check_health_aggregates_all_component_data(self):
         """check_health aggregates data from all components."""
         metrics = FakeMetricsCollector(
-            database_health=DatabaseHealth(connected=True, issues=[]),
+            database_health=DatabaseHealth(connected=True, issues=()),
             service_metrics=ServiceMetrics(
-                uptime_seconds=7200.0, llm_providers_available=["openai", "anthropic"]
+                uptime_seconds=7200.0, llm_providers_available=("openai", "anthropic")
             ),
             embedding_status=ComponentStatus(available=True, details="Loaded"),
             nlp_status=ComponentStatus(available=True, details="Ready"),
-            task_summary=BackgroundTaskSummary(by_status={}),
+            task_summary=BackgroundTaskSummary(by_status=MappingProxyType({})),
         )
         service = AdminService(metrics, self.config_store)
 
@@ -200,7 +201,7 @@ class TestAdminServiceCompositeHealthAggregation:
         assert health.database_connected is True
         assert health.nlp_pipeline_ready is True
         assert health.embedding_model_loaded is True
-        assert health.llm_providers_available == ["openai", "anthropic"]
+        assert health.llm_providers_available == ("openai", "anthropic")
         assert health.uptime_seconds == 7200.0
 
 
@@ -215,11 +216,11 @@ class TestAdminServiceHealthErrorHandling:
         """Health check continues despite database health check failure."""
         metrics = FakeMetricsCollector(
             service_metrics=ServiceMetrics(
-                uptime_seconds=0.0, llm_providers_available=["openai"]
+                uptime_seconds=0.0, llm_providers_available=("openai",)
             ),
             embedding_status=ComponentStatus(available=True, details="OK"),
             nlp_status=ComponentStatus(available=True, details="OK"),
-            task_summary=BackgroundTaskSummary(by_status={}),
+            task_summary=BackgroundTaskSummary(by_status=MappingProxyType({})),
             database_health_error=RuntimeError("Database check failed"),
         )
         service = AdminService(metrics, self.config_store)
@@ -232,10 +233,10 @@ class TestAdminServiceHealthErrorHandling:
     def test_check_health_resilient_to_llm_check_failure(self):
         """Health check continues despite LLM provider check failure."""
         metrics = FakeMetricsCollector(
-            database_health=DatabaseHealth(connected=True, issues=[]),
+            database_health=DatabaseHealth(connected=True, issues=()),
             embedding_status=ComponentStatus(available=True, details="OK"),
             nlp_status=ComponentStatus(available=True, details="OK"),
-            task_summary=BackgroundTaskSummary(by_status={}),
+            task_summary=BackgroundTaskSummary(by_status=MappingProxyType({})),
             service_metrics_error=RuntimeError("LLM provider check failed"),
         )
         service = AdminService(metrics, self.config_store)
@@ -243,18 +244,18 @@ class TestAdminServiceHealthErrorHandling:
 
         assert health.status == SystemHealthStatus.DEGRADED
         assert health.database_connected is True
-        assert health.llm_providers_available == []
+        assert health.llm_providers_available == ()
         assert any("Error checking service metrics" in issue for issue in health.issues)
 
     def test_check_health_resilient_to_embedding_check_failure(self):
         """Health check continues despite embedding model check failure."""
         metrics = FakeMetricsCollector(
-            database_health=DatabaseHealth(connected=True, issues=[]),
+            database_health=DatabaseHealth(connected=True, issues=()),
             service_metrics=ServiceMetrics(
-                uptime_seconds=0.0, llm_providers_available=["openai"]
+                uptime_seconds=0.0, llm_providers_available=("openai",)
             ),
             nlp_status=ComponentStatus(available=True, details="OK"),
-            task_summary=BackgroundTaskSummary(by_status={}),
+            task_summary=BackgroundTaskSummary(by_status=MappingProxyType({})),
             embedding_status_error=RuntimeError("Embedding check failed"),
         )
         service = AdminService(metrics, self.config_store)
@@ -267,12 +268,12 @@ class TestAdminServiceHealthErrorHandling:
     def test_check_health_resilient_to_nlp_check_failure(self):
         """Health check continues despite NLP pipeline check failure."""
         metrics = FakeMetricsCollector(
-            database_health=DatabaseHealth(connected=True, issues=[]),
+            database_health=DatabaseHealth(connected=True, issues=()),
             service_metrics=ServiceMetrics(
-                uptime_seconds=0.0, llm_providers_available=["openai"]
+                uptime_seconds=0.0, llm_providers_available=("openai",)
             ),
             embedding_status=ComponentStatus(available=True, details="OK"),
-            task_summary=BackgroundTaskSummary(by_status={}),
+            task_summary=BackgroundTaskSummary(by_status=MappingProxyType({})),
             nlp_status_error=RuntimeError("NLP check failed"),
         )
         service = AdminService(metrics, self.config_store)
@@ -285,9 +286,9 @@ class TestAdminServiceHealthErrorHandling:
     def test_check_health_resilient_to_task_summary_failure(self):
         """Health check continues despite background task summary check failure and reports the error."""
         metrics = FakeMetricsCollector(
-            database_health=DatabaseHealth(connected=True, issues=[]),
+            database_health=DatabaseHealth(connected=True, issues=()),
             service_metrics=ServiceMetrics(
-                uptime_seconds=0.0, llm_providers_available=["openai"]
+                uptime_seconds=0.0, llm_providers_available=("openai",)
             ),
             embedding_status=ComponentStatus(available=True, details="OK"),
             nlp_status=ComponentStatus(available=True, details="OK"),
@@ -306,17 +307,17 @@ class TestBackgroundTaskSummaryValueObject:
 
     def test_total_with_empty_by_status(self):
         """BackgroundTaskSummary.total returns 0 with empty by_status."""
-        summary = BackgroundTaskSummary(by_status={})
+        summary = BackgroundTaskSummary(by_status=MappingProxyType({}))
 
         assert summary.total == 0
 
     def test_total_with_non_empty_by_status(self):
         """BackgroundTaskSummary.total sums all tasks by status."""
         summary = BackgroundTaskSummary(
-            by_status={
+            by_status=MappingProxyType({
                 BackgroundTaskStatus.COMPLETED: 2,
                 BackgroundTaskStatus.FAILED: 1,
-            }
+            })
         )
 
         assert summary.total == 3
@@ -324,15 +325,108 @@ class TestBackgroundTaskSummaryValueObject:
     def test_total_with_multiple_statuses(self):
         """BackgroundTaskSummary.total correctly sums multiple status groups."""
         summary = BackgroundTaskSummary(
-            by_status={
+            by_status=MappingProxyType({
                 BackgroundTaskStatus.PENDING: 1,
                 BackgroundTaskStatus.RUNNING: 2,
                 BackgroundTaskStatus.COMPLETED: 5,
                 BackgroundTaskStatus.FAILED: 1,
-            }
+            })
         )
 
         assert summary.total == 9
+
+
+class TestBackgroundTaskStateTransitions:
+    """Tests for BackgroundTask state machine validation."""
+
+    def test_completed_to_pending_raises_error(self):
+        """Transition from COMPLETED to PENDING raises InvalidStateTransitionError."""
+        from domain.admin.entities import BackgroundTask
+
+        task = BackgroundTask(
+            id="task-1",
+            name="test-task",
+            status=BackgroundTaskStatus.COMPLETED,
+            created_at=datetime.now(timezone.utc),
+            completed_at=datetime.now(timezone.utc),
+        )
+
+        with pytest.raises(InvalidStateTransitionError) as exc_info:
+            task.transition_to(BackgroundTaskStatus.PENDING, datetime.now(timezone.utc))
+
+        assert "Cannot transition task" in str(exc_info.value)
+        assert "completed" in str(exc_info.value).lower()
+
+    def test_completed_to_running_raises_error(self):
+        """Transition from COMPLETED to RUNNING raises InvalidStateTransitionError."""
+        from domain.admin.entities import BackgroundTask
+
+        task = BackgroundTask(
+            id="task-1",
+            name="test-task",
+            status=BackgroundTaskStatus.COMPLETED,
+            created_at=datetime.now(timezone.utc),
+            completed_at=datetime.now(timezone.utc),
+        )
+
+        with pytest.raises(InvalidStateTransitionError) as exc_info:
+            task.transition_to(BackgroundTaskStatus.RUNNING, datetime.now(timezone.utc))
+
+        assert "Cannot transition task" in str(exc_info.value)
+
+    def test_failed_to_pending_raises_error(self):
+        """Transition from FAILED to PENDING raises InvalidStateTransitionError."""
+        from domain.admin.entities import BackgroundTask
+
+        task = BackgroundTask(
+            id="task-1",
+            name="test-task",
+            status=BackgroundTaskStatus.FAILED,
+            created_at=datetime.now(timezone.utc),
+            completed_at=datetime.now(timezone.utc),
+            error="Test failure",
+        )
+
+        with pytest.raises(InvalidStateTransitionError) as exc_info:
+            task.transition_to(BackgroundTaskStatus.PENDING, datetime.now(timezone.utc))
+
+        assert "Cannot transition task" in str(exc_info.value)
+
+    def test_failed_to_running_raises_error(self):
+        """Transition from FAILED to RUNNING raises InvalidStateTransitionError."""
+        from domain.admin.entities import BackgroundTask
+
+        task = BackgroundTask(
+            id="task-1",
+            name="test-task",
+            status=BackgroundTaskStatus.FAILED,
+            created_at=datetime.now(timezone.utc),
+            completed_at=datetime.now(timezone.utc),
+            error="Test failure",
+        )
+
+        with pytest.raises(InvalidStateTransitionError) as exc_info:
+            task.transition_to(BackgroundTaskStatus.RUNNING, datetime.now(timezone.utc))
+
+        assert "Cannot transition task" in str(exc_info.value)
+
+    def test_failed_to_completed_raises_error(self):
+        """Transition from FAILED to COMPLETED raises InvalidStateTransitionError."""
+        from domain.admin.entities import BackgroundTask
+
+        task = BackgroundTask(
+            id="task-1",
+            name="test-task",
+            status=BackgroundTaskStatus.FAILED,
+            created_at=datetime.now(timezone.utc),
+            completed_at=datetime.now(timezone.utc),
+            error="Test failure",
+        )
+
+        with pytest.raises(InvalidStateTransitionError) as exc_info:
+            task.transition_to(BackgroundTaskStatus.COMPLETED, datetime.now(timezone.utc))
+
+        assert "Cannot transition task" in str(exc_info.value)
 
 
 class TestAdminServiceBackgroundTaskSummary:
@@ -346,13 +440,13 @@ class TestAdminServiceBackgroundTaskSummary:
         """Health check reports issues when tasks have failed."""
         metrics = FakeMetricsCollector(
             service_metrics=ServiceMetrics(
-                uptime_seconds=0.0, llm_providers_available=["openai"]
+                uptime_seconds=0.0, llm_providers_available=("openai",)
             ),
             task_summary=BackgroundTaskSummary(
-                by_status={
+                by_status=MappingProxyType({
                     BackgroundTaskStatus.COMPLETED: 2,
                     BackgroundTaskStatus.FAILED: 1,
-                }
+                })
             ),
         )
         service = AdminService(metrics, self.config_store)
@@ -366,7 +460,7 @@ class TestAdminServiceBackgroundTaskSummary:
         """Health check is healthy when all tasks completed successfully."""
         metrics = FakeMetricsCollector(
             service_metrics=ServiceMetrics(
-                uptime_seconds=0.0, llm_providers_available=["openai"]
+                uptime_seconds=0.0, llm_providers_available=("openai",)
             ),
             task_summary=BackgroundTaskSummary(
                 by_status={BackgroundTaskStatus.COMPLETED: 3}
@@ -383,7 +477,7 @@ class TestAdminServiceBackgroundTaskSummary:
         """Health check reports correct count of multiple failed tasks."""
         metrics = FakeMetricsCollector(
             service_metrics=ServiceMetrics(
-                uptime_seconds=0.0, llm_providers_available=["openai"]
+                uptime_seconds=0.0, llm_providers_available=("openai",)
             ),
             task_summary=BackgroundTaskSummary(
                 by_status={
@@ -413,7 +507,7 @@ class TestAdminServiceHealthMonitoring:
         """Check health returns healthy status from metrics collector."""
         metrics = FakeMetricsCollector(
             service_metrics=ServiceMetrics(
-                uptime_seconds=0.0, llm_providers_available=["openai"]
+                uptime_seconds=0.0, llm_providers_available=("openai",)
             )
         )
         service = AdminService(metrics, self.config_store)
@@ -423,7 +517,7 @@ class TestAdminServiceHealthMonitoring:
         assert health.database_connected is True
         assert health.nlp_pipeline_ready is True
         assert health.embedding_model_loaded is True
-        assert health.llm_providers_available == ["openai"]
+        assert health.llm_providers_available == ("openai",)
         assert health.uptime_seconds == 0.0
         assert health.checked_at is not None
         assert health.issues == []
@@ -433,7 +527,7 @@ class TestAdminServiceHealthMonitoring:
         health = self.service.check_health()
 
         assert health.status == SystemHealthStatus.DEGRADED
-        assert health.llm_providers_available == []
+        assert health.llm_providers_available == ()
         assert any("No LLM providers configured" in issue for issue in health.issues)
 
 
@@ -723,6 +817,30 @@ class TestAdminServiceConfigurationManagement:
         assert config.llm["provider"] == "openai"
         assert config.sync is None
 
+    def test_update_configuration_raises_error_for_corrupted_dict_section(self):
+        """Update configuration raises ConfigurationError when section is not a dict."""
+        # Manually corrupt the config by setting a section to a non-dict value
+        config = self.service.get_configuration()
+        # We can't directly set to a non-dict because the type system prevents it,
+        # but we can test the error by monkeypatching
+        corrupted_config = AppConfiguration(
+            server={},
+            database="not a dict",  # Corrupted: should be a dict
+            logging={},
+            llm={},
+            nlp={},
+            embedding={},
+            reference_sources={},
+        )
+        config_store = FakeConfigurationStore(initial_config=corrupted_config)
+        service = AdminService(self.metrics, config_store)
+
+        with pytest.raises(ConfigurationError) as exc_info:
+            service.update_configuration("database", {"path": "/tmp/test.db"})
+
+        assert "not a dictionary" in str(exc_info.value)
+        assert "str" in str(exc_info.value)
+
 
 class TestAdminServiceTaskManagement:
     """Tests for background task lifecycle management."""
@@ -836,17 +954,17 @@ class TestAdminServiceTaskManagement:
     def test_update_task_status_raises_error_for_unknown_task(self):
         """Update task status raises TaskNotFoundError for unknown task."""
         with pytest.raises(TaskNotFoundError) as exc_info:
-            self.service.update_task_status("nonexistent", "running")
+            self.service.update_task_status("nonexistent", BackgroundTaskStatus.RUNNING)
 
         assert "Task nonexistent not found" in str(exc_info.value)
 
     def test_update_task_status_preserves_in_memory_state(self):
         """Update task status updates the task in-memory."""
         task = self.service.register_task("state-test")
-        self.service.update_task_status(task.id, "running")
+        self.service.update_task_status(task.id, BackgroundTaskStatus.RUNNING)
         retrieved = self.service.get_task(task.id)
 
-        assert retrieved.status == "running"
+        assert retrieved.status == BackgroundTaskStatus.RUNNING
         assert retrieved.started_at is not None
 
     def test_task_lifecycle_pending_to_running_to_completed(self):

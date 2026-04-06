@@ -2,6 +2,7 @@
 
 from dataclasses import dataclass, field
 from enum import Enum
+from types import MappingProxyType
 
 
 class SystemHealthStatus(str, Enum):
@@ -36,11 +37,11 @@ class DatabaseHealth:
 
     Attributes:
         connected: Whether database is accessible
-        issues: List of issues encountered, if any
+        issues: Tuple of issues encountered, if any
     """
 
     connected: bool
-    issues: list[str] = field(default_factory=list)
+    issues: tuple[str, ...] = field(default_factory=tuple)
 
 
 @dataclass(frozen=True)
@@ -50,11 +51,11 @@ class ServiceMetrics:
 
     Attributes:
         uptime_seconds: System uptime in seconds since startup
-        llm_providers_available: List of available LLM provider names
+        llm_providers_available: Tuple of available LLM provider names
     """
 
     uptime_seconds: float
-    llm_providers_available: list[str] = field(default_factory=list)
+    llm_providers_available: tuple[str, ...] = field(default_factory=tuple)
 
 
 @dataclass(frozen=True)
@@ -71,16 +72,21 @@ class ComponentStatus:
     details: str = ""
 
 
+def _make_empty_mapping_proxy() -> MappingProxyType:
+    """Create an empty MappingProxyType for default factory."""
+    return MappingProxyType({})
+
+
 @dataclass(frozen=True)
 class BackgroundTaskSummary:
     """
     Summary of background task execution status.
 
     Attributes:
-        by_status: Count of tasks grouped by status
+        by_status: Immutable mapping of task counts grouped by status
     """
 
-    by_status: dict[BackgroundTaskStatus, int] = field(default_factory=dict)
+    by_status: MappingProxyType = field(default_factory=_make_empty_mapping_proxy)
 
     @property
     def total(self) -> int:

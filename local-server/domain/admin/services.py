@@ -10,6 +10,7 @@ from __future__ import annotations
 import dataclasses
 import uuid
 from datetime import datetime, timezone
+from types import MappingProxyType
 from typing import Optional
 
 from .entities import SystemHealth, BackgroundTask, AppConfiguration
@@ -56,18 +57,18 @@ class AdminService:
             SystemHealth object describing current system status
         """
         # Initialize defaults for safe fallback on any component failure
-        db_health = DatabaseHealth(connected=False, issues=[])
-        service_metrics = ServiceMetrics(uptime_seconds=0.0, llm_providers_available=[])
+        db_health = DatabaseHealth(connected=False, issues=())
+        service_metrics = ServiceMetrics(uptime_seconds=0.0, llm_providers_available=())
         embedding_status = ComponentStatus(available=False, details="Health check not performed")
         nlp_status = ComponentStatus(available=False, details="Health check not performed")
-        task_summary = BackgroundTaskSummary(by_status={})
+        task_summary = BackgroundTaskSummary(by_status=MappingProxyType({}))
 
         # Call each port method with individual error handling
         try:
             db_health = self._metrics.get_database_health()
         except Exception as e:
             db_health = DatabaseHealth(
-                connected=False, issues=[f"Error checking database health: {e}"]
+                connected=False, issues=(f"Error checking database health: {e}",)
             )
 
         service_metrics_error = None
@@ -76,7 +77,7 @@ class AdminService:
         except Exception as e:
             service_metrics_error = str(e)
             service_metrics = ServiceMetrics(
-                uptime_seconds=0.0, llm_providers_available=[]
+                uptime_seconds=0.0, llm_providers_available=()
             )
 
         try:
@@ -98,7 +99,7 @@ class AdminService:
             task_summary = self._metrics.get_background_task_summary()
         except Exception as e:
             task_summary_error = str(e)
-            task_summary = BackgroundTaskSummary(by_status={})
+            task_summary = BackgroundTaskSummary(by_status=MappingProxyType({}))
 
         # Aggregate all issues
         issues: list[str] = []
