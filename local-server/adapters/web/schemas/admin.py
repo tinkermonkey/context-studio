@@ -188,37 +188,9 @@ class AppConfigurationResponse(BaseModel):
     API responses.
     """
 
-    server: dict = Field(
+    sections: dict[str, dict] = Field(
         ...,
-        description="Server configuration section"
-    )
-    database: dict = Field(
-        ...,
-        description="Database configuration section"
-    )
-    logging: dict = Field(
-        ...,
-        description="Logging configuration section"
-    )
-    llm: dict = Field(
-        ...,
-        description="LLM provider configuration section"
-    )
-    nlp: dict = Field(
-        default_factory=dict,
-        description="NLP pipeline configuration section"
-    )
-    embedding: dict = Field(
-        default_factory=dict,
-        description="Embedding model configuration section"
-    )
-    reference_sources: dict = Field(
-        default_factory=dict,
-        description="Reference sources configuration section"
-    )
-    sync: Optional[dict] = Field(
-        default=None,
-        description="Sync configuration section"
+        description="Configuration sections with masked credentials"
     )
 
     model_config = ConfigDict(from_attributes=True)
@@ -237,16 +209,19 @@ class AppConfigurationResponse(BaseModel):
         Returns:
             AppConfigurationResponse with masked credential fields
         """
-        return cls(
-            server=_mask_credentials(config.server) if config.server else {},
-            database=_mask_credentials(config.database) if config.database else {},
-            logging=_mask_credentials(config.logging) if config.logging else {},
-            llm=_mask_credentials(config.llm) if config.llm else {},
-            nlp=_mask_credentials(config.nlp) if config.nlp else {},
-            embedding=_mask_credentials(config.embedding) if config.embedding else {},
-            reference_sources=_mask_credentials(config.reference_sources) if config.reference_sources else {},
-            sync=_mask_credentials(config.sync) if config.sync else None,
-        )
+        masked_sections = {
+            "server": _mask_credentials(config.server) if config.server else {},
+            "database": _mask_credentials(config.database) if config.database else {},
+            "logging": _mask_credentials(config.logging) if config.logging else {},
+            "llm": _mask_credentials(config.llm) if config.llm else {},
+            "nlp": _mask_credentials(config.nlp) if config.nlp else {},
+            "embedding": _mask_credentials(config.embedding) if config.embedding else {},
+            "reference_sources": _mask_credentials(config.reference_sources) if config.reference_sources else {},
+        }
+        if config.sync is not None:
+            masked_sections["sync"] = _mask_credentials(config.sync) if config.sync else None
+
+        return cls(sections=masked_sections)
 
 
 class BackgroundTaskResponse(BaseModel):

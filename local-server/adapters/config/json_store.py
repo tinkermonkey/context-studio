@@ -63,6 +63,18 @@ class JSONFileConfigStore:
         except RuntimeError as e:
             raise ConfigurationError(f'Failed to load configuration: {e}') from e
 
+    def get_config(self) -> AppConfiguration:
+        """
+        Get current application configuration.
+
+        Returns:
+            AppConfiguration with all configuration sections
+
+        Raises:
+            ConfigurationError: If loading fails
+        """
+        return self.load()
+
     def save(self, config: AppConfiguration) -> AppConfiguration:
         """
         Save application configuration.
@@ -81,6 +93,45 @@ class JSONFileConfigStore:
         self._persist_config(config)
         logger.debug("Configuration saved successfully")
         return config
+
+    def update_config(self, updates: dict[str, dict]) -> AppConfiguration:
+        """
+        Update application configuration with partial updates.
+
+        Loads current configuration, merges updates into specified sections,
+        and saves the result.
+
+        Args:
+            updates: Dictionary with section names as keys and dicts of updates as values.
+                    Merges updates into existing sections.
+
+        Returns:
+            AppConfiguration with updates applied
+
+        Raises:
+            ConfigurationError: If update fails
+        """
+        try:
+            # Load current config
+            current_config = self.load()
+
+            # Merge updates into each section
+            for section_name, section_updates in updates.items():
+                if hasattr(current_config, section_name):
+                    current_section = getattr(current_config, section_name)
+                    if isinstance(current_section, dict) and isinstance(section_updates, dict):
+                        current_section.update(section_updates)
+                    else:
+                        setattr(current_config, section_name, section_updates)
+
+            # Save the updated config
+            self._persist_config(current_config)
+            logger.debug("Configuration updated successfully")
+            return current_config
+        except ConfigurationError:
+            raise
+        except Exception as e:
+            raise ConfigurationError(f'Failed to update configuration: {e}') from e
 
     def reset_to_defaults(self) -> AppConfiguration:
         """
@@ -113,6 +164,7 @@ class JSONFileConfigStore:
             )
 
             # Preserve credentials from current config for each section
+            # Only preserve credentials in sections that exist in the defaults
             section_names = ('server', 'database', 'logging', 'llm', 'nlp', 'embedding', 'reference_sources', 'sync')
             for attr_name in section_names:
                 current_section = getattr(current_config, attr_name, None)
@@ -122,11 +174,12 @@ class JSONFileConfigStore:
                 if current_section is None or not isinstance(current_section, dict):
                     continue
 
-                # If default section is None but current has credentials, initialize it
+                # Skip if default section doesn't exist (don't recreate sections not in defaults)
                 if default_section is None:
-                    default_section = {}
-                    setattr(default_config, attr_name, default_section)
-                elif not isinstance(default_section, dict):
+                    continue
+
+                # Only preserve if default section is a dict
+                if not isinstance(default_section, dict):
                     continue
 
                 # Preserve credential fields from current to default

@@ -94,3 +94,24 @@ class AppConfiguration:
     reference_sources: dict[str, Any]
     logging: dict[str, Any] = field(default_factory=lambda: {"level": "INFO"})
     sync: Optional[dict[str, Any]] = None
+
+    @property
+    def sections(self) -> dict[str, dict[str, Any]]:
+        """
+        Get all configuration sections as a dict.
+
+        Returns:
+            Dictionary with section names as keys and section dicts as values
+        """
+        result = {
+            "server": self.server,
+            "database": self.database,
+            "llm": self.llm,
+            "nlp": self.nlp,
+            "embedding": self.embedding,
+            "reference_sources": self.reference_sources,
+            "logging": self.logging,
+        }
+        if self.sync is not None:
+            result["sync"] = self.sync
+        return result

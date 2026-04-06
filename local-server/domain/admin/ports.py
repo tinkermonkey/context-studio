@@ -148,6 +148,28 @@ class ConfigurationStore(Protocol):
         """
         ...
 
+    def get_config(self) -> AppConfiguration:
+        """
+        Get current application configuration.
+
+        Returns:
+            AppConfiguration object with all configuration sections
+        """
+        ...
+
+    def update_config(self, updates: dict[str, dict[str, any]]) -> AppConfiguration:
+        """
+        Update application configuration with partial updates.
+
+        Args:
+            updates: Dictionary with section names as keys and dicts of updates as values.
+                    Merges updates into existing sections.
+
+        Returns:
+            AppConfiguration object with updates applied
+        """
+        ...
+
     def reset_to_defaults(self) -> AppConfiguration:
         """
         Reset configuration to defaults while preserving credentials.

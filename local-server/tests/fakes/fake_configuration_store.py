@@ -70,6 +70,40 @@ class FakeConfigurationStore:
         self._config = config
         return config
 
+    def get_config(self) -> AppConfiguration:
+        """
+        Get the current configuration.
+
+        Returns:
+            AppConfiguration object
+        """
+        return copy.deepcopy(self._config)
+
+    def update_config(self, updates: dict[str, dict]) -> AppConfiguration:
+        """
+        Update configuration with partial updates.
+
+        Merges updates into existing sections.
+
+        Args:
+            updates: Dictionary with section names and updates to merge
+
+        Returns:
+            AppConfiguration with updates applied
+        """
+        updated_config = copy.deepcopy(self._config)
+
+        for section_name, section_updates in updates.items():
+            if hasattr(updated_config, section_name):
+                current_section = getattr(updated_config, section_name)
+                if isinstance(current_section, dict) and isinstance(section_updates, dict):
+                    current_section.update(section_updates)
+                else:
+                    setattr(updated_config, section_name, section_updates)
+
+        self._config = updated_config
+        return updated_config
+
     def reset_to_defaults(self) -> AppConfiguration:
         """
         Reset configuration to defaults while preserving credentials.
@@ -84,6 +118,7 @@ class FakeConfigurationStore:
         reset_config = copy.deepcopy(self._defaults)
 
         # Preserve credentials from current config
+        # Only preserve credentials in sections that exist in the defaults
         for attr_name in ["server", "database", "logging", "llm", "nlp", "embedding", "reference_sources", "sync"]:
             current_section = getattr(self._config, attr_name, None)
             reset_section = getattr(reset_config, attr_name, None)
@@ -92,11 +127,12 @@ class FakeConfigurationStore:
             if current_section is None or not isinstance(current_section, dict):
                 continue
 
-            # If reset section is None but current has credentials, initialize it
+            # Skip if reset section doesn't exist (don't recreate sections not in defaults)
             if reset_section is None:
-                reset_section = {}
-                setattr(reset_config, attr_name, reset_section)
-            elif not isinstance(reset_section, dict):
+                continue
+
+            # Only preserve if reset section is a dict
+            if not isinstance(reset_section, dict):
                 continue
 
             # Preserve credential fields from current to reset
