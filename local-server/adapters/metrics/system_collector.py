@@ -9,6 +9,7 @@ from datetime import datetime, timezone
 
 from sqlalchemy import text
 from sqlalchemy.engine import Engine
+from sqlalchemy.exc import SQLAlchemyError
 
 from domain.admin.ports import (
     HealthCheckableNLP,
@@ -70,7 +71,7 @@ class SystemMetricsCollector:
             with self._db_engine.connect() as connection:
                 connection.execute(text("SELECT 1"))
             return True
-        except Exception as e:
+        except SQLAlchemyError as e:
             logger.warning(f"Database connectivity check failed: {e}")
             return False
 
