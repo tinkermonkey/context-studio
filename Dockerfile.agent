@@ -139,6 +139,7 @@ RUN python3 -c "import fastapi; import sqlalchemy; import alembic; import pydant
 # Verify mypy type stubs are installed
 RUN python3 -c "import importlib.metadata; importlib.metadata.version('types-networkx'); print('types-networkx OK')" && \
     python3 -c "import importlib.metadata; importlib.metadata.version('types-SQLAlchemy'); print('types-SQLAlchemy OK')" && \
+    python3 -c "import importlib.metadata; importlib.metadata.version('pyarrow-stubs'); print('pyarrow-stubs OK')" && \
     python3 -c "import importlib.metadata; importlib.metadata.version('boto3-stubs'); print('boto3-stubs OK')"
 
 # ============================================================================

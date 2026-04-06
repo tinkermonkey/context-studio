@@ -11,7 +11,6 @@ import os
 # Add local-server root to path for imports
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))))
 
-import pytest
 from adapters.web.schemas.admin import AppConfigurationResponse
 from domain.admin.entities import AppConfiguration
 
