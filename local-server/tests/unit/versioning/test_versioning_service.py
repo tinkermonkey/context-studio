@@ -1245,6 +1245,98 @@ class TestMergeStrategies:
         resolved = service.auto_resolve(report3, strategy=MergeStrategy.MANUAL)
         assert resolved.conflicts[0].resolution_strategy is None
 
+    def test_auto_resolve_merge_both_combines_lists(
+        self, service: VersioningService
+    ) -> None:
+        """Test MERGE_BOTH strategy combines list values from base and incoming."""
+        report = ConflictReport(proposal_id="test-proposal")
+        report.conflicts = [
+            Conflict(
+                entity_id="entity1",
+                field_name="tags",
+                base_value=["tag1", "tag2"],
+                incoming_value=["tag2", "tag3"],
+            ),
+        ]
+
+        resolved = service.auto_resolve(report, strategy=MergeStrategy.MERGE_BOTH)
+
+        assert resolved.all_resolved is True
+        assert resolved.conflicts[0].resolution_strategy == MergeStrategy.MERGE_BOTH
+        # Result should contain union of both lists
+        result_set = set(resolved.conflicts[0].resolved_value)
+        assert result_set == {"tag1", "tag2", "tag3"}
+
+    def test_auto_resolve_merge_both_combines_sets(
+        self, service: VersioningService
+    ) -> None:
+        """Test MERGE_BOTH strategy combines set values from base and incoming."""
+        report = ConflictReport(proposal_id="test-proposal")
+        report.conflicts = [
+            Conflict(
+                entity_id="entity1",
+                field_name="categories",
+                base_value={"cat1", "cat2"},
+                incoming_value={"cat2", "cat3"},
+            ),
+        ]
+
+        resolved = service.auto_resolve(report, strategy=MergeStrategy.MERGE_BOTH)
+
+        assert resolved.all_resolved is True
+        assert resolved.conflicts[0].resolution_strategy == MergeStrategy.MERGE_BOTH
+        # Result should be union of both sets
+        assert resolved.conflicts[0].resolved_value == {"cat1", "cat2", "cat3"}
+
+    def test_auto_resolve_merge_both_fallback_non_collection(
+        self, service: VersioningService
+    ) -> None:
+        """Test MERGE_BOTH strategy falls back to incoming_value for non-collections."""
+        report = ConflictReport(proposal_id="test-proposal")
+        report.conflicts = [
+            Conflict(
+                entity_id="entity1",
+                field_name="name",
+                base_value="base_name",
+                incoming_value="incoming_name",
+            ),
+        ]
+
+        resolved = service.auto_resolve(report, strategy=MergeStrategy.MERGE_BOTH)
+
+        assert resolved.all_resolved is True
+        assert resolved.conflicts[0].resolution_strategy == MergeStrategy.MERGE_BOTH
+        # Non-collection falls back to incoming_value
+        assert resolved.conflicts[0].resolved_value == "incoming_name"
+
+    def test_auto_resolve_merge_both_with_none_values(
+        self, service: VersioningService
+    ) -> None:
+        """Test MERGE_BOTH strategy handles None values gracefully."""
+        report = ConflictReport(proposal_id="test-proposal")
+        report.conflicts = [
+            Conflict(
+                entity_id="entity1",
+                field_name="tags",
+                base_value=None,
+                incoming_value=["tag1"],
+            ),
+            Conflict(
+                entity_id="entity2",
+                field_name="tags",
+                base_value=["tag2"],
+                incoming_value=None,
+            ),
+        ]
+
+        resolved = service.auto_resolve(report, strategy=MergeStrategy.MERGE_BOTH)
+
+        assert resolved.all_resolved is True
+        # When base is None, result is just incoming
+        assert set(resolved.conflicts[0].resolved_value) == {"tag1"}
+        # When incoming is None, result is just base
+        assert set(resolved.conflicts[1].resolved_value) == {"tag2"}
+
 
 class TestManualConflictResolution:
     """Test manual conflict resolution."""

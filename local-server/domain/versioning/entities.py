@@ -148,7 +148,12 @@ class Conflict:
 
     @property
     def is_resolved(self) -> bool:
-        """True if conflict is resolved (resolution_strategy is set)."""
+        """True if conflict is resolved (resolution_strategy is set).
+
+        A conflict is considered resolved when a resolution_strategy has been applied,
+        even if the resolved_value is None (representing an intentional null/empty resolution).
+        This semantic supports resolving conflicts to empty collections or null values.
+        """
         return self.resolution_strategy is not None
 
 

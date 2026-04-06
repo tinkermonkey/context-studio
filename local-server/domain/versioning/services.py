@@ -360,6 +360,29 @@ class VersioningService:
         )
         return updated_proposal
 
+    def _group_and_sort_events(
+        self, event_ids: list[str]
+    ) -> dict[str, list[ChangeEvent]]:
+        """
+        Fetch events by IDs and group them by entity_id with timestamp ordering.
+
+        Args:
+            event_ids: List of change event IDs to fetch
+
+        Returns:
+            Dictionary mapping entity_id to list of ChangeEvent objects sorted by timestamp
+        """
+        events = self._repo.get_changes_by_ids(event_ids)
+        events_by_entity: dict[str, list[ChangeEvent]] = defaultdict(list)
+        for event in events:
+            events_by_entity[event.entity_id].append(event)
+
+        # Sort events by timestamp within each entity
+        for entity_events in events_by_entity.values():
+            entity_events.sort(key=lambda e: e.timestamp)
+
+        return dict(events_by_entity)
+
     def detect_conflicts(
         self, proposal_id: str, resolutions: Optional[dict[str, dict[str, object]]] = None
     ) -> ConflictReport:
@@ -406,19 +429,8 @@ class VersioningService:
         if not changeset.event_ids:
             return report
 
-        # Get events in this changeset using the changeset's event_ids
-        changeset_events = self._repo.get_changes_by_ids(changeset.event_ids)
-
-        # Group events by entity_id and sort by timestamp
-        events_by_entity: dict[str, list[ChangeEvent]] = {}
-        for event in changeset_events:
-            if event.entity_id not in events_by_entity:
-                events_by_entity[event.entity_id] = []
-            events_by_entity[event.entity_id].append(event)
-
-        # Sort events by timestamp within each entity
-        for entity_id in events_by_entity:
-            events_by_entity[entity_id].sort(key=lambda e: e.timestamp)
+        # Get events and group by entity_id with timestamp ordering
+        events_by_entity = self._group_and_sort_events(changeset.event_ids)
 
         # Detect conflicts: compare consecutive events for same entity
         for entity_id, entity_events in events_by_entity.items():
@@ -488,6 +500,7 @@ class VersioningService:
         Strategies:
             - LAST_WRITE_WINS: Sets resolved_value=incoming_value (preserves current behavior)
             - BASE_VALUE_WINS: Sets resolved_value=base_value
+            - MERGE_BOTH: For collection-typed fields, combines both value sets; for other types, uses incoming_value
             - MANUAL: Leaves conflicts unresolved, deferring to explicit resolve_conflicts() calls
         """
         if strategy == MergeStrategy.MANUAL:
@@ -503,6 +516,33 @@ class VersioningService:
                 conflict.resolved_value = conflict.incoming_value
             elif strategy == MergeStrategy.BASE_VALUE_WINS:
                 conflict.resolved_value = conflict.base_value
+            elif strategy == MergeStrategy.MERGE_BOTH:
+                # For collection-typed fields, combine both value sets
+                base = conflict.base_value
+                incoming = conflict.incoming_value
+
+                # Handle collection merging if both values are collections
+                if (isinstance(base, (list, set, tuple)) and isinstance(incoming, (list, set, tuple))):
+                    # Convert to sets for combination
+                    base_set = set(base)
+                    incoming_set = set(incoming)
+                    merged = base_set | incoming_set
+                    # Preserve the original type of incoming_value for the result
+                    if isinstance(incoming, list):
+                        conflict.resolved_value = list(merged)
+                    elif isinstance(incoming, tuple):
+                        conflict.resolved_value = tuple(sorted(merged))
+                    else:
+                        conflict.resolved_value = merged
+                elif isinstance(base, (list, set, tuple)) and incoming is None:
+                    # If only base is a collection, use base
+                    conflict.resolved_value = base
+                elif isinstance(incoming, (list, set, tuple)) and base is None:
+                    # If only incoming is a collection, use incoming
+                    conflict.resolved_value = incoming
+                else:
+                    # For non-collection types or mixed types, fall back to incoming_value
+                    conflict.resolved_value = incoming
             else:
                 raise ValueError(f"Unrecognized merge strategy: {strategy}")
 
@@ -635,10 +675,9 @@ class VersioningService:
             List of EntityVersion objects ready to persist
 
         Raises:
-            ValueError: If the number of returned events does not match the number requested
-            Any exception propagates up to merge_proposal before the atomic transaction
-            starts. In-memory state transitions (changeset and proposal) have already been
-            applied but will not be persisted, since atomic_update_on_merge will not execute.
+            ValueError: If the number of returned events does not match the number requested.
+                This exception propagates before any state transitions in merge_proposal,
+                preventing in-memory state changes from being persisted.
         """
         if not changeset.event_ids:
             _logger.debug(
@@ -661,14 +700,8 @@ class VersioningService:
             _logger.error(error_msg)
             raise ValueError(error_msg)
 
-        # Group events by entity_id using defaultdict
-        events_by_entity: dict[str, list[ChangeEvent]] = defaultdict(list)
-        for event in changeset_events:
-            events_by_entity[event.entity_id].append(event)
-
-        # Sort events by timestamp within each entity
-        for entity_events in events_by_entity.values():
-            entity_events.sort(key=lambda e: e.timestamp)
+        # Group events by entity_id with timestamp ordering
+        events_by_entity = self._group_and_sort_events(changeset.event_ids)
 
         # Build versions for each entity
         versions = []
@@ -761,10 +794,9 @@ class VersioningService:
         Merge an approved proposal.
 
         Detects conflicts and blocks the merge if unresolved conflicts exist.
-        Transitions the changeset from APPROVED to MERGED and updates the
-        proposal state to 'merged'. Creates EntityVersion snapshots for all
-        affected entities. Publishes ChangesetMerged event upon successful
-        completion.
+        Creates EntityVersion snapshots for all affected entities. Then transitions
+        the changeset from APPROVED to MERGED and updates the proposal state to 'merged'.
+        Publishes ChangesetMerged event upon successful completion.
 
         Args:
             proposal_id: ID of the proposal to merge
@@ -776,10 +808,9 @@ class VersioningService:
             VersionNotFoundError: If the proposal or changeset does not exist
             ChangesetStateError: If the proposal is not in 'approved' state
             ConflictResolutionError: If unresolved conflicts exist
-            Exception: Exceptions from _create_merge_versions will propagate before
-                the atomic transaction starts, leaving in-memory state transitions
-                applied (changeset and proposal are transitioned but not persisted).
-                The atomic transaction in atomic_update_on_merge will not occur.
+            ValueError: If _create_merge_versions cannot find all required events.
+                This exception propagates before any state transitions, preventing
+                in-memory state changes from being persisted.
 
         Publishes:
             ChangesetMerged event after successful merge
