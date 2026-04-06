@@ -146,7 +146,7 @@ class ChangeEventRecorder:
             entity_id: ID of the entity that changed
             entity_type: Type of entity (e.g., "taxonomy", "class", "relationship")
             operation: Type of operation (CREATE, UPDATE, DELETE)
-            new_state: New state of the entity (None for DELETE)
+            new_state: New state of the entity. None is converted to {} before recording.
             previous_state: Previous state of the entity (None for CREATE)
             change_reason: Human-readable reason for the change
 
