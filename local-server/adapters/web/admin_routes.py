@@ -86,7 +86,7 @@ async def check_health(
     """
     try:
         health = await run_sync_in_executor(service.check_health)
-        return SystemHealthResponse.model_validate(health.__dict__)
+        return SystemHealthResponse.model_validate(health)
     except Exception as exc:
         status_code, message = _handle_admin_error(exc)
         raise HTTPException(status_code=status_code, detail=message)
@@ -109,7 +109,7 @@ async def get_database_health(
     """
     try:
         db_health = await run_sync_in_executor(service.get_database_health)
-        return DatabaseHealthResponse.model_validate(db_health.__dict__)
+        return DatabaseHealthResponse.model_validate(db_health)
     except Exception as exc:
         status_code, message = _handle_admin_error(exc)
         raise HTTPException(status_code=status_code, detail=message)
@@ -132,7 +132,7 @@ async def get_service_metrics(
     """
     try:
         metrics = await run_sync_in_executor(service.get_service_metrics)
-        return ServiceMetricsResponse.model_validate(metrics.__dict__)
+        return ServiceMetricsResponse.model_validate(metrics)
     except Exception as exc:
         status_code, message = _handle_admin_error(exc)
         raise HTTPException(status_code=status_code, detail=message)
@@ -155,7 +155,7 @@ async def get_embedding_status(
     """
     try:
         component_status = await run_sync_in_executor(service.get_embedding_model_status)
-        return ComponentStatusResponse.model_validate(component_status.__dict__)
+        return ComponentStatusResponse.model_validate(component_status)
     except Exception as exc:
         status_code, message = _handle_admin_error(exc)
         raise HTTPException(status_code=status_code, detail=message)
@@ -178,7 +178,7 @@ async def get_nlp_status(
     """
     try:
         component_status = await run_sync_in_executor(service.get_nlp_pipeline_status)
-        return ComponentStatusResponse.model_validate(component_status.__dict__)
+        return ComponentStatusResponse.model_validate(component_status)
     except Exception as exc:
         status_code, message = _handle_admin_error(exc)
         raise HTTPException(status_code=status_code, detail=message)

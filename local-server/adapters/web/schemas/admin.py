@@ -256,6 +256,8 @@ class BackgroundTaskResponse(BaseModel):
     )
     progress: Optional[float] = Field(
         default=None,
+        ge=0.0,
+        le=1.0,
         description="Task progress as a float between 0.0 and 1.0"
     )
     error: Optional[str] = Field(

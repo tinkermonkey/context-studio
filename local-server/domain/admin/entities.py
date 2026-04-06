@@ -67,6 +67,11 @@ class BackgroundTask:
     error: Optional[str] = None
     result: Optional[dict] = None
 
+    def __post_init__(self):
+        """Validate progress field is within valid range."""
+        if self.progress is not None and not (0.0 <= self.progress <= 1.0):
+            raise ValueError(f"progress must be between 0.0 and 1.0, got {self.progress}")
+
 
 @dataclass
 class AppConfiguration:

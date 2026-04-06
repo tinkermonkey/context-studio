@@ -14,7 +14,7 @@ import pytest
 from datetime import datetime, timezone
 
 from domain.admin.services import AdminService
-from domain.admin.entities import AppConfiguration
+from domain.admin.entities import AppConfiguration, BackgroundTask
 from domain.admin.value_objects import (
     SystemHealthStatus,
     BackgroundTaskStatus,
@@ -273,6 +273,115 @@ class TestAdminServiceHealthErrorHandling:
         health = service.check_health()
 
         assert health.status == SystemHealthStatus.HEALTHY
+
+
+class TestBackgroundTaskProgressValidation:
+    """Tests for BackgroundTask progress field validation."""
+
+    def test_background_task_with_valid_progress(self):
+        """BackgroundTask accepts progress values between 0.0 and 1.0."""
+        task = BackgroundTask(
+            id="task-1",
+            name="test-task",
+            status=BackgroundTaskStatus.RUNNING,
+            created_at=datetime.now(timezone.utc),
+            progress=0.5,
+        )
+
+        assert task.progress == 0.5
+
+    def test_background_task_with_progress_zero(self):
+        """BackgroundTask accepts progress=0.0."""
+        task = BackgroundTask(
+            id="task-1",
+            name="test-task",
+            status=BackgroundTaskStatus.RUNNING,
+            created_at=datetime.now(timezone.utc),
+            progress=0.0,
+        )
+
+        assert task.progress == 0.0
+
+    def test_background_task_with_progress_one(self):
+        """BackgroundTask accepts progress=1.0."""
+        task = BackgroundTask(
+            id="task-1",
+            name="test-task",
+            status=BackgroundTaskStatus.COMPLETED,
+            created_at=datetime.now(timezone.utc),
+            progress=1.0,
+        )
+
+        assert task.progress == 1.0
+
+    def test_background_task_with_progress_none(self):
+        """BackgroundTask accepts progress=None."""
+        task = BackgroundTask(
+            id="task-1",
+            name="test-task",
+            status=BackgroundTaskStatus.PENDING,
+            created_at=datetime.now(timezone.utc),
+            progress=None,
+        )
+
+        assert task.progress is None
+
+    def test_background_task_rejects_progress_above_one(self):
+        """BackgroundTask rejects progress > 1.0."""
+        with pytest.raises(ValueError) as exc_info:
+            BackgroundTask(
+                id="task-1",
+                name="test-task",
+                status=BackgroundTaskStatus.RUNNING,
+                created_at=datetime.now(timezone.utc),
+                progress=1.5,
+            )
+
+        assert "progress must be between 0.0 and 1.0" in str(exc_info.value)
+
+    def test_background_task_rejects_negative_progress(self):
+        """BackgroundTask rejects negative progress."""
+        with pytest.raises(ValueError) as exc_info:
+            BackgroundTask(
+                id="task-1",
+                name="test-task",
+                status=BackgroundTaskStatus.RUNNING,
+                created_at=datetime.now(timezone.utc),
+                progress=-0.5,
+            )
+
+        assert "progress must be between 0.0 and 1.0" in str(exc_info.value)
+
+
+class TestBackgroundTaskSummaryValueObject:
+    """Tests for BackgroundTaskSummary value object."""
+
+    def test_total_with_empty_by_status(self):
+        """BackgroundTaskSummary.total returns 0 with empty by_status."""
+        summary = BackgroundTaskSummary(by_status={})
+
+        assert summary.total == 0
+
+    def test_total_with_non_empty_by_status(self):
+        """BackgroundTaskSummary.total sums all tasks by status."""
+        summary = BackgroundTaskSummary(
+            by_status={"completed": 2, "failed": 1}
+        )
+
+        assert summary.total == 3
+
+    def test_total_with_multiple_statuses(self):
+        """BackgroundTaskSummary.total correctly sums multiple status groups."""
+        summary = BackgroundTaskSummary(
+            by_status={
+                "pending": 1,
+                "running": 2,
+                "completed": 5,
+                "failed": 1,
+            }
+        )
+
+        assert summary.total == 9
 
 
 class TestAdminServiceBackgroundTaskSummary:
