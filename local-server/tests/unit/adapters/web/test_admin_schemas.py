@@ -179,7 +179,9 @@ class TestAppConfigurationResponseMasking:
 
         AppConfigurationResponse.from_domain(config)
 
-        assert config.sections["llm"]["openai_api_key"] == original_key
+        llm_section = config.sections["llm"]
+        assert llm_section is not None
+        assert llm_section["openai_api_key"] == original_key
 
     def test_nested_sections_are_masked(self) -> None:
         """Test masking in multiple nested sections."""

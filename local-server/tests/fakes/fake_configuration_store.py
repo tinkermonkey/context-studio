@@ -65,8 +65,9 @@ class FakeConfigurationStore:
             AppConfiguration object with updated configuration
         """
         for section_name, section_updates in updates.items():
-            if section_name in self._config.sections and self._config.sections[section_name] is not None:
-                self._config.sections[section_name].update(section_updates)
+            current_section = self._config.sections.get(section_name)
+            if current_section is not None:
+                current_section.update(section_updates)
             else:
                 self._config.sections[section_name] = section_updates
         return self._config

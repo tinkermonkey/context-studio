@@ -83,8 +83,9 @@ class JSONFileConfigStore:
             # Merge updates into current configuration
             updated_sections = dict(current_config.sections)
             for section_name, section_updates in updates.items():
-                if section_name in updated_sections and updated_sections[section_name] is not None:
-                    updated_sections[section_name].update(section_updates)
+                current_section = updated_sections.get(section_name)
+                if current_section is not None:
+                    current_section.update(section_updates)
                 else:
                     updated_sections[section_name] = section_updates
 
@@ -157,18 +158,24 @@ class JSONFileConfigStore:
         """
         try:
             # Reconstruct Settings object from config sections
+            # Use empty dicts as defaults for required sections
             settings_dict = {
-                'server': config.sections.get('server', {}),
-                'database': config.sections.get('database', {}),
-                'logging': config.sections.get('logging', {}),
-                'llm': config.sections.get('llm', {}),
+                'server': config.sections.get('server') or {},
+                'database': config.sections.get('database') or {},
+                'logging': config.sections.get('logging') or {},
+                'llm': config.sections.get('llm') or {},
             }
-            if config.sections.get('reference') is not None:
-                settings_dict['reference'] = config.sections['reference']
-            if config.sections.get('sync') is not None:
-                settings_dict['sync'] = config.sections['sync']
+            # Add optional sections only if they exist
+            reference_section = config.sections.get('reference')
+            if reference_section is not None:
+                settings_dict['reference'] = reference_section
 
-            new_settings = Settings(**settings_dict)
+            sync_section = config.sections.get('sync')
+            if sync_section is not None:
+                settings_dict['sync'] = sync_section
+
+            # Pydantic will convert dicts to config classes
+            new_settings = Settings(**settings_dict)  # type: ignore[arg-type]
             self._mgr.settings = new_settings
 
             if not self._mgr.save():

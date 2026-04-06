@@ -22,7 +22,7 @@ from typing import Optional
 from datetime import datetime
 
 from pydantic import BaseModel, ConfigDict, Field
-from domain.admin.entities import AppConfiguration, BackgroundTask
+from domain.admin.entities import AppConfiguration
 from domain.admin.value_objects import CREDENTIAL_FIELD_NAMES, BackgroundTaskStatus, BackgroundTaskSummary
 from utils.logger import get_logger
 
