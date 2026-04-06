@@ -136,7 +136,7 @@ class AdminService:
             database_connected=db_health.connected,
             nlp_pipeline_ready=nlp_status.available,
             embedding_model_loaded=embedding_status.available,
-            llm_providers_available=service_metrics.llm_providers_available,
+            llm_providers_available=list(service_metrics.llm_providers_available),
             uptime_seconds=service_metrics.uptime_seconds,
             checked_at=datetime.now(timezone.utc),
             issues=issues,

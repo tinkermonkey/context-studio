@@ -201,7 +201,7 @@ class TestAdminServiceCompositeHealthAggregation:
         assert health.database_connected is True
         assert health.nlp_pipeline_ready is True
         assert health.embedding_model_loaded is True
-        assert health.llm_providers_available == ("openai", "anthropic")
+        assert health.llm_providers_available == ["openai", "anthropic"]
         assert health.uptime_seconds == 7200.0
 
 
@@ -244,7 +244,7 @@ class TestAdminServiceHealthErrorHandling:
 
         assert health.status == SystemHealthStatus.DEGRADED
         assert health.database_connected is True
-        assert health.llm_providers_available == ()
+        assert health.llm_providers_available == []
         assert any("Error checking service metrics" in issue for issue in health.issues)
 
     def test_check_health_resilient_to_embedding_check_failure(self):
@@ -517,7 +517,7 @@ class TestAdminServiceHealthMonitoring:
         assert health.database_connected is True
         assert health.nlp_pipeline_ready is True
         assert health.embedding_model_loaded is True
-        assert health.llm_providers_available == ("openai",)
+        assert health.llm_providers_available == ["openai"]
         assert health.uptime_seconds == 0.0
         assert health.checked_at is not None
         assert health.issues == []
@@ -527,7 +527,7 @@ class TestAdminServiceHealthMonitoring:
         health = self.service.check_health()
 
         assert health.status == SystemHealthStatus.DEGRADED
-        assert health.llm_providers_available == ()
+        assert health.llm_providers_available == []
         assert any("No LLM providers configured" in issue for issue in health.issues)
 
 
@@ -820,7 +820,7 @@ class TestAdminServiceConfigurationManagement:
     def test_update_configuration_raises_error_for_corrupted_dict_section(self):
         """Update configuration raises ConfigurationError when section is not a dict."""
         # Manually corrupt the config by setting a section to a non-dict value
-        config = self.service.get_configuration()
+        self.service.get_configuration()
         # We can't directly set to a non-dict because the type system prevents it,
         # but we can test the error by monkeypatching
         corrupted_config = AppConfiguration(
