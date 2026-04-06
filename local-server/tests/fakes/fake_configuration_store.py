@@ -2,7 +2,7 @@
 
 import sys
 import os
-from typing import Optional
+from typing import Any, Optional
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
@@ -29,7 +29,7 @@ class FakeConfigurationStore:
             sections={"llm": {}, "database": {}}
         )
         # Store default sections for reset operation
-        self._default_sections = {"llm": {}, "database": {}}
+        self._default_sections: dict[str, dict[str, Any]] = {"llm": {}, "database": {}}
 
     def load(self) -> AppConfiguration:
         """

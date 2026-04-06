@@ -11,8 +11,13 @@ from typing import Optional
 from sqlalchemy import text
 from sqlalchemy.engine import Engine
 
-from domain.admin.entities import SystemHealth
-from domain.admin.value_objects import SystemHealthStatus
+from domain.admin.value_objects import (
+    SystemHealthStatus,
+    DatabaseHealth,
+    ServiceMetrics,
+    ComponentStatus,
+    BackgroundTaskSummary,
+)
 from adapters.llm.provider_router import LLMProviderRouter
 from adapters.nlp.spacy_processor import SpacyNLPProcessor
 from adapters.embedding.sentence_transformer import SentenceTransformerEmbedding
@@ -26,7 +31,8 @@ class SystemMetricsCollector:
     Collects system health metrics from component adapters.
 
     Aggregates health status across LLM providers, NLP pipeline, and embedding
-    models into a single SystemHealth entity. Tracks uptime since application start.
+    models. Tracks uptime since application start. Implements the MetricsCollector
+    protocol to provide granular health checks.
     """
 
     def __init__(
@@ -77,90 +83,79 @@ class SystemMetricsCollector:
             logger.warning(f"Database connectivity check failed: {e}")
             return False
 
-    def collect_health(self) -> SystemHealth:
+    def get_database_health(self) -> DatabaseHealth:
         """
-        Collect current system health metrics.
-
-        Checks the status of database, NLP pipeline, embedding model, and LLM providers.
-        Determines overall status as 'healthy', 'degraded', or 'unhealthy' based on
-        component availability.
+        Get database health status.
 
         Returns:
-            SystemHealth object with all metrics populated
+            DatabaseHealth with connectivity and issue details
         """
-        issues: list[str] = []
+        connected = self._check_database_connected()
+        issues = []
+        if not connected:
+            issues.append("Database not accessible")
+        return DatabaseHealth(connected=connected, issues=issues)
 
-        # Check database connectivity
-        db_connected = self._check_database_connected()
-        if not db_connected:
-            issues.append('Database not accessible')
+    def get_service_metrics(self) -> ServiceMetrics:
+        """
+        Get service-level metrics.
 
-        # Track which components had errors during checks
-        error_components = set()
+        Returns:
+            ServiceMetrics with uptime and available LLM providers
+        """
+        now = datetime.now(timezone.utc)
+        uptime = (now - self._start_time).total_seconds()
 
-        # Check LLM providers with error handling
         llm_providers = []
         try:
             llm_providers = self._llm.list_available_providers()
         except Exception as e:
             logger.warning(f"Failed to check LLM providers: {e}")
-            issues.append('Error checking LLM providers')
-            error_components.add('llm')
 
-        # Check NLP pipeline readiness with error handling
-        nlp_ready = False
-        try:
-            nlp_ready = self._nlp.is_ready()
-        except Exception as e:
-            logger.warning(f"Failed to check NLP pipeline: {e}")
-            issues.append('Error checking NLP pipeline')
-            error_components.add('nlp')
+        return ServiceMetrics(
+            uptime_seconds=uptime, llm_providers_available=llm_providers
+        )
 
-        # Check embedding model with error handling
-        embedding_loaded = False
+    def get_embedding_model_status(self) -> ComponentStatus:
+        """
+        Get embedding model component status.
+
+        Returns:
+            ComponentStatus of the embedding model
+        """
         try:
-            embedding_loaded = self._embedding.is_loaded()
+            loaded = self._embedding.is_loaded()
+            details = "Embedding model loaded" if loaded else "Embedding model not loaded"
+            return ComponentStatus(available=loaded, details=details)
         except Exception as e:
             logger.warning(f"Failed to check embedding model: {e}")
-            issues.append('Error checking embedding model')
-            error_components.add('embedding')
+            return ComponentStatus(
+                available=False, details=f"Error checking embedding model: {e}"
+            )
 
-        # Aggregate issues for components that didn't have errors
-        if 'nlp' not in error_components and not nlp_ready:
-            issues.append('NLP pipeline not ready')
-        if 'embedding' not in error_components and not embedding_loaded:
-            issues.append('Embedding model not loaded')
-        if 'llm' not in error_components and not llm_providers:
-            issues.append('No LLM providers configured')
+    def get_nlp_pipeline_status(self) -> ComponentStatus:
+        """
+        Get NLP pipeline component status.
 
-        # Calculate uptime in seconds
-        now = datetime.now(timezone.utc)
-        uptime = (now - self._start_time).total_seconds()
+        Returns:
+            ComponentStatus of the NLP pipeline
+        """
+        try:
+            ready = self._nlp.is_ready()
+            details = "NLP pipeline ready" if ready else "NLP pipeline not ready"
+            return ComponentStatus(available=ready, details=details)
+        except Exception as e:
+            logger.warning(f"Failed to check NLP pipeline: {e}")
+            return ComponentStatus(
+                available=False, details=f"Error checking NLP pipeline: {e}"
+            )
 
-        # Determine overall status
-        # HEALTHY if all optional components are available
-        # DEGRADED if some optional components are missing
-        # UNHEALTHY if database is down
-        if not db_connected:
-            status = SystemHealthStatus.UNHEALTHY
-        elif issues:
-            status = SystemHealthStatus.DEGRADED
-        else:
-            status = SystemHealthStatus.HEALTHY
+    def get_background_task_summary(self) -> BackgroundTaskSummary:
+        """
+        Get summary of background task statuses.
 
-        logger.debug(
-            f"Health check: status={status}, db_connected={db_connected}, nlp_ready={nlp_ready}, "
-            f"embedding_loaded={embedding_loaded}, providers={len(llm_providers)}, "
-            f"issues={len(issues)}"
-        )
-
-        return SystemHealth(
-            status=status,
-            database_connected=db_connected,
-            nlp_pipeline_ready=nlp_ready,
-            embedding_model_loaded=embedding_loaded,
-            llm_providers_available=llm_providers,
-            uptime_seconds=uptime,
-            checked_at=now,
-            issues=issues,
-        )
+        Returns:
+            BackgroundTaskSummary with task counts by status
+        """
+        # Currently no background task tracking in the system
+        return BackgroundTaskSummary(total=0, by_status={})

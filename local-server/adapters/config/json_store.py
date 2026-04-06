@@ -9,6 +9,7 @@ without direct dependency on the config.py module or Pydantic.
 from config import ConfigurationManager, Settings
 from domain.admin.entities import AppConfiguration
 from domain.admin.exceptions import ConfigurationError
+from domain.admin.value_objects import CREDENTIAL_FIELD_NAMES
 from utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -95,3 +96,51 @@ class JSONFileConfigStore:
             raise
         except Exception as e:
             raise ConfigurationError(f'Failed to save configuration: {e}') from e
+
+    def reset_to_defaults(self) -> AppConfiguration:
+        """
+        Reset configuration to defaults while preserving credentials.
+
+        Creates a fresh Settings object with default values, preserves any
+        credential fields from the current configuration, and saves the result.
+
+        Returns:
+            AppConfiguration reset to defaults with credentials preserved
+
+        Raises:
+            ConfigurationError: If reset fails
+        """
+        try:
+            # Get current configuration to preserve credentials
+            current_config = self.load()
+
+            # Create fresh defaults
+            default_settings = Settings()
+            default_sections = {
+                'server': default_settings.server.model_dump(),
+                'database': default_settings.database.model_dump(),
+                'logging': default_settings.logging.model_dump(),
+                'llm': default_settings.llm.model_dump(),
+                'reference': default_settings.reference.model_dump() if default_settings.reference else None,
+                'sync': default_settings.sync.model_dump() if default_settings.sync else None,
+            }
+
+            # Preserve credentials from current config
+            for section_name, section_data in current_config.sections.items():
+                if section_name not in default_sections or section_data is None:
+                    continue
+                default_section = default_sections[section_name]
+                if default_section is None:
+                    continue
+                for key, value in section_data.items():
+                    if key in CREDENTIAL_FIELD_NAMES:
+                        default_section[key] = value
+
+            reset_config = AppConfiguration(sections=default_sections)
+            self.save(reset_config)
+            logger.debug("Configuration reset to defaults with credentials preserved")
+            return reset_config
+        except ConfigurationError:
+            raise
+        except Exception as e:
+            raise ConfigurationError(f'Failed to reset configuration: {e}') from e
