@@ -18,8 +18,13 @@ from domain.admin.exceptions import ConfigurationError, TaskNotFoundError, Admin
 from adapters.web.dependencies import get_admin_service
 from adapters.web.schemas.admin import (
     SystemHealthResponse,
+    DatabaseHealthResponse,
+    ServiceMetricsResponse,
+    ComponentStatusResponse,
+    BackgroundTaskSummaryResponse,
     AppConfigurationResponse,
     ConfigSectionUpdateRequest,
+    ConfigResetResponse,
     BackgroundTaskResponse,
 )
 from utils.async_executor import run_sync_in_executor
@@ -81,6 +86,121 @@ async def check_health(
         raise HTTPException(status_code=status_code, detail=message)
 
 
+@router.get("/health/database", response_model=DatabaseHealthResponse)
+async def get_database_health(
+    service: AdminService = Depends(get_admin_service),
+) -> DatabaseHealthResponse:
+    """
+    Get database component health status.
+
+    Returns detailed health information about the database connection and any issues.
+
+    Returns:
+        DatabaseHealthResponse with connectivity status and issues list
+
+    Raises:
+        HTTPException: 500 for internal errors
+    """
+    try:
+        db_health = await run_sync_in_executor(service.get_database_health)
+        return DatabaseHealthResponse.model_validate(db_health.__dict__)
+    except Exception as exc:
+        status_code, message = _handle_admin_error(exc)
+        raise HTTPException(status_code=status_code, detail=message)
+
+
+@router.get("/health/services", response_model=ServiceMetricsResponse)
+async def get_service_metrics(
+    service: AdminService = Depends(get_admin_service),
+) -> ServiceMetricsResponse:
+    """
+    Get service-level metrics.
+
+    Returns system uptime and list of available LLM providers.
+
+    Returns:
+        ServiceMetricsResponse with uptime and available providers
+
+    Raises:
+        HTTPException: 500 for internal errors
+    """
+    try:
+        metrics = await run_sync_in_executor(service.get_service_metrics)
+        return ServiceMetricsResponse.model_validate(metrics.__dict__)
+    except Exception as exc:
+        status_code, message = _handle_admin_error(exc)
+        raise HTTPException(status_code=status_code, detail=message)
+
+
+@router.get("/health/embedding", response_model=ComponentStatusResponse)
+async def get_embedding_status(
+    service: AdminService = Depends(get_admin_service),
+) -> ComponentStatusResponse:
+    """
+    Get embedding model component status.
+
+    Returns availability and status details for the embedding model.
+
+    Returns:
+        ComponentStatusResponse with availability and details
+
+    Raises:
+        HTTPException: 500 for internal errors
+    """
+    try:
+        status = await run_sync_in_executor(service.get_embedding_model_status)
+        return ComponentStatusResponse.model_validate(status.__dict__)
+    except Exception as exc:
+        status_code, message = _handle_admin_error(exc)
+        raise HTTPException(status_code=status_code, detail=message)
+
+
+@router.get("/health/nlp", response_model=ComponentStatusResponse)
+async def get_nlp_status(
+    service: AdminService = Depends(get_admin_service),
+) -> ComponentStatusResponse:
+    """
+    Get NLP pipeline component status.
+
+    Returns availability and status details for the NLP pipeline.
+
+    Returns:
+        ComponentStatusResponse with availability and details
+
+    Raises:
+        HTTPException: 500 for internal errors
+    """
+    try:
+        status = await run_sync_in_executor(service.get_nlp_pipeline_status)
+        return ComponentStatusResponse.model_validate(status.__dict__)
+    except Exception as exc:
+        status_code, message = _handle_admin_error(exc)
+        raise HTTPException(status_code=status_code, detail=message)
+
+
+@router.get("/health/tasks", response_model=BackgroundTaskSummaryResponse)
+async def get_task_summary(
+    service: AdminService = Depends(get_admin_service),
+) -> BackgroundTaskSummaryResponse:
+    """
+    Get summary of background task execution status.
+
+    Returns counts of tasks grouped by status (pending, running, completed, failed).
+
+    Returns:
+        BackgroundTaskSummaryResponse with task counts by status
+
+    Raises:
+        HTTPException: 500 for internal errors
+    """
+    try:
+        summary = await run_sync_in_executor(service.get_background_task_summary)
+        return BackgroundTaskSummaryResponse.model_validate(summary.__dict__)
+    except Exception as exc:
+        status_code, message = _handle_admin_error(exc)
+        raise HTTPException(status_code=status_code, detail=message)
+
+
 @router.get("/configuration", response_model=AppConfigurationResponse)
 async def get_configuration(
     service: AdminService = Depends(get_admin_service),
@@ -137,6 +257,30 @@ async def update_configuration(
             service.update_configuration, section, request.updates
         )
         return AppConfigurationResponse.from_domain(config)
+    except Exception as exc:
+        status_code, message = _handle_admin_error(exc)
+        raise HTTPException(status_code=status_code, detail=message)
+
+
+@router.post("/configuration/reset", response_model=ConfigResetResponse)
+async def reset_configuration(
+    service: AdminService = Depends(get_admin_service),
+) -> ConfigResetResponse:
+    """
+    Reset configuration to defaults while preserving credentials.
+
+    Resets all configuration values to their defaults. Credential fields
+    (API keys, secrets) are preserved. Returns configuration with masked credentials.
+
+    Returns:
+        ConfigResetResponse with reset configuration and masked credentials
+
+    Raises:
+        HTTPException: 500 for internal errors
+    """
+    try:
+        config = await run_sync_in_executor(service.reset_configuration)
+        return ConfigResetResponse.from_domain(config)
     except Exception as exc:
         status_code, message = _handle_admin_error(exc)
         raise HTTPException(status_code=status_code, detail=message)

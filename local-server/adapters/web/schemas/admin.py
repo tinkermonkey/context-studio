@@ -6,11 +6,16 @@ Request schemas:
 
 Response schemas:
 - SystemHealthResponse - Health check endpoint response
+- DatabaseHealthResponse - Database health status details
+- ServiceMetricsResponse - Service-level metrics
+- ComponentStatusResponse - Individual component status
+- BackgroundTaskSummaryResponse - Summary of background task execution
 - AppConfigurationResponse - Full application configuration
+- ConfigResetResponse - Configuration reset operation response
 - BackgroundTaskResponse - Background task status and metadata
 
 These schemas handle serialization/deserialization between HTTP and domain models.
-API key masking is applied at serialization time in AppConfigurationResponse.
+API key masking is applied at serialization time in AppConfigurationResponse and ConfigResetResponse.
 """
 
 import copy
@@ -18,6 +23,7 @@ from typing import Optional
 from datetime import datetime
 
 from pydantic import BaseModel, ConfigDict, Field
+from domain.admin.value_objects import CREDENTIAL_FIELD_NAMES
 
 
 class SystemHealthResponse(BaseModel):
@@ -59,6 +65,66 @@ class SystemHealthResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
 
+class DatabaseHealthResponse(BaseModel):
+    """Response containing database health status details."""
+
+    connected: bool = Field(
+        ...,
+        description="Whether database is accessible"
+    )
+    issues: list[str] = Field(
+        default_factory=list,
+        description="List of any database issues encountered"
+    )
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class ServiceMetricsResponse(BaseModel):
+    """Response containing service-level metrics."""
+
+    uptime_seconds: float = Field(
+        ...,
+        description="System uptime in seconds since startup"
+    )
+    llm_providers_available: list[str] = Field(
+        default_factory=list,
+        description="List of available LLM provider names"
+    )
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class ComponentStatusResponse(BaseModel):
+    """Response containing individual component status."""
+
+    available: bool = Field(
+        ...,
+        description="Whether the component is available/ready"
+    )
+    details: str = Field(
+        default="",
+        description="Human-readable detail about component status"
+    )
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class BackgroundTaskSummaryResponse(BaseModel):
+    """Response containing summary of background task execution status."""
+
+    total: int = Field(
+        ...,
+        description="Total number of background tasks registered"
+    )
+    by_status: dict[str, int] = Field(
+        default_factory=dict,
+        description="Count of tasks grouped by status"
+    )
+
+    model_config = ConfigDict(from_attributes=True)
+
+
 class ConfigSectionUpdateRequest(BaseModel):
     """Request to update a configuration section."""
 
@@ -83,22 +149,57 @@ class AppConfigurationResponse(BaseModel):
         """
         Convert domain AppConfiguration to response, masking sensitive values.
 
-        API keys in the 'llm' section are replaced with '***<last4>' to prevent
-        exposure in logs and API responses.
+        Credential fields are replaced with '***<last4>' to prevent exposure in logs
+        and API responses.
 
         Args:
             config: Domain AppConfiguration entity
 
         Returns:
-            AppConfigurationResponse with masked API keys
+            AppConfigurationResponse with masked credential fields
         """
         sections = copy.deepcopy(config.sections)
-        key_fields = {'openai_api_key', 'anthropic_api_key', 's3_secret_key', 's3_access_key'}
 
         for section in sections.values():
             if isinstance(section, dict):
                 for field_name in list(section.keys()):
-                    if field_name in key_fields and section[field_name]:
+                    if field_name in CREDENTIAL_FIELD_NAMES and section[field_name]:
+                        val = str(section[field_name])
+                        section[field_name] = f'***{val[-4:]}' if len(val) >= 4 else '***'
+
+        return cls(sections=sections)
+
+
+class ConfigResetResponse(BaseModel):
+    """Response from configuration reset operation."""
+
+    sections: dict = Field(
+        ...,
+        description="Configuration sections after reset with sensitive values masked"
+    )
+
+    model_config = ConfigDict(from_attributes=True)
+
+    @classmethod
+    def from_domain(cls, config) -> 'ConfigResetResponse':
+        """
+        Convert domain AppConfiguration to response, masking sensitive values.
+
+        Credential fields are replaced with '***<last4>' to prevent exposure in logs
+        and API responses.
+
+        Args:
+            config: Domain AppConfiguration entity after reset
+
+        Returns:
+            ConfigResetResponse with masked credential fields
+        """
+        sections = copy.deepcopy(config.sections)
+
+        for section in sections.values():
+            if isinstance(section, dict):
+                for field_name in list(section.keys()):
+                    if field_name in CREDENTIAL_FIELD_NAMES and section[field_name]:
                         val = str(section[field_name])
                         section[field_name] = f'***{val[-4:]}' if len(val) >= 4 else '***'
 
