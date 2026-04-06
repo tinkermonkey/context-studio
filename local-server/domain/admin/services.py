@@ -94,7 +94,7 @@ class AdminService:
 
         try:
             task_summary = self._metrics.get_background_task_summary()
-        except Exception as e:
+        except Exception:
             task_summary = BackgroundTaskSummary(total=0, by_status={})
 
         # Aggregate all issues
