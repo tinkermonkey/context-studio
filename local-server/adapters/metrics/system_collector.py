@@ -1,8 +1,9 @@
 """
 SystemMetricsCollector adapter implementation.
 
-Aggregates component health status into a SystemHealth entity by querying
-the readiness and availability of LLM providers, NLP pipeline, and embedding models.
+Collects granular health metrics from component adapters (LLM providers, NLP pipeline,
+embedding models, and database). Returns individual value objects with aggregation
+handled by AdminService.check_health().
 """
 
 from datetime import datetime, timezone
@@ -34,6 +35,29 @@ class SystemMetricsCollector:
     Aggregates health status across LLM providers, NLP pipeline, and embedding
     models. Tracks uptime since application start. Implements the MetricsCollector
     protocol to provide granular health checks.
+
+    ERROR HANDLING STRATEGY (Defense-in-Depth):
+    ============================================
+    This adapter uses a two-layer error handling pattern to maximize system resilience:
+
+    1. ADAPTER LAYER (this class):
+       - For ComponentStatus methods (embedding, NLP): Catch exceptions, log them,
+         and return ComponentStatus with error details. This allows safe degradation
+         when individual components fail.
+       - For ServiceMetrics: Log exceptions and re-raise them to signal error
+         conditions to the caller. This allows the service layer to distinguish
+         between "no providers configured" (empty list) and "failed to check" (exception).
+
+    2. SERVICE LAYER (AdminService.check_health()):
+       - Wraps all adapter calls in try-except blocks
+       - Catches exceptions that escape the adapter layer
+       - Creates safe default values and logs errors
+       - Aggregates all errors into the final SystemHealth status
+
+    This pattern ensures:
+    - Robustness: Individual component failures don't cascade
+    - Observability: All errors are logged at the point where they occur
+    - Caller clarity: Errors are distinguishable from empty/default states
     """
 
     def __init__(
@@ -92,17 +116,22 @@ class SystemMetricsCollector:
         """
         Get service-level metrics.
 
+        Raises:
+            Exception: If LLM provider check fails, exception is logged and re-raised
+                to allow the service layer to distinguish between "no providers
+                configured" and "failed to check providers"
+
         Returns:
             ServiceMetrics with uptime and available LLM providers
         """
         now = datetime.now(timezone.utc).timestamp()
         uptime = now - self._start_time
 
-        llm_providers = []
         try:
             llm_providers = self._llm.list_available_providers()
         except Exception as e:
             logger.warning(f"Failed to check LLM providers: {e}")
+            raise
 
         return ServiceMetrics(
             uptime_seconds=uptime, llm_providers_available=llm_providers

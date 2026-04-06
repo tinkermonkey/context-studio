@@ -11,6 +11,7 @@ import time
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
+import pytest
 from sqlalchemy import create_engine, text
 from adapters.metrics.system_collector import SystemMetricsCollector
 
@@ -270,6 +271,6 @@ def test_health_check_exception_handling():
     assert embedding_status.available is False
     assert "Error" in embedding_status.details
 
-    # Service metrics should handle LLM error and return empty list
-    metrics = collector.get_service_metrics()
-    assert metrics.llm_providers_available == []
+    # Service metrics should re-raise LLM error to allow caller to handle it
+    with pytest.raises(RuntimeError, match="LLM error"):
+        collector.get_service_metrics()
