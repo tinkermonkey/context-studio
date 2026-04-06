@@ -205,7 +205,7 @@ class JSONFileConfigStore:
         """
         for key, value in current.items():
             if key in CREDENTIAL_FIELD_NAMES and value:
-                # Preserve top-level credential
+                # Preserve credential
                 default[key] = value
             elif isinstance(value, dict) and isinstance(default.get(key), dict):
                 # Recursively preserve credentials in nested dicts

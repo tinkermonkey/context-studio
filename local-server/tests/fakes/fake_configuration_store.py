@@ -135,10 +135,26 @@ class FakeConfigurationStore:
             if not isinstance(reset_section, dict):
                 continue
 
-            # Preserve credential fields from current to reset
-            for key, value in current_section.items():
-                if key in CREDENTIAL_FIELD_NAMES:
-                    reset_section[key] = value
+            # Preserve credential fields from current to reset, including nested dicts
+            self._preserve_credentials_recursive(current_section, reset_section)
 
         self._config = reset_config
         return reset_config
+
+    def _preserve_credentials_recursive(self, current: dict, default: dict) -> None:
+        """
+        Recursively preserve credential fields from current to default configuration.
+
+        Preserves credential values in both top-level and nested dictionaries.
+
+        Args:
+            current: Current configuration dict
+            default: Default configuration dict to update with preserved credentials
+        """
+        for key, value in current.items():
+            if key in CREDENTIAL_FIELD_NAMES and value:
+                # Preserve credential
+                default[key] = value
+            elif isinstance(value, dict) and isinstance(default.get(key), dict):
+                # Recursively preserve credentials in nested dicts
+                self._preserve_credentials_recursive(value, default[key])

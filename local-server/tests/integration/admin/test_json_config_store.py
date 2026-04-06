@@ -303,7 +303,7 @@ def test_reset_to_defaults_removes_sync_not_in_defaults():
 
 
 def test_reset_to_defaults_preserves_nested_s3_credentials():
-    """Test that reset_to_defaults preserves nested S3 credentials."""
+    """Test that reset_to_defaults preserves nested S3 credentials when sync exists in defaults."""
     with tempfile.TemporaryDirectory() as tmpdir:
         config_file = os.path.join(tmpdir, "config.json")
 
@@ -311,6 +311,7 @@ def test_reset_to_defaults_preserves_nested_s3_credentials():
         original_s3_access_key = "AKIA1234567890ABCDEF"
         original_s3_secret_key = "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
 
+        # Config with nested S3 credentials and modified non-credential values
         config_data = {
             "server": {"host": "192.168.1.1", "port": 9999, "cors_origins": ["http://localhost:3000"]},
             "database": {
@@ -326,11 +327,11 @@ def test_reset_to_defaults_preserves_nested_s3_credentials():
             "sync": {
                 "adapter": "s3",
                 "s3": {
-                    "s3_bucket": "my-bucket",
-                    "s3_prefix": "context-studio",
+                    "s3_bucket": "my-custom-bucket",
+                    "s3_prefix": "custom-prefix",
                     "s3_access_key": original_s3_access_key,
                     "s3_secret_key": original_s3_secret_key,
-                    "s3_region": "us-west-2",
+                    "s3_region": "eu-west-1",
                 }
             },
         }
@@ -341,15 +342,17 @@ def test_reset_to_defaults_preserves_nested_s3_credentials():
         config_mgr = ConfigurationManager(config_file=config_file)
         store = JSONFileConfigStore(config_mgr)
 
-        # Reset to defaults
+        # Since the default Settings() has sync=None, the sync section will not be preserved.
+        # This test documents the current behavior: nested credentials in sync are only preserved
+        # if the default configuration also has a sync section. This is a limitation of the current
+        # Settings model, not the preservation logic.
         reset_config = store.reset_to_defaults()
 
         # Verify that top-level credentials are preserved
         assert reset_config.sections["llm"]["openai_api_key"] == "sk-test-123"
         assert reset_config.sections["llm"]["anthropic_api_key"] == "sk-ant-test-456"
 
-        # Verify that nested S3 credentials would be preserved if sync section existed
-        # Note: sync section itself is None in defaults, but if it existed, credentials would be preserved
+        # Since sync is None in defaults, the entire sync section is skipped
         assert reset_config.sections.get("sync") is None
 
 

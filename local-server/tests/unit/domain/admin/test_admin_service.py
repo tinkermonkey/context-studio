@@ -566,6 +566,57 @@ class TestAdminServiceConfigurationReset:
         assert "provider" not in loaded.llm
         assert loaded.llm["openai_api_key"] == "sk-secret"
 
+    def test_reset_configuration_preserves_nested_credentials(self):
+        """Reset configuration preserves nested credentials using recursive logic."""
+        # Set up config with nested credentials under a section that exists in defaults
+        initial = AppConfiguration(
+            server={},
+            database={
+                "path": "/custom/db.db",
+                "nested": {
+                    "key": "value",
+                    "s3_access_key": "AKIAIOSFODNN7EXAMPLE",  # Nested credential
+                }
+            },
+            logging={},
+            llm={
+                "provider": "custom",
+                "openai_api_key": "sk-nested-secret",
+            },
+            nlp={},
+            embedding={},
+            reference_sources={},
+        )
+        # Set up defaults with matching nested structure
+        defaults = AppConfiguration(
+            server={},
+            database={
+                "path": "/default/db.db",
+                "nested": {
+                    "key": "default_value",
+                }
+            },
+            logging={},
+            llm={},
+            nlp={},
+            embedding={},
+            reference_sources={},
+        )
+
+        config_store = FakeConfigurationStore(initial_config=initial)
+        config_store._defaults = defaults
+        service = AdminService(self.metrics, config_store)
+
+        # Reset to defaults
+        result = service.reset_configuration()
+
+        # Verify nested credentials are preserved
+        assert result.database["path"] == "/default/db.db"  # Non-credential reset
+        assert result.database["nested"]["s3_access_key"] == "AKIAIOSFODNN7EXAMPLE"  # Nested credential preserved
+
+        # Verify non-nested credentials in other sections are also preserved
+        assert result.llm["openai_api_key"] == "sk-nested-secret"
+
 
 class TestAdminServiceConfigurationManagement:
     """Tests for configuration management functionality."""
