@@ -23,7 +23,6 @@ from datetime import datetime
 
 from pydantic import BaseModel, ConfigDict, Field
 from domain.admin.value_objects import CREDENTIAL_FIELD_NAMES
-from domain.admin.exceptions import ConfigurationError
 from utils.logger import get_logger
 
 logger = get_logger(__name__)
