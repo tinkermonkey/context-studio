@@ -159,14 +159,20 @@ class SQLiteChangeRepository:
 
         Returns:
             List of matching ChangeEvent domain entities
+
+        Raises:
+            RuntimeError: If database operation fails
         """
         if not event_ids:
             return []
 
-        with self.session_factory() as session:
-            query = select(ChangeEvent).where(ChangeEvent.id.in_(event_ids))
-            orm_events = session.execute(query).scalars().all()
-            return [self._to_domain_change_event(e) for e in orm_events]
+        try:
+            with self.session_factory() as session:
+                query = select(ChangeEvent).where(ChangeEvent.id.in_(event_ids))
+                orm_events = session.execute(query).scalars().all()
+                return [self._to_domain_change_event(e) for e in orm_events]
+        except SQLAlchemyError as e:
+            raise RuntimeError(f"Failed to retrieve change events: {str(e)}") from e
 
     def mark_processed(self, event_ids: list[str]) -> None:
         """
@@ -177,25 +183,29 @@ class SQLiteChangeRepository:
 
         Raises:
             VersionNotFoundError: If any event IDs don't exist
+            RuntimeError: If database operation fails
         """
         if not event_ids:
             return
 
-        with self.session_factory() as session:
-            query = select(ChangeEvent).where(ChangeEvent.id.in_(event_ids))
-            events = session.execute(query).scalars().all()
-            found_ids = {cast(str, e.id) for e in events}
+        try:
+            with self.session_factory() as session:
+                query = select(ChangeEvent).where(ChangeEvent.id.in_(event_ids))
+                events = session.execute(query).scalars().all()
+                found_ids = {cast(str, e.id) for e in events}
 
-            missing_ids = set(event_ids) - found_ids
-            if missing_ids:
-                raise VersionNotFoundError(
-                    f"Change events not found: {', '.join(sorted(missing_ids))}"
-                )
+                missing_ids = set(event_ids) - found_ids
+                if missing_ids:
+                    raise VersionNotFoundError(
+                        f"Change events not found: {', '.join(sorted(missing_ids))}"
+                    )
 
-            for event in events:
-                event.processed = True
+                for event in events:
+                    event.processed = True
 
-            session.commit()
+                session.commit()
+        except SQLAlchemyError as e:
+            raise RuntimeError(f"Failed to mark change events as processed: {str(e)}") from e
 
     def delete_changes(self, event_ids: list[str]) -> None:
         """
@@ -637,43 +647,47 @@ class SQLiteChangeRepository:
 
         Raises:
             VersionNotFoundError: If the changeset or proposal does not exist
+            RuntimeError: If database operation fails
         """
-        with self.session_factory() as session:
-            orm_changeset = session.get(Changeset, changeset.id)
+        try:
+            with self.session_factory() as session:
+                orm_changeset = session.get(Changeset, changeset.id)
 
-            if not orm_changeset:
-                raise VersionNotFoundError(f"Changeset not found: {changeset.id}")
+                if not orm_changeset:
+                    raise VersionNotFoundError(f"Changeset not found: {changeset.id}")
 
-            orm_proposal = session.get(Proposal, proposal.id)
+                orm_proposal = session.get(Proposal, proposal.id)
 
-            if not orm_proposal:
-                raise VersionNotFoundError(f"Proposal not found: {proposal.id}")
+                if not orm_proposal:
+                    raise VersionNotFoundError(f"Proposal not found: {proposal.id}")
 
-            # Update changeset
-            orm_changeset.state = changeset.state.value
-            orm_changeset.updated_at = changeset.updated_at
+                # Update changeset
+                orm_changeset.state = changeset.state.value
+                orm_changeset.updated_at = changeset.updated_at
 
-            # Update proposal
-            orm_proposal.state = proposal.state.value
-            orm_proposal.reviewed_at = proposal.reviewed_at
-            orm_proposal.reviewer_notes = proposal.reviewer_notes
+                # Update proposal
+                orm_proposal.state = proposal.state.value
+                orm_proposal.reviewed_at = proposal.reviewed_at
+                orm_proposal.reviewer_notes = proposal.reviewer_notes
 
-            # Save all entity versions within the same transaction
-            for version in versions:
-                orm_version = EntityVersion(
-                    entity_id=version.entity_id,
-                    version=version.version,
-                    state=version.state.value,
-                    snapshot=version.snapshot,
-                    created_at=version.created_at,
-                    parent_version=version.parent_version,
-                )
-                session.add(orm_version)
+                # Save all entity versions within the same transaction
+                for version in versions:
+                    orm_version = EntityVersion(
+                        entity_id=version.entity_id,
+                        version=version.version,
+                        state=version.state.value,
+                        snapshot=version.snapshot,
+                        created_at=version.created_at,
+                        parent_version=version.parent_version,
+                    )
+                    session.add(orm_version)
 
-            # Commit all changes atomically
-            session.commit()
+                # Commit all changes atomically
+                session.commit()
 
-            return changeset, proposal
+                return changeset, proposal
+        except SQLAlchemyError as e:
+            raise RuntimeError(f"Failed to complete merge transaction: {str(e)}") from e
 
     # Helper methods for domain conversion
 
