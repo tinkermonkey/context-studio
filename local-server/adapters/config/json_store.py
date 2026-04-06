@@ -6,6 +6,8 @@ enabling the domain layer to persist and retrieve application configuration
 without direct dependency on the config.py module or Pydantic.
 """
 
+from pydantic import ValidationError
+
 from config import ConfigurationManager, Settings
 from domain.admin.entities import AppConfiguration
 from domain.admin.exceptions import ConfigurationError
@@ -57,7 +59,7 @@ class JSONFileConfigStore:
             }
             logger.debug("Configuration loaded successfully")
             return AppConfiguration(sections=sections)
-        except Exception as e:
+        except RuntimeError as e:
             raise ConfigurationError(f'Failed to load configuration: {e}') from e
 
     def update_config(self, updates: dict) -> AppConfiguration:
@@ -76,27 +78,22 @@ class JSONFileConfigStore:
         Raises:
             ConfigurationError: If update fails
         """
-        try:
-            # Get current configuration
-            current_config = self.get_config()
+        # Get current configuration (may raise ConfigurationError)
+        current_config = self.get_config()
 
-            # Merge updates into current configuration
-            updated_sections = dict(current_config.sections)
-            for section_name, section_updates in updates.items():
-                current_section = updated_sections.get(section_name)
-                if current_section is not None:
-                    current_section.update(section_updates)
-                else:
-                    updated_sections[section_name] = section_updates
+        # Merge updates into current configuration
+        updated_sections = dict(current_config.sections)
+        for section_name, section_updates in updates.items():
+            current_section = updated_sections.get(section_name)
+            if current_section is not None:
+                current_section.update(section_updates)
+            else:
+                updated_sections[section_name] = section_updates
 
-            updated_config = AppConfiguration(sections=updated_sections)
-            self._persist_config(updated_config)
-            logger.debug("Configuration updated successfully")
-            return updated_config
-        except ConfigurationError:
-            raise
-        except Exception as e:
-            raise ConfigurationError(f'Failed to update configuration: {e}') from e
+        updated_config = AppConfiguration(sections=updated_sections)
+        self._persist_config(updated_config)
+        logger.debug("Configuration updated successfully")
+        return updated_config
 
     def reset_to_defaults(self) -> AppConfiguration:
         """
@@ -143,7 +140,7 @@ class JSONFileConfigStore:
             return reset_config
         except ConfigurationError:
             raise
-        except Exception as e:
+        except ValidationError as e:
             raise ConfigurationError(f'Failed to reset configuration: {e}') from e
 
     def _persist_config(self, config: AppConfiguration) -> None:
@@ -182,5 +179,5 @@ class JSONFileConfigStore:
                 raise ConfigurationError("ConfigurationManager.save() returned False")
         except ConfigurationError:
             raise
-        except Exception as e:
+        except ValidationError as e:
             raise ConfigurationError(f'Failed to persist configuration: {e}') from e
