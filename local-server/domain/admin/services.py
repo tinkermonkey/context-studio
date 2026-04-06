@@ -226,7 +226,7 @@ class AdminService:
             Updated AppConfiguration object
 
         Raises:
-            ConfigurationError: If the section does not exist or is not configured
+            ConfigurationError: If the section does not exist, is not configured, or is not a dict
         """
         config = self._config.load()
 
@@ -239,6 +239,12 @@ class AdminService:
         section_value = getattr(config, section, None)
         if section_value is None:
             raise ConfigurationError(f"Configuration section '{section}' is not configured")
+
+        # Validate that section_value is a dict before attempting to update
+        if not isinstance(section_value, dict):
+            raise ConfigurationError(
+                f"Configuration section '{section}' is not a dictionary (got {type(section_value).__name__})"
+            )
 
         # Update the section with the provided updates
         section_value.update(updates)
@@ -318,13 +324,8 @@ class AdminService:
 
         Raises:
             TaskNotFoundError: If task_id does not exist
+            InvalidStateTransitionError: If the status transition is invalid
         """
         task = self.get_task(task_id)
-        task.status = status
-        if status == BackgroundTaskStatus.RUNNING:
-            task.started_at = datetime.now(timezone.utc)
-        elif status in (BackgroundTaskStatus.COMPLETED, BackgroundTaskStatus.FAILED):
-            task.completed_at = datetime.now(timezone.utc)
-        task.error = error
-        task.result = result
+        task.transition_to(status, datetime.now(timezone.utc), error=error, result=result)
         return task

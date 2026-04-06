@@ -29,7 +29,7 @@ CREDENTIAL_FIELD_NAMES = frozenset({
 })
 
 
-@dataclass
+@dataclass(frozen=True)
 class DatabaseHealth:
     """
     Health status of the database component.
@@ -43,7 +43,7 @@ class DatabaseHealth:
     issues: list[str] = field(default_factory=list)
 
 
-@dataclass
+@dataclass(frozen=True)
 class ServiceMetrics:
     """
     Metrics about system services and availability.
@@ -57,7 +57,7 @@ class ServiceMetrics:
     llm_providers_available: list[str] = field(default_factory=list)
 
 
-@dataclass
+@dataclass(frozen=True)
 class ComponentStatus:
     """
     Health status of an individual system component.
@@ -71,7 +71,7 @@ class ComponentStatus:
     details: str = ""
 
 
-@dataclass
+@dataclass(frozen=True)
 class BackgroundTaskSummary:
     """
     Summary of background task execution status.

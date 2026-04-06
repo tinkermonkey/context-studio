@@ -22,3 +22,9 @@ class TaskNotFoundError(AdminError):
     """Raised when a background task is not found."""
 
     pass
+
+
+class InvalidStateTransitionError(AdminError):
+    """Raised when an invalid state transition is attempted."""
+
+    pass

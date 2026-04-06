@@ -12,6 +12,7 @@ from datetime import datetime
 from typing import Any, Optional
 
 from domain.admin.value_objects import SystemHealthStatus, BackgroundTaskStatus
+from domain.admin.exceptions import InvalidStateTransitionError
 
 
 @dataclass
@@ -64,6 +65,69 @@ class BackgroundTask:
     completed_at: Optional[datetime] = None
     error: Optional[str] = None
     result: Optional[dict] = None
+
+    # Valid state transitions for background tasks
+    _VALID_TRANSITIONS = {
+        BackgroundTaskStatus.PENDING: {
+            BackgroundTaskStatus.RUNNING,
+            BackgroundTaskStatus.COMPLETED,
+            BackgroundTaskStatus.FAILED,
+        },
+        BackgroundTaskStatus.RUNNING: {
+            BackgroundTaskStatus.COMPLETED,
+            BackgroundTaskStatus.FAILED,
+        },
+        BackgroundTaskStatus.COMPLETED: set(),
+        BackgroundTaskStatus.FAILED: set(),
+    }
+
+    def can_transition_to(self, target_status: BackgroundTaskStatus) -> bool:
+        """
+        Check if the task can transition to the target status.
+
+        Args:
+            target_status: The desired status to transition to
+
+        Returns:
+            True if the transition is valid, False otherwise
+        """
+        return target_status in self._VALID_TRANSITIONS.get(self.status, set())
+
+    def transition_to(
+        self,
+        target_status: BackgroundTaskStatus,
+        timestamp: datetime,
+        error: Optional[str] = None,
+        result: Optional[dict] = None,
+    ) -> None:
+        """
+        Transition the task to a new status with validation.
+
+        Updates timestamps and additional data (error/result) as appropriate
+        for the target status.
+
+        Args:
+            target_status: The status to transition to
+            timestamp: Current timestamp for setting started_at/completed_at
+            error: Error message if transitioning to FAILED
+            result: Result data if transitioning to COMPLETED
+
+        Raises:
+            InvalidStateTransitionError: If the transition is not valid
+        """
+        if not self.can_transition_to(target_status):
+            raise InvalidStateTransitionError(
+                f"Cannot transition task from {self.status.value} to {target_status.value}"
+            )
+
+        self.status = target_status
+        if target_status == BackgroundTaskStatus.RUNNING:
+            self.started_at = timestamp
+        elif target_status in (BackgroundTaskStatus.COMPLETED, BackgroundTaskStatus.FAILED):
+            self.completed_at = timestamp
+
+        self.error = error
+        self.result = result
 
 
 @dataclass
