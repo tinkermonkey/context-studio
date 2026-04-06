@@ -66,10 +66,6 @@ class SystemMetricsCollector:
         Returns:
             True if database is accessible, False otherwise
         """
-        if self._db_engine is None:
-            logger.warning("Database engine not provided to metrics collector")
-            return False
-
         try:
             with self._db_engine.connect() as connection:
                 connection.execute(text("SELECT 1"))

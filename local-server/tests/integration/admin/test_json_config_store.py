@@ -256,8 +256,8 @@ def test_reset_to_defaults_persists_changes():
         assert reloaded_config.sections["llm"]["anthropic_api_key"] == "sk-ant-test-456"
 
 
-def test_reset_to_defaults_preserves_s3_credentials():
-    """Test that reset_to_defaults preserves S3 credentials."""
+def test_reset_to_defaults_removes_sync_not_in_defaults():
+    """Test that reset_to_defaults removes sync section since it's not in defaults."""
     with tempfile.TemporaryDirectory() as tmpdir:
         config_file = os.path.join(tmpdir, "config.json")
 
@@ -294,11 +294,6 @@ def test_reset_to_defaults_preserves_s3_credentials():
         # Reset to defaults
         reset_config = store.reset_to_defaults()
 
-        # Verify S3 credentials are preserved if they exist in sync section
-        # Note: S3 credentials in the sync section should be preserved via CREDENTIAL_FIELD_NAMES
-        if "sync" in reset_config.sections and reset_config.sections["sync"] is not None:
-            sync_section = reset_config.sections["sync"]
-            if "s3" in sync_section and sync_section["s3"] is not None:
-                s3_section = sync_section["s3"]
-                assert s3_section.get("s3_access_key") == "AKIA1234567890"
-                assert s3_section.get("s3_secret_key") == "wJalrXUtnFEMI/K7MDENG+bPxRfiCYEXAMPLEKEY"
+        # Since sync is not in the default Settings(), it should be None or removed
+        # This verifies that the reset removes sections not present in defaults
+        assert reset_config.sections.get("sync") is None

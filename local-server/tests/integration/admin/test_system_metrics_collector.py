@@ -8,17 +8,11 @@ health-check components, without depending on concrete adapter types.
 import sys
 import os
 import time
-from unittest.mock import Mock
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 from sqlalchemy import create_engine, text
 from adapters.metrics.system_collector import SystemMetricsCollector
-from domain.admin.ports import (
-    HealthCheckableNLP,
-    HealthCheckableEmbedding,
-    HealthCheckableLLM,
-)
 
 
 class FakeHealthCheckableNLP:
