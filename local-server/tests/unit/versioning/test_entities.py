@@ -172,7 +172,7 @@ class TestConflictReport:
         """Test that report with conflicts reports has_conflicts."""
         conflict = Conflict(
             entity_id="entity1",
-            entity_type="Class",
+            entity_type="class",
             field_name="title",
             base_value="Old",
             incoming_value="New",
@@ -184,7 +184,7 @@ class TestConflictReport:
         """Test that all_resolved is false when conflicts are unresolved."""
         conflict = Conflict(
             entity_id="entity1",
-            entity_type="Class",
+            entity_type="class",
             field_name="title",
             base_value="Old",
             incoming_value="New",
@@ -196,7 +196,7 @@ class TestConflictReport:
         """Test that all_resolved is true when all conflicts are resolved."""
         conflict = Conflict(
             entity_id="entity1",
-            entity_type="Class",
+            entity_type="class",
             field_name="title",
             base_value="Old",
             incoming_value="New",
@@ -211,7 +211,7 @@ class TestConflictReport:
         conflicts = [
             Conflict(
                 entity_id="entity1",
-            entity_type="Class",
+                entity_type="class",
                 field_name="title",
                 base_value="Old",
                 incoming_value="New",
@@ -220,7 +220,7 @@ class TestConflictReport:
             ),
             Conflict(
                 entity_id="entity1",
-            entity_type="Class",
+                entity_type="class",
                 field_name="description",
                 base_value="Old desc",
                 incoming_value="New desc",
@@ -236,7 +236,7 @@ class TestConflictReport:
         conflicts = [
             Conflict(
                 entity_id="entity1",
-            entity_type="Class",
+                entity_type="class",
                 field_name="title",
                 base_value="Old",
                 incoming_value="New",
@@ -245,7 +245,7 @@ class TestConflictReport:
             ),
             Conflict(
                 entity_id="entity1",
-            entity_type="Class",
+                entity_type="class",
                 field_name="description",
                 base_value="Old desc",
                 incoming_value="New desc",
@@ -258,7 +258,7 @@ class TestConflictReport:
         """Test that is_resolved is true when resolved_value is None but resolution_strategy is set."""
         conflict = Conflict(
             entity_id="entity1",
-            entity_type="Class",
+            entity_type="class",
             field_name="optional_field",
             base_value=None,
             incoming_value="New Value",

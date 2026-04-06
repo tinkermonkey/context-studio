@@ -2,13 +2,10 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import TYPE_CHECKING, Optional, Protocol, Sequence
+from typing import Optional, Protocol, Sequence
 
 from domain.versioning.entities import ChangeEvent, Changeset, EntityVersion, Proposal
 from domain.versioning.value_objects import SyncResult, ChangeOperation, ChangeHistoryResult, SyncStatus
-
-if TYPE_CHECKING:
-    from domain.ontology.entities import Class, ConceptScheme, Individual, Taxonomy
 
 
 class ChangeRepository(Protocol):
@@ -252,61 +249,4 @@ class SyncTarget(Protocol):
 
     def get_sync_status(self) -> SyncStatus:
         """Get the status of remote synchronization."""
-        ...
-
-
-class OntologyRepository(Protocol):
-    """Port for reading ontology entities to support diff computation and change tracking.
-
-    The versioning context uses this port to read current state of ontology entities
-    when computing diffs and tracking changes. This enables the versioning service
-    to understand what the previous state of an entity was before a change event.
-    """
-
-    def get_class(self, class_id: str) -> Class | None:
-        """
-        Retrieve a class by ID.
-
-        Args:
-            class_id: The ID of the class
-
-        Returns:
-            The Class if found, None otherwise
-        """
-        ...
-
-    def get_taxonomy(self, taxonomy_id: str) -> Taxonomy | None:
-        """
-        Retrieve a taxonomy by ID.
-
-        Args:
-            taxonomy_id: The ID of the taxonomy
-
-        Returns:
-            The Taxonomy if found, None otherwise
-        """
-        ...
-
-    def get_concept_scheme(self, concept_scheme_id: str) -> ConceptScheme | None:
-        """
-        Retrieve a concept scheme by ID.
-
-        Args:
-            concept_scheme_id: The ID of the concept scheme
-
-        Returns:
-            The ConceptScheme if found, None otherwise
-        """
-        ...
-
-    def get_individual(self, individual_id: str) -> Individual | None:
-        """
-        Retrieve an individual by ID.
-
-        Args:
-            individual_id: The ID of the individual
-
-        Returns:
-            The Individual if found, None otherwise
-        """
         ...
