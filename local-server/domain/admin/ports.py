@@ -8,7 +8,7 @@ explicitly inherit from these protocols.
 
 from __future__ import annotations
 
-from typing import Protocol
+from typing import Protocol, Any
 
 from .entities import AppConfiguration
 from .value_objects import DatabaseHealth, ServiceMetrics, ComponentStatus, BackgroundTaskSummary
@@ -157,7 +157,7 @@ class ConfigurationStore(Protocol):
         """
         ...
 
-    def update_config(self, updates: dict[str, dict[str, any]]) -> AppConfiguration:
+    def update_config(self, updates: dict[str, dict[str, Any]]) -> AppConfiguration:
         """
         Update application configuration with partial updates.
 

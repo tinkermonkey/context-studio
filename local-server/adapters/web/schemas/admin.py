@@ -18,7 +18,7 @@ API key masking is applied at serialization time in AppConfigurationResponse.
 """
 
 import copy
-from typing import Optional
+from typing import Optional, Any
 from datetime import datetime
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -188,9 +188,13 @@ class AppConfigurationResponse(BaseModel):
     API responses.
     """
 
-    sections: dict[str, dict] = Field(
-        ...,
-        description="Configuration sections with masked credentials"
+    llm: dict[str, Any] = Field(
+        default_factory=dict,
+        description="LLM configuration with masked credentials"
+    )
+    sync: Optional[dict[str, Any]] = Field(
+        default=None,
+        description="Sync configuration with masked credentials"
     )
 
     model_config = ConfigDict(from_attributes=True)
@@ -209,19 +213,10 @@ class AppConfigurationResponse(BaseModel):
         Returns:
             AppConfigurationResponse with masked credential fields
         """
-        masked_sections = {
-            "server": _mask_credentials(config.server) if config.server else {},
-            "database": _mask_credentials(config.database) if config.database else {},
-            "logging": _mask_credentials(config.logging) if config.logging else {},
-            "llm": _mask_credentials(config.llm) if config.llm else {},
-            "nlp": _mask_credentials(config.nlp) if config.nlp else {},
-            "embedding": _mask_credentials(config.embedding) if config.embedding else {},
-            "reference_sources": _mask_credentials(config.reference_sources) if config.reference_sources else {},
-        }
-        if config.sync is not None:
-            masked_sections["sync"] = _mask_credentials(config.sync) if config.sync else None
+        llm_masked = _mask_credentials(config.llm) if config.llm else {}
+        sync_masked = _mask_credentials(config.sync) if config.sync else None
 
-        return cls(sections=masked_sections)
+        return cls(llm=llm_masked, sync=sync_masked)
 
 
 class BackgroundTaskResponse(BaseModel):
