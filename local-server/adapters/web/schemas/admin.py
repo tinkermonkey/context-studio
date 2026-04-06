@@ -18,7 +18,7 @@ API key masking is applied at serialization time in AppConfigurationResponse.
 """
 
 import copy
-from typing import Optional, Any
+from typing import Optional, Any, Literal
 from datetime import datetime
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -60,7 +60,7 @@ def _mask_credentials(section: dict) -> dict:
 class SystemHealthResponse(BaseModel):
     """Response containing system health status and component readiness."""
 
-    status: str = Field(
+    status: Literal["healthy", "degraded", "unhealthy"] = Field(
         ...,
         description='Overall health status: "healthy", "degraded", or "unhealthy"'
     )
@@ -232,7 +232,7 @@ class BackgroundTaskResponse(BaseModel):
         ...,
         description="Human-readable task name"
     )
-    status: str = Field(
+    status: Literal["pending", "running", "completed", "failed"] = Field(
         ...,
         description='Task status: "pending", "running", "completed", or "failed"'
     )
