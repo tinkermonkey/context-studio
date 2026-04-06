@@ -880,12 +880,14 @@ class TestAutoResolveConflicts:
         report.conflicts = [
             Conflict(
                 entity_id="entity1",
+                entity_type="Class",
                 field_name="name",
                 base_value="old",
                 incoming_value="new1",
             ),
             Conflict(
                 entity_id="entity2",
+                entity_type="Class",
                 field_name="description",
                 base_value="old_desc",
                 incoming_value="new_desc",
@@ -909,6 +911,7 @@ class TestAutoResolveConflicts:
         report.conflicts = [
             Conflict(
                 entity_id="entity1",
+                entity_type="Class",
                 field_name="name",
                 base_value="base_value",
                 incoming_value="incoming_value",
@@ -1051,12 +1054,14 @@ class TestMergeStrategies:
         report.conflicts = [
             Conflict(
                 entity_id="entity1",
+                entity_type="Class",
                 field_name="name",
                 base_value="base_name",
                 incoming_value="incoming_name",
             ),
             Conflict(
                 entity_id="entity2",
+                entity_type="Class",
                 field_name="description",
                 base_value="base_desc",
                 incoming_value="incoming_desc",
@@ -1077,12 +1082,14 @@ class TestMergeStrategies:
         report.conflicts = [
             Conflict(
                 entity_id="entity1",
+                entity_type="Class",
                 field_name="name",
                 base_value="base_name",
                 incoming_value="incoming_name",
             ),
             Conflict(
                 entity_id="entity2",
+                entity_type="Class",
                 field_name="description",
                 base_value="base_desc",
                 incoming_value="incoming_desc",
@@ -1103,6 +1110,7 @@ class TestMergeStrategies:
         report.conflicts = [
             Conflict(
                 entity_id="entity1",
+                entity_type="Class",
                 field_name="name",
                 base_value="base_name",
                 incoming_value="incoming_name",
@@ -1124,6 +1132,7 @@ class TestMergeStrategies:
         report.conflicts = [
             Conflict(
                 entity_id="entity1",
+                entity_type="Class",
                 field_name="name",
                 base_value="base_value",
                 incoming_value="incoming_value",
@@ -1211,6 +1220,7 @@ class TestMergeStrategies:
         report1.conflicts = [
             Conflict(
                 entity_id="entity1",
+                entity_type="Class",
                 field_name="field1",
                 base_value="base1",
                 incoming_value="incoming1",
@@ -1224,6 +1234,7 @@ class TestMergeStrategies:
         report2.conflicts = [
             Conflict(
                 entity_id="entity1",
+                entity_type="Class",
                 field_name="field1",
                 base_value="base1",
                 incoming_value="incoming1",
@@ -1237,6 +1248,7 @@ class TestMergeStrategies:
         report3.conflicts = [
             Conflict(
                 entity_id="entity1",
+                entity_type="Class",
                 field_name="field1",
                 base_value="base1",
                 incoming_value="incoming1",
@@ -1253,6 +1265,7 @@ class TestMergeStrategies:
         report.conflicts = [
             Conflict(
                 entity_id="entity1",
+                entity_type="Class",
                 field_name="tags",
                 base_value=["tag1", "tag2"],
                 incoming_value=["tag2", "tag3"],
@@ -1274,6 +1287,7 @@ class TestMergeStrategies:
         report.conflicts = [
             Conflict(
                 entity_id="entity1",
+                entity_type="Class",
                 field_name="name",
                 base_value="base_name",
                 incoming_value="incoming_name",
@@ -1295,12 +1309,14 @@ class TestMergeStrategies:
         report.conflicts = [
             Conflict(
                 entity_id="entity1",
+                entity_type="Class",
                 field_name="tags",
                 base_value=None,
                 incoming_value=["tag1"],
             ),
             Conflict(
                 entity_id="entity2",
+                entity_type="Class",
                 field_name="tags",
                 base_value=["tag2"],
                 incoming_value=None,

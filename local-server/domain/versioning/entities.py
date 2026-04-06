@@ -140,11 +140,26 @@ class Conflict:
     """A merge conflict on a single field."""
 
     entity_id: str
+    entity_type: str
     field_name: str
     base_value: Any
     incoming_value: Any
     resolved_value: Any = None
     resolution_strategy: Optional[MergeStrategy] = None
+
+    def resolve(self, resolved_value: Any, strategy: MergeStrategy) -> None:
+        """
+        Atomically set the resolved value and strategy.
+
+        This method ensures the conflict cannot be left in a half-resolved state
+        where resolved_value is set but resolution_strategy is None (or vice versa).
+
+        Args:
+            resolved_value: The resolved value for this field
+            strategy: The MergeStrategy used to resolve the conflict
+        """
+        self.resolved_value = resolved_value
+        self.resolution_strategy = strategy
 
     @property
     def is_resolved(self) -> bool:

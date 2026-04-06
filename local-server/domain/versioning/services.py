@@ -463,6 +463,7 @@ class VersioningService:
 
                         conflict = Conflict(
                             entity_id=entity_id,
+                            entity_type=later.entity_type,
                             field_name=field_name,
                             base_value=base_value,
                             incoming_value=later.new_state.get(field_name),
@@ -474,8 +475,10 @@ class VersioningService:
             for conflict in report.conflicts:
                 entity_resolutions = resolutions.get(conflict.entity_id, {})
                 if conflict.field_name in entity_resolutions:
-                    conflict.resolved_value = entity_resolutions[conflict.field_name]
-                    conflict.resolution_strategy = MergeStrategy.MANUAL
+                    conflict.resolve(
+                        entity_resolutions[conflict.field_name],
+                        MergeStrategy.MANUAL
+                    )
 
         _logger.info(
             "Conflict detection complete (proposal_id=%s, conflicts_found=%d, resolved=%d)",
@@ -517,9 +520,9 @@ class VersioningService:
 
         for conflict in conflict_report.conflicts:
             if strategy == MergeStrategy.LAST_WRITE_WINS:
-                conflict.resolved_value = conflict.incoming_value
+                conflict.resolve(conflict.incoming_value, strategy)
             elif strategy == MergeStrategy.BASE_VALUE_WINS:
-                conflict.resolved_value = conflict.base_value
+                conflict.resolve(conflict.base_value, strategy)
             elif strategy == MergeStrategy.MERGE_BOTH:
                 # For list-typed fields (JSON only produces lists), combine both value sets.
                 # Non-list types fall back to incoming_value.
@@ -532,21 +535,20 @@ class VersioningService:
                     base_set = set(base)
                     incoming_set = set(incoming)
                     merged = base_set | incoming_set
-                    conflict.resolved_value = sorted(merged)
+                    resolved_value = sorted(merged)
                 elif isinstance(base, list) and incoming is None:
                     # If only base is a list, use base
-                    conflict.resolved_value = base
+                    resolved_value = base
                 elif isinstance(incoming, list) and base is None:
                     # If only incoming is a list, use incoming
-                    conflict.resolved_value = incoming
+                    resolved_value = incoming
                 else:
                     # For non-list types or mixed types, fall back to incoming_value
-                    conflict.resolved_value = incoming
+                    resolved_value = incoming
+
+                conflict.resolve(resolved_value, strategy)
             else:
                 raise ValueError(f"Unrecognized merge strategy: {strategy}")
-
-            # Populate the resolution_strategy field to mark conflict as resolved
-            conflict.resolution_strategy = strategy
 
         _logger.info(
             "Auto-resolved conflicts using %s strategy (proposal_id=%s, conflicts_resolved=%d)",

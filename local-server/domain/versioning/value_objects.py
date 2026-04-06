@@ -82,6 +82,12 @@ class SyncResult:
         pushed_event_ids: Specific IDs of events that were successfully pushed
         started_at: Timestamp when the sync operation started
         completed_at: Timestamp when the sync operation completed
+
+    Invariants:
+        - pushed >= 0
+        - pulled >= 0
+        - If started_at and completed_at are both set, completed_at >= started_at
+        - If pushed_event_ids is set, len(pushed_event_ids) == pushed
     """
 
     pushed: int
@@ -90,6 +96,25 @@ class SyncResult:
     pushed_event_ids: Optional[tuple[str, ...]] = None  # Specific event IDs that were successfully pushed
     started_at: Optional[datetime] = None
     completed_at: Optional[datetime] = None
+
+    def __post_init__(self) -> None:
+        """Validate invariants after initialization."""
+        if self.pushed < 0:
+            raise ValueError(f"pushed count cannot be negative: {self.pushed}")
+        if self.pulled < 0:
+            raise ValueError(f"pulled count cannot be negative: {self.pulled}")
+        if self.started_at is not None and self.completed_at is not None:
+            if self.completed_at < self.started_at:
+                raise ValueError(
+                    f"completed_at ({self.completed_at}) cannot be before "
+                    f"started_at ({self.started_at})"
+                )
+        if self.pushed_event_ids is not None:
+            if len(self.pushed_event_ids) != self.pushed:
+                raise ValueError(
+                    f"pushed_event_ids length ({len(self.pushed_event_ids)}) "
+                    f"must equal pushed count ({self.pushed})"
+                )
 
 
 @dataclass(frozen=True)
