@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Optional
+from typing import Any, Optional
 
 from domain.versioning.value_objects import ChangeState, ProposalState, ChangeOperation, EntityVersionState, MergeStrategy
 
@@ -141,9 +141,9 @@ class Conflict:
 
     entity_id: str
     field_name: str
-    base_value: object
-    incoming_value: object
-    resolved_value: object = None
+    base_value: Any
+    incoming_value: Any
+    resolved_value: Any = None
     resolution_strategy: Optional[MergeStrategy] = None
 
     @property
