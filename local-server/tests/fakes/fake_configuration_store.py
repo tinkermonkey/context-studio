@@ -1,5 +1,6 @@
 """Fake in-memory implementation of ConfigurationStore for testing."""
 
+import copy
 import sys
 import os
 from typing import Any, Optional
@@ -80,7 +81,6 @@ class FakeConfigurationStore:
             AppConfiguration reset to defaults with credentials preserved
         """
         # Create a deep copy of the defaults
-        import copy
         reset_config = copy.deepcopy(self._defaults)
 
         # Preserve credentials from current config
@@ -88,11 +88,18 @@ class FakeConfigurationStore:
             current_section = getattr(self._config, attr_name, None)
             reset_section = getattr(reset_config, attr_name, None)
 
-            if current_section is None or reset_section is None:
-                continue
-            if not isinstance(current_section, dict) or not isinstance(reset_section, dict):
+            # Skip if current section has no credentials
+            if current_section is None or not isinstance(current_section, dict):
                 continue
 
+            # If reset section is None but current has credentials, initialize it
+            if reset_section is None:
+                reset_section = {}
+                setattr(reset_config, attr_name, reset_section)
+            elif not isinstance(reset_section, dict):
+                continue
+
+            # Preserve credential fields from current to reset
             for key, value in current_section.items():
                 if key in CREDENTIAL_FIELD_NAMES:
                     reset_section[key] = value

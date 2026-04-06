@@ -55,10 +55,10 @@ class JSONFileConfigStore:
                 database=settings.database.model_dump(),
                 logging=settings.logging.model_dump(),
                 llm=settings.llm.model_dump(),
-                nlp=settings.nlp.model_dump() if hasattr(settings, 'nlp') and settings.nlp else {},
-                embedding=settings.embedding.model_dump() if hasattr(settings, 'embedding') and settings.embedding else {},
-                reference_sources=settings.reference.model_dump() if hasattr(settings, 'reference') and settings.reference else {},
-                sync=settings.sync.model_dump() if hasattr(settings, 'sync') and settings.sync else None,
+                nlp=settings.nlp if settings.nlp else {},
+                embedding=settings.embedding if settings.embedding else {},
+                reference_sources=settings.reference.model_dump() if settings.reference else {},
+                sync=settings.sync.model_dump() if settings.sync else None,
             )
         except RuntimeError as e:
             raise ConfigurationError(f'Failed to load configuration: {e}') from e
@@ -106,34 +106,30 @@ class JSONFileConfigStore:
                 database=default_settings.database.model_dump(),
                 logging=default_settings.logging.model_dump(),
                 llm=default_settings.llm.model_dump(),
-                nlp=default_settings.nlp.model_dump() if hasattr(default_settings, 'nlp') and default_settings.nlp else {},
-                embedding=default_settings.embedding.model_dump() if hasattr(default_settings, 'embedding') and default_settings.embedding else {},
-                reference_sources=default_settings.reference.model_dump() if hasattr(default_settings, 'reference') and default_settings.reference else {},
-                sync=default_settings.sync.model_dump() if hasattr(default_settings, 'sync') and default_settings.sync else None,
+                nlp=default_settings.nlp if default_settings.nlp else {},
+                embedding=default_settings.embedding if default_settings.embedding else {},
+                reference_sources=default_settings.reference.model_dump() if default_settings.reference else {},
+                sync=default_settings.sync.model_dump() if default_settings.sync else None,
             )
 
-            # Map of section names to their config attributes for preserving credentials
-            section_mapping = {
-                'server': 'server',
-                'database': 'database',
-                'logging': 'logging',
-                'llm': 'llm',
-                'nlp': 'nlp',
-                'embedding': 'embedding',
-                'reference_sources': 'reference_sources',
-                'sync': 'sync',
-            }
-
-            # Preserve credentials from current config
-            for section_name, attr_name in section_mapping.items():
+            # Preserve credentials from current config for each section
+            section_names = ('server', 'database', 'logging', 'llm', 'nlp', 'embedding', 'reference_sources', 'sync')
+            for attr_name in section_names:
                 current_section = getattr(current_config, attr_name, None)
                 default_section = getattr(default_config, attr_name, None)
 
-                if current_section is None or default_section is None:
-                    continue
-                if not isinstance(default_section, dict) or not isinstance(current_section, dict):
+                # Skip if current section has no credentials
+                if current_section is None or not isinstance(current_section, dict):
                     continue
 
+                # If default section is None but current has credentials, initialize it
+                if default_section is None:
+                    default_section = {}
+                    setattr(default_config, attr_name, default_section)
+                elif not isinstance(default_section, dict):
+                    continue
+
+                # Preserve credential fields from current to default
                 for key, value in current_section.items():
                     if key in CREDENTIAL_FIELD_NAMES:
                         default_section[key] = value
@@ -164,6 +160,8 @@ class JSONFileConfigStore:
                 'database': config.database or {},
                 'logging': config.logging or {},
                 'llm': config.llm or {},
+                'nlp': config.nlp or {},
+                'embedding': config.embedding or {},
             }
             # Add optional sections only if they exist
             if config.reference_sources is not None:
@@ -171,12 +169,6 @@ class JSONFileConfigStore:
 
             if config.sync is not None:
                 settings_dict['sync'] = config.sync
-
-            # Add nlp and embedding if they exist and have handlers in Settings
-            if hasattr(config, 'nlp') and config.nlp is not None:
-                settings_dict['nlp'] = config.nlp
-            if hasattr(config, 'embedding') and config.embedding is not None:
-                settings_dict['embedding'] = config.embedding
 
             # Pydantic will convert dicts to config classes
             new_settings = Settings(**settings_dict)  # type: ignore[arg-type]

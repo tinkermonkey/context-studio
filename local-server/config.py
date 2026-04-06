@@ -145,6 +145,8 @@ class Settings(BaseModel):
     database: DatabaseConfig = Field(default_factory=DatabaseConfig)
     logging: LoggingConfig = Field(default_factory=LoggingConfig)
     llm: LLMConfig = Field(default_factory=LLMConfig)
+    nlp: dict = Field(default_factory=dict, description="NLP pipeline configuration")
+    embedding: dict = Field(default_factory=dict, description="Embedding model configuration")
     reference: ReferenceConfig = Field(default_factory=ReferenceConfig)
     sync: Optional[SyncConfig] = Field(default=None, description="Synchronization configuration")
 

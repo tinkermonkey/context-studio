@@ -7,6 +7,7 @@ and background task lifecycle.
 
 from __future__ import annotations
 
+import dataclasses
 import uuid
 from datetime import datetime, timezone
 from typing import Optional
@@ -224,8 +225,8 @@ class AdminService:
         """
         config = self._config.load()
 
-        # Valid configuration sections
-        valid_sections = {"server", "database", "llm", "nlp", "embedding", "reference_sources", "logging", "sync"}
+        # Valid configuration sections derived from AppConfiguration fields
+        valid_sections = {f.name for f in dataclasses.fields(AppConfiguration)}
         if section not in valid_sections:
             raise ConfigurationError(f"Unknown config section: {section}")
 
@@ -235,11 +236,8 @@ class AdminService:
             raise ConfigurationError(f"Configuration section '{section}' is not configured")
 
         # Update the section with the provided updates
-        if isinstance(section_value, dict):
-            section_value.update(updates)
-            setattr(config, section, section_value)
-        else:
-            raise ConfigurationError(f"Configuration section '{section}' is not a dictionary")
+        section_value.update(updates)
+        setattr(config, section, section_value)
 
         return self._config.save(config)
 
