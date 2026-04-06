@@ -51,8 +51,10 @@ def _handle_admin_error(exc: Exception) -> tuple[int, str]:
         Tuple of (status_code, error_message)
     """
     if isinstance(exc, ConfigurationError):
+        logger.warning(f"Configuration error: {exc}")
         return (status.HTTP_400_BAD_REQUEST, str(exc))
     elif isinstance(exc, TaskNotFoundError):
+        logger.warning(f"Task not found: {exc}")
         return (status.HTTP_404_NOT_FOUND, str(exc))
     elif isinstance(exc, AdminError):
         logger.warning(f"Admin error: {exc}")
@@ -73,8 +75,9 @@ async def check_health(
     components (NLP pipeline, embedding model, LLM providers).
 
     Health status rules:
-    - "healthy": All core systems operational
-    - "degraded": Optional components unavailable but system functional
+    - "healthy": All systems operational
+    - "degraded": One or more issues detected (e.g., missing LLM providers, unavailable
+      components, failed background tasks) but core systems functional
     - "unhealthy": Critical systems (database) unavailable
 
     Returns:
@@ -214,7 +217,7 @@ async def get_configuration(
     Retrieve current application configuration.
 
     Returns all configuration sections with sensitive values (API keys)
-    masked to prevent exposure in logs.
+    masked in the API response to prevent exposure through the HTTP interface.
 
     Returns:
         AppConfigurationResponse with configuration sections and masked API keys

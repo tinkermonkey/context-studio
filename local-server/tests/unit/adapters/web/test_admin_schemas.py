@@ -11,8 +11,10 @@ import os
 # Add local-server root to path for imports
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))))
 
+import pytest
 from adapters.web.schemas.admin import AppConfigurationResponse
 from domain.admin.entities import AppConfiguration
+from domain.admin.exceptions import ConfigurationError
 
 
 class TestAppConfigurationResponseMasking:
@@ -230,8 +232,8 @@ class TestAppConfigurationResponseMasking:
         # 12345678901234 converted to string "12345678901234", last 4 is "1234"
         assert response.sections["llm"]["openai_api_key"] == "***1234"
 
-    def test_non_dict_sections_are_replaced_with_none(self) -> None:
-        """Test that non-dict sections are replaced with None to prevent credential leakage."""
+    def test_non_dict_sections_raise_configuration_error(self) -> None:
+        """Test that non-dict sections raise ConfigurationError instead of being silently replaced."""
         config = AppConfiguration(
             sections={
                 "llm": {
@@ -241,10 +243,11 @@ class TestAppConfigurationResponseMasking:
             }
         )
 
-        response = AppConfigurationResponse.from_domain(config)
+        with pytest.raises(ConfigurationError) as exc_info:
+            AppConfigurationResponse.from_domain(config)
 
-        assert response.sections["llm"]["openai_api_key"] == "***7890"
-        assert response.sections["list_section"] is None
+        assert "list_section" in str(exc_info.value)
+        assert "corrupted" in str(exc_info.value)
 
     def test_none_sections_remain_none(self) -> None:
         """Test that None section values remain as None."""
@@ -264,8 +267,8 @@ class TestAppConfigurationResponseMasking:
         assert response.sections["sync"] is None
         assert response.sections["reference"] is None
 
-    def test_string_section_is_replaced_with_none(self) -> None:
-        """Test that string section values are replaced with None to prevent credential leakage."""
+    def test_string_section_raises_configuration_error(self) -> None:
+        """Test that string section values raise ConfigurationError instead of being silently replaced."""
         config = AppConfiguration(
             sections={
                 "llm": {
@@ -275,13 +278,14 @@ class TestAppConfigurationResponseMasking:
             }
         )
 
-        response = AppConfigurationResponse.from_domain(config)
+        with pytest.raises(ConfigurationError) as exc_info:
+            AppConfigurationResponse.from_domain(config)
 
-        assert response.sections["llm"]["openai_api_key"] == "***7890"
-        assert response.sections["corrupted"] is None
+        assert "corrupted" in str(exc_info.value)
+        assert "corrupted" in str(exc_info.value)
 
-    def test_integer_section_is_replaced_with_none(self) -> None:
-        """Test that integer section values are replaced with None."""
+    def test_integer_section_raises_configuration_error(self) -> None:
+        """Test that integer section values raise ConfigurationError instead of being silently replaced."""
         config = AppConfiguration(
             sections={
                 "llm": {
@@ -291,7 +295,8 @@ class TestAppConfigurationResponseMasking:
             }
         )
 
-        response = AppConfigurationResponse.from_domain(config)
+        with pytest.raises(ConfigurationError) as exc_info:
+            AppConfigurationResponse.from_domain(config)
 
-        assert response.sections["llm"]["openai_api_key"] == "***7890"
-        assert response.sections["bad_section"] is None
+        assert "bad_section" in str(exc_info.value)
+        assert "corrupted" in str(exc_info.value)
