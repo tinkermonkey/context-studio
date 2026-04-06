@@ -548,6 +548,13 @@ class TestAdminServiceConfigurationManagement:
 
         assert "Unknown config section: unknown_section" in str(exc_info.value)
 
+    def test_update_configuration_raises_error_for_none_section(self):
+        """Update configuration raises ConfigurationError when section is None."""
+        with pytest.raises(ConfigurationError) as exc_info:
+            self.service.update_configuration("sync", {"bucket": "my-bucket"})
+
+        assert "Configuration section 'sync' is not configured" in str(exc_info.value)
+
     def test_update_configuration_merges_updates(self):
         """Update configuration merges updates with existing values."""
         self.service.update_configuration("llm", {"provider": "openai"})

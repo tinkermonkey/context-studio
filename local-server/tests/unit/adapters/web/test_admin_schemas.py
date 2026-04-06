@@ -230,8 +230,8 @@ class TestAppConfigurationResponseMasking:
         # 12345678901234 converted to string "12345678901234", last 4 is "1234"
         assert response.sections["llm"]["openai_api_key"] == "***1234"
 
-    def test_non_dict_sections_are_ignored(self) -> None:
-        """Test that non-dict sections are not masked and remain unchanged."""
+    def test_non_dict_sections_are_replaced_with_none(self) -> None:
+        """Test that non-dict sections are replaced with None to prevent credential leakage."""
         config = AppConfiguration(
             sections={
                 "llm": {
@@ -244,4 +244,54 @@ class TestAppConfigurationResponseMasking:
         response = AppConfigurationResponse.from_domain(config)
 
         assert response.sections["llm"]["openai_api_key"] == "***7890"
-        assert response.sections["list_section"] == ["item1", "item2"]
+        assert response.sections["list_section"] is None
+
+    def test_none_sections_remain_none(self) -> None:
+        """Test that None section values remain as None."""
+        config = AppConfiguration(
+            sections={
+                "llm": {
+                    "openai_api_key": "sk-test1234567890"
+                },
+                "sync": None,
+                "reference": None
+            }
+        )
+
+        response = AppConfigurationResponse.from_domain(config)
+
+        assert response.sections["llm"]["openai_api_key"] == "***7890"
+        assert response.sections["sync"] is None
+        assert response.sections["reference"] is None
+
+    def test_string_section_is_replaced_with_none(self) -> None:
+        """Test that string section values are replaced with None to prevent credential leakage."""
+        config = AppConfiguration(
+            sections={
+                "llm": {
+                    "openai_api_key": "sk-test1234567890"
+                },
+                "corrupted": "sk-secret-api-key-in-string"
+            }
+        )
+
+        response = AppConfigurationResponse.from_domain(config)
+
+        assert response.sections["llm"]["openai_api_key"] == "***7890"
+        assert response.sections["corrupted"] is None
+
+    def test_integer_section_is_replaced_with_none(self) -> None:
+        """Test that integer section values are replaced with None."""
+        config = AppConfiguration(
+            sections={
+                "llm": {
+                    "openai_api_key": "sk-test1234567890"
+                },
+                "bad_section": 12345
+            }
+        )
+
+        response = AppConfigurationResponse.from_domain(config)
+
+        assert response.sections["llm"]["openai_api_key"] == "***7890"
+        assert response.sections["bad_section"] is None
