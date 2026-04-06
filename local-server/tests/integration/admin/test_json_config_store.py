@@ -300,3 +300,51 @@ def test_reset_to_defaults_removes_sync_not_in_defaults():
         # Since sync is not in the default Settings(), it should be None or removed
         # This verifies that the reset removes sections not present in defaults
         assert reset_config.sections.get("sync") is None
+
+
+def test_update_config_with_dict_merging():
+    """Test that update_config merges nested dictionary updates correctly."""
+    with tempfile.TemporaryDirectory() as tmpdir:
+        config_file = os.path.join(tmpdir, "config.json")
+
+        # Create initial config with test values
+        config_data = {
+            "server": {"host": "127.0.0.1", "port": 8000, "cors_origins": ["*"]},
+            "database": {
+                "local_db_path": "./local.db",
+                "operations_db_path": "./operations.db",
+            },
+            "logging": {"log_level": "INFO", "max_bytes": 10485760, "backup_count": 5},
+            "llm": {"openai_api_key": "", "anthropic_api_key": ""},
+            "reference": {
+                "cache_db_path": "./reference_api_cache.db",
+                "reference_db_path": "./reference.db",
+            },
+        }
+
+        with open(config_file, "w") as f:
+            json.dump(config_data, f)
+
+        config_mgr = ConfigurationManager(config_file=config_file)
+        store = JSONFileConfigStore(config_mgr)
+
+        # Load initial config
+        initial_config = store.get_config()
+        initial_host = initial_config.server["host"]
+
+        # Update existing section - this tests the dict.update() path at line 123
+        updated = store.update_config({"server": {"host": "192.168.1.1"}})
+
+        # Verify nested dict was updated (merging not replacing)
+        assert updated.server["host"] == "192.168.1.1"
+        # Verify other fields in the section are preserved
+        assert updated.server["port"] == 8000
+        assert updated.server["cors_origins"] == ["*"]
+
+        # Verify changes persisted by reloading from disk
+        config_mgr2 = ConfigurationManager(config_file=config_file)
+        store2 = JSONFileConfigStore(config_mgr2)
+        reloaded_config = store2.get_config()
+
+        assert reloaded_config.server["host"] == "192.168.1.1"
+        assert reloaded_config.server["port"] == 8000

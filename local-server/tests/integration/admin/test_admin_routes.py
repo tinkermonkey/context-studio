@@ -581,3 +581,20 @@ class TestAdminErrorHandling:
         body = response.json()
         assert "detail" in body
         assert "not found" in body["detail"].lower()
+
+    def test_reset_configuration_error_returns_400(self, client, admin_service, monkeypatch):
+        """Test that ConfigurationError from reset_configuration returns 400 Bad Request."""
+        # Mock the service method to raise a ConfigurationError
+        def failing_reset_configuration():
+            raise ConfigurationError("Failed to reset configuration: Invalid default settings")
+
+        monkeypatch.setattr(admin_service, "reset_configuration", failing_reset_configuration)
+
+        response = client.post("/api/v1/admin/configuration/reset")
+
+        # Should return 400 for ConfigurationError
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+
+        body = response.json()
+        assert "detail" in body
+        assert "Failed to reset configuration" in body["detail"]
