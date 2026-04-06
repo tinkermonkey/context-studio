@@ -16,7 +16,7 @@ import pytest
 from datetime import datetime, timezone
 
 from domain.admin.services import AdminService
-from domain.admin.entities import AppConfiguration, BackgroundTask
+from domain.admin.entities import AppConfiguration
 from domain.admin.value_objects import (
     SystemHealthStatus,
     BackgroundTaskStatus,

@@ -71,6 +71,7 @@ class TestAppConfigurationResponseMasking:
 
         response = AppConfigurationResponse.from_domain(config)
 
+        assert response.sync is not None
         assert response.sync["s3_secret_key"] == "***EKEY"
 
     def test_s3_access_key_is_masked(self) -> None:
@@ -90,6 +91,7 @@ class TestAppConfigurationResponseMasking:
 
         response = AppConfigurationResponse.from_domain(config)
 
+        assert response.sync is not None
         assert response.sync["s3_access_key"] == "***MPLE"
 
     def test_short_api_key_is_masked_as_three_asterisks(self) -> None:
@@ -184,6 +186,7 @@ class TestAppConfigurationResponseMasking:
 
         response = AppConfigurationResponse.from_domain(config)
 
+        assert response.sync is not None
         assert response.sync["s3_access_key"] == "***MPLE"
         assert response.sync["s3_secret_key"] == "***EKEY"
 
@@ -249,6 +252,7 @@ class TestAppConfigurationResponseMasking:
         response = AppConfigurationResponse.from_domain(config)
 
         assert response.llm["openai_api_key"] == "***7890"
+        assert response.sync is not None
         assert response.sync["s3_access_key"] == "***MPLE"
         assert response.sync["s3_secret_key"] == "***EKEY"
 
