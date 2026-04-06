@@ -70,4 +70,5 @@ class NoOpSyncTarget:
             last_pulled_at=None,
             unprocessed_count=0,
             is_configured=False,
+            is_degraded=False,
         )

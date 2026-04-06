@@ -340,6 +340,7 @@ class DuckDBSyncAdapter:
         try:
             last_sync = None
             unprocessed_count = 0
+            is_degraded = False
 
             if self._changes_dir.exists() and self._changes_dir.is_dir():
                 # Get the most recent file timestamp
@@ -359,6 +360,7 @@ class DuckDBSyncAdapter:
                     unprocessed_count = self._change_repo.count_unprocessed()
                 except (RuntimeError, OSError) as e:
                     _logger.warning("Failed to count unprocessed changes: %s", str(e))
+                    is_degraded = True
 
             _logger.info("Retrieved sync status from local Parquet files")
             return SyncStatus(
@@ -366,6 +368,7 @@ class DuckDBSyncAdapter:
                 last_pulled_at=last_sync,
                 unprocessed_count=unprocessed_count,
                 is_configured=self.is_configured(),
+                is_degraded=is_degraded,
             )
 
         except (ValueError, TypeError, KeyError, OSError) as e:
