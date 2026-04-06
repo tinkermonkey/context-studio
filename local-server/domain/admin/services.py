@@ -69,9 +69,11 @@ class AdminService:
                 connected=False, issues=[f"Error checking database health: {e}"]
             )
 
+        service_metrics_error = None
         try:
             service_metrics = self._metrics.get_service_metrics()
         except Exception as e:
+            service_metrics_error = str(e)
             service_metrics = ServiceMetrics(
                 uptime_seconds=0.0, llm_providers_available=[]
             )
@@ -103,12 +105,14 @@ class AdminService:
         if not nlp_status.available:
             issues.append(f"NLP pipeline: {nlp_status.details}")
 
-        # Check LLM providers: either none configured or error during check
-        if not service_metrics.llm_providers_available:
+        # Check LLM providers: report error or config gap based on check success
+        if service_metrics_error:
+            issues.append(f"Error checking service metrics: {service_metrics_error}")
+        elif not service_metrics.llm_providers_available:
             issues.append("No LLM providers configured")
 
         # Check for failed background tasks
-        failed_tasks = task_summary.by_status.get("FAILED", 0)
+        failed_tasks = task_summary.by_status.get(BackgroundTaskStatus.FAILED.value, 0)
         if failed_tasks > 0:
             issues.append(f"{failed_tasks} background task(s) failed")
 

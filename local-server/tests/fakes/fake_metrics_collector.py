@@ -20,6 +20,7 @@ class FakeMetricsCollector:
     Fake implementation of MetricsCollector for unit testing.
 
     Allows test code to specify granular health components or use sensible defaults.
+    Supports raising exceptions from specific methods for testing error handling.
     """
 
     def __init__(
@@ -29,9 +30,14 @@ class FakeMetricsCollector:
         embedding_status: Optional[ComponentStatus] = None,
         nlp_status: Optional[ComponentStatus] = None,
         task_summary: Optional[BackgroundTaskSummary] = None,
+        database_health_error: Optional[Exception] = None,
+        service_metrics_error: Optional[Exception] = None,
+        embedding_status_error: Optional[Exception] = None,
+        nlp_status_error: Optional[Exception] = None,
+        task_summary_error: Optional[Exception] = None,
     ):
         """
-        Initialize with optional pre-configured health components.
+        Initialize with optional pre-configured health components or exceptions.
 
         Args:
             database_health: Optional DatabaseHealth. If None, defaults to connected.
@@ -39,6 +45,11 @@ class FakeMetricsCollector:
             embedding_status: Optional ComponentStatus. If None, defaults to available.
             nlp_status: Optional ComponentStatus. If None, defaults to available.
             task_summary: Optional BackgroundTaskSummary. If None, defaults to 0 tasks.
+            database_health_error: Optional Exception to raise from get_database_health().
+            service_metrics_error: Optional Exception to raise from get_service_metrics().
+            embedding_status_error: Optional Exception to raise from get_embedding_model_status().
+            nlp_status_error: Optional Exception to raise from get_nlp_pipeline_status().
+            task_summary_error: Optional Exception to raise from get_background_task_summary().
         """
         self._database_health = database_health or DatabaseHealth(
             connected=True, issues=[]
@@ -55,6 +66,11 @@ class FakeMetricsCollector:
         self._task_summary = task_summary or BackgroundTaskSummary(
             total=0, by_status={}
         )
+        self._database_health_error = database_health_error
+        self._service_metrics_error = service_metrics_error
+        self._embedding_status_error = embedding_status_error
+        self._nlp_status_error = nlp_status_error
+        self._task_summary_error = task_summary_error
 
     def get_database_health(self) -> DatabaseHealth:
         """
@@ -62,7 +78,12 @@ class FakeMetricsCollector:
 
         Returns:
             DatabaseHealth with connectivity and issue details
+
+        Raises:
+            Exception if database_health_error was set in __init__
         """
+        if self._database_health_error:
+            raise self._database_health_error
         return self._database_health
 
     def get_service_metrics(self) -> ServiceMetrics:
@@ -71,7 +92,12 @@ class FakeMetricsCollector:
 
         Returns:
             ServiceMetrics with uptime and available LLM providers
+
+        Raises:
+            Exception if service_metrics_error was set in __init__
         """
+        if self._service_metrics_error:
+            raise self._service_metrics_error
         return self._service_metrics
 
     def get_embedding_model_status(self) -> ComponentStatus:
@@ -80,7 +106,12 @@ class FakeMetricsCollector:
 
         Returns:
             ComponentStatus of the embedding model
+
+        Raises:
+            Exception if embedding_status_error was set in __init__
         """
+        if self._embedding_status_error:
+            raise self._embedding_status_error
         return self._embedding_status
 
     def get_nlp_pipeline_status(self) -> ComponentStatus:
@@ -89,7 +120,12 @@ class FakeMetricsCollector:
 
         Returns:
             ComponentStatus of the NLP pipeline
+
+        Raises:
+            Exception if nlp_status_error was set in __init__
         """
+        if self._nlp_status_error:
+            raise self._nlp_status_error
         return self._nlp_status
 
     def get_background_task_summary(self) -> BackgroundTaskSummary:
@@ -98,5 +134,10 @@ class FakeMetricsCollector:
 
         Returns:
             BackgroundTaskSummary with task counts by status
+
+        Raises:
+            Exception if task_summary_error was set in __init__
         """
+        if self._task_summary_error:
+            raise self._task_summary_error
         return self._task_summary
