@@ -182,10 +182,8 @@ class JSONFileConfigStore:
                 if not isinstance(default_section, dict):
                     continue
 
-                # Preserve credential fields from current to default
-                for key, value in current_section.items():
-                    if key in CREDENTIAL_FIELD_NAMES:
-                        default_section[key] = value
+                # Preserve credential fields from current to default, including nested dicts
+                self._preserve_credentials_recursive(current_section, default_section)
 
             self._persist_config(default_config)
             logger.debug("Configuration reset to defaults with credentials preserved")
@@ -194,6 +192,24 @@ class JSONFileConfigStore:
             raise
         except ValidationError as e:
             raise ConfigurationError(f'Failed to reset configuration: {e}') from e
+
+    def _preserve_credentials_recursive(self, current: dict, default: dict) -> None:
+        """
+        Recursively preserve credential fields from current to default configuration.
+
+        Preserves credential values in both top-level and nested dictionaries.
+
+        Args:
+            current: Current configuration dict
+            default: Default configuration dict to update with preserved credentials
+        """
+        for key, value in current.items():
+            if key in CREDENTIAL_FIELD_NAMES and value:
+                # Preserve top-level credential
+                default[key] = value
+            elif isinstance(value, dict) and isinstance(default.get(key), dict):
+                # Recursively preserve credentials in nested dicts
+                self._preserve_credentials_recursive(value, default[key])
 
     def _persist_config(self, config: AppConfiguration) -> None:
         """

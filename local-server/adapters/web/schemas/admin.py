@@ -34,21 +34,26 @@ def _mask_credentials(section: dict) -> dict:
     Mask sensitive credential fields in a configuration section.
 
     Replaces credential values with '***<last4>' format to prevent exposure
-    in API responses.
+    in API responses. Recursively masks credentials in nested dicts.
 
     Args:
         section: Dictionary of configuration
 
     Returns:
-        Deep copy of section with credential fields masked
+        Deep copy of section with credential fields masked (including nested dicts)
     """
     masked_section = copy.deepcopy(section)
 
-    for field_name in list(masked_section.keys()):
-        if field_name in CREDENTIAL_FIELD_NAMES and masked_section[field_name]:
-            val = str(masked_section[field_name])
-            masked_section[field_name] = f'***{val[-4:]}' if len(val) >= 4 else '***'
+    def mask_dict(d: dict) -> None:
+        """Recursively mask credentials in a dictionary."""
+        for key, value in d.items():
+            if key in CREDENTIAL_FIELD_NAMES and value:
+                val = str(value)
+                d[key] = f'***{val[-4:]}' if len(val) >= 4 else '***'
+            elif isinstance(value, dict):
+                mask_dict(value)
 
+    mask_dict(masked_section)
     return masked_section
 
 

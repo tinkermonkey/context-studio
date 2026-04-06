@@ -198,3 +198,92 @@ class TestMaskCredentialsFunction:
 
         assert result["provider"] == "openai"
         assert result["model"] == "gpt-4"
+
+    def test_masks_nested_s3_credentials(self):
+        """Test that S3 credentials nested in sync.s3 are masked."""
+        section = {
+            "adapter": "s3",
+            "s3": {
+                "s3_bucket": "my-bucket",
+                "s3_prefix": "context-studio",
+                "s3_access_key": "AKIAIOSFODNN7EXAMPLE",
+                "s3_secret_key": "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY",
+                "s3_region": "us-east-1"
+            },
+            "duckdb": None
+        }
+
+        result = _mask_credentials(section)
+
+        # Top-level non-credential fields should be unchanged
+        assert result["adapter"] == "s3"
+        assert result["duckdb"] is None
+
+        # Nested S3 config fields should be masked appropriately
+        assert result["s3"]["s3_bucket"] == "my-bucket"  # Not a credential
+        assert result["s3"]["s3_prefix"] == "context-studio"  # Not a credential
+        assert result["s3"]["s3_access_key"] == "***MPLE"  # Masked
+        assert result["s3"]["s3_secret_key"] == "***EKEY"  # Masked
+        assert result["s3"]["s3_region"] == "us-east-1"  # Not a credential
+
+    def test_masks_nested_s3_credentials_original_unchanged(self):
+        """Test that original nested structure is not modified (deep copy)."""
+        original_access_key = "AKIAIOSFODNN7EXAMPLE"
+        original_secret_key = "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
+        section = {
+            "adapter": "s3",
+            "s3": {
+                "s3_access_key": original_access_key,
+                "s3_secret_key": original_secret_key
+            }
+        }
+
+        _mask_credentials(section)
+
+        # Original should be unchanged
+        assert section["s3"]["s3_access_key"] == original_access_key
+        assert section["s3"]["s3_secret_key"] == original_secret_key
+
+    def test_masks_deeply_nested_credentials(self):
+        """Test masking credentials in deeply nested structures."""
+        section = {
+            "level1": {
+                "level2": {
+                    "openai_api_key": "sk-test1234567890",
+                    "model": "gpt-4"
+                }
+            }
+        }
+
+        result = _mask_credentials(section)
+
+        assert result["level1"]["level2"]["openai_api_key"] == "***7890"
+        assert result["level1"]["level2"]["model"] == "gpt-4"
+
+    def test_handles_none_values_in_nested_dicts(self):
+        """Test that None credential values in nested dicts are not masked."""
+        section = {
+            "adapter": "s3",
+            "s3": {
+                "s3_access_key": None,
+                "s3_secret_key": "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
+            }
+        }
+
+        result = _mask_credentials(section)
+
+        assert result["s3"]["s3_access_key"] is None
+        assert result["s3"]["s3_secret_key"] == "***EKEY"
+
+    def test_handles_empty_nested_dicts(self):
+        """Test handling of empty nested dicts."""
+        section = {
+            "adapter": "s3",
+            "s3": {},
+            "duckdb": None
+        }
+
+        result = _mask_credentials(section)
+
+        assert result["s3"] == {}
+        assert result["duckdb"] is None
