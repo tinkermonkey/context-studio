@@ -45,7 +45,7 @@ class FakeConfigurationStore:
             "sync": None,
         }
 
-    def load(self) -> AppConfiguration:
+    def get_config(self) -> AppConfiguration:
         """
         Load the current configuration.
 
@@ -54,14 +54,22 @@ class FakeConfigurationStore:
         """
         return self._config
 
-    def save(self, config: AppConfiguration) -> None:
+    def update_config(self, updates: dict) -> AppConfiguration:
         """
-        Save configuration.
+        Update configuration with partial updates.
 
         Args:
-            config: AppConfiguration to persist
+            updates: Dictionary with section names as keys and section updates as values
+
+        Returns:
+            AppConfiguration object with updated configuration
         """
-        self._config = config
+        for section_name, section_updates in updates.items():
+            if section_name in self._config.sections and self._config.sections[section_name] is not None:
+                self._config.sections[section_name].update(section_updates)
+            else:
+                self._config.sections[section_name] = section_updates
+        return self._config
 
     def reset_to_defaults(self) -> AppConfiguration:
         """

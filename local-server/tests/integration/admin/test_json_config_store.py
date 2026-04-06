@@ -45,7 +45,7 @@ def test_load_configuration():
         store = JSONFileConfigStore(config_mgr)
 
         # Load and verify
-        config = store.load()
+        config = store.get_config()
         assert isinstance(config, AppConfiguration)
         assert "server" in config.sections
         assert "database" in config.sections
@@ -79,17 +79,17 @@ def test_load_and_save_roundtrip():
         # First load
         config_mgr = ConfigurationManager(config_file=config_file)
         store = JSONFileConfigStore(config_mgr)
-        config = store.load()
+        config = store.get_config()
         assert config.sections["server"]["port"] == 8000
 
         # Modify config
-        config.sections["server"]["port"] = 9000
-        store.save(config)
+        updated = store.update_config({"server": {"port": 9000}})
+        assert updated.sections["server"]["port"] == 9000
 
         # Create a new manager and verify changes persisted
         config_mgr2 = ConfigurationManager(config_file=config_file)
         store2 = JSONFileConfigStore(config_mgr2)
-        config2 = store2.load()
+        config2 = store2.get_config()
         assert config2.sections["server"]["port"] == 9000
 
 
@@ -120,10 +120,9 @@ def test_save_with_nonexistent_directory():
 
         config_mgr = ConfigurationManager(config_file=temp_config)
         config_mgr.config_file = config_file  # Change target path
-        config = AppConfiguration(sections=config_data)
 
         store = JSONFileConfigStore(config_mgr)
-        store.save(config)
+        store.update_config({"server": {"port": 8000}})
 
         # Verify file was created in the subdirectory
         assert os.path.exists(config_file)
@@ -154,18 +153,22 @@ def test_load_and_save_preserves_sections():
         config_mgr = ConfigurationManager(config_file=config_file)
         store = JSONFileConfigStore(config_mgr)
 
-        # Load, modify all sections, save, and reload
-        config = store.load()
-        config.sections["logging"]["log_level"] = "WARNING"
-        config.sections["server"]["port"] = 9999
-        config.sections["llm"]["anthropic_api_key"] = "sk-ant-test"
-
-        store.save(config)
+        # Load, modify all sections, update, and reload
+        config = store.get_config()
+        updates = {
+            "logging": {"log_level": "WARNING"},
+            "server": {"port": 9999},
+            "llm": {"anthropic_api_key": "sk-ant-test"},
+        }
+        updated_config = store.update_config(updates)
+        assert updated_config.sections["logging"]["log_level"] == "WARNING"
+        assert updated_config.sections["server"]["port"] == 9999
+        assert updated_config.sections["llm"]["anthropic_api_key"] == "sk-ant-test"
 
         # Reload and verify all sections
         config_mgr2 = ConfigurationManager(config_file=config_file)
         store2 = JSONFileConfigStore(config_mgr2)
-        config2 = store2.load()
+        config2 = store2.get_config()
 
         assert config2.sections["logging"]["log_level"] == "WARNING"
         assert config2.sections["server"]["port"] == 9999
@@ -246,7 +249,7 @@ def test_reset_to_defaults_persists_changes():
         # Create a new manager and verify changes were persisted
         config_mgr2 = ConfigurationManager(config_file=config_file)
         store2 = JSONFileConfigStore(config_mgr2)
-        reloaded_config = store2.load()
+        reloaded_config = store2.get_config()
 
         # Verify defaults and preserved credentials
         assert reloaded_config.sections["server"]["host"] == "127.0.0.1"

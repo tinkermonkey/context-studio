@@ -3135,14 +3135,14 @@
         }
       }
     },
-    "/api/v1/admin/health/database": {
+    "/api/v1/admin/metrics/database": {
       "get": {
         "tags": [
           "admin"
         ],
         "summary": "Get Database Health",
         "description": "Get database component health status.\n\nReturns detailed health information about the database connection and any issues.\n\nReturns:\n    DatabaseHealthResponse with connectivity status and issues list\n\nRaises:\n    HTTPException: 500 for internal errors",
-        "operationId": "get_database_health_api_v1_admin_health_database_get",
+        "operationId": "get_database_health_api_v1_admin_metrics_database_get",
         "responses": {
           "200": {
             "description": "Successful Response",
@@ -3157,14 +3157,14 @@
         }
       }
     },
-    "/api/v1/admin/health/services": {
+    "/api/v1/admin/metrics/services": {
       "get": {
         "tags": [
           "admin"
         ],
         "summary": "Get Service Metrics",
         "description": "Get service-level metrics.\n\nReturns system uptime and list of available LLM providers.\n\nReturns:\n    ServiceMetricsResponse with uptime and available providers\n\nRaises:\n    HTTPException: 500 for internal errors",
-        "operationId": "get_service_metrics_api_v1_admin_health_services_get",
+        "operationId": "get_service_metrics_api_v1_admin_metrics_services_get",
         "responses": {
           "200": {
             "description": "Successful Response",
@@ -3179,14 +3179,14 @@
         }
       }
     },
-    "/api/v1/admin/health/embedding": {
+    "/api/v1/admin/metrics/embedding": {
       "get": {
         "tags": [
           "admin"
         ],
         "summary": "Get Embedding Status",
         "description": "Get embedding model component status.\n\nReturns availability and status details for the embedding model.\n\nReturns:\n    ComponentStatusResponse with availability and details\n\nRaises:\n    HTTPException: 500 for internal errors",
-        "operationId": "get_embedding_status_api_v1_admin_health_embedding_get",
+        "operationId": "get_embedding_status_api_v1_admin_metrics_embedding_get",
         "responses": {
           "200": {
             "description": "Successful Response",
@@ -3201,14 +3201,14 @@
         }
       }
     },
-    "/api/v1/admin/health/nlp": {
+    "/api/v1/admin/metrics/nlp": {
       "get": {
         "tags": [
           "admin"
         ],
         "summary": "Get Nlp Status",
         "description": "Get NLP pipeline component status.\n\nReturns availability and status details for the NLP pipeline.\n\nReturns:\n    ComponentStatusResponse with availability and details\n\nRaises:\n    HTTPException: 500 for internal errors",
-        "operationId": "get_nlp_status_api_v1_admin_health_nlp_get",
+        "operationId": "get_nlp_status_api_v1_admin_metrics_nlp_get",
         "responses": {
           "200": {
             "description": "Successful Response",
@@ -3223,14 +3223,14 @@
         }
       }
     },
-    "/api/v1/admin/health/tasks": {
+    "/api/v1/admin/metrics/tasks": {
       "get": {
         "tags": [
           "admin"
         ],
         "summary": "Get Task Summary",
         "description": "Get summary of background task execution status.\n\nReturns counts of tasks grouped by status (pending, running, completed, failed).\n\nReturns:\n    BackgroundTaskSummaryResponse with task counts by status\n\nRaises:\n    HTTPException: 500 for internal errors",
-        "operationId": "get_task_summary_api_v1_admin_health_tasks_get",
+        "operationId": "get_task_summary_api_v1_admin_metrics_tasks_get",
         "responses": {
           "200": {
             "description": "Successful Response",
@@ -3506,6 +3506,20 @@
             ],
             "title": "Completed At",
             "description": "Timestamp when task finished"
+          },
+          "progress": {
+            "anyOf": [
+              {
+                "type": "number",
+                "maximum": 1.0,
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Progress",
+            "description": "Task progress as a float between 0.0 and 1.0"
           },
           "error": {
             "anyOf": [
@@ -5118,7 +5132,6 @@
         "enum": [
           "last_write_wins",
           "base_value_wins",
-          "merge_both",
           "manual"
         ],
         "title": "MergeStrategy",
@@ -6304,11 +6317,6 @@
             "title": "Is Configured",
             "description": "Whether remote sync is configured"
           },
-          "is_degraded": {
-            "type": "boolean",
-            "title": "Is Degraded",
-            "description": "Whether sync status information is incomplete due to adapter errors"
-          },
           "last_pushed_at": {
             "anyOf": [
               {
@@ -6339,8 +6347,7 @@
         "type": "object",
         "required": [
           "unprocessed_count",
-          "is_configured",
-          "is_degraded"
+          "is_configured"
         ],
         "title": "SyncStatusResponse",
         "description": "Response with synchronization status"

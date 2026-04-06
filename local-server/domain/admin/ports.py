@@ -124,10 +124,10 @@ class ConfigurationStore(Protocol):
     Port for persisting and retrieving application configuration.
 
     Implementations handle loading configuration from files or other
-    storage, and saving configuration changes.
+    storage, and updating configuration changes.
     """
 
-    def load(self) -> AppConfiguration:
+    def get_config(self) -> AppConfiguration:
         """
         Load application configuration.
 
@@ -136,12 +136,15 @@ class ConfigurationStore(Protocol):
         """
         ...
 
-    def save(self, config: AppConfiguration) -> None:
+    def update_config(self, updates: dict) -> AppConfiguration:
         """
-        Save application configuration.
+        Update application configuration with partial updates.
 
         Args:
-            config: AppConfiguration object to persist
+            updates: Dictionary with section names as keys and section updates as values
+
+        Returns:
+            AppConfiguration object with updated configuration
         """
         ...
 

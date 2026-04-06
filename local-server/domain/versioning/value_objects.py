@@ -56,7 +56,6 @@ class MergeStrategy(str, Enum):
 
     LAST_WRITE_WINS = "last_write_wins"
     BASE_VALUE_WINS = "base_value_wins"
-    MERGE_BOTH = "merge_both"
     MANUAL = "manual"
 
 
@@ -68,7 +67,6 @@ class SyncStatus:
     last_pulled_at: Optional[datetime]
     unprocessed_count: int
     is_configured: bool
-    is_degraded: bool = False
 
 
 @dataclass(frozen=True)

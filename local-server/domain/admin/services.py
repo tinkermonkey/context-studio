@@ -189,7 +189,7 @@ class AdminService:
         Returns:
             AppConfiguration object with all configuration sections
         """
-        return self._config.load()
+        return self._config.get_config()
 
     def reset_configuration(self) -> AppConfiguration:
         """
@@ -209,8 +209,8 @@ class AdminService:
         """
         Update a configuration section.
 
-        Loads configuration, updates the specified section with new values,
-        and saves the result.
+        Validates the section exists, then calls ConfigurationStore to update
+        and persist the result.
 
         Args:
             section: Name of the configuration section to update
@@ -222,14 +222,12 @@ class AdminService:
         Raises:
             ConfigurationError: If the section does not exist or is not configured
         """
-        config = self._config.load()
+        config = self._config.get_config()
         if section not in config.sections:
             raise ConfigurationError(f"Unknown config section: {section}")
         if config.sections[section] is None:
             raise ConfigurationError(f"Configuration section '{section}' is not configured")
-        config.sections[section].update(updates)
-        self._config.save(config)
-        return config
+        return self._config.update_config({section: updates})
 
     def register_task(self, name: str) -> BackgroundTask:
         """

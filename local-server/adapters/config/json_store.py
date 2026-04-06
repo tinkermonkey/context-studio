@@ -32,7 +32,7 @@ class JSONFileConfigStore:
         """
         self._mgr = config_manager
 
-    def load(self) -> AppConfiguration:
+    def get_config(self) -> AppConfiguration:
         """
         Load application configuration from file.
 
@@ -60,42 +60,42 @@ class JSONFileConfigStore:
         except Exception as e:
             raise ConfigurationError(f'Failed to load configuration: {e}') from e
 
-    def save(self, config: AppConfiguration) -> None:
+    def update_config(self, updates: dict) -> AppConfiguration:
         """
-        Save application configuration to file.
+        Update application configuration with partial updates.
 
-        Takes an AppConfiguration with plain dicts, reconstructs Pydantic Settings,
-        and persists it via the wrapped ConfigurationManager.
+        Takes a dict of updates keyed by section name, merges them with the
+        current configuration, reconstructs Pydantic Settings, and persists.
 
         Args:
-            config: AppConfiguration to persist
+            updates: Dictionary with section names as keys and section updates as values
+
+        Returns:
+            AppConfiguration object with updated configuration
 
         Raises:
-            ConfigurationError: If saving fails
+            ConfigurationError: If update fails
         """
         try:
-            # Reconstruct Settings object from config sections
-            settings_dict = {
-                'server': config.sections.get('server', {}),
-                'database': config.sections.get('database', {}),
-                'logging': config.sections.get('logging', {}),
-                'llm': config.sections.get('llm', {}),
-            }
-            if config.sections.get('reference') is not None:
-                settings_dict['reference'] = config.sections['reference']
-            if config.sections.get('sync') is not None:
-                settings_dict['sync'] = config.sections['sync']
+            # Get current configuration
+            current_config = self.get_config()
 
-            new_settings = Settings(**settings_dict)
-            self._mgr.settings = new_settings
+            # Merge updates into current configuration
+            updated_sections = dict(current_config.sections)
+            for section_name, section_updates in updates.items():
+                if section_name in updated_sections and updated_sections[section_name] is not None:
+                    updated_sections[section_name].update(section_updates)
+                else:
+                    updated_sections[section_name] = section_updates
 
-            if not self._mgr.save():
-                raise ConfigurationError("ConfigurationManager.save() returned False")
-            logger.debug("Configuration saved successfully")
+            updated_config = AppConfiguration(sections=updated_sections)
+            self._persist_config(updated_config)
+            logger.debug("Configuration updated successfully")
+            return updated_config
         except ConfigurationError:
             raise
         except Exception as e:
-            raise ConfigurationError(f'Failed to save configuration: {e}') from e
+            raise ConfigurationError(f'Failed to update configuration: {e}') from e
 
     def reset_to_defaults(self) -> AppConfiguration:
         """
@@ -112,7 +112,7 @@ class JSONFileConfigStore:
         """
         try:
             # Get current configuration to preserve credentials
-            current_config = self.load()
+            current_config = self.get_config()
 
             # Create fresh defaults
             default_settings = Settings()
@@ -137,10 +137,43 @@ class JSONFileConfigStore:
                         default_section[key] = value
 
             reset_config = AppConfiguration(sections=default_sections)
-            self.save(reset_config)
+            self._persist_config(reset_config)
             logger.debug("Configuration reset to defaults with credentials preserved")
             return reset_config
         except ConfigurationError:
             raise
         except Exception as e:
             raise ConfigurationError(f'Failed to reset configuration: {e}') from e
+
+    def _persist_config(self, config: AppConfiguration) -> None:
+        """
+        Internal helper to persist configuration to storage.
+
+        Args:
+            config: AppConfiguration to persist
+
+        Raises:
+            ConfigurationError: If persistence fails
+        """
+        try:
+            # Reconstruct Settings object from config sections
+            settings_dict = {
+                'server': config.sections.get('server', {}),
+                'database': config.sections.get('database', {}),
+                'logging': config.sections.get('logging', {}),
+                'llm': config.sections.get('llm', {}),
+            }
+            if config.sections.get('reference') is not None:
+                settings_dict['reference'] = config.sections['reference']
+            if config.sections.get('sync') is not None:
+                settings_dict['sync'] = config.sections['sync']
+
+            new_settings = Settings(**settings_dict)
+            self._mgr.settings = new_settings
+
+            if not self._mgr.save():
+                raise ConfigurationError("ConfigurationManager.save() returned False")
+        except ConfigurationError:
+            raise
+        except Exception as e:
+            raise ConfigurationError(f'Failed to persist configuration: {e}') from e

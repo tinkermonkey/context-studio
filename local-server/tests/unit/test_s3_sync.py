@@ -208,4 +208,3 @@ class TestS3SyncAdapterClientErrorHandling:
 
         assert status.is_configured is True
         assert status.unprocessed_count == 0
-        assert status.is_degraded is False

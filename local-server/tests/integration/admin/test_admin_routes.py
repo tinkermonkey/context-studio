@@ -130,11 +130,7 @@ class TestConfigurationEndpoint:
     def test_get_configuration_masks_api_keys(self, client, config_store):
         """GET /api/v1/admin/configuration masks API keys."""
         # Ensure config has API keys
-        config = config_store.load()
-        if 'llm' not in config.sections:
-            config.sections['llm'] = {}
-        config.sections['llm']['openai_api_key'] = 'sk-1234567890abcdef1234567890'
-        config_store.save(config)
+        config_store.update_config({'llm': {'openai_api_key': 'sk-1234567890abcdef1234567890'}})
 
         # Get configuration
         response = client.get("/api/v1/admin/configuration")
@@ -352,105 +348,105 @@ class TestGranularHealthEndpoints:
     """Tests for granular health check endpoints."""
 
     def test_database_health_returns_200(self, client):
-        """GET /api/v1/admin/health/database returns 200."""
-        response = client.get("/api/v1/admin/health/database")
+        """GET /api/v1/admin/metrics/database returns 200."""
+        response = client.get("/api/v1/admin/metrics/database")
         assert response.status_code == status.HTTP_200_OK
 
     def test_database_health_response_structure(self, client):
-        """GET /api/v1/admin/health/database response has correct structure."""
-        response = client.get("/api/v1/admin/health/database")
+        """GET /api/v1/admin/metrics/database response has correct structure."""
+        response = client.get("/api/v1/admin/metrics/database")
         body = response.json()
 
         assert "connected" in body
         assert "issues" in body
 
     def test_database_health_response_types(self, client):
-        """GET /api/v1/admin/health/database response has correct types."""
-        response = client.get("/api/v1/admin/health/database")
+        """GET /api/v1/admin/metrics/database response has correct types."""
+        response = client.get("/api/v1/admin/metrics/database")
         body = response.json()
 
         assert isinstance(body["connected"], bool)
         assert isinstance(body["issues"], list)
 
     def test_service_metrics_returns_200(self, client):
-        """GET /api/v1/admin/health/services returns 200."""
-        response = client.get("/api/v1/admin/health/services")
+        """GET /api/v1/admin/metrics/services returns 200."""
+        response = client.get("/api/v1/admin/metrics/services")
         assert response.status_code == status.HTTP_200_OK
 
     def test_service_metrics_response_structure(self, client):
-        """GET /api/v1/admin/health/services response has correct structure."""
-        response = client.get("/api/v1/admin/health/services")
+        """GET /api/v1/admin/metrics/services response has correct structure."""
+        response = client.get("/api/v1/admin/metrics/services")
         body = response.json()
 
         assert "uptime_seconds" in body
         assert "llm_providers_available" in body
 
     def test_service_metrics_response_types(self, client):
-        """GET /api/v1/admin/health/services response has correct types."""
-        response = client.get("/api/v1/admin/health/services")
+        """GET /api/v1/admin/metrics/services response has correct types."""
+        response = client.get("/api/v1/admin/metrics/services")
         body = response.json()
 
         assert isinstance(body["uptime_seconds"], (int, float))
         assert isinstance(body["llm_providers_available"], list)
 
     def test_embedding_health_returns_200(self, client):
-        """GET /api/v1/admin/health/embedding returns 200."""
-        response = client.get("/api/v1/admin/health/embedding")
+        """GET /api/v1/admin/metrics/embedding returns 200."""
+        response = client.get("/api/v1/admin/metrics/embedding")
         assert response.status_code == status.HTTP_200_OK
 
     def test_embedding_health_response_structure(self, client):
-        """GET /api/v1/admin/health/embedding response has correct structure."""
-        response = client.get("/api/v1/admin/health/embedding")
+        """GET /api/v1/admin/metrics/embedding response has correct structure."""
+        response = client.get("/api/v1/admin/metrics/embedding")
         body = response.json()
 
         assert "available" in body
         assert "details" in body
 
     def test_embedding_health_response_types(self, client):
-        """GET /api/v1/admin/health/embedding response has correct types."""
-        response = client.get("/api/v1/admin/health/embedding")
+        """GET /api/v1/admin/metrics/embedding response has correct types."""
+        response = client.get("/api/v1/admin/metrics/embedding")
         body = response.json()
 
         assert isinstance(body["available"], bool)
         assert isinstance(body["details"], str)
 
     def test_nlp_health_returns_200(self, client):
-        """GET /api/v1/admin/health/nlp returns 200."""
-        response = client.get("/api/v1/admin/health/nlp")
+        """GET /api/v1/admin/metrics/nlp returns 200."""
+        response = client.get("/api/v1/admin/metrics/nlp")
         assert response.status_code == status.HTTP_200_OK
 
     def test_nlp_health_response_structure(self, client):
-        """GET /api/v1/admin/health/nlp response has correct structure."""
-        response = client.get("/api/v1/admin/health/nlp")
+        """GET /api/v1/admin/metrics/nlp response has correct structure."""
+        response = client.get("/api/v1/admin/metrics/nlp")
         body = response.json()
 
         assert "available" in body
         assert "details" in body
 
     def test_nlp_health_response_types(self, client):
-        """GET /api/v1/admin/health/nlp response has correct types."""
-        response = client.get("/api/v1/admin/health/nlp")
+        """GET /api/v1/admin/metrics/nlp response has correct types."""
+        response = client.get("/api/v1/admin/metrics/nlp")
         body = response.json()
 
         assert isinstance(body["available"], bool)
         assert isinstance(body["details"], str)
 
     def test_task_summary_returns_200(self, client):
-        """GET /api/v1/admin/health/tasks returns 200."""
-        response = client.get("/api/v1/admin/health/tasks")
+        """GET /api/v1/admin/metrics/tasks returns 200."""
+        response = client.get("/api/v1/admin/metrics/tasks")
         assert response.status_code == status.HTTP_200_OK
 
     def test_task_summary_response_structure(self, client):
-        """GET /api/v1/admin/health/tasks response has correct structure."""
-        response = client.get("/api/v1/admin/health/tasks")
+        """GET /api/v1/admin/metrics/tasks response has correct structure."""
+        response = client.get("/api/v1/admin/metrics/tasks")
         body = response.json()
 
         assert "total" in body
         assert "by_status" in body
 
     def test_task_summary_response_types(self, client):
-        """GET /api/v1/admin/health/tasks response has correct types."""
-        response = client.get("/api/v1/admin/health/tasks")
+        """GET /api/v1/admin/metrics/tasks response has correct types."""
+        response = client.get("/api/v1/admin/metrics/tasks")
         body = response.json()
 
         assert isinstance(body["total"], int)
@@ -476,11 +472,7 @@ class TestConfigurationResetEndpoint:
     def test_reset_configuration_masks_credentials(self, client, config_store):
         """POST /api/v1/admin/configuration/reset masks credential fields."""
         # Set up config with credentials
-        config = config_store.load()
-        if 'llm' not in config.sections:
-            config.sections['llm'] = {}
-        config.sections['llm']['openai_api_key'] = 'sk-1234567890abcdef1234567890'
-        config_store.save(config)
+        config_store.update_config({'llm': {'openai_api_key': 'sk-1234567890abcdef1234567890'}})
 
         # Reset configuration
         response = client.post("/api/v1/admin/configuration/reset")
