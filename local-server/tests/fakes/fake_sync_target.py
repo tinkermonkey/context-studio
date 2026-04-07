@@ -88,6 +88,7 @@ class FakeSyncTarget:
             last_pulled_at=last_sync,
             unprocessed_count=len(self._pushed_events),
             is_configured=self._configured,
+            is_degraded=False,
         )
 
     # Test helpers

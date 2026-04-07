@@ -9,9 +9,10 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Optional
+from typing import Any, Optional, ClassVar
 
 from domain.admin.value_objects import SystemHealthStatus, BackgroundTaskStatus
+from domain.admin.exceptions import InvalidStateTransitionError
 
 
 @dataclass
@@ -65,18 +66,116 @@ class BackgroundTask:
     error: Optional[str] = None
     result: Optional[dict] = None
 
+    # Valid state transitions for background tasks
+    _VALID_TRANSITIONS: ClassVar[dict[BackgroundTaskStatus, set[BackgroundTaskStatus]]] = {
+        BackgroundTaskStatus.PENDING: {
+            BackgroundTaskStatus.RUNNING,
+            BackgroundTaskStatus.COMPLETED,
+            BackgroundTaskStatus.FAILED,
+        },
+        BackgroundTaskStatus.RUNNING: {
+            BackgroundTaskStatus.COMPLETED,
+            BackgroundTaskStatus.FAILED,
+        },
+        BackgroundTaskStatus.COMPLETED: set(),
+        BackgroundTaskStatus.FAILED: set(),
+    }
+
+    def can_transition_to(self, target_status: BackgroundTaskStatus) -> bool:
+        """
+        Check if the task can transition to the target status.
+
+        Args:
+            target_status: The desired status to transition to
+
+        Returns:
+            True if the transition is valid, False otherwise
+        """
+        return target_status in self._VALID_TRANSITIONS.get(self.status, set())
+
+    def transition_to(
+        self,
+        target_status: BackgroundTaskStatus,
+        timestamp: datetime,
+        error: Optional[str] = None,
+        result: Optional[dict] = None,
+    ) -> None:
+        """
+        Transition the task to a new status with validation.
+
+        Updates timestamps and additional data (error/result) as appropriate
+        for the target status.
+
+        Args:
+            target_status: The status to transition to
+            timestamp: Current timestamp for setting started_at/completed_at
+            error: Error message if transitioning to FAILED
+            result: Result data if transitioning to COMPLETED
+
+        Raises:
+            InvalidStateTransitionError: If the transition is not valid
+        """
+        if not self.can_transition_to(target_status):
+            raise InvalidStateTransitionError(
+                f"Cannot transition task from {self.status.value} to {target_status.value}"
+            )
+
+        self.status = target_status
+        if target_status == BackgroundTaskStatus.RUNNING:
+            self.started_at = timestamp
+        elif target_status in (BackgroundTaskStatus.COMPLETED, BackgroundTaskStatus.FAILED):
+            self.completed_at = timestamp
+
+        self.error = error
+        self.result = result
+
 
 @dataclass
 class AppConfiguration:
     """
     Represents the application configuration.
 
-    Wraps configuration sections as plain dicts. The domain entity
+    Configuration is organized into explicit sections. The domain entity
     does NOT depend on Pydantic. API key values are unmasked here;
     masking is a presentation concern.
 
     Attributes:
-        sections: Dictionary mapping section names to their configuration dicts
+        server: Server configuration (host, port, cors settings)
+        database: Database configuration (paths, pool settings)
+        llm: LLM configuration (provider keys, default models)
+        nlp: NLP pipeline configuration (model name, components)
+        embedding: Embedding model configuration (model name)
+        reference_sources: External reference sources configuration (enabled sources, rate limits)
+        sync: Optional S3/remote sync settings
+        logging: Logging configuration (level, handlers, etc.)
     """
 
-    sections: dict
+    server: dict[str, Any]
+    database: dict[str, Any]
+    llm: dict[str, Any]
+    nlp: dict[str, Any]
+    embedding: dict[str, Any]
+    reference_sources: dict[str, Any]
+    logging: dict[str, Any] = field(default_factory=lambda: {"level": "INFO"})
+    sync: Optional[dict[str, Any]] = None
+
+    @property
+    def sections(self) -> dict[str, dict[str, Any]]:
+        """
+        Get all configuration sections as a dict.
+
+        Returns:
+            Dictionary with section names as keys and section dicts as values
+        """
+        result = {
+            "server": self.server,
+            "database": self.database,
+            "llm": self.llm,
+            "nlp": self.nlp,
+            "embedding": self.embedding,
+            "reference_sources": self.reference_sources,
+            "logging": self.logging,
+        }
+        if self.sync is not None:
+            result["sync"] = self.sync
+        return result

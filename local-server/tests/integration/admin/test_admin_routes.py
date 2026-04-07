@@ -21,6 +21,7 @@ from fastapi import FastAPI, status
 from fastapi.testclient import TestClient
 
 from domain.admin.services import AdminService
+from domain.admin.exceptions import AdminError, ConfigurationError, TaskNotFoundError
 from adapters.web.admin_routes import router
 from tests.fakes.fake_metrics_collector import FakeMetricsCollector
 from tests.fakes.fake_configuration_store import FakeConfigurationStore
@@ -129,11 +130,7 @@ class TestConfigurationEndpoint:
     def test_get_configuration_masks_api_keys(self, client, config_store):
         """GET /api/v1/admin/configuration masks API keys."""
         # Ensure config has API keys
-        config = config_store.load()
-        if 'llm' not in config.sections:
-            config.sections['llm'] = {}
-        config.sections['llm']['openai_api_key'] = 'sk-1234567890abcdef1234567890'
-        config_store.save(config)
+        config_store.update_config({'llm': {'openai_api_key': 'sk-1234567890abcdef1234567890'}})
 
         # Get configuration
         response = client.get("/api/v1/admin/configuration")
@@ -345,3 +342,259 @@ class TestTasksEndpoint:
         assert body["status"] == "completed"
         assert body["result"] == {"output": "task completed"}
         assert body["completed_at"] is not None
+
+
+class TestGranularHealthEndpoints:
+    """Tests for granular health check endpoints."""
+
+    def test_database_health_returns_200(self, client):
+        """GET /api/v1/admin/health/database returns 200."""
+        response = client.get("/api/v1/admin/health/database")
+        assert response.status_code == status.HTTP_200_OK
+
+    def test_database_health_response_structure(self, client):
+        """GET /api/v1/admin/health/database response has correct structure."""
+        response = client.get("/api/v1/admin/health/database")
+        body = response.json()
+
+        assert "connected" in body
+        assert "issues" in body
+
+    def test_database_health_response_types(self, client):
+        """GET /api/v1/admin/health/database response has correct types."""
+        response = client.get("/api/v1/admin/health/database")
+        body = response.json()
+
+        assert isinstance(body["connected"], bool)
+        assert isinstance(body["issues"], list)
+
+    def test_service_metrics_returns_200(self, client):
+        """GET /api/v1/admin/health/services returns 200."""
+        response = client.get("/api/v1/admin/health/services")
+        assert response.status_code == status.HTTP_200_OK
+
+    def test_service_metrics_response_structure(self, client):
+        """GET /api/v1/admin/health/services response has correct structure."""
+        response = client.get("/api/v1/admin/health/services")
+        body = response.json()
+
+        assert "uptime_seconds" in body
+        assert "llm_providers_available" in body
+
+    def test_service_metrics_response_types(self, client):
+        """GET /api/v1/admin/health/services response has correct types."""
+        response = client.get("/api/v1/admin/health/services")
+        body = response.json()
+
+        assert isinstance(body["uptime_seconds"], (int, float))
+        assert isinstance(body["llm_providers_available"], list)
+
+    def test_embedding_health_returns_200(self, client):
+        """GET /api/v1/admin/health/embedding returns 200."""
+        response = client.get("/api/v1/admin/health/embedding")
+        assert response.status_code == status.HTTP_200_OK
+
+    def test_embedding_health_response_structure(self, client):
+        """GET /api/v1/admin/health/embedding response has correct structure."""
+        response = client.get("/api/v1/admin/health/embedding")
+        body = response.json()
+
+        assert "available" in body
+        assert "details" in body
+
+    def test_embedding_health_response_types(self, client):
+        """GET /api/v1/admin/health/embedding response has correct types."""
+        response = client.get("/api/v1/admin/health/embedding")
+        body = response.json()
+
+        assert isinstance(body["available"], bool)
+        assert isinstance(body["details"], str)
+
+    def test_nlp_health_returns_200(self, client):
+        """GET /api/v1/admin/health/nlp returns 200."""
+        response = client.get("/api/v1/admin/health/nlp")
+        assert response.status_code == status.HTTP_200_OK
+
+    def test_nlp_health_response_structure(self, client):
+        """GET /api/v1/admin/health/nlp response has correct structure."""
+        response = client.get("/api/v1/admin/health/nlp")
+        body = response.json()
+
+        assert "available" in body
+        assert "details" in body
+
+    def test_nlp_health_response_types(self, client):
+        """GET /api/v1/admin/health/nlp response has correct types."""
+        response = client.get("/api/v1/admin/health/nlp")
+        body = response.json()
+
+        assert isinstance(body["available"], bool)
+        assert isinstance(body["details"], str)
+
+    def test_task_summary_returns_200(self, client):
+        """GET /api/v1/admin/health/tasks returns 200."""
+        response = client.get("/api/v1/admin/health/tasks")
+        assert response.status_code == status.HTTP_200_OK
+
+    def test_task_summary_response_structure(self, client):
+        """GET /api/v1/admin/health/tasks response has correct structure."""
+        response = client.get("/api/v1/admin/health/tasks")
+        body = response.json()
+
+        assert "total" in body
+        assert "by_status" in body
+
+    def test_task_summary_response_types(self, client):
+        """GET /api/v1/admin/health/tasks response has correct types."""
+        response = client.get("/api/v1/admin/health/tasks")
+        body = response.json()
+
+        assert isinstance(body["total"], int)
+        assert isinstance(body["by_status"], dict)
+
+
+class TestConfigurationResetEndpoint:
+    """Tests for configuration reset endpoint."""
+
+    def test_reset_configuration_returns_200(self, client):
+        """POST /api/v1/admin/configuration/reset returns 200."""
+        response = client.post("/api/v1/admin/configuration/reset")
+        assert response.status_code == status.HTTP_200_OK
+
+    def test_reset_configuration_response_structure(self, client):
+        """POST /api/v1/admin/configuration/reset response has correct structure."""
+        response = client.post("/api/v1/admin/configuration/reset")
+        body = response.json()
+
+        assert "sections" in body
+        assert isinstance(body["sections"], dict)
+
+    def test_reset_configuration_masks_credentials(self, client, config_store):
+        """POST /api/v1/admin/configuration/reset masks credential fields."""
+        # Set up config with credentials
+        config_store.update_config({'llm': {'openai_api_key': 'sk-1234567890abcdef1234567890'}})
+
+        # Reset configuration
+        response = client.post("/api/v1/admin/configuration/reset")
+        body = response.json()
+
+        # Credentials should be masked
+        llm_section = body["sections"].get("llm", {})
+        assert "openai_api_key" in llm_section, "openai_api_key should be present in reset response"
+        masked = llm_section["openai_api_key"]
+        assert masked.startswith("***"), "Credential should be masked"
+
+    def test_reset_configuration_restores_defaults(self, client, config_store, admin_service):
+        """POST /api/v1/admin/configuration/reset restores default values."""
+        # Get baseline config
+        reset_config = admin_service.reset_configuration()
+        dict(reset_config.sections)
+
+        # Modify config
+        response = client.patch(
+            "/api/v1/admin/configuration/llm",
+            json={"updates": {"custom_field": "custom_value"}}
+        )
+        assert response.status_code == status.HTTP_200_OK
+
+        # Reset
+        response = client.post("/api/v1/admin/configuration/reset")
+        body = response.json()
+
+        # Custom field should be removed in reset
+        llm_section = body["sections"].get("llm", {})
+        assert "custom_field" not in llm_section
+
+
+class TestAdminErrorHandling:
+    """Tests for error handling in admin routes."""
+
+    def test_generic_exception_returns_500(self, client, admin_service, monkeypatch):
+        """Test that non-AdminError exceptions return 500 Internal Server Error."""
+        # Mock the service method to raise a non-AdminError exception
+        def failing_check_health():
+            raise RuntimeError("Unexpected database connection error")
+
+        monkeypatch.setattr(admin_service, "check_health", failing_check_health)
+
+        # Call health endpoint which should handle the RuntimeError
+        response = client.get("/api/v1/admin/health")
+
+        # Should return 500 for unexpected exceptions
+        assert response.status_code == status.HTTP_500_INTERNAL_SERVER_ERROR
+
+        # Response should have error detail
+        body = response.json()
+        assert "detail" in body
+        assert body["detail"] == "An unexpected error occurred"
+
+    def test_admin_error_returns_400(self, client, admin_service, monkeypatch):
+        """Test that AdminError exceptions return 400 Bad Request."""
+        # Mock the service method to raise an AdminError
+        def failing_check_health():
+            raise AdminError("Configuration incomplete")
+
+        monkeypatch.setattr(admin_service, "check_health", failing_check_health)
+
+        response = client.get("/api/v1/admin/health")
+
+        # Should return 400 for AdminError
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+
+        body = response.json()
+        assert "detail" in body
+        assert "Configuration incomplete" in body["detail"]
+
+    def test_configuration_error_returns_400(self, client, admin_service, monkeypatch):
+        """Test that ConfigurationError exceptions return 400 Bad Request."""
+        # Mock the service method to raise a ConfigurationError
+        def failing_update_config(section, updates):
+            raise ConfigurationError(f"Invalid section: {section}")
+
+        monkeypatch.setattr(admin_service, "update_configuration", failing_update_config)
+
+        response = client.patch(
+            "/api/v1/admin/configuration/invalid",
+            json={"updates": {"key": "value"}}
+        )
+
+        # Should return 400 for ConfigurationError
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+
+        body = response.json()
+        assert "detail" in body
+        assert "Invalid section" in body["detail"]
+
+    def test_task_not_found_returns_404(self, client, admin_service, monkeypatch):
+        """Test that TaskNotFoundError exceptions return 404 Not Found."""
+        # Mock the service method to raise a TaskNotFoundError
+        def failing_get_task(task_id):
+            raise TaskNotFoundError(f"Task {task_id} not found")
+
+        monkeypatch.setattr(admin_service, "get_task", failing_get_task)
+
+        response = client.get("/api/v1/admin/tasks/nonexistent")
+
+        # Should return 404 for TaskNotFoundError
+        assert response.status_code == status.HTTP_404_NOT_FOUND
+
+        body = response.json()
+        assert "detail" in body
+        assert "not found" in body["detail"].lower()
+
+    def test_reset_configuration_error_returns_400(self, client, admin_service, monkeypatch):
+        """Test that ConfigurationError from reset_configuration returns 400 Bad Request."""
+        # Mock the service method to raise a ConfigurationError
+        def failing_reset_configuration():
+            raise ConfigurationError("Failed to reset configuration: Invalid default settings")
+
+        monkeypatch.setattr(admin_service, "reset_configuration", failing_reset_configuration)
+
+        response = client.post("/api/v1/admin/configuration/reset")
+
+        # Should return 400 for ConfigurationError
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+
+        body = response.json()
+        assert "detail" in body
+        assert "Failed to reset configuration" in body["detail"]

@@ -120,8 +120,8 @@ async def lifespan(app: FastAPI):
     """
     logger.info("Starting Context Studio server")
 
-    # Capture application start time for uptime calculation
-    app_start_time = datetime.now(timezone.utc)
+    # Capture application start time for uptime calculation (as Unix timestamp)
+    app_start_time = datetime.now(timezone.utc).timestamp()
 
     # Get configuration from global singleton
     config_manager = get_config_manager()
@@ -304,11 +304,11 @@ async def lifespan(app: FastAPI):
         logger.info("JSONFileConfigStore created")
 
         metrics_collector = SystemMetricsCollector(
-            llm_router=llm_router,
-            nlp_processor=nlp_processor,
-            embedding_service=embedding_service,
-            start_time=app_start_time,
+            llm=llm_router,
+            nlp=nlp_processor,
+            embedding=embedding_service,
             db_engine=db_manager.get_local_engine(),
+            start_time=app_start_time,
         )
         logger.info("SystemMetricsCollector created")
 

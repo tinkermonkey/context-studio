@@ -6,4 +6,5 @@ mypy
 typing-extensions
 types-networkx
 types-SQLAlchemy
+pyarrow-stubs
 boto3-stubs[s3]

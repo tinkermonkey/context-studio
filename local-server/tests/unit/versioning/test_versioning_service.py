@@ -1257,79 +1257,6 @@ class TestMergeStrategies:
         resolved = service.auto_resolve(report3, strategy=MergeStrategy.MANUAL)
         assert resolved.conflicts[0].resolution_strategy is None
 
-    def test_auto_resolve_merge_both_combines_lists(
-        self, service: VersioningService
-    ) -> None:
-        """Test MERGE_BOTH strategy combines list values from base and incoming with deterministic ordering."""
-        report = ConflictReport(proposal_id="test-proposal")
-        report.conflicts = [
-            Conflict(
-                entity_id="entity1",
-                entity_type="Class",
-                field_name="tags",
-                base_value=["tag1", "tag2"],
-                incoming_value=["tag2", "tag3"],
-            ),
-        ]
-
-        resolved = service.auto_resolve(report, strategy=MergeStrategy.MERGE_BOTH)
-
-        assert resolved.all_resolved is True
-        assert resolved.conflicts[0].resolution_strategy == MergeStrategy.MERGE_BOTH
-        # Result should contain union of both lists in sorted order for determinism
-        assert resolved.conflicts[0].resolved_value == ["tag1", "tag2", "tag3"]
-
-    def test_auto_resolve_merge_both_fallback_non_collection(
-        self, service: VersioningService
-    ) -> None:
-        """Test MERGE_BOTH strategy falls back to incoming_value for non-collections."""
-        report = ConflictReport(proposal_id="test-proposal")
-        report.conflicts = [
-            Conflict(
-                entity_id="entity1",
-                entity_type="Class",
-                field_name="name",
-                base_value="base_name",
-                incoming_value="incoming_name",
-            ),
-        ]
-
-        resolved = service.auto_resolve(report, strategy=MergeStrategy.MERGE_BOTH)
-
-        assert resolved.all_resolved is True
-        assert resolved.conflicts[0].resolution_strategy == MergeStrategy.MERGE_BOTH
-        # Non-collection falls back to incoming_value
-        assert resolved.conflicts[0].resolved_value == "incoming_name"
-
-    def test_auto_resolve_merge_both_with_none_values(
-        self, service: VersioningService
-    ) -> None:
-        """Test MERGE_BOTH strategy handles None values gracefully."""
-        report = ConflictReport(proposal_id="test-proposal")
-        report.conflicts = [
-            Conflict(
-                entity_id="entity1",
-                entity_type="Class",
-                field_name="tags",
-                base_value=None,
-                incoming_value=["tag1"],
-            ),
-            Conflict(
-                entity_id="entity2",
-                entity_type="Class",
-                field_name="tags",
-                base_value=["tag2"],
-                incoming_value=None,
-            ),
-        ]
-
-        resolved = service.auto_resolve(report, strategy=MergeStrategy.MERGE_BOTH)
-
-        assert resolved.all_resolved is True
-        # When base is None, result is just incoming
-        assert set(resolved.conflicts[0].resolved_value) == {"tag1"}
-        # When incoming is None, result is just base
-        assert set(resolved.conflicts[1].resolved_value) == {"tag2"}
 
 
 class TestManualConflictResolution:
@@ -1925,6 +1852,7 @@ class TestSyncStatusErrorHandling:
 
         assert status.unprocessed_count == 0
         assert status.is_configured == sync_target.is_configured()
+        assert status.is_degraded is True
 
     def test_get_sync_status_is_configured_error(
         self, repo: FakeChangeRepository, event_publisher: FakeEventPublisher
@@ -1946,6 +1874,7 @@ class TestSyncStatusErrorHandling:
 
         assert status.is_configured is False
         assert status.unprocessed_count == repo.count_unprocessed()
+        assert status.is_degraded is False
 
     def test_get_sync_status_both_errors(
         self, event_publisher: FakeEventPublisher
@@ -1972,6 +1901,7 @@ class TestSyncStatusErrorHandling:
 
         assert status.unprocessed_count == 0
         assert status.is_configured is False
+        assert status.is_degraded is True
 
     def test_get_sync_status_success_path(
         self, service: VersioningService, repo: FakeChangeRepository, sync_target: FakeSyncTarget
@@ -1989,6 +1919,7 @@ class TestSyncStatusErrorHandling:
 
         assert status.unprocessed_count == 1
         assert status.is_configured == sync_target.is_configured()
+        assert status.is_degraded is False
 
 
 # ============================================================================

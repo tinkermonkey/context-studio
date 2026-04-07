@@ -1,21 +1,29 @@
 """
 SystemMetricsCollector adapter implementation.
 
-Aggregates component health status into a SystemHealth entity by querying
-the readiness and availability of LLM providers, NLP pipeline, and embedding models.
+Collects granular health metrics from component adapters (LLM providers, NLP pipeline,
+embedding models, and database). Returns individual value objects with aggregation
+handled by AdminService.check_health().
 """
 
 from datetime import datetime, timezone
-from typing import Optional
+from types import MappingProxyType
 
 from sqlalchemy import text
 from sqlalchemy.engine import Engine
+from sqlalchemy.exc import SQLAlchemyError
 
-from domain.admin.entities import SystemHealth
-from domain.admin.value_objects import SystemHealthStatus
-from adapters.llm.provider_router import LLMProviderRouter
-from adapters.nlp.spacy_processor import SpacyNLPProcessor
-from adapters.embedding.sentence_transformer import SentenceTransformerEmbedding
+from domain.admin.ports import (
+    HealthCheckableNLP,
+    HealthCheckableEmbedding,
+    HealthCheckableLLM,
+)
+from domain.admin.value_objects import (
+    DatabaseHealth,
+    ServiceMetrics,
+    ComponentStatus,
+    BackgroundTaskSummary,
+)
 from utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -26,35 +34,37 @@ class SystemMetricsCollector:
     Collects system health metrics from component adapters.
 
     Aggregates health status across LLM providers, NLP pipeline, and embedding
-    models into a single SystemHealth entity. Tracks uptime since application start.
+    models. Tracks uptime since application start. Implements the MetricsCollector
+    protocol to provide granular health checks.
+
+    Error handling follows a two-layer pattern: this adapter catches and logs
+    errors for ComponentStatus methods (returning safe defaults), but re-raises
+    exceptions from get_service_metrics() so the caller can distinguish "no
+    providers" from "check failed". AdminService.check_health() catches any
+    exceptions that escape this layer.
     """
 
     def __init__(
         self,
-        llm_router: LLMProviderRouter,
-        nlp_processor: SpacyNLPProcessor,
-        embedding_service: SentenceTransformerEmbedding,
-        start_time: datetime,
-        db_engine: Optional[Engine] = None,
+        llm: HealthCheckableLLM,
+        nlp: HealthCheckableNLP,
+        embedding: HealthCheckableEmbedding,
+        db_engine: Engine,
+        start_time: float,
     ) -> None:
         """
         Initialize the system metrics collector.
 
         Args:
-            llm_router: LLM provider router for checking available providers
-            nlp_processor: NLP processor for checking readiness
-            embedding_service: Embedding service for checking model load status
-            start_time: Application start time for uptime calculation
+            llm: LLM component for checking available providers
+            nlp: NLP component for checking readiness
+            embedding: Embedding component for checking model load status
             db_engine: SQLAlchemy engine for database connectivity checks
-
-        Note:
-            TODO: Replace concrete adapter types with port protocols when available.
-            Currently coupled to LLMProviderRouter, SpacyNLPProcessor, and
-            SentenceTransformerEmbedding directly due to lack of defined ports.
+            start_time: Application start time as Unix timestamp (seconds since epoch)
         """
-        self._llm = llm_router
-        self._nlp = nlp_processor
-        self._embedding = embedding_service
+        self._llm = llm
+        self._nlp = nlp
+        self._embedding = embedding
         self._start_time = start_time
         self._db_engine = db_engine
 
@@ -65,102 +75,92 @@ class SystemMetricsCollector:
         Returns:
             True if database is accessible, False otherwise
         """
-        if self._db_engine is None:
-            logger.warning("Database engine not provided to metrics collector")
-            return False
-
         try:
             with self._db_engine.connect() as connection:
                 connection.execute(text("SELECT 1"))
             return True
-        except Exception as e:
+        except SQLAlchemyError as e:
             logger.warning(f"Database connectivity check failed: {e}")
             return False
 
-    def collect_health(self) -> SystemHealth:
+    def get_database_health(self) -> DatabaseHealth:
         """
-        Collect current system health metrics.
-
-        Checks the status of database, NLP pipeline, embedding model, and LLM providers.
-        Determines overall status as 'healthy', 'degraded', or 'unhealthy' based on
-        component availability.
+        Get database health status.
 
         Returns:
-            SystemHealth object with all metrics populated
+            DatabaseHealth with connectivity and issue details
         """
-        issues: list[str] = []
+        connected = self._check_database_connected()
+        issues: tuple[str, ...] = ()
+        if not connected:
+            issues = ("Database not accessible",)
+        return DatabaseHealth(connected=connected, issues=issues)
 
-        # Check database connectivity
-        db_connected = self._check_database_connected()
-        if not db_connected:
-            issues.append('Database not accessible')
+    def get_service_metrics(self) -> ServiceMetrics:
+        """
+        Get service-level metrics.
 
-        # Track which components had errors during checks
-        error_components = set()
+        Raises:
+            Exception: If LLM provider check fails, exception is logged and re-raised
+                to allow the service layer to distinguish between "no providers
+                configured" and "failed to check providers"
 
-        # Check LLM providers with error handling
-        llm_providers = []
+        Returns:
+            ServiceMetrics with uptime and available LLM providers
+        """
+        now = datetime.now(timezone.utc).timestamp()
+        uptime = now - self._start_time
+
         try:
             llm_providers = self._llm.list_available_providers()
         except Exception as e:
             logger.warning(f"Failed to check LLM providers: {e}")
-            issues.append('Error checking LLM providers')
-            error_components.add('llm')
+            raise
 
-        # Check NLP pipeline readiness with error handling
-        nlp_ready = False
-        try:
-            nlp_ready = self._nlp.is_ready()
-        except Exception as e:
-            logger.warning(f"Failed to check NLP pipeline: {e}")
-            issues.append('Error checking NLP pipeline')
-            error_components.add('nlp')
+        return ServiceMetrics(
+            uptime_seconds=uptime, llm_providers_available=tuple(llm_providers)
+        )
 
-        # Check embedding model with error handling
-        embedding_loaded = False
+    def get_embedding_model_status(self) -> ComponentStatus:
+        """
+        Get embedding model component status.
+
+        Returns:
+            ComponentStatus of the embedding model
+        """
         try:
-            embedding_loaded = self._embedding.is_loaded()
+            loaded = self._embedding.is_loaded()
+            details = "Embedding model loaded" if loaded else "Embedding model not loaded"
+            return ComponentStatus(available=loaded, details=details)
         except Exception as e:
             logger.warning(f"Failed to check embedding model: {e}")
-            issues.append('Error checking embedding model')
-            error_components.add('embedding')
+            return ComponentStatus(
+                available=False, details=f"Error checking embedding model: {e}"
+            )
 
-        # Aggregate issues for components that didn't have errors
-        if 'nlp' not in error_components and not nlp_ready:
-            issues.append('NLP pipeline not ready')
-        if 'embedding' not in error_components and not embedding_loaded:
-            issues.append('Embedding model not loaded')
-        if 'llm' not in error_components and not llm_providers:
-            issues.append('No LLM providers configured')
+    def get_nlp_pipeline_status(self) -> ComponentStatus:
+        """
+        Get NLP pipeline component status.
 
-        # Calculate uptime in seconds
-        now = datetime.now(timezone.utc)
-        uptime = (now - self._start_time).total_seconds()
+        Returns:
+            ComponentStatus of the NLP pipeline
+        """
+        try:
+            ready = self._nlp.is_ready()
+            details = "NLP pipeline ready" if ready else "NLP pipeline not ready"
+            return ComponentStatus(available=ready, details=details)
+        except Exception as e:
+            logger.warning(f"Failed to check NLP pipeline: {e}")
+            return ComponentStatus(
+                available=False, details=f"Error checking NLP pipeline: {e}"
+            )
 
-        # Determine overall status
-        # HEALTHY if all optional components are available
-        # DEGRADED if some optional components are missing
-        # UNHEALTHY if database is down
-        if not db_connected:
-            status = SystemHealthStatus.UNHEALTHY
-        elif issues:
-            status = SystemHealthStatus.DEGRADED
-        else:
-            status = SystemHealthStatus.HEALTHY
+    def get_background_task_summary(self) -> BackgroundTaskSummary:
+        """
+        Get summary of background task statuses.
 
-        logger.debug(
-            f"Health check: status={status}, db_connected={db_connected}, nlp_ready={nlp_ready}, "
-            f"embedding_loaded={embedding_loaded}, providers={len(llm_providers)}, "
-            f"issues={len(issues)}"
-        )
-
-        return SystemHealth(
-            status=status,
-            database_connected=db_connected,
-            nlp_pipeline_ready=nlp_ready,
-            embedding_model_loaded=embedding_loaded,
-            llm_providers_available=llm_providers,
-            uptime_seconds=uptime,
-            checked_at=now,
-            issues=issues,
-        )
+        Returns:
+            BackgroundTaskSummary with task counts by status
+        """
+        # Currently no background task tracking in the system
+        return BackgroundTaskSummary(by_status=MappingProxyType({}))

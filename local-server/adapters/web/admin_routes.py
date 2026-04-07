@@ -2,11 +2,17 @@
 HTTP route handlers for the System Administration bounded context.
 
 Endpoints:
-- GET  /api/v1/admin/health          - Check system health
-- GET  /api/v1/admin/configuration   - Retrieve configuration
+- GET  /api/v1/admin/health                 - Check system health
+- GET  /api/v1/admin/health/database        - Get database component health
+- GET  /api/v1/admin/health/services        - Get service-level metrics
+- GET  /api/v1/admin/health/embedding       - Get embedding model component status
+- GET  /api/v1/admin/health/nlp             - Get NLP pipeline component status
+- GET  /api/v1/admin/health/tasks           - Get background task summary
+- GET  /api/v1/admin/configuration          - Retrieve configuration
 - PATCH /api/v1/admin/configuration/{section} - Update configuration section
-- GET  /api/v1/admin/tasks           - List background tasks
-- GET  /api/v1/admin/tasks/{task_id} - Get background task details
+- POST /api/v1/admin/configuration/reset    - Reset configuration to defaults
+- GET  /api/v1/admin/tasks                  - List background tasks
+- GET  /api/v1/admin/tasks/{task_id}        - Get background task details
 
 All route handlers use run_sync_in_executor to prevent blocking the async event loop
 when calling synchronous domain service methods.
@@ -18,6 +24,10 @@ from domain.admin.exceptions import ConfigurationError, TaskNotFoundError, Admin
 from adapters.web.dependencies import get_admin_service
 from adapters.web.schemas.admin import (
     SystemHealthResponse,
+    DatabaseHealthResponse,
+    ServiceMetricsResponse,
+    ComponentStatusResponse,
+    BackgroundTaskSummaryResponse,
     AppConfigurationResponse,
     ConfigSectionUpdateRequest,
     BackgroundTaskResponse,
@@ -41,8 +51,10 @@ def _handle_admin_error(exc: Exception) -> tuple[int, str]:
         Tuple of (status_code, error_message)
     """
     if isinstance(exc, ConfigurationError):
+        logger.warning(f"Configuration error: {exc}")
         return (status.HTTP_400_BAD_REQUEST, str(exc))
     elif isinstance(exc, TaskNotFoundError):
+        logger.warning(f"Task not found: {exc}")
         return (status.HTTP_404_NOT_FOUND, str(exc))
     elif isinstance(exc, AdminError):
         logger.warning(f"Admin error: {exc}")
@@ -63,8 +75,9 @@ async def check_health(
     components (NLP pipeline, embedding model, LLM providers).
 
     Health status rules:
-    - "healthy": All core systems operational
-    - "degraded": Optional components unavailable but system functional
+    - "healthy": All systems operational
+    - "degraded": One or more issues detected (e.g., missing LLM providers, unavailable
+      components, failed background tasks) but core systems functional
     - "unhealthy": Critical systems (database) unavailable
 
     Returns:
@@ -75,7 +88,122 @@ async def check_health(
     """
     try:
         health = await run_sync_in_executor(service.check_health)
-        return SystemHealthResponse.model_validate(health.__dict__)
+        return SystemHealthResponse.model_validate(health)
+    except Exception as exc:
+        status_code, message = _handle_admin_error(exc)
+        raise HTTPException(status_code=status_code, detail=message)
+
+
+@router.get("/health/database", response_model=DatabaseHealthResponse)
+async def get_database_health(
+    service: AdminService = Depends(get_admin_service),
+) -> DatabaseHealthResponse:
+    """
+    Get database component health status.
+
+    Returns detailed health information about the database connection and any issues.
+
+    Returns:
+        DatabaseHealthResponse with connectivity status and issues list
+
+    Raises:
+        HTTPException: 500 for internal errors
+    """
+    try:
+        db_health = await run_sync_in_executor(service.get_database_health)
+        return DatabaseHealthResponse.model_validate(db_health)
+    except Exception as exc:
+        status_code, message = _handle_admin_error(exc)
+        raise HTTPException(status_code=status_code, detail=message)
+
+
+@router.get("/health/services", response_model=ServiceMetricsResponse)
+async def get_service_metrics(
+    service: AdminService = Depends(get_admin_service),
+) -> ServiceMetricsResponse:
+    """
+    Get service-level metrics.
+
+    Returns system uptime and list of available LLM providers.
+
+    Returns:
+        ServiceMetricsResponse with uptime and available providers
+
+    Raises:
+        HTTPException: 500 for internal errors
+    """
+    try:
+        metrics = await run_sync_in_executor(service.get_service_metrics)
+        return ServiceMetricsResponse.model_validate(metrics)
+    except Exception as exc:
+        status_code, message = _handle_admin_error(exc)
+        raise HTTPException(status_code=status_code, detail=message)
+
+
+@router.get("/health/embedding", response_model=ComponentStatusResponse)
+async def get_embedding_status(
+    service: AdminService = Depends(get_admin_service),
+) -> ComponentStatusResponse:
+    """
+    Get embedding model component status.
+
+    Returns availability and status details for the embedding model.
+
+    Returns:
+        ComponentStatusResponse with availability and details
+
+    Raises:
+        HTTPException: 500 for internal errors
+    """
+    try:
+        component_status = await run_sync_in_executor(service.get_embedding_model_status)
+        return ComponentStatusResponse.model_validate(component_status)
+    except Exception as exc:
+        status_code, message = _handle_admin_error(exc)
+        raise HTTPException(status_code=status_code, detail=message)
+
+
+@router.get("/health/nlp", response_model=ComponentStatusResponse)
+async def get_nlp_status(
+    service: AdminService = Depends(get_admin_service),
+) -> ComponentStatusResponse:
+    """
+    Get NLP pipeline component status.
+
+    Returns availability and status details for the NLP pipeline.
+
+    Returns:
+        ComponentStatusResponse with availability and details
+
+    Raises:
+        HTTPException: 500 for internal errors
+    """
+    try:
+        component_status = await run_sync_in_executor(service.get_nlp_pipeline_status)
+        return ComponentStatusResponse.model_validate(component_status)
+    except Exception as exc:
+        status_code, message = _handle_admin_error(exc)
+        raise HTTPException(status_code=status_code, detail=message)
+
+
+@router.get("/health/tasks", response_model=BackgroundTaskSummaryResponse)
+async def get_task_summary(
+    service: AdminService = Depends(get_admin_service),
+) -> BackgroundTaskSummaryResponse:
+    """
+    Get summary of background task execution status.
+
+    Returns counts of tasks grouped by status (pending, running, completed, failed).
+
+    Returns:
+        BackgroundTaskSummaryResponse with task counts by status
+
+    Raises:
+        HTTPException: 500 for internal errors
+    """
+    try:
+        summary = await run_sync_in_executor(service.get_background_task_summary)
+        return BackgroundTaskSummaryResponse.from_domain(summary)
     except Exception as exc:
         status_code, message = _handle_admin_error(exc)
         raise HTTPException(status_code=status_code, detail=message)
@@ -89,7 +217,7 @@ async def get_configuration(
     Retrieve current application configuration.
 
     Returns all configuration sections with sensitive values (API keys)
-    masked to prevent exposure in logs.
+    masked in the API response to prevent exposure through the HTTP interface.
 
     Returns:
         AppConfigurationResponse with configuration sections and masked API keys
@@ -142,6 +270,30 @@ async def update_configuration(
         raise HTTPException(status_code=status_code, detail=message)
 
 
+@router.post("/configuration/reset", response_model=AppConfigurationResponse)
+async def reset_configuration(
+    service: AdminService = Depends(get_admin_service),
+) -> AppConfigurationResponse:
+    """
+    Reset configuration to defaults while preserving credentials.
+
+    Resets all configuration values to their defaults. Credential fields
+    (API keys, secrets) are preserved. Returns configuration with masked credentials.
+
+    Returns:
+        AppConfigurationResponse with reset configuration and masked credentials
+
+    Raises:
+        HTTPException: 500 for internal errors
+    """
+    try:
+        config = await run_sync_in_executor(service.reset_configuration)
+        return AppConfigurationResponse.from_domain(config)
+    except Exception as exc:
+        status_code, message = _handle_admin_error(exc)
+        raise HTTPException(status_code=status_code, detail=message)
+
+
 @router.get("/tasks", response_model=list[BackgroundTaskResponse])
 async def list_tasks(
     service: AdminService = Depends(get_admin_service),
@@ -160,7 +312,7 @@ async def list_tasks(
     """
     try:
         tasks = await run_sync_in_executor(service.list_tasks)
-        return [BackgroundTaskResponse.model_validate(task.__dict__) for task in tasks]
+        return [BackgroundTaskResponse.model_validate(task) for task in tasks]
     except Exception as exc:
         status_code, message = _handle_admin_error(exc)
         raise HTTPException(status_code=status_code, detail=message)
@@ -188,7 +340,7 @@ async def get_task(
     """
     try:
         task = await run_sync_in_executor(service.get_task, task_id)
-        return BackgroundTaskResponse.model_validate(task.__dict__)
+        return BackgroundTaskResponse.model_validate(task)
     except Exception as exc:
         status_code, message = _handle_admin_error(exc)
         raise HTTPException(status_code=status_code, detail=message)

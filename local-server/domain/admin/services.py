@@ -7,12 +7,14 @@ and background task lifecycle.
 
 from __future__ import annotations
 
+import dataclasses
 import uuid
 from datetime import datetime, timezone
+from types import MappingProxyType
 from typing import Optional
 
 from .entities import SystemHealth, BackgroundTask, AppConfiguration
-from .value_objects import BackgroundTaskStatus
+from .value_objects import BackgroundTaskStatus, SystemHealthStatus, DatabaseHealth, ServiceMetrics, ComponentStatus, BackgroundTaskSummary
 from .ports import MetricsCollector, ConfigurationStore
 from .exceptions import TaskNotFoundError, ConfigurationError
 
@@ -43,14 +45,147 @@ class AdminService:
 
     def check_health(self) -> SystemHealth:
         """
-        Check current system health.
+        Check current system health by aggregating granular health checks.
 
-        Delegates to MetricsCollector to gather system state.
+        Calls all 5 granular port methods with resilience to individual failures
+        and computes overall system health status:
+        - UNHEALTHY if database is not connected
+        - DEGRADED if any issues are reported
+        - HEALTHY otherwise
 
         Returns:
             SystemHealth object describing current system status
         """
-        return self._metrics.collect_health()
+        # Initialize defaults for safe fallback on any component failure
+        db_health = DatabaseHealth(connected=False, issues=())
+        service_metrics = ServiceMetrics(uptime_seconds=0.0, llm_providers_available=())
+        embedding_status = ComponentStatus(available=False, details="Health check not performed")
+        nlp_status = ComponentStatus(available=False, details="Health check not performed")
+        task_summary = BackgroundTaskSummary(by_status=MappingProxyType({}))
+
+        # Call each port method with individual error handling
+        try:
+            db_health = self._metrics.get_database_health()
+        except Exception as e:
+            db_health = DatabaseHealth(
+                connected=False, issues=(f"Error checking database health: {e}",)
+            )
+
+        service_metrics_error = None
+        try:
+            service_metrics = self._metrics.get_service_metrics()
+        except Exception as e:
+            service_metrics_error = str(e)
+            service_metrics = ServiceMetrics(
+                uptime_seconds=0.0, llm_providers_available=()
+            )
+
+        try:
+            embedding_status = self._metrics.get_embedding_model_status()
+        except Exception as e:
+            embedding_status = ComponentStatus(
+                available=False, details=f"Error checking embedding model: {e}"
+            )
+
+        try:
+            nlp_status = self._metrics.get_nlp_pipeline_status()
+        except Exception as e:
+            nlp_status = ComponentStatus(
+                available=False, details=f"Error checking NLP pipeline: {e}"
+            )
+
+        task_summary_error = None
+        try:
+            task_summary = self._metrics.get_background_task_summary()
+        except Exception as e:
+            task_summary_error = str(e)
+            task_summary = BackgroundTaskSummary(by_status=MappingProxyType({}))
+
+        # Aggregate all issues
+        issues: list[str] = []
+        issues.extend(db_health.issues)
+        if not embedding_status.available:
+            issues.append(f"Embedding model: {embedding_status.details}")
+        if not nlp_status.available:
+            issues.append(f"NLP pipeline: {nlp_status.details}")
+
+        # Check LLM providers: report error or config gap based on check success
+        if service_metrics_error:
+            issues.append(f"Error checking service metrics: {service_metrics_error}")
+        elif not service_metrics.llm_providers_available:
+            issues.append("No LLM providers configured")
+
+        # Check for background task errors or failures
+        if task_summary_error:
+            issues.append(f"Error checking background tasks: {task_summary_error}")
+        else:
+            failed_tasks = task_summary.by_status.get(BackgroundTaskStatus.FAILED, 0)
+            if failed_tasks > 0:
+                issues.append(f"{failed_tasks} background task(s) failed")
+
+        # Derive overall status based on business rules
+        if not db_health.connected:
+            status = SystemHealthStatus.UNHEALTHY
+        elif issues:
+            status = SystemHealthStatus.DEGRADED
+        else:
+            status = SystemHealthStatus.HEALTHY
+
+        return SystemHealth(
+            status=status,
+            database_connected=db_health.connected,
+            nlp_pipeline_ready=nlp_status.available,
+            embedding_model_loaded=embedding_status.available,
+            llm_providers_available=list(service_metrics.llm_providers_available),
+            uptime_seconds=service_metrics.uptime_seconds,
+            checked_at=datetime.now(timezone.utc),
+            issues=issues,
+        )
+
+    def get_database_health(self) -> DatabaseHealth:
+        """
+        Get database health status.
+
+        Returns:
+            DatabaseHealth with connectivity and issue details
+        """
+        return self._metrics.get_database_health()
+
+    def get_service_metrics(self) -> ServiceMetrics:
+        """
+        Get service-level metrics.
+
+        Returns:
+            ServiceMetrics with uptime and available LLM providers
+        """
+        return self._metrics.get_service_metrics()
+
+    def get_embedding_model_status(self) -> ComponentStatus:
+        """
+        Get embedding model component status.
+
+        Returns:
+            ComponentStatus of the embedding model
+        """
+        return self._metrics.get_embedding_model_status()
+
+    def get_nlp_pipeline_status(self) -> ComponentStatus:
+        """
+        Get NLP pipeline component status.
+
+        Returns:
+            ComponentStatus of the NLP pipeline
+        """
+        return self._metrics.get_nlp_pipeline_status()
+
+    def get_background_task_summary(self) -> BackgroundTaskSummary:
+        """
+        Get summary of background task statuses.
+
+        Returns:
+            BackgroundTaskSummary with task counts by status
+        """
+        return self._metrics.get_background_task_summary()
 
     def get_configuration(self) -> AppConfiguration:
         """
@@ -63,14 +198,26 @@ class AdminService:
         """
         return self._config.load()
 
+    def reset_configuration(self) -> AppConfiguration:
+        """
+        Reset configuration to defaults while preserving credentials.
+
+        Delegates to ConfigurationStore.reset_to_defaults() to perform
+        the reset operation.
+
+        Returns:
+            AppConfiguration reset to defaults with credentials preserved
+        """
+        return self._config.reset_to_defaults()
+
     def update_configuration(
         self, section: str, updates: dict
     ) -> AppConfiguration:
         """
         Update a configuration section.
 
-        Loads configuration, updates the specified section with new values,
-        and saves the result.
+        Validates the section exists, updates it with new values,
+        and persists the result via ConfigurationStore.
 
         Args:
             section: Name of the configuration section to update
@@ -80,14 +227,31 @@ class AdminService:
             Updated AppConfiguration object
 
         Raises:
-            ConfigurationError: If the section does not exist
+            ConfigurationError: If the section does not exist, is not configured, or is not a dict
         """
         config = self._config.load()
-        if section not in config.sections:
+
+        # Valid configuration sections derived from AppConfiguration fields
+        valid_sections = {f.name for f in dataclasses.fields(AppConfiguration)}
+        if section not in valid_sections:
             raise ConfigurationError(f"Unknown config section: {section}")
-        config.sections[section].update(updates)
-        self._config.save(config)
-        return config
+
+        # Get the current section value
+        section_value = getattr(config, section, None)
+        if section_value is None:
+            raise ConfigurationError(f"Configuration section '{section}' is not configured")
+
+        # Validate that section_value is a dict before attempting to update
+        if not isinstance(section_value, dict):
+            raise ConfigurationError(
+                f"Configuration section '{section}' is not a dictionary (got {type(section_value).__name__})"
+            )
+
+        # Update the section with the provided updates
+        section_value.update(updates)
+        setattr(config, section, section_value)
+
+        return self._config.save(config)
 
     def register_task(self, name: str) -> BackgroundTask:
         """
@@ -161,13 +325,8 @@ class AdminService:
 
         Raises:
             TaskNotFoundError: If task_id does not exist
+            InvalidStateTransitionError: If the status transition is invalid
         """
         task = self.get_task(task_id)
-        task.status = status
-        if status == BackgroundTaskStatus.RUNNING:
-            task.started_at = datetime.now(timezone.utc)
-        elif status in (BackgroundTaskStatus.COMPLETED, BackgroundTaskStatus.FAILED):
-            task.completed_at = datetime.now(timezone.utc)
-        task.error = error
-        task.result = result
+        task.transition_to(status, datetime.now(timezone.utc), error=error, result=result)
         return task

@@ -507,7 +507,6 @@ class VersioningService:
         Strategies:
             - LAST_WRITE_WINS: Sets resolved_value=incoming_value (preserves current behavior)
             - BASE_VALUE_WINS: Sets resolved_value=base_value
-            - MERGE_BOTH: For collection-typed fields, combines both value sets; for other types, uses incoming_value
             - MANUAL: Leaves conflicts unresolved, deferring to explicit resolve_conflicts() calls
         """
         if strategy == MergeStrategy.MANUAL:
@@ -523,30 +522,6 @@ class VersioningService:
                 conflict.resolve(conflict.incoming_value, strategy)
             elif strategy == MergeStrategy.BASE_VALUE_WINS:
                 conflict.resolve(conflict.base_value, strategy)
-            elif strategy == MergeStrategy.MERGE_BOTH:
-                # For list-typed fields (JSON only produces lists), combine both value sets.
-                # Non-list types fall back to incoming_value.
-                base = conflict.base_value
-                incoming = conflict.incoming_value
-
-                # Handle collection merging if both values are lists
-                if isinstance(base, list) and isinstance(incoming, list):
-                    # Convert to sets for combination, then sort for deterministic ordering
-                    base_set = set(base)
-                    incoming_set = set(incoming)
-                    merged = base_set | incoming_set
-                    resolved_value = sorted(merged)
-                elif isinstance(base, list) and incoming is None:
-                    # If only base is a list, use base
-                    resolved_value = base
-                elif isinstance(incoming, list) and base is None:
-                    # If only incoming is a list, use incoming
-                    resolved_value = incoming
-                else:
-                    # For non-list types or mixed types, fall back to incoming_value
-                    resolved_value = incoming
-
-                conflict.resolve(resolved_value, strategy)
             else:
                 raise ValueError(f"Unrecognized merge strategy: {strategy}")
 
@@ -1090,21 +1065,18 @@ class VersioningService:
         Get the current synchronization status.
 
         Returns information about unprocessed changes awaiting push and whether
-        the remote sync target is configured. If errors occur checking sync status,
-        returns a degraded status indicator.
+        the remote sync target is configured.
 
         Returns:
-            SyncStatus with unprocessed count, configuration status, and degraded flag
+            SyncStatus with unprocessed count and configuration status
         """
-        is_degraded = False
         count = 0
         is_configured = False
+        is_degraded = False
 
         try:
             count = self._repo.count_unprocessed()
         except (RuntimeError, OSError) as e:
-            # Adapter errors indicate degraded state; mark it and use safe defaults
-            # Programming errors (TypeError, AttributeError, etc.) bubble up for visibility.
             _logger.warning(
                 "Failed to count unprocessed changes in sync status: %s", str(e)
             )
@@ -1113,11 +1085,9 @@ class VersioningService:
         try:
             is_configured = self._sync.is_configured()
         except (RuntimeError, OSError) as e:
-            # Same rationale: adapter errors degrade gracefully, but programming errors bubble up
             _logger.warning(
                 "Failed to check sync configuration status: %s", str(e)
             )
-            is_degraded = True
 
         status = SyncStatus(
             last_pushed_at=None,
