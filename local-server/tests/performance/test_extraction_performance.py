@@ -12,6 +12,7 @@ import pytest
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 from domain.extraction.services import ExtractionService
+from domain.extraction.ports import NLPProcessor
 from tests.fakes.fake_ontology_repository import FakeOntologyRepository
 from tests.fakes.fake_embedding_service import FakeEmbeddingService
 from tests.fakes.fake_llm_provider import FakeLLMProvider
@@ -47,7 +48,7 @@ def _generate_sample_text(num_words: int) -> str:
 
 
 def _setup_extraction_service(
-    nlp_processor: "object | None" = None,
+    nlp_processor: NLPProcessor | None = None,
 ) -> ExtractionService:
     """Set up extraction service with fake dependencies.
 
@@ -80,68 +81,29 @@ def _setup_extraction_service(
 
 
 @pytest.mark.performance
-def test_extraction_100_words_fake_nlp():
-    """Measure end-to-end extraction time for 100 words with fake NLP."""
+@pytest.mark.parametrize("num_words,max_time", [
+    (100, 1.0),
+    (500, 2.0),
+    (2000, 5.0),
+    (5000, 10.0),
+])
+def test_extraction_fake_nlp(num_words: int, max_time: float) -> None:
+    """Measure end-to-end extraction time with fake NLP at specified text length."""
     service = _setup_extraction_service()
-    text = _generate_sample_text(100)
+    text = _generate_sample_text(num_words)
 
     start = time.perf_counter()
     result = service.extract(text)
     elapsed = time.perf_counter() - start
 
-    print(f"\nExtraction (100 words, fake NLP): {elapsed:.4f}s")
+    print(f"\nExtraction ({num_words} words, fake NLP): {elapsed:.4f}s")
     assert result is not None
-    assert elapsed < 1.0
-
-
-@pytest.mark.performance
-def test_extraction_500_words_fake_nlp():
-    """Measure end-to-end extraction time for 500 words with fake NLP."""
-    service = _setup_extraction_service()
-    text = _generate_sample_text(500)
-
-    start = time.perf_counter()
-    result = service.extract(text)
-    elapsed = time.perf_counter() - start
-
-    print(f"\nExtraction (500 words, fake NLP): {elapsed:.4f}s")
-    assert result is not None
-    assert elapsed < 2.0
-
-
-@pytest.mark.performance
-def test_extraction_2000_words_fake_nlp():
-    """Measure end-to-end extraction time for 2000 words with fake NLP."""
-    service = _setup_extraction_service()
-    text = _generate_sample_text(2000)
-
-    start = time.perf_counter()
-    result = service.extract(text)
-    elapsed = time.perf_counter() - start
-
-    print(f"\nExtraction (2000 words, fake NLP): {elapsed:.4f}s")
-    assert result is not None
-    assert elapsed < 5.0
-
-
-@pytest.mark.performance
-def test_extraction_5000_words_fake_nlp():
-    """Measure end-to-end extraction time for 5000 words with fake NLP."""
-    service = _setup_extraction_service()
-    text = _generate_sample_text(5000)
-
-    start = time.perf_counter()
-    result = service.extract(text)
-    elapsed = time.perf_counter() - start
-
-    print(f"\nExtraction (5000 words, fake NLP): {elapsed:.4f}s")
-    assert result is not None
-    assert elapsed < 10.0
+    assert elapsed < max_time
 
 
 @pytest.mark.performance
 @pytest.mark.nlp
-def test_extraction_100_words_real_nlp():
+def test_extraction_100_words_real_nlp() -> None:
     """Measure end-to-end extraction time for 100 words with real spaCy NLP.
 
     This test requires the spaCy library and en_core_web_sm model to be installed.
@@ -169,7 +131,7 @@ def test_extraction_100_words_real_nlp():
 
 @pytest.mark.performance
 @pytest.mark.nlp
-def test_extraction_500_words_real_nlp():
+def test_extraction_500_words_real_nlp() -> None:
     """Measure end-to-end extraction time for 500 words with real spaCy NLP.
 
     This test requires the spaCy library and en_core_web_sm model to be installed.

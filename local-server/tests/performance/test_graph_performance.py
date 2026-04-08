@@ -12,6 +12,7 @@ import pytest
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 from adapters.graph.networkx_engine import NetworkXGraphEngine
+from adapters.graph.rdflib_engine import RDFLibQueryEngine
 
 
 def _create_graph_data(num_nodes: int) -> tuple[list[dict], list[dict]]:
@@ -37,188 +38,106 @@ def _create_graph_data(num_nodes: int) -> tuple[list[dict], list[dict]]:
 
 
 @pytest.mark.performance
-def test_graph_build_100_nodes():
-    """Measure time to build a graph with 100 nodes."""
+@pytest.mark.parametrize("num_nodes,max_time", [
+    (100, 0.5),
+    (500, 1.0),
+    (1000, 2.0),
+    (5000, 5.0),
+])
+def test_graph_build(num_nodes: int, max_time: float) -> None:
+    """Measure time to build a graph with specified number of nodes."""
     graph = NetworkXGraphEngine()
-    nodes, edges = _create_graph_data(100)
+    nodes, edges = _create_graph_data(num_nodes)
 
     start = time.perf_counter()
     graph.build_from_data(nodes, edges)
     elapsed = time.perf_counter() - start
 
-    print(f"\nGraph build (100 nodes): {elapsed:.4f}s")
-    assert graph.node_count() == 100
-    assert elapsed < 0.5  # Generous upper bound
+    print(f"\nGraph build ({num_nodes} nodes): {elapsed:.4f}s")
+    assert graph.node_count() == num_nodes
+    assert elapsed < max_time
 
 
 @pytest.mark.performance
-def test_graph_build_500_nodes():
-    """Measure time to build a graph with 500 nodes."""
+@pytest.mark.parametrize("num_nodes,max_time", [
+    (100, 0.1),
+    (500, 0.1),
+    (1000, 0.2),
+    (5000, 0.5),
+])
+def test_shortest_path_query(num_nodes: int, max_time: float) -> None:
+    """Measure shortest path query time in a graph of specified size."""
     graph = NetworkXGraphEngine()
-    nodes, edges = _create_graph_data(500)
-
-    start = time.perf_counter()
-    graph.build_from_data(nodes, edges)
-    elapsed = time.perf_counter() - start
-
-    print(f"\nGraph build (500 nodes): {elapsed:.4f}s")
-    assert graph.node_count() == 500
-    assert elapsed < 1.0
-
-
-@pytest.mark.performance
-def test_graph_build_1000_nodes():
-    """Measure time to build a graph with 1000 nodes."""
-    graph = NetworkXGraphEngine()
-    nodes, edges = _create_graph_data(1000)
-
-    start = time.perf_counter()
-    graph.build_from_data(nodes, edges)
-    elapsed = time.perf_counter() - start
-
-    print(f"\nGraph build (1000 nodes): {elapsed:.4f}s")
-    assert graph.node_count() == 1000
-    assert elapsed < 2.0
-
-
-@pytest.mark.performance
-def test_graph_build_5000_nodes():
-    """Measure time to build a graph with 5000 nodes."""
-    graph = NetworkXGraphEngine()
-    nodes, edges = _create_graph_data(5000)
-
-    start = time.perf_counter()
-    graph.build_from_data(nodes, edges)
-    elapsed = time.perf_counter() - start
-
-    print(f"\nGraph build (5000 nodes): {elapsed:.4f}s")
-    assert graph.node_count() == 5000
-    assert elapsed < 5.0
-
-
-@pytest.mark.performance
-def test_shortest_path_query_100_nodes():
-    """Measure shortest path query time in a 100-node graph."""
-    graph = NetworkXGraphEngine()
-    nodes, edges = _create_graph_data(100)
+    nodes, edges = _create_graph_data(num_nodes)
     graph.build_from_data(nodes, edges)
 
     start = time.perf_counter()
-    path = graph.shortest_path("node_0", "node_99")
+    path = graph.shortest_path("node_0", f"node_{num_nodes - 1}")
     elapsed = time.perf_counter() - start
 
-    print(f"\nShortest path query (100 nodes): {elapsed:.4f}s")
+    print(f"\nShortest path query ({num_nodes} nodes): {elapsed:.4f}s")
     assert path is not None
-    assert elapsed < 0.1
+    assert elapsed < max_time
 
 
 @pytest.mark.performance
-def test_shortest_path_query_500_nodes():
-    """Measure shortest path query time in a 500-node graph."""
+@pytest.mark.parametrize("num_nodes,max_time", [
+    (100, 0.5),
+    (500, 2.0),
+    (1000, 5.0),
+    (5000, 120.0),
+])
+def test_centrality_calculation(num_nodes: int, max_time: float) -> None:
+    """Measure centrality calculation time in a graph of specified size."""
     graph = NetworkXGraphEngine()
-    nodes, edges = _create_graph_data(500)
-    graph.build_from_data(nodes, edges)
-
-    start = time.perf_counter()
-    path = graph.shortest_path("node_0", "node_499")
-    elapsed = time.perf_counter() - start
-
-    print(f"\nShortest path query (500 nodes): {elapsed:.4f}s")
-    assert path is not None
-    assert elapsed < 0.1
-
-
-@pytest.mark.performance
-def test_shortest_path_query_1000_nodes():
-    """Measure shortest path query time in a 1000-node graph."""
-    graph = NetworkXGraphEngine()
-    nodes, edges = _create_graph_data(1000)
-    graph.build_from_data(nodes, edges)
-
-    start = time.perf_counter()
-    path = graph.shortest_path("node_0", "node_999")
-    elapsed = time.perf_counter() - start
-
-    print(f"\nShortest path query (1000 nodes): {elapsed:.4f}s")
-    assert path is not None
-    assert elapsed < 0.2
-
-
-@pytest.mark.performance
-def test_shortest_path_query_5000_nodes():
-    """Measure shortest path query time in a 5000-node graph."""
-    graph = NetworkXGraphEngine()
-    nodes, edges = _create_graph_data(5000)
-    graph.build_from_data(nodes, edges)
-
-    start = time.perf_counter()
-    path = graph.shortest_path("node_0", "node_4999")
-    elapsed = time.perf_counter() - start
-
-    print(f"\nShortest path query (5000 nodes): {elapsed:.4f}s")
-    assert path is not None
-    assert elapsed < 0.5
-
-
-@pytest.mark.performance
-def test_centrality_calculation_100_nodes():
-    """Measure centrality calculation time in a 100-node graph."""
-    graph = NetworkXGraphEngine()
-    nodes, edges = _create_graph_data(100)
+    nodes, edges = _create_graph_data(num_nodes)
     graph.build_from_data(nodes, edges)
 
     start = time.perf_counter()
     centrality = graph.centrality("betweenness")
     elapsed = time.perf_counter() - start
 
-    print(f"\nCentrality calculation (100 nodes): {elapsed:.4f}s")
-    assert len(centrality) == 100
-    assert elapsed < 0.5
+    print(f"\nCentrality calculation ({num_nodes} nodes): {elapsed:.4f}s")
+    assert len(centrality) == num_nodes
+    assert elapsed < max_time
 
 
 @pytest.mark.performance
-def test_centrality_calculation_500_nodes():
-    """Measure centrality calculation time in a 500-node graph."""
-    graph = NetworkXGraphEngine()
-    nodes, edges = _create_graph_data(500)
-    graph.build_from_data(nodes, edges)
+@pytest.mark.parametrize("num_nodes,max_time", [
+    (100, 0.5),
+    (500, 1.0),
+    (1000, 2.0),
+    (5000, 5.0),
+])
+def test_sparql_query(num_nodes: int, max_time: float) -> None:
+    """Measure SPARQL query execution time in a graph of specified size."""
+    # Create RDF-based query engine
+    engine = RDFLibQueryEngine()
+    nodes, edges = _create_graph_data(num_nodes)
+
+    # Load ontology into RDF graph
+    start = time.perf_counter()
+    engine.load_ontology(nodes, edges, [])
+    elapsed = time.perf_counter() - start
+    print(f"\nSPARQL graph load ({num_nodes} nodes): {elapsed:.4f}s")
+
+    # Execute a simple SPARQL query to count entities
+    sparql_query = """
+    PREFIX cs: <http://context-studio.local/vocab/>
+    PREFIX entity: <http://context-studio.local/entity/>
+    PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+    PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+
+    SELECT (COUNT(?entity) as ?count)
+    WHERE {
+        ?entity rdf:type cs:Class .
+    }
+    """
 
     start = time.perf_counter()
-    centrality = graph.centrality("betweenness")
+    results = engine.execute_sparql(sparql_query)
     elapsed = time.perf_counter() - start
 
-    print(f"\nCentrality calculation (500 nodes): {elapsed:.4f}s")
-    assert len(centrality) == 500
-    assert elapsed < 2.0
-
-
-@pytest.mark.performance
-def test_centrality_calculation_1000_nodes():
-    """Measure centrality calculation time in a 1000-node graph."""
-    graph = NetworkXGraphEngine()
-    nodes, edges = _create_graph_data(1000)
-    graph.build_from_data(nodes, edges)
-
-    start = time.perf_counter()
-    centrality = graph.centrality("betweenness")
-    elapsed = time.perf_counter() - start
-
-    print(f"\nCentrality calculation (1000 nodes): {elapsed:.4f}s")
-    assert len(centrality) == 1000
-    assert elapsed < 5.0
-
-
-@pytest.mark.performance
-def test_centrality_calculation_5000_nodes():
-    """Measure centrality calculation time in a 5000-node graph."""
-    graph = NetworkXGraphEngine()
-    nodes, edges = _create_graph_data(5000)
-    graph.build_from_data(nodes, edges)
-
-    start = time.perf_counter()
-    centrality = graph.centrality("betweenness")
-    elapsed = time.perf_counter() - start
-
-    print(f"\nCentrality calculation (5000 nodes): {elapsed:.4f}s")
-    assert len(centrality) == 5000
-    assert elapsed < 120.0
+    print(f"\nSPARQL query ({num_nodes} nodes): {elapsed:.4f}s")
+    assert len(results) > 0
+    assert elapsed < max_time
