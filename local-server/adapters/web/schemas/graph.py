@@ -106,6 +106,7 @@ class NeighborsResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     node_id: str = Field(..., description="ID of the queried node")
+    direction: str = Field(..., description="Direction of traversal: 'in', 'out', or 'both'")
     incoming: list[str] = Field(..., description="List of nodes with edges pointing to this node")
     outgoing: list[str] = Field(..., description="List of nodes this node has edges pointing to")
 
@@ -170,6 +171,8 @@ class SubgraphDataResponse(BaseModel):
 
     nodes: list[str] = Field(..., description="IDs of all nodes in the subgraph")
     edges: list[tuple[str, str]] = Field(..., description="Edges connecting nodes in the subgraph as (source, target) tuples")
+    node_count: int = Field(..., description="Number of nodes in the subgraph")
+    edge_count: int = Field(..., description="Number of edges in the subgraph")
 
 
 class SubgraphResultResponse(BaseModel):

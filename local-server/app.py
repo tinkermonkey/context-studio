@@ -17,9 +17,7 @@ from datetime import datetime, timezone
 
 import uvicorn
 from fastapi import FastAPI, status
-from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
 
 from config import get_config_manager, get_settings, SyncAdapterType
 from domain.admin.exceptions import ConfigurationError
@@ -449,17 +447,8 @@ app.include_router(admin_router)
 
 
 # ==================== Exception Handlers ====================
-
-@app.exception_handler(RequestValidationError)
-async def validation_exception_handler(request, exc):
-    """
-    Handle Pydantic validation errors from request bodies.
-    Return HTTP 400 (BAD_REQUEST) instead of the default 422 (UNPROCESSABLE_ENTITY).
-    """
-    return JSONResponse(
-        status_code=status.HTTP_400_BAD_REQUEST,
-        content={"detail": "Invalid request body"},
-    )
+# Note: Pydantic validation errors are handled by FastAPI and return 422 (UNPROCESSABLE_ENTITY) by default.
+# No custom handler is needed here.
 
 
 if __name__ == "__main__":

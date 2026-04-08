@@ -189,11 +189,11 @@ class TestTaxonomyCRUD:
         assert response.status_code == status.HTTP_409_CONFLICT
 
     def test_create_taxonomy_with_empty_title_fails(self, client):
-        """POST /api/taxonomies with empty title returns 400."""
+        """POST /api/taxonomies with empty title returns 422 (validation error)."""
         response = client.post("/api/taxonomies", json={
             "title": ""
         })
-        assert response.status_code == status.HTTP_400_BAD_REQUEST
+        assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
 
 
 class TestConceptSchemeCRUD:

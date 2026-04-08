@@ -338,6 +338,10 @@ async def get_neighbors(
         # Get the underlying NetworkX graph
         graph = service._graph_engine._graph
 
+        # Check if node exists in the graph
+        if node_id not in graph:
+            raise NodeNotFoundError(f"Node '{node_id}' not found in graph")
+
         # Get incoming and outgoing neighbors based on direction
         incoming = []
         outgoing = []
@@ -349,6 +353,7 @@ async def get_neighbors(
 
         return NeighborsResponse(
             node_id=node_id,
+            direction=direction,
             incoming=incoming,
             outgoing=outgoing,
         )
@@ -400,7 +405,12 @@ async def get_subgraph(
             if source in node_list and target in node_list:
                 subgraph_edges.append((source, target))
 
-        return SubgraphDataResponse(nodes=subgraph_nodes, edges=subgraph_edges)
+        return SubgraphDataResponse(
+            nodes=subgraph_nodes,
+            edges=subgraph_edges,
+            node_count=len(subgraph_nodes),
+            edge_count=len(subgraph_edges),
+        )
     except (NodeNotFoundError, GraphError) as exc:
         status_code, message = _handle_graph_error(exc)
         raise HTTPException(status_code=status_code, detail=message)
@@ -449,7 +459,12 @@ async def get_subgraph_by_depth(
 
         return SubgraphResultResponse(
             node_id=node_id,
-            subgraph=SubgraphDataResponse(nodes=subgraph_nodes, edges=subgraph_edges),
+            subgraph=SubgraphDataResponse(
+                nodes=subgraph_nodes,
+                edges=subgraph_edges,
+                node_count=len(subgraph_nodes),
+                edge_count=len(subgraph_edges),
+            ),
             depth=depth
         )
     except (NodeNotFoundError, GraphError) as exc:
