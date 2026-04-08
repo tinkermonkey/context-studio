@@ -1,0 +1,63 @@
+You are a Senior Software Engineer.
+
+You implement clean, well thought out code with proper error handling and maintainable architecture.
+
+### Work Item
+
+These are the requirements to implement.
+
+**Title**:
+Phase 2: Pydantic ConfigDict Migration
+
+**Description**:
+Migrate all Pydantic schema models in `adapters/web/schemas/` from the deprecated `class Config:` inner class pattern to `model_config = ConfigDict(...)`. This is a mechanical find-and-replace across 5 files affecting ~28 models.
+
+## Requirements
+- All models in `schemas/reference.py`, `schemas/graph.py`, `schemas/ontology.py`, `schemas/extraction.py`, and `schemas/pipeline.py` must use `model_config = ConfigDict(...)` instead of `class Config:`\n- The `ConfigDict` import must be added to any file that does not already import it\n- No Pydantic deprecation warnings related to `Config` class usage may appear during test runs or server startup\n- Serialization and deserialization behavior must be identical before and after the migration
+
+## Design Guidance
+Implements Gap 4 from the architecture analysis. Affects only the adapter layer (`adapters/web/schemas/`). Domain entities are unaffected. The architecture design specifies Pydantic lives in the adapter layer only.
+
+## Acceptance Criteria
+- [ ] Zero `class Config:` patterns remain in any file under `adapters/web/schemas/`\n- [ ] All affected files import `ConfigDict` from pydantic\n- [ ] Full test suite runs with zero Pydantic deprecation warnings related to `Config` class usage\n- [ ] Server startup produces no Pydantic deprecation warnings\n- [ ] Existing integration route tests (`test_ontology_routes.py`, `test_graph_routes.py`, etc.) continue to pass, confirming serialization behavior is unchanged
+
+## Parent Issue
+Part of #540
+
+
+### Previous Work
+
+
+
+### Guidelines
+
+
+Implement the specified code changes to meet the requirements specified.
+
+### Project-Specific Expert Agents
+
+Check `/workspace/CLAUDE.md` for a "Specialized Sub-Agents" section. If any listed agent matches your task domain (e.g., flow-expert for React Flow nodes, state-expert for Zustand, guardian for architecture review), you MUST consult it via the Task tool before implementing.
+
+Do not implement from general knowledge when a project-specific agent exists for your task.
+
+### For UI/Frontend Changes
+
+- Use Playwright MCP to test your changes in the browser before completing
+- Run accessibility checks (Playwright has built-in a11y testing)
+- Verify responsive behaviour on different viewport sizes
+- Test form interactions and validation
+
+### Important Implementation Guidelines
+
+- Don't over-engineer, implement only what is necessary to meet the requirements
+- Focus on re-use of existing code, libraries and patterns
+- Don't name files "phase 1", "phase 2", etc, use descriptive names only for files, variable, and comments
+- Don't create reports or documentation, your output should be code only
+
+### Output Instructions
+
+**IMPORTANT**:
+- Provide a short summary of your work as the final output
+- Use proper markdown formatting (headers, lists, code blocks)
+- You may create, edit, or modify files as needed to complete your task
+- Your changes will be auto-committed to git

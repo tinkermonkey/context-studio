@@ -16,11 +16,13 @@ These schemas handle serialization/deserialization between HTTP and domain model
 
 from typing import Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class ExtractedEntitySchema(BaseModel):
     """Response containing extracted entity data."""
+
+    model_config = ConfigDict(from_attributes=True)
 
     id: str = Field(..., description="Unique identifier for the entity")
     label: str = Field(..., description="The extracted entity label/name")
@@ -32,12 +34,11 @@ class ExtractedEntitySchema(BaseModel):
     matched_class_id: Optional[str] = Field(None, description="ID of matched ontology class, if any")
     properties: dict = Field(default_factory=dict, description="Optional metadata key-value pairs")
 
-    class Config:
-        from_attributes = True
-
 
 class ExtractionLayerResultSchema(BaseModel):
     """Response containing execution metadata for a single extraction layer."""
+
+    model_config = ConfigDict(from_attributes=True)
 
     layer_number: int = Field(..., description="Layer index (0-3)")
     layer_name: str = Field(..., description="Human-readable name of the layer")
@@ -46,12 +47,11 @@ class ExtractionLayerResultSchema(BaseModel):
     success: bool = Field(..., description="Whether layer completed successfully")
     error_message: Optional[str] = Field(None, description="Error message if layer failed")
 
-    class Config:
-        from_attributes = True
-
 
 class ExtractionResultSchema(BaseModel):
     """Response containing the complete output of an extraction operation."""
+
+    model_config = ConfigDict(from_attributes=True)
 
     id: str = Field(..., description="Unique identifier for this extraction result")
     text: str = Field(..., description="The source text that was extracted")
@@ -65,9 +65,6 @@ class ExtractionResultSchema(BaseModel):
     )
     total_duration_ms: int = Field(..., description="Total extraction time in milliseconds")
     created_at: str = Field(..., description="ISO 8601 timestamp when extraction completed")
-
-    class Config:
-        from_attributes = True
 
 
 class ExtractRequest(BaseModel):

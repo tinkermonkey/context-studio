@@ -18,7 +18,7 @@ These schemas handle serialization/deserialization between HTTP and domain model
 
 from typing import Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class ReferenceSearchRequest(BaseModel):
@@ -44,18 +44,19 @@ class ReferenceRelationsRequest(BaseModel):
 class ReferenceResultSchema(BaseModel):
     """Response containing a single reference search result."""
 
+    model_config = ConfigDict(from_attributes=True)
+
     uri: str = Field(..., description="Unique URI for this resource")
     label: str = Field(..., description="Human-readable label")
     description: Optional[str] = Field(None, description="Optional description")
     confidence: float = Field(1.0, description="Confidence score (0.0-1.0)")
     source: str = Field(..., description="Reference source name")
 
-    class Config:
-        from_attributes = True
-
 
 class ReferenceRelationSchema(BaseModel):
     """Response containing a single reference relationship."""
+
+    model_config = ConfigDict(from_attributes=True)
 
     subject_uri: str = Field(..., description="Source concept URI")
     predicate: str = Field(..., description="Relationship type")
@@ -63,12 +64,11 @@ class ReferenceRelationSchema(BaseModel):
     weight: Optional[float] = Field(None, description="Optional relationship weight")
     source: str = Field(..., description="Reference source name")
 
-    class Config:
-        from_attributes = True
-
 
 class ReferenceSearchResponseSchema(BaseModel):
     """Response containing search results aggregated from multiple sources."""
+
+    model_config = ConfigDict(from_attributes=True)
 
     term: str = Field(..., description="The search term that was executed")
     results: list[ReferenceResultSchema] = Field(
@@ -88,12 +88,11 @@ class ReferenceSearchResponseSchema(BaseModel):
         description="Total number of results returned",
     )
 
-    class Config:
-        from_attributes = True
-
 
 class ReferenceRelationsResponseSchema(BaseModel):
     """Response containing relationships aggregated from multiple sources."""
+
+    model_config = ConfigDict(from_attributes=True)
 
     uri: str = Field(..., description="The URI that was queried")
     relations: list[ReferenceRelationSchema] = Field(
@@ -113,12 +112,11 @@ class ReferenceRelationsResponseSchema(BaseModel):
         description="Total number of relations returned",
     )
 
-    class Config:
-        from_attributes = True
-
 
 class ReferenceSourceStatusSchema(BaseModel):
     """Status information for a single reference source."""
+
+    model_config = ConfigDict(from_attributes=True)
 
     name: str = Field(..., description="Source name")
     available: bool = Field(..., description="Whether source is currently available")
@@ -127,12 +125,11 @@ class ReferenceSourceStatusSchema(BaseModel):
         description="ISO 8601 timestamp of last availability check",
     )
 
-    class Config:
-        from_attributes = True
-
 
 class ReferenceStatusResponseSchema(BaseModel):
     """Response containing status of all reference sources."""
+
+    model_config = ConfigDict(from_attributes=True)
 
     sources: list[ReferenceSourceStatusSchema] = Field(
         default_factory=list,
@@ -143,6 +140,3 @@ class ReferenceStatusResponseSchema(BaseModel):
         description="Count of available sources",
     )
     timestamp: str = Field(..., description="ISO 8601 timestamp of this status check")
-
-    class Config:
-        from_attributes = True
