@@ -7,5 +7,5 @@ name = "context-studio-local-server"
 version = "0.1.0"
 description = "Local-first knowledge graph application"
 
-[tool.setuptools]
-packages = ["domain", "adapters"]
+[tool.setuptools.packages.find]
+include = ["domain*", "adapters*", "utils*"]
