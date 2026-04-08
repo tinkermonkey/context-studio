@@ -9,7 +9,9 @@ infrastructure imports.
 import sys
 import os
 
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+sys.path.append(
+    os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+)
 
 import pytest
 
@@ -21,10 +23,10 @@ from domain.pipeline.ports import LLMResponse
 from domain.ontology.entities import Class
 from domain.ontology.value_objects import ExternalReference
 
-
 # ============================================================================
 # Fakes for Layer 0 (KG Context)
 # ============================================================================
+
 
 class FakeOntologyRepository:
     """Fake ontology repository with configurable entities."""
@@ -101,11 +103,12 @@ class FakeEmbeddingService:
 # Fakes for Layer 1 (LLM Extract)
 # ============================================================================
 
+
 class FakeLLMProvider:
     """Fake LLM provider with configurable responses."""
 
     def __init__(self, response_content=None, should_fail=False):
-        self.response_content = response_content or '[]'
+        self.response_content = response_content or "[]"
         self.should_fail = should_fail
 
     def complete(
@@ -144,6 +147,7 @@ class FakeLLMProvider:
 # Fakes for Layer 2 (NLP Gap-Filling)
 # ============================================================================
 
+
 class FakeNLPProcessor:
     """Fake NLP processor with configurable entities."""
 
@@ -166,10 +170,13 @@ class FakeNLPProcessor:
 # Fakes for Layer 3 (Reference Enrichment)
 # ============================================================================
 
+
 class FakeReferenceSource:
     """Fake reference source with configurable results."""
 
-    def __init__(self, source_name_val="TestSource", results_map=None, should_fail=False):
+    def __init__(
+        self, source_name_val="TestSource", results_map=None, should_fail=False
+    ):
         self._source_name = source_name_val
         self.results_map = results_map or {}
         self.should_fail = should_fail
@@ -199,6 +206,7 @@ class FakeReferenceSource:
 # ============================================================================
 # Tests for Layer 0: KG Context
 # ============================================================================
+
 
 class TestLayer0KGContext:
     """Tests for Knowledge Graph context extraction layer."""
@@ -239,25 +247,30 @@ class TestLayer0KGContext:
 
     def test_kg_context_high_similarity_returns_entity(self):
         """High similarity matches are returned."""
-        # Create entity with embedding that will match our test text
+        # Create entity with embedding that matches the text embedding
+        fake_embedding_service = FakeEmbeddingService()
+        text = "Test text"
+        text_embedding = fake_embedding_service.embed(text)
+
         entities_dict = {
             "entity1": {
                 "title": "Apple Inc.",
                 "node_type": "Organization",
-                "embedding": [0.08] * 10,  # Similar to "Test text" (8 chars)
+                "embedding": text_embedding,  # Same embedding ensures high similarity (1.0)
                 "description": "Tech company",
                 "external_references": [{"uri": "https://apple.com"}],
             }
         }
 
         output = layers.kg_context.execute(
-            text="Test text",  # 9 chars
+            text=text,
             ontology_repo=FakeOntologyRepository(entities_dict),
-            embedding_service=FakeEmbeddingService(),
+            embedding_service=fake_embedding_service,
         )
 
-        # Should find high-similarity entity (both have similar embedding values)
+        # Should find high-similarity entity (identical embeddings = similarity of 1.0)
         assert len(output.entities) > 0
+        assert output.entities[0].confidence >= 0.7
 
     def test_kg_context_empty_external_references_handled(self):
         """Empty external_references list doesn't crash."""
@@ -333,7 +346,18 @@ class TestLayer0KGContext:
             "entity1": {
                 "title": "Apple Inc.",
                 "node_type": "Organization",
-                "embedding": [1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],  # Very different
+                "embedding": [
+                    1.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                ],  # Very different
                 "description": "Tech company",
                 "external_references": [{"uri": "https://apple.com"}],
             }
@@ -355,6 +379,7 @@ class TestLayer0KGContext:
 # Tests for Layer 1: LLM Extract
 # ============================================================================
 
+
 @pytest.mark.llm
 class TestLayer1LLMExtract:
     """Tests for LLM extraction layer."""
@@ -369,6 +394,7 @@ class TestLayer1LLMExtract:
 
     def test_llm_extract_no_available_models_returns_empty(self):
         """No available models returns empty output."""
+
         class NoModelsLLM:
             def list_available_models(self):
                 return []
@@ -393,13 +419,13 @@ class TestLayer1LLMExtract:
     def test_llm_extract_nested_json_array_preserved(self):
         """Nested JSON arrays are NOT truncated."""
         # This JSON has nested arrays - the bug fix should handle this
-        json_response = '''{
+        json_response = """{
             "entities": [
                 {"label": "Apple", "type": "ORG", "confidence": 0.95},
                 {"label": "Microsoft", "type": "ORG", "confidence": 0.90}
             ],
             "metadata": ["tag1", "tag2"]
-        }'''
+        }"""
         # The layer should extract the outer array starting with [
         # But this malformed response won't parse as valid JSON array
         # Let's use a properly formatted array with nested structures
@@ -415,10 +441,10 @@ class TestLayer1LLMExtract:
     def test_llm_extract_multiple_nested_arrays(self):
         """Multiple levels of nesting are handled correctly."""
         # JSON with nested closing brackets
-        json_response = '''[
+        json_response = """[
             {"label": "Apple", "data": [1, 2, 3]},
             {"label": "Microsoft", "data": [4, 5, 6]}
-        ]'''
+        ]"""
         input_data = LayerInput(text="Test text", existing_entities=[])
         output = layers.llm_extract.execute(input_data, FakeLLMProvider(json_response))
 
@@ -476,6 +502,7 @@ class TestLayer1LLMExtract:
 # ============================================================================
 # Tests for Layer 2: NLP Gap-Filling
 # ============================================================================
+
 
 class TestLayer2NLPGapFilling:
     """Tests for NLP gap-filling layer."""
@@ -556,7 +583,9 @@ class TestLayer2NLPGapFilling:
         """Deduplication normalizes whitespace."""
         prior_entity = ExtractedEntity(label="Apple Inc.", entity_type="ORG")
         nlp_entities = [
-            NLPEntity(text="  Apple Inc.  ", label="ORG", start=0, end=14, confidence=0.8),
+            NLPEntity(
+                text="  Apple Inc.  ", label="ORG", start=0, end=14, confidence=0.8
+            ),
         ]
         input_data = LayerInput(
             text="  Apple Inc.  company",
@@ -571,6 +600,7 @@ class TestLayer2NLPGapFilling:
 # ============================================================================
 # Tests for Layer 3: Reference Enrichment
 # ============================================================================
+
 
 class TestLayer3ReferenceEnrichment:
     """Tests for reference source enrichment layer."""
@@ -627,9 +657,7 @@ class TestLayer3ReferenceEnrichment:
             source="DBpedia",
         )
 
-        source = FakeReferenceSource(
-            results_map={"Apple": [ref_result]}
-        )
+        source = FakeReferenceSource(results_map={"Apple": [ref_result]})
 
         output = layers.reference.execute(input_data, [source])
 
@@ -686,9 +714,7 @@ class TestLayer3ReferenceEnrichment:
             label="Apple Inc.",
         )
 
-        source = FakeReferenceSource(
-            results_map={"Apple": [ref_result]}
-        )
+        source = FakeReferenceSource(results_map={"Apple": [ref_result]})
 
         output = layers.reference.execute(input_data, [source])
 
@@ -727,9 +753,7 @@ class TestLayer3ReferenceEnrichment:
             label="Apple Inc.",
         )
 
-        source = FakeReferenceSource(
-            results_map={"Apple": [ref_result]}
-        )
+        source = FakeReferenceSource(results_map={"Apple": [ref_result]})
 
         output = layers.reference.execute(input_data, [source])
 
@@ -752,7 +776,9 @@ class TestLayer3ReferenceEnrichment:
         )
 
         # First source raises, second source returns a valid result
-        failing_source = FakeReferenceSource(source_name_val="FailingSource", should_fail=True)
+        failing_source = FakeReferenceSource(
+            source_name_val="FailingSource", should_fail=True
+        )
         working_source = FakeReferenceSource(
             source_name_val="WorkingSource",
             results_map={"Apple": [ref_result]},
