@@ -87,7 +87,7 @@ class TestGraphConstruction:
         })
         class1_id = class1_response.json()["id"]
 
-        class2_response = e2e_client.post(f"/api/schemes/{scheme_id}/classes", json={
+        e2e_client.post(f"/api/schemes/{scheme_id}/classes", json={
             "title": "Graph Class 2",
             "parent_class_id": class1_id
         })
@@ -157,7 +157,7 @@ class TestGraphMetrics:
         })
         class2_id = class2_response.json()["id"]
 
-        class3_response = e2e_client.post(f"/api/schemes/{scheme_id}/classes", json={
+        e2e_client.post(f"/api/schemes/{scheme_id}/classes", json={
             "title": "Metrics Class 3",
             "parent_class_id": class2_id
         })
@@ -420,7 +420,7 @@ class TestCentrality:
         })
         scheme_id = scheme_response.json()["id"]
 
-        class1_response = e2e_client.post(f"/api/schemes/{scheme_id}/classes", json={
+        e2e_client.post(f"/api/schemes/{scheme_id}/classes", json={
             "title": "Centrality Class 1"
         })
 

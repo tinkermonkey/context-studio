@@ -544,7 +544,7 @@ class TestSyncOperations:
         - Response includes sync status information
         """
         # Create some activity to ensure sync status reflects something
-        taxonomy_id = create_taxonomy_with_changes(e2e_client)
+        create_taxonomy_with_changes(e2e_client)
 
         response = e2e_client.get("/api/v1/versioning/sync/status")
         assert response.status_code == status.HTTP_200_OK
