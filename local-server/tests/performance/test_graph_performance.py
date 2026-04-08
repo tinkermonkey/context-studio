@@ -16,8 +16,6 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(
 from domain.graph.services import GraphAnalysisService
 from domain.ontology.entities import Taxonomy, ConceptScheme, Class, Relationship, PropertyDefinition
 from tests.fakes.fake_ontology_repository import FakeOntologyRepository
-from adapters.graph.networkx_engine import NetworkXGraphEngine
-from adapters.graph.rdflib_engine import RDFLibQueryEngine
 
 
 def _setup_graph_service(num_nodes: int) -> tuple[GraphAnalysisService, FakeOntologyRepository, list[str]]:
@@ -32,6 +30,12 @@ def _setup_graph_service(num_nodes: int) -> tuple[GraphAnalysisService, FakeOnto
     Returns:
         Tuple of (service, repository, class_ids)
     """
+    try:
+        from adapters.graph.networkx_engine import NetworkXGraphEngine
+        from adapters.graph.rdflib_engine import RDFLibQueryEngine
+    except ImportError:
+        pytest.skip("NetworkX or RDFLib not installed")
+
     repository = FakeOntologyRepository()
 
     # Create taxonomy and concept scheme
@@ -113,6 +117,7 @@ def test_graph_build(num_nodes: int, max_time: float) -> None:
 def test_shortest_path_query(num_nodes: int, max_time: float) -> None:
     """Measure shortest path query time in a graph of specified size."""
     service, _, class_ids = _setup_graph_service(num_nodes)
+    service.build_graph()
 
     start = time.perf_counter()
     result = service.find_shortest_path(class_ids[0], class_ids[num_nodes - 1])
@@ -154,6 +159,7 @@ def test_centrality_calculation(num_nodes: int, max_time: float) -> None:
 def test_sparql_query(num_nodes: int, max_time: float) -> None:
     """Measure SPARQL query execution time in a graph of specified size."""
     service, _, _ = _setup_graph_service(num_nodes)
+    service.build_graph()
 
     # Execute a simple SPARQL query to count entities
     sparql_query = """
