@@ -749,6 +749,76 @@ class TestMoveClass:
             service.move_class(class_id=a.id, new_parent_id=c.id)
 
 
+class TestMoveClassToScheme:
+    """Tests for move_class_to_scheme."""
+
+    def test_move_class_to_scheme_success(self, service):
+        """Move a class to a different scheme in the same taxonomy."""
+        tax = service.create_taxonomy(title="Biology")
+        scheme1 = service.create_scheme(taxonomy_id=tax.id, title="Animals")
+        scheme2 = service.create_scheme(taxonomy_id=tax.id, title="Organisms")
+        cls = service.create_class(concept_scheme_id=scheme1.id, title="Dog")
+
+        moved = service.move_class_to_scheme(class_id=cls.id, target_scheme_id=scheme2.id)
+        assert moved.concept_scheme_id == scheme2.id
+
+        # Verify event was emitted
+        events = service._event_publisher.get_events_of_type(ClassUpdated)
+        assert len(events) == 1
+        assert events[0].class_id == cls.id
+        assert events[0].changed_fields == ("concept_scheme_id",)
+        assert events[0].old_values == {"concept_scheme_id": scheme1.id}
+        assert events[0].new_values == {"concept_scheme_id": scheme2.id}
+
+    def test_move_class_to_scheme_class_not_found_raises(self, service):
+        """Move nonexistent class raises EntityNotFoundError."""
+        tax = service.create_taxonomy(title="Biology")
+        scheme = service.create_scheme(taxonomy_id=tax.id, title="Animals")
+
+        with pytest.raises(EntityNotFoundError, match="Class"):
+            service.move_class_to_scheme(class_id="nonexistent", target_scheme_id=scheme.id)
+
+    def test_move_class_to_scheme_scheme_not_found_raises(self, service):
+        """Move class to nonexistent scheme raises EntityNotFoundError."""
+        tax = service.create_taxonomy(title="Biology")
+        scheme = service.create_scheme(taxonomy_id=tax.id, title="Animals")
+        cls = service.create_class(concept_scheme_id=scheme.id, title="Dog")
+
+        with pytest.raises(EntityNotFoundError, match="ConceptScheme"):
+            service.move_class_to_scheme(class_id=cls.id, target_scheme_id="nonexistent")
+
+    def test_move_class_to_scheme_cross_taxonomy_raises(self, service):
+        """Move class to scheme in different taxonomy raises ValueError."""
+        tax1 = service.create_taxonomy(title="Biology")
+        tax2 = service.create_taxonomy(title="Chemistry")
+        scheme1 = service.create_scheme(taxonomy_id=tax1.id, title="Animals")
+        scheme2 = service.create_scheme(taxonomy_id=tax2.id, title="Elements")
+        cls = service.create_class(concept_scheme_id=scheme1.id, title="Dog")
+
+        with pytest.raises(ValueError, match="different taxonomy"):
+            service.move_class_to_scheme(class_id=cls.id, target_scheme_id=scheme2.id)
+
+    def test_move_class_to_same_scheme_emits_event(self, service):
+        """Moving a class to its current scheme still emits event."""
+        tax = service.create_taxonomy(title="Biology")
+        scheme = service.create_scheme(taxonomy_id=tax.id, title="Animals")
+        cls = service.create_class(concept_scheme_id=scheme.id, title="Dog")
+
+        # Clear creation events
+        service._event_publisher.clear()
+
+        # Move class to its current scheme
+        moved = service.move_class_to_scheme(class_id=cls.id, target_scheme_id=scheme.id)
+        assert moved.concept_scheme_id == scheme.id
+
+        # Verify event was still emitted (even though it's a no-op semantically)
+        events = service._event_publisher.get_events_of_type(ClassUpdated)
+        assert len(events) == 1
+        assert events[0].class_id == cls.id
+        assert events[0].old_values == {"concept_scheme_id": scheme.id}
+        assert events[0].new_values == {"concept_scheme_id": scheme.id}
+
+
 class TestDeleteClass:
     """Tests for delete_class."""
 

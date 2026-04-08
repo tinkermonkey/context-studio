@@ -937,9 +937,28 @@ class OntologyService:
                 f"Class taxonomy: {cls.taxonomy_id}, target scheme taxonomy: {target_scheme.taxonomy_id}"
             )
 
+        # Capture old scheme ID before mutation
+        old_scheme_id = cls.concept_scheme_id
+
         # Update the class's concept scheme
         cls.concept_scheme_id = target_scheme_id
         cls = self._repository.save_class(cls)
+
+        # Emit event for audit trail and graph invalidation
+        failures = self._event_publisher.publish(ClassUpdated(
+            class_id=class_id,
+            changed_fields=("concept_scheme_id",),
+            old_values={"concept_scheme_id": old_scheme_id},
+            new_values={"concept_scheme_id": target_scheme_id},
+        ))
+        if failures:
+            handler_names = ", ".join(name for name, _ in failures)
+            _logger.warning(
+                "Event handlers failed for ClassUpdated (class_id=%s): %s. "
+                "Class moved but audit trail may have gaps.",
+                class_id,
+                handler_names,
+            )
 
         return cls
 
