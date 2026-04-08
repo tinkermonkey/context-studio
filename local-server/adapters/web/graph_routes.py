@@ -39,6 +39,7 @@ from domain.graph.exceptions import (
     SPARQLValidationError,
     CommunityDetectionError,
 )
+from utils.logger import get_logger
 
 from adapters.web.dependencies import get_graph_service
 from adapters.web.schemas.graph import (
@@ -62,12 +63,18 @@ from adapters.web.schemas.graph import (
 
 router = APIRouter(prefix="/api/graph", tags=["graph"])
 
+_logger = get_logger(__name__)
+
 
 # ==================== Error Handler Utilities ====================
 
-def _handle_graph_error(exc: GraphError) -> tuple[int, str]:
+def _handle_graph_error(exc: Exception) -> tuple[int, str]:
     """
     Map domain exceptions to HTTP status codes and error messages.
+
+    Handles domain-level exceptions (GraphError and subclasses) by mapping them to
+    appropriate HTTP status codes. Unexpected exceptions (AttributeError, TypeError,
+    KeyError, etc.) are logged as server errors with full context to aid in debugging.
 
     Args:
         exc: The domain exception from the graph service
@@ -79,8 +86,12 @@ def _handle_graph_error(exc: GraphError) -> tuple[int, str]:
         return (status.HTTP_404_NOT_FOUND, str(exc))
     elif isinstance(exc, (InvalidAlgorithmError, SPARQLValidationError, CommunityDetectionError)):
         return (status.HTTP_400_BAD_REQUEST, str(exc))
-    else:
+    elif isinstance(exc, GraphError):
         return (status.HTTP_422_UNPROCESSABLE_ENTITY, str(exc))
+    else:
+        # Log the original exception for unexpected errors
+        _logger.error(f"Unexpected error in graph endpoint: {exc}", exc_info=exc)
+        return (status.HTTP_500_INTERNAL_SERVER_ERROR, "An unexpected error occurred")
 
 
 # ==================== Graph Construction Endpoint ====================
@@ -110,7 +121,7 @@ async def build_graph(
         graph_dict = asdict(graph)
         graph_dict['timestamp'] = graph_dict.pop('last_built')
         return KnowledgeGraphResponse.model_validate(graph_dict)
-    except GraphError as exc:
+    except Exception as exc:
         status_code, message = _handle_graph_error(exc)
         raise HTTPException(status_code=status_code, detail=message)
 
@@ -141,7 +152,7 @@ async def get_metrics(
         metrics_dict = asdict(metrics)
         metrics_dict["communities"] = [sorted(list(community)) for community in metrics.communities]
         return GraphMetricsResponse.model_validate(metrics_dict)
-    except (InvalidAlgorithmError, CommunityDetectionError, GraphError) as exc:
+    except Exception as exc:
         status_code, message = _handle_graph_error(exc)
         raise HTTPException(status_code=status_code, detail=message)
 
@@ -174,7 +185,7 @@ async def get_degree_distribution(
             in_degree=in_degree,
             out_degree=out_degree,
         )
-    except GraphError as exc:
+    except Exception as exc:
         status_code, message = _handle_graph_error(exc)
         raise HTTPException(status_code=status_code, detail=message)
 
@@ -209,7 +220,9 @@ async def get_shortest_path(
                 detail=f"No path exists between '{source_id}' and '{target_id}'"
             )
         return PathResultResponse.model_validate(path_result)
-    except (NodeNotFoundError, GraphError) as exc:
+    except HTTPException:
+        raise
+    except Exception as exc:
         status_code, message = _handle_graph_error(exc)
         raise HTTPException(status_code=status_code, detail=message)
 
@@ -239,7 +252,7 @@ async def get_all_paths(
     try:
         path_results = service.find_all_paths(source_id, target_id, max_depth)
         return [PathResultResponse.model_validate(p) for p in path_results]
-    except (NodeNotFoundError, GraphError) as exc:
+    except Exception as exc:
         status_code, message = _handle_graph_error(exc)
         raise HTTPException(status_code=status_code, detail=message)
 
@@ -267,7 +280,7 @@ async def get_centrality(
     try:
         scores = service.get_centrality(algorithm)
         return CentralityResponse(algorithm=algorithm, scores=scores)
-    except (InvalidAlgorithmError, GraphError) as exc:
+    except Exception as exc:
         status_code, message = _handle_graph_error(exc)
         raise HTTPException(status_code=status_code, detail=message)
 
@@ -297,7 +310,7 @@ async def get_communities(
         # Convert communities (list of sets) to list of sorted lists for JSON serialization
         communities_as_lists = [sorted(list(community)) for community in communities]
         return CommunitiesResponse(algorithm=algorithm, communities=communities_as_lists)
-    except (InvalidAlgorithmError, CommunityDetectionError, GraphError) as exc:
+    except Exception as exc:
         status_code, message = _handle_graph_error(exc)
         raise HTTPException(status_code=status_code, detail=message)
 
@@ -342,7 +355,7 @@ async def get_neighbors(
             incoming=incoming,
             outgoing=outgoing,
         )
-    except (NodeNotFoundError, InvalidAlgorithmError, GraphError) as exc:
+    except Exception as exc:
         status_code, message = _handle_graph_error(exc)
         raise HTTPException(status_code=status_code, detail=message)
 
@@ -389,7 +402,9 @@ async def get_subgraph(
             node_count=subgraph.node_count,
             edge_count=subgraph.edge_count,
         )
-    except (NodeNotFoundError, GraphError) as exc:
+    except HTTPException:
+        raise
+    except Exception as exc:
         status_code, message = _handle_graph_error(exc)
         raise HTTPException(status_code=status_code, detail=message)
 
@@ -432,7 +447,7 @@ async def get_subgraph_by_depth(
             ),
             depth=depth
         )
-    except (NodeNotFoundError, GraphError) as exc:
+    except Exception as exc:
         status_code, message = _handle_graph_error(exc)
         raise HTTPException(status_code=status_code, detail=message)
 
@@ -464,7 +479,7 @@ async def check_cycle(
             target_id=request.target_id,
             would_create_cycle=would_create_cycle,
         )
-    except (NodeNotFoundError, GraphError) as exc:
+    except Exception as exc:
         status_code, message = _handle_graph_error(exc)
         raise HTTPException(status_code=status_code, detail=message)
 
@@ -493,7 +508,7 @@ async def execute_sparql(
         results = service.execute_sparql(request.query)
         triple_count = service.get_triple_count()
         return SPARQLResponse(results=results, triple_count=triple_count)
-    except (SPARQLValidationError, GraphError) as exc:
+    except Exception as exc:
         status_code, message = _handle_graph_error(exc)
         raise HTTPException(status_code=status_code, detail=message)
 
@@ -528,7 +543,7 @@ async def get_rdf_triples(
             TripleResponse(subject=s, predicate=p, object=o) for s, p, o in triples
         ]
         return TriplesResponse(triples=triple_responses, count=len(triple_responses))
-    except GraphError as exc:
+    except Exception as exc:
         status_code, message = _handle_graph_error(exc)
         raise HTTPException(status_code=status_code, detail=message)
 
@@ -552,6 +567,6 @@ async def get_rdf_triple_count(
     try:
         count = service.get_triple_count()
         return TripleCountResponse(count=count)
-    except GraphError as exc:
+    except Exception as exc:
         status_code, message = _handle_graph_error(exc)
         raise HTTPException(status_code=status_code, detail=message)
