@@ -57,6 +57,8 @@ def _handle_domain_error(exc: Exception) -> tuple[int, str]:
         return (status.HTTP_404_NOT_FOUND, str(exc))
     elif isinstance(exc, PipelineError):
         return (status.HTTP_400_BAD_REQUEST, str(exc))
+    elif isinstance(exc, ValueError):
+        return (status.HTTP_400_BAD_REQUEST, str(exc))
     else:
         # Log the original exception for unexpected errors
         _logger.error(f"Unexpected error in pipeline endpoint: {exc}", exc_info=exc)

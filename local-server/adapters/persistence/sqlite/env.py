@@ -78,7 +78,7 @@ def run_migrations_offline() -> None:
     script output.
 
     """
-    url = config.get_main_option("sqlalchemy.url")
+    url = os.environ.get("LOCAL_DB_URL") or config.get_main_option("sqlalchemy.url")
     context.configure(
         url=url,
         target_metadata=target_metadata,
@@ -98,6 +98,7 @@ def run_migrations_online() -> None:
 
     """
     config_section = config.get_section(config.config_ini_section) or {}
+    config_section["sqlalchemy.url"] = os.environ.get("LOCAL_DB_URL") or config_section.get("sqlalchemy.url", "sqlite:///./local.db")
     connectable = engine_from_config(
         config_section,
         prefix="sqlalchemy.",

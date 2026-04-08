@@ -105,8 +105,11 @@ def init_db(setup_e2e_config, temp_db_dir):
 
     # Run migrations for both databases
     # Set PYTHONPATH to include the local-server directory so alembic can import modules
+    # Also set database URLs to use the temp directory paths
     env = os.environ.copy()
     env["PYTHONPATH"] = str(local_server_dir)
+    env["LOCAL_DB_URL"] = f"sqlite:///{temp_db_dir / 'local.db'}"
+    env["OPERATIONS_DB_URL"] = f"sqlite:///{temp_db_dir / 'operations.db'}"
 
     result = subprocess.run(
         ["python", "scripts/run_migrations.py", "all", "upgrade", "heads"],
