@@ -627,7 +627,7 @@ class TestPipelineErrorHandling:
                 "user_prompt": "Process: {text}",
             }
         )
-        pipeline_id = create_response.json()["id"]
+        create_response.json()["id"]
 
         # Mock the service to raise an exception with sensitive details
         def mock_list_configs(*args, **kwargs):
