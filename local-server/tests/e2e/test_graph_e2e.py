@@ -87,15 +87,16 @@ class TestGraphConstruction:
         })
         class1_id = class1_response.json()["id"]
 
-        e2e_client.post(f"/api/schemes/{scheme_id}/classes", json={
+        class2_response = e2e_client.post(f"/api/schemes/{scheme_id}/classes", json={
             "title": "Graph Class 2",
             "parent_class_id": class1_id
         })
+        assert class2_response.status_code == 201
 
         # Build the graph
-        response = e2e_client.post("/api/graph/build")
-        assert response.status_code == status.HTTP_200_OK
-        body = response.json()
+        build_response = e2e_client.post("/api/graph/build")
+        assert build_response.status_code == status.HTTP_200_OK
+        body = build_response.json()
         assert "node_count" in body
         assert "edge_count" in body
         assert "last_built" in body
@@ -222,13 +223,15 @@ class TestDegreeDistribution:
         })
         class1_id = class1_response.json()["id"]
 
-        e2e_client.post(f"/api/schemes/{scheme_id}/classes", json={
+        class2_response = e2e_client.post(f"/api/schemes/{scheme_id}/classes", json={
             "title": "Degree Class 2",
             "parent_class_id": class1_id
         })
+        assert class2_response.status_code == 201
 
         # Build graph
-        e2e_client.post("/api/graph/build")
+        build_response = e2e_client.post("/api/graph/build")
+        assert build_response.status_code == status.HTTP_200_OK
 
         # Get degree distribution
         response = e2e_client.get("/api/graph/degree-distribution")
@@ -248,23 +251,23 @@ class TestPathFinding:
         Test shortest path endpoint returns proper response structure with real nodes.
 
         Asserts:
-        - Returns proper response structure or 404 if nodes exist but are disconnected
+        - Returns 200 (OK) when a path exists between connected nodes
         - Uses real entity IDs instead of fabricated strings
+        - Response includes source_id, target_id, nodes, distance, relationships
         """
-        # Create real entities
+        # Create real entities with parent-child relationships creating a connected chain
         taxonomy_id, scheme_id, class_ids = create_test_taxonomy_with_classes(e2e_client, num_classes=3)
 
         # Build the graph
-        e2e_client.post("/api/graph/build")
+        build_response = e2e_client.post("/api/graph/build")
+        assert build_response.status_code == status.HTTP_200_OK
 
-        # Query shortest path between real nodes
-        # Note: Without explicit relationships between the classes, graph won't have edges,
-        # so this will return 404 (nodes exist but no path connects them).
-        # This is expected behavior - the important part is we're using real IDs.
+        # Query shortest path between real nodes in the chain
+        # Note: Whether a path exists depends on how parent-child class relationships
+        # map to graph edges, which may result in 200 (if edges exist) or 404 (if no path)
         response = e2e_client.get(
             f"/api/graph/paths/shortest?source_id={class_ids[0]}&target_id={class_ids[2]}"
         )
-        # Accept 404 when nodes are disconnected or 200 if path exists
         assert response.status_code in [status.HTTP_200_OK, status.HTTP_404_NOT_FOUND]
         if response.status_code == status.HTTP_200_OK:
             body = response.json()
@@ -303,7 +306,8 @@ class TestPathFinding:
         class2_id = class2_response.json()["id"]
 
         # Build graph
-        e2e_client.post("/api/graph/build")
+        build_response = e2e_client.post("/api/graph/build")
+        assert build_response.status_code == status.HTTP_200_OK
 
         # Try to find path between disconnected nodes
         response = e2e_client.get(
@@ -316,20 +320,23 @@ class TestPathFinding:
         Test all paths endpoint returns proper structure with real nodes.
 
         Asserts:
-        - Returns a list of paths (may be empty if no connections exist)
+        - Returns a list of paths (200 OK)
         - Uses real entity IDs instead of fabricated strings
+        - Response is a list that may be empty if no connections exist
         """
-        # Create real entities
+        # Create real entities with parent-child relationships creating a connected chain
         taxonomy_id, scheme_id, class_ids = create_test_taxonomy_with_classes(e2e_client, num_classes=3)
 
         # Build the graph
-        e2e_client.post("/api/graph/build")
+        build_response = e2e_client.post("/api/graph/build")
+        assert build_response.status_code == status.HTTP_200_OK
 
-        # Find all paths between real nodes
+        # Find all paths between real nodes in the chain
+        # Note: Whether paths exist depends on how parent-child class relationships
+        # map to graph edges, which may result in 200 (with list) or 404 (if no path)
         response = e2e_client.get(
             f"/api/graph/paths/all?source_id={class_ids[0]}&target_id={class_ids[2]}&max_depth=5"
         )
-        # Accept 404 if nodes don't exist or 200 if endpoint responds with results
         assert response.status_code in [status.HTTP_200_OK, status.HTTP_404_NOT_FOUND]
         if response.status_code == status.HTTP_200_OK:
             body = response.json()
@@ -345,20 +352,23 @@ class TestNeighborQueries:
         Get neighbors of a real node created via API.
 
         Asserts:
-        - Response includes node_id, direction, and neighbors list
+        - Response status is either 200 (OK) if node exists in graph, or 404 (Not Found) if not
+        - If 200: response includes node_id, direction, and neighbors list
         - Uses real entity IDs instead of fabricated test strings
         """
-        # Create real entities
+        # Create real entities with parent-child relationships
         taxonomy_id, scheme_id, class_ids = create_test_taxonomy_with_classes(e2e_client, num_classes=2)
 
         # Build the graph
-        e2e_client.post("/api/graph/build")
+        build_response = e2e_client.post("/api/graph/build")
+        assert build_response.status_code == status.HTTP_200_OK
 
         # Get neighbors of a real node
+        # Note: Whether the node exists in the graph depends on how parent-child relationships
+        # map to graph nodes, which may result in 200 (if edges exist) or 404 (if node not in graph)
         response = e2e_client.get(
             f"/api/graph/nodes/{class_ids[0]}/neighbors?direction=both&depth=1"
         )
-        # Accept 200 if node exists in graph, 404 if node not found or graph is empty
         assert response.status_code in [status.HTTP_200_OK, status.HTTP_404_NOT_FOUND]
         if response.status_code == status.HTTP_200_OK:
             body = response.json()
@@ -374,20 +384,23 @@ class TestNeighborQueries:
         Get neighbors with directional filtering parameters.
 
         Asserts:
-        - Endpoint accepts direction parameter and returns correct structure
+        - Response status is either 200 (OK) if node exists in graph, or 404 (Not Found) if not
+        - If 200: endpoint accepts direction parameter and returns correct structure
         - Uses real entity IDs instead of fabricated test strings
         """
-        # Create real entities
+        # Create real entities with parent-child relationships
         taxonomy_id, scheme_id, class_ids = create_test_taxonomy_with_classes(e2e_client, num_classes=2)
 
         # Build the graph
-        e2e_client.post("/api/graph/build")
+        build_response = e2e_client.post("/api/graph/build")
+        assert build_response.status_code == status.HTTP_200_OK
 
         # Get outgoing neighbors of a real node
+        # Note: Whether the node exists in the graph depends on how parent-child relationships
+        # map to graph nodes, which may result in 200 (if edges exist) or 404 (if node not in graph)
         response = e2e_client.get(
             f"/api/graph/nodes/{class_ids[0]}/neighbors?direction=out&depth=2"
         )
-        # Accept 200 if node exists in graph, 404 if node not found or graph is empty
         assert response.status_code in [status.HTTP_200_OK, status.HTTP_404_NOT_FOUND]
         if response.status_code == status.HTTP_200_OK:
             body = response.json()
@@ -420,12 +433,14 @@ class TestCentrality:
         })
         scheme_id = scheme_response.json()["id"]
 
-        e2e_client.post(f"/api/schemes/{scheme_id}/classes", json={
+        class_response = e2e_client.post(f"/api/schemes/{scheme_id}/classes", json={
             "title": "Centrality Class 1"
         })
+        assert class_response.status_code == 201
 
         # Build graph
-        e2e_client.post("/api/graph/build")
+        build_response = e2e_client.post("/api/graph/build")
+        assert build_response.status_code == status.HTTP_200_OK
 
         # Get centrality
         response = e2e_client.get("/api/graph/centrality?algorithm=betweenness")
@@ -455,12 +470,14 @@ class TestCentrality:
         })
         scheme_id = scheme_response.json()["id"]
 
-        e2e_client.post(f"/api/schemes/{scheme_id}/classes", json={
+        class_response = e2e_client.post(f"/api/schemes/{scheme_id}/classes", json={
             "title": "PageRank Class"
         })
+        assert class_response.status_code == 201
 
         # Build graph
-        e2e_client.post("/api/graph/build")
+        build_response = e2e_client.post("/api/graph/build")
+        assert build_response.status_code == status.HTTP_200_OK
 
         # Get pagerank
         response = e2e_client.get("/api/graph/centrality?algorithm=pagerank")
@@ -492,12 +509,14 @@ class TestSPARQLQueries:
         })
         scheme_id = scheme_response.json()["id"]
 
-        e2e_client.post(f"/api/schemes/{scheme_id}/classes", json={
+        class_response = e2e_client.post(f"/api/schemes/{scheme_id}/classes", json={
             "title": "SPARQL Class"
         })
+        assert class_response.status_code == 201
 
         # Build graph
-        e2e_client.post("/api/graph/build")
+        build_response = e2e_client.post("/api/graph/build")
+        assert build_response.status_code == status.HTTP_200_OK
 
         # Execute SPARQL query
         response = e2e_client.post("/api/graph/sparql", json={
@@ -553,12 +572,14 @@ class TestRDFTriples:
         })
         scheme_id = scheme_response.json()["id"]
 
-        e2e_client.post(f"/api/schemes/{scheme_id}/classes", json={
+        class_response = e2e_client.post(f"/api/schemes/{scheme_id}/classes", json={
             "title": "Triples Class"
         })
+        assert class_response.status_code == 201
 
         # Build graph
-        e2e_client.post("/api/graph/build")
+        build_response = e2e_client.post("/api/graph/build")
+        assert build_response.status_code == status.HTTP_200_OK
 
         # Get triples
         response = e2e_client.get("/api/graph/rdf/triples")
@@ -587,12 +608,14 @@ class TestRDFTriples:
         })
         scheme_id = scheme_response.json()["id"]
 
-        e2e_client.post(f"/api/schemes/{scheme_id}/classes", json={
+        class_response = e2e_client.post(f"/api/schemes/{scheme_id}/classes", json={
             "title": "Count Class"
         })
+        assert class_response.status_code == 201
 
         # Build graph
-        e2e_client.post("/api/graph/build")
+        build_response = e2e_client.post("/api/graph/build")
+        assert build_response.status_code == status.HTTP_200_OK
 
         # Get count
         response = e2e_client.get("/api/graph/rdf/count")
@@ -612,7 +635,8 @@ class TestRDFTriples:
         taxonomy_id, scheme_id, class_ids = create_test_taxonomy_with_classes(e2e_client, num_classes=2)
 
         # Build graph
-        e2e_client.post("/api/graph/build")
+        build_response = e2e_client.post("/api/graph/build")
+        assert build_response.status_code == status.HTTP_200_OK
 
         # Get triples
         response = e2e_client.get("/api/graph/rdf/triples")
@@ -636,13 +660,14 @@ class TestCommunities:
 
         Asserts:
         - Status code 200 (OK)
-        - Response includes communities array
+        - Response includes both algorithm and communities
         """
         # Setup: Create entities to build a graph
         taxonomy_id, scheme_id, class_ids = create_test_taxonomy_with_classes(e2e_client, num_classes=3)
 
         # Build the graph
-        e2e_client.post("/api/graph/build")
+        build_response = e2e_client.post("/api/graph/build")
+        assert build_response.status_code == status.HTTP_200_OK
 
         # Get communities (may be empty if no connected components)
         response = e2e_client.get("/api/graph/communities")
@@ -651,7 +676,7 @@ class TestCommunities:
         assert "communities" in body
         assert isinstance(body["communities"], list)
         # Response includes algorithm and communities at minimum
-        assert "algorithm" in body or "communities" in body
+        assert "algorithm" in body and "communities" in body
 
 
 @pytest.mark.e2e
@@ -686,10 +711,12 @@ class TestCycleDetection:
             "title": "Cycle Class 2",
             "parent_class_id": class1_id
         })
+        assert class2_response.status_code == 201
         class2_id = class2_response.json()["id"]
 
         # Build graph
-        e2e_client.post("/api/graph/build")
+        build_response = e2e_client.post("/api/graph/build")
+        assert build_response.status_code == status.HTTP_200_OK
 
         # Check if adding edge from class2 to class1 would create cycle
         response = e2e_client.post("/api/graph/cycle-check", json={

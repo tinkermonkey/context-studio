@@ -171,30 +171,30 @@ class TestEntityVersions:
 
         # List versions
         response = e2e_client.get(f"/api/v1/versioning/versions/{taxonomy_id}")
-        # May return 200 with empty list if versioning not enabled, or 404 if not found
-        assert response.status_code in [status.HTTP_200_OK, status.HTTP_404_NOT_FOUND]
-        if response.status_code == status.HTTP_200_OK:
-            body = response.json()
-            assert isinstance(body, list)
-            # Verify each version (if any) has required fields
-            for version in body:
-                assert "version" in version
-                assert "entity_id" in version
-                assert "snapshot" in version
+        assert response.status_code == status.HTTP_200_OK
+        body = response.json()
+        assert isinstance(body, list)
+        # Verify each version (if any) has required fields
+        for version in body:
+            assert "version" in version
+            assert "entity_id" in version
+            assert "snapshot" in version
 
     def test_get_specific_version(self, e2e_client):
         """
         Get a specific version of an entity.
 
         Asserts:
-        - Endpoint handles requests for specific versions
+        - Response status is either 200 (OK) if version exists, or 404 (Not Found) if not
+        - If 200: response includes version, entity_id, and snapshot
         """
         # Create an entity
         taxonomy_id = create_taxonomy_with_changes(e2e_client)
 
         # Get version 1
+        # Note: Versioning behavior depends on whether the system maintains version history
+        # May return 404 if versioning is not enabled or version doesn't exist
         response = e2e_client.get(f"/api/v1/versioning/versions/{taxonomy_id}/1")
-        # May return 404 if version doesn't exist or versioning not enabled
         assert response.status_code in [status.HTTP_200_OK, status.HTTP_404_NOT_FOUND]
         if response.status_code == status.HTTP_200_OK:
             body = response.json()
@@ -207,26 +207,28 @@ class TestEntityVersions:
         Verify version history tracks mutations.
 
         Asserts:
+        - Status code 200 (OK)
         - Can retrieve version list after multiple updates
         """
         # Create and update
         taxonomy_id = create_taxonomy_with_changes(e2e_client)
 
         # Update multiple times
-        e2e_client.put(f"/api/taxonomies/{taxonomy_id}", json={
+        update1_response = e2e_client.put(f"/api/taxonomies/{taxonomy_id}", json={
             "title": "Update 1"
         })
-        e2e_client.put(f"/api/taxonomies/{taxonomy_id}", json={
+        assert update1_response.status_code == status.HTTP_200_OK
+
+        update2_response = e2e_client.put(f"/api/taxonomies/{taxonomy_id}", json={
             "title": "Update 2"
         })
+        assert update2_response.status_code == status.HTTP_200_OK
 
         # Get versions
         response = e2e_client.get(f"/api/v1/versioning/versions/{taxonomy_id}")
-        # May return 200 with empty list if versioning not enabled, or 404 if not found
-        assert response.status_code in [status.HTTP_200_OK, status.HTTP_404_NOT_FOUND]
-        if response.status_code == status.HTTP_200_OK:
-            versions = response.json()
-            assert isinstance(versions, list)
+        assert response.status_code == status.HTTP_200_OK
+        versions = response.json()
+        assert isinstance(versions, list)
 
 
 @pytest.mark.e2e
