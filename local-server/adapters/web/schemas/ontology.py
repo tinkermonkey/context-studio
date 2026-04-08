@@ -20,9 +20,11 @@ These schemas handle serialization/deserialization between HTTP and domain model
 """
 
 from datetime import datetime
-from typing import Optional, Any
+from typing import Optional, Any, TypeVar, Generic
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
+
+T = TypeVar("T")
 
 
 # ==================== Taxonomy Schemas ====================
@@ -44,15 +46,14 @@ class TaxonomyUpdateRequest(BaseModel):
 class TaxonomyResponse(BaseModel):
     """Response containing taxonomy data."""
 
+    model_config = ConfigDict(from_attributes=True)
+
     id: str = Field(..., description="Unique identifier")
     title: str = Field(..., description="Display name")
     description: Optional[str] = Field(None, description="Optional description")
     created_at: Optional[datetime] = Field(None, description="Creation timestamp")
     last_modified: Optional[datetime] = Field(None, description="Last modification timestamp")
     version: int = Field(default=1, description="Version number for optimistic concurrency control")
-
-    class Config:
-        from_attributes = True
 
 
 # ==================== ConceptScheme Schemas ====================
@@ -74,6 +75,8 @@ class ConceptSchemeUpdateRequest(BaseModel):
 class ConceptSchemeResponse(BaseModel):
     """Response containing concept scheme data."""
 
+    model_config = ConfigDict(from_attributes=True)
+
     id: str = Field(..., description="Unique identifier")
     taxonomy_id: str = Field(..., description="Parent taxonomy ID")
     title: str = Field(..., description="Display name")
@@ -81,9 +84,6 @@ class ConceptSchemeResponse(BaseModel):
     created_at: Optional[datetime] = Field(None, description="Creation timestamp")
     last_modified: Optional[datetime] = Field(None, description="Last modification timestamp")
     version: int = Field(default=1, description="Version number for optimistic concurrency control")
-
-    class Config:
-        from_attributes = True
 
 
 # ==================== Class Schemas ====================
@@ -129,9 +129,9 @@ class ClassUpdateRequest(BaseModel):
 
 
 class ClassMoveRequest(BaseModel):
-    """Request to move a class to a different parent."""
+    """Request to move a class to a different concept scheme."""
 
-    new_parent_id: Optional[str] = Field(None, description="ID of new parent class, or null to make root")
+    target_scheme_id: str = Field(..., description="ID of the target concept scheme")
 
 
 class ExternalReferenceResponse(BaseModel):
@@ -162,6 +162,8 @@ class DataPropertyValueResponse(BaseModel):
 class ClassResponse(BaseModel):
     """Response containing class data."""
 
+    model_config = ConfigDict(from_attributes=True)
+
     id: str = Field(..., description="Unique identifier")
     concept_scheme_id: str = Field(..., description="Parent concept scheme ID")
     taxonomy_id: str = Field(..., description="Parent taxonomy ID")
@@ -177,9 +179,6 @@ class ClassResponse(BaseModel):
     last_modified: Optional[datetime] = Field(None, description="Last modification timestamp")
     version: int = Field(default=1, description="Version number for optimistic concurrency control")
 
-    class Config:
-        from_attributes = True
-
 
 # ==================== Relationship Schemas ====================
 
@@ -188,20 +187,19 @@ class RelationshipCreateRequest(BaseModel):
 
     source_id: str = Field(..., description="ID of source entity")
     target_id: str = Field(..., description="ID of target entity")
-    property_definition_id: str = Field(..., description="ID of property definition (relationship type)")
+    relationship_type: str = Field(..., description="Relationship type identifier (e.g., 'related_to', 'parent_of')")
 
 
 class RelationshipResponse(BaseModel):
     """Response containing relationship data."""
+
+    model_config = ConfigDict(from_attributes=True)
 
     id: str = Field(..., description="Unique identifier")
     source_id: str = Field(..., description="Source entity ID")
     target_id: str = Field(..., description="Target entity ID")
     property_definition_id: str = Field(..., description="Property definition ID (relationship type)")
     created_at: Optional[datetime] = Field(None, description="Creation timestamp")
-
-    class Config:
-        from_attributes = True
 
 
 # ==================== PropertyDefinition Schemas ====================
@@ -224,6 +222,8 @@ class PropertyDefinitionUpdateRequest(BaseModel):
 class PropertyDefinitionResponse(BaseModel):
     """Response containing property definition data."""
 
+    model_config = ConfigDict(from_attributes=True)
+
     id: str = Field(..., description="Unique identifier")
     identifier: str = Field(..., description="Machine-readable identifier")
     title: str = Field(..., description="Display name")
@@ -233,22 +233,18 @@ class PropertyDefinitionResponse(BaseModel):
     last_modified: Optional[datetime] = Field(None, description="Last modification timestamp")
     version: int = Field(default=1, description="Version number for optimistic concurrency control")
 
-    class Config:
-        from_attributes = True
-
 
 # ==================== List Response Schemas ====================
 
-class ListResponse(BaseModel):
+class ListResponse(BaseModel, Generic[T]):
     """Generic paginated list response."""
 
-    items: list[Any] = Field(..., description="List of items")
+    model_config = ConfigDict(from_attributes=True)
+
+    items: list[T] = Field(..., description="List of items")
     total: int = Field(..., description="Total number of items")
     limit: int = Field(..., description="Limit applied")
     offset: int = Field(..., description="Offset applied")
-
-    class Config:
-        from_attributes = True
 
 
 # ==================== Error Response Schema ====================

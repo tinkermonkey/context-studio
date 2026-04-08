@@ -28,6 +28,7 @@ from fastapi import FastAPI, status
 from fastapi.testclient import TestClient
 
 from domain.pipeline.services import PipelineService
+from domain.pipeline.exceptions import LayerExecutionError
 from adapters.persistence.sqlite.operations.models import OperationsBase
 from adapters.persistence.sqlite.pipeline_repo import SQLitePipelineRepository
 from adapters.events.in_process import InProcessEventPublisher
@@ -539,3 +540,225 @@ class TestPipelineRoutes:
         # Executed pipeline should be in the list
         ids = [e["id"] for e in body]
         assert execution_id in ids
+
+
+class TestPipelineErrorHandling:
+    """Tests for error handling in pipeline routes."""
+
+    def test_unexpected_error_returns_500(self, client, monkeypatch):
+        """Unexpected exceptions (e.g., ValueError) return 500."""
+        # Create a pipeline first
+        create_response = client.post(
+            "/api/pipelines",
+            json={
+                "pipeline": "test_pipeline_error",
+                "title": "Test Pipeline Error",
+                "provider": "openai",
+                "model": "gpt-4",
+                "config": {},
+                "system_prompt": "Test",
+                "user_prompt": "Process: {text}",
+            }
+        )
+        pipeline_id = create_response.json()["id"]
+
+        # Mock the service to raise ValueError
+        def mock_get_config(*args, **kwargs):
+            raise ValueError("Simulated server-side ValueError")
+
+        original_service = client.app.state.pipeline_service
+        original_get_config = original_service.get_config
+        original_service.get_config = mock_get_config
+
+        try:
+            # Request should return 500 for unexpected exception
+            response = client.get(f"/api/pipelines/{pipeline_id}")
+            assert response.status_code == status.HTTP_500_INTERNAL_SERVER_ERROR
+            assert response.json()["detail"] == "An unexpected error occurred"
+        finally:
+            # Restore original service
+            original_service.get_config = original_get_config
+
+    def test_type_error_returns_500(self, client):
+        """TypeError (another unexpected exception) returns 500."""
+        # Create a pipeline first
+        create_response = client.post(
+            "/api/pipelines",
+            json={
+                "pipeline": "test_pipeline_typeerror",
+                "title": "Test Pipeline TypeError",
+                "provider": "openai",
+                "model": "gpt-4",
+                "config": {},
+                "system_prompt": "Test",
+                "user_prompt": "Process: {text}",
+            }
+        )
+        pipeline_id = create_response.json()["id"]
+
+        # Mock the service to raise TypeError
+        def mock_get_config(*args, **kwargs):
+            raise TypeError("Simulated server-side TypeError")
+
+        original_service = client.app.state.pipeline_service
+        original_get_config = original_service.get_config
+        original_service.get_config = mock_get_config
+
+        try:
+            # Request should return 500 for unexpected exception
+            response = client.get(f"/api/pipelines/{pipeline_id}")
+            assert response.status_code == status.HTTP_500_INTERNAL_SERVER_ERROR
+            assert response.json()["detail"] == "An unexpected error occurred"
+        finally:
+            # Restore original service
+            original_service.get_config = original_get_config
+
+    def test_error_message_generic_for_unexpected_errors(self, client):
+        """Unexpected error messages are generic (no internal details exposed)."""
+        # Create a pipeline first
+        create_response = client.post(
+            "/api/pipelines",
+            json={
+                "pipeline": "test_pipeline_generic_msg",
+                "title": "Test Pipeline Generic Message",
+                "provider": "openai",
+                "model": "gpt-4",
+                "config": {},
+                "system_prompt": "Test",
+                "user_prompt": "Process: {text}",
+            }
+        )
+        create_response.json()["id"]
+
+        # Mock the service to raise an exception with sensitive details
+        def mock_list_configs(*args, **kwargs):
+            raise RuntimeError("Database connection failed at 192.168.1.100:5432")
+
+        original_service = client.app.state.pipeline_service
+        original_list_configs = original_service.list_configs
+        original_service.list_configs = mock_list_configs
+
+        try:
+            # Request should return 500 with generic message
+            response = client.get("/api/pipelines")
+            assert response.status_code == status.HTTP_500_INTERNAL_SERVER_ERROR
+            # Should NOT contain the sensitive database details
+            body = response.json()
+            assert "192.168.1.100" not in body["detail"]
+            assert "5432" not in body["detail"]
+            assert body["detail"] == "An unexpected error occurred"
+        finally:
+            # Restore original service
+            original_service.list_configs = original_list_configs
+
+    def test_layer_execution_error_returns_500(self, client):
+        """LayerExecutionError returns 500 (server error)."""
+        # Create a pipeline first
+        create_response = client.post(
+            "/api/pipelines",
+            json={
+                "pipeline": "test_pipeline_layer_error",
+                "title": "Test Pipeline Layer Error",
+                "provider": "openai",
+                "model": "gpt-4",
+                "config": {},
+                "system_prompt": "Test",
+                "user_prompt": "Process: {text}",
+            }
+        )
+        pipeline_id = create_response.json()["id"]
+
+        # Mock the service to raise LayerExecutionError
+        def mock_execute_pipeline(*args, **kwargs):
+            raise LayerExecutionError("Layer processing failed during execution")
+
+        original_service = client.app.state.pipeline_service
+        original_execute = original_service.execute_pipeline
+        original_service.execute_pipeline = mock_execute_pipeline
+
+        try:
+            # Request should return 500 for LayerExecutionError
+            response = client.post(
+                f"/api/pipelines/{pipeline_id}/execute",
+                json={"input_text": "Test input"}
+            )
+            assert response.status_code == status.HTTP_500_INTERNAL_SERVER_ERROR
+            assert response.json()["detail"] == "Pipeline layer failed to execute"
+        finally:
+            # Restore original service
+            original_service.execute_pipeline = original_execute
+
+    def test_layer_execution_error_returns_500_on_get_config(self, client):
+        """LayerExecutionError returns 500 even when raised during config retrieval."""
+        # Create a pipeline first
+        create_response = client.post(
+            "/api/pipelines",
+            json={
+                "pipeline": "test_pipeline_layer_get_error",
+                "title": "Test Pipeline Layer Get Error",
+                "provider": "openai",
+                "model": "gpt-4",
+                "config": {},
+                "system_prompt": "Test",
+                "user_prompt": "Process: {text}",
+            }
+        )
+        pipeline_id = create_response.json()["id"]
+
+        # Mock the service to raise LayerExecutionError
+        def mock_get_config(*args, **kwargs):
+            raise LayerExecutionError("Unexpected layer error during config retrieval")
+
+        original_service = client.app.state.pipeline_service
+        original_get_config = original_service.get_config
+        original_service.get_config = mock_get_config
+
+        try:
+            # Request should return 500 for LayerExecutionError
+            response = client.get(f"/api/pipelines/{pipeline_id}")
+            assert response.status_code == status.HTTP_500_INTERNAL_SERVER_ERROR
+            assert response.json()["detail"] == "Pipeline layer failed to execute"
+        finally:
+            # Restore original service
+            original_service.get_config = original_get_config
+
+    def test_layer_execution_error_checked_before_pipeline_error(self, client):
+        """
+        Verify LayerExecutionError is checked before PipelineError in exception ordering.
+
+        This test ensures that if the isinstance checks are reordered in _handle_domain_error,
+        the test will catch the regression. LayerExecutionError is a subclass of PipelineError,
+        so checking PipelineError first would incorrectly return HTTP 400 instead of 500.
+        """
+        # Create a pipeline first
+        create_response = client.post(
+            "/api/pipelines",
+            json={
+                "pipeline": "test_pipeline_ordering",
+                "title": "Test Pipeline Ordering",
+                "provider": "openai",
+                "model": "gpt-4",
+                "config": {},
+                "system_prompt": "Test",
+                "user_prompt": "Process: {text}",
+            }
+        )
+        pipeline_id = create_response.json()["id"]
+
+        # Mock the service to raise LayerExecutionError
+        def mock_list_executions(*args, **kwargs):
+            raise LayerExecutionError("Layer execution ordering test error")
+
+        original_service = client.app.state.pipeline_service
+        original_list_executions = original_service.list_executions
+        original_service.list_executions = mock_list_executions
+
+        try:
+            # Request should return 500, NOT 400
+            response = client.get(f"/api/pipelines/{pipeline_id}/executions")
+            assert response.status_code == status.HTTP_500_INTERNAL_SERVER_ERROR
+            # Verify it's not 400 (which would indicate PipelineError was matched instead)
+            assert response.status_code != status.HTTP_400_BAD_REQUEST
+        finally:
+            # Restore original service
+            original_service.list_executions = original_list_executions

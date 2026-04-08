@@ -109,6 +109,24 @@ class GraphEngine(Protocol):
         """
         ...
 
+    def in_degree_distribution(self) -> dict[str, int]:
+        """
+        Get the in-degree of each node.
+
+        Returns:
+            Dictionary mapping node ID (str) to in-degree (int)
+        """
+        ...
+
+    def out_degree_distribution(self) -> dict[str, int]:
+        """
+        Get the out-degree of each node.
+
+        Returns:
+            Dictionary mapping node ID (str) to out-degree (int)
+        """
+        ...
+
     def connected_components(self) -> int:
         """
         Count the number of connected components in the graph.

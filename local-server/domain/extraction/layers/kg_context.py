@@ -4,6 +4,7 @@ Knowledge Graph context extraction layer (Layer 0).
 Extracts entities and relationships from the existing knowledge graph
 to provide context for subsequent extraction layers.
 """
+
 import logging
 from types import MappingProxyType
 
@@ -33,7 +34,10 @@ def execute(text: str, ontology_repo, embedding_service) -> LayerOutput:
     entities: list[ExtractedEntity] = []
 
     if not text or not text.strip():
-        return LayerOutput(entities=tuple(entities), metadata=MappingProxyType({"reason": "empty_text"}))
+        return LayerOutput(
+            entities=tuple(entities),
+            metadata=MappingProxyType({"reason": "empty_text"}),
+        )
 
     # Get embedding for the input text
     text_embedding = embedding_service.embed(text.strip())
@@ -44,12 +48,14 @@ def execute(text: str, ontology_repo, embedding_service) -> LayerOutput:
     if not all_entities_result or not all_entities_result[0]:
         return LayerOutput(
             entities=tuple(entities),
-            metadata=MappingProxyType({
-                "reason": "no_entities_in_repo",
-                "matches_found": 0,
-                "threshold": 0.7,
-                "entities_checked": 0,
-            })
+            metadata=MappingProxyType(
+                {
+                    "reason": "no_entities_in_repo",
+                    "matches_found": 0,
+                    "threshold": 0.7,
+                    "entities_checked": 0,
+                }
+            ),
         )
 
     all_entities, _ = all_entities_result
@@ -70,7 +76,11 @@ def execute(text: str, ontology_repo, embedding_service) -> LayerOutput:
         try:
             similarity = embedding_service.similarity(text_embedding, entity.embedding)
         except Exception as e:
-            _logger.warning("Skipping entity '%s' due to embedding similarity error: %s", entity.title, e)
+            _logger.warning(
+                "Skipping entity '%s' due to embedding similarity error: %s",
+                entity.title,
+                e,
+            )
             continue
 
         # Use similarity threshold of 0.7 for KG context
@@ -82,11 +92,14 @@ def execute(text: str, ontology_repo, embedding_service) -> LayerOutput:
             if entity.external_references:
                 entity_uri = entity.external_references[0].uri
 
+            # Clamp similarity to [0.0, 1.0] to handle floating point precision issues
+            confidence = max(0.0, min(1.0, float(similarity)))
+
             extracted = ExtractedEntity(
                 label=entity.title,
                 entity_type=entity_type,
                 source_layer=0,
-                confidence=float(similarity),
+                confidence=confidence,
                 uri=entity_uri,
                 description=entity.description,
                 properties={"kg_entity_id": entity.id},
@@ -96,9 +109,11 @@ def execute(text: str, ontology_repo, embedding_service) -> LayerOutput:
 
     return LayerOutput(
         entities=tuple(entities),
-        metadata=MappingProxyType({
-            "matches_found": matches_found,
-            "threshold": 0.7,
-            "entities_checked": len(all_entities),
-        }),
+        metadata=MappingProxyType(
+            {
+                "matches_found": matches_found,
+                "threshold": 0.7,
+                "entities_checked": len(all_entities),
+            }
+        ),
     )

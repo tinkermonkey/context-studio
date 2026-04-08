@@ -542,6 +542,66 @@ class TestNetworkXGraphEngineNeighbors:
 
         assert "nonexistent" in str(exc_info.value)
 
+    def test_neighbors_depth_1(self):
+        """Neighbors with depth=1 returns only immediate neighbors."""
+        engine = NetworkXGraphEngine()
+        nodes = [
+            {"id": "a"},
+            {"id": "b"},
+            {"id": "c"},
+            {"id": "d"},
+        ]
+        edges = [
+            {"source_id": "a", "target_id": "b"},
+            {"source_id": "b", "target_id": "c"},
+            {"source_id": "c", "target_id": "d"},
+        ]
+
+        engine.build_from_data(nodes, edges)
+        neighbors = engine.neighbors("a", direction="out", depth=1)
+
+        assert neighbors == {"b"}
+
+    def test_neighbors_depth_2(self):
+        """Neighbors with depth=2 returns nodes up to 2 hops away."""
+        engine = NetworkXGraphEngine()
+        nodes = [
+            {"id": "a"},
+            {"id": "b"},
+            {"id": "c"},
+            {"id": "d"},
+        ]
+        edges = [
+            {"source_id": "a", "target_id": "b"},
+            {"source_id": "b", "target_id": "c"},
+            {"source_id": "c", "target_id": "d"},
+        ]
+
+        engine.build_from_data(nodes, edges)
+        neighbors = engine.neighbors("a", direction="out", depth=2)
+
+        assert neighbors == {"b", "c"}
+
+    def test_neighbors_depth_3(self):
+        """Neighbors with depth=3 returns nodes up to 3 hops away."""
+        engine = NetworkXGraphEngine()
+        nodes = [
+            {"id": "a"},
+            {"id": "b"},
+            {"id": "c"},
+            {"id": "d"},
+        ]
+        edges = [
+            {"source_id": "a", "target_id": "b"},
+            {"source_id": "b", "target_id": "c"},
+            {"source_id": "c", "target_id": "d"},
+        ]
+
+        engine.build_from_data(nodes, edges)
+        neighbors = engine.neighbors("a", direction="out", depth=3)
+
+        assert neighbors == {"b", "c", "d"}
+
 
 class TestNetworkXGraphEngineHasCycle:
     """Tests for cycle detection."""

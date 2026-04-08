@@ -112,10 +112,10 @@ async def create_taxonomy(
         raise HTTPException(status_code=status_code, detail=message)
 
 
-@router.get("/taxonomies", response_model=ListResponse)
+@router.get("/taxonomies", response_model=ListResponse[TaxonomyResponse])
 async def list_taxonomies(
     service: OntologyService = Depends(get_ontology_service),
-) -> ListResponse:
+) -> ListResponse[TaxonomyResponse]:
     """
     Retrieve all taxonomies.
 
@@ -251,11 +251,11 @@ async def create_concept_scheme(
         raise HTTPException(status_code=status_code, detail=message)
 
 
-@router.get("/schemes", response_model=ListResponse)
+@router.get("/schemes", response_model=ListResponse[ConceptSchemeResponse])
 async def list_concept_schemes(
     taxonomy_id: Optional[str] = Query(None, description="Optional taxonomy ID to filter by"),
     service: OntologyService = Depends(get_ontology_service),
-) -> ListResponse:
+) -> ListResponse[ConceptSchemeResponse]:
     """
     Retrieve concept schemes, optionally filtered by taxonomy.
 
@@ -394,14 +394,14 @@ async def create_class(
         raise HTTPException(status_code=status_code, detail=message)
 
 
-@router.get("/classes", response_model=ListResponse)
+@router.get("/classes", response_model=ListResponse[ClassResponse])
 async def list_classes(
     concept_scheme_id: Optional[str] = Query(None, description="Optional concept scheme ID to filter by"),
     parent_class_id: Optional[str] = Query(None, description="Optional parent class ID to filter by"),
     limit: int = Query(100, ge=1, le=1000, description="Maximum number of results"),
     offset: int = Query(0, ge=0, description="Number of results to skip"),
     service: OntologyService = Depends(get_ontology_service),
-) -> ListResponse:
+) -> ListResponse[ClassResponse]:
     """
     Retrieve classes with optional filtering and pagination.
 
@@ -499,23 +499,25 @@ async def move_class(
     service: OntologyService = Depends(get_ontology_service),
 ) -> ClassResponse:
     """
-    Move a class to a different parent in the hierarchy.
+    Move a class to a different concept scheme.
 
     Args:
         class_id: The class ID
-        request: ClassMoveRequest with new_parent_id (or None to make root)
+        request: ClassMoveRequest with target_scheme_id
         service: OntologyService from dependency injection
 
     Returns:
-        Updated ClassResponse
+        Updated ClassResponse with new concept_scheme_id
 
     Raises:
-        HTTPException: 400 if invalid, 404 if not found, 422 if circular reference
+        HTTPException: 400 if invalid, 404 if not found
     """
     try:
-        cls = service.move_class(
-            class_id=class_id,
-            new_parent_id=request.new_parent_id,
+        # Use the service method to move the class to a different scheme
+        cls = await run_sync_in_executor(
+            service.move_class_to_scheme,
+            class_id,
+            request.target_scheme_id,
         )
         return ClassResponse.model_validate(cls)
     except Exception as exc:
@@ -556,7 +558,7 @@ async def create_relationship(
     Create a new typed relationship between two entities.
 
     Args:
-        request: RelationshipCreateRequest with source, target, and property definition IDs
+        request: RelationshipCreateRequest with source, target, and relationship_type
         service: OntologyService from dependency injection
 
     Returns:
@@ -566,10 +568,16 @@ async def create_relationship(
         HTTPException: 400 if invalid (self-loop), 404 if entities not found, 409 if duplicate
     """
     try:
+        # Get or create the property definition based on relationship_type
+        prop_def = service.get_or_create_property_definition_by_identifier(
+            identifier=request.relationship_type,
+            title=request.relationship_type.replace("_", " ").title(),
+        )
+
         relationship = service.create_relationship(
             source_id=request.source_id,
             target_id=request.target_id,
-            property_definition_id=request.property_definition_id,
+            property_definition_id=prop_def.id,
         )
         return RelationshipResponse.model_validate(relationship)
     except Exception as exc:
@@ -577,13 +585,13 @@ async def create_relationship(
         raise HTTPException(status_code=status_code, detail=message)
 
 
-@router.get("/relationships", response_model=ListResponse)
+@router.get("/relationships", response_model=ListResponse[RelationshipResponse])
 async def list_relationships(
     source_id: Optional[str] = Query(None, description="Optional source entity ID to filter by"),
     target_id: Optional[str] = Query(None, description="Optional target entity ID to filter by"),
     property_id: Optional[str] = Query(None, description="Optional property definition ID to filter by"),
     service: OntologyService = Depends(get_ontology_service),
-) -> ListResponse:
+) -> ListResponse[RelationshipResponse]:
     """
     Retrieve relationships with optional filtering.
 
@@ -693,11 +701,11 @@ async def create_property_definition(
         raise HTTPException(status_code=status_code, detail=message)
 
 
-@router.get("/properties", response_model=ListResponse)
+@router.get("/properties", response_model=ListResponse[PropertyDefinitionResponse])
 async def list_property_definitions(
     is_relevant: Optional[bool] = Query(None, description="Optional filter for relevant properties"),
     service: OntologyService = Depends(get_ontology_service),
-) -> ListResponse:
+) -> ListResponse[PropertyDefinitionResponse]:
     """
     Retrieve property definitions, optionally filtered by relevance.
 

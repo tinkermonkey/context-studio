@@ -7,12 +7,15 @@
 PRPs/
 **/.venv/
 **/test_env/
+**/test_venv/
+build_test_env/
 **/.dr/
 
 # Build and runtime artifacts
 *.log
 __pycache__/
 *.pyc
+*.egg-info/
 
 # Database files and SQLite runtime artifacts
 /cache.db*

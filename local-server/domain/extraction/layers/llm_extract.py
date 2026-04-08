@@ -3,6 +3,7 @@ LLM extraction layer (Layer 1).
 
 Extracts entities using prompts sent to language models.
 """
+
 import json
 import logging
 from types import MappingProxyType
@@ -31,7 +32,10 @@ def execute(input: LayerInput, llm: LLMProvider) -> LayerOutput:
     entities: list[ExtractedEntity] = []
 
     if not input.text or not input.text.strip():
-        return LayerOutput(entities=tuple(entities), metadata=MappingProxyType({"reason": "empty_text"}))
+        return LayerOutput(
+            entities=tuple(entities),
+            metadata=MappingProxyType({"reason": "empty_text"}),
+        )
 
     # Check if LLM is available
     available_models = llm.list_available_models()
@@ -125,11 +129,15 @@ JSON Array:"""
     if entity_list and isinstance(entity_list, list):
         for item in entity_list:
             if isinstance(item, dict) and "label" in item:
+                # Clamp confidence to [0.0, 1.0] to handle floating point precision issues
+                confidence = float(item.get("confidence", 0.5))
+                confidence = max(0.0, min(1.0, confidence))
+
                 extracted = ExtractedEntity(
                     label=item.get("label", "").strip(),
                     entity_type=item.get("type", "UNKNOWN"),
                     source_layer=1,
-                    confidence=float(item.get("confidence", 0.5)),
+                    confidence=confidence,
                     uri=item.get("uri"),
                     description=item.get("description"),
                 )

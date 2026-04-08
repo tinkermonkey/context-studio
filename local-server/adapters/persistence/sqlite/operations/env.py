@@ -1,8 +1,6 @@
-import os
 import sys
 from pathlib import Path
 from logging.config import fileConfig
-from typing import Any
 
 from sqlalchemy import engine_from_config
 from sqlalchemy import pool
@@ -14,12 +12,15 @@ local_server_root = Path(__file__).parent.parent.parent.parent
 if str(local_server_root) not in sys.path:
     sys.path.insert(0, str(local_server_root))
 
-target_metadata: Any = None
 try:
     from adapters.persistence.sqlite.operations.models import OperationsBase  # noqa: E402
     target_metadata = OperationsBase.metadata
-except ImportError:
-    pass
+except ImportError as e:
+    raise RuntimeError(
+        f"Failed to import OperationsBase for operations database migrations. "
+        f"Ensure adapters/persistence/sqlite/operations/models.py exists and is importable. "
+        f"Original error: {e}"
+    ) from e
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
@@ -48,7 +49,8 @@ def run_migrations_offline() -> None:
     script output.
 
     """
-    url = os.environ.get("OPERATIONS_DB_URL", "sqlite:///./operations.db")
+    x_args = context.get_x_argument(as_dictionary=True)
+    url = x_args.get("operations_db_url") or "sqlite:///./operations.db"
     context.configure(
         url=url,
         target_metadata=target_metadata,
@@ -67,8 +69,9 @@ def run_migrations_online() -> None:
     and associate a connection with the context.
 
     """
+    x_args = context.get_x_argument(as_dictionary=True)
     configuration = config.get_section(config.config_ini_section) or {}
-    configuration["sqlalchemy.url"] = os.environ.get("OPERATIONS_DB_URL", "sqlite:///./operations.db")
+    configuration["sqlalchemy.url"] = x_args.get("operations_db_url") or "sqlite:///./operations.db"
 
     connectable = engine_from_config(
         configuration,

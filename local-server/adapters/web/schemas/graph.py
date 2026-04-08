@@ -22,6 +22,7 @@ These schemas handle serialization/deserialization between HTTP and domain model
 """
 
 from datetime import datetime
+from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -46,17 +47,18 @@ class SPARQLRequest(BaseModel):
 class KnowledgeGraphResponse(BaseModel):
     """Response containing knowledge graph metadata."""
 
+    model_config = ConfigDict(from_attributes=True)
+
     node_count: int = Field(..., description="Number of nodes in the graph")
     edge_count: int = Field(..., description="Number of edges in the graph")
     is_directed: bool = Field(..., description="Whether the graph is directed")
-    last_built: datetime = Field(..., description="Timestamp when the graph was last built")
-
-    class Config:
-        from_attributes = True
+    timestamp: datetime = Field(..., description="Timestamp when the graph was last built")
 
 
 class GraphMetricsResponse(BaseModel):
     """Response containing computed graph metrics."""
+
+    model_config = ConfigDict(from_attributes=True)
 
     density: float = Field(..., description="Edge density of the graph")
     average_degree: float = Field(..., description="Average degree of nodes")
@@ -66,9 +68,6 @@ class GraphMetricsResponse(BaseModel):
     communities: list[list[str]] = Field(..., description="Detected communities as lists of node IDs")
     algorithm: str = Field(..., description="Name of the centrality algorithm used")
     computed_at: datetime = Field(..., description="Timestamp when metrics were computed")
-
-    class Config:
-        from_attributes = True
 
 
 class PathResultResponse(BaseModel):
@@ -86,53 +85,49 @@ class PathResultResponse(BaseModel):
 class CentralityResponse(BaseModel):
     """Response containing centrality scores."""
 
+    model_config = ConfigDict(from_attributes=True)
+
     algorithm: str = Field(..., description="Name of the centrality algorithm")
     scores: dict[str, float] = Field(..., description="Centrality scores mapped by node ID")
-
-    class Config:
-        from_attributes = True
 
 
 class CommunitiesResponse(BaseModel):
     """Response containing community detection results."""
 
+    model_config = ConfigDict(from_attributes=True)
+
     algorithm: str = Field(..., description="Name of the community detection algorithm")
     communities: list[list[str]] = Field(..., description="Communities as sorted lists of node IDs")
-
-    class Config:
-        from_attributes = True
 
 
 class NeighborsResponse(BaseModel):
     """Response containing neighbor nodes."""
 
-    node_id: str = Field(..., description="ID of the queried node")
-    direction: str = Field(..., description="Direction of traversal: 'in', 'out', or 'both'")
-    neighbors: list[str] = Field(..., description="List of neighboring node IDs")
+    model_config = ConfigDict(from_attributes=True)
 
-    class Config:
-        from_attributes = True
+    node_id: str = Field(..., description="ID of the queried node")
+    direction: Literal["in", "out", "both"] = Field(..., description="Direction of traversal: 'in', 'out', or 'both'")
+    incoming: list[str] = Field(..., description="List of nodes with edges pointing to this node")
+    outgoing: list[str] = Field(..., description="List of nodes this node has edges pointing to")
 
 
 class CycleCheckResponse(BaseModel):
     """Response from cycle detection check."""
 
+    model_config = ConfigDict(from_attributes=True)
+
     source_id: str = Field(..., description="ID of the proposed edge source")
     target_id: str = Field(..., description="ID of the proposed edge target")
     would_create_cycle: bool = Field(..., description="Whether adding this edge would create a cycle")
-
-    class Config:
-        from_attributes = True
 
 
 class SPARQLResponse(BaseModel):
     """Response from SPARQL query execution."""
 
+    model_config = ConfigDict(from_attributes=True)
+
     results: list[dict] = Field(..., description="Query result bindings")
     triple_count: int = Field(..., description="Total number of triples in the graph")
-
-    class Config:
-        from_attributes = True
 
 
 class TripleResponse(BaseModel):
@@ -146,42 +141,45 @@ class TripleResponse(BaseModel):
 class TriplesResponse(BaseModel):
     """Response containing RDF triples."""
 
+    model_config = ConfigDict(from_attributes=True)
+
     triples: list[TripleResponse] = Field(..., description="List of RDF triples")
     count: int = Field(..., description="Number of triples returned")
-
-    class Config:
-        from_attributes = True
 
 
 class TripleCountResponse(BaseModel):
     """Response containing RDF triple count."""
 
-    count: int = Field(..., description="Number of RDF triples in the graph")
+    model_config = ConfigDict(from_attributes=True)
 
-    class Config:
-        from_attributes = True
+    count: int = Field(..., description="Number of RDF triples in the graph")
 
 
 class DegreeDistributionResponse(BaseModel):
     """Response containing degree distribution for all nodes."""
 
-    distribution: dict[str, int] = Field(..., description="Mapping of node IDs to their degrees")
-    computed_at: datetime = Field(..., description="Timestamp when distribution was computed")
+    model_config = ConfigDict(from_attributes=True)
 
-    class Config:
-        from_attributes = True
+    in_degree: dict[str, int] = Field(..., description="Mapping of node IDs to their in-degrees")
+    out_degree: dict[str, int] = Field(..., description="Mapping of node IDs to their out-degrees")
+
+
+class SubgraphDataResponse(BaseModel):
+    """Response containing subgraph nodes and edges."""
+
+    model_config = ConfigDict(from_attributes=True)
+
+    nodes: list[str] = Field(..., description="IDs of all nodes in the subgraph")
+    edges: list[tuple[str, str]] = Field(..., description="Edges connecting nodes in the subgraph as (source, target) tuples")
+    node_count: int = Field(..., description="Number of nodes in the subgraph")
+    edge_count: int = Field(..., description="Number of edges in the subgraph")
 
 
 class SubgraphResultResponse(BaseModel):
     """Response containing depth-based subgraph extraction result."""
 
-    center_node_id: str = Field(..., description="ID of the center node")
-    node_ids: list[str] = Field(..., description="IDs of all nodes in the subgraph")
-    edge_ids: list[tuple[str, str]] = Field(..., description="Edges connecting nodes in the subgraph as (source, target) tuples")
-    node_count: int = Field(..., description="Number of nodes in the subgraph")
-    edge_count: int = Field(..., description="Number of edges in the subgraph")
-    depth: int = Field(..., description="Maximum traversal depth from center node")
-    extracted_at: datetime = Field(..., description="Timestamp when the subgraph was extracted")
+    model_config = ConfigDict(from_attributes=True)
 
-    class Config:
-        from_attributes = True
+    node_id: str = Field(..., description="ID of the center node")
+    subgraph: SubgraphDataResponse = Field(..., description="The extracted subgraph containing nodes and edges")
+    depth: int = Field(..., description="Maximum traversal depth from center node")

@@ -147,6 +147,44 @@ class FakeGraphEngine:
 
         return degree_dict
 
+    def in_degree_distribution(self) -> dict[str, int]:
+        """
+        Get the in-degree of each node.
+
+        For a directed graph, in-degree is the number of edges pointing to a node.
+
+        Returns:
+            Dictionary mapping node ID to in-degree (int)
+        """
+        in_degree_dict = {node_id: 0 for node_id in self._nodes}
+
+        # Count in-degree for each node
+        for edge in self._edges:
+            target_id = edge["target_id"]
+            if target_id in in_degree_dict:
+                in_degree_dict[target_id] += 1
+
+        return in_degree_dict
+
+    def out_degree_distribution(self) -> dict[str, int]:
+        """
+        Get the out-degree of each node.
+
+        For a directed graph, out-degree is the number of edges pointing from a node.
+
+        Returns:
+            Dictionary mapping node ID to out-degree (int)
+        """
+        out_degree_dict = {node_id: 0 for node_id in self._nodes}
+
+        # Count out-degree for each node
+        for edge in self._edges:
+            source_id = edge["source_id"]
+            if source_id in out_degree_dict:
+                out_degree_dict[source_id] += 1
+
+        return out_degree_dict
+
     def connected_components(self) -> int:
         """
         Count the number of weakly connected components in the graph.
@@ -219,11 +257,13 @@ class FakeGraphEngine:
         """
         subgraph = FakeGraphEngine()
 
-        # Copy only the requested nodes
-        subgraph_nodes = [node for node in self._nodes.values() if node["id"] in node_ids]
+        # Convert to set for O(1) membership testing instead of O(n)
+        node_ids_set = set(node_ids)
+
+        # Copy only the requested nodes using set-based filtering
+        subgraph_nodes = [node for node in self._nodes.values() if node["id"] in node_ids_set]
 
         # Copy only edges where both endpoints are in the subgraph
-        node_ids_set = set(node_ids)
         subgraph_edges = [
             edge for edge in self._edges
             if edge["source_id"] in node_ids_set and edge["target_id"] in node_ids_set

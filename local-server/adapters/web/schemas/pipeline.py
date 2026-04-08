@@ -13,9 +13,9 @@ These schemas handle serialization/deserialization between HTTP and domain model
 """
 
 from datetime import datetime
-from typing import Optional
+from typing import Optional, Literal
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class PipelineConfigurationCreate(BaseModel):
@@ -46,6 +46,8 @@ class PipelineConfigurationUpdate(BaseModel):
 class PipelineConfigurationResponse(BaseModel):
     """Response containing pipeline configuration data."""
 
+    model_config = ConfigDict(from_attributes=True)
+
     id: str = Field(..., description="Unique identifier")
     pipeline: str = Field(..., description="Pipeline identifier/slug")
     title: str = Field(..., description="Human-readable title")
@@ -59,9 +61,6 @@ class PipelineConfigurationResponse(BaseModel):
     created_at: datetime = Field(..., description="ISO 8601 creation timestamp")
     last_updated: datetime = Field(..., description="ISO 8601 last update timestamp")
 
-    class Config:
-        from_attributes = True
-
 
 class PipelineExecuteRequest(BaseModel):
     """Request to execute a pipeline."""
@@ -72,6 +71,8 @@ class PipelineExecuteRequest(BaseModel):
 class ExecutionResponse(BaseModel):
     """Response containing pipeline execution record data."""
 
+    model_config = ConfigDict(from_attributes=True)
+
     id: str = Field(..., description="Unique identifier for this execution")
     pipeline_config_id: str = Field(..., description="ID of the executed PipelineConfiguration")
     output_text: str = Field(..., description="The generated response from the LLM")
@@ -80,9 +81,6 @@ class ExecutionResponse(BaseModel):
     tokens_in: int = Field(..., description="Number of tokens in the input")
     tokens_out: int = Field(..., description="Number of tokens in the output")
     duration_ms: int = Field(..., description="Execution duration in milliseconds")
-    status: str = Field(..., description="Completion status (success, error, timeout)")
+    status: Literal["success", "error", "timeout"] = Field(..., description="Completion status (success, error, timeout)")
     error_message: Optional[str] = Field(None, description="Error description if applicable")
     timestamp: datetime = Field(..., description="ISO 8601 execution timestamp")
-
-    class Config:
-        from_attributes = True

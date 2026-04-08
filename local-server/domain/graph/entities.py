@@ -86,6 +86,27 @@ class PathResult:
 
 
 @dataclass
+class Subgraph:
+    """
+    A subgraph containing specific nodes and edges.
+
+    Represents a subgraph extracted from a larger knowledge graph,
+    containing only the specified nodes and edges between them.
+
+    Attributes:
+        node_ids: IDs of all nodes in the subgraph
+        edge_ids: List of (source_id, target_id) tuples for edges in the subgraph
+        node_count: Number of nodes in the subgraph
+        edge_count: Number of edges in the subgraph
+    """
+
+    node_ids: list[str]
+    edge_ids: list[tuple[str, str]]
+    node_count: int
+    edge_count: int
+
+
+@dataclass
 class SubgraphResult:
     """
     A subgraph extracted around a center node.

@@ -446,6 +446,11 @@ app.include_router(versioning_router)
 app.include_router(admin_router)
 
 
+# ==================== Exception Handlers ====================
+# Note: Pydantic validation errors are handled by FastAPI and return 422 (UNPROCESSABLE_ENTITY) by default.
+# No custom handler is needed here.
+
+
 if __name__ == "__main__":
     uvicorn.run(
         "app:app",

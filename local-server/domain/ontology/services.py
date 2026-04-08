@@ -903,6 +903,65 @@ class OntologyService:
 
         return cls
 
+    def move_class_to_scheme(self, class_id: str, target_scheme_id: str) -> Class:
+        """
+        Move a class to a different concept scheme within the same taxonomy.
+
+        Validates that:
+        - The class exists
+        - The target concept scheme exists
+        - Both the class and target scheme belong to the same taxonomy
+
+        Args:
+            class_id: The ID of the class to move
+            target_scheme_id: The ID of the target concept scheme
+
+        Returns:
+            The updated Class
+
+        Raises:
+            EntityNotFoundError: If the class or target scheme does not exist
+            ValueError: If the target scheme is in a different taxonomy than the class
+        """
+        cls = self._repository.get_class(class_id)
+        if cls is None:
+            raise EntityNotFoundError("Class", class_id)
+
+        target_scheme = self._repository.get_concept_scheme(target_scheme_id)
+        if target_scheme is None:
+            raise EntityNotFoundError("ConceptScheme", target_scheme_id)
+
+        if cls.taxonomy_id != target_scheme.taxonomy_id:
+            raise ValueError(
+                f"Cannot move class to scheme in different taxonomy. "
+                f"Class taxonomy: {cls.taxonomy_id}, target scheme taxonomy: {target_scheme.taxonomy_id}"
+            )
+
+        # Capture old scheme ID before mutation
+        old_scheme_id = cls.concept_scheme_id
+
+        # Update the class's concept scheme
+        cls.concept_scheme_id = target_scheme_id
+        cls = self._repository.save_class(cls)
+
+        # Emit event for audit trail and graph invalidation
+        failures = self._event_publisher.publish(ClassUpdated(
+            class_id=class_id,
+            changed_fields=("concept_scheme_id",),
+            old_values={"concept_scheme_id": old_scheme_id},
+            new_values={"concept_scheme_id": target_scheme_id},
+        ))
+        if failures:
+            handler_names = ", ".join(name for name, _ in failures)
+            _logger.warning(
+                "Event handlers failed for ClassUpdated (class_id=%s): %s. "
+                "Class moved but audit trail may have gaps.",
+                class_id,
+                handler_names,
+            )
+
+        return cls
+
     # Relationship operations
 
     def create_relationship(
@@ -1200,6 +1259,55 @@ class OntologyService:
         if prop_def is None:
             raise EntityNotFoundError("PropertyDefinition", property_id)
         return prop_def
+
+    def get_or_create_property_definition_by_identifier(
+        self,
+        identifier: str,
+        title: str | None = None,
+        description: str | None = None,
+    ) -> PropertyDefinition:
+        """
+        Get an existing property definition by identifier, or create it if not found.
+
+        This method provides idempotent creation: if a property definition with this
+        identifier already exists, it is returned; otherwise a new one is created with
+        the provided title and description.
+
+        Args:
+            identifier: Machine-readable identifier to lookup/create
+            title: Display name for the property (required if creating new)
+            description: Optional longer description (for creation only)
+
+        Returns:
+            The PropertyDefinition (either existing or newly created)
+
+        Raises:
+            ValueError: If identifier is empty, or if creating and title is empty
+            DuplicateEntityError: If a property with this identifier exists but title
+                conflicts with an existing different property (title uniqueness constraint)
+
+        Note:
+            Atomicity relies on the repository implementation providing transaction
+            semantics. If the caller operation fails after this method returns,
+            the caller is responsible for cleanup or explicit rollback.
+        """
+        if not identifier or not identifier.strip():
+            raise ValueError("Identifier cannot be empty")
+
+        # Check if property definition already exists by identifier
+        existing = self._repository.get_property_definition_by_identifier(identifier)
+        if existing:
+            return existing
+
+        # Create new property definition with provided title
+        if not title or not title.strip():
+            raise ValueError("Title cannot be empty when creating a new property definition")
+
+        return self.create_property_definition(
+            identifier=identifier,
+            title=title,
+            description=description,
+        )
 
     def list_property_definitions(self, is_relevant: bool | None = None) -> list[PropertyDefinition]:
         """
