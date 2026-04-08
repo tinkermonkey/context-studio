@@ -96,7 +96,9 @@ class FakeEmbeddingService:
         norm_b = sum(b * b for b in embedding_b) ** 0.5
         if norm_a == 0 or norm_b == 0:
             return 0.0
-        return dot / (norm_a * norm_b)
+        cosine_sim = dot / (norm_a * norm_b)
+        # Clamp to [0, 1] range to handle floating point precision issues
+        return max(0.0, min(1.0, cosine_sim))
 
 
 # ============================================================================
