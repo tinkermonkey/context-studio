@@ -258,24 +258,40 @@ class TestPathFinding:
         # Create real entities with parent-child relationships creating a connected chain
         taxonomy_id, scheme_id, class_ids = create_test_taxonomy_with_classes(e2e_client, num_classes=3)
 
+        # Create a property definition for relationships
+        prop_response = e2e_client.post("/api/properties", json={
+            "identifier": "parent_of",
+            "title": "Parent Of",
+            "description": "Indicates a parent-child relationship"
+        })
+        assert prop_response.status_code == 201, f"Failed to create property definition: {prop_response.text}"
+        property_definition_id = prop_response.json()["id"]
+
+        # Create explicit Relationship records to form edges in the graph
+        # (parent_class_id is an entity attribute, not a graph edge)
+        for i in range(len(class_ids) - 1):
+            rel_response = e2e_client.post("/api/relationships", json={
+                "source_id": class_ids[i],
+                "target_id": class_ids[i + 1],
+                "property_definition_id": property_definition_id
+            })
+            assert rel_response.status_code == 201, f"Failed to create relationship: {rel_response.text}"
+
         # Build the graph
         build_response = e2e_client.post("/api/graph/build")
         assert build_response.status_code == status.HTTP_200_OK
 
         # Query shortest path between real nodes in the chain
-        # Note: Whether a path exists depends on how parent-child class relationships
-        # map to graph edges, which may result in 200 (if edges exist) or 404 (if no path)
         response = e2e_client.get(
             f"/api/graph/paths/shortest?source_id={class_ids[0]}&target_id={class_ids[2]}"
         )
-        assert response.status_code in [status.HTTP_200_OK, status.HTTP_404_NOT_FOUND]
-        if response.status_code == status.HTTP_200_OK:
-            body = response.json()
-            assert "source_id" in body
-            assert "target_id" in body
-            assert "nodes" in body
-            assert "distance" in body
-            assert "relationships" in body
+        assert response.status_code == status.HTTP_200_OK
+        body = response.json()
+        assert "source_id" in body
+        assert "target_id" in body
+        assert "nodes" in body
+        assert "distance" in body
+        assert "relationships" in body
 
     def test_shortest_path_not_found(self, e2e_client):
         """
@@ -322,25 +338,41 @@ class TestPathFinding:
         Asserts:
         - Returns a list of paths (200 OK)
         - Uses real entity IDs instead of fabricated strings
-        - Response is a list that may be empty if no connections exist
+        - Response is a list containing paths between connected nodes
         """
         # Create real entities with parent-child relationships creating a connected chain
         taxonomy_id, scheme_id, class_ids = create_test_taxonomy_with_classes(e2e_client, num_classes=3)
+
+        # Create a property definition for relationships
+        prop_response = e2e_client.post("/api/properties", json={
+            "identifier": "connected_to",
+            "title": "Connected To",
+            "description": "Indicates a connection between entities"
+        })
+        assert prop_response.status_code == 201, f"Failed to create property definition: {prop_response.text}"
+        property_definition_id = prop_response.json()["id"]
+
+        # Create explicit Relationship records to form edges in the graph
+        # (parent_class_id is an entity attribute, not a graph edge)
+        for i in range(len(class_ids) - 1):
+            rel_response = e2e_client.post("/api/relationships", json={
+                "source_id": class_ids[i],
+                "target_id": class_ids[i + 1],
+                "property_definition_id": property_definition_id
+            })
+            assert rel_response.status_code == 201, f"Failed to create relationship: {rel_response.text}"
 
         # Build the graph
         build_response = e2e_client.post("/api/graph/build")
         assert build_response.status_code == status.HTTP_200_OK
 
         # Find all paths between real nodes in the chain
-        # Note: Whether paths exist depends on how parent-child class relationships
-        # map to graph edges, which may result in 200 (with list) or 404 (if no path)
         response = e2e_client.get(
             f"/api/graph/paths/all?source_id={class_ids[0]}&target_id={class_ids[2]}&max_depth=5"
         )
-        assert response.status_code in [status.HTTP_200_OK, status.HTTP_404_NOT_FOUND]
-        if response.status_code == status.HTTP_200_OK:
-            body = response.json()
-            assert isinstance(body, list)
+        assert response.status_code == status.HTTP_200_OK
+        body = response.json()
+        assert isinstance(body, list)
 
 
 @pytest.mark.e2e
@@ -352,62 +384,92 @@ class TestNeighborQueries:
         Get neighbors of a real node created via API.
 
         Asserts:
-        - Response status is either 200 (OK) if node exists in graph, or 404 (Not Found) if not
-        - If 200: response includes node_id, direction, and neighbors list
+        - Response status is 200 (OK) when node has neighbors in graph
+        - Response includes node_id, direction, and neighbors list
         - Uses real entity IDs instead of fabricated test strings
         """
         # Create real entities with parent-child relationships
         taxonomy_id, scheme_id, class_ids = create_test_taxonomy_with_classes(e2e_client, num_classes=2)
+
+        # Create a property definition for relationships
+        prop_response = e2e_client.post("/api/properties", json={
+            "identifier": "has_child",
+            "title": "Has Child",
+            "description": "Indicates a parent-child relationship"
+        })
+        assert prop_response.status_code == 201, f"Failed to create property definition: {prop_response.text}"
+        property_definition_id = prop_response.json()["id"]
+
+        # Create explicit Relationship records to form edges in the graph
+        # (parent_class_id is an entity attribute, not a graph edge)
+        rel_response = e2e_client.post("/api/relationships", json={
+            "source_id": class_ids[0],
+            "target_id": class_ids[1],
+            "property_definition_id": property_definition_id
+        })
+        assert rel_response.status_code == 201, f"Failed to create relationship: {rel_response.text}"
 
         # Build the graph
         build_response = e2e_client.post("/api/graph/build")
         assert build_response.status_code == status.HTTP_200_OK
 
         # Get neighbors of a real node
-        # Note: Whether the node exists in the graph depends on how parent-child relationships
-        # map to graph nodes, which may result in 200 (if edges exist) or 404 (if node not in graph)
         response = e2e_client.get(
             f"/api/graph/nodes/{class_ids[0]}/neighbors?direction=both&depth=1"
         )
-        assert response.status_code in [status.HTTP_200_OK, status.HTTP_404_NOT_FOUND]
-        if response.status_code == status.HTTP_200_OK:
-            body = response.json()
-            assert "node_id" in body
-            assert "direction" in body
-            assert "neighbors" in body
-            assert body["node_id"] == class_ids[0]
-            assert body["direction"] == "both"
-            assert isinstance(body["neighbors"], list)
+        assert response.status_code == status.HTTP_200_OK
+        body = response.json()
+        assert "node_id" in body
+        assert "direction" in body
+        assert "neighbors" in body
+        assert body["node_id"] == class_ids[0]
+        assert body["direction"] == "both"
+        assert isinstance(body["neighbors"], list)
 
     def test_get_neighbors_with_direction_params(self, e2e_client):
         """
         Get neighbors with directional filtering parameters.
 
         Asserts:
-        - Response status is either 200 (OK) if node exists in graph, or 404 (Not Found) if not
-        - If 200: endpoint accepts direction parameter and returns correct structure
+        - Response status is 200 (OK) when node has outgoing edges
+        - Endpoint accepts direction parameter and returns correct structure
         - Uses real entity IDs instead of fabricated test strings
         """
         # Create real entities with parent-child relationships
         taxonomy_id, scheme_id, class_ids = create_test_taxonomy_with_classes(e2e_client, num_classes=2)
+
+        # Create a property definition for relationships
+        prop_response = e2e_client.post("/api/properties", json={
+            "identifier": "extends",
+            "title": "Extends",
+            "description": "Indicates an extension relationship"
+        })
+        assert prop_response.status_code == 201, f"Failed to create property definition: {prop_response.text}"
+        property_definition_id = prop_response.json()["id"]
+
+        # Create explicit Relationship records to form edges in the graph
+        # (parent_class_id is an entity attribute, not a graph edge)
+        rel_response = e2e_client.post("/api/relationships", json={
+            "source_id": class_ids[0],
+            "target_id": class_ids[1],
+            "property_definition_id": property_definition_id
+        })
+        assert rel_response.status_code == 201, f"Failed to create relationship: {rel_response.text}"
 
         # Build the graph
         build_response = e2e_client.post("/api/graph/build")
         assert build_response.status_code == status.HTTP_200_OK
 
         # Get outgoing neighbors of a real node
-        # Note: Whether the node exists in the graph depends on how parent-child relationships
-        # map to graph nodes, which may result in 200 (if edges exist) or 404 (if node not in graph)
         response = e2e_client.get(
             f"/api/graph/nodes/{class_ids[0]}/neighbors?direction=out&depth=2"
         )
-        assert response.status_code in [status.HTTP_200_OK, status.HTTP_404_NOT_FOUND]
-        if response.status_code == status.HTTP_200_OK:
-            body = response.json()
-            assert body["node_id"] == class_ids[0]
-            assert body["direction"] == "out"
-            assert "neighbors" in body
-            assert isinstance(body["neighbors"], list)
+        assert response.status_code == status.HTTP_200_OK
+        body = response.json()
+        assert body["node_id"] == class_ids[0]
+        assert body["direction"] == "out"
+        assert "neighbors" in body
+        assert isinstance(body["neighbors"], list)
 
 
 @pytest.mark.e2e

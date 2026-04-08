@@ -185,22 +185,33 @@ class TestEntityVersions:
         Get a specific version of an entity.
 
         Asserts:
-        - Response status is either 200 (OK) if version exists, or 404 (Not Found) if not
-        - If 200: response includes version, entity_id, and snapshot
+        - Response status is 200 (OK) after version snapshot is created via merge workflow
+        - Response includes version, entity_id, and snapshot
         """
         # Create an entity
         taxonomy_id = create_taxonomy_with_changes(e2e_client)
 
-        # Get version 1
-        # Note: Versioning behavior depends on whether the system maintains version history
-        # May return 404 if versioning is not enabled or version doesn't exist
+        # Get change events for the entity
+        event_ids = get_change_event_ids(e2e_client, taxonomy_id)
+
+        # Create, stage, and submit changeset as proposal
+        proposal_id = create_and_submit_changeset(e2e_client, event_ids, "Version Test Changeset")
+
+        # Approve the proposal
+        approve_response = e2e_client.post(f"/api/v1/versioning/proposals/{proposal_id}/approve")
+        assert approve_response.status_code == status.HTTP_200_OK
+
+        # Merge the proposal (this creates version snapshots)
+        merge_response = e2e_client.post(f"/api/v1/versioning/proposals/{proposal_id}/merge")
+        assert merge_response.status_code == status.HTTP_200_OK
+
+        # Get version 1 (now exists due to merge creating a snapshot)
         response = e2e_client.get(f"/api/v1/versioning/versions/{taxonomy_id}/1")
-        assert response.status_code in [status.HTTP_200_OK, status.HTTP_404_NOT_FOUND]
-        if response.status_code == status.HTTP_200_OK:
-            body = response.json()
-            assert body["version"] == 1
-            assert body["entity_id"] == taxonomy_id
-            assert "snapshot" in body
+        assert response.status_code == status.HTTP_200_OK
+        body = response.json()
+        assert body["version"] == 1
+        assert body["entity_id"] == taxonomy_id
+        assert "snapshot" in body
 
     def test_version_history_tracks_mutations(self, e2e_client):
         """
