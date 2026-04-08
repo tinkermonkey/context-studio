@@ -13,12 +13,15 @@ local_server_root = Path(__file__).parent.parent.parent.parent
 if str(local_server_root) not in sys.path:
     sys.path.insert(0, str(local_server_root))
 
-target_metadata: Any = None
 try:
     from adapters.persistence.sqlite.operations.models import OperationsBase  # noqa: E402
     target_metadata = OperationsBase.metadata
-except ImportError:
-    pass
+except ImportError as e:
+    raise RuntimeError(
+        f"Failed to import OperationsBase for operations database migrations. "
+        f"Ensure adapters/persistence/sqlite/operations/models.py exists and is importable. "
+        f"Original error: {e}"
+    ) from e
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.

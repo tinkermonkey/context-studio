@@ -76,7 +76,7 @@ def run_migrations_offline() -> None:
 
     """
     x_args = context.get_x_argument(as_dictionary=True)
-    url = x_args.get("local_db_url") or config.get_main_option("sqlalchemy.url")
+    url = x_args.get("local_db_url") or config.get_main_option("sqlalchemy.url") or "sqlite:///./local.db"
     context.configure(
         url=url,
         target_metadata=target_metadata,
