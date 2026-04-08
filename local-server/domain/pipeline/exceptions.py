@@ -16,3 +16,8 @@ class PipelineNotFoundError(PipelineError):
 class LayerExecutionError(PipelineError):
     """Raised when a pipeline layer execution fails."""
     pass
+
+
+class InvalidInputError(PipelineError):
+    """Raised when pipeline input validation fails in domain logic."""
+    pass

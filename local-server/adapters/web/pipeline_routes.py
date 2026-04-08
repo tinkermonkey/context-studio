@@ -23,7 +23,7 @@ Error handling translates domain exceptions to appropriate HTTP responses.
 from fastapi import APIRouter, Depends, HTTPException, status
 
 from domain.pipeline.services import PipelineService
-from domain.pipeline.exceptions import PipelineNotFoundError, PipelineError
+from domain.pipeline.exceptions import PipelineNotFoundError, PipelineError, InvalidInputError
 from utils.logger import get_logger
 from utils.async_executor import run_sync_in_executor
 
@@ -47,6 +47,10 @@ def _handle_domain_error(exc: Exception) -> tuple[int, str]:
     """
     Map domain exceptions to HTTP status codes and error messages.
 
+    Handles domain-level exceptions (PipelineError and subclasses) by mapping them to
+    appropriate HTTP status codes. Unexpected exceptions (ValueError, TypeError, etc.)
+    are logged as server errors with full context to aid in debugging.
+
     Args:
         exc: The domain exception
 
@@ -55,12 +59,12 @@ def _handle_domain_error(exc: Exception) -> tuple[int, str]:
     """
     if isinstance(exc, PipelineNotFoundError):
         return (status.HTTP_404_NOT_FOUND, str(exc))
+    elif isinstance(exc, InvalidInputError):
+        return (status.HTTP_400_BAD_REQUEST, str(exc))
     elif isinstance(exc, PipelineError):
         return (status.HTTP_400_BAD_REQUEST, str(exc))
-    elif isinstance(exc, ValueError):
-        return (status.HTTP_400_BAD_REQUEST, str(exc))
     else:
-        # Log the original exception for unexpected errors
+        # All unexpected exceptions are server errors—log with full context
         _logger.error(f"Unexpected error in pipeline endpoint: {exc}", exc_info=exc)
         return (status.HTTP_500_INTERNAL_SERVER_ERROR, "An unexpected error occurred")
 
