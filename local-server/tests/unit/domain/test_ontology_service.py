@@ -1179,6 +1179,144 @@ class TestCreatePropertyDefinition:
             service.create_property_definition(identifier="is_a", title="")
 
 
+class TestGetOrCreatePropertyDefinitionByIdentifier:
+    """Tests for get_or_create_property_definition_by_identifier."""
+
+    def test_get_or_create_creates_new_property(self, service):
+        """First call with new identifier creates a new property definition."""
+        prop = service.get_or_create_property_definition_by_identifier(
+            identifier="is_a",
+            title="Is A",
+            description="Taxonomic is-a relationship",
+        )
+
+        assert prop.id is not None
+        assert prop.identifier == "is_a"
+        assert prop.title == "Is A"
+        assert prop.description == "Taxonomic is-a relationship"
+
+        # Verify PropertyDefinitionCreated event was emitted
+        events = service._event_publisher.get_events_of_type(PropertyDefinitionCreated)
+        assert len(events) == 1
+        assert events[0].property_id == prop.id
+
+    def test_get_or_create_returns_existing_property(self, service):
+        """Second call with same identifier returns existing property without creating duplicate."""
+        # Create first
+        prop1 = service.get_or_create_property_definition_by_identifier(
+            identifier="is_a",
+            title="Is A",
+        )
+
+        # Clear event history from first creation
+        service._event_publisher.clear()
+
+        # Get or create again with same identifier
+        prop2 = service.get_or_create_property_definition_by_identifier(
+            identifier="is_a",
+            title="Is A",
+        )
+
+        # Should return the same property
+        assert prop2.id == prop1.id
+        assert prop2.identifier == prop1.identifier
+
+        # No new event should be emitted
+        events = service._event_publisher.get_events_of_type(PropertyDefinitionCreated)
+        assert len(events) == 0
+
+    def test_get_or_create_ignores_title_on_existing_lookup(self, service):
+        """When property exists, provided title is ignored."""
+        # Create with original title
+        prop1 = service.get_or_create_property_definition_by_identifier(
+            identifier="is_a",
+            title="Is A",
+        )
+
+        # Try to get with different title
+        prop2 = service.get_or_create_property_definition_by_identifier(
+            identifier="is_a",
+            title="Different Title",
+        )
+
+        # Should return the same property with original title
+        assert prop2.id == prop1.id
+        assert prop2.title == "Is A"  # Original title, not "Different Title"
+
+    def test_get_or_create_empty_identifier_raises(self, service):
+        """Empty identifier raises ValueError."""
+        with pytest.raises(ValueError, match="Identifier cannot be empty"):
+            service.get_or_create_property_definition_by_identifier(
+                identifier="",
+                title="Is A",
+            )
+
+    def test_get_or_create_whitespace_identifier_raises(self, service):
+        """Whitespace-only identifier raises ValueError."""
+        with pytest.raises(ValueError, match="Identifier cannot be empty"):
+            service.get_or_create_property_definition_by_identifier(
+                identifier="   ",
+                title="Is A",
+            )
+
+    def test_get_or_create_empty_title_when_creating_raises(self, service):
+        """Empty title when creating new property raises ValueError."""
+        with pytest.raises(ValueError, match="Title cannot be empty when creating"):
+            service.get_or_create_property_definition_by_identifier(
+                identifier="is_a",
+                title="",
+            )
+
+    def test_get_or_create_whitespace_title_when_creating_raises(self, service):
+        """Whitespace-only title when creating new property raises ValueError."""
+        with pytest.raises(ValueError, match="Title cannot be empty when creating"):
+            service.get_or_create_property_definition_by_identifier(
+                identifier="is_a",
+                title="   ",
+            )
+
+    def test_get_or_create_none_title_when_creating_raises(self, service):
+        """None title when creating new property raises ValueError."""
+        with pytest.raises(ValueError, match="Title cannot be empty when creating"):
+            service.get_or_create_property_definition_by_identifier(
+                identifier="is_a",
+                title=None,
+            )
+
+    def test_get_or_create_duplicate_title_with_different_identifier_raises(self, service):
+        """Creating with duplicate title but different identifier raises DuplicateEntityError."""
+        service.get_or_create_property_definition_by_identifier(
+            identifier="is_a",
+            title="Is A",
+        )
+
+        with pytest.raises(DuplicateEntityError, match="title"):
+            service.get_or_create_property_definition_by_identifier(
+                identifier="also_is_a",
+                title="Is A",  # Duplicate title!
+            )
+
+    def test_get_or_create_with_description(self, service):
+        """Create new property with optional description."""
+        prop = service.get_or_create_property_definition_by_identifier(
+            identifier="is_a",
+            title="Is A",
+            description="Taxonomic relationship",
+        )
+
+        assert prop.description == "Taxonomic relationship"
+
+    def test_get_or_create_with_none_description(self, service):
+        """Create new property with None description."""
+        prop = service.get_or_create_property_definition_by_identifier(
+            identifier="is_a",
+            title="Is A",
+            description=None,
+        )
+
+        assert prop.description is None
+
+
 class TestGetAndListOperations:
     """Tests for all get_* and list_* read operations."""
 

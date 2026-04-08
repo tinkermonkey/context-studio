@@ -1241,6 +1241,55 @@ class OntologyService:
             raise EntityNotFoundError("PropertyDefinition", property_id)
         return prop_def
 
+    def get_or_create_property_definition_by_identifier(
+        self,
+        identifier: str,
+        title: str | None = None,
+        description: str | None = None,
+    ) -> PropertyDefinition:
+        """
+        Get an existing property definition by identifier, or create it if not found.
+
+        This method provides idempotent creation: if a property definition with this
+        identifier already exists, it is returned; otherwise a new one is created with
+        the provided title and description.
+
+        Args:
+            identifier: Machine-readable identifier to lookup/create
+            title: Display name for the property (required if creating new)
+            description: Optional longer description (for creation only)
+
+        Returns:
+            The PropertyDefinition (either existing or newly created)
+
+        Raises:
+            ValueError: If identifier is empty, or if creating and title is empty
+            DuplicateEntityError: If a property with this identifier exists but title
+                conflicts with an existing different property (title uniqueness constraint)
+
+        Note:
+            Atomicity relies on the repository implementation providing transaction
+            semantics. If the caller operation fails after this method returns,
+            the caller is responsible for cleanup or explicit rollback.
+        """
+        if not identifier or not identifier.strip():
+            raise ValueError("Identifier cannot be empty")
+
+        # Check if property definition already exists by identifier
+        existing = self._repository.get_property_definition_by_identifier(identifier)
+        if existing:
+            return existing
+
+        # Create new property definition with provided title
+        if not title or not title.strip():
+            raise ValueError("Title cannot be empty when creating a new property definition")
+
+        return self.create_property_definition(
+            identifier=identifier,
+            title=title,
+            description=description,
+        )
+
     def list_property_definitions(self, is_relevant: bool | None = None) -> list[PropertyDefinition]:
         """
         Retrieve property definitions, optionally filtered by relevance.

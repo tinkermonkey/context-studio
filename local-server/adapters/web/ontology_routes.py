@@ -568,28 +568,16 @@ async def create_relationship(
         HTTPException: 400 if invalid (self-loop), 404 if entities not found, 409 if duplicate
     """
     try:
-        # Look up or create the property definition based on relationship_type
-        prop_defs = service.list_property_definitions()
-        prop_def_id = None
-
-        for pd in prop_defs:
-            if pd.identifier == request.relationship_type:
-                prop_def_id = pd.id
-                break
-
-        # If property definition doesn't exist, create it
-        if prop_def_id is None:
-            prop_def = service.create_property_definition(
-                identifier=request.relationship_type,
-                title=request.relationship_type.replace("_", " ").title(),
-                description=None,
-            )
-            prop_def_id = prop_def.id
+        # Get or create the property definition based on relationship_type
+        prop_def = service.get_or_create_property_definition_by_identifier(
+            identifier=request.relationship_type,
+            title=request.relationship_type.replace("_", " ").title(),
+        )
 
         relationship = service.create_relationship(
             source_id=request.source_id,
             target_id=request.target_id,
-            property_definition_id=prop_def_id,
+            property_definition_id=prop_def.id,
         )
         return RelationshipResponse.model_validate(relationship)
     except Exception as exc:
