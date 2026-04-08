@@ -1,4 +1,3 @@
-import os
 import sys
 from pathlib import Path
 from logging.config import fileConfig
@@ -48,7 +47,8 @@ def run_migrations_offline() -> None:
     script output.
 
     """
-    url = os.environ.get("OPERATIONS_DB_URL", "sqlite:///./operations.db")
+    x_args = context.get_x_argument(as_dictionary=True)
+    url = x_args.get("operations_db_url") or "sqlite:///./operations.db"
     context.configure(
         url=url,
         target_metadata=target_metadata,
@@ -67,8 +67,9 @@ def run_migrations_online() -> None:
     and associate a connection with the context.
 
     """
+    x_args = context.get_x_argument(as_dictionary=True)
     configuration = config.get_section(config.config_ini_section) or {}
-    configuration["sqlalchemy.url"] = os.environ.get("OPERATIONS_DB_URL", "sqlite:///./operations.db")
+    configuration["sqlalchemy.url"] = x_args.get("operations_db_url") or "sqlite:///./operations.db"
 
     connectable = engine_from_config(
         configuration,

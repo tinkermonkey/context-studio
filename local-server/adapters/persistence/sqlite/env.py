@@ -36,10 +36,8 @@ if x_args.get("db") == "operations":
     if operations_env_path.exists():
         # Load operations config from the same alembic.ini
         operations_config = Config(str(Path(__file__).parent / "alembic.ini"))
-        operations_config.set_main_option(
-            "sqlalchemy.url",
-            os.environ.get("OPERATIONS_DB_URL", "sqlite:///./operations.db")
-        )
+        operations_db_url = x_args.get("operations_db_url") or "sqlite:///./operations.db"
+        operations_config.set_main_option("sqlalchemy.url", operations_db_url)
 
         # Import and execute operations environment
         spec = importlib.util.spec_from_file_location("operations_env", operations_env_path)
@@ -78,7 +76,8 @@ def run_migrations_offline() -> None:
     script output.
 
     """
-    url = os.environ.get("LOCAL_DB_URL") or config.get_main_option("sqlalchemy.url")
+    x_args = context.get_x_argument(as_dictionary=True)
+    url = x_args.get("local_db_url") or config.get_main_option("sqlalchemy.url")
     context.configure(
         url=url,
         target_metadata=target_metadata,
@@ -97,8 +96,9 @@ def run_migrations_online() -> None:
     and associate a connection with the context.
 
     """
+    x_args = context.get_x_argument(as_dictionary=True)
     config_section = config.get_section(config.config_ini_section) or {}
-    config_section["sqlalchemy.url"] = os.environ.get("LOCAL_DB_URL") or config_section.get("sqlalchemy.url", "sqlite:///./local.db")
+    config_section["sqlalchemy.url"] = x_args.get("local_db_url") or config_section.get("sqlalchemy.url", "sqlite:///./local.db")
     connectable = engine_from_config(
         config_section,
         prefix="sqlalchemy.",
