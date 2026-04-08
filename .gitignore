@@ -7,6 +7,8 @@
 PRPs/
 **/.venv/
 **/test_env/
+**/test_venv/
+build_test_env/
 **/.dr/
 
 # Build and runtime artifacts
