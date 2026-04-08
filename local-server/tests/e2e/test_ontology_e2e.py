@@ -373,6 +373,32 @@ class TestClassHierarchy:
         body = response.json()
         assert body["parent_class_id"] == parent_id
 
+    def test_create_class_with_invalid_parent_fails(self, e2e_client):
+        """
+        Creating a class with a non-existent parent_id fails.
+
+        Asserts:
+        - Status code 404 (Not Found) for missing parent reference
+        """
+        # Create taxonomy and scheme
+        tax_response = e2e_client.post("/api/taxonomies", json={
+            "title": "Invalid Parent Taxonomy"
+        })
+        taxonomy_id = tax_response.json()["id"]
+
+        scheme_response = e2e_client.post(f"/api/taxonomies/{taxonomy_id}/schemes", json={
+            "title": "Invalid Parent Scheme"
+        })
+        scheme_id = scheme_response.json()["id"]
+
+        # Try to create a class with non-existent parent
+        invalid_parent_id = "00000000-0000-0000-0000-000000000000"
+        response = e2e_client.post(f"/api/schemes/{scheme_id}/classes", json={
+            "title": "Orphan Class",
+            "parent_class_id": invalid_parent_id
+        })
+        assert response.status_code == status.HTTP_404_NOT_FOUND
+
     def test_list_classes(self, e2e_client):
         """
         List classes with filtering options.
