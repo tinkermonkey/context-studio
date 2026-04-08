@@ -257,11 +257,13 @@ class FakeGraphEngine:
         """
         subgraph = FakeGraphEngine()
 
-        # Copy only the requested nodes
-        subgraph_nodes = [node for node in self._nodes.values() if node["id"] in node_ids]
+        # Convert to set for O(1) membership testing instead of O(n)
+        node_ids_set = set(node_ids)
+
+        # Copy only the requested nodes using set-based filtering
+        subgraph_nodes = [node for node in self._nodes.values() if node["id"] in node_ids_set]
 
         # Copy only edges where both endpoints are in the subgraph
-        node_ids_set = set(node_ids)
         subgraph_edges = [
             edge for edge in self._edges
             if edge["source_id"] in node_ids_set and edge["target_id"] in node_ids_set
