@@ -13,7 +13,7 @@ These schemas handle serialization/deserialization between HTTP and domain model
 """
 
 from datetime import datetime
-from typing import Optional
+from typing import Optional, Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -81,6 +81,6 @@ class ExecutionResponse(BaseModel):
     tokens_in: int = Field(..., description="Number of tokens in the input")
     tokens_out: int = Field(..., description="Number of tokens in the output")
     duration_ms: int = Field(..., description="Execution duration in milliseconds")
-    status: str = Field(..., description="Completion status (success, error, timeout)")
+    status: Literal["success", "error", "timeout"] = Field(..., description="Completion status (success, error, timeout)")
     error_message: Optional[str] = Field(None, description="Error description if applicable")
     timestamp: datetime = Field(..., description="ISO 8601 execution timestamp")

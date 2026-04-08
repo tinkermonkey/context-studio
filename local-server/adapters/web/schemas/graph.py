@@ -22,6 +22,7 @@ These schemas handle serialization/deserialization between HTTP and domain model
 """
 
 from datetime import datetime
+from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -105,7 +106,7 @@ class NeighborsResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     node_id: str = Field(..., description="ID of the queried node")
-    direction: str = Field(..., description="Direction of traversal: 'in', 'out', or 'both'")
+    direction: Literal["in", "out", "both"] = Field(..., description="Direction of traversal: 'in', 'out', or 'both'")
     neighbors: list[str] = Field(..., description="List of neighboring node IDs")
 
 

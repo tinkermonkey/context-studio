@@ -28,7 +28,7 @@ class ExtractedEntitySchema(BaseModel):
     label: str = Field(..., description="The extracted entity label/name")
     entity_type: str = Field(..., description="Classification of the entity")
     source_layer: int = Field(..., description="Which layer extracted this entity (0-3)")
-    confidence: float = Field(..., description="Confidence score from 0.0 to 1.0")
+    confidence: float = Field(..., ge=0.0, le=1.0, description="Confidence score from 0.0 to 1.0")
     uri: Optional[str] = Field(None, description="Optional URI to external knowledge base")
     description: Optional[str] = Field(None, description="Optional description of the entity")
     matched_class_id: Optional[str] = Field(None, description="ID of matched ontology class, if any")

@@ -20,9 +20,11 @@ These schemas handle serialization/deserialization between HTTP and domain model
 """
 
 from datetime import datetime
-from typing import Optional, Any
+from typing import Optional, Any, TypeVar, Generic
 
 from pydantic import BaseModel, ConfigDict, Field
+
+T = TypeVar("T")
 
 
 # ==================== Taxonomy Schemas ====================
@@ -234,12 +236,12 @@ class PropertyDefinitionResponse(BaseModel):
 
 # ==================== List Response Schemas ====================
 
-class ListResponse(BaseModel):
+class ListResponse(BaseModel, Generic[T]):
     """Generic paginated list response."""
 
     model_config = ConfigDict(from_attributes=True)
 
-    items: list[Any] = Field(..., description="List of items")
+    items: list[T] = Field(..., description="List of items")
     total: int = Field(..., description="Total number of items")
     limit: int = Field(..., description="Limit applied")
     offset: int = Field(..., description="Offset applied")

@@ -4604,6 +4604,11 @@
           },
           "status": {
             "type": "string",
+            "enum": [
+              "success",
+              "error",
+              "timeout"
+            ],
             "title": "Status",
             "description": "Completion status (success, error, timeout)"
           },
@@ -4728,6 +4733,8 @@
           },
           "confidence": {
             "type": "number",
+            "maximum": 1.0,
+            "minimum": 0.0,
             "title": "Confidence",
             "description": "Confidence score from 0.0 to 1.0"
           },
@@ -5122,6 +5129,11 @@
           },
           "direction": {
             "type": "string",
+            "enum": [
+              "in",
+              "out",
+              "both"
+            ],
             "title": "Direction",
             "description": "Direction of traversal: 'in', 'out', or 'both'"
           },
@@ -5821,6 +5833,8 @@
           },
           "confidence": {
             "type": "number",
+            "maximum": 1.0,
+            "minimum": 0.0,
             "title": "Confidence",
             "description": "Confidence score (0.0-1.0)",
             "default": 1.0
