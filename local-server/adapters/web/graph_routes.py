@@ -27,7 +27,6 @@ Error handling translates domain exceptions to appropriate HTTP responses.
 """
 
 from dataclasses import asdict
-from datetime import datetime, timezone
 from typing import Literal, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
