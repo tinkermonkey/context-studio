@@ -13,7 +13,7 @@ import re
 from datetime import datetime, timezone
 from typing import TYPE_CHECKING, Any
 
-from .entities import GraphMetrics, KnowledgeGraph, PathResult, SubgraphResult
+from .entities import GraphMetrics, KnowledgeGraph, PathResult, Subgraph, SubgraphResult
 from .exceptions import GraphError, InvalidAlgorithmError, SPARQLValidationError
 from .ports import GraphEngine, SemanticQueryEngine
 
@@ -210,6 +210,27 @@ class GraphAnalysisService:
         """
         self._ensure_graph()
         return self._graph_engine.degree_distribution()
+
+    def get_degree_distributions(self) -> tuple[dict[str, int], dict[str, int]]:
+        """
+        Get the in-degree and out-degree of each node in the graph.
+
+        For a directed graph, returns separate mappings for in-degree (edges pointing to a node)
+        and out-degree (edges pointing from a node).
+
+        Returns:
+            Tuple of (in_degree_dict, out_degree_dict)
+            - in_degree_dict: Dictionary mapping node ID to in-degree
+            - out_degree_dict: Dictionary mapping node ID to out-degree
+
+        Raises:
+            GraphError: If graph construction fails
+        """
+        self._ensure_graph()
+        return (
+            self._graph_engine.in_degree_distribution(),
+            self._graph_engine.out_degree_distribution(),
+        )
 
     def get_metrics(self, algorithm: str = "betweenness") -> GraphMetrics:
         """
@@ -454,6 +475,43 @@ class GraphAnalysisService:
             edge_count=subgraph.edge_count(),
             is_directed=True,
             last_built=datetime.now(timezone.utc),
+        )
+
+    def extract_subgraph_with_edges(self, node_ids: list[str]) -> Subgraph:
+        """
+        Extract a subgraph containing the specified nodes and all edges between them.
+
+        Returns the actual nodes and edges in the subgraph, not just counts.
+        This is useful for clients that need the complete subgraph data including edges.
+
+        Args:
+            node_ids: List of node IDs to include in the subgraph
+
+        Returns:
+            Subgraph containing node IDs, edges, and counts
+
+        Raises:
+            NodeNotFoundError: If any node in the list does not exist in the graph
+        """
+        self._ensure_graph()
+
+        if not node_ids:
+            raise ValueError("node_ids must contain at least one node ID")
+
+        # Verify all nodes exist in the graph by attempting to get neighbors
+        # neighbors() raises NodeNotFoundError if node doesn't exist
+        for node_id in node_ids:
+            self._graph_engine.neighbors(node_id)
+
+        # Extract subgraph with the specified nodes
+        subgraph = self._graph_engine.subgraph(node_ids)
+        edge_ids = subgraph.edges()
+
+        return Subgraph(
+            node_ids=sorted(node_ids),
+            edge_ids=edge_ids,
+            node_count=subgraph.node_count(),
+            edge_count=subgraph.edge_count(),
         )
 
     def extract_subgraph_by_depth(self, center_node_id: str, depth: int) -> SubgraphResult:

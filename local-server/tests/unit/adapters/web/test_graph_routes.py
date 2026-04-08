@@ -349,7 +349,7 @@ class TestNeighborsEndpoint:
         assert response.status_code == status.HTTP_200_OK
 
     def test_neighbors_response_structure(self, client, repository_with_data):
-        """GET /nodes/{node_id}/neighbors response contains node_id, direction, neighbors."""
+        """GET /nodes/{node_id}/neighbors response contains node_id, direction, incoming, outgoing."""
         classes = repository_with_data.list_classes()
         response = client.get(f"/api/graph/nodes/{classes[0].id}/neighbors")
         assert response.status_code == status.HTTP_200_OK
@@ -357,8 +357,10 @@ class TestNeighborsEndpoint:
 
         assert "node_id" in data
         assert "direction" in data
-        assert "neighbors" in data
-        assert isinstance(data["neighbors"], list)
+        assert "incoming" in data
+        assert "outgoing" in data
+        assert isinstance(data["incoming"], list)
+        assert isinstance(data["outgoing"], list)
         assert data["node_id"] == classes[0].id
         assert data["direction"] == "both"  # Default
 
@@ -389,8 +391,10 @@ class TestNeighborsEndpoint:
         response = client.get(f"/api/graph/nodes/{classes[0].id}/neighbors?depth=2")
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
-        assert "neighbors" in data
-        assert isinstance(data["neighbors"], list)
+        assert "incoming" in data
+        assert "outgoing" in data
+        assert isinstance(data["incoming"], list)
+        assert isinstance(data["outgoing"], list)
 
     def test_neighbors_depth_zero_returns_422(self, client, repository_with_data):
         """GET /nodes/{node_id}/neighbors with depth=0 returns 422 validation error."""
@@ -415,18 +419,20 @@ class TestSubgraphEndpoint:
         assert response.status_code == status.HTTP_200_OK
 
     def test_subgraph_response_structure(self, client, repository_with_data):
-        """GET /subgraph response contains node_count, edge_count, is_directed."""
+        """GET /subgraph response contains nodes, edges, node_count, edge_count."""
         classes = repository_with_data.list_classes()
         response = client.get(f"/api/graph/subgraph?nodes={classes[0].id}")
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
 
+        assert "nodes" in data
+        assert "edges" in data
         assert "node_count" in data
         assert "edge_count" in data
-        assert "is_directed" in data
+        assert isinstance(data["nodes"], list)
+        assert isinstance(data["edges"], list)
         assert isinstance(data["node_count"], int)
         assert isinstance(data["edge_count"], int)
-        assert isinstance(data["is_directed"], bool)
 
     def test_subgraph_with_multiple_nodes(self, client, repository_with_data):
         """GET /subgraph accepts multiple comma-separated node IDs."""
@@ -611,7 +617,7 @@ class TestBuildGraphEndpoint:
         assert "node_count" in data
         assert "edge_count" in data
         assert "is_directed" in data
-        assert "last_built" in data
+        assert "timestamp" in data
         assert isinstance(data["node_count"], int)
         assert isinstance(data["edge_count"], int)
         assert isinstance(data["is_directed"], bool)
@@ -634,14 +640,15 @@ class TestDegreeDistributionEndpoint:
         assert response.status_code == status.HTTP_200_OK
 
     def test_degree_distribution_response_structure(self, client):
-        """GET /degree-distribution response contains node degrees."""
+        """GET /degree-distribution response contains in_degree and out_degree."""
         response = client.get("/api/graph/degree-distribution")
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
 
-        assert "distribution" in data
-        assert "computed_at" in data
-        assert isinstance(data["distribution"], dict)
+        assert "in_degree" in data
+        assert "out_degree" in data
+        assert isinstance(data["in_degree"], dict)
+        assert isinstance(data["out_degree"], dict)
 
     def test_degree_distribution_values_are_integers(self, client):
         """GET /degree-distribution returns integer degree values."""
@@ -649,7 +656,12 @@ class TestDegreeDistributionEndpoint:
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
 
-        for node_id, degree in data["distribution"].items():
+        for node_id, degree in data["in_degree"].items():
+            assert isinstance(node_id, str)
+            assert isinstance(degree, int)
+            assert degree >= 0
+
+        for node_id, degree in data["out_degree"].items():
             assert isinstance(node_id, str)
             assert isinstance(degree, int)
             assert degree >= 0
@@ -661,7 +673,8 @@ class TestDegreeDistributionEndpoint:
         data = response.json()
 
         # Should have entries for classes in the repository
-        assert len(data["distribution"]) > 0
+        assert len(data["in_degree"]) > 0
+        assert len(data["out_degree"]) > 0
 
 
 class TestErrorHandling:

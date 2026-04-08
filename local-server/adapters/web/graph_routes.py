@@ -170,11 +170,7 @@ async def get_degree_distribution(
         HTTPException: 422 if graph error occurs
     """
     try:
-        # Ensure graph is built and compute in/out degree distributions
-        service._ensure_graph()
-        in_degree = service._graph_engine.in_degree_distribution()
-        out_degree = service._graph_engine.out_degree_distribution()
-
+        in_degree, out_degree = service.get_degree_distributions()
         return DegreeDistributionResponse(
             in_degree=in_degree,
             out_degree=out_degree,
@@ -332,24 +328,20 @@ async def get_neighbors(
         HTTPException: 404 if node is not found, 400 if direction is invalid, 422 if graph error occurs
     """
     try:
-        # Ensure graph is built
-        service._ensure_graph()
+        # Get all neighbors of the node using the public service method
+        # The service validates the node exists and raises NodeNotFoundError if not
+        neighbors = service.get_neighbors(node_id, direction=direction, depth=depth)
 
-        # Get the underlying NetworkX graph
-        graph = service._graph_engine._graph
-
-        # Check if node exists in the graph
-        if node_id not in graph:
-            raise NodeNotFoundError(f"Node '{node_id}' not found in graph")
-
-        # Get incoming and outgoing neighbors based on direction
+        # Build separate incoming and outgoing lists for the response
+        # For the GraphAnalysisService, we need to query neighbors for each direction separately
+        # since the service method returns a combined set based on the direction parameter
         incoming = []
         outgoing = []
 
         if direction in ("in", "both"):
-            incoming = sorted([pred for pred, _ in graph.in_edges(node_id)])
+            incoming = sorted(list(service.get_neighbors(node_id, direction="in", depth=depth)))
         if direction in ("out", "both"):
-            outgoing = sorted([succ for _, succ in graph.out_edges(node_id)])
+            outgoing = sorted(list(service.get_neighbors(node_id, direction="out", depth=depth)))
 
         return NeighborsResponse(
             node_id=node_id,
@@ -395,21 +387,14 @@ async def get_subgraph(
                 detail="nodes parameter must contain at least one node ID"
             )
 
-        service.extract_subgraph(node_list)
-        graph = service._graph_engine._graph
-
-        # Extract nodes and edges from the subgraph
-        subgraph_nodes = list(node_list)
-        subgraph_edges = []
-        for source, target in graph.edges():
-            if source in node_list and target in node_list:
-                subgraph_edges.append((source, target))
+        # Use the public service method to extract subgraph with edges
+        subgraph = service.extract_subgraph_with_edges(node_list)
 
         return SubgraphDataResponse(
-            nodes=subgraph_nodes,
-            edges=subgraph_edges,
-            node_count=len(subgraph_nodes),
-            edge_count=len(subgraph_edges),
+            nodes=subgraph.node_ids,
+            edges=subgraph.edge_ids,
+            node_count=subgraph.node_count,
+            edge_count=subgraph.edge_count,
         )
     except (NodeNotFoundError, GraphError) as exc:
         status_code, message = _handle_graph_error(exc)
@@ -441,29 +426,16 @@ async def get_subgraph_by_depth(
     """
     try:
         subgraph_result = service.extract_subgraph_by_depth(node_id, depth)
-        graph = service._graph_engine._graph
 
-        # Extract nodes and edges from the result
-        subgraph_nodes = []
-        subgraph_edges = []
-
-        if hasattr(subgraph_result, 'node_ids'):
-            subgraph_nodes = subgraph_result.node_ids
-        elif hasattr(subgraph_result, 'nodes'):
-            subgraph_nodes = subgraph_result.nodes
-
-        # Build edges list from the graph for nodes in the subgraph
-        for source, target in graph.edges():
-            if source in subgraph_nodes and target in subgraph_nodes:
-                subgraph_edges.append((source, target))
-
+        # Use the domain entity's actual properties (node_ids and edge_ids)
+        # The SubgraphResult dataclass always has these attributes
         return SubgraphResultResponse(
             node_id=node_id,
             subgraph=SubgraphDataResponse(
-                nodes=subgraph_nodes,
-                edges=subgraph_edges,
-                node_count=len(subgraph_nodes),
-                edge_count=len(subgraph_edges),
+                nodes=subgraph_result.node_ids,
+                edges=subgraph_result.edge_ids,
+                node_count=subgraph_result.node_count,
+                edge_count=subgraph_result.edge_count,
             ),
             depth=depth
         )
