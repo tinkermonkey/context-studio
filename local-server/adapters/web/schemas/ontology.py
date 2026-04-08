@@ -129,9 +129,9 @@ class ClassUpdateRequest(BaseModel):
 
 
 class ClassMoveRequest(BaseModel):
-    """Request to move a class to a different parent."""
+    """Request to move a class to a different concept scheme."""
 
-    new_parent_id: Optional[str] = Field(None, description="ID of new parent class, or null to make root")
+    target_scheme_id: str = Field(..., description="ID of the target concept scheme")
 
 
 class ExternalReferenceResponse(BaseModel):
@@ -187,7 +187,7 @@ class RelationshipCreateRequest(BaseModel):
 
     source_id: str = Field(..., description="ID of source entity")
     target_id: str = Field(..., description="ID of target entity")
-    property_definition_id: str = Field(..., description="ID of property definition (relationship type)")
+    relationship_type: str = Field(..., description="Relationship type identifier (e.g., 'related_to', 'parent_of')")
 
 
 class RelationshipResponse(BaseModel):

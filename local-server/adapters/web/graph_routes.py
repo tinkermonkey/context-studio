@@ -57,6 +57,7 @@ from adapters.web.schemas.graph import (
     TripleCountResponse,
     TripleResponse,
     DegreeDistributionResponse,
+    SubgraphDataResponse,
     SubgraphResultResponse,
 )
 
@@ -107,7 +108,9 @@ async def build_graph(
     """
     try:
         graph = service.build_graph()
-        return KnowledgeGraphResponse.model_validate(graph)
+        graph_dict = asdict(graph)
+        graph_dict['timestamp'] = graph_dict.pop('last_built', datetime.now(timezone.utc))
+        return KnowledgeGraphResponse.model_validate(graph_dict)
     except GraphError as exc:
         status_code, message = _handle_graph_error(exc)
         raise HTTPException(status_code=status_code, detail=message)
@@ -154,23 +157,27 @@ async def get_degree_distribution(
     Get the degree distribution across all nodes in the graph.
 
     The degree of a node is the number of edges connected to it. This endpoint
-    provides the raw degree counts for each node, useful for network analysis
+    provides the in-degree and out-degree counts for each node, useful for network analysis
     and topology studies.
 
     Args:
         service: GraphAnalysisService from dependency injection
 
     Returns:
-        DegreeDistributionResponse containing node ID to degree mapping and computed timestamp
+        DegreeDistributionResponse containing node ID to degree mappings
 
     Raises:
         HTTPException: 422 if graph error occurs
     """
     try:
-        distribution = service.get_degree_distribution()
+        # Ensure graph is built and compute in/out degree distributions
+        service._ensure_graph()
+        in_degree = service._graph_engine.in_degree_distribution()
+        out_degree = service._graph_engine.out_degree_distribution()
+
         return DegreeDistributionResponse(
-            distribution=distribution,
-            computed_at=datetime.now(timezone.utc),
+            in_degree=in_degree,
+            out_degree=out_degree,
         )
     except GraphError as exc:
         status_code, message = _handle_graph_error(exc)
@@ -319,17 +326,31 @@ async def get_neighbors(
         service: GraphAnalysisService from dependency injection
 
     Returns:
-        NeighborsResponse containing list of neighboring node IDs
+        NeighborsResponse containing lists of incoming and outgoing neighbors
 
     Raises:
         HTTPException: 404 if node is not found, 400 if direction is invalid, 422 if graph error occurs
     """
     try:
-        neighbors = service.get_neighbors(node_id, direction=direction, depth=depth)
+        # Ensure graph is built
+        service._ensure_graph()
+
+        # Get the underlying NetworkX graph
+        graph = service._graph_engine._graph
+
+        # Get incoming and outgoing neighbors based on direction
+        incoming = []
+        outgoing = []
+
+        if direction in ("in", "both"):
+            incoming = sorted([pred for pred, _ in graph.in_edges(node_id)])
+        if direction in ("out", "both"):
+            outgoing = sorted([succ for _, succ in graph.out_edges(node_id)])
+
         return NeighborsResponse(
             node_id=node_id,
-            direction=direction,
-            neighbors=sorted(list(neighbors)),
+            incoming=incoming,
+            outgoing=outgoing,
         )
     except (NodeNotFoundError, InvalidAlgorithmError, GraphError) as exc:
         status_code, message = _handle_graph_error(exc)
@@ -338,11 +359,11 @@ async def get_neighbors(
 
 # ==================== Subgraph Extraction Endpoints ====================
 
-@router.get("/subgraph", response_model=KnowledgeGraphResponse)
+@router.get("/subgraph", response_model=SubgraphDataResponse)
 async def get_subgraph(
     nodes: str = Query(..., description="Comma-separated list of node IDs to extract subgraph for"),
     service: GraphAnalysisService = Depends(get_graph_service),
-) -> KnowledgeGraphResponse:
+) -> SubgraphDataResponse:
     """
     Extract a subgraph containing the specified nodes and all edges between them.
 
@@ -354,7 +375,7 @@ async def get_subgraph(
         service: GraphAnalysisService from dependency injection
 
     Returns:
-        KnowledgeGraphResponse describing the extracted subgraph
+        SubgraphDataResponse containing the nodes and edges in the subgraph
 
     Raises:
         HTTPException: 404 if any node is not found, 400 if nodes parameter is invalid, 422 if graph error occurs
@@ -369,8 +390,17 @@ async def get_subgraph(
                 detail="nodes parameter must contain at least one node ID"
             )
 
-        subgraph = service.extract_subgraph(node_list)
-        return KnowledgeGraphResponse.model_validate(subgraph)
+        service.extract_subgraph(node_list)
+        graph = service._graph_engine._graph
+
+        # Extract nodes and edges from the subgraph
+        subgraph_nodes = list(node_list)
+        subgraph_edges = []
+        for source, target in graph.edges():
+            if source in node_list and target in node_list:
+                subgraph_edges.append((source, target))
+
+        return SubgraphDataResponse(nodes=subgraph_nodes, edges=subgraph_edges)
     except (NodeNotFoundError, GraphError) as exc:
         status_code, message = _handle_graph_error(exc)
         raise HTTPException(status_code=status_code, detail=message)
@@ -394,14 +424,34 @@ async def get_subgraph_by_depth(
         service: GraphAnalysisService from dependency injection
 
     Returns:
-        SubgraphResultResponse containing center node ID, node count, edge count, depth, and extraction timestamp
+        SubgraphResultResponse containing center node ID, subgraph data, and depth
 
     Raises:
         HTTPException: 404 if center node is not found, 400 if depth is invalid, 422 if graph error occurs
     """
     try:
         subgraph_result = service.extract_subgraph_by_depth(node_id, depth)
-        return SubgraphResultResponse.model_validate(subgraph_result)
+        graph = service._graph_engine._graph
+
+        # Extract nodes and edges from the result
+        subgraph_nodes = []
+        subgraph_edges = []
+
+        if hasattr(subgraph_result, 'node_ids'):
+            subgraph_nodes = subgraph_result.node_ids
+        elif hasattr(subgraph_result, 'nodes'):
+            subgraph_nodes = subgraph_result.nodes
+
+        # Build edges list from the graph for nodes in the subgraph
+        for source, target in graph.edges():
+            if source in subgraph_nodes and target in subgraph_nodes:
+                subgraph_edges.append((source, target))
+
+        return SubgraphResultResponse(
+            node_id=node_id,
+            subgraph=SubgraphDataResponse(nodes=subgraph_nodes, edges=subgraph_edges),
+            depth=depth
+        )
     except (NodeNotFoundError, GraphError) as exc:
         status_code, message = _handle_graph_error(exc)
         raise HTTPException(status_code=status_code, detail=message)

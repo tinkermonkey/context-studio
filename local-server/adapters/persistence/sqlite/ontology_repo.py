@@ -529,6 +529,7 @@ class SQLiteOntologyRepository:
                 orm_entity.title = cls.title  # type: ignore[assignment]
                 orm_entity.description = cls.description  # type: ignore[assignment]
                 orm_entity.parent_class_id = cls.parent_class_id  # type: ignore[assignment]
+                orm_entity.concept_scheme_id = cls.concept_scheme_id  # type: ignore[assignment]
                 orm_entity.structural_property_id = cls.structural_property_id  # type: ignore[assignment]
                 orm_entity.external_references = mapped_orm.external_references  # type: ignore[assignment]
                 orm_entity.lexical_senses = mapped_orm.lexical_senses  # type: ignore[assignment]

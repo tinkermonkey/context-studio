@@ -903,6 +903,47 @@ class OntologyService:
 
         return cls
 
+    def move_class_to_scheme(self, class_id: str, target_scheme_id: str) -> Class:
+        """
+        Move a class to a different concept scheme within the same taxonomy.
+
+        Validates that:
+        - The class exists
+        - The target concept scheme exists
+        - Both the class and target scheme belong to the same taxonomy
+
+        Args:
+            class_id: The ID of the class to move
+            target_scheme_id: The ID of the target concept scheme
+
+        Returns:
+            The updated Class
+
+        Raises:
+            EntityNotFoundError: If the class or target scheme does not exist
+            ValueError: If the target scheme is in a different taxonomy than the class
+        """
+        cls = self._repository.get_class(class_id)
+        if cls is None:
+            raise EntityNotFoundError("Class", class_id)
+
+        target_scheme = self._repository.get_concept_scheme(target_scheme_id)
+        if target_scheme is None:
+            raise EntityNotFoundError("ConceptScheme", target_scheme_id)
+
+        if cls.taxonomy_id != target_scheme.taxonomy_id:
+            raise ValueError(
+                f"Cannot move class to scheme in different taxonomy. "
+                f"Class taxonomy: {cls.taxonomy_id}, target scheme taxonomy: {target_scheme.taxonomy_id}"
+            )
+
+        # Update the class's concept scheme
+        old_scheme_id = cls.concept_scheme_id
+        cls.concept_scheme_id = target_scheme_id
+        cls = self._repository.save_class(cls)
+
+        return cls
+
     # Relationship operations
 
     def create_relationship(

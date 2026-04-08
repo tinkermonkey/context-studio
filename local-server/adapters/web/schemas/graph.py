@@ -52,7 +52,7 @@ class KnowledgeGraphResponse(BaseModel):
     node_count: int = Field(..., description="Number of nodes in the graph")
     edge_count: int = Field(..., description="Number of edges in the graph")
     is_directed: bool = Field(..., description="Whether the graph is directed")
-    last_built: datetime = Field(..., description="Timestamp when the graph was last built")
+    timestamp: datetime = Field(..., description="Timestamp when the graph was last built")
 
 
 class GraphMetricsResponse(BaseModel):
@@ -106,8 +106,8 @@ class NeighborsResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     node_id: str = Field(..., description="ID of the queried node")
-    direction: Literal["in", "out", "both"] = Field(..., description="Direction of traversal: 'in', 'out', or 'both'")
-    neighbors: list[str] = Field(..., description="List of neighboring node IDs")
+    incoming: list[str] = Field(..., description="List of nodes with edges pointing to this node")
+    outgoing: list[str] = Field(..., description="List of nodes this node has edges pointing to")
 
 
 class CycleCheckResponse(BaseModel):
@@ -159,8 +159,17 @@ class DegreeDistributionResponse(BaseModel):
 
     model_config = ConfigDict(from_attributes=True)
 
-    distribution: dict[str, int] = Field(..., description="Mapping of node IDs to their degrees")
-    computed_at: datetime = Field(..., description="Timestamp when distribution was computed")
+    in_degree: dict[str, int] = Field(..., description="Mapping of node IDs to their in-degrees")
+    out_degree: dict[str, int] = Field(..., description="Mapping of node IDs to their out-degrees")
+
+
+class SubgraphDataResponse(BaseModel):
+    """Response containing subgraph nodes and edges."""
+
+    model_config = ConfigDict(from_attributes=True)
+
+    nodes: list[str] = Field(..., description="IDs of all nodes in the subgraph")
+    edges: list[tuple[str, str]] = Field(..., description="Edges connecting nodes in the subgraph as (source, target) tuples")
 
 
 class SubgraphResultResponse(BaseModel):
@@ -168,10 +177,6 @@ class SubgraphResultResponse(BaseModel):
 
     model_config = ConfigDict(from_attributes=True)
 
-    center_node_id: str = Field(..., description="ID of the center node")
-    node_ids: list[str] = Field(..., description="IDs of all nodes in the subgraph")
-    edge_ids: list[tuple[str, str]] = Field(..., description="Edges connecting nodes in the subgraph as (source, target) tuples")
-    node_count: int = Field(..., description="Number of nodes in the subgraph")
-    edge_count: int = Field(..., description="Number of edges in the subgraph")
+    node_id: str = Field(..., description="ID of the center node")
+    subgraph: SubgraphDataResponse = Field(..., description="The extracted subgraph containing nodes and edges")
     depth: int = Field(..., description="Maximum traversal depth from center node")
-    extracted_at: datetime = Field(..., description="Timestamp when the subgraph was extracted")

@@ -499,23 +499,25 @@ async def move_class(
     service: OntologyService = Depends(get_ontology_service),
 ) -> ClassResponse:
     """
-    Move a class to a different parent in the hierarchy.
+    Move a class to a different concept scheme.
 
     Args:
         class_id: The class ID
-        request: ClassMoveRequest with new_parent_id (or None to make root)
+        request: ClassMoveRequest with target_scheme_id
         service: OntologyService from dependency injection
 
     Returns:
-        Updated ClassResponse
+        Updated ClassResponse with new concept_scheme_id
 
     Raises:
-        HTTPException: 400 if invalid, 404 if not found, 422 if circular reference
+        HTTPException: 400 if invalid, 404 if not found
     """
     try:
-        cls = service.move_class(
-            class_id=class_id,
-            new_parent_id=request.new_parent_id,
+        # Use the service method to move the class to a different scheme
+        cls = await run_sync_in_executor(
+            service.move_class_to_scheme,
+            class_id,
+            request.target_scheme_id,
         )
         return ClassResponse.model_validate(cls)
     except Exception as exc:
@@ -556,7 +558,7 @@ async def create_relationship(
     Create a new typed relationship between two entities.
 
     Args:
-        request: RelationshipCreateRequest with source, target, and property definition IDs
+        request: RelationshipCreateRequest with source, target, and relationship_type
         service: OntologyService from dependency injection
 
     Returns:
@@ -566,10 +568,28 @@ async def create_relationship(
         HTTPException: 400 if invalid (self-loop), 404 if entities not found, 409 if duplicate
     """
     try:
+        # Look up or create the property definition based on relationship_type
+        prop_defs = service.list_property_definitions()
+        prop_def_id = None
+
+        for pd in prop_defs:
+            if pd.identifier == request.relationship_type:
+                prop_def_id = pd.id
+                break
+
+        # If property definition doesn't exist, create it
+        if prop_def_id is None:
+            prop_def = service.create_property_definition(
+                identifier=request.relationship_type,
+                title=request.relationship_type.replace("_", " ").title(),
+                description=None,
+            )
+            prop_def_id = prop_def.id
+
         relationship = service.create_relationship(
             source_id=request.source_id,
             target_id=request.target_id,
-            property_definition_id=request.property_definition_id,
+            property_definition_id=prop_def_id,
         )
         return RelationshipResponse.model_validate(relationship)
     except Exception as exc:
