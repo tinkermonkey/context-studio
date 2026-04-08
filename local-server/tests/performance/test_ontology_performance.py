@@ -50,9 +50,9 @@ def _create_test_taxonomy_and_scheme(service: OntologyService) -> tuple[str, str
 
 @pytest.mark.performance
 @pytest.mark.parametrize("num_classes,max_time", [
-    (100, 5.0),
-    (500, 15.0),
-    (1000, 30.0),
+    (100, 0.01),
+    (500, 0.1),
+    (1000, 0.2),
 ])
 def test_bulk_insert_fake_embedding(num_classes: int, max_time: float) -> None:
     """Measure throughput of inserting classes with fake embedding."""
@@ -98,9 +98,9 @@ def test_list_classes(num_classes: int, max_time: float) -> None:
 
 @pytest.mark.performance
 @pytest.mark.parametrize("num_classes,max_time", [
-    (100, 5.0),
-    (500, 15.0),
-    (1000, 30.0),
+    (100, 0.01),
+    (500, 0.1),
+    (1000, 0.24),
 ])
 def test_update_classes(num_classes: int, max_time: float) -> None:
     """Measure throughput of updating classes."""

@@ -2,124 +2,158 @@
 
 Tests measure graph build time, shortest path queries, SPARQL queries, and
 centrality calculations at multiple graph sizes (100, 500, 1000, 5000 nodes).
+Tests exercise the domain GraphAnalysisService through its ports.
 """
 
 import sys
 import os
 import time
 import pytest
+from uuid import uuid4
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
+from domain.graph.services import GraphAnalysisService
+from domain.ontology.entities import Taxonomy, ConceptScheme, Class, Relationship, PropertyDefinition
+from tests.fakes.fake_ontology_repository import FakeOntologyRepository
 from adapters.graph.networkx_engine import NetworkXGraphEngine
 from adapters.graph.rdflib_engine import RDFLibQueryEngine
 
 
-def _create_graph_data(num_nodes: int) -> tuple[list[dict], list[dict]]:
-    """Create test graph data with specified number of nodes.
+def _setup_graph_service(num_nodes: int) -> tuple[GraphAnalysisService, FakeOntologyRepository, list[str]]:
+    """Set up graph analysis service with test data.
+
+    Creates a taxonomy, concept scheme, and classes, building a DAG where
+    each node connects to the next 2 nodes.
 
     Args:
-        num_nodes: Number of nodes to create
+        num_nodes: Number of classes to create
 
     Returns:
-        Tuple of (nodes list, edges list)
+        Tuple of (service, repository, class_ids)
     """
-    nodes = [{"id": f"node_{i}", "title": f"Node {i}", "type": "class"} for i in range(num_nodes)]
+    repository = FakeOntologyRepository()
 
-    # Create edges: each node connects to next 2 nodes (creating a DAG)
-    edges = []
+    # Create taxonomy and concept scheme
+    taxonomy = Taxonomy(id=str(uuid4()), title="Test Taxonomy")
+    scheme = ConceptScheme(id=str(uuid4()), title="Test Scheme", taxonomy_id=taxonomy.id)
+    repository.save_taxonomy(taxonomy)
+    repository.save_concept_scheme(scheme)
+
+    # Create a property definition for relationships
+    prop_def = PropertyDefinition(
+        id=str(uuid4()),
+        identifier="relates_to",
+        title="Relates To"
+    )
+    repository.save_property_definition(prop_def)
+
+    # Create classes
+    class_ids = []
+    for i in range(num_nodes):
+        cls = Class(id=str(uuid4()), title=f"Node_{i}", concept_scheme_id=scheme.id, taxonomy_id=taxonomy.id)
+        repository.save_class(cls)
+        class_ids.append(cls.id)
+
+    # Create edges: each class connects to next 2 classes (creating a DAG)
     for i in range(num_nodes):
         if i + 1 < num_nodes:
-            edges.append({"source_id": f"node_{i}", "target_id": f"node_{i + 1}"})
+            rel = Relationship(
+                id=str(uuid4()),
+                source_id=class_ids[i],
+                target_id=class_ids[i + 1],
+                property_definition_id=prop_def.id
+            )
+            repository.save_relationship(rel)
         if i + 2 < num_nodes:
-            edges.append({"source_id": f"node_{i}", "target_id": f"node_{i + 2}"})
+            rel = Relationship(
+                id=str(uuid4()),
+                source_id=class_ids[i],
+                target_id=class_ids[i + 2],
+                property_definition_id=prop_def.id
+            )
+            repository.save_relationship(rel)
 
-    return nodes, edges
+    # Create service with ports
+    graph_engine = NetworkXGraphEngine()
+    query_engine = RDFLibQueryEngine()
+    service = GraphAnalysisService(repository, graph_engine, query_engine)
+
+    return service, repository, class_ids
 
 
 @pytest.mark.performance
 @pytest.mark.parametrize("num_nodes,max_time", [
-    (100, 0.5),
-    (500, 1.0),
-    (1000, 2.0),
-    (5000, 5.0),
+    (100, 0.002),
+    (500, 0.01),
+    (1000, 0.02),
+    (5000, 0.1),
 ])
 def test_graph_build(num_nodes: int, max_time: float) -> None:
     """Measure time to build a graph with specified number of nodes."""
-    graph = NetworkXGraphEngine()
-    nodes, edges = _create_graph_data(num_nodes)
+    service, repository, class_ids = _setup_graph_service(num_nodes)
 
     start = time.perf_counter()
-    graph.build_from_data(nodes, edges)
+    result = service.build_graph()
     elapsed = time.perf_counter() - start
 
     print(f"\nGraph build ({num_nodes} nodes): {elapsed:.4f}s")
-    assert graph.node_count() == num_nodes
+    # Graph includes: 1 taxonomy + 1 concept scheme + num_nodes classes + 1 property definition
+    assert result.node_count == num_nodes + 3
     assert elapsed < max_time
 
 
 @pytest.mark.performance
 @pytest.mark.parametrize("num_nodes,max_time", [
-    (100, 0.1),
-    (500, 0.1),
-    (1000, 0.2),
-    (5000, 0.5),
+    (100, 0.005),
+    (500, 0.01),
+    (1000, 0.02),
+    (5000, 0.13),
 ])
 def test_shortest_path_query(num_nodes: int, max_time: float) -> None:
     """Measure shortest path query time in a graph of specified size."""
-    graph = NetworkXGraphEngine()
-    nodes, edges = _create_graph_data(num_nodes)
-    graph.build_from_data(nodes, edges)
+    service, repository, class_ids = _setup_graph_service(num_nodes)
 
     start = time.perf_counter()
-    path = graph.shortest_path("node_0", f"node_{num_nodes - 1}")
+    result = service.find_shortest_path(class_ids[0], class_ids[num_nodes - 1])
     elapsed = time.perf_counter() - start
 
     print(f"\nShortest path query ({num_nodes} nodes): {elapsed:.4f}s")
-    assert path is not None
+    assert result is not None
     assert elapsed < max_time
 
 
 @pytest.mark.performance
 @pytest.mark.parametrize("num_nodes,max_time", [
-    (100, 0.5),
-    (500, 2.0),
-    (1000, 5.0),
-    (5000, 120.0),
+    (100, 0.2),
+    (500, 0.5),
+    (1000, 2.5),
+    (5000, 110.0),
 ])
 def test_centrality_calculation(num_nodes: int, max_time: float) -> None:
     """Measure centrality calculation time in a graph of specified size."""
-    graph = NetworkXGraphEngine()
-    nodes, edges = _create_graph_data(num_nodes)
-    graph.build_from_data(nodes, edges)
+    service, repository, class_ids = _setup_graph_service(num_nodes)
 
     start = time.perf_counter()
-    centrality = graph.centrality("betweenness")
+    centrality = service.get_centrality("betweenness")
     elapsed = time.perf_counter() - start
 
     print(f"\nCentrality calculation ({num_nodes} nodes): {elapsed:.4f}s")
-    assert len(centrality) == num_nodes
+    # Graph includes: 1 taxonomy + 1 concept scheme + num_nodes classes + 1 property definition
+    assert len(centrality) == num_nodes + 3
     assert elapsed < max_time
 
 
 @pytest.mark.performance
 @pytest.mark.parametrize("num_nodes,max_time", [
-    (100, 0.5),
-    (500, 1.0),
-    (1000, 2.0),
-    (5000, 5.0),
+    (100, 0.3),
+    (500, 0.1),
+    (1000, 0.3),
+    (5000, 1.0),
 ])
 def test_sparql_query(num_nodes: int, max_time: float) -> None:
     """Measure SPARQL query execution time in a graph of specified size."""
-    # Create RDF-based query engine
-    engine = RDFLibQueryEngine()
-    nodes, edges = _create_graph_data(num_nodes)
-
-    # Load ontology into RDF graph
-    start = time.perf_counter()
-    engine.load_ontology(nodes, edges, [])
-    elapsed = time.perf_counter() - start
-    print(f"\nSPARQL graph load ({num_nodes} nodes): {elapsed:.4f}s")
+    service, repository, class_ids = _setup_graph_service(num_nodes)
 
     # Execute a simple SPARQL query to count entities
     sparql_query = """
@@ -135,7 +169,7 @@ def test_sparql_query(num_nodes: int, max_time: float) -> None:
     """
 
     start = time.perf_counter()
-    results = engine.execute_sparql(sparql_query)
+    results = service.execute_sparql(sparql_query)
     elapsed = time.perf_counter() - start
 
     print(f"\nSPARQL query ({num_nodes} nodes): {elapsed:.4f}s")
