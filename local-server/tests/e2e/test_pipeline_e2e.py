@@ -7,7 +7,7 @@ with a fully initialized application using real databases and real adapters.
 Tests verify:
 - Pipeline configuration CRUD operations
 - Execution triggering and record retrieval
-- Validation of invalid provider/model inputs
+- Validation of invalid provider inputs
 - Delete cascade behavior
 """
 

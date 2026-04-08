@@ -790,4 +790,4 @@ class TestCycleDetection:
         assert "source_id" in body
         assert "target_id" in body
         assert "would_create_cycle" in body
-        assert isinstance(body["would_create_cycle"], bool)
+        assert body["would_create_cycle"] is True
