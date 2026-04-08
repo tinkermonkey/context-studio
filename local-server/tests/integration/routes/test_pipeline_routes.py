@@ -546,8 +546,6 @@ class TestPipelineErrorHandling:
 
     def test_unexpected_error_returns_500(self, client, monkeypatch):
         """Unexpected exceptions (e.g., ValueError) return 500."""
-        from adapters.web.pipeline_routes import get_pipeline_configuration
-
         # Create a pipeline first
         create_response = client.post(
             "/api/pipelines",
@@ -582,8 +580,6 @@ class TestPipelineErrorHandling:
 
     def test_type_error_returns_500(self, client):
         """TypeError (another unexpected exception) returns 500."""
-        from adapters.web.pipeline_routes import router
-
         # Create a pipeline first
         create_response = client.post(
             "/api/pipelines",
