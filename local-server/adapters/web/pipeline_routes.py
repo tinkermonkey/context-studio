@@ -51,6 +51,12 @@ def _handle_domain_error(exc: Exception) -> tuple[int, str]:
     appropriate HTTP status codes. Unexpected exceptions (ValueError, TypeError, etc.)
     are logged as server errors with full context to aid in debugging.
 
+    Exception Ordering:
+        LayerExecutionError MUST be checked before PipelineError. Since LayerExecutionError
+        is a subclass of PipelineError, checking PipelineError first would incorrectly
+        return HTTP 400 instead of HTTP 500. The order is: PipelineNotFoundError →
+        LayerExecutionError → PipelineError → other exceptions.
+
     Args:
         exc: The domain exception
 
