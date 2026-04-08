@@ -328,13 +328,7 @@ async def get_neighbors(
         HTTPException: 404 if node is not found, 400 if direction is invalid, 422 if graph error occurs
     """
     try:
-        # Get all neighbors of the node using the public service method
-        # The service validates the node exists and raises NodeNotFoundError if not
-        neighbors = service.get_neighbors(node_id, direction=direction, depth=depth)
-
         # Build separate incoming and outgoing lists for the response
-        # For the GraphAnalysisService, we need to query neighbors for each direction separately
-        # since the service method returns a combined set based on the direction parameter
         incoming = []
         outgoing = []
 
