@@ -938,7 +938,6 @@ class OntologyService:
             )
 
         # Update the class's concept scheme
-        old_scheme_id = cls.concept_scheme_id
         cls.concept_scheme_id = target_scheme_id
         cls = self._repository.save_class(cls)
 
