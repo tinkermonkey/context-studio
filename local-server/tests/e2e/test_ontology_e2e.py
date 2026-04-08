@@ -441,86 +441,141 @@ class TestClassHierarchy:
         body = response.json()
         assert all(c["concept_scheme_id"] == scheme_id for c in body["items"])
 
-    def test_move_class_to_new_parent(self, e2e_client):
+    def test_move_class_to_different_scheme(self, e2e_client):
         """
-        Move a class to a different parent.
+        Move a class from one concept scheme to another within the same taxonomy.
 
         Asserts:
         - Status code 200 (OK)
-        - parent_class_id is updated to new parent
+        - concept_scheme_id is updated to target scheme
         """
-        # Setup: create taxonomy, scheme, and classes
+        # Setup: create taxonomy and two schemes
         tax_response = e2e_client.post("/api/taxonomies", json={
             "title": "Move Class Taxonomy"
         })
         taxonomy_id = tax_response.json()["id"]
 
-        scheme_response = e2e_client.post(f"/api/taxonomies/{taxonomy_id}/schemes", json={
-            "title": "Move Class Scheme"
+        scheme1_response = e2e_client.post(f"/api/taxonomies/{taxonomy_id}/schemes", json={
+            "title": "Source Scheme"
         })
-        scheme_id = scheme_response.json()["id"]
+        scheme1_id = scheme1_response.json()["id"]
 
-        parent1_response = e2e_client.post(f"/api/schemes/{scheme_id}/classes", json={
-            "title": "Parent 1"
+        scheme2_response = e2e_client.post(f"/api/taxonomies/{taxonomy_id}/schemes", json={
+            "title": "Target Scheme"
         })
-        parent1_id = parent1_response.json()["id"]
+        scheme2_id = scheme2_response.json()["id"]
 
-        parent2_response = e2e_client.post(f"/api/schemes/{scheme_id}/classes", json={
-            "title": "Parent 2"
+        # Create a root-level class in scheme1
+        class_response = e2e_client.post(f"/api/schemes/{scheme1_id}/classes", json={
+            "title": "Test Class"
         })
-        parent2_id = parent2_response.json()["id"]
+        class_id = class_response.json()["id"]
 
-        child_response = e2e_client.post(f"/api/schemes/{scheme_id}/classes", json={
-            "title": "Child",
-            "parent_class_id": parent1_id
-        })
-        child_id = child_response.json()["id"]
+        # Verify initial state
+        assert class_response.json()["concept_scheme_id"] == scheme1_id
 
-        # Move child to parent2
-        response = e2e_client.post(f"/api/classes/{child_id}/move", json={
-            "new_parent_id": parent2_id
+        # Move class to scheme2
+        response = e2e_client.post(f"/api/classes/{class_id}/move", json={
+            "target_scheme_id": scheme2_id
         })
         assert response.status_code == status.HTTP_200_OK
         body = response.json()
-        assert body["parent_class_id"] == parent2_id
+        assert body["concept_scheme_id"] == scheme2_id
 
-    def test_move_class_to_root(self, e2e_client):
+    def test_move_class_to_scheme_different_taxonomy_fails(self, e2e_client):
         """
-        Move a child class to root level (no parent).
+        Moving a class to a scheme in a different taxonomy fails.
 
         Asserts:
-        - Status code 200 (OK)
-        - parent_class_id becomes None
+        - Status code 400 (Bad Request)
+        - Error message indicates taxonomy mismatch
         """
-        # Setup
+        # Setup: create two taxonomies with schemes
+        tax1_response = e2e_client.post("/api/taxonomies", json={
+            "title": "Taxonomy 1"
+        })
+        taxonomy1_id = tax1_response.json()["id"]
+
+        tax2_response = e2e_client.post("/api/taxonomies", json={
+            "title": "Taxonomy 2"
+        })
+        taxonomy2_id = tax2_response.json()["id"]
+
+        scheme1_response = e2e_client.post(f"/api/taxonomies/{taxonomy1_id}/schemes", json={
+            "title": "Scheme 1"
+        })
+        scheme1_id = scheme1_response.json()["id"]
+
+        scheme2_response = e2e_client.post(f"/api/taxonomies/{taxonomy2_id}/schemes", json={
+            "title": "Scheme 2"
+        })
+        scheme2_id = scheme2_response.json()["id"]
+
+        # Create class in scheme1
+        class_response = e2e_client.post(f"/api/schemes/{scheme1_id}/classes", json={
+            "title": "Test Class"
+        })
+        class_id = class_response.json()["id"]
+
+        # Try to move to scheme2 (different taxonomy)
+        response = e2e_client.post(f"/api/classes/{class_id}/move", json={
+            "target_scheme_id": scheme2_id
+        })
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+
+    def test_move_nonexistent_class_fails(self, e2e_client):
+        """
+        Moving a non-existent class fails with 404.
+
+        Asserts:
+        - Status code 404 (Not Found)
+        """
+        # Setup: create taxonomy and scheme
         tax_response = e2e_client.post("/api/taxonomies", json={
-            "title": "Move to Root Taxonomy"
+            "title": "Nonexistent Class Move Taxonomy"
         })
         taxonomy_id = tax_response.json()["id"]
 
         scheme_response = e2e_client.post(f"/api/taxonomies/{taxonomy_id}/schemes", json={
-            "title": "Move to Root Scheme"
+            "title": "Nonexistent Class Move Scheme"
         })
         scheme_id = scheme_response.json()["id"]
 
-        parent_response = e2e_client.post(f"/api/schemes/{scheme_id}/classes", json={
-            "title": "Parent"
+        # Try to move a non-existent class
+        response = e2e_client.post(f"/api/classes/nonexistent-id/move", json={
+            "target_scheme_id": scheme_id
         })
-        parent_id = parent_response.json()["id"]
+        assert response.status_code == status.HTTP_404_NOT_FOUND
 
-        child_response = e2e_client.post(f"/api/schemes/{scheme_id}/classes", json={
-            "title": "Child",
-            "parent_class_id": parent_id
-        })
-        child_id = child_response.json()["id"]
+    def test_move_to_nonexistent_scheme_fails(self, e2e_client):
+        """
+        Moving a class to a non-existent scheme fails with 404.
 
-        # Move child to root
-        response = e2e_client.post(f"/api/classes/{child_id}/move", json={
-            "new_parent_id": None
+        Asserts:
+        - Status code 404 (Not Found)
+        """
+        # Setup: create taxonomy and scheme
+        tax_response = e2e_client.post("/api/taxonomies", json={
+            "title": "Nonexistent Scheme Move Taxonomy"
         })
-        assert response.status_code == status.HTTP_200_OK
-        body = response.json()
-        assert body["parent_class_id"] is None
+        taxonomy_id = tax_response.json()["id"]
+
+        scheme_response = e2e_client.post(f"/api/taxonomies/{taxonomy_id}/schemes", json={
+            "title": "Nonexistent Scheme Move Scheme"
+        })
+        scheme_id = scheme_response.json()["id"]
+
+        # Create a class
+        class_response = e2e_client.post(f"/api/schemes/{scheme_id}/classes", json={
+            "title": "Class for Nonexistent Scheme Move"
+        })
+        class_id = class_response.json()["id"]
+
+        # Try to move to a non-existent scheme
+        response = e2e_client.post(f"/api/classes/{class_id}/move", json={
+            "target_scheme_id": "nonexistent-scheme-id"
+        })
+        assert response.status_code == status.HTTP_404_NOT_FOUND
 
     def test_delete_root_class_with_children_fails(self, e2e_client):
         """
