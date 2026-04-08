@@ -31,8 +31,8 @@ from domain.versioning.value_objects import ChangeOperation
 from adapters.persistence.sqlite.models import Base
 from adapters.persistence.sqlite.change_repo import SQLiteChangeRepository
 from adapters.sync.noop_sync import NoOpSyncTarget
+from adapters.events.in_process import InProcessEventPublisher
 from adapters.web.versioning_routes import router
-from tests.fakes.fake_event_publisher import FakeEventPublisher
 
 
 @pytest.fixture
@@ -70,8 +70,8 @@ def sync_target():
 
 @pytest.fixture
 def event_publisher():
-    """Create a FakeEventPublisher for testing."""
-    return FakeEventPublisher()
+    """Create an event publisher for testing."""
+    return InProcessEventPublisher()
 
 
 @pytest.fixture

@@ -19,6 +19,7 @@ import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 import pytest
+from datetime import datetime
 from fastapi import status
 from uuid import uuid4
 
@@ -125,21 +126,21 @@ class TestExtractionWorkflow:
         })
         body = response.json()
 
-        # Check entity structure (if any entities were found)
-        if body["extracted_entities"]:
-            for entity in body["extracted_entities"]:
-                assert "id" in entity
-                assert "label" in entity
-                assert "entity_type" in entity
-                assert "source_layer" in entity
-                assert "confidence" in entity
+        # Check entity structure (entities should be found in extraction)
+        assert body["extracted_entities"], "Expected at least one extracted entity"
+        for entity in body["extracted_entities"]:
+            assert "id" in entity
+            assert "label" in entity
+            assert "entity_type" in entity
+            assert "source_layer" in entity
+            assert "confidence" in entity
 
-                # Verify types
-                assert isinstance(entity["id"], str)
-                assert isinstance(entity["label"], str)
-                assert isinstance(entity["entity_type"], str)
-                assert isinstance(entity["source_layer"], int)
-                assert isinstance(entity["confidence"], float)
+            # Verify types
+            assert isinstance(entity["id"], str)
+            assert isinstance(entity["label"], str)
+            assert isinstance(entity["entity_type"], str)
+            assert isinstance(entity["source_layer"], int)
+            assert isinstance(entity["confidence"], float)
 
     def test_extract_total_duration_positive(self, e2e_client):
         """
@@ -166,7 +167,6 @@ class TestExtractionWorkflow:
         })
         body = response.json()
         # Should be ISO 8601 string, verify it can be parsed
-        from datetime import datetime
         try:
             datetime.fromisoformat(body["created_at"])
         except ValueError:
@@ -475,12 +475,12 @@ class TestReferenceEnrichment:
         body = response.json()
 
         # Check if enrichment added metadata
-        if body["extracted_entities"]:
-            entity = body["extracted_entities"][0]
-            # Entity should still have all original fields
-            assert "id" in entity
-            assert "label" in entity
-            assert "confidence" in entity
+        assert body["extracted_entities"], "Expected at least one enriched entity"
+        entity = body["extracted_entities"][0]
+        # Entity should still have all original fields
+        assert "id" in entity
+        assert "label" in entity
+        assert "confidence" in entity
 
 
 @pytest.mark.e2e
@@ -493,13 +493,23 @@ class TestExtractionDeduplication:
 
         Asserts:
         - Status code 200 (OK)
-        - Entities with same label are merged or deduplicated
+        - Entities with same label are deduplicated (no duplicate labels in results)
+        - Deduplication reduces entity count compared to raw extraction
         """
         response = e2e_client.post("/api/extract", json={
-            "text": "SQLite database SQLite engine."
+            "text": "SQLite database SQLite engine SQLite system."
         })
         assert response.status_code == status.HTTP_200_OK
-        # If deduplication works, similar entities should be merged
+        body = response.json()
+
+        # Verify that entities were extracted
+        assert "extracted_entities" in body
+        entities = body["extracted_entities"]
+        assert len(entities) > 0, "Expected entities to be extracted"
+
+        # Verify deduplication: check that no entity label appears multiple times
+        entity_labels = [entity["label"] for entity in entities]
+        assert len(entity_labels) == len(set(entity_labels)), "Duplicate entity labels found - deduplication failed"
 
     def test_extract_maintains_unique_entities(self, e2e_client):
         """
@@ -507,12 +517,28 @@ class TestExtractionDeduplication:
 
         Asserts:
         - Status code 200 (OK)
-        - Response contains multiple unique entities
+        - Response contains multiple unique entities (different labels)
+        - All extracted entities have required fields
         """
         response = e2e_client.post("/api/extract", json={
-            "text": "Python is a programming language. Postgres is a database."
+            "text": "Python is a programming language. Postgres is a database. Java is another language."
         })
         assert response.status_code == status.HTTP_200_OK
         body = response.json()
+
         # Verify response structure is valid
         assert "extracted_entities" in body
+        entities = body["extracted_entities"]
+
+        # Verify we have at least one entity
+        assert len(entities) > 0, "Expected at least one entity to be extracted"
+
+        # Verify each entity has required fields
+        for entity in entities:
+            assert "id" in entity, "Entity missing id field"
+            assert "label" in entity, "Entity missing label field"
+            assert "entity_type" in entity, "Entity missing entity_type field"
+
+        # Verify uniqueness: different entities should have different labels
+        entity_labels = [entity["label"] for entity in entities]
+        assert len(entity_labels) == len(set(entity_labels)), "Duplicate entity labels found - uniqueness not maintained"
