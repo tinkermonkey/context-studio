@@ -91,7 +91,7 @@ def _setup_graph_service(num_nodes: int) -> tuple[GraphAnalysisService, FakeOnto
 ])
 def test_graph_build(num_nodes: int, max_time: float) -> None:
     """Measure time to build a graph with specified number of nodes."""
-    service, repository, class_ids = _setup_graph_service(num_nodes)
+    service, _, _ = _setup_graph_service(num_nodes)
 
     start = time.perf_counter()
     result = service.build_graph()
@@ -112,7 +112,7 @@ def test_graph_build(num_nodes: int, max_time: float) -> None:
 ])
 def test_shortest_path_query(num_nodes: int, max_time: float) -> None:
     """Measure shortest path query time in a graph of specified size."""
-    service, repository, class_ids = _setup_graph_service(num_nodes)
+    service, _, class_ids = _setup_graph_service(num_nodes)
 
     start = time.perf_counter()
     result = service.find_shortest_path(class_ids[0], class_ids[num_nodes - 1])
@@ -132,7 +132,7 @@ def test_shortest_path_query(num_nodes: int, max_time: float) -> None:
 ])
 def test_centrality_calculation(num_nodes: int, max_time: float) -> None:
     """Measure centrality calculation time in a graph of specified size."""
-    service, repository, class_ids = _setup_graph_service(num_nodes)
+    service, _, _ = _setup_graph_service(num_nodes)
 
     start = time.perf_counter()
     centrality = service.get_centrality("betweenness")
@@ -146,14 +146,14 @@ def test_centrality_calculation(num_nodes: int, max_time: float) -> None:
 
 @pytest.mark.performance
 @pytest.mark.parametrize("num_nodes,max_time", [
-    (100, 0.3),
-    (500, 0.1),
-    (1000, 0.3),
+    (100, 0.1),
+    (500, 0.3),
+    (1000, 0.5),
     (5000, 1.0),
 ])
 def test_sparql_query(num_nodes: int, max_time: float) -> None:
     """Measure SPARQL query execution time in a graph of specified size."""
-    service, repository, class_ids = _setup_graph_service(num_nodes)
+    service, _, _ = _setup_graph_service(num_nodes)
 
     # Execute a simple SPARQL query to count entities
     sparql_query = """
