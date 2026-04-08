@@ -1,5 +1,4 @@
 import sys
-import os
 import importlib.util
 from pathlib import Path
 from logging.config import fileConfig

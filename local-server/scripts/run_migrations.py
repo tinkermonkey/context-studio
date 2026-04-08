@@ -73,12 +73,18 @@ def main():
         if idx + 1 < len(alembic_args):
             local_db_url = alembic_args[idx + 1]
             alembic_args = alembic_args[:idx] + alembic_args[idx + 2:]
+        else:
+            print("Error: --local-db-url requires a value")
+            sys.exit(1)
 
     if "--operations-db-url" in alembic_args:
         idx = alembic_args.index("--operations-db-url")
         if idx + 1 < len(alembic_args):
             operations_db_url = alembic_args[idx + 1]
             alembic_args = alembic_args[:idx] + alembic_args[idx + 2:]
+        else:
+            print("Error: --operations-db-url requires a value")
+            sys.exit(1)
 
     if database == "all":
         print("Running migrations for local.db...")
