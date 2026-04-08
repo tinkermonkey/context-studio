@@ -109,7 +109,7 @@ async def build_graph(
     try:
         graph = service.build_graph()
         graph_dict = asdict(graph)
-        graph_dict['timestamp'] = graph_dict.pop('last_built', datetime.now(timezone.utc))
+        graph_dict['timestamp'] = graph_dict.pop('last_built')
         return KnowledgeGraphResponse.model_validate(graph_dict)
     except GraphError as exc:
         status_code, message = _handle_graph_error(exc)

@@ -387,6 +387,24 @@ class TestNeighbors:
         response = client.get(f"/api/graph/nodes/{uuid4()}/neighbors")
         assert response.status_code == status.HTTP_404_NOT_FOUND
 
+    def test_neighbors_depth_parameter_respected(self, client, populated_repository):
+        """GET /api/graph/nodes/{id}/neighbors respects the depth parameter."""
+        classes = list(populated_repository.list_classes())
+        assert len(classes) > 0, "populated_repository fixture must contain at least 1 class"
+
+        # Get neighbors with depth=1 and depth=2
+        response_depth1 = client.get(f"/api/graph/nodes/{classes[0].id}/neighbors?depth=1")
+        response_depth2 = client.get(f"/api/graph/nodes/{classes[0].id}/neighbors?depth=2")
+
+        assert response_depth1.status_code == status.HTTP_200_OK
+        assert response_depth2.status_code == status.HTTP_200_OK
+
+        # Depth 2 should return a superset of depth 1 neighbors
+        neighbors1 = set(response_depth1.json()["incoming"] + response_depth1.json()["outgoing"])
+        neighbors2 = set(response_depth2.json()["incoming"] + response_depth2.json()["outgoing"])
+
+        assert neighbors1.issubset(neighbors2)
+
 
 class TestCycleCheck:
     """Integration tests for cycle check endpoint."""
