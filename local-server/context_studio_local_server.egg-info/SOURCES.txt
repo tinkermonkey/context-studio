@@ -1,9 +1,0 @@
-pyproject.toml
-adapters/__init__.py
-context_studio_local_server.egg-info/PKG-INFO
-context_studio_local_server.egg-info/SOURCES.txt
-context_studio_local_server.egg-info/dependency_links.txt
-context_studio_local_server.egg-info/top_level.txt
-domain/__init__.py
-domain/events.py
-domain/ports.py
