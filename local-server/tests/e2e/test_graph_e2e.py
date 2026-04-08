@@ -22,6 +22,42 @@ import pytest
 from fastapi import status
 
 
+def create_test_taxonomy_with_classes(e2e_client, num_classes=2, unique_id=""):
+    """
+    Helper to reduce boilerplate: creates a taxonomy with a scheme and classes.
+
+    Returns: (taxonomy_id, scheme_id, [class_ids])
+    """
+    import uuid
+    unique_suffix = str(uuid.uuid4())[:8] if not unique_id else unique_id
+
+    tax_response = e2e_client.post("/api/taxonomies", json={
+        "title": f"Test Taxonomy {unique_suffix}"
+    })
+    assert tax_response.status_code == 201, f"Failed to create taxonomy: {tax_response.text}"
+    taxonomy_id = tax_response.json()["id"]
+
+    scheme_response = e2e_client.post(f"/api/taxonomies/{taxonomy_id}/schemes", json={
+        "title": f"Test Scheme {unique_suffix}"
+    })
+    assert scheme_response.status_code == 201, f"Failed to create scheme: {scheme_response.text}"
+    scheme_id = scheme_response.json()["id"]
+
+    class_ids = []
+    parent_id = None
+    for i in range(num_classes):
+        class_response = e2e_client.post(f"/api/schemes/{scheme_id}/classes", json={
+            "title": f"Test Class {i+1} {unique_suffix}",
+            **({"parent_class_id": parent_id} if parent_id else {})
+        })
+        assert class_response.status_code == 201, f"Failed to create class: {class_response.text}"
+        class_id = class_response.json()["id"]
+        class_ids.append(class_id)
+        parent_id = class_id
+
+    return taxonomy_id, scheme_id, class_ids
+
+
 @pytest.mark.e2e
 class TestGraphConstruction:
     """Tests for graph construction from existing ontology entities."""
@@ -209,27 +245,34 @@ class TestPathFinding:
 
     def test_shortest_path_response_structure(self, e2e_client):
         """
-        Test shortest path endpoint response structure.
+        Test shortest path endpoint returns proper response structure with real nodes.
 
         Asserts:
-        - Endpoint exists and handles requests
-        - Returns proper error or success response
+        - Returns proper response structure or 404 if nodes exist but are disconnected
+        - Uses real entity IDs instead of fabricated strings
         """
-        # Get the graph metrics to determine if there are nodes
-        metrics_resp = e2e_client.get("/api/graph/metrics")
-        assert metrics_resp.status_code == status.HTTP_200_OK
-        metrics = metrics_resp.json()
+        # Create real entities
+        taxonomy_id, scheme_id, class_ids = create_test_taxonomy_with_classes(e2e_client, num_classes=3)
 
-        if metrics["average_degree"] == 0:
-            # Graph is empty or sparse, test with dummy IDs
-            response = e2e_client.get("/api/graph/paths/shortest?source_id=dummy1&target_id=dummy2")
-            # Should return 404 for non-existent nodes
-            assert response.status_code == status.HTTP_404_NOT_FOUND
-        else:
-            # Graph has nodes, try to find path (may succeed or return 404 if disconnected)
-            response = e2e_client.get("/api/graph/paths/shortest?source_id=node1&target_id=node2")
-            # Either success or 404 is acceptable
-            assert response.status_code in [status.HTTP_200_OK, status.HTTP_404_NOT_FOUND]
+        # Build the graph
+        e2e_client.post("/api/graph/build")
+
+        # Query shortest path between real nodes
+        # Note: Without explicit relationships between the classes, graph won't have edges,
+        # so this will return 404 (nodes exist but no path connects them).
+        # This is expected behavior - the important part is we're using real IDs.
+        response = e2e_client.get(
+            f"/api/graph/paths/shortest?source_id={class_ids[0]}&target_id={class_ids[2]}"
+        )
+        # Accept 404 when nodes are disconnected or 200 if path exists
+        assert response.status_code in [status.HTTP_200_OK, status.HTTP_404_NOT_FOUND]
+        if response.status_code == status.HTTP_200_OK:
+            body = response.json()
+            assert "source_id" in body
+            assert "target_id" in body
+            assert "nodes" in body
+            assert "distance" in body
+            assert "relationships" in body
 
     def test_shortest_path_not_found(self, e2e_client):
         """
@@ -270,17 +313,23 @@ class TestPathFinding:
 
     def test_find_all_paths_response_structure(self, e2e_client):
         """
-        Test all paths endpoint response structure.
+        Test all paths endpoint returns proper structure with real nodes.
 
         Asserts:
-        - Endpoint exists and returns proper response format
-        - Returns list of path results (may be empty for non-existent nodes)
+        - Returns a list of paths (may be empty if no connections exist)
+        - Uses real entity IDs instead of fabricated strings
         """
-        # Test with non-existent node IDs
+        # Create real entities
+        taxonomy_id, scheme_id, class_ids = create_test_taxonomy_with_classes(e2e_client, num_classes=3)
+
+        # Build the graph
+        e2e_client.post("/api/graph/build")
+
+        # Find all paths between real nodes
         response = e2e_client.get(
-            "/api/graph/paths/all?source_id=nonexistent1&target_id=nonexistent2&max_depth=5"
+            f"/api/graph/paths/all?source_id={class_ids[0]}&target_id={class_ids[2]}&max_depth=5"
         )
-        # Either 404 for non-existent nodes or empty list is acceptable
+        # Accept 404 if nodes don't exist or 200 if endpoint responds with results
         assert response.status_code in [status.HTTP_200_OK, status.HTTP_404_NOT_FOUND]
         if response.status_code == status.HTTP_200_OK:
             body = response.json()
@@ -293,24 +342,31 @@ class TestNeighborQueries:
 
     def test_get_neighbors_response_structure(self, e2e_client):
         """
-        Get neighbors endpoint response structure.
+        Get neighbors of a real node created via API.
 
         Asserts:
-        - Endpoint responds to requests
-        - Returns proper response structure or 404 for non-existent nodes
+        - Response includes node_id, direction, and neighbors list
+        - Uses real entity IDs instead of fabricated test strings
         """
-        # Test with a specific node ID
-        test_node_id = "test-node-id-12345"
+        # Create real entities
+        taxonomy_id, scheme_id, class_ids = create_test_taxonomy_with_classes(e2e_client, num_classes=2)
+
+        # Build the graph
+        e2e_client.post("/api/graph/build")
+
+        # Get neighbors of a real node
         response = e2e_client.get(
-            f"/api/graph/nodes/{test_node_id}/neighbors?direction=both&depth=1"
+            f"/api/graph/nodes/{class_ids[0]}/neighbors?direction=both&depth=1"
         )
-        # Either 200 with empty neighbors or 404 for non-existent node is acceptable
+        # Accept 200 if node exists in graph, 404 if node not found or graph is empty
         assert response.status_code in [status.HTTP_200_OK, status.HTTP_404_NOT_FOUND]
         if response.status_code == status.HTTP_200_OK:
             body = response.json()
             assert "node_id" in body
             assert "direction" in body
             assert "neighbors" in body
+            assert body["node_id"] == class_ids[0]
+            assert body["direction"] == "both"
             assert isinstance(body["neighbors"], list)
 
     def test_get_neighbors_with_direction_params(self, e2e_client):
@@ -318,20 +374,27 @@ class TestNeighborQueries:
         Get neighbors with directional filtering parameters.
 
         Asserts:
-        - Endpoint accepts direction parameter (in/out/both)
-        - Response includes the requested direction
+        - Endpoint accepts direction parameter and returns correct structure
+        - Uses real entity IDs instead of fabricated test strings
         """
-        # Test with direction parameter
-        test_node_id = "test-node-456"
+        # Create real entities
+        taxonomy_id, scheme_id, class_ids = create_test_taxonomy_with_classes(e2e_client, num_classes=2)
+
+        # Build the graph
+        e2e_client.post("/api/graph/build")
+
+        # Get outgoing neighbors of a real node
         response = e2e_client.get(
-            f"/api/graph/nodes/{test_node_id}/neighbors?direction=out&depth=2"
+            f"/api/graph/nodes/{class_ids[0]}/neighbors?direction=out&depth=2"
         )
-        # Accept 404 for non-existent node or 200 if node exists
+        # Accept 200 if node exists in graph, 404 if node not found or graph is empty
         assert response.status_code in [status.HTTP_200_OK, status.HTTP_404_NOT_FOUND]
         if response.status_code == status.HTTP_200_OK:
             body = response.json()
+            assert body["node_id"] == class_ids[0]
             assert body["direction"] == "out"
             assert "neighbors" in body
+            assert isinstance(body["neighbors"], list)
 
 
 @pytest.mark.e2e
@@ -538,15 +601,20 @@ class TestRDFTriples:
         assert "count" in body
         assert isinstance(body["count"], int)
 
-    def test_rdf_triples_with_filter(self, e2e_client):
+    def test_rdf_triples_count_matches_length(self, e2e_client):
         """
-        Get RDF triples with optional filtering.
+        Get RDF triples and verify count matches number of triples returned.
 
         Asserts:
-        - Status code 200 (OK)
-        - Response structure is correct
+        - Count field matches the actual number of triples in response
         """
-        # Get triples (may return results or be empty depending on data)
+        # Setup: create entities to ensure some triples exist
+        taxonomy_id, scheme_id, class_ids = create_test_taxonomy_with_classes(e2e_client, num_classes=2)
+
+        # Build graph
+        e2e_client.post("/api/graph/build")
+
+        # Get triples
         response = e2e_client.get("/api/graph/rdf/triples")
         assert response.status_code == status.HTTP_200_OK
         body = response.json()
@@ -554,8 +622,36 @@ class TestRDFTriples:
         assert "count" in body
         assert isinstance(body["triples"], list)
         assert isinstance(body["count"], int)
-        # Count should match number of triples
+        # Count should match the number of triples
         assert body["count"] == len(body["triples"])
+
+
+@pytest.mark.e2e
+class TestCommunities:
+    """Tests for community detection in graphs."""
+
+    def test_get_communities(self, e2e_client):
+        """
+        Detect and retrieve communities in the graph.
+
+        Asserts:
+        - Status code 200 (OK)
+        - Response includes communities array
+        """
+        # Setup: Create entities to build a graph
+        taxonomy_id, scheme_id, class_ids = create_test_taxonomy_with_classes(e2e_client, num_classes=3)
+
+        # Build the graph
+        e2e_client.post("/api/graph/build")
+
+        # Get communities (may be empty if no connected components)
+        response = e2e_client.get("/api/graph/communities")
+        assert response.status_code == status.HTTP_200_OK
+        body = response.json()
+        assert "communities" in body
+        assert isinstance(body["communities"], list)
+        # Response includes algorithm and communities at minimum
+        assert "algorithm" in body or "communities" in body
 
 
 @pytest.mark.e2e

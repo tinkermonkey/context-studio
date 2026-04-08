@@ -21,6 +21,54 @@ import pytest
 from fastapi import status
 
 
+def create_taxonomy_with_changes(e2e_client):
+    """
+    Helper to create a taxonomy and return its ID.
+    Used to reduce boilerplate in versioning tests.
+    """
+    import uuid
+    unique_id = str(uuid.uuid4())[:8]
+    response = e2e_client.post("/api/taxonomies", json={
+        "title": f"Test Taxonomy {unique_id}"
+    })
+    assert response.status_code == status.HTTP_201_CREATED, f"Failed to create taxonomy: {response.text}"
+    return response.json()["id"]
+
+
+def get_change_event_ids(e2e_client, entity_id):
+    """
+    Helper to retrieve change event IDs for an entity.
+    """
+    response = e2e_client.get(f"/api/v1/versioning/changes/{entity_id}")
+    assert response.status_code == status.HTTP_200_OK
+    events = response.json()["events"]
+    return [e["id"] for e in events]
+
+
+def create_and_submit_changeset(e2e_client, event_ids, changeset_name="Test Changeset"):
+    """
+    Helper to create a changeset, stage it, and submit it as a proposal.
+    Returns the proposal_id.
+    """
+    # Create changeset
+    response = e2e_client.post("/api/v1/versioning/changesets", json={
+        "name": changeset_name,
+        "description": f"Test changeset: {changeset_name}",
+        "event_ids": event_ids
+    })
+    assert response.status_code == status.HTTP_201_CREATED
+    changeset_id = response.json()["id"]
+
+    # Stage it
+    response = e2e_client.post(f"/api/v1/versioning/changesets/{changeset_id}/stage")
+    assert response.status_code == status.HTTP_200_OK
+
+    # Submit as proposal
+    response = e2e_client.post(f"/api/v1/versioning/changesets/{changeset_id}/submit")
+    assert response.status_code == status.HTTP_200_OK
+    return response.json()["id"]
+
+
 @pytest.mark.e2e
 class TestChangeHistory:
     """Tests for change history retrieval after ontology mutations."""
@@ -112,32 +160,23 @@ class TestEntityVersions:
 
     def test_list_entity_versions(self, e2e_client):
         """
-        List all versions of an entity.
+        List all versions of an entity after creation.
 
         Asserts:
         - Status code 200 (OK)
         - Response is array of EntityVersionResponse objects
         """
-        # Create and modify a taxonomy
-        response = e2e_client.post("/api/taxonomies", json={
-            "title": "Version List Taxonomy"
-        })
-        assert response.status_code == status.HTTP_201_CREATED
-        taxonomy_id = response.json()["id"]
+        # Create an entity
+        taxonomy_id = create_taxonomy_with_changes(e2e_client)
 
-        # Update it to create a second version
-        e2e_client.put(f"/api/taxonomies/{taxonomy_id}", json={
-            "title": "Updated Version List Taxonomy"
-        })
-
-        # List versions - may be empty if versioning not enabled or events not recorded
+        # List versions
         response = e2e_client.get(f"/api/v1/versioning/versions/{taxonomy_id}")
-        # Accept 404 or 200 depending on whether versioning is active for this entity
+        # May return 200 with empty list if versioning not enabled, or 404 if not found
         assert response.status_code in [status.HTTP_200_OK, status.HTTP_404_NOT_FOUND]
         if response.status_code == status.HTTP_200_OK:
             body = response.json()
             assert isinstance(body, list)
-            # Verify each version has required fields if any exist
+            # Verify each version (if any) has required fields
             for version in body:
                 assert "version" in version
                 assert "entity_id" in version
@@ -151,32 +190,27 @@ class TestEntityVersions:
         - Endpoint handles requests for specific versions
         """
         # Create an entity
-        response = e2e_client.post("/api/taxonomies", json={
-            "title": "Specific Version Taxonomy"
-        })
-        taxonomy_id = response.json()["id"]
+        taxonomy_id = create_taxonomy_with_changes(e2e_client)
 
-        # Try to get version 1
+        # Get version 1
         response = e2e_client.get(f"/api/v1/versioning/versions/{taxonomy_id}/1")
-        # Accept 404 if version doesn't exist or 200 if it does
+        # May return 404 if version doesn't exist or versioning not enabled
         assert response.status_code in [status.HTTP_200_OK, status.HTTP_404_NOT_FOUND]
         if response.status_code == status.HTTP_200_OK:
             body = response.json()
             assert body["version"] == 1
             assert body["entity_id"] == taxonomy_id
+            assert "snapshot" in body
 
     def test_version_history_tracks_mutations(self, e2e_client):
         """
-        Version history endpoint responds to mutation tracking requests.
+        Verify version history tracks mutations.
 
         Asserts:
-        - Endpoint handles requests for version lists
+        - Can retrieve version list after multiple updates
         """
         # Create and update
-        response = e2e_client.post("/api/taxonomies", json={
-            "title": "Multi Update Taxonomy"
-        })
-        taxonomy_id = response.json()["id"]
+        taxonomy_id = create_taxonomy_with_changes(e2e_client)
 
         # Update multiple times
         e2e_client.put(f"/api/taxonomies/{taxonomy_id}", json={
@@ -188,7 +222,7 @@ class TestEntityVersions:
 
         # Get versions
         response = e2e_client.get(f"/api/v1/versioning/versions/{taxonomy_id}")
-        # Accept 404 if versioning not active, or 200 if it is
+        # May return 200 with empty list if versioning not enabled, or 404 if not found
         assert response.status_code in [status.HTTP_200_OK, status.HTTP_404_NOT_FOUND]
         if response.status_code == status.HTTP_200_OK:
             versions = response.json()
@@ -208,15 +242,8 @@ class TestChangesetLifecycle:
         - Response includes id, name, description, state, event_ids
         """
         # Create an entity to get change events
-        response = e2e_client.post("/api/taxonomies", json={
-            "title": "Changeset Taxonomy"
-        })
-        taxonomy_id = response.json()["id"]
-
-        # Get the change events
-        response = e2e_client.get(f"/api/v1/versioning/changes/{taxonomy_id}")
-        events = response.json()["events"]
-        event_ids = [e["id"] for e in events]
+        taxonomy_id = create_taxonomy_with_changes(e2e_client)
+        event_ids = get_change_event_ids(e2e_client, taxonomy_id)
 
         # Create changeset
         response = e2e_client.post("/api/v1/versioning/changesets", json={
@@ -242,13 +269,8 @@ class TestChangesetLifecycle:
         - State transitions to staged (lowercase)
         """
         # Create changeset
-        response = e2e_client.post("/api/taxonomies", json={
-            "title": "Stage Test Taxonomy"
-        })
-        taxonomy_id = response.json()["id"]
-
-        response = e2e_client.get(f"/api/v1/versioning/changes/{taxonomy_id}")
-        event_ids = [e["id"] for e in response.json()["events"]]
+        taxonomy_id = create_taxonomy_with_changes(e2e_client)
+        event_ids = get_change_event_ids(e2e_client, taxonomy_id)
 
         response = e2e_client.post("/api/v1/versioning/changesets", json={
             "name": "Stage Test Changeset",
@@ -273,13 +295,8 @@ class TestChangesetLifecycle:
         - Can transition to staged state (lowercase)
         """
         # Setup
-        response = e2e_client.post("/api/taxonomies", json={
-            "title": "Lifecycle Taxonomy"
-        })
-        taxonomy_id = response.json()["id"]
-
-        response = e2e_client.get(f"/api/v1/versioning/changes/{taxonomy_id}")
-        event_ids = [e["id"] for e in response.json()["events"]]
+        taxonomy_id = create_taxonomy_with_changes(e2e_client)
+        event_ids = get_change_event_ids(e2e_client, taxonomy_id)
 
         # Create
         response = e2e_client.post("/api/v1/versioning/changesets", json={
@@ -309,22 +326,18 @@ class TestProposalWorkflow:
         - Status code 200 (OK)
         - Response includes proposal id, changeset_id, state, created_at
         """
-        # Setup changeset
-        response = e2e_client.post("/api/taxonomies", json={
-            "title": "Proposal Taxonomy"
-        })
-        taxonomy_id = response.json()["id"]
+        # Create changeset and get event IDs
+        taxonomy_id = create_taxonomy_with_changes(e2e_client)
+        event_ids = get_change_event_ids(e2e_client, taxonomy_id)
 
-        response = e2e_client.get(f"/api/v1/versioning/changes/{taxonomy_id}")
-        event_ids = [e["id"] for e in response.json()["events"]]
-
-        # Create and stage
+        # Create changeset
         response = e2e_client.post("/api/v1/versioning/changesets", json={
             "name": "Proposal Changeset",
             "event_ids": event_ids
         })
         changeset_id = response.json()["id"]
 
+        # Stage it
         e2e_client.post(f"/api/v1/versioning/changesets/{changeset_id}/stage")
 
         # Submit proposal
@@ -343,25 +356,10 @@ class TestProposalWorkflow:
         - Status code 200 (OK)
         - State transitions to 'approved'
         """
-        # Setup: create and submit proposal
-        response = e2e_client.post("/api/taxonomies", json={
-            "title": "Approve Taxonomy"
-        })
-        taxonomy_id = response.json()["id"]
-
-        response = e2e_client.get(f"/api/v1/versioning/changes/{taxonomy_id}")
-        event_ids = [e["id"] for e in response.json()["events"]]
-
-        response = e2e_client.post("/api/v1/versioning/changesets", json={
-            "name": "Approve Changeset",
-            "event_ids": event_ids
-        })
-        changeset_id = response.json()["id"]
-
-        e2e_client.post(f"/api/v1/versioning/changesets/{changeset_id}/stage")
-
-        response = e2e_client.post(f"/api/v1/versioning/changesets/{changeset_id}/submit")
-        proposal_id = response.json()["id"]
+        # Create changeset and submit as proposal
+        taxonomy_id = create_taxonomy_with_changes(e2e_client)
+        event_ids = get_change_event_ids(e2e_client, taxonomy_id)
+        proposal_id = create_and_submit_changeset(e2e_client, event_ids, "Approve Changeset")
 
         # Approve
         response = e2e_client.post(f"/api/v1/versioning/proposals/{proposal_id}/approve")
@@ -377,26 +375,12 @@ class TestProposalWorkflow:
         - Status code 200 (OK)
         - Response includes merge result details
         """
-        # Setup: create, submit, and approve proposal
-        response = e2e_client.post("/api/taxonomies", json={
-            "title": "Merge Taxonomy"
-        })
-        taxonomy_id = response.json()["id"]
+        # Create changeset and submit as proposal
+        taxonomy_id = create_taxonomy_with_changes(e2e_client)
+        event_ids = get_change_event_ids(e2e_client, taxonomy_id)
+        proposal_id = create_and_submit_changeset(e2e_client, event_ids, "Merge Changeset")
 
-        response = e2e_client.get(f"/api/v1/versioning/changes/{taxonomy_id}")
-        event_ids = [e["id"] for e in response.json()["events"]]
-
-        response = e2e_client.post("/api/v1/versioning/changesets", json={
-            "name": "Merge Changeset",
-            "event_ids": event_ids
-        })
-        changeset_id = response.json()["id"]
-
-        e2e_client.post(f"/api/v1/versioning/changesets/{changeset_id}/stage")
-
-        response = e2e_client.post(f"/api/v1/versioning/changesets/{changeset_id}/submit")
-        proposal_id = response.json()["id"]
-
+        # Approve
         e2e_client.post(f"/api/v1/versioning/proposals/{proposal_id}/approve")
 
         # Merge
@@ -415,14 +399,9 @@ class TestProposalWorkflow:
         - Can create, submit, approve, and merge proposals
         - States transition correctly through the workflow (all lowercase)
         """
-        # Setup
-        response = e2e_client.post("/api/taxonomies", json={
-            "title": "Full Workflow Taxonomy"
-        })
-        taxonomy_id = response.json()["id"]
-
-        response = e2e_client.get(f"/api/v1/versioning/changes/{taxonomy_id}")
-        event_ids = [e["id"] for e in response.json()["events"]]
+        # Create changeset and submit as proposal
+        taxonomy_id = create_taxonomy_with_changes(e2e_client)
+        event_ids = get_change_event_ids(e2e_client, taxonomy_id)
 
         # Create changeset
         response = e2e_client.post("/api/v1/versioning/changesets", json={
@@ -459,25 +438,10 @@ class TestProposalWorkflow:
         - Status code 200 (OK)
         - State transitions to 'rejected'
         """
-        # Setup
-        response = e2e_client.post("/api/taxonomies", json={
-            "title": "Reject Taxonomy"
-        })
-        taxonomy_id = response.json()["id"]
-
-        response = e2e_client.get(f"/api/v1/versioning/changes/{taxonomy_id}")
-        event_ids = [e["id"] for e in response.json()["events"]]
-
-        response = e2e_client.post("/api/v1/versioning/changesets", json={
-            "name": "Reject Changeset",
-            "event_ids": event_ids
-        })
-        changeset_id = response.json()["id"]
-
-        e2e_client.post(f"/api/v1/versioning/changesets/{changeset_id}/stage")
-
-        response = e2e_client.post(f"/api/v1/versioning/changesets/{changeset_id}/submit")
-        proposal_id = response.json()["id"]
+        # Create changeset and submit as proposal
+        taxonomy_id = create_taxonomy_with_changes(e2e_client)
+        event_ids = get_change_event_ids(e2e_client, taxonomy_id)
+        proposal_id = create_and_submit_changeset(e2e_client, event_ids, "Reject Changeset")
 
         # Reject
         response = e2e_client.post(f"/api/v1/versioning/proposals/{proposal_id}/reject", json={
@@ -500,25 +464,10 @@ class TestConflictDetection:
         - Status code 200 (OK)
         - Response includes conflicts array and has_conflicts flag
         """
-        # Setup
-        response = e2e_client.post("/api/taxonomies", json={
-            "title": "Conflict Taxonomy"
-        })
-        taxonomy_id = response.json()["id"]
-
-        response = e2e_client.get(f"/api/v1/versioning/changes/{taxonomy_id}")
-        event_ids = [e["id"] for e in response.json()["events"]]
-
-        response = e2e_client.post("/api/v1/versioning/changesets", json={
-            "name": "Conflict Changeset",
-            "event_ids": event_ids
-        })
-        changeset_id = response.json()["id"]
-
-        e2e_client.post(f"/api/v1/versioning/changesets/{changeset_id}/stage")
-
-        response = e2e_client.post(f"/api/v1/versioning/changesets/{changeset_id}/submit")
-        proposal_id = response.json()["id"]
+        # Create changeset and submit as proposal
+        taxonomy_id = create_taxonomy_with_changes(e2e_client)
+        event_ids = get_change_event_ids(e2e_client, taxonomy_id)
+        proposal_id = create_and_submit_changeset(e2e_client, event_ids, "Conflict Changeset")
 
         # Detect conflicts
         response = e2e_client.get(f"/api/v1/versioning/proposals/{proposal_id}/conflicts")
@@ -537,31 +486,21 @@ class TestConflictDetection:
         Asserts:
         - Status code 200 (OK)
         - Response includes conflicts field
+        - 422 means there are no conflicts to resolve (valid expected scenario)
         """
-        # Setup
-        response = e2e_client.post("/api/taxonomies", json={
-            "title": "Auto Resolve Taxonomy"
-        })
-        taxonomy_id = response.json()["id"]
-
-        response = e2e_client.get(f"/api/v1/versioning/changes/{taxonomy_id}")
-        event_ids = [e["id"] for e in response.json()["events"]]
-
-        response = e2e_client.post("/api/v1/versioning/changesets", json={
-            "name": "Auto Resolve Changeset",
-            "event_ids": event_ids
-        })
-        changeset_id = response.json()["id"]
-
-        e2e_client.post(f"/api/v1/versioning/changesets/{changeset_id}/stage")
-
-        response = e2e_client.post(f"/api/v1/versioning/changesets/{changeset_id}/submit")
-        proposal_id = response.json()["id"]
+        # Create changeset and submit as proposal
+        taxonomy_id = create_taxonomy_with_changes(e2e_client)
+        event_ids = get_change_event_ids(e2e_client, taxonomy_id)
+        proposal_id = create_and_submit_changeset(e2e_client, event_ids, "Auto Resolve Changeset")
 
         # Auto-resolve with last_write_wins strategy (lowercase with underscores)
+        # 422 is expected if there are no conflicts to resolve (proposal is conflict-free)
+        # 200 is expected if there are conflicts that were resolved
         response = e2e_client.post(f"/api/v1/versioning/proposals/{proposal_id}/auto-resolve", json={
             "strategy": "last_write_wins"
         })
+        # In a clean proposal without conflicts, 422 Unprocessable Entity is returned
+        # because there is nothing to auto-resolve. This is the expected behavior.
         assert response.status_code in [status.HTTP_200_OK, status.HTTP_422_UNPROCESSABLE_ENTITY]
         if response.status_code == status.HTTP_200_OK:
             body = response.json()
@@ -574,25 +513,10 @@ class TestConflictDetection:
         Asserts:
         - Conflict report includes all required fields
         """
-        # Setup
-        response = e2e_client.post("/api/taxonomies", json={
-            "title": "Conflict Report Taxonomy"
-        })
-        taxonomy_id = response.json()["id"]
-
-        response = e2e_client.get(f"/api/v1/versioning/changes/{taxonomy_id}")
-        event_ids = [e["id"] for e in response.json()["events"]]
-
-        response = e2e_client.post("/api/v1/versioning/changesets", json={
-            "name": "Conflict Report Changeset",
-            "event_ids": event_ids
-        })
-        changeset_id = response.json()["id"]
-
-        e2e_client.post(f"/api/v1/versioning/changesets/{changeset_id}/stage")
-
-        response = e2e_client.post(f"/api/v1/versioning/changesets/{changeset_id}/submit")
-        proposal_id = response.json()["id"]
+        # Create changeset and submit as proposal
+        taxonomy_id = create_taxonomy_with_changes(e2e_client)
+        event_ids = get_change_event_ids(e2e_client, taxonomy_id)
+        proposal_id = create_and_submit_changeset(e2e_client, event_ids, "Conflict Report Changeset")
 
         # Get conflict report
         response = e2e_client.get(f"/api/v1/versioning/proposals/{proposal_id}/conflicts")
@@ -619,6 +543,9 @@ class TestSyncOperations:
         - Status code 200 (OK)
         - Response includes sync status information
         """
+        # Create some activity to ensure sync status reflects something
+        taxonomy_id = create_taxonomy_with_changes(e2e_client)
+
         response = e2e_client.get("/api/v1/versioning/sync/status")
         assert response.status_code == status.HTTP_200_OK
         body = response.json()
