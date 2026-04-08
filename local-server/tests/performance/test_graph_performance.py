@@ -138,6 +138,7 @@ def test_shortest_path_query(num_nodes: int, max_time: float) -> None:
 def test_centrality_calculation(num_nodes: int, max_time: float) -> None:
     """Measure centrality calculation time in a graph of specified size."""
     service, _, _ = _setup_graph_service(num_nodes)
+    service.build_graph()
 
     start = time.perf_counter()
     centrality = service.get_centrality("betweenness")
