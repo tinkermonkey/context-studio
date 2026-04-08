@@ -678,3 +678,184 @@ class TestPropertyDefinitionCRUD:
 
         response = client.delete(f"/api/properties/{property_id}")
         assert response.status_code == status.HTTP_204_NO_CONTENT
+
+
+class TestAutoCreatePropertyDefinition:
+    """Integration tests for auto-creation of property definitions during relationship creation."""
+
+    def test_create_relationship_auto_creates_property_definition(self, client):
+        """Create relationship auto-creates property definition if not present."""
+        tax_response = client.post("/api/taxonomies", json={
+            "title": "Test Taxonomy"
+        })
+        taxonomy_id = tax_response.json()["id"]
+
+        scheme_response = client.post(f"/api/taxonomies/{taxonomy_id}/schemes", json={
+            "title": "Test Scheme"
+        })
+        scheme_id = scheme_response.json()["id"]
+
+        class1_response = client.post(f"/api/schemes/{scheme_id}/classes", json={
+            "title": "Class 1"
+        })
+        class1_id = class1_response.json()["id"]
+
+        class2_response = client.post(f"/api/schemes/{scheme_id}/classes", json={
+            "title": "Class 2"
+        })
+        class2_id = class2_response.json()["id"]
+
+        response = client.post("/api/relationships", json={
+            "source_id": class1_id,
+            "target_id": class2_id,
+            "relationship_type": "auto_created_type"
+        })
+        assert response.status_code == status.HTTP_201_CREATED
+        rel_data = response.json()
+        assert "property_definition_id" in rel_data
+
+        # Verify property definition was created with derived title
+        prop_id = rel_data["property_definition_id"]
+        prop_response = client.get(f"/api/properties/{prop_id}")
+        assert prop_response.status_code == status.HTTP_200_OK
+        prop_data = prop_response.json()
+        assert prop_data["identifier"] == "auto_created_type"
+        # Verify title is derived correctly: snake_case becomes Title Case
+        assert prop_data["title"] == "Auto Created Type"
+
+    def test_create_relationship_with_existing_property_definition_reuses_it(self, client):
+        """Create relationship reuses existing property definition instead of creating new one."""
+        # Create a property definition explicitly
+        prop_response = client.post("/api/properties", json={
+            "identifier": "existing_relationship",
+            "title": "Existing Relationship Type",
+            "description": "A pre-existing property definition"
+        })
+        assert prop_response.status_code == status.HTTP_201_CREATED
+        property_id = prop_response.json()["id"]
+
+        # Create taxonomies and classes for relationships
+        tax_response = client.post("/api/taxonomies", json={
+            "title": "Test Taxonomy"
+        })
+        taxonomy_id = tax_response.json()["id"]
+
+        scheme_response = client.post(f"/api/taxonomies/{taxonomy_id}/schemes", json={
+            "title": "Test Scheme"
+        })
+        scheme_id = scheme_response.json()["id"]
+
+        class1_response = client.post(f"/api/schemes/{scheme_id}/classes", json={
+            "title": "Class 1"
+        })
+        class1_id = class1_response.json()["id"]
+
+        class2_response = client.post(f"/api/schemes/{scheme_id}/classes", json={
+            "title": "Class 2"
+        })
+        class2_id = class2_response.json()["id"]
+
+        # Create relationship with the same identifier
+        response = client.post("/api/relationships", json={
+            "source_id": class1_id,
+            "target_id": class2_id,
+            "relationship_type": "existing_relationship"
+        })
+        assert response.status_code == status.HTTP_201_CREATED
+        rel_data = response.json()
+
+        # Verify the relationship uses the existing property definition
+        assert rel_data["property_definition_id"] == property_id
+
+    def test_create_multiple_relationships_with_same_type_is_idempotent(self, client):
+        """Multiple relationships with same type use the same property definition."""
+        tax_response = client.post("/api/taxonomies", json={
+            "title": "Test Taxonomy"
+        })
+        taxonomy_id = tax_response.json()["id"]
+
+        scheme_response = client.post(f"/api/taxonomies/{taxonomy_id}/schemes", json={
+            "title": "Test Scheme"
+        })
+        scheme_id = scheme_response.json()["id"]
+
+        # Create 4 classes
+        class_ids = []
+        for i in range(4):
+            resp = client.post(f"/api/schemes/{scheme_id}/classes", json={
+                "title": f"Class {i+1}"
+            })
+            class_ids.append(resp.json()["id"])
+
+        # Create first relationship
+        rel1_response = client.post("/api/relationships", json={
+            "source_id": class_ids[0],
+            "target_id": class_ids[1],
+            "relationship_type": "idempotent_type"
+        })
+        assert rel1_response.status_code == status.HTTP_201_CREATED
+        property_id_1 = rel1_response.json()["property_definition_id"]
+
+        # Create second relationship with same type
+        rel2_response = client.post("/api/relationships", json={
+            "source_id": class_ids[2],
+            "target_id": class_ids[3],
+            "relationship_type": "idempotent_type"
+        })
+        assert rel2_response.status_code == status.HTTP_201_CREATED
+        property_id_2 = rel2_response.json()["property_definition_id"]
+
+        # Both relationships should use the same property definition
+        assert property_id_1 == property_id_2
+
+        # Verify only one property definition was created
+        props_response = client.get("/api/properties")
+        matching_props = [
+            p for p in props_response.json()["items"]
+            if p["identifier"] == "idempotent_type"
+        ]
+        assert len(matching_props) == 1
+        assert matching_props[0]["id"] == property_id_1
+
+    def test_create_relationship_derives_title_correctly_from_snake_case(self, client):
+        """Property definition title is correctly derived from snake_case identifier."""
+        tax_response = client.post("/api/taxonomies", json={
+            "title": "Test Taxonomy"
+        })
+        taxonomy_id = tax_response.json()["id"]
+
+        scheme_response = client.post(f"/api/taxonomies/{taxonomy_id}/schemes", json={
+            "title": "Test Scheme"
+        })
+        scheme_id = scheme_response.json()["id"]
+
+        class1_response = client.post(f"/api/schemes/{scheme_id}/classes", json={
+            "title": "Class 1"
+        })
+        class1_id = class1_response.json()["id"]
+
+        class2_response = client.post(f"/api/schemes/{scheme_id}/classes", json={
+            "title": "Class 2"
+        })
+        class2_id = class2_response.json()["id"]
+
+        # Test various snake_case transformations
+        test_cases = [
+            ("simple_type", "Simple Type"),
+            ("complex_relationship_type", "Complex Relationship Type"),
+            ("a_b_c", "A B C"),
+        ]
+
+        for identifier, expected_title in test_cases:
+            response = client.post("/api/relationships", json={
+                "source_id": class1_id,
+                "target_id": class2_id,
+                "relationship_type": identifier
+            })
+            assert response.status_code == status.HTTP_201_CREATED
+            prop_id = response.json()["property_definition_id"]
+
+            prop_response = client.get(f"/api/properties/{prop_id}")
+            assert prop_response.status_code == status.HTTP_200_OK
+            prop_data = prop_response.json()
+            assert prop_data["title"] == expected_title
