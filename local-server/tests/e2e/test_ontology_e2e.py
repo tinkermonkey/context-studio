@@ -542,7 +542,7 @@ class TestClassHierarchy:
         scheme_id = scheme_response.json()["id"]
 
         # Try to move a non-existent class
-        response = e2e_client.post(f"/api/classes/nonexistent-id/move", json={
+        response = e2e_client.post("/api/classes/nonexistent-id/move", json={
             "target_scheme_id": scheme_id
         })
         assert response.status_code == status.HTTP_404_NOT_FOUND
