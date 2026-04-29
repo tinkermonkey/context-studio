@@ -37,7 +37,10 @@ export async function apiRequest<T = unknown>(
   }
 
   // Handle 204 No Content and other empty-body responses
-  if (response.status() === 204 || response.headers()["content-length"] === "0") {
+  if (
+    response.status() === 204 ||
+    response.headers()["content-length"] === "0"
+  ) {
     return {} as T;
   }
 

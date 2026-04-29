@@ -123,7 +123,15 @@ describe("WordSenseSelector", () => {
   describe("Persisted senses", () => {
     it("displays persisted sense selections", () => {
       const persistedSenses: WordSense[] = [
-        { label: "machine", language_code: "en", term: "machine", sense_type: "wordnet", sense_id: "machine.n.01", definition: "A device", domain: undefined },
+        {
+          label: "machine",
+          language_code: "en",
+          term: "machine",
+          sense_type: "wordnet",
+          sense_id: "machine.n.01",
+          definition: "A device",
+          domain: undefined,
+        },
       ];
 
       renderComponent({ title: "machine learning", persistedSenses });
@@ -133,7 +141,15 @@ describe("WordSenseSelector", () => {
 
     it("initializes with persisted senses", () => {
       const persistedSenses: WordSense[] = [
-        { label: "learning", language_code: "en", term: "learning", sense_type: "wordnet", sense_id: "learning.n.01", definition: "A device", domain: undefined },
+        {
+          label: "learning",
+          language_code: "en",
+          term: "learning",
+          sense_type: "wordnet",
+          sense_id: "learning.n.01",
+          definition: "A device",
+          domain: undefined,
+        },
       ];
 
       renderComponent({ title: "machine learning", persistedSenses });
@@ -417,7 +433,15 @@ describe("WordSenseSelector", () => {
   describe("Dirty tracking", () => {
     it("is not dirty when selections match persisted", () => {
       const persistedSenses: WordSense[] = [
-        { label: "machine", language_code: "en", term: "machine", sense_type: "wordnet", sense_id: "machine.n.01", definition: "A device", domain: undefined },
+        {
+          label: "machine",
+          language_code: "en",
+          term: "machine",
+          sense_type: "wordnet",
+          sense_id: "machine.n.01",
+          definition: "A device",
+          domain: undefined,
+        },
       ];
 
       renderComponent({ title: "machine", persistedSenses });
@@ -447,7 +471,15 @@ describe("WordSenseSelector", () => {
       });
 
       const persistedSenses: WordSense[] = [
-        { label: "machine", language_code: "en", term: "machine", sense_type: "wordnet", sense_id: "machine.n.01", definition: "A device", domain: undefined },
+        {
+          label: "machine",
+          language_code: "en",
+          term: "machine",
+          sense_type: "wordnet",
+          sense_id: "machine.n.01",
+          definition: "A device",
+          domain: undefined,
+        },
       ];
 
       renderComponent({ title: "machine", persistedSenses });

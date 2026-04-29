@@ -382,9 +382,7 @@ export async function clearTestData(
       const classes = extractItems(classesResponse);
       const testClassIds = new Set(
         classes
-          .filter((cls) =>
-            isTestEntity(cls, ["test-class-", "seed-class-"]),
-          )
+          .filter((cls) => isTestEntity(cls, ["test-class-", "seed-class-"]))
           .map((cls) => cls.id),
       );
 
@@ -490,7 +488,10 @@ export async function clearTestData(
   // Report all cleanup errors
   if (cleanupErrors.length > 0) {
     const errorSummary = cleanupErrors
-      .map((e) => `  - ${e.step}: ${e.error instanceof Error ? e.error.message : String(e.error)}`)
+      .map(
+        (e) =>
+          `  - ${e.step}: ${e.error instanceof Error ? e.error.message : String(e.error)}`,
+      )
       .join("\n");
     throw new Error(
       `Test data cleanup failed with ${cleanupErrors.length} error(s):\n${errorSummary}`,

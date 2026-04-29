@@ -113,6 +113,7 @@ export async function endpointExists(
       `Could not reach backend at http://localhost:8888${endpoint}: ${
         error instanceof Error ? error.message : String(error)
       }`,
+      { cause: error },
     );
   }
 }

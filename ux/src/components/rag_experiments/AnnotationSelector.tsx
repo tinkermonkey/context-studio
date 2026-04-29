@@ -68,7 +68,7 @@ export const AnnotationSelector: React.FC<AnnotationSelectorProps> = ({
     return allClasses.filter(
       (cls) =>
         cls.title.toLowerCase().includes(query) ||
-        cls.definition?.toLowerCase().includes(query)
+        cls.definition?.toLowerCase().includes(query),
     );
   }, [allClasses, debouncedSearchQuery]);
 

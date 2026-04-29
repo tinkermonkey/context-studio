@@ -27,7 +27,9 @@ export const PredicateSelector: React.FC<PredicateSelectorProps> = ({
       loading={isLoading}
       error={error ? "Failed to load predicates" : null}
       fieldMap={{ value: "id", title: "title", definition: "definition" }}
-      onSelect={(r) => onSelect && onSelect(r as PropertyDefinition | undefined)}
+      onSelect={(r) =>
+        onSelect && onSelect(r as PropertyDefinition | undefined)
+      }
       value={value}
     />
   );

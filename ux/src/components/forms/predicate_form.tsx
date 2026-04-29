@@ -8,7 +8,10 @@ import React from "react";
 import { useForm } from "@tanstack/react-form";
 import { TextInput, Textarea, Button, Alert, Label } from "flowbite-react";
 import { Info } from "lucide-react";
-import type { PropertyDefinitionCreate, PropertyDefinition } from "@/api/types/ontology";
+import type {
+  PropertyDefinitionCreate,
+  PropertyDefinition,
+} from "@/api/types/ontology";
 import {
   useCreatePredicate,
   useUpdatePredicate,

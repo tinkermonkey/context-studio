@@ -40,9 +40,8 @@ export const MappingCreationWorkflow: React.FC<
   const [title, setTitle] = useState<string>("");
   const [definition, setDefinition] = useState<string>("");
   const [identifier, setIdentifier] = useState<string>("");
-  const [createdPredicate, setCreatedPredicate] = useState<PropertyDefinition | null>(
-    null,
-  );
+  const [createdPredicate, setCreatedPredicate] =
+    useState<PropertyDefinition | null>(null);
   const toast = useButterToast();
 
   // Query external predicates for the cluster
