@@ -48,10 +48,10 @@ export const NodeLinkDisplay: React.FC<NodeLinkDisplayProps> = ({
   // Separate links into outgoing and incoming
   const { outgoingLinks, incomingLinks } = useMemo(() => {
     const outgoing = links.filter(
-      (link) => link.source_node_id === currentNodeId,
+      (link) => link.source_id === currentNodeId,
     );
     const incoming = links.filter(
-      (link) => link.target_node_id === currentNodeId,
+      (link) => link.target_id === currentNodeId,
     );
     return { outgoingLinks: outgoing, incomingLinks: incoming };
   }, [links, currentNodeId]);
@@ -59,10 +59,10 @@ export const NodeLinkDisplay: React.FC<NodeLinkDisplayProps> = ({
   // Group links by predicate
   const groupByPredicate = (linksList: OntologyClassLink[]): GroupedLinks => {
     return linksList.reduce((acc, link) => {
-      if (!acc[link.predicate]) {
-        acc[link.predicate] = [];
+      if (!acc[link.property_definition_id]) {
+        acc[link.property_definition_id] = [];
       }
-      acc[link.predicate].push(link);
+      acc[link.property_definition_id].push(link);
       return acc;
     }, {} as GroupedLinks);
   };

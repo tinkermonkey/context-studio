@@ -36,8 +36,8 @@ export const NodeLinkItem: React.FC<NodeLinkItemProps> = ({
   const navigate = useNavigate();
 
   // Determine which node to display (the "other" node, not the current one)
-  const isOutgoing = link.source_node_id === currentNodeId;
-  const displayNodeId = isOutgoing ? link.target_node_id : link.source_node_id;
+  const isOutgoing = link.source_id === currentNodeId;
+  const displayNodeId = isOutgoing ? link.target_id : link.source_id;
 
   // Fetch the node to display
   const { data: displayNode, isLoading } = useClass(displayNodeId);
@@ -136,7 +136,7 @@ export const NodeLinkItem: React.FC<NodeLinkItemProps> = ({
                 </span>
               </div>
               <div className="text-sm text-gray-600">
-                via: <code className="font-mono">{link.predicate}</code>
+                via: <code className="font-mono">{link.property_definition_id}</code>
               </div>
             </div>
 
