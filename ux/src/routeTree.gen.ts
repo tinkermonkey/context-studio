@@ -20,7 +20,6 @@ import { Route as AppConceptSchemesRouteImport } from './routes/app/concept-sche
 import { Route as AppClassesRouteImport } from './routes/app/classes'
 import { Route as AppReferenceIndexRouteImport } from './routes/app/reference/index'
 import { Route as AppConfigIndexRouteImport } from './routes/app/config/index'
-import { Route as AppStructure_nodesNodeIdRouteImport } from './routes/app/ontologyClass/$nodeId'
 import { Route as AppReferenceSearchRouteImport } from './routes/app/reference/search'
 import { Route as AppReferenceRagTestRouteImport } from './routes/app/reference/rag-test'
 import { Route as AppReferencePropertiesRouteImport } from './routes/app/reference/properties'
@@ -101,12 +100,6 @@ const AppConfigIndexRoute = AppConfigIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AppConfigRoute,
 } as any)
-const AppStructure_nodesNodeIdRoute =
-  AppStructure_nodesNodeIdRouteImport.update({
-    id: '/ontologyClass/$nodeId',
-    path: '/ontologyClass/$nodeId',
-    getParentRoute: () => AppRoute,
-  } as any)
 const AppReferenceSearchRoute = AppReferenceSearchRouteImport.update({
   id: '/reference/search',
   path: '/reference/search',
@@ -266,7 +259,6 @@ export interface FileRoutesByFullPath {
   '/app/reference/properties': typeof AppReferencePropertiesRoute
   '/app/reference/rag-test': typeof AppReferenceRagTestRoute
   '/app/reference/search': typeof AppReferenceSearchRoute
-  '/app/ontologyClass/$nodeId': typeof AppStructure_nodesNodeIdRoute
   '/app/config/': typeof AppConfigIndexRoute
   '/app/reference': typeof AppReferenceIndexRoute
   '/app/config/pipelines/$pipelineType': typeof AppConfigPipelinesPipelineTypeRouteWithChildren
@@ -301,7 +293,6 @@ export interface FileRoutesByTo {
   '/app/reference/properties': typeof AppReferencePropertiesRoute
   '/app/reference/rag-test': typeof AppReferenceRagTestRoute
   '/app/reference/search': typeof AppReferenceSearchRoute
-  '/app/ontologyClass/$nodeId': typeof AppStructure_nodesNodeIdRoute
   '/app/config': typeof AppConfigIndexRoute
   '/app/reference': typeof AppReferenceIndexRoute
   '/app/config/pipelines': typeof AppConfigPipelinesIndexRoute
@@ -339,7 +330,6 @@ export interface FileRoutesById {
   '/app/reference/properties': typeof AppReferencePropertiesRoute
   '/app/reference/rag-test': typeof AppReferenceRagTestRoute
   '/app/reference/search': typeof AppReferenceSearchRoute
-  '/app/ontologyClass/$nodeId': typeof AppStructure_nodesNodeIdRoute
   '/app/config/': typeof AppConfigIndexRoute
   '/app/reference/': typeof AppReferenceIndexRoute
   '/app/config/pipelines/$pipelineType': typeof AppConfigPipelinesPipelineTypeRouteWithChildren
@@ -379,7 +369,6 @@ export interface FileRouteTypes {
     | '/app/reference/properties'
     | '/app/reference/rag-test'
     | '/app/reference/search'
-    | '/app/ontologyClass/$nodeId'
     | '/app/config/'
     | '/app/reference'
     | '/app/config/pipelines/$pipelineType'
@@ -414,7 +403,6 @@ export interface FileRouteTypes {
     | '/app/reference/properties'
     | '/app/reference/rag-test'
     | '/app/reference/search'
-    | '/app/ontologyClass/$nodeId'
     | '/app/config'
     | '/app/reference'
     | '/app/config/pipelines'
@@ -451,7 +439,6 @@ export interface FileRouteTypes {
     | '/app/reference/properties'
     | '/app/reference/rag-test'
     | '/app/reference/search'
-    | '/app/ontologyClass/$nodeId'
     | '/app/config/'
     | '/app/reference/'
     | '/app/config/pipelines/$pipelineType'
@@ -545,13 +532,6 @@ declare module '@tanstack/react-router' {
       fullPath: '/app/config/'
       preLoaderRoute: typeof AppConfigIndexRouteImport
       parentRoute: typeof AppConfigRoute
-    }
-    '/app/ontologyClass/$nodeId': {
-      id: '/app/ontologyClass/$nodeId'
-      path: '/ontologyClass/$nodeId'
-      fullPath: '/app/ontologyClass/$nodeId'
-      preLoaderRoute: typeof AppStructure_nodesNodeIdRouteImport
-      parentRoute: typeof AppRoute
     }
     '/app/reference/search': {
       id: '/app/reference/search'
@@ -807,7 +787,6 @@ interface AppRouteChildren {
   AppReferencePropertiesRoute: typeof AppReferencePropertiesRoute
   AppReferenceRagTestRoute: typeof AppReferenceRagTestRoute
   AppReferenceSearchRoute: typeof AppReferenceSearchRoute
-  AppStructure_nodesNodeIdRoute: typeof AppStructure_nodesNodeIdRoute
   AppReferenceIndexRoute: typeof AppReferenceIndexRoute
 }
 
@@ -830,7 +809,6 @@ const AppRouteChildren: AppRouteChildren = {
   AppReferencePropertiesRoute: AppReferencePropertiesRoute,
   AppReferenceRagTestRoute: AppReferenceRagTestRoute,
   AppReferenceSearchRoute: AppReferenceSearchRoute,
-  AppStructure_nodesNodeIdRoute: AppStructure_nodesNodeIdRoute,
   AppReferenceIndexRoute: AppReferenceIndexRoute,
 }
 
