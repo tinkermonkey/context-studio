@@ -2,7 +2,6 @@ import { test, expect } from "@playwright/test";
 import {
   createTaxonomy,
   createConceptScheme,
-  createClass,
   createPropertyDefinition,
   createRelationship,
   createTestHierarchy,

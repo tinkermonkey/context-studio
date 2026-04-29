@@ -52,10 +52,10 @@ test.describe("Navigation and Layout Integrity", () => {
 
       // Verify sidebar is visible
       const sidebar = page.locator("aside, [role='complementary']").first();
-      const hasSidebar = await sidebar.isVisible().catch(() => false);
+      const _hasSidebar = await sidebar.isVisible().catch(() => false);
 
       // Some pages might not have sidebar, but if they do, it should be visible
-      if (hasSidebar) {
+      if (_hasSidebar) {
         await expect(sidebar).toBeVisible();
       }
     }
@@ -133,7 +133,7 @@ test.describe("Navigation and Layout Integrity", () => {
 
     // Verify sidebar (optional on dashboard)
     const sidebar = page.locator("aside, [role='complementary']").first();
-    const hasSidebar = await sidebar.isVisible().catch(() => false);
+    const _hasSidebar = await sidebar.isVisible().catch(() => false);
     // Sidebar is optional, so we don't assert on it
 
     // Verify main content or body text
@@ -162,7 +162,7 @@ test.describe("Navigation and Layout Integrity", () => {
 
     // Verify table loads (if data exists)
     const table = page.locator("table, [role='table']").first();
-    const hasTable = await table.isVisible().catch(() => false);
+    const _hasTable = await table.isVisible().catch(() => false);
     // Table presence depends on data, so we don't assert
   });
 

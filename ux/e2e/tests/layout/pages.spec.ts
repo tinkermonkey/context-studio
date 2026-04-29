@@ -3,7 +3,6 @@ import {
   createTestHierarchy,
   createPropertyDefinition,
   clearTestData,
-  apiRequest,
 } from "../../fixtures/test-helpers";
 
 /**
@@ -125,7 +124,7 @@ test.describe("Pages and Interactive Elements", () => {
     page,
   }) => {
     // Create test data
-    const taxonomy = await createTestHierarchy(page, 1);
+    const _taxonomy = await createTestHierarchy(page, 1);
 
     // Navigate to taxonomies page
     await page.goto("/app/taxonomies");
@@ -295,7 +294,7 @@ test.describe("Pages and Interactive Elements", () => {
     page,
   }) => {
     // Create test data
-    const taxonomy = await createTestHierarchy(page, 1);
+    const _taxonomy = await createTestHierarchy(page, 1);
 
     // Navigate to taxonomies page
     await page.goto("/app/taxonomies");
@@ -312,7 +311,7 @@ test.describe("Pages and Interactive Elements", () => {
 
   test("should support row selection and bulk actions", async ({ page }) => {
     // Create test data
-    const hierarchy = await createTestHierarchy(page, 1);
+    const _hierarchy = await createTestHierarchy(page, 1);
 
     // Navigate to properties page
     await page.goto("/app/properties");
@@ -338,7 +337,7 @@ test.describe("Pages and Interactive Elements", () => {
 
     // While loading, there might be a spinner
     const spinner = page.locator("[role='status'], .spinner, .loading").first();
-    const hasSpinner = await spinner.isVisible().catch(() => false);
+    const _hasSpinner = await spinner.isVisible().catch(() => false);
 
     // Wait for page to fully load
     await page.waitForLoadState("networkidle");
