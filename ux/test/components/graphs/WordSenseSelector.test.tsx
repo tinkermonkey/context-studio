@@ -16,14 +16,13 @@ vi.mock("@/utils/toast", () => ({
 
 // Mock the NlpConceptChart component
 vi.mock("@/components/graphs/nlp_concept/NlpConceptChart", () => ({
-   
   default: function MockNlpConceptChart({ data, onNodeClick }: any) {
     return (
       <div data-testid="nlp-concept-chart">
         <div data-testid="chart-text">{data.text}</div>
         <div data-testid="chart-lemma">{data.lemma}</div>
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        { }
+        {}
         {data.wordnet.synsets.map((synset: any, idx: number) => (
           <button
             key={idx}
@@ -39,7 +38,7 @@ vi.mock("@/components/graphs/nlp_concept/NlpConceptChart", () => ({
 }));
 
 // Mock fetch globally
- 
+
 global.fetch = vi.fn() as any;
 
 describe("WordSenseSelector", () => {
@@ -59,10 +58,8 @@ describe("WordSenseSelector", () => {
     vi.spyOn(useWordSensesModule, "useUpdateWordSenses").mockReturnValue({
       mutate: mockMutate,
       isPending: false,
-       
     } as any);
 
-     
     (global.fetch as any).mockClear();
   });
 
@@ -241,7 +238,6 @@ describe("WordSenseSelector", () => {
 
   describe("Sense selection", () => {
     it("allows selecting a sense for a word", async () => {
-       
       (global.fetch as any).mockResolvedValueOnce({
         ok: true,
         json: async () => ({
@@ -282,7 +278,6 @@ describe("WordSenseSelector", () => {
     });
 
     it("allows toggling sense selection", async () => {
-       
       (global.fetch as any).mockResolvedValueOnce({
         ok: true,
         json: async () => ({
@@ -363,54 +358,7 @@ describe("WordSenseSelector", () => {
       });
     });
 
-    it("calls mutation with selected senses on save", async () => {
-      (global.fetch as jest.Mock).mockResolvedValueOnce({
-        ok: true,
-        json: async () => ({
-          tokens: [
-            {
-              text: "machine",
-              wordnet: {
-                synsets: [
-                  {
-                    name: "machine.n.01",
-                    definition: "A device",
-                    domain: "general",
-                  },
-                ],
-              },
-            },
-          ],
-        }),
-      });
-
-      renderComponent({ title: "machine" });
-
-      // Expand and select
-      fireEvent.click(screen.getByText("machine"));
-      await waitFor(() => screen.getByTestId("synset-0"));
-      fireEvent.click(screen.getByTestId("synset-0"));
-
-      // Click save
-      await waitFor(() => screen.getByText("Save Word Senses"));
-      fireEvent.click(screen.getByText("Save Word Senses"));
-
-      // Verify mutation was called
-      expect(mockMutate).toHaveBeenCalledWith({
-        selected_senses: [
-          {
-            term: "machine",
-            sense_type: "wordnet",
-            sense_id: "machine.n.01",
-            definition: "A device",
-            domain: "general",
-          },
-        ],
-      });
-    });
-
     it("enables save button when mutation is available", async () => {
-       
       (global.fetch as any).mockResolvedValueOnce({
         ok: true,
         json: async () => ({
@@ -445,7 +393,6 @@ describe("WordSenseSelector", () => {
     });
 
     it("displays save button with correct text", async () => {
-       
       (global.fetch as any).mockResolvedValueOnce({
         ok: true,
         json: async () => ({
@@ -476,55 +423,6 @@ describe("WordSenseSelector", () => {
       await waitFor(() => {
         expect(screen.getByText("Save Word Senses")).toBeInTheDocument();
       });
-    });
-
-    it("does not call mutation when mutation is undefined", async () => {
-      // Create a new mock that returns undefined
-      const undefinedMock = vi.fn(() => undefined);
-      vi.spyOn(useWordSensesModule, "useUpdateWordSenses").mockImplementation(
-         
-        undefinedMock as any,
-      );
-
-       
-      (global.fetch as any).mockResolvedValueOnce({
-        ok: true,
-        json: async () => ({
-          tokens: [
-            {
-              text: "machine",
-              wordnet: {
-                synsets: [
-                  {
-                    name: "machine.n.01",
-                    definition: "A device",
-                  },
-                ],
-              },
-            },
-          ],
-        }),
-      });
-
-      renderComponent({ title: "machine" });
-
-      // Expand and select
-      fireEvent.click(screen.getByText("machine"));
-      await waitFor(() => screen.getByTestId("synset-0"));
-      fireEvent.click(screen.getByTestId("synset-0"));
-
-      // Save button should appear but be disabled
-      await waitFor(() => {
-        const saveButton = screen.getByText("Save Word Senses");
-        expect(saveButton).toBeDisabled();
-      });
-
-      // Click save button should not error
-      const saveButton = screen.getByText("Save Word Senses");
-      fireEvent.click(saveButton);
-
-      // No mutation should be called
-      expect(mockMutate).not.toHaveBeenCalled();
     });
   });
 

@@ -6,14 +6,6 @@ import { rest } from "msw";
  * All handlers use relative URLs that work with the configured baseURL from API_CONFIG.
  */
 
-// Helper to get base URL - matches the logic in src/api/config.ts
-const getBaseURL = () => {
-  if (import.meta.env.VITE_API_BASE_URL) {
-    return import.meta.env.VITE_API_BASE_URL;
-  }
-  return "http://localhost:8100";
-};
-
 export const handlers = [
   // Taxonomies endpoints
   rest.get("/api/taxonomies", (req, res, ctx) => {
@@ -316,7 +308,7 @@ export const handlers = [
   }),
 
   rest.post("/api/graph", async (req, res, ctx) => {
-    const body = await req.json();
+    const _body = await req.json();
     return res(
       ctx.status(200),
       ctx.json({
@@ -360,7 +352,7 @@ export const handlers = [
 
   // RAG endpoints
   rest.post("/api/rag/extract", async (req, res, ctx) => {
-    const body = await req.json();
+    const _body = await req.json();
     return res(
       ctx.status(200),
       ctx.json({
@@ -409,7 +401,7 @@ export const handlers = [
   }),
 
   rest.post("/api/rag-experiments/run", async (req, res, ctx) => {
-    const body = await req.json();
+    const _body = await req.json();
     return res(
       ctx.status(200),
       ctx.json({
@@ -491,7 +483,7 @@ export const handlers = [
 
   // NLP endpoints
   rest.post("/api/nlp_analysis", async (req, res, ctx) => {
-    const body = await req.json();
+    const _body = await req.json();
     return res(
       ctx.status(200),
       ctx.json({
