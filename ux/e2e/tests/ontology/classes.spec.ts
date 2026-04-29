@@ -48,8 +48,12 @@ test.describe("Ontology Class CRUD Operations", () => {
     await expect(modal).toBeVisible({ timeout: 5000 });
 
     // Fill form fields
-    const titleInput = page.locator('[data-testid="class-title-input"]').first();
-    const definitionInput = page.locator('[data-testid="class-definition-input"]').first();
+    const titleInput = page
+      .locator('[data-testid="class-title-input"]')
+      .first();
+    const definitionInput = page
+      .locator('[data-testid="class-definition-input"]')
+      .first();
 
     await titleInput.fill("test-class-e2e-create");
     await definitionInput.fill("A test class created via E2E tests");
@@ -108,8 +112,10 @@ test.describe("Ontology Class CRUD Operations", () => {
 
     // Verify API response includes both
     const response = await apiRequest<any>(page, "/api/classes");
-    const titles = response.items?.map((c: any) => c.title) ||
-      response.map((c: any) => c.title) || [];
+    const titles =
+      response.items?.map((c: any) => c.title) ||
+      response.map((c: any) => c.title) ||
+      [];
     expect(titles).toContain(class1.title);
     expect(titles).toContain(class2.title);
   });
@@ -134,7 +140,9 @@ test.describe("Ontology Class CRUD Operations", () => {
 
     // Verify detail page contains class information
     await expect(page.getByText("Detail Test Class")).toBeVisible();
-    await expect(page.getByText("Test definition for class details")).toBeVisible();
+    await expect(
+      page.getByText("Test definition for class details"),
+    ).toBeVisible();
 
     // Verify API read-back returns same data
     const apiResponse = await apiRequest<any>(
@@ -165,8 +173,12 @@ test.describe("Ontology Class CRUD Operations", () => {
     await expect(modal).toBeVisible({ timeout: 5000 });
 
     // Update fields
-    const titleInput = page.locator('[data-testid="class-title-input"]').first();
-    const definitionInput = page.locator('[data-testid="class-definition-input"]').first();
+    const titleInput = page
+      .locator('[data-testid="class-title-input"]')
+      .first();
+    const definitionInput = page
+      .locator('[data-testid="class-definition-input"]')
+      .first();
 
     await titleInput.fill("test-class-e2e-update");
     await definitionInput.fill("Updated class definition");
@@ -214,7 +226,9 @@ test.describe("Ontology Class CRUD Operations", () => {
     await actionsDropdown.click();
 
     // Click Delete Selected
-    const deleteAction = page.getByRole("menuitem", { name: /delete selected/i });
+    const deleteAction = page.getByRole("menuitem", {
+      name: /delete selected/i,
+    });
     await deleteAction.click();
 
     // Handle confirmation dialog if present

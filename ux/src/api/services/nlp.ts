@@ -86,13 +86,12 @@ export interface ProxyMonitoringResponse {
     total_entries: number;
     total_size_bytes: number;
     hit_rate: number;
-     
+
     domains: Record<string, any>;
   };
   upstream?: {
-     
     overall: any;
-     
+
     domains: Record<string, any>;
   };
   database?: {
@@ -106,9 +105,8 @@ export interface ProxyMonitoringResponse {
     recent_errors: string[];
   };
   throttling?: {
-     
     overall: any;
-     
+
     domains: Record<string, any>;
   };
 }

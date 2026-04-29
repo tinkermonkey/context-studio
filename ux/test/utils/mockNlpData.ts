@@ -1,5 +1,5 @@
 // Use loose typing for test mocks to avoid tight coupling with service types
- 
+
 export const mockTokenData: any = {
   text: "database",
   lemma: "database",
@@ -24,7 +24,6 @@ export const mockTokenData: any = {
         terms: ["information_system", "data_structure"],
         scores: [0.8, 0.7],
       },
-       
     ] as any,
   },
 };

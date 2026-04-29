@@ -19,12 +19,12 @@ export { NodeType } from "./ontology";
 /**
  * @deprecated Use the new ontology entity types instead
  */
-export type OntologyClassCreate = any;  
+export type OntologyClassCreate = any;
 
 /**
  * @deprecated Use the new ontology entity types instead
  */
-export type OntologyClassUpdate = any;  
+export type OntologyClassUpdate = any;
 
 /**
  * @deprecated Use the new ontology entity types instead
@@ -53,17 +53,17 @@ export enum RecordType {
 /**
  * @deprecated
  */
-export type WordSense = any;  
+export type WordSense = any;
 
 /**
  * @deprecated
  */
-export type OntologyClassLink = any;  
+export type OntologyClassLink = any;
 
 /**
  * @deprecated
  */
-export type OntologyClassLinkCreate = any;  
+export type OntologyClassLinkCreate = any;
 
 /**
  * @deprecated
@@ -83,27 +83,27 @@ export interface ReferenceLink {
 /**
  * @deprecated
  */
-export type OntologyClassAttribute = any;  
+export type OntologyClassAttribute = any;
 
 /**
  * @deprecated
  */
-export type AttributeValueType = any;  
+export type AttributeValueType = any;
 
 /**
  * @deprecated
  */
-export type ResolvedAttribute = any;  
+export type ResolvedAttribute = any;
 
 /**
  * @deprecated
  */
-export type FindOntologyClassResult = any;  
+export type FindOntologyClassResult = any;
 
 /**
  * @deprecated
  */
-export type ExternalPredicateOut = any;  
+export type ExternalPredicateOut = any;
 
 /**
  * @deprecated

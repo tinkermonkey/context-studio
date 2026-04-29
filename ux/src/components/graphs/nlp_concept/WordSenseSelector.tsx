@@ -24,11 +24,9 @@ interface WordAnalysisResult {
   pos?: string;
   tag?: string;
   concepcy?: {
-     
     related_terms: any[];
   };
   wordnet?: {
-     
     synsets: any[];
   };
 }
@@ -395,7 +393,6 @@ export const WordSenseSelector: React.FC<WordSenseSelectorProps> = ({
                   inputTerm: state.analysis.text,
                   wordnet: {
                     synsets: (state.analysis.wordnet?.synsets || []).map(
-                       
                       (s: any) => ({
                         name: s.name || s.synset || s.id || s[0] || "unknown",
                         definition: s.definition || s.gloss || s.def || "",

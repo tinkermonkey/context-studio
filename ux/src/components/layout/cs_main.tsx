@@ -6,7 +6,7 @@ interface CsMainProps {
 
 interface CsMainTitleProps {
   children?: ReactNode;
-   
+
   icon?: React.ComponentType<any>;
   className?: string;
   "data-testid"?: string;

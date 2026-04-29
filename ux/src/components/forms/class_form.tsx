@@ -3,7 +3,10 @@ import { useForm } from "@tanstack/react-form";
 import { TextInput, Textarea, Button, Alert, Label } from "flowbite-react";
 import { Info, Database, Hash } from "lucide-react";
 import type { OntologyClass, OntologyClassCreate } from "@/api/types/ontology";
-import { useCreateOntologyClass, useUpdateOntologyClass } from "@/api/hooks/ontologyClasses";
+import {
+  useCreateOntologyClass,
+  useUpdateOntologyClass,
+} from "@/api/hooks/ontologyClasses";
 import { ConceptSchemeSelector } from "@/components/node_selectors/concept_scheme_selector";
 
 interface ClassFormProps {
@@ -24,14 +27,14 @@ const ClassForm: React.FC<ClassFormProps> = ({
   const createClassMutation = useCreateOntologyClass();
   const updateClassMutation = useUpdateOntologyClass();
   const isEdit = !!ontologyClass;
-  const isChildMode = mode === "child" || !!parentConceptSchemeId || !!parentClassId;
+  const isChildMode =
+    mode === "child" || !!parentConceptSchemeId || !!parentClassId;
   const [submitError, setSubmitError] = React.useState<string | null>(null);
 
   const getDefaultValues = () => ({
     title: ontologyClass?.title ?? "",
     definition: ontologyClass?.definition ?? "",
-    parent_class_id:
-      ontologyClass?.parent_class_id ?? parentClassId ?? "",
+    parent_class_id: ontologyClass?.parent_class_id ?? parentClassId ?? "",
   });
 
   const form = useForm({
@@ -102,7 +105,8 @@ const ClassForm: React.FC<ClassFormProps> = ({
             <div className="flex items-center gap-2 text-sm text-blue-700 dark:text-blue-300">
               <Info className="h-4 w-4" />
               <span>
-                Creating class in {parentConceptSchemeId ? "concept scheme" : "parent class"}
+                Creating class in{" "}
+                {parentConceptSchemeId ? "concept scheme" : "parent class"}
               </span>
             </div>
             <div className="mt-1 flex items-center gap-2">

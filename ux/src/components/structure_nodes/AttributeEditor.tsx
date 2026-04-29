@@ -8,9 +8,7 @@ import React, { useState } from "react";
 import { useForm } from "@tanstack/react-form";
 import { TextInput, Button, Label, Select, Card, Alert } from "flowbite-react";
 import { AlertCircle, Plus, X } from "lucide-react";
-import type {
-  OntologyClassAttribute,
-} from "@/api/types/ontology";
+import type { OntologyClassAttribute } from "@/api/types/ontology";
 import { AttributeValueInput } from "./AttributeValueInput";
 
 interface AttributeEditorProps {
@@ -21,15 +19,9 @@ interface AttributeEditorProps {
   existingKeys?: string[];
 }
 
-const ATTRIBUTE_TYPES = [
-  "string",
-  "number",
-  "boolean",
-  "date",
-  "url",
-] as const;
+const ATTRIBUTE_TYPES = ["string", "number", "boolean", "date", "url"] as const;
 
-type AttributeValueType = typeof ATTRIBUTE_TYPES[number];
+type AttributeValueType = (typeof ATTRIBUTE_TYPES)[number];
 
 const validateKey = (key: string, existingKeys?: string[]): string | null => {
   if (!key.trim()) {
@@ -137,9 +129,7 @@ export const AttributeEditor: React.FC<AttributeEditorProps> = ({
           value: value.value,
         });
         form.reset();
-      } catch (
-        error: any  
-      ) {
+      } catch (error: any) {
         const message =
           error?.message || error?.detail || "Failed to save attribute";
         setSubmitError(message);
@@ -254,7 +244,6 @@ export const AttributeEditor: React.FC<AttributeEditorProps> = ({
                   <AttributeValueInput
                     value={field.state.value}
                     valueType={typeField.state.value}
-                     
                     onChange={(newValue) => field.handleChange(newValue as any)}
                     error={validationErrors.value}
                     disabled={isLoading}

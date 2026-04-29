@@ -48,7 +48,7 @@ export const useButterToast = () => {
       const Icon = iconMap[type];
 
       // Render toast using React
-       
+
       const root = (window as any).ReactDOM?.createRoot?.(toastWrapper);
       if (root) {
         root.render(
@@ -95,7 +95,10 @@ export const useButterToast = () => {
                 : "text-blue-500 bg-blue-100 rounded-lg dark:bg-blue-800 dark:text-blue-200"
         }`;
 
-        const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+        const svg = document.createElementNS(
+          "http://www.w3.org/2000/svg",
+          "svg",
+        );
         svg.setAttribute("class", "w-5 h-5");
         svg.setAttribute("fill", "currentColor");
         svg.setAttribute("viewBox", "0 0 20 20");

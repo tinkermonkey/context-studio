@@ -83,27 +83,24 @@ Object.defineProperty(window, "matchMedia", {
 });
 
 // Mock IntersectionObserver
- 
+
 (global as any).IntersectionObserver = class IntersectionObserver {
   root: Element | Document | null = null;
   rootMargin = "";
   thresholds: number[] = [];
 
   constructor(
-     
     _callback: IntersectionObserverCallback,
-     
+
     _options?: IntersectionObserverInit,
   ) {
     // No-op
   }
 
-   
   observe(_$target: Element): void {
     // No-op
   }
 
-   
   unobserve(_$target: Element): void {
     // No-op
   }
@@ -119,15 +116,14 @@ Object.defineProperty(window, "matchMedia", {
 
 // Mock ResizeObserver for tests
 global.ResizeObserver = class ResizeObserver {
-   
   constructor(_$callback: ResizeObserverCallback) {
     // No-op
   }
-   
+
   observe(_$target: Element, _options?: ResizeObserverOptions) {
     // No-op
   }
-   
+
   unobserve(_$target: Element) {
     // No-op
   }

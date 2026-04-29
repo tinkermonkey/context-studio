@@ -41,7 +41,6 @@ import {
 } from "@/components/misc/query_filters";
 
 export interface BaseNodeTableProps<T> {
-   
   columns: any[];
   data: T[];
   isLoading?: boolean;
@@ -128,9 +127,9 @@ function BaseNodeTable<T>({
   const [showCreateModal, setShowCreateModal] = React.useState(false);
   const [showDeleteModal, setShowDeleteModal] = React.useState(false);
   const [showMoveModal, setShowMoveModal] = React.useState(false);
-   
+
   const [pendingDeleteRows, setPendingDeleteRows] = React.useState<any[]>([]);
-   
+
   const [pendingMoveRows, setPendingMoveRows] = React.useState<any[]>([]);
   const [childrenToHandle, setChildrenToHandle] = React.useState<T[]>([]);
   const [deleteOption, setDeleteOption] = React.useState<"delete" | "orphan">(
@@ -141,7 +140,7 @@ function BaseNodeTable<T>({
   );
   const [selectedCount, setSelectedCount] = React.useState(0);
   const [, setIsProcessing] = React.useState(false);
-   
+
   const tableRef = React.useRef<any>(null);
   const [columnVisibility, setColumnVisibility] = React.useState<
     Record<string, boolean>
@@ -318,21 +317,18 @@ function BaseNodeTable<T>({
 
     const searchLower = debouncedSearchTerm.toLowerCase().trim();
 
-    return (data ?? []).filter(
-       
-      (item: any) => {
-        // Search in title and definition fields
-        const title = item.title?.toLowerCase() || "";
-        const definition = item.definition?.toLowerCase() || "";
-        const id = item.id?.toLowerCase() || "";
+    return (data ?? []).filter((item: any) => {
+      // Search in title and definition fields
+      const title = item.title?.toLowerCase() || "";
+      const definition = item.definition?.toLowerCase() || "";
+      const id = item.id?.toLowerCase() || "";
 
-        return (
-          title.includes(searchLower) ||
-          definition.includes(searchLower) ||
-          id.includes(searchLower)
-        );
-      },
-    );
+      return (
+        title.includes(searchLower) ||
+        definition.includes(searchLower) ||
+        id.includes(searchLower)
+      );
+    });
   }, [data, debouncedSearchTerm]);
 
   // Handle filter changes
@@ -484,12 +480,7 @@ function BaseNodeTable<T>({
       }
 
       // Then delete the selected items
-      await onDelete(
-        pendingDeleteRows.map(
-           
-          (row: any) => getId(row.original),
-        ),
-      );
+      await onDelete(pendingDeleteRows.map((row: any) => getId(row.original)));
       setPendingDeleteRows([]);
       setChildrenToHandle([]);
 

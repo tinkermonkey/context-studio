@@ -19,7 +19,7 @@ test.describe("Term Management", () => {
 
   test.beforeEach(async ({ page }) => {
     // Create a test layer
-     
+
     const layerResponse = await apiRequest<any>(page, "/api/classes", {
       method: "POST",
       body: {
@@ -31,7 +31,7 @@ test.describe("Term Management", () => {
     testLayerId = layerResponse.id;
 
     // Create a test domain
-     
+
     const domainResponse = await apiRequest<any>(page, "/api/classes", {
       method: "POST",
       body: {
@@ -92,7 +92,7 @@ test.describe("Term Management", () => {
 
     // Wait for actual options to load by looking for our specific test domain
     // Get the test domain title first
-     
+
     const domainResponse = await apiRequest<any>(
       page,
       `/api/classes/${testDomainId}`,
@@ -123,13 +123,12 @@ test.describe("Term Management", () => {
     );
 
     // Verify term exists in backend with correct domain association
-     
+
     const response = await apiRequest<{ data: any[] }>(
       page,
       "/api/classes?node_type=term",
     );
 
-     
     const createdTerm = response.data.find((n: any) => n.title === termTitle);
 
     expect(createdTerm).toBeDefined();
@@ -145,7 +144,7 @@ test.describe("Term Management", () => {
     const updatedDefinition = "Updated definition via E2E test";
 
     // Create term via API
-     
+
     const createResponse = await apiRequest<any>(page, "/api/classes", {
       method: "POST",
       body: {
@@ -185,11 +184,8 @@ test.describe("Term Management", () => {
     );
 
     // Verify backend was updated
-     
-    const response = await apiRequest<any>(
-      page,
-      `/api/classes/${termId}`,
-    );
+
+    const response = await apiRequest<any>(page, `/api/classes/${termId}`);
     expect(response.title).toBe(updatedTitle);
     expect(response.definition).toBe(updatedDefinition);
   });
@@ -197,7 +193,7 @@ test.describe("Term Management", () => {
   test("should delete a term", async ({ page }) => {
     // Create a term to delete
     const termTitle = `E2E Delete Test ${Date.now()}`;
-     
+
     const createResponse = await apiRequest<any>(page, "/api/classes", {
       method: "POST",
       body: {
@@ -341,7 +337,7 @@ test.describe("Term Management", () => {
     // Create a term
     const termTitle = `E2E Detail Test ${Date.now()}`;
     const termDefinition = "Test term for detail view";
-     
+
     const createResponse = await apiRequest<any>(page, "/api/classes", {
       method: "POST",
       body: {
@@ -387,7 +383,7 @@ test.describe("Term Management", () => {
 
   test("should cancel term creation", async ({ page }) => {
     // Get current term count
-     
+
     const beforeResponse = await apiRequest<{ data: any[]; total: number }>(
       page,
       "/api/classes?node_type=term",
@@ -412,7 +408,7 @@ test.describe("Term Management", () => {
     await page.waitForLoadState("networkidle");
 
     // Verify no new term was created
-     
+
     const afterResponse = await apiRequest<{ data: any[]; total: number }>(
       page,
       "/api/classes?node_type=term",
@@ -423,7 +419,6 @@ test.describe("Term Management", () => {
 
     // Verify the specific test term was not created
     const testTerm = afterResponse.data.find(
-       
       (n: any) => n.title === "Test Term Not Submitted",
     );
     expect(testTerm).toBeUndefined();
@@ -462,7 +457,7 @@ test.describe("Term Management", () => {
   }) => {
     // Create multiple terms
     const timestamp = Date.now();
-     
+
     const term1 = await apiRequest<any>(page, "/api/classes", {
       method: "POST",
       body: {
@@ -472,7 +467,7 @@ test.describe("Term Management", () => {
         parent_node_id: testDomainId,
       },
     });
-     
+
     const term2 = await apiRequest<any>(page, "/api/classes", {
       method: "POST",
       body: {
@@ -521,20 +516,16 @@ test.describe("Term Management", () => {
 
   test("should filter terms by domain", async ({ page }) => {
     // Create a second domain
-     
-    const domain2Response = await apiRequest<any>(
-      page,
-      "/api/classes",
-      {
-        method: "POST",
-        body: {
-          title: `E2E Test Domain 2 ${Date.now()}`,
-          definition: "Second test domain",
-          node_type: "domain",
-          parent_node_id: testLayerId,
-        },
+
+    const domain2Response = await apiRequest<any>(page, "/api/classes", {
+      method: "POST",
+      body: {
+        title: `E2E Test Domain 2 ${Date.now()}`,
+        definition: "Second test domain",
+        node_type: "domain",
+        parent_node_id: testLayerId,
       },
-    );
+    });
     const domain2Id = domain2Response.id;
 
     const timestamp = Date.now();
@@ -542,7 +533,7 @@ test.describe("Term Management", () => {
     const term2Title = `Term Domain 2 ${timestamp}`;
 
     // Create terms in each domain
-     
+
     await apiRequest<any>(page, "/api/classes", {
       method: "POST",
       body: {
@@ -553,7 +544,6 @@ test.describe("Term Management", () => {
       },
     });
 
-     
     await apiRequest<any>(page, "/api/classes", {
       method: "POST",
       body: {
@@ -598,7 +588,7 @@ test.describe("Term Management", () => {
 
   test("should filter terms by layer", async ({ page }) => {
     // Create a second layer and domain
-     
+
     const layer2Response = await apiRequest<any>(page, "/api/classes", {
       method: "POST",
       body: {
@@ -609,20 +599,15 @@ test.describe("Term Management", () => {
     });
     const layer2Id = layer2Response.id;
 
-     
-    const domain2Response = await apiRequest<any>(
-      page,
-      "/api/classes",
-      {
-        method: "POST",
-        body: {
-          title: `E2E Test Domain Layer 2 ${Date.now()}`,
-          definition: "Domain in layer 2",
-          node_type: "domain",
-          parent_node_id: layer2Id,
-        },
+    const domain2Response = await apiRequest<any>(page, "/api/classes", {
+      method: "POST",
+      body: {
+        title: `E2E Test Domain Layer 2 ${Date.now()}`,
+        definition: "Domain in layer 2",
+        node_type: "domain",
+        parent_node_id: layer2Id,
       },
-    );
+    });
     const domain2Id = domain2Response.id;
 
     const timestamp = Date.now();
@@ -686,20 +671,16 @@ test.describe("Term Management", () => {
     page,
   }) => {
     // Create a second domain in the same layer
-     
-    const domain2Response = await apiRequest<any>(
-      page,
-      "/api/classes",
-      {
-        method: "POST",
-        body: {
-          title: `E2E Test Domain 2 ${Date.now()}`,
-          definition: "Second domain in same layer",
-          node_type: "domain",
-          parent_node_id: testLayerId,
-        },
+
+    const domain2Response = await apiRequest<any>(page, "/api/classes", {
+      method: "POST",
+      body: {
+        title: `E2E Test Domain 2 ${Date.now()}`,
+        definition: "Second domain in same layer",
+        node_type: "domain",
+        parent_node_id: testLayerId,
       },
-    );
+    });
     const domain2Id = domain2Response.id;
 
     const timestamp = Date.now();

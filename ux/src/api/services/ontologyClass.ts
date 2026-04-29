@@ -22,7 +22,8 @@ export class OntologyClassService extends BaseService {
       const queryParams: Record<string, unknown> = {};
       if (params?.offset !== undefined) queryParams.offset = params.offset;
       if (params?.limit !== undefined) queryParams.limit = params.limit;
-      if (params?.concept_scheme_id) queryParams.concept_scheme_id = params.concept_scheme_id;
+      if (params?.concept_scheme_id)
+        queryParams.concept_scheme_id = params.concept_scheme_id;
       if (params?.parent_class_id)
         queryParams.parent_class_id = params.parent_class_id;
 
@@ -56,7 +57,10 @@ export class OntologyClassService extends BaseService {
   /**
    * Create a new ontology class within a scheme
    */
-  async create(schemeId: string, data: OntologyClassCreate): Promise<OntologyClass> {
+  async create(
+    schemeId: string,
+    data: OntologyClassCreate,
+  ): Promise<OntologyClass> {
     return this.withErrorContext(async () => {
       this.validateRequired(schemeId, "schemeId");
       this.validateRequired(data.title, "title");
@@ -101,9 +105,7 @@ export class OntologyClassService extends BaseService {
   async delete(id: string): Promise<void> {
     return this.withErrorContext(async () => {
       this.validateRequired(id, "id");
-      return this.deleteResource<void>(
-        `${ENDPOINTS.ONTOLOGY_CLASSES}/${id}`,
-      );
+      return this.deleteResource<void>(`${ENDPOINTS.ONTOLOGY_CLASSES}/${id}`);
     }, "delete");
   }
 }

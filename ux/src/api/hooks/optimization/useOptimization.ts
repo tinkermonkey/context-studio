@@ -24,27 +24,27 @@ export interface SystemHealth {
 
 export interface PerformanceMetrics {
   timestamp: string;
-   
+
   database_metrics: Record<string, any>;
-   
+
   s3_metrics: Record<string, any>;
-   
+
   query_metrics: Record<string, any>;
-   
+
   system_metrics: Record<string, any>;
-   
+
   cache_metrics: Record<string, any>;
-   
+
   batch_metrics: Record<string, any>;
 }
 
 export interface PerformanceTrends {
   analysis_window_hours: number;
-   
+
   trends: Record<string, any>;
-   
+
   issues: Array<Record<string, any>>;
-   
+
   recommendations: Array<Record<string, any>>;
   overall_health_score: number;
   performance_grade: string;
@@ -53,7 +53,7 @@ export interface PerformanceTrends {
 export interface QueryStats {
   total_queries: number;
   avg_execution_time_ms: number;
-   
+
   cache_stats: Record<string, any>;
   materialized_views_count: number;
 }
@@ -61,7 +61,7 @@ export interface QueryStats {
 export interface QueryOptimization {
   original_query: string;
   optimized_query: string;
-   
+
   metrics: Record<string, any>;
   optimization_applied: string[];
 }
@@ -72,13 +72,12 @@ export interface StorageStats {
     total_savings_bytes: number;
     average_compression_ratio: number;
   };
-   
+
   compression_algorithms_used: Record<string, any>;
   total_optimizations: number;
 }
 
 export interface StorageOptimization {
-   
   optimization_actions: Array<Record<string, any>>;
   storage_saved_bytes: number;
   cost_reduction_estimate: number;
@@ -86,11 +85,10 @@ export interface StorageOptimization {
 }
 
 export interface ThreeWayDiff {
-   
   diff_result: Record<string, any>;
-   
+
   conflicts_detected: Array<Record<string, any>>;
-   
+
   semantic_insights?: Record<string, any>;
   merge_recommendation?: string;
 }
@@ -102,14 +100,14 @@ export interface BatchOperationResult {
   failed_items: number;
   processing_time_seconds: number;
   throughput_per_second: number;
-   
+
   errors: Array<Record<string, any>>;
 }
 
 // Request Types
 export interface QueryOptimizationRequest {
   query: string;
-   
+
   context?: Record<string, any>;
 }
 
@@ -120,21 +118,20 @@ export interface MaterializedViewRequest {
 }
 
 export interface ThreeWayDiffRequest {
-   
   base: Record<string, any>;
-   
+
   local: Record<string, any>;
-   
+
   remote: Record<string, any>;
   enable_semantic_analysis?: boolean;
 }
 
 export interface BatchOperationRequest {
   operation_type: string;
-   
+
   entity_data: Array<Record<string, any>>;
   author_id: string;
-   
+
   options?: Record<string, any>;
 }
 
@@ -169,10 +166,8 @@ export function useSystemHealth(options?: UseQueryOptions<SystemHealth>) {
 }
 
 export function usePerformanceDashboard(
-   
   options?: UseQueryOptions<Record<string, any>>,
 ) {
-   
   return useQuery<Record<string, any>>({
     queryKey: optimizationKeys.performanceDashboard(),
     queryFn: async () => {
@@ -241,9 +236,7 @@ export function useStorageStats(options?: UseQueryOptions<StorageStats>) {
   });
 }
 
- 
 export function useDiffStats(options?: UseQueryOptions<Record<string, any>>) {
-   
   return useQuery<Record<string, any>>({
     queryKey: optimizationKeys.diffStats(),
     queryFn: async () => {
@@ -254,9 +247,7 @@ export function useDiffStats(options?: UseQueryOptions<Record<string, any>>) {
   });
 }
 
- 
 export function useBatchStats(options?: UseQueryOptions<Record<string, any>>) {
-   
   return useQuery<Record<string, any>>({
     queryKey: optimizationKeys.batchStats(),
     queryFn: async () => {
@@ -267,10 +258,8 @@ export function useBatchStats(options?: UseQueryOptions<Record<string, any>>) {
   });
 }
 export function useOptimizationConfig(
-   
   options?: UseQueryOptions<Record<string, any>>,
 ) {
-   
   return useQuery<Record<string, any>>({
     queryKey: optimizationKeys.config(),
     queryFn: async () => {
@@ -282,10 +271,8 @@ export function useOptimizationConfig(
 }
 
 export function useAutoOptimize(
-   
   options?: UseMutationOptions<any, Error, void>,
 ) {
-   
   return useMutation<any, Error, void>({
     mutationFn: async () => {
       const response = await apiClient.post(
@@ -317,10 +304,8 @@ export function useOptimizeQuery(
 }
 
 export function useCreateMaterializedView(
-   
   options?: UseMutationOptions<any, Error, MaterializedViewRequest>,
 ) {
-   
   return useMutation<any, Error, MaterializedViewRequest>({
     mutationFn: async (request) => {
       const response = await apiClient.post(
@@ -348,10 +333,8 @@ export function useOptimizeStorage(
 }
 
 export function useSetupLifecyclePolicies(
-   
   options?: UseMutationOptions<any, Error, void>,
 ) {
-   
   return useMutation<any, Error, void>({
     mutationFn: async () => {
       const response = await apiClient.post(
@@ -398,10 +381,8 @@ export function useBatchOperation(
 }
 
 export function useUpdateOptimizationConfig(
-   
   options?: UseMutationOptions<any, Error, Record<string, any>>,
 ) {
-   
   return useMutation<any, Error, Record<string, any>>({
     mutationFn: async (config) => {
       const response = await apiClient.put(`/api/optimization/config`, config);

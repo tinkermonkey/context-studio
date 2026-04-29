@@ -10,14 +10,16 @@ import type { OntologyClass } from "../../types/ontology";
 /**
  * @deprecated Use the new ontology entity mutation hooks instead
  */
-export const useCreateOntologyClass = (..._args: any[]): UseMutationResult<OntologyClass, Error, any, any> => {  
+export const useCreateOntologyClass = (
+  ..._args: any[]
+): UseMutationResult<OntologyClass, Error, any, any> => {
   return {
-    mutate: (_data?: any) => {  
+    mutate: (_data?: any) => {
       throw new Error(
         "useCreateOntologyClass has been removed. Use useCreateTaxonomy, useCreateConceptScheme, or useCreateOntologyClass instead.",
       );
     },
-    mutateAsync: async (_data?: any) => {  
+    mutateAsync: async (_data?: any) => {
       throw new Error(
         "useCreateOntologyClass has been removed. Use useCreateTaxonomy, useCreateConceptScheme, or useCreateOntologyClass instead.",
       );
@@ -35,15 +37,15 @@ export const useCreateOntologyClass = (..._args: any[]): UseMutationResult<Ontol
  * @deprecated Use the new ontology entity mutation hooks instead
  */
 export const useUpdateOntologyClass = (
-  _options?: any,  
+  _options?: any,
 ): UseMutationResult<OntologyClass, Error, any, any> => {
   return {
-    mutate: (_data?: any) => {  
+    mutate: (_data?: any) => {
       throw new Error(
         "useUpdateOntologyClass has been removed. Use useUpdateTaxonomy, useUpdateConceptScheme, or useUpdateOntologyClass instead.",
       );
     },
-    mutateAsync: async (_data?: any) => {  
+    mutateAsync: async (_data?: any) => {
       throw new Error(
         "useUpdateOntologyClass has been removed. Use useUpdateTaxonomy, useUpdateConceptScheme, or useUpdateOntologyClass instead.",
       );
@@ -61,15 +63,15 @@ export const useUpdateOntologyClass = (
  * @deprecated Use the new ontology entity mutation hooks instead
  */
 export const useDeleteOntologyClass = (
-  _options?: any,  
+  _options?: any,
 ): UseMutationResult<void, Error, string, any> => {
   return {
-    mutate: (_data?: any) => {  
+    mutate: (_data?: any) => {
       throw new Error(
         "useDeleteOntologyClass has been removed. Use useDeleteTaxonomy, useDeleteConceptScheme, or useDeleteOntologyClass instead.",
       );
     },
-    mutateAsync: async (_data?: any) => {  
+    mutateAsync: async (_data?: any) => {
       throw new Error(
         "useDeleteOntologyClass has been removed. Use useDeleteTaxonomy, useDeleteConceptScheme, or useDeleteOntologyClass instead.",
       );
@@ -112,10 +114,10 @@ export const useMoveOntologyClass = (
   _options?: any,
 ): UseMutationResult<any, Error, any, any> => {
   return {
-    mutate: (_data?: any) => {  
+    mutate: (_data?: any) => {
       throw new Error("useMoveOntologyClass has been removed.");
     },
-    mutateAsync: async (_data?: any) => {  
+    mutateAsync: async (_data?: any) => {
       throw new Error("useMoveOntologyClass has been removed.");
     },
     isPending: false,
@@ -130,13 +132,19 @@ export const useMoveOntologyClass = (
 /**
  * @deprecated
  */
-export const useCreateDomain = (..._args: any[]): UseMutationResult<any, Error, any, any> => {  
+export const useCreateDomain = (
+  ..._args: any[]
+): UseMutationResult<any, Error, any, any> => {
   return {
-    mutate: (_data?: any) => {  
-      throw new Error("useCreateDomain has been removed. Use useCreateConceptScheme instead.");
+    mutate: (_data?: any) => {
+      throw new Error(
+        "useCreateDomain has been removed. Use useCreateConceptScheme instead.",
+      );
     },
-    mutateAsync: async (_data?: any) => {  
-      throw new Error("useCreateDomain has been removed. Use useCreateConceptScheme instead.");
+    mutateAsync: async (_data?: any) => {
+      throw new Error(
+        "useCreateDomain has been removed. Use useCreateConceptScheme instead.",
+      );
     },
     isPending: false,
     isError: true,
@@ -151,14 +159,18 @@ export const useCreateDomain = (..._args: any[]): UseMutationResult<any, Error, 
  * @deprecated
  */
 export const useCreateLayer = (
-  _options?: any,  
+  _options?: any,
 ): UseMutationResult<any, Error, any, any> => {
   return {
-    mutate: (_data?: any) => {  
-      throw new Error("useCreateLayer has been removed. Use useCreateTaxonomy instead.");
+    mutate: (_data?: any) => {
+      throw new Error(
+        "useCreateLayer has been removed. Use useCreateTaxonomy instead.",
+      );
     },
-    mutateAsync: async (_data?: any) => {  
-      throw new Error("useCreateLayer has been removed. Use useCreateTaxonomy instead.");
+    mutateAsync: async (_data?: any) => {
+      throw new Error(
+        "useCreateLayer has been removed. Use useCreateTaxonomy instead.",
+      );
     },
     isPending: false,
     isError: true,
@@ -173,14 +185,18 @@ export const useCreateLayer = (
  * @deprecated
  */
 export const useCreateTerm = (
-  _options?: any,  
+  _options?: any,
 ): UseMutationResult<any, Error, any, any> => {
   return {
-    mutate: (_data?: any) => {  
-      throw new Error("useCreateTerm has been removed. Use useCreateOntologyClass instead.");
+    mutate: (_data?: any) => {
+      throw new Error(
+        "useCreateTerm has been removed. Use useCreateOntologyClass instead.",
+      );
     },
-    mutateAsync: async (_data?: any) => {  
-      throw new Error("useCreateTerm has been removed. Use useCreateOntologyClass instead.");
+    mutateAsync: async (_data?: any) => {
+      throw new Error(
+        "useCreateTerm has been removed. Use useCreateOntologyClass instead.",
+      );
     },
     isPending: false,
     isError: true,
@@ -195,14 +211,18 @@ export const useCreateTerm = (
  * @deprecated
  */
 export const useUpdateTerm = (
-  _options?: any,  
+  _options?: any,
 ): UseMutationResult<any, Error, any, any> => {
   return {
-    mutate: (_data?: any) => {  
-      throw new Error("useUpdateTerm has been removed. Use useUpdateOntologyClass instead.");
+    mutate: (_data?: any) => {
+      throw new Error(
+        "useUpdateTerm has been removed. Use useUpdateOntologyClass instead.",
+      );
     },
-    mutateAsync: async (_data?: any) => {  
-      throw new Error("useUpdateTerm has been removed. Use useUpdateOntologyClass instead.");
+    mutateAsync: async (_data?: any) => {
+      throw new Error(
+        "useUpdateTerm has been removed. Use useUpdateOntologyClass instead.",
+      );
     },
     isPending: false,
     isError: true,
@@ -217,14 +237,18 @@ export const useUpdateTerm = (
  * @deprecated
  */
 export const useUpdateDomain = (
-  _options?: any,  
+  _options?: any,
 ): UseMutationResult<any, Error, any, any> => {
   return {
-    mutate: (_data?: any) => {  
-      throw new Error("useUpdateDomain has been removed. Use useUpdateConceptScheme instead.");
+    mutate: (_data?: any) => {
+      throw new Error(
+        "useUpdateDomain has been removed. Use useUpdateConceptScheme instead.",
+      );
     },
-    mutateAsync: async (_data?: any) => {  
-      throw new Error("useUpdateDomain has been removed. Use useUpdateConceptScheme instead.");
+    mutateAsync: async (_data?: any) => {
+      throw new Error(
+        "useUpdateDomain has been removed. Use useUpdateConceptScheme instead.",
+      );
     },
     isPending: false,
     isError: true,
@@ -239,14 +263,18 @@ export const useUpdateDomain = (
  * @deprecated
  */
 export const useUpdateLayer = (
-  _options?: any,  
+  _options?: any,
 ): UseMutationResult<any, Error, any, any> => {
   return {
-    mutate: (_data?: any) => {  
-      throw new Error("useUpdateLayer has been removed. Use useUpdateTaxonomy instead.");
+    mutate: (_data?: any) => {
+      throw new Error(
+        "useUpdateLayer has been removed. Use useUpdateTaxonomy instead.",
+      );
     },
-    mutateAsync: async (_data?: any) => {  
-      throw new Error("useUpdateLayer has been removed. Use useUpdateTaxonomy instead.");
+    mutateAsync: async (_data?: any) => {
+      throw new Error(
+        "useUpdateLayer has been removed. Use useUpdateTaxonomy instead.",
+      );
     },
     isPending: false,
     isError: true,

@@ -22,11 +22,10 @@ export class RelationshipService extends BaseService {
       const queryParams: Record<string, unknown> = {};
       if (params?.offset !== undefined) queryParams.offset = params.offset;
       if (params?.limit !== undefined) queryParams.limit = params.limit;
-      if (params?.source_id)
-        queryParams.source_id = params.source_id;
-      if (params?.target_id)
-        queryParams.target_id = params.target_id;
-      if (params?.relationship_type) queryParams.relationship_type = params.relationship_type;
+      if (params?.source_id) queryParams.source_id = params.source_id;
+      if (params?.target_id) queryParams.target_id = params.target_id;
+      if (params?.relationship_type)
+        queryParams.relationship_type = params.relationship_type;
 
       // If no limit specified, load all
       if (params?.limit === undefined) {
@@ -36,10 +35,7 @@ export class RelationshipService extends BaseService {
         );
       }
 
-      return this.getPage<Relationship>(
-        ENDPOINTS.RELATIONSHIPS,
-        queryParams,
-      );
+      return this.getPage<Relationship>(ENDPOINTS.RELATIONSHIPS, queryParams);
     }, "list");
   }
 
@@ -49,9 +45,7 @@ export class RelationshipService extends BaseService {
   async get(id: string): Promise<Relationship> {
     return this.withErrorContext(async () => {
       this.validateRequired(id, "id");
-      return this.getResource<Relationship>(
-        `${ENDPOINTS.RELATIONSHIPS}/${id}`,
-      );
+      return this.getResource<Relationship>(`${ENDPOINTS.RELATIONSHIPS}/${id}`);
     }, "get");
   }
 

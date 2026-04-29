@@ -248,7 +248,7 @@ export class EnabledModelsService extends BaseService {
   /**
    * Validate provider configuration
    */
-   
+
   async validateProviderConfig(_providerType: ProviderType): Promise<{
     valid: boolean;
     issues: string[];

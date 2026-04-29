@@ -25,7 +25,10 @@ export class TaxonomyService extends BaseService {
 
       // If no limit specified, load all
       if (params?.limit === undefined) {
-        return this.getAllPaginated<Taxonomy>(ENDPOINTS.TAXONOMIES, queryParams);
+        return this.getAllPaginated<Taxonomy>(
+          ENDPOINTS.TAXONOMIES,
+          queryParams,
+        );
       }
 
       return this.getPage<Taxonomy>(ENDPOINTS.TAXONOMIES, queryParams);
@@ -65,10 +68,7 @@ export class TaxonomyService extends BaseService {
         this.sanitizeString(data.title, "title", 255);
       }
 
-      return this.putResource<Taxonomy>(
-        `${ENDPOINTS.TAXONOMIES}/${id}`,
-        data,
-      );
+      return this.putResource<Taxonomy>(`${ENDPOINTS.TAXONOMIES}/${id}`, data);
     }, "update");
   }
 

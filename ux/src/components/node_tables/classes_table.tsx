@@ -4,7 +4,10 @@ import { Checkbox } from "flowbite-react";
 import type { OntologyClass } from "@/api/types/ontology";
 import { renderShortDateTime, renderShortUuid } from "@/utils/renderers";
 import { BaseNodeTable } from "./node_table";
-import { useOntologyClasses, useDeleteOntologyClass } from "@/api/hooks/ontologyClasses";
+import {
+  useOntologyClasses,
+  useDeleteOntologyClass,
+} from "@/api/hooks/ontologyClasses";
 import { ClassForm } from "@/components/forms/class_form";
 import { ClassMoveForm } from "@/components/forms/class_move_form";
 import type { FieldDefinition } from "@/components/misc/query_filters";
@@ -139,7 +142,6 @@ export interface ClassesTableProps {
   onQueryParamsChange?: (params: Record<string, unknown>) => void;
 }
 
-
 const ClassesTable = React.forwardRef<any, ClassesTableProps>((props) => {
   const { queryParams = {}, onQueryParamsChange } = props;
 
@@ -185,7 +187,9 @@ const ClassesTable = React.forwardRef<any, ClassesTableProps>((props) => {
       onQueryParamsChange={onQueryParamsChange}
       filterFields={classFilterFields}
       searchPlaceholder="Search..."
-      linkGenerator={(ontologyClass: OntologyClass) => `/app/classes/${ontologyClass.id}`}
+      linkGenerator={(ontologyClass: OntologyClass) =>
+        `/app/classes/${ontologyClass.id}`
+      }
     />
   );
 });

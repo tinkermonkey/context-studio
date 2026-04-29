@@ -112,7 +112,9 @@ test.describe("Pages and Interactive Elements", () => {
 
     // Verify either table exists or empty state message
     const table = page.locator("table").first();
-    const emptyMessage = page.locator("text=/no data|no results|empty/i").first();
+    const emptyMessage = page
+      .locator("text=/no data|no results|empty/i")
+      .first();
 
     const tableExists = await table.isVisible().catch(() => false);
     const hasEmptyMessage = await emptyMessage.isVisible().catch(() => false);
@@ -177,7 +179,9 @@ test.describe("Pages and Interactive Elements", () => {
 
     // Find a row with our test taxonomy
     const tableText = page.locator("table").first();
-    const taxonomyCell = tableText.locator(`text=${taxonomy.taxonomy.title}`).first();
+    const taxonomyCell = tableText
+      .locator(`text=${taxonomy.taxonomy.title}`)
+      .first();
 
     // Verify cell is visible and interactable
     await expect(taxonomyCell).toBeVisible();
@@ -282,9 +286,11 @@ test.describe("Pages and Interactive Elements", () => {
           await submitButton.click();
 
           // Wait for modal to close
-          await expect(modal).not.toBeVisible({ timeout: 5000 }).catch(() => {
-            // Modal might still be visible if form validation failed
-          });
+          await expect(modal)
+            .not.toBeVisible({ timeout: 5000 })
+            .catch(() => {
+              // Modal might still be visible if form validation failed
+            });
         }
       }
     }
@@ -319,15 +325,17 @@ test.describe("Pages and Interactive Elements", () => {
 
     // Find and click a checkbox to select a row
     const checkboxes = page.locator("input[type='checkbox']");
-    if (await checkboxes.count() > 1) {
+    if ((await checkboxes.count()) > 1) {
       // Skip the header checkbox (index 0) and select first row
       await checkboxes.nth(1).click();
 
       // Verify checkbox is checked
       const selectedCheckbox = checkboxes.nth(1);
-      await expect(selectedCheckbox).toBeChecked().catch(() => {
-        // Checkbox might be in a different state depending on implementation
-      });
+      await expect(selectedCheckbox)
+        .toBeChecked()
+        .catch(() => {
+          // Checkbox might be in a different state depending on implementation
+        });
     }
   });
 

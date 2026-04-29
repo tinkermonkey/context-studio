@@ -136,7 +136,8 @@ export const NodeLinkItem: React.FC<NodeLinkItemProps> = ({
                 </span>
               </div>
               <div className="text-sm text-gray-600">
-                via: <code className="font-mono">{link.property_definition_id}</code>
+                via:{" "}
+                <code className="font-mono">{link.property_definition_id}</code>
               </div>
             </div>
 

@@ -10,7 +10,7 @@ import { Card } from "flowbite-react";
 export interface ChartDataPoint {
   label: string;
   value: number;
-   
+
   metadata?: Record<string, any>;
 }
 

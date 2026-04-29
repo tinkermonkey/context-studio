@@ -92,7 +92,6 @@ function RouteComponent() {
     return labels[path] || path;
   };
 
-   
   const handleUpdateServerConfig = async (path: string, value: any) => {
     const label = getConfigLabel(path);
     await updateConfigMutation.mutateAsync(
@@ -113,7 +112,6 @@ function RouteComponent() {
     );
   };
 
-   
   const handleUpdateLoggingConfig = async (path: string, value: any) => {
     const label = getConfigLabel(path);
     await updateConfigMutation.mutateAsync(
@@ -134,7 +132,6 @@ function RouteComponent() {
     );
   };
 
-   
   const handleUpdateSecurityConfig = async (path: string, value: any) => {
     const label = getConfigLabel(path);
     await updateConfigMutation.mutateAsync(
@@ -220,10 +217,8 @@ function ServerSettingsSection({
   onUpdate,
   isUpdating,
 }: {
-   
   config: any;
 
-   
   onUpdate: (path: string, value: any) => void;
   isUpdating: boolean;
 }) {
@@ -367,10 +362,8 @@ function LoggingConfigurationSection({
   onUpdate,
   isUpdating,
 }: {
-   
   config: any;
 
-   
   onUpdate: (path: string, value: any) => void;
   isUpdating: boolean;
 }) {
@@ -562,10 +555,8 @@ function SecuritySettingsSection({
   onUpdate,
   isUpdating,
 }: {
-   
   config: any;
 
-   
   onUpdate: (path: string, value: any) => void;
   isUpdating: boolean;
 }) {

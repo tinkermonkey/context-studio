@@ -58,7 +58,11 @@ export const usePropertyDefinition = (
  * Hook to create a new property definition
  */
 export const useCreatePropertyDefinition = (
-  options?: UseMutationOptions<PropertyDefinition, Error, PropertyDefinitionCreate>,
+  options?: UseMutationOptions<
+    PropertyDefinition,
+    Error,
+    PropertyDefinitionCreate
+  >,
 ) => {
   const queryClient = useQueryClient();
 
@@ -87,8 +91,7 @@ export const useUpdatePropertyDefinition = (
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ id, data }) =>
-      propertyDefinitionService.update(id, data),
+    mutationFn: ({ id, data }) => propertyDefinitionService.update(id, data),
     onSuccess: (updatedProperty) => {
       // Update specific property cache
       queryClient.setQueryData(

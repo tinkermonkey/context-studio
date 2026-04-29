@@ -221,9 +221,9 @@ export const useGenerateTermDefinitionWithReferencesMutation = (
     Error,
     {
       term: string;
-       
+
       dbpediaContext?: Record<string, any>;
-       
+
       wikidataContext?: Record<string, any>;
     }
   >,
@@ -348,9 +348,9 @@ export const useGenerateDefinitionWithReferencesMutation = (
     Error,
     {
       term: string;
-       
+
       dbpediaContext?: Record<string, any>;
-       
+
       wikidataContext?: Record<string, any>;
     }
   >,

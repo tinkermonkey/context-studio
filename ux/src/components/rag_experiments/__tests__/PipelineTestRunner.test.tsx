@@ -54,7 +54,6 @@ describe("PipelineTestRunner", () => {
       },
       isLoading: false,
       error: null,
-       
     } as any);
 
     vi.mocked(ragExperimentsHooks.useRunPipelineTest).mockReturnValue({
@@ -63,7 +62,6 @@ describe("PipelineTestRunner", () => {
       isSuccess: false,
       error: null,
       data: null,
-       
     } as any);
   });
 
@@ -126,7 +124,6 @@ describe("PipelineTestRunner", () => {
       data: null,
       isLoading: true,
       error: null,
-       
     } as any);
 
     render(<PipelineTestRunner />, { wrapper: createWrapper() });
@@ -139,7 +136,6 @@ describe("PipelineTestRunner", () => {
       data: null,
       isLoading: false,
       error: new Error("Failed to fetch paragraphs"),
-       
     } as any);
 
     render(<PipelineTestRunner />, { wrapper: createWrapper() });
@@ -184,7 +180,6 @@ describe("PipelineTestRunner", () => {
       isSuccess: false,
       error: null,
       data: null,
-       
     } as any);
 
     render(<PipelineTestRunner />, { wrapper: createWrapper() });
@@ -204,7 +199,6 @@ describe("PipelineTestRunner", () => {
         failed_runs: 0,
         results: [],
       },
-       
     } as any);
 
     render(<PipelineTestRunner />, { wrapper: createWrapper() });
@@ -220,7 +214,6 @@ describe("PipelineTestRunner", () => {
       isSuccess: false,
       error: new Error("Test execution failed"),
       data: null,
-       
     } as any);
 
     render(<PipelineTestRunner />, { wrapper: createWrapper() });
@@ -258,7 +251,6 @@ describe("PipelineTestRunner", () => {
       data: { paragraphs: [], total_count: 0, limit: 100, offset: 0 },
       isLoading: false,
       error: null,
-       
     } as any);
 
     render(<PipelineTestRunner />, { wrapper: createWrapper() });

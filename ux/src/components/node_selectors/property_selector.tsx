@@ -28,7 +28,9 @@ export const PropertySelector: React.FC<PropertySelectorProps> = ({
       loading={isLoading}
       error={error ? "Failed to load properties" : null}
       fieldMap={{ value: "id", title: "title", definition: "description" }}
-      onSelect={(r) => onSelect && onSelect(r as PropertyDefinition | undefined)}
+      onSelect={(r) =>
+        onSelect && onSelect(r as PropertyDefinition | undefined)
+      }
       value={value}
     />
   );

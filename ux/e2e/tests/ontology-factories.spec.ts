@@ -40,7 +40,9 @@ test.describe("Test Data Factories", () => {
       expect(taxonomy.version).toBeDefined();
     });
 
-    test("should create a concept scheme within a taxonomy", async ({ page }) => {
+    test("should create a concept scheme within a taxonomy", async ({
+      page,
+    }) => {
       const taxonomy = await createTaxonomy(page);
       expect(taxonomy.id).toBeDefined();
 
@@ -56,7 +58,9 @@ test.describe("Test Data Factories", () => {
       expect(scheme.description).toBe("A test scheme");
     });
 
-    test("should create an ontology class within a scheme", async ({ page }) => {
+    test("should create an ontology class within a scheme", async ({
+      page,
+    }) => {
       const taxonomy = await createTaxonomy(page);
       const scheme = await createConceptScheme(page, taxonomy.id);
 
@@ -111,7 +115,9 @@ test.describe("Test Data Factories", () => {
   });
 
   test.describe("Composite Factories", () => {
-    test("should create a test hierarchy with single class", async ({ page }) => {
+    test("should create a test hierarchy with single class", async ({
+      page,
+    }) => {
       const hierarchy = await createTestHierarchy(page, 1);
 
       expect(hierarchy.taxonomy).toBeDefined();
@@ -126,7 +132,9 @@ test.describe("Test Data Factories", () => {
       expect(hierarchy.classes[0].scheme_id).toBe(hierarchy.scheme.id);
     });
 
-    test("should create a test hierarchy with multiple classes", async ({ page }) => {
+    test("should create a test hierarchy with multiple classes", async ({
+      page,
+    }) => {
       const classCount = 3;
       const hierarchy = await createTestHierarchy(page, classCount);
 
@@ -138,7 +146,9 @@ test.describe("Test Data Factories", () => {
       }
     });
 
-    test("should create a test hierarchy with custom titles", async ({ page }) => {
+    test("should create a test hierarchy with custom titles", async ({
+      page,
+    }) => {
       const hierarchy = await createTestHierarchy(page, 2, {
         taxonomyTitle: "Custom Taxonomy",
         schemeTitle: "Custom Scheme",
@@ -151,7 +161,9 @@ test.describe("Test Data Factories", () => {
       expect(hierarchy.classes[1].title).toContain("Custom Class");
     });
 
-    test("should create a relationship-ready hierarchy with property definition", async ({ page }) => {
+    test("should create a relationship-ready hierarchy with property definition", async ({
+      page,
+    }) => {
       const hierarchy = await createTestHierarchy(page);
 
       // Verify all required entities for relationships are present
@@ -189,7 +201,9 @@ test.describe("Test Data Factories", () => {
       expect(seededData.properties).toHaveLength(0); // Default propertiesCount
     });
 
-    test("should seed test data with custom hierarchy configuration", async ({ page }) => {
+    test("should seed test data with custom hierarchy configuration", async ({
+      page,
+    }) => {
       const seededData = await seedTestData(page, {
         hierarchyCount: 2,
         classesPerHierarchy: 3,
@@ -203,7 +217,9 @@ test.describe("Test Data Factories", () => {
       expect(seededData.properties).toHaveLength(2);
     });
 
-    test("should create independent hierarchies when seeding multiple", async ({ page }) => {
+    test("should create independent hierarchies when seeding multiple", async ({
+      page,
+    }) => {
       const seededData = await seedTestData(page, {
         hierarchyCount: 2,
       });
@@ -256,7 +272,9 @@ test.describe("Test Data Factories", () => {
   });
 
   test.describe("Data Cleanup", () => {
-    test("should complete cleanup without errors when test data exists", async ({ page }) => {
+    test("should complete cleanup without errors when test data exists", async ({
+      page,
+    }) => {
       // Create test data
       const hierarchy = await createTestHierarchy(page);
       expect(hierarchy.taxonomy.id).toBeDefined();
@@ -269,21 +287,29 @@ test.describe("Test Data Factories", () => {
       expect(true).toBe(true);
     });
 
-    test("should not fail if there is no test data to clean", async ({ page }) => {
+    test("should not fail if there is no test data to clean", async ({
+      page,
+    }) => {
       // This should complete without error even if no test data exists
       await expect(clearTestData(page)).resolves.not.toThrow();
     });
   });
 
   test.describe("Factory-Generated Entity References", () => {
-    test("should allow using factory-created entity IDs in subsequent operations", async ({ page }) => {
+    test("should allow using factory-created entity IDs in subsequent operations", async ({
+      page,
+    }) => {
       // Create a hierarchy
       const hierarchy = await createTestHierarchy(page, 1);
 
       // Use the taxonomy ID to create another scheme
-      const anotherScheme = await createConceptScheme(page, hierarchy.taxonomy.id, {
-        title: "Another Scheme",
-      });
+      const anotherScheme = await createConceptScheme(
+        page,
+        hierarchy.taxonomy.id,
+        {
+          title: "Another Scheme",
+        },
+      );
 
       expect(anotherScheme.taxonomy_id).toBe(hierarchy.taxonomy.id);
 

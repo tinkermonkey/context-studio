@@ -12,7 +12,7 @@ interface CreateChildButtonProps {
   parentId: string;
   parentObject: OntologyClass;
   childType: "domain" | "term";
-   
+
   onSuccess?: (child: any) => void;
   className?: string;
   size?: "xs" | "sm" | "md" | "lg" | "xl";
@@ -61,7 +61,6 @@ export const CreateChildButton: React.FC<CreateChildButtonProps> = ({
     }
   };
 
-   
   const handleSuccess = (child: any) => {
     setIsModalOpen(false);
 

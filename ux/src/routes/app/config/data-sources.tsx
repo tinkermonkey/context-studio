@@ -202,9 +202,8 @@ function ReferenceAPIsSection({
   onToggleProxy,
   isUpdating,
 }: {
-   
   config: any;
-   
+
   status: any;
   onToggleSource: (sourceName: string, enabled: boolean) => void;
   onUpdateTimeout: (sourceName: string, timeout: number) => void;
@@ -221,15 +220,12 @@ function ReferenceAPIsSection({
     .filter((key) => typeof config[key] === "object");
 
   // Create a map of source status by name for quick lookup
-   
+
   const statusByName: Record<string, any> = {};
   if (status?.sources) {
-    status.sources.forEach(
-       
-      (sourceStatus: any) => {
-        statusByName[sourceStatus.name] = sourceStatus;
-      },
-    );
+    status.sources.forEach((sourceStatus: any) => {
+      statusByName[sourceStatus.name] = sourceStatus;
+    });
   }
 
   return (
@@ -307,11 +303,11 @@ function ReferenceSourceCard({
   Icon,
 }: {
   sourceName: string;
-   
+
   sourceInfo: any;
-   
+
   config: any;
-   
+
   status: any;
   isEnabled: boolean;
   hasProxy: boolean;
@@ -431,7 +427,7 @@ function ReferenceSourceCard({
 }
 
 // Database Settings Section Component
- 
+
 function DatabaseSettingsSection({ config }: { config: any }) {
   if (!config) {
     return <div>No database configuration available</div>;

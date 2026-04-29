@@ -27,7 +27,7 @@ async function generateTestHierarchy(
   timestamp: number,
 ): Promise<TestHierarchy> {
   // Create layer with category attribute
-   
+
   const layerResponse = await apiRequest<any>(page, "/api/classes", {
     method: "POST",
     body: {
@@ -52,7 +52,7 @@ async function generateTestHierarchy(
   });
 
   // Create domain with jurisdiction attribute
-   
+
   const domainResponse = await apiRequest<any>(page, "/api/classes", {
     method: "POST",
     body: {
@@ -78,7 +78,7 @@ async function generateTestHierarchy(
   });
 
   // Create term1 with override and local attribute
-   
+
   const term1Response = await apiRequest<any>(page, "/api/classes", {
     method: "POST",
     body: {
@@ -110,7 +110,7 @@ async function generateTestHierarchy(
   });
 
   // Create term2 with no local attributes (inherits all)
-   
+
   const term2Response = await apiRequest<any>(page, "/api/classes", {
     method: "POST",
     body: {
@@ -127,38 +127,29 @@ async function generateTestHierarchy(
   let parentId = term1Id;
 
   for (let i = 1; i <= 5; i++) {
-     
-    const deepTermResponse = await apiRequest<any>(
-      page,
-      "/api/classes",
-      {
-        method: "POST",
-        body: {
-          title: `Deep Term Level ${i} ${timestamp}`,
-          definition: `Nested term at level ${i}`,
-          node_type: "term",
-          parent_node_id: parentId,
-        },
+    const deepTermResponse = await apiRequest<any>(page, "/api/classes", {
+      method: "POST",
+      body: {
+        title: `Deep Term Level ${i} ${timestamp}`,
+        definition: `Nested term at level ${i}`,
+        node_type: "term",
+        parent_node_id: parentId,
       },
-    );
+    });
 
     // Add level attribute only at level 3
     if (i === 3) {
-      await apiRequest(
-        page,
-        `/api/classes/${deepTermResponse.id}/attributes`,
-        {
-          method: "POST",
-          body: [
-            {
-              key: "level_attribute",
-              title: "Level Attribute",
-              value_type: "string",
-              value: `Level ${i}`,
-            },
-          ],
-        },
-      );
+      await apiRequest(page, `/api/classes/${deepTermResponse.id}/attributes`, {
+        method: "POST",
+        body: [
+          {
+            key: "level_attribute",
+            title: "Level Attribute",
+            value_type: "string",
+            value: `Level ${i}`,
+          },
+        ],
+      });
     }
 
     deepTerms.push(deepTermResponse);
@@ -244,13 +235,13 @@ test.describe("Structure Node Attributes E2E", () => {
     await expect(page.getByText("test_value")).toBeVisible();
 
     // Verify via API
-     
+
     const nodeResponse = await apiRequest<any>(
       page,
       `/api/classes/${testHierarchy.term1.id}/attributes`,
     );
     const createdAttr = nodeResponse.find(
-      (attr: any) => attr.key === attributeKey,  
+      (attr: any) => attr.key === attributeKey,
     );
     expect(createdAttr).toBeDefined();
     expect(createdAttr.value).toBe("test_value");
@@ -339,13 +330,13 @@ test.describe("Structure Node Attributes E2E", () => {
     await expect(page.getByText("California")).toBeVisible({ timeout: 5000 });
 
     // Verify via API
-     
+
     const attributes = await apiRequest<any>(
       page,
       `/api/classes/${testHierarchy.term1.id}/attributes`,
     );
     const jurisdictionAttr = attributes.find(
-      (a: any) => a.key === "jurisdiction",  
+      (a: any) => a.key === "jurisdiction",
     );
     expect(jurisdictionAttr.value).toBe("California");
   });
@@ -504,7 +495,7 @@ test.describe("Structure Node Attributes E2E", () => {
     await expect(page.getByText("Level 3")).toBeVisible();
 
     // Verify via API - resolve attributes should show all ancestors' attributes
-     
+
     const attributes = await apiRequest<any>(
       page,
       `/api/classes/${deepestTerm.id}/attributes`,
@@ -512,10 +503,7 @@ test.describe("Structure Node Attributes E2E", () => {
     expect(attributes.length).toBeGreaterThan(0);
 
     // Check for category attribute
-    const categoryAttr = attributes.find(
-       
-      (a: any) => a.key === "category",
-    );
+    const categoryAttr = attributes.find((a: any) => a.key === "category");
     expect(categoryAttr).toBeDefined();
     expect(categoryAttr.inherited).toBe(true);
   });
@@ -523,7 +511,7 @@ test.describe("Structure Node Attributes E2E", () => {
   test("Display performance with 50+ attributes", async ({ page }) => {
     // Create a term with many attributes
     const timestamp = Date.now();
-     
+
     const termResponse = await apiRequest<any>(page, "/api/classes", {
       method: "POST",
       body: {
@@ -664,20 +652,16 @@ test.describe("Structure Node Attributes E2E", () => {
   test("Verify attribute types are preserved", async ({ page }) => {
     // Create a test node with all attribute types
     const timestamp = Date.now();
-     
-    const testNodeResponse = await apiRequest<any>(
-      page,
-      "/api/classes",
-      {
-        method: "POST",
-        body: {
-          title: `Type Test Node ${timestamp}`,
-          definition: "Test all attribute types",
-          node_type: "term",
-          parent_node_id: testHierarchy.domain.id,
-        },
+
+    const testNodeResponse = await apiRequest<any>(page, "/api/classes", {
+      method: "POST",
+      body: {
+        title: `Type Test Node ${timestamp}`,
+        definition: "Test all attribute types",
+        node_type: "term",
+        parent_node_id: testHierarchy.domain.id,
       },
-    );
+    });
     const testNodeId = testNodeResponse.id;
 
     // Set attributes with all types
@@ -735,7 +719,7 @@ test.describe("Structure Node Attributes E2E", () => {
     await expect(page.getByText("https://example.com")).toBeVisible();
 
     // Verify via API
-     
+
     const attributes = await apiRequest<any>(
       page,
       `/api/classes/${testNodeId}/attributes`,
@@ -743,27 +727,27 @@ test.describe("Structure Node Attributes E2E", () => {
     expect(attributes.length).toBe(5);
     expect(
       attributes.some(
-        (a: any) => a.key === "string_attr" && a.value_type === "string",  
+        (a: any) => a.key === "string_attr" && a.value_type === "string",
       ),
     ).toBe(true);
     expect(
       attributes.some(
-        (a: any) => a.key === "number_attr" && a.value_type === "number",  
+        (a: any) => a.key === "number_attr" && a.value_type === "number",
       ),
     ).toBe(true);
     expect(
       attributes.some(
-        (a: any) => a.key === "boolean_attr" && a.value_type === "boolean",  
+        (a: any) => a.key === "boolean_attr" && a.value_type === "boolean",
       ),
     ).toBe(true);
     expect(
       attributes.some(
-        (a: any) => a.key === "date_attr" && a.value_type === "date",  
+        (a: any) => a.key === "date_attr" && a.value_type === "date",
       ),
     ).toBe(true);
     expect(
       attributes.some(
-        (a: any) => a.key === "url_attr" && a.value_type === "url",  
+        (a: any) => a.key === "url_attr" && a.value_type === "url",
       ),
     ).toBe(true);
   });

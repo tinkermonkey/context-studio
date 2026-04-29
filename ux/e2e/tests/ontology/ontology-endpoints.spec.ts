@@ -40,9 +40,13 @@ test.describe("Ontology API Endpoints", () => {
       const response = await apiRequest<any>(page, "/api/taxonomies");
 
       // Verify response structure
-      expect(Array.isArray(response) || Array.isArray(response.items)).toBe(true);
+      expect(Array.isArray(response) || Array.isArray(response.items)).toBe(
+        true,
+      );
 
-      const taxonomies = Array.isArray(response) ? response : response.items || [];
+      const taxonomies = Array.isArray(response)
+        ? response
+        : response.items || [];
       expect(taxonomies.length).toBeGreaterThanOrEqual(2);
 
       // Verify our test data is in response
@@ -79,7 +83,10 @@ test.describe("Ontology API Endpoints", () => {
       });
 
       // Call endpoint
-      const response = await apiRequest<any>(page, `/api/taxonomies/${taxonomy.id}`);
+      const response = await apiRequest<any>(
+        page,
+        `/api/taxonomies/${taxonomy.id}`,
+      );
 
       // Verify response
       expect(response.id).toBe(taxonomy.id);
@@ -94,13 +101,17 @@ test.describe("Ontology API Endpoints", () => {
       const taxonomy = await createTaxonomy(page);
 
       // Update via API
-      const response = await apiRequest<any>(page, `/api/taxonomies/${taxonomy.id}`, {
-        method: "PUT",
-        body: {
-          title: "Updated Taxonomy",
-          description: "Updated via API",
+      const response = await apiRequest<any>(
+        page,
+        `/api/taxonomies/${taxonomy.id}`,
+        {
+          method: "PUT",
+          body: {
+            title: "Updated Taxonomy",
+            description: "Updated via API",
+          },
         },
-      });
+      );
 
       // Verify response
       expect(response.id).toBe(taxonomy.id);
@@ -198,13 +209,17 @@ test.describe("Ontology API Endpoints", () => {
       const scheme = await createConceptScheme(page, taxonomy.id);
 
       // Update via API
-      const response = await apiRequest<any>(page, `/api/schemes/${scheme.id}`, {
-        method: "PUT",
-        body: {
-          title: "Updated Scheme",
-          description: "Updated via API",
+      const response = await apiRequest<any>(
+        page,
+        `/api/schemes/${scheme.id}`,
+        {
+          method: "PUT",
+          body: {
+            title: "Updated Scheme",
+            description: "Updated via API",
+          },
         },
-      });
+      );
 
       // Verify response
       expect(response.id).toBe(scheme.id);
@@ -287,7 +302,10 @@ test.describe("Ontology API Endpoints", () => {
       const ontologyClass = hierarchy.classes[0];
 
       // Call endpoint
-      const response = await apiRequest<any>(page, `/api/classes/${ontologyClass.id}`);
+      const response = await apiRequest<any>(
+        page,
+        `/api/classes/${ontologyClass.id}`,
+      );
 
       // Verify response
       expect(response.id).toBe(ontologyClass.id);
@@ -354,7 +372,9 @@ test.describe("Ontology API Endpoints", () => {
       const response = await apiRequest<any>(page, "/api/properties");
 
       // Verify response
-      const properties = Array.isArray(response) ? response : response.items || [];
+      const properties = Array.isArray(response)
+        ? response
+        : response.items || [];
       const ids = properties.map((p: any) => p.id);
       expect(ids).toContain(prop1.id);
       expect(ids).toContain(prop2.id);
@@ -385,7 +405,10 @@ test.describe("Ontology API Endpoints", () => {
       const property = await createPropertyDefinition(page);
 
       // Call endpoint
-      const response = await apiRequest<any>(page, `/api/properties/${property.id}`);
+      const response = await apiRequest<any>(
+        page,
+        `/api/properties/${property.id}`,
+      );
 
       // Verify response
       expect(response.id).toBe(property.id);
@@ -460,7 +483,9 @@ test.describe("Ontology API Endpoints", () => {
       const response = await apiRequest<any>(page, "/api/relationships");
 
       // Verify response
-      const relationships = Array.isArray(response) ? response : response.items || [];
+      const relationships = Array.isArray(response)
+        ? response
+        : response.items || [];
       const ids = relationships.map((r: any) => r.id);
       expect(ids).toContain(rel1.id);
     });

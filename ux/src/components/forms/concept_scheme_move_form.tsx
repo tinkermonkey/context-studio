@@ -65,7 +65,8 @@ export function ConceptSchemeMoveForm({
       <Alert color="info" icon={Info}>
         <span className="font-medium">Move Concept Schemes</span>
         <p className="mt-1 text-sm">
-          Moving concept schemes to a different taxonomy or changing their parent concept scheme.
+          Moving concept schemes to a different taxonomy or changing their
+          parent concept scheme.
         </p>
       </Alert>
 

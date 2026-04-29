@@ -22,12 +22,8 @@ import { Link } from "@tanstack/react-router";
 
 // Component to render a single entity with its matched node link
 
-function EntityItem(
-  { entity }: { entity: any },  
-) {
-  const { data: node, isLoading } = useClass(
-    entity.metadata?.matched_kg_node,
-  );
+function EntityItem({ entity }: { entity: any }) {
+  const { data: node, isLoading } = useClass(entity.metadata?.matched_kg_node);
 
   const linkProps = useMemo(() => {
     if (!node?.id) return null;
@@ -88,7 +84,7 @@ export default function RAGTestPage() {
   const [inputText, setInputText] = useState("");
   const [enableTrace, setEnableTrace] = useState(true);
   const [enableLlmLayer, setEnableLlmLayer] = useState(false);
-   
+
   const [result, setResult] = useState<any>(null);
   const [requestId, setRequestId] = useState<string | null>(null);
 
@@ -275,7 +271,6 @@ export default function RAGTestPage() {
                   typeof value === "object" &&
                   value !== null
                 ) {
-                   
                   const layerMetrics = value as any;
                   return (
                     <div
@@ -335,14 +330,9 @@ export default function RAGTestPage() {
               </h3>
               <div className="space-y-2">
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                {result.entities.map(
-                  (
-                    entity: any,  
-                    index: number,
-                  ) => (
-                    <EntityItem key={index} entity={entity} />
-                  ),
-                )}
+                {result.entities.map((entity: any, index: number) => (
+                  <EntityItem key={index} entity={entity} />
+                ))}
               </div>
             </div>
           )}
@@ -388,7 +378,7 @@ export default function RAGTestPage() {
             <div>
               <pre className="overflow-auto rounded-lg bg-gray-50 p-4 text-xs dark:bg-gray-900">
                 <code className="text-gray-900 dark:text-white">
-                  { }
+                  {}
                   {JSON.stringify(traceData as any, null, 2)}
                 </code>
               </pre>

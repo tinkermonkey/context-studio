@@ -81,7 +81,7 @@ describe("AnalyticsDashboard", () => {
     document.body.appendChild(root);
 
     // Default successful responses
-     
+
     (useAnalyticsForTimeRange as any).mockReturnValue({
       data: mockAnalyticsData,
       isLoading: false,
@@ -89,7 +89,6 @@ describe("AnalyticsDashboard", () => {
       refetch: vi.fn(),
     });
 
-     
     (useAnalyticsWithRefresh as any).mockReturnValue({
       data: mockAnalyticsData,
       isLoading: false,
@@ -97,7 +96,6 @@ describe("AnalyticsDashboard", () => {
       refetch: vi.fn(),
     });
 
-     
     (useLLMTraceabilityHealth as any).mockReturnValue({
       data: mockHealthData,
       isLoading: false,
@@ -105,7 +103,7 @@ describe("AnalyticsDashboard", () => {
     });
 
     // Add missing flavor analytics mocks
-     
+
     (useFlavorAnalytics as any).mockReturnValue({
       data: mockAnalyticsData,
       isLoading: false,
@@ -113,7 +111,6 @@ describe("AnalyticsDashboard", () => {
       refetch: vi.fn(),
     });
 
-     
     (useFlavorAnalyticsWithRefresh as any).mockReturnValue({
       data: mockAnalyticsData,
       isLoading: false,
@@ -202,7 +199,6 @@ describe("AnalyticsDashboard", () => {
 
   describe("Loading States", () => {
     it("should show loading spinner when analytics are loading", () => {
-       
       (useAnalyticsForTimeRange as any).mockReturnValue({
         data: null,
         isLoading: true,
@@ -221,7 +217,7 @@ describe("AnalyticsDashboard", () => {
 
     it("should show loading spinner in refresh button when refreshing", () => {
       const mockRefetch = vi.fn();
-       
+
       (useAnalyticsForTimeRange as any).mockReturnValue({
         data: mockAnalyticsData,
         isLoading: true,
@@ -241,7 +237,6 @@ describe("AnalyticsDashboard", () => {
     });
 
     it("should show health loading state", () => {
-       
       (useLLMTraceabilityHealth as any).mockReturnValue({
         data: null,
         isLoading: true,
@@ -261,7 +256,6 @@ describe("AnalyticsDashboard", () => {
 
   describe("Error States", () => {
     it("should show error alert when analytics fail to load", () => {
-       
       (useAnalyticsForTimeRange as any).mockReturnValue({
         data: null,
         isLoading: false,
@@ -280,7 +274,6 @@ describe("AnalyticsDashboard", () => {
     });
 
     it("should show degraded health status", () => {
-       
       (useLLMTraceabilityHealth as any).mockReturnValue({
         data: { ...mockHealthData, status: "degraded" },
         isLoading: false,
@@ -297,7 +290,6 @@ describe("AnalyticsDashboard", () => {
     });
 
     it("should show unhealthy status with red indicator", () => {
-       
       (useLLMTraceabilityHealth as any).mockReturnValue({
         data: { ...mockHealthData, status: "unhealthy" },
         isLoading: false,
@@ -334,7 +326,6 @@ describe("AnalyticsDashboard", () => {
       const user = userEvent.setup();
       const mockRefetch = vi.fn();
 
-       
       (useAnalyticsForTimeRange as any).mockReturnValue({
         data: mockAnalyticsData,
         isLoading: false,
@@ -372,12 +363,10 @@ describe("AnalyticsDashboard", () => {
       const mockCreateObjectURL = vi.fn(() => "mock-url");
       const mockRevokeObjectURL = vi.fn();
 
-       
       global.Blob = mockBlob as any;
       global.URL = {
         createObjectURL: mockCreateObjectURL,
         revokeObjectURL: mockRevokeObjectURL,
-         
       } as any;
 
       // Mock only anchor element creation specifically
@@ -393,7 +382,6 @@ describe("AnalyticsDashboard", () => {
 
       vi.spyOn(document, "createElement").mockImplementation((tagName) => {
         if (tagName === "a") {
-           
           return mockLink as any;
         }
         return originalCreateElement.call(document, tagName);
@@ -481,7 +469,6 @@ describe("AnalyticsDashboard", () => {
 
   describe("No Data State", () => {
     it("should show no data message when analytics data is empty", () => {
-       
       (useAnalyticsForTimeRange as any).mockReturnValue({
         data: null,
         isLoading: false,

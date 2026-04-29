@@ -347,12 +347,12 @@ test.describe("Predicate Management", () => {
   }) => {
     // Create multiple predicates
     const timestamp = Date.now();
-     
+
     const predicate1 = await apiRequest<any>(page, "/api/properties", {
       method: "POST",
       body: { title: `Bulk Delete 1 ${timestamp}` },
     });
-     
+
     const predicate2 = await apiRequest<any>(page, "/api/properties", {
       method: "POST",
       body: { title: `Bulk Delete 2 ${timestamp}` },
@@ -396,7 +396,7 @@ test.describe("Predicate Management", () => {
 
   test("should cancel predicate creation", async ({ page }) => {
     // Get current predicate count
-     
+
     const beforeResponse = await apiRequest<{ data: any[]; total: number }>(
       page,
       "/api/properties",
@@ -423,7 +423,7 @@ test.describe("Predicate Management", () => {
     await page.waitForLoadState("networkidle");
 
     // Verify no new predicate was created
-     
+
     const afterResponse = await apiRequest<{ data: any[]; total: number }>(
       page,
       "/api/properties",

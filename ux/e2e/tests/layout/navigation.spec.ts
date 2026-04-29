@@ -114,7 +114,9 @@ test.describe("Navigation and Layout Integrity", () => {
       });
 
       // Verify page loaded without errors
-      const errorMessages = await page.locator("text=/error|error|failed/i").count();
+      const errorMessages = await page
+        .locator("text=/error|error|failed/i")
+        .count();
       expect(errorMessages).toBe(0);
     }
   });

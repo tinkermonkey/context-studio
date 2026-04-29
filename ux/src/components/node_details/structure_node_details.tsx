@@ -308,12 +308,8 @@ export const OntologyClassDetails: React.FC<OntologyClassDetailsProps> = ({
                 : null
             }
             currentDefinition={node.definition}
-            layerId={
-              node.node_type === "taxonomy" ? node.id : parentLayer?.id
-            }
-            domainId={
-              node.node_type === "scheme" ? node.id : parentDomain?.id
-            }
+            layerId={node.node_type === "taxonomy" ? node.id : parentLayer?.id}
+            domainId={node.node_type === "scheme" ? node.id : parentDomain?.id}
             termId={node.node_type === "class" ? node.id : undefined}
             nodeId={node.id}
           />
@@ -346,9 +342,7 @@ export const OntologyClassDetails: React.FC<OntologyClassDetailsProps> = ({
             <h2 className="text-xl font-semibold">Hierarchy</h2>
             <TreeChartPanel
               layerId={node.node_type === "taxonomy" ? node.id : undefined}
-              domainId={
-                node.node_type === "scheme" ? node.id : undefined
-              }
+              domainId={node.node_type === "scheme" ? node.id : undefined}
               termId={node.node_type === "class" ? node.id : undefined}
             />
           </div>

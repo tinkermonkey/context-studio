@@ -16,7 +16,6 @@ const EditableText: React.FC<EditableTextProps> = ({
   className = "",
   onChange,
 }) => {
-   
   const contentEditable = useRef<any>(null);
   const [html, setHtml] = useState(
     typeof children === "string"
@@ -26,7 +25,6 @@ const EditableText: React.FC<EditableTextProps> = ({
         )?.join("") || "",
   );
 
-   
   const handleChange = (evt: React.ChangeEvent<any>) => {
     setHtml(evt.target.value);
     if (onChange) onChange(evt.target.value);

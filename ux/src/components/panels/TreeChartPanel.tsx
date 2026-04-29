@@ -217,7 +217,8 @@ export function TreeChartPanel({
                   title: ancestorTerm.title,
                   definition: ancestorTerm.definition || "",
                   node_type: "class",
-                  parent_node_id: ancestorTerm.parent_node_id || targetTerm.scheme_id,
+                  parent_node_id:
+                    ancestorTerm.parent_node_id || targetTerm.scheme_id,
                 },
               ];
             }

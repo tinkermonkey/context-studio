@@ -7,17 +7,17 @@
 /**
  * @deprecated
  */
-export type PredicateOut = any;  
+export type PredicateOut = any;
 
 /**
  * @deprecated
  */
-export type PredicateCreate = any;  
+export type PredicateCreate = any;
 
 /**
  * @deprecated
  */
-export type PredicateUpdate = any;  
+export type PredicateUpdate = any;
 
 /**
  * @deprecated
@@ -38,23 +38,33 @@ export interface ExternalPredicateOut {
  */
 export class PredicatesService {
   list() {
-    throw new Error("PredicatesService has been removed. Use PropertyDefinitionService instead.");
+    throw new Error(
+      "PredicatesService has been removed. Use PropertyDefinitionService instead.",
+    );
   }
 
   get(_id: string) {
-    throw new Error("PredicatesService has been removed. Use PropertyDefinitionService instead.");
+    throw new Error(
+      "PredicatesService has been removed. Use PropertyDefinitionService instead.",
+    );
   }
 
-  create(_data: any) {  
-    throw new Error("PredicatesService has been removed. Use PropertyDefinitionService instead.");
+  create(_data: any) {
+    throw new Error(
+      "PredicatesService has been removed. Use PropertyDefinitionService instead.",
+    );
   }
 
-  update(_id: string, _data: any) {  
-    throw new Error("PredicatesService has been removed. Use PropertyDefinitionService instead.");
+  update(_id: string, _data: any) {
+    throw new Error(
+      "PredicatesService has been removed. Use PropertyDefinitionService instead.",
+    );
   }
 
   delete(_id: string) {
-    throw new Error("PredicatesService has been removed. Use PropertyDefinitionService instead.");
+    throw new Error(
+      "PredicatesService has been removed. Use PropertyDefinitionService instead.",
+    );
   }
 }
 

@@ -83,7 +83,6 @@ describe("ReferenceNodePanel", () => {
       data: undefined,
       isLoading: true,
       error: null,
-       
     } as any);
 
     render(
@@ -101,7 +100,6 @@ describe("ReferenceNodePanel", () => {
       data: undefined,
       isLoading: false,
       error: new Error(errorMessage),
-       
     } as any);
 
     render(
@@ -120,7 +118,6 @@ describe("ReferenceNodePanel", () => {
       data: [],
       isLoading: false,
       error: null,
-       
     } as any);
 
     render(
@@ -147,7 +144,6 @@ describe("ReferenceNodePanel", () => {
       data: mockLinks,
       isLoading: false,
       error: null,
-       
     } as any);
 
     render(
@@ -167,7 +163,6 @@ describe("ReferenceNodePanel", () => {
       data: mockLinks,
       isLoading: false,
       error: null,
-       
     } as any);
 
     render(
@@ -193,7 +188,6 @@ describe("ReferenceNodePanel", () => {
       data: mockLinks,
       isLoading: false,
       error: null,
-       
     } as any);
 
     render(
@@ -215,7 +209,6 @@ describe("ReferenceNodePanel", () => {
       data: [],
       isLoading: false,
       error: null,
-       
     } as any);
 
     render(

@@ -75,8 +75,10 @@ function TestFlavorPage() {
   const currentFlavorLoading = isDefault ? defaultFlavorLoading : flavorLoading;
   const currentFlavorError = isDefault ? defaultFlavorError : flavorError;
   const { data: taxonomiesData, isLoading: layersLoading } = useTaxonomies();
-  const { data: conceptSchemesData, isLoading: domainsLoading } = useConceptSchemes();
-  const { data: ontologyClassesData, isLoading: termsLoading } = useOntologyClasses();
+  const { data: conceptSchemesData, isLoading: domainsLoading } =
+    useConceptSchemes();
+  const { data: ontologyClassesData, isLoading: termsLoading } =
+    useOntologyClasses();
 
   const getRecordOptions = (): TestRecord[] => {
     if (!currentFlavor) return [];
@@ -114,7 +116,13 @@ function TestFlavorPage() {
       const record = recordOptions.find((r) => r.id === recordId);
       setSelectedRecord(record || null);
     }
-  }, [recordId, taxonomiesData, conceptSchemesData, ontologyClassesData, currentFlavor]);
+  }, [
+    recordId,
+    taxonomiesData,
+    conceptSchemesData,
+    ontologyClassesData,
+    currentFlavor,
+  ]);
 
   // Function to update selected record and URL
   const handleRecordSelection = (recordId: string) => {

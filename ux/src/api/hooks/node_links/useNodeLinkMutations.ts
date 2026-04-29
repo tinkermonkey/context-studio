@@ -9,13 +9,19 @@ import { UseMutationResult } from "@tanstack/react-query";
 /**
  * @deprecated Use useCreateRelationship instead
  */
-export const useCreateNodeLink = (..._args: any[]): UseMutationResult<any, Error, any, any> => {  
+export const useCreateNodeLink = (
+  ..._args: any[]
+): UseMutationResult<any, Error, any, any> => {
   return {
-    mutate: (_data?: any) => {  
-      throw new Error("useCreateNodeLink has been removed. Use useCreateRelationship instead.");
+    mutate: (_data?: any) => {
+      throw new Error(
+        "useCreateNodeLink has been removed. Use useCreateRelationship instead.",
+      );
     },
-    mutateAsync: async (_data?: any) => {  
-      throw new Error("useCreateNodeLink has been removed. Use useCreateRelationship instead.");
+    mutateAsync: async (_data?: any) => {
+      throw new Error(
+        "useCreateNodeLink has been removed. Use useCreateRelationship instead.",
+      );
     },
     isPending: false,
     isError: true,
@@ -30,14 +36,18 @@ export const useCreateNodeLink = (..._args: any[]): UseMutationResult<any, Error
  * @deprecated Use useUpdateRelationship instead
  */
 export const useUpdateNodeLink = (
-  _options?: any,  
+  _options?: any,
 ): UseMutationResult<any, Error, any, any> => {
   return {
-    mutate: (_data?: any) => {  
-      throw new Error("useUpdateNodeLink has been removed. Use useUpdateRelationship instead.");
+    mutate: (_data?: any) => {
+      throw new Error(
+        "useUpdateNodeLink has been removed. Use useUpdateRelationship instead.",
+      );
     },
-    mutateAsync: async (_data?: any) => {  
-      throw new Error("useUpdateNodeLink has been removed. Use useUpdateRelationship instead.");
+    mutateAsync: async (_data?: any) => {
+      throw new Error(
+        "useUpdateNodeLink has been removed. Use useUpdateRelationship instead.",
+      );
     },
     isPending: false,
     isError: true,
@@ -52,14 +62,18 @@ export const useUpdateNodeLink = (
  * @deprecated Use useDeleteRelationship instead
  */
 export const useDeleteNodeLink = (
-  _options?: any,  
+  _options?: any,
 ): UseMutationResult<void, Error, string, any> => {
   return {
-    mutate: (_data?: any) => {  
-      throw new Error("useDeleteNodeLink has been removed. Use useDeleteRelationship instead.");
+    mutate: (_data?: any) => {
+      throw new Error(
+        "useDeleteNodeLink has been removed. Use useDeleteRelationship instead.",
+      );
     },
-    mutateAsync: async (_data?: any) => {  
-      throw new Error("useDeleteNodeLink has been removed. Use useDeleteRelationship instead.");
+    mutateAsync: async (_data?: any) => {
+      throw new Error(
+        "useDeleteNodeLink has been removed. Use useDeleteRelationship instead.",
+      );
     },
     isPending: false,
     isError: true,

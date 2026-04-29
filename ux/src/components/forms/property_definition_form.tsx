@@ -32,7 +32,6 @@ const PropertyDefinitionForm: React.FC<PropertyDefinitionFormProps> = ({
   const isEdit = !!propertyDefinition;
   const [submitError, setSubmitError] = React.useState<string | null>(null);
 
-
   const form = useForm({
     defaultValues: {
       title: propertyDefinition?.title ?? "",
@@ -55,9 +54,8 @@ const PropertyDefinitionForm: React.FC<PropertyDefinitionFormProps> = ({
             data: submissionData,
           });
         } else {
-          result = await createPropertyDefinitionMutation.mutateAsync(
-            submissionData,
-          );
+          result =
+            await createPropertyDefinitionMutation.mutateAsync(submissionData);
         }
         if (onSuccess) onSuccess(result);
         form.reset();
@@ -73,9 +71,7 @@ const PropertyDefinitionForm: React.FC<PropertyDefinitionFormProps> = ({
           error?.detail;
 
         if (Array.isArray(detail)) {
-          message = detail
-            .map((d: any) => d.msg)
-            .join("; ");
+          message = detail.map((d: any) => d.msg).join("; ");
         } else if (error?.message) {
           message = error.message;
         } else if (typeof error === "string") {
@@ -93,7 +89,6 @@ const PropertyDefinitionForm: React.FC<PropertyDefinitionFormProps> = ({
       }
     },
   });
-
 
   return (
     <>

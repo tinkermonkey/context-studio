@@ -62,16 +62,13 @@ test.describe("Layer Management", () => {
     );
 
     // Verify layer exists in backend
-     
+
     const response = await apiRequest<{ data: any[] }>(
       page,
       "/api/classes?node_type=layer",
     );
 
-    const createdLayer = response.data.find(
-       
-      (n: any) => n.title === layerTitle,
-    );
+    const createdLayer = response.data.find((n: any) => n.title === layerTitle);
 
     expect(createdLayer).toBeDefined();
     expect(createdLayer?.definition).toBe(layerDefinition);
@@ -85,7 +82,7 @@ test.describe("Layer Management", () => {
     const updatedDefinition = "Updated definition via E2E test";
 
     // Create layer via API for speed
-     
+
     const createResponse = await apiRequest<any>(page, "/api/classes", {
       method: "POST",
       body: {
@@ -129,11 +126,8 @@ test.describe("Layer Management", () => {
     );
 
     // Verify backend was updated
-     
-    const response = await apiRequest<any>(
-      page,
-      `/api/classes/${layerId}`,
-    );
+
+    const response = await apiRequest<any>(page, `/api/classes/${layerId}`);
     expect(response.title).toBe(updatedTitle);
     expect(response.definition).toBe(updatedDefinition);
   });
@@ -141,7 +135,7 @@ test.describe("Layer Management", () => {
   test("should delete a layer", async ({ page }) => {
     // Create a layer to delete
     const layerTitle = `E2E Delete Test ${Date.now()}`;
-     
+
     const createResponse = await apiRequest<any>(page, "/api/classes", {
       method: "POST",
       body: {
@@ -268,7 +262,7 @@ test.describe("Layer Management", () => {
     // Create a layer
     const layerTitle = `E2E Detail Test ${Date.now()}`;
     const layerDefinition = "Test layer for detail view";
-     
+
     const createResponse = await apiRequest<any>(page, "/api/classes", {
       method: "POST",
       body: {
@@ -316,7 +310,7 @@ test.describe("Layer Management", () => {
     // We simply verify that if we don't click submit, the layer is not created
 
     // Get current layer count
-     
+
     const beforeResponse = await apiRequest<{ data: any[]; total: number }>(
       page,
       "/api/classes?node_type=layer",
@@ -341,7 +335,7 @@ test.describe("Layer Management", () => {
     await page.waitForLoadState("networkidle");
 
     // Verify no new layer was created
-     
+
     const afterResponse = await apiRequest<{ data: any[]; total: number }>(
       page,
       "/api/classes?node_type=layer",
@@ -352,7 +346,6 @@ test.describe("Layer Management", () => {
 
     // Verify the specific test layer was not created
     const testLayer = afterResponse.data.find(
-       
       (n: any) => n.title === "Test Layer Not Submitted",
     );
     expect(testLayer).toBeUndefined();
@@ -385,12 +378,12 @@ test.describe("Layer Management", () => {
   }) => {
     // Create multiple layers
     const timestamp = Date.now();
-     
+
     const layer1 = await apiRequest<any>(page, "/api/classes", {
       method: "POST",
       body: { title: `Bulk Delete 1 ${timestamp}`, node_type: "layer" },
     });
-     
+
     const layer2 = await apiRequest<any>(page, "/api/classes", {
       method: "POST",
       body: { title: `Bulk Delete 2 ${timestamp}`, node_type: "layer" },

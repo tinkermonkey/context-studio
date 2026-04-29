@@ -11,7 +11,7 @@ import { UseQueryResult, UseMutationResult } from "@tanstack/react-query";
  */
 export const useNodeAttributes = (
   _nodeId?: string,
-  _options?: any,  
+  _options?: any,
 ): UseQueryResult<any[], Error> => {
   return {
     data: undefined,
@@ -23,19 +23,24 @@ export const useNodeAttributes = (
     status: "error",
     dataUpdatedAt: 0,
     errorUpdatedAt: Date.now(),
-    refetch: async () => ({ data: undefined } as any),  
+    refetch: async () => ({ data: undefined }) as any,
   } as UseQueryResult<any[], Error>;
 };
 
 /**
  * @deprecated
  */
-export const useUpdateNodeAttribute = (): UseMutationResult<any, Error, any, any> => {
+export const useUpdateNodeAttribute = (): UseMutationResult<
+  any,
+  Error,
+  any,
+  any
+> => {
   return {
-    mutate: (_data?: any) => {  
+    mutate: (_data?: any) => {
       throw new Error("useUpdateNodeAttribute has been removed.");
     },
-    mutateAsync: async (_data?: any) => {  
+    mutateAsync: async (_data?: any) => {
       throw new Error("useUpdateNodeAttribute has been removed.");
     },
     isPending: false,
@@ -52,25 +57,26 @@ export const useUpdateNodeAttribute = (): UseMutationResult<any, Error, any, any
  */
 export const useNodeAttributeMutations = (
   _nodeId?: string,
-  _options?: any,  
+  _options?: any,
 ): {
   setAttributesMutation: UseMutationResult<any, Error, any, any>;
   removeAttributeMutation: UseMutationResult<any, Error, any, any>;
 } => {
-  const createErrorMutation = (): UseMutationResult<any, Error, any, any> => ({
-    mutate: (_data?: any) => {  
-      throw new Error("useNodeAttributeMutations has been removed.");
-    },
-    mutateAsync: async (_data?: any) => {  
-      throw new Error("useNodeAttributeMutations has been removed.");
-    },
-    isPending: false,
-    isError: true,
-    error: new Error("useNodeAttributeMutations has been removed."),
-    status: "idle",
-    reset: () => {},
-    variables: undefined,
-  } as unknown as UseMutationResult<any, Error, any, any>);
+  const createErrorMutation = (): UseMutationResult<any, Error, any, any> =>
+    ({
+      mutate: (_data?: any) => {
+        throw new Error("useNodeAttributeMutations has been removed.");
+      },
+      mutateAsync: async (_data?: any) => {
+        throw new Error("useNodeAttributeMutations has been removed.");
+      },
+      isPending: false,
+      isError: true,
+      error: new Error("useNodeAttributeMutations has been removed."),
+      status: "idle",
+      reset: () => {},
+      variables: undefined,
+    }) as unknown as UseMutationResult<any, Error, any, any>;
 
   return {
     setAttributesMutation: createErrorMutation(),

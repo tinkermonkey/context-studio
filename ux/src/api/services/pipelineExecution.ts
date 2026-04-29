@@ -40,9 +40,9 @@ export interface LegacyTermDefinitionRequest {
     definition?: string;
     relationship_predicate?: string;
   }>;
-   
+
   dbpedia_context?: Record<string, any>;
-   
+
   wikidata_context?: Record<string, any>;
   flavor?: string;
 }

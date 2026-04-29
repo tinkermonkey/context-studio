@@ -93,9 +93,8 @@ const NlpConceptChart: React.FC<NlpConceptChartProps> = ({
   useMeasurementHtml();
 
   // Handle node click - simply bubble up the node ID
-   
+
   const _handleNodeClick = useCallback(
-     
     (node: any) => {
       onNodeClick?.(node.id);
     },

@@ -46,7 +46,6 @@ export const PredicateMappingManager: React.FC<
     setShowWorkflowModal(true);
   };
 
-   
   const handleWorkflowComplete = (_$predicate: PredicateOut) => {
     setShowWorkflowModal(false);
     setSelectedPredicateIds([]);

@@ -55,10 +55,7 @@ function RouteComponent() {
     return labels[path] || path;
   };
 
-  const handleUpdateConfig = async (
-    path: string,
-    value: any,  
-  ) => {
+  const handleUpdateConfig = async (path: string, value: any) => {
     const label = getConfigLabel(path);
     await updateConfigMutation.mutateAsync(
       {
@@ -147,9 +144,8 @@ function EnvironmentVariablesSection({
   onUpdate,
   isUpdating,
 }: {
-   
   config: any;
-  onUpdate: (path: string, value: any) => void;  
+  onUpdate: (path: string, value: any) => void;
   isUpdating: boolean;
 }) {
   if (!config) {
@@ -314,7 +310,6 @@ function RawConfigurationSection({
   config,
   isUpdating,
 }: {
-   
   config: any;
   isUpdating: boolean;
 }) {

@@ -11,7 +11,7 @@ const TestComponent: React.FC = () => {
   return (
     <div>
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      { }
+      {}
       {data?.map((d: any) => (
         <div key={d.id}>{d.title}</div>
       ))}

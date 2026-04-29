@@ -68,8 +68,6 @@ const TermForm: React.FC<TermFormProps> = ({
         }
         if (onSuccess) onSuccess(result);
         form.reset();
-
-         
       } catch (error: any) {
         // Log the full error for debugging
         console.error("Full error object:", error);
@@ -84,7 +82,6 @@ const TermForm: React.FC<TermFormProps> = ({
 
         let message: string;
         if (Array.isArray(detail)) {
-           
           message = detail.map((d: any) => d.msg).join("; ");
         } else if (error?.message) {
           message = error.message;

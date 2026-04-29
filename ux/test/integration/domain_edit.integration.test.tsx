@@ -6,7 +6,6 @@ import { describe, it, expect, vi } from "vitest";
 // Hoistable mocks so router and hooks don't perform network or rely on app RouterProvider
 vi.mock("@tanstack/react-router", () => {
   return {
-     
     Link: (props: any) => React.createElement("a", props, props.children),
     useNavigate: () => vi.fn(),
   };
@@ -22,7 +21,6 @@ vi.mock("@/api/hooks/layers/useLayers", () => ({
   }),
 }));
 vi.mock("@/api/hooks/terms/useTerms", () => ({
-
   useTerms: (_: any) => ({ data: [], isLoading: false }),
 }));
 vi.mock("@/api/hooks/graph/useGraph", () => ({
@@ -141,11 +139,11 @@ describe("OntologyClassDetails edit flow (Domain)", () => {
     // Mock structureNodeService methods that are actually called
     const getSpy = vi
       .spyOn(structureNodeService, "get")
-       
+
       .mockResolvedValue(domain as any);
     const updateSpy = vi
       .spyOn(structureNodeService, "update")
-       
+
       .mockResolvedValue(updatedDomain as any);
 
     // With Link, useLayer, and useTerms mocked above, we can render without RouterProvider

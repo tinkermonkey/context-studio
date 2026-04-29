@@ -196,7 +196,6 @@ export class UnifiedReferenceService extends BaseService {
       const sources: Record<
         SourceType,
         { enabled: boolean; endpoint: string }
-         
       > = {} as any;
 
       Object.entries(SOURCE_ENDPOINTS).forEach(([source, config]) => {

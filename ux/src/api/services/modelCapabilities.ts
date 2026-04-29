@@ -93,7 +93,7 @@ export class ModelCapabilitiesService extends BaseService {
     const response = await this.getModelCapabilities(modelName);
 
     // Parse the capabilities object which comes as a generic object
-     
+
     const capabilities = response.capabilities as any;
 
     return {
@@ -142,7 +142,6 @@ export class ModelCapabilitiesService extends BaseService {
 
     return allModels.models.reduce(
       (acc, model) => {
-         
         const provider = (model.capabilities as any)?.provider ?? "unknown";
         if (!acc[provider]) {
           acc[provider] = [];

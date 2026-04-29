@@ -9,14 +9,16 @@ import { UseMutationResult } from "@tanstack/react-query";
 /**
  * @deprecated Use useCreatePropertyDefinition instead
  */
-export const useCreatePredicate = (..._args: any[]): UseMutationResult<any, Error, any, any> => {  
+export const useCreatePredicate = (
+  ..._args: any[]
+): UseMutationResult<any, Error, any, any> => {
   return {
-    mutate: (_data?: any) => {  
+    mutate: (_data?: any) => {
       throw new Error(
         "useCreatePredicate has been removed. Use useCreatePropertyDefinition instead.",
       );
     },
-    mutateAsync: async (_data?: any) => {  
+    mutateAsync: async (_data?: any) => {
       throw new Error(
         "useCreatePredicate has been removed. Use useCreatePropertyDefinition instead.",
       );
@@ -34,15 +36,15 @@ export const useCreatePredicate = (..._args: any[]): UseMutationResult<any, Erro
  * @deprecated Use useUpdatePropertyDefinition instead
  */
 export const useUpdatePredicate = (
-  _options?: any,  
+  _options?: any,
 ): UseMutationResult<any, Error, any, any> => {
   return {
-    mutate: (_data?: any) => {  
+    mutate: (_data?: any) => {
       throw new Error(
         "useUpdatePredicate has been removed. Use useUpdatePropertyDefinition instead.",
       );
     },
-    mutateAsync: async (_data?: any) => {  
+    mutateAsync: async (_data?: any) => {
       throw new Error(
         "useUpdatePredicate has been removed. Use useUpdatePropertyDefinition instead.",
       );
@@ -60,15 +62,15 @@ export const useUpdatePredicate = (
  * @deprecated Use useDeletePropertyDefinition instead
  */
 export const useDeletePredicate = (
-  _options?: any,  
+  _options?: any,
 ): UseMutationResult<void, Error, string, any> => {
   return {
-    mutate: (_data?: any) => {  
+    mutate: (_data?: any) => {
       throw new Error(
         "useDeletePredicate has been removed. Use useDeletePropertyDefinition instead.",
       );
     },
-    mutateAsync: async (_data?: any) => {  
+    mutateAsync: async (_data?: any) => {
       throw new Error(
         "useDeletePredicate has been removed. Use useDeletePropertyDefinition instead.",
       );
@@ -85,12 +87,14 @@ export const useDeletePredicate = (
 /**
  * @deprecated
  */
-export const useClusterPredicates = (..._args: any[]): UseMutationResult<any, Error, any, any> => {  
+export const useClusterPredicates = (
+  ..._args: any[]
+): UseMutationResult<any, Error, any, any> => {
   return {
-    mutate: (_data?: any) => {  
+    mutate: (_data?: any) => {
       throw new Error("useClusterPredicates has been removed.");
     },
-    mutateAsync: async (_data?: any) => {  
+    mutateAsync: async (_data?: any) => {
       throw new Error("useClusterPredicates has been removed.");
     },
     isPending: false,

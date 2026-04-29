@@ -35,7 +35,7 @@ declare module "flowbite-react" {
   export interface TabsItemProps extends ComponentProps<"div"> {
     active?: boolean;
     title: string;
-     
+
     icon?: any;
     children?: ReactNode;
   }

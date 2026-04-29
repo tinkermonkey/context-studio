@@ -23,13 +23,11 @@ import {
 } from "@/api/hooks/pipelineFlavors";
 import { useSuggestTermDefinitionMutation } from "@/api/hooks/llm";
 
- 
 const mockUsePipelineFlavors = usePipelineFlavors as any;
- 
+
 const mockUsePipelineFlavor = usePipelineFlavor as any;
 
 const mockUseSuggestTermDefinitionMutation =
-   
   useSuggestTermDefinitionMutation as any;
 
 const createWrapper = () => {
@@ -223,7 +221,6 @@ describe("LlmPipelineRun", () => {
       mutateAsync: vi.fn(),
     });
 
-     
     const customTemplate = (result: any) => (
       <div data-testid="custom-template">
         Custom: {result.flavorTitle} - {result.status}

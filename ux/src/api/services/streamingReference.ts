@@ -276,7 +276,7 @@ export class StreamingReferenceService extends BaseService {
    */
   async getSourceStatus(): Promise<Record<SourceType, boolean>> {
     const sources = getEnabledSources();
-     
+
     const status: Record<SourceType, boolean> = {} as any;
 
     // For now, just return enabled status

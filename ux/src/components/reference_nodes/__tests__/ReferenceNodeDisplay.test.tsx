@@ -44,14 +44,13 @@ describe("ReferenceNodeDisplay", () => {
 
     // Mock window.open and store reference
     mockWindowOpen = vi.fn().mockReturnValue(null);
-     
+
     window.open = mockWindowOpen as any;
 
     // Default mock for remove mutation
     mockUseRemoveReferenceLink.mockReturnValue({
       mutate: vi.fn(),
       isPending: false,
-       
     } as any);
   });
 
@@ -154,7 +153,6 @@ describe("ReferenceNodeDisplay", () => {
     mockUseRemoveReferenceLink.mockReturnValue({
       mutate: mockMutate,
       isPending: false,
-       
     } as any);
 
     render(

@@ -7,7 +7,7 @@ export interface NodeContext {
   text?: string;
   lemma?: string;
   pos?: string;
-   
+
   token?: any;
   synset?: {
     name: string;
@@ -18,7 +18,7 @@ export interface NodeContext {
     domain: string;
   };
   relationType?: string;
-   
+
   relation?: any;
   targetTerm?: {
     label: string;

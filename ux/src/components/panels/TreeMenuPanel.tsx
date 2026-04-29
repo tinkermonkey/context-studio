@@ -17,7 +17,7 @@ export interface TreeMenuPanelProps {
   /**
    * Optional callback when a node is clicked
    */
-  onNodeClick?: (node: any) => void;  
+  onNodeClick?: (node: any) => void;
 
   /**
    * Additional CSS classes to apply to the panel container
@@ -89,8 +89,10 @@ export function TreeMenuPanel({
 
   // Load all base data
   const { data: taxonomies, isLoading: layersLoading } = useTaxonomies();
-  const { data: conceptSchemes, isLoading: domainsLoading } = useConceptSchemes();
-  const { data: ontologyClasses, isLoading: termsLoading } = useOntologyClasses();
+  const { data: conceptSchemes, isLoading: domainsLoading } =
+    useConceptSchemes();
+  const { data: ontologyClasses, isLoading: termsLoading } =
+    useOntologyClasses();
 
   // Transform data to compatible format for treeBuilder
   const layers = taxonomies?.map((t) => ({
@@ -151,7 +153,6 @@ export function TreeMenuPanel({
 
     // Helper function to find path to a node
     const findPath = (
-       
       node: any,
 
       targetId: string,

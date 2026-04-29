@@ -82,7 +82,6 @@ export const ExternalPredicatesTab: React.FC<ExternalPredicatesTabProps> = ({
     },
     {
       enabled: !useSearch,
-       
     } as any,
   );
 
@@ -341,75 +340,72 @@ export const ExternalPredicatesTab: React.FC<ExternalPredicatesTabProps> = ({
               </TableRow>
             </TableHead>
             <TableBody className="divide-y">
-              {displayData.map(
-                 
-                (predicate: any) => (
-                  <TableRow
-                    key={predicate.id}
-                    className="bg-white dark:border-gray-700 dark:bg-gray-800"
-                  >
-                    <TableCell className="w-fit whitespace-nowrap">
+              {displayData.map((predicate: any) => (
+                <TableRow
+                  key={predicate.id}
+                  className="bg-white dark:border-gray-700 dark:bg-gray-800"
+                >
+                  <TableCell className="w-fit whitespace-nowrap">
+                    <Badge
+                      color={getSourceBadgeColor(predicate.source)}
+                      className="w-fit"
+                    >
+                      {predicate.source}
+                    </Badge>
+                  </TableCell>
+                  <TableCell className="font-mono text-xs break-all">
+                    {predicate.external_id}
+                  </TableCell>
+                  <TableCell className="font-medium text-gray-900 dark:text-white">
+                    {predicate.title}
+                  </TableCell>
+                  <TableCell className="break-words">
+                    {predicate.definition || (
+                      <span className="text-gray-400">—</span>
+                    )}
+                  </TableCell>
+                  {useSearch && (
+                    <TableCell className="">
                       <Badge
-                        color={getSourceBadgeColor(predicate.source)}
-                        className="w-fit"
+                        color={
+                          predicate.similarity_score >= 0.8
+                            ? "success"
+                            : predicate.similarity_score >= 0.7
+                              ? "warning"
+                              : "gray"
+                        }
                       >
-                        {predicate.source}
+                        {(predicate.similarity_score * 100).toFixed(0)}%
                       </Badge>
                     </TableCell>
-                    <TableCell className="font-mono text-xs break-all">
-                      {predicate.external_id}
-                    </TableCell>
-                    <TableCell className="font-medium text-gray-900 dark:text-white">
-                      {predicate.title}
-                    </TableCell>
-                    <TableCell className="break-words">
-                      {predicate.definition || (
-                        <span className="text-gray-400">—</span>
-                      )}
-                    </TableCell>
-                    {useSearch && (
-                      <TableCell className="">
-                        <Badge
-                          color={
-                            predicate.similarity_score >= 0.8
-                              ? "success"
-                              : predicate.similarity_score >= 0.7
-                                ? "warning"
-                                : "gray"
-                          }
-                        >
-                          {(predicate.similarity_score * 100).toFixed(0)}%
-                        </Badge>
-                      </TableCell>
-                    )}
-                    <TableCell className="">
+                  )}
+                  <TableCell className="">
+                    <Button
+                      size="xs"
+                      color="light"
+                      onClick={() =>
+                        setSelectedPredicate({
+                          source: predicate.source,
+                          externalId: predicate.external_id,
+                        })
+                      }
+                      title="View example uses"
+                    >
+                      <Info className="h-4 w-4" />
+                    </Button>
+                  </TableCell>
+                  <TableCell className="w-1">
+                    {onPredicateSelect && (
                       <Button
                         size="xs"
-                        color="light"
-                        onClick={() =>
-                          setSelectedPredicate({
-                            source: predicate.source,
-                            externalId: predicate.external_id,
-                          })
-                        }
-                        title="View example uses"
+                        onClick={() => onPredicateSelect(predicate.id)}
                       >
-                        <Info className="h-4 w-4" />
+                        Select
                       </Button>
-                    </TableCell>
-                    <TableCell className="w-1">
-                      {onPredicateSelect && (
-                        <Button
-                          size="xs"
-                          onClick={() => onPredicateSelect(predicate.id)}
-                        >
-                          Select
-                        </Button>
-                      )}
-                    </TableCell>
-                  </TableRow>
-                ),
-              )}
+                    )}
+                  </TableCell>
+                </TableRow>
+              ))}
             </TableBody>
           </Table>
         )}

@@ -10,7 +10,6 @@ import { CreateChildButton } from "../create_child_button";
 
 // Mock the form components
 vi.mock("@/components/forms/domain_form", () => ({
-   
   DomainForm: ({ onSuccess }: { onSuccess: (domain: any) => void }) => (
     <div data-testid="domain-form">
       <button onClick={() => onSuccess({ id: "1", title: "Test Domain" })}>
@@ -21,7 +20,6 @@ vi.mock("@/components/forms/domain_form", () => ({
 }));
 
 vi.mock("@/components/forms/term_form", () => ({
-   
   TermForm: ({ onSuccess }: { onSuccess: (term: any) => void }) => (
     <div data-testid="term-form">
       <button onClick={() => onSuccess({ id: "1", title: "Test Term" })}>

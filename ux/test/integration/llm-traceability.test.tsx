@@ -118,7 +118,6 @@ const mockSelectionResponse = {
 };
 
 describe("LLM Traceability Integration", () => {
-   
   let mockService: any;
 
   beforeEach(() => {

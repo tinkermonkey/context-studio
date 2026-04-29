@@ -23,7 +23,9 @@ test.describe("Smoke Tests", () => {
 
   test("should communicate with backend API", async ({ request }) => {
     // Make a direct API request to verify backend is running
-    const response = await request.get("http://localhost:8888/api/v1/admin/health");
+    const response = await request.get(
+      "http://localhost:8888/api/v1/admin/health",
+    );
 
     expect(response.ok()).toBeTruthy();
     expect(response.status()).toBe(200);

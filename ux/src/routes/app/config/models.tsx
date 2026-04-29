@@ -269,7 +269,6 @@ function ProviderConfigurationTab({
   providersStatus,
   isLoading,
 }: {
-   
   providersStatus: any;
   isLoading: boolean;
 }) {
@@ -285,7 +284,6 @@ function ProviderConfigurationTab({
     <div className="space-y-6">
       <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
         {Object.entries(providersStatus.providers).map(
-           
           ([provider, status]: [string, any]) => (
             <ProviderStatusCard
               key={provider}
@@ -305,7 +303,7 @@ function ProviderStatusCard({
   status,
 }: {
   provider: ProviderType;
-   
+
   status: any;
 }) {
   const hasEnabledModels = status.enabled_models > 0;

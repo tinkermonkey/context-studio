@@ -9,10 +9,7 @@ import { useForm } from "@tanstack/react-form";
 import { Button, Alert, Label, Radio } from "flowbite-react";
 import { Info, ArrowRight } from "lucide-react";
 
-import {
-  OntologyClass,
-  OntologyClassLink,
-} from "@/api/types/ontology";
+import { OntologyClass, OntologyClassLink } from "@/api/types/ontology";
 import { useCreateRelationship } from "@/api/hooks/relationships/useRelationships";
 import { PredicateSelector } from "@/components/node_selectors/predicate_selector";
 import { OntologyClassSelector } from "@/components/node_selectors/structure_node_selector";
@@ -100,10 +97,7 @@ export const NodeLinkForm: React.FC<NodeLinkFormProps> = ({
           target_id: targetId,
           relationship_type: value.predicateId,
         });
-      } catch (
-         
-        error: any
-      ) {
+      } catch (error: any) {
         let message = "An error occurred";
         const detail =
           error?.response?.data?.detail ||
@@ -112,7 +106,6 @@ export const NodeLinkForm: React.FC<NodeLinkFormProps> = ({
           error?.detail;
 
         if (Array.isArray(detail)) {
-           
           message = detail.map((d: any) => d.msg).join("; ");
         } else if (error?.message) {
           message = error.message;

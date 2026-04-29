@@ -35,7 +35,7 @@ export function useConfiguration(
  */
 export function useConfigurationValue(
   path: string | undefined,
-   
+
   options?: Omit<UseQueryOptions<any, Error>, "queryKey" | "queryFn">,
 ) {
   return useQuery({
@@ -54,7 +54,6 @@ export function useConfigurationValue(
  * Hook to get configuration schema
  */
 export function useConfigurationSchema(
-   
   options?: Omit<UseQueryOptions<any, Error>, "queryKey" | "queryFn">,
 ) {
   return useQuery({
@@ -150,9 +149,8 @@ export function useUpdateConfigurationValue() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (
-      { path, value }: { path: string; value: any },  
-    ) => configurationService.updateConfigurationValue(path, value),
+    mutationFn: ({ path, value }: { path: string; value: any }) =>
+      configurationService.updateConfigurationValue(path, value),
     onSuccess: (_, { path }) => {
       // Invalidate related queries
       queryClient.invalidateQueries({ queryKey: ["configuration"] });
@@ -176,7 +174,7 @@ export function useUpdateReferenceSourceConfig() {
     }: {
       sourceName: string;
       path: string;
-       
+
       value: any;
     }) =>
       configurationService.updateReferenceSourceConfig(sourceName, path, value),

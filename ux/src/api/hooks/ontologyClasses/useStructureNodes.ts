@@ -11,7 +11,7 @@ import type { OntologyClass } from "../../types/ontology";
  * @deprecated Use useTaxonomies, useConceptSchemes, useOntologyClasses instead
  */
 export const useOntologyClasses = (
-  _params?: any,  
+  _params?: any,
 ): UseQueryResult<OntologyClass[], Error> => {
   return {
     data: undefined,
@@ -25,7 +25,7 @@ export const useOntologyClasses = (
     status: "error",
     dataUpdatedAt: 0,
     errorUpdatedAt: Date.now(),
-    refetch: async () => ({ data: undefined } as any),  
+    refetch: async () => ({ data: undefined }) as any,
   } as UseQueryResult<OntologyClass[], Error>;
 };
 
@@ -33,19 +33,21 @@ export const useOntologyClasses = (
  * @deprecated Use useConceptSchemes instead
  */
 export const useDomainNodes = (
-  ..._args: any[]  
+  ..._args: any[]
 ): UseQueryResult<OntologyClass[], Error> => {
   return {
     data: undefined,
     isLoading: false,
     isFetching: false,
     isPlaceholderData: false,
-    error: new Error("useDomainNodes has been removed. Use useConceptSchemes instead."),
+    error: new Error(
+      "useDomainNodes has been removed. Use useConceptSchemes instead.",
+    ),
     isError: true,
     status: "error",
     dataUpdatedAt: 0,
     errorUpdatedAt: Date.now(),
-    refetch: async () => ({ data: undefined } as any),  
+    refetch: async () => ({ data: undefined }) as any,
   } as UseQueryResult<OntologyClass[], Error>;
 };
 
@@ -53,26 +55,30 @@ export const useDomainNodes = (
  * @deprecated Use useTaxonomies instead
  */
 export const useLayerNodes = (
-  _params?: any,  
+  _params?: any,
 ): UseQueryResult<OntologyClass[], Error> => {
   return {
     data: undefined,
     isLoading: false,
     isFetching: false,
     isPlaceholderData: false,
-    error: new Error("useLayerNodes has been removed. Use useTaxonomies instead."),
+    error: new Error(
+      "useLayerNodes has been removed. Use useTaxonomies instead.",
+    ),
     isError: true,
     status: "error",
     dataUpdatedAt: 0,
     errorUpdatedAt: Date.now(),
-    refetch: async () => ({ data: undefined } as any),  
+    refetch: async () => ({ data: undefined }) as any,
   } as UseQueryResult<OntologyClass[], Error>;
 };
 
 /**
  * @deprecated
  */
-export const useClass = (..._args: any[]): UseQueryResult<OntologyClass, Error> => {  
+export const useClass = (
+  ..._args: any[]
+): UseQueryResult<OntologyClass, Error> => {
   return {
     data: undefined,
     isLoading: false,
@@ -83,14 +89,16 @@ export const useClass = (..._args: any[]): UseQueryResult<OntologyClass, Error> 
     status: "error",
     dataUpdatedAt: 0,
     errorUpdatedAt: Date.now(),
-    refetch: async () => ({ data: undefined } as any),  
+    refetch: async () => ({ data: undefined }) as any,
   } as UseQueryResult<OntologyClass, Error>;
 };
 
 /**
  * @deprecated
  */
-export const useTermNodes = (..._args: any[]): UseQueryResult<OntologyClass[], Error> => {  
+export const useTermNodes = (
+  ..._args: any[]
+): UseQueryResult<OntologyClass[], Error> => {
   return {
     data: undefined,
     isLoading: false,
@@ -101,14 +109,16 @@ export const useTermNodes = (..._args: any[]): UseQueryResult<OntologyClass[], E
     status: "error",
     dataUpdatedAt: 0,
     errorUpdatedAt: Date.now(),
-    refetch: async () => ({ data: undefined } as any),  
+    refetch: async () => ({ data: undefined }) as any,
   } as UseQueryResult<OntologyClass[], Error>;
 };
 
 /**
  * @deprecated
  */
-export const useClassSearch = (..._args: any[]): UseQueryResult<OntologyClass[], Error> => {  
+export const useClassSearch = (
+  ..._args: any[]
+): UseQueryResult<OntologyClass[], Error> => {
   return {
     data: undefined,
     isLoading: false,
@@ -119,6 +129,6 @@ export const useClassSearch = (..._args: any[]): UseQueryResult<OntologyClass[],
     status: "error",
     dataUpdatedAt: 0,
     errorUpdatedAt: Date.now(),
-    refetch: async () => ({ data: undefined } as any),  
+    refetch: async () => ({ data: undefined }) as any,
   } as UseQueryResult<OntologyClass[], Error>;
 };

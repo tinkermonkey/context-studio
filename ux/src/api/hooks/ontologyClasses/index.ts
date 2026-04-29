@@ -19,10 +19,7 @@ export {
   useNodeAttributeMutations,
 } from "./useNodeAttributes";
 
-export {
-  useWordSenses,
-  useUpdateWordSenses,
-} from "./useWordSenses";
+export { useWordSenses, useUpdateWordSenses } from "./useWordSenses";
 
 export {
   useDomainNodes,

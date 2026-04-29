@@ -51,15 +51,15 @@ export const AnnotationSelector: React.FC<AnnotationSelectorProps> = ({
   }, [searchInput]);
 
   // Use vector search for structure nodes based on debounced search query
-  const { data: searchResults, isLoading: nodesLoading } =
-    useClassSearch({
-      query: debouncedSearchQuery,
-      limit: 100,
-      threshold: 0.0,
-    });
+  const { data: searchResults, isLoading: nodesLoading } = useClassSearch({
+    query: debouncedSearchQuery,
+    limit: 100,
+    threshold: 0.0,
+  });
 
   // Convert search results to OntologyClass format for RecordSelector
-  const ontologyClass: OntologyClass[] = (searchResults as OntologyClass[]) || [];
+  const ontologyClass: OntologyClass[] =
+    (searchResults as OntologyClass[]) || [];
 
   // Handle text selection
   const handleTextSelection = () => {

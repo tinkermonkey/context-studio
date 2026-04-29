@@ -37,9 +37,7 @@ const TaxonomyForm: React.FC<TaxonomyFormProps> = ({ onSuccess, taxonomy }) => {
         }
         if (onSuccess) onSuccess(result);
         form.reset();
-      } catch (
-        error: any
-      ) {
+      } catch (error: any) {
         let message: string;
         console.error("Full error object:", error);
         console.error("Error detail:", error?.detail);
@@ -51,11 +49,7 @@ const TaxonomyForm: React.FC<TaxonomyFormProps> = ({ onSuccess, taxonomy }) => {
           error?.detail;
 
         if (Array.isArray(detail)) {
-          message = detail
-            .map(
-              (d: any) => d.msg,
-            )
-            .join("; ");
+          message = detail.map((d: any) => d.msg).join("; ");
         } else if (error?.message) {
           message = error.message;
         } else if (typeof error === "string") {
@@ -90,7 +84,10 @@ const TaxonomyForm: React.FC<TaxonomyFormProps> = ({ onSuccess, taxonomy }) => {
         >
           {(field) => (
             <div>
-              <Label htmlFor="taxonomy-title" className="mb-1 block font-medium">
+              <Label
+                htmlFor="taxonomy-title"
+                className="mb-1 block font-medium"
+              >
                 Title
               </Label>
               <TextInput

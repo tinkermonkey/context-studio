@@ -30,7 +30,6 @@ export const Route = createFileRoute("/app/concept-schemes")({
 });
 
 function ConceptSchemesPage() {
-
   const tableRef = React.useRef<any>(null);
   const navigate = useNavigate({ from: "/app/concept-schemes" });
   const search = useSearch({ from: "/app/concept-schemes" });
@@ -105,7 +104,8 @@ function ConceptSchemesPage() {
               )}
             </div>
             <div className="py-3 pb-6">
-              {taxonomy?.description && `Taxonomy description: ${taxonomy.description}`}
+              {taxonomy?.description &&
+                `Taxonomy description: ${taxonomy.description}`}
             </div>
           </>
         )}

@@ -4,7 +4,10 @@ import { Checkbox } from "flowbite-react";
 import type { ConceptScheme } from "@/api/types/ontology";
 import { renderShortDateTime, renderShortUuid } from "@/utils/renderers";
 import { BaseNodeTable } from "./node_table";
-import { useConceptSchemes, useDeleteConceptScheme } from "@/api/hooks/conceptSchemes";
+import {
+  useConceptSchemes,
+  useDeleteConceptScheme,
+} from "@/api/hooks/conceptSchemes";
 import { ConceptSchemeForm } from "@/components/forms/concept_scheme_form";
 import { ConceptSchemeMoveForm } from "@/components/forms/concept_scheme_move_form";
 import type { FieldDefinition } from "@/components/misc/query_filters";
@@ -139,55 +142,62 @@ export interface ConceptSchemesTableProps {
   onQueryParamsChange?: (params: Record<string, unknown>) => void;
 }
 
+const ConceptSchemesTable = React.forwardRef<any, ConceptSchemesTableProps>(
+  (props) => {
+    const { queryParams = {}, onQueryParamsChange } = props;
 
-const ConceptSchemesTable = React.forwardRef<any, ConceptSchemesTableProps>((props) => {
-  const { queryParams = {}, onQueryParamsChange } = props;
+    // Use query params in the concept schemes hook
+    const {
+      data: conceptSchemes,
+      isLoading,
+      error,
+      refetch,
+    } = useConceptSchemes(queryParams as any);
+    const deleteConceptScheme = useDeleteConceptScheme();
 
-  // Use query params in the concept schemes hook
-  const {
-    data: conceptSchemes,
-    isLoading,
-    error,
-    refetch,
-  } = useConceptSchemes(queryParams as any);
-  const deleteConceptScheme = useDeleteConceptScheme();
+    const defaultColumnVisibility: Record<string, boolean> = {
+      id: false,
+      taxonomy_id: false,
+      created_at: false,
+      last_modified: false,
+    };
+    const columnVisibility = {
+      ...defaultColumnVisibility,
+      ...props.columnVisibility,
+    };
 
-  const defaultColumnVisibility: Record<string, boolean> = {
-    id: false,
-    taxonomy_id: false,
-    created_at: false,
-    last_modified: false,
-  };
-  const columnVisibility = {
-    ...defaultColumnVisibility,
-    ...props.columnVisibility,
-  };
-
-  return (
-    <BaseNodeTable
-      columns={columns}
-      data={conceptSchemes ?? []}
-      isLoading={isLoading}
-      error={error}
-      onRefetch={refetch}
-      onDelete={async (ids: string[]) => {
-        await Promise.all(ids.map((id) => deleteConceptScheme.mutateAsync(id)));
-      }}
-      createForm={({ onSuccess }) => <ConceptSchemeForm onSuccess={onSuccess} />}
-      editForm={({ node, onSuccess }) => (
-        <ConceptSchemeForm conceptScheme={node} onSuccess={onSuccess} />
-      )}
-      moveForm={ConceptSchemeMoveForm}
-      typeName="Concept Scheme"
-      getId={(item) => item.id}
-      columnVisibility={columnVisibility}
-      queryParams={queryParams}
-      onQueryParamsChange={onQueryParamsChange}
-      filterFields={conceptSchemeFilterFields}
-      searchPlaceholder="Search..."
-      linkGenerator={(item: ConceptScheme) => `/app/concept-schemes/${item.id}`}
-    />
-  );
-});
+    return (
+      <BaseNodeTable
+        columns={columns}
+        data={conceptSchemes ?? []}
+        isLoading={isLoading}
+        error={error}
+        onRefetch={refetch}
+        onDelete={async (ids: string[]) => {
+          await Promise.all(
+            ids.map((id) => deleteConceptScheme.mutateAsync(id)),
+          );
+        }}
+        createForm={({ onSuccess }) => (
+          <ConceptSchemeForm onSuccess={onSuccess} />
+        )}
+        editForm={({ node, onSuccess }) => (
+          <ConceptSchemeForm conceptScheme={node} onSuccess={onSuccess} />
+        )}
+        moveForm={ConceptSchemeMoveForm}
+        typeName="Concept Scheme"
+        getId={(item) => item.id}
+        columnVisibility={columnVisibility}
+        queryParams={queryParams}
+        onQueryParamsChange={onQueryParamsChange}
+        filterFields={conceptSchemeFilterFields}
+        searchPlaceholder="Search..."
+        linkGenerator={(item: ConceptScheme) =>
+          `/app/concept-schemes/${item.id}`
+        }
+      />
+    );
+  },
+);
 
 export { ConceptSchemesTable };

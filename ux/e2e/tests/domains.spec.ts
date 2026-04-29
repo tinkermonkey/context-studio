@@ -18,7 +18,7 @@ test.describe("Domain Management", () => {
 
   test.beforeEach(async ({ page }) => {
     // Create a test layer for domains to belong to
-     
+
     const layerResponse = await apiRequest<any>(page, "/api/classes", {
       method: "POST",
       body: {
@@ -85,7 +85,7 @@ test.describe("Domain Management", () => {
 
     // Wait for actual options to load by looking for our specific test layer
     // Get the test layer title first
-     
+
     const layerResponse = await apiRequest<any>(
       page,
       `/api/classes/${testLayerId}`,
@@ -116,13 +116,12 @@ test.describe("Domain Management", () => {
     );
 
     // Verify domain exists in backend with correct layer association
-     
+
     const response = await apiRequest<{ data: any[] }>(
       page,
       "/api/classes?node_type=domain",
     );
     const createdDomain = response.data.find(
-       
       (n: any) => n.title === domainTitle,
     );
 
@@ -139,7 +138,7 @@ test.describe("Domain Management", () => {
     const updatedDefinition = "Updated definition via E2E test";
 
     // Create domain via API
-     
+
     const createResponse = await apiRequest<any>(page, "/api/classes", {
       method: "POST",
       body: {
@@ -184,11 +183,8 @@ test.describe("Domain Management", () => {
     );
 
     // Verify backend was updated
-     
-    const response = await apiRequest<any>(
-      page,
-      `/api/classes/${domainId}`,
-    );
+
+    const response = await apiRequest<any>(page, `/api/classes/${domainId}`);
     expect(response.title).toBe(updatedTitle);
     expect(response.definition).toBe(updatedDefinition);
   });
@@ -196,7 +192,7 @@ test.describe("Domain Management", () => {
   test("should delete a domain", async ({ page }) => {
     // Create a domain to delete
     const domainTitle = `E2E Delete Test ${Date.now()}`;
-     
+
     const createResponse = await apiRequest<any>(page, "/api/classes", {
       method: "POST",
       body: {
@@ -336,7 +332,7 @@ test.describe("Domain Management", () => {
     // Create a domain
     const domainTitle = `E2E Detail Test ${Date.now()}`;
     const domainDefinition = "Test domain for detail view";
-     
+
     const createResponse = await apiRequest<any>(page, "/api/classes", {
       method: "POST",
       body: {
@@ -382,7 +378,7 @@ test.describe("Domain Management", () => {
 
   test("should cancel domain creation", async ({ page }) => {
     // Get current domain count
-     
+
     const beforeResponse = await apiRequest<{ data: any[]; total: number }>(
       page,
       "/api/classes?node_type=domain",
@@ -407,7 +403,7 @@ test.describe("Domain Management", () => {
     await page.waitForLoadState("networkidle");
 
     // Verify no new domain was created
-     
+
     const afterResponse = await apiRequest<{ data: any[]; total: number }>(
       page,
       "/api/classes?node_type=domain",
@@ -418,7 +414,6 @@ test.describe("Domain Management", () => {
 
     // Verify the specific test domain was not created
     const testDomain = afterResponse.data.find(
-       
       (n: any) => n.title === "Test Domain Not Submitted",
     );
     expect(testDomain).toBeUndefined();
@@ -451,7 +446,7 @@ test.describe("Domain Management", () => {
   }) => {
     // Create multiple domains
     const timestamp = Date.now();
-     
+
     const domain1 = await apiRequest<any>(page, "/api/classes", {
       method: "POST",
       body: {
@@ -460,7 +455,7 @@ test.describe("Domain Management", () => {
         parent_node_id: testLayerId,
       },
     });
-     
+
     const domain2 = await apiRequest<any>(page, "/api/classes", {
       method: "POST",
       body: {
@@ -508,7 +503,7 @@ test.describe("Domain Management", () => {
 
   test("should filter domains by layer", async ({ page }) => {
     // Create a second layer
-     
+
     const layer2Response = await apiRequest<any>(page, "/api/classes", {
       method: "POST",
       body: {

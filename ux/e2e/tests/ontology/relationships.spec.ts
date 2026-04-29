@@ -41,7 +41,12 @@ test.describe("Relationship CRUD Operations", () => {
     page,
   }) => {
     // Create relationship using API
-    const relationship = await createRelationship(page, class1Id, class2Id, propertyId);
+    const relationship = await createRelationship(
+      page,
+      class1Id,
+      class2Id,
+      propertyId,
+    );
 
     // Verify relationship was created successfully
     expect(relationship.id).toBeDefined();
@@ -75,7 +80,9 @@ test.describe("Relationship CRUD Operations", () => {
     );
 
     // Fetch relationships list from API
-    const response = await apiRequest<Relationship[] | { items: Relationship[] }>(page, "/api/relationships");
+    const response = await apiRequest<
+      Relationship[] | { items: Relationship[] }
+    >(page, "/api/relationships");
     const relationships = Array.isArray(response) ? response : response.items;
 
     // Verify both relationships appear in list
@@ -94,7 +101,12 @@ test.describe("Relationship CRUD Operations", () => {
     page,
   }) => {
     // Create a relationship
-    const relationship = await createRelationship(page, class1Id, class2Id, propertyId);
+    const relationship = await createRelationship(
+      page,
+      class1Id,
+      class2Id,
+      propertyId,
+    );
 
     // Verify GET single relationship returns correct structure
     const getResponse = await apiRequest<Relationship>(
@@ -108,7 +120,9 @@ test.describe("Relationship CRUD Operations", () => {
     expect(getResponse).toHaveProperty("created_at");
 
     // Verify GET all relationships returns collection
-    const listResponse = await apiRequest<Relationship[] | { items: Relationship[] }>(page, "/api/relationships");
+    const listResponse = await apiRequest<
+      Relationship[] | { items: Relationship[] }
+    >(page, "/api/relationships");
     const isList = Array.isArray(listResponse);
     const hasItems = !isList && Array.isArray((listResponse as any).items);
     expect(isList || hasItems).toBe(true);
@@ -116,7 +130,12 @@ test.describe("Relationship CRUD Operations", () => {
 
   test("should delete a relationship", async ({ page }) => {
     // Create a relationship
-    const relationship = await createRelationship(page, class1Id, class2Id, propertyId);
+    const relationship = await createRelationship(
+      page,
+      class1Id,
+      class2Id,
+      propertyId,
+    );
 
     // Verify relationship exists
     const beforeDelete = await apiRequest<Relationship>(
@@ -132,7 +151,10 @@ test.describe("Relationship CRUD Operations", () => {
 
     // Verify relationship is deleted
     try {
-      await apiRequest<Relationship>(page, `/api/relationships/${relationship.id}`);
+      await apiRequest<Relationship>(
+        page,
+        `/api/relationships/${relationship.id}`,
+      );
       throw new Error("Relationship was not deleted from API");
     } catch (error: any) {
       if (!error.message.includes("404")) {
@@ -145,7 +167,12 @@ test.describe("Relationship CRUD Operations", () => {
     page,
   }) => {
     // Create a relationship
-    const relationship = await createRelationship(page, class1Id, class2Id, propertyId);
+    const relationship = await createRelationship(
+      page,
+      class1Id,
+      class2Id,
+      propertyId,
+    );
 
     // Fetch relationship details
     const apiResponse = await apiRequest<Relationship>(
@@ -195,7 +222,12 @@ test.describe("Relationship CRUD Operations", () => {
     page,
   }) => {
     // Create valid relationship
-    const relationship = await createRelationship(page, class1Id, class2Id, propertyId);
+    const relationship = await createRelationship(
+      page,
+      class1Id,
+      class2Id,
+      propertyId,
+    );
     expect(relationship.id).toBeDefined();
 
     // Verify deleting a related class does not leave orphaned relationships
@@ -219,18 +251,8 @@ test.describe("Relationship CRUD Operations", () => {
     const prop2 = hierarchy2.propertyDefinition;
 
     // Create two relationships between same classes with different properties
-    const rel1 = await createRelationship(
-      page,
-      class1Id,
-      class2Id,
-      propertyId,
-    );
-    const rel2 = await createRelationship(
-      page,
-      class1Id,
-      class2Id,
-      prop2.id,
-    );
+    const rel1 = await createRelationship(page, class1Id, class2Id, propertyId);
+    const rel2 = await createRelationship(page, class1Id, class2Id, prop2.id);
 
     // Verify both relationships exist
     expect(rel1.id).not.toBe(rel2.id);
@@ -241,7 +263,12 @@ test.describe("Relationship CRUD Operations", () => {
 
   test("should update a relationship property", async ({ page }) => {
     // Create a relationship
-    const relationship = await createRelationship(page, class1Id, class2Id, propertyId);
+    const relationship = await createRelationship(
+      page,
+      class1Id,
+      class2Id,
+      propertyId,
+    );
 
     // Create another property to update to
     const hierarchy2 = await createTestHierarchy(page, 0);
@@ -257,7 +284,7 @@ test.describe("Relationship CRUD Operations", () => {
       {
         method: "PUT",
         body: updateData,
-      }
+      },
     );
 
     // Verify update via API

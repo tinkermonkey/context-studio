@@ -74,9 +74,7 @@ const PredicateForm: React.FC<PredicateFormProps> = ({
         }
         if (onSuccess) onSuccess(result);
         form.reset();
-      } catch (
-        error: any  
-      ) {
+      } catch (error: any) {
         let message: string;
         // Log the full error for debugging
         console.error("Full error object:", error);
@@ -90,12 +88,7 @@ const PredicateForm: React.FC<PredicateFormProps> = ({
           error?.detail;
 
         if (Array.isArray(detail)) {
-          message = detail
-            .map(
-               
-              (d: any) => d.msg,
-            )
-            .join("; ");
+          message = detail.map((d: any) => d.msg).join("; ");
         } else if (error?.message) {
           message = error.message;
         } else if (typeof error === "string") {

@@ -69,7 +69,7 @@ export interface UnifiedLink {
   predicate: string;
   source: string;
   confidence_score: number;
-   
+
   metadata?: Record<string, any>;
 }
 
@@ -181,7 +181,7 @@ export interface ConceptNetEdge {
     term: string;
   };
   weight: number;
-   
+
   sources: Array<any>;
 }
 

@@ -50,8 +50,12 @@ test.describe("Concept Scheme CRUD Operations", () => {
     await expect(modal).toBeVisible({ timeout: 5000 });
 
     // Fill form fields
-    const titleInput = page.locator('[data-testid="concept-scheme-title-input"]').first();
-    const definitionInput = page.locator('[data-testid="concept-scheme-definition-input"]').first();
+    const titleInput = page
+      .locator('[data-testid="concept-scheme-title-input"]')
+      .first();
+    const definitionInput = page
+      .locator('[data-testid="concept-scheme-definition-input"]')
+      .first();
 
     await titleInput.fill("test-scheme-e2e-create");
     await definitionInput.fill("A test scheme created via E2E tests");
@@ -110,8 +114,10 @@ test.describe("Concept Scheme CRUD Operations", () => {
 
     // Verify API response includes both
     const response = await apiRequest<any>(page, "/api/schemes");
-    const titles = response.items?.map((s: any) => s.title) ||
-      response.map((s: any) => s.title) || [];
+    const titles =
+      response.items?.map((s: any) => s.title) ||
+      response.map((s: any) => s.title) ||
+      [];
     expect(titles).toContain(scheme1.title);
     expect(titles).toContain(scheme2.title);
   });
@@ -169,8 +175,12 @@ test.describe("Concept Scheme CRUD Operations", () => {
     await expect(modal).toBeVisible({ timeout: 5000 });
 
     // Update fields
-    const titleInput = page.locator('[data-testid="concept-scheme-title-input"]').first();
-    const definitionInput = page.locator('[data-testid="concept-scheme-definition-input"]').first();
+    const titleInput = page
+      .locator('[data-testid="concept-scheme-title-input"]')
+      .first();
+    const definitionInput = page
+      .locator('[data-testid="concept-scheme-definition-input"]')
+      .first();
 
     await titleInput.fill("test-scheme-e2e-update");
     await definitionInput.fill("Updated scheme definition");
@@ -218,7 +228,9 @@ test.describe("Concept Scheme CRUD Operations", () => {
     await actionsDropdown.click();
 
     // Click Delete Selected
-    const deleteAction = page.getByRole("menuitem", { name: /delete selected/i });
+    const deleteAction = page.getByRole("menuitem", {
+      name: /delete selected/i,
+    });
     await deleteAction.click();
 
     // Handle confirmation dialog if present
@@ -269,7 +281,10 @@ test.describe("Concept Scheme CRUD Operations", () => {
     await expect(page.getByText(testDescription)).toBeVisible();
 
     // Verify API response has all fields
-    const apiResponse = await apiRequest<any>(page, `/api/schemes/${scheme.id}`);
+    const apiResponse = await apiRequest<any>(
+      page,
+      `/api/schemes/${scheme.id}`,
+    );
     expect(apiResponse.title).toBe(testTitle);
     expect(apiResponse.definition).toBe(testDescription);
     expect(apiResponse.id).toBeDefined();

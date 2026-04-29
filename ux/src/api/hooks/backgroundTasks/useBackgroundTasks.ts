@@ -19,13 +19,13 @@ export interface TaskStatus {
   task_type: string;
   status: string;
   progress: number;
-   
+
   result?: any;
   error?: string;
   created_at?: string;
   started_at?: string;
   completed_at?: string;
-   
+
   metadata: Record<string, any>;
 }
 

@@ -54,7 +54,10 @@ export class ConceptSchemeService extends BaseService {
   /**
    * Create a new concept scheme within a taxonomy
    */
-  async create(taxonomyId: string, data: ConceptSchemeCreate): Promise<ConceptScheme> {
+  async create(
+    taxonomyId: string,
+    data: ConceptSchemeCreate,
+  ): Promise<ConceptScheme> {
     return this.withErrorContext(async () => {
       this.validateRequired(taxonomyId, "taxonomyId");
       this.validateRequired(data.title, "title");
@@ -91,9 +94,7 @@ export class ConceptSchemeService extends BaseService {
   async delete(id: string): Promise<void> {
     return this.withErrorContext(async () => {
       this.validateRequired(id, "id");
-      return this.deleteResource<void>(
-        `${ENDPOINTS.CONCEPT_SCHEMES}/${id}`,
-      );
+      return this.deleteResource<void>(`${ENDPOINTS.CONCEPT_SCHEMES}/${id}`);
     }, "delete");
   }
 }

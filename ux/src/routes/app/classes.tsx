@@ -1,7 +1,5 @@
 import React from "react";
-import {
-  useOntologyClasses,
-} from "@/api/hooks/ontologyClasses";
+import { useOntologyClasses } from "@/api/hooks/ontologyClasses";
 import { useTaxonomies, useTaxonomy } from "@/api/hooks/taxonomies";
 import { useConceptScheme } from "@/api/hooks/conceptSchemes";
 import {
@@ -37,10 +35,8 @@ export const Route = createFileRoute("/app/classes")({
 });
 
 function ClassesPage() {
-  const {
-    isLoading: classesLoading,
-    error: classesError,
-  } = useOntologyClasses();
+  const { isLoading: classesLoading, error: classesError } =
+    useOntologyClasses();
   const {
     data: taxonomies,
     isLoading: taxonomiesLoading,
@@ -96,7 +92,12 @@ function ClassesPage() {
     error: conceptSchemeError,
   } = useConceptScheme((queryParams.concept_scheme_id as string) ?? "");
 
-  if (classesLoading || taxonomiesLoading || taxonomyLoading || conceptSchemeLoading) {
+  if (
+    classesLoading ||
+    taxonomiesLoading ||
+    taxonomyLoading ||
+    conceptSchemeLoading
+  ) {
     return <Spinner />;
   }
   if (classesError) {
@@ -128,7 +129,10 @@ function ClassesPage() {
           {sortedTaxonomies.map((taxonomy) => (
             <div key={taxonomy.id} className="space-y-2">
               <CsSidebarTitle>{taxonomy.title}</CsSidebarTitle>
-              <CollapsibleConceptSchemesList taxonomyId={taxonomy.id} useLinks={true} />
+              <CollapsibleConceptSchemesList
+                taxonomyId={taxonomy.id}
+                useLinks={true}
+              />
             </div>
           ))}
         </div>
@@ -148,7 +152,8 @@ function ClassesPage() {
               )}
             </div>
             <div className="py-3 pb-6">
-              {taxonomy?.description && `Taxonomy description: ${taxonomy.description}`}
+              {taxonomy?.description &&
+                `Taxonomy description: ${taxonomy.description}`}
             </div>
           </>
         )}
@@ -161,11 +166,15 @@ function ClassesPage() {
               </i>
               {conceptSchemeLoading && <span> (loading...)</span>}
               {conceptSchemeError && (
-                <span className="text-red-500"> (error loading concept scheme)</span>
+                <span className="text-red-500">
+                  {" "}
+                  (error loading concept scheme)
+                </span>
               )}
             </div>
             <div className="py-3 pb-6">
-              {conceptScheme?.description && `Concept Scheme description: ${conceptScheme.description}`}
+              {conceptScheme?.description &&
+                `Concept Scheme description: ${conceptScheme.description}`}
             </div>
           </>
         )}

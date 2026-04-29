@@ -104,9 +104,13 @@ export interface PropertiesTableProps {
   columnVisibility?: Record<string, boolean>;
 }
 
-
 const PropertiesTable = React.forwardRef<any, PropertiesTableProps>((props) => {
-  const { data: properties, isLoading, error, refetch } = usePropertyDefinitions();
+  const {
+    data: properties,
+    isLoading,
+    error,
+    refetch,
+  } = usePropertyDefinitions();
   const deleteProperty = useDeletePropertyDefinition();
 
   // Default hidden columns: id, created_at, last_modified
@@ -130,9 +134,14 @@ const PropertiesTable = React.forwardRef<any, PropertiesTableProps>((props) => {
       onDelete={async (ids: string[]) => {
         await Promise.all(ids.map((id) => deleteProperty.mutateAsync(id)));
       }}
-      createForm={({ onSuccess }) => <PropertyDefinitionForm onSuccess={onSuccess} />}
+      createForm={({ onSuccess }) => (
+        <PropertyDefinitionForm onSuccess={onSuccess} />
+      )}
       editForm={({ node, onSuccess }) => (
-        <PropertyDefinitionForm propertyDefinition={node} onSuccess={onSuccess} />
+        <PropertyDefinitionForm
+          propertyDefinition={node}
+          onSuccess={onSuccess}
+        />
       )}
       typeName="Property Definition"
       getId={(item) => item.id}

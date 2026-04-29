@@ -39,14 +39,20 @@ test.describe("Taxonomy CRUD Operations", () => {
     await expect(modal).toBeVisible({ timeout: 5000 });
 
     // Fill form fields
-    const titleInput = page.locator('[data-testid="taxonomy-title-input"]').first();
-    const descriptionInput = page.locator('[data-testid="taxonomy-description-input"]').first();
+    const titleInput = page
+      .locator('[data-testid="taxonomy-title-input"]')
+      .first();
+    const descriptionInput = page
+      .locator('[data-testid="taxonomy-description-input"]')
+      .first();
 
     await titleInput.fill("test-taxonomy-e2e-create");
     await descriptionInput.fill("A test taxonomy created via E2E tests");
 
     // Submit form
-    const submitButton = modal.getByRole("button", { name: /create|save|submit/i });
+    const submitButton = modal.getByRole("button", {
+      name: /create|save|submit/i,
+    });
     await submitButton.click();
 
     // Wait for modal to close
@@ -75,8 +81,10 @@ test.describe("Taxonomy CRUD Operations", () => {
 
     // Verify API response includes both
     const response = await apiRequest<any>(page, "/api/taxonomies");
-    const titles = response.items?.map((t: any) => t.title) ||
-      response.map((t: any) => t.title) || [];
+    const titles =
+      response.items?.map((t: any) => t.title) ||
+      response.map((t: any) => t.title) ||
+      [];
     expect(titles).toContain(taxonomy1.title);
     expect(titles).toContain(taxonomy2.title);
   });
@@ -132,8 +140,12 @@ test.describe("Taxonomy CRUD Operations", () => {
     await expect(modal).toBeVisible({ timeout: 5000 });
 
     // Update fields
-    const titleInput = page.locator('[data-testid="taxonomy-title-input"]').first();
-    const descriptionInput = page.locator('[data-testid="taxonomy-description-input"]').first();
+    const titleInput = page
+      .locator('[data-testid="taxonomy-title-input"]')
+      .first();
+    const descriptionInput = page
+      .locator('[data-testid="taxonomy-description-input"]')
+      .first();
 
     await titleInput.fill("test-taxonomy-e2e-update");
     await descriptionInput.fill("Updated description");
@@ -181,7 +193,9 @@ test.describe("Taxonomy CRUD Operations", () => {
     await actionsDropdown.click();
 
     // Click Delete Selected
-    const deleteAction = page.getByRole("menuitem", { name: /delete selected/i });
+    const deleteAction = page.getByRole("menuitem", {
+      name: /delete selected/i,
+    });
     await deleteAction.click();
 
     // Handle confirmation dialog if present

@@ -11,14 +11,12 @@ import {
 import { ChevronDown, Search, X, CircleX } from "lucide-react";
 import SearchHighlight from "@/components/misc/search_highlight";
 
- 
 export interface FieldMap<T = any> {
   value: keyof T | string;
   title: keyof T | string;
   definition?: keyof T | string;
 }
 
- 
 export interface PortalRecordSelectorProps<T = any> {
   records: T[];
   loading?: boolean;
@@ -34,7 +32,6 @@ export interface PortalRecordSelectorProps<T = any> {
   "data-testid"?: string;
 }
 
- 
 export function PortalRecordSelector<T = any>(
   props: PortalRecordSelectorProps<T>,
 ): React.ReactElement {
@@ -62,13 +59,10 @@ export function PortalRecordSelector<T = any>(
   const optionRefs = useRef<Record<string, HTMLDivElement | null>>({});
   const [menuStyle, setMenuStyle] = useState<React.CSSProperties>({});
 
-   
   const getValue = (item: any) => String(item[fieldMap.value as string] ?? "");
 
-   
   const getTitle = (item: any) => String(item[fieldMap.title as string] ?? "");
 
-   
   const getDefinition = (item: any) =>
     fieldMap.definition
       ? String(item[fieldMap.definition as string] ?? "")

@@ -9,7 +9,9 @@ import { UseQueryResult, UseMutationResult } from "@tanstack/react-query";
 /**
  * @deprecated Use usePropertyDefinitions instead
  */
-export const usePredicates = (..._args: any[]): UseQueryResult<{ data: any[]; total: number }, Error> => {  
+export const usePredicates = (
+  ..._args: any[]
+): UseQueryResult<{ data: any[]; total: number }, Error> => {
   return {
     data: undefined,
     isLoading: false,
@@ -22,14 +24,16 @@ export const usePredicates = (..._args: any[]): UseQueryResult<{ data: any[]; to
     status: "error",
     dataUpdatedAt: 0,
     errorUpdatedAt: Date.now(),
-    refetch: async () => ({ data: undefined } as any),  
+    refetch: async () => ({ data: undefined }) as any,
   } as UseQueryResult<{ data: any[]; total: number }, Error>;
 };
 
 /**
  * @deprecated
  */
-export const useExternalPredicates = (..._args: any[]): UseQueryResult<{ data: any[]; total: number }, Error> => {  
+export const useExternalPredicates = (
+  ..._args: any[]
+): UseQueryResult<{ data: any[]; total: number }, Error> => {
   return {
     data: undefined,
     isLoading: false,
@@ -40,14 +44,16 @@ export const useExternalPredicates = (..._args: any[]): UseQueryResult<{ data: a
     status: "error",
     dataUpdatedAt: 0,
     errorUpdatedAt: Date.now(),
-    refetch: async () => ({ data: undefined } as any),  
+    refetch: async () => ({ data: undefined }) as any,
   } as UseQueryResult<{ data: any[]; total: number }, Error>;
 };
 
 /**
  * @deprecated
  */
-export const useSimilarPredicates = (..._args: any[]): UseQueryResult<{ results: any[]; total: number }, Error> => {  
+export const useSimilarPredicates = (
+  ..._args: any[]
+): UseQueryResult<{ results: any[]; total: number }, Error> => {
   return {
     data: undefined,
     isLoading: false,
@@ -58,14 +64,16 @@ export const useSimilarPredicates = (..._args: any[]): UseQueryResult<{ results:
     status: "error",
     dataUpdatedAt: 0,
     errorUpdatedAt: Date.now(),
-    refetch: async () => ({ data: undefined } as any),  
+    refetch: async () => ({ data: undefined }) as any,
   } as UseQueryResult<{ results: any[]; total: number }, Error>;
 };
 
 /**
  * @deprecated
  */
-export const useSearchExternalPredicates = (..._args: any[]): UseQueryResult<{ data: any[]; total: number }, Error> => {  
+export const useSearchExternalPredicates = (
+  ..._args: any[]
+): UseQueryResult<{ data: any[]; total: number }, Error> => {
   return {
     data: undefined,
     isLoading: false,
@@ -76,19 +84,21 @@ export const useSearchExternalPredicates = (..._args: any[]): UseQueryResult<{ d
     status: "error",
     dataUpdatedAt: 0,
     errorUpdatedAt: Date.now(),
-    refetch: async () => ({ data: undefined } as any),  
+    refetch: async () => ({ data: undefined }) as any,
   } as UseQueryResult<{ data: any[]; total: number }, Error>;
 };
 
 /**
  * @deprecated
  */
-export const useDiscoverPredicates = (..._args: any[]): UseMutationResult<any, Error, any, any> => {  
+export const useDiscoverPredicates = (
+  ..._args: any[]
+): UseMutationResult<any, Error, any, any> => {
   return {
-    mutate: (_data?: any) => {  
+    mutate: (_data?: any) => {
       throw new Error("useDiscoverPredicates has been removed.");
     },
-    mutateAsync: async (_data?: any) => {  
+    mutateAsync: async (_data?: any) => {
       throw new Error("useDiscoverPredicates has been removed.");
     },
     isPending: false,

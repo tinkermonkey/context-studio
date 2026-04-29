@@ -37,19 +37,19 @@ const ensureClient = () => {
 export const apiClient: AxiosInstance = new Proxy({} as AxiosInstance, {
   get(_, prop: string | symbol) {
     const client = ensureClient();
-     
+
     return (client as any)[prop];
   },
   set(_, prop: string | symbol, value) {
     const client = ensureClient();
-     
+
     (client as any)[prop] = value;
     return true;
   },
-   
+
   apply(_, __, args: any[]) {
     const client = ensureClient();
-     
+
     return (client as any).apply(_, args);
   },
 }) as unknown as AxiosInstance;

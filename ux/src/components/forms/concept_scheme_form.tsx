@@ -3,7 +3,10 @@ import { useForm } from "@tanstack/react-form";
 import { TextInput, Textarea, Button, Alert, Label } from "flowbite-react";
 import { Info, Database } from "lucide-react";
 import type { ConceptScheme } from "@/api/types/ontology";
-import { useCreateConceptScheme, useUpdateConceptScheme } from "@/api/hooks/conceptSchemes";
+import {
+  useCreateConceptScheme,
+  useUpdateConceptScheme,
+} from "@/api/hooks/conceptSchemes";
 import { TaxonomySelector } from "@/components/node_selectors/taxonomy_selector";
 
 interface ConceptSchemeFormProps {
@@ -69,9 +72,7 @@ const ConceptSchemeForm: React.FC<ConceptSchemeFormProps> = ({
           error?.detail;
 
         if (Array.isArray(detail)) {
-          message = detail
-            .map((d: any) => d.msg)
-            .join("; ");
+          message = detail.map((d: any) => d.msg).join("; ");
         } else if (error?.message) {
           message = error.message;
         } else if (typeof error === "string") {
@@ -81,7 +82,9 @@ const ConceptSchemeForm: React.FC<ConceptSchemeFormProps> = ({
         }
         setSubmitError(message);
         console.error(
-          isEdit ? "Failed to update concept scheme:" : "Failed to create concept scheme:",
+          isEdit
+            ? "Failed to update concept scheme:"
+            : "Failed to create concept scheme:",
           error,
         );
       }
@@ -120,7 +123,10 @@ const ConceptSchemeForm: React.FC<ConceptSchemeFormProps> = ({
         >
           {(field) => (
             <div>
-              <Label htmlFor="concept-scheme-title" className="mb-1 block font-medium">
+              <Label
+                htmlFor="concept-scheme-title"
+                className="mb-1 block font-medium"
+              >
                 Title
               </Label>
               <TextInput
@@ -184,7 +190,9 @@ const ConceptSchemeForm: React.FC<ConceptSchemeFormProps> = ({
                 </Label>
                 <TaxonomySelector
                   value={field.state.value}
-                  onSelect={(taxonomy) => field.handleChange(taxonomy?.id || "")}
+                  onSelect={(taxonomy) =>
+                    field.handleChange(taxonomy?.id || "")
+                  }
                   data-testid="concept-scheme-taxonomy-selector"
                 />
                 {field.state.meta.errors.length > 0 && (

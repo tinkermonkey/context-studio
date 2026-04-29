@@ -9,27 +9,29 @@ import { UseQueryResult } from "@tanstack/react-query";
 /**
  * @deprecated Use useRelationships instead
  */
-export const useNodeLinks = (
-  _params?: any,  
-): UseQueryResult<any[], Error> => {
+export const useNodeLinks = (_params?: any): UseQueryResult<any[], Error> => {
   return {
     data: undefined,
     isLoading: false,
     isFetching: false,
     isPlaceholderData: false,
-    error: new Error("useNodeLinks has been removed. Use useRelationships instead."),
+    error: new Error(
+      "useNodeLinks has been removed. Use useRelationships instead.",
+    ),
     isError: true,
     status: "error",
     dataUpdatedAt: 0,
     errorUpdatedAt: Date.now(),
-    refetch: async () => ({ data: undefined } as any),  
+    refetch: async () => ({ data: undefined }) as any,
   } as UseQueryResult<any[], Error>;
 };
 
 /**
  * @deprecated
  */
-export const useNodeLinksByNode = (..._args: any[]): UseQueryResult<any[], Error> => {  
+export const useNodeLinksByNode = (
+  ..._args: any[]
+): UseQueryResult<any[], Error> => {
   return {
     data: undefined,
     isLoading: false,
@@ -40,6 +42,6 @@ export const useNodeLinksByNode = (..._args: any[]): UseQueryResult<any[], Error
     status: "error",
     dataUpdatedAt: 0,
     errorUpdatedAt: Date.now(),
-    refetch: async () => ({ data: undefined } as any),  
+    refetch: async () => ({ data: undefined }) as any,
   } as UseQueryResult<any[], Error>;
 };

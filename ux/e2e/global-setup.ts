@@ -80,8 +80,14 @@ async function globalSetup(): Promise<void> {
   const venvPythonPath = path.join(backendPath, ".venv/bin/python");
 
   try {
-    const testLocalDb = path.resolve(backendPath, "datafiles/e2e-test/local.db");
-    const testOpsDb = path.resolve(backendPath, "datafiles/e2e-test/operations.db");
+    const testLocalDb = path.resolve(
+      backendPath,
+      "datafiles/e2e-test/local.db",
+    );
+    const testOpsDb = path.resolve(
+      backendPath,
+      "datafiles/e2e-test/operations.db",
+    );
 
     // Run local.db migrations
     console.log("  Running local.db migrations...");

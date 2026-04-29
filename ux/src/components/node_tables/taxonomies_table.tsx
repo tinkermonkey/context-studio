@@ -92,7 +92,6 @@ export interface TaxonomiesTableProps {
   columnVisibility?: Record<string, boolean>;
 }
 
-
 const TaxonomiesTable = React.forwardRef<any, TaxonomiesTableProps>((props) => {
   const { data: taxonomies, isLoading, error, refetch } = useTaxonomies();
   const deleteTaxonomy = useDeleteTaxonomy();
@@ -125,9 +124,7 @@ const TaxonomiesTable = React.forwardRef<any, TaxonomiesTableProps>((props) => {
       typeName="Taxonomy"
       getId={(item) => item.id}
       columnVisibility={columnVisibility}
-      linkGenerator={(taxonomy: Taxonomy) =>
-        `/app/taxonomies/${taxonomy.id}`
-      }
+      linkGenerator={(taxonomy: Taxonomy) => `/app/taxonomies/${taxonomy.id}`}
     />
   );
 });

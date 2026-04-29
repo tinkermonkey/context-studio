@@ -47,12 +47,8 @@ export const NodeLinkDisplay: React.FC<NodeLinkDisplayProps> = ({
 
   // Separate links into outgoing and incoming
   const { outgoingLinks, incomingLinks } = useMemo(() => {
-    const outgoing = links.filter(
-      (link) => link.source_id === currentNodeId,
-    );
-    const incoming = links.filter(
-      (link) => link.target_id === currentNodeId,
-    );
+    const outgoing = links.filter((link) => link.source_id === currentNodeId);
+    const incoming = links.filter((link) => link.target_id === currentNodeId);
     return { outgoingLinks: outgoing, incomingLinks: incoming };
   }, [links, currentNodeId]);
 

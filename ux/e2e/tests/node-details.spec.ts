@@ -21,7 +21,7 @@ test.describe("Structure Node Detail View", () => {
 
   test.beforeEach(async ({ page }) => {
     // Create test hierarchy: layer → domain → term
-     
+
     const layerResponse = await apiRequest<any>(page, "/api/classes", {
       method: "POST",
       body: {
@@ -32,7 +32,6 @@ test.describe("Structure Node Detail View", () => {
     });
     testLayerId = layerResponse.id;
 
-     
     const domainResponse = await apiRequest<any>(page, "/api/classes", {
       method: "POST",
       body: {
@@ -44,7 +43,6 @@ test.describe("Structure Node Detail View", () => {
     });
     testDomainId = domainResponse.id;
 
-     
     const termResponse = await apiRequest<any>(page, "/api/classes", {
       method: "POST",
       body: {
@@ -218,11 +216,8 @@ test.describe("Structure Node Detail View", () => {
     await expect(definitionSection).toContainText(newDefinition);
 
     // Verify backend was updated
-     
-    const response = await apiRequest<any>(
-      page,
-      `/api/classes/${testTermId}`,
-    );
+
+    const response = await apiRequest<any>(page, `/api/classes/${testTermId}`);
     expect(response.definition).toBe(newDefinition);
   });
 
@@ -261,7 +256,7 @@ test.describe("Structure Node Detail View", () => {
 
   test("should handle nodes with no definition", async ({ page }) => {
     // Create a node without a definition
-     
+
     const nodeResponse = await apiRequest<any>(page, "/api/classes", {
       method: "POST",
       body: {
@@ -438,7 +433,7 @@ test.describe("Structure Node Detail View", () => {
     page,
   }) => {
     // Create term with multi-word title to trigger NLP
-     
+
     const termResponse = await apiRequest<any>(page, "/api/classes", {
       method: "POST",
       body: {
@@ -511,7 +506,7 @@ test.describe("Structure Node Detail View", () => {
 
   test("should add and remove reference node links", async ({ page }) => {
     // Create term for reference linking
-     
+
     const termResponse = await apiRequest<any>(page, "/api/classes", {
       method: "POST",
       body: {

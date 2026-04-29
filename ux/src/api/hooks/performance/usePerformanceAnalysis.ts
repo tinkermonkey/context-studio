@@ -169,11 +169,11 @@ export interface StorageCompressionResult {
 export interface DiffConflict {
   path: string;
   conflict_type: string;
-   
+
   base_value: any;
-   
+
   local_value: any;
-   
+
   remote_value: any;
 }
 
@@ -195,7 +195,7 @@ export interface ThreeWayDiff {
 export interface BatchOperationError {
   item_index: number;
   error_message: string;
-   
+
   item_data: any;
 }
 
@@ -213,7 +213,6 @@ export interface BatchOperationResult {
 export interface QueryTuningRequest {
   query: string;
   context?: {
-     
     table_schemas?: Record<string, any>;
     expected_result_size?: number;
   };
@@ -226,18 +225,17 @@ export interface MaterializedViewRequest {
 }
 
 export interface ThreeWayDiffRequest {
-   
   base: Record<string, any>;
-   
+
   local: Record<string, any>;
-   
+
   remote: Record<string, any>;
   enable_semantic_analysis?: boolean;
 }
 
 export interface BatchOperationRequest {
   operation_type: string;
-   
+
   entity_data: Array<Record<string, any>>;
   author_id: string;
   options?: {
@@ -415,10 +413,8 @@ export function usePerformanceConfig(
 // Mutation Hooks
 
 export function useAutoTunePerformance(
-   
   options?: UseMutationOptions<any, Error, void>,
 ) {
-   
   return useMutation<any, Error, void>({
     mutationFn: async () => {
       const response = await apiClient.post(
@@ -445,10 +441,8 @@ export function useTuneQuery(
   });
 }
 export function useCreateMaterializedView(
-   
   options?: UseMutationOptions<any, Error, MaterializedViewRequest>,
 ) {
-   
   return useMutation<any, Error, MaterializedViewRequest>({
     mutationFn: async (request) => {
       const response = await apiClient.post(
@@ -475,10 +469,8 @@ export function useCompressStorage(
   });
 }
 export function useSetupLifecyclePolicies(
-   
   options?: UseMutationOptions<any, Error, void>,
 ) {
-   
   return useMutation<any, Error, void>({
     mutationFn: async () => {
       const response = await apiClient.post(
@@ -525,10 +517,8 @@ export function useBatchOperation(
 }
 
 export function useUpdatePerformanceConfig(
-   
   options?: UseMutationOptions<any, Error, PerformanceConfig>,
 ) {
-   
   return useMutation<any, Error, PerformanceConfig>({
     mutationFn: async (config) => {
       const response = await apiClient.put(`/api/optimization/config`, config);

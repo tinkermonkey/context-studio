@@ -49,7 +49,6 @@ const MockButton = ({
   onClick,
   children,
   ...props
-   
 }: any) => (
   <button
     onClick={(e) => {
@@ -69,7 +68,6 @@ const MockContentButton = ({
   onClick,
   "data-content": content,
   children,
-   
 }: any) => (
   <button
     onClick={onClick}
@@ -91,13 +89,12 @@ describe("SelectionTracker", () => {
     vi.clearAllMocks();
 
     // Mock the hooks
-     
+
     (useRecordSelectionMutation as any).mockReturnValue({
       mutate: mockRecordSelection,
       isPending: false,
     });
 
-     
     (useOptimisticSelectionRecording as any).mockReturnValue(
       mockOptimisticRecording,
     );
@@ -351,7 +348,7 @@ describe("SelectionTracker", () => {
       const mockError = new Error("Tracking failed");
 
       // Mock non-optimistic recording with error
-       
+
       (useRecordSelectionMutation as any).mockReturnValue({
         mutate: vi.fn(),
         isPending: false,
@@ -376,7 +373,7 @@ describe("SelectionTracker", () => {
       await user.click(button);
 
       // Simulate the error callback being called
-       
+
       const mockMutationHook = (useRecordSelectionMutation as any).mock
         .calls[0][0];
       mockMutationHook.onError(mockError, {
@@ -393,7 +390,6 @@ describe("SelectionTracker", () => {
 
   describe("Visual Feedback", () => {
     it("should show tracking indicator when showFeedback is true and tracking", () => {
-       
       (useOptimisticSelectionRecording as any).mockReturnValue({
         recordSelection: vi.fn(),
         isTracking: true,
@@ -416,7 +412,6 @@ describe("SelectionTracker", () => {
     });
 
     it("should not show tracking indicator when showFeedback is false", () => {
-       
       (useOptimisticSelectionRecording as any).mockReturnValue({
         recordSelection: vi.fn(),
         isTracking: true,

@@ -120,7 +120,10 @@ export const ReferenceNodeDisplay: React.FC<ReferenceNodeDisplayProps> = ({
             >
               {links.map((link, index) => {
                 const linkKey = `${link.source || "unknown"}-${link.external_id || index}-${index}`;
-                const sourceUrl = getSourceUrl(link.source || "", link.external_id || "");
+                const sourceUrl = getSourceUrl(
+                  link.source || "",
+                  link.external_id || "",
+                );
 
                 return (
                   <div
@@ -188,7 +191,9 @@ export const ReferenceNodeDisplay: React.FC<ReferenceNodeDisplayProps> = ({
             {confirmRemove && (
               <div className="rounded-lg border bg-gray-50 p-3">
                 <div className="mb-2 flex items-center gap-2">
-                  <Badge color={getSourceBadgeColor(confirmRemove.source || "")}>
+                  <Badge
+                    color={getSourceBadgeColor(confirmRemove.source || "")}
+                  >
                     {getSourceLabel(confirmRemove.source || "")}
                   </Badge>
                 </div>

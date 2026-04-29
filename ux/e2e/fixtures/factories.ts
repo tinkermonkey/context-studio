@@ -178,18 +178,14 @@ export async function createRelationship(
   targetClassId: string,
   propertyId: string,
 ): Promise<Relationship> {
-  const response = await apiRequest<Relationship>(
-    page,
-    "/api/relationships",
-    {
-      method: "POST",
-      body: {
-        source_class_id: sourceClassId,
-        target_class_id: targetClassId,
-        property_id: propertyId,
-      },
+  const response = await apiRequest<Relationship>(page, "/api/relationships", {
+    method: "POST",
+    body: {
+      source_class_id: sourceClassId,
+      target_class_id: targetClassId,
+      property_id: propertyId,
     },
-  );
+  });
 
   return response;
 }
@@ -335,7 +331,10 @@ export async function seedTestData(
  * @param page - Playwright page object
  * @param maxAge - Maximum age in milliseconds for entities to consider as test data (default: 10 minutes)
  */
-export async function clearTestData(page: Page, maxAge: number = 10 * 60 * 1000): Promise<void> {
+export async function clearTestData(
+  page: Page,
+  maxAge: number = 10 * 60 * 1000,
+): Promise<void> {
   const now = Date.now();
 
   const extractItems = (response: any): any[] => {
@@ -357,9 +356,13 @@ export async function clearTestData(page: Page, maxAge: number = 10 * 60 * 1000)
     endpoint: string,
     titlePatterns: string[],
   ): Promise<void> => {
-    const matches = titlePatterns.some((pattern) => entity.title?.includes(pattern));
+    const matches = titlePatterns.some((pattern) =>
+      entity.title?.includes(pattern),
+    );
     if (matches) {
-      const createdAt = entity.created_at ? new Date(entity.created_at).getTime() : 0;
+      const createdAt = entity.created_at
+        ? new Date(entity.created_at).getTime()
+        : 0;
       if (now - createdAt < maxAge) {
         try {
           await apiRequest(page, `${endpoint}/${entity.id}`, {
@@ -375,10 +378,15 @@ export async function clearTestData(page: Page, maxAge: number = 10 * 60 * 1000)
   try {
     // STEP 1: Delete all test relationships (first — they reference other entities)
     try {
-      const relationshipsResponse = await apiRequest<any>(page, "/api/relationships");
+      const relationshipsResponse = await apiRequest<any>(
+        page,
+        "/api/relationships",
+      );
       const relationships = extractItems(relationshipsResponse);
       for (const relationship of relationships) {
-        const createdAt = relationship.created_at ? new Date(relationship.created_at).getTime() : 0;
+        const createdAt = relationship.created_at
+          ? new Date(relationship.created_at).getTime()
+          : 0;
         // Delete relationships created within the test data window
         if (now - createdAt < maxAge) {
           try {
@@ -386,7 +394,10 @@ export async function clearTestData(page: Page, maxAge: number = 10 * 60 * 1000)
               method: "DELETE",
             });
           } catch (error) {
-            console.warn(`Failed to delete relationship ${relationship.id}:`, error);
+            console.warn(
+              `Failed to delete relationship ${relationship.id}:`,
+              error,
+            );
           }
         }
       }

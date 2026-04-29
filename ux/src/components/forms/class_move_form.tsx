@@ -93,7 +93,8 @@ export function ClassMoveForm({
       </div>
 
       <div className="text-sm text-gray-600">
-        Moving {selectedNodes.length} class{selectedNodes.length > 1 ? "es" : ""}.
+        Moving {selectedNodes.length} class
+        {selectedNodes.length > 1 ? "es" : ""}.
         {moveChildren && " All child classes will also be moved recursively."}
       </div>
 

@@ -7,7 +7,7 @@ import { useAddExistingDataset } from "@/api/hooks/datasets/useDatasetMutations"
 import { useDatasetsDirectory } from "@/api/hooks/datasets";
 
 interface AddExistingDatasetFormProps {
-  onSuccess?: (dataset: any) => void;  
+  onSuccess?: (dataset: any) => void;
 }
 
 const AddExistingDatasetForm: React.FC<AddExistingDatasetFormProps> = ({
@@ -47,9 +47,7 @@ const AddExistingDatasetForm: React.FC<AddExistingDatasetFormProps> = ({
         );
         if (onSuccess) onSuccess(result);
         form.reset();
-      } catch (
-        error: any  
-      ) {
+      } catch (error: any) {
         let message = "An error occurred";
         console.error("Full error object:", error);
         console.error("Error detail:", error?.detail);
@@ -58,10 +56,7 @@ const AddExistingDatasetForm: React.FC<AddExistingDatasetFormProps> = ({
           if (Array.isArray(error.response.data.detail)) {
             // Validation errors from FastAPI
             const validationErrors = error.response.data.detail
-              .map(
-                 
-                (err: any) => `${err.loc?.join(" > ")}: ${err.msg}`,
-              )
+              .map((err: any) => `${err.loc?.join(" > ")}: ${err.msg}`)
               .join(", ");
             message = `Validation error: ${validationErrors}`;
           } else if (typeof error.response.data.detail === "string") {

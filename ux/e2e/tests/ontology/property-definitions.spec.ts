@@ -39,8 +39,12 @@ test.describe("Property Definition CRUD Operations", () => {
     await expect(modal).toBeVisible({ timeout: 5000 });
 
     // Fill form fields
-    const titleInput = page.locator('[data-testid="property-definition-title-input"]').first();
-    const descriptionInput = page.locator('[data-testid="property-definition-description-input"]').first();
+    const titleInput = page
+      .locator('[data-testid="property-definition-title-input"]')
+      .first();
+    const descriptionInput = page
+      .locator('[data-testid="property-definition-description-input"]')
+      .first();
 
     await titleInput.fill("test-property-e2e-create");
     await descriptionInput.fill("A test property created via E2E tests");
@@ -101,8 +105,10 @@ test.describe("Property Definition CRUD Operations", () => {
 
     // Verify API response includes both
     const response = await apiRequest<any>(page, "/api/properties");
-    const titles = response.items?.map((p: any) => p.title) ||
-      response.map((p: any) => p.title) || [];
+    const titles =
+      response.items?.map((p: any) => p.title) ||
+      response.map((p: any) => p.title) ||
+      [];
     expect(titles).toContain(prop1.title);
     expect(titles).toContain(prop2.title);
   });
@@ -163,8 +169,12 @@ test.describe("Property Definition CRUD Operations", () => {
     await expect(modal).toBeVisible({ timeout: 5000 });
 
     // Update fields
-    const titleInput = page.locator('[data-testid="property-definition-title-input"]').first();
-    const descriptionInput = page.locator('[data-testid="property-definition-description-input"]').first();
+    const titleInput = page
+      .locator('[data-testid="property-definition-title-input"]')
+      .first();
+    const descriptionInput = page
+      .locator('[data-testid="property-definition-description-input"]')
+      .first();
 
     await titleInput.fill("test-property-e2e-update");
     await descriptionInput.fill("Updated property description");
@@ -212,7 +222,9 @@ test.describe("Property Definition CRUD Operations", () => {
     await actionsDropdown.click();
 
     // Click Delete Selected
-    const deleteAction = page.getByRole("menuitem", { name: /delete selected/i });
+    const deleteAction = page.getByRole("menuitem", {
+      name: /delete selected/i,
+    });
     await deleteAction.click();
 
     // Handle confirmation dialog if present

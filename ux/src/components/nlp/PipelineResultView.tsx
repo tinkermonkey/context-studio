@@ -34,9 +34,9 @@ interface PipelineExecutionResult {
 
 interface PipelineResultViewProps {
   result: PipelineExecutionResult;
-   
+
   apiContext: Record<string, any> | null;
-   
+
   buildApiContext: () => Record<string, any>;
   termId?: string | null;
   domainId?: string | null;
@@ -106,7 +106,6 @@ const PipelineResultView: React.FC<PipelineResultViewProps> = ({
     savedVisibleLocal,
   ]);
 
-   
   const handleSaveLocal = async (res: any) => {
     // Extract definition from structured_output, legacy format, or raw response
     const definition =
@@ -117,7 +116,6 @@ const PipelineResultView: React.FC<PipelineResultViewProps> = ({
     setSaveMessageLocal(null);
     setIsSavingLocal(true);
 
-     
     const payload: any = { definition };
     try {
       if (termId) {
@@ -145,10 +143,7 @@ const PipelineResultView: React.FC<PipelineResultViewProps> = ({
         setSavedVisibleLocal(false);
       }
       setIsSavingLocal(false);
-    } catch (
-       
-      err: any
-    ) {
+    } catch (err: any) {
       setSaveMessageLocal(err?.message || "Failed to save definition");
       setIsSavingLocal(false);
     }

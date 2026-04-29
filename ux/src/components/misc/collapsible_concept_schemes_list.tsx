@@ -13,14 +13,20 @@ interface CollapsibleConceptSchemesListProps {
   useLinks?: boolean;
 }
 
-const CollapsibleConceptSchemesList: React.FC<CollapsibleConceptSchemesListProps> = ({
+const CollapsibleConceptSchemesList: React.FC<
+  CollapsibleConceptSchemesListProps
+> = ({
   taxonomyId,
   showCount = 20,
   onConceptSchemeClick,
   selectedConceptSchemeId,
   useLinks = true,
 }) => {
-  const { data: conceptSchemes, isLoading, error } = useConceptSchemes({ taxonomy_id: taxonomyId });
+  const {
+    data: conceptSchemes,
+    isLoading,
+    error,
+  } = useConceptSchemes({ taxonomy_id: taxonomyId });
   const [isExpanded, setIsExpanded] = useState(false);
 
   if (isLoading) {

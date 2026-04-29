@@ -116,7 +116,6 @@ function RouteComponent() {
         {
           title: "Database Performance",
           metrics: Object.entries(performanceMetrics.database_metrics).map(
-             
             ([key, value]: [string, any]) => ({
               label: key
                 .replace(/_/g, " ")
@@ -326,7 +325,6 @@ function RouteComponent() {
                         },
                       ]}
                       issues={trends.issues.map(
-                         
                         (issue: any) => issue.description || issue,
                       )}
                     />
@@ -339,10 +337,7 @@ function RouteComponent() {
                           </h5>
                           <ul className="space-y-2">
                             {trends.recommendations.map(
-                              (
-                                rec: any,  
-                                index: number,
-                              ) => (
+                              (rec: any, index: number) => (
                                 <li
                                   key={index}
                                   className="flex items-start gap-2 text-sm text-gray-700 dark:text-gray-300"
@@ -381,7 +376,6 @@ function RouteComponent() {
                         </h5>
                         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                           {Object.entries(queryStats.cache_stats).map(
-                             
                             ([key, value]: [string, any]) => (
                               <div
                                 key={key}
@@ -431,7 +425,6 @@ function RouteComponent() {
                           title=""
                           data={Object.entries(
                             storageStats.compression_algorithms_used,
-                             
                           ).map(([algorithm, count]: [string, any]) => ({
                             label: algorithm,
                             value: count,
