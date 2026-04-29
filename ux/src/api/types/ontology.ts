@@ -26,8 +26,9 @@ export interface TaxonomyUpdate {
 }
 
 export interface TaxonomyListParams {
-  skip?: number;
+  offset?: number;
   limit?: number;
+  [key: string]: unknown;
 }
 
 // ============= ConceptScheme =============
@@ -52,9 +53,10 @@ export interface ConceptSchemeUpdate {
 }
 
 export interface ConceptSchemeListParams {
-  skip?: number;
+  offset?: number;
   limit?: number;
   taxonomy_id?: string;
+  [key: string]: unknown;
 }
 
 // ============= OntologyClass =============
@@ -83,10 +85,11 @@ export interface OntologyClassUpdate {
 }
 
 export interface OntologyClassListParams {
-  skip?: number;
+  offset?: number;
   limit?: number;
   scheme_id?: string;
   parent_class_id?: string;
+  [key: string]: unknown;
 }
 
 // ============= Relationship =============
@@ -113,11 +116,12 @@ export interface RelationshipUpdate {
 }
 
 export interface RelationshipListParams {
-  skip?: number;
+  offset?: number;
   limit?: number;
   source_class_id?: string;
   target_class_id?: string;
   property_id?: string;
+  [key: string]: unknown;
 }
 
 // ============= PropertyDefinition =============
@@ -144,8 +148,9 @@ export interface PropertyDefinitionUpdate {
 }
 
 export interface PropertyDefinitionListParams {
-  skip?: number;
+  offset?: number;
   limit?: number;
+  [key: string]: unknown;
 }
 
 // ============= Generic List Response =============

@@ -1,50 +1,37 @@
 /**
- * Word Senses Hooks (DEPRECATED - For UI Backward Compatibility)
+ * DEPRECATED: useWordSenses Hook
+ *
+ * @deprecated
  */
 
-import {
-  useQuery,
-  useMutation,
-  UseQueryOptions,
-  UseMutationOptions,
-} from "@tanstack/react-query";
-import type {
-  WordSense,
-  SelectedWordSensesUpdate,
-} from "../../types/structureNodes";
+import { UseQueryOptions } from "@tanstack/react-query";
 
 /**
- * DEPRECATED: Get word senses for a node
+ * @deprecated
  */
 export const useWordSenses = (
-  nodeId: string,
-  options?: UseQueryOptions<WordSense[], Error>,
+  _nodeId?: string,
+  _options?: UseQueryOptions<any, Error>, // eslint-disable-line @typescript-eslint/no-explicit-any
 ) => {
-  return useQuery({
-    queryKey: ["word_senses", nodeId],
-    queryFn: async () => {
-      console.warn("useWordSenses is deprecated.");
-      return [];
-    },
-    enabled: !!nodeId,
-    ...options,
-  });
+  return {
+    data: undefined,
+    isLoading: false,
+    error: new Error("useWordSenses has been removed."),
+    isError: true,
+  };
 };
 
 /**
- * DEPRECATED: Update word senses
+ * @deprecated
  */
-export const useUpdateWordSenses = (
-  options?: UseMutationOptions<
-    WordSense[],
-    Error,
-    { nodeId: string; data: SelectedWordSensesUpdate }
-  >,
-) => {
-  return useMutation({
-    mutationFn: async () => {
-      throw new Error("useUpdateWordSenses is deprecated.");
+export const useUpdateWordSenses = () => {
+  return {
+    mutate: () => {
+      throw new Error("useUpdateWordSenses has been removed.");
     },
-    ...options,
-  });
+    mutateAsync: async () => {
+      throw new Error("useUpdateWordSenses has been removed.");
+    },
+    isPending: false,
+  };
 };

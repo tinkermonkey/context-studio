@@ -6,9 +6,11 @@
 
 import { AxiosInstance, AxiosRequestConfig } from "axios";
 import { apiClient } from "../client/axios";
+import type { ListResponse } from "../types/ontology";
+import { apiLogger } from "../utils/logger";
 
 export interface ListParams {
-  skip?: number;
+  offset?: number;
   limit?: number;
   sort?: string;
   [key: string]: unknown;
@@ -26,13 +28,6 @@ export interface PaginatedResponse<T> {
   total: number;
   skip: number;
   limit: number;
-}
-
-export interface ListResponse<T> {
-  items: T[];
-  total: number;
-  limit: number;
-  offset: number;
 }
 
 export interface PaginationConfig {
@@ -124,13 +119,13 @@ export abstract class BaseService {
     params?: Record<string, unknown>,
   ): Promise<T[]> {
     const allItems: T[] = [];
-    let skip = 0;
+    let offset = 0;
     const limit = this.paginationConfig.maxPageSize;
 
     while (true) {
       const pageParams = {
         ...params,
-        skip,
+        offset,
         limit,
       };
 
@@ -153,7 +148,7 @@ export abstract class BaseService {
         break;
       }
 
-      skip += limit;
+      offset += limit;
     }
 
     return allItems;
@@ -204,6 +199,11 @@ export abstract class BaseService {
     if ("data" in response && Array.isArray(response.data)) {
       return response.data;
     }
+    // Log warning when response format doesn't match either expected format
+    apiLogger.warn(
+      "Response format did not match ListResponse or PaginatedResponse",
+      { response },
+    );
     return [];
   }
 

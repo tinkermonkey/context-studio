@@ -14,7 +14,7 @@ import {
   isStructureNodeEvent,
   isStructureNodeLinkEvent,
   isPredicateEvent,
-} from "../../types/structureNodes";
+} from "../../types/changeEvents";
 
 // Change Events Service
 class ChangeEventService extends BaseService {

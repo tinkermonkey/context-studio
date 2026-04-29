@@ -6,7 +6,6 @@
 
 // Services
 export * from "./services/base";
-export * from "./services/predicates";
 export * from "./services/graph";
 export * from "./services/datasets";
 export * from "./services/schema";
@@ -18,7 +17,6 @@ export * from "./services/llmTraceability";
 export * from "./services/pipelineExecution";
 
 // Hooks
-export * from "./hooks/predicates";
 export * from "./hooks/graph";
 export * from "./hooks/datasets";
 export * from "./hooks/schema";

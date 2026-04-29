@@ -22,7 +22,7 @@ export class PropertyDefinitionService extends BaseService {
   ): Promise<PropertyDefinition[]> {
     return this.withErrorContext(async () => {
       const queryParams: Record<string, unknown> = {};
-      if (params?.skip !== undefined) queryParams.skip = params.skip;
+      if (params?.offset !== undefined) queryParams.offset = params.offset;
       if (params?.limit !== undefined) queryParams.limit = params.limit;
 
       // If no limit specified, load all

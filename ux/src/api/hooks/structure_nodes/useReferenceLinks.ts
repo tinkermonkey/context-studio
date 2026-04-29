@@ -1,83 +1,52 @@
 /**
- * Reference Links Hooks (DEPRECATED - For UI Backward Compatibility)
+ * DEPRECATED: useReferenceLinks Hook
+ *
+ * @deprecated
  */
 
-import {
-  useQuery,
-  useMutation,
-  UseQueryOptions,
-  UseMutationOptions,
-} from "@tanstack/react-query";
-import type { ReferenceLink } from "../../types/structureNodes";
+import { UseQueryOptions } from "@tanstack/react-query";
 
 /**
- * DEPRECATED: Get reference links for a node
+ * @deprecated
  */
 export const useReferenceLinks = (
-  nodeId: string,
-  options?: UseQueryOptions<ReferenceLink[], Error>,
+  _nodeId?: string,
+  _options?: UseQueryOptions<any, Error>, // eslint-disable-line @typescript-eslint/no-explicit-any
 ) => {
-  return useQuery({
-    queryKey: ["reference_links", nodeId],
-    queryFn: async () => {
-      console.warn("useReferenceLinks is deprecated.");
-      return [];
-    },
-    enabled: !!nodeId,
-    ...options,
-  });
+  return {
+    data: undefined,
+    isLoading: false,
+    error: new Error("useReferenceLinks has been removed."),
+    isError: true,
+  };
 };
 
 /**
- * DEPRECATED: Add reference links
+ * @deprecated
  */
-export const useAddReferenceLinks = (
-  options?: UseMutationOptions<
-    ReferenceLink[],
-    Error,
-    { nodeId: string; referenceLinks: ReferenceLink[] }
-  >,
-) => {
-  return useMutation({
-    mutationFn: async () => {
-      throw new Error("useAddReferenceLinks is deprecated.");
+export const useAddReferenceLinks = () => {
+  return {
+    mutate: () => {
+      throw new Error("useAddReferenceLinks has been removed.");
     },
-    ...options,
-  });
+    mutateAsync: async () => {
+      throw new Error("useAddReferenceLinks has been removed.");
+    },
+    isPending: false,
+  };
 };
 
 /**
- * DEPRECATED: Remove reference links
+ * @deprecated
  */
-export const useRemoveReferenceLinks = (
-  options?: UseMutationOptions<
-    ReferenceLink[],
-    Error,
-    { nodeId: string; referenceLinks: ReferenceLink[] }
-  >,
-) => {
-  return useMutation({
-    mutationFn: async () => {
-      throw new Error("useRemoveReferenceLinks is deprecated.");
+export const useDeleteReferenceLink = () => {
+  return {
+    mutate: () => {
+      throw new Error("useDeleteReferenceLink has been removed.");
     },
-    ...options,
-  });
-};
-
-/**
- * DEPRECATED: Remove a single reference link
- */
-export const useRemoveReferenceLink = (
-  options?: UseMutationOptions<
-    ReferenceLink[],
-    Error,
-    { nodeId: string; referenceLink: ReferenceLink }
-  >,
-) => {
-  return useMutation({
-    mutationFn: async () => {
-      throw new Error("useRemoveReferenceLink is deprecated.");
+    mutateAsync: async () => {
+      throw new Error("useDeleteReferenceLink has been removed.");
     },
-    ...options,
-  });
+    isPending: false,
+  };
 };

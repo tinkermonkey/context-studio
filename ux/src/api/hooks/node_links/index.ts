@@ -1,17 +1,11 @@
 /**
- * Node Links Hooks (Legacy - For UI Backward Compatibility)
+ * DEPRECATED: Legacy Node Links Hooks
  *
- * DEPRECATED: This module exists only for backward compatibility with existing UI components.
- * Use the new entity-specific hooks instead: useRelationships, useRelationship, etc.
+ * This module exists for backward compatibility with legacy UI components.
+ * These hooks should be migrated to use the new ontology entity hooks.
+ *
+ * Do not use these hooks in new code.
  */
 
-export {
-  useNodeLinks,
-  useNodeLinksPage,
-  useNodeLink,
-} from "./useNodeLinks";
-
-export {
-  useCreateNodeLink,
-  useDeleteNodeLink,
-} from "./useNodeLinkMutations";
+export * from "./useNodeLinks";
+export * from "./useNodeLinkMutations";

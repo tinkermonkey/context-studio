@@ -1,45 +1,14 @@
 /**
- * Structure Nodes Hooks (Legacy - For UI Backward Compatibility)
+ * DEPRECATED: Legacy Structure Node Hooks
  *
- * DEPRECATED: This module exists only for backward compatibility with existing UI components.
- * These hooks should be refactored to use the new entity-specific hooks:
- * - useTaxonomies, useTaxonomy, useCreateTaxonomy, etc. for taxonomies
- * - useConceptSchemes, useConceptScheme, useCreateConceptScheme, etc. for schemes
- * - useOntologyClasses, useOntologyClass, useCreateOntologyClass, etc. for classes
- * - useRelationships, useRelationship, useCreateRelationship, etc. for relationships
- * - usePropertyDefinitions, usePropertyDefinition, useCreatePropertyDefinition, etc. for properties
+ * This module exists for backward compatibility with legacy UI components.
+ * These hooks should be migrated to use the new ontology entity hooks.
+ *
+ * Do not use these hooks in new code.
  */
 
-export {
-  useStructureNodes,
-  useStructureNodesPage,
-  useStructureNode,
-  useLayerNodes,
-  useDomainNodes,
-  useTermNodes,
-  useStructureNodeFind,
-} from "./useStructureNodes";
-
-export {
-  useCreateStructureNode,
-  useUpdateStructureNode,
-  useDeleteStructureNode,
-  useMoveStructureNodes,
-} from "./useStructureNodeMutations";
-
-export {
-  useNodeAttributes,
-  useSetNodeAttributes,
-  useRemoveNodeAttribute,
-} from "./useNodeAttributes";
-
-export {
-  useReferenceLinks,
-  useAddReferenceLinks,
-  useRemoveReferenceLinks,
-} from "./useReferenceLinks";
-
-export {
-  useWordSenses,
-  useUpdateWordSenses,
-} from "./useWordSenses";
+export * from "./useStructureNodes";
+export * from "./useStructureNodeMutations";
+export * from "./useWordSenses";
+export * from "./useNodeAttributes";
+export * from "./useReferenceLinks";

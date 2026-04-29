@@ -1,79 +1,37 @@
 /**
- * Node Attributes Hooks (DEPRECATED - For UI Backward Compatibility)
+ * DEPRECATED: useNodeAttributes Hook
+ *
+ * @deprecated
  */
 
-import {
-  useQuery,
-  useMutation,
-  UseQueryOptions,
-  UseMutationOptions,
-} from "@tanstack/react-query";
-import type {
-  ResolvedAttribute,
-  StructureNodeAttribute,
-  StructureNode,
-} from "../../types/structureNodes";
+import { UseQueryOptions } from "@tanstack/react-query";
 
 /**
- * DEPRECATED: Get resolved attributes for a node
+ * @deprecated
  */
 export const useNodeAttributes = (
-  nodeId: string,
-  options?: UseQueryOptions<ResolvedAttribute[], Error>,
+  _nodeId?: string,
+  _options?: UseQueryOptions<any, Error>, // eslint-disable-line @typescript-eslint/no-explicit-any
 ) => {
-  return useQuery({
-    queryKey: ["node_attributes", nodeId],
-    queryFn: async () => {
-      console.warn("useNodeAttributes is deprecated.");
-      return [];
-    },
-    enabled: !!nodeId,
-    ...options,
-  });
-};
-
-/**
- * DEPRECATED: Set node attributes
- */
-export const useSetNodeAttributes = (
-  options?: UseMutationOptions<
-    StructureNode,
-    Error,
-    { nodeId: string; attributes: StructureNodeAttribute[] }
-  >,
-) => {
-  return useMutation({
-    mutationFn: async () => {
-      throw new Error("useSetNodeAttributes is deprecated.");
-    },
-    ...options,
-  });
-};
-
-/**
- * DEPRECATED: Remove node attribute
- */
-export const useRemoveNodeAttribute = (
-  options?: UseMutationOptions<
-    StructureNode,
-    Error,
-    { nodeId: string; key: string }
-  >,
-) => {
-  return useMutation({
-    mutationFn: async () => {
-      throw new Error("useRemoveNodeAttribute is deprecated.");
-    },
-    ...options,
-  });
-};
-
-/**
- * DEPRECATED: Batch mutations for node attributes
- */
-export const useNodeAttributeMutations = (nodeId: string) => {
   return {
-    setAttributes: useSetNodeAttributes(),
-    removeAttribute: useRemoveNodeAttribute(),
+    data: undefined,
+    isLoading: false,
+    error: new Error("useNodeAttributes has been removed."),
+    isError: true,
+  };
+};
+
+/**
+ * @deprecated
+ */
+export const useUpdateNodeAttribute = () => {
+  return {
+    mutate: () => {
+      throw new Error("useUpdateNodeAttribute has been removed.");
+    },
+    mutateAsync: async () => {
+      throw new Error("useUpdateNodeAttribute has been removed.");
+    },
+    isPending: false,
   };
 };

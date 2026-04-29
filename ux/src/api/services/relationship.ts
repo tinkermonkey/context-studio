@@ -20,7 +20,7 @@ export class RelationshipService extends BaseService {
   async list(params?: RelationshipListParams): Promise<Relationship[]> {
     return this.withErrorContext(async () => {
       const queryParams: Record<string, unknown> = {};
-      if (params?.skip !== undefined) queryParams.skip = params.skip;
+      if (params?.offset !== undefined) queryParams.offset = params.offset;
       if (params?.limit !== undefined) queryParams.limit = params.limit;
       if (params?.source_class_id)
         queryParams.source_class_id = params.source_class_id;

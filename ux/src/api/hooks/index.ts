@@ -43,7 +43,6 @@ export * from "./nlp";
 export * from "./nlpReference";
 export * from "./ontologyClasses";
 export * from "./pipelineFlavors";
-export * from "./predicates";
 export * from "./propertyDefinitions";
 export * from "./rag";
 export * from "./reference";

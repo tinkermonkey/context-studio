@@ -1,39 +1,58 @@
 /**
- * Node Link Mutation Hooks (DEPRECATED - For UI Backward Compatibility)
+ * DEPRECATED: Node Link Mutation Hooks
+ *
+ * @deprecated Migrate to use the new ontology entity mutation hooks instead
  */
 
-import { UseMutationOptions, useMutation } from "@tanstack/react-query";
-import type {
-  StructureNodeLink,
-  StructureNodeLinkCreate,
-} from "../../types/structureNodes";
+import { UseMutationOptions } from "@tanstack/react-query";
 
 /**
- * DEPRECATED: Hook to create a node link
+ * @deprecated Use useCreateRelationship instead
  */
 export const useCreateNodeLink = (
-  options?: UseMutationOptions<StructureNodeLink, Error, StructureNodeLinkCreate>,
+  _options?: UseMutationOptions<any, Error, any>, // eslint-disable-line @typescript-eslint/no-explicit-any
 ) => {
-  return useMutation({
-    mutationFn: async () => {
-      console.warn("useCreateNodeLink is deprecated. Use useCreateRelationship() instead.");
-      throw new Error("useCreateNodeLink is deprecated.");
+  return {
+    mutate: () => {
+      throw new Error("useCreateNodeLink has been removed. Use useCreateRelationship instead.");
     },
-    ...options,
-  });
+    mutateAsync: async () => {
+      throw new Error("useCreateNodeLink has been removed. Use useCreateRelationship instead.");
+    },
+    isPending: false,
+  };
 };
 
 /**
- * DEPRECATED: Hook to delete a node link
+ * @deprecated Use useUpdateRelationship instead
+ */
+export const useUpdateNodeLink = (
+  _options?: UseMutationOptions<any, Error, any>, // eslint-disable-line @typescript-eslint/no-explicit-any
+) => {
+  return {
+    mutate: () => {
+      throw new Error("useUpdateNodeLink has been removed. Use useUpdateRelationship instead.");
+    },
+    mutateAsync: async () => {
+      throw new Error("useUpdateNodeLink has been removed. Use useUpdateRelationship instead.");
+    },
+    isPending: false,
+  };
+};
+
+/**
+ * @deprecated Use useDeleteRelationship instead
  */
 export const useDeleteNodeLink = (
-  options?: UseMutationOptions<void, Error, string>,
+  _options?: UseMutationOptions<void, Error, string>, // eslint-disable-line @typescript-eslint/no-explicit-any
 ) => {
-  return useMutation({
-    mutationFn: async () => {
-      console.warn("useDeleteNodeLink is deprecated. Use useDeleteRelationship() instead.");
-      throw new Error("useDeleteNodeLink is deprecated.");
+  return {
+    mutate: () => {
+      throw new Error("useDeleteNodeLink has been removed. Use useDeleteRelationship instead.");
     },
-    ...options,
-  });
+    mutateAsync: async () => {
+      throw new Error("useDeleteNodeLink has been removed. Use useDeleteRelationship instead.");
+    },
+    isPending: false,
+  };
 };

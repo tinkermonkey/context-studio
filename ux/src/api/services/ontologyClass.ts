@@ -20,7 +20,7 @@ export class OntologyClassService extends BaseService {
   async list(params?: OntologyClassListParams): Promise<OntologyClass[]> {
     return this.withErrorContext(async () => {
       const queryParams: Record<string, unknown> = {};
-      if (params?.skip !== undefined) queryParams.skip = params.skip;
+      if (params?.offset !== undefined) queryParams.offset = params.offset;
       if (params?.limit !== undefined) queryParams.limit = params.limit;
       if (params?.scheme_id) queryParams.scheme_id = params.scheme_id;
       if (params?.parent_class_id)
