@@ -13,10 +13,10 @@ import {
   OntologyClass,
   OntologyClassLink,
   OntologyClassLinkCreate,
-} from "@/api/types/ontologyClasss";
-import { useCreateNodeLink } from "@/api/hooks/relationships/useNodeLinkMutations";
+} from "@/api/types/ontology";
+import { useCreateNodeLink } from "@/api/hooks/node_links/useNodeLinkMutations";
 import { PredicateSelector } from "@/components/node_selectors/predicate_selector";
-import { OntologyClassSelector } from "@/components/node_selectors/ontologyClass_selector";
+import { OntologyClassSelector } from "@/components/node_selectors/structure_node_selector";
 import { toast } from "@/utils/toast";
 
 interface NodeLinkFormProps {

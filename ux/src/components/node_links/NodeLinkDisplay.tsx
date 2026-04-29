@@ -7,8 +7,8 @@
 
 import React, { useState, useMemo } from "react";
 
-import { OntologyClassLink } from "@/api/types/ontologyClasss";
-import { useDeleteNodeLink } from "@/api/hooks/relationships/useNodeLinkMutations";
+import { OntologyClassLink } from "@/api/types/ontology";
+import { useDeleteNodeLink } from "@/api/hooks/node_links/useNodeLinkMutations";
 import { toast } from "@/utils/toast";
 import { NodeLinkGroupDisplay } from "./NodeLinkGroupDisplay";
 

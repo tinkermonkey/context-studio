@@ -5,7 +5,7 @@
  */
 
 import { UseMutationResult } from "@tanstack/react-query";
-import type { OntologyClass } from "../../types/ontologyClasss";
+import type { OntologyClass } from "../../types/ontologyClass";
 
 /**
  * @deprecated Use the new ontology entity mutation hooks instead

@@ -16,8 +16,8 @@ import {
 import { AlertCircle, Database, Hash, Layers, Trash2 } from "lucide-react";
 import { useNavigate } from "@tanstack/react-router";
 
-import { OntologyClassLink, NodeType } from "@/api/types/ontologyClasss";
-import { useClass } from "@/api/hooks/ontologyClasss/useClasss";
+import { OntologyClassLink, NodeType } from "@/api/types/ontology";
+import { useClass } from "@/api/hooks/ontologyClasses/useOntologyClasses";
 
 interface NodeLinkItemProps {
   link: OntologyClassLink;
@@ -47,7 +47,7 @@ export const NodeLinkItem: React.FC<NodeLinkItemProps> = ({
   };
 
   const handleNavigate = () => {
-    navigate({ to: `/app/ontologyClasss/${displayNodeId}` });
+    navigate({ to: `/app/ontologyClass/${displayNodeId}` });
   };
 
   // Get icon for node type

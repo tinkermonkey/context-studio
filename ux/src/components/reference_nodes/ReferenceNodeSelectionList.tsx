@@ -10,8 +10,8 @@ import { Alert, Badge, Button, Spinner } from "flowbite-react";
 import { Save, Trash2, X } from "lucide-react";
 
 import { UnifiedNode } from "@/api/types/unified";
-import { ReferenceLink } from "@/api/types/ontologyClasss";
-import { useAddReferenceLinks } from "@/api/hooks/ontologyClasss/useReferenceLinks";
+import { ReferenceLink } from "@/api/types/ontology";
+import { useAddReferenceLinks } from "@/api/hooks/ontologyClasses/useReferenceLinks";
 import { getSourceBadgeColor, getSourceLabel } from "@/utils/sourceUtils";
 import { toast } from "@/utils/toast";
 

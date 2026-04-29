@@ -21,7 +21,7 @@ import {
   Plus,
   X,
 } from "lucide-react";
-import { NodeType } from "@/api/types/ontologyClasss";
+import { NodeType } from "@/api/types/ontology";
 import { useTermHierarchy } from "@/api/hooks/graph/useGraph";
 import { useQueryClient } from "@tanstack/react-query";
 import { QUERY_KEYS } from "@/api/config";
@@ -36,7 +36,7 @@ import {
 import { CsMain, CsMainTitle, CsMainHeader } from "@/components/layout/cs_main";
 import { NlpAnalysisPanel } from "@/components/nlp/NlpAnalysisPanel";
 import { TreeChartPanel } from "@/components/panels/TreeChartPanel";
-import type { OntologyClass } from "@/api/types/ontologyClasss";
+import type { OntologyClass } from "@/api/types/ontology";
 import { TreeMenuPanel } from "@/components/panels/TreeMenuPanel";
 import { useNlpAnalysisStore } from "@/stores/nlpAnalysisStore";
 import { useUpdateTaxonomy } from "@/api/hooks/taxonomies/useTaxonomies";
@@ -44,10 +44,10 @@ import { useUpdateConceptScheme } from "@/api/hooks/conceptSchemes/useConceptSch
 import { useUpdateOntologyClass } from "@/api/hooks/ontologyClasses/useOntologyClasses";
 import { toast } from "@/utils/toast";
 import { ReferenceNodePanel } from "@/components/reference_nodes";
-import { NodeLinkPanel } from "@/components/relationships";
+import { NodeLinkPanel } from "@/components/node_links";
 import { DomainMoveForm } from "@/components/forms/domain_move_form";
 import { TermMoveForm } from "@/components/forms/term_move_form";
-import { AttributePanel } from "@/components/ontologyClasss/AttributePanel";
+import { AttributePanel } from "@/components/structure_nodes/AttributePanel";
 import type { NodeOut } from "@/api/services/missingTypes";
 
 interface OntologyClassDetailsProps {
@@ -182,7 +182,7 @@ export const OntologyClassDetails: React.FC<OntologyClassDetailsProps> = ({
                           href={
                             isLast
                               ? undefined
-                              : `/app/ontologyClasss/${ancestorNode.id}`
+                              : `/app/ontologyClass/${ancestorNode.id}`
                           }
                           icon={icon}
                         >
@@ -200,7 +200,7 @@ export const OntologyClassDetails: React.FC<OntologyClassDetailsProps> = ({
                   breadcrumbItems.push(
                     <BreadcrumbItem
                       key={first.id}
-                      href={`/app/ontologyClasss/${first.id}`}
+                      href={`/app/ontologyClass/${first.id}`}
                       icon={getIconForType(first.node_type as string)}
                     >
                       {first.title as string}

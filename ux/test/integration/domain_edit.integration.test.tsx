@@ -32,7 +32,7 @@ vi.mock("@/api/hooks/graph/useGraph", () => ({
     error: null,
   }),
 }));
-vi.mock("@/api/hooks/structure_nodes/useNodeAttributes", () => ({
+vi.mock("@/api/hooks/ontologyClasses/useNodeAttributes", () => ({
   useNodeAttributes: () => ({
     data: [],
     isLoading: false,
@@ -99,7 +99,7 @@ import {
   renderWithProviders as render,
   makeTestQueryClient,
 } from "@/test/utils/renderWithProviders";
-import { StructureNodeDetails } from "@/components/node_details/structure_node_details";
+import { OntologyClassDetails } from "@/components/node_details/structure_node_details";
 import { QUERY_KEYS } from "@/api/config";
 // Using service-level mocks for deterministic integration test
 import { structureNodeService } from "@/api/services/structureNodes";
@@ -120,7 +120,7 @@ const domain = {
   version: 1,
 };
 
-describe("StructureNodeDetails edit flow (Domain)", () => {
+describe("OntologyClassDetails edit flow (Domain)", () => {
   it("opens edit modal, submits form, and invalidates queries on success", async () => {
     // create a test QueryClient and spy on invalidateQueries
     const qc = makeTestQueryClient();
@@ -145,7 +145,7 @@ describe("StructureNodeDetails edit flow (Domain)", () => {
       .mockResolvedValue(updatedDomain as any);
 
     // With Link, useLayer, and useTerms mocked above, we can render without RouterProvider
-    render(<StructureNodeDetails node={domain} />, { queryClient: qc });
+    render(<OntologyClassDetails node={domain} />, { queryClient: qc });
 
     // Edit button should be present
     const edit = await screen.findByRole("button", { name: /edit/i });

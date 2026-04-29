@@ -16,7 +16,7 @@ import {
   Textarea,
 } from "flowbite-react";
 import { useExtractEntities, useRAGTrace } from "@/api/hooks/rag";
-import { useClass } from "@/api/hooks/ontologyClasss/useClasss";
+import { useClass } from "@/api/hooks/ontologyClasses/useOntologyClasses";
 import { Info, ExternalLink } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 
@@ -33,7 +33,7 @@ function EntityItem(
     if (!node?.id || !node?.node_type) return null;
 
     return {
-      to: "/app/ontologyClasss/$nodeId" as const,
+      to: "/app/ontologyClass/$nodeId" as const,
       params: { nodeId: node.id },
     };
   }, [node]);

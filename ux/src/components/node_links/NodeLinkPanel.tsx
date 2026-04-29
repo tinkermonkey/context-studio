@@ -9,8 +9,8 @@ import React, { useState } from "react";
 import { Button, Alert } from "flowbite-react";
 import { Plus, Info } from "lucide-react";
 
-import { OntologyClass } from "@/api/types/ontologyClasss";
-import { useNodeLinksByNode } from "@/api/hooks/relationships/useNodeLinks";
+import { OntologyClass } from "@/api/types/ontology";
+import { useNodeLinksByNode } from "@/api/hooks/node_links/useNodeLinks";
 import { NodeLinkForm } from "./NodeLinkForm";
 import { NodeLinkDisplay } from "./NodeLinkDisplay";
 

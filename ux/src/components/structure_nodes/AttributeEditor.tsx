@@ -11,7 +11,7 @@ import { AlertCircle, Plus, X } from "lucide-react";
 import type {
   OntologyClassAttribute,
   AttributeValueType,
-} from "@/api/types/ontologyClasss";
+} from "@/api/types/ontology";
 import { AttributeValueInput } from "./AttributeValueInput";
 
 interface AttributeEditorProps {

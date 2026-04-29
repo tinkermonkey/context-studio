@@ -14,10 +14,10 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { vi, describe, it, expect, beforeEach, afterEach } from "vitest";
 
 import { ReferenceNodePanel } from "../ReferenceNodePanel";
-import { useReferenceLinks } from "@/api/hooks/ontologyClasss/useReferenceLinks";
+import { useReferenceLinks } from "@/api/hooks/ontologyClasses/useReferenceLinks";
 
 // Mock the hooks
-vi.mock("@/api/hooks/ontologyClasss/useReferenceLinks", () => ({
+vi.mock("@/api/hooks/ontologyClasses/useReferenceLinks", () => ({
   useReferenceLinks: vi.fn(),
   useAddReferenceLinks: vi.fn(() => ({
     mutate: vi.fn(),

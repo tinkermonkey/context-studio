@@ -1,6 +1,6 @@
-import { OntologyClass } from "@/api/types/ontologyClasss";
+import { OntologyClass } from "@/api/types/ontology";
 import { PortalRecordSelector } from "@/components/node_selectors/portal_record_selector";
-import { useTermNodes } from "@/api/hooks/ontologyClasss/useClasss";
+import { useTermNodes } from "@/api/hooks/ontologyClasses/useOntologyClasses";
 
 export interface TermSelectorProps {
   onSelect?: (term: OntologyClass | undefined) => void;

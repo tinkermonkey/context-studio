@@ -183,7 +183,7 @@ describe("SelectionTracker", () => {
 
       expect(mockOptimisticRecording.recordSelection).toHaveBeenCalledWith({
         execution_id: "exec-123",
-        record_type: "structure_node",
+        record_type: "ontologyClass",
         record_id: "node-456",
         suggestion_field: "definition",
         selected_content: "selected content",
@@ -212,7 +212,7 @@ describe("SelectionTracker", () => {
 
       expect(mockOptimisticRecording.recordSelection).toHaveBeenCalledWith({
         execution_id: "exec-123",
-        record_type: "structure_node",
+        record_type: "ontologyClass",
         record_id: "node-456",
         suggestion_field: "definition",
         selected_content: "accepted content",
@@ -239,7 +239,7 @@ describe("SelectionTracker", () => {
 
       expect(mockOptimisticRecording.recordSelection).toHaveBeenCalledWith({
         execution_id: "exec-123",
-        record_type: "structure_node",
+        record_type: "ontologyClass",
         record_id: "node-456",
         suggestion_field: "definition",
         selected_content: "applied content",
@@ -268,7 +268,7 @@ describe("SelectionTracker", () => {
 
       expect(mockOptimisticRecording.recordSelection).toHaveBeenCalledWith({
         execution_id: "exec-123",
-        record_type: "structure_node",
+        record_type: "ontologyClass",
         record_id: "node-456",
         suggestion_field: "definition",
         selected_content: "content from attribute",
@@ -381,7 +381,7 @@ describe("SelectionTracker", () => {
         .calls[0][0];
       mockMutationHook.onError(mockError, {
         execution_id: "exec-123",
-        record_type: "structure_node",
+        record_type: "ontologyClass",
         record_id: "node-456",
         suggestion_field: "definition",
         selected_content: "selected content",

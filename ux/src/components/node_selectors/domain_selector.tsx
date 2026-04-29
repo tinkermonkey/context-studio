@@ -1,6 +1,6 @@
-import { OntologyClass } from "@/api/types/ontologyClasss";
+import { OntologyClass } from "@/api/types/ontology";
 import { PortalRecordSelector } from "@/components/node_selectors/portal_record_selector";
-import { useDomainNodes } from "@/api/hooks/ontologyClasss/useClasss";
+import { useDomainNodes } from "@/api/hooks/ontologyClasses/useOntologyClasses";
 
 export interface DomainSelectorProps {
   onSelect?: (domain: OntologyClass | undefined) => void;

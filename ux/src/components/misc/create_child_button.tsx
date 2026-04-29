@@ -2,7 +2,7 @@ import React from "react";
 import { Button } from "flowbite-react";
 import { Plus } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
-import type { OntologyClass } from "@/api/types/ontologyClasss";
+import type { OntologyClass } from "@/api/types/ontology";
 import { CreateChildModal } from "./create_child_modal";
 import { DomainForm } from "@/components/forms/domain_form";
 import { TermForm } from "@/components/forms/term_form";

@@ -7,11 +7,11 @@
 import React, { useState } from "react";
 import { Spinner, Button, Alert } from "flowbite-react";
 import { Plus, AlertCircle } from "lucide-react";
-import type { OntologyClassAttribute } from "@/api/types/ontologyClasss";
+import type { OntologyClassAttribute } from "@/api/types/ontology";
 import {
   useNodeAttributes,
   useNodeAttributeMutations,
-} from "@/api/hooks/ontologyClasss/useNodeAttributes";
+} from "@/api/hooks/ontologyClasses/useNodeAttributes";
 import { AttributeList } from "./AttributeList";
 import { AttributeEditor } from "./AttributeEditor";
 import { toast } from "@/utils/toast";

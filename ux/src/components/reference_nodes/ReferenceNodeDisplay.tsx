@@ -17,8 +17,8 @@ import {
 } from "flowbite-react";
 import { AlertCircle, ExternalLink, Trash2 } from "lucide-react";
 
-import { ReferenceLink } from "@/api/types/ontologyClasss";
-import { useRemoveReferenceLink } from "@/api/hooks/ontologyClasss/useReferenceLinks";
+import { ReferenceLink } from "@/api/types/ontology";
+import { useRemoveReferenceLink } from "@/api/hooks/ontologyClasses/useReferenceLinks";
 import {
   getSourceBadgeColor,
   getSourceLabel,

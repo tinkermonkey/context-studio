@@ -1,16 +1,16 @@
 /**
- * DEPRECATED: useClasss Hook
+ * DEPRECATED: useOntologyClasses Hook
  *
  * @deprecated Migrate to use the new ontology entity hooks instead
  */
 
 import { UseQueryResult } from "@tanstack/react-query";
-import type { OntologyClass } from "../../types/ontologyClasss";
+import type { OntologyClass } from "../../types/ontologyClass";
 
 /**
  * @deprecated Use useTaxonomies, useConceptSchemes, useOntologyClasses instead
  */
-export const useClasss = (
+export const useOntologyClasses = (
   _params?: any,  
 ): UseQueryResult<OntologyClass[], Error> => {
   return {
@@ -19,7 +19,7 @@ export const useClasss = (
     isFetching: false,
     isPlaceholderData: false,
     error: new Error(
-      "useClasss has been removed. Use useTaxonomies, useConceptSchemes, or useOntologyClasses instead.",
+      "useOntologyClasses has been removed. Use useTaxonomies, useConceptSchemes, or useOntologyClasses instead.",
     ),
     isError: true,
     status: "error",

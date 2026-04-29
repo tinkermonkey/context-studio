@@ -20,7 +20,7 @@ import { Route as AppConceptSchemesRouteImport } from './routes/app/concept-sche
 import { Route as AppClassesRouteImport } from './routes/app/classes'
 import { Route as AppReferenceIndexRouteImport } from './routes/app/reference/index'
 import { Route as AppConfigIndexRouteImport } from './routes/app/config/index'
-import { Route as AppStructure_nodesNodeIdRouteImport } from './routes/app/ontologyClasss/$nodeId'
+import { Route as AppStructure_nodesNodeIdRouteImport } from './routes/app/ontologyClass/$nodeId'
 import { Route as AppReferenceSearchRouteImport } from './routes/app/reference/search'
 import { Route as AppReferenceRagTestRouteImport } from './routes/app/reference/rag-test'
 import { Route as AppReferencePropertiesRouteImport } from './routes/app/reference/properties'
@@ -103,8 +103,8 @@ const AppConfigIndexRoute = AppConfigIndexRouteImport.update({
 } as any)
 const AppStructure_nodesNodeIdRoute =
   AppStructure_nodesNodeIdRouteImport.update({
-    id: '/ontologyClasss/$nodeId',
-    path: '/ontologyClasss/$nodeId',
+    id: '/ontologyClass/$nodeId',
+    path: '/ontologyClass/$nodeId',
     getParentRoute: () => AppRoute,
   } as any)
 const AppReferenceSearchRoute = AppReferenceSearchRouteImport.update({
@@ -266,7 +266,7 @@ export interface FileRoutesByFullPath {
   '/app/reference/properties': typeof AppReferencePropertiesRoute
   '/app/reference/rag-test': typeof AppReferenceRagTestRoute
   '/app/reference/search': typeof AppReferenceSearchRoute
-  '/app/ontologyClasss/$nodeId': typeof AppStructure_nodesNodeIdRoute
+  '/app/ontologyClass/$nodeId': typeof AppStructure_nodesNodeIdRoute
   '/app/config/': typeof AppConfigIndexRoute
   '/app/reference': typeof AppReferenceIndexRoute
   '/app/config/pipelines/$pipelineType': typeof AppConfigPipelinesPipelineTypeRouteWithChildren
@@ -301,7 +301,7 @@ export interface FileRoutesByTo {
   '/app/reference/properties': typeof AppReferencePropertiesRoute
   '/app/reference/rag-test': typeof AppReferenceRagTestRoute
   '/app/reference/search': typeof AppReferenceSearchRoute
-  '/app/ontologyClasss/$nodeId': typeof AppStructure_nodesNodeIdRoute
+  '/app/ontologyClass/$nodeId': typeof AppStructure_nodesNodeIdRoute
   '/app/config': typeof AppConfigIndexRoute
   '/app/reference': typeof AppReferenceIndexRoute
   '/app/config/pipelines': typeof AppConfigPipelinesIndexRoute
@@ -339,7 +339,7 @@ export interface FileRoutesById {
   '/app/reference/properties': typeof AppReferencePropertiesRoute
   '/app/reference/rag-test': typeof AppReferenceRagTestRoute
   '/app/reference/search': typeof AppReferenceSearchRoute
-  '/app/ontologyClasss/$nodeId': typeof AppStructure_nodesNodeIdRoute
+  '/app/ontologyClass/$nodeId': typeof AppStructure_nodesNodeIdRoute
   '/app/config/': typeof AppConfigIndexRoute
   '/app/reference/': typeof AppReferenceIndexRoute
   '/app/config/pipelines/$pipelineType': typeof AppConfigPipelinesPipelineTypeRouteWithChildren
@@ -379,7 +379,7 @@ export interface FileRouteTypes {
     | '/app/reference/properties'
     | '/app/reference/rag-test'
     | '/app/reference/search'
-    | '/app/ontologyClasss/$nodeId'
+    | '/app/ontologyClass/$nodeId'
     | '/app/config/'
     | '/app/reference'
     | '/app/config/pipelines/$pipelineType'
@@ -414,7 +414,7 @@ export interface FileRouteTypes {
     | '/app/reference/properties'
     | '/app/reference/rag-test'
     | '/app/reference/search'
-    | '/app/ontologyClasss/$nodeId'
+    | '/app/ontologyClass/$nodeId'
     | '/app/config'
     | '/app/reference'
     | '/app/config/pipelines'
@@ -451,7 +451,7 @@ export interface FileRouteTypes {
     | '/app/reference/properties'
     | '/app/reference/rag-test'
     | '/app/reference/search'
-    | '/app/ontologyClasss/$nodeId'
+    | '/app/ontologyClass/$nodeId'
     | '/app/config/'
     | '/app/reference/'
     | '/app/config/pipelines/$pipelineType'
@@ -546,10 +546,10 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppConfigIndexRouteImport
       parentRoute: typeof AppConfigRoute
     }
-    '/app/ontologyClasss/$nodeId': {
-      id: '/app/ontologyClasss/$nodeId'
-      path: '/ontologyClasss/$nodeId'
-      fullPath: '/app/ontologyClasss/$nodeId'
+    '/app/ontologyClass/$nodeId': {
+      id: '/app/ontologyClass/$nodeId'
+      path: '/ontologyClass/$nodeId'
+      fullPath: '/app/ontologyClass/$nodeId'
       preLoaderRoute: typeof AppStructure_nodesNodeIdRouteImport
       parentRoute: typeof AppRoute
     }

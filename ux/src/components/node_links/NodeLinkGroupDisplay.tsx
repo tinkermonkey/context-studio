@@ -8,7 +8,7 @@ import { Badge } from "flowbite-react";
 import React from "react";
 // removed import;
 
-import { OntologyClassLink } from "@/api/types/ontologyClasss";
+import { OntologyClassLink } from "@/api/types/ontology";
 import { NodeLinkItem } from "./NodeLinkItem";
 
 interface NodeLinkGroupDisplayProps {

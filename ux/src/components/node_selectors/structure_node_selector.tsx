@@ -6,12 +6,12 @@
 
 import React, { useMemo } from "react";
 
-import { OntologyClass, NodeType } from "@/api/types/ontologyClasss";
+import { OntologyClass, NodeType } from "@/api/types/ontology";
 import {
   PortalRecordSelector,
   FieldMap,
 } from "@/components/node_selectors/portal_record_selector";
-import { useClasss } from "@/api/hooks/ontologyClasss/useClasss";
+import { useOntologyClasses } from "@/api/hooks/ontologyClasses/useOntologyClasses";
 
 export interface OntologyClassSelectorProps {
   onSelect?: (node: OntologyClass | undefined) => void;
@@ -37,7 +37,7 @@ export const OntologyClassSelector: React.FC<OntologyClassSelectorProps> = ({
     data: nodes,
     isLoading,
     error,
-  } = useClasss(nodeType ? { node_type: nodeType } : undefined);
+  } = useOntologyClasses(nodeType ? { node_type: nodeType } : undefined);
 
   // Filter out excluded nodes
   const filteredNodes = useMemo(() => {

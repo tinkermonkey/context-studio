@@ -3,7 +3,7 @@ import React from "react";
 import { screen, waitFor } from "@testing-library/react";
 import { describe, it, expect } from "vitest";
 import { renderWithProviders as render } from "@/test/utils/renderWithProviders";
-import { useDomainNodes } from "@/api/hooks/structure_nodes/useStructureNodes";
+import { useDomainNodes } from "@/api/hooks/ontologyClasses/useStructureNodes";
 
 const TestComponent: React.FC = () => {
   const { data, isLoading } = useDomainNodes();

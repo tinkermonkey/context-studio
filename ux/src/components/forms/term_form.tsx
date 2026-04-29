@@ -2,7 +2,7 @@ import React from "react";
 import { useForm } from "@tanstack/react-form";
 import { TextInput, Textarea, Button, Alert, Label } from "flowbite-react";
 import { Info, Database, Hash } from "lucide-react";
-import type { OntologyClass } from "@/api/types/ontologyClasss";
+import type { OntologyClass } from "@/api/types/ontology";
 import { useCreateOntologyClass } from "@/api/hooks/ontologyClasses/useOntologyClasses";
 import { useUpdateOntologyClass } from "@/api/hooks/ontologyClasses/useOntologyClasses";
 import { DomainSelector } from "@/components/node_selectors/domain_selector";

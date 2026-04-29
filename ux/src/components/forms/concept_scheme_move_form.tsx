@@ -7,9 +7,9 @@
 import React, { useState } from "react";
 import { Button, Label, Checkbox, Alert } from "flowbite-react";
 import { Info } from "lucide-react";
-import { OntologyClass } from "@/api/types/ontologyClasss";
+import { OntologyClass } from "@/api/types/ontology";
 import { TaxonomySelector } from "@/components/node_selectors/taxonomy_selector";
-import { useMoveOntologyClasss } from "@/api/hooks/ontologyClasss/useClassMutations";
+import { useMoveOntologyClasss } from "@/api/hooks/ontologyClasses/useOntologyClassMutations";
 import { useButterToast } from "@/hooks/useButterToast";
 
 interface ConceptSchemeMoveFormProps {

@@ -29,7 +29,7 @@ export class OntologyClasssService {
   }
 }
 
-export const ontologyClasssService = new OntologyClasssService();
+export const ontologyClassService = new OntologyClasssService();
 
-// Export with singular name for backward compatibility
-export const ontologyClassService = ontologyClasssService;
+// Export with old name for backward compatibility
+export const structureNodeService = ontologyClassService;

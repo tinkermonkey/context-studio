@@ -13,12 +13,12 @@ import {
   useCreateAnnotation,
   useDeleteAnnotation,
 } from "@/api/hooks/ragExperiments";
-import { useClassSearch } from "@/api/hooks/ontologyClasss/useClasss";
+import { useClassSearch } from "@/api/hooks/ontologyClasses/useOntologyClasses";
 import type { TestParagraphResponse } from "@/api/services/ragExperiments";
 import type {
   OntologyClass,
   FindOntologyClassResult,
-} from "@/api/types/ontologyClasss";
+} from "@/api/types/ontology";
 
 export interface AnnotationSelectorProps {
   paragraph: TestParagraphResponse;
@@ -62,7 +62,7 @@ export const AnnotationSelector: React.FC<AnnotationSelectorProps> = ({
     });
 
   // Convert search results to OntologyClass format for RecordSelector
-  const ontologyClasss: OntologyClass[] =
+  const ontologyClass: OntologyClass[] =
     searchResults?.map((result: FindOntologyClassResult) => ({
       id: result.id,
       node_type: result.node_type,
@@ -176,7 +176,7 @@ export const AnnotationSelector: React.FC<AnnotationSelectorProps> = ({
         annotation.start_char,
         annotation.end_char,
       );
-      const nodeInfo = (ontologyClasss || []).find(
+      const nodeInfo = (ontologyClass || []).find(
         (n: OntologyClass) => n.id === annotation.ontologyClass_id,
       );
 
@@ -239,7 +239,7 @@ export const AnnotationSelector: React.FC<AnnotationSelectorProps> = ({
                 Link to Structure Node (search to find nodes)
               </label>
               <RecordSelector
-                records={ontologyClasss || []}
+                records={ontologyClass || []}
                 fieldMap={{
                   value: "id",
                   title: "title",
@@ -303,7 +303,7 @@ export const AnnotationSelector: React.FC<AnnotationSelectorProps> = ({
           </h4>
           <div className="space-y-2">
             {paragraph.annotations.map((annotation) => {
-              const nodeInfo = (ontologyClasss || []).find(
+              const nodeInfo = (ontologyClass || []).find(
                 (n: OntologyClass) =>
                   n.id === (annotation.ontologyClass_id as string),
               );

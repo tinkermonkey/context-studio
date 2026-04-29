@@ -10,7 +10,7 @@ import { Button, Alert } from "flowbite-react";
 import { Search, Info } from "lucide-react";
 
 import { UnifiedNode } from "@/api/types/unified";
-import { useReferenceLinks } from "@/api/hooks/ontologyClasss/useReferenceLinks";
+import { useReferenceLinks } from "@/api/hooks/ontologyClasses/useReferenceLinks";
 import { ReferenceNodeSearch } from "./ReferenceNodeSearch";
 import { ReferenceNodeSelectionList } from "./ReferenceNodeSelectionList";
 import { ReferenceNodeDisplay } from "./ReferenceNodeDisplay";

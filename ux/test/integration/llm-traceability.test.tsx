@@ -101,7 +101,7 @@ const mockExecutionHistoryResponse = {
     selections: [
       {
         selection_id: "sel-456",
-        record_type: "structure_node",
+        record_type: "ontologyClass",
         record_id: "node-789",
         suggestion_field: "definition",
         selected_content: "A subset of AI...",
@@ -307,7 +307,7 @@ describe("LLM Traceability Integration", () => {
       await waitFor(() => {
         expect(mockService.recordSelection).toHaveBeenCalledWith({
           execution_id: "exec-123",
-          record_type: "structure_node",
+          record_type: "ontologyClass",
           record_id: "node-456",
           suggestion_field: "definition",
           selected_content: "Selected content",

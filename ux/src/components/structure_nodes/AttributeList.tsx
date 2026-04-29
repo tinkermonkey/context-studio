@@ -10,8 +10,8 @@ import { Edit2, Link, Trash2 } from "lucide-react";
 import type {
   ResolvedAttribute,
   OntologyClassAttribute,
-} from "@/api/types/ontologyClasss";
-import { useClass } from "@/api/hooks/ontologyClasss/useClasss";
+} from "@/api/types/ontology";
+import { useClass } from "@/api/hooks/ontologyClasses/useOntologyClasses";
 
 interface AttributeListProps {
   attributes: ResolvedAttribute[];

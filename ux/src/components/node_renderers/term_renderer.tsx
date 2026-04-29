@@ -1,5 +1,5 @@
 import React from "react";
-import { useClass } from "@/api/hooks/ontologyClasss/useClasss";
+import { useClass } from "@/api/hooks/ontologyClasses/useOntologyClasses";
 
 type TermProps = {
   term_id: string;

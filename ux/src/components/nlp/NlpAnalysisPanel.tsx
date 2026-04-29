@@ -13,7 +13,7 @@ import { NlpTokenAnalysisPanel } from "@/components/nlp/NlpTokenAnalysisPanel";
 import { NlpRefinementPanel } from "@/components/nlp/NlpRefinementPanel";
 import { NlpGenerationResult } from "@/components/nlp/NlpGenerationResult";
 import { useNlpAnalysisStore } from "@/stores/nlpAnalysisStore";
-import { useWordSenses } from "@/api/hooks/ontologyClasss/useWordSenses";
+import { useWordSenses } from "@/api/hooks/ontologyClasses/useWordSenses";
 import { WordSenseSelector } from "@/components/graphs/nlp_concept/WordSenseSelector";
 import type { NodeContext } from "@/components/nlp/types";
 

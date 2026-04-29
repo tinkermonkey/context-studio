@@ -1,4 +1,4 @@
-import { OntologyClass } from "@/api/types/ontologyClasss";
+import { OntologyClass } from "@/api/types/ontology";
 import { PortalRecordSelector } from "@/components/node_selectors/portal_record_selector";
 import { useConceptSchemes } from "@/api/hooks/conceptSchemes";
 

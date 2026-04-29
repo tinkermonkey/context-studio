@@ -4,7 +4,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { vi, describe, it, expect, beforeEach, afterEach } from "vitest";
 import WordSenseSelector from "@/components/graphs/nlp_concept/WordSenseSelector";
 import { WordSense } from "@/api/types/structureNodes";
-import * as useWordSensesModule from "@/api/hooks/structure_nodes/useWordSenses";
+import * as useWordSensesModule from "@/api/hooks/ontologyClasses/useWordSenses";
 
 // Mock the toast utility
 vi.mock("@/utils/toast", () => ({
