@@ -12,9 +12,8 @@ import { Info, ArrowRight } from "lucide-react";
 import {
   OntologyClass,
   OntologyClassLink,
-  OntologyClassLinkCreate,
 } from "@/api/types/ontology";
-import { useCreateNodeLink } from "@/api/hooks/node_links/useNodeLinkMutations";
+import { useCreateRelationship } from "@/api/hooks/relationships/useRelationships";
 import { PredicateSelector } from "@/components/node_selectors/predicate_selector";
 import { OntologyClassSelector } from "@/components/node_selectors/structure_node_selector";
 import { toast } from "@/utils/toast";
@@ -37,7 +36,7 @@ export const NodeLinkForm: React.FC<NodeLinkFormProps> = ({
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [direction, setDirection] = useState<Direction>("outgoing");
 
-  const createLinkMutation = useCreateNodeLink({
+  const createLinkMutation = useCreateRelationship({
     onSuccess: () => {
       toast.success("Link created successfully");
       onSuccess();
@@ -72,17 +71,15 @@ export const NodeLinkForm: React.FC<NodeLinkFormProps> = ({
       const isDuplicate = existingLinks.some((link) => {
         if (direction === "outgoing") {
           return (
-            link.source_node_id === currentNode.id &&
-            link.target_node_id === value.targetNodeId &&
-            (link.predicate === value.predicate ||
-              link.predicate_id === value.predicateId)
+            link.source_id === currentNode.id &&
+            link.target_id === value.targetNodeId &&
+            link.property_definition_id === value.predicateId
           );
         } else {
           return (
-            link.source_node_id === value.targetNodeId &&
-            link.target_node_id === currentNode.id &&
-            (link.predicate === value.predicate ||
-              link.predicate_id === value.predicateId)
+            link.source_id === value.targetNodeId &&
+            link.target_id === currentNode.id &&
+            link.property_definition_id === value.predicateId
           );
         }
       });
@@ -98,17 +95,11 @@ export const NodeLinkForm: React.FC<NodeLinkFormProps> = ({
         const targetId =
           direction === "outgoing" ? value.targetNodeId : currentNode.id;
 
-        const linkData: OntologyClassLinkCreate = {
+        await createLinkMutation.mutateAsync({
           source_id: sourceId,
           target_id: targetId,
-          property_definition_id: value.predicateId,
-          source_node_id: sourceId, // Legacy
-          target_node_id: targetId, // Legacy
-          predicate: value.predicate, // Legacy
-          predicate_id: value.predicateId, // Legacy
-        };
-
-        await createLinkMutation.mutateAsync(linkData);
+          relationship_type: value.predicateId,
+        });
       } catch (
          
         error: any
