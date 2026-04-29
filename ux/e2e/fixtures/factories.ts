@@ -399,9 +399,13 @@ export async function clearTestData(
           testClassIds.has(relationship.source_class_id) &&
           testClassIds.has(relationship.target_class_id)
         ) {
-          await apiRequest(page, `/api/relationships/${relationship.id}`, {
-            method: "DELETE",
-          });
+          try {
+            await apiRequest(page, `/api/relationships/${relationship.id}`, {
+              method: "DELETE",
+            });
+          } catch (error) {
+            cleanupErrors.push({ step: "relationships", error });
+          }
         }
       }
     } catch (error) {
@@ -413,13 +417,17 @@ export async function clearTestData(
       const propertiesResponse = await apiRequest<any>(page, "/api/properties");
       const properties = extractItems(propertiesResponse);
       for (const property of properties) {
-        await deleteEntityIfMatches(page, property, "/api/properties", [
-          "test-property-",
-          "seed-property-",
-        ]);
+        try {
+          await deleteEntityIfMatches(page, property, "/api/properties", [
+            "test-property-",
+            "seed-property-",
+          ]);
+        } catch (error) {
+          cleanupErrors.push({ step: "properties", error });
+        }
       }
     } catch (error) {
-      cleanupErrors.push({ step: "properties", error });
+      cleanupErrors.push({ step: "properties-fetch", error });
     }
 
     // STEP 3: Delete all test ontology classes (after relationships cleared)
@@ -427,13 +435,17 @@ export async function clearTestData(
       const classesResponse = await apiRequest<any>(page, "/api/classes");
       const classes = extractItems(classesResponse);
       for (const ontologyClass of classes) {
-        await deleteEntityIfMatches(page, ontologyClass, "/api/classes", [
-          "test-class-",
-          "seed-class-",
-        ]);
+        try {
+          await deleteEntityIfMatches(page, ontologyClass, "/api/classes", [
+            "test-class-",
+            "seed-class-",
+          ]);
+        } catch (error) {
+          cleanupErrors.push({ step: "classes", error });
+        }
       }
     } catch (error) {
-      cleanupErrors.push({ step: "classes", error });
+      cleanupErrors.push({ step: "classes-fetch", error });
     }
 
     // STEP 4: Delete all test concept schemes (after classes deleted)
@@ -441,13 +453,17 @@ export async function clearTestData(
       const schemesResponse = await apiRequest<any>(page, "/api/schemes");
       const schemes = extractItems(schemesResponse);
       for (const scheme of schemes) {
-        await deleteEntityIfMatches(page, scheme, "/api/schemes", [
-          "test-scheme-",
-          "seed-scheme-",
-        ]);
+        try {
+          await deleteEntityIfMatches(page, scheme, "/api/schemes", [
+            "test-scheme-",
+            "seed-scheme-",
+          ]);
+        } catch (error) {
+          cleanupErrors.push({ step: "schemes", error });
+        }
       }
     } catch (error) {
-      cleanupErrors.push({ step: "schemes", error });
+      cleanupErrors.push({ step: "schemes-fetch", error });
     }
 
     // STEP 5: Delete all test taxonomies (last — after all dependent entities removed)
@@ -455,13 +471,17 @@ export async function clearTestData(
       const taxonomiesResponse = await apiRequest<any>(page, "/api/taxonomies");
       const taxonomies = extractItems(taxonomiesResponse);
       for (const taxonomy of taxonomies) {
-        await deleteEntityIfMatches(page, taxonomy, "/api/taxonomies", [
-          "test-taxonomy-",
-          "seed-taxonomy-",
-        ]);
+        try {
+          await deleteEntityIfMatches(page, taxonomy, "/api/taxonomies", [
+            "test-taxonomy-",
+            "seed-taxonomy-",
+          ]);
+        } catch (error) {
+          cleanupErrors.push({ step: "taxonomies", error });
+        }
       }
     } catch (error) {
-      cleanupErrors.push({ step: "taxonomies", error });
+      cleanupErrors.push({ step: "taxonomies-fetch", error });
     }
   } catch (error) {
     cleanupErrors.push({ step: "cleanup-wrapper", error });

@@ -61,7 +61,7 @@ The E2E test infrastructure uses Playwright's global setup/teardown to manage se
 
 - **Test databases**: All tests use isolated databases in `/local-server/datafiles/e2e-test/`
 - **Configuration**: Backend uses `/local-server/config.e2e.json` for test-specific settings
-- **Ports**: Different ports (8888/3888) prevent conflicts with development servers (8000/3000)
+- **Ports**: Different ports (8888/3888) prevent conflicts with development servers (8000/3100)
 - **Sequential execution**: Tests run one at a time to avoid race conditions
 
 ## Directory Structure
