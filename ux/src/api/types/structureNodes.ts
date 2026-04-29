@@ -20,6 +20,10 @@ export enum NodeType {
   TAXONOMY = "taxonomy",
   SCHEME = "scheme",
   CLASS = "class",
+  // Deprecated aliases for backward compatibility
+  DOMAIN = "domain",
+  TERM = "term",
+  LAYER = "layer",
 }
 
 /**

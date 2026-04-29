@@ -83,10 +83,11 @@ export const ReferenceNodeDisplay: React.FC<ReferenceNodeDisplayProps> = ({
 
   // Group links by source
   const groupedLinks: GroupedLinks = referenceLinks.reduce((acc, link) => {
-    if (!acc[link.source]) {
-      acc[link.source] = [];
+    const source = link.source || "unknown";
+    if (!acc[source]) {
+      acc[source] = [];
     }
-    acc[link.source].push(link);
+    acc[source].push(link);
     return acc;
   }, {} as GroupedLinks);
 
@@ -118,8 +119,8 @@ export const ReferenceNodeDisplay: React.FC<ReferenceNodeDisplayProps> = ({
               aria-label={`${sourceLabel} reference links`}
             >
               {links.map((link, index) => {
-                const linkKey = `${link.source}-${link.external_id}-${index}`;
-                const sourceUrl = getSourceUrl(link.source, link.external_id);
+                const linkKey = `${link.source || "unknown"}-${link.external_id || index}-${index}`;
+                const sourceUrl = getSourceUrl(link.source || "", link.external_id || "");
 
                 return (
                   <div
@@ -139,8 +140,8 @@ export const ReferenceNodeDisplay: React.FC<ReferenceNodeDisplayProps> = ({
                             onClick={() =>
                               handleViewExternal(
                                 sourceUrl,
-                                link.source,
-                                link.external_id,
+                                link.source || "",
+                                link.external_id || "",
                               )
                             }
                             className="flex items-center gap-1"
@@ -187,8 +188,8 @@ export const ReferenceNodeDisplay: React.FC<ReferenceNodeDisplayProps> = ({
             {confirmRemove && (
               <div className="rounded-lg border bg-gray-50 p-3">
                 <div className="mb-2 flex items-center gap-2">
-                  <Badge color={getSourceBadgeColor(confirmRemove.source)}>
-                    {getSourceLabel(confirmRemove.source)}
+                  <Badge color={getSourceBadgeColor(confirmRemove.source || "")}>
+                    {getSourceLabel(confirmRemove.source || "")}
                   </Badge>
                 </div>
                 <code className="font-mono text-sm text-gray-700">

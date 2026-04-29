@@ -2,13 +2,13 @@ import React from "react";
 import { useForm } from "@tanstack/react-form";
 import { TextInput, Textarea, Button, Alert, Label } from "flowbite-react";
 import { Info } from "lucide-react";
-import type { OntologyClass } from "@/api/types/ontology";
+import type { Taxonomy } from "@/api/types/ontology";
 import { useCreateTaxonomy } from "@/api/hooks/taxonomies/useTaxonomies";
 import { useUpdateTaxonomy } from "@/api/hooks/taxonomies/useTaxonomies";
 
 interface LayerFormProps {
-  onSuccess?: (layer: OntologyClass) => void;
-  layer?: OntologyClass;
+  onSuccess?: (layer: Taxonomy) => void;
+  layer?: Taxonomy;
 }
 
 const LayerForm: React.FC<LayerFormProps> = ({ onSuccess, layer }) => {
@@ -19,7 +19,7 @@ const LayerForm: React.FC<LayerFormProps> = ({ onSuccess, layer }) => {
   const form = useForm({
     defaultValues: {
       title: layer?.title ?? "",
-      definition: layer?.definition ?? "",
+      description: layer?.description ?? "",
     },
     onSubmit: async ({ value }) => {
       setSubmitError(null);
@@ -30,13 +30,13 @@ const LayerForm: React.FC<LayerFormProps> = ({ onSuccess, layer }) => {
             id: layer.id,
             data: {
               title: value.title,
-              description: value.definition,
+              description: value.description,
             },
           });
         } else {
           result = await createLayerMutation.mutateAsync({
             title: value.title,
-            description: value.definition,
+            description: value.description,
           });
         }
         if (onSuccess) onSuccess(result);
@@ -119,21 +119,21 @@ const LayerForm: React.FC<LayerFormProps> = ({ onSuccess, layer }) => {
             </div>
           )}
         </form.Field>
-        <form.Field name="definition">
+        <form.Field name="description">
           {(field) => (
             <div>
               <Label
-                htmlFor="layer-definition"
+                htmlFor="layer-description"
                 className="mb-1 block font-medium"
               >
-                Definition (optional)
+                Description (optional)
               </Label>
               <Textarea
-                id="layer-definition"
-                placeholder="Definition (optional)"
+                id="layer-description"
+                placeholder="Description (optional)"
                 value={field.state.value}
                 onChange={(e) => field.handleChange(e.target.value)}
-                data-testid="layer-definition-input"
+                data-testid="layer-description-input"
               />
               {field.state.meta.errors.length > 0 && (
                 <div className="mt-1 text-sm text-red-600">

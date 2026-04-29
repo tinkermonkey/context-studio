@@ -2,18 +2,18 @@ import React from "react";
 import { useForm } from "@tanstack/react-form";
 import { TextInput, Textarea, Button, Alert, Label } from "flowbite-react";
 import { Info, Layers } from "lucide-react";
-import type { OntologyClass } from "@/api/types/ontology";
+import type { ConceptScheme } from "@/api/types/ontology";
 import { useCreateConceptScheme } from "@/api/hooks/conceptSchemes/useConceptSchemes";
 import { useUpdateConceptScheme } from "@/api/hooks/conceptSchemes/useConceptSchemes";
 import { LayerSelector } from "@/components/node_selectors/layer_selector";
 import { PredicateSelector } from "@/components/node_selectors/predicate_selector";
 
 interface DomainFormProps {
-  onSuccess?: (domain: OntologyClass) => void;
-  domain?: OntologyClass; // For edit mode
+  onSuccess?: (domain: ConceptScheme) => void;
+  domain?: ConceptScheme; // For edit mode
   // Child form props
   parentLayerId?: string;
-  parentLayer?: OntologyClass; // Full object for better UX
+  parentLayer?: ConceptScheme; // Full object for better UX
   mode?: "create" | "edit" | "child";
 }
 
@@ -32,9 +32,8 @@ const DomainForm: React.FC<DomainFormProps> = ({
 
   const getDefaultValues = () => ({
     title: domain?.title ?? "",
-    definition: domain?.definition ?? "",
-    parent_node_id: domain?.parent_node_id ?? parentLayerId ?? "",
-    structural_predicate_id: domain?.structural_predicate_id ?? undefined,
+    description: domain?.description ?? "",
+    taxonomy_id: domain?.taxonomy_id ?? parentLayerId ?? "",
   });
 
   const form = useForm({
@@ -48,23 +47,18 @@ const DomainForm: React.FC<DomainFormProps> = ({
             id: domain.id,
             data: {
               title: value.title,
-              description: value.definition,
+              description: value.description,
             },
           });
         } else {
 
-          const createData: any = {
+          const createData = {
             title: value.title,
-            description: value.definition,
+            description: value.description,
           };
 
-          // Note: structural_predicate_id is not supported in new API, ignore for now
-          // if (value.structural_predicate_id) {
-          //   createData.structural_predicate_id = value.structural_predicate_id;
-          // }
-
           result = await createDomainMutation.mutateAsync({
-            taxonomyId: value.parent_node_id,
+            taxonomyId: value.taxonomy_id,
             data: createData,
           });
         }
@@ -164,21 +158,21 @@ const DomainForm: React.FC<DomainFormProps> = ({
             </div>
           )}
         </form.Field>
-        <form.Field name="definition">
+        <form.Field name="description">
           {(field) => (
             <div>
               <Label
-                htmlFor="domain-definition"
+                htmlFor="domain-description"
                 className="mb-1 block font-medium"
               >
-                Definition
+                Description
               </Label>
               <Textarea
-                id="domain-definition"
-                placeholder="Definition"
+                id="domain-description"
+                placeholder="Description"
                 value={field.state.value}
                 onChange={(e) => field.handleChange(e.target.value)}
-                data-testid="domain-definition-input"
+                data-testid="domain-description-input"
               />
               {field.state.meta.errors.length > 0 && (
                 <div className="mt-1 text-sm text-red-600">
@@ -192,24 +186,24 @@ const DomainForm: React.FC<DomainFormProps> = ({
         {/* Hide layer selector in child mode */}
         {!isChildMode && (
           <form.Field
-            name="parent_node_id"
+            name="taxonomy_id"
             validators={{
               onChange: ({ value }) =>
-                !value ? "Layer is required" : undefined,
+                !value ? "Taxonomy is required" : undefined,
             }}
           >
             {(field) => (
               <div>
                 <Label
-                  htmlFor="domain-layer"
+                  htmlFor="domain-taxonomy"
                   className="mb-1 block font-medium"
                 >
-                  Layer
+                  Taxonomy
                 </Label>
                 <LayerSelector
                   value={field.state.value}
                   onSelect={(layer) => field.handleChange(layer?.id || "")}
-                  data-testid="domain-layer-selector"
+                  data-testid="domain-taxonomy-selector"
                 />
                 {field.state.meta.errors.length > 0 && (
                   <div className="mt-1 text-sm text-red-600">
@@ -220,38 +214,6 @@ const DomainForm: React.FC<DomainFormProps> = ({
             )}
           </form.Field>
         )}
-
-        {/* Predicate Fields */}
-        <form.Field name="structural_predicate_id">
-          {(field) => (
-            <div>
-              <Label
-                htmlFor="domain-primary-predicate"
-                className="mb-1 block font-medium"
-              >
-                Structural Predicate (optional)
-              </Label>
-              <PredicateSelector
-                value={field.state.value}
-                onSelect={(predicate) => {
-                  const predicateId = predicate?.id || undefined;
-                  field.handleChange(predicateId);
-
-                  // Structural predicate selection
-                }}
-              />
-              <p className="mt-1 text-sm text-gray-500">
-                The predicate that defines this domain's core hierarchical
-                relationships
-              </p>
-              {field.state.meta.errors.length > 0 && (
-                <div className="mt-1 text-sm text-red-600">
-                  {field.state.meta.errors[0]}
-                </div>
-              )}
-            </div>
-          )}
-        </form.Field>
 
         {submitError && (
           <Alert color="failure" className="mb-2" icon={Info}>

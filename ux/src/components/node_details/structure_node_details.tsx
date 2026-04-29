@@ -82,7 +82,7 @@ export const OntologyClassDetails: React.FC<OntologyClassDetailsProps> = ({
     }
   };
 
-  const NodeIcon = getIconForType(node.node_type);
+  const NodeIcon = getIconForType(node.node_type || "");
 
   // Load hierarchy data for all nodes
   const { data: hierarchy, isLoading: hierarchyLoading } = useTermHierarchy(

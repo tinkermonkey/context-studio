@@ -30,3 +30,5 @@ export class OntologyClassService {
 }
 
 export const ontologyClassService = new OntologyClassService();
+// Alias for backward compatibility
+export const structureNodeService = ontologyClassService;

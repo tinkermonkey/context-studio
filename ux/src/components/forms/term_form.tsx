@@ -35,9 +35,9 @@ const TermForm: React.FC<TermFormProps> = ({
 
   const getDefaultValues = () => ({
     title: term?.title ?? "",
-    definition: term?.definition ?? "",
-    parent_node_id:
-      term?.parent_node_id ?? parentDomainId ?? parentTermId ?? "",
+    description: term?.description ?? "",
+    parent_class_id:
+      term?.parent_class_id ?? parentDomainId ?? parentTermId ?? "",
   });
 
   const form = useForm({
@@ -51,18 +51,17 @@ const TermForm: React.FC<TermFormProps> = ({
             id: term.id,
             data: {
               title: value.title,
-              definition: value.definition,
-              parent_class_id: value.parent_node_id || undefined,
+              description: value.description,
             },
           });
         } else {
           // For creating, we need the schemeId, which should be parentDomainId
-          const schemeId = parentDomainId || value.parent_node_id;
+          const schemeId = parentDomainId || value.parent_class_id;
           result = await createTermMutation.mutateAsync({
             schemeId: schemeId,
             data: {
               title: value.title,
-              definition: value.definition,
+              description: value.description,
               parent_class_id: parentTermId || undefined,
             },
           });
@@ -160,28 +159,28 @@ const TermForm: React.FC<TermFormProps> = ({
           )}
         </form.Field>
         <form.Field
-          name="definition"
+          name="description"
           validators={{
             onChange: ({ value }) =>
-              !value ? "Definition is required" : undefined,
+              !value ? "Description is required" : undefined,
           }}
         >
           {(field) => (
             <div>
               <Label
-                htmlFor="term-definition"
+                htmlFor="term-description"
                 className="mb-1 block font-medium"
               >
-                Definition
+                Description
               </Label>
               <Textarea
-                id="term-definition"
-                placeholder="Definition"
+                id="term-description"
+                placeholder="Description"
                 value={field.state.value}
                 color={field.state.meta.errors.length ? "failure" : undefined}
                 onChange={(e) => field.handleChange(e.target.value)}
                 required
-                data-testid="term-definition-input"
+                data-testid="term-description-input"
               />
             </div>
           )}
@@ -190,7 +189,7 @@ const TermForm: React.FC<TermFormProps> = ({
         {/* Hide domain selector in child mode when parent is provided */}
         {!isChildMode && (
           <form.Field
-            name="parent_node_id"
+            name="parent_class_id"
             validators={{
               onChange: ({ value }) =>
                 !value ? "Parent is required" : undefined,

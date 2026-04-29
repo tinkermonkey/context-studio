@@ -225,7 +225,7 @@ export const AttributeEditor: React.FC<AttributeEditorProps> = ({
                 id="value_type"
                 value={field.state.value}
                 onChange={(e) =>
-                  field.handleChange(e.target.value as AttributeValueType)
+                  field.handleChange(e.target.value as string)
                 }
                 disabled={isEdit || isLoading}
                 sizing="sm"

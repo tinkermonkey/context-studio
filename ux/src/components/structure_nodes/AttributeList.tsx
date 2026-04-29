@@ -11,7 +11,7 @@ import type {
   ResolvedAttribute,
   OntologyClassAttribute,
 } from "@/api/types/ontology";
-import { useClass } from "@/api/hooks/ontologyClasses/useOntologyClasses";
+import { useClass } from "@/api/hooks/ontologyClasses";
 
 interface AttributeListProps {
   attributes: ResolvedAttribute[];

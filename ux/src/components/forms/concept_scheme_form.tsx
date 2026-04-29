@@ -2,16 +2,16 @@ import React from "react";
 import { useForm } from "@tanstack/react-form";
 import { TextInput, Textarea, Button, Alert, Label } from "flowbite-react";
 import { Info, Database } from "lucide-react";
-import type { OntologyClass } from "@/api/types/ontology";
+import type { ConceptScheme } from "@/api/types/ontology";
 import { useCreateConceptScheme, useUpdateConceptScheme } from "@/api/hooks/conceptSchemes";
 import { TaxonomySelector } from "@/components/node_selectors/taxonomy_selector";
 import { PropertySelector } from "@/components/node_selectors/property_selector";
 
 interface ConceptSchemeFormProps {
-  onSuccess?: (conceptScheme: OntologyClass) => void;
-  conceptScheme?: OntologyClass;
+  onSuccess?: (conceptScheme: ConceptScheme) => void;
+  conceptScheme?: ConceptScheme;
   parentTaxonomyId?: string;
-  parentTaxonomy?: OntologyClass;
+  parentTaxonomy?: ConceptScheme;
   mode?: "create" | "edit" | "child";
 }
 
@@ -30,9 +30,8 @@ const ConceptSchemeForm: React.FC<ConceptSchemeFormProps> = ({
 
   const getDefaultValues = () => ({
     title: conceptScheme?.title ?? "",
-    definition: conceptScheme?.definition ?? "",
-    parent_node_id: conceptScheme?.parent_node_id ?? parentTaxonomyId ?? "",
-    structural_predicate_id: conceptScheme?.structural_predicate_id ?? undefined,
+    description: conceptScheme?.description ?? "",
+    taxonomy_id: conceptScheme?.taxonomy_id ?? parentTaxonomyId ?? "",
   });
 
   const form = useForm({
@@ -47,17 +46,13 @@ const ConceptSchemeForm: React.FC<ConceptSchemeFormProps> = ({
             data: value,
           });
         } else {
-          const createData: any = {
+          const createData = {
             title: value.title,
-            definition: value.definition,
+            description: value.description,
           };
 
-          if (value.structural_predicate_id) {
-            createData.structural_predicate_id = value.structural_predicate_id;
-          }
-
           result = await createConceptSchemeMutation.mutateAsync({
-            taxonomyId: value.parent_node_id,
+            taxonomyId: value.taxonomy_id || parentTaxonomyId || "",
             data: createData,
           });
         }
@@ -147,21 +142,21 @@ const ConceptSchemeForm: React.FC<ConceptSchemeFormProps> = ({
             </div>
           )}
         </form.Field>
-        <form.Field name="definition">
+        <form.Field name="description">
           {(field) => (
             <div>
               <Label
-                htmlFor="concept-scheme-definition"
+                htmlFor="concept-scheme-description"
                 className="mb-1 block font-medium"
               >
-                Definition
+                Description
               </Label>
               <Textarea
-                id="concept-scheme-definition"
-                placeholder="Definition"
+                id="concept-scheme-description"
+                placeholder="Description"
                 value={field.state.value}
                 onChange={(e) => field.handleChange(e.target.value)}
-                data-testid="concept-scheme-definition-input"
+                data-testid="concept-scheme-description-input"
               />
               {field.state.meta.errors.length > 0 && (
                 <div className="mt-1 text-sm text-red-600">
@@ -174,7 +169,7 @@ const ConceptSchemeForm: React.FC<ConceptSchemeFormProps> = ({
 
         {!isChildMode && (
           <form.Field
-            name="parent_node_id"
+            name="taxonomy_id"
             validators={{
               onChange: ({ value }) =>
                 !value ? "Taxonomy is required" : undefined,
@@ -202,34 +197,6 @@ const ConceptSchemeForm: React.FC<ConceptSchemeFormProps> = ({
             )}
           </form.Field>
         )}
-
-        <form.Field name="structural_predicate_id">
-          {(field) => (
-            <div>
-              <Label
-                htmlFor="concept-scheme-property"
-                className="mb-1 block font-medium"
-              >
-                Structural Property (optional)
-              </Label>
-              <PropertySelector
-                value={field.state.value}
-                onSelect={(property) => {
-                  const propertyId = property?.id || undefined;
-                  field.handleChange(propertyId);
-                }}
-              />
-              <p className="mt-1 text-sm text-gray-500">
-                The property that defines this concept scheme's core hierarchical relationships
-              </p>
-              {field.state.meta.errors.length > 0 && (
-                <div className="mt-1 text-sm text-red-600">
-                  {field.state.meta.errors[0]}
-                </div>
-              )}
-            </div>
-          )}
-        </form.Field>
 
         {submitError && (
           <Alert color="failure" className="mb-2" icon={Info}>
