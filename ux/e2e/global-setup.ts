@@ -1,4 +1,4 @@
-import { spawn, ChildProcess } from "child_process";
+import { spawn, ChildProcess, execSync } from "child_process";
 import path from "path";
 import fs from "fs";
 import { fileURLToPath } from "url";
@@ -80,22 +80,29 @@ async function globalSetup(): Promise<void> {
   const venvPythonPath = path.join(backendPath, ".venv/bin/python");
 
   try {
-    const { execSync } = await import("child_process");
+    const testLocalDb = path.resolve(backendPath, "datafiles/e2e-test/local.db");
+    const testOpsDb = path.resolve(backendPath, "datafiles/e2e-test/operations.db");
 
     // Run local.db migrations
     console.log("  Running local.db migrations...");
-    execSync(`${venvPythonPath} scripts/run_migrations.py local upgrade head`, {
-      cwd: backendPath,
-      stdio: "inherit",
-    });
+    execSync(
+      `${venvPythonPath} scripts/run_migrations.py local upgrade head --local-db-url sqlite:///${testLocalDb}`,
+      {
+        cwd: backendPath,
+        stdio: "inherit",
+      },
+    );
     console.log("  ✓ local.db migrations completed");
 
     // Run operations.db migrations
     console.log("  Running operations.db migrations...");
-    execSync(`${venvPythonPath} scripts/run_migrations.py operations upgrade head`, {
-      cwd: backendPath,
-      stdio: "inherit",
-    });
+    execSync(
+      `${venvPythonPath} scripts/run_migrations.py operations upgrade head --operations-db-url sqlite:///${testOpsDb}`,
+      {
+        cwd: backendPath,
+        stdio: "inherit",
+      },
+    );
     console.log("  ✓ operations.db migrations completed");
 
     console.log("✅ Database migrations completed\n");
