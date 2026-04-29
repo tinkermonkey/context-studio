@@ -90,6 +90,10 @@ async function globalSetup(): Promise<void> {
       {
         cwd: backendPath,
         stdio: "inherit",
+        env: {
+          ...process.env,
+          PYTHONPATH: backendPath,
+        },
       },
     );
     console.log("  ✓ local.db migrations completed");
@@ -101,6 +105,10 @@ async function globalSetup(): Promise<void> {
       {
         cwd: backendPath,
         stdio: "inherit",
+        env: {
+          ...process.env,
+          PYTHONPATH: backendPath,
+        },
       },
     );
     console.log("  ✓ operations.db migrations completed");

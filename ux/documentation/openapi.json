@@ -17,7 +17,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ListResponse"
+                  "$ref": "#/components/schemas/ListResponse_TaxonomyResponse_"
                 }
               }
             }
@@ -268,7 +268,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ListResponse"
+                  "$ref": "#/components/schemas/ListResponse_ConceptSchemeResponse_"
                 }
               }
             }
@@ -536,7 +536,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ListResponse"
+                  "$ref": "#/components/schemas/ListResponse_ClassResponse_"
                 }
               }
             }
@@ -680,7 +680,7 @@
       "post": {
         "tags": ["ontology"],
         "summary": "Move Class",
-        "description": "Move a class to a different parent in the hierarchy.\n\nArgs:\n    class_id: The class ID\n    request: ClassMoveRequest with new_parent_id (or None to make root)\n    service: OntologyService from dependency injection\n\nReturns:\n    Updated ClassResponse\n\nRaises:\n    HTTPException: 400 if invalid, 404 if not found, 422 if circular reference",
+        "description": "Move a class to a different concept scheme.\n\nArgs:\n    class_id: The class ID\n    request: ClassMoveRequest with target_scheme_id\n    service: OntologyService from dependency injection\n\nReturns:\n    Updated ClassResponse with new concept_scheme_id\n\nRaises:\n    HTTPException: 400 if invalid, 404 if not found",
         "operationId": "move_class_api_classes__class_id__move_post",
         "parameters": [
           {
@@ -731,7 +731,7 @@
       "post": {
         "tags": ["ontology"],
         "summary": "Create Relationship",
-        "description": "Create a new typed relationship between two entities.\n\nArgs:\n    request: RelationshipCreateRequest with source, target, and property definition IDs\n    service: OntologyService from dependency injection\n\nReturns:\n    Created RelationshipResponse\n\nRaises:\n    HTTPException: 400 if invalid (self-loop), 404 if entities not found, 409 if duplicate",
+        "description": "Create a new typed relationship between two entities.\n\nArgs:\n    request: RelationshipCreateRequest with source, target, and relationship_type\n    service: OntologyService from dependency injection\n\nReturns:\n    Created RelationshipResponse\n\nRaises:\n    HTTPException: 400 if invalid (self-loop), 404 if entities not found, 409 if duplicate",
         "operationId": "create_relationship_api_relationships_post",
         "requestBody": {
           "required": true,
@@ -833,7 +833,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ListResponse"
+                  "$ref": "#/components/schemas/ListResponse_RelationshipResponse_"
                 }
               }
             }
@@ -994,7 +994,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ListResponse"
+                  "$ref": "#/components/schemas/ListResponse_PropertyDefinitionResponse_"
                 }
               }
             }
@@ -1202,7 +1202,7 @@
       "get": {
         "tags": ["graph"],
         "summary": "Get Degree Distribution",
-        "description": "Get the degree distribution across all nodes in the graph.\n\nThe degree of a node is the number of edges connected to it. This endpoint\nprovides the raw degree counts for each node, useful for network analysis\nand topology studies.\n\nArgs:\n    service: GraphAnalysisService from dependency injection\n\nReturns:\n    DegreeDistributionResponse containing node ID to degree mapping and computed timestamp\n\nRaises:\n    HTTPException: 422 if graph error occurs",
+        "description": "Get the degree distribution across all nodes in the graph.\n\nThe degree of a node is the number of edges connected to it. This endpoint\nprovides the in-degree and out-degree counts for each node, useful for network analysis\nand topology studies.\n\nArgs:\n    service: GraphAnalysisService from dependency injection\n\nReturns:\n    DegreeDistributionResponse containing node ID to degree mappings\n\nRaises:\n    HTTPException: 422 if graph error occurs",
         "operationId": "get_degree_distribution_api_graph_degree_distribution_get",
         "responses": {
           "200": {
@@ -1436,7 +1436,7 @@
       "get": {
         "tags": ["graph"],
         "summary": "Get Neighbors",
-        "description": "Get all neighbors of a node up to a specified depth with optional directional filtering.\n\nArgs:\n    node_id: ID of the queried node\n    direction: Direction of traversal (in, out, or both)\n    depth: Maximum distance from center node (minimum 1, maximum 10, default 1)\n    service: GraphAnalysisService from dependency injection\n\nReturns:\n    NeighborsResponse containing list of neighboring node IDs\n\nRaises:\n    HTTPException: 404 if node is not found, 400 if direction is invalid, 422 if graph error occurs",
+        "description": "Get all neighbors of a node up to a specified depth with optional directional filtering.\n\nArgs:\n    node_id: ID of the queried node\n    direction: Direction of traversal (in, out, or both)\n    depth: Maximum distance from center node (minimum 1, maximum 10, default 1)\n    service: GraphAnalysisService from dependency injection\n\nReturns:\n    NeighborsResponse containing lists of incoming and outgoing neighbors\n\nRaises:\n    HTTPException: 404 if node is not found, 400 if direction is invalid, 422 if graph error occurs",
         "operationId": "get_neighbors_api_graph_nodes__node_id__neighbors_get",
         "parameters": [
           {
@@ -1504,7 +1504,7 @@
       "get": {
         "tags": ["graph"],
         "summary": "Get Subgraph",
-        "description": "Extract a subgraph containing the specified nodes and all edges between them.\n\nThis endpoint extracts a subgraph from a pre-computed list of node IDs.\nFor depth-based neighborhood extraction, use GET /nodes/{node_id}/subgraph instead.\n\nArgs:\n    nodes: Comma-separated list of node IDs (e.g., \"id1,id2,id3\")\n    service: GraphAnalysisService from dependency injection\n\nReturns:\n    KnowledgeGraphResponse describing the extracted subgraph\n\nRaises:\n    HTTPException: 404 if any node is not found, 400 if nodes parameter is invalid, 422 if graph error occurs",
+        "description": "Extract a subgraph containing the specified nodes and all edges between them.\n\nThis endpoint extracts a subgraph from a pre-computed list of node IDs.\nFor depth-based neighborhood extraction, use GET /nodes/{node_id}/subgraph instead.\n\nArgs:\n    nodes: Comma-separated list of node IDs (e.g., \"id1,id2,id3\")\n    service: GraphAnalysisService from dependency injection\n\nReturns:\n    SubgraphDataResponse containing the nodes and edges in the subgraph\n\nRaises:\n    HTTPException: 404 if any node is not found, 400 if nodes parameter is invalid, 422 if graph error occurs",
         "operationId": "get_subgraph_api_graph_subgraph_get",
         "parameters": [
           {
@@ -1525,7 +1525,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/KnowledgeGraphResponse"
+                  "$ref": "#/components/schemas/SubgraphDataResponse"
                 }
               }
             }
@@ -1547,7 +1547,7 @@
       "get": {
         "tags": ["graph"],
         "summary": "Get Subgraph By Depth",
-        "description": "Extract a subgraph containing a center node and all nodes within a specified depth (FR-9).\n\nThis implements depth-based subgraph extraction where depth 1 returns the center node\nand its immediate neighbors, depth 2 returns two hops away, etc.\n\nArgs:\n    node_id: ID of the center node\n    depth: Maximum distance from center node (minimum 1, maximum 10, default 1)\n    service: GraphAnalysisService from dependency injection\n\nReturns:\n    SubgraphResultResponse containing center node ID, node count, edge count, depth, and extraction timestamp\n\nRaises:\n    HTTPException: 404 if center node is not found, 400 if depth is invalid, 422 if graph error occurs",
+        "description": "Extract a subgraph containing a center node and all nodes within a specified depth (FR-9).\n\nThis implements depth-based subgraph extraction where depth 1 returns the center node\nand its immediate neighbors, depth 2 returns two hops away, etc.\n\nArgs:\n    node_id: ID of the center node\n    depth: Maximum distance from center node (minimum 1, maximum 10, default 1)\n    service: GraphAnalysisService from dependency injection\n\nReturns:\n    SubgraphResultResponse containing center node ID, subgraph data, and depth\n\nRaises:\n    HTTPException: 404 if center node is not found, 400 if depth is invalid, 422 if graph error occurs",
         "operationId": "get_subgraph_by_depth_api_graph_nodes__node_id__subgraph_get",
         "parameters": [
           {
@@ -3665,22 +3665,16 @@
       },
       "ClassMoveRequest": {
         "properties": {
-          "new_parent_id": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "New Parent Id",
-            "description": "ID of new parent class, or null to make root"
+          "target_scheme_id": {
+            "type": "string",
+            "title": "Target Scheme Id",
+            "description": "ID of the target concept scheme"
           }
         },
         "type": "object",
+        "required": ["target_scheme_id"],
         "title": "ClassMoveRequest",
-        "description": "Request to move a class to a different parent."
+        "description": "Request to move a class to a different concept scheme."
       },
       "ClassResponse": {
         "properties": {
@@ -4222,23 +4216,25 @@
       },
       "DegreeDistributionResponse": {
         "properties": {
-          "distribution": {
+          "in_degree": {
             "additionalProperties": {
               "type": "integer"
             },
             "type": "object",
-            "title": "Distribution",
-            "description": "Mapping of node IDs to their degrees"
+            "title": "In Degree",
+            "description": "Mapping of node IDs to their in-degrees"
           },
-          "computed_at": {
-            "type": "string",
-            "format": "date-time",
-            "title": "Computed At",
-            "description": "Timestamp when distribution was computed"
+          "out_degree": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "type": "object",
+            "title": "Out Degree",
+            "description": "Mapping of node IDs to their out-degrees"
           }
         },
         "type": "object",
-        "required": ["distribution", "computed_at"],
+        "required": ["in_degree", "out_degree"],
         "title": "DegreeDistributionResponse",
         "description": "Response containing degree distribution for all nodes."
       },
@@ -4729,15 +4725,15 @@
             "title": "Is Directed",
             "description": "Whether the graph is directed"
           },
-          "last_built": {
+          "timestamp": {
             "type": "string",
             "format": "date-time",
-            "title": "Last Built",
+            "title": "Timestamp",
             "description": "Timestamp when the graph was last built"
           }
         },
         "type": "object",
-        "required": ["node_count", "edge_count", "is_directed", "last_built"],
+        "required": ["node_count", "edge_count", "is_directed", "timestamp"],
         "title": "KnowledgeGraphResponse",
         "description": "Response containing knowledge graph metadata."
       },
@@ -4764,10 +4760,12 @@
         "title": "LexicalSenseResponse",
         "description": "Response containing lexical sense data."
       },
-      "ListResponse": {
+      "ListResponse_ClassResponse_": {
         "properties": {
           "items": {
-            "items": {},
+            "items": {
+              "$ref": "#/components/schemas/ClassResponse"
+            },
             "type": "array",
             "title": "Items",
             "description": "List of items"
@@ -4790,8 +4788,127 @@
         },
         "type": "object",
         "required": ["items", "total", "limit", "offset"],
-        "title": "ListResponse",
-        "description": "Generic paginated list response."
+        "title": "ListResponse[ClassResponse]"
+      },
+      "ListResponse_ConceptSchemeResponse_": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/ConceptSchemeResponse"
+            },
+            "type": "array",
+            "title": "Items",
+            "description": "List of items"
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total",
+            "description": "Total number of items"
+          },
+          "limit": {
+            "type": "integer",
+            "title": "Limit",
+            "description": "Limit applied"
+          },
+          "offset": {
+            "type": "integer",
+            "title": "Offset",
+            "description": "Offset applied"
+          }
+        },
+        "type": "object",
+        "required": ["items", "total", "limit", "offset"],
+        "title": "ListResponse[ConceptSchemeResponse]"
+      },
+      "ListResponse_PropertyDefinitionResponse_": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/PropertyDefinitionResponse"
+            },
+            "type": "array",
+            "title": "Items",
+            "description": "List of items"
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total",
+            "description": "Total number of items"
+          },
+          "limit": {
+            "type": "integer",
+            "title": "Limit",
+            "description": "Limit applied"
+          },
+          "offset": {
+            "type": "integer",
+            "title": "Offset",
+            "description": "Offset applied"
+          }
+        },
+        "type": "object",
+        "required": ["items", "total", "limit", "offset"],
+        "title": "ListResponse[PropertyDefinitionResponse]"
+      },
+      "ListResponse_RelationshipResponse_": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/RelationshipResponse"
+            },
+            "type": "array",
+            "title": "Items",
+            "description": "List of items"
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total",
+            "description": "Total number of items"
+          },
+          "limit": {
+            "type": "integer",
+            "title": "Limit",
+            "description": "Limit applied"
+          },
+          "offset": {
+            "type": "integer",
+            "title": "Offset",
+            "description": "Offset applied"
+          }
+        },
+        "type": "object",
+        "required": ["items", "total", "limit", "offset"],
+        "title": "ListResponse[RelationshipResponse]"
+      },
+      "ListResponse_TaxonomyResponse_": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/TaxonomyResponse"
+            },
+            "type": "array",
+            "title": "Items",
+            "description": "List of items"
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total",
+            "description": "Total number of items"
+          },
+          "limit": {
+            "type": "integer",
+            "title": "Limit",
+            "description": "Limit applied"
+          },
+          "offset": {
+            "type": "integer",
+            "title": "Offset",
+            "description": "Offset applied"
+          }
+        },
+        "type": "object",
+        "required": ["items", "total", "limit", "offset"],
+        "title": "ListResponse[TaxonomyResponse]"
       },
       "MergeResultResponse": {
         "properties": {
@@ -4852,17 +4969,25 @@
             "title": "Direction",
             "description": "Direction of traversal: 'in', 'out', or 'both'"
           },
-          "neighbors": {
+          "incoming": {
             "items": {
               "type": "string"
             },
             "type": "array",
-            "title": "Neighbors",
-            "description": "List of neighboring node IDs"
+            "title": "Incoming",
+            "description": "List of nodes with edges pointing to this node"
+          },
+          "outgoing": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Outgoing",
+            "description": "List of nodes this node has edges pointing to"
           }
         },
         "type": "object",
-        "required": ["node_id", "direction", "neighbors"],
+        "required": ["node_id", "direction", "incoming", "outgoing"],
         "title": "NeighborsResponse",
         "description": "Response containing neighbor nodes."
       },
@@ -5696,14 +5821,14 @@
             "title": "Target Id",
             "description": "ID of target entity"
           },
-          "property_definition_id": {
+          "relationship_type": {
             "type": "string",
-            "title": "Property Definition Id",
-            "description": "ID of property definition (relationship type)"
+            "title": "Relationship Type",
+            "description": "Relationship type identifier (e.g., 'related_to', 'parent_of')"
           }
         },
         "type": "object",
-        "required": ["source_id", "target_id", "property_definition_id"],
+        "required": ["source_id", "target_id", "relationship_type"],
         "title": "RelationshipCreateRequest",
         "description": "Request to create a new relationship."
       },
@@ -5822,22 +5947,17 @@
         "title": "ServiceMetricsResponse",
         "description": "Response containing service-level metrics."
       },
-      "SubgraphResultResponse": {
+      "SubgraphDataResponse": {
         "properties": {
-          "center_node_id": {
-            "type": "string",
-            "title": "Center Node Id",
-            "description": "ID of the center node"
-          },
-          "node_ids": {
+          "nodes": {
             "items": {
               "type": "string"
             },
             "type": "array",
-            "title": "Node Ids",
+            "title": "Nodes",
             "description": "IDs of all nodes in the subgraph"
           },
-          "edge_ids": {
+          "edges": {
             "items": {
               "prefixItems": [
                 {
@@ -5852,7 +5972,7 @@
               "minItems": 2
             },
             "type": "array",
-            "title": "Edge Ids",
+            "title": "Edges",
             "description": "Edges connecting nodes in the subgraph as (source, target) tuples"
           },
           "node_count": {
@@ -5864,29 +5984,32 @@
             "type": "integer",
             "title": "Edge Count",
             "description": "Number of edges in the subgraph"
+          }
+        },
+        "type": "object",
+        "required": ["nodes", "edges", "node_count", "edge_count"],
+        "title": "SubgraphDataResponse",
+        "description": "Response containing subgraph nodes and edges."
+      },
+      "SubgraphResultResponse": {
+        "properties": {
+          "node_id": {
+            "type": "string",
+            "title": "Node Id",
+            "description": "ID of the center node"
+          },
+          "subgraph": {
+            "$ref": "#/components/schemas/SubgraphDataResponse",
+            "description": "The extracted subgraph containing nodes and edges"
           },
           "depth": {
             "type": "integer",
             "title": "Depth",
             "description": "Maximum traversal depth from center node"
-          },
-          "extracted_at": {
-            "type": "string",
-            "format": "date-time",
-            "title": "Extracted At",
-            "description": "Timestamp when the subgraph was extracted"
           }
         },
         "type": "object",
-        "required": [
-          "center_node_id",
-          "node_ids",
-          "edge_ids",
-          "node_count",
-          "edge_count",
-          "depth",
-          "extracted_at"
-        ],
+        "required": ["node_id", "subgraph", "depth"],
         "title": "SubgraphResultResponse",
         "description": "Response containing depth-based subgraph extraction result."
       },
