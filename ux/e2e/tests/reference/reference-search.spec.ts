@@ -2,7 +2,7 @@ import { test, expect } from "@playwright/test";
 import {
   waitForAnyCondition,
   mockReferenceAPIs,
-} from "../fixtures/test-helpers";
+} from "../../fixtures/test-helpers";
 
 /**
  * Reference Data Search E2E Tests
