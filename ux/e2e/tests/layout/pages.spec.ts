@@ -251,7 +251,7 @@ test.describe("Pages and Interactive Elements", () => {
       if (await closeButton.isVisible()) {
         await closeButton.click();
       } else {
-        await page.press("Escape");
+        await page.keyboard.press("Escape");
       }
     }
   });

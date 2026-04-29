@@ -75,8 +75,8 @@ test.describe("Relationship CRUD Operations", () => {
     );
 
     // Fetch relationships list from API
-    const response = await apiRequest<Relationship[]>(page, "/api/relationships");
-    const relationships = response.items || response;
+    const response = await apiRequest<Relationship[] | { items: Relationship[] }>(page, "/api/relationships");
+    const relationships = Array.isArray(response) ? response : response.items;
 
     // Verify both relationships appear in list
     const ids = relationships.map((r: any) => r.id);
@@ -85,8 +85,9 @@ test.describe("Relationship CRUD Operations", () => {
 
     // Verify relationship details
     const rel1Data = relationships.find((r: any) => r.id === rel1.id);
-    expect(rel1Data.source_class_id).toBe(class1Id);
-    expect(rel1Data.target_class_id).toBe(class2Id);
+    expect(rel1Data).toBeDefined();
+    expect(rel1Data!.source_class_id).toBe(class1Id);
+    expect(rel1Data!.target_class_id).toBe(class2Id);
   });
 
   test("should verify relationship endpoints with correct structure", async ({
@@ -107,8 +108,10 @@ test.describe("Relationship CRUD Operations", () => {
     expect(getResponse).toHaveProperty("created_at");
 
     // Verify GET all relationships returns collection
-    const listResponse = await apiRequest<Relationship[]>(page, "/api/relationships");
-    expect(Array.isArray(listResponse) || Array.isArray(listResponse.items)).toBe(true);
+    const listResponse = await apiRequest<Relationship[] | { items: Relationship[] }>(page, "/api/relationships");
+    const isList = Array.isArray(listResponse);
+    const hasItems = !isList && Array.isArray((listResponse as any).items);
+    expect(isList || hasItems).toBe(true);
   });
 
   test("should delete a relationship", async ({ page }) => {
