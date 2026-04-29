@@ -7,7 +7,6 @@ import {
   screen,
 } from "@/test/utils/renderWithProviders";
 import { CreateChildButton } from "../create_child_button";
-import { NodeType } from "@/api/types/ontology";
 
 // Mock the form components
 vi.mock("@/components/forms/domain_form", () => ({

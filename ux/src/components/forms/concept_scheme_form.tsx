@@ -5,7 +5,6 @@ import { Info, Database } from "lucide-react";
 import type { ConceptScheme } from "@/api/types/ontology";
 import { useCreateConceptScheme, useUpdateConceptScheme } from "@/api/hooks/conceptSchemes";
 import { TaxonomySelector } from "@/components/node_selectors/taxonomy_selector";
-import { PropertySelector } from "@/components/node_selectors/property_selector";
 
 interface ConceptSchemeFormProps {
   onSuccess?: (conceptScheme: ConceptScheme) => void;

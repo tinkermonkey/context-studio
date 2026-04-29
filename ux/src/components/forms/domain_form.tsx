@@ -6,7 +6,6 @@ import type { ConceptScheme } from "@/api/types/ontology";
 import { useCreateConceptScheme } from "@/api/hooks/conceptSchemes/useConceptSchemes";
 import { useUpdateConceptScheme } from "@/api/hooks/conceptSchemes/useConceptSchemes";
 import { LayerSelector } from "@/components/node_selectors/layer_selector";
-import { PredicateSelector } from "@/components/node_selectors/predicate_selector";
 
 interface DomainFormProps {
   onSuccess?: (domain: ConceptScheme) => void;

@@ -14,7 +14,6 @@ import {
 } from "@/utils/treeBuilder";
 import { ChartData } from "@/components/graphs/tree_chart/tree_data";
 import { apiLogger } from "@/api/utils/logger";
-import { NodeType } from "@/api/types/ontology";
 
 export interface TreeChartPanelProps {
   /**

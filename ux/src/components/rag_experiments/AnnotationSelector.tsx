@@ -15,10 +15,7 @@ import {
 } from "@/api/hooks/ragExperiments";
 import { useClassSearch } from "@/api/hooks/ontologyClasses";
 import type { TestParagraphResponse } from "@/api/services/ragExperiments";
-import type {
-  OntologyClass,
-  FindOntologyClassResult,
-} from "@/api/types/ontology";
+import type { OntologyClass } from "@/api/types/ontology";
 
 export interface AnnotationSelectorProps {
   paragraph: TestParagraphResponse;
