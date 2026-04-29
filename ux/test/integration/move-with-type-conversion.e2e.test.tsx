@@ -13,7 +13,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 // Mock router to avoid app boot
 vi.mock("@tanstack/react-router", () => {
   return {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+     
     Link: (props: any) => React.createElement("a", props, props.children),
     useNavigate: () => vi.fn(),
   };

@@ -86,13 +86,13 @@ export interface ProxyMonitoringResponse {
     total_entries: number;
     total_size_bytes: number;
     hit_rate: number;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+     
     domains: Record<string, any>;
   };
   upstream?: {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+     
     overall: any;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+     
     domains: Record<string, any>;
   };
   database?: {
@@ -106,9 +106,9 @@ export interface ProxyMonitoringResponse {
     recent_errors: string[];
   };
   throttling?: {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+     
     overall: any;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+     
     domains: Record<string, any>;
   };
 }

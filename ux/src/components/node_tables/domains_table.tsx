@@ -148,7 +148,7 @@ export interface DomainsTableProps {
   onQueryParamsChange?: (params: Record<string, unknown>) => void;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+ 
 const DomainsTable = React.forwardRef<any, DomainsTableProps>((props) => {
   const { queryParams = {}, onQueryParamsChange } = props;
 

@@ -116,7 +116,7 @@ function RouteComponent() {
         {
           title: "Database Performance",
           metrics: Object.entries(performanceMetrics.database_metrics).map(
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+             
             ([key, value]: [string, any]) => ({
               label: key
                 .replace(/_/g, " ")
@@ -326,7 +326,7 @@ function RouteComponent() {
                         },
                       ]}
                       issues={trends.issues.map(
-                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                         
                         (issue: any) => issue.description || issue,
                       )}
                     />
@@ -340,7 +340,7 @@ function RouteComponent() {
                           <ul className="space-y-2">
                             {trends.recommendations.map(
                               (
-                                rec: any, // eslint-disable-line @typescript-eslint/no-explicit-any
+                                rec: any,  
                                 index: number,
                               ) => (
                                 <li
@@ -381,7 +381,7 @@ function RouteComponent() {
                         </h5>
                         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                           {Object.entries(queryStats.cache_stats).map(
-                            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                             
                             ([key, value]: [string, any]) => (
                               <div
                                 key={key}
@@ -431,7 +431,7 @@ function RouteComponent() {
                           title=""
                           data={Object.entries(
                             storageStats.compression_algorithms_used,
-                            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                             
                           ).map(([algorithm, count]: [string, any]) => ({
                             label: algorithm,
                             value: count,

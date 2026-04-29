@@ -93,9 +93,9 @@ const NlpConceptChart: React.FC<NlpConceptChartProps> = ({
   useMeasurementHtml();
 
   // Handle node click - simply bubble up the node ID
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+   
   const _handleNodeClick = useCallback(
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+     
     (node: any) => {
       onNodeClick?.(node.id);
     },

@@ -22,9 +22,9 @@ export const NlpTokenAnalysisPanel: React.FC<Props> = ({
   const measurementContentRef = React.useRef<HTMLDivElement | null>(null);
 
   // Get the token context
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
   const wordnet = token.wordnet as any;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
   const concepcy = token.concepcy as any;
 
   // Create token prefix for this chart
@@ -75,7 +75,7 @@ export const NlpTokenAnalysisPanel: React.FC<Props> = ({
               inputTerm: token.text,
               wordnet: {
                 synsets: (wordnet?.synsets || []).map(
-                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                   
                   (s: any) => ({
                     name: s.name || s.synset || s.id || s[0] || "unknown",
                     definition: s.definition || s.gloss || s.def || "",

@@ -171,9 +171,9 @@ export const useDefinitionWithComponents = (
  */
 export const useDefinitionWithReferences = (
   term: string | null,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
   dbpediaContext?: Record<string, any> | null,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
   wikidataContext?: Record<string, any> | null,
   options?: UseQueryOptions<DefinitionSuggestionResponse, Error>,
 ) => {
@@ -222,7 +222,7 @@ export const useComprehensiveDefinition = (
         );
       }
       // Support both legacy and new request formats
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+       
       const term = (request as any).term || request.context_data?.term;
       if (!term) {
         throw new Error(
@@ -233,9 +233,9 @@ export const useComprehensiveDefinition = (
     },
     enabled:
       !!request &&
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+       
       (!!(request as any).term || !!request.context_data?.term) &&
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+       
       (((request as any).term && (request as any).term.trim().length > 0) ||
         (request.context_data?.term &&
           (request.context_data.term as string).trim().length > 0)),

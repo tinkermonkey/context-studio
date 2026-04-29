@@ -1,5 +1,5 @@
 // Use loose typing for test mocks to avoid tight coupling with service types
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+ 
 export const mockTokenData: any = {
   text: "database",
   lemma: "database",
@@ -24,7 +24,7 @@ export const mockTokenData: any = {
         terms: ["information_system", "data_structure"],
         scores: [0.8, 0.7],
       },
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+       
     ] as any,
   },
 };

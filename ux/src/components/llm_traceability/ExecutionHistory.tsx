@@ -339,7 +339,7 @@ export const ExecutionHistory: React.FC<ExecutionHistoryProps> = ({
     // Convert flavor execution data to ExecutionHistoryResponse format
     // Map database fields to what the UI component expects
     return flavorExecutionData.executions.map(
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+       
       (exec: any) => ({
         success: true,
         data: {

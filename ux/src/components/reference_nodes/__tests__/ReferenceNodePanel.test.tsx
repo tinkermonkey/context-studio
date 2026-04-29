@@ -83,7 +83,7 @@ describe("ReferenceNodePanel", () => {
       data: undefined,
       isLoading: true,
       error: null,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+       
     } as any);
 
     render(
@@ -101,7 +101,7 @@ describe("ReferenceNodePanel", () => {
       data: undefined,
       isLoading: false,
       error: new Error(errorMessage),
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+       
     } as any);
 
     render(
@@ -120,7 +120,7 @@ describe("ReferenceNodePanel", () => {
       data: [],
       isLoading: false,
       error: null,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+       
     } as any);
 
     render(
@@ -147,7 +147,7 @@ describe("ReferenceNodePanel", () => {
       data: mockLinks,
       isLoading: false,
       error: null,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+       
     } as any);
 
     render(
@@ -167,7 +167,7 @@ describe("ReferenceNodePanel", () => {
       data: mockLinks,
       isLoading: false,
       error: null,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+       
     } as any);
 
     render(
@@ -193,7 +193,7 @@ describe("ReferenceNodePanel", () => {
       data: mockLinks,
       isLoading: false,
       error: null,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+       
     } as any);
 
     render(
@@ -215,7 +215,7 @@ describe("ReferenceNodePanel", () => {
       data: [],
       isLoading: false,
       error: null,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+       
     } as any);
 
     render(

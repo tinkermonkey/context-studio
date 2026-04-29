@@ -21,7 +21,7 @@ test.describe("Structure Node Detail View", () => {
 
   test.beforeEach(async ({ page }) => {
     // Create test hierarchy: layer → domain → term
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+     
     const layerResponse = await apiRequest<any>(page, "/api/structure_nodes", {
       method: "POST",
       body: {
@@ -32,7 +32,7 @@ test.describe("Structure Node Detail View", () => {
     });
     testLayerId = layerResponse.id;
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+     
     const domainResponse = await apiRequest<any>(page, "/api/structure_nodes", {
       method: "POST",
       body: {
@@ -44,7 +44,7 @@ test.describe("Structure Node Detail View", () => {
     });
     testDomainId = domainResponse.id;
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+     
     const termResponse = await apiRequest<any>(page, "/api/structure_nodes", {
       method: "POST",
       body: {
@@ -218,7 +218,7 @@ test.describe("Structure Node Detail View", () => {
     await expect(definitionSection).toContainText(newDefinition);
 
     // Verify backend was updated
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+     
     const response = await apiRequest<any>(
       page,
       `/api/structure_nodes/${testTermId}`,
@@ -261,7 +261,7 @@ test.describe("Structure Node Detail View", () => {
 
   test("should handle nodes with no definition", async ({ page }) => {
     // Create a node without a definition
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+     
     const nodeResponse = await apiRequest<any>(page, "/api/structure_nodes", {
       method: "POST",
       body: {
@@ -438,7 +438,7 @@ test.describe("Structure Node Detail View", () => {
     page,
   }) => {
     // Create term with multi-word title to trigger NLP
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+     
     const termResponse = await apiRequest<any>(page, "/api/structure_nodes", {
       method: "POST",
       body: {
@@ -511,7 +511,7 @@ test.describe("Structure Node Detail View", () => {
 
   test("should add and remove reference node links", async ({ page }) => {
     // Create term for reference linking
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+     
     const termResponse = await apiRequest<any>(page, "/api/structure_nodes", {
       method: "POST",
       body: {

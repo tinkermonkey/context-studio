@@ -6,7 +6,7 @@ import { mockAnalysis } from "../../utils/mockNlpData";
 
 // Mock the useNLPAnalysis hook to return our mockAnalysis
 vi.mock("@/api/hooks/nlp/useNLPAnalysis", () => ({
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
   useNLPAnalysis: (text: string, options: any) => ({
     data: options?.enabled === false ? null : text ? mockAnalysis : null,
     isLoading: false,

@@ -65,7 +65,7 @@ export const useCreateConceptScheme = (
   return useMutation({
     mutationFn: ({ taxonomyId, data }) =>
       conceptSchemeService.create(taxonomyId, data),
-    onSuccess: (newScheme) => {
+    onSuccess: (_newScheme) => {
       // Invalidate concept schemes list
       queryClient.invalidateQueries({
         queryKey: [QUERY_KEYS.CONCEPT_SCHEMES],

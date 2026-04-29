@@ -19,13 +19,13 @@ export interface TaskStatus {
   task_type: string;
   status: string;
   progress: number;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
   result?: any;
   error?: string;
   created_at?: string;
   started_at?: string;
   completed_at?: string;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
   metadata: Record<string, any>;
 }
 

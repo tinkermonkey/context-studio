@@ -34,9 +34,9 @@ interface PipelineExecutionResult {
 
 interface PipelineResultViewProps {
   result: PipelineExecutionResult;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
   apiContext: Record<string, any> | null;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
   buildApiContext: () => Record<string, any>;
   termId?: string | null;
   domainId?: string | null;
@@ -106,7 +106,7 @@ const PipelineResultView: React.FC<PipelineResultViewProps> = ({
     savedVisibleLocal,
   ]);
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
   const handleSaveLocal = async (res: any) => {
     // Extract definition from structured_output, legacy format, or raw response
     const definition =
@@ -117,7 +117,7 @@ const PipelineResultView: React.FC<PipelineResultViewProps> = ({
     setSaveMessageLocal(null);
     setIsSavingLocal(true);
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+     
     const payload: any = { definition };
     try {
       if (termId) {
@@ -146,7 +146,7 @@ const PipelineResultView: React.FC<PipelineResultViewProps> = ({
       }
       setIsSavingLocal(false);
     } catch (
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+       
       err: any
     ) {
       setSaveMessageLocal(err?.message || "Failed to save definition");

@@ -37,19 +37,19 @@ const ensureClient = () => {
 export const apiClient: AxiosInstance = new Proxy({} as AxiosInstance, {
   get(_, prop: string | symbol) {
     const client = ensureClient();
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+     
     return (client as any)[prop];
   },
   set(_, prop: string | symbol, value) {
     const client = ensureClient();
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+     
     (client as any)[prop] = value;
     return true;
   },
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
   apply(_, __, args: any[]) {
     const client = ensureClient();
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+     
     return (client as any).apply(_, args);
   },
 }) as unknown as AxiosInstance;

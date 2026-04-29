@@ -108,7 +108,7 @@ export interface PredicatesTableProps {
   columnVisibility?: Record<string, boolean>;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+ 
 const PredicatesTable = React.forwardRef<any, PredicatesTableProps>((props) => {
   const { data: predicates, isLoading, error, refetch } = usePredicates();
   const deletePredicate = useDeletePredicate();

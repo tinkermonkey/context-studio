@@ -35,7 +35,7 @@ export function useConfiguration(
  */
 export function useConfigurationValue(
   path: string | undefined,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
   options?: Omit<UseQueryOptions<any, Error>, "queryKey" | "queryFn">,
 ) {
   return useQuery({
@@ -54,7 +54,7 @@ export function useConfigurationValue(
  * Hook to get configuration schema
  */
 export function useConfigurationSchema(
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
   options?: Omit<UseQueryOptions<any, Error>, "queryKey" | "queryFn">,
 ) {
   return useQuery({
@@ -151,7 +151,7 @@ export function useUpdateConfigurationValue() {
 
   return useMutation({
     mutationFn: (
-      { path, value }: { path: string; value: any }, // eslint-disable-line @typescript-eslint/no-explicit-any
+      { path, value }: { path: string; value: any },  
     ) => configurationService.updateConfigurationValue(path, value),
     onSuccess: (_, { path }) => {
       // Invalidate related queries
@@ -176,7 +176,7 @@ export function useUpdateReferenceSourceConfig() {
     }: {
       sourceName: string;
       path: string;
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+       
       value: any;
     }) =>
       configurationService.updateReferenceSourceConfig(sourceName, path, value),

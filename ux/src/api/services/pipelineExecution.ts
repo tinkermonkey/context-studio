@@ -39,9 +39,9 @@ export interface LegacyTermDefinitionRequest {
     definition?: string;
     relationship_predicate?: string;
   }>;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
   dbpedia_context?: Record<string, any>;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
   wikidata_context?: Record<string, any>;
   flavor?: string;
 }
@@ -165,11 +165,11 @@ export class PipelineExecutionService extends BaseService {
    * Convert new generic response to legacy term definition response format
    */
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
   convertToLegacyTermResponse(response: PipelineExecutionResponse): any {
     // Parse the response_content as JSON if it's a string
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+     
     let parsedResult: any = response.response_content;
     if (typeof response.response_content === "string") {
       try {
@@ -193,9 +193,9 @@ export class PipelineExecutionService extends BaseService {
    * Convert new generic response to legacy domain definition response format
    */
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
   convertToLegacyDomainResponse(response: PipelineExecutionResponse): any {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+     
     let parsedResult: any = response.response_content;
     if (typeof response.response_content === "string") {
       try {
@@ -217,9 +217,9 @@ export class PipelineExecutionService extends BaseService {
    * Convert new generic response to legacy layer definition response format
    */
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
   convertToLegacyLayerResponse(response: PipelineExecutionResponse): any {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+     
     let parsedResult: any = response.response_content;
     if (typeof response.response_content === "string") {
       try {

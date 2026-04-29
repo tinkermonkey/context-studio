@@ -16,11 +16,11 @@ export class StructureNodesService {
     throw new Error("StructureNodesService has been removed.");
   }
 
-  create(_data: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
+  create(_data: any) {  
     throw new Error("StructureNodesService has been removed.");
   }
 
-  update(_id: string, _data: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
+  update(_id: string, _data: any) {  
     throw new Error("StructureNodesService has been removed.");
   }
 

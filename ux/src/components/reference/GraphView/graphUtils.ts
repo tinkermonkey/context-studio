@@ -261,7 +261,7 @@ export function convertToReagraphFormat(
 /**
  * Analyze graph structure for layout suitability
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+ 
 export function analyzeGraphStructure(nodes: any[], edges: any[]) {
   if (edges.length === 0) {
     return {

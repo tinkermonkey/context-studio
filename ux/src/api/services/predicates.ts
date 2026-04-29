@@ -7,17 +7,17 @@
 /**
  * @deprecated
  */
-export type PredicateOut = any; // eslint-disable-line @typescript-eslint/no-explicit-any
+export type PredicateOut = any;  
 
 /**
  * @deprecated
  */
-export type PredicateCreate = any; // eslint-disable-line @typescript-eslint/no-explicit-any
+export type PredicateCreate = any;  
 
 /**
  * @deprecated
  */
-export type PredicateUpdate = any; // eslint-disable-line @typescript-eslint/no-explicit-any
+export type PredicateUpdate = any;  
 
 /**
  * @deprecated
@@ -45,11 +45,11 @@ export class PredicatesService {
     throw new Error("PredicatesService has been removed. Use PropertyDefinitionService instead.");
   }
 
-  create(_data: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
+  create(_data: any) {  
     throw new Error("PredicatesService has been removed. Use PropertyDefinitionService instead.");
   }
 
-  update(_id: string, _data: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
+  update(_id: string, _data: any) {  
     throw new Error("PredicatesService has been removed. Use PropertyDefinitionService instead.");
   }
 

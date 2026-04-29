@@ -71,7 +71,7 @@ export const NlpAnalysisPanel: React.FC<NlpAnalysisPanelProps> = ({
     refetch: refetchWordSenses,
   } = useWordSenses(nodeId || "", {
     enabled: !!nodeId && isMultiWord,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+     
   } as any);
 
   // Custom hook for API call
@@ -91,7 +91,7 @@ export const NlpAnalysisPanel: React.FC<NlpAnalysisPanelProps> = ({
     queryKey,
     staleTime: 1000 * 60 * 5, // Cache for 5 minutes
     gcTime: 1000 * 60 * 30, // Keep in cache for 30 minutes
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+     
   } as any);
 
   // Watch for analyze trigger from store
@@ -145,7 +145,7 @@ export const NlpAnalysisPanel: React.FC<NlpAnalysisPanelProps> = ({
       }
 
       const token = analysisResult.tokens.find(
-        (t: any) => t.text === text && (t.start ?? 0) === start, // eslint-disable-line @typescript-eslint/no-explicit-any
+        (t: any) => t.text === text && (t.start ?? 0) === start,  
       );
 
       if (!token) {
@@ -172,7 +172,7 @@ export const NlpAnalysisPanel: React.FC<NlpAnalysisPanelProps> = ({
         const synsets = token.wordnet?.synsets || [];
 
         if (senseIndex >= 0 && senseIndex < synsets.length) {
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+           
           const synset = synsets[senseIndex] as any;
           return {
             type: "sense" as const,
@@ -210,9 +210,9 @@ export const NlpAnalysisPanel: React.FC<NlpAnalysisPanelProps> = ({
           const relatedTerms = token.concepcy?.related_terms || [];
           // Filter relations by type and find the one at the given index
           // Note: related_terms is typed as string[] but actually contains relation objects
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+           
           const relationsOfType = (relatedTerms as any[]).filter(
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+             
             (rel: any) =>
               rel.relation === relationType &&
               rel.subject?.label === (token.lemma || token.text),
@@ -339,7 +339,7 @@ export const NlpAnalysisPanel: React.FC<NlpAnalysisPanelProps> = ({
                   <Accordion alwaysOpen className="w-full">
                     {}
                     {(analysisResult.tokens || []).map(
-                      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                       
                       (token: any) => {
                         // Create a unique prefix for this token's chart nodes
                         const tokenPrefix = `token-${token.text}-${token.start ?? 0}`;

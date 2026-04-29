@@ -10,7 +10,7 @@ import { UseQueryResult } from "@tanstack/react-query";
  * @deprecated Use useRelationships instead
  */
 export const useNodeLinks = (
-  _params?: any, // eslint-disable-line @typescript-eslint/no-explicit-any
+  _params?: any,  
 ): UseQueryResult<any[], Error> => {
   return {
     data: undefined,
@@ -22,14 +22,14 @@ export const useNodeLinks = (
     status: "error",
     dataUpdatedAt: 0,
     errorUpdatedAt: Date.now(),
-    refetch: async () => ({ data: undefined } as any), // eslint-disable-line @typescript-eslint/no-explicit-any
+    refetch: async () => ({ data: undefined } as any),  
   } as UseQueryResult<any[], Error>;
 };
 
 /**
  * @deprecated
  */
-export const useNodeLinksByNode = (..._args: any[]): UseQueryResult<any[], Error> => { // eslint-disable-line @typescript-eslint/no-explicit-any
+export const useNodeLinksByNode = (..._args: any[]): UseQueryResult<any[], Error> => {  
   return {
     data: undefined,
     isLoading: false,
@@ -40,6 +40,6 @@ export const useNodeLinksByNode = (..._args: any[]): UseQueryResult<any[], Error
     status: "error",
     dataUpdatedAt: 0,
     errorUpdatedAt: Date.now(),
-    refetch: async () => ({ data: undefined } as any), // eslint-disable-line @typescript-eslint/no-explicit-any
+    refetch: async () => ({ data: undefined } as any),  
   } as UseQueryResult<any[], Error>;
 };

@@ -13,7 +13,7 @@ export const Route = createFileRoute("/app/predicates")({
 
 function PredicatesPage() {
   const { data: predicates, isLoading, error } = usePredicates();
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
   const tableRef = React.useRef<any>(null);
 
   if (isLoading) {

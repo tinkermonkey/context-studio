@@ -10,14 +10,14 @@ import type { StructureNode } from "../../types/structureNodes";
 /**
  * @deprecated Use the new ontology entity mutation hooks instead
  */
-export const useCreateStructureNode = (..._args: any[]): UseMutationResult<StructureNode, Error, any, any> => { // eslint-disable-line @typescript-eslint/no-explicit-any
+export const useCreateStructureNode = (..._args: any[]): UseMutationResult<StructureNode, Error, any, any> => {  
   return {
-    mutate: (_data?: any) => { // eslint-disable-line @typescript-eslint/no-explicit-any
+    mutate: (_data?: any) => {  
       throw new Error(
         "useCreateStructureNode has been removed. Use useCreateTaxonomy, useCreateConceptScheme, or useCreateOntologyClass instead.",
       );
     },
-    mutateAsync: async (_data?: any) => { // eslint-disable-line @typescript-eslint/no-explicit-any
+    mutateAsync: async (_data?: any) => {  
       throw new Error(
         "useCreateStructureNode has been removed. Use useCreateTaxonomy, useCreateConceptScheme, or useCreateOntologyClass instead.",
       );
@@ -35,15 +35,15 @@ export const useCreateStructureNode = (..._args: any[]): UseMutationResult<Struc
  * @deprecated Use the new ontology entity mutation hooks instead
  */
 export const useUpdateStructureNode = (
-  _options?: any, // eslint-disable-line @typescript-eslint/no-explicit-any
+  _options?: any,  
 ): UseMutationResult<StructureNode, Error, any, any> => {
   return {
-    mutate: (_data?: any) => { // eslint-disable-line @typescript-eslint/no-explicit-any
+    mutate: (_data?: any) => {  
       throw new Error(
         "useUpdateStructureNode has been removed. Use useUpdateTaxonomy, useUpdateConceptScheme, or useUpdateOntologyClass instead.",
       );
     },
-    mutateAsync: async (_data?: any) => { // eslint-disable-line @typescript-eslint/no-explicit-any
+    mutateAsync: async (_data?: any) => {  
       throw new Error(
         "useUpdateStructureNode has been removed. Use useUpdateTaxonomy, useUpdateConceptScheme, or useUpdateOntologyClass instead.",
       );
@@ -61,15 +61,15 @@ export const useUpdateStructureNode = (
  * @deprecated Use the new ontology entity mutation hooks instead
  */
 export const useDeleteStructureNode = (
-  _options?: any, // eslint-disable-line @typescript-eslint/no-explicit-any
+  _options?: any,  
 ): UseMutationResult<void, Error, string, any> => {
   return {
-    mutate: (_data?: any) => { // eslint-disable-line @typescript-eslint/no-explicit-any
+    mutate: (_data?: any) => {  
       throw new Error(
         "useDeleteStructureNode has been removed. Use useDeleteTaxonomy, useDeleteConceptScheme, or useDeleteOntologyClass instead.",
       );
     },
-    mutateAsync: async (_data?: any) => { // eslint-disable-line @typescript-eslint/no-explicit-any
+    mutateAsync: async (_data?: any) => {  
       throw new Error(
         "useDeleteStructureNode has been removed. Use useDeleteTaxonomy, useDeleteConceptScheme, or useDeleteOntologyClass instead.",
       );
@@ -87,13 +87,13 @@ export const useDeleteStructureNode = (
  * @deprecated
  */
 export const useBulkUpdateStructureNodes = (
-  _options?: any, // eslint-disable-line @typescript-eslint/no-explicit-any
+  _options?: any,  
 ): UseMutationResult<any, Error, any, any> => {
   return {
-    mutate: (_data?: any) => { // eslint-disable-line @typescript-eslint/no-explicit-any
+    mutate: (_data?: any) => {  
       throw new Error("useBulkUpdateStructureNodes has been removed.");
     },
-    mutateAsync: async (_data?: any) => { // eslint-disable-line @typescript-eslint/no-explicit-any
+    mutateAsync: async (_data?: any) => {  
       throw new Error("useBulkUpdateStructureNodes has been removed.");
     },
     isPending: false,
@@ -109,13 +109,13 @@ export const useBulkUpdateStructureNodes = (
  * @deprecated
  */
 export const useMoveStructureNode = (
-  _options?: any, // eslint-disable-line @typescript-eslint/no-explicit-any
+  _options?: any,  
 ): UseMutationResult<StructureNode, Error, any, any> => {
   return {
-    mutate: (_data?: any) => { // eslint-disable-line @typescript-eslint/no-explicit-any
+    mutate: (_data?: any) => {  
       throw new Error("useMoveStructureNode has been removed.");
     },
-    mutateAsync: async (_data?: any) => { // eslint-disable-line @typescript-eslint/no-explicit-any
+    mutateAsync: async (_data?: any) => {  
       throw new Error("useMoveStructureNode has been removed.");
     },
     isPending: false,
@@ -130,12 +130,12 @@ export const useMoveStructureNode = (
 /**
  * @deprecated
  */
-export const useCreateDomain = (..._args: any[]): UseMutationResult<any, Error, any, any> => { // eslint-disable-line @typescript-eslint/no-explicit-any
+export const useCreateDomain = (..._args: any[]): UseMutationResult<any, Error, any, any> => {  
   return {
-    mutate: (_data?: any) => { // eslint-disable-line @typescript-eslint/no-explicit-any
+    mutate: (_data?: any) => {  
       throw new Error("useCreateDomain has been removed. Use useCreateConceptScheme instead.");
     },
-    mutateAsync: async (_data?: any) => { // eslint-disable-line @typescript-eslint/no-explicit-any
+    mutateAsync: async (_data?: any) => {  
       throw new Error("useCreateDomain has been removed. Use useCreateConceptScheme instead.");
     },
     isPending: false,
@@ -151,13 +151,13 @@ export const useCreateDomain = (..._args: any[]): UseMutationResult<any, Error, 
  * @deprecated
  */
 export const useCreateLayer = (
-  _options?: any, // eslint-disable-line @typescript-eslint/no-explicit-any
+  _options?: any,  
 ): UseMutationResult<any, Error, any, any> => {
   return {
-    mutate: (_data?: any) => { // eslint-disable-line @typescript-eslint/no-explicit-any
+    mutate: (_data?: any) => {  
       throw new Error("useCreateLayer has been removed. Use useCreateTaxonomy instead.");
     },
-    mutateAsync: async (_data?: any) => { // eslint-disable-line @typescript-eslint/no-explicit-any
+    mutateAsync: async (_data?: any) => {  
       throw new Error("useCreateLayer has been removed. Use useCreateTaxonomy instead.");
     },
     isPending: false,
@@ -173,13 +173,13 @@ export const useCreateLayer = (
  * @deprecated
  */
 export const useCreateTerm = (
-  _options?: any, // eslint-disable-line @typescript-eslint/no-explicit-any
+  _options?: any,  
 ): UseMutationResult<any, Error, any, any> => {
   return {
-    mutate: (_data?: any) => { // eslint-disable-line @typescript-eslint/no-explicit-any
+    mutate: (_data?: any) => {  
       throw new Error("useCreateTerm has been removed. Use useCreateOntologyClass instead.");
     },
-    mutateAsync: async (_data?: any) => { // eslint-disable-line @typescript-eslint/no-explicit-any
+    mutateAsync: async (_data?: any) => {  
       throw new Error("useCreateTerm has been removed. Use useCreateOntologyClass instead.");
     },
     isPending: false,
@@ -195,13 +195,13 @@ export const useCreateTerm = (
  * @deprecated
  */
 export const useMoveStructureNodes = (
-  _options?: any, // eslint-disable-line @typescript-eslint/no-explicit-any
+  _options?: any,  
 ): UseMutationResult<any, Error, any, any> => {
   return {
-    mutate: (_data?: any) => { // eslint-disable-line @typescript-eslint/no-explicit-any
+    mutate: (_data?: any) => {  
       throw new Error("useMoveStructureNodes has been removed.");
     },
-    mutateAsync: async (_data?: any) => { // eslint-disable-line @typescript-eslint/no-explicit-any
+    mutateAsync: async (_data?: any) => {  
       throw new Error("useMoveStructureNodes has been removed.");
     },
     isPending: false,
@@ -217,13 +217,13 @@ export const useMoveStructureNodes = (
  * @deprecated
  */
 export const useUpdateTerm = (
-  _options?: any, // eslint-disable-line @typescript-eslint/no-explicit-any
+  _options?: any,  
 ): UseMutationResult<any, Error, any, any> => {
   return {
-    mutate: (_data?: any) => { // eslint-disable-line @typescript-eslint/no-explicit-any
+    mutate: (_data?: any) => {  
       throw new Error("useUpdateTerm has been removed. Use useUpdateOntologyClass instead.");
     },
-    mutateAsync: async (_data?: any) => { // eslint-disable-line @typescript-eslint/no-explicit-any
+    mutateAsync: async (_data?: any) => {  
       throw new Error("useUpdateTerm has been removed. Use useUpdateOntologyClass instead.");
     },
     isPending: false,
@@ -239,13 +239,13 @@ export const useUpdateTerm = (
  * @deprecated
  */
 export const useUpdateDomain = (
-  _options?: any, // eslint-disable-line @typescript-eslint/no-explicit-any
+  _options?: any,  
 ): UseMutationResult<any, Error, any, any> => {
   return {
-    mutate: (_data?: any) => { // eslint-disable-line @typescript-eslint/no-explicit-any
+    mutate: (_data?: any) => {  
       throw new Error("useUpdateDomain has been removed. Use useUpdateConceptScheme instead.");
     },
-    mutateAsync: async (_data?: any) => { // eslint-disable-line @typescript-eslint/no-explicit-any
+    mutateAsync: async (_data?: any) => {  
       throw new Error("useUpdateDomain has been removed. Use useUpdateConceptScheme instead.");
     },
     isPending: false,
@@ -261,13 +261,13 @@ export const useUpdateDomain = (
  * @deprecated
  */
 export const useUpdateLayer = (
-  _options?: any, // eslint-disable-line @typescript-eslint/no-explicit-any
+  _options?: any,  
 ): UseMutationResult<any, Error, any, any> => {
   return {
-    mutate: (_data?: any) => { // eslint-disable-line @typescript-eslint/no-explicit-any
+    mutate: (_data?: any) => {  
       throw new Error("useUpdateLayer has been removed. Use useUpdateTaxonomy instead.");
     },
-    mutateAsync: async (_data?: any) => { // eslint-disable-line @typescript-eslint/no-explicit-any
+    mutateAsync: async (_data?: any) => {  
       throw new Error("useUpdateLayer has been removed. Use useUpdateTaxonomy instead.");
     },
     isPending: false,

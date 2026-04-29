@@ -75,33 +75,33 @@ describe("PipelineFlavorEditor - Default Population", () => {
       },
       isLoading: false,
       error: null,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+       
     } as any);
 
     vi.mocked(useCreatePipelineFlavor).mockReturnValue({
       mutate: vi.fn(),
       isPending: false,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+       
     } as any);
 
     vi.mocked(useUpdatePipelineFlavor).mockReturnValue({
       mutate: vi.fn(),
       isPending: false,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+       
     } as any);
 
     vi.mocked(useTypedModelCapabilities).mockReturnValue({
       data: undefined,
       isLoading: false,
       error: null,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+       
     } as any);
 
     vi.mocked(useValidateLLMConfig).mockReturnValue({
       data: undefined,
       isLoading: false,
       error: null,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+       
     } as any);
 
     const mockOnClose = vi.fn();
@@ -143,33 +143,33 @@ describe("PipelineFlavorEditor - Default Population", () => {
       },
       isLoading: false,
       error: null,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+       
     } as any);
 
     vi.mocked(useCreatePipelineFlavor).mockReturnValue({
       mutate: vi.fn(),
       isPending: false,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+       
     } as any);
 
     vi.mocked(useUpdatePipelineFlavor).mockReturnValue({
       mutate: vi.fn(),
       isPending: false,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+       
     } as any);
 
     vi.mocked(useTypedModelCapabilities).mockReturnValue({
       data: undefined,
       isLoading: false,
       error: null,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+       
     } as any);
 
     vi.mocked(useValidateLLMConfig).mockReturnValue({
       data: undefined,
       isLoading: false,
       error: null,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+       
     } as any);
 
     const mockOnClose = vi.fn();
@@ -203,33 +203,33 @@ describe("PipelineFlavorEditor - Default Population", () => {
       data: null,
       isLoading: true,
       error: null,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+       
     } as any);
 
     vi.mocked(useCreatePipelineFlavor).mockReturnValue({
       mutate: vi.fn(),
       isPending: false,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+       
     } as any);
 
     vi.mocked(useUpdatePipelineFlavor).mockReturnValue({
       mutate: vi.fn(),
       isPending: false,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+       
     } as any);
 
     vi.mocked(useTypedModelCapabilities).mockReturnValue({
       data: undefined,
       isLoading: false,
       error: null,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+       
     } as any);
 
     vi.mocked(useValidateLLMConfig).mockReturnValue({
       data: undefined,
       isLoading: false,
       error: null,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+       
     } as any);
 
     const mockOnClose = vi.fn();
@@ -266,33 +266,33 @@ describe("PipelineFlavorEditor - Default Population", () => {
       },
       isLoading: false,
       error: null,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+       
     } as any);
 
     vi.mocked(useCreatePipelineFlavor).mockReturnValue({
       mutate: vi.fn(),
       isPending: false,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+       
     } as any);
 
     vi.mocked(useUpdatePipelineFlavor).mockReturnValue({
       mutate: vi.fn(),
       isPending: false,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+       
     } as any);
 
     vi.mocked(useTypedModelCapabilities).mockReturnValue({
       data: undefined,
       isLoading: false,
       error: null,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+       
     } as any);
 
     vi.mocked(useValidateLLMConfig).mockReturnValue({
       data: undefined,
       isLoading: false,
       error: null,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+       
     } as any);
 
     const mockOnClose = vi.fn();

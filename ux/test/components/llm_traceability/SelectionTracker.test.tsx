@@ -49,7 +49,7 @@ const MockButton = ({
   onClick,
   children,
   ...props
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
 }: any) => (
   <button
     onClick={(e) => {
@@ -69,7 +69,7 @@ const MockContentButton = ({
   onClick,
   "data-content": content,
   children,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
 }: any) => (
   <button
     onClick={onClick}
@@ -91,13 +91,13 @@ describe("SelectionTracker", () => {
     vi.clearAllMocks();
 
     // Mock the hooks
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+     
     (useRecordSelectionMutation as any).mockReturnValue({
       mutate: mockRecordSelection,
       isPending: false,
     });
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+     
     (useOptimisticSelectionRecording as any).mockReturnValue(
       mockOptimisticRecording,
     );
@@ -351,7 +351,7 @@ describe("SelectionTracker", () => {
       const mockError = new Error("Tracking failed");
 
       // Mock non-optimistic recording with error
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+       
       (useRecordSelectionMutation as any).mockReturnValue({
         mutate: vi.fn(),
         isPending: false,
@@ -376,7 +376,7 @@ describe("SelectionTracker", () => {
       await user.click(button);
 
       // Simulate the error callback being called
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+       
       const mockMutationHook = (useRecordSelectionMutation as any).mock
         .calls[0][0];
       mockMutationHook.onError(mockError, {
@@ -393,7 +393,7 @@ describe("SelectionTracker", () => {
 
   describe("Visual Feedback", () => {
     it("should show tracking indicator when showFeedback is true and tracking", () => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+       
       (useOptimisticSelectionRecording as any).mockReturnValue({
         recordSelection: vi.fn(),
         isTracking: true,
@@ -416,7 +416,7 @@ describe("SelectionTracker", () => {
     });
 
     it("should not show tracking indicator when showFeedback is false", () => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+       
       (useOptimisticSelectionRecording as any).mockReturnValue({
         recordSelection: vi.fn(),
         isTracking: true,

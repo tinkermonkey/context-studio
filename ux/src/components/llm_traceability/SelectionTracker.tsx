@@ -149,7 +149,7 @@ export const SelectionTracker: React.FC<SelectionTrackerProps> = ({
     }
 
     // Capture original handlers before they might change
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+     
     const originalProps = child.props as any;
     const originalOnSelect = originalProps.onSelect;
     const originalOnAccept = originalProps.onAccept;
@@ -159,7 +159,7 @@ export const SelectionTracker: React.FC<SelectionTrackerProps> = ({
 
     // Look for common selection props and enhance them
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+     
     const enhancedProps: any = {};
 
     // Check if this is a DOM element (lowercase tag name) vs React component (uppercase or function)
@@ -173,7 +173,7 @@ export const SelectionTracker: React.FC<SelectionTrackerProps> = ({
 
       const createHandler =
         (
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+           
           originalHandler: any,
         ) =>
         (content: string) => {
@@ -201,7 +201,7 @@ export const SelectionTracker: React.FC<SelectionTrackerProps> = ({
 
       const createHandler =
         (
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+           
           originalHandler: any,
         ) =>
         (content: string) => {
@@ -298,10 +298,10 @@ export function withSelectionTracking<P extends object>(
   Component: React.ComponentType<P>,
   trackerProps: Omit<SelectionTrackerProps, "children">,
 ) {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
   return React.forwardRef<any, P>((props, ref) => (
     <SelectionTracker {...trackerProps}>
-      {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+      { }
       {React.createElement(Component as any, { ...props, ref })}
     </SelectionTracker>
   ));

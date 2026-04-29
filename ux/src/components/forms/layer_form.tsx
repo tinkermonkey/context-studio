@@ -39,7 +39,7 @@ const LayerForm: React.FC<LayerFormProps> = ({ onSuccess, layer }) => {
         if (onSuccess) onSuccess(result);
         form.reset();
       } catch (
-        error: any // eslint-disable-line @typescript-eslint/no-explicit-any
+        error: any  
       ) {
         let message: string;
         // Log the full error for debugging
@@ -56,7 +56,7 @@ const LayerForm: React.FC<LayerFormProps> = ({ onSuccess, layer }) => {
         if (Array.isArray(detail)) {
           message = detail
             .map(
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+               
               (d: any) => d.msg,
             )
             .join("; ");

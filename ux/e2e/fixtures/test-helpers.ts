@@ -23,7 +23,7 @@ export async function apiRequest<T = unknown>(
   endpoint: string,
   options?: {
     method?: "GET" | "POST" | "PUT" | "DELETE" | "PATCH";
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+     
     body?: any;
     headers?: Record<string, string>;
   },
@@ -69,15 +69,15 @@ export async function clearTestData(): Promise<void> {
  * Create test data in the backend.
  */
 export async function seedTestData(
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+   
   _data: {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+     
     layers?: any[];
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+     
     domains?: any[];
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+     
     terms?: any[];
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+     
     predicates?: any[];
   },
 ): Promise<void> {

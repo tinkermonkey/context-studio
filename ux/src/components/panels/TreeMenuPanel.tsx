@@ -19,7 +19,7 @@ export interface TreeMenuPanelProps {
   /**
    * Optional callback when a node is clicked
    */
-  onNodeClick?: (node: any) => void; // eslint-disable-line @typescript-eslint/no-explicit-any
+  onNodeClick?: (node: any) => void;  
 
   /**
    * Additional CSS classes to apply to the panel container
@@ -132,7 +132,7 @@ export function TreeMenuPanel({
 
     // Helper function to find path to a node
     const findPath = (
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+       
       node: any,
 
       targetId: string,

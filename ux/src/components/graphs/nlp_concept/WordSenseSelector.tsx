@@ -24,11 +24,11 @@ interface WordAnalysisResult {
   pos?: string;
   tag?: string;
   concepcy?: {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+     
     related_terms: any[];
   };
   wordnet?: {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+     
     synsets: any[];
   };
 }
@@ -389,7 +389,7 @@ export const WordSenseSelector: React.FC<WordSenseSelectorProps> = ({
                   inputTerm: state.analysis.text,
                   wordnet: {
                     synsets: (state.analysis.wordnet?.synsets || []).map(
-                      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                       
                       (s: any) => ({
                         name: s.name || s.synset || s.id || s[0] || "unknown",
                         definition: s.definition || s.gloss || s.def || "",

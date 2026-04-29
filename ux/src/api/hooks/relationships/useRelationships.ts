@@ -60,7 +60,7 @@ export const useCreateRelationship = (
 
   return useMutation({
     mutationFn: (data) => relationshipService.create(data),
-    onSuccess: (newRelationship) => {
+    onSuccess: (_newRelationship) => {
       // Invalidate relationships list
       queryClient.invalidateQueries({
         queryKey: [QUERY_KEYS.RELATIONSHIPS],

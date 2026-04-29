@@ -65,7 +65,7 @@ export const useCreateOntologyClass = (
   return useMutation({
     mutationFn: ({ schemeId, data }) =>
       ontologyClassService.create(schemeId, data),
-    onSuccess: (newClass) => {
+    onSuccess: (_newClass) => {
       // Invalidate ontology classes list
       queryClient.invalidateQueries({
         queryKey: [QUERY_KEYS.ONTOLOGY_CLASSES],

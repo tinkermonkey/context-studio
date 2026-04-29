@@ -179,7 +179,7 @@ test.describe("Pipeline Configuration", () => {
     const timestamp = Date.now();
     const flavorTitle = `E2E Test Flavor ${timestamp}`;
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+     
     const createResponse = await apiRequest<any>(
       page,
       "/api/pipeline-flavors",
@@ -271,7 +271,7 @@ test.describe("Pipeline Configuration", () => {
     const timestamp = Date.now();
     const flavorTitle = `E2E Delete Test ${timestamp}`;
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+     
     const createResponse = await apiRequest<any>(
       page,
       "/api/pipeline-flavors",
@@ -349,7 +349,7 @@ test.describe("Pipeline Configuration", () => {
     const timestamp = Date.now();
     const flavorTitle = `E2E Cancel Delete ${timestamp}`;
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+     
     const createResponse = await apiRequest<any>(
       page,
       "/api/pipeline-flavors",
@@ -403,7 +403,7 @@ test.describe("Pipeline Configuration", () => {
     await expect(page.getByText(flavorTitle)).toBeVisible();
 
     // Verify flavor still exists in backend
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+     
     const response = await apiRequest<any>(
       page,
       `/api/pipeline-flavors/${flavorId}`,
@@ -492,7 +492,7 @@ test.describe("Pipeline Configuration", () => {
     const timestamp = Date.now();
     const flavorTitle = `E2E Disabled Flavor ${timestamp}`;
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+     
     const createResponse = await apiRequest<any>(
       page,
       "/api/pipeline-flavors",

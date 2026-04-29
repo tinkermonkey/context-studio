@@ -15,7 +15,7 @@ export const Route = createFileRoute("/app/layers")({
 
 function LayersPage() {
   const { data: layers, isLoading, error } = useLayerNodes();
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
   const tableRef = React.useRef<any>(null);
 
   if (isLoading) {

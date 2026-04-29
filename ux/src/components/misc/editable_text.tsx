@@ -16,7 +16,7 @@ const EditableText: React.FC<EditableTextProps> = ({
   className = "",
   onChange,
 }) => {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
   const contentEditable = useRef<any>(null);
   const [html, setHtml] = useState(
     typeof children === "string"
@@ -26,7 +26,7 @@ const EditableText: React.FC<EditableTextProps> = ({
         )?.join("") || "",
   );
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
   const handleChange = (evt: React.ChangeEvent<any>) => {
     setHtml(evt.target.value);
     if (onChange) onChange(evt.target.value);

@@ -187,7 +187,7 @@ export const errorInterceptor = (error: AxiosError) => {
  */
 function extractErrorMessage(data: unknown, fallback: string): string {
   if (typeof data === "object" && data !== null) {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+     
     const errorData = data as any;
     return errorData.message || errorData.detail || fallback;
   }
@@ -202,7 +202,7 @@ function isValidationErrorResponse(data: unknown): data is HTTPValidationError {
     typeof data === "object" &&
     data !== null &&
     "detail" in data &&
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+     
     Array.isArray((data as any).detail)
   );
 }

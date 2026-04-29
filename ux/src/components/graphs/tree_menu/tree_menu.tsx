@@ -32,7 +32,7 @@ interface TreeMenuProps {
   /**
    * Optional callback when a node is clicked
    */
-  onNodeClick?: (node: any) => void; // eslint-disable-line @typescript-eslint/no-explicit-any
+  onNodeClick?: (node: any) => void;  
   /**
    * Optional view identifier for persisting expand state
    * If not provided, expand state will not be persisted to session storage
@@ -259,7 +259,7 @@ const TreeMenu: React.FC<TreeMenuProps> = ({
   // Node click handler to navigate to the node's details
   // Uses provided onNodeClick if present, otherwise navigates to details page
   const handleNodeClick = useCallback(
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+     
     (node: any) => {
       console.log("handleNodeClick:", node);
       if (onNodeClick) {
@@ -300,7 +300,7 @@ const TreeMenu: React.FC<TreeMenuProps> = ({
         {}
         {root.children.map(
           (
-            child: any, // eslint-disable-line @typescript-eslint/no-explicit-any
+            child: any,  
             index: number,
           ) => {
             child.childIndex = index;

@@ -60,7 +60,7 @@ export const useCreateTaxonomy = (
 
   return useMutation({
     mutationFn: (data) => taxonomyService.create(data),
-    onSuccess: (newTaxonomy) => {
+    onSuccess: (_newTaxonomy) => {
       // Invalidate taxonomies list
       queryClient.invalidateQueries({
         queryKey: [QUERY_KEYS.TAXONOMIES],

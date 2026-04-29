@@ -49,7 +49,7 @@ const DomainForm: React.FC<DomainFormProps> = ({
             data: value,
           });
         } else {
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+           
           const createData: any = {
             title: value.title,
             definition: value.definition,
@@ -68,7 +68,7 @@ const DomainForm: React.FC<DomainFormProps> = ({
         if (onSuccess) onSuccess(result);
         form.reset();
       } catch (
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+         
         error: any
       ) {
         let message: string;
@@ -86,7 +86,7 @@ const DomainForm: React.FC<DomainFormProps> = ({
         if (Array.isArray(detail)) {
           message = detail
             .map(
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+               
               (d: any) => d.msg,
             )
             .join("; ");

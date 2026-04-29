@@ -137,7 +137,7 @@ export const AttributeEditor: React.FC<AttributeEditorProps> = ({
         });
         form.reset();
       } catch (
-        error: any // eslint-disable-line @typescript-eslint/no-explicit-any
+        error: any  
       ) {
         const message =
           error?.message || error?.detail || "Failed to save attribute";
@@ -253,7 +253,7 @@ export const AttributeEditor: React.FC<AttributeEditorProps> = ({
                   <AttributeValueInput
                     value={field.state.value}
                     valueType={typeField.state.value}
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                     
                     onChange={(newValue) => field.handleChange(newValue as any)}
                     error={validationErrors.value}
                     disabled={isLoading}

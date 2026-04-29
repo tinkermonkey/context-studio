@@ -11,7 +11,7 @@
 /**
  * @deprecated Use the new ontology entity types instead
  */
-export type StructureNode = any; // eslint-disable-line @typescript-eslint/no-explicit-any
+export type StructureNode = any;  
 
 /**
  * @deprecated Use the new ontology entity types instead
@@ -25,12 +25,12 @@ export enum NodeType {
 /**
  * @deprecated Use the new ontology entity types instead
  */
-export type StructureNodeCreate = any; // eslint-disable-line @typescript-eslint/no-explicit-any
+export type StructureNodeCreate = any;  
 
 /**
  * @deprecated Use the new ontology entity types instead
  */
-export type StructureNodeUpdate = any; // eslint-disable-line @typescript-eslint/no-explicit-any
+export type StructureNodeUpdate = any;  
 
 /**
  * @deprecated Use the new ontology entity types instead
@@ -59,17 +59,17 @@ export enum RecordType {
 /**
  * @deprecated
  */
-export type WordSense = any; // eslint-disable-line @typescript-eslint/no-explicit-any
+export type WordSense = any;  
 
 /**
  * @deprecated
  */
-export type StructureNodeLink = any; // eslint-disable-line @typescript-eslint/no-explicit-any
+export type StructureNodeLink = any;  
 
 /**
  * @deprecated
  */
-export type StructureNodeLinkCreate = any; // eslint-disable-line @typescript-eslint/no-explicit-any
+export type StructureNodeLinkCreate = any;  
 
 /**
  * @deprecated
@@ -89,27 +89,27 @@ export interface ReferenceLink {
 /**
  * @deprecated
  */
-export type StructureNodeAttribute = any; // eslint-disable-line @typescript-eslint/no-explicit-any
+export type StructureNodeAttribute = any;  
 
 /**
  * @deprecated
  */
-export type AttributeValueType = any; // eslint-disable-line @typescript-eslint/no-explicit-any
+export type AttributeValueType = any;  
 
 /**
  * @deprecated
  */
-export type ResolvedAttribute = any; // eslint-disable-line @typescript-eslint/no-explicit-any
+export type ResolvedAttribute = any;  
 
 /**
  * @deprecated
  */
-export type FindStructureNodeResult = any; // eslint-disable-line @typescript-eslint/no-explicit-any
+export type FindStructureNodeResult = any;  
 
 /**
  * @deprecated
  */
-export type ExternalPredicateOut = any; // eslint-disable-line @typescript-eslint/no-explicit-any
+export type ExternalPredicateOut = any;  
 
 /**
  * @deprecated

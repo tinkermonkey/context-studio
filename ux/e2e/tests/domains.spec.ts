@@ -18,7 +18,7 @@ test.describe("Domain Management", () => {
 
   test.beforeEach(async ({ page }) => {
     // Create a test layer for domains to belong to
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+     
     const layerResponse = await apiRequest<any>(page, "/api/structure_nodes", {
       method: "POST",
       body: {
@@ -85,7 +85,7 @@ test.describe("Domain Management", () => {
 
     // Wait for actual options to load by looking for our specific test layer
     // Get the test layer title first
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+     
     const layerResponse = await apiRequest<any>(
       page,
       `/api/structure_nodes/${testLayerId}`,
@@ -116,13 +116,13 @@ test.describe("Domain Management", () => {
     );
 
     // Verify domain exists in backend with correct layer association
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+     
     const response = await apiRequest<{ data: any[] }>(
       page,
       "/api/structure_nodes?node_type=domain",
     );
     const createdDomain = response.data.find(
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+       
       (n: any) => n.title === domainTitle,
     );
 
@@ -139,7 +139,7 @@ test.describe("Domain Management", () => {
     const updatedDefinition = "Updated definition via E2E test";
 
     // Create domain via API
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+     
     const createResponse = await apiRequest<any>(page, "/api/structure_nodes", {
       method: "POST",
       body: {
@@ -184,7 +184,7 @@ test.describe("Domain Management", () => {
     );
 
     // Verify backend was updated
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+     
     const response = await apiRequest<any>(
       page,
       `/api/structure_nodes/${domainId}`,
@@ -196,7 +196,7 @@ test.describe("Domain Management", () => {
   test("should delete a domain", async ({ page }) => {
     // Create a domain to delete
     const domainTitle = `E2E Delete Test ${Date.now()}`;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+     
     const createResponse = await apiRequest<any>(page, "/api/structure_nodes", {
       method: "POST",
       body: {
@@ -336,7 +336,7 @@ test.describe("Domain Management", () => {
     // Create a domain
     const domainTitle = `E2E Detail Test ${Date.now()}`;
     const domainDefinition = "Test domain for detail view";
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+     
     const createResponse = await apiRequest<any>(page, "/api/structure_nodes", {
       method: "POST",
       body: {
@@ -382,7 +382,7 @@ test.describe("Domain Management", () => {
 
   test("should cancel domain creation", async ({ page }) => {
     // Get current domain count
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+     
     const beforeResponse = await apiRequest<{ data: any[]; total: number }>(
       page,
       "/api/structure_nodes?node_type=domain",
@@ -407,7 +407,7 @@ test.describe("Domain Management", () => {
     await page.waitForLoadState("networkidle");
 
     // Verify no new domain was created
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+     
     const afterResponse = await apiRequest<{ data: any[]; total: number }>(
       page,
       "/api/structure_nodes?node_type=domain",
@@ -418,7 +418,7 @@ test.describe("Domain Management", () => {
 
     // Verify the specific test domain was not created
     const testDomain = afterResponse.data.find(
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+       
       (n: any) => n.title === "Test Domain Not Submitted",
     );
     expect(testDomain).toBeUndefined();
@@ -451,7 +451,7 @@ test.describe("Domain Management", () => {
   }) => {
     // Create multiple domains
     const timestamp = Date.now();
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+     
     const domain1 = await apiRequest<any>(page, "/api/structure_nodes", {
       method: "POST",
       body: {
@@ -460,7 +460,7 @@ test.describe("Domain Management", () => {
         parent_node_id: testLayerId,
       },
     });
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+     
     const domain2 = await apiRequest<any>(page, "/api/structure_nodes", {
       method: "POST",
       body: {
@@ -508,7 +508,7 @@ test.describe("Domain Management", () => {
 
   test("should filter domains by layer", async ({ page }) => {
     // Create a second layer
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+     
     const layer2Response = await apiRequest<any>(page, "/api/structure_nodes", {
       method: "POST",
       body: {

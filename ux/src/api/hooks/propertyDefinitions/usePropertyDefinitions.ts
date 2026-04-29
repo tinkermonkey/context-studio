@@ -64,7 +64,7 @@ export const useCreatePropertyDefinition = (
 
   return useMutation({
     mutationFn: (data) => propertyDefinitionService.create(data),
-    onSuccess: (newProperty) => {
+    onSuccess: (_newProperty) => {
       // Invalidate property definitions list
       queryClient.invalidateQueries({
         queryKey: [QUERY_KEYS.PROPERTY_DEFINITIONS],

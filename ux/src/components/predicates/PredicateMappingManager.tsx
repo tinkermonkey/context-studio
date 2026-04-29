@@ -46,7 +46,7 @@ export const PredicateMappingManager: React.FC<
     setShowWorkflowModal(true);
   };
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+   
   const handleWorkflowComplete = (_$predicate: PredicateOut) => {
     setShowWorkflowModal(false);
     setSelectedPredicateIds([]);

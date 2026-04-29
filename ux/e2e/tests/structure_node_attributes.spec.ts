@@ -27,7 +27,7 @@ async function generateTestHierarchy(
   timestamp: number,
 ): Promise<TestHierarchy> {
   // Create layer with category attribute
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
   const layerResponse = await apiRequest<any>(page, "/api/structure_nodes", {
     method: "POST",
     body: {
@@ -52,7 +52,7 @@ async function generateTestHierarchy(
   });
 
   // Create domain with jurisdiction attribute
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
   const domainResponse = await apiRequest<any>(page, "/api/structure_nodes", {
     method: "POST",
     body: {
@@ -78,7 +78,7 @@ async function generateTestHierarchy(
   });
 
   // Create term1 with override and local attribute
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
   const term1Response = await apiRequest<any>(page, "/api/structure_nodes", {
     method: "POST",
     body: {
@@ -110,7 +110,7 @@ async function generateTestHierarchy(
   });
 
   // Create term2 with no local attributes (inherits all)
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
   const term2Response = await apiRequest<any>(page, "/api/structure_nodes", {
     method: "POST",
     body: {
@@ -127,7 +127,7 @@ async function generateTestHierarchy(
   let parentId = term1Id;
 
   for (let i = 1; i <= 5; i++) {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+     
     const deepTermResponse = await apiRequest<any>(
       page,
       "/api/structure_nodes",
@@ -244,13 +244,13 @@ test.describe("Structure Node Attributes E2E", () => {
     await expect(page.getByText("test_value")).toBeVisible();
 
     // Verify via API
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+     
     const nodeResponse = await apiRequest<any>(
       page,
       `/api/structure_nodes/${testHierarchy.term1.id}/attributes`,
     );
     const createdAttr = nodeResponse.find(
-      (attr: any) => attr.key === attributeKey, // eslint-disable-line @typescript-eslint/no-explicit-any
+      (attr: any) => attr.key === attributeKey,  
     );
     expect(createdAttr).toBeDefined();
     expect(createdAttr.value).toBe("test_value");
@@ -339,13 +339,13 @@ test.describe("Structure Node Attributes E2E", () => {
     await expect(page.getByText("California")).toBeVisible({ timeout: 5000 });
 
     // Verify via API
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+     
     const attributes = await apiRequest<any>(
       page,
       `/api/structure_nodes/${testHierarchy.term1.id}/attributes`,
     );
     const jurisdictionAttr = attributes.find(
-      (a: any) => a.key === "jurisdiction", // eslint-disable-line @typescript-eslint/no-explicit-any
+      (a: any) => a.key === "jurisdiction",  
     );
     expect(jurisdictionAttr.value).toBe("California");
   });
@@ -504,7 +504,7 @@ test.describe("Structure Node Attributes E2E", () => {
     await expect(page.getByText("Level 3")).toBeVisible();
 
     // Verify via API - resolve attributes should show all ancestors' attributes
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+     
     const attributes = await apiRequest<any>(
       page,
       `/api/structure_nodes/${deepestTerm.id}/attributes`,
@@ -513,7 +513,7 @@ test.describe("Structure Node Attributes E2E", () => {
 
     // Check for category attribute
     const categoryAttr = attributes.find(
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+       
       (a: any) => a.key === "category",
     );
     expect(categoryAttr).toBeDefined();
@@ -523,7 +523,7 @@ test.describe("Structure Node Attributes E2E", () => {
   test("Display performance with 50+ attributes", async ({ page }) => {
     // Create a term with many attributes
     const timestamp = Date.now();
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+     
     const termResponse = await apiRequest<any>(page, "/api/structure_nodes", {
       method: "POST",
       body: {
@@ -664,7 +664,7 @@ test.describe("Structure Node Attributes E2E", () => {
   test("Verify attribute types are preserved", async ({ page }) => {
     // Create a test node with all attribute types
     const timestamp = Date.now();
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+     
     const testNodeResponse = await apiRequest<any>(
       page,
       "/api/structure_nodes",
@@ -735,7 +735,7 @@ test.describe("Structure Node Attributes E2E", () => {
     await expect(page.getByText("https://example.com")).toBeVisible();
 
     // Verify via API
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+     
     const attributes = await apiRequest<any>(
       page,
       `/api/structure_nodes/${testNodeId}/attributes`,
@@ -743,27 +743,27 @@ test.describe("Structure Node Attributes E2E", () => {
     expect(attributes.length).toBe(5);
     expect(
       attributes.some(
-        (a: any) => a.key === "string_attr" && a.value_type === "string", // eslint-disable-line @typescript-eslint/no-explicit-any
+        (a: any) => a.key === "string_attr" && a.value_type === "string",  
       ),
     ).toBe(true);
     expect(
       attributes.some(
-        (a: any) => a.key === "number_attr" && a.value_type === "number", // eslint-disable-line @typescript-eslint/no-explicit-any
+        (a: any) => a.key === "number_attr" && a.value_type === "number",  
       ),
     ).toBe(true);
     expect(
       attributes.some(
-        (a: any) => a.key === "boolean_attr" && a.value_type === "boolean", // eslint-disable-line @typescript-eslint/no-explicit-any
+        (a: any) => a.key === "boolean_attr" && a.value_type === "boolean",  
       ),
     ).toBe(true);
     expect(
       attributes.some(
-        (a: any) => a.key === "date_attr" && a.value_type === "date", // eslint-disable-line @typescript-eslint/no-explicit-any
+        (a: any) => a.key === "date_attr" && a.value_type === "date",  
       ),
     ).toBe(true);
     expect(
       attributes.some(
-        (a: any) => a.key === "url_attr" && a.value_type === "url", // eslint-disable-line @typescript-eslint/no-explicit-any
+        (a: any) => a.key === "url_attr" && a.value_type === "url",  
       ),
     ).toBe(true);
   });

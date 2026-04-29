@@ -11,7 +11,7 @@ import type { StructureNode } from "../../types/structureNodes";
  * @deprecated Use useTaxonomies, useConceptSchemes, useOntologyClasses instead
  */
 export const useStructureNodes = (
-  _params?: any, // eslint-disable-line @typescript-eslint/no-explicit-any
+  _params?: any,  
 ): UseQueryResult<StructureNode[], Error> => {
   return {
     data: undefined,
@@ -25,7 +25,7 @@ export const useStructureNodes = (
     status: "error",
     dataUpdatedAt: 0,
     errorUpdatedAt: Date.now(),
-    refetch: async () => ({ data: undefined } as any), // eslint-disable-line @typescript-eslint/no-explicit-any
+    refetch: async () => ({ data: undefined } as any),  
   } as UseQueryResult<StructureNode[], Error>;
 };
 
@@ -33,7 +33,7 @@ export const useStructureNodes = (
  * @deprecated Use useConceptSchemes instead
  */
 export const useDomainNodes = (
-  ..._args: any[] // eslint-disable-line @typescript-eslint/no-explicit-any
+  ..._args: any[]  
 ): UseQueryResult<StructureNode[], Error> => {
   return {
     data: undefined,
@@ -45,7 +45,7 @@ export const useDomainNodes = (
     status: "error",
     dataUpdatedAt: 0,
     errorUpdatedAt: Date.now(),
-    refetch: async () => ({ data: undefined } as any), // eslint-disable-line @typescript-eslint/no-explicit-any
+    refetch: async () => ({ data: undefined } as any),  
   } as UseQueryResult<StructureNode[], Error>;
 };
 
@@ -53,7 +53,7 @@ export const useDomainNodes = (
  * @deprecated Use useTaxonomies instead
  */
 export const useLayerNodes = (
-  _params?: any, // eslint-disable-line @typescript-eslint/no-explicit-any
+  _params?: any,  
 ): UseQueryResult<StructureNode[], Error> => {
   return {
     data: undefined,
@@ -65,14 +65,14 @@ export const useLayerNodes = (
     status: "error",
     dataUpdatedAt: 0,
     errorUpdatedAt: Date.now(),
-    refetch: async () => ({ data: undefined } as any), // eslint-disable-line @typescript-eslint/no-explicit-any
+    refetch: async () => ({ data: undefined } as any),  
   } as UseQueryResult<StructureNode[], Error>;
 };
 
 /**
  * @deprecated
  */
-export const useStructureNode = (..._args: any[]): UseQueryResult<StructureNode, Error> => { // eslint-disable-line @typescript-eslint/no-explicit-any
+export const useStructureNode = (..._args: any[]): UseQueryResult<StructureNode, Error> => {  
   return {
     data: undefined,
     isLoading: false,
@@ -83,14 +83,14 @@ export const useStructureNode = (..._args: any[]): UseQueryResult<StructureNode,
     status: "error",
     dataUpdatedAt: 0,
     errorUpdatedAt: Date.now(),
-    refetch: async () => ({ data: undefined } as any), // eslint-disable-line @typescript-eslint/no-explicit-any
+    refetch: async () => ({ data: undefined } as any),  
   } as UseQueryResult<StructureNode, Error>;
 };
 
 /**
  * @deprecated
  */
-export const useTermNodes = (..._args: any[]): UseQueryResult<StructureNode[], Error> => { // eslint-disable-line @typescript-eslint/no-explicit-any
+export const useTermNodes = (..._args: any[]): UseQueryResult<StructureNode[], Error> => {  
   return {
     data: undefined,
     isLoading: false,
@@ -101,14 +101,14 @@ export const useTermNodes = (..._args: any[]): UseQueryResult<StructureNode[], E
     status: "error",
     dataUpdatedAt: 0,
     errorUpdatedAt: Date.now(),
-    refetch: async () => ({ data: undefined } as any), // eslint-disable-line @typescript-eslint/no-explicit-any
+    refetch: async () => ({ data: undefined } as any),  
   } as UseQueryResult<StructureNode[], Error>;
 };
 
 /**
  * @deprecated
  */
-export const useStructureNodeSearch = (..._args: any[]): UseQueryResult<StructureNode[], Error> => { // eslint-disable-line @typescript-eslint/no-explicit-any
+export const useStructureNodeSearch = (..._args: any[]): UseQueryResult<StructureNode[], Error> => {  
   return {
     data: undefined,
     isLoading: false,
@@ -119,6 +119,6 @@ export const useStructureNodeSearch = (..._args: any[]): UseQueryResult<Structur
     status: "error",
     dataUpdatedAt: 0,
     errorUpdatedAt: Date.now(),
-    refetch: async () => ({ data: undefined } as any), // eslint-disable-line @typescript-eslint/no-explicit-any
+    refetch: async () => ({ data: undefined } as any),  
   } as UseQueryResult<StructureNode[], Error>;
 };

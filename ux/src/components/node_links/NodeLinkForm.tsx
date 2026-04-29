@@ -104,7 +104,7 @@ export const NodeLinkForm: React.FC<NodeLinkFormProps> = ({
 
         await createLinkMutation.mutateAsync(linkData);
       } catch (
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+         
         error: any
       ) {
         let message = "An error occurred";
@@ -115,7 +115,7 @@ export const NodeLinkForm: React.FC<NodeLinkFormProps> = ({
           error?.detail;
 
         if (Array.isArray(detail)) {
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+           
           message = detail.map((d: any) => d.msg).join("; ");
         } else if (error?.message) {
           message = error.message;

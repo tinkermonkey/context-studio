@@ -2,11 +2,11 @@ import { apiLogger } from "@/api/utils/logger";
 import { HierarchyNode } from "@/components/graphs/tree_chart/tree_data";
 
 export interface TreeBuilderInput {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
   layers: any[];
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
   domains: any[];
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
   terms: any[];
 }
 
@@ -53,14 +53,14 @@ export function buildHierarchicalTree(input: TreeBuilderInput): HierarchyNode {
 
     // Combine all nodes into a single array for generic processing
     const allNodes = [
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+       
       ...layers.map((n: any) => ({ ...n, node_type: n.node_type || "layer" })),
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+       
       ...domains.map((n: any) => ({
         ...n,
         node_type: n.node_type || "domain",
       })),
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+       
       ...terms.map((n: any) => ({ ...n, node_type: n.node_type || "term" })),
     ];
 
@@ -88,7 +88,7 @@ export function buildHierarchicalTree(input: TreeBuilderInput): HierarchyNode {
  * @param nodes - Array of all node objects (layers, domains, terms, etc.)
  * @returns Object containing the top-level nodes and a map of all nodes
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+ 
 export function buildNodeHierarchy(nodes: any[]): {
   topLevelNodes: HierarchyNode[];
   nodeMap: Map<string, HierarchyNode>;
@@ -97,7 +97,7 @@ export function buildNodeHierarchy(nodes: any[]): {
   const topLevelNodes: HierarchyNode[] = [];
 
   // First pass: create all node entries
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
   nodes.forEach((node: any) => {
     if (!node.id) {
       console.warn("Node missing id:", node);
@@ -121,7 +121,7 @@ export function buildNodeHierarchy(nodes: any[]): {
   });
 
   // Second pass: establish parent-child relationships
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
   nodes.forEach((node: any) => {
     const hierarchyNode = nodeMap.get(node.id);
     if (!hierarchyNode) return;
@@ -238,7 +238,7 @@ function buildFilteredTree(
     (ancestor) => ancestor.id === originalNode.id,
   );
   const isTarget = originalNode.id === targetNode.id;
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+   
   const _isDirectChild = targetNode.children?.some(
     (child) => child.id === originalNode.id,
   );

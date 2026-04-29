@@ -6,7 +6,7 @@ interface CsMainProps {
 
 interface CsMainTitleProps {
   children?: ReactNode;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
   icon?: React.ComponentType<any>;
   className?: string;
   "data-testid"?: string;

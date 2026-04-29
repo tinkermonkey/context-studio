@@ -276,7 +276,7 @@ export class StreamingReferenceService extends BaseService {
    */
   async getSourceStatus(): Promise<Record<SourceType, boolean>> {
     const sources = getEnabledSources();
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+     
     const status: Record<SourceType, boolean> = {} as any;
 
     // For now, just return enabled status

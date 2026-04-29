@@ -47,7 +47,7 @@ export const NlpGenerationResult: React.FC<NlpGenerationResultProps> = ({
 }) => {
   const [apiContext, setApiContext] = React.useState<Record<
     string,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+     
     any
   > | null>(null);
 
@@ -226,7 +226,7 @@ export const NlpGenerationResult: React.FC<NlpGenerationResultProps> = ({
                 flavorList={flavorList}
                 // Render each result with its own saving state
                 resultTemplate={
-                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                   
                   (result: any) => (
                     <PipelineResultView
                       result={result}

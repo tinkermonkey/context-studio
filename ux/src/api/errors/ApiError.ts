@@ -31,7 +31,7 @@ export class ApiError extends Error {
   ): ApiError {
     const message =
       typeof response.data === "object" && response.data !== null
-        ? // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        ?  
           (response.data as any).message || fallbackMessage
         : fallbackMessage;
 
@@ -39,7 +39,7 @@ export class ApiError extends Error {
       response.status,
       message,
       typeof response.data === "object" && response.data !== null
-        ? // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        ?  
           (response.data as any).code
         : undefined,
       response.data,

@@ -269,7 +269,7 @@ function ProviderConfigurationTab({
   providersStatus,
   isLoading,
 }: {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
   providersStatus: any;
   isLoading: boolean;
 }) {
@@ -285,7 +285,7 @@ function ProviderConfigurationTab({
     <div className="space-y-6">
       <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
         {Object.entries(providersStatus.providers).map(
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+           
           ([provider, status]: [string, any]) => (
             <ProviderStatusCard
               key={provider}
@@ -305,7 +305,7 @@ function ProviderStatusCard({
   status,
 }: {
   provider: ProviderType;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
   status: any;
 }) {
   const hasEnabledModels = status.enabled_models > 0;

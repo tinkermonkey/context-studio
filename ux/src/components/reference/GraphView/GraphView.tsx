@@ -105,7 +105,7 @@ export const GraphView: React.FC<GraphViewProps> = ({
   }, [nodes, edges]);
 
   // Handle node selection
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
   const handleNodeClick = (node: any) => {
     if (node.data) {
       // For grouped structure, only handle clicks on data nodes (not predicate nodes)
@@ -381,7 +381,7 @@ export const GraphView: React.FC<GraphViewProps> = ({
               nodes={nodes}
               edges={edges}
               theme={lightTheme}
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+               
               layoutType={currentLayoutType as any}
               onNodeClick={handleNodeClick}
               onCanvasClick={() => {
@@ -390,7 +390,7 @@ export const GraphView: React.FC<GraphViewProps> = ({
                 setPinnedPosition(null);
                 setHoveredNode(null);
               }}
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+               
               onNodePointerOver={(node: any) => {
                 if (node && node.data) {
                   // For grouped structure, only show tooltips for data nodes
@@ -658,7 +658,7 @@ class ErrorBoundary extends React.Component<
   }
 
   static getDerivedStateFromError(
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+     
     _: Error,
   ): ErrorBoundaryState {
     return { hasError: true };

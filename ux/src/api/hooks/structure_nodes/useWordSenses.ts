@@ -11,7 +11,7 @@ import { UseQueryResult, UseMutationResult } from "@tanstack/react-query";
  */
 export const useWordSenses = (
   _nodeId?: string,
-  _options?: any, // eslint-disable-line @typescript-eslint/no-explicit-any
+  _options?: any,  
 ): UseQueryResult<any[], Error> => {
   return {
     data: undefined,
@@ -23,7 +23,7 @@ export const useWordSenses = (
     status: "error",
     dataUpdatedAt: 0,
     errorUpdatedAt: Date.now(),
-    refetch: async () => ({ data: undefined } as any), // eslint-disable-line @typescript-eslint/no-explicit-any
+    refetch: async () => ({ data: undefined } as any),  
   } as UseQueryResult<any[], Error>;
 };
 
@@ -31,13 +31,13 @@ export const useWordSenses = (
  * @deprecated
  */
 export const useUpdateWordSenses = (
-  ..._args: any[] // eslint-disable-line @typescript-eslint/no-explicit-any
+  ..._args: any[]  
 ): UseMutationResult<any, Error, any, any> => {
   return {
-    mutate: (_data?: any) => { // eslint-disable-line @typescript-eslint/no-explicit-any
+    mutate: (_data?: any) => {  
       throw new Error("useUpdateWordSenses has been removed.");
     },
-    mutateAsync: async (_data?: any) => { // eslint-disable-line @typescript-eslint/no-explicit-any
+    mutateAsync: async (_data?: any) => {  
       throw new Error("useUpdateWordSenses has been removed.");
     },
     isPending: false,

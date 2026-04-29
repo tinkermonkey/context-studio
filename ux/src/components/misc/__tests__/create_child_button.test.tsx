@@ -11,7 +11,7 @@ import { NodeType } from "@/api/types/structureNodes";
 
 // Mock the form components
 vi.mock("@/components/forms/domain_form", () => ({
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
   DomainForm: ({ onSuccess }: { onSuccess: (domain: any) => void }) => (
     <div data-testid="domain-form">
       <button onClick={() => onSuccess({ id: "1", title: "Test Domain" })}>
@@ -22,7 +22,7 @@ vi.mock("@/components/forms/domain_form", () => ({
 }));
 
 vi.mock("@/components/forms/term_form", () => ({
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
   TermForm: ({ onSuccess }: { onSuccess: (term: any) => void }) => (
     <div data-testid="term-form">
       <button onClick={() => onSuccess({ id: "1", title: "Test Term" })}>
