@@ -32,7 +32,7 @@ export const NodeLinkDisplay: React.FC<NodeLinkDisplayProps> = ({
       toast.success("Link deleted successfully");
       setDeletingLinkId(undefined);
     },
-    onError: (error) => {
+    onError: (error: Error) => {
       toast.error(
         error instanceof Error ? error.message : "Failed to delete link",
       );

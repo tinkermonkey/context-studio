@@ -52,7 +52,7 @@ export function DomainMoveForm({
 
       // Show warnings if any
       if (result.warnings.length > 0) {
-        result.warnings.forEach((warning) => toast.warning(warning));
+        result.warnings.forEach((warning: string) => toast.warning(warning));
       }
 
       onSuccess();

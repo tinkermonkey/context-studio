@@ -35,7 +35,7 @@ export const ReferenceNodeSelectionList: React.FC<
       );
       onSaveSuccess();
     },
-    onError: (error) => {
+    onError: (error: Error) => {
       toast.error(
         error instanceof Error
           ? error.message

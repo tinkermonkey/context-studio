@@ -55,7 +55,7 @@ export const MappingCreationWorkflow: React.FC<
 
   // Create predicate mutation
   const createMutation = useCreatePredicate({
-    onSuccess: (predicate) => {
+    onSuccess: (predicate: PredicateOut) => {
       setCreatedPredicate(predicate);
       setStep("confirm");
       toast.success("Global predicate created successfully");

@@ -36,7 +36,7 @@ export const ClusterVisualizationTab: React.FC<
 
   // Cluster predicates mutation
   const clusterMutation = useClusterPredicates({
-    onSuccess: (result) => {
+    onSuccess: (result: unknown) => {
       const clusterResult = result as ClusterResult;
       setClusters(clusterResult);
       const clustersArray =

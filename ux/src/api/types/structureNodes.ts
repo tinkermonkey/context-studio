@@ -82,7 +82,8 @@ export interface NodeAttribute {
  * @deprecated
  */
 export interface ReferenceLink {
-  [key: string]: unknown;
+  source: string;
+  external_id: string;
 }
 
 /**

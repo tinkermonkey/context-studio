@@ -132,7 +132,7 @@ export const WordSenseSelector: React.FC<WordSenseSelectorProps> = ({
 
       onSaveComplete?.();
     },
-    onError: (error) => {
+    onError: (error: Error) => {
       toast.error(`Failed to save word senses: ${error.message}`);
 
       // Return focus to save button on error

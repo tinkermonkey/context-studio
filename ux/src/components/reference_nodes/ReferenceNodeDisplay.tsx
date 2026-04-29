@@ -48,7 +48,7 @@ export const ReferenceNodeDisplay: React.FC<ReferenceNodeDisplayProps> = ({
       toast.success("Reference link removed successfully");
       setConfirmRemove(null);
     },
-    onError: (error) => {
+    onError: (error: Error) => {
       toast.error(
         error instanceof Error
           ? error.message

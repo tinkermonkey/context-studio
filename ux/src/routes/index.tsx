@@ -330,7 +330,7 @@ function HomeComponent() {
                         Record ID: {event.record_id}
                       </p>
                       <p className="mt-1 text-xs text-gray-500 dark:text-gray-500">
-                        {formatDate(event.event_timestamp)}
+                        {event.created_at ? formatDate(event.created_at) : "Unknown"}
                       </p>
                     </div>
                   </div>

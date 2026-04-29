@@ -42,7 +42,7 @@ export const NodeLinkForm: React.FC<NodeLinkFormProps> = ({
       toast.success("Link created successfully");
       onSuccess();
     },
-    onError: (error) => {
+    onError: (error: Error) => {
       const message =
         error instanceof Error ? error.message : "Failed to create link";
       toast.error(message);

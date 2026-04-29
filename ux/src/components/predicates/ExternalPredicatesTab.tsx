@@ -111,9 +111,9 @@ export const ExternalPredicatesTab: React.FC<ExternalPredicatesTabProps> = ({
 
   // Discover predicates mutation
   const discoverMutation = useDiscoverPredicates({
-    onSuccess: (result) => {
+    onSuccess: (result: unknown) => {
       toast.success(
-        `Predicate discovery started. Task ID: ${result.task_id}. This may take a few minutes.`,
+        `Predicate discovery started. Task ID: ${(result as Record<string, unknown>)?.task_id}. This may take a few minutes.`,
       );
       // Refetch after a delay to show new predicates
       setTimeout(() => refetchList(), 5000);
