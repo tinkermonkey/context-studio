@@ -56,42 +56,19 @@ export async function apiRequest<T = unknown>(
 }
 
 /**
- * Clear all test data from the backend.
- * Useful for resetting state between tests.
+ * Export factory functions for convenient access
+ * See fixtures/factories.ts for implementation
  */
-export async function clearTestData(): Promise<void> {
-  // Implement based on your API's data clearing endpoint
-  // For example:
-  // await apiRequest(page, '/api/test/clear', { method: 'POST' });
-}
-
-/**
- * Create test data in the backend.
- */
-export async function seedTestData(
-   
-  _data: {
-     
-    layers?: any[];
-     
-    domains?: any[];
-     
-    terms?: any[];
-     
-    predicates?: any[];
-  },
-): Promise<void> {
-  // Implement based on your API's structure
-  // For example:
-  // if (data.layers) {
-  //   for (const layer of data.layers) {
-  //     await apiRequest(page, '/api/structure-nodes', {
-  //       method: 'POST',
-  //       body: layer,
-  //     });
-  //   }
-  // }
-}
+export {
+  createTaxonomy,
+  createConceptScheme,
+  createClass,
+  createPropertyDefinition,
+  createRelationship,
+  createTestHierarchy,
+  seedTestData,
+  clearTestData,
+} from "./factories";
 
 /**
  * Wait for an element to be visible with better error messages
