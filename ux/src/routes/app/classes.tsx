@@ -1,9 +1,9 @@
 import React from "react";
 import {
   useOntologyClasses,
-  useOntologyClass,
 } from "@/api/hooks/ontologyClasses";
-import { useTaxonomies } from "@/api/hooks/taxonomies";
+import { useTaxonomies, useTaxonomy } from "@/api/hooks/taxonomies";
+import { useConceptSchemes, useConceptScheme } from "@/api/hooks/conceptSchemes";
 import {
   createFileRoute,
   useNavigate,
@@ -15,7 +15,7 @@ import { CsSidebar, CsSidebarTitle } from "@/components/layout/cs_sidebar";
 import { CsMain, CsMainTitle } from "@/components/layout/cs_main";
 import { CollapsibleConceptSchemesList } from "@/components/misc/collapsible_concept_schemes_list";
 import { Hash } from "lucide-react";
-import type { OntologyClass } from "@/api/types/ontologyClasses";
+import type { OntologyClass } from "@/api/types/ontology";
 
 // Define the search parameters schema
 interface ClassesSearch {
@@ -91,14 +91,14 @@ function ClassesPage() {
     data: taxonomy,
     isLoading: taxonomyLoading,
     error: taxonomyError,
-  } = useOntologyClass((queryParams.taxonomy_id as string) ?? "");
+  } = useTaxonomy((queryParams.taxonomy_id as string) ?? "");
 
   // Load the concept scheme record if concept_scheme_id is provided
   const {
     data: conceptScheme,
     isLoading: conceptSchemeLoading,
     error: conceptSchemeError,
-  } = useOntologyClass((queryParams.concept_scheme_id as string) ?? "");
+  } = useConceptScheme((queryParams.concept_scheme_id as string) ?? "");
 
   if (classesLoading || taxonomiesLoading || taxonomyLoading || conceptSchemeLoading) {
     return <Spinner />;
@@ -129,7 +129,7 @@ function ClassesPage() {
     <>
       <CsSidebar>
         <div className="space-y-4">
-          {sortedTaxonomies.map((taxonomy: OntologyClass) => (
+          {sortedTaxonomies.map((taxonomy) => (
             <div key={taxonomy.id} className="space-y-2">
               <CsSidebarTitle>{taxonomy.title}</CsSidebarTitle>
               <CollapsibleConceptSchemesList taxonomyId={taxonomy.id} useLinks={true} />
@@ -152,7 +152,7 @@ function ClassesPage() {
               )}
             </div>
             <div className="py-3 pb-6">
-              {taxonomy?.definition && `Taxonomy definition: ${taxonomy.definition}`}
+              {taxonomy?.description && `Taxonomy description: ${taxonomy.description}`}
             </div>
           </>
         )}
@@ -169,7 +169,7 @@ function ClassesPage() {
               )}
             </div>
             <div className="py-3 pb-6">
-              {conceptScheme?.definition && `Concept Scheme definition: ${conceptScheme.definition}`}
+              {conceptScheme?.description && `Concept Scheme description: ${conceptScheme.description}`}
             </div>
           </>
         )}

@@ -83,7 +83,7 @@ const CollapsibleTaxonomiesList: React.FC<CollapsibleTaxonomiesListProps> = ({
               to="/app/concept-schemes"
               search={{ taxonomy_id: taxonomy.id }}
               className={className}
-              title={taxonomy.definition || taxonomy.title}
+              title={taxonomy.description || taxonomy.title}
             >
               {taxonomy.title}
             </Link>
@@ -93,7 +93,7 @@ const CollapsibleTaxonomiesList: React.FC<CollapsibleTaxonomiesListProps> = ({
             <div
               key={taxonomy.id}
               className={className}
-              title={taxonomy.definition || taxonomy.title}
+              title={taxonomy.description || taxonomy.title}
               onClick={() => handleTaxonomyClick(taxonomy.id)}
             >
               {taxonomy.title}

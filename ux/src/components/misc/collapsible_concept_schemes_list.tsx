@@ -3,7 +3,7 @@ import { useConceptSchemes } from "@/api/hooks/conceptSchemes";
 import { Spinner, Button } from "flowbite-react";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import { Link } from "@tanstack/react-router";
-import type { StructureNode } from "@/api/types/structureNodes";
+import type { ConceptScheme } from "@/api/types/ontology";
 
 interface CollapsibleConceptSchemesListProps {
   taxonomyId: string;
@@ -20,7 +20,7 @@ const CollapsibleConceptSchemesList: React.FC<CollapsibleConceptSchemesListProps
   selectedConceptSchemeId,
   useLinks = true,
 }) => {
-  const { data: conceptSchemes, isLoading, error } = useConceptSchemes(taxonomyId);
+  const { data: conceptSchemes, isLoading, error } = useConceptSchemes({ taxonomy_id: taxonomyId });
   const [isExpanded, setIsExpanded] = useState(false);
 
   if (isLoading) {
@@ -70,7 +70,7 @@ const CollapsibleConceptSchemesList: React.FC<CollapsibleConceptSchemesListProps
 
   return (
     <div className="mx-1 mb-8 space-y-1">
-      {displayedConceptSchemes.map((conceptScheme: StructureNode) => {
+      {displayedConceptSchemes.map((conceptScheme: ConceptScheme) => {
         const isSelected = selectedConceptSchemeId === conceptScheme.id;
         const className = `${
           isSelected
@@ -85,7 +85,7 @@ const CollapsibleConceptSchemesList: React.FC<CollapsibleConceptSchemesListProps
               to="/app/classes"
               search={{ concept_scheme_id: conceptScheme.id }}
               className={className}
-              title={conceptScheme.definition || conceptScheme.title}
+              title={conceptScheme.description || conceptScheme.title}
             >
               {conceptScheme.title}
             </Link>
@@ -95,7 +95,7 @@ const CollapsibleConceptSchemesList: React.FC<CollapsibleConceptSchemesListProps
             <div
               key={conceptScheme.id}
               className={className}
-              title={conceptScheme.definition || conceptScheme.title}
+              title={conceptScheme.description || conceptScheme.title}
               onClick={() => handleConceptSchemeClick(conceptScheme.id)}
             >
               {conceptScheme.title}

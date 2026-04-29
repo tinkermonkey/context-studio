@@ -105,7 +105,7 @@ function ConceptSchemesPage() {
               )}
             </div>
             <div className="py-3 pb-6">
-              {taxonomy?.definition && `Taxonomy definition: ${taxonomy.definition}`}
+              {taxonomy?.description && `Taxonomy description: ${taxonomy.description}`}
             </div>
           </>
         )}

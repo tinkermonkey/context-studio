@@ -7,14 +7,14 @@
 import React from "react";
 import { createColumnHelper } from "@tanstack/react-table";
 import { Checkbox } from "flowbite-react";
-import { PropertyDefinitionOut } from "@/api/services/propertyDefinitions";
+import type { PropertyDefinition } from "@/api/types/ontology";
 import { renderShortDateTime, renderShortUuid } from "@/utils/renderers";
 import { usePropertyDefinitions } from "@/api/hooks/propertyDefinitions";
 import { useDeletePropertyDefinition } from "@/api/hooks/propertyDefinitions";
 import { PropertyDefinitionForm } from "@/components/forms/property_definition_form";
 import { BaseNodeTable } from "./node_table";
 
-const columnHelper = createColumnHelper<PropertyDefinitionOut>();
+const columnHelper = createColumnHelper<PropertyDefinition>();
 
 const columns = [
   columnHelper.display({
@@ -58,11 +58,11 @@ const columns = [
     cell: (info) => info.getValue() ?? "",
     header: () => "Title",
   }),
-  columnHelper.accessor("definition", {
+  columnHelper.accessor("description", {
     cell: (info) => {
       const value = info.getValue();
-      if (!value) return <span className="text-gray-400">No definition</span>;
-      // Truncate long definitions with ellipsis
+      if (!value) return <span className="text-gray-400">No description</span>;
+      // Truncate long descriptions with ellipsis
       const truncated =
         value.length > 100 ? value.substring(0, 100) + "..." : value;
       return (
@@ -71,17 +71,13 @@ const columns = [
         </span>
       );
     },
-    header: () => "Definition",
+    header: () => "Description",
   }),
-  columnHelper.accessor("identifier", {
-    cell: (info) => (
-      <code className="rounded bg-gray-100 px-2 py-1 text-sm dark:bg-gray-800">
-        {info.getValue() ?? ""}
-      </code>
-    ),
-    header: () => "Identifier",
+  columnHelper.accessor("range", {
+    cell: (info) => info.getValue() ?? "-",
+    header: () => "Range",
   }),
-  columnHelper.accessor("date_created", {
+  columnHelper.accessor("created_at", {
     cell: (info) => {
       const value = info.getValue();
       return value !== null && value !== undefined
@@ -90,7 +86,7 @@ const columns = [
     },
     header: () => "Created",
   }),
-  columnHelper.accessor("date_modified", {
+  columnHelper.accessor("last_modified", {
     cell: (info) => {
       const value = info.getValue();
       return value !== null && value !== undefined
@@ -102,23 +98,22 @@ const columns = [
 ];
 
 export interface PropertiesTableProps {
-  data?: PropertyDefinitionOut[];
+  data?: PropertyDefinition[];
   onSelectionChange?: (count: number) => void;
   onEdit?: (id: string) => void;
   columnVisibility?: Record<string, boolean>;
 }
 
 
-const PropertiesTable = React.forwardRef<any, PropertiesTableProps>((props) => {
+const PropertiesTable = React.forwardRef<any, PropertiesTableProps>((props, ref) => {
   const { data: properties, isLoading, error, refetch } = usePropertyDefinitions();
   const deleteProperty = useDeletePropertyDefinition();
 
-  // Default hidden columns: id, mapping, date_created, date_modified
+  // Default hidden columns: id, created_at, last_modified
   const defaultColumnVisibility: Record<string, boolean> = {
     id: false,
-    mapping: false,
-    date_created: false,
-    date_modified: false,
+    created_at: false,
+    last_modified: false,
   };
   const columnVisibility = {
     ...defaultColumnVisibility,
@@ -128,7 +123,7 @@ const PropertiesTable = React.forwardRef<any, PropertiesTableProps>((props) => {
   return (
     <BaseNodeTable
       columns={columns}
-      data={properties?.data ?? []}
+      data={properties ?? []}
       isLoading={isLoading}
       error={error}
       onRefetch={refetch}
@@ -142,8 +137,8 @@ const PropertiesTable = React.forwardRef<any, PropertiesTableProps>((props) => {
       typeName="Property Definition"
       getId={(item) => item.id}
       columnVisibility={columnVisibility}
-      linkGenerator={(propertyDefinition: PropertyDefinitionOut) =>
-        `/app/property-definitions/${propertyDefinition.id}`
+      linkGenerator={(propertyDefinition: PropertyDefinition) =>
+        `/app/properties/${propertyDefinition.id}`
       }
     />
   );

@@ -350,10 +350,10 @@ function HomeComponent() {
           </h2>
           <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
             <QuickActionCard
-              title="Knowledge Graph"
-              description="Browse and manage layers, domains, and terms in your knowledge graph"
+              title="Ontology Structure"
+              description="Browse and manage taxonomies, concept schemes, and classes"
               icon={Network}
-              href="/app/layers"
+              href="/app/taxonomies"
             />
             <QuickActionCard
               title="Analytics"
@@ -368,10 +368,10 @@ function HomeComponent() {
               href="/app/datasets"
             />
             <QuickActionCard
-              title="Predicates"
-              description="Define and manage semantic relationships between nodes"
+              title="Property Definitions"
+              description="Define and manage semantic relationships between classes"
               icon={GitBranch}
-              href="/app/predicates"
+              href="/app/properties"
             />
             <QuickActionCard
               title="Pipeline Configuration"

@@ -2,17 +2,15 @@ import React from "react";
 import { useForm } from "@tanstack/react-form";
 import { TextInput, Textarea, Button, Alert, Label } from "flowbite-react";
 import { Info, Database, Hash } from "lucide-react";
-import type { StructureNode } from "@/api/types/structureNodes";
+import type { OntologyClass, OntologyClassCreate } from "@/api/types/ontology";
 import { useCreateOntologyClass, useUpdateOntologyClass } from "@/api/hooks/ontologyClasses";
 import { ConceptSchemeSelector } from "@/components/node_selectors/concept_scheme_selector";
 
 interface ClassFormProps {
-  onSuccess?: (ontologyClass: StructureNode) => void;
-  ontologyClass?: StructureNode;
+  onSuccess?: (ontologyClass: OntologyClass) => void;
+  ontologyClass?: OntologyClass;
   parentConceptSchemeId?: string;
-  parentConceptScheme?: StructureNode;
   parentClassId?: string;
-  parentClass?: StructureNode;
   mode?: "create" | "edit" | "child";
 }
 
@@ -20,9 +18,7 @@ const ClassForm: React.FC<ClassFormProps> = ({
   onSuccess,
   ontologyClass,
   parentConceptSchemeId,
-  parentConceptScheme,
   parentClassId,
-  parentClass,
   mode = "create",
 }) => {
   const createClassMutation = useCreateOntologyClass();
@@ -34,8 +30,8 @@ const ClassForm: React.FC<ClassFormProps> = ({
   const getDefaultValues = () => ({
     title: ontologyClass?.title ?? "",
     definition: ontologyClass?.definition ?? "",
-    parent_node_id:
-      ontologyClass?.parent_node_id ?? parentConceptSchemeId ?? parentClassId ?? "",
+    parent_class_id:
+      ontologyClass?.parent_class_id ?? parentClassId ?? "",
   });
 
   const form = useForm({
@@ -43,19 +39,22 @@ const ClassForm: React.FC<ClassFormProps> = ({
     onSubmit: async ({ value }) => {
       setSubmitError(null);
       try {
+        const classData: OntologyClassCreate = {
+          title: value.title,
+          definition: value.definition || null,
+          parent_class_id: value.parent_class_id || null,
+        };
+
         let result;
         if (isEdit && ontologyClass?.id) {
           result = await updateClassMutation.mutateAsync({
             id: ontologyClass.id,
-            data: value,
+            data: classData,
           });
         } else {
           result = await createClassMutation.mutateAsync({
-            parentId: value.parent_node_id,
-            data: {
-              title: value.title,
-              definition: value.definition,
-            },
+            schemeId: parentConceptSchemeId || "",
+            data: classData,
           });
         }
         if (onSuccess) onSuccess(result);
@@ -98,22 +97,22 @@ const ClassForm: React.FC<ClassFormProps> = ({
         }}
         className="flex flex-col gap-4"
       >
-        {isChildMode && (parentConceptScheme || parentClass) && (
+        {isChildMode && (parentConceptSchemeId || parentClassId) && (
           <div className="rounded-lg bg-blue-50 p-4 dark:bg-blue-900/20">
             <div className="flex items-center gap-2 text-sm text-blue-700 dark:text-blue-300">
               <Info className="h-4 w-4" />
               <span>
-                Creating class in {parentConceptScheme ? "concept scheme" : "parent class"}:
+                Creating class in {parentConceptSchemeId ? "concept scheme" : "parent class"}
               </span>
             </div>
             <div className="mt-1 flex items-center gap-2">
-              {parentConceptScheme ? (
+              {parentConceptSchemeId ? (
                 <Database className="h-5 w-5 text-blue-600 dark:text-blue-400" />
               ) : (
                 <Hash className="h-5 w-5 text-blue-600 dark:text-blue-400" />
               )}
               <span className="font-semibold text-blue-900 dark:text-blue-100">
-                {parentConceptScheme?.title || parentClass?.title}
+                {parentConceptSchemeId || parentClassId}
               </span>
             </div>
           </div>
@@ -173,7 +172,7 @@ const ClassForm: React.FC<ClassFormProps> = ({
 
         {!isChildMode && (
           <form.Field
-            name="parent_node_id"
+            name="parent_class_id"
             validators={{
               onChange: ({ value }) =>
                 !value ? "Parent is required" : undefined,

@@ -32,7 +32,7 @@ function PropertiesPage() {
       <CsMain>
         <CsMainTitle icon={Hash}>Property Definitions</CsMainTitle>
 
-        <PropertiesTable ref={tableRef} data={properties?.data} />
+        <PropertiesTable ref={tableRef} data={properties} />
       </CsMain>
     </>
   );

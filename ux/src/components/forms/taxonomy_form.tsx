@@ -18,7 +18,7 @@ const TaxonomyForm: React.FC<TaxonomyFormProps> = ({ onSuccess, taxonomy }) => {
   const form = useForm({
     defaultValues: {
       title: taxonomy?.title ?? "",
-      definition: taxonomy?.definition ?? "",
+      description: taxonomy?.description ?? "",
     },
     onSubmit: async ({ value }) => {
       setSubmitError(null);
@@ -32,7 +32,7 @@ const TaxonomyForm: React.FC<TaxonomyFormProps> = ({ onSuccess, taxonomy }) => {
         } else {
           result = await createTaxonomyMutation.mutateAsync({
             title: value.title,
-            definition: value.definition,
+            description: value.description,
           });
         }
         if (onSuccess) onSuccess(result);
@@ -111,21 +111,21 @@ const TaxonomyForm: React.FC<TaxonomyFormProps> = ({ onSuccess, taxonomy }) => {
             </div>
           )}
         </form.Field>
-        <form.Field name="definition">
+        <form.Field name="description">
           {(field) => (
             <div>
               <Label
-                htmlFor="taxonomy-definition"
+                htmlFor="taxonomy-description"
                 className="mb-1 block font-medium"
               >
-                Definition (optional)
+                Description (optional)
               </Label>
               <Textarea
-                id="taxonomy-definition"
-                placeholder="Definition (optional)"
+                id="taxonomy-description"
+                placeholder="Description (optional)"
                 value={field.state.value}
                 onChange={(e) => field.handleChange(e.target.value)}
-                data-testid="taxonomy-definition-input"
+                data-testid="taxonomy-description-input"
               />
               {field.state.meta.errors.length > 0 && (
                 <div className="mt-1 text-sm text-red-600">

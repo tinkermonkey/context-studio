@@ -1,17 +1,16 @@
 import React from "react";
 import { createColumnHelper } from "@tanstack/react-table";
 import { Checkbox } from "flowbite-react";
-import { StructureNode } from "@/api/types/structureNodes";
+import type { ConceptScheme } from "@/api/types/ontology";
 import { renderShortDateTime, renderShortUuid } from "@/utils/renderers";
 import { BaseNodeTable } from "./node_table";
-import { useConceptSchemes } from "@/api/hooks/conceptSchemes";
-import { useOntologyClasses } from "@/api/hooks/ontologyClasses";
-import { useDeleteStructureNode } from "@/api/hooks/structure_nodes/useStructureNodeMutations";
+import { useConceptSchemes, useDeleteConceptScheme } from "@/api/hooks/conceptSchemes";
+import { useTaxonomies } from "@/api/hooks/taxonomies";
 import { ConceptSchemeForm } from "@/components/forms/concept_scheme_form";
 import { ConceptSchemeMoveForm } from "@/components/forms/concept_scheme_move_form";
 import type { FieldDefinition } from "@/components/misc/query_filters";
 
-const columnHelper = createColumnHelper<StructureNode>();
+const columnHelper = createColumnHelper<ConceptScheme>();
 
 const columns = [
   columnHelper.display({
@@ -55,31 +54,26 @@ const columns = [
     cell: (info) => info.getValue() ?? "",
     header: () => "Title",
   }),
-  columnHelper.accessor("definition", {
-    cell: (info) => info.getValue() ?? "",
-    header: () => "Definition",
+  columnHelper.accessor("description", {
+    cell: (info) => {
+      const value = info.getValue();
+      if (!value) return <span className="text-gray-400">No description</span>;
+      const truncated =
+        value.length > 100 ? value.substring(0, 100) + "..." : value;
+      return (
+        <span title={value} className="cursor-help">
+          {truncated}
+        </span>
+      );
+    },
+    header: () => "Description",
   }),
-  columnHelper.accessor("parent_node_id", {
+  columnHelper.accessor("taxonomy_id", {
     cell: (info) => {
       const value = info.getValue() ?? "";
       return value ? renderShortUuid(value) : "";
     },
     header: () => "Taxonomy",
-  }),
-  columnHelper.accessor("structural_predicate_id", {
-    cell: (info) => {
-      const value = info.getValue();
-      return value ? (
-        renderShortUuid(value)
-      ) : (
-        <span className="text-gray-400">None</span>
-      );
-    },
-    header: () => "Structural Property",
-  }),
-  columnHelper.accessor("version", {
-    cell: (info) => info.getValue() ?? "",
-    header: () => "Version",
   }),
   columnHelper.accessor("created_at", {
     cell: (info) => {
@@ -110,17 +104,17 @@ const conceptSchemeFilterFields: FieldDefinition[] = [
     operators: ["equals", "contains", "starts_with", "ends_with"],
   },
   {
-    field: "definition",
-    label: "Definition",
+    field: "description",
+    label: "Description",
     type: "text",
     operators: ["contains"],
   },
   {
-    field: "parent_node_id",
+    field: "taxonomy_id",
     label: "Taxonomy",
     type: "select",
     operators: ["equals"],
-    // TODO: Populate this from the structure nodes API
+    // TODO: Populate this from the taxonomies API
     options: [],
   },
   {
@@ -138,7 +132,7 @@ const conceptSchemeFilterFields: FieldDefinition[] = [
 ];
 
 export interface ConceptSchemesTableProps {
-  data?: StructureNode[];
+  data?: ConceptScheme[];
   onSelectionChange?: (count: number) => void;
   onEdit?: (id: string) => void;
   columnVisibility?: Record<string, boolean>;
@@ -147,7 +141,7 @@ export interface ConceptSchemesTableProps {
 }
 
 
-const ConceptSchemesTable = React.forwardRef<any, ConceptSchemesTableProps>((props) => {
+const ConceptSchemesTable = React.forwardRef<any, ConceptSchemesTableProps>((props, ref) => {
   const { queryParams = {}, onQueryParamsChange } = props;
 
   // Use query params in the concept schemes hook
@@ -156,17 +150,12 @@ const ConceptSchemesTable = React.forwardRef<any, ConceptSchemesTableProps>((pro
     isLoading,
     error,
     refetch,
-  } = useConceptSchemes(
-    queryParams?.parent_node_id as string | undefined,
-    queryParams,
-  );
-  const deleteConceptScheme = useDeleteStructureNode();
-  const { data: allClasses } = useOntologyClasses();
+  } = useConceptSchemes(queryParams as any);
+  const deleteConceptScheme = useDeleteConceptScheme();
 
   const defaultColumnVisibility: Record<string, boolean> = {
     id: false,
-    parent_node_id: false,
-    version: false,
+    taxonomy_id: false,
     created_at: false,
     last_modified: false,
   };
@@ -175,32 +164,10 @@ const ConceptSchemesTable = React.forwardRef<any, ConceptSchemesTableProps>((pro
     ...props.columnVisibility,
   };
 
-  // Get classes that belong to a concept scheme (for safe deletion)
-  const getConceptSchemeChildren = async (conceptSchemeId: string) => {
-    if (!allClasses) return [];
-    return allClasses.filter((ontologyClass) => ontologyClass.parent_node_id === conceptSchemeId);
-  };
-
-  // Move classes when orphaning them during concept scheme deletion
-  const moveConceptSchemeChildren = async (
-    childIds: string[],
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    newParentId: string | null,
-  ) => {
-    if (childIds.length === 0) return;
-
-    // For concept scheme deletion, we need to move classes to another concept scheme or orphan them
-    // Since we can't have classes without concept schemes, we'll need to handle this differently
-    // For now, this will be implemented when we have a better strategy
-    console.warn(
-      "Moving concept scheme children not yet implemented - classes need a concept scheme",
-    );
-  };
-
   return (
     <BaseNodeTable
       columns={columns}
-      data={(conceptSchemes ?? []) as StructureNode[]}
+      data={conceptSchemes ?? []}
       isLoading={isLoading}
       error={error}
       onRefetch={refetch}
@@ -209,7 +176,7 @@ const ConceptSchemesTable = React.forwardRef<any, ConceptSchemesTableProps>((pro
       }}
       createForm={({ onSuccess }) => <ConceptSchemeForm onSuccess={onSuccess} />}
       editForm={({ node, onSuccess }) => (
-        <ConceptSchemeForm conceptScheme={node as StructureNode} onSuccess={onSuccess} />
+        <ConceptSchemeForm conceptScheme={node} onSuccess={onSuccess} />
       )}
       moveForm={ConceptSchemeMoveForm}
       typeName="Concept Scheme"
@@ -219,9 +186,7 @@ const ConceptSchemesTable = React.forwardRef<any, ConceptSchemesTableProps>((pro
       onQueryParamsChange={onQueryParamsChange}
       filterFields={conceptSchemeFilterFields}
       searchPlaceholder="Search..."
-      linkGenerator={(item: StructureNode) => `/app/concept-schemes/${item.id}`}
-      onGetChildren={getConceptSchemeChildren}
-      onMoveChildren={moveConceptSchemeChildren}
+      linkGenerator={(item: ConceptScheme) => `/app/concept-schemes/${item.id}`}
     />
   );
 });

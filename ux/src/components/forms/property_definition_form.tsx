@@ -8,15 +8,18 @@ import React from "react";
 import { useForm } from "@tanstack/react-form";
 import { TextInput, Textarea, Button, Alert, Label } from "flowbite-react";
 import { Info } from "lucide-react";
-import type { PropertyDefinitionCreate, PropertyDefinitionOut } from "@/api/services/propertyDefinitions";
+import type {
+  PropertyDefinitionCreate,
+  PropertyDefinition,
+} from "@/api/types/ontology";
 import {
   useCreatePropertyDefinition,
   useUpdatePropertyDefinition,
 } from "@/api/hooks/propertyDefinitions";
 
 interface PropertyDefinitionFormProps {
-  onSuccess?: (propertyDefinition: PropertyDefinitionOut) => void;
-  propertyDefinition?: PropertyDefinitionOut;
+  onSuccess?: (propertyDefinition: PropertyDefinition) => void;
+  propertyDefinition?: PropertyDefinition;
   mode?: "create" | "edit" | "child";
 }
 
@@ -29,30 +32,20 @@ const PropertyDefinitionForm: React.FC<PropertyDefinitionFormProps> = ({
   const isEdit = !!propertyDefinition;
   const [submitError, setSubmitError] = React.useState<string | null>(null);
 
-  const identifierManuallyEdited = React.useRef(false);
-  const lastAutoIdentifier = React.useRef("");
-  const [titleValue, setTitleValue] = React.useState(propertyDefinition?.title ?? "");
-
-  const generateIdentifier = (title: string): string => {
-    return title
-      .toLowerCase()
-      .replace(/[^a-z0-9]/g, "_")
-      .replace(/_+/g, "_")
-      .replace(/^_|_$/g, "");
-  };
 
   const form = useForm({
     defaultValues: {
       title: propertyDefinition?.title ?? "",
-      definition: propertyDefinition?.definition ?? "",
-      identifier: propertyDefinition?.identifier ?? "",
+      description: propertyDefinition?.description ?? "",
+      range: propertyDefinition?.range ?? "",
     },
     onSubmit: async ({ value }) => {
       setSubmitError(null);
       try {
-        const submissionData = {
-          ...value,
-          identifier: value.identifier || generateIdentifier(value.title),
+        const submissionData: PropertyDefinitionCreate = {
+          title: value.title,
+          description: value.description || null,
+          range: value.range || null,
         };
 
         let result;
@@ -63,7 +56,7 @@ const PropertyDefinitionForm: React.FC<PropertyDefinitionFormProps> = ({
           });
         } else {
           result = await createPropertyDefinitionMutation.mutateAsync(
-            submissionData as PropertyDefinitionCreate,
+            submissionData,
           );
         }
         if (onSuccess) onSuccess(result);
@@ -101,30 +94,6 @@ const PropertyDefinitionForm: React.FC<PropertyDefinitionFormProps> = ({
     },
   });
 
-  React.useEffect(() => {
-    if (identifierManuallyEdited.current) {
-      return;
-    }
-
-    const timeoutId = setTimeout(() => {
-      const newIdentifier = generateIdentifier(titleValue);
-      const currentIdentifier = form.getFieldValue("identifier");
-
-      if (newIdentifier !== currentIdentifier) {
-        form.setFieldValue("identifier", newIdentifier);
-        lastAutoIdentifier.current = newIdentifier;
-      }
-    }, 300);
-
-    return () => clearTimeout(timeoutId);
-  }, [titleValue]);
-
-  React.useEffect(() => {
-    if (propertyDefinition?.identifier) {
-      identifierManuallyEdited.current = true;
-      lastAutoIdentifier.current = propertyDefinition.identifier;
-    }
-  }, [propertyDefinition?.identifier]);
 
   return (
     <>
@@ -157,7 +126,6 @@ const PropertyDefinitionForm: React.FC<PropertyDefinitionFormProps> = ({
                 color={field.state.meta.errors.length ? "failure" : undefined}
                 onChange={(e) => {
                   field.handleChange(e.target.value);
-                  setTitleValue(e.target.value);
                 }}
                 required
                 autoFocus
@@ -171,19 +139,19 @@ const PropertyDefinitionForm: React.FC<PropertyDefinitionFormProps> = ({
           )}
         </form.Field>
 
-        <form.Field name="definition">
+        <form.Field name="description">
           {(field) => (
             <div>
               <Label
-                htmlFor="property-definition-definition"
+                htmlFor="property-definition-description"
                 className="mb-1 block font-medium"
               >
-                Definition (optional)
+                Description (optional)
               </Label>
               <Textarea
-                id="property-definition-definition"
-                data-testid="property-definition-definition-input"
-                placeholder="Definition (optional)"
+                id="property-definition-description"
+                data-testid="property-definition-description-input"
+                placeholder="Description (optional)"
                 value={field.state.value}
                 onChange={(e) => field.handleChange(e.target.value)}
                 rows={3}
@@ -197,45 +165,22 @@ const PropertyDefinitionForm: React.FC<PropertyDefinitionFormProps> = ({
           )}
         </form.Field>
 
-        <form.Field
-          name="identifier"
-          validators={{
-            onChange: ({ value }) => {
-              if (value && !/^[a-z0-9_]+$/i.test(value)) {
-                return "Identifier can only contain letters, numbers, and underscores";
-              }
-              return undefined;
-            },
-          }}
-        >
+        <form.Field name="range">
           {(field) => (
             <div>
               <Label
-                htmlFor="property-definition-identifier"
+                htmlFor="property-definition-range"
                 className="mb-1 block font-medium"
               >
-                Identifier (optional)
+                Range (optional)
               </Label>
               <TextInput
-                id="property-definition-identifier"
-                data-testid="property-definition-identifier-input"
-                placeholder="Auto-generated from title"
+                id="property-definition-range"
+                data-testid="property-definition-range-input"
+                placeholder="Range type (optional)"
                 value={field.state.value}
-                color={field.state.meta.errors.length ? "failure" : undefined}
-                onChange={(e) => {
-                  field.handleChange(e.target.value);
-                  const title = form.getFieldValue("title");
-                  const autoGenerated = generateIdentifier(title);
-                  if (e.target.value !== autoGenerated) {
-                    identifierManuallyEdited.current = true;
-                  } else {
-                    identifierManuallyEdited.current = false;
-                  }
-                }}
+                onChange={(e) => field.handleChange(e.target.value)}
               />
-              <p className="mt-1 text-sm text-gray-500">
-                Unique identifier for API usage. Auto-generated if not provided.
-              </p>
               {field.state.meta.errors.length > 0 && (
                 <div className="mt-1 text-sm text-red-600">
                   {field.state.meta.errors[0]}

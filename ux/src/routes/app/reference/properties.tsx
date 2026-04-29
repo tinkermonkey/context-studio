@@ -5,18 +5,18 @@ import { CsSidebar, CsSidebarTitle } from "@/components/layout/cs_sidebar";
 import { CsMain, CsMainTitle } from "@/components/layout/cs_main";
 import { GitBranch } from "lucide-react";
 
-export const Route = createFileRoute("/app/reference/predicates")({
-  component: ReferencePredicatesComponent,
+export const Route = createFileRoute("/app/reference/properties")({
+  component: ReferencePropertiesComponent,
 });
 
-function ReferencePredicatesComponent() {
+function ReferencePropertiesComponent() {
   return (
     <>
       <CsSidebar>
-        <CsSidebarTitle>Predicate Mapping</CsSidebarTitle>
+        <CsSidebarTitle>Property Mapping</CsSidebarTitle>
       </CsSidebar>
       <CsMain>
-        <CsMainTitle icon={GitBranch}>Predicate Mapping</CsMainTitle>
+        <CsMainTitle icon={GitBranch}>Property Mapping</CsMainTitle>
         <PredicateMappingManager />
       </CsMain>
     </>

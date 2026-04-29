@@ -1,14 +1,13 @@
 import React from "react";
 import { createColumnHelper } from "@tanstack/react-table";
 import { Checkbox } from "flowbite-react";
-import { StructureNode } from "@/api/types/structureNodes";
+import type { Taxonomy } from "@/api/types/ontology";
 import { renderShortDateTime, renderShortUuid } from "@/utils/renderers";
-import { useTaxonomies } from "@/api/hooks/taxonomies";
-import { useDeleteStructureNode } from "@/api/hooks/structure_nodes/useStructureNodeMutations";
+import { useTaxonomies, useDeleteTaxonomy } from "@/api/hooks/taxonomies";
 import { TaxonomyForm } from "@/components/forms/taxonomy_form";
 import { BaseNodeTable } from "./node_table";
 
-const columnHelper = createColumnHelper<StructureNode>();
+const columnHelper = createColumnHelper<Taxonomy>();
 
 const columns = [
   columnHelper.display({
@@ -52,13 +51,19 @@ const columns = [
     cell: (info) => info.getValue() ?? "",
     header: () => "Title",
   }),
-  columnHelper.accessor("definition", {
-    cell: (info) => info.getValue() ?? "",
-    header: () => "Definition",
-  }),
-  columnHelper.accessor("version", {
-    cell: (info) => info.getValue() ?? "",
-    header: () => "Version",
+  columnHelper.accessor("description", {
+    cell: (info) => {
+      const value = info.getValue();
+      if (!value) return <span className="text-gray-400">No description</span>;
+      const truncated =
+        value.length > 100 ? value.substring(0, 100) + "..." : value;
+      return (
+        <span title={value} className="cursor-help">
+          {truncated}
+        </span>
+      );
+    },
+    header: () => "Description",
   }),
   columnHelper.accessor("created_at", {
     cell: (info) => {
@@ -81,21 +86,20 @@ const columns = [
 ];
 
 export interface TaxonomiesTableProps {
-  data?: StructureNode[];
+  data?: Taxonomy[];
   onSelectionChange?: (count: number) => void;
   onEdit?: (id: string) => void;
   columnVisibility?: Record<string, boolean>;
 }
 
 
-const TaxonomiesTable = React.forwardRef<any, TaxonomiesTableProps>((props) => {
+const TaxonomiesTable = React.forwardRef<any, TaxonomiesTableProps>((props, ref) => {
   const { data: taxonomies, isLoading, error, refetch } = useTaxonomies();
-  const deleteTaxonomy = useDeleteStructureNode();
+  const deleteTaxonomy = useDeleteTaxonomy();
 
-  // Default hidden columns: id, version, created_at, last_modified
+  // Default hidden columns: id, created_at, last_modified
   const defaultColumnVisibility: Record<string, boolean> = {
     id: false,
-    version: false,
     created_at: false,
     last_modified: false,
   };
@@ -107,7 +111,7 @@ const TaxonomiesTable = React.forwardRef<any, TaxonomiesTableProps>((props) => {
   return (
     <BaseNodeTable
       columns={columns}
-      data={(taxonomies ?? []) as StructureNode[]}
+      data={taxonomies ?? []}
       isLoading={isLoading}
       error={error}
       onRefetch={refetch}
@@ -121,7 +125,7 @@ const TaxonomiesTable = React.forwardRef<any, TaxonomiesTableProps>((props) => {
       typeName="Taxonomy"
       getId={(item) => item.id}
       columnVisibility={columnVisibility}
-      linkGenerator={(taxonomy: StructureNode) =>
+      linkGenerator={(taxonomy: Taxonomy) =>
         `/app/taxonomies/${taxonomy.id}`
       }
     />

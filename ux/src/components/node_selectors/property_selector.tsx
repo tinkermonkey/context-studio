@@ -4,12 +4,13 @@
  * Dropdown selector for choosing a single property definition
  */
 
-import { PropertyDefinitionOut } from "@/api/services/propertyDefinitions";
+import React from "react";
+import type { PropertyDefinition } from "@/api/types/ontology";
 import { PortalRecordSelector } from "@/components/node_selectors/portal_record_selector";
 import { usePropertyDefinitions } from "@/api/hooks/propertyDefinitions";
 
 export interface PropertySelectorProps {
-  onSelect?: (property: PropertyDefinitionOut | undefined) => void;
+  onSelect?: (property: PropertyDefinition | undefined) => void;
   value?: string;
   placeholder?: string;
   disabled?: boolean;
@@ -23,11 +24,11 @@ export const PropertySelector: React.FC<PropertySelectorProps> = ({
 
   return (
     <PortalRecordSelector
-      records={properties?.data ?? []}
+      records={properties ?? []}
       loading={isLoading}
       error={error ? "Failed to load properties" : null}
-      fieldMap={{ value: "id", title: "title", definition: "definition" }}
-      onSelect={(r) => onSelect && onSelect(r as PropertyDefinitionOut | undefined)}
+      fieldMap={{ value: "id", title: "title", definition: "description" }}
+      onSelect={(r) => onSelect && onSelect(r as PropertyDefinition | undefined)}
       value={value}
     />
   );

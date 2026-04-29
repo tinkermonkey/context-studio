@@ -1,16 +1,15 @@
 import React from "react";
 import { createColumnHelper } from "@tanstack/react-table";
 import { Checkbox } from "flowbite-react";
-import { StructureNode } from "@/api/types/structureNodes";
+import type { OntologyClass } from "@/api/types/ontology";
 import { renderShortDateTime, renderShortUuid } from "@/utils/renderers";
 import { BaseNodeTable } from "./node_table";
-import { useOntologyClasses, useOntologyClass } from "@/api/hooks/ontologyClasses";
-import { useDeleteStructureNode } from "@/api/hooks/structure_nodes/useStructureNodeMutations";
+import { useOntologyClasses, useDeleteOntologyClass } from "@/api/hooks/ontologyClasses";
 import { ClassForm } from "@/components/forms/class_form";
 import { ClassMoveForm } from "@/components/forms/class_move_form";
 import type { FieldDefinition } from "@/components/misc/query_filters";
 
-const columnHelper = createColumnHelper<StructureNode>();
+const columnHelper = createColumnHelper<OntologyClass>();
 
 const columns = [
   columnHelper.display({
@@ -55,19 +54,25 @@ const columns = [
     header: () => "Title",
   }),
   columnHelper.accessor("definition", {
-    cell: (info) => info.getValue() ?? "",
+    cell: (info) => {
+      const value = info.getValue();
+      if (!value) return <span className="text-gray-400">No definition</span>;
+      const truncated =
+        value.length > 100 ? value.substring(0, 100) + "..." : value;
+      return (
+        <span title={value} className="cursor-help">
+          {truncated}
+        </span>
+      );
+    },
     header: () => "Definition",
   }),
-  columnHelper.accessor("parent_node_id", {
+  columnHelper.accessor("parent_class_id", {
     cell: (info) => {
       const value = info.getValue() ?? "";
-      return value ? renderShortUuid(value) : "";
+      return value ? renderShortUuid(value) : "-";
     },
-    header: () => "Parent",
-  }),
-  columnHelper.accessor("version", {
-    cell: (info) => info.getValue() ?? "",
-    header: () => "Version",
+    header: () => "Parent Class",
   }),
   columnHelper.accessor("created_at", {
     cell: (info) => {
@@ -104,8 +109,8 @@ const classFilterFields: FieldDefinition[] = [
     operators: ["contains"],
   },
   {
-    field: "parent_node_id",
-    label: "Parent",
+    field: "parent_class_id",
+    label: "Parent Class",
     type: "select",
     operators: ["equals"],
     // TODO: Populate this from ontology classes API
@@ -126,7 +131,7 @@ const classFilterFields: FieldDefinition[] = [
 ];
 
 export interface ClassesTableProps {
-  data?: StructureNode[];
+  data?: OntologyClass[];
   onSelectionChange?: (count: number) => void;
   onEdit?: (id: string) => void;
   columnVisibility?: Record<string, boolean>;
@@ -135,7 +140,7 @@ export interface ClassesTableProps {
 }
 
 
-const ClassesTable = React.forwardRef<any, ClassesTableProps>((props) => {
+const ClassesTable = React.forwardRef<any, ClassesTableProps>((props, ref) => {
   const { queryParams = {}, onQueryParamsChange } = props;
 
   // Use query params in the classes hook
@@ -144,14 +149,12 @@ const ClassesTable = React.forwardRef<any, ClassesTableProps>((props) => {
     isLoading,
     error,
     refetch,
-  } = useOntologyClasses(undefined, queryParams);
-  const { data: allClasses } = useOntologyClasses(); // Get all classes for finding children
-  const deleteClass = useDeleteStructureNode();
+  } = useOntologyClasses(queryParams as any);
+  const deleteClass = useDeleteOntologyClass();
 
   const defaultColumnVisibility: Record<string, boolean> = {
     id: false,
-    parent_node_id: false,
-    version: false,
+    parent_class_id: false,
     created_at: false,
     last_modified: false,
   };
@@ -160,45 +163,10 @@ const ClassesTable = React.forwardRef<any, ClassesTableProps>((props) => {
     ...props.columnVisibility,
   };
 
-  // Get child classes for safe deletion workflow
-  const getClassChildren = async (classId: string): Promise<StructureNode[]> => {
-    if (!allClasses) return [];
-    return (allClasses as StructureNode[]).filter(
-      (ontologyClass) => ontologyClass.parent_node_id === classId,
-    );
-  };
-
-  // Move child classes when orphaning them during parent deletion
-  const moveClassChildren = async (
-    childIds: string[],
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    newParentId: string | null,
-  ) => {
-    if (childIds.length === 0) return;
-
-    // Find a target concept scheme for the orphaned classes
-    // We'll use the concept scheme of the first child class since classes must belong to a concept scheme
-    const firstChild = allClasses?.find((ontologyClass) => childIds.includes(ontologyClass.id));
-    if (!firstChild) return;
-
-    // For orphaning, we need to use the structure node update API to set parent_node_id to null
-    // Since we don't have a bulk move API, we update each class individually
-    // This is a limitation we'll need to address in a future update
-    console.warn(
-      "Class orphaning not fully implemented - using move to same concept scheme for now",
-    );
-
-    // TODO: Implement class moving with new ontology API
-    // await updateOntologyClass for each child class to change parent_node_id
-    console.warn(
-      "Class moving needs to be reimplemented with ontology API",
-    );
-  };
-
   return (
     <BaseNodeTable
       columns={columns}
-      data={(classes ?? []) as StructureNode[]}
+      data={classes ?? []}
       isLoading={isLoading}
       error={error}
       onRefetch={refetch}
@@ -217,9 +185,7 @@ const ClassesTable = React.forwardRef<any, ClassesTableProps>((props) => {
       onQueryParamsChange={onQueryParamsChange}
       filterFields={classFilterFields}
       searchPlaceholder="Search..."
-      linkGenerator={(ontologyClass: StructureNode) => `/app/classes/${ontologyClass.id}`}
-      onGetChildren={getClassChildren}
-      onMoveChildren={moveClassChildren}
+      linkGenerator={(ontologyClass: OntologyClass) => `/app/classes/${ontologyClass.id}`}
     />
   );
 });
