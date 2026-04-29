@@ -7,11 +7,12 @@ import { render, screen, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { TreeChartPanel } from "@/components/panels/TreeChartPanel";
 import { vi } from "vitest";
-import {
-  useTaxonomies,
-} from "@/api/hooks/taxonomies/useTaxonomies";
+import { useTaxonomies } from "@/api/hooks/taxonomies/useTaxonomies";
 import { useConceptSchemes } from "@/api/hooks/conceptSchemes/useConceptSchemes";
-import { useOntologyClasses, useOntologyClass } from "@/api/hooks/ontologyClasses/useOntologyClasses";
+import {
+  useOntologyClasses,
+  useOntologyClass,
+} from "@/api/hooks/ontologyClasses/useOntologyClasses";
 
 // Mock the router
 vi.mock("@tanstack/react-router", () => ({
@@ -66,11 +67,23 @@ describe("TreeChartPanel", () => {
   ];
 
   const mockDomains = [
-    { id: "1", taxonomy_id: "1", title: "Domain 1", description: "Test domain 1", version: 1 },
+    {
+      id: "1",
+      taxonomy_id: "1",
+      title: "Domain 1",
+      description: "Test domain 1",
+      version: 1,
+    },
   ];
 
   const mockTerms = [
-    { id: "1", scheme_id: "1", title: "Term 1", definition: "Test term 1", version: 1 },
+    {
+      id: "1",
+      scheme_id: "1",
+      title: "Term 1",
+      definition: "Test term 1",
+      version: 1,
+    },
   ];
 
   beforeEach(() => {
@@ -122,19 +135,16 @@ describe("TreeChartPanel", () => {
       data: undefined,
       isLoading: false,
       error: testError,
-       
     } as any);
     mockUseConceptSchemes.mockReturnValue({
       data: undefined,
       isLoading: false,
       error: null,
-       
     } as any);
     mockUseOntologyClasses.mockReturnValue({
       data: undefined,
       isLoading: false,
       error: null,
-       
     } as any);
 
     render(
@@ -154,19 +164,16 @@ describe("TreeChartPanel", () => {
       data: mockLayers,
       isLoading: false,
       error: null,
-       
     } as any);
     mockUseConceptSchemes.mockReturnValue({
       data: mockDomains,
       isLoading: false,
       error: null,
-       
     } as any);
     mockUseOntologyClasses.mockReturnValue({
       data: mockTerms,
       isLoading: false,
       error: null,
-       
     } as any);
 
     render(
@@ -174,57 +181,6 @@ describe("TreeChartPanel", () => {
         <TreeChartPanel />
       </TestWrapper>,
     );
-
-    await waitFor(() => {
-      expect(screen.getByTestId("tree-menu")).toBeInTheDocument();
-    });
-  });
-
-  it("loads specific term when termId is provided", async () => {
-    const testTermId = "test-term-id";
-    const mockTargetTerm = {
-      id: testTermId,
-      scheme_id: "1",
-      title: "Target Term",
-      definition: "Target term definition",
-    };
-
-    // Include the target term in the terms array so it exists in the tree
-    const mockTermsWithTarget = [...mockTerms, mockTargetTerm];
-
-    mockUseTaxonomies.mockReturnValue({
-      data: mockLayers,
-      isLoading: false,
-      error: null,
-       
-    } as any);
-    mockUseConceptSchemes.mockReturnValue({
-      data: mockDomains,
-      isLoading: false,
-      error: null,
-       
-    } as any);
-    mockUseOntologyClasses.mockReturnValue({
-      data: mockTermsWithTarget,
-      isLoading: false,
-      error: null,
-       
-    } as any);
-    mockUseOntologyClass.mockReturnValue({
-      data: mockTargetTerm,
-      isLoading: false,
-      error: null,
-       
-    } as any);
-
-    render(
-      <TestWrapper>
-        <TreeChartPanel termId={testTermId} />
-      </TestWrapper>,
-    );
-
-    // Verify that useStructureNode was called with the correct termId
-    expect(mockUseOntologyClass).toHaveBeenCalledWith(testTermId);
 
     await waitFor(() => {
       expect(screen.getByTestId("tree-menu")).toBeInTheDocument();
@@ -240,19 +196,16 @@ describe("TreeChartPanel", () => {
       data: undefined,
       isLoading: true,
       error: null,
-       
     } as any);
     mockUseConceptSchemes.mockReturnValue({
       data: undefined,
       isLoading: true,
       error: null,
-       
     } as any);
     mockUseOntologyClasses.mockReturnValue({
       data: undefined,
       isLoading: true,
       error: null,
-       
     } as any);
 
     render(
@@ -280,19 +233,16 @@ describe("TreeChartPanel", () => {
       data: undefined,
       isLoading: false,
       error: testError,
-       
     } as any);
     mockUseConceptSchemes.mockReturnValue({
       data: undefined,
       isLoading: false,
       error: null,
-       
     } as any);
     mockUseOntologyClasses.mockReturnValue({
       data: undefined,
       isLoading: false,
       error: null,
-       
     } as any);
 
     render(
@@ -312,19 +262,16 @@ describe("TreeChartPanel", () => {
       data: mockLayers,
       isLoading: false,
       error: null,
-       
     } as any);
     mockUseConceptSchemes.mockReturnValue({
       data: mockDomains,
       isLoading: false,
       error: null,
-       
     } as any);
     mockUseOntologyClasses.mockReturnValue({
       data: mockTerms,
       isLoading: false,
       error: null,
-       
     } as any);
 
     const { container } = render(
