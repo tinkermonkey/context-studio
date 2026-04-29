@@ -20,11 +20,9 @@ import {
   AlertCircle,
 } from "lucide-react";
 import { TreeChartPanel } from "@/components/panels/TreeChartPanel";
-import {
-  useLayerNodes,
-  useDomainNodes,
-  useTermNodes,
-} from "@/api/hooks/structure_nodes/useStructureNodes";
+import { useTaxonomies } from "@/api/hooks/taxonomies/useTaxonomies";
+import { useConceptSchemes } from "@/api/hooks/conceptSchemes/useConceptSchemes";
+import { useOntologyClasses } from "@/api/hooks/ontologyClasses/useOntologyClasses";
 import { useLLMTraceabilityHealth } from "@/api/hooks/llm/useLLMTraceability";
 import { useChangeEvents } from "@/api/hooks/events/useChangeEvents";
 import { StatCard } from "@/components/ui/StatCard";
@@ -52,22 +50,22 @@ const THEME_COLORS = {
 function HomeComponent() {
   // Fetch knowledge graph statistics
   const {
-    data: layers,
+    data: taxonomies,
     isLoading: layersLoading,
     error: layersError,
-  } = useLayerNodes();
+  } = useTaxonomies();
 
   const {
-    data: domains,
+    data: conceptSchemes,
     isLoading: domainsLoading,
     error: domainsError,
-  } = useDomainNodes();
+  } = useConceptSchemes();
 
   const {
-    data: terms,
+    data: ontologyClasses,
     isLoading: termsLoading,
     error: termsError,
-  } = useTermNodes();
+  } = useOntologyClasses();
 
   // Fetch LLM system health
   const {
@@ -87,9 +85,9 @@ function HomeComponent() {
   const statsError = layersError || domainsError || termsError;
 
   // Calculate statistics
-  const layerCount = layers?.length || 0;
-  const domainCount = domains?.length || 0;
-  const termCount = terms?.length || 0;
+  const layerCount = taxonomies?.length || 0;
+  const domainCount = conceptSchemes?.length || 0;
+  const termCount = ontologyClasses?.length || 0;
   const totalNodes = layerCount + domainCount + termCount;
 
   // Format date for display

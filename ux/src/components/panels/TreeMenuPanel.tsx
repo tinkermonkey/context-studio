@@ -1,11 +1,9 @@
 import React, { useRef, useState, useEffect } from "react";
 import { Spinner } from "flowbite-react";
 import { TreeMenu } from "@/components/graphs/tree_menu/tree_menu";
-import {
-  useLayerNodes,
-  useDomainNodes,
-  useTermNodes,
-} from "@/api/hooks/structure_nodes/useStructureNodes";
+import { useTaxonomies } from "@/api/hooks/taxonomies/useTaxonomies";
+import { useConceptSchemes } from "@/api/hooks/conceptSchemes/useConceptSchemes";
+import { useOntologyClasses } from "@/api/hooks/ontologyClasses/useOntologyClasses";
 import { buildHierarchicalTree } from "@/utils/treeBuilder";
 import { ChartData } from "@/components/graphs/tree_chart/tree_data";
 import { apiLogger } from "@/api/utils/logger";
@@ -90,9 +88,30 @@ export function TreeMenuPanel({
   }, []);
 
   // Load all base data
-  const { data: layers, isLoading: layersLoading } = useLayerNodes();
-  const { data: domains, isLoading: domainsLoading } = useDomainNodes();
-  const { data: terms, isLoading: termsLoading } = useTermNodes();
+  const { data: taxonomies, isLoading: layersLoading } = useTaxonomies();
+  const { data: conceptSchemes, isLoading: domainsLoading } = useConceptSchemes();
+  const { data: ontologyClasses, isLoading: termsLoading } = useOntologyClasses();
+
+  // Transform data to compatible format for treeBuilder
+  const layers = taxonomies?.map((t) => ({
+    ...t,
+    node_type: "layer",
+    parent_node_id: null,
+    definition: t.description || "",
+  }));
+
+  const domains = conceptSchemes?.map((cs) => ({
+    ...cs,
+    node_type: "domain",
+    parent_node_id: cs.taxonomy_id,
+    definition: cs.description || "",
+  }));
+
+  const terms = ontologyClasses?.map((oc) => ({
+    ...oc,
+    node_type: "term",
+    parent_node_id: oc.parent_class_id || oc.scheme_id,
+  }));
 
   // Determine loading state
   const isLoading = layersLoading || domainsLoading || termsLoading;

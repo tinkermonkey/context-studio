@@ -1,6 +1,6 @@
 import { StructureNode } from "@/api/types/structureNodes";
 import { PortalRecordSelector } from "@/components/node_selectors/portal_record_selector";
-import { useLayerNodes } from "@/api/hooks/structure_nodes/useStructureNodes";
+import { useTaxonomies } from "@/api/hooks/taxonomies/useTaxonomies";
 
 export interface LayerSelectorProps {
   onSelect?: (layer: StructureNode | undefined) => void;
@@ -13,7 +13,15 @@ export const LayerSelector: React.FC<LayerSelectorProps> = ({
   value,
   "data-testid": dataTestId,
 }) => {
-  const { data: layers, isLoading, error } = useLayerNodes();
+  const { data: taxonomies, isLoading, error } = useTaxonomies();
+
+  // Transform taxonomies to StructureNode-like format for compatibility
+  const layers = taxonomies?.map((t) => ({
+    id: t.id,
+    title: t.title,
+    definition: t.description || "",
+  })) as StructureNode[] | undefined;
+
   return (
     <PortalRecordSelector
       records={layers ?? []}

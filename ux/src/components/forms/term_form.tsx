@@ -3,8 +3,8 @@ import { useForm } from "@tanstack/react-form";
 import { TextInput, Textarea, Button, Alert, Label } from "flowbite-react";
 import { Info, Database, Hash } from "lucide-react";
 import type { StructureNode } from "@/api/types/structureNodes";
-import { useCreateTerm } from "@/api/hooks/structure_nodes/useStructureNodeMutations";
-import { useUpdateStructureNode } from "@/api/hooks/structure_nodes/useStructureNodeMutations";
+import { useCreateOntologyClass } from "@/api/hooks/ontologyClasses/useOntologyClasses";
+import { useUpdateOntologyClass } from "@/api/hooks/ontologyClasses/useOntologyClasses";
 import { DomainSelector } from "@/components/node_selectors/domain_selector";
 
 interface TermFormProps {
@@ -27,8 +27,8 @@ const TermForm: React.FC<TermFormProps> = ({
   parentTerm,
   mode = "create",
 }) => {
-  const createTermMutation = useCreateTerm();
-  const updateTermMutation = useUpdateStructureNode();
+  const createTermMutation = useCreateOntologyClass();
+  const updateTermMutation = useUpdateOntologyClass();
   const isEdit = !!term;
   const isChildMode = mode === "child" || !!parentDomainId || !!parentTermId;
   const [submitError, setSubmitError] = React.useState<string | null>(null);
@@ -49,14 +49,21 @@ const TermForm: React.FC<TermFormProps> = ({
         if (isEdit && term?.id) {
           result = await updateTermMutation.mutateAsync({
             id: term.id,
-            data: value,
-          });
-        } else {
-          result = await createTermMutation.mutateAsync({
-            parentId: value.parent_node_id,
             data: {
               title: value.title,
               definition: value.definition,
+              parent_class_id: value.parent_node_id || undefined,
+            },
+          });
+        } else {
+          // For creating, we need the schemeId, which should be parentDomainId
+          const schemeId = parentDomainId || value.parent_node_id;
+          result = await createTermMutation.mutateAsync({
+            schemeId: schemeId,
+            data: {
+              title: value.title,
+              definition: value.definition,
+              parent_class_id: parentTermId || undefined,
             },
           });
         }

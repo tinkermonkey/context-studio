@@ -3,8 +3,8 @@ import { useForm } from "@tanstack/react-form";
 import { TextInput, Textarea, Button, Alert, Label } from "flowbite-react";
 import { Info } from "lucide-react";
 import type { StructureNode } from "@/api/types/structureNodes";
-import { useCreateLayer } from "@/api/hooks/structure_nodes/useStructureNodeMutations";
-import { useUpdateStructureNode } from "@/api/hooks/structure_nodes/useStructureNodeMutations";
+import { useCreateTaxonomy } from "@/api/hooks/taxonomies/useTaxonomies";
+import { useUpdateTaxonomy } from "@/api/hooks/taxonomies/useTaxonomies";
 
 interface LayerFormProps {
   onSuccess?: (layer: StructureNode) => void;
@@ -12,8 +12,8 @@ interface LayerFormProps {
 }
 
 const LayerForm: React.FC<LayerFormProps> = ({ onSuccess, layer }) => {
-  const createLayerMutation = useCreateLayer();
-  const updateLayerMutation = useUpdateStructureNode();
+  const createLayerMutation = useCreateTaxonomy();
+  const updateLayerMutation = useUpdateTaxonomy();
   const isEdit = !!layer;
   const [submitError, setSubmitError] = React.useState<string | null>(null);
   const form = useForm({
@@ -28,12 +28,15 @@ const LayerForm: React.FC<LayerFormProps> = ({ onSuccess, layer }) => {
         if (isEdit && layer?.id) {
           result = await updateLayerMutation.mutateAsync({
             id: layer.id,
-            data: value,
+            data: {
+              title: value.title,
+              description: value.definition,
+            },
           });
         } else {
           result = await createLayerMutation.mutateAsync({
             title: value.title,
-            definition: value.definition,
+            description: value.definition,
           });
         }
         if (onSuccess) onSuccess(result);

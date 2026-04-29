@@ -1,12 +1,10 @@
 import React from "react";
 import { Spinner } from "flowbite-react";
 import { TreeMenu } from "@/components/graphs/tree_menu/tree_menu";
-import {
-  useLayerNodes,
-  useDomainNodes,
-  useTermNodes,
-  useStructureNode,
-} from "@/api/hooks/structure_nodes/useStructureNodes";
+import { useTaxonomies } from "@/api/hooks/taxonomies/useTaxonomies";
+import { useConceptSchemes } from "@/api/hooks/conceptSchemes/useConceptSchemes";
+import { useOntologyClasses } from "@/api/hooks/ontologyClasses/useOntologyClasses";
+import { useOntologyClass } from "@/api/hooks/ontologyClasses/useOntologyClasses";
 import { useTermHierarchy } from "@/api/hooks/graph/useGraph";
 import {
   buildHierarchicalTree,
@@ -80,27 +78,48 @@ export function TreeChartPanel({
 }: TreeChartPanelProps) {
   // Load all base data
   const {
-    data: layers,
+    data: taxonomies,
     isLoading: layersLoading,
     error: layersError,
-  } = useLayerNodes();
+  } = useTaxonomies();
   const {
-    data: domains,
+    data: conceptSchemes,
     isLoading: domainsLoading,
     error: domainsError,
-  } = useDomainNodes();
+  } = useConceptSchemes();
   const {
-    data: terms,
+    data: ontologyClasses,
     isLoading: termsLoading,
     error: termsError,
-  } = useTermNodes();
+  } = useOntologyClasses();
+
+  // Transform data to compatible format for treeBuilder
+  const layers = taxonomies?.map((t) => ({
+    ...t,
+    node_type: "layer",
+    parent_node_id: null,
+    definition: t.description || "",
+  }));
+
+  const domains = conceptSchemes?.map((cs) => ({
+    ...cs,
+    node_type: "domain",
+    parent_node_id: cs.taxonomy_id,
+    definition: cs.description || "",
+  }));
+
+  const terms = ontologyClasses?.map((oc) => ({
+    ...oc,
+    node_type: "term",
+    parent_node_id: oc.parent_class_id || oc.scheme_id,
+  }));
 
   // Load specific term if termId is provided
   const {
     data: targetTerm,
     isLoading: termLoading,
     error: termError,
-  } = useStructureNode(termId || "");
+  } = useOntologyClass(termId || "");
 
   // Load term hierarchy to get all ancestors
   const {
@@ -109,19 +128,17 @@ export function TreeChartPanel({
     error: hierarchyError,
   } = useTermHierarchy(termId || "");
 
-  // Load specific domain if domainId is provided
-  const {
-    data: targetDomain,
-    isLoading: domainLoading,
-    error: domainError,
-  } = useStructureNode(domainId || "");
+  // Load specific domain if domainId is provided - need to find from conceptSchemes
+  const targetDomain =
+    domainId && domains ? domains.find((d) => d.id === domainId) : null;
+  const domainLoading = domainsLoading;
+  const domainError = domainsError;
 
-  // Load specific layer if layerId is provided
-  const {
-    data: targetLayer,
-    isLoading: layerLoading,
-    error: layerError,
-  } = useStructureNode(layerId || "");
+  // Load specific layer if layerId is provided - need to find from taxonomies
+  const targetLayer =
+    layerId && layers ? layers.find((l) => l.id === layerId) : null;
+  const layerLoading = layersLoading;
+  const layerError = layersError;
 
   // Determine loading state
   const isLoading =

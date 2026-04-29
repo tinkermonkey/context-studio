@@ -39,7 +39,9 @@ import { TreeChartPanel } from "@/components/panels/TreeChartPanel";
 import type { StructureNode } from "@/api/types/structureNodes";
 import { TreeMenuPanel } from "@/components/panels/TreeMenuPanel";
 import { useNlpAnalysisStore } from "@/stores/nlpAnalysisStore";
-import { useUpdateStructureNode } from "@/api/hooks/structure_nodes/useStructureNodeMutations";
+import { useUpdateTaxonomy } from "@/api/hooks/taxonomies/useTaxonomies";
+import { useUpdateConceptScheme } from "@/api/hooks/conceptSchemes/useConceptSchemes";
+import { useUpdateOntologyClass } from "@/api/hooks/ontologyClasses/useOntologyClasses";
 import { toast } from "@/utils/toast";
 import { ReferenceNodePanel } from "@/components/reference_nodes";
 import { NodeLinkPanel } from "@/components/node_links";
@@ -374,7 +376,27 @@ const EditableDefinition: React.FC<{ node: StructureNode }> = ({ node }) => {
   const [isEditing, setIsEditing] = React.useState(false);
   const [value, setValue] = React.useState(node.definition || "");
   const textareaRef = React.useRef<HTMLTextAreaElement>(null);
-  const updateMutation = useUpdateStructureNode();
+
+  // Get the appropriate mutation based on node type
+  const taxonomyMutation = useUpdateTaxonomy();
+  const conceptSchemeMutation = useUpdateConceptScheme();
+  const ontologyClassMutation = useUpdateOntologyClass();
+
+  // Select the appropriate mutation based on node type
+  const getUpdateMutation = () => {
+    switch (node.node_type) {
+      case NodeType.LAYER:
+        return taxonomyMutation;
+      case NodeType.DOMAIN:
+        return conceptSchemeMutation;
+      case NodeType.TERM:
+        return ontologyClassMutation;
+      default:
+        return taxonomyMutation;
+    }
+  };
+
+  const updateMutation = getUpdateMutation();
 
   // Auto-resize textarea to fit content
   const autoResizeTextarea = React.useCallback(() => {

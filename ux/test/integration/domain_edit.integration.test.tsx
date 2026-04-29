@@ -22,8 +22,15 @@ vi.mock("@/api/hooks/layers/useLayers", () => ({
   }),
 }));
 vi.mock("@/api/hooks/terms/useTerms", () => ({
-   
+
   useTerms: (_: any) => ({ data: [], isLoading: false }),
+}));
+vi.mock("@/api/hooks/graph/useGraph", () => ({
+  useTermHierarchy: (_: string) => ({
+    data: null,
+    isLoading: false,
+    error: null,
+  }),
 }));
 vi.mock("@/api/hooks/structure_nodes/useNodeAttributes", () => ({
   useNodeAttributes: () => ({
@@ -35,6 +42,56 @@ vi.mock("@/api/hooks/structure_nodes/useNodeAttributes", () => ({
   useNodeAttributeMutations: () => ({
     setAttributesMutation: { mutateAsync: vi.fn(), isPending: false },
     removeAttributeMutation: { mutateAsync: vi.fn(), isPending: false },
+  }),
+}));
+vi.mock("@/api/hooks/taxonomies/useTaxonomies", () => ({
+  useTaxonomies: () => ({
+    data: [{ id: "1", title: "Layer 1", description: "Test layer" }],
+    isLoading: false,
+    error: null,
+  }),
+  useCreateTaxonomy: () => ({
+    mutateAsync: vi.fn(),
+    isPending: false,
+  }),
+  useUpdateTaxonomy: () => ({
+    mutateAsync: vi.fn(),
+    isPending: false,
+  }),
+}));
+vi.mock("@/api/hooks/conceptSchemes/useConceptSchemes", () => ({
+  useConceptSchemes: () => ({
+    data: [],
+    isLoading: false,
+    error: null,
+  }),
+  useCreateConceptScheme: () => ({
+    mutateAsync: vi.fn(),
+    isPending: false,
+  }),
+  useUpdateConceptScheme: () => ({
+    mutateAsync: vi.fn(),
+    isPending: false,
+  }),
+}));
+vi.mock("@/api/hooks/ontologyClasses/useOntologyClasses", () => ({
+  useOntologyClasses: () => ({
+    data: [],
+    isLoading: false,
+    error: null,
+  }),
+  useOntologyClass: (_id: string) => ({
+    data: null,
+    isLoading: false,
+    error: null,
+  }),
+  useCreateOntologyClass: () => ({
+    mutateAsync: vi.fn(),
+    isPending: false,
+  }),
+  useUpdateOntologyClass: () => ({
+    mutateAsync: vi.fn(),
+    isPending: false,
   }),
 }));
 

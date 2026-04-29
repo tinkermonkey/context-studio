@@ -3,7 +3,7 @@ import {
   useOntologyClasses,
 } from "@/api/hooks/ontologyClasses";
 import { useTaxonomies, useTaxonomy } from "@/api/hooks/taxonomies";
-import { useConceptSchemes, useConceptScheme } from "@/api/hooks/conceptSchemes";
+import { useConceptScheme } from "@/api/hooks/conceptSchemes";
 import {
   createFileRoute,
   useNavigate,
@@ -15,7 +15,6 @@ import { CsSidebar, CsSidebarTitle } from "@/components/layout/cs_sidebar";
 import { CsMain, CsMainTitle } from "@/components/layout/cs_main";
 import { CollapsibleConceptSchemesList } from "@/components/misc/collapsible_concept_schemes_list";
 import { Hash } from "lucide-react";
-import type { OntologyClass } from "@/api/types/ontology";
 
 // Define the search parameters schema
 interface ClassesSearch {

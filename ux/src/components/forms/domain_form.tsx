@@ -3,8 +3,8 @@ import { useForm } from "@tanstack/react-form";
 import { TextInput, Textarea, Button, Alert, Label } from "flowbite-react";
 import { Info, Layers } from "lucide-react";
 import type { StructureNode } from "@/api/types/structureNodes";
-import { useCreateDomain } from "@/api/hooks/structure_nodes/useStructureNodeMutations";
-import { useUpdateStructureNode } from "@/api/hooks/structure_nodes/useStructureNodeMutations";
+import { useCreateConceptScheme } from "@/api/hooks/conceptSchemes/useConceptSchemes";
+import { useUpdateConceptScheme } from "@/api/hooks/conceptSchemes/useConceptSchemes";
 import { LayerSelector } from "@/components/node_selectors/layer_selector";
 import { PredicateSelector } from "@/components/node_selectors/predicate_selector";
 
@@ -24,8 +24,8 @@ const DomainForm: React.FC<DomainFormProps> = ({
   parentLayer,
   mode = "create",
 }) => {
-  const createDomainMutation = useCreateDomain();
-  const updateDomainMutation = useUpdateStructureNode();
+  const createDomainMutation = useCreateConceptScheme();
+  const updateDomainMutation = useUpdateConceptScheme();
   const isEdit = !!domain;
   const isChildMode = mode === "child" || !!parentLayerId;
   const [submitError, setSubmitError] = React.useState<string | null>(null);
@@ -46,22 +46,25 @@ const DomainForm: React.FC<DomainFormProps> = ({
         if (isEdit && domain?.id) {
           result = await updateDomainMutation.mutateAsync({
             id: domain.id,
-            data: value,
+            data: {
+              title: value.title,
+              description: value.definition,
+            },
           });
         } else {
-           
+
           const createData: any = {
             title: value.title,
-            definition: value.definition,
+            description: value.definition,
           };
 
-          // Only include structural_predicate_id if it has a value
-          if (value.structural_predicate_id) {
-            createData.structural_predicate_id = value.structural_predicate_id;
-          }
+          // Note: structural_predicate_id is not supported in new API, ignore for now
+          // if (value.structural_predicate_id) {
+          //   createData.structural_predicate_id = value.structural_predicate_id;
+          // }
 
           result = await createDomainMutation.mutateAsync({
-            layerId: value.parent_node_id,
+            taxonomyId: value.parent_node_id,
             data: createData,
           });
         }
