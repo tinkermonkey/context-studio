@@ -74,54 +74,30 @@ async function globalSetup(): Promise<void> {
   fs.mkdirSync(testDbDir, { recursive: true });
   console.log("✅ Test databases cleaned\n");
 
-  // 2. Run database migrations and initialize operations database
+  // 2. Run database migrations
   console.log("🔄 Running database migrations...");
   const backendPath = path.resolve(__dirname, "../../local-server");
   const venvPythonPath = path.join(backendPath, ".venv/bin/python");
-  const migrationScript = `
-import sys
-import os
-sys.path.insert(0, '.')
-os.environ['CONFIG_PATH'] = './config.e2e.json'
-
-# Migrate main database
-from database.migrations.migration_manager import MigrationManager
-db_path = './datafiles/e2e-test/local.db'
-os.makedirs(os.path.dirname(db_path), exist_ok=True)
-MigrationManager(db_path).migrate_to_latest()
-print('✓ Created local.db with migrations')
-
-# Initialize operations database
-from pipeline.manager import get_operations_database_manager
-from operations.models import OperationsBase
-manager = get_operations_database_manager()
-OperationsBase.metadata.create_all(bind=manager.get_engine())
-print('✓ Created operations.db with schema')
-
-# CRITICAL: Dispose engine to release file handles and prevent readonly errors
-manager.get_engine().dispose()
-print('✓ Disposed database connections')
-
-# Clear the global singleton to force fresh connection when backend starts
-import pipeline.manager as pm
-pm._operations_db_manager = None
-print('✓ Cleared manager singleton')
-
-# Create a pristine template for test isolation
-import shutil
-template_path = './datafiles/e2e-test/operations.template.db'
-shutil.copy('./datafiles/e2e-test/operations.db', template_path)
-print(f'✓ Created template database: {template_path}')
-
-print('Migrations completed')
-`;
 
   try {
     const { execSync } = await import("child_process");
-    execSync(`${venvPythonPath} -c "${migrationScript.replace(/"/g, '\\"')}"`, {
+
+    // Run local.db migrations
+    console.log("  Running local.db migrations...");
+    execSync(`${venvPythonPath} scripts/run_migrations.py local upgrade head`, {
       cwd: backendPath,
       stdio: "inherit",
     });
+    console.log("  ✓ local.db migrations completed");
+
+    // Run operations.db migrations
+    console.log("  Running operations.db migrations...");
+    execSync(`${venvPythonPath} scripts/run_migrations.py operations upgrade head`, {
+      cwd: backendPath,
+      stdio: "inherit",
+    });
+    console.log("  ✓ operations.db migrations completed");
+
     console.log("✅ Database migrations completed\n");
   } catch (error) {
     console.error("❌ Failed to run migrations:", error);
@@ -196,7 +172,7 @@ print('Migrations completed')
 
   // 4. Wait for backend to be ready (60s timeout for initial NLP model loading)
   try {
-    await waitForUrl("http://localhost:8888/health", 60000);
+    await waitForUrl("http://localhost:8888/api/v1/admin/health", 60000);
     console.log("✅ Backend ready\n");
   } catch (error) {
     console.error("❌ Backend failed to start:", error);
