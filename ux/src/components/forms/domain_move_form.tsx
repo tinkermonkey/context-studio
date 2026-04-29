@@ -9,7 +9,7 @@ import { Button, Label, Checkbox, Alert } from "flowbite-react";
 import { Info } from "lucide-react";
 import { OntologyClass } from "@/api/types/ontology";
 import { OntologyClassSelector } from "@/components/node_selectors/structure_node_selector";
-import { useMoveOntologyClasss } from "@/api/hooks/ontologyClasses/useOntologyClassMutations";
+import { useMoveOntologyClass } from "@/api/hooks/ontologyClasses/useOntologyClassMutations";
 import { useButterToast } from "@/hooks/useButterToast";
 
 interface DomainMoveFormProps {
@@ -25,7 +25,7 @@ export function DomainMoveForm({
 }: DomainMoveFormProps) {
   const [targetParentId, setTargetParentId] = useState<string>("");
   const [moveChildren, setMoveChildren] = useState(true);
-  const moveNodes = useMoveOntologyClasss();
+  const moveNodes = useMoveOntologyClass();
   const toast = useButterToast();
 
   const handleSubmit = async (e: React.FormEvent) => {

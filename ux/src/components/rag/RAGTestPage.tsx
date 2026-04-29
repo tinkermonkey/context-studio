@@ -16,7 +16,7 @@ import {
   Textarea,
 } from "flowbite-react";
 import { useExtractEntities, useRAGTrace } from "@/api/hooks/rag";
-import { useClass } from "@/api/hooks/ontologyClasses/useOntologyClasses";
+import { useClass } from "@/api/hooks/ontologyClasses";
 import { Info, ExternalLink } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 

@@ -25,7 +25,6 @@ export {
 } from "./useWordSenses";
 
 export {
-  useOntologyClasses,
   useDomainNodes,
   useLayerNodes,
   useClass,
@@ -34,12 +33,11 @@ export {
 } from "./useStructureNodes";
 
 export {
-  useBulkUpdateOntologyClasss,
+  useBulkUpdateOntologyClass,
   useMoveOntologyClass,
   useCreateDomain,
   useCreateLayer,
   useCreateTerm,
-  useMoveOntologyClasss,
   useUpdateTerm,
   useUpdateDomain,
   useUpdateLayer,

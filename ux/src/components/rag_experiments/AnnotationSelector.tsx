@@ -13,7 +13,7 @@ import {
   useCreateAnnotation,
   useDeleteAnnotation,
 } from "@/api/hooks/ragExperiments";
-import { useClassSearch } from "@/api/hooks/ontologyClasses/useOntologyClasses";
+import { useClassSearch } from "@/api/hooks/ontologyClasses";
 import type { TestParagraphResponse } from "@/api/services/ragExperiments";
 import type {
   OntologyClass,

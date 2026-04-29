@@ -21,7 +21,7 @@ import {
   Plus,
   X,
 } from "lucide-react";
-import { NodeType } from "@/api/types/ontology";
+import { NodeType } from "@/api/types/changeEvents";
 import { useTermHierarchy } from "@/api/hooks/graph/useGraph";
 import { useQueryClient } from "@tanstack/react-query";
 import { QUERY_KEYS } from "@/api/config";

@@ -7,29 +7,26 @@
 /**
  * @deprecated
  */
-export class OntologyClasssService {
+export class OntologyClassService {
   list() {
-    throw new Error("OntologyClasssService has been removed.");
+    throw new Error("OntologyClassService has been removed.");
   }
 
   get(_id: string) {
-    throw new Error("OntologyClasssService has been removed.");
+    throw new Error("OntologyClassService has been removed.");
   }
 
-  create(_data: any) {  
-    throw new Error("OntologyClasssService has been removed.");
+  create(_data: any) {
+    throw new Error("OntologyClassService has been removed.");
   }
 
-  update(_id: string, _data: any) {  
-    throw new Error("OntologyClasssService has been removed.");
+  update(_id: string, _data: any) {
+    throw new Error("OntologyClassService has been removed.");
   }
 
   delete(_id: string) {
-    throw new Error("OntologyClasssService has been removed.");
+    throw new Error("OntologyClassService has been removed.");
   }
 }
 
-export const ontologyClassService = new OntologyClasssService();
-
-// Export with old name for backward compatibility
-export const structureNodeService = ontologyClassService;
+export const ontologyClassService = new OntologyClassService();

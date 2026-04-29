@@ -86,19 +86,19 @@ export const useDeleteOntologyClass = (
 /**
  * @deprecated
  */
-export const useBulkUpdateOntologyClasss = (
-  _options?: any,  
+export const useBulkUpdateOntologyClass = (
+  _options?: any,
 ): UseMutationResult<any, Error, any, any> => {
   return {
-    mutate: (_data?: any) => {  
-      throw new Error("useBulkUpdateOntologyClasss has been removed.");
+    mutate: (_data?: any) => {
+      throw new Error("useBulkUpdateOntologyClass has been removed.");
     },
-    mutateAsync: async (_data?: any) => {  
-      throw new Error("useBulkUpdateOntologyClasss has been removed.");
+    mutateAsync: async (_data?: any) => {
+      throw new Error("useBulkUpdateOntologyClass has been removed.");
     },
     isPending: false,
     isError: true,
-    error: new Error("useBulkUpdateOntologyClasss has been removed."),
+    error: new Error("useBulkUpdateOntologyClass has been removed."),
     status: "idle",
     reset: () => {},
     variables: undefined,
@@ -185,28 +185,6 @@ export const useCreateTerm = (
     isPending: false,
     isError: true,
     error: new Error("useCreateTerm has been removed."),
-    status: "idle",
-    reset: () => {},
-    variables: undefined,
-  } as unknown as UseMutationResult<any, Error, any, any>;
-};
-
-/**
- * @deprecated
- */
-export const useMoveOntologyClasss = (
-  _options?: any,  
-): UseMutationResult<any, Error, any, any> => {
-  return {
-    mutate: (_data?: any) => {  
-      throw new Error("useMoveOntologyClasss has been removed.");
-    },
-    mutateAsync: async (_data?: any) => {  
-      throw new Error("useMoveOntologyClasss has been removed.");
-    },
-    isPending: false,
-    isError: true,
-    error: new Error("useMoveOntologyClasss has been removed."),
     status: "idle",
     reset: () => {},
     variables: undefined,
