@@ -28,6 +28,13 @@ export interface PaginatedResponse<T> {
   limit: number;
 }
 
+export interface ListResponse<T> {
+  items: T[];
+  total: number;
+  limit: number;
+  offset: number;
+}
+
 export interface PaginationConfig {
   defaultPageSize: number;
   maxPageSize: number;
@@ -107,6 +114,7 @@ export abstract class BaseService {
 
   /**
    * Fetch all pages of data by making multiple API calls
+   * Handles both ListResponse (items/offset) and PaginatedResponse (data/skip) formats
    * @param url The endpoint URL
    * @param params Base parameters for the request
    * @returns Array of all items across all pages
@@ -117,7 +125,7 @@ export abstract class BaseService {
   ): Promise<T[]> {
     const allItems: T[] = [];
     let skip = 0;
-    const limit = this.paginationConfig.maxPageSize; // Use max page size for efficiency
+    const limit = this.paginationConfig.maxPageSize;
 
     while (true) {
       const pageParams = {
@@ -126,20 +134,22 @@ export abstract class BaseService {
         limit,
       };
 
-      const response = await this.getResource<PaginatedResponse<T>>(
-        url,
-        pageParams,
-      );
+      // Try to fetch as ListResponse format first (new API)
+      const response = await this.getResource<
+        ListResponse<T> | PaginatedResponse<T>
+      >(url, pageParams);
 
-      // If we got no items, we've reached the end
-      if (!response.data || response.data.length === 0) {
+      // Handle both response formats
+      const items = this.extractItems(response);
+      const total = response.total;
+
+      if (!items || items.length === 0) {
         break;
       }
 
-      allItems.push(...response.data);
+      allItems.push(...items);
 
-      // If we got fewer items than the limit, or if we've reached the total, we've reached the end
-      if (response.data.length < limit || allItems.length >= response.total) {
+      if (items.length < limit || allItems.length >= total) {
         break;
       }
 
@@ -151,6 +161,7 @@ export abstract class BaseService {
 
   /**
    * Get a single page of data
+   * Handles both ListResponse (items/offset) and PaginatedResponse (data/skip) formats
    * @param url The endpoint URL
    * @param params Parameters including pagination options
    * @returns Single page of items
@@ -159,8 +170,10 @@ export abstract class BaseService {
     url: string,
     params?: Record<string, unknown>,
   ): Promise<T[]> {
-    const response = await this.getResource<PaginatedResponse<T>>(url, params);
-    return response.data;
+    const response = await this.getResource<
+      ListResponse<T> | PaginatedResponse<T>
+    >(url, params);
+    return this.extractItems(response);
   }
 
   /**
@@ -174,6 +187,24 @@ export abstract class BaseService {
     params?: Record<string, unknown>,
   ): Promise<PaginatedResponse<T>> {
     return this.getResource<PaginatedResponse<T>>(url, params);
+  }
+
+  /**
+   * Extract items from either ListResponse or PaginatedResponse format
+   * @private
+   */
+  private extractItems<T>(
+    response: ListResponse<T> | PaginatedResponse<T>,
+  ): T[] {
+    // Check if it's ListResponse format (has 'items' property)
+    if ("items" in response && Array.isArray(response.items)) {
+      return response.items;
+    }
+    // Otherwise treat as PaginatedResponse format (has 'data' property)
+    if ("data" in response && Array.isArray(response.data)) {
+      return response.data;
+    }
+    return [];
   }
 
   /**

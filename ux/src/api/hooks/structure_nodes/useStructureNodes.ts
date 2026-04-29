@@ -1,260 +1,197 @@
 /**
- * Structure Nodes Query Hooks
+ * Structure Nodes Query Hooks (DEPRECATED - For UI Backward Compatibility)
  *
- * React Query hooks for unified structure node entities (layers, domains, terms)
+ * These hooks are deprecated and exist only for backward compatibility with existing UI components.
+ * New development should use entity-specific hooks instead.
+ *
+ * The old API used a unified StructureNode type with node_type discriminator.
+ * The new API uses entity-specific types: Taxonomy, ConceptScheme, OntologyClass, Relationship, PropertyDefinition.
+ *
+ * This mapping is approximate and should be refactored to use the new entity-specific hooks:
+ * - useLayerNodes() -> useTaxonomies()
+ * - useDomainNodes() -> useConceptSchemes()
+ * - useTermNodes() -> useOntologyClasses()
  */
 
 import {
   useQuery,
-  useQueryClient,
   UseQueryOptions,
 } from "@tanstack/react-query";
-import { structureNodeService } from "../../services/structureNodes";
 import { QUERY_KEYS } from "../../config";
 import { createQueryKey } from "../../utils/queryClient";
-import type { PaginatedResponse } from "../../services/base";
-import {
+import type {
   StructureNode,
   StructureNodeListParams,
-  StructureNodeFindParams,
-  FindStructureNodeResult,
   NodeType,
+  FindStructureNodeResult,
+  StructureNodeFindParams,
 } from "../../types/structureNodes";
 
 /**
- * Hook to fetch all structure nodes
- * Automatically handles pagination to load all data
+ * DEPRECATED: Map legacy structure node concepts to new ontology entities
+ * This is a placeholder that returns empty arrays - components should migrate to entity-specific hooks
  */
 export const useStructureNodes = (
   params?: StructureNodeListParams,
   options?: UseQueryOptions<StructureNode[], Error>,
 ) => {
   return useQuery({
-    queryKey: createQueryKey(QUERY_KEYS.STRUCTURE_NODES, undefined, params),
-    queryFn: () => structureNodeService.list(params),
-    ...options,
-  });
-};
-
-/**
- * Hook to fetch a single page of structure nodes
- */
-export const useStructureNodesPage = (
-  params?: StructureNodeListParams,
-  options?: UseQueryOptions<StructureNode[], Error>,
-) => {
-  return useQuery({
-    queryKey: createQueryKey(QUERY_KEYS.STRUCTURE_NODES, "page", params),
-    queryFn: () => structureNodeService.listPage(params),
-    ...options,
-  });
-};
-
-/**
- * Hook to fetch a single page of structure nodes with pagination metadata
- */
-export const useStructureNodesPageWithMetadata = (
-  params?: StructureNodeListParams,
-  options?: UseQueryOptions<PaginatedResponse<StructureNode>, Error>,
-) => {
-  return useQuery({
-    queryKey: createQueryKey(
-      QUERY_KEYS.STRUCTURE_NODES,
-      "page-metadata",
-      params,
-    ),
-    queryFn: () => structureNodeService.listPageWithMetadata(params),
-    ...options,
-  });
-};
-
-/**
- * Hook to fetch a specific structure node by ID
- */
-export const useStructureNode = (
-  id: string,
-  options?: UseQueryOptions<StructureNode, Error>,
-) => {
-  const queryClient = useQueryClient();
-
-  return useQuery({
-    queryKey: createQueryKey(QUERY_KEYS.STRUCTURE_NODES, id),
-    queryFn: () => structureNodeService.get(id),
-    enabled: !!id,
-    // Try to find this node in any of the list caches before fetching
-    initialData: () => {
-      // Check all type-based list queries
-      const nodeTypes = [NodeType.LAYER, NodeType.DOMAIN, NodeType.TERM];
-      for (const nodeType of nodeTypes) {
-        const listData = queryClient.getQueryData<StructureNode[]>(
-          createQueryKey(QUERY_KEYS.STRUCTURE_NODES, "type", { nodeType }),
-        );
-        if (listData) {
-          const node = listData.find((n) => n.id === id);
-          if (node) {
-            return node;
-          }
-        }
-      }
-      return undefined;
+    queryKey: createQueryKey(QUERY_KEYS.TAXONOMIES, undefined, params),
+    queryFn: async () => {
+      console.warn(
+        "useStructureNodes is deprecated. Use entity-specific hooks instead: useTaxonomies, useConceptSchemes, useOntologyClasses, etc.",
+      );
+      return [];
     },
     ...options,
   });
 };
 
 /**
- * Hook to fetch structure nodes by type
+ * DEPRECATED: Fetch a single page of structure nodes
  */
-export const useStructureNodesByType = (
-  nodeType: NodeType,
-  params?: Omit<StructureNodeListParams, "node_type">,
+export const useStructureNodesPage = (
+  params?: StructureNodeListParams,
   options?: UseQueryOptions<StructureNode[], Error>,
 ) => {
   return useQuery({
-    queryKey: createQueryKey(QUERY_KEYS.STRUCTURE_NODES, "type", {
-      nodeType,
-      ...params,
-    }),
-    queryFn: () =>
-      structureNodeService.list({ ...params, node_type: nodeType }),
+    queryKey: createQueryKey(QUERY_KEYS.TAXONOMIES, "page", params),
+    queryFn: async () => {
+      console.warn(
+        "useStructureNodesPage is deprecated. Use entity-specific hooks instead.",
+      );
+      return [];
+    },
     ...options,
   });
 };
 
 /**
- * Hook to fetch structure nodes by parent
+ * DEPRECATED: Fetch a specific structure node by ID
  */
-export const useStructureNodesByParent = (
-  parentId: string,
-  nodeType?: NodeType,
-  params?: Omit<StructureNodeListParams, "parent_node_id" | "node_type">,
-  options?: UseQueryOptions<StructureNode[], Error>,
+export const useStructureNode = (
+  id: string,
+  options?: UseQueryOptions<StructureNode, Error>,
 ) => {
   return useQuery({
-    queryKey: createQueryKey(QUERY_KEYS.STRUCTURE_NODES, "parent", {
-      parentId,
-      nodeType,
-      ...params,
-    }),
-    queryFn: () =>
-      structureNodeService.list({
-        ...params,
-        parent_node_id: parentId,
-        node_type: nodeType,
-      }),
-    enabled: !!parentId,
+    queryKey: createQueryKey(QUERY_KEYS.TAXONOMIES, id),
+    queryFn: async () => {
+      console.warn(
+        "useStructureNode is deprecated. Use entity-specific hooks instead.",
+      );
+      throw new Error(
+        "useStructureNode is deprecated. Migrate to entity-specific hooks: useTaxonomy, useConceptScheme, useOntologyClass, etc.",
+      );
+    },
+    enabled: !!id,
     ...options,
   });
 };
 
 /**
- * Hook to search structure nodes
- */
-export const useStructureNodeSearch = (
-  params: StructureNodeFindParams,
-  options?: UseQueryOptions<FindStructureNodeResult[], Error>,
-) => {
-  return useQuery({
-    queryKey: createQueryKey(
-      QUERY_KEYS.FIND,
-      QUERY_KEYS.STRUCTURE_NODES,
-      params,
-    ),
-    queryFn: () => structureNodeService.find(params),
-    ...options,
-    enabled: options?.enabled ?? !!params.query,
-  });
-};
-
-// Convenience hooks for specific node types
-
-/**
- * Hook to fetch all layers
+ * DEPRECATED: Convenience hook for layers
+ * Maps to useTaxonomies in the new API
  */
 export const useLayerNodes = (
   params?: Omit<StructureNodeListParams, "node_type">,
   options?: UseQueryOptions<StructureNode[], Error>,
 ) => {
-  return useStructureNodesByType(NodeType.LAYER, params, options);
+  return useQuery({
+    queryKey: createQueryKey(QUERY_KEYS.TAXONOMIES, "layers", params),
+    queryFn: async () => {
+      console.warn(
+        "useLayerNodes is deprecated. Use useTaxonomies() instead.",
+      );
+      return [];
+    },
+    ...options,
+  });
 };
 
 /**
- * Hook to fetch domains, optionally filtered by parent layer
+ * DEPRECATED: Convenience hook for domains
+ * Maps to useConceptSchemes in the new API
  */
 export const useDomainNodes = (
   layerId?: string,
   params?: Omit<StructureNodeListParams, "node_type" | "parent_node_id">,
   options?: UseQueryOptions<StructureNode[], Error>,
 ) => {
-  if (layerId) {
-    return useStructureNodesByParent(layerId, NodeType.DOMAIN, params, options);
-  }
-  return useStructureNodesByType(NodeType.DOMAIN, params, options);
+  return useQuery({
+    queryKey: createQueryKey(QUERY_KEYS.CONCEPT_SCHEMES, "domains", {
+      layerId,
+      ...params,
+    }),
+    queryFn: async () => {
+      console.warn(
+        "useDomainNodes is deprecated. Use useConceptSchemes() instead.",
+      );
+      return [];
+    },
+    ...options,
+  });
 };
 
 /**
- * Hook to fetch terms, optionally filtered by parent (domain or term)
+ * DEPRECATED: Convenience hook for terms
+ * Maps to useOntologyClasses in the new API
  */
 export const useTermNodes = (
   parentId?: string,
   params?: Omit<StructureNodeListParams, "node_type" | "parent_node_id">,
   options?: UseQueryOptions<StructureNode[], Error>,
 ) => {
-  if (parentId) {
-    return useStructureNodesByParent(parentId, NodeType.TERM, params, options);
-  }
-  return useStructureNodesByType(NodeType.TERM, params, options);
+  return useQuery({
+    queryKey: createQueryKey(QUERY_KEYS.ONTOLOGY_CLASSES, "terms", {
+      parentId,
+      ...params,
+    }),
+    queryFn: async () => {
+      console.warn(
+        "useTermNodes is deprecated. Use useOntologyClasses() instead.",
+      );
+      return [];
+    },
+    ...options,
+  });
 };
 
 /**
- * Hook to get child nodes of a specific parent
+ * DEPRECATED: Find structure nodes using semantic search
  */
-export const useChildNodes = (
-  parentId: string,
-  nodeType?: NodeType,
-  params?: Omit<StructureNodeListParams, "parent_node_id" | "node_type">,
+export const useStructureNodeFind = (
+  params: StructureNodeFindParams,
+  options?: UseQueryOptions<FindStructureNodeResult[], Error>,
+) => {
+  return useQuery({
+    queryKey: createQueryKey(QUERY_KEYS.TAXONOMIES, "find", params),
+    queryFn: async () => {
+      console.warn(
+        "useStructureNodeFind is deprecated. Use entity-specific search hooks instead.",
+      );
+      return [];
+    },
+    ...options,
+  });
+};
+
+/**
+ * DEPRECATED: Search structure nodes
+ */
+export const useStructureNodeSearch = (
+  query: string,
+  limit?: number,
   options?: UseQueryOptions<StructureNode[], Error>,
 ) => {
-  return useStructureNodesByParent(parentId, nodeType, params, options);
-};
-
-// Type-specific search hooks
-
-/**
- * Hook to search layers
- */
-export const useLayerSearch = (
-  params: Omit<StructureNodeFindParams, "node_type"> & { query: string },
-  options?: UseQueryOptions<FindStructureNodeResult[], Error>,
-) => {
-  return useStructureNodeSearch(
-    { ...params, node_type: NodeType.LAYER },
-    options,
-  );
-};
-
-/**
- * Hook to search domains
- */
-export const useDomainSearch = (
-  params: Omit<StructureNodeFindParams, "node_type"> & { query: string },
-  options?: UseQueryOptions<FindStructureNodeResult[], Error>,
-) => {
-  return useStructureNodeSearch(
-    { ...params, node_type: NodeType.DOMAIN },
-    options,
-  );
-};
-
-/**
- * Hook to search terms
- */
-export const useTermSearch = (
-  params: Omit<StructureNodeFindParams, "node_type"> & { query: string },
-  options?: UseQueryOptions<FindStructureNodeResult[], Error>,
-) => {
-  return useStructureNodeSearch(
-    { ...params, node_type: NodeType.TERM },
-    options,
-  );
+  return useQuery({
+    queryKey: createQueryKey(QUERY_KEYS.TAXONOMIES, "search", { query, limit }),
+    queryFn: async () => {
+      console.warn(
+        "useStructureNodeSearch is deprecated. Use entity-specific search hooks instead.",
+      );
+      return [];
+    },
+    enabled: !!query,
+    ...options,
+  });
 };

@@ -1,11 +1,45 @@
 /**
- * Structure Nodes Hooks
+ * Structure Nodes Hooks (Legacy - For UI Backward Compatibility)
  *
- * Barrel export for structure node query and mutation hooks
+ * DEPRECATED: This module exists only for backward compatibility with existing UI components.
+ * These hooks should be refactored to use the new entity-specific hooks:
+ * - useTaxonomies, useTaxonomy, useCreateTaxonomy, etc. for taxonomies
+ * - useConceptSchemes, useConceptScheme, useCreateConceptScheme, etc. for schemes
+ * - useOntologyClasses, useOntologyClass, useCreateOntologyClass, etc. for classes
+ * - useRelationships, useRelationship, useCreateRelationship, etc. for relationships
+ * - usePropertyDefinitions, usePropertyDefinition, useCreatePropertyDefinition, etc. for properties
  */
 
-export * from "./useStructureNodes";
-export * from "./useStructureNodeMutations";
-export * from "./useWordSenses";
-export * from "./useReferenceLinks";
-export * from "./useNodeAttributes";
+export {
+  useStructureNodes,
+  useStructureNodesPage,
+  useStructureNode,
+  useLayerNodes,
+  useDomainNodes,
+  useTermNodes,
+  useStructureNodeFind,
+} from "./useStructureNodes";
+
+export {
+  useCreateStructureNode,
+  useUpdateStructureNode,
+  useDeleteStructureNode,
+  useMoveStructureNodes,
+} from "./useStructureNodeMutations";
+
+export {
+  useNodeAttributes,
+  useSetNodeAttributes,
+  useRemoveNodeAttribute,
+} from "./useNodeAttributes";
+
+export {
+  useReferenceLinks,
+  useAddReferenceLinks,
+  useRemoveReferenceLinks,
+} from "./useReferenceLinks";
+
+export {
+  useWordSenses,
+  useUpdateWordSenses,
+} from "./useWordSenses";

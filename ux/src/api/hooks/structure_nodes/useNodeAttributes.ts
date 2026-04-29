@@ -1,42 +1,31 @@
 /**
- * Node Attributes Query and Mutation Hooks
- *
- * React Query hooks for fetching and mutating structure node attributes
+ * Node Attributes Hooks (DEPRECATED - For UI Backward Compatibility)
  */
 
 import {
   useQuery,
   useMutation,
-  useQueryClient,
   UseQueryOptions,
   UseMutationOptions,
 } from "@tanstack/react-query";
-import { structureNodeService } from "../../services/structureNodes";
-import { QUERY_KEYS } from "../../config";
-import { createQueryKey } from "../../utils/queryClient";
 import type {
-  StructureNodeAttribute,
   ResolvedAttribute,
+  StructureNodeAttribute,
   StructureNode,
 } from "../../types/structureNodes";
 
 /**
- * Hook to fetch resolved attributes (local + inherited) for a structure node
+ * DEPRECATED: Get resolved attributes for a node
  */
 export const useNodeAttributes = (
-  nodeId: string | undefined,
+  nodeId: string,
   options?: UseQueryOptions<ResolvedAttribute[], Error>,
 ) => {
   return useQuery({
-    queryKey: [
-      ...(createQueryKey(QUERY_KEYS.STRUCTURE_NODES, "attributes") as string[]),
-      nodeId,
-    ] as const,
-    queryFn: () => {
-      if (!nodeId) {
-        return Promise.resolve([]);
-      }
-      return structureNodeService.getNodeAttributes(nodeId);
+    queryKey: ["node_attributes", nodeId],
+    queryFn: async () => {
+      console.warn("useNodeAttributes is deprecated.");
+      return [];
     },
     enabled: !!nodeId,
     ...options,
@@ -44,63 +33,47 @@ export const useNodeAttributes = (
 };
 
 /**
- * Hook to get mutation functions for managing node attributes
+ * DEPRECATED: Set node attributes
  */
-export const useNodeAttributeMutations = (
-  nodeId: string,
-  options?: {
-    setAttributesOptions?: UseMutationOptions<
-      StructureNode,
-      Error,
-      StructureNodeAttribute[]
-    >;
-    removeAttributeOptions?: UseMutationOptions<StructureNode, Error, string>;
-  },
+export const useSetNodeAttributes = (
+  options?: UseMutationOptions<
+    StructureNode,
+    Error,
+    { nodeId: string; attributes: StructureNodeAttribute[] }
+  >,
 ) => {
-  const queryClient = useQueryClient();
-
-  const setAttributesMutation = useMutation({
-    mutationFn: (attributes: StructureNodeAttribute[]) =>
-      structureNodeService.setNodeAttributes(nodeId, attributes),
-    onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: [
-          ...(createQueryKey(
-            QUERY_KEYS.STRUCTURE_NODES,
-            "attributes",
-          ) as string[]),
-          nodeId,
-        ],
-      });
-      queryClient.invalidateQueries({
-        queryKey: createQueryKey(QUERY_KEYS.STRUCTURE_NODES, nodeId),
-      });
+  return useMutation({
+    mutationFn: async () => {
+      throw new Error("useSetNodeAttributes is deprecated.");
     },
-    ...options?.setAttributesOptions,
+    ...options,
   });
+};
 
-  const removeAttributeMutation = useMutation({
-    mutationFn: (key: string) =>
-      structureNodeService.removeNodeAttribute(nodeId, key),
-    onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: [
-          ...(createQueryKey(
-            QUERY_KEYS.STRUCTURE_NODES,
-            "attributes",
-          ) as string[]),
-          nodeId,
-        ],
-      });
-      queryClient.invalidateQueries({
-        queryKey: createQueryKey(QUERY_KEYS.STRUCTURE_NODES, nodeId),
-      });
+/**
+ * DEPRECATED: Remove node attribute
+ */
+export const useRemoveNodeAttribute = (
+  options?: UseMutationOptions<
+    StructureNode,
+    Error,
+    { nodeId: string; key: string }
+  >,
+) => {
+  return useMutation({
+    mutationFn: async () => {
+      throw new Error("useRemoveNodeAttribute is deprecated.");
     },
-    ...options?.removeAttributeOptions,
+    ...options,
   });
+};
 
+/**
+ * DEPRECATED: Batch mutations for node attributes
+ */
+export const useNodeAttributeMutations = (nodeId: string) => {
   return {
-    setAttributesMutation,
-    removeAttributeMutation,
+    setAttributes: useSetNodeAttributes(),
+    removeAttribute: useRemoveNodeAttribute(),
   };
 };

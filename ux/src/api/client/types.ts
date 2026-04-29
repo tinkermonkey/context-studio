@@ -1889,8 +1889,9 @@ export interface paths {
      *     components (NLP pipeline, embedding model, LLM providers).
      *
      *     Health status rules:
-     *     - "healthy": All core systems operational
-     *     - "degraded": Optional components unavailable but system functional
+     *     - "healthy": All systems operational
+     *     - "degraded": One or more issues detected (e.g., missing LLM providers, unavailable
+     *       components, failed background tasks) but core systems functional
      *     - "unhealthy": Critical systems (database) unavailable
      *
      *     Returns:
@@ -1908,7 +1909,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  "/api/v1/admin/metrics/database": {
+  "/api/v1/admin/health/database": {
     parameters: {
       query?: never;
       header?: never;
@@ -1927,7 +1928,7 @@ export interface paths {
      *     Raises:
      *         HTTPException: 500 for internal errors
      */
-    get: operations["get_database_health_api_v1_admin_metrics_database_get"];
+    get: operations["get_database_health_api_v1_admin_health_database_get"];
     put?: never;
     post?: never;
     delete?: never;
@@ -1936,7 +1937,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  "/api/v1/admin/metrics/services": {
+  "/api/v1/admin/health/services": {
     parameters: {
       query?: never;
       header?: never;
@@ -1955,7 +1956,7 @@ export interface paths {
      *     Raises:
      *         HTTPException: 500 for internal errors
      */
-    get: operations["get_service_metrics_api_v1_admin_metrics_services_get"];
+    get: operations["get_service_metrics_api_v1_admin_health_services_get"];
     put?: never;
     post?: never;
     delete?: never;
@@ -1964,7 +1965,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  "/api/v1/admin/metrics/embedding": {
+  "/api/v1/admin/health/embedding": {
     parameters: {
       query?: never;
       header?: never;
@@ -1983,7 +1984,7 @@ export interface paths {
      *     Raises:
      *         HTTPException: 500 for internal errors
      */
-    get: operations["get_embedding_status_api_v1_admin_metrics_embedding_get"];
+    get: operations["get_embedding_status_api_v1_admin_health_embedding_get"];
     put?: never;
     post?: never;
     delete?: never;
@@ -1992,7 +1993,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  "/api/v1/admin/metrics/nlp": {
+  "/api/v1/admin/health/nlp": {
     parameters: {
       query?: never;
       header?: never;
@@ -2011,7 +2012,7 @@ export interface paths {
      *     Raises:
      *         HTTPException: 500 for internal errors
      */
-    get: operations["get_nlp_status_api_v1_admin_metrics_nlp_get"];
+    get: operations["get_nlp_status_api_v1_admin_health_nlp_get"];
     put?: never;
     post?: never;
     delete?: never;
@@ -2020,7 +2021,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  "/api/v1/admin/metrics/tasks": {
+  "/api/v1/admin/health/tasks": {
     parameters: {
       query?: never;
       header?: never;
@@ -2039,7 +2040,7 @@ export interface paths {
      *     Raises:
      *         HTTPException: 500 for internal errors
      */
-    get: operations["get_task_summary_api_v1_admin_metrics_tasks_get"];
+    get: operations["get_task_summary_api_v1_admin_health_tasks_get"];
     put?: never;
     post?: never;
     delete?: never;
@@ -2060,7 +2061,7 @@ export interface paths {
      * @description Retrieve current application configuration.
      *
      *     Returns all configuration sections with sensitive values (API keys)
-     *     masked to prevent exposure in logs.
+     *     masked in the API response to prevent exposure through the HTTP interface.
      *
      *     Returns:
      *         AppConfigurationResponse with configuration sections and masked API keys
@@ -2227,10 +2228,12 @@ export interface components {
     AppConfigurationResponse: {
       /**
        * Sections
-       * @description Configuration sections with sensitive values masked
+       * @description All configuration sections with masked credentials
        */
-      sections: {
-        [key: string]: unknown;
+      sections?: {
+        [key: string]: {
+          [key: string]: unknown;
+        };
       };
     };
     /**
@@ -2262,8 +2265,9 @@ export interface components {
       /**
        * Status
        * @description Task status: "pending", "running", "completed", or "failed"
+       * @enum {string}
        */
-      status: string;
+      status: "pending" | "running" | "completed" | "failed";
       /**
        * Created At
        * Format: date-time
@@ -2280,11 +2284,6 @@ export interface components {
        * @description Timestamp when task finished
        */
       completed_at?: string | null;
-      /**
-       * Progress
-       * @description Task progress as a float between 0.0 and 1.0
-       */
-      progress?: number | null;
       /**
        * Error
        * @description Error message if task failed
@@ -2972,8 +2971,9 @@ export interface components {
       /**
        * Status
        * @description Completion status (success, error, timeout)
+       * @enum {string}
        */
-      status: string;
+      status: "success" | "error" | "timeout";
       /**
        * Error Message
        * @description Error description if applicable
@@ -3331,8 +3331,9 @@ export interface components {
       /**
        * Direction
        * @description Direction of traversal: 'in', 'out', or 'both'
+       * @enum {string}
        */
-      direction: string;
+      direction: "in" | "out" | "both";
       /**
        * Neighbors
        * @description List of neighboring node IDs
@@ -4093,6 +4094,12 @@ export interface components {
        */
       is_configured: boolean;
       /**
+       * Is Degraded
+       * @description Whether sync status is degraded due to errors (unprocessed_count may be unreliable)
+       * @default false
+       */
+      is_degraded: boolean;
+      /**
        * Last Pushed At
        * @description ISO timestamp of last successful push
        */
@@ -4111,8 +4118,9 @@ export interface components {
       /**
        * Status
        * @description Overall health status: "healthy", "degraded", or "unhealthy"
+       * @enum {string}
        */
-      status: string;
+      status: "healthy" | "degraded" | "unhealthy";
       /**
        * Database Connected
        * @description Whether database is accessible
@@ -6451,7 +6459,7 @@ export interface operations {
       };
     };
   };
-  get_database_health_api_v1_admin_metrics_database_get: {
+  get_database_health_api_v1_admin_health_database_get: {
     parameters: {
       query?: never;
       header?: never;
@@ -6471,7 +6479,7 @@ export interface operations {
       };
     };
   };
-  get_service_metrics_api_v1_admin_metrics_services_get: {
+  get_service_metrics_api_v1_admin_health_services_get: {
     parameters: {
       query?: never;
       header?: never;
@@ -6491,7 +6499,7 @@ export interface operations {
       };
     };
   };
-  get_embedding_status_api_v1_admin_metrics_embedding_get: {
+  get_embedding_status_api_v1_admin_health_embedding_get: {
     parameters: {
       query?: never;
       header?: never;
@@ -6511,7 +6519,7 @@ export interface operations {
       };
     };
   };
-  get_nlp_status_api_v1_admin_metrics_nlp_get: {
+  get_nlp_status_api_v1_admin_health_nlp_get: {
     parameters: {
       query?: never;
       header?: never;
@@ -6531,7 +6539,7 @@ export interface operations {
       };
     };
   };
-  get_task_summary_api_v1_admin_metrics_tasks_get: {
+  get_task_summary_api_v1_admin_health_tasks_get: {
     parameters: {
       query?: never;
       header?: never;
