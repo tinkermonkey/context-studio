@@ -12,14 +12,17 @@ export const handlers = [
     return res(
       ctx.status(200),
       ctx.json({
-        data: [
+        items: [
           {
             id: "taxonomy-1",
             title: "Taxonomy 1",
-            node_type: "taxonomy",
+            version: 1,
             created_at: new Date().toISOString(),
           },
         ],
+        total: 1,
+        limit: 50,
+        offset: 0,
       }),
     );
   }),
@@ -29,12 +32,10 @@ export const handlers = [
     return res(
       ctx.status(200),
       ctx.json({
-        data: {
-          id,
-          title: `Taxonomy ${id}`,
-          node_type: "taxonomy",
-          created_at: new Date().toISOString(),
-        },
+        id,
+        title: `Taxonomy ${id}`,
+        version: 1,
+        created_at: new Date().toISOString(),
       }),
     );
   }),
@@ -44,7 +45,9 @@ export const handlers = [
     return res(
       ctx.status(201),
       ctx.json({
-        data: { ...body, id: "new-taxonomy", node_type: "taxonomy" },
+        ...body,
+        id: "new-taxonomy",
+        version: 1,
       }),
     );
   }),
@@ -61,9 +64,15 @@ export const handlers = [
     return res(
       ctx.status(200),
       ctx.json({
-        data: { ...body, id, node_type: "taxonomy" },
+        ...body,
+        id,
+        version: 1,
       }),
     );
+  }),
+
+  rest.delete("/api/taxonomies/:id", (req, res, ctx) => {
+    return res(ctx.status(204));
   }),
 
   // Schemes endpoints
@@ -71,14 +80,18 @@ export const handlers = [
     return res(
       ctx.status(200),
       ctx.json({
-        data: [
+        items: [
           {
             id: "scheme-1",
             title: "Scheme 1",
-            node_type: "scheme",
+            taxonomy_id: "taxonomy-1",
+            version: 1,
             created_at: new Date().toISOString(),
           },
         ],
+        total: 1,
+        limit: 50,
+        offset: 0,
       }),
     );
   }),
@@ -88,12 +101,11 @@ export const handlers = [
     return res(
       ctx.status(200),
       ctx.json({
-        data: {
-          id,
-          title: `Scheme ${id}`,
-          node_type: "scheme",
-          created_at: new Date().toISOString(),
-        },
+        id,
+        title: `Scheme ${id}`,
+        taxonomy_id: "taxonomy-1",
+        version: 1,
+        created_at: new Date().toISOString(),
       }),
     );
   }),
@@ -103,7 +115,9 @@ export const handlers = [
     return res(
       ctx.status(201),
       ctx.json({
-        data: { ...body, id: "new-scheme", node_type: "scheme" },
+        ...body,
+        id: "new-scheme",
+        version: 1,
       }),
     );
   }),
@@ -120,9 +134,15 @@ export const handlers = [
     return res(
       ctx.status(200),
       ctx.json({
-        data: { ...body, id, node_type: "scheme" },
+        ...body,
+        id,
+        version: 1,
       }),
     );
+  }),
+
+  rest.delete("/api/schemes/:id", (req, res, ctx) => {
+    return res(ctx.status(204));
   }),
 
   // Classes endpoints
@@ -130,14 +150,19 @@ export const handlers = [
     return res(
       ctx.status(200),
       ctx.json({
-        data: [
+        items: [
           {
             id: "class-1",
             title: "Class 1",
-            node_type: "class",
+            concept_scheme_id: "scheme-1",
+            taxonomy_id: "taxonomy-1",
+            version: 1,
             created_at: new Date().toISOString(),
           },
         ],
+        total: 1,
+        limit: 50,
+        offset: 0,
       }),
     );
   }),
@@ -147,12 +172,12 @@ export const handlers = [
     return res(
       ctx.status(200),
       ctx.json({
-        data: {
-          id,
-          title: `Class ${id}`,
-          node_type: "class",
-          created_at: new Date().toISOString(),
-        },
+        id,
+        title: `Class ${id}`,
+        concept_scheme_id: "scheme-1",
+        taxonomy_id: "taxonomy-1",
+        version: 1,
+        created_at: new Date().toISOString(),
       }),
     );
   }),
@@ -162,7 +187,9 @@ export const handlers = [
     return res(
       ctx.status(201),
       ctx.json({
-        data: { ...body, id: "new-class", node_type: "class" },
+        ...body,
+        id: "new-class",
+        version: 1,
       }),
     );
   }),
@@ -179,9 +206,15 @@ export const handlers = [
     return res(
       ctx.status(200),
       ctx.json({
-        data: { ...body, id, node_type: "class" },
+        ...body,
+        id,
+        version: 1,
       }),
     );
+  }),
+
+  rest.delete("/api/classes/:id", (req, res, ctx) => {
+    return res(ctx.status(204));
   }),
 
   // Properties endpoints (replaces legacy predicates)
@@ -189,13 +222,17 @@ export const handlers = [
     return res(
       ctx.status(200),
       ctx.json({
-        data: [
+        items: [
           {
             id: "prop-1",
             title: "Property 1",
-            property_type: "object_property",
+            identifier: "prop-1",
+            version: 1,
           },
         ],
+        total: 1,
+        limit: 50,
+        offset: 0,
       }),
     );
   }),
@@ -205,11 +242,10 @@ export const handlers = [
     return res(
       ctx.status(200),
       ctx.json({
-        data: {
-          id,
-          title: `Property ${id}`,
-          property_type: "object_property",
-        },
+        id,
+        title: `Property ${id}`,
+        identifier: id,
+        version: 1,
       }),
     );
   }),
@@ -219,7 +255,9 @@ export const handlers = [
     return res(
       ctx.status(201),
       ctx.json({
-        data: { ...body, id: "new-property", property_type: "object_property" },
+        ...body,
+        id: "new-property",
+        version: 1,
       }),
     );
   }),
@@ -236,9 +274,15 @@ export const handlers = [
     return res(
       ctx.status(200),
       ctx.json({
-        data: { ...body, id, property_type: "object_property" },
+        ...body,
+        id,
+        version: 1,
       }),
     );
+  }),
+
+  rest.delete("/api/properties/:id", (req, res, ctx) => {
+    return res(ctx.status(204));
   }),
 
   // Relationships endpoints
@@ -246,14 +290,18 @@ export const handlers = [
     return res(
       ctx.status(200),
       ctx.json({
-        data: [
+        items: [
           {
             id: "rel-1",
-            source_node_id: "node-1",
-            target_node_id: "node-2",
-            property_id: "prop-1",
+            source_id: "class-1",
+            target_id: "class-2",
+            property_definition_id: "prop-1",
+            version: 1,
           },
         ],
+        total: 1,
+        limit: 50,
+        offset: 0,
       }),
     );
   }),
@@ -263,12 +311,11 @@ export const handlers = [
     return res(
       ctx.status(200),
       ctx.json({
-        data: {
-          id,
-          source_node_id: "node-1",
-          target_node_id: "node-2",
-          property_id: "prop-1",
-        },
+        id,
+        source_id: "class-1",
+        target_id: "class-2",
+        property_definition_id: "prop-1",
+        version: 1,
       }),
     );
   }),
@@ -278,7 +325,9 @@ export const handlers = [
     return res(
       ctx.status(201),
       ctx.json({
-        data: { ...body, id: "new-relationship" },
+        ...body,
+        id: "new-relationship",
+        version: 1,
       }),
     );
   }),
@@ -289,9 +338,15 @@ export const handlers = [
     return res(
       ctx.status(200),
       ctx.json({
-        data: { ...body, id },
+        ...body,
+        id,
+        version: 1,
       }),
     );
+  }),
+
+  rest.delete("/api/relationships/:id", (req, res, ctx) => {
+    return res(ctx.status(204));
   }),
 
   // Graph endpoints
@@ -299,10 +354,8 @@ export const handlers = [
     return res(
       ctx.status(200),
       ctx.json({
-        data: {
-          nodes: [],
-          edges: [],
-        },
+        nodes: [],
+        edges: [],
       }),
     );
   }),
@@ -312,10 +365,8 @@ export const handlers = [
     return res(
       ctx.status(200),
       ctx.json({
-        data: {
-          nodes: [],
-          edges: [],
-        },
+        nodes: [],
+        edges: [],
       }),
     );
   }),
@@ -325,7 +376,10 @@ export const handlers = [
     return res(
       ctx.status(200),
       ctx.json({
-        data: [],
+        items: [],
+        total: 0,
+        limit: 50,
+        offset: 0,
       }),
     );
   }),
@@ -334,9 +388,7 @@ export const handlers = [
   rest.get("/api/schema", (req, res, ctx) => {
     return res(
       ctx.status(200),
-      ctx.json({
-        data: null,
-      }),
+      ctx.json(null),
     );
   }),
 
@@ -345,7 +397,10 @@ export const handlers = [
     return res(
       ctx.status(200),
       ctx.json({
-        data: [],
+        items: [],
+        total: 0,
+        limit: 50,
+        offset: 0,
       }),
     );
   }),
@@ -356,10 +411,8 @@ export const handlers = [
     return res(
       ctx.status(200),
       ctx.json({
-        data: {
-          request_id: "rag-req-1",
-          status: "completed",
-        },
+        request_id: "rag-req-1",
+        status: "completed",
       }),
     );
   }),
@@ -369,10 +422,8 @@ export const handlers = [
     return res(
       ctx.status(200),
       ctx.json({
-        data: {
-          request_id: requestId,
-          metrics: {},
-        },
+        request_id: requestId,
+        metrics: {},
       }),
     );
   }),
@@ -382,10 +433,8 @@ export const handlers = [
     return res(
       ctx.status(200),
       ctx.json({
-        data: {
-          request_id: requestId,
-          trace: [],
-        },
+        request_id: requestId,
+        trace: [],
       }),
     );
   }),
@@ -395,7 +444,10 @@ export const handlers = [
     return res(
       ctx.status(200),
       ctx.json({
-        data: [],
+        items: [],
+        total: 0,
+        limit: 50,
+        offset: 0,
       }),
     );
   }),
@@ -405,10 +457,8 @@ export const handlers = [
     return res(
       ctx.status(200),
       ctx.json({
-        data: {
-          run_id: "exp-run-1",
-          status: "completed",
-        },
+        run_id: "exp-run-1",
+        status: "completed",
       }),
     );
   }),
@@ -418,7 +468,10 @@ export const handlers = [
     return res(
       ctx.status(200),
       ctx.json({
-        data: [],
+        items: [],
+        total: 0,
+        limit: 50,
+        offset: 0,
       }),
     );
   }),
@@ -426,9 +479,7 @@ export const handlers = [
   rest.get("/api/llm", (req, res, ctx) => {
     return res(
       ctx.status(200),
-      ctx.json({
-        data: null,
-      }),
+      ctx.json(null),
     );
   }),
 
@@ -437,9 +488,14 @@ export const handlers = [
     return res(
       ctx.status(201),
       ctx.json({
-        data: { ...body, id: "new-llm-config" },
+        ...body,
+        id: "new-llm-config",
       }),
     );
+  }),
+
+  rest.delete("/api/llm/:id", (req, res, ctx) => {
+    return res(ctx.status(204));
   }),
 
   // LLM Traceability endpoints
@@ -447,9 +503,7 @@ export const handlers = [
     return res(
       ctx.status(200),
       ctx.json({
-        data: {
-          status: "healthy",
-        },
+        status: "healthy",
       }),
     );
   }),
@@ -458,7 +512,10 @@ export const handlers = [
     return res(
       ctx.status(200),
       ctx.json({
-        data: [],
+        items: [],
+        total: 0,
+        limit: 50,
+        offset: 0,
       }),
     );
   }),
@@ -466,9 +523,7 @@ export const handlers = [
   rest.get("/api/llm/execution-analytics", (req, res, ctx) => {
     return res(
       ctx.status(200),
-      ctx.json({
-        data: {},
-      }),
+      ctx.json({}),
     );
   }),
 
@@ -476,7 +531,10 @@ export const handlers = [
     return res(
       ctx.status(200),
       ctx.json({
-        data: [],
+        items: [],
+        total: 0,
+        limit: 50,
+        offset: 0,
       }),
     );
   }),
@@ -487,10 +545,8 @@ export const handlers = [
     return res(
       ctx.status(200),
       ctx.json({
-        data: {
-          analysis_id: "nlp-1",
-          results: {},
-        },
+        analysis_id: "nlp-1",
+        results: {},
       }),
     );
   }),
@@ -500,7 +556,10 @@ export const handlers = [
     return res(
       ctx.status(200),
       ctx.json({
-        data: [],
+        items: [],
+        total: 0,
+        limit: 50,
+        offset: 0,
       }),
     );
   }),
@@ -509,7 +568,10 @@ export const handlers = [
     return res(
       ctx.status(200),
       ctx.json({
-        data: [],
+        items: [],
+        total: 0,
+        limit: 50,
+        offset: 0,
       }),
     );
   }),
@@ -517,9 +579,7 @@ export const handlers = [
   rest.get("/api/reference/ref-db/filter/statistics", (req, res, ctx) => {
     return res(
       ctx.status(200),
-      ctx.json({
-        data: {},
-      }),
+      ctx.json({}),
     );
   }),
 
@@ -527,7 +587,10 @@ export const handlers = [
     return res(
       ctx.status(200),
       ctx.json({
-        data: [],
+        items: [],
+        total: 0,
+        limit: 50,
+        offset: 0,
       }),
     );
   }),

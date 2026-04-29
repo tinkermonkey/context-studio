@@ -256,6 +256,55 @@ describe("BaseService", () => {
       // Should make two requests
       expect(vi.mocked(mockClient.request).mock.calls.length).toBe(2);
     });
+
+    it("should throw error when max iterations exceeded to prevent infinite loops", async () => {
+      const mockItems = Array.from({ length: 100 }, (_, i) => ({
+        id: String(i),
+        title: `Item ${i}`,
+      }));
+
+      // Mock server returning same page repeatedly (returns offset=0 every time)
+      const response: PaginatedResponse<{ id: string; title: string }> = {
+        data: mockItems,
+        total: 999999, // Very large total to prevent early exit
+        skip: 0,
+        limit: 100,
+      };
+
+      // Mock all requests to return the same page
+      vi.mocked(mockClient.request).mockResolvedValue({ data: response });
+
+      await expect(
+        service.testGetAllPaginated<{ id: string; title: string }>(
+          "/api/items",
+        ),
+      ).rejects.toThrow("exceeded maximum iterations");
+    });
+
+    it("should stop when allItems.length >= total", async () => {
+      const page1Items = Array.from({ length: 100 }, (_, i) => ({
+        id: String(i + 1),
+        title: `Item ${i + 1}`,
+      }));
+
+      const response: PaginatedResponse<{ id: string; title: string }> = {
+        data: page1Items,
+        total: 100, // Exactly 100 items total
+        skip: 0,
+        limit: 100,
+      };
+
+      vi.mocked(mockClient.request).mockResolvedValueOnce({ data: response });
+
+      const result = await service.testGetAllPaginated<{
+        id: string;
+        title: string;
+      }>("/api/items");
+
+      expect(result).toEqual(page1Items);
+      // Should only make one request
+      expect(vi.mocked(mockClient.request).mock.calls.length).toBe(1);
+    });
   });
 
   describe("getPage", () => {
