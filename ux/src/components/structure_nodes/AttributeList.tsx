@@ -9,14 +9,14 @@ import { Badge, Button, Tooltip } from "flowbite-react";
 import { Edit2, Link, Trash2 } from "lucide-react";
 import type {
   ResolvedAttribute,
-  StructureNodeAttribute,
-} from "@/api/types/structureNodes";
-import { useStructureNode } from "@/api/hooks/structure_nodes/useStructureNodes";
+  OntologyClassAttribute,
+} from "@/api/types/ontologyClasss";
+import { useClass } from "@/api/hooks/ontologyClasss/useClasss";
 
 interface AttributeListProps {
   attributes: ResolvedAttribute[];
   onRemoveAttribute?: (key: string) => void;
-  onEditAttribute?: (attribute: StructureNodeAttribute) => void;
+  onEditAttribute?: (attribute: OntologyClassAttribute) => void;
   isLoading?: boolean;
 }
 
@@ -61,7 +61,7 @@ const AttributeValueDisplay: React.FC<{
 const InheritedAttributeInfo: React.FC<{
   sourceNodeId: string | null | undefined;
 }> = ({ sourceNodeId }) => {
-  const { data: sourceNode } = useStructureNode(sourceNodeId || "");
+  const { data: sourceNode } = useClass(sourceNodeId || "");
 
   const sourceTitle = sourceNode?.title || "Unknown node";
 
@@ -137,7 +137,7 @@ export const AttributeList: React.FC<AttributeListProps> = ({
                       size="sm"
                       color="light"
                       onClick={() =>
-                        onEditAttribute(attr as StructureNodeAttribute)
+                        onEditAttribute(attr as OntologyClassAttribute)
                       }
                       disabled={isLoading}
                     >

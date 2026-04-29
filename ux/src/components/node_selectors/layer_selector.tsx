@@ -1,9 +1,9 @@
-import { StructureNode } from "@/api/types/structureNodes";
+import { OntologyClass } from "@/api/types/ontologyClasss";
 import { PortalRecordSelector } from "@/components/node_selectors/portal_record_selector";
 import { useTaxonomies } from "@/api/hooks/taxonomies/useTaxonomies";
 
 export interface LayerSelectorProps {
-  onSelect?: (layer: StructureNode | undefined) => void;
+  onSelect?: (layer: OntologyClass | undefined) => void;
   value?: string;
   "data-testid"?: string;
 }
@@ -15,12 +15,12 @@ export const LayerSelector: React.FC<LayerSelectorProps> = ({
 }) => {
   const { data: taxonomies, isLoading, error } = useTaxonomies();
 
-  // Transform taxonomies to StructureNode-like format for compatibility
+  // Transform taxonomies to OntologyClass-like format for compatibility
   const layers = taxonomies?.map((t) => ({
     id: t.id,
     title: t.title,
     definition: t.description || "",
-  })) as StructureNode[] | undefined;
+  })) as OntologyClass[] | undefined;
 
   return (
     <PortalRecordSelector
@@ -28,7 +28,7 @@ export const LayerSelector: React.FC<LayerSelectorProps> = ({
       loading={isLoading}
       error={error ? "Failed to load records" : null}
       fieldMap={{ value: "id", title: "title", definition: "definition" }}
-      onSelect={(r) => onSelect && onSelect(r as StructureNode | undefined)}
+      onSelect={(r) => onSelect && onSelect(r as OntologyClass | undefined)}
       value={value}
       data-testid={dataTestId}
     />

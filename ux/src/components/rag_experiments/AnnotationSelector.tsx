@@ -13,12 +13,12 @@ import {
   useCreateAnnotation,
   useDeleteAnnotation,
 } from "@/api/hooks/ragExperiments";
-import { useStructureNodeSearch } from "@/api/hooks/structure_nodes/useStructureNodes";
+import { useClassSearch } from "@/api/hooks/ontologyClasss/useClasss";
 import type { TestParagraphResponse } from "@/api/services/ragExperiments";
 import type {
-  StructureNode,
-  FindStructureNodeResult,
-} from "@/api/types/structureNodes";
+  OntologyClass,
+  FindOntologyClassResult,
+} from "@/api/types/ontologyClasss";
 
 export interface AnnotationSelectorProps {
   paragraph: TestParagraphResponse;
@@ -55,15 +55,15 @@ export const AnnotationSelector: React.FC<AnnotationSelectorProps> = ({
 
   // Use vector search for structure nodes based on debounced search query
   const { data: searchResults, isLoading: nodesLoading } =
-    useStructureNodeSearch({
+    useClassSearch({
       query: debouncedSearchQuery,
       limit: 100,
       threshold: 0.0,
     });
 
-  // Convert search results to StructureNode format for RecordSelector
-  const structureNodes: StructureNode[] =
-    searchResults?.map((result: FindStructureNodeResult) => ({
+  // Convert search results to OntologyClass format for RecordSelector
+  const ontologyClasss: OntologyClass[] =
+    searchResults?.map((result: FindOntologyClassResult) => ({
       id: result.id,
       node_type: result.node_type,
       parent_node_id: result.parent_node_id,
@@ -120,7 +120,7 @@ export const AnnotationSelector: React.FC<AnnotationSelectorProps> = ({
       paragraphId: paragraph.id,
       startChar: selection.start,
       endChar: selection.end,
-      structureNodeId: selectedNodeId,
+      ontologyClassId: selectedNodeId,
     });
 
     // Reset selection
@@ -176,8 +176,8 @@ export const AnnotationSelector: React.FC<AnnotationSelectorProps> = ({
         annotation.start_char,
         annotation.end_char,
       );
-      const nodeInfo = (structureNodes || []).find(
-        (n: StructureNode) => n.id === annotation.structure_node_id,
+      const nodeInfo = (ontologyClasss || []).find(
+        (n: OntologyClass) => n.id === annotation.ontologyClass_id,
       );
 
       segments.push(
@@ -239,14 +239,14 @@ export const AnnotationSelector: React.FC<AnnotationSelectorProps> = ({
                 Link to Structure Node (search to find nodes)
               </label>
               <RecordSelector
-                records={structureNodes || []}
+                records={ontologyClasss || []}
                 fieldMap={{
                   value: "id",
                   title: "title",
                   definition: "definition",
                 }}
                 value={selectedNodeId}
-                onSelect={(node: StructureNode) =>
+                onSelect={(node: OntologyClass) =>
                   setSelectedNodeId(node?.id || "")
                 }
                 search={searchInput}
@@ -303,9 +303,9 @@ export const AnnotationSelector: React.FC<AnnotationSelectorProps> = ({
           </h4>
           <div className="space-y-2">
             {paragraph.annotations.map((annotation) => {
-              const nodeInfo = (structureNodes || []).find(
-                (n: StructureNode) =>
-                  n.id === (annotation.structure_node_id as string),
+              const nodeInfo = (ontologyClasss || []).find(
+                (n: OntologyClass) =>
+                  n.id === (annotation.ontologyClass_id as string),
               );
               return (
                 <div
@@ -319,7 +319,7 @@ export const AnnotationSelector: React.FC<AnnotationSelectorProps> = ({
                     <p className="text-xs text-gray-600">
                       →{" "}
                       {nodeInfo?.title ||
-                        (annotation.structure_node_id as string)}
+                        (annotation.ontologyClass_id as string)}
                     </p>
                     <p className="text-xs text-gray-500">
                       Position: {annotation.start_char} - {annotation.end_char}

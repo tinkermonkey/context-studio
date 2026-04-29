@@ -7,11 +7,11 @@
 import React, { useState } from "react";
 import { Spinner, Button, Alert } from "flowbite-react";
 import { Plus, AlertCircle } from "lucide-react";
-import type { StructureNodeAttribute } from "@/api/types/structureNodes";
+import type { OntologyClassAttribute } from "@/api/types/ontologyClasss";
 import {
   useNodeAttributes,
   useNodeAttributeMutations,
-} from "@/api/hooks/structure_nodes/useNodeAttributes";
+} from "@/api/hooks/ontologyClasss/useNodeAttributes";
 import { AttributeList } from "./AttributeList";
 import { AttributeEditor } from "./AttributeEditor";
 import { toast } from "@/utils/toast";
@@ -23,7 +23,7 @@ interface AttributePanelProps {
 export const AttributePanel: React.FC<AttributePanelProps> = ({ nodeId }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [editingAttribute, setEditingAttribute] = useState<
-    StructureNodeAttribute | undefined
+    OntologyClassAttribute | undefined
   >();
 
   // Fetch resolved attributes
@@ -43,10 +43,10 @@ export const AttributePanel: React.FC<AttributePanelProps> = ({ nodeId }) => {
     .filter((attr) => attr.key !== editingAttribute?.key) // Exclude current attribute being edited
     .map((attr) => attr.key);
 
-  // Helper to convert ResolvedAttribute to StructureNodeAttribute
-  const toStructureNodeAttribute = (
+  // Helper to convert ResolvedAttribute to OntologyClassAttribute
+  const toOntologyClassAttribute = (
     attr: (typeof attributes)[number],
-  ): StructureNodeAttribute => ({
+  ): OntologyClassAttribute => ({
     key: attr.key,
     title: attr.title,
     value_type: attr.value_type,
@@ -54,7 +54,7 @@ export const AttributePanel: React.FC<AttributePanelProps> = ({ nodeId }) => {
   });
 
   // Handle attribute save (create or update)
-  const handleSaveAttribute = async (attribute: StructureNodeAttribute) => {
+  const handleSaveAttribute = async (attribute: OntologyClassAttribute) => {
     try {
       if (editingAttribute) {
         // For editing, we need to replace the entire attributes list
@@ -63,7 +63,7 @@ export const AttributePanel: React.FC<AttributePanelProps> = ({ nodeId }) => {
           .filter(
             (attr) => attr.key !== editingAttribute.key && !attr.inherited,
           )
-          .map(toStructureNodeAttribute)
+          .map(toOntologyClassAttribute)
           .concat(attribute);
 
         await setAttributesMutation.mutateAsync(newAttributes);
@@ -72,7 +72,7 @@ export const AttributePanel: React.FC<AttributePanelProps> = ({ nodeId }) => {
         // For creating, add to existing local attributes
         const localAttributes = attributes
           .filter((attr) => !attr.inherited)
-          .map(toStructureNodeAttribute);
+          .map(toOntologyClassAttribute);
         const newAttributes = localAttributes.concat(attribute);
 
         await setAttributesMutation.mutateAsync(newAttributes);
@@ -104,7 +104,7 @@ export const AttributePanel: React.FC<AttributePanelProps> = ({ nodeId }) => {
   };
 
   // Handle edit button click
-  const handleEditAttribute = (attribute: StructureNodeAttribute) => {
+  const handleEditAttribute = (attribute: OntologyClassAttribute) => {
     setEditingAttribute(attribute);
     setIsEditing(true);
   };

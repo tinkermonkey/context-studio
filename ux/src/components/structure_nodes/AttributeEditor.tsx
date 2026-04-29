@@ -9,15 +9,15 @@ import { useForm } from "@tanstack/react-form";
 import { TextInput, Button, Label, Select, Card, Alert } from "flowbite-react";
 import { AlertCircle, Plus, X } from "lucide-react";
 import type {
-  StructureNodeAttribute,
+  OntologyClassAttribute,
   AttributeValueType,
-} from "@/api/types/structureNodes";
+} from "@/api/types/ontologyClasss";
 import { AttributeValueInput } from "./AttributeValueInput";
 
 interface AttributeEditorProps {
-  onSave: (attribute: StructureNodeAttribute) => Promise<void>;
+  onSave: (attribute: OntologyClassAttribute) => Promise<void>;
   isLoading?: boolean;
-  initialAttribute?: StructureNodeAttribute;
+  initialAttribute?: OntologyClassAttribute;
   onCancel?: () => void;
   existingKeys?: string[];
 }

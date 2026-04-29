@@ -22,3 +22,6 @@ __pycache__/
 /datafiles/
 *.db
 *.db-journal
+
+# Test outputs
+ux/test_output.txt

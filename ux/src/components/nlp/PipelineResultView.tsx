@@ -5,7 +5,7 @@ import {
   useUpdateTerm,
   useUpdateDomain,
   useUpdateLayer,
-} from "@/api/hooks/structure_nodes/useStructureNodeMutations";
+} from "@/api/hooks/ontologyClasss/useClassMutations";
 
 // Interface for the expected pipeline execution result
 interface PipelineExecutionResult {

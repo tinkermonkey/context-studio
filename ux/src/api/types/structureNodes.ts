@@ -11,26 +11,26 @@
 /**
  * @deprecated Use the new ontology entity types instead
  */
-export type StructureNode = any;  
+export type OntologyClass = any;  
 
 /**
  * @deprecated Use the new ontology entity types instead
  */
 export enum NodeType {
-  LAYER = "LAYER",
-  DOMAIN = "DOMAIN",
-  TERM = "TERM",
+  TAXONOMY = "taxonomy",
+  SCHEME = "scheme",
+  CLASS = "class",
 }
 
 /**
  * @deprecated Use the new ontology entity types instead
  */
-export type StructureNodeCreate = any;  
+export type OntologyClassCreate = any;  
 
 /**
  * @deprecated Use the new ontology entity types instead
  */
-export type StructureNodeUpdate = any;  
+export type OntologyClassUpdate = any;  
 
 /**
  * @deprecated Use the new ontology entity types instead
@@ -51,8 +51,8 @@ export interface ChangeEvent {
  * @deprecated Use the new ontology entity types instead
  */
 export enum RecordType {
-  STRUCTURE_NODE = "structure_node",
-  STRUCTURE_NODE_LINK = "structure_node_link",
+  STRUCTURE_NODE = "ontologyClass",
+  STRUCTURE_NODE_LINK = "ontologyClass_link",
   PREDICATE = "predicate",
 }
 
@@ -64,12 +64,12 @@ export type WordSense = any;
 /**
  * @deprecated
  */
-export type StructureNodeLink = any;  
+export type OntologyClassLink = any;  
 
 /**
  * @deprecated
  */
-export type StructureNodeLinkCreate = any;  
+export type OntologyClassLinkCreate = any;  
 
 /**
  * @deprecated
@@ -89,7 +89,7 @@ export interface ReferenceLink {
 /**
  * @deprecated
  */
-export type StructureNodeAttribute = any;  
+export type OntologyClassAttribute = any;  
 
 /**
  * @deprecated
@@ -104,7 +104,7 @@ export type ResolvedAttribute = any;
 /**
  * @deprecated
  */
-export type FindStructureNodeResult = any;  
+export type FindOntologyClassResult = any;  
 
 /**
  * @deprecated
@@ -114,15 +114,15 @@ export type ExternalPredicateOut = any;
 /**
  * @deprecated
  */
-export function isStructureNodeEvent(event: ChangeEvent): boolean {
-  return event.record_type === "structure_node";
+export function isOntologyClassEvent(event: ChangeEvent): boolean {
+  return event.record_type === "ontologyClass";
 }
 
 /**
  * @deprecated
  */
-export function isStructureNodeLinkEvent(event: ChangeEvent): boolean {
-  return event.record_type === "structure_node_link";
+export function isOntologyClassLinkEvent(event: ChangeEvent): boolean {
+  return event.record_type === "ontologyClass_link";
 }
 
 /**

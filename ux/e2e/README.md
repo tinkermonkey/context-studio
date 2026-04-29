@@ -106,18 +106,18 @@ test.describe("Feature Name", () => {
 import { test, expect } from "@playwright/test";
 import { waitForAppReady, apiRequest } from "../fixtures/test-helpers";
 
-test("should create a structure node", async ({ page }) => {
+test("should create an ontology class", async ({ page }) => {
   await page.goto("/");
   await waitForAppReady(page);
 
   // Create via UI
-  await page.click('[data-testid="new-node-button"]');
-  await page.fill('[data-testid="node-name"]', "Test Node");
+  await page.click('[data-testid="new-class-button"]');
+  await page.fill('[data-testid="class-name"]', "Test Class");
   await page.click('[data-testid="submit"]');
 
   // Verify via API
-  const nodes = await apiRequest(page, "/api/structure-nodes");
-  expect(nodes.nodes.some((n) => n.name === "Test Node")).toBeTruthy();
+  const classes = await apiRequest(page, "/api/classes");
+  expect(classes.data.some((c) => c.title === "Test Class")).toBeTruthy();
 });
 ```
 

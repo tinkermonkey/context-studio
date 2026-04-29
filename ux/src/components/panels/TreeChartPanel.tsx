@@ -14,7 +14,7 @@ import {
 } from "@/utils/treeBuilder";
 import { ChartData } from "@/components/graphs/tree_chart/tree_data";
 import { apiLogger } from "@/api/utils/logger";
-import { NodeType } from "@/api/types/structureNodes";
+import { NodeType } from "@/api/types/ontologyClasss";
 
 export interface TreeChartPanelProps {
   /**
@@ -217,7 +217,7 @@ export function TreeChartPanel({
                   id: ancestorTerm.id,
                   title: ancestorTerm.title,
                   definition: ancestorTerm.definition || "",
-                  node_type: NodeType.TERM,
+                  node_type: "class",
                   parent_node_id: ancestorTerm.parent_node_id || targetTerm.scheme_id,
                 },
               ];
@@ -235,7 +235,7 @@ export function TreeChartPanel({
                   id: ancestorDomain.id,
                   title: ancestorDomain.title,
                   definition: ancestorDomain.definition || "",
-                  node_type: NodeType.DOMAIN,
+                  node_type: "scheme",
                   parent_node_id: ancestorDomain.parent_node_id || "",
                 },
               ];
@@ -253,7 +253,7 @@ export function TreeChartPanel({
                   id: ancestorLayer.id,
                   title: ancestorLayer.title,
                   definition: ancestorLayer.definition || "",
-                  node_type: NodeType.LAYER,
+                  node_type: "taxonomy",
                   parent_node_id: null,
                 },
               ];

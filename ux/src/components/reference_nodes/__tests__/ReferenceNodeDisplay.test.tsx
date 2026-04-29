@@ -8,11 +8,11 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { vi, describe, it, expect, beforeEach, afterEach } from "vitest";
 
 import { ReferenceNodeDisplay } from "../ReferenceNodeDisplay";
-import { useRemoveReferenceLink } from "@/api/hooks/structure_nodes/useReferenceLinks";
-import { ReferenceLink } from "@/api/types/structureNodes";
+import { useRemoveReferenceLink } from "@/api/hooks/ontologyClasss/useReferenceLinks";
+import { ReferenceLink } from "@/api/types/ontologyClasss";
 
 // Mock the hooks
-vi.mock("@/api/hooks/structure_nodes/useReferenceLinks");
+vi.mock("@/api/hooks/ontologyClasss/useReferenceLinks");
 vi.mock("@/utils/toast");
 
 const mockUseRemoveReferenceLink = useRemoveReferenceLink as ReturnType<

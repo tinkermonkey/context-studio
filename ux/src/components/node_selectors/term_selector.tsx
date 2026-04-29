@@ -1,9 +1,9 @@
-import { StructureNode } from "@/api/types/structureNodes";
+import { OntologyClass } from "@/api/types/ontologyClasss";
 import { PortalRecordSelector } from "@/components/node_selectors/portal_record_selector";
-import { useTermNodes } from "@/api/hooks/structure_nodes/useStructureNodes";
+import { useTermNodes } from "@/api/hooks/ontologyClasss/useClasss";
 
 export interface TermSelectorProps {
-  onSelect?: (term: StructureNode | undefined) => void;
+  onSelect?: (term: OntologyClass | undefined) => void;
   value?: string;
 }
 
@@ -18,7 +18,7 @@ export const TermSelector: React.FC<TermSelectorProps> = ({
       loading={isLoading}
       error={error ? "Failed to load records" : null}
       fieldMap={{ value: "id", title: "title", definition: "definition" }}
-      onSelect={(r) => onSelect && onSelect(r as StructureNode | undefined)}
+      onSelect={(r) => onSelect && onSelect(r as OntologyClass | undefined)}
       value={value}
     />
   );

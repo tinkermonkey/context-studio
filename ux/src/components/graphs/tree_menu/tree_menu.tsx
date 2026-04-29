@@ -271,7 +271,7 @@ const TreeMenu: React.FC<TreeMenuProps> = ({
           node.type === "domain" ||
           node.type === "layer"
         ) {
-          navigate({ to: `/app/structure_nodes/${node.id}` });
+          navigate({ to: `/app/ontologyClasss/${node.id}` });
         } else {
           console.warn("Clicked on unknown node:", node);
         }

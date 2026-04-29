@@ -16,11 +16,11 @@ import {
 import { AlertCircle, Database, Hash, Layers, Trash2 } from "lucide-react";
 import { useNavigate } from "@tanstack/react-router";
 
-import { StructureNodeLink, NodeType } from "@/api/types/structureNodes";
-import { useStructureNode } from "@/api/hooks/structure_nodes/useStructureNodes";
+import { OntologyClassLink, NodeType } from "@/api/types/ontologyClasss";
+import { useClass } from "@/api/hooks/ontologyClasss/useClasss";
 
 interface NodeLinkItemProps {
-  link: StructureNodeLink;
+  link: OntologyClassLink;
   currentNodeId: string;
   onDelete: (linkId: string) => void;
   isDeleting: boolean;
@@ -40,24 +40,24 @@ export const NodeLinkItem: React.FC<NodeLinkItemProps> = ({
   const displayNodeId = isOutgoing ? link.target_node_id : link.source_node_id;
 
   // Fetch the node to display
-  const { data: displayNode, isLoading } = useStructureNode(displayNodeId);
+  const { data: displayNode, isLoading } = useClass(displayNodeId);
 
   const handleDelete = () => {
     onDelete(link.id);
   };
 
   const handleNavigate = () => {
-    navigate({ to: `/app/structure_nodes/${displayNodeId}` });
+    navigate({ to: `/app/ontologyClasss/${displayNodeId}` });
   };
 
   // Get icon for node type
   const getNodeIcon = (nodeType: NodeType) => {
     switch (nodeType) {
-      case NodeType.LAYER:
+      case "taxonomy":
         return Layers;
-      case NodeType.DOMAIN:
+      case "scheme":
         return Database;
-      case NodeType.TERM:
+      case "class":
         return Hash;
       default:
         return Hash;

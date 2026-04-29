@@ -7,8 +7,8 @@
  * Do not use these hooks in new code.
  */
 
-export * from "./useStructureNodes";
-export * from "./useStructureNodeMutations";
+export * from "./useClasss";
+export * from "./useClassMutations";
 export * from "./useWordSenses";
 export * from "./useNodeAttributes";
 export * from "./useReferenceLinks";

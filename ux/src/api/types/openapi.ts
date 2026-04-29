@@ -243,7 +243,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  "/api/predicates/": {
+  "/api/properties/": {
     parameters: {
       query?: never;
       header?: never;
@@ -267,7 +267,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  "/api/predicates/{id}": {
+  "/api/properties/{id}": {
     parameters: {
       query?: never;
       header?: never;
@@ -295,7 +295,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  "/api/predicates/by-identifier/{identifier}": {
+  "/api/properties/by-identifier/{identifier}": {
     parameters: {
       query?: never;
       header?: never;
@@ -315,7 +315,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  "/api/predicates/conceptnet-relations": {
+  "/api/properties/conceptnet-relations": {
     parameters: {
       query?: never;
       header?: never;
@@ -335,7 +335,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  "/api/predicates/import-from-conceptnet": {
+  "/api/properties/import-from-conceptnet": {
     parameters: {
       query?: never;
       header?: never;
@@ -355,7 +355,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  "/api/predicates/{id}/conceptnet-relation": {
+  "/api/properties/{id}/conceptnet-relation": {
     parameters: {
       query?: never;
       header?: never;
@@ -375,7 +375,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  "/api/predicates/conceptnet-mapping": {
+  "/api/properties/conceptnet-mapping": {
     parameters: {
       query?: never;
       header?: never;

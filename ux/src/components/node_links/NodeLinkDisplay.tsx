@@ -7,18 +7,18 @@
 
 import React, { useState, useMemo } from "react";
 
-import { StructureNodeLink } from "@/api/types/structureNodes";
-import { useDeleteNodeLink } from "@/api/hooks/node_links/useNodeLinkMutations";
+import { OntologyClassLink } from "@/api/types/ontologyClasss";
+import { useDeleteNodeLink } from "@/api/hooks/relationships/useNodeLinkMutations";
 import { toast } from "@/utils/toast";
 import { NodeLinkGroupDisplay } from "./NodeLinkGroupDisplay";
 
 interface NodeLinkDisplayProps {
-  links: StructureNodeLink[];
+  links: OntologyClassLink[];
   currentNodeId: string;
 }
 
 interface GroupedLinks {
-  [predicate: string]: StructureNodeLink[];
+  [predicate: string]: OntologyClassLink[];
 }
 
 export const NodeLinkDisplay: React.FC<NodeLinkDisplayProps> = ({
@@ -57,7 +57,7 @@ export const NodeLinkDisplay: React.FC<NodeLinkDisplayProps> = ({
   }, [links, currentNodeId]);
 
   // Group links by predicate
-  const groupByPredicate = (linksList: StructureNodeLink[]): GroupedLinks => {
+  const groupByPredicate = (linksList: OntologyClassLink[]): GroupedLinks => {
     return linksList.reduce((acc, link) => {
       if (!acc[link.predicate]) {
         acc[link.predicate] = [];

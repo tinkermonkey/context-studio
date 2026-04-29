@@ -80,7 +80,7 @@ test.describe("Predicate Management", () => {
     // Verify predicate exists in backend
     const response = await apiRequest<{ data: Predicate[] }>(
       page,
-      "/api/predicates",
+      "/api/properties",
     );
     const createdPredicate = response.data.find(
       (p: Predicate) => p.title === predicateTitle,
@@ -119,7 +119,7 @@ test.describe("Predicate Management", () => {
     // Verify predicate exists in backend with custom identifier
     const response = await apiRequest<{ data: Predicate[] }>(
       page,
-      "/api/predicates",
+      "/api/properties",
     );
     const createdPredicate = response.data.find(
       (p: Predicate) => p.title === predicateTitle,
@@ -138,7 +138,7 @@ test.describe("Predicate Management", () => {
     // Create predicate via API for speed
     const createResponse = await apiRequest<Predicate>(
       page,
-      "/api/predicates",
+      "/api/properties",
       {
         method: "POST",
         body: {
@@ -186,7 +186,7 @@ test.describe("Predicate Management", () => {
     // Verify backend was updated
     const response = await apiRequest<Predicate>(
       page,
-      `/api/predicates/${predicateId}`,
+      `/api/properties/${predicateId}`,
     );
     expect(response.title).toBe(updatedTitle);
     expect(response.definition).toBe(updatedDefinition);
@@ -197,7 +197,7 @@ test.describe("Predicate Management", () => {
     const predicateTitle = `E2E Delete Test ${Date.now()}`;
     const createResponse = await apiRequest<Predicate>(
       page,
-      "/api/predicates",
+      "/api/properties",
       {
         method: "POST",
         body: {
@@ -240,7 +240,7 @@ test.describe("Predicate Management", () => {
 
     // Verify predicate is deleted from backend
     try {
-      await apiRequest(page, `/api/predicates/${predicateId}`);
+      await apiRequest(page, `/api/properties/${predicateId}`);
       // If we get here, the predicate wasn't deleted
       expect(false).toBe(true); // Force fail
     } catch (error) {
@@ -258,15 +258,15 @@ test.describe("Predicate Management", () => {
 
     // Create predicates via API
     await Promise.all([
-      apiRequest(page, "/api/predicates", {
+      apiRequest(page, "/api/properties", {
         method: "POST",
         body: { title: predicate1Title },
       }),
-      apiRequest(page, "/api/predicates", {
+      apiRequest(page, "/api/properties", {
         method: "POST",
         body: { title: predicate2Title },
       }),
-      apiRequest(page, "/api/predicates", {
+      apiRequest(page, "/api/properties", {
         method: "POST",
         body: { title: predicate3Title },
       }),
@@ -348,12 +348,12 @@ test.describe("Predicate Management", () => {
     // Create multiple predicates
     const timestamp = Date.now();
      
-    const predicate1 = await apiRequest<any>(page, "/api/predicates", {
+    const predicate1 = await apiRequest<any>(page, "/api/properties", {
       method: "POST",
       body: { title: `Bulk Delete 1 ${timestamp}` },
     });
      
-    const predicate2 = await apiRequest<any>(page, "/api/predicates", {
+    const predicate2 = await apiRequest<any>(page, "/api/properties", {
       method: "POST",
       body: { title: `Bulk Delete 2 ${timestamp}` },
     });
@@ -399,7 +399,7 @@ test.describe("Predicate Management", () => {
      
     const beforeResponse = await apiRequest<{ data: any[]; total: number }>(
       page,
-      "/api/predicates",
+      "/api/properties",
     );
     const beforeCount = beforeResponse.total;
 
@@ -426,7 +426,7 @@ test.describe("Predicate Management", () => {
      
     const afterResponse = await apiRequest<{ data: any[]; total: number }>(
       page,
-      "/api/predicates",
+      "/api/properties",
     );
     const afterCount = afterResponse.total;
 

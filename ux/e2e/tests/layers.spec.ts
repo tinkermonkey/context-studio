@@ -65,7 +65,7 @@ test.describe("Layer Management", () => {
      
     const response = await apiRequest<{ data: any[] }>(
       page,
-      "/api/structure_nodes?node_type=layer",
+      "/api/classes?node_type=layer",
     );
 
     const createdLayer = response.data.find(
@@ -86,7 +86,7 @@ test.describe("Layer Management", () => {
 
     // Create layer via API for speed
      
-    const createResponse = await apiRequest<any>(page, "/api/structure_nodes", {
+    const createResponse = await apiRequest<any>(page, "/api/classes", {
       method: "POST",
       body: {
         title: originalTitle,
@@ -132,7 +132,7 @@ test.describe("Layer Management", () => {
      
     const response = await apiRequest<any>(
       page,
-      `/api/structure_nodes/${layerId}`,
+      `/api/classes/${layerId}`,
     );
     expect(response.title).toBe(updatedTitle);
     expect(response.definition).toBe(updatedDefinition);
@@ -142,7 +142,7 @@ test.describe("Layer Management", () => {
     // Create a layer to delete
     const layerTitle = `E2E Delete Test ${Date.now()}`;
      
-    const createResponse = await apiRequest<any>(page, "/api/structure_nodes", {
+    const createResponse = await apiRequest<any>(page, "/api/classes", {
       method: "POST",
       body: {
         title: layerTitle,
@@ -184,7 +184,7 @@ test.describe("Layer Management", () => {
 
     // Verify layer is deleted from backend
     try {
-      await apiRequest(page, `/api/structure_nodes/${layerId}`);
+      await apiRequest(page, `/api/classes/${layerId}`);
       // If we get here, the layer wasn't deleted
       expect(false).toBe(true); // Force fail
     } catch (error) {
@@ -202,15 +202,15 @@ test.describe("Layer Management", () => {
 
     // Create layers via API
     await Promise.all([
-      apiRequest(page, "/api/structure_nodes", {
+      apiRequest(page, "/api/classes", {
         method: "POST",
         body: { title: layer1Title, node_type: "layer" },
       }),
-      apiRequest(page, "/api/structure_nodes", {
+      apiRequest(page, "/api/classes", {
         method: "POST",
         body: { title: layer2Title, node_type: "layer" },
       }),
-      apiRequest(page, "/api/structure_nodes", {
+      apiRequest(page, "/api/classes", {
         method: "POST",
         body: { title: layer3Title, node_type: "layer" },
       }),
@@ -269,7 +269,7 @@ test.describe("Layer Management", () => {
     const layerTitle = `E2E Detail Test ${Date.now()}`;
     const layerDefinition = "Test layer for detail view";
      
-    const createResponse = await apiRequest<any>(page, "/api/structure_nodes", {
+    const createResponse = await apiRequest<any>(page, "/api/classes", {
       method: "POST",
       body: {
         title: layerTitle,
@@ -290,20 +290,20 @@ test.describe("Layer Management", () => {
     await expect(row).toBeVisible({ timeout: 10000 });
 
     // Find the link in the row - it should be in a cell with an anchor tag
-    const link = row.locator('a[href*="/app/structure_nodes/"]');
+    const link = row.locator('a[href*="/app/classes/"]');
     await expect(link).toBeVisible({ timeout: 5000 });
 
     // Click the link
     await link.click();
 
     // Wait for navigation with a longer timeout
-    await page.waitForURL(`**/app/structure_nodes/${layerId}`, {
+    await page.waitForURL(`**/app/classes/${layerId}`, {
       timeout: 15000,
     });
     await page.waitForLoadState("networkidle");
 
     // Verify we're on the detail page
-    expect(page.url()).toContain(`/app/structure_nodes/${layerId}`);
+    expect(page.url()).toContain(`/app/classes/${layerId}`);
 
     // Verify layer details are displayed
     await expect(page.locator("body")).toContainText(layerTitle, {
@@ -319,7 +319,7 @@ test.describe("Layer Management", () => {
      
     const beforeResponse = await apiRequest<{ data: any[]; total: number }>(
       page,
-      "/api/structure_nodes?node_type=layer",
+      "/api/classes?node_type=layer",
     );
     const beforeCount = beforeResponse.total;
 
@@ -344,7 +344,7 @@ test.describe("Layer Management", () => {
      
     const afterResponse = await apiRequest<{ data: any[]; total: number }>(
       page,
-      "/api/structure_nodes?node_type=layer",
+      "/api/classes?node_type=layer",
     );
     const afterCount = afterResponse.total;
 
@@ -386,12 +386,12 @@ test.describe("Layer Management", () => {
     // Create multiple layers
     const timestamp = Date.now();
      
-    const layer1 = await apiRequest<any>(page, "/api/structure_nodes", {
+    const layer1 = await apiRequest<any>(page, "/api/classes", {
       method: "POST",
       body: { title: `Bulk Delete 1 ${timestamp}`, node_type: "layer" },
     });
      
-    const layer2 = await apiRequest<any>(page, "/api/structure_nodes", {
+    const layer2 = await apiRequest<any>(page, "/api/classes", {
       method: "POST",
       body: { title: `Bulk Delete 2 ${timestamp}`, node_type: "layer" },
     });

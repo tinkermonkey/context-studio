@@ -1,8 +1,8 @@
 import React, { useState, useCallback, useMemo, useEffect } from "react";
 import { Spinner } from "flowbite-react";
 import { Save } from "lucide-react";
-import { useUpdateWordSenses } from "@/api/hooks/structure_nodes/useWordSenses";
-import { WordSense } from "@/api/types/structureNodes";
+import { useUpdateWordSenses } from "@/api/hooks/ontologyClasss/useWordSenses";
+import { WordSense } from "@/api/types/ontologyClasss";
 import { toast } from "@/utils/toast";
 import NlpConceptChart from "./NlpConceptChart";
 

@@ -5,78 +5,78 @@
  */
 
 import { UseMutationResult } from "@tanstack/react-query";
-import type { StructureNode } from "../../types/structureNodes";
+import type { OntologyClass } from "../../types/ontologyClasss";
 
 /**
  * @deprecated Use the new ontology entity mutation hooks instead
  */
-export const useCreateStructureNode = (..._args: any[]): UseMutationResult<StructureNode, Error, any, any> => {  
+export const useCreateOntologyClass = (..._args: any[]): UseMutationResult<OntologyClass, Error, any, any> => {  
   return {
     mutate: (_data?: any) => {  
       throw new Error(
-        "useCreateStructureNode has been removed. Use useCreateTaxonomy, useCreateConceptScheme, or useCreateOntologyClass instead.",
+        "useCreateOntologyClass has been removed. Use useCreateTaxonomy, useCreateConceptScheme, or useCreateOntologyClass instead.",
       );
     },
     mutateAsync: async (_data?: any) => {  
       throw new Error(
-        "useCreateStructureNode has been removed. Use useCreateTaxonomy, useCreateConceptScheme, or useCreateOntologyClass instead.",
+        "useCreateOntologyClass has been removed. Use useCreateTaxonomy, useCreateConceptScheme, or useCreateOntologyClass instead.",
       );
     },
     isPending: false,
     isError: true,
-    error: new Error("useCreateStructureNode has been removed."),
+    error: new Error("useCreateOntologyClass has been removed."),
     status: "idle",
     reset: () => {},
     variables: undefined,
-  } as unknown as UseMutationResult<StructureNode, Error, any, any>;
+  } as unknown as UseMutationResult<OntologyClass, Error, any, any>;
 };
 
 /**
  * @deprecated Use the new ontology entity mutation hooks instead
  */
-export const useUpdateStructureNode = (
+export const useUpdateOntologyClass = (
   _options?: any,  
-): UseMutationResult<StructureNode, Error, any, any> => {
+): UseMutationResult<OntologyClass, Error, any, any> => {
   return {
     mutate: (_data?: any) => {  
       throw new Error(
-        "useUpdateStructureNode has been removed. Use useUpdateTaxonomy, useUpdateConceptScheme, or useUpdateOntologyClass instead.",
+        "useUpdateOntologyClass has been removed. Use useUpdateTaxonomy, useUpdateConceptScheme, or useUpdateOntologyClass instead.",
       );
     },
     mutateAsync: async (_data?: any) => {  
       throw new Error(
-        "useUpdateStructureNode has been removed. Use useUpdateTaxonomy, useUpdateConceptScheme, or useUpdateOntologyClass instead.",
+        "useUpdateOntologyClass has been removed. Use useUpdateTaxonomy, useUpdateConceptScheme, or useUpdateOntologyClass instead.",
       );
     },
     isPending: false,
     isError: true,
-    error: new Error("useUpdateStructureNode has been removed."),
+    error: new Error("useUpdateOntologyClass has been removed."),
     status: "idle",
     reset: () => {},
     variables: undefined,
-  } as unknown as UseMutationResult<StructureNode, Error, any, any>;
+  } as unknown as UseMutationResult<OntologyClass, Error, any, any>;
 };
 
 /**
  * @deprecated Use the new ontology entity mutation hooks instead
  */
-export const useDeleteStructureNode = (
+export const useDeleteOntologyClass = (
   _options?: any,  
 ): UseMutationResult<void, Error, string, any> => {
   return {
     mutate: (_data?: any) => {  
       throw new Error(
-        "useDeleteStructureNode has been removed. Use useDeleteTaxonomy, useDeleteConceptScheme, or useDeleteOntologyClass instead.",
+        "useDeleteOntologyClass has been removed. Use useDeleteTaxonomy, useDeleteConceptScheme, or useDeleteOntologyClass instead.",
       );
     },
     mutateAsync: async (_data?: any) => {  
       throw new Error(
-        "useDeleteStructureNode has been removed. Use useDeleteTaxonomy, useDeleteConceptScheme, or useDeleteOntologyClass instead.",
+        "useDeleteOntologyClass has been removed. Use useDeleteTaxonomy, useDeleteConceptScheme, or useDeleteOntologyClass instead.",
       );
     },
     isPending: false,
     isError: true,
-    error: new Error("useDeleteStructureNode has been removed."),
+    error: new Error("useDeleteOntologyClass has been removed."),
     status: "idle",
     reset: () => {},
     variables: undefined,
@@ -86,19 +86,19 @@ export const useDeleteStructureNode = (
 /**
  * @deprecated
  */
-export const useBulkUpdateStructureNodes = (
+export const useBulkUpdateOntologyClasss = (
   _options?: any,  
 ): UseMutationResult<any, Error, any, any> => {
   return {
     mutate: (_data?: any) => {  
-      throw new Error("useBulkUpdateStructureNodes has been removed.");
+      throw new Error("useBulkUpdateOntologyClasss has been removed.");
     },
     mutateAsync: async (_data?: any) => {  
-      throw new Error("useBulkUpdateStructureNodes has been removed.");
+      throw new Error("useBulkUpdateOntologyClasss has been removed.");
     },
     isPending: false,
     isError: true,
-    error: new Error("useBulkUpdateStructureNodes has been removed."),
+    error: new Error("useBulkUpdateOntologyClasss has been removed."),
     status: "idle",
     reset: () => {},
     variables: undefined,
@@ -108,23 +108,23 @@ export const useBulkUpdateStructureNodes = (
 /**
  * @deprecated
  */
-export const useMoveStructureNode = (
+export const useMoveOntologyClass = (
   _options?: any,  
-): UseMutationResult<StructureNode, Error, any, any> => {
+): UseMutationResult<OntologyClass, Error, any, any> => {
   return {
     mutate: (_data?: any) => {  
-      throw new Error("useMoveStructureNode has been removed.");
+      throw new Error("useMoveOntologyClass has been removed.");
     },
     mutateAsync: async (_data?: any) => {  
-      throw new Error("useMoveStructureNode has been removed.");
+      throw new Error("useMoveOntologyClass has been removed.");
     },
     isPending: false,
     isError: true,
-    error: new Error("useMoveStructureNode has been removed."),
+    error: new Error("useMoveOntologyClass has been removed."),
     status: "idle",
     reset: () => {},
     variables: undefined,
-  } as unknown as UseMutationResult<StructureNode, Error, any, any>;
+  } as unknown as UseMutationResult<OntologyClass, Error, any, any>;
 };
 
 /**
@@ -194,19 +194,19 @@ export const useCreateTerm = (
 /**
  * @deprecated
  */
-export const useMoveStructureNodes = (
+export const useMoveOntologyClasss = (
   _options?: any,  
 ): UseMutationResult<any, Error, any, any> => {
   return {
     mutate: (_data?: any) => {  
-      throw new Error("useMoveStructureNodes has been removed.");
+      throw new Error("useMoveOntologyClasss has been removed.");
     },
     mutateAsync: async (_data?: any) => {  
-      throw new Error("useMoveStructureNodes has been removed.");
+      throw new Error("useMoveOntologyClasss has been removed.");
     },
     isPending: false,
     isError: true,
-    error: new Error("useMoveStructureNodes has been removed."),
+    error: new Error("useMoveOntologyClasss has been removed."),
     status: "idle",
     reset: () => {},
     variables: undefined,

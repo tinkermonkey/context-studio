@@ -91,13 +91,13 @@ export function useCreateAnnotation() {
       paragraphId: string;
       startChar: number;
       endChar: number;
-      structureNodeId: string;
+      ontologyClassId: string;
     }) =>
       ragExperimentsService.createAnnotation(
         params.paragraphId,
         params.startChar,
         params.endChar,
-        params.structureNodeId,
+        params.ontologyClassId,
       ),
     onSuccess: (data, variables) => {
       // Invalidate the specific paragraph to refetch with new annotation

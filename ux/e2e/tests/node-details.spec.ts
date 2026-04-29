@@ -22,7 +22,7 @@ test.describe("Structure Node Detail View", () => {
   test.beforeEach(async ({ page }) => {
     // Create test hierarchy: layer → domain → term
      
-    const layerResponse = await apiRequest<any>(page, "/api/structure_nodes", {
+    const layerResponse = await apiRequest<any>(page, "/api/classes", {
       method: "POST",
       body: {
         title: `E2E Test Layer ${Date.now()}`,
@@ -33,7 +33,7 @@ test.describe("Structure Node Detail View", () => {
     testLayerId = layerResponse.id;
 
      
-    const domainResponse = await apiRequest<any>(page, "/api/structure_nodes", {
+    const domainResponse = await apiRequest<any>(page, "/api/classes", {
       method: "POST",
       body: {
         title: `E2E Test Domain ${Date.now()}`,
@@ -45,7 +45,7 @@ test.describe("Structure Node Detail View", () => {
     testDomainId = domainResponse.id;
 
      
-    const termResponse = await apiRequest<any>(page, "/api/structure_nodes", {
+    const termResponse = await apiRequest<any>(page, "/api/classes", {
       method: "POST",
       body: {
         title: `E2E Test Term ${Date.now()}`,
@@ -59,11 +59,11 @@ test.describe("Structure Node Detail View", () => {
 
   test("should load and display layer detail page", async ({ page }) => {
     // Navigate to layer detail page
-    await page.goto(`/app/structure_nodes/${testLayerId}`);
+    await page.goto(`/app/classes/${testLayerId}`);
     await page.waitForLoadState("networkidle");
 
     // Verify page loaded
-    expect(page.url()).toContain(`/app/structure_nodes/${testLayerId}`);
+    expect(page.url()).toContain(`/app/classes/${testLayerId}`);
 
     // Verify layer title is displayed
     const titleElement = page.locator('[data-testid="node-detail-title"]');
@@ -87,11 +87,11 @@ test.describe("Structure Node Detail View", () => {
 
   test("should load and display domain detail page", async ({ page }) => {
     // Navigate to domain detail page
-    await page.goto(`/app/structure_nodes/${testDomainId}`);
+    await page.goto(`/app/classes/${testDomainId}`);
     await page.waitForLoadState("networkidle");
 
     // Verify page loaded
-    expect(page.url()).toContain(`/app/structure_nodes/${testDomainId}`);
+    expect(page.url()).toContain(`/app/classes/${testDomainId}`);
 
     // Verify domain title is displayed
     const titleElement = page.locator('[data-testid="node-detail-title"]');
@@ -115,11 +115,11 @@ test.describe("Structure Node Detail View", () => {
 
   test("should load and display term detail page", async ({ page }) => {
     // Navigate to term detail page
-    await page.goto(`/app/structure_nodes/${testTermId}`);
+    await page.goto(`/app/classes/${testTermId}`);
     await page.waitForLoadState("networkidle");
 
     // Verify page loaded
-    expect(page.url()).toContain(`/app/structure_nodes/${testTermId}`);
+    expect(page.url()).toContain(`/app/classes/${testTermId}`);
 
     // Verify term title is displayed
     const titleElement = page.locator('[data-testid="node-detail-title"]');
@@ -143,7 +143,7 @@ test.describe("Structure Node Detail View", () => {
 
   test("should display node metadata correctly", async ({ page }) => {
     // Navigate to layer detail page
-    await page.goto(`/app/structure_nodes/${testLayerId}`);
+    await page.goto(`/app/classes/${testLayerId}`);
     await page.waitForLoadState("networkidle");
 
     // Verify title
@@ -164,7 +164,7 @@ test.describe("Structure Node Detail View", () => {
 
   test("should display definition section", async ({ page }) => {
     // Navigate to domain detail page
-    await page.goto(`/app/structure_nodes/${testDomainId}`);
+    await page.goto(`/app/classes/${testDomainId}`);
     await page.waitForLoadState("networkidle");
 
     // Verify definition section is visible
@@ -181,7 +181,7 @@ test.describe("Structure Node Detail View", () => {
 
   test.skip("should edit node definition inline", async ({ page }) => {
     // Navigate to term detail page
-    await page.goto(`/app/structure_nodes/${testTermId}`);
+    await page.goto(`/app/classes/${testTermId}`);
     await page.waitForLoadState("networkidle");
 
     const definitionSection = page.locator(
@@ -221,14 +221,14 @@ test.describe("Structure Node Detail View", () => {
      
     const response = await apiRequest<any>(
       page,
-      `/api/structure_nodes/${testTermId}`,
+      `/api/classes/${testTermId}`,
     );
     expect(response.definition).toBe(newDefinition);
   });
 
   test("should view child nodes section (hierarchy)", async ({ page }) => {
     // Navigate to layer detail page (which has a domain child)
-    await page.goto(`/app/structure_nodes/${testLayerId}`);
+    await page.goto(`/app/classes/${testLayerId}`);
     await page.waitForLoadState("networkidle");
 
     // Verify children section exists
@@ -243,7 +243,7 @@ test.describe("Structure Node Detail View", () => {
 
   test("should navigate to child nodes from hierarchy", async ({ page }) => {
     // Navigate to layer detail page
-    await page.goto(`/app/structure_nodes/${testLayerId}`);
+    await page.goto(`/app/classes/${testLayerId}`);
     await page.waitForLoadState("networkidle");
 
     // Wait for the page to fully load
@@ -262,7 +262,7 @@ test.describe("Structure Node Detail View", () => {
   test("should handle nodes with no definition", async ({ page }) => {
     // Create a node without a definition
      
-    const nodeResponse = await apiRequest<any>(page, "/api/structure_nodes", {
+    const nodeResponse = await apiRequest<any>(page, "/api/classes", {
       method: "POST",
       body: {
         title: `No Definition Node ${Date.now()}`,
@@ -272,7 +272,7 @@ test.describe("Structure Node Detail View", () => {
     const nodeId = nodeResponse.id;
 
     // Navigate to the node
-    await page.goto(`/app/structure_nodes/${nodeId}`);
+    await page.goto(`/app/classes/${nodeId}`);
     await page.waitForLoadState("networkidle");
 
     // Verify definition section shows placeholder text
@@ -285,7 +285,7 @@ test.describe("Structure Node Detail View", () => {
     const invalidNodeId = "00000000-0000-0000-0000-000000000000";
 
     // Navigate to invalid node
-    await page.goto(`/app/structure_nodes/${invalidNodeId}`);
+    await page.goto(`/app/classes/${invalidNodeId}`);
     await page.waitForLoadState("networkidle");
 
     // Verify error message is displayed
@@ -299,7 +299,7 @@ test.describe("Structure Node Detail View", () => {
 
   test("should display breadcrumb navigation", async ({ page }) => {
     // Navigate to term detail page (deepest in hierarchy)
-    await page.goto(`/app/structure_nodes/${testTermId}`);
+    await page.goto(`/app/classes/${testTermId}`);
     await page.waitForLoadState("networkidle");
 
     // Look for breadcrumb navigation
@@ -312,7 +312,7 @@ test.describe("Structure Node Detail View", () => {
 
   test("should open edit modal from detail page", async ({ page }) => {
     // Navigate to domain detail page
-    await page.goto(`/app/structure_nodes/${testDomainId}`);
+    await page.goto(`/app/classes/${testDomainId}`);
     await page.waitForLoadState("networkidle");
 
     // Click Edit button
@@ -335,7 +335,7 @@ test.describe("Structure Node Detail View", () => {
 
   test("should navigate between related nodes", async ({ page }) => {
     // Start at layer
-    await page.goto(`/app/structure_nodes/${testLayerId}`);
+    await page.goto(`/app/classes/${testLayerId}`);
     await page.waitForLoadState("networkidle");
 
     // Verify we're on layer page
@@ -343,7 +343,7 @@ test.describe("Structure Node Detail View", () => {
     await expect(layerTitle).toContainText("E2E Test Layer");
 
     // Navigate to domain (via sidebar or hierarchy)
-    await page.goto(`/app/structure_nodes/${testDomainId}`);
+    await page.goto(`/app/classes/${testDomainId}`);
     await page.waitForLoadState("networkidle");
 
     // Verify we're on domain page
@@ -351,7 +351,7 @@ test.describe("Structure Node Detail View", () => {
     await expect(domainTitle).toContainText("E2E Test Domain");
 
     // Navigate to term
-    await page.goto(`/app/structure_nodes/${testTermId}`);
+    await page.goto(`/app/classes/${testTermId}`);
     await page.waitForLoadState("networkidle");
 
     // Verify we're on term page
@@ -363,21 +363,21 @@ test.describe("Structure Node Detail View", () => {
     page,
   }) => {
     // Test layer hierarchy
-    await page.goto(`/app/structure_nodes/${testLayerId}`);
+    await page.goto(`/app/classes/${testLayerId}`);
     await page.waitForLoadState("networkidle");
 
     let childrenSection = page.locator('[data-testid="node-children-section"]');
     await expect(childrenSection).toBeVisible();
 
     // Test domain hierarchy
-    await page.goto(`/app/structure_nodes/${testDomainId}`);
+    await page.goto(`/app/classes/${testDomainId}`);
     await page.waitForLoadState("networkidle");
 
     childrenSection = page.locator('[data-testid="node-children-section"]');
     await expect(childrenSection).toBeVisible();
 
     // Test term hierarchy
-    await page.goto(`/app/structure_nodes/${testTermId}`);
+    await page.goto(`/app/classes/${testTermId}`);
     await page.waitForLoadState("networkidle");
 
     childrenSection = page.locator('[data-testid="node-children-section"]');
@@ -386,7 +386,7 @@ test.describe("Structure Node Detail View", () => {
 
   test.skip("should cancel definition edit", async ({ page }) => {
     // Navigate to layer detail page
-    await page.goto(`/app/structure_nodes/${testLayerId}`);
+    await page.goto(`/app/classes/${testLayerId}`);
     await page.waitForLoadState("networkidle");
 
     const definitionSection = page.locator(
@@ -425,7 +425,7 @@ test.describe("Structure Node Detail View", () => {
 
   test("should show version information", async ({ page }) => {
     // Navigate to any node detail page
-    await page.goto(`/app/structure_nodes/${testLayerId}`);
+    await page.goto(`/app/classes/${testLayerId}`);
     await page.waitForLoadState("networkidle");
 
     // Verify version is displayed
@@ -439,7 +439,7 @@ test.describe("Structure Node Detail View", () => {
   }) => {
     // Create term with multi-word title to trigger NLP
      
-    const termResponse = await apiRequest<any>(page, "/api/structure_nodes", {
+    const termResponse = await apiRequest<any>(page, "/api/classes", {
       method: "POST",
       body: {
         title: `machine learning ${Date.now()}`,
@@ -450,7 +450,7 @@ test.describe("Structure Node Detail View", () => {
     const termId = termResponse.id;
 
     // Navigate to term detail page
-    await page.goto(`/app/structure_nodes/${termId}`);
+    await page.goto(`/app/classes/${termId}`);
     await page.waitForLoadState("networkidle");
 
     // Verify NLP Analysis panel is visible
@@ -512,7 +512,7 @@ test.describe("Structure Node Detail View", () => {
   test("should add and remove reference node links", async ({ page }) => {
     // Create term for reference linking
      
-    const termResponse = await apiRequest<any>(page, "/api/structure_nodes", {
+    const termResponse = await apiRequest<any>(page, "/api/classes", {
       method: "POST",
       body: {
         title: `algorithm ${Date.now()}`,
@@ -523,7 +523,7 @@ test.describe("Structure Node Detail View", () => {
     const termId = termResponse.id;
 
     // Navigate to term detail page
-    await page.goto(`/app/structure_nodes/${termId}`);
+    await page.goto(`/app/classes/${termId}`);
     await page.waitForLoadState("networkidle");
 
     // Verify Reference Node panel is visible

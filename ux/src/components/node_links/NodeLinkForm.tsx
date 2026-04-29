@@ -10,18 +10,18 @@ import { Button, Alert, Label, Radio } from "flowbite-react";
 import { Info, ArrowRight } from "lucide-react";
 
 import {
-  StructureNode,
-  StructureNodeLink,
-  StructureNodeLinkCreate,
-} from "@/api/types/structureNodes";
-import { useCreateNodeLink } from "@/api/hooks/node_links/useNodeLinkMutations";
+  OntologyClass,
+  OntologyClassLink,
+  OntologyClassLinkCreate,
+} from "@/api/types/ontologyClasss";
+import { useCreateNodeLink } from "@/api/hooks/relationships/useNodeLinkMutations";
 import { PredicateSelector } from "@/components/node_selectors/predicate_selector";
-import { StructureNodeSelector } from "@/components/node_selectors/structure_node_selector";
+import { OntologyClassSelector } from "@/components/node_selectors/ontologyClass_selector";
 import { toast } from "@/utils/toast";
 
 interface NodeLinkFormProps {
-  currentNode: StructureNode;
-  existingLinks: StructureNodeLink[];
+  currentNode: OntologyClass;
+  existingLinks: OntologyClassLink[];
   onSuccess: () => void;
   onCancel: () => void;
 }
@@ -93,7 +93,7 @@ export const NodeLinkForm: React.FC<NodeLinkFormProps> = ({
       }
 
       try {
-        const linkData: StructureNodeLinkCreate = {
+        const linkData: OntologyClassLinkCreate = {
           source_node_id:
             direction === "outgoing" ? currentNode.id : value.targetNodeId,
           target_node_id:
@@ -223,7 +223,7 @@ export const NodeLinkForm: React.FC<NodeLinkFormProps> = ({
               <Label htmlFor="link-target" className="mb-1 block font-medium">
                 Target Node *
               </Label>
-              <StructureNodeSelector
+              <OntologyClassSelector
                 value={field.state.value}
                 onSelect={(node) => field.handleChange(node?.id || "")}
                 excludeNodeIds={[currentNode.id]}

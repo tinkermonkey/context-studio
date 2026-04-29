@@ -114,7 +114,7 @@ export const SelectionTracker: React.FC<SelectionTrackerProps> = ({
 
       const request: SelectionRecordRequest = {
         execution_id: executionId,
-        record_type: "structure_node",
+        record_type: "ontologyClass",
         record_id: recordId,
         suggestion_field: suggestionField,
         selected_content: selectedContent,
@@ -339,7 +339,7 @@ export const useManualSelectionTracking = (
     (selectedContent: string) => {
       const request: SelectionRecordRequest = {
         execution_id: executionId,
-        record_type: "structure_node",
+        record_type: "ontologyClass",
         record_id: recordId,
         suggestion_field: suggestionField,
         selected_content: selectedContent,

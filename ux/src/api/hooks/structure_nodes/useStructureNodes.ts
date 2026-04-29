@@ -1,32 +1,32 @@
 /**
- * DEPRECATED: useStructureNodes Hook
+ * DEPRECATED: useClasss Hook
  *
  * @deprecated Migrate to use the new ontology entity hooks instead
  */
 
 import { UseQueryResult } from "@tanstack/react-query";
-import type { StructureNode } from "../../types/structureNodes";
+import type { OntologyClass } from "../../types/ontologyClasss";
 
 /**
  * @deprecated Use useTaxonomies, useConceptSchemes, useOntologyClasses instead
  */
-export const useStructureNodes = (
+export const useClasss = (
   _params?: any,  
-): UseQueryResult<StructureNode[], Error> => {
+): UseQueryResult<OntologyClass[], Error> => {
   return {
     data: undefined,
     isLoading: false,
     isFetching: false,
     isPlaceholderData: false,
     error: new Error(
-      "useStructureNodes has been removed. Use useTaxonomies, useConceptSchemes, or useOntologyClasses instead.",
+      "useClasss has been removed. Use useTaxonomies, useConceptSchemes, or useOntologyClasses instead.",
     ),
     isError: true,
     status: "error",
     dataUpdatedAt: 0,
     errorUpdatedAt: Date.now(),
     refetch: async () => ({ data: undefined } as any),  
-  } as UseQueryResult<StructureNode[], Error>;
+  } as UseQueryResult<OntologyClass[], Error>;
 };
 
 /**
@@ -34,7 +34,7 @@ export const useStructureNodes = (
  */
 export const useDomainNodes = (
   ..._args: any[]  
-): UseQueryResult<StructureNode[], Error> => {
+): UseQueryResult<OntologyClass[], Error> => {
   return {
     data: undefined,
     isLoading: false,
@@ -46,7 +46,7 @@ export const useDomainNodes = (
     dataUpdatedAt: 0,
     errorUpdatedAt: Date.now(),
     refetch: async () => ({ data: undefined } as any),  
-  } as UseQueryResult<StructureNode[], Error>;
+  } as UseQueryResult<OntologyClass[], Error>;
 };
 
 /**
@@ -54,7 +54,7 @@ export const useDomainNodes = (
  */
 export const useLayerNodes = (
   _params?: any,  
-): UseQueryResult<StructureNode[], Error> => {
+): UseQueryResult<OntologyClass[], Error> => {
   return {
     data: undefined,
     isLoading: false,
@@ -66,31 +66,31 @@ export const useLayerNodes = (
     dataUpdatedAt: 0,
     errorUpdatedAt: Date.now(),
     refetch: async () => ({ data: undefined } as any),  
-  } as UseQueryResult<StructureNode[], Error>;
+  } as UseQueryResult<OntologyClass[], Error>;
 };
 
 /**
  * @deprecated
  */
-export const useStructureNode = (..._args: any[]): UseQueryResult<StructureNode, Error> => {  
+export const useClass = (..._args: any[]): UseQueryResult<OntologyClass, Error> => {  
   return {
     data: undefined,
     isLoading: false,
     isFetching: false,
     isPlaceholderData: false,
-    error: new Error("useStructureNode has been removed."),
+    error: new Error("useClass has been removed."),
     isError: true,
     status: "error",
     dataUpdatedAt: 0,
     errorUpdatedAt: Date.now(),
     refetch: async () => ({ data: undefined } as any),  
-  } as UseQueryResult<StructureNode, Error>;
+  } as UseQueryResult<OntologyClass, Error>;
 };
 
 /**
  * @deprecated
  */
-export const useTermNodes = (..._args: any[]): UseQueryResult<StructureNode[], Error> => {  
+export const useTermNodes = (..._args: any[]): UseQueryResult<OntologyClass[], Error> => {  
   return {
     data: undefined,
     isLoading: false,
@@ -102,23 +102,23 @@ export const useTermNodes = (..._args: any[]): UseQueryResult<StructureNode[], E
     dataUpdatedAt: 0,
     errorUpdatedAt: Date.now(),
     refetch: async () => ({ data: undefined } as any),  
-  } as UseQueryResult<StructureNode[], Error>;
+  } as UseQueryResult<OntologyClass[], Error>;
 };
 
 /**
  * @deprecated
  */
-export const useStructureNodeSearch = (..._args: any[]): UseQueryResult<StructureNode[], Error> => {  
+export const useClassSearch = (..._args: any[]): UseQueryResult<OntologyClass[], Error> => {  
   return {
     data: undefined,
     isLoading: false,
     isFetching: false,
     isPlaceholderData: false,
-    error: new Error("useStructureNodeSearch has been removed."),
+    error: new Error("useClassSearch has been removed."),
     isError: true,
     status: "error",
     dataUpdatedAt: 0,
     errorUpdatedAt: Date.now(),
     refetch: async () => ({ data: undefined } as any),  
-  } as UseQueryResult<StructureNode[], Error>;
+  } as UseQueryResult<OntologyClass[], Error>;
 };

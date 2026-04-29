@@ -16,7 +16,7 @@ import {
   Textarea,
 } from "flowbite-react";
 import { useExtractEntities, useRAGTrace } from "@/api/hooks/rag";
-import { useStructureNode } from "@/api/hooks/structure_nodes/useStructureNodes";
+import { useClass } from "@/api/hooks/ontologyClasss/useClasss";
 import { Info, ExternalLink } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 
@@ -25,7 +25,7 @@ import { Link } from "@tanstack/react-router";
 function EntityItem(
   { entity }: { entity: any },  
 ) {
-  const { data: node, isLoading } = useStructureNode(
+  const { data: node, isLoading } = useClass(
     entity.metadata?.matched_kg_node,
   );
 
@@ -33,7 +33,7 @@ function EntityItem(
     if (!node?.id || !node?.node_type) return null;
 
     return {
-      to: "/app/structure_nodes/$nodeId" as const,
+      to: "/app/ontologyClasss/$nodeId" as const,
       params: { nodeId: node.id },
     };
   }, [node]);

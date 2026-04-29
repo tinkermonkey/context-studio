@@ -7,13 +7,13 @@
 import React, { useState } from "react";
 import { Button, Label, Checkbox, Alert } from "flowbite-react";
 import { Info } from "lucide-react";
-import { StructureNode } from "@/api/types/structureNodes";
+import { OntologyClass } from "@/api/types/ontologyClasss";
 import { TaxonomySelector } from "@/components/node_selectors/taxonomy_selector";
-import { useMoveStructureNodes } from "@/api/hooks/structure_nodes/useStructureNodeMutations";
+import { useMoveOntologyClasss } from "@/api/hooks/ontologyClasss/useClassMutations";
 import { useButterToast } from "@/hooks/useButterToast";
 
 interface ConceptSchemeMoveFormProps {
-  selectedNodes: StructureNode[];
+  selectedNodes: OntologyClass[];
   onSuccess: () => void;
   onCancel: () => void;
 }
@@ -25,7 +25,7 @@ export function ConceptSchemeMoveForm({
 }: ConceptSchemeMoveFormProps) {
   const [targetParentId, setTargetParentId] = useState<string>("");
   const [moveChildren, setMoveChildren] = useState(true);
-  const moveNodes = useMoveStructureNodes();
+  const moveNodes = useMoveOntologyClasss();
   const toast = useButterToast();
 
   const handleSubmit = async (e: React.FormEvent) => {

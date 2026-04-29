@@ -6,15 +6,15 @@
 
 import React, { useMemo } from "react";
 
-import { StructureNode, NodeType } from "@/api/types/structureNodes";
+import { OntologyClass, NodeType } from "@/api/types/ontologyClasss";
 import {
   PortalRecordSelector,
   FieldMap,
 } from "@/components/node_selectors/portal_record_selector";
-import { useStructureNodes } from "@/api/hooks/structure_nodes/useStructureNodes";
+import { useClasss } from "@/api/hooks/ontologyClasss/useClasss";
 
-export interface StructureNodeSelectorProps {
-  onSelect?: (node: StructureNode | undefined) => void;
+export interface OntologyClassSelectorProps {
+  onSelect?: (node: OntologyClass | undefined) => void;
   value?: string;
   excludeNodeIds?: string[]; // Prevent selection of specific nodes (e.g., current node)
   nodeType?: NodeType; // Optional filter by node type
@@ -23,7 +23,7 @@ export interface StructureNodeSelectorProps {
   "data-testid"?: string;
 }
 
-export const StructureNodeSelector: React.FC<StructureNodeSelectorProps> = ({
+export const OntologyClassSelector: React.FC<OntologyClassSelectorProps> = ({
   onSelect,
   value,
   excludeNodeIds = [],
@@ -37,7 +37,7 @@ export const StructureNodeSelector: React.FC<StructureNodeSelectorProps> = ({
     data: nodes,
     isLoading,
     error,
-  } = useStructureNodes(nodeType ? { node_type: nodeType } : undefined);
+  } = useClasss(nodeType ? { node_type: nodeType } : undefined);
 
   // Filter out excluded nodes
   const filteredNodes = useMemo(() => {
@@ -47,7 +47,7 @@ export const StructureNodeSelector: React.FC<StructureNodeSelectorProps> = ({
   }, [nodes, excludeNodeIds]);
 
   // Field map for PortalRecordSelector
-  const fieldMap: FieldMap<StructureNode> = {
+  const fieldMap: FieldMap<OntologyClass> = {
     value: "id",
     title: "title",
     definition: "definition",
@@ -59,7 +59,7 @@ export const StructureNodeSelector: React.FC<StructureNodeSelectorProps> = ({
       loading={isLoading}
       error={error ? "Failed to load nodes" : null}
       fieldMap={fieldMap}
-      onSelect={(r) => onSelect && onSelect(r as StructureNode | undefined)}
+      onSelect={(r) => onSelect && onSelect(r as OntologyClass | undefined)}
       value={value}
       placeholder={placeholder}
       disabled={disabled}

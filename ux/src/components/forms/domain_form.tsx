@@ -2,18 +2,18 @@ import React from "react";
 import { useForm } from "@tanstack/react-form";
 import { TextInput, Textarea, Button, Alert, Label } from "flowbite-react";
 import { Info, Layers } from "lucide-react";
-import type { StructureNode } from "@/api/types/structureNodes";
+import type { OntologyClass } from "@/api/types/ontologyClasss";
 import { useCreateConceptScheme } from "@/api/hooks/conceptSchemes/useConceptSchemes";
 import { useUpdateConceptScheme } from "@/api/hooks/conceptSchemes/useConceptSchemes";
 import { LayerSelector } from "@/components/node_selectors/layer_selector";
 import { PredicateSelector } from "@/components/node_selectors/predicate_selector";
 
 interface DomainFormProps {
-  onSuccess?: (domain: StructureNode) => void;
-  domain?: StructureNode; // For edit mode
+  onSuccess?: (domain: OntologyClass) => void;
+  domain?: OntologyClass; // For edit mode
   // Child form props
   parentLayerId?: string;
-  parentLayer?: StructureNode; // Full object for better UX
+  parentLayer?: OntologyClass; // Full object for better UX
   mode?: "create" | "edit" | "child";
 }
 

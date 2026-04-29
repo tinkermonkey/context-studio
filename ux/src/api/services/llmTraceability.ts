@@ -308,7 +308,7 @@ export class LLMTraceabilityService extends BaseService {
   ): Promise<SelectionRecordResponse> {
     const request: SelectionRecordRequest = {
       execution_id: executionId,
-      record_type: "structure_node",
+      record_type: "ontologyClass",
       record_id: recordId,
       suggestion_field: field,
       selected_content: content,

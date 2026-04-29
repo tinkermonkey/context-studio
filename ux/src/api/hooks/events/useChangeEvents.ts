@@ -11,8 +11,8 @@ import {
   ChangeEvent,
   RecordType,
   NodeType,
-  isStructureNodeEvent,
-  isStructureNodeLinkEvent,
+  isOntologyClassEvent,
+  isOntologyClassLinkEvent,
   isPredicateEvent,
 } from "../../types/changeEvents";
 
@@ -190,14 +190,14 @@ export const processChangeEvent = (event: ChangeEvent) => {
     recordType: event.record_type,
     eventType: event.event_type,
     recordId: event.record_id,
-    isStructureNode: isStructureNodeEvent(event),
-    isNodeLink: isStructureNodeLinkEvent(event),
+    isOntologyClass: isOntologyClassEvent(event),
+    isNodeLink: isOntologyClassLinkEvent(event),
     isPredicate: isPredicateEvent(event),
     nodeType: null as NodeType | null,
   };
 
   // For structure node events, determine the specific node type
-  if (isStructureNodeEvent(event)) {
+  if (isOntologyClassEvent(event)) {
     const nodeType = event.new_data?.node_type || event.old_data?.node_type;
     routing.nodeType = nodeType as NodeType;
   }
@@ -215,7 +215,7 @@ export const filterEventsByNodeType = (
   nodeType: NodeType,
 ): ChangeEvent[] => {
   return events.filter((event) => {
-    if (!isStructureNodeEvent(event)) return false;
+    if (!isOntologyClassEvent(event)) return false;
     const eventNodeType =
       event.new_data?.node_type || event.old_data?.node_type;
     return eventNodeType === nodeType;
@@ -235,7 +235,7 @@ export const filterEventsByRecordType = (
 /**
  * Get structure node events only
  */
-export const getStructureNodeEvents = (
+export const getOntologyClassEvents = (
   events: ChangeEvent[],
 ): ChangeEvent[] => {
   return filterEventsByRecordType(events, RecordType.STRUCTURE_NODE);

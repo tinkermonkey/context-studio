@@ -9,14 +9,14 @@ import React, { useState } from "react";
 import { Button, Alert } from "flowbite-react";
 import { Plus, Info } from "lucide-react";
 
-import { StructureNode } from "@/api/types/structureNodes";
-import { useNodeLinksByNode } from "@/api/hooks/node_links/useNodeLinks";
+import { OntologyClass } from "@/api/types/ontologyClasss";
+import { useNodeLinksByNode } from "@/api/hooks/relationships/useNodeLinks";
 import { NodeLinkForm } from "./NodeLinkForm";
 import { NodeLinkDisplay } from "./NodeLinkDisplay";
 
 export interface NodeLinkPanelProps {
   nodeId: string;
-  node: StructureNode;
+  node: OntologyClass;
 }
 
 export const NodeLinkPanel: React.FC<NodeLinkPanelProps> = ({

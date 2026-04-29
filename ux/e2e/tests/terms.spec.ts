@@ -20,7 +20,7 @@ test.describe("Term Management", () => {
   test.beforeEach(async ({ page }) => {
     // Create a test layer
      
-    const layerResponse = await apiRequest<any>(page, "/api/structure_nodes", {
+    const layerResponse = await apiRequest<any>(page, "/api/classes", {
       method: "POST",
       body: {
         title: `E2E Test Layer ${Date.now()}`,
@@ -32,7 +32,7 @@ test.describe("Term Management", () => {
 
     // Create a test domain
      
-    const domainResponse = await apiRequest<any>(page, "/api/structure_nodes", {
+    const domainResponse = await apiRequest<any>(page, "/api/classes", {
       method: "POST",
       body: {
         title: `E2E Test Domain ${Date.now()}`,
@@ -95,7 +95,7 @@ test.describe("Term Management", () => {
      
     const domainResponse = await apiRequest<any>(
       page,
-      `/api/structure_nodes/${testDomainId}`,
+      `/api/classes/${testDomainId}`,
     );
     const testDomainTitle = domainResponse.title;
 
@@ -126,7 +126,7 @@ test.describe("Term Management", () => {
      
     const response = await apiRequest<{ data: any[] }>(
       page,
-      "/api/structure_nodes?node_type=term",
+      "/api/classes?node_type=term",
     );
 
      
@@ -146,7 +146,7 @@ test.describe("Term Management", () => {
 
     // Create term via API
      
-    const createResponse = await apiRequest<any>(page, "/api/structure_nodes", {
+    const createResponse = await apiRequest<any>(page, "/api/classes", {
       method: "POST",
       body: {
         title: originalTitle,
@@ -188,7 +188,7 @@ test.describe("Term Management", () => {
      
     const response = await apiRequest<any>(
       page,
-      `/api/structure_nodes/${termId}`,
+      `/api/classes/${termId}`,
     );
     expect(response.title).toBe(updatedTitle);
     expect(response.definition).toBe(updatedDefinition);
@@ -198,7 +198,7 @@ test.describe("Term Management", () => {
     // Create a term to delete
     const termTitle = `E2E Delete Test ${Date.now()}`;
      
-    const createResponse = await apiRequest<any>(page, "/api/structure_nodes", {
+    const createResponse = await apiRequest<any>(page, "/api/classes", {
       method: "POST",
       body: {
         title: termTitle,
@@ -241,7 +241,7 @@ test.describe("Term Management", () => {
 
     // Verify term is deleted from backend
     try {
-      await apiRequest(page, `/api/structure_nodes/${termId}`);
+      await apiRequest(page, `/api/classes/${termId}`);
       // If we get here, the term wasn't deleted
       expect(false).toBe(true); // Force fail
     } catch (error) {
@@ -259,7 +259,7 @@ test.describe("Term Management", () => {
 
     // Create terms via API
     await Promise.all([
-      apiRequest(page, "/api/structure_nodes", {
+      apiRequest(page, "/api/classes", {
         method: "POST",
         body: {
           title: term1Title,
@@ -268,7 +268,7 @@ test.describe("Term Management", () => {
           parent_node_id: testDomainId,
         },
       }),
-      apiRequest(page, "/api/structure_nodes", {
+      apiRequest(page, "/api/classes", {
         method: "POST",
         body: {
           title: term2Title,
@@ -277,7 +277,7 @@ test.describe("Term Management", () => {
           parent_node_id: testDomainId,
         },
       }),
-      apiRequest(page, "/api/structure_nodes", {
+      apiRequest(page, "/api/classes", {
         method: "POST",
         body: {
           title: term3Title,
@@ -342,7 +342,7 @@ test.describe("Term Management", () => {
     const termTitle = `E2E Detail Test ${Date.now()}`;
     const termDefinition = "Test term for detail view";
      
-    const createResponse = await apiRequest<any>(page, "/api/structure_nodes", {
+    const createResponse = await apiRequest<any>(page, "/api/classes", {
       method: "POST",
       body: {
         title: termTitle,
@@ -364,20 +364,20 @@ test.describe("Term Management", () => {
     await expect(row).toBeVisible({ timeout: 10000 });
 
     // Find the link in the row
-    const link = row.locator('a[href*="/app/structure_nodes/"]');
+    const link = row.locator('a[href*="/app/classes/"]');
     await expect(link).toBeVisible({ timeout: 5000 });
 
     // Click the link
     await link.click();
 
     // Wait for navigation
-    await page.waitForURL(`**/app/structure_nodes/${termId}`, {
+    await page.waitForURL(`**/app/classes/${termId}`, {
       timeout: 15000,
     });
     await page.waitForLoadState("networkidle");
 
     // Verify we're on the detail page
-    expect(page.url()).toContain(`/app/structure_nodes/${termId}`);
+    expect(page.url()).toContain(`/app/classes/${termId}`);
 
     // Verify term details are displayed
     await expect(page.locator("body")).toContainText(termTitle, {
@@ -390,7 +390,7 @@ test.describe("Term Management", () => {
      
     const beforeResponse = await apiRequest<{ data: any[]; total: number }>(
       page,
-      "/api/structure_nodes?node_type=term",
+      "/api/classes?node_type=term",
     );
     const beforeCount = beforeResponse.total;
 
@@ -415,7 +415,7 @@ test.describe("Term Management", () => {
      
     const afterResponse = await apiRequest<{ data: any[]; total: number }>(
       page,
-      "/api/structure_nodes?node_type=term",
+      "/api/classes?node_type=term",
     );
     const afterCount = afterResponse.total;
 
@@ -463,7 +463,7 @@ test.describe("Term Management", () => {
     // Create multiple terms
     const timestamp = Date.now();
      
-    const term1 = await apiRequest<any>(page, "/api/structure_nodes", {
+    const term1 = await apiRequest<any>(page, "/api/classes", {
       method: "POST",
       body: {
         title: `Bulk Delete 1 ${timestamp}`,
@@ -473,7 +473,7 @@ test.describe("Term Management", () => {
       },
     });
      
-    const term2 = await apiRequest<any>(page, "/api/structure_nodes", {
+    const term2 = await apiRequest<any>(page, "/api/classes", {
       method: "POST",
       body: {
         title: `Bulk Delete 2 ${timestamp}`,
@@ -524,7 +524,7 @@ test.describe("Term Management", () => {
      
     const domain2Response = await apiRequest<any>(
       page,
-      "/api/structure_nodes",
+      "/api/classes",
       {
         method: "POST",
         body: {
@@ -543,7 +543,7 @@ test.describe("Term Management", () => {
 
     // Create terms in each domain
      
-    await apiRequest<any>(page, "/api/structure_nodes", {
+    await apiRequest<any>(page, "/api/classes", {
       method: "POST",
       body: {
         title: term1Title,
@@ -554,7 +554,7 @@ test.describe("Term Management", () => {
     });
 
      
-    await apiRequest<any>(page, "/api/structure_nodes", {
+    await apiRequest<any>(page, "/api/classes", {
       method: "POST",
       body: {
         title: term2Title,
@@ -599,7 +599,7 @@ test.describe("Term Management", () => {
   test("should filter terms by layer", async ({ page }) => {
     // Create a second layer and domain
      
-    const layer2Response = await apiRequest<any>(page, "/api/structure_nodes", {
+    const layer2Response = await apiRequest<any>(page, "/api/classes", {
       method: "POST",
       body: {
         title: `E2E Test Layer 2 ${Date.now()}`,
@@ -612,7 +612,7 @@ test.describe("Term Management", () => {
      
     const domain2Response = await apiRequest<any>(
       page,
-      "/api/structure_nodes",
+      "/api/classes",
       {
         method: "POST",
         body: {
@@ -630,7 +630,7 @@ test.describe("Term Management", () => {
     const term2Title = `Term Layer 2 ${timestamp}`;
 
     // Create terms in domains from different layers
-    await apiRequest(page, "/api/structure_nodes", {
+    await apiRequest(page, "/api/classes", {
       method: "POST",
       body: {
         title: term1Title,
@@ -640,7 +640,7 @@ test.describe("Term Management", () => {
       },
     });
 
-    await apiRequest(page, "/api/structure_nodes", {
+    await apiRequest(page, "/api/classes", {
       method: "POST",
       body: {
         title: term2Title,
@@ -689,7 +689,7 @@ test.describe("Term Management", () => {
      
     const domain2Response = await apiRequest<any>(
       page,
-      "/api/structure_nodes",
+      "/api/classes",
       {
         method: "POST",
         body: {
@@ -705,7 +705,7 @@ test.describe("Term Management", () => {
     const timestamp = Date.now();
 
     // Create terms in different domains
-    await apiRequest(page, "/api/structure_nodes", {
+    await apiRequest(page, "/api/classes", {
       method: "POST",
       body: {
         title: `Term D1 ${timestamp}`,
@@ -715,7 +715,7 @@ test.describe("Term Management", () => {
       },
     });
 
-    await apiRequest(page, "/api/structure_nodes", {
+    await apiRequest(page, "/api/classes", {
       method: "POST",
       body: {
         title: `Term D2 ${timestamp}`,

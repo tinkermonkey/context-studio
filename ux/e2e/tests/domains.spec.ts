@@ -19,7 +19,7 @@ test.describe("Domain Management", () => {
   test.beforeEach(async ({ page }) => {
     // Create a test layer for domains to belong to
      
-    const layerResponse = await apiRequest<any>(page, "/api/structure_nodes", {
+    const layerResponse = await apiRequest<any>(page, "/api/classes", {
       method: "POST",
       body: {
         title: `E2E Test Layer ${Date.now()}`,
@@ -88,7 +88,7 @@ test.describe("Domain Management", () => {
      
     const layerResponse = await apiRequest<any>(
       page,
-      `/api/structure_nodes/${testLayerId}`,
+      `/api/classes/${testLayerId}`,
     );
     const testLayerTitle = layerResponse.title;
 
@@ -119,7 +119,7 @@ test.describe("Domain Management", () => {
      
     const response = await apiRequest<{ data: any[] }>(
       page,
-      "/api/structure_nodes?node_type=domain",
+      "/api/classes?node_type=domain",
     );
     const createdDomain = response.data.find(
        
@@ -140,7 +140,7 @@ test.describe("Domain Management", () => {
 
     // Create domain via API
      
-    const createResponse = await apiRequest<any>(page, "/api/structure_nodes", {
+    const createResponse = await apiRequest<any>(page, "/api/classes", {
       method: "POST",
       body: {
         title: originalTitle,
@@ -187,7 +187,7 @@ test.describe("Domain Management", () => {
      
     const response = await apiRequest<any>(
       page,
-      `/api/structure_nodes/${domainId}`,
+      `/api/classes/${domainId}`,
     );
     expect(response.title).toBe(updatedTitle);
     expect(response.definition).toBe(updatedDefinition);
@@ -197,7 +197,7 @@ test.describe("Domain Management", () => {
     // Create a domain to delete
     const domainTitle = `E2E Delete Test ${Date.now()}`;
      
-    const createResponse = await apiRequest<any>(page, "/api/structure_nodes", {
+    const createResponse = await apiRequest<any>(page, "/api/classes", {
       method: "POST",
       body: {
         title: domainTitle,
@@ -240,7 +240,7 @@ test.describe("Domain Management", () => {
 
     // Verify domain is deleted from backend
     try {
-      await apiRequest(page, `/api/structure_nodes/${domainId}`);
+      await apiRequest(page, `/api/classes/${domainId}`);
       // If we get here, the domain wasn't deleted
       expect(false).toBe(true); // Force fail
     } catch (_error) {
@@ -258,7 +258,7 @@ test.describe("Domain Management", () => {
 
     // Create domains via API
     await Promise.all([
-      apiRequest(page, "/api/structure_nodes", {
+      apiRequest(page, "/api/classes", {
         method: "POST",
         body: {
           title: domain1Title,
@@ -266,7 +266,7 @@ test.describe("Domain Management", () => {
           parent_node_id: testLayerId,
         },
       }),
-      apiRequest(page, "/api/structure_nodes", {
+      apiRequest(page, "/api/classes", {
         method: "POST",
         body: {
           title: domain2Title,
@@ -274,7 +274,7 @@ test.describe("Domain Management", () => {
           parent_node_id: testLayerId,
         },
       }),
-      apiRequest(page, "/api/structure_nodes", {
+      apiRequest(page, "/api/classes", {
         method: "POST",
         body: {
           title: domain3Title,
@@ -337,7 +337,7 @@ test.describe("Domain Management", () => {
     const domainTitle = `E2E Detail Test ${Date.now()}`;
     const domainDefinition = "Test domain for detail view";
      
-    const createResponse = await apiRequest<any>(page, "/api/structure_nodes", {
+    const createResponse = await apiRequest<any>(page, "/api/classes", {
       method: "POST",
       body: {
         title: domainTitle,
@@ -359,20 +359,20 @@ test.describe("Domain Management", () => {
     await expect(row).toBeVisible({ timeout: 10000 });
 
     // Find the link in the row
-    const link = row.locator('a[href*="/app/structure_nodes/"]');
+    const link = row.locator('a[href*="/app/classes/"]');
     await expect(link).toBeVisible({ timeout: 5000 });
 
     // Click the link
     await link.click();
 
     // Wait for navigation
-    await page.waitForURL(`**/app/structure_nodes/${domainId}`, {
+    await page.waitForURL(`**/app/classes/${domainId}`, {
       timeout: 15000,
     });
     await page.waitForLoadState("networkidle");
 
     // Verify we're on the detail page
-    expect(page.url()).toContain(`/app/structure_nodes/${domainId}`);
+    expect(page.url()).toContain(`/app/classes/${domainId}`);
 
     // Verify domain details are displayed
     await expect(page.locator("body")).toContainText(domainTitle, {
@@ -385,7 +385,7 @@ test.describe("Domain Management", () => {
      
     const beforeResponse = await apiRequest<{ data: any[]; total: number }>(
       page,
-      "/api/structure_nodes?node_type=domain",
+      "/api/classes?node_type=domain",
     );
     const beforeCount = beforeResponse.total;
 
@@ -410,7 +410,7 @@ test.describe("Domain Management", () => {
      
     const afterResponse = await apiRequest<{ data: any[]; total: number }>(
       page,
-      "/api/structure_nodes?node_type=domain",
+      "/api/classes?node_type=domain",
     );
     const afterCount = afterResponse.total;
 
@@ -452,7 +452,7 @@ test.describe("Domain Management", () => {
     // Create multiple domains
     const timestamp = Date.now();
      
-    const domain1 = await apiRequest<any>(page, "/api/structure_nodes", {
+    const domain1 = await apiRequest<any>(page, "/api/classes", {
       method: "POST",
       body: {
         title: `Bulk Delete 1 ${timestamp}`,
@@ -461,7 +461,7 @@ test.describe("Domain Management", () => {
       },
     });
      
-    const domain2 = await apiRequest<any>(page, "/api/structure_nodes", {
+    const domain2 = await apiRequest<any>(page, "/api/classes", {
       method: "POST",
       body: {
         title: `Bulk Delete 2 ${timestamp}`,
@@ -509,7 +509,7 @@ test.describe("Domain Management", () => {
   test("should filter domains by layer", async ({ page }) => {
     // Create a second layer
      
-    const layer2Response = await apiRequest<any>(page, "/api/structure_nodes", {
+    const layer2Response = await apiRequest<any>(page, "/api/classes", {
       method: "POST",
       body: {
         title: `E2E Test Layer 2 ${Date.now()}`,
@@ -522,7 +522,7 @@ test.describe("Domain Management", () => {
     const timestamp = Date.now();
 
     // Create domains in each layer
-    await apiRequest(page, "/api/structure_nodes", {
+    await apiRequest(page, "/api/classes", {
       method: "POST",
       body: {
         title: `Domain Layer 1 ${timestamp}`,
@@ -531,7 +531,7 @@ test.describe("Domain Management", () => {
       },
     });
 
-    await apiRequest(page, "/api/structure_nodes", {
+    await apiRequest(page, "/api/classes", {
       method: "POST",
       body: {
         title: `Domain Layer 2 ${timestamp}`,

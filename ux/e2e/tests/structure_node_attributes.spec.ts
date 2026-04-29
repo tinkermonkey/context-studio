@@ -28,7 +28,7 @@ async function generateTestHierarchy(
 ): Promise<TestHierarchy> {
   // Create layer with category attribute
    
-  const layerResponse = await apiRequest<any>(page, "/api/structure_nodes", {
+  const layerResponse = await apiRequest<any>(page, "/api/classes", {
     method: "POST",
     body: {
       title: `Legal Domain ${timestamp}`,
@@ -39,7 +39,7 @@ async function generateTestHierarchy(
   const layerId = layerResponse.id;
 
   // Set attributes on layer
-  await apiRequest(page, `/api/structure_nodes/${layerId}/attributes`, {
+  await apiRequest(page, `/api/classes/${layerId}/attributes`, {
     method: "POST",
     body: [
       {
@@ -53,7 +53,7 @@ async function generateTestHierarchy(
 
   // Create domain with jurisdiction attribute
    
-  const domainResponse = await apiRequest<any>(page, "/api/structure_nodes", {
+  const domainResponse = await apiRequest<any>(page, "/api/classes", {
     method: "POST",
     body: {
       title: `Contract Law ${timestamp}`,
@@ -65,7 +65,7 @@ async function generateTestHierarchy(
   const domainId = domainResponse.id;
 
   // Set attributes on domain
-  await apiRequest(page, `/api/structure_nodes/${domainId}/attributes`, {
+  await apiRequest(page, `/api/classes/${domainId}/attributes`, {
     method: "POST",
     body: [
       {
@@ -79,7 +79,7 @@ async function generateTestHierarchy(
 
   // Create term1 with override and local attribute
    
-  const term1Response = await apiRequest<any>(page, "/api/structure_nodes", {
+  const term1Response = await apiRequest<any>(page, "/api/classes", {
     method: "POST",
     body: {
       title: `Force Majeure ${timestamp}`,
@@ -91,7 +91,7 @@ async function generateTestHierarchy(
   const term1Id = term1Response.id;
 
   // Set attributes on term1 (override jurisdiction, add definition_date)
-  await apiRequest(page, `/api/structure_nodes/${term1Id}/attributes`, {
+  await apiRequest(page, `/api/classes/${term1Id}/attributes`, {
     method: "POST",
     body: [
       {
@@ -111,7 +111,7 @@ async function generateTestHierarchy(
 
   // Create term2 with no local attributes (inherits all)
    
-  const term2Response = await apiRequest<any>(page, "/api/structure_nodes", {
+  const term2Response = await apiRequest<any>(page, "/api/classes", {
     method: "POST",
     body: {
       title: `Indemnification ${timestamp}`,
@@ -130,7 +130,7 @@ async function generateTestHierarchy(
      
     const deepTermResponse = await apiRequest<any>(
       page,
-      "/api/structure_nodes",
+      "/api/classes",
       {
         method: "POST",
         body: {
@@ -146,7 +146,7 @@ async function generateTestHierarchy(
     if (i === 3) {
       await apiRequest(
         page,
-        `/api/structure_nodes/${deepTermResponse.id}/attributes`,
+        `/api/classes/${deepTermResponse.id}/attributes`,
         {
           method: "POST",
           body: [
@@ -194,7 +194,7 @@ test.describe("Structure Node Attributes E2E", () => {
 
   test("Create attribute on structure node", async ({ page }) => {
     // Navigate to term1 detail page
-    await page.goto(`/app/structure_nodes/${testHierarchy.term1.id}`);
+    await page.goto(`/app/classes/${testHierarchy.term1.id}`);
     await page.waitForLoadState("networkidle");
 
     // Verify page loaded
@@ -247,7 +247,7 @@ test.describe("Structure Node Attributes E2E", () => {
      
     const nodeResponse = await apiRequest<any>(
       page,
-      `/api/structure_nodes/${testHierarchy.term1.id}/attributes`,
+      `/api/classes/${testHierarchy.term1.id}/attributes`,
     );
     const createdAttr = nodeResponse.find(
       (attr: any) => attr.key === attributeKey,  
@@ -261,7 +261,7 @@ test.describe("Structure Node Attributes E2E", () => {
     page,
   }) => {
     // Navigate to term2 (has only inherited attributes)
-    await page.goto(`/app/structure_nodes/${testHierarchy.term2.id}`);
+    await page.goto(`/app/classes/${testHierarchy.term2.id}`);
     await page.waitForLoadState("networkidle");
 
     // Verify page loaded
@@ -295,7 +295,7 @@ test.describe("Structure Node Attributes E2E", () => {
 
   test("Override inherited attribute", async ({ page }) => {
     // Navigate to term1 (which has jurisdiction override)
-    await page.goto(`/app/structure_nodes/${testHierarchy.term1.id}`);
+    await page.goto(`/app/classes/${testHierarchy.term1.id}`);
     await page.waitForLoadState("networkidle");
 
     // Find the jurisdiction attribute
@@ -342,7 +342,7 @@ test.describe("Structure Node Attributes E2E", () => {
      
     const attributes = await apiRequest<any>(
       page,
-      `/api/structure_nodes/${testHierarchy.term1.id}/attributes`,
+      `/api/classes/${testHierarchy.term1.id}/attributes`,
     );
     const jurisdictionAttr = attributes.find(
       (a: any) => a.key === "jurisdiction",  
@@ -352,7 +352,7 @@ test.describe("Structure Node Attributes E2E", () => {
 
   test("Delete local attribute override", async ({ page }) => {
     // Navigate to term1 (has override we can delete)
-    await page.goto(`/app/structure_nodes/${testHierarchy.term1.id}`);
+    await page.goto(`/app/classes/${testHierarchy.term1.id}`);
     await page.waitForLoadState("networkidle");
 
     // Create a new attribute to delete
@@ -427,7 +427,7 @@ test.describe("Structure Node Attributes E2E", () => {
 
   test("Inline validation for attribute types", async ({ page }) => {
     // Navigate to a term
-    await page.goto(`/app/structure_nodes/${testHierarchy.term1.id}`);
+    await page.goto(`/app/classes/${testHierarchy.term1.id}`);
     await page.waitForLoadState("networkidle");
 
     // Click add attribute
@@ -482,7 +482,7 @@ test.describe("Structure Node Attributes E2E", () => {
   test("Attribute inheritance across 5-level hierarchy", async ({ page }) => {
     // Navigate to deepest level (level 5)
     const deepestTerm = testHierarchy.deepTerms[4];
-    await page.goto(`/app/structure_nodes/${deepestTerm.id}`);
+    await page.goto(`/app/classes/${deepestTerm.id}`);
     await page.waitForLoadState("networkidle");
 
     // Verify attributes are loaded
@@ -507,7 +507,7 @@ test.describe("Structure Node Attributes E2E", () => {
      
     const attributes = await apiRequest<any>(
       page,
-      `/api/structure_nodes/${deepestTerm.id}/attributes`,
+      `/api/classes/${deepestTerm.id}/attributes`,
     );
     expect(attributes.length).toBeGreaterThan(0);
 
@@ -524,7 +524,7 @@ test.describe("Structure Node Attributes E2E", () => {
     // Create a term with many attributes
     const timestamp = Date.now();
      
-    const termResponse = await apiRequest<any>(page, "/api/structure_nodes", {
+    const termResponse = await apiRequest<any>(page, "/api/classes", {
       method: "POST",
       body: {
         title: `Performance Test Term ${timestamp}`,
@@ -546,14 +546,14 @@ test.describe("Structure Node Attributes E2E", () => {
       });
     }
 
-    await apiRequest(page, `/api/structure_nodes/${termId}/attributes`, {
+    await apiRequest(page, `/api/classes/${termId}/attributes`, {
       method: "POST",
       body: attributes,
     });
 
     // Navigate and measure render time
     const startTime = Date.now();
-    await page.goto(`/app/structure_nodes/${termId}`);
+    await page.goto(`/app/classes/${termId}`);
     await page.waitForLoadState("networkidle");
     const renderTime = Date.now() - startTime;
 
@@ -580,7 +580,7 @@ test.describe("Structure Node Attributes E2E", () => {
 
   test("Attribute display readability", async ({ page }) => {
     // Navigate to term1 with multiple attributes
-    await page.goto(`/app/structure_nodes/${testHierarchy.term1.id}`);
+    await page.goto(`/app/classes/${testHierarchy.term1.id}`);
     await page.waitForLoadState("networkidle");
 
     // Verify attributes section is visible
@@ -610,11 +610,11 @@ test.describe("Structure Node Attributes E2E", () => {
 
   test("API error handling in UX", async ({ page }) => {
     // Navigate to term1
-    await page.goto(`/app/structure_nodes/${testHierarchy.term1.id}`);
+    await page.goto(`/app/classes/${testHierarchy.term1.id}`);
     await page.waitForLoadState("networkidle");
 
     // Intercept attribute API to simulate error
-    await page.route(`**/api/structure_nodes/*/attributes`, (route) => {
+    await page.route(`**/api/classes/*/attributes`, (route) => {
       if (route.request().method() === "POST") {
         route.abort("failed");
       } else {
@@ -667,7 +667,7 @@ test.describe("Structure Node Attributes E2E", () => {
      
     const testNodeResponse = await apiRequest<any>(
       page,
-      "/api/structure_nodes",
+      "/api/classes",
       {
         method: "POST",
         body: {
@@ -681,7 +681,7 @@ test.describe("Structure Node Attributes E2E", () => {
     const testNodeId = testNodeResponse.id;
 
     // Set attributes with all types
-    await apiRequest(page, `/api/structure_nodes/${testNodeId}/attributes`, {
+    await apiRequest(page, `/api/classes/${testNodeId}/attributes`, {
       method: "POST",
       body: [
         {
@@ -718,7 +718,7 @@ test.describe("Structure Node Attributes E2E", () => {
     });
 
     // Navigate to node
-    await page.goto(`/app/structure_nodes/${testNodeId}`);
+    await page.goto(`/app/classes/${testNodeId}`);
     await page.waitForLoadState("networkidle");
 
     // Verify all attributes are displayed
@@ -738,7 +738,7 @@ test.describe("Structure Node Attributes E2E", () => {
      
     const attributes = await apiRequest<any>(
       page,
-      `/api/structure_nodes/${testNodeId}/attributes`,
+      `/api/classes/${testNodeId}/attributes`,
     );
     expect(attributes.length).toBe(5);
     expect(

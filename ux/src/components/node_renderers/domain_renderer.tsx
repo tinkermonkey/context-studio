@@ -1,12 +1,12 @@
 import React from "react";
-import { useStructureNode } from "@/api/hooks/structure_nodes/useStructureNodes";
+import { useClass } from "@/api/hooks/ontologyClasss/useClasss";
 
 type DomainProps = {
   domain_id: string;
 };
 
 export const DomainRenderer: React.FC<DomainProps> = ({ domain_id }) => {
-  const { data, isLoading, isError } = useStructureNode(domain_id);
+  const { data, isLoading, isError } = useClass(domain_id);
 
   if (isLoading) return <span>Loading...</span>;
   if (isError || !data) return <span>Domain not found</span>;

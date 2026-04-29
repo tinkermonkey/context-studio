@@ -2,13 +2,13 @@ import React from "react";
 import { useForm } from "@tanstack/react-form";
 import { TextInput, Textarea, Button, Alert, Label } from "flowbite-react";
 import { Info } from "lucide-react";
-import type { StructureNode } from "@/api/types/structureNodes";
+import type { OntologyClass } from "@/api/types/ontologyClasss";
 import { useCreateTaxonomy } from "@/api/hooks/taxonomies/useTaxonomies";
 import { useUpdateTaxonomy } from "@/api/hooks/taxonomies/useTaxonomies";
 
 interface LayerFormProps {
-  onSuccess?: (layer: StructureNode) => void;
-  layer?: StructureNode;
+  onSuccess?: (layer: OntologyClass) => void;
+  layer?: OntologyClass;
 }
 
 const LayerForm: React.FC<LayerFormProps> = ({ onSuccess, layer }) => {

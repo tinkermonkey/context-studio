@@ -2,16 +2,16 @@ import React from "react";
 import { useForm } from "@tanstack/react-form";
 import { TextInput, Textarea, Button, Alert, Label } from "flowbite-react";
 import { Info, Database } from "lucide-react";
-import type { StructureNode } from "@/api/types/structureNodes";
+import type { OntologyClass } from "@/api/types/ontologyClasss";
 import { useCreateConceptScheme, useUpdateConceptScheme } from "@/api/hooks/conceptSchemes";
 import { TaxonomySelector } from "@/components/node_selectors/taxonomy_selector";
 import { PropertySelector } from "@/components/node_selectors/property_selector";
 
 interface ConceptSchemeFormProps {
-  onSuccess?: (conceptScheme: StructureNode) => void;
-  conceptScheme?: StructureNode;
+  onSuccess?: (conceptScheme: OntologyClass) => void;
+  conceptScheme?: OntologyClass;
   parentTaxonomyId?: string;
-  parentTaxonomy?: StructureNode;
+  parentTaxonomy?: OntologyClass;
   mode?: "create" | "edit" | "child";
 }
 

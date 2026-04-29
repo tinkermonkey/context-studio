@@ -14,18 +14,18 @@ export enum RecordType {
   RELATIONSHIP = "relationship",
   PROPERTY_DEFINITION = "property_definition",
   // Legacy types for compatibility with existing change events
-  STRUCTURE_NODE = "structure_node",
-  STRUCTURE_NODE_LINK = "structure_node_link",
+  STRUCTURE_NODE = "ontologyClass",
+  STRUCTURE_NODE_LINK = "ontologyClass_link",
   PREDICATE = "predicate",
 }
 
 /**
- * Node types in the taxonomy (legacy, for backward compatibility with change events)
+ * Node types in the ontology (new naming to match entity types)
  */
 export enum NodeType {
-  LAYER = "LAYER",
-  DOMAIN = "DOMAIN",
-  TERM = "TERM",
+  TAXONOMY = "taxonomy",
+  SCHEME = "scheme",
+  CLASS = "class",
 }
 
 /**
@@ -46,14 +46,14 @@ export interface ChangeEvent {
 /**
  * Type guard to check if an event is a structure node event
  */
-export function isStructureNodeEvent(event: ChangeEvent): boolean {
+export function isOntologyClassEvent(event: ChangeEvent): boolean {
   return event.record_type === RecordType.STRUCTURE_NODE;
 }
 
 /**
  * Type guard to check if an event is a structure node link event
  */
-export function isStructureNodeLinkEvent(event: ChangeEvent): boolean {
+export function isOntologyClassLinkEvent(event: ChangeEvent): boolean {
   return event.record_type === RecordType.STRUCTURE_NODE_LINK;
 }
 

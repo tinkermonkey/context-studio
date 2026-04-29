@@ -7,13 +7,13 @@
 import React, { useState } from "react";
 import { Button, Label, Checkbox, Alert } from "flowbite-react";
 import { Info } from "lucide-react";
-import { StructureNode } from "@/api/types/structureNodes";
-import { StructureNodeSelector } from "@/components/node_selectors/structure_node_selector";
-import { useMoveStructureNodes } from "@/api/hooks/structure_nodes/useStructureNodeMutations";
+import { OntologyClass } from "@/api/types/ontologyClasss";
+import { OntologyClassSelector } from "@/components/node_selectors/ontologyClass_selector";
+import { useMoveOntologyClasss } from "@/api/hooks/ontologyClasss/useClassMutations";
 import { useButterToast } from "@/hooks/useButterToast";
 
 interface DomainMoveFormProps {
-  selectedNodes: StructureNode[];
+  selectedNodes: OntologyClass[];
   onSuccess: () => void;
   onCancel: () => void;
 }
@@ -25,7 +25,7 @@ export function DomainMoveForm({
 }: DomainMoveFormProps) {
   const [targetParentId, setTargetParentId] = useState<string>("");
   const [moveChildren, setMoveChildren] = useState(true);
-  const moveNodes = useMoveStructureNodes();
+  const moveNodes = useMoveOntologyClasss();
   const toast = useButterToast();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -83,7 +83,7 @@ export function DomainMoveForm({
 
       <div>
         <Label htmlFor="target-parent">Target Parent Node</Label>
-        <StructureNodeSelector
+        <OntologyClassSelector
           value={targetParentId}
           onSelect={(node) => setTargetParentId(node?.id || "")}
           excludeNodeIds={excludeNodeIds}
