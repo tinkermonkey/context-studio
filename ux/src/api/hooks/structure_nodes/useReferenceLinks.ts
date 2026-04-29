@@ -41,11 +41,26 @@ export const useAddReferenceLinks = () => {
  */
 export const useDeleteReferenceLink = () => {
   return {
-    mutate: () => {
+    mutate: (_data?: any) => { // eslint-disable-line @typescript-eslint/no-explicit-any
       throw new Error("useDeleteReferenceLink has been removed.");
     },
-    mutateAsync: async () => {
+    mutateAsync: async (_data?: any) => { // eslint-disable-line @typescript-eslint/no-explicit-any
       throw new Error("useDeleteReferenceLink has been removed.");
+    },
+    isPending: false,
+  };
+};
+
+/**
+ * @deprecated
+ */
+export const useRemoveReferenceLink = (..._args: any[]) => { // eslint-disable-line @typescript-eslint/no-explicit-any
+  return {
+    mutate: (_data?: any) => { // eslint-disable-line @typescript-eslint/no-explicit-any
+      throw new Error("useRemoveReferenceLink has been removed.");
+    },
+    mutateAsync: async (_data?: any) => { // eslint-disable-line @typescript-eslint/no-explicit-any
+      throw new Error("useRemoveReferenceLink has been removed.");
     },
     isPending: false,
   };

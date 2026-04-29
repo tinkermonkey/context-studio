@@ -88,6 +88,31 @@ export interface ReferenceLink {
 /**
  * @deprecated
  */
+export type StructureNodeAttribute = any; // eslint-disable-line @typescript-eslint/no-explicit-any
+
+/**
+ * @deprecated
+ */
+export type AttributeValueType = any; // eslint-disable-line @typescript-eslint/no-explicit-any
+
+/**
+ * @deprecated
+ */
+export type ResolvedAttribute = any; // eslint-disable-line @typescript-eslint/no-explicit-any
+
+/**
+ * @deprecated
+ */
+export type FindStructureNodeResult = any; // eslint-disable-line @typescript-eslint/no-explicit-any
+
+/**
+ * @deprecated
+ */
+export type ExternalPredicateOut = any; // eslint-disable-line @typescript-eslint/no-explicit-any
+
+/**
+ * @deprecated
+ */
 export function isStructureNodeEvent(event: ChangeEvent): boolean {
   return event.record_type === "structure_node";
 }

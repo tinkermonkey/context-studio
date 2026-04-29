@@ -11,12 +11,12 @@ import { UseMutationOptions } from "@tanstack/react-query";
  */
 export const useCreatePredicate = (..._args: any[]) => { // eslint-disable-line @typescript-eslint/no-explicit-any
   return {
-    mutate: () => {
+    mutate: (_data?: any) => { // eslint-disable-line @typescript-eslint/no-explicit-any
       throw new Error(
         "useCreatePredicate has been removed. Use useCreatePropertyDefinition instead.",
       );
     },
-    mutateAsync: async () => {
+    mutateAsync: async (_data?: any) => { // eslint-disable-line @typescript-eslint/no-explicit-any
       throw new Error(
         "useCreatePredicate has been removed. Use useCreatePropertyDefinition instead.",
       );
@@ -62,6 +62,21 @@ export const useDeletePredicate = (
       throw new Error(
         "useDeletePredicate has been removed. Use useDeletePropertyDefinition instead.",
       );
+    },
+    isPending: false,
+  };
+};
+
+/**
+ * @deprecated
+ */
+export const useClusterPredicates = (..._args: any[]) => { // eslint-disable-line @typescript-eslint/no-explicit-any
+  return {
+    mutate: (_data?: any) => { // eslint-disable-line @typescript-eslint/no-explicit-any
+      throw new Error("useClusterPredicates has been removed.");
+    },
+    mutateAsync: async (_data?: any) => { // eslint-disable-line @typescript-eslint/no-explicit-any
+      throw new Error("useClusterPredicates has been removed.");
     },
     isPending: false,
   };

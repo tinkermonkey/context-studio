@@ -26,11 +26,26 @@ export const useNodeAttributes = (
  */
 export const useUpdateNodeAttribute = () => {
   return {
-    mutate: () => {
+    mutate: (_data?: any) => { // eslint-disable-line @typescript-eslint/no-explicit-any
       throw new Error("useUpdateNodeAttribute has been removed.");
     },
-    mutateAsync: async () => {
+    mutateAsync: async (_data?: any) => { // eslint-disable-line @typescript-eslint/no-explicit-any
       throw new Error("useUpdateNodeAttribute has been removed.");
+    },
+    isPending: false,
+  };
+};
+
+/**
+ * @deprecated
+ */
+export const useNodeAttributeMutations = (..._args: any[]) => { // eslint-disable-line @typescript-eslint/no-explicit-any
+  return {
+    mutate: (_data?: any) => { // eslint-disable-line @typescript-eslint/no-explicit-any
+      throw new Error("useNodeAttributeMutations has been removed.");
+    },
+    mutateAsync: async (_data?: any) => { // eslint-disable-line @typescript-eslint/no-explicit-any
+      throw new Error("useNodeAttributeMutations has been removed.");
     },
     isPending: false,
   };

@@ -69,3 +69,29 @@ export const useStructureNode = (..._args: any[]) => { // eslint-disable-line @t
     refetch: async () => undefined,
   };
 };
+
+/**
+ * @deprecated
+ */
+export const useTermNodes = (..._args: any[]) => { // eslint-disable-line @typescript-eslint/no-explicit-any
+  return {
+    data: undefined,
+    isLoading: false,
+    error: new Error("useTermNodes has been removed."),
+    isError: true,
+    refetch: async () => undefined,
+  };
+};
+
+/**
+ * @deprecated
+ */
+export const useStructureNodeSearch = (..._args: any[]) => { // eslint-disable-line @typescript-eslint/no-explicit-any
+  return {
+    data: undefined,
+    isLoading: false,
+    error: new Error("useStructureNodeSearch has been removed."),
+    isError: true,
+    refetch: async () => undefined,
+  };
+};

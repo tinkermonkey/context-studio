@@ -12,12 +12,12 @@ import type { StructureNode } from "../../types/structureNodes";
  */
 export const useCreateStructureNode = (..._args: any[]) => { // eslint-disable-line @typescript-eslint/no-explicit-any
   return {
-    mutate: () => {
+    mutate: (_data?: any) => { // eslint-disable-line @typescript-eslint/no-explicit-any
       throw new Error(
         "useCreateStructureNode has been removed. Use useCreateTaxonomy, useCreateConceptScheme, or useCreateOntologyClass instead.",
       );
     },
-    mutateAsync: async () => {
+    mutateAsync: async (_data?: any) => { // eslint-disable-line @typescript-eslint/no-explicit-any
       throw new Error(
         "useCreateStructureNode has been removed. Use useCreateTaxonomy, useCreateConceptScheme, or useCreateOntologyClass instead.",
       );

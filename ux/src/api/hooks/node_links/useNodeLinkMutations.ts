@@ -11,10 +11,10 @@ import { UseMutationOptions } from "@tanstack/react-query";
  */
 export const useCreateNodeLink = (..._args: any[]) => { // eslint-disable-line @typescript-eslint/no-explicit-any
   return {
-    mutate: () => {
+    mutate: (_data?: any) => { // eslint-disable-line @typescript-eslint/no-explicit-any
       throw new Error("useCreateNodeLink has been removed. Use useCreateRelationship instead.");
     },
-    mutateAsync: async () => {
+    mutateAsync: async (_data?: any) => { // eslint-disable-line @typescript-eslint/no-explicit-any
       throw new Error("useCreateNodeLink has been removed. Use useCreateRelationship instead.");
     },
     isPending: false,
