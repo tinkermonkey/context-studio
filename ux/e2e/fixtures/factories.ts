@@ -324,18 +324,20 @@ export async function seedTestData(
  * 4. Concept schemes (must be deleted before taxonomies)
  * 5. Taxonomies (deleted last)
  *
- * Per ADR-2, isolation is achieved through unique names and per-run
- * cleanup in global-setup.ts. This function targets specific test
- * entities that may have been created during a test.
+ * Isolation is achieved through unique names/prefixes for all test-created entities.
+ * Test data is identified by name/title prefixes. Relationships are identified
+ * by their source and target classes being test-created.
  *
  * @param page - Playwright page object
  * @param maxAge - Maximum age in milliseconds for entities to consider as test data (default: 10 minutes)
+ * @throws {Error} If any cleanup step fails after all cleanup attempts
  */
 export async function clearTestData(
   page: Page,
   maxAge: number = 10 * 60 * 1000,
 ): Promise<void> {
   const now = Date.now();
+  const cleanupErrors: Array<{ step: string; error: unknown }> = [];
 
   const extractItems = (response: any): any[] => {
     if (Array.isArray(response)) {
@@ -350,59 +352,60 @@ export async function clearTestData(
     return [];
   };
 
+  const isTestEntity = (entity: any, titlePatterns: string[]): boolean => {
+    return titlePatterns.some((pattern) => entity.title?.includes(pattern));
+  };
+
   const deleteEntityIfMatches = async (
     page: Page,
     entity: any,
     endpoint: string,
     titlePatterns: string[],
   ): Promise<void> => {
-    const matches = titlePatterns.some((pattern) =>
-      entity.title?.includes(pattern),
-    );
-    if (matches) {
+    if (isTestEntity(entity, titlePatterns)) {
       const createdAt = entity.created_at
         ? new Date(entity.created_at).getTime()
         : 0;
       if (now - createdAt < maxAge) {
-        try {
-          await apiRequest(page, `${endpoint}/${entity.id}`, {
-            method: "DELETE",
-          });
-        } catch (error) {
-          console.warn(`Failed to delete entity ${entity.id}:`, error);
-        }
+        await apiRequest(page, `${endpoint}/${entity.id}`, {
+          method: "DELETE",
+        });
       }
     }
   };
 
   try {
     // STEP 1: Delete all test relationships (first — they reference other entities)
+    // Relationships are identified by their source/target classes being test-created
     try {
+      const classesResponse = await apiRequest<any>(page, "/api/classes");
+      const classes = extractItems(classesResponse);
+      const testClassIds = new Set(
+        classes
+          .filter((cls) =>
+            isTestEntity(cls, ["test-class-", "seed-class-"]),
+          )
+          .map((cls) => cls.id),
+      );
+
       const relationshipsResponse = await apiRequest<any>(
         page,
         "/api/relationships",
       );
       const relationships = extractItems(relationshipsResponse);
       for (const relationship of relationships) {
-        const createdAt = relationship.created_at
-          ? new Date(relationship.created_at).getTime()
-          : 0;
-        // Delete relationships created within the test data window
-        if (now - createdAt < maxAge) {
-          try {
-            await apiRequest(page, `/api/relationships/${relationship.id}`, {
-              method: "DELETE",
-            });
-          } catch (error) {
-            console.warn(
-              `Failed to delete relationship ${relationship.id}:`,
-              error,
-            );
-          }
+        // Only delete relationships between test-created classes
+        if (
+          testClassIds.has(relationship.source_class_id) &&
+          testClassIds.has(relationship.target_class_id)
+        ) {
+          await apiRequest(page, `/api/relationships/${relationship.id}`, {
+            method: "DELETE",
+          });
         }
       }
     } catch (error) {
-      console.warn("Error fetching/deleting relationships:", error);
+      cleanupErrors.push({ step: "relationships", error });
     }
 
     // STEP 2: Delete all test property definitions (after relationships cleared)
@@ -416,7 +419,7 @@ export async function clearTestData(
         ]);
       }
     } catch (error) {
-      console.warn("Error fetching/deleting properties:", error);
+      cleanupErrors.push({ step: "properties", error });
     }
 
     // STEP 3: Delete all test ontology classes (after relationships cleared)
@@ -430,7 +433,7 @@ export async function clearTestData(
         ]);
       }
     } catch (error) {
-      console.warn("Error fetching/deleting classes:", error);
+      cleanupErrors.push({ step: "classes", error });
     }
 
     // STEP 4: Delete all test concept schemes (after classes deleted)
@@ -444,7 +447,7 @@ export async function clearTestData(
         ]);
       }
     } catch (error) {
-      console.warn("Error fetching/deleting schemes:", error);
+      cleanupErrors.push({ step: "schemes", error });
     }
 
     // STEP 5: Delete all test taxonomies (last — after all dependent entities removed)
@@ -458,9 +461,19 @@ export async function clearTestData(
         ]);
       }
     } catch (error) {
-      console.warn("Error fetching/deleting taxonomies:", error);
+      cleanupErrors.push({ step: "taxonomies", error });
     }
   } catch (error) {
-    console.warn("Error during test data cleanup:", error);
+    cleanupErrors.push({ step: "cleanup-wrapper", error });
+  }
+
+  // Report all cleanup errors
+  if (cleanupErrors.length > 0) {
+    const errorSummary = cleanupErrors
+      .map((e) => `  - ${e.step}: ${e.error instanceof Error ? e.error.message : String(e.error)}`)
+      .join("\n");
+    throw new Error(
+      `Test data cleanup failed with ${cleanupErrors.length} error(s):\n${errorSummary}`,
+    );
   }
 }

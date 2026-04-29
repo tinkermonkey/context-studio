@@ -87,6 +87,8 @@ export async function waitForAnyCondition(
 
 /**
  * Check if a backend endpoint exists
+ * @throws {Error} If the backend is unreachable (network error)
+ * @returns true if endpoint exists (status != 404), false if 404
  */
 export async function endpointExists(
   page: Page,
@@ -105,8 +107,13 @@ export async function endpointExists(
 
     // 404 means endpoint doesn't exist, anything else means it exists
     return response.status() !== 404;
-  } catch {
-    return false;
+  } catch (error) {
+    // Network error: backend unreachable
+    throw new Error(
+      `Could not reach backend at http://localhost:8888${endpoint}: ${
+        error instanceof Error ? error.message : String(error)
+      }`,
+    );
   }
 }
 

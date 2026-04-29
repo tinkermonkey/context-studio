@@ -43,8 +43,8 @@ The E2E test infrastructure uses Playwright's global setup/teardown to manage se
 
 1. **Global Setup** (`e2e/global-setup.ts`):
    - Cleans test databases in `/local-server/datafiles/e2e-test/`
-   - Starts Python backend on port 8001
-   - Starts Vite frontend dev server on port 3101
+   - Starts Python backend on port 8888
+   - Starts Vite frontend dev server on port 3888
    - Waits for both servers to be ready
    - Servers run for the entire test suite
 
@@ -61,7 +61,7 @@ The E2E test infrastructure uses Playwright's global setup/teardown to manage se
 
 - **Test databases**: All tests use isolated databases in `/local-server/datafiles/e2e-test/`
 - **Configuration**: Backend uses `/local-server/config.e2e.json` for test-specific settings
-- **Ports**: Different ports (8001/3101) prevent conflicts with development servers (8000/3100)
+- **Ports**: Different ports (8888/3888) prevent conflicts with development servers (8000/3000)
 - **Sequential execution**: Tests run one at a time to avoid race conditions
 
 ## Directory Structure
@@ -145,7 +145,7 @@ test("should create an ontology class", async ({ page }) => {
 
 **`/ux/.env.e2e`**
 
-- Points frontend to test backend (port 8001)
+- Points frontend to test backend (port 8888)
 - Sets environment identifier
 
 ### Playwright Configuration
@@ -161,14 +161,14 @@ test("should create an ontology class", async ({ page }) => {
 
 ### Tests fail with "Address already in use"
 
-One of the servers (8001 or 3101) is already running. Stop them:
+One of the servers (8888 or 3888) is already running. Stop them:
 
 ```bash
 # Find processes using the ports
-lsof -ti:8001 -ti:3101
+lsof -ti:8888 -ti:3888
 
 # Kill them
-lsof -ti:8001 -ti:3101 | xargs kill -9
+lsof -ti:8888 -ti:3888 | xargs kill -9
 ```
 
 ### Tests timeout during global setup
@@ -205,7 +205,7 @@ npm install
 The test databases are created fresh on each run. If migrations fail:
 
 1. Delete `/local-server/datafiles/e2e-test/` manually
-2. Check migration files in `/local-server/database/migrations/versions/`
+2. Check migration files in `/local-server/adapters/persistence/sqlite/versions/`
 3. Review backend logs for specific migration errors
 
 ## CI/CD Integration

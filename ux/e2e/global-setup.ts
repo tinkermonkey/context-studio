@@ -207,8 +207,11 @@ async function globalSetup(): Promise<void> {
   console.log("⚛️  Starting frontend (port 3888)...");
   const frontendPath = path.resolve(__dirname, "..");
 
+  // Determine the npm command based on platform
+  const npmCommand = process.platform === "win32" ? "npm.cmd" : "npm";
+
   frontendProcess = spawn(
-    "npm",
+    npmCommand,
     ["run", "dev", "--", "--port=3888", "--mode=e2e"],
     {
       cwd: frontendPath,
@@ -221,7 +224,8 @@ async function globalSetup(): Promise<void> {
         MODE: "e2e",
       },
       stdio: ["ignore", "pipe", "pipe"],
-      shell: true, // Use shell for npm on all platforms
+      // Do not use shell: true to ensure proper child process handling
+      // npm will correctly launch Vite as a child process
     },
   );
 
