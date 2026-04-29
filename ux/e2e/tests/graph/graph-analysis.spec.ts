@@ -80,10 +80,10 @@ test.describe("Graph Visualization and Analysis", () => {
       await page.waitForLoadState("networkidle");
 
       // Wait for edges to render
-      await page.waitForTimeout(1000);
+      const edges = page.locator('[data-testid="graph-edge"]');
+      await expect(edges.first()).toBeVisible({ timeout: 5000 });
 
       // Verify edges are rendered
-      const edges = page.locator('[data-testid="graph-edge"]');
       const edgeCount = await edges.count();
       expect(edgeCount).toBeGreaterThan(0);
     });
@@ -152,10 +152,10 @@ test.describe("Graph Visualization and Analysis", () => {
       await firstNode.hover();
 
       // Verify connected nodes are highlighted
-      await page.waitForTimeout(300);
       const highlighted = page.locator(
         '[data-testid="graph-node"][class*="connected"]',
       );
+      await expect(highlighted.first()).toBeVisible({ timeout: 5000 });
       expect(await highlighted.count()).toBeGreaterThan(0);
     });
 
@@ -201,8 +201,8 @@ test.describe("Graph Visualization and Analysis", () => {
       await expect(zoomInButton).toBeVisible();
       await zoomInButton.click();
 
-      // Wait for zoom animation
-      await page.waitForTimeout(300);
+      // Wait for zoom animation to complete
+      await page.waitForLoadState("networkidle");
 
       // Verify zoom level changed
       const newScale = await graphContainer.evaluate((el) =>
@@ -227,8 +227,8 @@ test.describe("Graph Visualization and Analysis", () => {
       await expect(zoomOutButton).toBeVisible();
       await zoomOutButton.click();
 
-      // Wait for zoom animation
-      await page.waitForTimeout(300);
+      // Wait for zoom animation to complete
+      await page.waitForLoadState("networkidle");
 
       // Verify zoom level changed
       const newScale = await graphContainer.evaluate((el) =>
@@ -247,8 +247,8 @@ test.describe("Graph Visualization and Analysis", () => {
       await expect(fitButton).toBeVisible();
       await fitButton.click();
 
-      // Wait for animation
-      await page.waitForTimeout(300);
+      // Wait for animation to complete
+      await page.waitForLoadState("networkidle");
 
       // Verify graph is visible
       const graphContainer = page.locator('[data-testid="graph-container"]');
@@ -272,8 +272,8 @@ test.describe("Graph Visualization and Analysis", () => {
         targetPosition: { x: 300, y: 300 },
       });
 
-      // Wait for pan animation
-      await page.waitForTimeout(300);
+      // Wait for pan animation to complete
+      await page.waitForLoadState("networkidle");
 
       // Verify position changed (or graph moved)
       const newPosition = await canvas.evaluate((el) =>
@@ -292,17 +292,16 @@ test.describe("Graph Visualization and Analysis", () => {
       await page.waitForLoadState("networkidle");
 
       // Wait for edges to render
-      await page.waitForTimeout(1000);
+      const edges = page.locator('[data-testid="graph-edge"]');
+      await expect(edges.first()).toBeVisible({ timeout: 5000 });
 
       // Hover over an edge
-      const firstEdge = page.locator('[data-testid="graph-edge"]').first();
+      const firstEdge = edges.first();
       await firstEdge.hover();
 
       // Verify tooltip/label appears
       const tooltip = page.locator('[data-testid="graph-edge-tooltip"]');
-      const isVisible = await tooltip.isVisible().catch(() => false);
-      // Tooltip may be optional, so we just verify the action doesn't error
-      expect(isVisible === true || isVisible === false).toBe(true);
+      await expect(tooltip).toBeVisible({ timeout: 5000 });
     });
 
     test("should filter graph by node type", async ({ page }) => {
@@ -313,26 +312,25 @@ test.describe("Graph Visualization and Analysis", () => {
       // Get initial node count
       const allNodes = page.locator('[data-testid="graph-node"]');
       const initialCount = await allNodes.count();
+      expect(initialCount).toBeGreaterThan(0);
 
       // Open filter panel
       const filterButton = page.locator('[data-testid="graph-filter-button"]');
-      if (await filterButton.isVisible().catch(() => false)) {
-        await filterButton.click();
+      await expect(filterButton).toBeVisible({ timeout: 5000 });
+      await filterButton.click();
 
-        // Select a filter option
-        const filterOption = page.locator('[data-testid="graph-filter-option"]').first();
-        if (await filterOption.isVisible().catch(() => false)) {
-          await filterOption.click();
+      // Select a filter option
+      const filterOption = page.locator('[data-testid="graph-filter-option"]').first();
+      await expect(filterOption).toBeVisible({ timeout: 5000 });
+      await filterOption.click();
 
-          // Wait for filter to apply
-          await page.waitForTimeout(500);
+      // Wait for filter to apply
+      await page.waitForLoadState("networkidle");
 
-          // Verify node count changed or remained same (based on filter)
-          const filteredNodes = page.locator('[data-testid="graph-node"]');
-          const filteredCount = await filteredNodes.count();
-          expect(filteredCount).toBeLessThanOrEqual(initialCount);
-        }
-      }
+      // Verify node count changed or remained same (based on filter)
+      const filteredNodes = page.locator('[data-testid="graph-node"]');
+      const filteredCount = await filteredNodes.count();
+      expect(filteredCount).toBeLessThanOrEqual(initialCount);
     });
 
     test("should search and highlight nodes", async ({ page }) => {
@@ -342,19 +340,18 @@ test.describe("Graph Visualization and Analysis", () => {
 
       // Open search
       const searchInput = page.locator('[data-testid="graph-search-input"]');
-      if (await searchInput.isVisible().catch(() => false)) {
-        // Type search term
-        await searchInput.fill("class");
+      await expect(searchInput).toBeVisible({ timeout: 5000 });
 
-        // Wait for search results
-        await page.waitForTimeout(500);
+      // Type search term
+      await searchInput.fill("class");
 
-        // Verify nodes are highlighted
-        const highlighted = page.locator('[class*="search-highlight"]');
-        const count = await highlighted.count().catch(() => 0);
-        // May or may not have highlights depending on implementation
-        expect(count >= 0).toBe(true);
-      }
+      // Wait for search results to apply
+      await page.waitForLoadState("networkidle");
+
+      // Verify nodes are highlighted
+      const highlighted = page.locator('[class*="search-highlight"]');
+      const count = await highlighted.count();
+      expect(count).toBeGreaterThan(0);
     });
 
     test("should display graph statistics", async ({ page }) => {
@@ -364,58 +361,68 @@ test.describe("Graph Visualization and Analysis", () => {
 
       // Look for statistics panel
       const statsPanel = page.locator('[data-testid="graph-statistics"]');
-      const isPanelVisible = await statsPanel.isVisible().catch(() => false);
+      await expect(statsPanel).toBeVisible({ timeout: 5000 });
 
-      if (isPanelVisible) {
-        // Verify statistics are displayed
-        const stats = await statsPanel.textContent();
-        expect(stats).toBeTruthy();
-      }
+      // Verify statistics are displayed
+      const stats = await statsPanel.textContent();
+      expect(stats).toBeTruthy();
+      expect(stats!.length).toBeGreaterThan(0);
     });
   });
 
   test.describe("Graph Error Handling", () => {
     test("should handle empty graph gracefully", async ({ page }) => {
-      // Create a scheme with no classes
-      const response = await apiRequest<any>(page, "/api/taxonomies", {
-        method: "POST",
-        body: { title: "Empty Taxonomy" },
-      });
+      let emptyTaxonomyId: string;
+      let schemeId: string;
 
-      const emptyTaxonomyId = response.id;
-
-      const schemeResponse = await apiRequest<any>(
-        page,
-        `/api/taxonomies/${emptyTaxonomyId}/schemes`,
-        {
+      try {
+        // Create a scheme with no classes
+        const response = await apiRequest<any>(page, "/api/taxonomies", {
           method: "POST",
-          body: { title: "Empty Scheme" },
-        },
-      );
+          body: { title: "Empty Taxonomy" },
+        });
 
-      // Navigate to graph view
-      await page.goto("/app/graph");
-      await page.waitForLoadState("networkidle");
+        emptyTaxonomyId = response.id;
 
-      // Verify page handles empty state
-      const emptyMessage = page.locator('[data-testid="graph-empty-state"]');
-      const isEmptyStateVisible = await emptyMessage
-        .isVisible()
-        .catch(() => false);
+        const schemeResponse = await apiRequest<any>(
+          page,
+          `/api/taxonomies/${emptyTaxonomyId}/schemes`,
+          {
+            method: "POST",
+            body: { title: "Empty Scheme" },
+          },
+        );
 
-      // Should either show empty state or render empty graph
-      const graphContainer = page.locator('[data-testid="graph-container"]');
-      const isGraphVisible = await graphContainer.isVisible().catch(() => false);
+        schemeId = schemeResponse.id;
 
-      expect(isEmptyStateVisible || isGraphVisible).toBe(true);
+        // Navigate to graph view
+        await page.goto("/app/graph");
+        await page.waitForLoadState("networkidle");
 
-      // Cleanup
-      await apiRequest(page, `/api/schemes/${schemeResponse.id}`, {
-        method: "DELETE",
-      });
-      await apiRequest(page, `/api/taxonomies/${emptyTaxonomyId}`, {
-        method: "DELETE",
-      });
+        // Verify page handles empty state
+        const emptyMessage = page.locator('[data-testid="graph-empty-state"]');
+        const isEmptyStateVisible = await emptyMessage
+          .isVisible()
+          .catch(() => false);
+
+        // Should either show empty state or render empty graph
+        const graphContainer = page.locator('[data-testid="graph-container"]');
+        const isGraphVisible = await graphContainer.isVisible().catch(() => false);
+
+        expect(isEmptyStateVisible || isGraphVisible).toBe(true);
+      } finally {
+        // Cleanup - always runs even if test fails
+        if (schemeId) {
+          await apiRequest(page, `/api/schemes/${schemeId}`, {
+            method: "DELETE",
+          }).catch(() => {});
+        }
+        if (emptyTaxonomyId) {
+          await apiRequest(page, `/api/taxonomies/${emptyTaxonomyId}`, {
+            method: "DELETE",
+          }).catch(() => {});
+        }
+      }
     });
 
     test("should handle large graphs without crashing", async ({ page }) => {

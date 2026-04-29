@@ -18,14 +18,15 @@ import {
  */
 test.describe("Reference Search", () => {
   test.beforeEach(async ({ page }) => {
+    // Mock the reference APIs BEFORE navigation
+    // (route mocking only intercepts requests made after registration)
+    await mockReferenceAPIs(page);
+
     // Navigate to the reference search page
     await page.goto("/app/reference-search");
 
     // Wait for page to load
     await page.waitForLoadState("networkidle");
-
-    // Mock the reference APIs
-    await mockReferenceAPIs(page);
   });
 
   test("should display the reference search interface", async ({ page }) => {
