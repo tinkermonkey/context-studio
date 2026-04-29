@@ -21,6 +21,7 @@ export const useStructureNodes = (
       "useStructureNodes has been removed. Use useTaxonomies, useConceptSchemes, or useOntologyClasses instead.",
     ),
     isError: true,
+    refetch: async () => undefined,
   };
 };
 
@@ -36,6 +37,7 @@ export const useDomainNodes = (
     isLoading: false,
     error: new Error("useDomainNodes has been removed. Use useConceptSchemes instead."),
     isError: true,
+    refetch: async () => undefined,
   };
 };
 
@@ -51,5 +53,6 @@ export const useLayerNodes = (
     isLoading: false,
     error: new Error("useLayerNodes has been removed. Use useTaxonomies instead."),
     isError: true,
+    refetch: async () => undefined,
   };
 };

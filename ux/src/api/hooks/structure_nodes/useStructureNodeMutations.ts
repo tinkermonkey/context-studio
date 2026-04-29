@@ -11,7 +11,6 @@ import type { StructureNode } from "../../types/structureNodes";
  * @deprecated Use the new ontology entity mutation hooks instead
  */
 export const useCreateStructureNode = (
-  _params?: any, // eslint-disable-line @typescript-eslint/no-explicit-any
   _options?: UseMutationOptions<StructureNode, Error, any>, // eslint-disable-line @typescript-eslint/no-explicit-any
 ) => {
   return {
@@ -33,7 +32,6 @@ export const useCreateStructureNode = (
  * @deprecated Use the new ontology entity mutation hooks instead
  */
 export const useUpdateStructureNode = (
-  _params?: any, // eslint-disable-line @typescript-eslint/no-explicit-any
   _options?: UseMutationOptions<StructureNode, Error, any>, // eslint-disable-line @typescript-eslint/no-explicit-any
 ) => {
   return {
@@ -55,7 +53,6 @@ export const useUpdateStructureNode = (
  * @deprecated Use the new ontology entity mutation hooks instead
  */
 export const useDeleteStructureNode = (
-  _params?: any, // eslint-disable-line @typescript-eslint/no-explicit-any
   _options?: UseMutationOptions<void, Error, string>, // eslint-disable-line @typescript-eslint/no-explicit-any
 ) => {
   return {
@@ -77,7 +74,6 @@ export const useDeleteStructureNode = (
  * @deprecated
  */
 export const useBulkUpdateStructureNodes = (
-  _params?: any, // eslint-disable-line @typescript-eslint/no-explicit-any
   _options?: UseMutationOptions<any, Error, any>, // eslint-disable-line @typescript-eslint/no-explicit-any
 ) => {
   return {
@@ -95,7 +91,6 @@ export const useBulkUpdateStructureNodes = (
  * @deprecated
  */
 export const useMoveStructureNode = (
-  _params?: any, // eslint-disable-line @typescript-eslint/no-explicit-any
   _options?: UseMutationOptions<StructureNode, Error, any>, // eslint-disable-line @typescript-eslint/no-explicit-any
 ) => {
   return {
