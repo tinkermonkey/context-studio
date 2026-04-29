@@ -87,27 +87,26 @@ test.describe("Test Data Factories", () => {
     });
 
     test("should create a relationship between classes", async ({ page }) => {
-      // Create hierarchy
+      // Create hierarchy (which now includes a property definition)
       const hierarchy = await createTestHierarchy(page, 2);
 
-      // Create a property to use in the relationship
-      const property = await createPropertyDefinition(page, {
-        title: "Related To",
-      });
+      // Use the property definition from the hierarchy
+      expect(hierarchy.propertyDefinition).toBeDefined();
+      expect(hierarchy.propertyDefinition.id).toBeDefined();
 
-      // Create relationship
+      // Create relationship using the hierarchy's property definition
       const relationship = await createRelationship(
         page,
         hierarchy.classes[0].id,
         hierarchy.classes[1].id,
-        property.id,
+        hierarchy.propertyDefinition.id,
       );
 
       expect(relationship).toBeDefined();
       expect(relationship.id).toBeDefined();
       expect(relationship.source_class_id).toBe(hierarchy.classes[0].id);
       expect(relationship.target_class_id).toBe(hierarchy.classes[1].id);
-      expect(relationship.property_id).toBe(property.id);
+      expect(relationship.property_id).toBe(hierarchy.propertyDefinition.id);
     });
   });
 
@@ -150,6 +149,34 @@ test.describe("Test Data Factories", () => {
       expect(hierarchy.scheme.title).toBe("Custom Scheme");
       expect(hierarchy.classes[0].title).toContain("Custom Class");
       expect(hierarchy.classes[1].title).toContain("Custom Class");
+    });
+
+    test("should create a relationship-ready hierarchy with property definition", async ({ page }) => {
+      const hierarchy = await createTestHierarchy(page);
+
+      // Verify all required entities for relationships are present
+      expect(hierarchy.taxonomy).toBeDefined();
+      expect(hierarchy.taxonomy.id).toBeDefined();
+
+      expect(hierarchy.scheme).toBeDefined();
+      expect(hierarchy.scheme.id).toBeDefined();
+
+      expect(hierarchy.classes).toBeDefined();
+      expect(hierarchy.classes.length).toBeGreaterThan(0);
+
+      expect(hierarchy.propertyDefinition).toBeDefined();
+      expect(hierarchy.propertyDefinition.id).toBeDefined();
+
+      // Verify the property definition can be used to create a relationship
+      const relationship = await createRelationship(
+        page,
+        hierarchy.classes[0].id,
+        hierarchy.classes[0].id,
+        hierarchy.propertyDefinition.id,
+      );
+
+      expect(relationship).toBeDefined();
+      expect(relationship.id).toBeDefined();
     });
   });
 

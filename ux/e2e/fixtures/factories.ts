@@ -1,5 +1,5 @@
 import { Page } from "@playwright/test";
-import { apiRequest } from "./test-helpers";
+import { apiRequest } from "./api-client";
 import type {
   Taxonomy,
   ConceptScheme,
@@ -196,12 +196,15 @@ export async function createRelationship(
 
 /**
  * Composite factory that creates a complete test hierarchy:
- * Taxonomy -> ConceptScheme -> OntologyClasses
+ * Taxonomy -> ConceptScheme -> OntologyClasses + PropertyDefinition
+ *
+ * Produces a relationship-ready state with all necessary entities
+ * to create relationships between classes.
  *
  * @param page - Playwright page object
  * @param classCount - Number of classes to create within the scheme (default: 1)
  * @param overrides - Optional fields to override defaults
- * @returns Object containing created hierarchy entities
+ * @returns Object containing created hierarchy entities including property definition
  */
 export async function createTestHierarchy(
   page: Page,
@@ -210,11 +213,13 @@ export async function createTestHierarchy(
     taxonomyTitle?: string;
     schemeTitle?: string;
     classTitle?: string;
+    propertyTitle?: string;
   },
 ): Promise<{
   taxonomy: Taxonomy;
   scheme: ConceptScheme;
   classes: OntologyClass[];
+  propertyDefinition: PropertyDefinition;
 }> {
   // Create the taxonomy
   const taxonomy = await createTaxonomy(page, {
@@ -238,16 +243,25 @@ export async function createTestHierarchy(
     classes.push(testClass);
   }
 
+  // Create a property definition for relationship support
+  const propertyDefinition = await createPropertyDefinition(page, {
+    title: overrides?.propertyTitle,
+  });
+
   return {
     taxonomy,
     scheme,
     classes,
+    propertyDefinition,
   };
 }
 
 /**
  * Seed test data with factory composition for tests that require
  * a known starting state
+ *
+ * Uses timestamp-based names to ensure uniqueness across repeated calls
+ * within the same test run.
  *
  * @param page - Playwright page object
  * @param options - Configuration for seeded data
@@ -265,6 +279,7 @@ export async function seedTestData(
     taxonomy: Taxonomy;
     scheme: ConceptScheme;
     classes: OntologyClass[];
+    propertyDefinition: PropertyDefinition;
   }>;
   properties: PropertyDefinition[];
 }> {
@@ -277,18 +292,21 @@ export async function seedTestData(
 
   // Create hierarchies
   for (let i = 0; i < hierarchyCount; i++) {
+    const timestamp = getRunTimestamp();
     const hierarchy = await createTestHierarchy(page, classesPerHierarchy, {
-      taxonomyTitle: `seed-taxonomy-${i + 1}`,
-      schemeTitle: `seed-scheme-${i + 1}`,
-      classTitle: `seed-class-${i + 1}`,
+      taxonomyTitle: `seed-taxonomy-${timestamp}-${i + 1}`,
+      schemeTitle: `seed-scheme-${timestamp}-${i + 1}`,
+      classTitle: `seed-class-${timestamp}-${i + 1}`,
+      propertyTitle: `seed-property-${timestamp}-${i + 1}`,
     });
     hierarchies.push(hierarchy);
   }
 
   // Create properties if requested
   for (let i = 0; i < propertiesCount; i++) {
+    const timestamp = getRunTimestamp();
     const property = await createPropertyDefinition(page, {
-      title: `seed-property-${i + 1}`,
+      title: `seed-property-${timestamp}-${i + 1}`,
     });
     properties.push(property);
   }
@@ -301,7 +319,14 @@ export async function seedTestData(
 
 /**
  * Delete all factory-created test data by removing entities with
- * the run-specific timestamp prefix/suffix
+ * the run-specific timestamp prefix/suffix.
+ *
+ * CRITICAL: Deletion order respects foreign-key constraints:
+ * 1. Relationships (must be deleted first — they reference properties and classes)
+ * 2. Property definitions (must be deleted before classes, after relationships cleared)
+ * 3. Ontology classes (must be deleted before schemes)
+ * 4. Concept schemes (must be deleted before taxonomies)
+ * 5. Taxonomies (deleted last)
  *
  * Per ADR-2, isolation is achieved through unique names and per-run
  * cleanup in global-setup.ts. This function targets specific test
@@ -348,64 +373,7 @@ export async function clearTestData(page: Page, maxAge: number = 10 * 60 * 1000)
   };
 
   try {
-    // Fetch and delete all test taxonomies
-    try {
-      const taxonomiesResponse = await apiRequest<any>(page, "/api/taxonomies");
-      const taxonomies = extractItems(taxonomiesResponse);
-      for (const taxonomy of taxonomies) {
-        await deleteEntityIfMatches(page, taxonomy, "/api/taxonomies", [
-          "test-taxonomy-",
-          "seed-taxonomy-",
-        ]);
-      }
-    } catch (error) {
-      console.warn("Error fetching/deleting taxonomies:", error);
-    }
-
-    // Fetch and delete all test concept schemes
-    try {
-      const schemesResponse = await apiRequest<any>(page, "/api/schemes");
-      const schemes = extractItems(schemesResponse);
-      for (const scheme of schemes) {
-        await deleteEntityIfMatches(page, scheme, "/api/schemes", [
-          "test-scheme-",
-          "seed-scheme-",
-        ]);
-      }
-    } catch (error) {
-      console.warn("Error fetching/deleting schemes:", error);
-    }
-
-    // Fetch and delete all test ontology classes
-    try {
-      const classesResponse = await apiRequest<any>(page, "/api/classes");
-      const classes = extractItems(classesResponse);
-      for (const ontologyClass of classes) {
-        await deleteEntityIfMatches(page, ontologyClass, "/api/classes", [
-          "test-class-",
-          "seed-class-",
-        ]);
-      }
-    } catch (error) {
-      console.warn("Error fetching/deleting classes:", error);
-    }
-
-    // Fetch and delete all test properties
-    try {
-      const propertiesResponse = await apiRequest<any>(page, "/api/properties");
-      const properties = extractItems(propertiesResponse);
-      for (const property of properties) {
-        await deleteEntityIfMatches(page, property, "/api/properties", [
-          "test-property-",
-          "seed-property-",
-        ]);
-      }
-    } catch (error) {
-      console.warn("Error fetching/deleting properties:", error);
-    }
-
-    // Fetch and delete all test relationships
-    // Relationships don't have titles, so only check by creation date
+    // STEP 1: Delete all test relationships (first — they reference other entities)
     try {
       const relationshipsResponse = await apiRequest<any>(page, "/api/relationships");
       const relationships = extractItems(relationshipsResponse);
@@ -424,6 +392,62 @@ export async function clearTestData(page: Page, maxAge: number = 10 * 60 * 1000)
       }
     } catch (error) {
       console.warn("Error fetching/deleting relationships:", error);
+    }
+
+    // STEP 2: Delete all test property definitions (after relationships cleared)
+    try {
+      const propertiesResponse = await apiRequest<any>(page, "/api/properties");
+      const properties = extractItems(propertiesResponse);
+      for (const property of properties) {
+        await deleteEntityIfMatches(page, property, "/api/properties", [
+          "test-property-",
+          "seed-property-",
+        ]);
+      }
+    } catch (error) {
+      console.warn("Error fetching/deleting properties:", error);
+    }
+
+    // STEP 3: Delete all test ontology classes (after relationships cleared)
+    try {
+      const classesResponse = await apiRequest<any>(page, "/api/classes");
+      const classes = extractItems(classesResponse);
+      for (const ontologyClass of classes) {
+        await deleteEntityIfMatches(page, ontologyClass, "/api/classes", [
+          "test-class-",
+          "seed-class-",
+        ]);
+      }
+    } catch (error) {
+      console.warn("Error fetching/deleting classes:", error);
+    }
+
+    // STEP 4: Delete all test concept schemes (after classes deleted)
+    try {
+      const schemesResponse = await apiRequest<any>(page, "/api/schemes");
+      const schemes = extractItems(schemesResponse);
+      for (const scheme of schemes) {
+        await deleteEntityIfMatches(page, scheme, "/api/schemes", [
+          "test-scheme-",
+          "seed-scheme-",
+        ]);
+      }
+    } catch (error) {
+      console.warn("Error fetching/deleting schemes:", error);
+    }
+
+    // STEP 5: Delete all test taxonomies (last — after all dependent entities removed)
+    try {
+      const taxonomiesResponse = await apiRequest<any>(page, "/api/taxonomies");
+      const taxonomies = extractItems(taxonomiesResponse);
+      for (const taxonomy of taxonomies) {
+        await deleteEntityIfMatches(page, taxonomy, "/api/taxonomies", [
+          "test-taxonomy-",
+          "seed-taxonomy-",
+        ]);
+      }
+    } catch (error) {
+      console.warn("Error fetching/deleting taxonomies:", error);
     }
   } catch (error) {
     console.warn("Error during test data cleanup:", error);
