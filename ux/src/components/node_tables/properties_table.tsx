@@ -105,7 +105,7 @@ export interface PropertiesTableProps {
 }
 
 
-const PropertiesTable = React.forwardRef<any, PropertiesTableProps>((props, ref) => {
+const PropertiesTable = React.forwardRef<any, PropertiesTableProps>((props) => {
   const { data: properties, isLoading, error, refetch } = usePropertyDefinitions();
   const deleteProperty = useDeletePropertyDefinition();
 

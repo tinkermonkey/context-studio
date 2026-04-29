@@ -60,8 +60,6 @@ export function ConceptSchemeMoveForm({
     }
   };
 
-  const excludeNodeIds = selectedNodes.map((node) => node.id);
-
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <Alert color="info" icon={Info}>

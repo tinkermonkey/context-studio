@@ -93,7 +93,7 @@ export interface TaxonomiesTableProps {
 }
 
 
-const TaxonomiesTable = React.forwardRef<any, TaxonomiesTableProps>((props, ref) => {
+const TaxonomiesTable = React.forwardRef<any, TaxonomiesTableProps>((props) => {
   const { data: taxonomies, isLoading, error, refetch } = useTaxonomies();
   const deleteTaxonomy = useDeleteTaxonomy();
 

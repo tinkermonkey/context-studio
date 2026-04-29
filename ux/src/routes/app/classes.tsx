@@ -39,8 +39,6 @@ export const Route = createFileRoute("/app/classes")({
 
 function ClassesPage() {
   const {
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    data: classList,
     isLoading: classesLoading,
     error: classesError,
   } = useOntologyClasses();
@@ -50,7 +48,6 @@ function ClassesPage() {
     error: taxonomiesError,
   } = useTaxonomies();
 
-  const tableRef = React.useRef<any>(null);
   const navigate = useNavigate({ from: "/app/classes" });
   const search = useSearch({ from: "/app/classes" });
 
@@ -175,7 +172,6 @@ function ClassesPage() {
         )}
 
         <ClassesTable
-          ref={tableRef}
           queryParams={queryParams}
           onQueryParamsChange={handleQueryParamsChange}
         />

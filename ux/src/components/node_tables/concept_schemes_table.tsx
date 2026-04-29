@@ -5,7 +5,6 @@ import type { ConceptScheme } from "@/api/types/ontology";
 import { renderShortDateTime, renderShortUuid } from "@/utils/renderers";
 import { BaseNodeTable } from "./node_table";
 import { useConceptSchemes, useDeleteConceptScheme } from "@/api/hooks/conceptSchemes";
-import { useTaxonomies } from "@/api/hooks/taxonomies";
 import { ConceptSchemeForm } from "@/components/forms/concept_scheme_form";
 import { ConceptSchemeMoveForm } from "@/components/forms/concept_scheme_move_form";
 import type { FieldDefinition } from "@/components/misc/query_filters";
@@ -141,7 +140,7 @@ export interface ConceptSchemesTableProps {
 }
 
 
-const ConceptSchemesTable = React.forwardRef<any, ConceptSchemesTableProps>((props, ref) => {
+const ConceptSchemesTable = React.forwardRef<any, ConceptSchemesTableProps>((props) => {
   const { queryParams = {}, onQueryParamsChange } = props;
 
   // Use query params in the concept schemes hook

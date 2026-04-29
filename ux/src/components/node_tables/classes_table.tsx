@@ -140,7 +140,7 @@ export interface ClassesTableProps {
 }
 
 
-const ClassesTable = React.forwardRef<any, ClassesTableProps>((props, ref) => {
+const ClassesTable = React.forwardRef<any, ClassesTableProps>((props) => {
   const { queryParams = {}, onQueryParamsChange } = props;
 
   // Use query params in the classes hook
