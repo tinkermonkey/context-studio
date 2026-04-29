@@ -305,6 +305,42 @@ describe("BaseService", () => {
       // Should only make one request
       expect(vi.mocked(mockClient.request).mock.calls.length).toBe(1);
     });
+
+    it("should not throw error when exactly maxIterations pages are needed and last page completes successfully", async () => {
+      const maxIterations = 1000;
+      const itemsPerPage = 100;
+      const totalItems = maxIterations * itemsPerPage; // Exactly 100,000 items
+
+      // Create a mock function that returns different pages based on offset
+      let callCount = 0;
+      vi.mocked(mockClient.request).mockImplementation(async () => {
+        const offset = callCount * itemsPerPage;
+        const pageItems = Array.from({ length: itemsPerPage }, (_, i) => ({
+          id: String(offset + i),
+          title: `Item ${offset + i}`,
+        }));
+
+        const response: PaginatedResponse<{ id: string; title: string }> = {
+          data: pageItems,
+          total: totalItems,
+          skip: offset,
+          limit: itemsPerPage,
+        };
+
+        callCount++;
+        return { data: response };
+      });
+
+      // Should not throw and should return all items successfully
+      const result = await service.testGetAllPaginated<{
+        id: string;
+        title: string;
+      }>("/api/items");
+
+      expect(result.length).toBe(totalItems);
+      // Should make exactly maxIterations requests
+      expect(callCount).toBe(maxIterations);
+    });
   });
 
   describe("getPage", () => {

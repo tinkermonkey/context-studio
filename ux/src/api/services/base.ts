@@ -115,6 +115,7 @@ export abstract class BaseService {
     const limit = this.paginationConfig.maxPageSize;
     const maxIterations = 1000; // Prevent infinite loops if server returns invalid data
     let iterations = 0;
+    let total = 0;
 
     while (iterations < maxIterations) {
       iterations++;
@@ -131,7 +132,7 @@ export abstract class BaseService {
 
       // Handle both response formats
       const items = this.extractItems(response);
-      const total = response.total;
+      total = response.total;
 
       if (!items || items.length === 0) {
         break;
@@ -146,7 +147,7 @@ export abstract class BaseService {
       offset += limit;
     }
 
-    if (iterations >= maxIterations) {
+    if (iterations >= maxIterations && allItems.length < total) {
       const error = new Error(
         "getAllPaginated exceeded maximum iterations. The server may be returning invalid pagination data.",
       );
