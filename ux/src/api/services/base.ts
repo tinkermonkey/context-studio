@@ -47,14 +47,8 @@ export abstract class BaseService {
   }
 
   protected async request<T>(config: AxiosRequestConfig): Promise<T> {
-    try {
-      const response = await this.client.request<T>(config);
-      return response.data;
-    } catch (error) {
-      // Don't add context here - withErrorContext() will handle it
-      // This prevents duplicate error message decoration
-      throw error;
-    }
+    const response = await this.client.request<T>(config);
+    return response.data;
   }
 
   protected async getResource<T>(

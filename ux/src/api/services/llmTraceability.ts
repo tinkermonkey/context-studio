@@ -7,6 +7,7 @@
 
 import { BaseService } from "./base";
 import { ENDPOINTS } from "../config";
+import { apiLogger } from "../utils/logger";
 import type {
   SelectionRecordRequest,
   SelectionRecordResponse,
@@ -340,10 +341,9 @@ export class LLMTraceabilityService extends BaseService {
       // Log the actual error for debugging - network failures, auth issues, etc. all have specific causes
       const errorMessage =
         error instanceof Error ? error.message : String(error);
-      console.warn(
-        "[LLM Traceability] Health check failed:",
-        errorMessage,
-      );
+      apiLogger.warn("[LLM Traceability] Health check failed:", {
+        error: errorMessage,
+      });
       // If health check fails, system is not healthy
       return false;
     }

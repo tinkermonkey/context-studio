@@ -165,8 +165,6 @@ export class PipelineExecutionService extends BaseService {
   /**
    * Convert new generic response to legacy term definition response format
    */
-
-   
   convertToLegacyTermResponse(response: PipelineExecutionResponse): any {
     // Parse the response_content as JSON if it's a string
     let parsedResult: any = response.response_content;
