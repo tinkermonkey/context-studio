@@ -50,8 +50,14 @@ export const useUpdateNodeAttribute = (): UseMutationResult<any, Error, any, any
 /**
  * @deprecated
  */
-export const useNodeAttributeMutations = (..._args: any[]): UseMutationResult<any, Error, any, any> => { // eslint-disable-line @typescript-eslint/no-explicit-any
-  return {
+export const useNodeAttributeMutations = (
+  _nodeId?: string,
+  _options?: any, // eslint-disable-line @typescript-eslint/no-explicit-any
+): {
+  setAttributesMutation: UseMutationResult<any, Error, any, any>;
+  removeAttributeMutation: UseMutationResult<any, Error, any, any>;
+} => {
+  const createErrorMutation = (): UseMutationResult<any, Error, any, any> => ({
     mutate: (_data?: any) => { // eslint-disable-line @typescript-eslint/no-explicit-any
       throw new Error("useNodeAttributeMutations has been removed.");
     },
@@ -64,5 +70,10 @@ export const useNodeAttributeMutations = (..._args: any[]): UseMutationResult<an
     status: "idle",
     reset: () => {},
     variables: undefined,
-  } as unknown as UseMutationResult<any, Error, any, any>;
+  } as unknown as UseMutationResult<any, Error, any, any>);
+
+  return {
+    setAttributesMutation: createErrorMutation(),
+    removeAttributeMutation: createErrorMutation(),
+  };
 };

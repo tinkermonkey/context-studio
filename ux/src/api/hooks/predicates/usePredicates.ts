@@ -4,12 +4,12 @@
  * @deprecated Predicates are now modeled as PropertyDefinition entities
  */
 
-import { UseQueryResult } from "@tanstack/react-query";
+import { UseQueryResult, UseMutationResult } from "@tanstack/react-query";
 
 /**
  * @deprecated Use usePropertyDefinitions instead
  */
-export const usePredicates = (..._args: any[]): UseQueryResult<any[], Error> => { // eslint-disable-line @typescript-eslint/no-explicit-any
+export const usePredicates = (..._args: any[]): UseQueryResult<{ data: any[]; total: number }, Error> => { // eslint-disable-line @typescript-eslint/no-explicit-any
   return {
     data: undefined,
     isLoading: false,
@@ -23,13 +23,13 @@ export const usePredicates = (..._args: any[]): UseQueryResult<any[], Error> => 
     dataUpdatedAt: 0,
     errorUpdatedAt: Date.now(),
     refetch: async () => ({ data: undefined } as any), // eslint-disable-line @typescript-eslint/no-explicit-any
-  } as UseQueryResult<any[], Error>;
+  } as UseQueryResult<{ data: any[]; total: number }, Error>;
 };
 
 /**
  * @deprecated
  */
-export const useExternalPredicates = (..._args: any[]): UseQueryResult<any, Error> => { // eslint-disable-line @typescript-eslint/no-explicit-any
+export const useExternalPredicates = (..._args: any[]): UseQueryResult<{ data: any[]; total: number }, Error> => { // eslint-disable-line @typescript-eslint/no-explicit-any
   return {
     data: undefined,
     isLoading: false,
@@ -41,13 +41,13 @@ export const useExternalPredicates = (..._args: any[]): UseQueryResult<any, Erro
     dataUpdatedAt: 0,
     errorUpdatedAt: Date.now(),
     refetch: async () => ({ data: undefined } as any), // eslint-disable-line @typescript-eslint/no-explicit-any
-  } as UseQueryResult<any, Error>;
+  } as UseQueryResult<{ data: any[]; total: number }, Error>;
 };
 
 /**
  * @deprecated
  */
-export const useSimilarPredicates = (..._args: any[]): UseQueryResult<any[], Error> => { // eslint-disable-line @typescript-eslint/no-explicit-any
+export const useSimilarPredicates = (..._args: any[]): UseQueryResult<{ results: any[]; total: number }, Error> => { // eslint-disable-line @typescript-eslint/no-explicit-any
   return {
     data: undefined,
     isLoading: false,
@@ -59,13 +59,13 @@ export const useSimilarPredicates = (..._args: any[]): UseQueryResult<any[], Err
     dataUpdatedAt: 0,
     errorUpdatedAt: Date.now(),
     refetch: async () => ({ data: undefined } as any), // eslint-disable-line @typescript-eslint/no-explicit-any
-  } as UseQueryResult<any[], Error>;
+  } as UseQueryResult<{ results: any[]; total: number }, Error>;
 };
 
 /**
  * @deprecated
  */
-export const useSearchExternalPredicates = (..._args: any[]): UseQueryResult<any[], Error> => { // eslint-disable-line @typescript-eslint/no-explicit-any
+export const useSearchExternalPredicates = (..._args: any[]): UseQueryResult<{ data: any[]; total: number }, Error> => { // eslint-disable-line @typescript-eslint/no-explicit-any
   return {
     data: undefined,
     isLoading: false,
@@ -77,23 +77,25 @@ export const useSearchExternalPredicates = (..._args: any[]): UseQueryResult<any
     dataUpdatedAt: 0,
     errorUpdatedAt: Date.now(),
     refetch: async () => ({ data: undefined } as any), // eslint-disable-line @typescript-eslint/no-explicit-any
-  } as UseQueryResult<any[], Error>;
+  } as UseQueryResult<{ data: any[]; total: number }, Error>;
 };
 
 /**
  * @deprecated
  */
-export const useDiscoverPredicates = (..._args: any[]): UseQueryResult<any[], Error> => { // eslint-disable-line @typescript-eslint/no-explicit-any
+export const useDiscoverPredicates = (..._args: any[]): UseMutationResult<any, Error, any, any> => { // eslint-disable-line @typescript-eslint/no-explicit-any
   return {
-    data: undefined,
-    isLoading: false,
-    isFetching: false,
-    isPlaceholderData: false,
-    error: new Error("useDiscoverPredicates has been removed."),
+    mutate: (_data?: any) => { // eslint-disable-line @typescript-eslint/no-explicit-any
+      throw new Error("useDiscoverPredicates has been removed.");
+    },
+    mutateAsync: async (_data?: any) => { // eslint-disable-line @typescript-eslint/no-explicit-any
+      throw new Error("useDiscoverPredicates has been removed.");
+    },
+    isPending: false,
     isError: true,
-    status: "error",
-    dataUpdatedAt: 0,
-    errorUpdatedAt: Date.now(),
-    refetch: async () => ({ data: undefined } as any), // eslint-disable-line @typescript-eslint/no-explicit-any
-  } as UseQueryResult<any[], Error>;
+    error: new Error("useDiscoverPredicates has been removed."),
+    status: "idle",
+    reset: () => {},
+    variables: undefined,
+  } as unknown as UseMutationResult<any, Error, any, any>;
 };
