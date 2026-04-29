@@ -5,7 +5,8 @@
  */
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { BaseService, type ListResponse, type PaginatedResponse } from "../base";
+import { BaseService, type PaginatedResponse } from "../base";
+import type { ListResponse } from "../../types/ontology";
 import type { AxiosInstance } from "axios";
 
 // Create a test service class that extends BaseService
@@ -67,6 +68,9 @@ describe("BaseService", () => {
       ];
       const response: ListResponse<{ id: string; title: string }> = {
         items: mockItems,
+        total: 2,
+        limit: 50,
+        offset: 0,
       };
 
       const result = service.testExtractItems(response);
@@ -126,6 +130,9 @@ describe("BaseService", () => {
     it("should return empty array when ListResponse has empty items", () => {
       const response: ListResponse<{ id: string; title: string }> = {
         items: [],
+        total: 0,
+        limit: 50,
+        offset: 0,
       };
 
       const result = service.testExtractItems(response);
@@ -294,6 +301,9 @@ describe("BaseService", () => {
       ];
       const response: ListResponse<{ id: string; title: string }> = {
         items: mockItems,
+        total: 2,
+        limit: 50,
+        offset: 0,
       };
 
       vi.mocked(mockClient.request).mockResolvedValueOnce({ data: response });
@@ -329,9 +339,9 @@ describe("BaseService", () => {
       };
 
       // Non-Error objects should be re-thrown unchanged
-      await expect(service.testWithErrorContext(operation, "test")).rejects.toEqual(
-        testError,
-      );
+      await expect(
+        service.testWithErrorContext(operation, "test"),
+      ).rejects.toEqual(testError);
     });
 
     it("should return successful operation result", async () => {

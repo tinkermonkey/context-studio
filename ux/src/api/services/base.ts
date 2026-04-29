@@ -178,9 +178,8 @@ export abstract class BaseService {
 
   /**
    * Extract items from either ListResponse or PaginatedResponse format
-   * @private
    */
-  private extractItems<T>(
+  protected extractItems<T>(
     response: ListResponse<T> | PaginatedResponse<T>,
   ): T[] {
     // Check if it's ListResponse format (has 'items' property)
