@@ -7,13 +7,13 @@
 import React, { useState } from "react";
 import { Button, Label, Checkbox, Alert } from "flowbite-react";
 import { Info } from "lucide-react";
-import { OntologyClass } from "@/api/types/ontology";
+import { ConceptScheme } from "@/api/types/ontology";
 import { TaxonomySelector } from "@/components/node_selectors/taxonomy_selector";
 import { useMoveOntologyClass } from "@/api/hooks/ontologyClasses/useOntologyClassMutations";
 import { useButterToast } from "@/hooks/useButterToast";
 
 interface ConceptSchemeMoveFormProps {
-  selectedNodes: OntologyClass[];
+  selectedNodes: ConceptScheme[];
   onSuccess: () => void;
   onCancel: () => void;
 }

@@ -47,6 +47,8 @@ vi.mock("@/hooks/useButterToast", () => ({
 const createDomain = (id: string, title: string, layerId: string) => ({
   id,
   title,
+  concept_scheme_id: "scheme-1",
+  taxonomy_id: "taxonomy-1",
   node_type: NodeType.DOMAIN,
   parent_node_id: layerId,
   created_at: new Date().toISOString(),
@@ -57,6 +59,8 @@ const createDomain = (id: string, title: string, layerId: string) => ({
 const createTerm = (id: string, title: string, parentId: string) => ({
   id,
   title,
+  concept_scheme_id: "scheme-1",
+  taxonomy_id: "taxonomy-1",
   node_type: NodeType.TERM,
   parent_node_id: parentId,
   created_at: new Date().toISOString(),

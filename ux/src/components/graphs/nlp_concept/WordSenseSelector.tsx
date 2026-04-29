@@ -72,7 +72,10 @@ export const WordSenseSelector: React.FC<WordSenseSelectorProps> = ({
     words.forEach((word) => {
       // Find persisted sense for this word
       const persistedSense =
-        persistedSenses.find((s) => s.term.toLowerCase() === word) || null;
+        persistedSenses.find((s) => {
+          const senseLabel = s.label || s.term;
+          return senseLabel?.toLowerCase() === word;
+        }) || null;
 
       initialMap.set(word, {
         word,
@@ -105,9 +108,11 @@ export const WordSenseSelector: React.FC<WordSenseSelectorProps> = ({
 
     // Check if any selection changed
     for (const currentSense of currentSelections) {
-      const persistedSense = persistedSenses.find(
-        (s) => s.term.toLowerCase() === currentSense.term.toLowerCase(),
-      );
+      const currentLabel = currentSense.label || currentSense.term;
+      const persistedSense = persistedSenses.find((s) => {
+        const senseLabel = s.label || s.term;
+        return senseLabel?.toLowerCase() === currentLabel?.toLowerCase();
+      });
 
       if (
         !persistedSense ||
@@ -183,7 +188,8 @@ export const WordSenseSelector: React.FC<WordSenseSelectorProps> = ({
         // Use handleSenseSelect to update the state
         const next = new Map(prev);
         const wordSense: WordSense = {
-          term: word,
+          label: word,
+          language_code: "en",
           sense_type: "wordnet",
           sense_id: synset.name,
           definition: synset.definition,

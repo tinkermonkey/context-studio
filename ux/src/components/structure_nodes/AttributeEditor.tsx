@@ -10,7 +10,6 @@ import { TextInput, Button, Label, Select, Card, Alert } from "flowbite-react";
 import { AlertCircle, Plus, X } from "lucide-react";
 import type {
   OntologyClassAttribute,
-  AttributeValueType,
 } from "@/api/types/ontology";
 import { AttributeValueInput } from "./AttributeValueInput";
 
@@ -22,13 +21,15 @@ interface AttributeEditorProps {
   existingKeys?: string[];
 }
 
-const ATTRIBUTE_TYPES: AttributeValueType[] = [
+const ATTRIBUTE_TYPES = [
   "string",
   "number",
   "boolean",
   "date",
   "url",
-];
+] as const;
+
+type AttributeValueType = typeof ATTRIBUTE_TYPES[number];
 
 const validateKey = (key: string, existingKeys?: string[]): string | null => {
   if (!key.trim()) {
@@ -223,9 +224,9 @@ export const AttributeEditor: React.FC<AttributeEditorProps> = ({
             children={(field) => (
               <Select
                 id="value_type"
-                value={field.state.value}
+                value={String(field.state.value)}
                 onChange={(e) =>
-                  field.handleChange(e.target.value as string)
+                  field.handleChange(e.target.value as AttributeValueType)
                 }
                 disabled={isEdit || isLoading}
                 sizing="sm"

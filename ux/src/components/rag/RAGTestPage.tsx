@@ -30,11 +30,10 @@ function EntityItem(
   );
 
   const linkProps = useMemo(() => {
-    if (!node?.id || !node?.node_type) return null;
+    if (!node?.id) return null;
 
     return {
-      to: "/app/ontologyClass/$nodeId" as const,
-      params: { nodeId: node.id },
+      to: "/app/classes" as const,
     };
   }, [node]);
 

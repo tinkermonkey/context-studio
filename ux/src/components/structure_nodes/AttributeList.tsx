@@ -125,7 +125,9 @@ export const AttributeList: React.FC<AttributeListProps> = ({
                     <span className="font-medium text-gray-900">
                       {attr.title || attr.key}
                     </span>
-                    <AttributeTypeDisplay type={attr.value_type} />
+                    {attr.value_type && (
+                      <AttributeTypeDisplay type={attr.value_type} />
+                    )}
                   </div>
                   <div>
                     <AttributeValueDisplay value={attr.value} />
@@ -144,11 +146,11 @@ export const AttributeList: React.FC<AttributeListProps> = ({
                       <Edit2 className="h-4 w-4" />
                     </Button>
                   )}
-                  {onRemoveAttribute && (
+                  {onRemoveAttribute && attr.key && (
                     <Button
                       size="sm"
                       color="light"
-                      onClick={() => onRemoveAttribute(attr.key)}
+                      onClick={() => onRemoveAttribute(attr.key!)}
                       disabled={isLoading}
                     >
                       <Trash2 className="h-4 w-4" />
@@ -177,7 +179,9 @@ export const AttributeList: React.FC<AttributeListProps> = ({
                     <span className="font-medium text-gray-900">
                       {attr.title || attr.key}
                     </span>
-                    <AttributeTypeDisplay type={attr.value_type} />
+                    {attr.value_type && (
+                      <AttributeTypeDisplay type={attr.value_type} />
+                    )}
                     <InheritedAttributeInfo
                       sourceNodeId={attr.source_node_id}
                     />

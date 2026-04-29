@@ -62,18 +62,7 @@ export const AnnotationSelector: React.FC<AnnotationSelectorProps> = ({
     });
 
   // Convert search results to OntologyClass format for RecordSelector
-  const ontologyClass: OntologyClass[] =
-    searchResults?.map((result: FindOntologyClassResult) => ({
-      id: result.id,
-      node_type: result.node_type,
-      parent_node_id: result.parent_node_id,
-      title: result.title,
-      definition: result.definition,
-      structural_predicate_id: result.structural_predicate_id,
-      created_at: result.created_at,
-      version: result.version,
-      last_modified: result.last_modified,
-    })) || [];
+  const ontologyClass: OntologyClass[] = (searchResults as OntologyClass[]) || [];
 
   // Handle text selection
   const handleTextSelection = () => {
