@@ -99,9 +99,7 @@ import {
 } from "@/test/utils/renderWithProviders";
 import { OntologyClassDetails } from "@/components/node_details/structure_node_details";
 import { QUERY_KEYS } from "@/api/config";
-// Using service-level mocks for deterministic integration test
-import { structureNodeService } from "@/api/services/structureNodes";
-import { NodeType } from "@/api/types/structureNodes";
+import { NodeType } from "@/api/types/ontology";
 import { setupMocks } from "../msw/setupTests";
 
 // Setup MSW for any uncaught network calls
@@ -136,15 +134,9 @@ describe("OntologyClassDetails edit flow (Domain)", () => {
       last_modified: new Date().toISOString(),
     };
 
-    // Mock structureNodeService methods that are actually called
-    const getSpy = vi
-      .spyOn(structureNodeService, "get")
-
-      .mockResolvedValue(domain as any);
-    const updateSpy = vi
-      .spyOn(structureNodeService, "update")
-
-      .mockResolvedValue(updatedDomain as any);
+    // Mock ontologyClassService methods that are actually called
+    // Note: These services are called internally by the hooks
+    // For this test, we rely on the hook mocks above to handle the data
 
     // With Link, useLayer, and useTerms mocked above, we can render without RouterProvider
     render(<OntologyClassDetails node={domain} />, { queryClient: qc });
@@ -169,17 +161,13 @@ describe("OntologyClassDetails edit flow (Domain)", () => {
       expect(invalidateSpy).toHaveBeenCalled();
       // check for list invalidation
       expect(invalidateSpy).toHaveBeenCalledWith({
-        queryKey: [QUERY_KEYS.STRUCTURE_NODES],
+        queryKey: [QUERY_KEYS.ONTOLOGY_CLASSES],
       });
       // check for per-node invalidation
       expect(invalidateSpy).toHaveBeenCalledWith({
-        queryKey: [QUERY_KEYS.STRUCTURE_NODES, domain.id],
+        queryKey: [QUERY_KEYS.ONTOLOGY_CLASSES, domain.id],
       });
       // Service mocks handled the update; we expect the query invalidation to have been triggered
     });
-
-    // restore spies to avoid leaking into other tests
-    getSpy.mockRestore();
-    updateSpy.mockRestore();
   });
 });

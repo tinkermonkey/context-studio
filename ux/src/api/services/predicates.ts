@@ -1,26 +1,35 @@
 /**
- * DEPRECATED: Predicates Service
+ * DEPRECATED: Predicates Type Aliases
  *
- * @deprecated Predicates are now modeled as PropertyDefinition entities
+ * This file provides backward compatibility for predicates types.
+ * Predicates are now modeled as PropertyDefinition entities.
+ *
+ * @deprecated Use PropertyDefinition types from @/api/services/propertyDefinition instead
  */
 
-/**
- * @deprecated
- */
-export type PredicateOut = any;
+import type {
+  PropertyDefinition,
+  PropertyDefinitionCreate,
+  PropertyDefinitionUpdate,
+} from "../types/ontology";
 
 /**
- * @deprecated
+ * @deprecated Use PropertyDefinition instead
  */
-export type PredicateCreate = any;
+export type PredicateOut = PropertyDefinition;
 
 /**
- * @deprecated
+ * @deprecated Use PropertyDefinitionCreate instead
  */
-export type PredicateUpdate = any;
+export type PredicateCreate = PropertyDefinitionCreate;
 
 /**
- * @deprecated
+ * @deprecated Use PropertyDefinitionUpdate instead
+ */
+export type PredicateUpdate = PropertyDefinitionUpdate;
+
+/**
+ * @deprecated This interface represents external predicate metadata
  */
 export interface ExternalPredicateOut {
   id: string;
@@ -32,40 +41,3 @@ export interface ExternalPredicateOut {
   created_at: string;
   updated_at: string;
 }
-
-/**
- * @deprecated
- */
-export class PredicatesService {
-  list() {
-    throw new Error(
-      "PredicatesService has been removed. Use PropertyDefinitionService instead.",
-    );
-  }
-
-  get(_id: string) {
-    throw new Error(
-      "PredicatesService has been removed. Use PropertyDefinitionService instead.",
-    );
-  }
-
-  create(_data: any) {
-    throw new Error(
-      "PredicatesService has been removed. Use PropertyDefinitionService instead.",
-    );
-  }
-
-  update(_id: string, _data: any) {
-    throw new Error(
-      "PredicatesService has been removed. Use PropertyDefinitionService instead.",
-    );
-  }
-
-  delete(_id: string) {
-    throw new Error(
-      "PredicatesService has been removed. Use PropertyDefinitionService instead.",
-    );
-  }
-}
-
-export const predicatesService = new PredicatesService();

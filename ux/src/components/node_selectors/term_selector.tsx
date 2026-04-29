@@ -1,6 +1,6 @@
 import { OntologyClass } from "@/api/types/ontology";
 import { PortalRecordSelector } from "@/components/node_selectors/portal_record_selector";
-import { useTermNodes } from "@/api/hooks/ontologyClasses";
+import { useOntologyClasses } from "@/api/hooks/ontologyClasses";
 
 export interface TermSelectorProps {
   onSelect?: (term: OntologyClass | undefined) => void;
@@ -11,7 +11,7 @@ export const TermSelector: React.FC<TermSelectorProps> = ({
   onSelect,
   value,
 }) => {
-  const { data: terms, isLoading, error } = useTermNodes();
+  const { data: terms, isLoading, error } = useOntologyClasses();
   return (
     <PortalRecordSelector
       records={terms ?? []}

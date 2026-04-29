@@ -3,10 +3,10 @@ import React from "react";
 import { screen, waitFor } from "@testing-library/react";
 import { describe, it, expect } from "vitest";
 import { renderWithProviders as render } from "@/test/utils/renderWithProviders";
-import { useDomainNodes } from "@/api/hooks/ontologyClasses/useStructureNodes";
+import { useConceptSchemes } from "@/api/hooks/conceptSchemes";
 
 const TestComponent: React.FC = () => {
-  const { data, isLoading } = useDomainNodes();
+  const { data, isLoading } = useConceptSchemes();
   if (isLoading) return <div>loading</div>;
   return (
     <div>

@@ -11,7 +11,7 @@ import type {
   ResolvedAttribute,
   OntologyClassAttribute,
 } from "@/api/types/ontology";
-import { useClass } from "@/api/hooks/ontologyClasses";
+import { useOntologyClass } from "@/api/hooks/ontologyClasses";
 
 interface AttributeListProps {
   attributes: ResolvedAttribute[];
@@ -61,7 +61,7 @@ const AttributeValueDisplay: React.FC<{
 const InheritedAttributeInfo: React.FC<{
   sourceNodeId: string | null | undefined;
 }> = ({ sourceNodeId }) => {
-  const { data: sourceNode } = useClass(sourceNodeId || "");
+  const { data: sourceNode } = useOntologyClass(sourceNodeId || "");
 
   const sourceTitle = sourceNode?.title || "Unknown node";
 

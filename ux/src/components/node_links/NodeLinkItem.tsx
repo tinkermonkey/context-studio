@@ -17,7 +17,7 @@ import { AlertCircle, Database, Hash, Layers, Trash2 } from "lucide-react";
 import { useNavigate } from "@tanstack/react-router";
 
 import { OntologyClassLink, NodeType } from "@/api/types/ontology";
-import { useClass } from "@/api/hooks/ontologyClasses";
+import { useOntologyClass } from "@/api/hooks/ontologyClasses";
 
 interface NodeLinkItemProps {
   link: OntologyClassLink;
@@ -40,7 +40,7 @@ export const NodeLinkItem: React.FC<NodeLinkItemProps> = ({
   const displayNodeId = isOutgoing ? link.target_id : link.source_id;
 
   // Fetch the node to display
-  const { data: displayNode, isLoading } = useClass(displayNodeId);
+  const { data: displayNode, isLoading } = useOntologyClass(displayNodeId);
 
   const handleDelete = () => {
     onDelete(link.id);

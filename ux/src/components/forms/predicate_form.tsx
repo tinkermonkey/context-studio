@@ -49,7 +49,7 @@ const PredicateForm: React.FC<PredicateFormProps> = ({
   const form = useForm({
     defaultValues: {
       title: predicate?.title ?? "",
-      definition: predicate?.definition ?? "",
+      description: predicate?.description ?? "",
       identifier: predicate?.identifier ?? "",
     },
     onSubmit: async ({ value }) => {
@@ -182,7 +182,7 @@ const PredicateForm: React.FC<PredicateFormProps> = ({
           )}
         </form.Field>
 
-        <form.Field name="definition">
+        <form.Field name="description">
           {(field) => (
             <div>
               <Label

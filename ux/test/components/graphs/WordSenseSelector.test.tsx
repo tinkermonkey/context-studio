@@ -3,7 +3,7 @@ import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { vi, describe, it, expect, beforeEach, afterEach } from "vitest";
 import WordSenseSelector from "@/components/graphs/nlp_concept/WordSenseSelector";
-import { WordSense } from "@/api/types/structureNodes";
+import { WordSense } from "@/api/types/ontology";
 import * as useWordSensesModule from "@/api/hooks/ontologyClasses/useWordSenses";
 
 // Mock the toast utility
@@ -123,13 +123,7 @@ describe("WordSenseSelector", () => {
   describe("Persisted senses", () => {
     it("displays persisted sense selections", () => {
       const persistedSenses: WordSense[] = [
-        {
-          term: "machine",
-          sense_type: "wordnet",
-          sense_id: "machine.n.01",
-          definition: "A device",
-          domain: null,
-        },
+        { label: "machine", language_code: "en", term: "machine", sense_type: "wordnet", sense_id: "machine.n.01", definition: "A device", domain: undefined },
       ];
 
       renderComponent({ title: "machine learning", persistedSenses });
@@ -139,13 +133,7 @@ describe("WordSenseSelector", () => {
 
     it("initializes with persisted senses", () => {
       const persistedSenses: WordSense[] = [
-        {
-          term: "learning",
-          sense_type: "wordnet",
-          sense_id: "learning.n.01",
-          definition: "Knowledge acquisition",
-          domain: null,
-        },
+        { label: "learning", language_code: "en", term: "learning", sense_type: "wordnet", sense_id: "learning.n.01", definition: "A device", domain: undefined },
       ];
 
       renderComponent({ title: "machine learning", persistedSenses });
@@ -429,13 +417,7 @@ describe("WordSenseSelector", () => {
   describe("Dirty tracking", () => {
     it("is not dirty when selections match persisted", () => {
       const persistedSenses: WordSense[] = [
-        {
-          term: "machine",
-          sense_type: "wordnet",
-          sense_id: "machine.n.01",
-          definition: "A device",
-          domain: null,
-        },
+        { label: "machine", language_code: "en", term: "machine", sense_type: "wordnet", sense_id: "machine.n.01", definition: "A device", domain: undefined },
       ];
 
       renderComponent({ title: "machine", persistedSenses });
@@ -465,13 +447,7 @@ describe("WordSenseSelector", () => {
       });
 
       const persistedSenses: WordSense[] = [
-        {
-          term: "machine",
-          sense_type: "wordnet",
-          sense_id: "machine.n.01",
-          definition: "A device",
-          domain: null,
-        },
+        { label: "machine", language_code: "en", term: "machine", sense_type: "wordnet", sense_id: "machine.n.01", definition: "A device", domain: undefined },
       ];
 
       renderComponent({ title: "machine", persistedSenses });

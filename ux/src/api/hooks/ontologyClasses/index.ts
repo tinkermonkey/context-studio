@@ -21,13 +21,6 @@ export {
 
 export { useWordSenses, useUpdateWordSenses } from "./useWordSenses";
 
-export {
-  useDomainNodes,
-  useLayerNodes,
-  useClass,
-  useTermNodes,
-  useClassSearch,
-} from "./useStructureNodes";
 
 export {
   useBulkUpdateOntologyClass,

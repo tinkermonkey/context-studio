@@ -16,14 +16,14 @@ import {
   Textarea,
 } from "flowbite-react";
 import { useExtractEntities, useRAGTrace } from "@/api/hooks/rag";
-import { useClass } from "@/api/hooks/ontologyClasses";
+import { useOntologyClass } from "@/api/hooks/ontologyClasses";
 import { Info, ExternalLink } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 
 // Component to render a single entity with its matched node link
 
 function EntityItem({ entity }: { entity: any }) {
-  const { data: node, isLoading } = useClass(entity.metadata?.matched_kg_node);
+  const { data: node, isLoading } = useOntologyClass(entity.metadata?.matched_kg_node);
 
   const linkProps = useMemo(() => {
     if (!node?.id) return null;

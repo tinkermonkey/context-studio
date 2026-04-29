@@ -13,7 +13,7 @@ import {
   useCreateAnnotation,
   useDeleteAnnotation,
 } from "@/api/hooks/ragExperiments";
-import { useClassSearch } from "@/api/hooks/ontologyClasses";
+import { useOntologyClasses } from "@/api/hooks/ontologyClasses";
 import type { TestParagraphResponse } from "@/api/services/ragExperiments";
 import type { OntologyClass } from "@/api/types/ontology";
 
@@ -50,16 +50,22 @@ export const AnnotationSelector: React.FC<AnnotationSelectorProps> = ({
     return () => clearTimeout(timer);
   }, [searchInput]);
 
-  // Use vector search for structure nodes based on debounced search query
-  const { data: searchResults, isLoading: nodesLoading } = useClassSearch({
-    query: debouncedSearchQuery,
-    limit: 100,
-    threshold: 0.0,
-  });
+  // Fetch all ontology classes
+  const { data: allClasses, isLoading: nodesLoading } = useOntologyClasses();
 
-  // Convert search results to OntologyClass format for RecordSelector
-  const ontologyClass: OntologyClass[] =
-    (searchResults as OntologyClass[]) || [];
+  // Filter classes based on search query
+  const ontologyClass: OntologyClass[] = React.useMemo(() => {
+    if (!allClasses) return [];
+
+    if (!debouncedSearchQuery) return allClasses;
+
+    const query = debouncedSearchQuery.toLowerCase();
+    return allClasses.filter(
+      (cls) =>
+        cls.title.toLowerCase().includes(query) ||
+        cls.definition?.toLowerCase().includes(query)
+    );
+  }, [allClasses, debouncedSearchQuery]);
 
   // Handle text selection
   const handleTextSelection = () => {

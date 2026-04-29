@@ -24,7 +24,7 @@ import {
 } from "@/test/utils/renderWithProviders";
 import { DomainMoveForm } from "@/components/forms/domain_move_form";
 import { TermMoveForm } from "@/components/forms/term_move_form";
-import { NodeType } from "@/api/types/structureNodes";
+import { NodeType } from "@/api/types/ontology";
 import { setupMocks } from "../msw/setupTests";
 
 // Setup MSW for any uncaught network calls

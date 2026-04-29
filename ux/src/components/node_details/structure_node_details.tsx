@@ -532,9 +532,9 @@ const EditModal: React.FC<{
 
     try {
       queryClient.invalidateQueries({
-        queryKey: [QUERY_KEYS.STRUCTURE_NODES, node.id],
+        queryKey: [QUERY_KEYS.ONTOLOGY_CLASSES, node.id],
       });
-      queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.STRUCTURE_NODES] });
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.ONTOLOGY_CLASSES] });
     } catch (e) {
       console.warn("Failed to invalidate node queries", e);
     }
@@ -593,9 +593,9 @@ const AddChildModal: React.FC<{
 
     try {
       queryClient.invalidateQueries({
-        queryKey: [QUERY_KEYS.STRUCTURE_NODES, node.id],
+        queryKey: [QUERY_KEYS.ONTOLOGY_CLASSES, node.id],
       });
-      queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.STRUCTURE_NODES] });
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.ONTOLOGY_CLASSES] });
     } catch (e) {
       console.warn("Failed to invalidate node queries", e);
     }
@@ -675,9 +675,9 @@ const MoveModal: React.FC<{
 
     try {
       queryClient.invalidateQueries({
-        queryKey: [QUERY_KEYS.STRUCTURE_NODES, node.id],
+        queryKey: [QUERY_KEYS.ONTOLOGY_CLASSES, node.id],
       });
-      queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.STRUCTURE_NODES] });
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.ONTOLOGY_CLASSES] });
     } catch (e) {
       console.warn("Failed to invalidate node queries", e);
     }
