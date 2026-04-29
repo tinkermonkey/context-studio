@@ -6,6 +6,7 @@
 
 import { BaseService } from "./base";
 import { ENDPOINTS } from "../config";
+import { apiLogger } from "../utils/logger";
 import type {
   PipelineExecutionRequest,
   PipelineExecutionResponse,
@@ -168,13 +169,16 @@ export class PipelineExecutionService extends BaseService {
    
   convertToLegacyTermResponse(response: PipelineExecutionResponse): any {
     // Parse the response_content as JSON if it's a string
-
-     
     let parsedResult: any = response.response_content;
     if (typeof response.response_content === "string") {
       try {
         parsedResult = JSON.parse(response.response_content);
-      } catch {
+      } catch (error) {
+        // Log parsing failure to enable debugging
+        apiLogger.warn(
+          "Failed to parse pipeline response as JSON, treating as plain text",
+          { response_content: response.response_content, error },
+        );
         // If parsing fails, treat as plain text definition
         parsedResult = { definition: response.response_content };
       }
@@ -192,15 +196,17 @@ export class PipelineExecutionService extends BaseService {
   /**
    * Convert new generic response to legacy domain definition response format
    */
-
-   
   convertToLegacyDomainResponse(response: PipelineExecutionResponse): any {
-     
     let parsedResult: any = response.response_content;
     if (typeof response.response_content === "string") {
       try {
         parsedResult = JSON.parse(response.response_content);
-      } catch {
+      } catch (error) {
+        // Log parsing failure to enable debugging
+        apiLogger.warn(
+          "Failed to parse pipeline response as JSON, treating as plain text",
+          { response_content: response.response_content, error },
+        );
         parsedResult = { definition: response.response_content };
       }
     }
@@ -216,15 +222,17 @@ export class PipelineExecutionService extends BaseService {
   /**
    * Convert new generic response to legacy layer definition response format
    */
-
-   
   convertToLegacyLayerResponse(response: PipelineExecutionResponse): any {
-     
     let parsedResult: any = response.response_content;
     if (typeof response.response_content === "string") {
       try {
         parsedResult = JSON.parse(response.response_content);
-      } catch {
+      } catch (error) {
+        // Log parsing failure to enable debugging
+        apiLogger.warn(
+          "Failed to parse pipeline response as JSON, treating as plain text",
+          { response_content: response.response_content, error },
+        );
         parsedResult = { definition: response.response_content };
       }
     }

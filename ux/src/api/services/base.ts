@@ -51,10 +51,8 @@ export abstract class BaseService {
       const response = await this.client.request<T>(config);
       return response.data;
     } catch (error) {
-      // Add service context to errors
-      if (error instanceof Error) {
-        error.message = `${this.constructor.name}: ${error.message}`;
-      }
+      // Don't add context here - withErrorContext() will handle it
+      // This prevents duplicate error message decoration
       throw error;
     }
   }
@@ -199,12 +197,13 @@ export abstract class BaseService {
     if ("data" in response && Array.isArray(response.data)) {
       return response.data;
     }
-    // Log warning when response format doesn't match either expected format
-    apiLogger.warn(
+    // Throw error when response format doesn't match either expected format
+    // This prevents silent failures where users see empty tables with no indication of error
+    const error = new Error(
       "Response format did not match ListResponse or PaginatedResponse",
-      { response },
     );
-    return [];
+    apiLogger.error("Invalid response format", { response });
+    throw error;
   }
 
   /**
