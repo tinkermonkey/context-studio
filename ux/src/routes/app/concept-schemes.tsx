@@ -4,36 +4,36 @@ import {
   useNavigate,
   useSearch,
 } from "@tanstack/react-router";
-import { DomainsTable } from "@/components/node_tables/domains_table";
+import { ConceptSchemesTable } from "@/components/node_tables/concept_schemes_table";
 import { CsSidebar, CsSidebarTitle } from "@/components/layout/cs_sidebar";
 import { CsMain, CsMainTitle } from "@/components/layout/cs_main";
-import { CollapsibleLayersList } from "@/components/misc/collapsible_layers_list";
-import { useStructureNode } from "@/api/hooks/structure_nodes/useStructureNodes";
+import { CollapsibleTaxonomiesList } from "@/components/misc/collapsible_taxonomies_list";
+import { useTaxonomy } from "@/api/hooks/taxonomies";
 import { Database } from "lucide-react";
 
 // Define the search parameters schema
-interface DomainsSearch {
-  layer_id?: string;
+interface ConceptSchemesSearch {
+  taxonomy_id?: string;
   query?: string;
   [key: string]: unknown;
 }
 
-export const Route = createFileRoute("/app/domains")({
-  component: DomainsPage,
-  validateSearch: (search: Record<string, unknown>): DomainsSearch => {
+export const Route = createFileRoute("/app/concept-schemes")({
+  component: ConceptSchemesPage,
+  validateSearch: (search: Record<string, unknown>): ConceptSchemesSearch => {
     return {
-      layer_id: search.layer_id as string,
+      taxonomy_id: search.taxonomy_id as string,
       query: search.query as string,
       ...search,
     };
   },
 });
 
-function DomainsPage() {
-   
+function ConceptSchemesPage() {
+
   const tableRef = React.useRef<any>(null);
-  const navigate = useNavigate({ from: "/app/domains" });
-  const search = useSearch({ from: "/app/domains" });
+  const navigate = useNavigate({ from: "/app/concept-schemes" });
+  const search = useSearch({ from: "/app/concept-schemes" });
 
   // Use search params directly as query params - no need for separate state
   const queryParams = React.useMemo(() => {
@@ -48,17 +48,17 @@ function DomainsPage() {
     return params;
   }, [search]);
 
-  // Load the layer record if layer_id is provided
+  // Load the taxonomy record if taxonomy_id is provided
   const {
-    data: layer,
-    isLoading: layerLoading,
-    error: layerError,
-  } = useStructureNode(queryParams.layer_id as string);
+    data: taxonomy,
+    isLoading: taxonomyLoading,
+    error: taxonomyError,
+  } = useTaxonomy(queryParams.taxonomy_id as string);
 
   const handleQueryParamsChange = React.useCallback(
     (newParams: Record<string, unknown>) => {
       // Update URL search parameters to reflect current filters
-      const searchParams: DomainsSearch = {};
+      const searchParams: ConceptSchemesSearch = {};
 
       Object.entries(newParams).forEach(([key, value]) => {
         if (value !== undefined && value !== null && value !== "") {
@@ -77,40 +77,40 @@ function DomainsPage() {
   return (
     <>
       <CsSidebar>
-        <CsSidebarTitle>Layers</CsSidebarTitle>
-        <CollapsibleLayersList
-          selectedLayerId={queryParams.layer_id as string}
+        <CsSidebarTitle>Taxonomies</CsSidebarTitle>
+        <CollapsibleTaxonomiesList
+          selectedTaxonomyId={queryParams.taxonomy_id as string}
           useLinks={true}
         />
       </CsSidebar>
       <CsMain>
         <CsMainTitle icon={Database}>
-          Domains
-          {!!queryParams.layer_id && (
+          Concept Schemes
+          {!!queryParams.taxonomy_id && (
             <span className="ml-2 text-sm font-normal text-gray-600 dark:text-gray-400">
-              (filtered by layer)
+              (filtered by taxonomy)
             </span>
           )}
         </CsMainTitle>
-        {!!queryParams.layer_id && (
+        {!!queryParams.taxonomy_id && (
           <>
             <div className="text-md">
-              Domains in the layer{" "}
+              Concept Schemes in the taxonomy{" "}
               <i className="font-bold">
-                {layer?.title || String(queryParams.layer_id)}
+                {taxonomy?.title || String(queryParams.taxonomy_id)}
               </i>
-              {layerLoading && <span> (loading...)</span>}
-              {layerError && (
-                <span className="text-red-500"> (error loading layer)</span>
+              {taxonomyLoading && <span> (loading...)</span>}
+              {taxonomyError && (
+                <span className="text-red-500"> (error loading taxonomy)</span>
               )}
             </div>
             <div className="py-3 pb-6">
-              {layer?.definition && `Layer definition: ${layer.definition}`}
+              {taxonomy?.definition && `Taxonomy definition: ${taxonomy.definition}`}
             </div>
           </>
         )}
 
-        <DomainsTable
+        <ConceptSchemesTable
           ref={tableRef}
           queryParams={queryParams}
           onQueryParamsChange={handleQueryParamsChange}

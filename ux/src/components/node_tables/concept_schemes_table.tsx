@@ -4,10 +4,11 @@ import { Checkbox } from "flowbite-react";
 import { StructureNode } from "@/api/types/structureNodes";
 import { renderShortDateTime, renderShortUuid } from "@/utils/renderers";
 import { BaseNodeTable } from "./node_table";
-import { useTermNodes } from "@/api/hooks/structure_nodes/useStructureNodes";
+import { useConceptSchemes } from "@/api/hooks/conceptSchemes";
+import { useOntologyClasses } from "@/api/hooks/ontologyClasses";
 import { useDeleteStructureNode } from "@/api/hooks/structure_nodes/useStructureNodeMutations";
-import { TermForm } from "@/components/forms/term_form";
-import { TermMoveForm } from "@/components/forms/term_move_form";
+import { ConceptSchemeForm } from "@/components/forms/concept_scheme_form";
+import { ConceptSchemeMoveForm } from "@/components/forms/concept_scheme_move_form";
 import type { FieldDefinition } from "@/components/misc/query_filters";
 
 const columnHelper = createColumnHelper<StructureNode>();
@@ -63,7 +64,18 @@ const columns = [
       const value = info.getValue() ?? "";
       return value ? renderShortUuid(value) : "";
     },
-    header: () => "Parent",
+    header: () => "Taxonomy",
+  }),
+  columnHelper.accessor("structural_predicate_id", {
+    cell: (info) => {
+      const value = info.getValue();
+      return value ? (
+        renderShortUuid(value)
+      ) : (
+        <span className="text-gray-400">None</span>
+      );
+    },
+    header: () => "Structural Property",
   }),
   columnHelper.accessor("version", {
     cell: (info) => info.getValue() ?? "",
@@ -89,8 +101,8 @@ const columns = [
   }),
 ];
 
-// Define filter fields for terms
-const domainFilterFields: FieldDefinition[] = [
+// Define filter fields for concept schemes
+const conceptSchemeFilterFields: FieldDefinition[] = [
   {
     field: "title",
     label: "Title",
@@ -105,10 +117,10 @@ const domainFilterFields: FieldDefinition[] = [
   },
   {
     field: "parent_node_id",
-    label: "Parent",
+    label: "Taxonomy",
     type: "select",
     operators: ["equals"],
-    // TODO: Populate this from structure nodes API
+    // TODO: Populate this from the structure nodes API
     options: [],
   },
   {
@@ -125,7 +137,7 @@ const domainFilterFields: FieldDefinition[] = [
   },
 ];
 
-export interface TermsTableProps {
+export interface ConceptSchemesTableProps {
   data?: StructureNode[];
   onSelectionChange?: (count: number) => void;
   onEdit?: (id: string) => void;
@@ -134,19 +146,22 @@ export interface TermsTableProps {
   onQueryParamsChange?: (params: Record<string, unknown>) => void;
 }
 
- 
-const TermsTable = React.forwardRef<any, TermsTableProps>((props) => {
+
+const ConceptSchemesTable = React.forwardRef<any, ConceptSchemesTableProps>((props) => {
   const { queryParams = {}, onQueryParamsChange } = props;
 
-  // Use query params in the terms hook
+  // Use query params in the concept schemes hook
   const {
-    data: terms,
+    data: conceptSchemes,
     isLoading,
     error,
     refetch,
-  } = useTermNodes(undefined, queryParams);
-  const { data: allTerms } = useTermNodes(); // Get all terms for finding children
-  const deleteTerm = useDeleteStructureNode();
+  } = useConceptSchemes(
+    queryParams?.parent_node_id as string | undefined,
+    queryParams,
+  );
+  const deleteConceptScheme = useDeleteStructureNode();
+  const { data: allClasses } = useOntologyClasses();
 
   const defaultColumnVisibility: Record<string, boolean> = {
     id: false,
@@ -160,68 +175,55 @@ const TermsTable = React.forwardRef<any, TermsTableProps>((props) => {
     ...props.columnVisibility,
   };
 
-  // Get child terms for safe deletion workflow
-  const getTermChildren = async (termId: string): Promise<StructureNode[]> => {
-    if (!allTerms) return [];
-    return (allTerms as StructureNode[]).filter(
-      (term) => term.parent_node_id === termId,
-    );
+  // Get classes that belong to a concept scheme (for safe deletion)
+  const getConceptSchemeChildren = async (conceptSchemeId: string) => {
+    if (!allClasses) return [];
+    return allClasses.filter((ontologyClass) => ontologyClass.parent_node_id === conceptSchemeId);
   };
 
-  // Move child terms when orphaning them during parent deletion
-  const moveTermChildren = async (
+  // Move classes when orphaning them during concept scheme deletion
+  const moveConceptSchemeChildren = async (
     childIds: string[],
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     newParentId: string | null,
   ) => {
     if (childIds.length === 0) return;
 
-    // Find a target domain for the orphaned terms
-    // We'll use the domain of the first child term since terms must belong to a domain
-    const firstChild = allTerms?.find((term) => childIds.includes(term.id));
-    if (!firstChild) return;
-
-    // For orphaning, we need to use the structure node update API to set parent_node_id to null
-    // Since we don't have a bulk move API, we update each term individually
-    // This is a limitation we'll need to address in a future update
+    // For concept scheme deletion, we need to move classes to another concept scheme or orphan them
+    // Since we can't have classes without concept schemes, we'll need to handle this differently
+    // For now, this will be implemented when we have a better strategy
     console.warn(
-      "Term orphaning not fully implemented - using move to same domain for now",
-    );
-
-    // TODO: Implement term moving with new structure node API
-    // await updateStructureNode for each child term to change parent_node_id
-    console.warn(
-      "Term moving needs to be reimplemented with structure node API",
+      "Moving concept scheme children not yet implemented - classes need a concept scheme",
     );
   };
 
   return (
     <BaseNodeTable
       columns={columns}
-      data={(terms ?? []) as StructureNode[]}
+      data={(conceptSchemes ?? []) as StructureNode[]}
       isLoading={isLoading}
       error={error}
       onRefetch={refetch}
       onDelete={async (ids: string[]) => {
-        await Promise.all(ids.map((id) => deleteTerm.mutateAsync(id)));
+        await Promise.all(ids.map((id) => deleteConceptScheme.mutateAsync(id)));
       }}
-      createForm={({ onSuccess }) => <TermForm onSuccess={onSuccess} />}
+      createForm={({ onSuccess }) => <ConceptSchemeForm onSuccess={onSuccess} />}
       editForm={({ node, onSuccess }) => (
-        <TermForm term={node} onSuccess={onSuccess} />
+        <ConceptSchemeForm conceptScheme={node as StructureNode} onSuccess={onSuccess} />
       )}
-      moveForm={TermMoveForm}
-      typeName="Term"
+      moveForm={ConceptSchemeMoveForm}
+      typeName="Concept Scheme"
       getId={(item) => item.id}
       columnVisibility={columnVisibility}
       queryParams={queryParams}
       onQueryParamsChange={onQueryParamsChange}
-      filterFields={domainFilterFields}
+      filterFields={conceptSchemeFilterFields}
       searchPlaceholder="Search..."
-      linkGenerator={(term: StructureNode) => `/app/structure_nodes/${term.id}`}
-      onGetChildren={getTermChildren}
-      onMoveChildren={moveTermChildren}
+      linkGenerator={(item: StructureNode) => `/app/concept-schemes/${item.id}`}
+      onGetChildren={getConceptSchemeChildren}
+      onMoveChildren={moveConceptSchemeChildren}
     />
   );
 });
 
-export { TermsTable };
+export { ConceptSchemesTable };

@@ -4,13 +4,10 @@ import { Checkbox } from "flowbite-react";
 import { StructureNode } from "@/api/types/structureNodes";
 import { renderShortDateTime, renderShortUuid } from "@/utils/renderers";
 import { BaseNodeTable } from "./node_table";
-import {
-  useDomainNodes,
-  useTermNodes,
-} from "@/api/hooks/structure_nodes/useStructureNodes";
+import { useOntologyClasses, useOntologyClass } from "@/api/hooks/ontologyClasses";
 import { useDeleteStructureNode } from "@/api/hooks/structure_nodes/useStructureNodeMutations";
-import { DomainForm } from "@/components/forms/domain_form";
-import { DomainMoveForm } from "@/components/forms/domain_move_form";
+import { ClassForm } from "@/components/forms/class_form";
+import { ClassMoveForm } from "@/components/forms/class_move_form";
 import type { FieldDefinition } from "@/components/misc/query_filters";
 
 const columnHelper = createColumnHelper<StructureNode>();
@@ -66,18 +63,7 @@ const columns = [
       const value = info.getValue() ?? "";
       return value ? renderShortUuid(value) : "";
     },
-    header: () => "Layer",
-  }),
-  columnHelper.accessor("structural_predicate_id", {
-    cell: (info) => {
-      const value = info.getValue();
-      return value ? (
-        renderShortUuid(value)
-      ) : (
-        <span className="text-gray-400">None</span>
-      );
-    },
-    header: () => "Structural Predicate",
+    header: () => "Parent",
   }),
   columnHelper.accessor("version", {
     cell: (info) => info.getValue() ?? "",
@@ -103,8 +89,8 @@ const columns = [
   }),
 ];
 
-// Define filter fields for domains
-const domainFilterFields: FieldDefinition[] = [
+// Define filter fields for classes
+const classFilterFields: FieldDefinition[] = [
   {
     field: "title",
     label: "Title",
@@ -119,10 +105,10 @@ const domainFilterFields: FieldDefinition[] = [
   },
   {
     field: "parent_node_id",
-    label: "Layer",
+    label: "Parent",
     type: "select",
     operators: ["equals"],
-    // TODO: Populate this from the structure nodes API
+    // TODO: Populate this from ontology classes API
     options: [],
   },
   {
@@ -139,7 +125,7 @@ const domainFilterFields: FieldDefinition[] = [
   },
 ];
 
-export interface DomainsTableProps {
+export interface ClassesTableProps {
   data?: StructureNode[];
   onSelectionChange?: (count: number) => void;
   onEdit?: (id: string) => void;
@@ -148,22 +134,19 @@ export interface DomainsTableProps {
   onQueryParamsChange?: (params: Record<string, unknown>) => void;
 }
 
- 
-const DomainsTable = React.forwardRef<any, DomainsTableProps>((props) => {
+
+const ClassesTable = React.forwardRef<any, ClassesTableProps>((props) => {
   const { queryParams = {}, onQueryParamsChange } = props;
 
-  // Use query params in the domains hook
+  // Use query params in the classes hook
   const {
-    data: domains,
+    data: classes,
     isLoading,
     error,
     refetch,
-  } = useDomainNodes(
-    queryParams?.parent_node_id as string | undefined,
-    queryParams,
-  );
-  const deleteDomain = useDeleteStructureNode();
-  const { data: allTerms } = useTermNodes();
+  } = useOntologyClasses(undefined, queryParams);
+  const { data: allClasses } = useOntologyClasses(); // Get all classes for finding children
+  const deleteClass = useDeleteStructureNode();
 
   const defaultColumnVisibility: Record<string, boolean> = {
     id: false,
@@ -177,55 +160,68 @@ const DomainsTable = React.forwardRef<any, DomainsTableProps>((props) => {
     ...props.columnVisibility,
   };
 
-  // Get terms that belong to a domain (for safe deletion)
-  const getDomainsChildren = async (domainId: string) => {
-    if (!allTerms) return [];
-    return allTerms.filter((term) => term.parent_node_id === domainId);
+  // Get child classes for safe deletion workflow
+  const getClassChildren = async (classId: string): Promise<StructureNode[]> => {
+    if (!allClasses) return [];
+    return (allClasses as StructureNode[]).filter(
+      (ontologyClass) => ontologyClass.parent_node_id === classId,
+    );
   };
 
-  // Move terms when orphaning them during domain deletion
-  const moveDomainsChildren = async (
+  // Move child classes when orphaning them during parent deletion
+  const moveClassChildren = async (
     childIds: string[],
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     newParentId: string | null,
   ) => {
     if (childIds.length === 0) return;
 
-    // For domain deletion, we need to move terms to another domain or orphan them
-    // Since we can't have terms without domains, we'll need to handle this differently
-    // For now, this will be implemented when we have a better strategy
+    // Find a target concept scheme for the orphaned classes
+    // We'll use the concept scheme of the first child class since classes must belong to a concept scheme
+    const firstChild = allClasses?.find((ontologyClass) => childIds.includes(ontologyClass.id));
+    if (!firstChild) return;
+
+    // For orphaning, we need to use the structure node update API to set parent_node_id to null
+    // Since we don't have a bulk move API, we update each class individually
+    // This is a limitation we'll need to address in a future update
     console.warn(
-      "Moving domain children not yet implemented - terms need a domain",
+      "Class orphaning not fully implemented - using move to same concept scheme for now",
+    );
+
+    // TODO: Implement class moving with new ontology API
+    // await updateOntologyClass for each child class to change parent_node_id
+    console.warn(
+      "Class moving needs to be reimplemented with ontology API",
     );
   };
 
   return (
     <BaseNodeTable
       columns={columns}
-      data={(domains ?? []) as StructureNode[]}
+      data={(classes ?? []) as StructureNode[]}
       isLoading={isLoading}
       error={error}
       onRefetch={refetch}
       onDelete={async (ids: string[]) => {
-        await Promise.all(ids.map((id) => deleteDomain.mutateAsync(id)));
+        await Promise.all(ids.map((id) => deleteClass.mutateAsync(id)));
       }}
-      createForm={({ onSuccess }) => <DomainForm onSuccess={onSuccess} />}
+      createForm={({ onSuccess }) => <ClassForm onSuccess={onSuccess} />}
       editForm={({ node, onSuccess }) => (
-        <DomainForm domain={node as StructureNode} onSuccess={onSuccess} />
+        <ClassForm ontologyClass={node} onSuccess={onSuccess} />
       )}
-      moveForm={DomainMoveForm}
-      typeName="Domain"
+      moveForm={ClassMoveForm}
+      typeName="Class"
       getId={(item) => item.id}
       columnVisibility={columnVisibility}
       queryParams={queryParams}
       onQueryParamsChange={onQueryParamsChange}
-      filterFields={domainFilterFields}
+      filterFields={classFilterFields}
       searchPlaceholder="Search..."
-      linkGenerator={(item: StructureNode) => `/app/structure_nodes/${item.id}`}
-      onGetChildren={getDomainsChildren}
-      onMoveChildren={moveDomainsChildren}
+      linkGenerator={(ontologyClass: StructureNode) => `/app/classes/${ontologyClass.id}`}
+      onGetChildren={getClassChildren}
+      onMoveChildren={moveClassChildren}
     />
   );
 });
 
-export { DomainsTable };
+export { ClassesTable };

@@ -3,9 +3,9 @@ import { createColumnHelper } from "@tanstack/react-table";
 import { Checkbox } from "flowbite-react";
 import { StructureNode } from "@/api/types/structureNodes";
 import { renderShortDateTime, renderShortUuid } from "@/utils/renderers";
-import { useLayerNodes } from "@/api/hooks/structure_nodes/useStructureNodes";
+import { useTaxonomies } from "@/api/hooks/taxonomies";
 import { useDeleteStructureNode } from "@/api/hooks/structure_nodes/useStructureNodeMutations";
-import { LayerForm } from "@/components/forms/layer_form";
+import { TaxonomyForm } from "@/components/forms/taxonomy_form";
 import { BaseNodeTable } from "./node_table";
 
 const columnHelper = createColumnHelper<StructureNode>();
@@ -80,17 +80,17 @@ const columns = [
   }),
 ];
 
-export interface LayersTableProps {
+export interface TaxonomiesTableProps {
   data?: StructureNode[];
   onSelectionChange?: (count: number) => void;
   onEdit?: (id: string) => void;
   columnVisibility?: Record<string, boolean>;
 }
 
- 
-const LayersTable = React.forwardRef<any, LayersTableProps>((props) => {
-  const { data: layers, isLoading, error, refetch } = useLayerNodes();
-  const deleteLayer = useDeleteStructureNode();
+
+const TaxonomiesTable = React.forwardRef<any, TaxonomiesTableProps>((props) => {
+  const { data: taxonomies, isLoading, error, refetch } = useTaxonomies();
+  const deleteTaxonomy = useDeleteStructureNode();
 
   // Default hidden columns: id, version, created_at, last_modified
   const defaultColumnVisibility: Record<string, boolean> = {
@@ -107,25 +107,25 @@ const LayersTable = React.forwardRef<any, LayersTableProps>((props) => {
   return (
     <BaseNodeTable
       columns={columns}
-      data={(layers ?? []) as StructureNode[]}
+      data={(taxonomies ?? []) as StructureNode[]}
       isLoading={isLoading}
       error={error}
       onRefetch={refetch}
       onDelete={async (ids: string[]) => {
-        await Promise.all(ids.map((id) => deleteLayer.mutateAsync(id)));
+        await Promise.all(ids.map((id) => deleteTaxonomy.mutateAsync(id)));
       }}
-      createForm={({ onSuccess }) => <LayerForm onSuccess={onSuccess} />}
+      createForm={({ onSuccess }) => <TaxonomyForm onSuccess={onSuccess} />}
       editForm={({ node, onSuccess }) => (
-        <LayerForm layer={node} onSuccess={onSuccess} />
+        <TaxonomyForm taxonomy={node} onSuccess={onSuccess} />
       )}
-      typeName="Layer"
+      typeName="Taxonomy"
       getId={(item) => item.id}
       columnVisibility={columnVisibility}
-      linkGenerator={(layer: StructureNode) =>
-        `/app/structure_nodes/${layer.id}`
+      linkGenerator={(taxonomy: StructureNode) =>
+        `/app/taxonomies/${taxonomy.id}`
       }
     />
   );
 });
 
-export { LayersTable };
+export { TaxonomiesTable };

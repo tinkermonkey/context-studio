@@ -1,20 +1,20 @@
 /**
- * Predicates Table Component
+ * Property Definitions Table Component
  *
- * Table for displaying and managing predicates
+ * Table for displaying and managing property definitions
  */
 
 import React from "react";
 import { createColumnHelper } from "@tanstack/react-table";
 import { Checkbox } from "flowbite-react";
-import { PredicateOut } from "@/api/services/predicates";
+import { PropertyDefinitionOut } from "@/api/services/propertyDefinitions";
 import { renderShortDateTime, renderShortUuid } from "@/utils/renderers";
-import { usePredicates } from "@/api/hooks/predicates";
-import { useDeletePredicate } from "@/api/hooks/predicates";
-import { PredicateForm } from "@/components/forms/predicate_form";
+import { usePropertyDefinitions } from "@/api/hooks/propertyDefinitions";
+import { useDeletePropertyDefinition } from "@/api/hooks/propertyDefinitions";
+import { PropertyDefinitionForm } from "@/components/forms/property_definition_form";
 import { BaseNodeTable } from "./node_table";
 
-const columnHelper = createColumnHelper<PredicateOut>();
+const columnHelper = createColumnHelper<PropertyDefinitionOut>();
 
 const columns = [
   columnHelper.display({
@@ -101,17 +101,17 @@ const columns = [
   }),
 ];
 
-export interface PredicatesTableProps {
-  data?: PredicateOut[];
+export interface PropertiesTableProps {
+  data?: PropertyDefinitionOut[];
   onSelectionChange?: (count: number) => void;
   onEdit?: (id: string) => void;
   columnVisibility?: Record<string, boolean>;
 }
 
- 
-const PredicatesTable = React.forwardRef<any, PredicatesTableProps>((props) => {
-  const { data: predicates, isLoading, error, refetch } = usePredicates();
-  const deletePredicate = useDeletePredicate();
+
+const PropertiesTable = React.forwardRef<any, PropertiesTableProps>((props) => {
+  const { data: properties, isLoading, error, refetch } = usePropertyDefinitions();
+  const deleteProperty = useDeletePropertyDefinition();
 
   // Default hidden columns: id, mapping, date_created, date_modified
   const defaultColumnVisibility: Record<string, boolean> = {
@@ -128,25 +128,25 @@ const PredicatesTable = React.forwardRef<any, PredicatesTableProps>((props) => {
   return (
     <BaseNodeTable
       columns={columns}
-      data={predicates?.data ?? []}
+      data={properties?.data ?? []}
       isLoading={isLoading}
       error={error}
       onRefetch={refetch}
       onDelete={async (ids: string[]) => {
-        await Promise.all(ids.map((id) => deletePredicate.mutateAsync(id)));
+        await Promise.all(ids.map((id) => deleteProperty.mutateAsync(id)));
       }}
-      createForm={({ onSuccess }) => <PredicateForm onSuccess={onSuccess} />}
+      createForm={({ onSuccess }) => <PropertyDefinitionForm onSuccess={onSuccess} />}
       editForm={({ node, onSuccess }) => (
-        <PredicateForm predicate={node} onSuccess={onSuccess} />
+        <PropertyDefinitionForm propertyDefinition={node} onSuccess={onSuccess} />
       )}
-      typeName="Predicate"
+      typeName="Property Definition"
       getId={(item) => item.id}
       columnVisibility={columnVisibility}
-      linkGenerator={(predicate: PredicateOut) =>
-        `/app/nodes/predicate/${predicate.id}`
+      linkGenerator={(propertyDefinition: PropertyDefinitionOut) =>
+        `/app/property-definitions/${propertyDefinition.id}`
       }
     />
   );
 });
 
-export { PredicatesTable };
+export { PropertiesTable };

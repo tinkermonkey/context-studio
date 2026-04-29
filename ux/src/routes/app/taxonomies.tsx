@@ -1,7 +1,7 @@
 import React from "react";
-import { useLayerNodes } from "@/api/hooks/structure_nodes/useStructureNodes";
+import { useTaxonomies } from "@/api/hooks/taxonomies";
 import { createFileRoute } from "@tanstack/react-router";
-import { LayersTable } from "@/components/node_tables/layers_table";
+import { TaxonomiesTable } from "@/components/node_tables/taxonomies_table";
 import { Spinner } from "flowbite-react";
 import { CsSidebar, CsSidebarTitle } from "@/components/layout/cs_sidebar";
 import { CsMain, CsMainTitle } from "@/components/layout/cs_main";
@@ -9,13 +9,13 @@ import { Layers } from "lucide-react";
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { TreeMenuPanel } from "@/components/panels/TreeMenuPanel";
 
-export const Route = createFileRoute("/app/layers")({
-  component: LayersPage,
+export const Route = createFileRoute("/app/taxonomies")({
+  component: TaxonomiesPage,
 });
 
-function LayersPage() {
-  const { data: layers, isLoading, error } = useLayerNodes();
-   
+function TaxonomiesPage() {
+  const { data: taxonomies, isLoading, error } = useTaxonomies();
+
   const tableRef = React.useRef<any>(null);
 
   if (isLoading) {
@@ -23,18 +23,18 @@ function LayersPage() {
   }
   if (error) {
     console.error(error);
-    return <div>Error loading layers</div>;
+    return <div>Error loading taxonomies</div>;
   }
 
   return (
     <>
       <CsSidebar>
-        <CsSidebarTitle>Layers</CsSidebarTitle>
+        <CsSidebarTitle>Taxonomies</CsSidebarTitle>
       </CsSidebar>
       <CsMain>
-        <CsMainTitle icon={Layers}>Layers</CsMainTitle>
+        <CsMainTitle icon={Layers}>Taxonomies</CsMainTitle>
 
-        <LayersTable ref={tableRef} data={layers} />
+        <TaxonomiesTable ref={tableRef} data={taxonomies} />
       </CsMain>
     </>
   );
