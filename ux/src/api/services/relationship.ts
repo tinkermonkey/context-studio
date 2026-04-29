@@ -22,11 +22,11 @@ export class RelationshipService extends BaseService {
       const queryParams: Record<string, unknown> = {};
       if (params?.offset !== undefined) queryParams.offset = params.offset;
       if (params?.limit !== undefined) queryParams.limit = params.limit;
-      if (params?.source_class_id)
-        queryParams.source_class_id = params.source_class_id;
-      if (params?.target_class_id)
-        queryParams.target_class_id = params.target_class_id;
-      if (params?.property_id) queryParams.property_id = params.property_id;
+      if (params?.source_id)
+        queryParams.source_id = params.source_id;
+      if (params?.target_id)
+        queryParams.target_id = params.target_id;
+      if (params?.relationship_type) queryParams.relationship_type = params.relationship_type;
 
       // If no limit specified, load all
       if (params?.limit === undefined) {
@@ -60,9 +60,9 @@ export class RelationshipService extends BaseService {
    */
   async create(data: RelationshipCreate): Promise<Relationship> {
     return this.withErrorContext(async () => {
-      this.validateRequired(data.source_class_id, "source_class_id");
-      this.validateRequired(data.target_class_id, "target_class_id");
-      this.validateRequired(data.property_id, "property_id");
+      this.validateRequired(data.source_id, "source_id");
+      this.validateRequired(data.target_id, "target_id");
+      this.validateRequired(data.relationship_type, "relationship_type");
 
       return this.postResource<Relationship>(ENDPOINTS.RELATIONSHIPS, data);
     }, "create");

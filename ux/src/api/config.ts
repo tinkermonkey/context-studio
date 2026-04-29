@@ -35,7 +35,7 @@ export const QUERY_KEYS = {
   PROPERTY_DEFINITIONS: "property_definitions",
   // Deprecated legacy keys for backward compatibility
   STRUCTURE_NODES: "ontologyClass",
-  NODE_LINKS: "relationships",
+  NODE_LINKS: "node_links",
   /**
    * @deprecated Use PROPERTY_DEFINITIONS instead.
    * Can be removed once all legacy predicate hooks are migrated to usePropertyDefinitions.

@@ -22,7 +22,7 @@ export class OntologyClassService extends BaseService {
       const queryParams: Record<string, unknown> = {};
       if (params?.offset !== undefined) queryParams.offset = params.offset;
       if (params?.limit !== undefined) queryParams.limit = params.limit;
-      if (params?.scheme_id) queryParams.scheme_id = params.scheme_id;
+      if (params?.concept_scheme_id) queryParams.concept_scheme_id = params.concept_scheme_id;
       if (params?.parent_class_id)
         queryParams.parent_class_id = params.parent_class_id;
 

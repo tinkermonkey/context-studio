@@ -4,6 +4,8 @@
  * Types for the change tracking system that monitors modifications to entities
  */
 
+export { NodeType } from "./ontology";
+
 /**
  * Record types that can be tracked in change events
  */
@@ -20,19 +22,10 @@ export enum RecordType {
 }
 
 /**
- * Node types in the ontology (new naming to match entity types)
- */
-export enum NodeType {
-  TAXONOMY = "taxonomy",
-  SCHEME = "scheme",
-  CLASS = "class",
-}
-
-/**
  * A change event representing a modification to an entity
  */
 export interface ChangeEvent {
-  id: number;
+  id: string;
   record_type: RecordType;
   record_id: string;
   event_type: string;

@@ -167,14 +167,14 @@ export interface OntologyClassLink {
 }
 
 export interface OntologyClassLinkCreate {
-  source_id?: string;
-  target_id?: string;
-  property_definition_id?: string;
+  source_id: string;
+  target_id: string;
+  property_definition_id: string;
   // Legacy properties for backward compatibility
   source_node_id?: string; // Alias for source_id
   target_node_id?: string; // Alias for target_id
   predicate_id?: string; // Alias for property_definition_id
-  [key: string]: any;
+  predicate?: any; // Legacy field for backward compatibility
 }
 
 // ============= Relationship =============
@@ -194,29 +194,30 @@ export interface Relationship {
 }
 
 export interface RelationshipCreate {
-  source_class_id: string;
-  target_class_id: string;
-  property_id: string;
+  source_id: string;
+  target_id: string;
+  relationship_type: string;
 }
 
 export interface RelationshipUpdate {
-  source_class_id?: string;
-  target_class_id?: string;
-  property_id?: string;
+  source_id?: string;
+  target_id?: string;
+  relationship_type?: string;
 }
 
 export interface RelationshipListParams {
   offset?: number;
   limit?: number;
-  source_class_id?: string;
-  target_class_id?: string;
-  property_id?: string;
+  source_id?: string;
+  target_id?: string;
+  relationship_type?: string;
   [key: string]: unknown;
 }
 
 // ============= PropertyDefinition =============
 export interface PropertyDefinition {
   id: string;
+  identifier: string;
   title: string;
   description?: string | null;
   range?: string | null;

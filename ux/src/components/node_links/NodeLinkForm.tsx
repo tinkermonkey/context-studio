@@ -93,13 +93,19 @@ export const NodeLinkForm: React.FC<NodeLinkFormProps> = ({
       }
 
       try {
+        const sourceId =
+          direction === "outgoing" ? currentNode.id : value.targetNodeId;
+        const targetId =
+          direction === "outgoing" ? value.targetNodeId : currentNode.id;
+
         const linkData: OntologyClassLinkCreate = {
-          source_node_id:
-            direction === "outgoing" ? currentNode.id : value.targetNodeId,
-          target_node_id:
-            direction === "outgoing" ? value.targetNodeId : currentNode.id,
-          predicate: value.predicate,
-          predicate_id: value.predicateId,
+          source_id: sourceId,
+          target_id: targetId,
+          property_definition_id: value.predicateId,
+          source_node_id: sourceId, // Legacy
+          target_node_id: targetId, // Legacy
+          predicate: value.predicate, // Legacy
+          predicate_id: value.predicateId, // Legacy
         };
 
         await createLinkMutation.mutateAsync(linkData);

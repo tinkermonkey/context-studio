@@ -11,20 +11,10 @@
 /**
  * @deprecated Use the new ontology entity types instead
  */
-export type OntologyClass = any;  
+export type OntologyClass = any;
 
-/**
- * @deprecated Use the new ontology entity types instead
- */
-export enum NodeType {
-  TAXONOMY = "taxonomy",
-  SCHEME = "scheme",
-  CLASS = "class",
-  // Deprecated aliases for backward compatibility
-  DOMAIN = "domain",
-  TERM = "term",
-  LAYER = "layer",
-}
+// Re-export NodeType from ontology for convenience
+export { NodeType } from "./ontology";
 
 /**
  * @deprecated Use the new ontology entity types instead
@@ -40,7 +30,7 @@ export type OntologyClassUpdate = any;
  * @deprecated Use the new ontology entity types instead
  */
 export interface ChangeEvent {
-  id: number;
+  id: string;
   record_type: string;
   record_id: string;
   event_type: string;
