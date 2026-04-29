@@ -8,15 +8,15 @@ import React from "react";
 import { useForm } from "@tanstack/react-form";
 import { TextInput, Textarea, Button, Alert, Label } from "flowbite-react";
 import { Info } from "lucide-react";
-import type { PredicateCreate, PredicateOut } from "@/api/services/predicates";
+import type { PropertyDefinitionCreate, PropertyDefinition } from "@/api/types/ontology";
 import {
   useCreatePredicate,
   useUpdatePredicate,
 } from "@/api/hooks/predicates/usePredicateMutations";
 
 interface PredicateFormProps {
-  onSuccess?: (predicate: PredicateOut) => void;
-  predicate?: PredicateOut; // For edit mode
+  onSuccess?: (predicate: PropertyDefinition) => void;
+  predicate?: PropertyDefinition; // For edit mode
   // Future child form props
   mode?: "create" | "edit" | "child";
 }
@@ -69,7 +69,7 @@ const PredicateForm: React.FC<PredicateFormProps> = ({
           });
         } else {
           result = await createPredicateMutation.mutateAsync(
-            submissionData as PredicateCreate,
+            submissionData as PropertyDefinitionCreate,
           );
         }
         if (onSuccess) onSuccess(result);

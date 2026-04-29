@@ -25,7 +25,7 @@ import { useSimilarPredicates } from "@/api/hooks/predicates";
 import { useButterToast } from "@/hooks/useButterToast";
 import { getSourceBadgeColor } from "@/utils/sourceUtils";
 import { PredicateSelector } from "@/components/node_selectors/predicate_selector";
-import { PredicateOut } from "@/api/services/predicates";
+import { PropertyDefinition } from "@/api/types/ontology";
 
 export interface SimilaritySearchTabProps {
   onClusterSelect?: (predicateIds: string[]) => void;
@@ -35,7 +35,7 @@ export const SimilaritySearchTab: React.FC<SimilaritySearchTabProps> = ({
   onClusterSelect,
 }) => {
   const [selectedPredicate, setSelectedPredicate] = useState<
-    PredicateOut | undefined
+    PropertyDefinition | undefined
   >();
   const [debouncedPredicateId, setDebouncedPredicateId] = useState<string>("");
   const [sourceFilter, setSourceFilter] = useState<string>("");

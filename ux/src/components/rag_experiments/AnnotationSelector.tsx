@@ -51,6 +51,11 @@ export const AnnotationSelector: React.FC<AnnotationSelectorProps> = ({
   }, [searchInput]);
 
   // Fetch all ontology classes
+  // NOTE: This replaces the previous useClassSearch which performed server-side semantic/vector search.
+  // The current implementation uses client-side filtering with substring matching only.
+  // This is a known functional degradation: it loads the entire class set regardless of search input
+  // and loses semantic matching capability. Consider implementing a server-side search endpoint
+  // to restore proper semantic search if the ontology grows significantly.
   const { data: allClasses, isLoading: nodesLoading } = useOntologyClasses();
 
   // Filter classes based on search query

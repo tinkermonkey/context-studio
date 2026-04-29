@@ -21,7 +21,6 @@ export {
 
 export { useWordSenses, useUpdateWordSenses } from "./useWordSenses";
 
-
 export {
   useBulkUpdateOntologyClass,
   useMoveOntologyClass,

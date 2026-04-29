@@ -126,18 +126,6 @@ describe("OntologyClassDetails edit flow (Domain)", () => {
     const qc = makeTestQueryClient();
     const invalidateSpy = vi.spyOn(qc, "invalidateQueries");
 
-    // Service-level spies: mock the actual services being called
-    const updatedDomain = {
-      ...domain,
-      title: "Domain 1 edited",
-      version: 2,
-      last_modified: new Date().toISOString(),
-    };
-
-    // Mock ontologyClassService methods that are actually called
-    // Note: These services are called internally by the hooks
-    // For this test, we rely on the hook mocks above to handle the data
-
     // With Link, useLayer, and useTerms mocked above, we can render without RouterProvider
     render(<OntologyClassDetails node={domain} />, { queryClient: qc });
 
