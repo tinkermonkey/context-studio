@@ -33,7 +33,7 @@ export const useStructureNodes = (
  * @deprecated Use useConceptSchemes instead
  */
 export const useDomainNodes = (
-  _params?: any, // eslint-disable-line @typescript-eslint/no-explicit-any
+  ..._args: any[] // eslint-disable-line @typescript-eslint/no-explicit-any
 ): UseQueryResult<StructureNode[], Error> => {
   return {
     data: undefined,

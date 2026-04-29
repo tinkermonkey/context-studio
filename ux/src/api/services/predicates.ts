@@ -22,6 +22,20 @@ export type PredicateUpdate = any; // eslint-disable-line @typescript-eslint/no-
 /**
  * @deprecated
  */
+export interface ExternalPredicateOut {
+  id: string;
+  title: string;
+  definition: string;
+  source: string;
+  external_id: string;
+  attributes?: Record<string, unknown>;
+  created_at: string;
+  updated_at: string;
+}
+
+/**
+ * @deprecated
+ */
 export class PredicatesService {
   list() {
     throw new Error("PredicatesService has been removed. Use PropertyDefinitionService instead.");

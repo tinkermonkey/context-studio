@@ -30,7 +30,9 @@ export const useWordSenses = (
 /**
  * @deprecated
  */
-export const useUpdateWordSenses = (): UseMutationResult<any, Error, any, any> => {
+export const useUpdateWordSenses = (
+  ..._args: any[] // eslint-disable-line @typescript-eslint/no-explicit-any
+): UseMutationResult<any, Error, any, any> => {
   return {
     mutate: (_data?: any) => { // eslint-disable-line @typescript-eslint/no-explicit-any
       throw new Error("useUpdateWordSenses has been removed.");

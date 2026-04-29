@@ -30,7 +30,9 @@ export const useReferenceLinks = (
 /**
  * @deprecated
  */
-export const useAddReferenceLinks = (): UseMutationResult<any, Error, any, any> => {
+export const useAddReferenceLinks = (
+  ..._args: any[] // eslint-disable-line @typescript-eslint/no-explicit-any
+): UseMutationResult<any, Error, any, any> => {
   return {
     mutate: (_data?: any) => { // eslint-disable-line @typescript-eslint/no-explicit-any
       throw new Error("useAddReferenceLinks has been removed.");
