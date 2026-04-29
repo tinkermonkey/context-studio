@@ -5,7 +5,7 @@
  */
 
 import { UseQueryResult } from "@tanstack/react-query";
-import type { OntologyClass } from "../../types/ontologyClass";
+import type { OntologyClass } from "../../types/ontology";
 
 /**
  * @deprecated Use useTaxonomies, useConceptSchemes, useOntologyClasses instead

@@ -5,7 +5,7 @@
  */
 
 import { UseMutationResult } from "@tanstack/react-query";
-import type { OntologyClass } from "../../types/ontologyClass";
+import type { OntologyClass } from "../../types/ontology";
 
 /**
  * @deprecated Use the new ontology entity mutation hooks instead
@@ -109,8 +109,8 @@ export const useBulkUpdateOntologyClass = (
  * @deprecated
  */
 export const useMoveOntologyClass = (
-  _options?: any,  
-): UseMutationResult<OntologyClass, Error, any, any> => {
+  _options?: any,
+): UseMutationResult<any, Error, any, any> => {
   return {
     mutate: (_data?: any) => {  
       throw new Error("useMoveOntologyClass has been removed.");
@@ -124,7 +124,7 @@ export const useMoveOntologyClass = (
     status: "idle",
     reset: () => {},
     variables: undefined,
-  } as unknown as UseMutationResult<OntologyClass, Error, any, any>;
+  } as unknown as UseMutationResult<any, Error, any, any>;
 };
 
 /**
