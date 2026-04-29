@@ -5,7 +5,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { RelationshipService } from "../relationship";
 import type { AxiosInstance } from "axios";
-import type { ListResponse } from "../../types/ontology";
+import type { ListResponse, Relationship } from "../../types/ontology";
 
 describe("RelationshipService", () => {
   let mockClient: AxiosInstance;
@@ -21,7 +21,7 @@ describe("RelationshipService", () => {
 
   describe("list", () => {
     it("should fetch all relationships without limit", async () => {
-      const mockRelationships = [
+      const mockRelationships: Relationship[] = [
         {
           id: "rel-1",
           source_id: "class-1",
@@ -37,7 +37,7 @@ describe("RelationshipService", () => {
           version: 1,
         },
       ];
-      const response: ListResponse<typeof mockRelationships[0]> = {
+      const response: ListResponse<(typeof mockRelationships)[0]> = {
         items: mockRelationships,
         total: 2,
         limit: 50,
@@ -51,7 +51,7 @@ describe("RelationshipService", () => {
     });
 
     it("should use correct field names in query params", async () => {
-      const mockRelationships = [
+      const mockRelationships: Relationship[] = [
         {
           id: "rel-1",
           source_id: "class-1",
@@ -60,7 +60,7 @@ describe("RelationshipService", () => {
           version: 1,
         },
       ];
-      const response: ListResponse<typeof mockRelationships[0]> = {
+      const response: ListResponse<(typeof mockRelationships)[0]> = {
         items: mockRelationships,
         total: 1,
         limit: 50,
@@ -84,8 +84,8 @@ describe("RelationshipService", () => {
     });
 
     it("should use correct field names (not source_node_id/target_node_id)", async () => {
-      const mockRelationships = [];
-      const response: ListResponse<any> = {
+      const mockRelationships: Relationship[] = [];
+      const response: ListResponse<Relationship> = {
         items: mockRelationships,
         total: 0,
         limit: 50,
@@ -178,7 +178,7 @@ describe("RelationshipService", () => {
           source_id: "",
           target_id: "class-2",
           relationship_type: "type-1",
-        })
+        }),
       ).rejects.toThrow("source_id is required");
     });
 
@@ -188,7 +188,7 @@ describe("RelationshipService", () => {
           source_id: "class-1",
           target_id: "",
           relationship_type: "type-1",
-        })
+        }),
       ).rejects.toThrow("target_id is required");
     });
 
@@ -198,7 +198,7 @@ describe("RelationshipService", () => {
           source_id: "class-1",
           target_id: "class-2",
           relationship_type: "",
-        })
+        }),
       ).rejects.toThrow("relationship_type is required");
     });
 
@@ -247,7 +247,7 @@ describe("RelationshipService", () => {
 
     it("should validate ID is required", async () => {
       await expect(
-        service.update("", { source_id: "class-1" })
+        service.update("", { source_id: "class-1" }),
       ).rejects.toThrow("id is required");
     });
 
