@@ -4,12 +4,12 @@
  * @deprecated Migrate to use the new ontology entity mutation hooks instead
  */
 
-import { UseMutationOptions } from "@tanstack/react-query";
+import { UseMutationResult } from "@tanstack/react-query";
 
 /**
  * @deprecated Use useCreateRelationship instead
  */
-export const useCreateNodeLink = (..._args: any[]) => { // eslint-disable-line @typescript-eslint/no-explicit-any
+export const useCreateNodeLink = (..._args: any[]): UseMutationResult<any, Error, any, any> => { // eslint-disable-line @typescript-eslint/no-explicit-any
   return {
     mutate: (_data?: any) => { // eslint-disable-line @typescript-eslint/no-explicit-any
       throw new Error("useCreateNodeLink has been removed. Use useCreateRelationship instead.");
@@ -18,39 +18,54 @@ export const useCreateNodeLink = (..._args: any[]) => { // eslint-disable-line @
       throw new Error("useCreateNodeLink has been removed. Use useCreateRelationship instead.");
     },
     isPending: false,
-  };
+    isError: true,
+    error: new Error("useCreateNodeLink has been removed."),
+    status: "idle",
+    reset: () => {},
+    variables: undefined,
+  } as unknown as UseMutationResult<any, Error, any, any>;
 };
 
 /**
  * @deprecated Use useUpdateRelationship instead
  */
 export const useUpdateNodeLink = (
-  _options?: UseMutationOptions<any, Error, any>, // eslint-disable-line @typescript-eslint/no-explicit-any
-) => {
+  _options?: any, // eslint-disable-line @typescript-eslint/no-explicit-any
+): UseMutationResult<any, Error, any, any> => {
   return {
-    mutate: () => {
+    mutate: (_data?: any) => { // eslint-disable-line @typescript-eslint/no-explicit-any
       throw new Error("useUpdateNodeLink has been removed. Use useUpdateRelationship instead.");
     },
-    mutateAsync: async () => {
+    mutateAsync: async (_data?: any) => { // eslint-disable-line @typescript-eslint/no-explicit-any
       throw new Error("useUpdateNodeLink has been removed. Use useUpdateRelationship instead.");
     },
     isPending: false,
-  };
+    isError: true,
+    error: new Error("useUpdateNodeLink has been removed."),
+    status: "idle",
+    reset: () => {},
+    variables: undefined,
+  } as unknown as UseMutationResult<any, Error, any, any>;
 };
 
 /**
  * @deprecated Use useDeleteRelationship instead
  */
 export const useDeleteNodeLink = (
-  _options?: UseMutationOptions<void, Error, string>, // eslint-disable-line @typescript-eslint/no-explicit-any
-) => {
+  _options?: any, // eslint-disable-line @typescript-eslint/no-explicit-any
+): UseMutationResult<void, Error, string, any> => {
   return {
-    mutate: () => {
+    mutate: (_data?: any) => { // eslint-disable-line @typescript-eslint/no-explicit-any
       throw new Error("useDeleteNodeLink has been removed. Use useDeleteRelationship instead.");
     },
-    mutateAsync: async () => {
+    mutateAsync: async (_data?: any) => { // eslint-disable-line @typescript-eslint/no-explicit-any
       throw new Error("useDeleteNodeLink has been removed. Use useDeleteRelationship instead.");
     },
     isPending: false,
-  };
+    isError: true,
+    error: new Error("useDeleteNodeLink has been removed."),
+    status: "idle",
+    reset: () => {},
+    variables: undefined,
+  } as unknown as UseMutationResult<void, Error, string, any>;
 };

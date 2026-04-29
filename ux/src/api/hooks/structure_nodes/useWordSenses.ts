@@ -4,34 +4,45 @@
  * @deprecated
  */
 
-import { UseQueryOptions } from "@tanstack/react-query";
+import { UseQueryResult, UseMutationResult } from "@tanstack/react-query";
 
 /**
  * @deprecated
  */
 export const useWordSenses = (
   _nodeId?: string,
-  _options?: UseQueryOptions<any, Error>, // eslint-disable-line @typescript-eslint/no-explicit-any
-) => {
+  _options?: any, // eslint-disable-line @typescript-eslint/no-explicit-any
+): UseQueryResult<any[], Error> => {
   return {
     data: undefined,
     isLoading: false,
+    isFetching: false,
+    isPlaceholderData: false,
     error: new Error("useWordSenses has been removed."),
     isError: true,
-  };
+    status: "error",
+    dataUpdatedAt: 0,
+    errorUpdatedAt: Date.now(),
+    refetch: async () => ({ data: undefined } as any), // eslint-disable-line @typescript-eslint/no-explicit-any
+  } as UseQueryResult<any[], Error>;
 };
 
 /**
  * @deprecated
  */
-export const useUpdateWordSenses = () => {
+export const useUpdateWordSenses = (): UseMutationResult<any, Error, any, any> => {
   return {
-    mutate: () => {
+    mutate: (_data?: any) => { // eslint-disable-line @typescript-eslint/no-explicit-any
       throw new Error("useUpdateWordSenses has been removed.");
     },
-    mutateAsync: async () => {
+    mutateAsync: async (_data?: any) => { // eslint-disable-line @typescript-eslint/no-explicit-any
       throw new Error("useUpdateWordSenses has been removed.");
     },
     isPending: false,
-  };
+    isError: true,
+    error: new Error("useUpdateWordSenses has been removed."),
+    status: "idle",
+    reset: () => {},
+    variables: undefined,
+  } as unknown as UseMutationResult<any, Error, any, any>;
 };

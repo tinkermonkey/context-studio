@@ -4,12 +4,12 @@
  * @deprecated Predicates are now modeled as PropertyDefinition entities
  */
 
-import { UseMutationOptions } from "@tanstack/react-query";
+import { UseMutationResult } from "@tanstack/react-query";
 
 /**
  * @deprecated Use useCreatePropertyDefinition instead
  */
-export const useCreatePredicate = (..._args: any[]) => { // eslint-disable-line @typescript-eslint/no-explicit-any
+export const useCreatePredicate = (..._args: any[]): UseMutationResult<any, Error, any, any> => { // eslint-disable-line @typescript-eslint/no-explicit-any
   return {
     mutate: (_data?: any) => { // eslint-disable-line @typescript-eslint/no-explicit-any
       throw new Error(
@@ -22,55 +22,70 @@ export const useCreatePredicate = (..._args: any[]) => { // eslint-disable-line 
       );
     },
     isPending: false,
-  };
+    isError: true,
+    error: new Error("useCreatePredicate has been removed."),
+    status: "idle",
+    reset: () => {},
+    variables: undefined,
+  } as unknown as UseMutationResult<any, Error, any, any>;
 };
 
 /**
  * @deprecated Use useUpdatePropertyDefinition instead
  */
 export const useUpdatePredicate = (
-  _options?: UseMutationOptions<any, Error, any>, // eslint-disable-line @typescript-eslint/no-explicit-any
-) => {
+  _options?: any, // eslint-disable-line @typescript-eslint/no-explicit-any
+): UseMutationResult<any, Error, any, any> => {
   return {
-    mutate: () => {
+    mutate: (_data?: any) => { // eslint-disable-line @typescript-eslint/no-explicit-any
       throw new Error(
         "useUpdatePredicate has been removed. Use useUpdatePropertyDefinition instead.",
       );
     },
-    mutateAsync: async () => {
+    mutateAsync: async (_data?: any) => { // eslint-disable-line @typescript-eslint/no-explicit-any
       throw new Error(
         "useUpdatePredicate has been removed. Use useUpdatePropertyDefinition instead.",
       );
     },
     isPending: false,
-  };
+    isError: true,
+    error: new Error("useUpdatePredicate has been removed."),
+    status: "idle",
+    reset: () => {},
+    variables: undefined,
+  } as unknown as UseMutationResult<any, Error, any, any>;
 };
 
 /**
  * @deprecated Use useDeletePropertyDefinition instead
  */
 export const useDeletePredicate = (
-  _options?: UseMutationOptions<void, Error, string>, // eslint-disable-line @typescript-eslint/no-explicit-any
-) => {
+  _options?: any, // eslint-disable-line @typescript-eslint/no-explicit-any
+): UseMutationResult<void, Error, string, any> => {
   return {
-    mutate: () => {
+    mutate: (_data?: any) => { // eslint-disable-line @typescript-eslint/no-explicit-any
       throw new Error(
         "useDeletePredicate has been removed. Use useDeletePropertyDefinition instead.",
       );
     },
-    mutateAsync: async () => {
+    mutateAsync: async (_data?: any) => { // eslint-disable-line @typescript-eslint/no-explicit-any
       throw new Error(
         "useDeletePredicate has been removed. Use useDeletePropertyDefinition instead.",
       );
     },
     isPending: false,
-  };
+    isError: true,
+    error: new Error("useDeletePredicate has been removed."),
+    status: "idle",
+    reset: () => {},
+    variables: undefined,
+  } as unknown as UseMutationResult<void, Error, string, any>;
 };
 
 /**
  * @deprecated
  */
-export const useClusterPredicates = (..._args: any[]) => { // eslint-disable-line @typescript-eslint/no-explicit-any
+export const useClusterPredicates = (..._args: any[]): UseMutationResult<any, Error, any, any> => { // eslint-disable-line @typescript-eslint/no-explicit-any
   return {
     mutate: (_data?: any) => { // eslint-disable-line @typescript-eslint/no-explicit-any
       throw new Error("useClusterPredicates has been removed.");
@@ -79,5 +94,10 @@ export const useClusterPredicates = (..._args: any[]) => { // eslint-disable-lin
       throw new Error("useClusterPredicates has been removed.");
     },
     isPending: false,
-  };
+    isError: true,
+    error: new Error("useClusterPredicates has been removed."),
+    status: "idle",
+    reset: () => {},
+    variables: undefined,
+  } as unknown as UseMutationResult<any, Error, any, any>;
 };

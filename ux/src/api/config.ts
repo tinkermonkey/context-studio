@@ -36,6 +36,10 @@ export const QUERY_KEYS = {
   // Deprecated legacy keys for backward compatibility
   STRUCTURE_NODES: "structure_nodes",
   NODE_LINKS: "node_links",
+  /**
+   * @deprecated Use PROPERTY_DEFINITIONS instead.
+   * Can be removed once all legacy predicate hooks are migrated to usePropertyDefinitions.
+   */
   PREDICATES: "predicates",
   GRAPH: "graph",
   FIND: "find",

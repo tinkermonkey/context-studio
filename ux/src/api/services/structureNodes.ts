@@ -30,3 +30,6 @@ export class StructureNodesService {
 }
 
 export const structureNodesService = new StructureNodesService();
+
+// Export with singular name for backward compatibility
+export const structureNodeService = structureNodesService;

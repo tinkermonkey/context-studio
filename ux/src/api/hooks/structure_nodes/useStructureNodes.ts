@@ -4,7 +4,7 @@
  * @deprecated Migrate to use the new ontology entity hooks instead
  */
 
-import { UseQueryOptions } from "@tanstack/react-query";
+import { UseQueryResult } from "@tanstack/react-query";
 import type { StructureNode } from "../../types/structureNodes";
 
 /**
@@ -12,17 +12,21 @@ import type { StructureNode } from "../../types/structureNodes";
  */
 export const useStructureNodes = (
   _params?: any, // eslint-disable-line @typescript-eslint/no-explicit-any
-  _options?: UseQueryOptions<StructureNode[], Error>,
-) => {
+): UseQueryResult<StructureNode[], Error> => {
   return {
     data: undefined,
     isLoading: false,
+    isFetching: false,
+    isPlaceholderData: false,
     error: new Error(
       "useStructureNodes has been removed. Use useTaxonomies, useConceptSchemes, or useOntologyClasses instead.",
     ),
     isError: true,
-    refetch: async () => undefined,
-  };
+    status: "error",
+    dataUpdatedAt: 0,
+    errorUpdatedAt: Date.now(),
+    refetch: async () => ({ data: undefined } as any), // eslint-disable-line @typescript-eslint/no-explicit-any
+  } as UseQueryResult<StructureNode[], Error>;
 };
 
 /**
@@ -30,15 +34,19 @@ export const useStructureNodes = (
  */
 export const useDomainNodes = (
   _params?: any, // eslint-disable-line @typescript-eslint/no-explicit-any
-  _options?: UseQueryOptions<StructureNode[], Error>,
-) => {
+): UseQueryResult<StructureNode[], Error> => {
   return {
     data: undefined,
     isLoading: false,
+    isFetching: false,
+    isPlaceholderData: false,
     error: new Error("useDomainNodes has been removed. Use useConceptSchemes instead."),
     isError: true,
-    refetch: async () => undefined,
-  };
+    status: "error",
+    dataUpdatedAt: 0,
+    errorUpdatedAt: Date.now(),
+    refetch: async () => ({ data: undefined } as any), // eslint-disable-line @typescript-eslint/no-explicit-any
+  } as UseQueryResult<StructureNode[], Error>;
 };
 
 /**
@@ -46,52 +54,71 @@ export const useDomainNodes = (
  */
 export const useLayerNodes = (
   _params?: any, // eslint-disable-line @typescript-eslint/no-explicit-any
-  _options?: UseQueryOptions<StructureNode[], Error>,
-) => {
+): UseQueryResult<StructureNode[], Error> => {
   return {
     data: undefined,
     isLoading: false,
+    isFetching: false,
+    isPlaceholderData: false,
     error: new Error("useLayerNodes has been removed. Use useTaxonomies instead."),
     isError: true,
-    refetch: async () => undefined,
-  };
+    status: "error",
+    dataUpdatedAt: 0,
+    errorUpdatedAt: Date.now(),
+    refetch: async () => ({ data: undefined } as any), // eslint-disable-line @typescript-eslint/no-explicit-any
+  } as UseQueryResult<StructureNode[], Error>;
 };
 
 /**
  * @deprecated
  */
-export const useStructureNode = (..._args: any[]) => { // eslint-disable-line @typescript-eslint/no-explicit-any
+export const useStructureNode = (..._args: any[]): UseQueryResult<StructureNode, Error> => { // eslint-disable-line @typescript-eslint/no-explicit-any
   return {
     data: undefined,
     isLoading: false,
+    isFetching: false,
+    isPlaceholderData: false,
     error: new Error("useStructureNode has been removed."),
     isError: true,
-    refetch: async () => undefined,
-  };
+    status: "error",
+    dataUpdatedAt: 0,
+    errorUpdatedAt: Date.now(),
+    refetch: async () => ({ data: undefined } as any), // eslint-disable-line @typescript-eslint/no-explicit-any
+  } as UseQueryResult<StructureNode, Error>;
 };
 
 /**
  * @deprecated
  */
-export const useTermNodes = (..._args: any[]) => { // eslint-disable-line @typescript-eslint/no-explicit-any
+export const useTermNodes = (..._args: any[]): UseQueryResult<StructureNode[], Error> => { // eslint-disable-line @typescript-eslint/no-explicit-any
   return {
     data: undefined,
     isLoading: false,
+    isFetching: false,
+    isPlaceholderData: false,
     error: new Error("useTermNodes has been removed."),
     isError: true,
-    refetch: async () => undefined,
-  };
+    status: "error",
+    dataUpdatedAt: 0,
+    errorUpdatedAt: Date.now(),
+    refetch: async () => ({ data: undefined } as any), // eslint-disable-line @typescript-eslint/no-explicit-any
+  } as UseQueryResult<StructureNode[], Error>;
 };
 
 /**
  * @deprecated
  */
-export const useStructureNodeSearch = (..._args: any[]) => { // eslint-disable-line @typescript-eslint/no-explicit-any
+export const useStructureNodeSearch = (..._args: any[]): UseQueryResult<StructureNode[], Error> => { // eslint-disable-line @typescript-eslint/no-explicit-any
   return {
     data: undefined,
     isLoading: false,
+    isFetching: false,
+    isPlaceholderData: false,
     error: new Error("useStructureNodeSearch has been removed."),
     isError: true,
-    refetch: async () => undefined,
-  };
+    status: "error",
+    dataUpdatedAt: 0,
+    errorUpdatedAt: Date.now(),
+    refetch: async () => ({ data: undefined } as any), // eslint-disable-line @typescript-eslint/no-explicit-any
+  } as UseQueryResult<StructureNode[], Error>;
 };
