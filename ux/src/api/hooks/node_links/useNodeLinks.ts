@@ -18,5 +18,19 @@ export const useNodeLinks = (
     isLoading: false,
     error: new Error("useNodeLinks has been removed. Use useRelationships instead."),
     isError: true,
+    refetch: async () => undefined,
+  };
+};
+
+/**
+ * @deprecated
+ */
+export const useNodeLinksByNode = (..._args: any[]) => { // eslint-disable-line @typescript-eslint/no-explicit-any
+  return {
+    data: undefined,
+    isLoading: false,
+    error: new Error("useNodeLinksByNode has been removed."),
+    isError: true,
+    refetch: async () => undefined,
   };
 };

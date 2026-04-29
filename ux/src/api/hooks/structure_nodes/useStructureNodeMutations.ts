@@ -10,9 +10,7 @@ import type { StructureNode } from "../../types/structureNodes";
 /**
  * @deprecated Use the new ontology entity mutation hooks instead
  */
-export const useCreateStructureNode = (
-  _options?: UseMutationOptions<StructureNode, Error, any>, // eslint-disable-line @typescript-eslint/no-explicit-any
-) => {
+export const useCreateStructureNode = (..._args: any[]) => { // eslint-disable-line @typescript-eslint/no-explicit-any
   return {
     mutate: () => {
       throw new Error(
@@ -107,9 +105,7 @@ export const useMoveStructureNode = (
 /**
  * @deprecated
  */
-export const useCreateDomain = (
-  _options?: UseMutationOptions<any, Error, any>, // eslint-disable-line @typescript-eslint/no-explicit-any
-) => {
+export const useCreateDomain = (..._args: any[]) => { // eslint-disable-line @typescript-eslint/no-explicit-any
   return {
     mutate: () => {
       throw new Error("useCreateDomain has been removed. Use useCreateConceptScheme instead.");

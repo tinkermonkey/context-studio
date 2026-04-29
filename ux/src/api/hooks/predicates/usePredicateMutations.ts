@@ -9,9 +9,7 @@ import { UseMutationOptions } from "@tanstack/react-query";
 /**
  * @deprecated Use useCreatePropertyDefinition instead
  */
-export const useCreatePredicate = (
-  _options?: UseMutationOptions<any, Error, any>, // eslint-disable-line @typescript-eslint/no-explicit-any
-) => {
+export const useCreatePredicate = (..._args: any[]) => { // eslint-disable-line @typescript-eslint/no-explicit-any
   return {
     mutate: () => {
       throw new Error(

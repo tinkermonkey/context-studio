@@ -64,6 +64,16 @@ export type WordSense = any; // eslint-disable-line @typescript-eslint/no-explic
 /**
  * @deprecated
  */
+export type StructureNodeLink = any; // eslint-disable-line @typescript-eslint/no-explicit-any
+
+/**
+ * @deprecated
+ */
+export type StructureNodeLinkCreate = any; // eslint-disable-line @typescript-eslint/no-explicit-any
+
+/**
+ * @deprecated
+ */
 export interface NodeAttribute {
   [key: string]: unknown;
 }

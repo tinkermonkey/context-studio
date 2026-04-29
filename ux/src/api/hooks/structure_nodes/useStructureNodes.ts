@@ -56,3 +56,16 @@ export const useLayerNodes = (
     refetch: async () => undefined,
   };
 };
+
+/**
+ * @deprecated
+ */
+export const useStructureNode = (..._args: any[]) => { // eslint-disable-line @typescript-eslint/no-explicit-any
+  return {
+    data: undefined,
+    isLoading: false,
+    error: new Error("useStructureNode has been removed."),
+    isError: true,
+    refetch: async () => undefined,
+  };
+};
