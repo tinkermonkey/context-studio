@@ -39,10 +39,10 @@ test.describe("Taxonomy CRUD Operations", () => {
     await expect(modal).toBeVisible({ timeout: 5000 });
 
     // Fill form fields
-    const titleInput = page.locator("input[name='title']").first();
-    const descriptionInput = page.locator("textarea[name='description']").first();
+    const titleInput = page.locator('[data-testid="taxonomy-title-input"]').first();
+    const descriptionInput = page.locator('[data-testid="taxonomy-description-input"]').first();
 
-    await titleInput.fill("E2E Test Taxonomy");
+    await titleInput.fill("test-taxonomy-e2e-create");
     await descriptionInput.fill("A test taxonomy created via E2E tests");
 
     // Submit form
@@ -53,7 +53,7 @@ test.describe("Taxonomy CRUD Operations", () => {
     await expect(modal).not.toBeVisible({ timeout: 5000 });
 
     // Verify taxonomy appears in table
-    await expect(page.getByText("E2E Test Taxonomy")).toBeVisible();
+    await expect(page.getByText("test-taxonomy-e2e-create")).toBeVisible();
   });
 
   test("should list all taxonomies", async ({ page }) => {
@@ -123,27 +123,19 @@ test.describe("Taxonomy CRUD Operations", () => {
     await page.goto("/app/taxonomies");
     await page.waitForLoadState("networkidle");
 
-    // Find and click edit button for taxonomy
+    // Find and double-click row to open edit form
     const taxonomyRow = page.getByText("Update Test Taxonomy");
-    const rowContainer = taxonomyRow.locator("..");
-    const editButton = rowContainer.getByRole("button", { name: /edit|update/i });
-
-    // Click edit button or double-click row depending on UI
-    if (await editButton.isVisible()) {
-      await editButton.click();
-    } else {
-      await taxonomyRow.dblclick();
-    }
+    await taxonomyRow.dblclick();
 
     // Wait for edit form
     const modal = page.getByRole("dialog");
     await expect(modal).toBeVisible({ timeout: 5000 });
 
     // Update fields
-    const titleInput = page.locator("input[name='title']").first();
-    const descriptionInput = page.locator("textarea[name='description']").first();
+    const titleInput = page.locator('[data-testid="taxonomy-title-input"]').first();
+    const descriptionInput = page.locator('[data-testid="taxonomy-description-input"]').first();
 
-    await titleInput.fill("Updated Taxonomy Title");
+    await titleInput.fill("test-taxonomy-e2e-update");
     await descriptionInput.fill("Updated description");
 
     // Submit form
@@ -154,14 +146,14 @@ test.describe("Taxonomy CRUD Operations", () => {
     await page.waitForLoadState("networkidle");
 
     // Verify updates in UI
-    await expect(page.getByText("Updated Taxonomy Title")).toBeVisible();
+    await expect(page.getByText("test-taxonomy-e2e-update")).toBeVisible();
 
     // Verify updates via API
     const apiResponse = await apiRequest<any>(
       page,
       `/api/taxonomies/${taxonomy.id}`,
     );
-    expect(apiResponse.title).toBe("Updated Taxonomy Title");
+    expect(apiResponse.title).toBe("test-taxonomy-e2e-update");
     expect(apiResponse.description).toBe("Updated description");
   });
 
@@ -178,23 +170,26 @@ test.describe("Taxonomy CRUD Operations", () => {
     // Verify taxonomy is visible
     await expect(page.getByText("Delete Test Taxonomy")).toBeVisible();
 
-    // Find and click delete button
+    // Find the row and select it via checkbox
     const taxonomyRow = page.getByText("Delete Test Taxonomy");
-    const rowContainer = taxonomyRow.locator("..");
-    const deleteButton = rowContainer.getByRole("button", {
-      name: /delete|remove/i,
+    const rowContainer = taxonomyRow.locator("..").locator("..");
+    const checkbox = rowContainer.locator("input[type='checkbox']").first();
+    await checkbox.click();
+
+    // Click Actions dropdown
+    const actionsDropdown = page.getByRole("button", { name: /actions/i });
+    await actionsDropdown.click();
+
+    // Click Delete Selected
+    const deleteAction = page.getByRole("menuitem", { name: /delete selected/i });
+    await deleteAction.click();
+
+    // Handle confirmation dialog if present
+    const confirmButton = page.getByRole("button", {
+      name: /confirm|delete|yes/i,
     });
-
-    if (await deleteButton.isVisible()) {
-      await deleteButton.click();
-
-      // Handle confirmation dialog if present
-      const confirmButton = page.getByRole("button", {
-        name: /confirm|delete|yes/i,
-      });
-      if (await confirmButton.isVisible({ timeout: 2000 }).catch(() => false)) {
-        await confirmButton.click();
-      }
+    if (await confirmButton.isVisible({ timeout: 2000 }).catch(() => false)) {
+      await confirmButton.click();
     }
 
     // Wait for deletion to complete

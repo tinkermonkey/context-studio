@@ -5,6 +5,7 @@ import {
   clearTestData,
   apiRequest,
 } from "../../fixtures/test-helpers";
+import type { Relationship, OntologyClass } from "@/api/types/ontology";
 
 /**
  * Relationship CRUD E2E Tests
@@ -49,7 +50,7 @@ test.describe("Relationship CRUD Operations", () => {
     expect(relationship.property_id).toBe(propertyId);
 
     // Verify API can retrieve the relationship
-    const apiResponse = await apiRequest<any>(
+    const apiResponse = await apiRequest<Relationship>(
       page,
       `/api/relationships/${relationship.id}`,
     );
@@ -74,7 +75,7 @@ test.describe("Relationship CRUD Operations", () => {
     );
 
     // Fetch relationships list from API
-    const response = await apiRequest<any>(page, "/api/relationships");
+    const response = await apiRequest<Relationship[]>(page, "/api/relationships");
     const relationships = response.items || response;
 
     // Verify both relationships appear in list
@@ -95,7 +96,7 @@ test.describe("Relationship CRUD Operations", () => {
     const relationship = await createRelationship(page, class1Id, class2Id, propertyId);
 
     // Verify GET single relationship returns correct structure
-    const getResponse = await apiRequest<any>(
+    const getResponse = await apiRequest<Relationship>(
       page,
       `/api/relationships/${relationship.id}`,
     );
@@ -106,7 +107,7 @@ test.describe("Relationship CRUD Operations", () => {
     expect(getResponse).toHaveProperty("created_at");
 
     // Verify GET all relationships returns collection
-    const listResponse = await apiRequest<any>(page, "/api/relationships");
+    const listResponse = await apiRequest<Relationship[]>(page, "/api/relationships");
     expect(Array.isArray(listResponse) || Array.isArray(listResponse.items)).toBe(true);
   });
 
@@ -115,7 +116,7 @@ test.describe("Relationship CRUD Operations", () => {
     const relationship = await createRelationship(page, class1Id, class2Id, propertyId);
 
     // Verify relationship exists
-    const beforeDelete = await apiRequest<any>(
+    const beforeDelete = await apiRequest<Relationship>(
       page,
       `/api/relationships/${relationship.id}`,
     );
@@ -128,7 +129,7 @@ test.describe("Relationship CRUD Operations", () => {
 
     // Verify relationship is deleted
     try {
-      await apiRequest<any>(page, `/api/relationships/${relationship.id}`);
+      await apiRequest<Relationship>(page, `/api/relationships/${relationship.id}`);
       throw new Error("Relationship was not deleted from API");
     } catch (error: any) {
       if (!error.message.includes("404")) {
@@ -144,7 +145,7 @@ test.describe("Relationship CRUD Operations", () => {
     const relationship = await createRelationship(page, class1Id, class2Id, propertyId);
 
     // Fetch relationship details
-    const apiResponse = await apiRequest<any>(
+    const apiResponse = await apiRequest<Relationship>(
       page,
       `/api/relationships/${relationship.id}`,
     );
@@ -155,13 +156,13 @@ test.describe("Relationship CRUD Operations", () => {
     expect(apiResponse.property_id).toBe(propertyId);
 
     // Verify relationship is bidirectional when querying classes
-    const class1Response = await apiRequest<any>(
+    const class1Response = await apiRequest<OntologyClass>(
       page,
       `/api/classes/${class1Id}`,
     );
     expect(class1Response.id).toBe(class1Id);
 
-    const class2Response = await apiRequest<any>(
+    const class2Response = await apiRequest<OntologyClass>(
       page,
       `/api/classes/${class2Id}`,
     );
@@ -178,7 +179,7 @@ test.describe("Relationship CRUD Operations", () => {
     );
 
     // Verify self-referential relationship
-    const apiResponse = await apiRequest<any>(
+    const apiResponse = await apiRequest<Relationship>(
       page,
       `/api/relationships/${selfRelationship.id}`,
     );
@@ -198,7 +199,7 @@ test.describe("Relationship CRUD Operations", () => {
     // (This is handled by the backend cascading delete)
 
     // Verify relationship fields cannot be null
-    const apiResponse = await apiRequest<any>(
+    const apiResponse = await apiRequest<Relationship>(
       page,
       `/api/relationships/${relationship.id}`,
     );
@@ -210,13 +211,9 @@ test.describe("Relationship CRUD Operations", () => {
   test("should create multiple relationships between same classes", async ({
     page,
   }) => {
-    // Create hierarchy with multiple property definitions
-    const hierarchy = await createTestHierarchy(page, 2, {
-      propertyTitle: "RelationType",
-    });
-    const prop2 = await createTestHierarchy(page, 0).then(
-      (h) => h.propertyDefinition,
-    );
+    // Create another property for second relationship
+    const hierarchy2 = await createTestHierarchy(page, 0);
+    const prop2 = hierarchy2.propertyDefinition;
 
     // Create two relationships between same classes with different properties
     const rel1 = await createRelationship(
@@ -237,5 +234,36 @@ test.describe("Relationship CRUD Operations", () => {
     expect(rel1.source_class_id).toBe(rel2.source_class_id);
     expect(rel1.target_class_id).toBe(rel2.target_class_id);
     expect(rel1.property_id).not.toBe(rel2.property_id);
+  });
+
+  test("should update a relationship property", async ({ page }) => {
+    // Create a relationship
+    const relationship = await createRelationship(page, class1Id, class2Id, propertyId);
+
+    // Create another property to update to
+    const hierarchy2 = await createTestHierarchy(page, 0);
+    const newProperty = hierarchy2.propertyDefinition;
+
+    // Update the relationship property via API
+    const updateData = {
+      property_id: newProperty.id,
+    };
+    await apiRequest<Relationship>(
+      page,
+      `/api/relationships/${relationship.id}`,
+      {
+        method: "PUT",
+        body: updateData,
+      }
+    );
+
+    // Verify update via API
+    const updatedResponse = await apiRequest<Relationship>(
+      page,
+      `/api/relationships/${relationship.id}`,
+    );
+    expect(updatedResponse.property_id).toBe(newProperty.id);
+    expect(updatedResponse.source_class_id).toBe(class1Id);
+    expect(updatedResponse.target_class_id).toBe(class2Id);
   });
 });

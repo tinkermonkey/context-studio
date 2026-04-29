@@ -16,12 +16,9 @@ test.describe("Navigation and Layout Integrity", () => {
   const primaryPages = [
     { path: "/app/", name: "Dashboard" },
     { path: "/app/taxonomies", name: "Taxonomies" },
-    { path: "/app/schemes", name: "Concept Schemes" },
+    { path: "/app/concept-schemes", name: "Concept Schemes" },
     { path: "/app/classes", name: "Classes" },
     { path: "/app/properties", name: "Properties" },
-    { path: "/app/layers", name: "Layers" },
-    { path: "/app/domains", name: "Domains" },
-    { path: "/app/predicates", name: "Predicates" },
     { path: "/app/datasets", name: "Datasets" },
     { path: "/app/config", name: "Configuration" },
   ];
@@ -100,7 +97,7 @@ test.describe("Navigation and Layout Integrity", () => {
     // Navigate through several pages
     const navigationSequence = [
       "/app/taxonomies",
-      "/app/schemes",
+      "/app/concept-schemes",
       "/app/classes",
       "/app/properties",
       "/app/",
@@ -134,15 +131,15 @@ test.describe("Navigation and Layout Integrity", () => {
     const navbar = page.locator("nav").first();
     await expect(navbar).toBeVisible();
 
-    // Verify sidebar
+    // Verify sidebar (optional on dashboard)
     const sidebar = page.locator("aside, [role='complementary']").first();
     const hasSidebar = await sidebar.isVisible().catch(() => false);
-    expect(hasSidebar || true).toBe(true); // Sidebar may be optional on dashboard
+    // Sidebar is optional, so we don't assert on it
 
-    // Verify main content
+    // Verify main content or body text
     const mainContent = page.locator("main, [role='main']").first();
     const hasMain = await mainContent.isVisible().catch(() => false);
-    expect(hasMain || true).toBe(true); // Main content should exist
+    expect(hasMain).toBeTruthy();
 
     // Verify page has body content
     const bodyText = await page.locator("body").textContent();
@@ -163,15 +160,15 @@ test.describe("Navigation and Layout Integrity", () => {
     const headingVisible = await heading.isVisible().catch(() => false);
     expect(headingVisible).toBe(true);
 
-    // Verify table or content is loaded
+    // Verify table loads (if data exists)
     const table = page.locator("table, [role='table']").first();
     const hasTable = await table.isVisible().catch(() => false);
-    expect(hasTable || true).toBe(true); // Table presence depends on data
+    // Table presence depends on data, so we don't assert
   });
 
   test("should load schemes page with complete layout", async ({ page }) => {
     // Navigate to schemes
-    await page.goto("/app/schemes");
+    await page.goto("/app/concept-schemes");
     await page.waitForLoadState("networkidle");
 
     // Verify navbar
@@ -226,7 +223,7 @@ test.describe("Navigation and Layout Integrity", () => {
       await page.waitForLoadState("networkidle");
 
       // Verify navigation worked
-      expect(page.url()).toContain("/schemes");
+      expect(page.url()).toContain("/concept-schemes");
 
       // Verify navbar is still visible
       const navbar = page.locator("nav").first();
@@ -265,7 +262,7 @@ test.describe("Navigation and Layout Integrity", () => {
   test("should display page titles correctly", async ({ page }) => {
     const pageTitles = [
       { path: "/app/taxonomies", title: /taxonomies/i },
-      { path: "/app/schemes", title: /schemes/i },
+      { path: "/app/concept-schemes", title: /schemes/i },
       { path: "/app/classes", title: /classes/i },
       { path: "/app/properties", title: /properties/i },
     ];
@@ -274,16 +271,17 @@ test.describe("Navigation and Layout Integrity", () => {
       await page.goto(pageInfo.path);
       await page.waitForLoadState("networkidle");
 
-      // Verify page title or heading
+      // Verify page loads correctly
+      const bodyText = await page.locator("body").textContent();
+      expect(bodyText).toBeTruthy();
+
+      // Verify page title or heading matches expected
       const heading = page.getByRole("heading");
       const headingText = await heading.allTextContents();
       const hasMatchingTitle = headingText.some((text) =>
         pageInfo.title.test(text),
       );
-
-      // At minimum, page should load without errors
-      const bodyText = await page.locator("body").textContent();
-      expect(bodyText).toBeTruthy();
+      expect(hasMatchingTitle).toBeTruthy();
     }
   });
 });

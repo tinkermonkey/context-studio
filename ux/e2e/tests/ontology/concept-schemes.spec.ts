@@ -37,7 +37,7 @@ test.describe("Concept Scheme CRUD Operations", () => {
 
   test("should create a concept scheme via UI", async ({ page }) => {
     // Navigate to concept schemes page
-    await page.goto("/app/schemes");
+    await page.goto("/app/concept-schemes");
     await page.waitForLoadState("networkidle");
 
     // Click add button
@@ -50,11 +50,11 @@ test.describe("Concept Scheme CRUD Operations", () => {
     await expect(modal).toBeVisible({ timeout: 5000 });
 
     // Fill form fields
-    const titleInput = page.locator("input[name='title']").first();
-    const descriptionInput = page.locator("textarea[name='description']").first();
+    const titleInput = page.locator('[data-testid="concept-scheme-title-input"]').first();
+    const definitionInput = page.locator('[data-testid="concept-scheme-definition-input"]').first();
 
-    await titleInput.fill("E2E Test Scheme");
-    await descriptionInput.fill("A test scheme created via E2E tests");
+    await titleInput.fill("test-scheme-e2e-create");
+    await definitionInput.fill("A test scheme created via E2E tests");
 
     // Submit form
     const submitButton = modal.getByRole("button", {
@@ -66,7 +66,7 @@ test.describe("Concept Scheme CRUD Operations", () => {
     await expect(modal).not.toBeVisible({ timeout: 5000 });
 
     // Verify scheme appears in table
-    await expect(page.getByText("E2E Test Scheme")).toBeVisible();
+    await expect(page.getByText("test-scheme-e2e-create")).toBeVisible();
   });
 
   test("should create a concept scheme within a taxonomy", async ({ page }) => {
@@ -77,7 +77,7 @@ test.describe("Concept Scheme CRUD Operations", () => {
     });
 
     // Navigate to concept schemes page
-    await page.goto("/app/schemes");
+    await page.goto("/app/concept-schemes");
     await page.waitForLoadState("networkidle");
 
     // Verify scheme appears in list
@@ -101,7 +101,7 @@ test.describe("Concept Scheme CRUD Operations", () => {
     });
 
     // Navigate to concept schemes page
-    await page.goto("/app/schemes");
+    await page.goto("/app/concept-schemes");
     await page.waitForLoadState("networkidle");
 
     // Verify both schemes appear in the list
@@ -124,7 +124,7 @@ test.describe("Concept Scheme CRUD Operations", () => {
     });
 
     // Navigate to concept schemes page
-    await page.goto("/app/schemes");
+    await page.goto("/app/concept-schemes");
     await page.waitForLoadState("networkidle");
 
     // Click on scheme row to view details
@@ -157,31 +157,23 @@ test.describe("Concept Scheme CRUD Operations", () => {
     });
 
     // Navigate to concept schemes page
-    await page.goto("/app/schemes");
+    await page.goto("/app/concept-schemes");
     await page.waitForLoadState("networkidle");
 
-    // Find and click edit button for scheme
+    // Find and double-click row to open edit form
     const schemeRow = page.getByText("Update Test Scheme");
-    const rowContainer = schemeRow.locator("..");
-    const editButton = rowContainer.getByRole("button", { name: /edit|update/i });
-
-    // Click edit button or double-click row
-    if (await editButton.isVisible()) {
-      await editButton.click();
-    } else {
-      await schemeRow.dblclick();
-    }
+    await schemeRow.dblclick();
 
     // Wait for edit form
     const modal = page.getByRole("dialog");
     await expect(modal).toBeVisible({ timeout: 5000 });
 
     // Update fields
-    const titleInput = page.locator("input[name='title']").first();
-    const descriptionInput = page.locator("textarea[name='description']").first();
+    const titleInput = page.locator('[data-testid="concept-scheme-title-input"]').first();
+    const definitionInput = page.locator('[data-testid="concept-scheme-definition-input"]').first();
 
-    await titleInput.fill("Updated Scheme Title");
-    await descriptionInput.fill("Updated scheme description");
+    await titleInput.fill("test-scheme-e2e-update");
+    await definitionInput.fill("Updated scheme definition");
 
     // Submit form
     const submitButton = modal.getByRole("button", { name: /save|update/i });
@@ -191,15 +183,15 @@ test.describe("Concept Scheme CRUD Operations", () => {
     await page.waitForLoadState("networkidle");
 
     // Verify updates in UI
-    await expect(page.getByText("Updated Scheme Title")).toBeVisible();
+    await expect(page.getByText("test-scheme-e2e-update")).toBeVisible();
 
     // Verify updates via API
     const apiResponse = await apiRequest<any>(
       page,
       `/api/schemes/${scheme.id}`,
     );
-    expect(apiResponse.title).toBe("Updated Scheme Title");
-    expect(apiResponse.description).toBe("Updated scheme description");
+    expect(apiResponse.title).toBe("test-scheme-e2e-update");
+    expect(apiResponse.definition).toBe("Updated scheme definition");
   });
 
   test("should delete a concept scheme", async ({ page }) => {
@@ -209,29 +201,32 @@ test.describe("Concept Scheme CRUD Operations", () => {
     });
 
     // Navigate to concept schemes page
-    await page.goto("/app/schemes");
+    await page.goto("/app/concept-schemes");
     await page.waitForLoadState("networkidle");
 
     // Verify scheme is visible
     await expect(page.getByText("Delete Test Scheme")).toBeVisible();
 
-    // Find and click delete button
+    // Find the row and select it via checkbox
     const schemeRow = page.getByText("Delete Test Scheme");
-    const rowContainer = schemeRow.locator("..");
-    const deleteButton = rowContainer.getByRole("button", {
-      name: /delete|remove/i,
+    const rowContainer = schemeRow.locator("..").locator("..");
+    const checkbox = rowContainer.locator("input[type='checkbox']").first();
+    await checkbox.click();
+
+    // Click Actions dropdown
+    const actionsDropdown = page.getByRole("button", { name: /actions/i });
+    await actionsDropdown.click();
+
+    // Click Delete Selected
+    const deleteAction = page.getByRole("menuitem", { name: /delete selected/i });
+    await deleteAction.click();
+
+    // Handle confirmation dialog if present
+    const confirmButton = page.getByRole("button", {
+      name: /confirm|delete|yes/i,
     });
-
-    if (await deleteButton.isVisible()) {
-      await deleteButton.click();
-
-      // Handle confirmation dialog if present
-      const confirmButton = page.getByRole("button", {
-        name: /confirm|delete|yes/i,
-      });
-      if (await confirmButton.isVisible({ timeout: 2000 }).catch(() => false)) {
-        await confirmButton.click();
-      }
+    if (await confirmButton.isVisible({ timeout: 2000 }).catch(() => false)) {
+      await confirmButton.click();
     }
 
     // Wait for deletion to complete
@@ -266,7 +261,7 @@ test.describe("Concept Scheme CRUD Operations", () => {
     });
 
     // Navigate to concept schemes page
-    await page.goto("/app/schemes");
+    await page.goto("/app/concept-schemes");
     await page.waitForLoadState("networkidle");
 
     // Verify all fields visible in list
@@ -276,7 +271,7 @@ test.describe("Concept Scheme CRUD Operations", () => {
     // Verify API response has all fields
     const apiResponse = await apiRequest<any>(page, `/api/schemes/${scheme.id}`);
     expect(apiResponse.title).toBe(testTitle);
-    expect(apiResponse.description).toBe(testDescription);
+    expect(apiResponse.definition).toBe(testDescription);
     expect(apiResponse.id).toBeDefined();
     expect(apiResponse.taxonomy_id).toBe(taxonomyId);
     expect(apiResponse.created_at).toBeDefined();

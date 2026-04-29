@@ -48,10 +48,10 @@ test.describe("Ontology Class CRUD Operations", () => {
     await expect(modal).toBeVisible({ timeout: 5000 });
 
     // Fill form fields
-    const titleInput = page.locator("input[name='title']").first();
-    const definitionInput = page.locator("textarea[name='definition']").first();
+    const titleInput = page.locator('[data-testid="class-title-input"]').first();
+    const definitionInput = page.locator('[data-testid="class-definition-input"]').first();
 
-    await titleInput.fill("E2E Test Class");
+    await titleInput.fill("test-class-e2e-create");
     await definitionInput.fill("A test class created via E2E tests");
 
     // Submit form
@@ -64,7 +64,7 @@ test.describe("Ontology Class CRUD Operations", () => {
     await expect(modal).not.toBeVisible({ timeout: 5000 });
 
     // Verify class appears in table
-    await expect(page.getByText("E2E Test Class")).toBeVisible();
+    await expect(page.getByText("test-class-e2e-create")).toBeVisible();
   });
 
   test("should create a class within a concept scheme", async ({ page }) => {
@@ -156,27 +156,19 @@ test.describe("Ontology Class CRUD Operations", () => {
     await page.goto("/app/classes");
     await page.waitForLoadState("networkidle");
 
-    // Find and click edit button for class
+    // Find and double-click row to open edit form
     const classRow = page.getByText("Update Test Class");
-    const rowContainer = classRow.locator("..");
-    const editButton = rowContainer.getByRole("button", { name: /edit|update/i });
-
-    // Click edit button or double-click row
-    if (await editButton.isVisible()) {
-      await editButton.click();
-    } else {
-      await classRow.dblclick();
-    }
+    await classRow.dblclick();
 
     // Wait for edit form
     const modal = page.getByRole("dialog");
     await expect(modal).toBeVisible({ timeout: 5000 });
 
     // Update fields
-    const titleInput = page.locator("input[name='title']").first();
-    const definitionInput = page.locator("textarea[name='definition']").first();
+    const titleInput = page.locator('[data-testid="class-title-input"]').first();
+    const definitionInput = page.locator('[data-testid="class-definition-input"]').first();
 
-    await titleInput.fill("Updated Class Title");
+    await titleInput.fill("test-class-e2e-update");
     await definitionInput.fill("Updated class definition");
 
     // Submit form
@@ -187,14 +179,14 @@ test.describe("Ontology Class CRUD Operations", () => {
     await page.waitForLoadState("networkidle");
 
     // Verify updates in UI
-    await expect(page.getByText("Updated Class Title")).toBeVisible();
+    await expect(page.getByText("test-class-e2e-update")).toBeVisible();
 
     // Verify updates via API
     const apiResponse = await apiRequest<any>(
       page,
       `/api/classes/${ontologyClass.id}`,
     );
-    expect(apiResponse.title).toBe("Updated Class Title");
+    expect(apiResponse.title).toBe("test-class-e2e-update");
     expect(apiResponse.definition).toBe("Updated class definition");
   });
 
@@ -211,23 +203,26 @@ test.describe("Ontology Class CRUD Operations", () => {
     // Verify class is visible
     await expect(page.getByText("Delete Test Class")).toBeVisible();
 
-    // Find and click delete button
+    // Find the row and select it via checkbox
     const classRow = page.getByText("Delete Test Class");
-    const rowContainer = classRow.locator("..");
-    const deleteButton = rowContainer.getByRole("button", {
-      name: /delete|remove/i,
+    const rowContainer = classRow.locator("..").locator("..");
+    const checkbox = rowContainer.locator("input[type='checkbox']").first();
+    await checkbox.click();
+
+    // Click Actions dropdown
+    const actionsDropdown = page.getByRole("button", { name: /actions/i });
+    await actionsDropdown.click();
+
+    // Click Delete Selected
+    const deleteAction = page.getByRole("menuitem", { name: /delete selected/i });
+    await deleteAction.click();
+
+    // Handle confirmation dialog if present
+    const confirmButton = page.getByRole("button", {
+      name: /confirm|delete|yes/i,
     });
-
-    if (await deleteButton.isVisible()) {
-      await deleteButton.click();
-
-      // Handle confirmation dialog if present
-      const confirmButton = page.getByRole("button", {
-        name: /confirm|delete|yes/i,
-      });
-      if (await confirmButton.isVisible({ timeout: 2000 }).catch(() => false)) {
-        await confirmButton.click();
-      }
+    if (await confirmButton.isVisible({ timeout: 2000 }).catch(() => false)) {
+      await confirmButton.click();
     }
 
     // Wait for deletion to complete

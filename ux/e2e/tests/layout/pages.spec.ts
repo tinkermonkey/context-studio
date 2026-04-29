@@ -48,7 +48,7 @@ test.describe("Pages and Interactive Elements", () => {
     const hierarchy = await createTestHierarchy(page, 1);
 
     // Navigate to schemes page
-    await page.goto("/app/schemes");
+    await page.goto("/app/concept-schemes");
     await page.waitForLoadState("networkidle");
 
     // Verify table is visible

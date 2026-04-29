@@ -39,10 +39,10 @@ test.describe("Property Definition CRUD Operations", () => {
     await expect(modal).toBeVisible({ timeout: 5000 });
 
     // Fill form fields
-    const titleInput = page.locator("input[name='title']").first();
-    const descriptionInput = page.locator("textarea[name='description']").first();
+    const titleInput = page.locator('[data-testid="property-definition-title-input"]').first();
+    const descriptionInput = page.locator('[data-testid="property-definition-description-input"]').first();
 
-    await titleInput.fill("E2E Test Property");
+    await titleInput.fill("test-property-e2e-create");
     await descriptionInput.fill("A test property created via E2E tests");
 
     // Submit form
@@ -55,7 +55,7 @@ test.describe("Property Definition CRUD Operations", () => {
     await expect(modal).not.toBeVisible({ timeout: 5000 });
 
     // Verify property appears in table
-    await expect(page.getByText("E2E Test Property")).toBeVisible();
+    await expect(page.getByText("test-property-e2e-create")).toBeVisible();
   });
 
   test("should create a property definition via API", async ({ page }) => {
@@ -154,29 +154,19 @@ test.describe("Property Definition CRUD Operations", () => {
     await page.goto("/app/properties");
     await page.waitForLoadState("networkidle");
 
-    // Find and click edit button for property
+    // Find and double-click row to open edit form
     const propertyRow = page.getByText("Update Test Property");
-    const rowContainer = propertyRow.locator("..");
-    const editButton = rowContainer.getByRole("button", {
-      name: /edit|update/i,
-    });
-
-    // Click edit button or double-click row
-    if (await editButton.isVisible()) {
-      await editButton.click();
-    } else {
-      await propertyRow.dblclick();
-    }
+    await propertyRow.dblclick();
 
     // Wait for edit form
     const modal = page.getByRole("dialog");
     await expect(modal).toBeVisible({ timeout: 5000 });
 
     // Update fields
-    const titleInput = page.locator("input[name='title']").first();
-    const descriptionInput = page.locator("textarea[name='description']").first();
+    const titleInput = page.locator('[data-testid="property-definition-title-input"]').first();
+    const descriptionInput = page.locator('[data-testid="property-definition-description-input"]').first();
 
-    await titleInput.fill("Updated Property Title");
+    await titleInput.fill("test-property-e2e-update");
     await descriptionInput.fill("Updated property description");
 
     // Submit form
@@ -187,14 +177,14 @@ test.describe("Property Definition CRUD Operations", () => {
     await page.waitForLoadState("networkidle");
 
     // Verify updates in UI
-    await expect(page.getByText("Updated Property Title")).toBeVisible();
+    await expect(page.getByText("test-property-e2e-update")).toBeVisible();
 
     // Verify updates via API
     const apiResponse = await apiRequest<any>(
       page,
       `/api/properties/${property.id}`,
     );
-    expect(apiResponse.title).toBe("Updated Property Title");
+    expect(apiResponse.title).toBe("test-property-e2e-update");
     expect(apiResponse.description).toBe("Updated property description");
   });
 
@@ -211,23 +201,26 @@ test.describe("Property Definition CRUD Operations", () => {
     // Verify property is visible
     await expect(page.getByText("Delete Test Property")).toBeVisible();
 
-    // Find and click delete button
+    // Find the row and select it via checkbox
     const propertyRow = page.getByText("Delete Test Property");
-    const rowContainer = propertyRow.locator("..");
-    const deleteButton = rowContainer.getByRole("button", {
-      name: /delete|remove/i,
+    const rowContainer = propertyRow.locator("..").locator("..");
+    const checkbox = rowContainer.locator("input[type='checkbox']").first();
+    await checkbox.click();
+
+    // Click Actions dropdown
+    const actionsDropdown = page.getByRole("button", { name: /actions/i });
+    await actionsDropdown.click();
+
+    // Click Delete Selected
+    const deleteAction = page.getByRole("menuitem", { name: /delete selected/i });
+    await deleteAction.click();
+
+    // Handle confirmation dialog if present
+    const confirmButton = page.getByRole("button", {
+      name: /confirm|delete|yes/i,
     });
-
-    if (await deleteButton.isVisible()) {
-      await deleteButton.click();
-
-      // Handle confirmation dialog if present
-      const confirmButton = page.getByRole("button", {
-        name: /confirm|delete|yes/i,
-      });
-      if (await confirmButton.isVisible({ timeout: 2000 }).catch(() => false)) {
-        await confirmButton.click();
-      }
+    if (await confirmButton.isVisible({ timeout: 2000 }).catch(() => false)) {
+      await confirmButton.click();
     }
 
     // Wait for deletion to complete
