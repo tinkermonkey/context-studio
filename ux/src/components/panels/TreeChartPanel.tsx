@@ -184,9 +184,14 @@ export function TreeChartPanel({
       let allLayers = layers;
 
       if (termId && targetTerm) {
-        // Add targetTerm if not present
+        // Add targetTerm if not present - transform to include required properties
         if (!terms.some((t) => t.id === termId)) {
-          allTerms = [...terms, targetTerm];
+          const transformedTerm = {
+            ...targetTerm,
+            node_type: "term",
+            parent_node_id: targetTerm.parent_class_id || targetTerm.scheme_id,
+          };
+          allTerms = [...terms, transformedTerm];
         }
 
         // Process ancestors from hierarchy to ensure they're in the tree
@@ -208,17 +213,12 @@ export function TreeChartPanel({
               allTerms = [
                 ...allTerms,
                 {
+                  ...targetTerm,
                   id: ancestorTerm.id,
                   title: ancestorTerm.title,
                   definition: ancestorTerm.definition || "",
                   node_type: NodeType.TERM,
-                  parent_node_id: ancestorTerm.parent_node_id,
-                  structural_predicate_id: undefined,
-                  title_embedding: undefined,
-                  definition_embedding: undefined,
-                  created_at: "",
-                  version: 1,
-                  last_modified: "",
+                  parent_node_id: ancestorTerm.parent_node_id || targetTerm.scheme_id,
                 },
               ];
             }
@@ -231,17 +231,12 @@ export function TreeChartPanel({
               allDomains = [
                 ...allDomains,
                 {
+                  ...domains[0],
                   id: ancestorDomain.id,
                   title: ancestorDomain.title,
                   definition: ancestorDomain.definition || "",
                   node_type: NodeType.DOMAIN,
-                  parent_node_id: ancestorDomain.parent_node_id,
-                  structural_predicate_id: undefined,
-                  title_embedding: undefined,
-                  definition_embedding: undefined,
-                  created_at: "",
-                  version: 1,
-                  last_modified: "",
+                  parent_node_id: ancestorDomain.parent_node_id || "",
                 },
               ];
             }
@@ -254,17 +249,12 @@ export function TreeChartPanel({
               allLayers = [
                 ...allLayers,
                 {
+                  ...layers[0],
                   id: ancestorLayer.id,
                   title: ancestorLayer.title,
                   definition: ancestorLayer.definition || "",
                   node_type: NodeType.LAYER,
-                  parent_node_id: ancestorLayer.parent_node_id,
-                  structural_predicate_id: undefined,
-                  title_embedding: undefined,
-                  definition_embedding: undefined,
-                  created_at: "",
-                  version: 1,
-                  last_modified: "",
+                  parent_node_id: null,
                 },
               ];
             }

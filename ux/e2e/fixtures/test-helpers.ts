@@ -1,5 +1,4 @@
 import { Page } from "@playwright/test";
-import { apiRequest } from "./api-client";
 
 /**
  * Test helper utilities for E2E tests.

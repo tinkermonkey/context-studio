@@ -9,7 +9,6 @@ import { TreeChartPanel } from "@/components/panels/TreeChartPanel";
 import { vi } from "vitest";
 import {
   useTaxonomies,
-  useUpdateTaxonomy,
 } from "@/api/hooks/taxonomies/useTaxonomies";
 import { useConceptSchemes } from "@/api/hooks/conceptSchemes/useConceptSchemes";
 import { useOntologyClasses, useOntologyClass } from "@/api/hooks/ontologyClasses/useOntologyClasses";
