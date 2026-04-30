@@ -94,7 +94,9 @@ export function useEmbeddingRegeneration() {
 
   const stopRegeneration = async () => {
     try {
-      const response = await fetch("/api/embeddings/stop", { method: "POST" });
+      const response = await fetch(`${API_CONFIG.baseURL}/api/embeddings/stop`, {
+        method: "POST",
+      });
       const result = await response.json();
       return result.stopped;
     } catch {

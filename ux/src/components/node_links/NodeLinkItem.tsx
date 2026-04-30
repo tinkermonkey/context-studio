@@ -18,6 +18,7 @@ import { useNavigate } from "@tanstack/react-router";
 
 import { OntologyClassLink, NodeType } from "@/api/types/ontology";
 import { useOntologyClass } from "@/api/hooks/ontologyClasses";
+import { usePropertyDefinition } from "@/api/hooks/propertyDefinitions";
 import { getNodePath } from "@/utils/nodeNavigation";
 
 interface NodeLinkItemProps {
@@ -42,6 +43,11 @@ export const NodeLinkItem: React.FC<NodeLinkItemProps> = ({
 
   // Fetch the node to display
   const { data: displayNode, isLoading } = useOntologyClass(displayNodeId);
+
+  // Fetch the property definition to display its title
+  const { data: propertyDefinition } = usePropertyDefinition(
+    link.property_definition_id,
+  );
 
   const handleDelete = () => {
     onDelete(link.id);
@@ -139,8 +145,7 @@ export const NodeLinkItem: React.FC<NodeLinkItemProps> = ({
                 </span>
               </div>
               <div className="text-sm text-gray-600">
-                via:{" "}
-                <code className="font-mono">{link.property_definition_id}</code>
+                via: <span className="font-medium">{propertyDefinition?.title || link.property_definition_id}</span>
               </div>
             </div>
 
