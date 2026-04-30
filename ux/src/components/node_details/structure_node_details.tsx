@@ -543,14 +543,14 @@ const EditModal: React.FC<{
 }> = ({ node, isOpen, onClose }) => {
   const queryClient = useQueryClient();
 
-  const handleSuccess = () => {
+  const handleSuccess = async () => {
     onClose();
 
     try {
-      queryClient.invalidateQueries({
+      await queryClient.invalidateQueries({
         queryKey: [QUERY_KEYS.ONTOLOGY_CLASSES, node.id],
       });
-      queryClient.invalidateQueries({
+      await queryClient.invalidateQueries({
         queryKey: [QUERY_KEYS.ONTOLOGY_CLASSES],
       });
     } catch (e) {
@@ -601,14 +601,14 @@ const AddChildModal: React.FC<{
 }> = ({ node, isOpen, onClose }) => {
   const queryClient = useQueryClient();
 
-  const handleSuccess = () => {
+  const handleSuccess = async () => {
     onClose();
 
     try {
-      queryClient.invalidateQueries({
+      await queryClient.invalidateQueries({
         queryKey: [QUERY_KEYS.ONTOLOGY_CLASSES, node.id],
       });
-      queryClient.invalidateQueries({
+      await queryClient.invalidateQueries({
         queryKey: [QUERY_KEYS.ONTOLOGY_CLASSES],
       });
     } catch (e) {
