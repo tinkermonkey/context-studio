@@ -65,6 +65,9 @@ export async function waitForAnyCondition(
   timeout: number = 10000,
 ): Promise<number> {
   const startTime = Date.now();
+  const conditionErrors: (Error | null)[] = new Array(conditions.length).fill(
+    null,
+  );
 
   while (Date.now() - startTime < timeout) {
     for (let i = 0; i < conditions.length; i++) {
@@ -73,15 +76,26 @@ export async function waitForAnyCondition(
         if (result) {
           return i; // Return which condition succeeded
         }
-      } catch {
-        // Condition not met yet, continue
+        // Condition returned false, clear any previous error
+        conditionErrors[i] = null;
+      } catch (error) {
+        // Store error for better diagnostics, but continue trying
+        conditionErrors[i] =
+          error instanceof Error
+            ? error
+            : new Error(String(error));
       }
     }
     await page.waitForTimeout(100);
   }
 
+  // Build error message with details from each condition
+  const errorDetails = conditionErrors
+    .map((err, i) => `Condition ${i}: ${err ? err.message : "returned false"}`)
+    .join("\n  ");
+
   throw new Error(
-    `None of the ${conditions.length} conditions were met within ${timeout}ms`,
+    `None of the ${conditions.length} conditions were met within ${timeout}ms:\n  ${errorDetails}`,
   );
 }
 

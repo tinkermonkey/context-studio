@@ -25,14 +25,28 @@ async function waitForUrl(url: string, timeout: number = 30000): Promise<void> {
         console.log(`✓ ${url} is ready`);
         return;
       }
-    } catch {
-      // Server not ready yet, continue waiting
-      const elapsed = Date.now() - startTime;
-      if (elapsed % 5000 < interval) {
-        // Log every 5 seconds
-        console.log(
-          `  Still waiting for ${url}... (${Math.round(elapsed / 1000)}s)`,
+
+      // Server returned an error status code (not a connection error)
+      if (response.status >= 400) {
+        throw new Error(
+          `Server returned ${response.status} ${response.statusText}. ` +
+            `Check the server logs for details.`,
         );
+      }
+    } catch (error) {
+      // Check if this is a network error (server not ready) or an actual error
+      if (error instanceof Error && !error.message.includes("Server returned")) {
+        // Network error: server not ready yet, continue waiting
+        const elapsed = Date.now() - startTime;
+        if (elapsed % 5000 < interval) {
+          // Log every 5 seconds
+          console.log(
+            `  Still waiting for ${url}... (${Math.round(elapsed / 1000)}s)`,
+          );
+        }
+      } else {
+        // Server error or other fatal issue: fail immediately
+        throw error;
       }
     }
     await new Promise((resolve) => setTimeout(resolve, interval));
@@ -151,7 +165,13 @@ async function globalSetup(): Promise<void> {
     stdio: ["ignore", "pipe", "pipe"],
   });
 
-  console.log(`🔍 Backend spawned with CONFIG_PATH: ${e2eConfigPath}`);
+  if (!backendProcess.pid) {
+    throw new Error(
+      "Backend process failed to spawn: no PID assigned. Check that Python is available and the virtual environment is properly set up.",
+    );
+  }
+
+  console.log(`🔍 Backend spawned (PID: ${backendProcess.pid}) with CONFIG_PATH: ${e2eConfigPath}`);
 
   // Log backend output
   // Set SHOW_BACKEND_LOGS=true environment variable to see all backend output
@@ -223,6 +243,15 @@ async function globalSetup(): Promise<void> {
     },
   );
 
+  if (!frontendProcess.pid) {
+    if (backendProcess) {
+      backendProcess.kill("SIGTERM");
+    }
+    throw new Error(
+      "Frontend process failed to spawn: no PID assigned. Check that npm is available and properly configured.",
+    );
+  }
+
   // Log frontend output (Vite outputs to stderr)
   frontendProcess.stdout?.on("data", (data) => {
     const message = data.toString().trim();
@@ -260,13 +289,9 @@ async function globalSetup(): Promise<void> {
     throw error;
   }
 
-  // 7. Store process PIDs for teardown
-  if (backendProcess.pid) {
-    process.env.E2E_BACKEND_PID = backendProcess.pid.toString();
-  }
-  if (frontendProcess.pid) {
-    process.env.E2E_FRONTEND_PID = frontendProcess.pid.toString();
-  }
+  // 7. Store process PIDs for teardown (verified to exist above)
+  process.env.E2E_BACKEND_PID = backendProcess.pid!.toString();
+  process.env.E2E_FRONTEND_PID = frontendProcess.pid!.toString();
 
   console.log("🎉 E2E environment ready!\n");
   console.log("   Frontend: http://localhost:3888");
