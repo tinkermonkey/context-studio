@@ -137,15 +137,15 @@ const columns = [
         <div className="space-y-1">
           <div className="flex items-center space-x-1 text-xs text-gray-600 dark:text-gray-400">
             <Layers className="h-3 w-3" />
-            <span>{metrics.taxonomies_count} taxonomies</span>
+            <span>{metrics.layers_count} layers</span>
           </div>
           <div className="flex items-center space-x-1 text-xs text-gray-600 dark:text-gray-400">
             <Database className="h-3 w-3" />
-            <span>{metrics.concept_schemes_count} concept schemes</span>
+            <span>{metrics.domains_count} domains</span>
           </div>
           <div className="flex items-center space-x-1 text-xs text-gray-600 dark:text-gray-400">
             <Hash className="h-3 w-3" />
-            <span>{metrics.classes_count} classes</span>
+            <span>{metrics.terms_count} terms</span>
           </div>
         </div>
       );

@@ -276,7 +276,7 @@ test.describe("Relationship CRUD Operations", () => {
 
     // Update the relationship property via API
     const updateData = {
-      relationship_type: "updated",
+      property_definition_id: newProperty.id,
     };
     await apiRequest<Relationship>(
       page,
@@ -292,7 +292,7 @@ test.describe("Relationship CRUD Operations", () => {
       page,
       `/api/relationships/${relationship.id}`,
     );
-    expect(updatedResponse.property_definition_id).toBe(propertyId);
+    expect(updatedResponse.property_definition_id).toBe(newProperty.id);
     expect(updatedResponse.source_id).toBe(class1Id);
     expect(updatedResponse.target_id).toBe(class2Id);
   });

@@ -111,6 +111,7 @@ export function TreeChartPanel({
     ...oc,
     node_type: "term",
     parent_node_id: oc.parent_class_id || oc.concept_scheme_id,
+    definition: oc.description || "",
   }));
 
   // Load specific term if termId is provided
@@ -189,6 +190,7 @@ export function TreeChartPanel({
             ...targetTerm,
             node_type: "term",
             parent_node_id: targetTerm.parent_class_id || targetTerm.concept_scheme_id,
+            definition: targetTerm.description || "",
           };
           allTerms = [...terms, transformedTerm];
         }
@@ -215,7 +217,7 @@ export function TreeChartPanel({
                   ...targetTerm,
                   id: ancestorTerm.id,
                   title: ancestorTerm.title,
-                  description: ancestorTerm.definition || "",
+                  definition: ancestorTerm.definition || "",
                   node_type: "class",
                   parent_node_id:
                     ancestorTerm.parent_node_id || targetTerm.concept_scheme_id,
@@ -234,7 +236,7 @@ export function TreeChartPanel({
                   ...domains[0],
                   id: ancestorDomain.id,
                   title: ancestorDomain.title,
-                  description: ancestorDomain.definition || "",
+                  definition: ancestorDomain.definition || "",
                   node_type: "scheme",
                   parent_node_id: ancestorDomain.parent_node_id || "",
                 },
@@ -252,7 +254,7 @@ export function TreeChartPanel({
                   ...layers[0],
                   id: ancestorLayer.id,
                   title: ancestorLayer.title,
-                  description: ancestorLayer.definition || "",
+                  definition: ancestorLayer.definition || "",
                   node_type: "taxonomy",
                   parent_node_id: null,
                 },

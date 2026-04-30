@@ -136,25 +136,25 @@ export const CurrentDatasetCard: React.FC<CurrentDatasetCardProps> = ({
       <div className="mt-6 grid grid-cols-2 gap-4">
         <div className="rounded-lg bg-gray-50 p-3 text-center dark:bg-gray-700">
           <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
-            {activeDataset.metrics.taxonomies_count}
+            {activeDataset.metrics.layers_count}
           </div>
           <div className="text-sm text-gray-600 dark:text-gray-400">
-            Taxonomies
+            Layers
           </div>
         </div>
         <div className="rounded-lg bg-gray-50 p-3 text-center dark:bg-gray-700">
           <div className="text-2xl font-bold text-green-600 dark:text-green-400">
-            {activeDataset.metrics.concept_schemes_count}
+            {activeDataset.metrics.domains_count}
           </div>
           <div className="text-sm text-gray-600 dark:text-gray-400">
-            Concept Schemes
+            Domains
           </div>
         </div>
         <div className="rounded-lg bg-gray-50 p-3 text-center dark:bg-gray-700">
           <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">
-            {activeDataset.metrics.classes_count}
+            {activeDataset.metrics.terms_count}
           </div>
-          <div className="text-sm text-gray-600 dark:text-gray-400">Classes</div>
+          <div className="text-sm text-gray-600 dark:text-gray-400">Terms</div>
         </div>
         <div className="rounded-lg bg-gray-50 p-3 text-center dark:bg-gray-700">
           <div className="text-2xl font-bold text-orange-600 dark:text-orange-400">

@@ -28,11 +28,11 @@ import { toast } from "@/utils/toast";
 
 interface ReferenceNodeDisplayProps {
   nodeId: string;
-  referenceLinks: ReferenceLink[] | any[];
+  referenceLinks: ReferenceLink[];
 }
 
 interface GroupedLinks {
-  [source: string]: (ReferenceLink | any)[];
+  [source: string]: ReferenceLink[];
 }
 
 export const ReferenceNodeDisplay: React.FC<ReferenceNodeDisplayProps> = ({
@@ -192,13 +192,13 @@ export const ReferenceNodeDisplay: React.FC<ReferenceNodeDisplayProps> = ({
               <div className="rounded-lg border bg-gray-50 p-3">
                 <div className="mb-2 flex items-center gap-2">
                   <Badge
-                    color={getSourceBadgeColor((confirmRemove as any).source || "")}
+                    color={getSourceBadgeColor(confirmRemove.source || "")}
                   >
-                    {getSourceLabel((confirmRemove as any).source || "")}
+                    {getSourceLabel(confirmRemove.source || "")}
                   </Badge>
                 </div>
                 <code className="font-mono text-sm text-gray-700">
-                  {(confirmRemove as any).external_id}
+                  {confirmRemove.external_id}
                 </code>
               </div>
             )}

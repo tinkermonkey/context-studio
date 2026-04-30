@@ -22,9 +22,9 @@ export interface DatasetResponse {
   schema_version?: string;
   is_active?: boolean;
   metrics: {
-    taxonomies_count?: number;
-    concept_schemes_count?: number;
-    classes_count?: number;
+    layers_count?: number;
+    domains_count?: number;
+    terms_count?: number;
     relationships_count?: number;
     property_definitions_count?: number;
   };

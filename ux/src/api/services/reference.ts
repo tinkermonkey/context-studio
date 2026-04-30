@@ -28,10 +28,12 @@ export interface ReferenceNode {
 
 export interface ReferenceLink {
   id: string;
-  subject_node: string;
-  predicate: string;
-  object_node: string;
-  created_at: string;
+  subject_node?: string;
+  predicate?: string;
+  object_node?: string;
+  created_at?: string;
+  source?: string;
+  external_id?: string;
 }
 
 export interface NodeLinksParams {

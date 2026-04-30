@@ -15,10 +15,6 @@ export enum RecordType {
   ONTOLOGY_CLASS = "ontology_class",
   RELATIONSHIP = "relationship",
   PROPERTY_DEFINITION = "property_definition",
-  // Legacy types for compatibility with existing change events
-  STRUCTURE_NODE = "ontologyClass",
-  STRUCTURE_NODE_LINK = "ontologyClass_link",
-  PREDICATE = "predicate",
 }
 
 /**
