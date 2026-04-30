@@ -110,13 +110,15 @@ export const handlers = [
     );
   }),
 
-  rest.post("/api/schemes", async (req, res, ctx) => {
+  rest.post("/api/taxonomies/:taxonomy_id/schemes", async (req, res, ctx) => {
+    const { taxonomy_id } = req.params as { taxonomy_id: string };
     const body = await req.json();
     return res(
       ctx.status(201),
       ctx.json({
         ...body,
         id: "new-scheme",
+        taxonomy_id,
         version: 1,
       }),
     );
@@ -182,13 +184,15 @@ export const handlers = [
     );
   }),
 
-  rest.post("/api/classes", async (req, res, ctx) => {
+  rest.post("/api/schemes/:scheme_id/classes", async (req, res, ctx) => {
+    const { scheme_id } = req.params as { scheme_id: string };
     const body = await req.json();
     return res(
       ctx.status(201),
       ctx.json({
         ...body,
         id: "new-class",
+        concept_scheme_id: scheme_id,
         version: 1,
       }),
     );
