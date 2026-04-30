@@ -56,7 +56,7 @@ const columns = [
     cell: (info) => info.getValue() ?? "",
     header: () => "Title",
   }),
-  columnHelper.accessor("definition", {
+  columnHelper.accessor("description", {
     cell: (info) => {
       const value = info.getValue();
       if (!value) return <span className="text-gray-400">No definition</span>;

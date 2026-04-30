@@ -9,7 +9,7 @@ import { vi, describe, it, expect, beforeEach, afterEach } from "vitest";
 
 import { ReferenceNodeDisplay } from "../ReferenceNodeDisplay";
 import { useRemoveReferenceLink } from "@/api/hooks/ontologyClasses/useReferenceLinks";
-import { ReferenceLink } from "@/api/types/ontology";
+import { ReferenceLink } from "@/api/services/reference";
 
 // Mock the hooks
 vi.mock("@/api/hooks/ontologyClasses/useReferenceLinks");

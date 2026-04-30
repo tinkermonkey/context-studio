@@ -97,22 +97,22 @@ export async function createClass(
   schemeId: string,
   overrides?: {
     title?: string;
-    definition?: string;
+    description?: string;
     parent_class_id?: string;
   },
 ): Promise<OntologyClass> {
   const timestamp = getRunTimestamp();
   const title = overrides?.title || `test-class-${timestamp}`;
-  const definition =
-    overrides?.definition || `Test class definition created at ${timestamp}`;
+  const description =
+    overrides?.description || `Test class definition created at ${timestamp}`;
 
   const body: {
     title: string;
-    definition: string;
+    description: string;
     parent_class_id?: string;
   } = {
     title,
-    definition,
+    description,
   };
 
   if (overrides?.parent_class_id) {

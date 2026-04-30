@@ -51,12 +51,12 @@ test.describe("Ontology Class CRUD Operations", () => {
     const titleInput = page
       .locator('[data-testid="class-title-input"]')
       .first();
-    const definitionInput = page
-      .locator('[data-testid="class-definition-input"]')
+    const descriptionInput = page
+      .locator('[data-testid="class-description-input"]')
       .first();
 
     await titleInput.fill("test-class-e2e-create");
-    await definitionInput.fill("A test class created via E2E tests");
+    await descriptionInput.fill("A test class created via E2E tests");
 
     // Submit form
     const submitButton = modal.getByRole("button", {
@@ -75,7 +75,7 @@ test.describe("Ontology Class CRUD Operations", () => {
     // Create class within specific scheme
     const ontologyClass = await createClass(page, schemeId, {
       title: "Scheme Specific Class",
-      definition: "Class created under specific scheme",
+      description: "Class created under specific scheme",
     });
 
     // Navigate to classes page
@@ -90,7 +90,7 @@ test.describe("Ontology Class CRUD Operations", () => {
       page,
       `/api/classes/${ontologyClass.id}`,
     );
-    expect(apiResponse.scheme_id).toBe(schemeId);
+    expect(apiResponse.concept_scheme_id).toBe(schemeId);
   });
 
   test("should list all classes", async ({ page }) => {
@@ -124,7 +124,7 @@ test.describe("Ontology Class CRUD Operations", () => {
     // Create test class
     const ontologyClass = await createClass(page, schemeId, {
       title: "Detail Test Class",
-      definition: "Test definition for class details",
+      description: "Test definition for class details",
     });
 
     // Navigate to classes page
@@ -150,14 +150,14 @@ test.describe("Ontology Class CRUD Operations", () => {
       `/api/classes/${ontologyClass.id}`,
     );
     expect(apiResponse.title).toBe(ontologyClass.title);
-    expect(apiResponse.definition).toBe(ontologyClass.definition);
+    expect(apiResponse.description).toBe(ontologyClass.description);
   });
 
   test("should update a class", async ({ page }) => {
     // Create test class
     const ontologyClass = await createClass(page, schemeId, {
       title: "Update Test Class",
-      definition: "Original definition",
+      description: "Original definition",
     });
 
     // Navigate to classes page
@@ -263,11 +263,11 @@ test.describe("Ontology Class CRUD Operations", () => {
   }) => {
     // Create class with all fields populated
     const testTitle = `Field Test ${Date.now()}`;
-    const testDefinition = "Testing all field persistence";
+    const testDescription = "Testing all field persistence";
 
     const ontologyClass = await createClass(page, schemeId, {
       title: testTitle,
-      definition: testDefinition,
+      description: testDescription,
     });
 
     // Navigate to classes page
@@ -276,7 +276,7 @@ test.describe("Ontology Class CRUD Operations", () => {
 
     // Verify all fields visible in list
     await expect(page.getByText(testTitle)).toBeVisible();
-    await expect(page.getByText(testDefinition)).toBeVisible();
+    await expect(page.getByText(testDescription)).toBeVisible();
 
     // Verify API response has all fields
     const apiResponse = await apiRequest<any>(

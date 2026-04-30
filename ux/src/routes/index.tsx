@@ -318,18 +318,18 @@ function HomeComponent() {
                     <div className="min-w-0 flex-1">
                       <div className="mb-1 flex items-center gap-2">
                         <Badge color="info" size="sm">
-                          {formatEventType(event.event_type)}
+                          {formatEventType(event.operation)}
                         </Badge>
                         <Badge color="gray" size="sm">
-                          {event.record_type}
+                          {event.entity_type}
                         </Badge>
                       </div>
                       <p className="truncate text-sm text-gray-600 dark:text-gray-400">
-                        Record ID: {event.record_id}
+                        Record ID: {event.entity_id}
                       </p>
                       <p className="mt-1 text-xs text-gray-500 dark:text-gray-500">
-                        {event.created_at
-                          ? formatDate(event.created_at)
+                        {event.timestamp
+                          ? formatDate(event.timestamp)
                           : "Unknown"}
                       </p>
                     </div>

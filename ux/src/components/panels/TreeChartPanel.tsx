@@ -110,7 +110,7 @@ export function TreeChartPanel({
   const terms = ontologyClasses?.map((oc) => ({
     ...oc,
     node_type: "term",
-    parent_node_id: oc.parent_class_id || oc.scheme_id,
+    parent_node_id: oc.parent_class_id || oc.concept_scheme_id,
   }));
 
   // Load specific term if termId is provided
@@ -188,7 +188,7 @@ export function TreeChartPanel({
           const transformedTerm = {
             ...targetTerm,
             node_type: "term",
-            parent_node_id: targetTerm.parent_class_id || targetTerm.scheme_id,
+            parent_node_id: targetTerm.parent_class_id || targetTerm.concept_scheme_id,
           };
           allTerms = [...terms, transformedTerm];
         }
@@ -218,7 +218,7 @@ export function TreeChartPanel({
                   definition: ancestorTerm.definition || "",
                   node_type: "class",
                   parent_node_id:
-                    ancestorTerm.parent_node_id || targetTerm.scheme_id,
+                    ancestorTerm.parent_node_id || targetTerm.concept_scheme_id,
                 },
               ];
             }

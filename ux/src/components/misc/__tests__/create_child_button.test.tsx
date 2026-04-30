@@ -7,6 +7,7 @@ import {
   screen,
 } from "@/test/utils/renderWithProviders";
 import { CreateChildButton } from "../create_child_button";
+import { NodeType } from "@/api/types/ontology";
 
 // Mock the form components
 vi.mock("@/components/forms/domain_form", () => ({
@@ -36,8 +37,7 @@ describe("CreateChildButton", () => {
     id: "layer-1",
     title: "Test Layer",
     description: "Test description",
-    definition: "Test definition",
-    node_type: "taxonomy",
+    node_type: NodeType.TAXONOMY,
     concept_scheme_id: "layer-1",
     taxonomy_id: "layer-1",
     created_at: "2023-01-01T00:00:00Z",
@@ -49,10 +49,9 @@ describe("CreateChildButton", () => {
     id: "domain-1",
     title: "Test Domain",
     description: "Test description",
-    definition: "Test definition",
     parent_node_id: "layer-1",
     parent_class_id: "layer-1",
-    node_type: "concept_scheme",
+    node_type: NodeType.CONCEPT_SCHEME,
     concept_scheme_id: "domain-1",
     taxonomy_id: "layer-1",
     created_at: "2023-01-01T00:00:00Z",

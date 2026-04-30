@@ -309,7 +309,7 @@ export const OntologyClassDetails: React.FC<OntologyClassDetailsProps> = ({
               parentDomain
                 ? {
                     title: parentDomain.title as string,
-                    definition: (parentDomain.description || "") as string,
+                    definition: ((parentDomain as OntologyClass)?.description || "") as string,
                   }
                 : null
             }
@@ -317,7 +317,7 @@ export const OntologyClassDetails: React.FC<OntologyClassDetailsProps> = ({
               parentTerm
                 ? {
                     title: parentTerm.title as string,
-                    definition: (parentTerm.description || "") as string,
+                    definition: ((parentTerm as OntologyClass)?.description || "") as string,
                     relationshipPredicate: "child_of",
                   }
                 : null
@@ -429,14 +429,14 @@ const EditableDefinition: React.FC<{ node: OntologyClass }> = ({ node }) => {
   // Select the appropriate mutation based on node type
   const getUpdateMutation = () => {
     switch (node.node_type) {
-      case "taxonomy":
-      case "layer":
+      case NodeType.TAXONOMY:
+      case NodeType.LAYER:
         return taxonomyMutation;
-      case "scheme":
-      case "domain":
+      case NodeType.CONCEPT_SCHEME:
+      case NodeType.DOMAIN:
         return conceptSchemeMutation;
-      case "class":
-      case "term":
+      case NodeType.CLASS:
+      case NodeType.TERM:
         return ontologyClassMutation;
       default:
         return taxonomyMutation;
@@ -591,14 +591,14 @@ const EditModal: React.FC<{
 
   const getModalTitle = () => {
     switch (node.node_type) {
-      case "taxonomy":
-      case "layer":
+      case NodeType.TAXONOMY:
+      case NodeType.LAYER:
         return "Edit Layer";
-      case "scheme":
-      case "domain":
+      case NodeType.CONCEPT_SCHEME:
+      case NodeType.DOMAIN:
         return "Edit Domain";
-      case "class":
-      case "term":
+      case NodeType.CLASS:
+      case NodeType.TERM:
         return "Edit Term";
       default:
         return "Edit Node";
@@ -607,14 +607,14 @@ const EditModal: React.FC<{
 
   const getForm = () => {
     switch (node.node_type) {
-      case "taxonomy":
-      case "layer":
+      case NodeType.TAXONOMY:
+      case NodeType.LAYER:
         return <LayerForm layer={node} onSuccess={handleSuccess} />;
-      case "scheme":
-      case "domain":
+      case NodeType.CONCEPT_SCHEME:
+      case NodeType.DOMAIN:
         return <DomainForm domain={node} onSuccess={handleSuccess} />;
-      case "class":
-      case "term":
+      case NodeType.CLASS:
+      case NodeType.TERM:
         return <TermForm term={node} onSuccess={handleSuccess} />;
       default:
         return null;
@@ -654,14 +654,14 @@ const AddChildModal: React.FC<{
 
   const getModalTitle = () => {
     switch (node.node_type) {
-      case "taxonomy":
-      case "layer":
+      case NodeType.TAXONOMY:
+      case NodeType.LAYER:
         return "Add Domain";
-      case "scheme":
-      case "domain":
+      case NodeType.CONCEPT_SCHEME:
+      case NodeType.DOMAIN:
         return "Add Term";
-      case "class":
-      case "term":
+      case NodeType.CLASS:
+      case NodeType.TERM:
         return "Add Child Term";
       default:
         return "Add Child Node";
@@ -670,8 +670,8 @@ const AddChildModal: React.FC<{
 
   const getForm = () => {
     switch (node.node_type) {
-      case "taxonomy":
-      case "layer":
+      case NodeType.TAXONOMY:
+      case NodeType.LAYER:
         return (
           <DomainForm
             parentLayerId={node.id}
@@ -680,8 +680,8 @@ const AddChildModal: React.FC<{
             onSuccess={handleSuccess}
           />
         );
-      case "scheme":
-      case "domain":
+      case NodeType.CONCEPT_SCHEME:
+      case NodeType.DOMAIN:
         return (
           <TermForm
             parentDomainId={node.id}
@@ -690,8 +690,8 @@ const AddChildModal: React.FC<{
             onSuccess={handleSuccess}
           />
         );
-      case "class":
-      case "term":
+      case NodeType.CLASS:
+      case NodeType.TERM:
         return (
           <TermForm
             parentTermId={node.id}
@@ -738,11 +738,11 @@ const MoveModal: React.FC<{
 
   const getModalTitle = () => {
     switch (node.node_type) {
-      case "scheme":
-      case "domain":
+      case NodeType.CONCEPT_SCHEME:
+      case NodeType.DOMAIN:
         return "Move Domain";
-      case "class":
-      case "term":
+      case NodeType.CLASS:
+      case NodeType.TERM:
         return "Move Term";
       default:
         return "Move Node";
@@ -751,8 +751,8 @@ const MoveModal: React.FC<{
 
   const getForm = () => {
     switch (node.node_type) {
-      case "scheme":
-      case "domain":
+      case NodeType.CONCEPT_SCHEME:
+      case NodeType.DOMAIN:
         return (
           <DomainMoveForm
             selectedNodes={[node]}
@@ -760,8 +760,8 @@ const MoveModal: React.FC<{
             onCancel={onClose}
           />
         );
-      case "class":
-      case "term":
+      case NodeType.CLASS:
+      case NodeType.TERM:
         return (
           <TermMoveForm
             selectedNodes={[node]}

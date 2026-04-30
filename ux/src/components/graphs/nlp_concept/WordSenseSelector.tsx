@@ -71,7 +71,7 @@ export const WordSenseSelector: React.FC<WordSenseSelectorProps> = ({
       // Find persisted sense for this word
       const persistedSense =
         persistedSenses.find((s) => {
-          const senseLabel = s.label || s.term;
+          const senseLabel = s.label;
           return senseLabel?.toLowerCase() === word;
         }) || null;
 
@@ -106,15 +106,16 @@ export const WordSenseSelector: React.FC<WordSenseSelectorProps> = ({
 
     // Check if any selection changed
     for (const currentSense of currentSelections) {
-      const currentLabel = currentSense.label || currentSense.term;
+      const currentLabel = currentSense.label;
       const persistedSense = persistedSenses.find((s) => {
-        const senseLabel = s.label || s.term;
+        const senseLabel = s.label;
         return senseLabel?.toLowerCase() === currentLabel?.toLowerCase();
       });
 
       if (
         !persistedSense ||
-        persistedSense.sense_id !== currentSense.sense_id
+        persistedSense.label !== currentSense.label ||
+        persistedSense.sense_type !== currentSense.sense_type
       ) {
         return true;
       }
@@ -189,13 +190,11 @@ export const WordSenseSelector: React.FC<WordSenseSelectorProps> = ({
           label: word,
           language_code: "en",
           sense_type: "wordnet",
-          sense_id: synset.name,
-          definition: synset.definition,
-          domain: synset.domain || null,
         };
 
         const newSense =
-          state.selectedSense?.sense_id === wordSense.sense_id
+          state.selectedSense?.label === wordSense.label &&
+          state.selectedSense?.sense_type === wordSense.sense_type
             ? null
             : wordSense;
 
@@ -342,7 +341,7 @@ export const WordSenseSelector: React.FC<WordSenseSelectorProps> = ({
           className="mb-2 w-full text-left font-semibold text-gray-800 transition-colors duration-200 hover:text-blue-600 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none"
           aria-expanded={state.isExpanded}
           aria-controls={`word-sense-${word}`}
-          aria-label={`${state.isExpanded ? "Collapse" : "Expand"} sense options for ${word}${state.selectedSense ? `, currently selected: ${state.selectedSense.sense_id}` : ""}`}
+          aria-label={`${state.isExpanded ? "Collapse" : "Expand"} sense options for ${word}${state.selectedSense ? `, currently selected: ${state.selectedSense.label}` : ""}`}
         >
           {word}
           {state.selectedSense && (
@@ -350,7 +349,7 @@ export const WordSenseSelector: React.FC<WordSenseSelectorProps> = ({
               className="ml-2 rounded-full bg-blue-600 px-2 py-0.5 text-xs text-white"
               aria-label="Selected sense"
             >
-              {state.selectedSense.sense_id}
+              {state.selectedSense.label}
             </span>
           )}
         </button>

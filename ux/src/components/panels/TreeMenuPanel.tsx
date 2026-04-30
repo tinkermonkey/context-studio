@@ -112,7 +112,7 @@ export function TreeMenuPanel({
   const terms = ontologyClasses?.map((oc) => ({
     ...oc,
     node_type: "term",
-    parent_node_id: oc.parent_class_id || oc.scheme_id,
+    parent_node_id: oc.parent_class_id || oc.concept_scheme_id,
   }));
 
   // Determine loading state

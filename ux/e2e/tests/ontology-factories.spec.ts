@@ -66,14 +66,14 @@ test.describe("Test Data Factories", () => {
 
       const ontologyClass = await createClass(page, scheme.id, {
         title: "Test Class",
-        definition: "A test class definition",
+        description: "A test class definition",
       });
 
       expect(ontologyClass).toBeDefined();
       expect(ontologyClass.id).toBeDefined();
-      expect(ontologyClass.scheme_id).toBe(scheme.id);
+      expect(ontologyClass.concept_scheme_id).toBe(scheme.id);
       expect(ontologyClass.title).toBe("Test Class");
-      expect(ontologyClass.definition).toBe("A test class definition");
+      expect(ontologyClass.description).toBe("A test class definition");
     });
 
     test("should create a property definition", async ({ page }) => {
@@ -108,9 +108,9 @@ test.describe("Test Data Factories", () => {
 
       expect(relationship).toBeDefined();
       expect(relationship.id).toBeDefined();
-      expect(relationship.source_class_id).toBe(hierarchy.classes[0].id);
-      expect(relationship.target_class_id).toBe(hierarchy.classes[1].id);
-      expect(relationship.property_id).toBe(hierarchy.propertyDefinition.id);
+      expect(relationship.source_id).toBe(hierarchy.classes[0].id);
+      expect(relationship.target_id).toBe(hierarchy.classes[1].id);
+      expect(relationship.property_definition_id).toBe(hierarchy.propertyDefinition.id);
     });
   });
 
@@ -129,7 +129,7 @@ test.describe("Test Data Factories", () => {
 
       expect(hierarchy.classes).toHaveLength(1);
       expect(hierarchy.classes[0].id).toBeDefined();
-      expect(hierarchy.classes[0].scheme_id).toBe(hierarchy.scheme.id);
+      expect(hierarchy.classes[0].concept_scheme_id).toBe(hierarchy.scheme.id);
     });
 
     test("should create a test hierarchy with multiple classes", async ({
@@ -142,7 +142,7 @@ test.describe("Test Data Factories", () => {
 
       // Verify all classes belong to the same scheme
       for (const ontologyClass of hierarchy.classes) {
-        expect(ontologyClass.scheme_id).toBe(hierarchy.scheme.id);
+        expect(ontologyClass.concept_scheme_id).toBe(hierarchy.scheme.id);
       }
     });
 
@@ -318,7 +318,7 @@ test.describe("Test Data Factories", () => {
         title: "Another Class",
       });
 
-      expect(anotherClass.scheme_id).toBe(anotherScheme.id);
+      expect(anotherClass.concept_scheme_id).toBe(anotherScheme.id);
 
       // Create a property and relationship using the classes
       const property = await createPropertyDefinition(page, {
@@ -332,8 +332,8 @@ test.describe("Test Data Factories", () => {
         property.id,
       );
 
-      expect(relationship.source_class_id).toBe(hierarchy.classes[0].id);
-      expect(relationship.target_class_id).toBe(anotherClass.id);
+      expect(relationship.source_id).toBe(hierarchy.classes[0].id);
+      expect(relationship.target_id).toBe(anotherClass.id);
     });
   });
 });
