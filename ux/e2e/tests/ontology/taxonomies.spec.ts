@@ -52,7 +52,7 @@ test.describe("Taxonomy CRUD Operations", () => {
 
     // Wait for the form to close and page to update
     await expect(form).not.toBeVisible();
-    await page.waitForLoadState("networkidle");
+    await waitForAppReady(page);
 
     // Verify the taxonomy appears in the list
     await expect(page.getByText("Test Taxonomy")).toBeVisible();
@@ -69,7 +69,7 @@ test.describe("Taxonomy CRUD Operations", () => {
 
     // Navigate to taxonomies page
     await page.goto("/app/taxonomies");
-    await page.waitForLoadState("networkidle");
+    await waitForAppReady(page);
 
     // Verify both taxonomies appear in the list
     await expect(page.getByText("List Test Taxonomy 1")).toBeVisible();
@@ -94,18 +94,18 @@ test.describe("Taxonomy CRUD Operations", () => {
 
     // Navigate to taxonomies page
     await page.goto("/app/taxonomies");
-    await page.waitForLoadState("networkidle");
+    await waitForAppReady(page);
 
     // Click on taxonomy row to view details
-    const taxonomyLink = page.getByText("Detail Test Taxonomy");
-    await taxonomyLink.click();
+    const taxonomyRow = page.getByTestId(`taxonomy-row-${taxonomy.id}`);
+    await taxonomyRow.click();
 
     // Wait for detail page to load
-    await page.waitForLoadState("networkidle");
+    await waitForAppReady(page);
 
     // Verify detail page contains taxonomy information
-    await expect(page.getByText("Detail Test Taxonomy")).toBeVisible();
-    await expect(page.getByText("Test description for details")).toBeVisible();
+    await expect(page.getByTestId("taxonomy-details-title")).toBeVisible();
+    await expect(page.getByTestId("taxonomy-details-description")).toBeVisible();
 
     // Verify API read-back returns same data
     const apiResponse = await apiRequest<any>(
@@ -125,10 +125,10 @@ test.describe("Taxonomy CRUD Operations", () => {
 
     // Navigate to taxonomies page
     await page.goto("/app/taxonomies");
-    await page.waitForLoadState("networkidle");
+    await waitForAppReady(page);
 
     // Find and double-click row to open edit form
-    const taxonomyRow = page.getByText("Update Test Taxonomy");
+    const taxonomyRow = page.getByTestId(`taxonomy-row-${taxonomy.id}`);
     await taxonomyRow.dblclick();
 
     // Wait for edit form
@@ -136,25 +136,25 @@ test.describe("Taxonomy CRUD Operations", () => {
     await expect(modal).toBeVisible({ timeout: 5000 });
 
     // Update fields
-    const titleInput = page
-      .locator('[data-testid="taxonomy-title-input"]')
-      .first();
-    const descriptionInput = page
-      .locator('[data-testid="taxonomy-description-input"]')
-      .first();
+    const titleInput = page.getByTestId("taxonomy-title-input");
+    const descriptionInput = page.getByTestId(
+      "taxonomy-description-input",
+    );
 
     await titleInput.fill("test-taxonomy-e2e-update");
     await descriptionInput.fill("Updated description");
 
     // Submit form
-    const submitButton = modal.getByRole("button", { name: /save|update/i });
+    const submitButton = page.getByTestId("taxonomy-submit-button");
     await submitButton.click();
 
     // Wait for changes to apply
-    await page.waitForLoadState("networkidle");
+    await waitForAppReady(page);
 
     // Verify updates in UI
-    await expect(page.getByText("test-taxonomy-e2e-update")).toBeVisible();
+    await expect(page.getByTestId("taxonomy-row-title")).toContainText(
+      "test-taxonomy-e2e-update",
+    );
 
     // Verify updates via API
     const apiResponse = await apiRequest<any>(
@@ -195,7 +195,7 @@ test.describe("Taxonomy CRUD Operations", () => {
 
     // Wait for the modal to close
     await expect(deleteModal).not.toBeVisible();
-    await page.waitForLoadState("networkidle");
+    await waitForAppReady(page);
 
     // Verify the taxonomy is no longer visible in the list
     await expect(page.getByText("Taxonomy to Delete")).not.toBeVisible();
@@ -227,11 +227,14 @@ test.describe("Taxonomy CRUD Operations", () => {
 
     // Navigate to taxonomies page
     await page.goto("/app/taxonomies");
-    await page.waitForLoadState("networkidle");
+    await waitForAppReady(page);
 
     // Verify all fields visible in list
-    await expect(page.getByText(testTitle)).toBeVisible();
-    await expect(page.getByText(testDescription)).toBeVisible();
+    const row = page.getByTestId(`taxonomy-row-${taxonomy.id}`);
+    await expect(row.getByTestId("taxonomy-row-title")).toContainText(testTitle);
+    await expect(row.getByTestId("taxonomy-row-description")).toContainText(
+      testDescription,
+    );
 
     // Verify API response has all fields
     const apiResponse = await apiRequest<any>(
@@ -295,9 +298,12 @@ test.describe("Taxonomy CRUD Operations", () => {
 
     // Wait for form to close
     await expect(form).not.toBeVisible();
-    await page.waitForLoadState("networkidle");
+    await waitForAppReady(page);
 
     // Verify the taxonomy with special characters appears
-    await expect(page.getByText(specialTitle)).toBeVisible();
+    const taxonomyList = page.getByTestId("taxonomy-list");
+    await expect(
+      taxonomyList.getByRole("cell", { name: new RegExp(specialTitle) }),
+    ).toBeVisible();
   });
 });
