@@ -8,10 +8,10 @@ export async function apiRequest<T = unknown>(
   endpoint: string,
   options?: {
     method?: "GET" | "POST" | "PUT" | "DELETE" | "PATCH";
-    body?: any;
+    body?: Record<string, unknown>;
     headers?: Record<string, string>;
   },
-): Promise<T> {
+): Promise<T | void> {
   const { method = "GET", body, headers = {} } = options || {};
 
   const response = await page.request.fetch(
@@ -41,7 +41,7 @@ export async function apiRequest<T = unknown>(
     response.status() === 204 ||
     response.headers()["content-length"] === "0"
   ) {
-    return {} as T;
+    return;
   }
 
   return await response.json();

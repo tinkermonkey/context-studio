@@ -57,49 +57,6 @@ export async function waitForElement(
 }
 
 /**
- * Wait for any of multiple conditions to be true
- */
-export async function waitForAnyCondition(
-  page: Page,
-  conditions: Array<() => Promise<boolean>>,
-  timeout: number = 10000,
-): Promise<number> {
-  const startTime = Date.now();
-  const conditionErrors: (Error | null)[] = new Array(conditions.length).fill(
-    null,
-  );
-
-  while (Date.now() - startTime < timeout) {
-    for (let i = 0; i < conditions.length; i++) {
-      try {
-        const result = await conditions[i]();
-        if (result) {
-          return i; // Return which condition succeeded
-        }
-        // Condition returned false, clear any previous error
-        conditionErrors[i] = null;
-      } catch (error) {
-        // Store error for better diagnostics, but continue trying
-        conditionErrors[i] =
-          error instanceof Error
-            ? error
-            : new Error(String(error));
-      }
-    }
-    await page.waitForTimeout(100);
-  }
-
-  // Build error message with details from each condition
-  const errorDetails = conditionErrors
-    .map((err, i) => `Condition ${i}: ${err ? err.message : "returned false"}`)
-    .join("\n  ");
-
-  throw new Error(
-    `None of the ${conditions.length} conditions were met within ${timeout}ms:\n  ${errorDetails}`,
-  );
-}
-
-/**
  * Check if a backend endpoint exists
  * @throws {Error} If the backend is unreachable (network error)
  * @returns true if endpoint exists (status != 404), false if 404
@@ -110,10 +67,12 @@ export async function endpointExists(
   method: "GET" | "POST" | "PUT" | "DELETE" = "GET",
 ): Promise<boolean> {
   try {
+    // Use HEAD for GET, OPTIONS for all other methods to safely probe endpoint existence
+    const probeMethod = method === "GET" ? "HEAD" : "OPTIONS";
     const response = await page.request.fetch(
       `http://localhost:8888${endpoint}`,
       {
-        method: method === "GET" ? "HEAD" : method,
+        method: probeMethod,
         headers: { "Content-Type": "application/json" },
         failOnStatusCode: false,
       },

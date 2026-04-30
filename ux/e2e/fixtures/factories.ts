@@ -462,6 +462,7 @@ export async function clearTestData(
         await deleteEntityIfMatches(page, taxonomy, "/api/taxonomies", [
           "test-taxonomy-",
           "seed-taxonomy-",
+          "Test ",
         ]);
       } catch (error) {
         cleanupErrors.push({ step: "taxonomies", error });
