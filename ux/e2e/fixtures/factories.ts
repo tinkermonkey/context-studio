@@ -16,7 +16,7 @@ import type {
  * the default dataset.
  *
  * All factory-created entities use a run-specific prefix/suffix
- * (timestamp + random suffix) to ensure uniqueness and isolation within a test run.
+ * (timestamp + incrementing counter) to ensure uniqueness and isolation within a test run.
  */
 
 let entityCounter = 0;

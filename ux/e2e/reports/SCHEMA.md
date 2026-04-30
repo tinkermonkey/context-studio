@@ -66,7 +66,7 @@ This approach maintains a single source of truth (the tests array) and avoids re
 | `duration_ms` | number | Total test duration in milliseconds (sum of all attempts, including retries) |
 | `attempts` | array | Array of `AttemptReport` objects, one per test execution (normally 1, more if retried) |
 | `selectors_used` | array | List of `data-testid` selector strings extracted from the test file. **Note:** This is extracted from the entire test file, not scoped to the individual test. If a spec file contains multiple tests using different selectors, each `TestReport` will include the union of all selectors in that file. This means `selectors_used` reflects file-level selector coverage, not test-level coverage. |
-| `failure` | object | Only present if test failed; see `FailureReport` below. Omitted for passed tests. |
+| `failure` | object | Present if test failed or flaky (failed on first attempt but passed on retry); see `FailureReport` below. Omitted for passed and skipped tests. |
 
 ## AttemptReport Object
 
