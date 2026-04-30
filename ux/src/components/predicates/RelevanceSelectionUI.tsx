@@ -68,7 +68,7 @@ export const RelevanceSelectionUI: React.FC<RelevanceSelectionUIProps> = ({
   const filteredPredicates = React.useMemo(() => {
     if (!predicates?.data) return [];
 
-    let filtered = (predicates.data as any[]);
+    let filtered = predicates.data as any[];
 
     // Apply search filter
     if (searchQuery.trim()) {

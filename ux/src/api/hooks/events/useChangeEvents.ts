@@ -202,7 +202,8 @@ export const processChangeEvent = (event: ChangeEvent) => {
 
   // For ontology class events, determine the specific node type
   if (isOntologyClassEvent(event)) {
-    const nodeType = event.new_state?.node_type || event.previous_state?.node_type;
+    const nodeType =
+      event.new_state?.node_type || event.previous_state?.node_type;
     routing.nodeType = nodeType as NodeType;
   }
 
@@ -246,7 +247,9 @@ export const getTaxonomyEvents = (events: ChangeEvent[]): ChangeEvent[] => {
 /**
  * Get concept scheme events only
  */
-export const getConceptSchemeEvents = (events: ChangeEvent[]): ChangeEvent[] => {
+export const getConceptSchemeEvents = (
+  events: ChangeEvent[],
+): ChangeEvent[] => {
   return filterEventsByEntityType(events, RecordType.CONCEPT_SCHEME);
 };
 

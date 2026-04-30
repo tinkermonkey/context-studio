@@ -25,7 +25,7 @@ describe("TaxonomyService", () => {
         { id: "tax-1", title: "Taxonomy 1", version: 1 },
         { id: "tax-2", title: "Taxonomy 2", version: 1 },
       ];
-      const response: ListResponse<typeof mockTaxonomies[0]> = {
+      const response: ListResponse<(typeof mockTaxonomies)[0]> = {
         items: mockTaxonomies,
         total: 2,
         limit: 50,
@@ -39,10 +39,8 @@ describe("TaxonomyService", () => {
     });
 
     it("should fetch taxonomies with pagination params", async () => {
-      const mockTaxonomies = [
-        { id: "tax-1", title: "Taxonomy 1", version: 1 },
-      ];
-      const response: ListResponse<typeof mockTaxonomies[0]> = {
+      const mockTaxonomies = [{ id: "tax-1", title: "Taxonomy 1", version: 1 }];
+      const response: ListResponse<(typeof mockTaxonomies)[0]> = {
         items: mockTaxonomies,
         total: 5,
         limit: 1,
@@ -65,7 +63,7 @@ describe("TaxonomyService", () => {
       });
 
       await expect(service.list()).rejects.toThrow(
-        "Response format did not match"
+        "Response format did not match",
       );
     });
   });
@@ -115,14 +113,14 @@ describe("TaxonomyService", () => {
 
     it("should validate title is required", async () => {
       await expect(service.create({ title: "" })).rejects.toThrow(
-        "title is required"
+        "title is required",
       );
     });
 
     it("should validate title max length", async () => {
       const longTitle = "a".repeat(256);
       await expect(service.create({ title: longTitle })).rejects.toThrow(
-        "cannot exceed 255"
+        "cannot exceed 255",
       );
     });
 
@@ -155,9 +153,9 @@ describe("TaxonomyService", () => {
     });
 
     it("should validate ID is required", async () => {
-      await expect(
-        service.update("", { title: "New Title" })
-      ).rejects.toThrow("id is required");
+      await expect(service.update("", { title: "New Title" })).rejects.toThrow(
+        "id is required",
+      );
     });
 
     it("should send PUT request with correct data", async () => {

@@ -134,13 +134,15 @@ export const ManualMappingInterface: React.FC<ManualMappingInterfaceProps> = ({
   // Get unique sources
   const availableSources = React.useMemo(() => {
     if (!externalPredicates?.data) return [];
-    const sources = new Set((externalPredicates.data as any[]).map((p: any) => p.source));
+    const sources = new Set(
+      (externalPredicates.data as any[]).map((p: any) => p.source),
+    );
     return Array.from(sources).sort() as string[];
   }, [externalPredicates?.data]);
 
-  const selectedGlobalPredicate = (globalPredicates?.data as any[] | undefined)?.find(
-    (p: any) => p.id === globalPredicateId,
-  );
+  const selectedGlobalPredicate = (
+    globalPredicates?.data as any[] | undefined
+  )?.find((p: any) => p.id === globalPredicateId);
 
   return (
     <div className="flex flex-col gap-4">
@@ -166,11 +168,13 @@ export const ManualMappingInterface: React.FC<ManualMappingInterfaceProps> = ({
           disabled={loadingGlobal}
         >
           <option value="">Select a global predicate</option>
-          {(globalPredicates?.data as any[] | undefined)?.map((predicate: any) => (
-            <option key={predicate.id} value={predicate.id}>
-              {predicate.title}
-            </option>
-          ))}
+          {(globalPredicates?.data as any[] | undefined)?.map(
+            (predicate: any) => (
+              <option key={predicate.id} value={predicate.id}>
+                {predicate.title}
+              </option>
+            ),
+          )}
         </Select>
 
         {selectedGlobalPredicate && (
@@ -333,9 +337,9 @@ export const ManualMappingInterface: React.FC<ManualMappingInterfaceProps> = ({
 
           <div className="space-y-2">
             {selectedMappings.map((mapping: any) => {
-              const predicate = (externalPredicates?.data as any[] | undefined)?.find(
-                (p: any) => p.id === mapping.externalPredicateId,
-              );
+              const predicate = (
+                externalPredicates?.data as any[] | undefined
+              )?.find((p: any) => p.id === mapping.externalPredicateId);
               return (
                 <div
                   key={mapping.externalPredicateId}

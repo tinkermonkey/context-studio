@@ -72,7 +72,10 @@ export function useEmbeddingRegeneration() {
         }
       } catch (parseError) {
         apiLogger.error("Failed to parse WebSocket message", {
-          error: parseError instanceof Error ? parseError.message : String(parseError),
+          error:
+            parseError instanceof Error
+              ? parseError.message
+              : String(parseError),
         });
         setStatus("error");
         setError("Failed to parse server response");
@@ -119,7 +122,8 @@ export function useEmbeddingRegeneration() {
       const result = await response.json();
       return result.stopped;
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : String(error);
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
       apiLogger.error("Stop regeneration error", { error: errorMessage });
       setError("Failed to stop regeneration");
       return false;

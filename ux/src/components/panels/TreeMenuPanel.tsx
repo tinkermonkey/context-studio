@@ -118,34 +118,34 @@ export function TreeMenuPanel({
   const isLoading = layersLoading || domainsLoading || termsLoading;
 
   // Build chart data with error handling
-  const { chartData, buildError } = React.useMemo(
-    (): { chartData: ChartData | null; buildError: Error | null } => {
-      if (!layers || !domains || !terms) {
-        return { chartData: null, buildError: null };
-      }
+  const { chartData, buildError } = React.useMemo((): {
+    chartData: ChartData | null;
+    buildError: Error | null;
+  } => {
+    if (!layers || !domains || !terms) {
+      return { chartData: null, buildError: null };
+    }
 
-      try {
-        // Build the complete tree
-        const completeTree = buildHierarchicalTree({
-          layers,
-          domains,
-          terms,
-        });
+    try {
+      // Build the complete tree
+      const completeTree = buildHierarchicalTree({
+        layers,
+        domains,
+        terms,
+      });
 
-        return {
-          chartData: {
-            root: completeTree,
-          } as ChartData,
-          buildError: null,
-        };
-      } catch (err) {
-        const error = err instanceof Error ? err : new Error(String(err));
-        apiLogger.error("Error building menu data", { error });
-        return { chartData: null, buildError: error };
-      }
-    },
-    [layers, domains, terms],
-  );
+      return {
+        chartData: {
+          root: completeTree,
+        } as ChartData,
+        buildError: null,
+      };
+    } catch (err) {
+      const error = err instanceof Error ? err : new Error(String(err));
+      apiLogger.error("Error building menu data", { error });
+      return { chartData: null, buildError: error };
+    }
+  }, [layers, domains, terms]);
 
   // Find path to highlighted node for auto-expansion
   // eslint-disable-next-line @typescript-eslint/no-unused-vars

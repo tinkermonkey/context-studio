@@ -12,10 +12,7 @@ import type {
   PropertyDefinitionCreate,
   PropertyDefinition,
 } from "@/api/types/ontology";
-import {
-  useCreatePredicate,
-  useUpdatePredicate,
-} from "@/api/hooks/predicates";
+import { useCreatePredicate, useUpdatePredicate } from "@/api/hooks/predicates";
 
 interface PredicateFormProps {
   onSuccess?: (predicate: PropertyDefinition) => void;

@@ -127,17 +127,12 @@ export const OntologyClassDetails: React.FC<OntologyClassDetailsProps> = ({
 
   // Extract parent nodes from lineage
   const { parentLayer, parentDomain, parentTerm } = React.useMemo(() => {
-    const layer = lineage.find(
-      (n) => n.node_type === NodeType.TAXONOMY,
-    );
-    const domain = lineage.find(
-      (n) => n.node_type === NodeType.CONCEPT_SCHEME,
-    );
+    const layer = lineage.find((n) => n.node_type === NodeType.TAXONOMY);
+    const domain = lineage.find((n) => n.node_type === NodeType.CONCEPT_SCHEME);
     // Parent term is the term that comes immediately before the current node
     const currentIndex = lineage.findIndex((n) => n.id === node.id);
     const parentTerm =
-      currentIndex > 0 &&
-      lineage[currentIndex - 1].node_type === NodeType.CLASS
+      currentIndex > 0 && lineage[currentIndex - 1].node_type === NodeType.CLASS
         ? lineage[currentIndex - 1]
         : undefined;
 
@@ -283,16 +278,13 @@ export const OntologyClassDetails: React.FC<OntologyClassDetailsProps> = ({
           {/* NLP Analysis */}
           <NlpAnalysisPanel
             text={node.title}
-            textTitle={
-              node.node_type === NodeType.CLASS
-                ? "Class"
-                : "Title"
-            }
+            textTitle={node.node_type === NodeType.CLASS ? "Class" : "Title"}
             domainContext={
               parentDomain
                 ? {
                     title: parentDomain.title as string,
-                    definition: ((parentDomain as OntologyClass)?.description || "") as string,
+                    definition: ((parentDomain as OntologyClass)?.description ||
+                      "") as string,
                   }
                 : null
             }
@@ -300,16 +292,15 @@ export const OntologyClassDetails: React.FC<OntologyClassDetailsProps> = ({
               parentTerm
                 ? {
                     title: parentTerm.title as string,
-                    definition: ((parentTerm as OntologyClass)?.description || "") as string,
+                    definition: ((parentTerm as OntologyClass)?.description ||
+                      "") as string,
                     relationshipPredicate: "child_of",
                   }
                 : null
             }
             currentDefinition={node.description}
             layerId={
-              node.node_type === NodeType.TAXONOMY
-                ? node.id
-                : parentLayer?.id
+              node.node_type === NodeType.TAXONOMY ? node.id : parentLayer?.id
             }
             domainId={
               node.node_type === NodeType.CONCEPT_SCHEME
@@ -353,14 +344,10 @@ export const OntologyClassDetails: React.FC<OntologyClassDetailsProps> = ({
             <h2 className="text-xl font-semibold">Hierarchy</h2>
             <TreeChartPanel
               layerId={
-                node.node_type === NodeType.TAXONOMY
-                  ? node.id
-                  : undefined
+                node.node_type === NodeType.TAXONOMY ? node.id : undefined
               }
               domainId={
-                node.node_type === NodeType.CONCEPT_SCHEME
-                  ? node.id
-                  : undefined
+                node.node_type === NodeType.CONCEPT_SCHEME ? node.id : undefined
               }
               termId={
                 node.node_type === NodeType.CLASS ||
@@ -554,7 +541,8 @@ const EditModal: React.FC<{
         queryKey: [QUERY_KEYS.ONTOLOGY_CLASSES],
       });
     } catch (e) {
-      const errorMsg = e instanceof Error ? e.message : "Failed to refresh data";
+      const errorMsg =
+        e instanceof Error ? e.message : "Failed to refresh data";
       toast.error(`Failed to refresh node data: ${errorMsg}`);
     }
   };
@@ -612,7 +600,8 @@ const AddChildModal: React.FC<{
         queryKey: [QUERY_KEYS.ONTOLOGY_CLASSES],
       });
     } catch (e) {
-      const errorMsg = e instanceof Error ? e.message : "Failed to refresh data";
+      const errorMsg =
+        e instanceof Error ? e.message : "Failed to refresh data";
       toast.error(`Failed to refresh node data: ${errorMsg}`);
     }
   };

@@ -62,7 +62,6 @@ export const NlpAnalysisPanel: React.FC<NlpAnalysisPanelProps> = ({
     return words.length > 1;
   }, [text]);
 
-
   // Custom hook for API call
   const lowercasedText = text.toLowerCase();
   const queryKey = [
@@ -270,7 +269,6 @@ export const NlpAnalysisPanel: React.FC<NlpAnalysisPanelProps> = ({
     },
     [getNodeContext],
   );
-
 
   return (
     <>

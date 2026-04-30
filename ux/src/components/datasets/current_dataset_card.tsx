@@ -138,9 +138,7 @@ export const CurrentDatasetCard: React.FC<CurrentDatasetCardProps> = ({
           <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
             {activeDataset.metrics.layers_count}
           </div>
-          <div className="text-sm text-gray-600 dark:text-gray-400">
-            Layers
-          </div>
+          <div className="text-sm text-gray-600 dark:text-gray-400">Layers</div>
         </div>
         <div className="rounded-lg bg-gray-50 p-3 text-center dark:bg-gray-700">
           <div className="text-2xl font-bold text-green-600 dark:text-green-400">

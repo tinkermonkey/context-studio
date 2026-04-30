@@ -62,7 +62,12 @@ test.describe("Relationship CRUD Operations", () => {
 
   test("should list all relationships", async ({ page }) => {
     // Create multiple relationships
-    const rel1 = await createRelationship(page, class1Id, class2Id, "related_to");
+    const rel1 = await createRelationship(
+      page,
+      class1Id,
+      class2Id,
+      "related_to",
+    );
 
     // Create another class for second relationship
     const hierarchy = await createTestHierarchy(page, 1);
@@ -239,8 +244,18 @@ test.describe("Relationship CRUD Operations", () => {
     page,
   }) => {
     // Create two relationships between same classes with different relationship types
-    const rel1 = await createRelationship(page, class1Id, class2Id, "related_to");
-    const rel2 = await createRelationship(page, class1Id, class2Id, "parent_of");
+    const rel1 = await createRelationship(
+      page,
+      class1Id,
+      class2Id,
+      "related_to",
+    );
+    const rel2 = await createRelationship(
+      page,
+      class1Id,
+      class2Id,
+      "parent_of",
+    );
 
     // Verify both relationships exist
     expect(rel1.id).not.toBe(rel2.id);

@@ -26,7 +26,11 @@ export const NodeLinkPanel: React.FC<NodeLinkPanelProps> = ({
   const [isFormActive, setIsFormActive] = useState(false);
 
   // Fetch relationships filtered for this node only
-  const { data: links = [], isLoading, error } = useRelationships({
+  const {
+    data: links = [],
+    isLoading,
+    error,
+  } = useRelationships({
     source_id: nodeId,
   });
 

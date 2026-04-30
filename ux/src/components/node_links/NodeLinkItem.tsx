@@ -145,7 +145,10 @@ export const NodeLinkItem: React.FC<NodeLinkItemProps> = ({
                 </span>
               </div>
               <div className="text-sm text-gray-600">
-                via: <span className="font-medium">{propertyDefinition?.title || link.property_definition_id}</span>
+                via:{" "}
+                <span className="font-medium">
+                  {propertyDefinition?.title || link.property_definition_id}
+                </span>
               </div>
             </div>
 

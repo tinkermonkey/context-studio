@@ -119,10 +119,7 @@ export abstract class BaseService {
       };
 
       // Fetch as ListResponse format (API response format)
-      const response = await this.getResource<ListResponse<T>>(
-        url,
-        pageParams,
-      );
+      const response = await this.getResource<ListResponse<T>>(url, pageParams);
 
       // Extract items from response
       const items = this.extractItems(response);
@@ -145,7 +142,10 @@ export abstract class BaseService {
       const error = new Error(
         "getAllPaginated exceeded maximum iterations. The server may be returning invalid pagination data.",
       );
-      apiLogger.error("getAllPaginated max iterations reached", { url, params });
+      apiLogger.error("getAllPaginated max iterations reached", {
+        url,
+        params,
+      });
       throw error;
     }
 

@@ -3,7 +3,10 @@ import { createColumnHelper } from "@tanstack/react-table";
 import { Checkbox } from "flowbite-react";
 import type { Relationship } from "@/api/types/ontology";
 import { renderShortDateTime, renderShortUuid } from "@/utils/renderers";
-import { useRelationships, useDeleteRelationship } from "@/api/hooks/relationships";
+import {
+  useRelationships,
+  useDeleteRelationship,
+} from "@/api/hooks/relationships";
 import { BaseNodeTable } from "./node_table";
 
 const columnHelper = createColumnHelper<Relationship>();
@@ -45,18 +48,15 @@ const columns = [
     header: () => "ID",
   }),
   columnHelper.accessor("source_id", {
-    cell: (info) =>
-      info.getValue() ? renderShortUuid(info.getValue()) : "-",
+    cell: (info) => (info.getValue() ? renderShortUuid(info.getValue()) : "-"),
     header: () => "Source ID",
   }),
   columnHelper.accessor("target_id", {
-    cell: (info) =>
-      info.getValue() ? renderShortUuid(info.getValue()) : "-",
+    cell: (info) => (info.getValue() ? renderShortUuid(info.getValue()) : "-"),
     header: () => "Target ID",
   }),
   columnHelper.accessor("property_definition_id", {
-    cell: (info) =>
-      info.getValue() ? renderShortUuid(info.getValue()) : "-",
+    cell: (info) => (info.getValue() ? renderShortUuid(info.getValue()) : "-"),
     header: () => "Property Definition ID",
   }),
   columnHelper.accessor("created_at", {
@@ -87,7 +87,12 @@ export interface RelationshipsTableProps {
 
 const RelationshipsTable = React.forwardRef<any, RelationshipsTableProps>(
   (props) => {
-    const { data: relationships, isLoading, error, refetch } = useRelationships();
+    const {
+      data: relationships,
+      isLoading,
+      error,
+      refetch,
+    } = useRelationships();
     const deleteRelationship = useDeleteRelationship();
 
     const defaultColumnVisibility: Record<string, boolean> = {

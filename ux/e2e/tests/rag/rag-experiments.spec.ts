@@ -172,7 +172,9 @@ test.describe("RAG Experiments", () => {
     ).toBeVisible({ timeout: 5000 });
 
     // Wait for input to be populated with the original text
-    const inputField = page.locator('[data-testid="test-paragraph-text-input"]');
+    const inputField = page.locator(
+      '[data-testid="test-paragraph-text-input"]',
+    );
     await expect(inputField).toHaveValue(originalText, { timeout: 5000 });
 
     // Verify the original text is loaded

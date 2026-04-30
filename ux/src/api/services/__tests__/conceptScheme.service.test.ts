@@ -35,7 +35,7 @@ describe("ConceptSchemeService", () => {
           version: 1,
         },
       ];
-      const response: ListResponse<typeof mockSchemes[0]> = {
+      const response: ListResponse<(typeof mockSchemes)[0]> = {
         items: mockSchemes,
         total: 2,
         limit: 50,
@@ -57,7 +57,7 @@ describe("ConceptSchemeService", () => {
           version: 1,
         },
       ];
-      const response: ListResponse<typeof mockSchemes[0]> = {
+      const response: ListResponse<(typeof mockSchemes)[0]> = {
         items: mockSchemes,
         total: 1,
         limit: 50,
@@ -114,15 +114,15 @@ describe("ConceptSchemeService", () => {
     });
 
     it("should validate taxonomy ID is required", async () => {
-      await expect(
-        service.create("", { title: "New Scheme" })
-      ).rejects.toThrow("taxonomyId is required");
+      await expect(service.create("", { title: "New Scheme" })).rejects.toThrow(
+        "taxonomyId is required",
+      );
     });
 
     it("should validate title is required", async () => {
-      await expect(
-        service.create("tax-1", { title: "" })
-      ).rejects.toThrow("title is required");
+      await expect(service.create("tax-1", { title: "" })).rejects.toThrow(
+        "title is required",
+      );
     });
 
     it("should accept description in create request", async () => {
@@ -175,9 +175,9 @@ describe("ConceptSchemeService", () => {
     });
 
     it("should validate ID is required", async () => {
-      await expect(
-        service.update("", { title: "Updated" })
-      ).rejects.toThrow("id is required");
+      await expect(service.update("", { title: "Updated" })).rejects.toThrow(
+        "id is required",
+      );
     });
   });
 

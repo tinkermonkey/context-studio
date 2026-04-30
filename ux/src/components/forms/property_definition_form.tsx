@@ -102,7 +102,8 @@ const PropertyDefinitionForm: React.FC<PropertyDefinitionFormProps> = ({
         <form.Field
           name="identifier"
           validators={{
-            onChange: ({ value }) => (!value ? "Identifier is required" : undefined),
+            onChange: ({ value }) =>
+              !value ? "Identifier is required" : undefined,
           }}
         >
           {(field) => (

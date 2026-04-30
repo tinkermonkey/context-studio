@@ -386,10 +386,7 @@ export const handlers = [
 
   // Schema endpoints
   rest.get("/api/schema", (req, res, ctx) => {
-    return res(
-      ctx.status(200),
-      ctx.json(null),
-    );
+    return res(ctx.status(200), ctx.json(null));
   }),
 
   // Change events endpoints
@@ -477,10 +474,7 @@ export const handlers = [
   }),
 
   rest.get("/api/llm", (req, res, ctx) => {
-    return res(
-      ctx.status(200),
-      ctx.json(null),
-    );
+    return res(ctx.status(200), ctx.json(null));
   }),
 
   rest.post("/api/llm", async (req, res, ctx) => {
@@ -521,10 +515,7 @@ export const handlers = [
   }),
 
   rest.get("/api/llm/execution-analytics", (req, res, ctx) => {
-    return res(
-      ctx.status(200),
-      ctx.json({}),
-    );
+    return res(ctx.status(200), ctx.json({}));
   }),
 
   rest.get("/api/llm/execution-history", (req, res, ctx) => {
@@ -577,10 +568,7 @@ export const handlers = [
   }),
 
   rest.get("/api/reference/ref-db/filter/statistics", (req, res, ctx) => {
-    return res(
-      ctx.status(200),
-      ctx.json({}),
-    );
+    return res(ctx.status(200), ctx.json({}));
   }),
 
   rest.get("/api/reference/ref-db/nodes", (req, res, ctx) => {

@@ -20,52 +20,61 @@ export const usePredicates = (..._args: any[]): any => {
     isError: true,
     error: new Error(
       "usePredicates has been removed. Use usePropertyDefinitions instead. " +
-      "See ux/src/api/hooks/predicates/index.ts for migration guide."
+        "See ux/src/api/hooks/predicates/index.ts for migration guide.",
     ),
   };
 };
 
 export const useCreatePredicate = (..._args: any[]): any => {
   return {
-    mutate: () => Promise.reject(new Error(
-      "useCreatePredicate has been removed. Use useCreatePropertyDefinition instead. " +
-      "See ux/src/api/hooks/predicates/index.ts for migration guide."
-    )),
+    mutate: () =>
+      Promise.reject(
+        new Error(
+          "useCreatePredicate has been removed. Use useCreatePropertyDefinition instead. " +
+            "See ux/src/api/hooks/predicates/index.ts for migration guide.",
+        ),
+      ),
     isPending: false,
     isError: true,
     error: new Error(
       "useCreatePredicate has been removed. Use useCreatePropertyDefinition instead. " +
-      "See ux/src/api/hooks/predicates/index.ts for migration guide."
+        "See ux/src/api/hooks/predicates/index.ts for migration guide.",
     ),
   };
 };
 
 export const useUpdatePredicate = (..._args: any[]): any => {
   return {
-    mutate: () => Promise.reject(new Error(
-      "useUpdatePredicate has been removed. Use useUpdatePropertyDefinition instead. " +
-      "See ux/src/api/hooks/predicates/index.ts for migration guide."
-    )),
+    mutate: () =>
+      Promise.reject(
+        new Error(
+          "useUpdatePredicate has been removed. Use useUpdatePropertyDefinition instead. " +
+            "See ux/src/api/hooks/predicates/index.ts for migration guide.",
+        ),
+      ),
     isPending: false,
     isError: true,
     error: new Error(
       "useUpdatePredicate has been removed. Use useUpdatePropertyDefinition instead. " +
-      "See ux/src/api/hooks/predicates/index.ts for migration guide."
+        "See ux/src/api/hooks/predicates/index.ts for migration guide.",
     ),
   };
 };
 
 export const useDeletePredicate = (..._args: any[]): any => {
   return {
-    mutate: () => Promise.reject(new Error(
-      "useDeletePredicate has been removed. Use useDeletePropertyDefinition instead. " +
-      "See ux/src/api/hooks/predicates/index.ts for migration guide."
-    )),
+    mutate: () =>
+      Promise.reject(
+        new Error(
+          "useDeletePredicate has been removed. Use useDeletePropertyDefinition instead. " +
+            "See ux/src/api/hooks/predicates/index.ts for migration guide.",
+        ),
+      ),
     isPending: false,
     isError: true,
     error: new Error(
       "useDeletePredicate has been removed. Use useDeletePropertyDefinition instead. " +
-      "See ux/src/api/hooks/predicates/index.ts for migration guide."
+        "See ux/src/api/hooks/predicates/index.ts for migration guide.",
     ),
   };
 };
@@ -90,7 +99,10 @@ export const useSimilarPredicates = (..._args: any[]): any => {
 
 export const useSearchExternalPredicates = (..._args: any[]): any => {
   return {
-    mutate: () => Promise.reject(new Error("useSearchExternalPredicates has been removed.")),
+    mutate: () =>
+      Promise.reject(
+        new Error("useSearchExternalPredicates has been removed."),
+      ),
     isPending: false,
     isError: true,
     error: new Error("useSearchExternalPredicates has been removed."),
@@ -99,7 +111,8 @@ export const useSearchExternalPredicates = (..._args: any[]): any => {
 
 export const useDiscoverPredicates = (..._args: any[]): any => {
   return {
-    mutate: () => Promise.reject(new Error("useDiscoverPredicates has been removed.")),
+    mutate: () =>
+      Promise.reject(new Error("useDiscoverPredicates has been removed.")),
     isPending: false,
     isError: true,
     error: new Error("useDiscoverPredicates has been removed."),
@@ -108,7 +121,8 @@ export const useDiscoverPredicates = (..._args: any[]): any => {
 
 export const useClusterPredicates = (..._args: any[]): any => {
   return {
-    mutate: () => Promise.reject(new Error("useClusterPredicates has been removed.")),
+    mutate: () =>
+      Promise.reject(new Error("useClusterPredicates has been removed.")),
     isPending: false,
     isError: true,
     error: new Error("useClusterPredicates has been removed."),

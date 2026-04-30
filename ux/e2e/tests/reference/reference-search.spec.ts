@@ -165,9 +165,7 @@ test.describe("Reference Search", () => {
     );
 
     // Verify error is displayed or error state exists
-    const errorVisible = await errorIndicator
-      .isVisible()
-      .catch(() => false);
+    const errorVisible = await errorIndicator.isVisible().catch(() => false);
     const pageText = await page.locator("body").textContent();
     const hasErrorText = pageText?.includes("Error") ?? false;
 

@@ -81,7 +81,9 @@ export const SimilaritySearchTab: React.FC<SimilaritySearchTabProps> = ({
   // Get unique sources from results
   const availableSources = React.useMemo(() => {
     if (!data?.results) return [];
-    const sources = new Set((data.results as any[]).map((item: any) => item.source));
+    const sources = new Set(
+      (data.results as any[]).map((item: any) => item.source),
+    );
     return Array.from(sources).sort() as string[];
   }, [data?.results]);
 

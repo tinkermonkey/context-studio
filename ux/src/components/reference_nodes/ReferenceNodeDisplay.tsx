@@ -16,8 +16,8 @@ interface ReferenceNodeDisplayProps {
 export const ReferenceNodeDisplay: React.FC<ReferenceNodeDisplayProps> = () => {
   return (
     <Alert color="info" icon={Info}>
-      Reference node display is not yet available. This feature requires
-      backend API implementation.
+      Reference node display is not yet available. This feature requires backend
+      API implementation.
     </Alert>
   );
 };

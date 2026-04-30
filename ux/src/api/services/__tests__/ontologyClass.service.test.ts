@@ -37,7 +37,7 @@ describe("OntologyClassService", () => {
           version: 1,
         },
       ];
-      const response: ListResponse<typeof mockClasses[0]> = {
+      const response: ListResponse<(typeof mockClasses)[0]> = {
         items: mockClasses,
         total: 2,
         limit: 50,
@@ -60,7 +60,7 @@ describe("OntologyClassService", () => {
           version: 1,
         },
       ];
-      const response: ListResponse<typeof mockClasses[0]> = {
+      const response: ListResponse<(typeof mockClasses)[0]> = {
         items: mockClasses,
         total: 1,
         limit: 50,
@@ -85,7 +85,7 @@ describe("OntologyClassService", () => {
           version: 1,
         },
       ];
-      const response: ListResponse<typeof mockClasses[0]> = {
+      const response: ListResponse<(typeof mockClasses)[0]> = {
         items: mockClasses,
         total: 10,
         limit: 5,
@@ -144,15 +144,15 @@ describe("OntologyClassService", () => {
     });
 
     it("should validate scheme ID is required", async () => {
-      await expect(
-        service.create("", { title: "New Class" })
-      ).rejects.toThrow("schemeId is required");
+      await expect(service.create("", { title: "New Class" })).rejects.toThrow(
+        "schemeId is required",
+      );
     });
 
     it("should validate title is required", async () => {
-      await expect(
-        service.create("scheme-1", { title: "" })
-      ).rejects.toThrow("title is required");
+      await expect(service.create("scheme-1", { title: "" })).rejects.toThrow(
+        "title is required",
+      );
     });
 
     it("should accept parent_class_id in create request", async () => {
@@ -205,9 +205,9 @@ describe("OntologyClassService", () => {
     });
 
     it("should validate ID is required", async () => {
-      await expect(
-        service.update("", { title: "Updated" })
-      ).rejects.toThrow("id is required");
+      await expect(service.update("", { title: "Updated" })).rejects.toThrow(
+        "id is required",
+      );
     });
   });
 

@@ -35,7 +35,7 @@ describe("PropertyDefinitionService", () => {
           version: 1,
         },
       ];
-      const response: ListResponse<typeof mockProperties[0]> = {
+      const response: ListResponse<(typeof mockProperties)[0]> = {
         items: mockProperties,
         total: 2,
         limit: 50,
@@ -57,7 +57,7 @@ describe("PropertyDefinitionService", () => {
           version: 1,
         },
       ];
-      const response: ListResponse<typeof mockProperties[0]> = {
+      const response: ListResponse<(typeof mockProperties)[0]> = {
         items: mockProperties,
         total: 10,
         limit: 5,
@@ -132,13 +132,13 @@ describe("PropertyDefinitionService", () => {
 
     it("should validate identifier is required", async () => {
       await expect(
-        service.create({ identifier: "", title: "New Property" })
+        service.create({ identifier: "", title: "New Property" }),
       ).rejects.toThrow("identifier is required");
     });
 
     it("should validate title is required", async () => {
       await expect(
-        service.create({ identifier: "new-prop", title: "" })
+        service.create({ identifier: "new-prop", title: "" }),
       ).rejects.toThrow("title is required");
     });
 
@@ -176,9 +176,9 @@ describe("PropertyDefinitionService", () => {
     });
 
     it("should validate ID is required", async () => {
-      await expect(
-        service.update("", { title: "Updated" })
-      ).rejects.toThrow("id is required");
+      await expect(service.update("", { title: "Updated" })).rejects.toThrow(
+        "id is required",
+      );
     });
 
     it("should allow partial updates", async () => {

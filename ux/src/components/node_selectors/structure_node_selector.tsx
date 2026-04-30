@@ -33,11 +33,7 @@ export const OntologyClassSelector: React.FC<OntologyClassSelectorProps> = ({
   "data-testid": dataTestId,
 }) => {
   // Fetch all nodes
-  const {
-    data: nodes,
-    isLoading,
-    error,
-  } = useOntologyClasses();
+  const { data: nodes, isLoading, error } = useOntologyClasses();
 
   // Filter by type and excluded nodes
   const filteredNodes = useMemo(() => {
