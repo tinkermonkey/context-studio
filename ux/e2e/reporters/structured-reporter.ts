@@ -7,7 +7,13 @@ import {
 import * as fs from "fs";
 import * as path from "path";
 import { execSync } from "child_process";
-import * as yaml from "js-yaml";
+import {
+  flattenRegistry,
+  extractPatternTemplates,
+  matchesPattern as matchesPatternTemplate,
+  loadSelectorRegistry as loadSharedSelectorRegistry,
+} from "../../src/utils/selector-registry";
+import type { SelectorRegistry as SharedSelectorRegistry } from "../../src/utils/selector-registry";
 
 type TestReport =
   | {
@@ -85,13 +91,12 @@ interface SelectorCoverage {
 
 interface RegistryEntry {
   id: string;
-  component: string;
+  component?: string;
   [key: string]: unknown;
 }
 
-interface SelectorRegistry {
-  [key: string]: RegistryEntry | SelectorRegistry;
-}
+// Use the shared SelectorRegistry type but keep the local RegistryEntry for compatibility
+type SelectorRegistry = SharedSelectorRegistry;
 
 export default class StructuredReporter implements Reporter {
   private reportDir: string;
@@ -120,11 +125,9 @@ export default class StructuredReporter implements Reporter {
     }
 
     try {
-      const content = fs.readFileSync(registryPath, "utf-8");
-      const parsed = yaml.load(content) as SelectorRegistry;
-      this.selectorRegistry = parsed || {};
+      this.selectorRegistry = loadSharedSelectorRegistry(registryPath);
 
-      if (!parsed || Object.keys(parsed).length === 0) {
+      if (Object.keys(this.selectorRegistry).length === 0) {
         console.warn(
           `Selector registry at ${registryPath} is empty. ` +
           `Coverage report will show 0% with all selectors as undocumented.`
@@ -313,12 +316,12 @@ export default class StructuredReporter implements Reporter {
     const gaps: string[] = [];
     const undocumented: string[] = [];
 
-    // Flatten the registry structure
-    const flatRegistry = this.flattenRegistry(this.selectorRegistry);
-    const patternRegistry = this.extractPatternTemplates(this.selectorRegistry);
+    // Flatten the registry structure and extract pattern templates
+    const flatRegistry = flattenRegistry(this.selectorRegistry);
+    const patternRegistry = extractPatternTemplates(this.selectorRegistry);
 
     // Check coverage for each documented selector
-    for (const [_key, entry] of Object.entries(flatRegistry)) {
+    for (const [_key, entry] of flatRegistry) {
       const id = entry.id;
       let isCovered = false;
 
@@ -329,7 +332,7 @@ export default class StructuredReporter implements Reporter {
       // Check if it's a pattern template and any selector matches it
       else if (patternRegistry.includes(id)) {
         for (const selector of this.usedSelectors) {
-          if (this.matchesPatternTemplate(selector, [id])) {
+          if (matchesPatternTemplate(selector, [id])) {
             isCovered = true;
             break;
           }
@@ -350,8 +353,8 @@ export default class StructuredReporter implements Reporter {
     // Find undocumented selectors
     Array.from(this.usedSelectors).forEach((selector) => {
       if (
-        !flatRegistry[selector] &&
-        !this.matchesPatternTemplate(selector, patternRegistry)
+        !flatRegistry.has(selector) &&
+        !matchesPatternTemplate(selector, patternRegistry)
       ) {
         undocumented.push(selector);
       }
@@ -373,70 +376,6 @@ export default class StructuredReporter implements Reporter {
     };
   }
 
-  private flattenRegistry(
-    registry: SelectorRegistry,
-    result: Record<string, RegistryEntry> = {}
-  ): Record<string, RegistryEntry> {
-    for (const [_key, value] of Object.entries(registry)) {
-      if (value && typeof value === "object" && !Array.isArray(value)) {
-        if ("id" in value) {
-          result[(value as RegistryEntry).id] = value as RegistryEntry;
-        } else {
-          this.flattenRegistry(value as SelectorRegistry, result);
-        }
-      }
-    }
-    return result;
-  }
-
-  private extractPatternTemplates(
-    registry: SelectorRegistry,
-    result: string[] = []
-  ): string[] {
-    for (const [_key, value] of Object.entries(registry)) {
-      if (!value || typeof value !== "object" || Array.isArray(value)) {
-        continue;
-      }
-
-      // Check if this is a registry entry (has 'id' property)
-      if ("id" in value) {
-        const entry = value as RegistryEntry;
-        if (typeof entry.id === "string" && entry.id.includes("{") && entry.id.includes("}")) {
-          result.push(entry.id);
-        }
-      } else {
-        // Recursively search nested registries
-        this.extractPatternTemplates(value as SelectorRegistry, result);
-      }
-    }
-    return result;
-  }
-
-  private matchesPatternTemplate(
-    selector: string,
-    patterns: string[]
-  ): boolean {
-    for (const pattern of patterns) {
-      // Split pattern into literal and placeholder parts
-      const parts = pattern.split(/(\{[^}]+\})/);
-      const regexPattern = parts
-        .map((part) => {
-          // Placeholder parts: replace with flexible ID pattern
-          if (part.startsWith("{") && part.endsWith("}")) {
-            return "[a-zA-Z0-9_-]+";
-          }
-          // Literal parts: escape regex special characters
-          return part.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-        })
-        .join("");
-
-      const regex = new RegExp(`^${regexPattern}$`);
-      if (regex.test(selector)) {
-        return true;
-      }
-    }
-    return false;
-  }
 
   private writeJsonReport(report: RunReport, runId: string): boolean {
     const filePath = path.join(this.reportDir, `${runId}.json`);

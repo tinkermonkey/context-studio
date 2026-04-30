@@ -15,114 +15,35 @@
 
 import fs from "fs";
 import path from "path";
-import yaml from "js-yaml";
+import {
+  loadSelectorRegistry,
+  extractSelectorsFromRegistry,
+  matchesPattern,
+} from "../src/utils/selector-registry";
 
 interface ValidationResult {
-  hasErrors: boolean;
-  hasWarnings: boolean;
   errors: string[];
   warnings: string[];
 }
 
 const result: ValidationResult = {
-  hasErrors: false,
-  hasWarnings: false,
   errors: [],
   warnings: [],
 };
 
-// Extract all data-testid values from source code
-function extractSelectorsFromCode(directory: string): Set<string> {
+/**
+ * Walks a directory tree and extracts selectors using the provided regex patterns
+ */
+function extractSelectorsFromDirectory(
+  directory: string,
+  options: {
+    fileExtensions: string[];
+    patterns: RegExp[];
+    skipDotFiles?: boolean;
+  }
+): Set<string> {
   const selectors = new Set<string>();
-  // Match both literal attributes and JSX expressions
-  const dataTestIdRegex = /data-testid=["']([^"']+)["']/g;
-  const jsxExpressionRegex = /data-testid=\{\s*`([^`]+)`\s*\}/g;
-  const propRegex = /dataTestId\s*=\s*["']([^"']+)["']/g;
-
-  function resetRegexes() {
-    dataTestIdRegex.lastIndex = 0;
-    jsxExpressionRegex.lastIndex = 0;
-    propRegex.lastIndex = 0;
-  }
-
-  function walkDir(dir: string) {
-    const files = fs.readdirSync(dir);
-
-    for (const file of files) {
-      const filePath = path.join(dir, file);
-      const stat = fs.statSync(filePath);
-
-      // Skip node_modules, .git, dist, etc.
-      if (
-        file.startsWith(".") ||
-        file === "node_modules" ||
-        file === "dist" ||
-        file === "build"
-      ) {
-        continue;
-      }
-
-      if (stat.isDirectory()) {
-        walkDir(filePath);
-      } else if (
-        file.endsWith(".tsx") ||
-        file.endsWith(".ts") ||
-        file.endsWith(".jsx") ||
-        file.endsWith(".js")
-      ) {
-        try {
-          const content = fs.readFileSync(filePath, "utf-8");
-
-          // Reset regex lastIndex before processing each file
-          resetRegexes();
-
-          // Extract literal data-testid attributes
-          let match;
-          while ((match = dataTestIdRegex.exec(content)) !== null) {
-            selectors.add(match[1]);
-          }
-
-          // Extract JSX expression templates (skip templates with variables for now)
-          while ((match = jsxExpressionRegex.exec(content)) !== null) {
-            if (!match[1].includes("${")) {
-              selectors.add(match[1]);
-            }
-          }
-
-          // Extract prop-based dataTestId usage
-          while ((match = propRegex.exec(content)) !== null) {
-            selectors.add(match[1]);
-          }
-        } catch (err) {
-          console.warn(`⚠️  Warning: Could not read file ${filePath}: ${err instanceof Error ? err.message : String(err)}`);
-        }
-      }
-    }
-  }
-
-  walkDir(directory);
-  return selectors;
-}
-
-// Extract all data-testid references from E2E tests only
-function extractSelectorsFromE2ETests(testDirectory: string): Set<string> {
-  const selectors = new Set<string>();
-
-  // Patterns to match selector references in tests
-  const patterns = [
-    /data-testid=["']([^"']+)["']/g,
-    /getByTestId\(["']([^"']+)["']\)/g,
-    /getByTestId\(`([^`]+)`\)/g,
-    /\[data-testid=["']([^"']+)["']\]/g,
-    /locator\(\['data-testid=([^']+)'\]\)/g,
-    /locator\(['"][^'"].*data-testid=['"]([^'"]+)['"]/g,
-  ];
-
-  function resetPatterns() {
-    for (const pattern of patterns) {
-      pattern.lastIndex = 0;
-    }
-  }
+  const { fileExtensions, patterns, skipDotFiles = true } = options;
 
   function walkDir(dir: string) {
     if (!fs.existsSync(dir)) {
@@ -135,19 +56,24 @@ function extractSelectorsFromE2ETests(testDirectory: string): Set<string> {
       const filePath = path.join(dir, file);
       const stat = fs.statSync(filePath);
 
+      // Skip node_modules, dist, build, and optionally dot files
+      if (
+        (skipDotFiles && file.startsWith(".")) ||
+        file === "node_modules" ||
+        file === "dist" ||
+        file === "build"
+      ) {
+        continue;
+      }
+
       if (stat.isDirectory()) {
         walkDir(filePath);
-      } else if (
-        file.endsWith(".spec.ts") ||
-        file.endsWith(".spec.tsx")
-      ) {
+      } else if (fileExtensions.some((ext) => file.endsWith(ext))) {
         try {
           const content = fs.readFileSync(filePath, "utf-8");
 
-          // Reset regex lastIndex before processing each file
-          resetPatterns();
-
           for (const pattern of patterns) {
+            pattern.lastIndex = 0;
             let match;
             while ((match = pattern.exec(content)) !== null) {
               const selector = match[1];
@@ -158,102 +84,66 @@ function extractSelectorsFromE2ETests(testDirectory: string): Set<string> {
             }
           }
         } catch (err) {
-          console.warn(`⚠️  Warning: Could not read test file ${filePath}: ${err instanceof Error ? err.message : String(err)}`);
+          const fileType =
+            fileExtensions[0] === ".spec.ts" ? "test" : "source";
+          console.warn(
+            `⚠️  Warning: Could not read ${fileType} file ${filePath}: ${err instanceof Error ? err.message : String(err)}`
+          );
         }
       }
     }
   }
 
-  walkDir(testDirectory);
+  walkDir(directory);
   return selectors;
+}
+
+// Extract all data-testid values from source code
+function extractSelectorsFromCode(directory: string): Set<string> {
+  return extractSelectorsFromDirectory(directory, {
+    fileExtensions: [".tsx", ".ts", ".jsx", ".js"],
+    patterns: [
+      /data-testid=["']([^"']+)["']/g,
+      /data-testid=\{\s*`([^`]+)`\s*\}/g,
+      /dataTestId\s*=\s*["']([^"']+)["']/g,
+    ],
+  });
+}
+
+// Extract all data-testid references from E2E tests only
+function extractSelectorsFromE2ETests(testDirectory: string): Set<string> {
+  return extractSelectorsFromDirectory(testDirectory, {
+    fileExtensions: [".spec.ts", ".spec.tsx"],
+    patterns: [
+      /data-testid=["']([^"']+)["']/g,
+      /getByTestId\(["']([^"']+)["']\)/g,
+      /getByTestId\(`([^`]+)`\)/g,
+      /\[data-testid=["']([^"']+)["']\]/g,
+      /locator\(\['data-testid=([^']+)'\]\)/g,
+      /locator\(['"][^'"].*data-testid=['"]([^'"]+)['"]/g,
+    ],
+  });
 }
 
 // Load registry and extract all documented selectors
 function loadRegistry(): {
   documented: Set<string>;
-  patterns: Map<string, string>;
+  patterns: string[];
   knownFuture: Set<string>;
 } {
   const registryPath = path.join(process.cwd(), "selector-registry.yaml");
 
-  if (!fs.existsSync(registryPath)) {
-    console.error("❌ selector-registry.yaml not found");
-    process.exit(1);
-  }
-
   try {
-    const content = fs.readFileSync(registryPath, "utf-8");
-    const registry = yaml.load(content);
-
-    // Type guard: registry must be an object
-    if (!registry || typeof registry !== "object" || Array.isArray(registry)) {
-      console.error("❌ selector-registry.yaml: root must be an object");
-      process.exit(1);
-    }
-
-    const documented = new Set<string>();
-    const patterns = new Map<string, string>();
-    const knownFuture = new Set<string>();
-
-    for (const section of Object.values(registry)) {
-      // Type guard: section must be an object (not a scalar or array)
-      if (!section || typeof section !== "object" || Array.isArray(section)) {
-        console.error("❌ selector-registry.yaml: all sections must be objects");
-        process.exit(1);
-      }
-
-      for (const entry of Object.values(section)) {
-        // Type guard: entry must be an object with an id field
-        if (!entry || typeof entry !== "object" || Array.isArray(entry)) {
-          console.error("❌ selector-registry.yaml: all entries must be objects");
-          process.exit(1);
-        }
-
-        const typedEntry = entry as Record<string, unknown>;
-
-        // Type guard: entry must have an id field that is a string
-        if (typeof typedEntry.id !== "string") {
-          console.error("❌ selector-registry.yaml: all entries must have an id field (string)");
-          process.exit(1);
-        }
-
-        const id = typedEntry.id;
-        const status = typedEntry.status as string | undefined;
-        const pattern = typedEntry.pattern as boolean | undefined;
-
-        // Track known future selectors separately
-        if (status === "not_yet_implemented" || status === "future") {
-          knownFuture.add(id);
-        } else if (pattern) {
-          // Store pattern with template placeholders
-          patterns.set(id.replace(/{[^}]+}/g, "*"), id);
-        } else {
-          documented.add(id);
-        }
-      }
-    }
-
+    const registry = loadSelectorRegistry(registryPath);
+    const { documented, patterns, knownFuture } =
+      extractSelectorsFromRegistry(registry);
     return { documented, patterns, knownFuture };
   } catch (err) {
-    if (err instanceof Error) {
-      console.error(`❌ Error parsing selector-registry.yaml: ${err.message}`);
-    } else {
-      console.error("❌ Error parsing selector-registry.yaml");
-    }
+    console.error(
+      `❌ ${err instanceof Error ? err.message : "Error loading registry"}`
+    );
     process.exit(1);
   }
-}
-
-// Check if a selector matches a pattern
-function matchesPattern(selector: string, patterns: Map<string, string>): boolean {
-  for (const [pattern] of patterns) {
-    // Use .+ instead of [^-]+ to match hyphens and UUIDs properly
-    const regexPattern = pattern.replace(/\*/g, "[\\w-]+");
-    if (new RegExp(`^${regexPattern}$`).test(selector)) {
-      return true;
-    }
-  }
-  return false;
 }
 
 // Main validation
@@ -286,7 +176,6 @@ function validate() {
       !codeSelectors.has(testSelector) &&
       !matchesPattern(testSelector, patterns)
     ) {
-      result.hasErrors = true;
       result.errors.push(
         `❌ Test references non-existent selector: "${testSelector}"`
       );
@@ -302,16 +191,23 @@ function validate() {
   }
 
   if (futureSelectors.size > 0) {
-    console.log(`ℹ️  Found ${futureSelectors.size} known future selectors (not implemented yet):`);
-    futureSelectors.forEach((sel) => console.log(`  ℹ️  ${sel} (planned for future implementation)`));
+    console.log(
+      `ℹ️  Found ${futureSelectors.size} known future selectors (not implemented yet):`
+    );
+    futureSelectors.forEach((sel) =>
+      console.log(`  ℹ️  ${sel} (planned for future implementation)`)
+    );
     console.log();
   }
 
   // Check 2: Code selectors should be in registry (warnings only)
   console.log("✅ Checking code selectors against registry...");
   for (const codeSelector of codeSelectors) {
-    if (!documented.has(codeSelector) && !matchesPattern(codeSelector, patterns) && !knownFuture.has(codeSelector)) {
-      result.hasWarnings = true;
+    if (
+      !documented.has(codeSelector) &&
+      !matchesPattern(codeSelector, patterns) &&
+      !knownFuture.has(codeSelector)
+    ) {
       result.warnings.push(
         `⚠️  Code selector not in registry: "${codeSelector}"`
       );
@@ -343,10 +239,10 @@ function validate() {
   }
 
   // Summary
-  if (result.hasErrors) {
+  if (result.errors.length > 0) {
     console.log("❌ Validation FAILED: Tests reference non-existent selectors");
     process.exit(1);
-  } else if (result.hasWarnings) {
+  } else if (result.warnings.length > 0) {
     console.log("⚠️  Validation completed with warnings: Update selector registry");
     process.exit(0);
   } else {
