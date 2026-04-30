@@ -667,11 +667,10 @@ npm run test:e2e     # Validates first, then runs playwright
 ```
 
 **Exit codes**:
-- `0` = All checks passed ✅
+- `0` = All checks passed, or warnings present (non-blocking) ✅
 - `1` = Hard failure: test references non-existent selector ❌
-- `2` = Warnings: selector in code but not in registry ⚠️
 
-Tests cannot proceed if a test references a non-existent selector. Warnings indicate the registry needs updating.
+Tests cannot proceed if a test references a non-existent selector. Warnings indicate the registry needs updating but do not block test execution.
 
 ### Anti-Patterns to Avoid
 

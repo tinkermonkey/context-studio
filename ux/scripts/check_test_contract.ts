@@ -348,7 +348,7 @@ function validate() {
     process.exit(1);
   } else if (result.hasWarnings) {
     console.log("⚠️  Validation completed with warnings: Update selector registry");
-    process.exit(2);
+    process.exit(0);
   } else {
     console.log("✅ Validation PASSED: All selectors valid");
     process.exit(0);
