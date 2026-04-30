@@ -21,7 +21,7 @@ import {
   Plus,
   X,
 } from "lucide-react";
-import { NodeType } from "@/api/types/changeEvents";
+import { NodeType } from "@/api/types/ontology";
 import { useTermHierarchy } from "@/api/hooks/graph/useGraph";
 import { useQueryClient } from "@tanstack/react-query";
 import { QUERY_KEYS } from "@/api/config";
@@ -69,16 +69,18 @@ export const OntologyClassDetails: React.FC<OntologyClassDetailsProps> = ({
   }, [node.title, setText, triggerAnalysis]);
 
   // Helper to get icon for a node type
-  const getIconForType = (nodeType: string) => {
+  const getIconForType = (nodeType?: string) => {
+    if (!nodeType) return Hash;
     switch (nodeType) {
-      case "taxonomy":
-      case "layer":
+      case NodeType.TAXONOMY:
+      case NodeType.LAYER:
         return Layers;
-      case "scheme":
-      case "domain":
+      case NodeType.CONCEPT_SCHEME:
+      case NodeType.DOMAIN:
         return Database;
-      case "class":
-      case "term":
+      case NodeType.CLASS:
+      case NodeType.TERM:
+      case NodeType.INDIVIDUAL:
         return Hash;
       default:
         return Hash;
@@ -131,12 +133,20 @@ export const OntologyClassDetails: React.FC<OntologyClassDetailsProps> = ({
 
   // Extract parent nodes from lineage
   const { parentLayer, parentDomain, parentTerm } = React.useMemo(() => {
-    const layer = lineage.find((n) => n.node_type === "taxonomy");
-    const domain = lineage.find((n) => n.node_type === "scheme");
+    const layer = lineage.find(
+      (n) => n.node_type === NodeType.TAXONOMY || n.node_type === NodeType.LAYER,
+    );
+    const domain = lineage.find(
+      (n) =>
+        n.node_type === NodeType.CONCEPT_SCHEME ||
+        n.node_type === NodeType.DOMAIN,
+    );
     // Parent term is the term that comes immediately before the current node
     const currentIndex = lineage.findIndex((n) => n.id === node.id);
     const parentTerm =
-      currentIndex > 0 && lineage[currentIndex - 1].node_type === "class"
+      currentIndex > 0 &&
+      (lineage[currentIndex - 1].node_type === NodeType.CLASS ||
+        lineage[currentIndex - 1].node_type === NodeType.TERM)
         ? lineage[currentIndex - 1]
         : undefined;
 
@@ -263,16 +273,17 @@ export const OntologyClassDetails: React.FC<OntologyClassDetailsProps> = ({
                 <Plus className="mr-2 h-4 w-4" />
                 Add Child
               </Button>
-              {node.node_type !== "taxonomy" && (
-                <Button
-                  color="gray"
-                  size="sm"
-                  onClick={() => setIsMoveOpen(true)}
-                >
-                  <Move className="mr-2 h-4 w-4" />
-                  Move
-                </Button>
-              )}
+              {node.node_type !== NodeType.TAXONOMY &&
+                node.node_type !== NodeType.LAYER && (
+                  <Button
+                    color="gray"
+                    size="sm"
+                    onClick={() => setIsMoveOpen(true)}
+                  >
+                    <Move className="mr-2 h-4 w-4" />
+                    Move
+                  </Button>
+                )}
               <Button
                 color="gray"
                 size="sm"
@@ -289,12 +300,16 @@ export const OntologyClassDetails: React.FC<OntologyClassDetailsProps> = ({
           {/* NLP Analysis */}
           <NlpAnalysisPanel
             text={node.title}
-            textTitle={node.node_type === "class" ? "Term" : "Title"}
+            textTitle={
+              node.node_type === NodeType.CLASS || node.node_type === NodeType.TERM
+                ? "Term"
+                : "Title"
+            }
             domainContext={
               parentDomain
                 ? {
                     title: parentDomain.title as string,
-                    definition: (parentDomain.definition || "") as string,
+                    definition: (parentDomain.description || "") as string,
                   }
                 : null
             }
@@ -302,15 +317,31 @@ export const OntologyClassDetails: React.FC<OntologyClassDetailsProps> = ({
               parentTerm
                 ? {
                     title: parentTerm.title as string,
-                    definition: (parentTerm.definition || "") as string,
+                    definition: (parentTerm.description || "") as string,
                     relationshipPredicate: "child_of",
                   }
                 : null
             }
-            currentDefinition={node.definition}
-            layerId={node.node_type === "taxonomy" ? node.id : parentLayer?.id}
-            domainId={node.node_type === "scheme" ? node.id : parentDomain?.id}
-            termId={node.node_type === "class" ? node.id : undefined}
+            currentDefinition={node.description}
+            layerId={
+              node.node_type === NodeType.TAXONOMY ||
+              node.node_type === NodeType.LAYER
+                ? node.id
+                : parentLayer?.id
+            }
+            domainId={
+              node.node_type === NodeType.CONCEPT_SCHEME ||
+              node.node_type === NodeType.DOMAIN
+                ? node.id
+                : parentDomain?.id
+            }
+            termId={
+              node.node_type === NodeType.CLASS ||
+              node.node_type === NodeType.TERM ||
+              node.node_type === NodeType.INDIVIDUAL
+                ? node.id
+                : undefined
+            }
             nodeId={node.id}
           />
 
@@ -341,9 +372,25 @@ export const OntologyClassDetails: React.FC<OntologyClassDetailsProps> = ({
           <div className="pt-4" data-testid="node-children-section">
             <h2 className="text-xl font-semibold">Hierarchy</h2>
             <TreeChartPanel
-              layerId={node.node_type === "taxonomy" ? node.id : undefined}
-              domainId={node.node_type === "scheme" ? node.id : undefined}
-              termId={node.node_type === "class" ? node.id : undefined}
+              layerId={
+                node.node_type === NodeType.TAXONOMY ||
+                node.node_type === NodeType.LAYER
+                  ? node.id
+                  : undefined
+              }
+              domainId={
+                node.node_type === NodeType.CONCEPT_SCHEME ||
+                node.node_type === NodeType.DOMAIN
+                  ? node.id
+                  : undefined
+              }
+              termId={
+                node.node_type === NodeType.CLASS ||
+                node.node_type === NodeType.TERM ||
+                node.node_type === NodeType.INDIVIDUAL
+                  ? node.id
+                  : undefined
+              }
             />
           </div>
         </div>
@@ -371,7 +418,7 @@ export const OntologyClassDetails: React.FC<OntologyClassDetailsProps> = ({
 // Editable Definition Component
 const EditableDefinition: React.FC<{ node: OntologyClass }> = ({ node }) => {
   const [isEditing, setIsEditing] = React.useState(false);
-  const [value, setValue] = React.useState(node.definition || "");
+  const [value, setValue] = React.useState(node.description || "");
   const textareaRef = React.useRef<HTMLTextAreaElement>(null);
 
   // Get the appropriate mutation based on node type
@@ -411,8 +458,8 @@ const EditableDefinition: React.FC<{ node: OntologyClass }> = ({ node }) => {
 
   // Update value when node changes
   React.useEffect(() => {
-    setValue(node.definition || "");
-  }, [node.definition]);
+    setValue(node.description || "");
+  }, [node.description]);
 
   // Focus textarea and resize when entering edit mode
   React.useEffect(() => {
@@ -430,7 +477,7 @@ const EditableDefinition: React.FC<{ node: OntologyClass }> = ({ node }) => {
     try {
       await updateMutation.mutateAsync({
         id: node.id,
-        data: { definition: value },
+        data: { description: value },
       });
       setIsEditing(false);
       toast.success("Definition updated successfully");
@@ -442,7 +489,7 @@ const EditableDefinition: React.FC<{ node: OntologyClass }> = ({ node }) => {
   };
 
   const handleCancel = () => {
-    setValue(node.definition || "");
+    setValue(node.description || "");
     setIsEditing(false);
   };
 
@@ -505,7 +552,7 @@ const EditableDefinition: React.FC<{ node: OntologyClass }> = ({ node }) => {
       className="-m-2 min-h-[4rem] cursor-text rounded p-2 text-base leading-relaxed font-normal text-gray-700 transition-colors hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-800"
       title="Double-click to edit"
     >
-      {node.definition || (
+      {node.description || (
         <span className="text-gray-400 italic dark:text-gray-500">
           No definition provided. Double-click to add one.
         </span>

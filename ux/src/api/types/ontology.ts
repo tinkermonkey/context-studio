@@ -76,26 +76,18 @@ export interface OntologyClass {
   last_modified?: string | null;
   version: number;
   // Legacy properties for backward compatibility
-  node_type?: string;
-  definition?: string | null; // Alias for description
-  parent_node_id?: string | null; // Alias for parent_class_id
-  scheme_id?: string; // Alias for concept_scheme_id
+  node_type?: NodeType;
 }
 
 export interface OntologyClassCreate {
   title: string;
   description?: string | null;
   parent_class_id?: string | null;
-  // Legacy properties for backward compatibility
-  definition?: string | null; // Alias for description
-  parent_node_id?: string | null; // Alias for parent_class_id
 }
 
 export interface OntologyClassUpdate {
   title?: string | null;
   description?: string | null;
-  // Legacy properties for backward compatibility
-  definition?: string | null; // Alias for description
 }
 
 export interface OntologyClassListParams {
@@ -119,11 +111,6 @@ export interface LexicalSense {
   label: string;
   language_code: string;
   sense_type: string;
-  // Legacy properties for backward compatibility
-  term?: string; // Alias for label
-  sense_id?: string;
-  definition?: string;
-  domain?: string;
 }
 
 // ============= DataPropertyValue =============
@@ -175,11 +162,6 @@ export interface Relationship {
   created_at?: string | null;
   last_modified?: string | null;
   version?: number;
-  // Legacy properties for backward compatibility
-  source_class_id?: string; // Alias for source_id
-  target_class_id?: string; // Alias for target_id
-  property_id?: string; // Alias for property_definition_id
-  relationship_type?: string;
 }
 
 export interface RelationshipCreate {
@@ -242,15 +224,7 @@ export interface ListResponse<T> {
 }
 
 // ============= Deprecated Types for Backward Compatibility =============
-/** @deprecated */
-export interface ReferenceLink {
-  id?: string;
-  source_id?: string;
-  target_id?: string;
-  source?: string;
-  external_id?: string;
-  [key: string]: any;
-}
+// Note: ReferenceLink has been moved to reference.ts service for proper API alignment
 
 /** @deprecated */
 export interface OntologyClassAttribute {

@@ -26,33 +26,47 @@ export enum RecordType {
  */
 export interface ChangeEvent {
   id: string;
-  record_type: RecordType;
-  record_id: string;
-  event_type: string;
-  old_data?: Record<string, unknown> | null;
-  new_data?: Record<string, unknown> | null;
+  entity_type: string;
+  entity_id: string;
+  operation: string;
+  previous_state?: Record<string, unknown> | null;
+  new_state?: Record<string, unknown> | null;
   processed: boolean;
-  created_at?: string | null;
-  timestamp?: string | null;
+  timestamp: string;
+  user_id?: string | null;
 }
 
 /**
- * Type guard to check if an event is a structure node event
+ * Type guard to check if an event is a taxonomy event
+ */
+export function isTaxonomyEvent(event: ChangeEvent): boolean {
+  return event.entity_type === RecordType.TAXONOMY;
+}
+
+/**
+ * Type guard to check if an event is a concept scheme event
+ */
+export function isConceptSchemeEvent(event: ChangeEvent): boolean {
+  return event.entity_type === RecordType.CONCEPT_SCHEME;
+}
+
+/**
+ * Type guard to check if an event is an ontology class event
  */
 export function isOntologyClassEvent(event: ChangeEvent): boolean {
-  return event.record_type === RecordType.STRUCTURE_NODE;
+  return event.entity_type === RecordType.ONTOLOGY_CLASS;
 }
 
 /**
- * Type guard to check if an event is a structure node link event
+ * Type guard to check if an event is a relationship event
  */
-export function isOntologyClassLinkEvent(event: ChangeEvent): boolean {
-  return event.record_type === RecordType.STRUCTURE_NODE_LINK;
+export function isRelationshipEvent(event: ChangeEvent): boolean {
+  return event.entity_type === RecordType.RELATIONSHIP;
 }
 
 /**
- * Type guard to check if an event is a predicate event
+ * Type guard to check if an event is a property definition event
  */
-export function isPredicateEvent(event: ChangeEvent): boolean {
-  return event.record_type === RecordType.PREDICATE;
+export function isPropertyDefinitionEvent(event: ChangeEvent): boolean {
+  return event.entity_type === RecordType.PROPERTY_DEFINITION;
 }

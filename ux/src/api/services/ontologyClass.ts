@@ -66,8 +66,8 @@ export class OntologyClassService extends BaseService {
       this.validateRequired(data.title, "title");
       this.sanitizeString(data.title, "title", 255);
 
-      if (data.definition) {
-        this.sanitizeString(data.definition, "definition", 10000);
+      if (data.description) {
+        this.sanitizeString(data.description, "description", 10000);
       }
 
       return this.postResource<OntologyClass>(
@@ -88,8 +88,8 @@ export class OntologyClassService extends BaseService {
         this.sanitizeString(data.title, "title", 255);
       }
 
-      if (data.definition) {
-        this.sanitizeString(data.definition, "definition", 10000);
+      if (data.description) {
+        this.sanitizeString(data.description, "description", 10000);
       }
 
       return this.putResource<OntologyClass>(

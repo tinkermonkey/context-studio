@@ -33,7 +33,7 @@ const ClassForm: React.FC<ClassFormProps> = ({
 
   const getDefaultValues = () => ({
     title: ontologyClass?.title ?? "",
-    definition: ontologyClass?.definition ?? "",
+    description: ontologyClass?.description ?? "",
     parent_class_id: ontologyClass?.parent_class_id ?? parentClassId ?? "",
   });
 
@@ -44,7 +44,7 @@ const ClassForm: React.FC<ClassFormProps> = ({
       try {
         const classData: OntologyClassCreate = {
           title: value.title,
-          definition: value.definition || null,
+          description: value.description || null,
           parent_class_id: value.parent_class_id || null,
         };
 
@@ -147,28 +147,28 @@ const ClassForm: React.FC<ClassFormProps> = ({
           )}
         </form.Field>
         <form.Field
-          name="definition"
+          name="description"
           validators={{
             onChange: ({ value }) =>
-              !value ? "Definition is required" : undefined,
+              !value ? "Description is required" : undefined,
           }}
         >
           {(field) => (
             <div>
               <Label
-                htmlFor="class-definition"
+                htmlFor="class-description"
                 className="mb-1 block font-medium"
               >
-                Definition
+                Description
               </Label>
               <Textarea
-                id="class-definition"
-                placeholder="Definition"
+                id="class-description"
+                placeholder="Description"
                 value={field.state.value}
                 color={field.state.meta.errors.length ? "failure" : undefined}
                 onChange={(e) => field.handleChange(e.target.value)}
                 required
-                data-testid="class-definition-input"
+                data-testid="class-description-input"
               />
             </div>
           )}
