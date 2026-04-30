@@ -114,12 +114,12 @@ export default class StructuredReporter implements Reporter {
 
   onTestEnd(test: TestCase, result: TestResult): void {
     const specFile = test.location.file;
-    const testKey = test.id;
+    const testTitle = test.titlePath().join(" > ");
 
     // Find existing test report if it's being retried
     const existingIndex = this.tests.findIndex((t) => {
-      // Match by spec file and test ID for unique identification
-      return t.spec_file === specFile && t.test_name === test.title;
+      // Match by spec file and full test path (including describe hierarchy)
+      return t.spec_file === specFile && t.test_name === testTitle;
     });
 
     const testStatus = this.computeTestStatus(test);
@@ -141,7 +141,7 @@ export default class StructuredReporter implements Reporter {
 
     const testReport: TestReport = {
       spec_file: specFile,
-      test_name: test.title,
+      test_name: testTitle,
       status: testStatus,
       duration_ms: totalDuration,
       attempts: this.extractAttempts(test),
