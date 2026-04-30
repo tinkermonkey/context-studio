@@ -47,15 +47,15 @@ test.describe("Smoke Tests", () => {
     await expect(brand).toBeVisible();
   });
 
-  test("should load the layers page", async ({ page }) => {
-    // Navigate to layers page
-    await page.goto("/app/layers");
+  test("should load the classes page", async ({ page }) => {
+    // Navigate to classes page (replaces /app/layers which no longer exists)
+    await page.goto("/app/classes");
 
     // Wait for page to load
     await page.waitForLoadState("networkidle");
 
-    // Verify we're on the layers page
-    expect(page.url()).toContain("/app/layers");
+    // Verify we're on the classes page
+    expect(page.url()).toContain("/app/classes");
 
     // Verify the page loaded without errors
     // Just check that the page rendered something

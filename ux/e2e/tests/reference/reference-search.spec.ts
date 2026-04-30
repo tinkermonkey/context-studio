@@ -162,26 +162,19 @@ test.describe("Reference Search", () => {
     // Perform a search
     await page.fill('[data-testid="reference-search-input"]', "computer");
 
-    // Wait for error message
+    // Wait for error message or error state
     const errorIndicator = page.locator(
       'text="Error" | [data-testid="reference-search-error"]',
     );
 
-    // Use waitForAnyCondition to handle different error states
-    try {
-      await waitForAnyCondition(page, [
-        async () => {
-          const visible = await errorIndicator.isVisible();
-          return visible;
-        },
-        async () => {
-          const text = await page.locator("body").textContent();
-          return text!.includes("Error");
-        },
-      ]);
-    } catch {
-      // Error handling is working - search failed gracefully
-    }
+    // Verify error is displayed or error state exists
+    const errorVisible = await errorIndicator
+      .isVisible()
+      .catch(() => false);
+    const pageText = await page.locator("body").textContent();
+    const hasErrorText = pageText?.includes("Error") ?? false;
+
+    expect(errorVisible || hasErrorText).toBe(true);
   });
 
   test("should clear search and reset results", async ({ page }) => {

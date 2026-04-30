@@ -350,9 +350,14 @@ test.describe("Pages and Interactive Elements", () => {
     // Wait for page to fully load
     await page.waitForLoadState("networkidle");
 
-    // Verify page loaded successfully
+    // Verify page loaded successfully (either table or empty state)
     const table = page.locator("table").first();
+    const emptyMessage = page
+      .locator("text=/no data|no results|empty/i")
+      .first();
+
     const tableLoaded = await table.isVisible().catch(() => false);
-    expect(tableLoaded || true).toBe(true);
+    const hasEmptyState = await emptyMessage.isVisible().catch(() => false);
+    expect(tableLoaded || hasEmptyState).toBe(true);
   });
 });

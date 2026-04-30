@@ -53,12 +53,12 @@ test.describe("Concept Scheme CRUD Operations", () => {
     const titleInput = page
       .locator('[data-testid="concept-scheme-title-input"]')
       .first();
-    const definitionInput = page
-      .locator('[data-testid="concept-scheme-definition-input"]')
+    const descriptionInput = page
+      .locator('[data-testid="concept-scheme-description-input"]')
       .first();
 
     await titleInput.fill("test-scheme-e2e-create");
-    await definitionInput.fill("A test scheme created via E2E tests");
+    await descriptionInput.fill("A test scheme created via E2E tests");
 
     // Submit form
     const submitButton = modal.getByRole("button", {
@@ -178,12 +178,12 @@ test.describe("Concept Scheme CRUD Operations", () => {
     const titleInput = page
       .locator('[data-testid="concept-scheme-title-input"]')
       .first();
-    const definitionInput = page
-      .locator('[data-testid="concept-scheme-definition-input"]')
+    const descriptionInput = page
+      .locator('[data-testid="concept-scheme-description-input"]')
       .first();
 
     await titleInput.fill("test-scheme-e2e-update");
-    await definitionInput.fill("Updated scheme definition");
+    await descriptionInput.fill("Updated scheme definition");
 
     // Submit form
     const submitButton = modal.getByRole("button", { name: /save|update/i });
@@ -201,7 +201,7 @@ test.describe("Concept Scheme CRUD Operations", () => {
       `/api/schemes/${scheme.id}`,
     );
     expect(apiResponse.title).toBe("test-scheme-e2e-update");
-    expect(apiResponse.definition).toBe("Updated scheme definition");
+    expect(apiResponse.description).toBe("Updated scheme definition");
   });
 
   test("should delete a concept scheme", async ({ page }) => {
@@ -286,7 +286,7 @@ test.describe("Concept Scheme CRUD Operations", () => {
       `/api/schemes/${scheme.id}`,
     );
     expect(apiResponse.title).toBe(testTitle);
-    expect(apiResponse.definition).toBe(testDescription);
+    expect(apiResponse.description).toBe(testDescription);
     expect(apiResponse.id).toBeDefined();
     expect(apiResponse.taxonomy_id).toBe(taxonomyId);
     expect(apiResponse.created_at).toBeDefined();

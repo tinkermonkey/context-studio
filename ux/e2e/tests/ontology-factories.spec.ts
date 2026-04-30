@@ -280,11 +280,7 @@ test.describe("Test Data Factories", () => {
       expect(hierarchy.taxonomy.id).toBeDefined();
 
       // Cleanup should complete without throwing errors
-      // (actual deletion is verified by the pattern matching in clearTestData)
-      await clearTestData(page);
-
-      // If we reach here, cleanup completed successfully
-      expect(true).toBe(true);
+      await expect(clearTestData(page)).resolves.not.toThrow();
     });
 
     test("should not fail if there is no test data to clean", async ({

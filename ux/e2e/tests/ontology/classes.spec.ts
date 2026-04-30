@@ -176,12 +176,12 @@ test.describe("Ontology Class CRUD Operations", () => {
     const titleInput = page
       .locator('[data-testid="class-title-input"]')
       .first();
-    const definitionInput = page
-      .locator('[data-testid="class-definition-input"]')
+    const descriptionInput = page
+      .locator('[data-testid="class-description-input"]')
       .first();
 
     await titleInput.fill("test-class-e2e-update");
-    await definitionInput.fill("Updated class definition");
+    await descriptionInput.fill("Updated class definition");
 
     // Submit form
     const submitButton = modal.getByRole("button", { name: /save|update/i });
@@ -199,7 +199,7 @@ test.describe("Ontology Class CRUD Operations", () => {
       `/api/classes/${ontologyClass.id}`,
     );
     expect(apiResponse.title).toBe("test-class-e2e-update");
-    expect(apiResponse.definition).toBe("Updated class definition");
+    expect(apiResponse.description).toBe("Updated class definition");
   });
 
   test("should delete a class", async ({ page }) => {

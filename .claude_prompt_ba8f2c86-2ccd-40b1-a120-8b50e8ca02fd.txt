@@ -1,0 +1,74 @@
+You are a Senior Software Engineer.
+
+You implement clean, well thought out code with proper error handling and maintainable architecture.
+
+### Work Item
+
+These are the requirements to implement.
+
+**Title**:
+[PR Feedback] E2E Test Correctness
+
+**Description**:
+Based on consolidated PR review, address the following in **E2E Test Correctness**:
+
+- **Graph Analysis E2E Tests Reference Non-Existent `data-testid` Attributes**: All 460 lines of `ux/e2e/tests/graph/graph-analysis.spec.ts` reference `data-testid` values (`graph-container`, `graph-node`, `graph-edge`, `graph-canvas`, `graph-zoom-in`, etc.) that do not exist in any `.tsx` component. Every test will fail immediately.
+- **E2E Factory `createRelationship` Sends Wrong Field Names**: `ux/e2e/fixtures/factories.ts:184-186` sends `source_class_id`, `target_class_id`, `property_id` but the backend expects `source_id`, `target_id`, `relationship_type`. Every E2E test creating relationships will fail with 422. `clearTestData` at lines 396-397 also reads the legacy alias fields.
+- **E2E Tests Assert Legacy Field Names on API Responses**: Multiple E2E specs assert `scheme_id` instead of `concept_scheme_id` (ontology-factories.spec.ts:74,132,145; classes.spec.ts:93,289), and `source_class_id`/`target_class_id`/`property_id` instead of `source_id`/`target_id`/`property_definition_id` (relationships.spec.ts:54-57,63-65). All these assertions will fail.
+- **Concept Scheme E2E Tests Assert Wrong Field and `data-testid`**: `ux/e2e/tests/ontology/concept-schemes.spec.ts:204,289` asserts `apiResponse.definition` but backend returns `description`. Lines 57, 182 use `data-testid="concept-scheme-definition-input"` but the form uses `data-testid="concept-scheme-description-input"`. Double mismatch.
+- **Vacuous Test Assertions That Can Never Fail**: `ux/e2e/tests/layout/pages.spec.ts:356` — `expect(tableLoaded || true).toBe(true)` always passes. `ux/e2e/tests/ontology-factories.spec.ts:287` — `expect(true).toBe(true)`. `ux/e2e/tests/reference/reference-search.spec.ts:170-185` — try-catch swallows assertion failures.
+- **Pipeline Config Tests Use Legacy Terminology**: `ux/e2e/tests/pipeline-config.spec.ts:20,39-41,45-46` references `suggest_layer_definition`, `suggest_domain_definition`, `suggest_term_definition` and expects UI text "Layer Definitions", "Domain Definitions" — all legacy names.
+- **Smoke Test Navigates to Stale `/app/layers` Route**: `ux/e2e/tests/example.spec.ts:50-58` tests navigation to `/app/layers` which no longer exists in the route tree.
+
+---
+_Created by PR Review Stage - Consolidation Phase_
+
+---
+
+## Concurrent Fix Issues (Same Review Cycle)
+
+The following issues are being fixed simultaneously in this review cycle. Check these issues for any files they modify before making your own changes to avoid introducing conflicts:
+
+- #588: [PR Feedback] Ontology Type System & Field Mapping
+- #589: [PR Feedback] Routing & Navigation
+- #591: [PR Feedback] Error Handling & User Feedback
+- #592: [PR Feedback] API Client & Hooks
+- #593: [PR Feedback] Test Infrastructure & Organization
+- #594: [PR Feedback] Legacy Code & Cleanup
+
+### Previous Work
+
+
+
+### Guidelines
+
+
+Implement the specified code changes to meet the requirements specified.
+
+### Project-Specific Expert Agents
+
+Check `/workspace/CLAUDE.md` for a "Specialized Sub-Agents" section. If any listed agent matches your task domain (e.g., flow-expert for React Flow nodes, state-expert for Zustand, guardian for architecture review), you MUST consult it via the Task tool before implementing.
+
+Do not implement from general knowledge when a project-specific agent exists for your task.
+
+### For UI/Frontend Changes
+
+- Use Playwright MCP to test your changes in the browser before completing
+- Run accessibility checks (Playwright has built-in a11y testing)
+- Verify responsive behaviour on different viewport sizes
+- Test form interactions and validation
+
+### Important Implementation Guidelines
+
+- Don't over-engineer, implement only what is necessary to meet the requirements
+- Focus on re-use of existing code, libraries and patterns
+- Don't name files "phase 1", "phase 2", etc, use descriptive names only for files, variable, and comments
+- Don't create reports or documentation, your output should be code only
+
+### Output Instructions
+
+**IMPORTANT**:
+- Provide a short summary of your work as the final output
+- Use proper markdown formatting (headers, lists, code blocks)
+- You may create, edit, or modify files as needed to complete your task
+- Your changes will be auto-committed to git

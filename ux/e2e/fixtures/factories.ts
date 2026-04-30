@@ -181,9 +181,9 @@ export async function createRelationship(
   const response = await apiRequest<Relationship>(page, "/api/relationships", {
     method: "POST",
     body: {
-      source_class_id: sourceClassId,
-      target_class_id: targetClassId,
-      property_id: propertyId,
+      source_id: sourceClassId,
+      target_id: targetClassId,
+      property_definition_id: propertyId,
     },
   });
 
@@ -393,8 +393,8 @@ export async function clearTestData(
     for (const relationship of relationships) {
       // Only delete relationships between test-created classes
       if (
-        testClassIds.has(relationship.source_class_id) &&
-        testClassIds.has(relationship.target_class_id)
+        testClassIds.has(relationship.source_id) &&
+        testClassIds.has(relationship.target_id)
       ) {
         try {
           await apiRequest(page, `/api/relationships/${relationship.id}`, {
