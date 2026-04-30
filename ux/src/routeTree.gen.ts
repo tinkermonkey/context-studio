@@ -13,6 +13,7 @@ import { Route as AppRouteImport } from './routes/app'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AppIndexRouteImport } from './routes/app/index'
 import { Route as AppTaxonomiesRouteImport } from './routes/app/taxonomies'
+import { Route as AppRelationshipsRouteImport } from './routes/app/relationships'
 import { Route as AppPropertiesRouteImport } from './routes/app/properties'
 import { Route as AppDatasetsRouteImport } from './routes/app/datasets'
 import { Route as AppConfigRouteImport } from './routes/app/config'
@@ -20,6 +21,7 @@ import { Route as AppConceptSchemesRouteImport } from './routes/app/concept-sche
 import { Route as AppClassesRouteImport } from './routes/app/classes'
 import { Route as AppReferenceIndexRouteImport } from './routes/app/reference/index'
 import { Route as AppConfigIndexRouteImport } from './routes/app/config/index'
+import { Route as AppTaxonomiesTaxonomyIdRouteImport } from './routes/app/taxonomies.$taxonomyId'
 import { Route as AppReferenceSearchRouteImport } from './routes/app/reference/search'
 import { Route as AppReferenceRagTestRouteImport } from './routes/app/reference/rag-test'
 import { Route as AppReferencePropertiesRouteImport } from './routes/app/reference/properties'
@@ -38,6 +40,8 @@ import { Route as AppConfigNetworkRouteImport } from './routes/app/config/networ
 import { Route as AppConfigModelsRouteImport } from './routes/app/config/models'
 import { Route as AppConfigDataSourcesRouteImport } from './routes/app/config/data-sources'
 import { Route as AppConfigAdvancedRouteImport } from './routes/app/config/advanced'
+import { Route as AppConceptSchemesSchemeIdRouteImport } from './routes/app/concept-schemes.$schemeId'
+import { Route as AppClassesClassIdRouteImport } from './routes/app/classes.$classId'
 import { Route as AppConfigPipelinesIndexRouteImport } from './routes/app/config/pipelines.index'
 import { Route as AppConfigPipelinesPipelineTypeRouteImport } from './routes/app/config/pipelines.$pipelineType'
 import { Route as AppConfigPipelinesPipelineTypeIndexRouteImport } from './routes/app/config/pipelines.$pipelineType.index'
@@ -63,6 +67,11 @@ const AppIndexRoute = AppIndexRouteImport.update({
 const AppTaxonomiesRoute = AppTaxonomiesRouteImport.update({
   id: '/taxonomies',
   path: '/taxonomies',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppRelationshipsRoute = AppRelationshipsRouteImport.update({
+  id: '/relationships',
+  path: '/relationships',
   getParentRoute: () => AppRoute,
 } as any)
 const AppPropertiesRoute = AppPropertiesRouteImport.update({
@@ -99,6 +108,11 @@ const AppConfigIndexRoute = AppConfigIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => AppConfigRoute,
+} as any)
+const AppTaxonomiesTaxonomyIdRoute = AppTaxonomiesTaxonomyIdRouteImport.update({
+  id: '/$taxonomyId',
+  path: '/$taxonomyId',
+  getParentRoute: () => AppTaxonomiesRoute,
 } as any)
 const AppReferenceSearchRoute = AppReferenceSearchRouteImport.update({
   id: '/reference/search',
@@ -195,6 +209,17 @@ const AppConfigAdvancedRoute = AppConfigAdvancedRouteImport.update({
   path: '/advanced',
   getParentRoute: () => AppConfigRoute,
 } as any)
+const AppConceptSchemesSchemeIdRoute =
+  AppConceptSchemesSchemeIdRouteImport.update({
+    id: '/$schemeId',
+    path: '/$schemeId',
+    getParentRoute: () => AppConceptSchemesRoute,
+  } as any)
+const AppClassesClassIdRoute = AppClassesClassIdRouteImport.update({
+  id: '/$classId',
+  path: '/$classId',
+  getParentRoute: () => AppClassesRoute,
+} as any)
 const AppConfigPipelinesIndexRoute = AppConfigPipelinesIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -234,13 +259,16 @@ const AppConfigPipelinesPipelineTypeEditFlavorIdRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/app': typeof AppRouteWithChildren
-  '/app/classes': typeof AppClassesRoute
-  '/app/concept-schemes': typeof AppConceptSchemesRoute
+  '/app/classes': typeof AppClassesRouteWithChildren
+  '/app/concept-schemes': typeof AppConceptSchemesRouteWithChildren
   '/app/config': typeof AppConfigRouteWithChildren
   '/app/datasets': typeof AppDatasetsRoute
   '/app/properties': typeof AppPropertiesRoute
-  '/app/taxonomies': typeof AppTaxonomiesRoute
+  '/app/relationships': typeof AppRelationshipsRoute
+  '/app/taxonomies': typeof AppTaxonomiesRouteWithChildren
   '/app/': typeof AppIndexRoute
+  '/app/classes/$classId': typeof AppClassesClassIdRoute
+  '/app/concept-schemes/$schemeId': typeof AppConceptSchemesSchemeIdRoute
   '/app/config/advanced': typeof AppConfigAdvancedRoute
   '/app/config/data-sources': typeof AppConfigDataSourcesRoute
   '/app/config/models': typeof AppConfigModelsRoute
@@ -259,6 +287,7 @@ export interface FileRoutesByFullPath {
   '/app/reference/properties': typeof AppReferencePropertiesRoute
   '/app/reference/rag-test': typeof AppReferenceRagTestRoute
   '/app/reference/search': typeof AppReferenceSearchRoute
+  '/app/taxonomies/$taxonomyId': typeof AppTaxonomiesTaxonomyIdRoute
   '/app/config/': typeof AppConfigIndexRoute
   '/app/reference': typeof AppReferenceIndexRoute
   '/app/config/pipelines/$pipelineType': typeof AppConfigPipelinesPipelineTypeRouteWithChildren
@@ -270,12 +299,15 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/app/classes': typeof AppClassesRoute
-  '/app/concept-schemes': typeof AppConceptSchemesRoute
+  '/app/classes': typeof AppClassesRouteWithChildren
+  '/app/concept-schemes': typeof AppConceptSchemesRouteWithChildren
   '/app/datasets': typeof AppDatasetsRoute
   '/app/properties': typeof AppPropertiesRoute
-  '/app/taxonomies': typeof AppTaxonomiesRoute
+  '/app/relationships': typeof AppRelationshipsRoute
+  '/app/taxonomies': typeof AppTaxonomiesRouteWithChildren
   '/app': typeof AppIndexRoute
+  '/app/classes/$classId': typeof AppClassesClassIdRoute
+  '/app/concept-schemes/$schemeId': typeof AppConceptSchemesSchemeIdRoute
   '/app/config/advanced': typeof AppConfigAdvancedRoute
   '/app/config/data-sources': typeof AppConfigDataSourcesRoute
   '/app/config/models': typeof AppConfigModelsRoute
@@ -293,6 +325,7 @@ export interface FileRoutesByTo {
   '/app/reference/properties': typeof AppReferencePropertiesRoute
   '/app/reference/rag-test': typeof AppReferenceRagTestRoute
   '/app/reference/search': typeof AppReferenceSearchRoute
+  '/app/taxonomies/$taxonomyId': typeof AppTaxonomiesTaxonomyIdRoute
   '/app/config': typeof AppConfigIndexRoute
   '/app/reference': typeof AppReferenceIndexRoute
   '/app/config/pipelines': typeof AppConfigPipelinesIndexRoute
@@ -305,13 +338,16 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/app': typeof AppRouteWithChildren
-  '/app/classes': typeof AppClassesRoute
-  '/app/concept-schemes': typeof AppConceptSchemesRoute
+  '/app/classes': typeof AppClassesRouteWithChildren
+  '/app/concept-schemes': typeof AppConceptSchemesRouteWithChildren
   '/app/config': typeof AppConfigRouteWithChildren
   '/app/datasets': typeof AppDatasetsRoute
   '/app/properties': typeof AppPropertiesRoute
-  '/app/taxonomies': typeof AppTaxonomiesRoute
+  '/app/relationships': typeof AppRelationshipsRoute
+  '/app/taxonomies': typeof AppTaxonomiesRouteWithChildren
   '/app/': typeof AppIndexRoute
+  '/app/classes/$classId': typeof AppClassesClassIdRoute
+  '/app/concept-schemes/$schemeId': typeof AppConceptSchemesSchemeIdRoute
   '/app/config/advanced': typeof AppConfigAdvancedRoute
   '/app/config/data-sources': typeof AppConfigDataSourcesRoute
   '/app/config/models': typeof AppConfigModelsRoute
@@ -330,6 +366,7 @@ export interface FileRoutesById {
   '/app/reference/properties': typeof AppReferencePropertiesRoute
   '/app/reference/rag-test': typeof AppReferenceRagTestRoute
   '/app/reference/search': typeof AppReferenceSearchRoute
+  '/app/taxonomies/$taxonomyId': typeof AppTaxonomiesTaxonomyIdRoute
   '/app/config/': typeof AppConfigIndexRoute
   '/app/reference/': typeof AppReferenceIndexRoute
   '/app/config/pipelines/$pipelineType': typeof AppConfigPipelinesPipelineTypeRouteWithChildren
@@ -349,8 +386,11 @@ export interface FileRouteTypes {
     | '/app/config'
     | '/app/datasets'
     | '/app/properties'
+    | '/app/relationships'
     | '/app/taxonomies'
     | '/app/'
+    | '/app/classes/$classId'
+    | '/app/concept-schemes/$schemeId'
     | '/app/config/advanced'
     | '/app/config/data-sources'
     | '/app/config/models'
@@ -369,6 +409,7 @@ export interface FileRouteTypes {
     | '/app/reference/properties'
     | '/app/reference/rag-test'
     | '/app/reference/search'
+    | '/app/taxonomies/$taxonomyId'
     | '/app/config/'
     | '/app/reference'
     | '/app/config/pipelines/$pipelineType'
@@ -384,8 +425,11 @@ export interface FileRouteTypes {
     | '/app/concept-schemes'
     | '/app/datasets'
     | '/app/properties'
+    | '/app/relationships'
     | '/app/taxonomies'
     | '/app'
+    | '/app/classes/$classId'
+    | '/app/concept-schemes/$schemeId'
     | '/app/config/advanced'
     | '/app/config/data-sources'
     | '/app/config/models'
@@ -403,6 +447,7 @@ export interface FileRouteTypes {
     | '/app/reference/properties'
     | '/app/reference/rag-test'
     | '/app/reference/search'
+    | '/app/taxonomies/$taxonomyId'
     | '/app/config'
     | '/app/reference'
     | '/app/config/pipelines'
@@ -419,8 +464,11 @@ export interface FileRouteTypes {
     | '/app/config'
     | '/app/datasets'
     | '/app/properties'
+    | '/app/relationships'
     | '/app/taxonomies'
     | '/app/'
+    | '/app/classes/$classId'
+    | '/app/concept-schemes/$schemeId'
     | '/app/config/advanced'
     | '/app/config/data-sources'
     | '/app/config/models'
@@ -439,6 +487,7 @@ export interface FileRouteTypes {
     | '/app/reference/properties'
     | '/app/reference/rag-test'
     | '/app/reference/search'
+    | '/app/taxonomies/$taxonomyId'
     | '/app/config/'
     | '/app/reference/'
     | '/app/config/pipelines/$pipelineType'
@@ -482,6 +531,13 @@ declare module '@tanstack/react-router' {
       path: '/taxonomies'
       fullPath: '/app/taxonomies'
       preLoaderRoute: typeof AppTaxonomiesRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/relationships': {
+      id: '/app/relationships'
+      path: '/relationships'
+      fullPath: '/app/relationships'
+      preLoaderRoute: typeof AppRelationshipsRouteImport
       parentRoute: typeof AppRoute
     }
     '/app/properties': {
@@ -532,6 +588,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/app/config/'
       preLoaderRoute: typeof AppConfigIndexRouteImport
       parentRoute: typeof AppConfigRoute
+    }
+    '/app/taxonomies/$taxonomyId': {
+      id: '/app/taxonomies/$taxonomyId'
+      path: '/$taxonomyId'
+      fullPath: '/app/taxonomies/$taxonomyId'
+      preLoaderRoute: typeof AppTaxonomiesTaxonomyIdRouteImport
+      parentRoute: typeof AppTaxonomiesRoute
     }
     '/app/reference/search': {
       id: '/app/reference/search'
@@ -659,6 +722,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppConfigAdvancedRouteImport
       parentRoute: typeof AppConfigRoute
     }
+    '/app/concept-schemes/$schemeId': {
+      id: '/app/concept-schemes/$schemeId'
+      path: '/$schemeId'
+      fullPath: '/app/concept-schemes/$schemeId'
+      preLoaderRoute: typeof AppConceptSchemesSchemeIdRouteImport
+      parentRoute: typeof AppConceptSchemesRoute
+    }
+    '/app/classes/$classId': {
+      id: '/app/classes/$classId'
+      path: '/$classId'
+      fullPath: '/app/classes/$classId'
+      preLoaderRoute: typeof AppClassesClassIdRouteImport
+      parentRoute: typeof AppClassesRoute
+    }
     '/app/config/pipelines/': {
       id: '/app/config/pipelines/'
       path: '/'
@@ -703,6 +780,29 @@ declare module '@tanstack/react-router' {
     }
   }
 }
+
+interface AppClassesRouteChildren {
+  AppClassesClassIdRoute: typeof AppClassesClassIdRoute
+}
+
+const AppClassesRouteChildren: AppClassesRouteChildren = {
+  AppClassesClassIdRoute: AppClassesClassIdRoute,
+}
+
+const AppClassesRouteWithChildren = AppClassesRoute._addFileChildren(
+  AppClassesRouteChildren,
+)
+
+interface AppConceptSchemesRouteChildren {
+  AppConceptSchemesSchemeIdRoute: typeof AppConceptSchemesSchemeIdRoute
+}
+
+const AppConceptSchemesRouteChildren: AppConceptSchemesRouteChildren = {
+  AppConceptSchemesSchemeIdRoute: AppConceptSchemesSchemeIdRoute,
+}
+
+const AppConceptSchemesRouteWithChildren =
+  AppConceptSchemesRoute._addFileChildren(AppConceptSchemesRouteChildren)
 
 interface AppConfigPipelinesPipelineTypeRouteChildren {
   AppConfigPipelinesPipelineTypeCreateRoute: typeof AppConfigPipelinesPipelineTypeCreateRoute
@@ -768,13 +868,26 @@ const AppConfigRouteWithChildren = AppConfigRoute._addFileChildren(
   AppConfigRouteChildren,
 )
 
+interface AppTaxonomiesRouteChildren {
+  AppTaxonomiesTaxonomyIdRoute: typeof AppTaxonomiesTaxonomyIdRoute
+}
+
+const AppTaxonomiesRouteChildren: AppTaxonomiesRouteChildren = {
+  AppTaxonomiesTaxonomyIdRoute: AppTaxonomiesTaxonomyIdRoute,
+}
+
+const AppTaxonomiesRouteWithChildren = AppTaxonomiesRoute._addFileChildren(
+  AppTaxonomiesRouteChildren,
+)
+
 interface AppRouteChildren {
-  AppClassesRoute: typeof AppClassesRoute
-  AppConceptSchemesRoute: typeof AppConceptSchemesRoute
+  AppClassesRoute: typeof AppClassesRouteWithChildren
+  AppConceptSchemesRoute: typeof AppConceptSchemesRouteWithChildren
   AppConfigRoute: typeof AppConfigRouteWithChildren
   AppDatasetsRoute: typeof AppDatasetsRoute
   AppPropertiesRoute: typeof AppPropertiesRoute
-  AppTaxonomiesRoute: typeof AppTaxonomiesRoute
+  AppRelationshipsRoute: typeof AppRelationshipsRoute
+  AppTaxonomiesRoute: typeof AppTaxonomiesRouteWithChildren
   AppIndexRoute: typeof AppIndexRoute
   AppMonitoringAnalyticsRoute: typeof AppMonitoringAnalyticsRoute
   AppMonitoringLlmTraceabilityRoute: typeof AppMonitoringLlmTraceabilityRoute
@@ -791,12 +904,13 @@ interface AppRouteChildren {
 }
 
 const AppRouteChildren: AppRouteChildren = {
-  AppClassesRoute: AppClassesRoute,
-  AppConceptSchemesRoute: AppConceptSchemesRoute,
+  AppClassesRoute: AppClassesRouteWithChildren,
+  AppConceptSchemesRoute: AppConceptSchemesRouteWithChildren,
   AppConfigRoute: AppConfigRouteWithChildren,
   AppDatasetsRoute: AppDatasetsRoute,
   AppPropertiesRoute: AppPropertiesRoute,
-  AppTaxonomiesRoute: AppTaxonomiesRoute,
+  AppRelationshipsRoute: AppRelationshipsRoute,
+  AppTaxonomiesRoute: AppTaxonomiesRouteWithChildren,
   AppIndexRoute: AppIndexRoute,
   AppMonitoringAnalyticsRoute: AppMonitoringAnalyticsRoute,
   AppMonitoringLlmTraceabilityRoute: AppMonitoringLlmTraceabilityRoute,

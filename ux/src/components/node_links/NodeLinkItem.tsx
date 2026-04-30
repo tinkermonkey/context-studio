@@ -18,6 +18,7 @@ import { useNavigate } from "@tanstack/react-router";
 
 import { OntologyClassLink, NodeType } from "@/api/types/ontology";
 import { useOntologyClass } from "@/api/hooks/ontologyClasses";
+import { getNodePath } from "@/utils/nodeNavigation";
 
 interface NodeLinkItemProps {
   link: OntologyClassLink;
@@ -47,7 +48,9 @@ export const NodeLinkItem: React.FC<NodeLinkItemProps> = ({
   };
 
   const handleNavigate = () => {
-    navigate({ to: `/app/ontologyClass/${displayNodeId}` });
+    if (displayNode) {
+      navigate({ to: getNodePath(displayNodeId, displayNode.node_type) });
+    }
   };
 
   // Get icon for node type

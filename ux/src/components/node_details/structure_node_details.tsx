@@ -22,6 +22,7 @@ import {
   X,
 } from "lucide-react";
 import { NodeType } from "@/api/types/ontology";
+import { getNodePath } from "@/utils/nodeNavigation";
 import { useTermHierarchy } from "@/api/hooks/graph/useGraph";
 import { useQueryClient } from "@tanstack/react-query";
 import { QUERY_KEYS } from "@/api/config";
@@ -195,7 +196,10 @@ export const OntologyClassDetails: React.FC<OntologyClassDetailsProps> = ({
                           href={
                             isLast
                               ? undefined
-                              : `/app/ontologyClass/${ancestorNode.id}`
+                              : getNodePath(
+                                  ancestorNode.id,
+                                  ancestorNode.node_type as string,
+                                )
                           }
                           icon={icon}
                         >
@@ -213,7 +217,7 @@ export const OntologyClassDetails: React.FC<OntologyClassDetailsProps> = ({
                   breadcrumbItems.push(
                     <BreadcrumbItem
                       key={first.id}
-                      href={`/app/ontologyClass/${first.id}`}
+                      href={getNodePath(first.id, first.node_type as string)}
                       icon={getIconForType(first.node_type as string)}
                     >
                       {first.title as string}
