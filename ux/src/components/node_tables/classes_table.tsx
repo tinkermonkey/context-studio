@@ -9,7 +9,6 @@ import {
   useDeleteOntologyClass,
 } from "@/api/hooks/ontologyClasses";
 import { ClassForm } from "@/components/forms/class_form";
-import { ClassMoveForm } from "@/components/forms/class_move_form";
 import type { FieldDefinition } from "@/components/misc/query_filters";
 
 const columnHelper = createColumnHelper<OntologyClass>();
@@ -179,7 +178,6 @@ const ClassesTable = React.forwardRef<any, ClassesTableProps>((props) => {
       editForm={({ node, onSuccess }) => (
         <ClassForm ontologyClass={node} onSuccess={onSuccess} />
       )}
-      moveForm={ClassMoveForm}
       typeName="Class"
       getId={(item) => item.id}
       columnVisibility={columnVisibility}

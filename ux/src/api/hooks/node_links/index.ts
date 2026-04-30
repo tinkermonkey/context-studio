@@ -1,11 +1,4 @@
 /**
- * DEPRECATED: Legacy Node Links Hooks
- *
- * This module exists for backward compatibility with legacy UI components.
- * These hooks should be migrated to use the new ontology entity hooks.
- *
- * Do not use these hooks in new code.
+ * This module is deprecated. Use relationship hooks instead.
+ * @deprecated Use useRelationships, useCreateRelationship, useUpdateRelationship, useDeleteRelationship from ../relationships
  */
-
-export * from "./useNodeLinks";
-export * from "./useNodeLinkMutations";

@@ -17,7 +17,6 @@ import {
   Edit3,
   Hash,
   Layers,
-  Move,
   Plus,
   X,
 } from "lucide-react";
@@ -46,8 +45,6 @@ import { useUpdateOntologyClass } from "@/api/hooks/ontologyClasses/useOntologyC
 import { toast } from "@/utils/toast";
 import { ReferenceNodePanel } from "@/components/reference_nodes";
 import { NodeLinkPanel } from "@/components/node_links";
-import { DomainMoveForm } from "@/components/forms/domain_move_form";
-import { TermMoveForm } from "@/components/forms/term_move_form";
 import { AttributePanel } from "@/components/structure_nodes/AttributePanel";
 import type { NodeOut } from "@/api/services/missingTypes";
 
@@ -60,7 +57,6 @@ export const OntologyClassDetails: React.FC<OntologyClassDetailsProps> = ({
 }) => {
   const [isEditOpen, setIsEditOpen] = React.useState(false);
   const [isAddChildOpen, setIsAddChildOpen] = React.useState(false);
-  const [isMoveOpen, setIsMoveOpen] = React.useState(false);
   const { setText, triggerAnalysis } = useNlpAnalysisStore();
 
   // Handle analyze button click
@@ -271,16 +267,6 @@ export const OntologyClassDetails: React.FC<OntologyClassDetailsProps> = ({
                 <Plus className="mr-2 h-4 w-4" />
                 Add Child
               </Button>
-              {node.node_type !== NodeType.TAXONOMY && (
-                  <Button
-                    color="gray"
-                    size="sm"
-                    onClick={() => setIsMoveOpen(true)}
-                  >
-                    <Move className="mr-2 h-4 w-4" />
-                    Move
-                  </Button>
-                )}
               <Button
                 color="gray"
                 size="sm"
@@ -396,11 +382,6 @@ export const OntologyClassDetails: React.FC<OntologyClassDetailsProps> = ({
         node={node}
         isOpen={isAddChildOpen}
         onClose={() => setIsAddChildOpen(false)}
-      />
-      <MoveModal
-        node={node}
-        isOpen={isMoveOpen}
-        onClose={() => setIsMoveOpen(false)}
       />
     </>
   );
@@ -674,71 +655,6 @@ const AddChildModal: React.FC<{
             parentTerm={node}
             mode="child"
             onSuccess={handleSuccess}
-          />
-        );
-      default:
-        return null;
-    }
-  };
-
-  return (
-    <Modal show={isOpen} onClose={onClose}>
-      <ModalHeader className="border-b-0">{getModalTitle()}</ModalHeader>
-      <ModalBody>{getForm()}</ModalBody>
-    </Modal>
-  );
-};
-
-// Move Modal
-const MoveModal: React.FC<{
-  node: OntologyClass;
-  isOpen: boolean;
-  onClose: () => void;
-}> = ({ node, isOpen, onClose }) => {
-  const queryClient = useQueryClient();
-
-  const handleSuccess = () => {
-    onClose();
-
-    try {
-      queryClient.invalidateQueries({
-        queryKey: [QUERY_KEYS.ONTOLOGY_CLASSES, node.id],
-      });
-      queryClient.invalidateQueries({
-        queryKey: [QUERY_KEYS.ONTOLOGY_CLASSES],
-      });
-    } catch (e) {
-      console.warn("Failed to invalidate node queries", e);
-    }
-  };
-
-  const getModalTitle = () => {
-    switch (node.node_type) {
-      case NodeType.CONCEPT_SCHEME:
-        return "Move Domain";
-      case NodeType.CLASS:
-        return "Move Term";
-      default:
-        return "Move Node";
-    }
-  };
-
-  const getForm = () => {
-    switch (node.node_type) {
-      case NodeType.CONCEPT_SCHEME:
-        return (
-          <DomainMoveForm
-            selectedNodes={[node]}
-            onSuccess={handleSuccess}
-            onCancel={onClose}
-          />
-        );
-      case NodeType.CLASS:
-        return (
-          <TermMoveForm
-            selectedNodes={[node]}
-            onSuccess={handleSuccess}
-            onCancel={onClose}
           />
         );
       default:

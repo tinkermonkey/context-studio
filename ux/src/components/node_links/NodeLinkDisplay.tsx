@@ -8,7 +8,7 @@
 import React, { useState, useMemo } from "react";
 
 import { OntologyClassLink } from "@/api/types/ontology";
-import { useDeleteNodeLink } from "@/api/hooks/node_links/useNodeLinkMutations";
+import { useDeleteRelationship } from "@/api/hooks/relationships";
 import { toast } from "@/utils/toast";
 import { NodeLinkGroupDisplay } from "./NodeLinkGroupDisplay";
 
@@ -27,7 +27,7 @@ export const NodeLinkDisplay: React.FC<NodeLinkDisplayProps> = ({
 }) => {
   const [deletingLinkId, setDeletingLinkId] = useState<string | undefined>();
 
-  const deleteLink = useDeleteNodeLink({
+  const deleteRelationship = useDeleteRelationship({
     onSuccess: () => {
       toast.success("Link deleted successfully");
       setDeletingLinkId(undefined);
@@ -42,7 +42,7 @@ export const NodeLinkDisplay: React.FC<NodeLinkDisplayProps> = ({
 
   const handleDelete = (linkId: string) => {
     setDeletingLinkId(linkId);
-    deleteLink.mutate(linkId);
+    deleteRelationship.mutate(linkId);
   };
 
   // Separate links into outgoing and incoming

@@ -5,12 +5,12 @@
  * Provides inline form for creating links and displays existing links.
  */
 
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { Button, Alert } from "flowbite-react";
 import { Plus, Info } from "lucide-react";
 
 import { OntologyClass } from "@/api/types/ontology";
-import { useNodeLinksByNode } from "@/api/hooks/node_links/useNodeLinks";
+import { useRelationships } from "@/api/hooks/relationships";
 import { NodeLinkForm } from "./NodeLinkForm";
 import { NodeLinkDisplay } from "./NodeLinkDisplay";
 
@@ -25,8 +25,14 @@ export const NodeLinkPanel: React.FC<NodeLinkPanelProps> = ({
 }) => {
   const [isFormActive, setIsFormActive] = useState(false);
 
-  // Fetch links for this node
-  const { data: links = [], isLoading, error } = useNodeLinksByNode(nodeId);
+  // Fetch relationships - filter to only those related to this node
+  const { data: allRelationships = [], isLoading, error } = useRelationships();
+
+  const links = useMemo(() => {
+    return allRelationships.filter(
+      (rel: any) => rel.source_id === nodeId || rel.target_id === nodeId
+    );
+  }, [allRelationships, nodeId]);
 
   const hasLinks = links.length > 0;
   const shouldShowForm = isFormActive;

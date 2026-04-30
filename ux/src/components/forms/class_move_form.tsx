@@ -9,8 +9,12 @@ import { Button, Label, Checkbox, Alert } from "flowbite-react";
 import { Info } from "lucide-react";
 import { OntologyClass } from "@/api/types/ontology";
 import { OntologyClassSelector } from "@/components/node_selectors/structure_node_selector";
-import { useMoveOntologyClass } from "@/api/hooks/ontologyClasses/useOntologyClassMutations";
 import { useButterToast } from "@/hooks/useButterToast";
+
+/**
+ * @deprecated Move functionality is not yet supported by the backend
+ * This component is kept for future implementation when the API is available
+ */
 
 interface ClassMoveFormProps {
   selectedNodes: OntologyClass[];
@@ -25,47 +29,12 @@ export function ClassMoveForm({
 }: ClassMoveFormProps) {
   const [targetParentId, setTargetParentId] = useState<string>("");
   const [moveChildren, setMoveChildren] = useState(true);
-  const moveNodes = useMoveOntologyClass();
   const toast = useButterToast();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    if (!targetParentId) {
-      return;
-    }
-
-    try {
-      const result = await moveNodes.mutateAsync({
-        node_ids: selectedNodes.map((node) => node.id),
-        target_parent_id: targetParentId,
-        move_children: moveChildren,
-        handle_conflicts: "warn",
-      });
-
-      let message = `Moved ${result.moved_nodes.length} class(es) successfully`;
-      if (result.converted_nodes.length > 0) {
-        message += ` (${result.converted_nodes.length} node(s) had type automatically converted)`;
-      }
-      toast.success(message);
-
-      if (result.warnings.length > 0) {
-        result.warnings.forEach((warning: string) => toast.warning(warning));
-      }
-
-      onSuccess();
-    } catch (error: any) {
-      console.error("Failed to move classes:", error);
-      let message = "Failed to move nodes";
-      if (error?.response?.data?.detail) {
-        if (typeof error.response.data.detail === "string") {
-          message = error.response.data.detail;
-        }
-      } else if (error instanceof Error) {
-        message = error.message;
-      }
-      toast.error(message);
-    }
+    toast.error("Move functionality is not yet available");
+    onCancel();
   };
 
   const excludeNodeIds = selectedNodes.map((node) => node.id);
@@ -113,9 +82,10 @@ export function ClassMoveForm({
         <Button
           type="submit"
           color="blue"
-          disabled={!targetParentId || moveNodes.isPending}
+          disabled={true}
+          title="Move functionality is not yet available"
         >
-          {moveNodes.isPending ? "Moving..." : "Move Classes"}
+          Move Classes (Not Available)
         </Button>
       </div>
     </form>

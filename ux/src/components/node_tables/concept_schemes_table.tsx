@@ -9,7 +9,6 @@ import {
   useDeleteConceptScheme,
 } from "@/api/hooks/conceptSchemes";
 import { ConceptSchemeForm } from "@/components/forms/concept_scheme_form";
-import { ConceptSchemeMoveForm } from "@/components/forms/concept_scheme_move_form";
 import type { FieldDefinition } from "@/components/misc/query_filters";
 
 const columnHelper = createColumnHelper<ConceptScheme>();
@@ -184,7 +183,6 @@ const ConceptSchemesTable = React.forwardRef<any, ConceptSchemesTableProps>(
         editForm={({ node, onSuccess }) => (
           <ConceptSchemeForm conceptScheme={node} onSuccess={onSuccess} />
         )}
-        moveForm={ConceptSchemeMoveForm}
         typeName="Concept Scheme"
         getId={(item) => item.id}
         columnVisibility={columnVisibility}

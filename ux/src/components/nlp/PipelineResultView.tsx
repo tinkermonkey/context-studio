@@ -1,11 +1,9 @@
 import * as React from "react";
 import { Button, Alert, Spinner } from "flowbite-react";
 import { CheckCircle } from "lucide-react";
-import {
-  useUpdateTerm,
-  useUpdateDomain,
-  useUpdateLayer,
-} from "@/api/hooks/ontologyClasses/useOntologyClassMutations";
+import { useUpdateOntologyClass } from "@/api/hooks/ontologyClasses";
+import { useUpdateConceptScheme } from "@/api/hooks/conceptSchemes";
+import { useUpdateTaxonomy } from "@/api/hooks/taxonomies";
 
 // Interface for the expected pipeline execution result
 interface PipelineExecutionResult {
@@ -59,9 +57,9 @@ const PipelineResultView: React.FC<PipelineResultViewProps> = ({
     React.useState<string | null>(null);
   const [savedVisibleLocal, setSavedVisibleLocal] = React.useState(false);
 
-  const updateTerm = useUpdateTerm();
-  const updateDomain = useUpdateDomain();
-  const updateLayer = useUpdateLayer();
+  const updateOntologyClass = useUpdateOntologyClass();
+  const updateConceptScheme = useUpdateConceptScheme();
+  const updateTaxonomy = useUpdateTaxonomy();
 
   const canSaveLocal = Boolean(termId || domainId || layerId);
 
@@ -119,13 +117,13 @@ const PipelineResultView: React.FC<PipelineResultViewProps> = ({
     const payload: any = { definition };
     try {
       if (termId) {
-        await updateTerm.mutateAsync({ id: termId, data: payload });
+        await updateOntologyClass.mutateAsync({ id: termId, data: payload });
         setSaveMessageLocal("Definition saved to term successfully");
       } else if (domainId) {
-        await updateDomain.mutateAsync({ id: domainId, data: payload });
+        await updateConceptScheme.mutateAsync({ id: domainId, data: payload });
         setSaveMessageLocal("Definition saved to domain successfully");
       } else if (layerId) {
-        await updateLayer.mutateAsync({ id: layerId, data: payload });
+        await updateTaxonomy.mutateAsync({ id: layerId, data: payload });
         setSaveMessageLocal("Definition saved to layer successfully");
       } else {
         throw new Error("No valid target ID provided for saving definition");
@@ -214,7 +212,10 @@ const PipelineResultView: React.FC<PipelineResultViewProps> = ({
                 isSavingLocal ||
                 !canSaveLocal ||
                 !hasSaveableContent ||
-                savedVisibleLocal
+                savedVisibleLocal ||
+                updateOntologyClass.isPending ||
+                updateConceptScheme.isPending ||
+                updateTaxonomy.isPending
               }
               title={
                 isSavingLocal
