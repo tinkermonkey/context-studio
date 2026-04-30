@@ -12,7 +12,7 @@ You MUST follow this process in order:
 
 ### 1. Read the Product Contract First
 
-Before exploring anything else, **read the authoritative product knowledge** from `/app.context.md`:
+Before exploring anything else, **read the authoritative product knowledge** from `ux/e2e/documentation/app-context.md`:
 - Page Map (all routes and their purposes)
 - Entity Model Summary (field names and relationships)
 - Key User Flows (documented workflows)
@@ -113,7 +113,7 @@ Before outputting the plan, verify:
 - [ ] Every selector used exists in `/ux/selector-registry.yaml`
 - [ ] All entity field names are from the OpenAPI types
 - [ ] The plan follows the documented Key User Flows
-- [ ] All anti-patterns from `app.context.md` are called out
+- [ ] All anti-patterns from `ux/e2e/documentation/app-context.md` are called out
 - [ ] CRUD operations are explicit
 - [ ] Factory usage is documented
 - [ ] Tests cover the documented invariants
@@ -146,7 +146,7 @@ Use these reports to:
 ## Context You Have Access To
 
 - Application repository (read-only)
-- Product knowledge (`app.context.md`)
+- Product knowledge (`ux/e2e/documentation/app-context.md`)
 - Selector registry (`ux/selector-registry.yaml`)
 - Entity type definitions (`ux/src/api/client/types.ts`)
 - Existing test examples in `ux/e2e/tests/`

@@ -9,15 +9,25 @@ import * as path from "path";
 import { execSync } from "child_process";
 import * as yaml from "js-yaml";
 
-interface TestReport {
-  spec_file: string;
-  test_name: string;
-  status: "passed" | "failed" | "skipped" | "flaky";
-  duration_ms: number;
-  attempts: AttemptReport[];
-  selectors_used: string[];
-  failure?: FailureReport;
-}
+type TestReport =
+  | {
+      spec_file: string;
+      test_name: string;
+      status: "passed" | "skipped";
+      duration_ms: number;
+      attempts: AttemptReport[];
+      selectors_used: string[];
+      failure?: never;
+    }
+  | {
+      spec_file: string;
+      test_name: string;
+      status: "failed" | "flaky";
+      duration_ms: number;
+      attempts: AttemptReport[];
+      selectors_used: string[];
+      failure: FailureReport;
+    };
 
 interface AttemptReport {
   status: "passed" | "failed" | "skipped";
@@ -37,13 +47,27 @@ interface RunReport {
   started_at: string;
   ended_at: string;
   duration_ms: number;
+  tests: TestReport[];
+  selector_coverage: SelectorCoverage;
+}
+
+// Computed properties for RunReport
+interface RunReportStats {
   total: number;
   passed: number;
   failed: number;
   skipped: number;
   flaky: number;
-  tests: TestReport[];
-  selector_coverage: SelectorCoverage;
+}
+
+function computeRunStats(tests: TestReport[]): RunReportStats {
+  return {
+    total: tests.length,
+    passed: tests.filter((t) => t.status === "passed").length,
+    failed: tests.filter((t) => t.status === "failed").length,
+    skipped: tests.filter((t) => t.status === "skipped").length,
+    flaky: tests.filter((t) => t.status === "flaky").length,
+  };
 }
 
 interface DocumentedSelector {
@@ -75,13 +99,6 @@ export default class StructuredReporter implements Reporter {
   private tests: TestReport[] = [];
   private selectorRegistry: SelectorRegistry = {};
   private usedSelectors: Set<string> = new Set();
-  private testStats = {
-    total: 0,
-    passed: 0,
-    failed: 0,
-    skipped: 0,
-    flaky: 0,
-  };
 
   constructor() {
     this.reportDir = path.join(__dirname, "..", "reports");
@@ -139,43 +156,37 @@ export default class StructuredReporter implements Reporter {
     // Collect selectors from all attempts and the test file
     const allSelectors = this.extractSelectorsFromTest(test, result);
 
-    const testReport: TestReport = {
-      spec_file: specFile,
-      test_name: testTitle,
-      status: testStatus,
-      duration_ms: totalDuration,
-      attempts: this.extractAttempts(test),
-      selectors_used: allSelectors,
-      failure: failureInfo,
-    };
+    // Create report with proper discriminated union typing
+    let testReport: TestReport;
+    if (testStatus === "failed" || testStatus === "flaky") {
+      testReport = {
+        spec_file: specFile,
+        test_name: testTitle,
+        status: testStatus,
+        duration_ms: totalDuration,
+        attempts: this.extractAttempts(test),
+        selectors_used: allSelectors,
+        failure: failureInfo || {
+          message: "Test failed without error details",
+          screenshots: [],
+        },
+      };
+    } else {
+      testReport = {
+        spec_file: specFile,
+        test_name: testTitle,
+        status: testStatus,
+        duration_ms: totalDuration,
+        attempts: this.extractAttempts(test),
+        selectors_used: allSelectors,
+      };
+    }
 
     if (existingIndex >= 0) {
       // Update existing test report with new outcome (handles retries)
-      const oldReport = this.tests[existingIndex];
-      const oldStatus = oldReport.status;
-      const newStatus = testStatus;
-
-      // Update stats: decrement old status, increment new status
-      if (oldStatus === "passed") this.testStats.passed--;
-      if (oldStatus === "failed") this.testStats.failed--;
-      if (oldStatus === "skipped") this.testStats.skipped--;
-      if (oldStatus === "flaky") this.testStats.flaky--;
-
-      if (newStatus === "passed") this.testStats.passed++;
-      if (newStatus === "failed") this.testStats.failed++;
-      if (newStatus === "skipped") this.testStats.skipped++;
-      if (newStatus === "flaky") this.testStats.flaky++;
-
-      // Replace with updated report
       this.tests[existingIndex] = testReport;
     } else {
       // First time seeing this test
-      this.testStats.total++;
-      if (testStatus === "passed") this.testStats.passed++;
-      if (testStatus === "failed") this.testStats.failed++;
-      if (testStatus === "skipped") this.testStats.skipped++;
-      if (testStatus === "flaky") this.testStats.flaky++;
-
       this.tests.push(testReport);
     }
 
@@ -198,7 +209,6 @@ export default class StructuredReporter implements Reporter {
       started_at: new Date(this.startTime).toISOString(),
       ended_at: new Date(endTime).toISOString(),
       duration_ms: endTime - this.startTime,
-      ...this.testStats,
       tests: this.tests,
       selector_coverage: selectorCoverage,
     };
@@ -408,6 +418,8 @@ export default class StructuredReporter implements Reporter {
     const filePath = path.join(this.reportDir, `${runId}.md`);
 
     try {
+      const stats = computeRunStats(report.tests);
+
       let markdown = `# Test Run Report\n\n`;
       markdown += `**Run ID:** ${report.run_id}\n`;
       markdown += `**Started:** ${report.started_at}\n`;
@@ -418,11 +430,11 @@ export default class StructuredReporter implements Reporter {
       markdown += `## Summary\n\n`;
       markdown += `| Metric | Count | Percentage |\n`;
       markdown += `|--------|-------|------------|\n`;
-      markdown += `| Total | ${report.total} | 100% |\n`;
-      markdown += `| Passed | ${report.passed} | ${report.total > 0 ? Math.round((report.passed / report.total) * 100) : 0}% |\n`;
-      markdown += `| Failed | ${report.failed} | ${report.total > 0 ? Math.round((report.failed / report.total) * 100) : 0}% |\n`;
-      markdown += `| Flaky | ${report.flaky} | ${report.total > 0 ? Math.round((report.flaky / report.total) * 100) : 0}% |\n`;
-      markdown += `| Skipped | ${report.skipped} | ${report.total > 0 ? Math.round((report.skipped / report.total) * 100) : 0}% |\n\n`;
+      markdown += `| Total | ${stats.total} | 100% |\n`;
+      markdown += `| Passed | ${stats.passed} | ${stats.total > 0 ? Math.round((stats.passed / stats.total) * 100) : 0}% |\n`;
+      markdown += `| Failed | ${stats.failed} | ${stats.total > 0 ? Math.round((stats.failed / stats.total) * 100) : 0}% |\n`;
+      markdown += `| Flaky | ${stats.flaky} | ${stats.total > 0 ? Math.round((stats.flaky / stats.total) * 100) : 0}% |\n`;
+      markdown += `| Skipped | ${stats.skipped} | ${stats.total > 0 ? Math.round((stats.skipped / stats.total) * 100) : 0}% |\n\n`;
 
       // Selector coverage
       markdown += `## Selector Coverage\n\n`;

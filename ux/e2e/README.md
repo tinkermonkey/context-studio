@@ -267,7 +267,7 @@ This project uses Claude agents to generate high-quality test specifications and
 
 ### Overview
 
-The test development workflow uses a planner agent and a generator agent to create Playwright tests that consume the authoritative product knowledge from `app.context.md` and the selector registry.
+The test development workflow uses a planner agent and a generator agent to create Playwright tests that consume the authoritative product knowledge from `./documentation/app-context.md` and the selector registry.
 
 ```
 Feature Request → Planner Agent → Spec Review → Generator Agent → Test Review → Merge
@@ -310,7 +310,7 @@ npx claude-code --agent-definition .github/playwright-planner.md \
 ```
 
 The planner will:
-1. Read the authoritative product knowledge (`app.context.md`)
+1. Read the authoritative product knowledge (`./documentation/app-context.md`)
 2. Consult the selector registry (`ux/selector-registry.yaml`)
 3. Review entity field names from the OpenAPI contract
 4. Create a comprehensive test specification with:
@@ -320,7 +320,7 @@ The planner will:
    - CRUD coverage analysis
    - Anti-pattern validations
 
-**Output**: A Markdown spec file in `specs/<feature-name>.md`
+**Output**: A Markdown spec file in `./documentation/specs/<feature-name>.md`
 
 ### Step 3: Review and Approve the Specification
 
@@ -589,7 +589,7 @@ To prevent tests from hallucinating selectors and field names, Context Studio ma
 
 ### The Contract
 
-**See `app.context.md` at the repository root** for:
+**See `./documentation/app-context.md`** for:
 - Complete page map (all routes and their purpose)
 - Entity model summary (field names sourced from `ux/src/api/client/types.ts`)
 - Key user flows (5–8 documented workflows agents must understand)
@@ -690,4 +690,4 @@ See `app.context.md` for the full list of anti-patterns.
 - [Playwright Documentation](https://playwright.dev/docs/intro)
 - [Playwright Best Practices](https://playwright.dev/docs/best-practices)
 - [Playwright API Reference](https://playwright.dev/docs/api/class-test)
-- [App Context](../../app.context.md) — Authoritative product knowledge contract
+- [App Context](./documentation/app-context.md) — Authoritative product knowledge contract

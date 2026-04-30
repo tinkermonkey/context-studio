@@ -12,7 +12,7 @@ Before writing any test code, you MUST:
 
 ### 1. Read the Product Contract
 
-Consult `/app.context.md` to understand:
+Consult `ux/e2e/documentation/app-context.md` to understand:
 - All pages and their routes
 - Entity model summary and field names
 - Key user flows
@@ -92,7 +92,7 @@ If you encounter a selector that SHOULD exist but doesn't:
 - Check the registry for similar selectors
 - If truly missing, fail the generation with a clear error message
 
-### Rule 4: Refuse Anti-Patterns from app.context.md
+### Rule 4: Refuse Anti-Patterns from ux/e2e/documentation/app-context.md
 
 Your test code MUST NOT contain these anti-patterns:
 
