@@ -94,7 +94,7 @@ export abstract class BaseService {
 
   /**
    * Fetch all pages of data by making multiple API calls
-   * Handles both ListResponse (items/offset) and PaginatedResponse (data/skip) formats
+   * Handles ListResponse (items/offset) format
    * @param url The endpoint URL
    * @param params Base parameters for the request
    * @returns Array of all items across all pages
@@ -124,7 +124,7 @@ export abstract class BaseService {
         pageParams,
       );
 
-      // Handle both response formats
+      // Extract items from response
       const items = this.extractItems(response);
       total = response.total;
 
