@@ -174,7 +174,7 @@ export const AnnotationSelector: React.FC<AnnotationSelectorProps> = ({
         annotation.end_char,
       );
       const nodeInfo = (ontologyClass || []).find(
-        (n: OntologyClass) => n.id === annotation.ontologyClass_id,
+        (n: OntologyClass) => n.id === annotation.ontology_class_id,
       );
 
       segments.push(
@@ -302,7 +302,7 @@ export const AnnotationSelector: React.FC<AnnotationSelectorProps> = ({
             {paragraph.annotations.map((annotation) => {
               const nodeInfo = (ontologyClass || []).find(
                 (n: OntologyClass) =>
-                  n.id === (annotation.ontologyClass_id as string),
+                  n.id === (annotation.ontology_class_id as string),
               );
               return (
                 <div
@@ -316,7 +316,7 @@ export const AnnotationSelector: React.FC<AnnotationSelectorProps> = ({
                     <p className="text-xs text-gray-600">
                       →{" "}
                       {nodeInfo?.title ||
-                        (annotation.ontologyClass_id as string)}
+                        (annotation.ontology_class_id as string)}
                     </p>
                     <p className="text-xs text-gray-500">
                       Position: {annotation.start_char} - {annotation.end_char}

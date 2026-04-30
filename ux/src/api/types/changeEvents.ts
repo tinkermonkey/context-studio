@@ -24,12 +24,13 @@ export interface ChangeEvent {
   id: string;
   entity_type: string;
   entity_id: string;
-  operation: string;
+  operation: "create" | "update" | "delete";
   previous_state?: Record<string, unknown> | null;
-  new_state?: Record<string, unknown> | null;
+  new_state: Record<string, unknown>;
   processed: boolean;
   timestamp: string;
   user_id?: string | null;
+  change_reason?: string | null;
 }
 
 /**

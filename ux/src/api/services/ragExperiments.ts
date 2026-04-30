@@ -204,7 +204,7 @@ export class RAGExperimentsService extends BaseService {
         {
           start_char: startChar,
           end_char: endChar,
-          ontologyClass_id: ontologyClassId,
+          ontology_class_id: ontologyClassId,
         } as CreateAnnotationRequest,
       );
       return response;

@@ -10,13 +10,10 @@ export function getNodePath(nodeId: string, nodeType?: string): string {
 
   switch (nodeType) {
     case NodeType.TAXONOMY:
-    case NodeType.LAYER:
       return `/app/taxonomies/${nodeId}`;
     case NodeType.CONCEPT_SCHEME:
-    case NodeType.DOMAIN:
       return `/app/concept-schemes/${nodeId}`;
     case NodeType.CLASS:
-    case NodeType.TERM:
     case NodeType.INDIVIDUAL:
       return `/app/classes/${nodeId}`;
     default:

@@ -128,10 +128,6 @@ export enum NodeType {
   CLASS = "class",
   INDIVIDUAL = "individual",
   PROPERTY_DEFINITION = "property_definition",
-  // Deprecated aliases for backward compatibility
-  DOMAIN = "domain",
-  TERM = "term",
-  LAYER = "layer",
 }
 
 // ============= OntologyClassLink (Deprecated) =============
@@ -187,22 +183,20 @@ export interface PropertyDefinition {
   identifier: string;
   title: string;
   description?: string | null;
-  range?: string | null;
   created_at?: string | null;
   last_modified?: string | null;
   version: number;
 }
 
 export interface PropertyDefinitionCreate {
+  identifier: string;
   title: string;
   description?: string | null;
-  range?: string | null;
 }
 
 export interface PropertyDefinitionUpdate {
   title?: string | null;
   description?: string | null;
-  range?: string | null;
 }
 
 export interface PropertyDefinitionListParams {

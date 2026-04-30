@@ -305,7 +305,7 @@ export interface Annotation {
   id?: string;
   start_char: number;
   end_char: number;
-  ontologyClass_id?: string;
+  ontology_class_id?: string;
   text?: string;
 }
 
