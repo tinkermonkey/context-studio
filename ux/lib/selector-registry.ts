@@ -1,5 +1,4 @@
 import fs from "fs";
-import path from "path";
 import yaml from "js-yaml";
 
 export interface RegistryEntry {
@@ -36,7 +35,9 @@ export function loadSelectorRegistry(registryPath: string): SelectorRegistry {
     return registry as SelectorRegistry;
   } catch (err) {
     if (err instanceof Error) {
-      throw new Error(`Error parsing selector-registry.yaml: ${err.message}`);
+      throw new Error(`Error parsing selector-registry.yaml: ${err.message}`, {
+        cause: err,
+      });
     }
     throw err;
   }
