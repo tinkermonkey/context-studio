@@ -66,8 +66,8 @@ export const ManualMappingInterface: React.FC<ManualMappingInterfaceProps> = ({
     if (!searchQuery.trim()) return externalPredicates.data;
 
     const query = searchQuery.toLowerCase();
-    return externalPredicates.data.filter(
-      (p) =>
+    return (externalPredicates.data as any[]).filter(
+      (p: any) =>
         p.title.toLowerCase().includes(query) ||
         p.external_id.toLowerCase().includes(query),
     );
@@ -134,12 +134,12 @@ export const ManualMappingInterface: React.FC<ManualMappingInterfaceProps> = ({
   // Get unique sources
   const availableSources = React.useMemo(() => {
     if (!externalPredicates?.data) return [];
-    const sources = new Set(externalPredicates.data.map((p) => p.source));
-    return Array.from(sources).sort();
+    const sources = new Set((externalPredicates.data as any[]).map((p: any) => p.source));
+    return Array.from(sources).sort() as string[];
   }, [externalPredicates?.data]);
 
-  const selectedGlobalPredicate = globalPredicates?.data?.find(
-    (p) => p.id === globalPredicateId,
+  const selectedGlobalPredicate = (globalPredicates?.data as any[] | undefined)?.find(
+    (p: any) => p.id === globalPredicateId,
   );
 
   return (
@@ -166,7 +166,7 @@ export const ManualMappingInterface: React.FC<ManualMappingInterfaceProps> = ({
           disabled={loadingGlobal}
         >
           <option value="">Select a global predicate</option>
-          {globalPredicates?.data?.map((predicate) => (
+          {(globalPredicates?.data as any[] | undefined)?.map((predicate: any) => (
             <option key={predicate.id} value={predicate.id}>
               {predicate.title}
             </option>
@@ -237,7 +237,7 @@ export const ManualMappingInterface: React.FC<ManualMappingInterfaceProps> = ({
               onChange={(e) => setSourceFilter(e.target.value)}
             >
               <option value="">All Sources</option>
-              {availableSources.map((source) => (
+              {availableSources.map((source: string) => (
                 <option key={source} value={source}>
                   {source}
                 </option>
@@ -275,7 +275,7 @@ export const ManualMappingInterface: React.FC<ManualMappingInterfaceProps> = ({
                 </TableRow>
               </TableHead>
               <TableBody className="divide-y">
-                {filteredExternalPredicates.map((predicate) => (
+                {filteredExternalPredicates.map((predicate: any) => (
                   <TableRow
                     key={predicate.id}
                     className="bg-white dark:border-gray-700 dark:bg-gray-800"
@@ -332,9 +332,9 @@ export const ManualMappingInterface: React.FC<ManualMappingInterfaceProps> = ({
           </h4>
 
           <div className="space-y-2">
-            {selectedMappings.map((mapping) => {
-              const predicate = externalPredicates?.data.find(
-                (p) => p.id === mapping.externalPredicateId,
+            {selectedMappings.map((mapping: any) => {
+              const predicate = (externalPredicates?.data as any[] | undefined)?.find(
+                (p: any) => p.id === mapping.externalPredicateId,
               );
               return (
                 <div
