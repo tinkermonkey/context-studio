@@ -12,8 +12,8 @@ import {
   extractPatternTemplates,
   matchesPattern as matchesPatternTemplate,
   loadSelectorRegistry as loadSharedSelectorRegistry,
-} from "../../src/utils/selector-registry";
-import type { SelectorRegistry as SharedSelectorRegistry } from "../../src/utils/selector-registry";
+} from "../../lib/selector-registry";
+import type { SelectorRegistry as SharedSelectorRegistry } from "../../lib/selector-registry";
 
 type TestReport =
   | {
@@ -89,13 +89,6 @@ interface SelectorCoverage {
   undocumented: string[];
 }
 
-interface RegistryEntry {
-  id: string;
-  component?: string;
-  [key: string]: unknown;
-}
-
-// Use the shared SelectorRegistry type but keep the local RegistryEntry for compatibility
 type SelectorRegistry = SharedSelectorRegistry;
 
 export default class StructuredReporter implements Reporter {

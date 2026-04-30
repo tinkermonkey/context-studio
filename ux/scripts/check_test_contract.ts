@@ -19,7 +19,7 @@ import {
   loadSelectorRegistry,
   extractSelectorsFromRegistry,
   matchesPattern,
-} from "../src/utils/selector-registry";
+} from "../lib/selector-registry";
 
 interface ValidationResult {
   errors: string[];
