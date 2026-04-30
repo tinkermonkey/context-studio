@@ -256,37 +256,6 @@ function matchesPattern(selector: string, patterns: Map<string, string>): boolea
   return false;
 }
 
-// Validate dynamic selectors follow the expected template pattern
-function validateDynamicSelectors(
-  codeSelectors: Set<string>,
-  patterns: Map<string, string>
-): { valid: boolean; errors: string[] } {
-  const errors: string[] = [];
-
-  // Dynamic selectors are those that match a documented pattern template
-  // We validate that all documented patterns are actually represented in the code
-  // by checking if any selector matches each pattern
-  for (const [pattern] of patterns) {
-    const regexPattern = pattern.replace(/\*/g, "[\\w-]+");
-    const hasMatchingSelector = Array.from(codeSelectors).some((selector) =>
-      new RegExp(`^${regexPattern}$`).test(selector)
-    );
-
-    // If a pattern is documented but has no matching selectors in the code,
-    // it means the dynamic selector template exists but is not being used
-    // This is not necessarily an error, but we could warn about unused patterns
-    if (!hasMatchingSelector) {
-      // Note: This is informational - patterns may be defined before implementation
-      // Only report as warning if the pattern doesn't have status=future or status=not_yet_implemented
-    }
-  }
-
-  return {
-    valid: errors.length === 0,
-    errors,
-  };
-}
-
 // Main validation
 function validate() {
   console.log("🔍 Validating test contract...\n");
@@ -355,17 +324,6 @@ function validate() {
     console.log(
       `⚠️  Found ${result.warnings.length} undocumented code selectors (warnings)\n`
     );
-  }
-
-  // Check 3: Registry patterns are properly formatted
-  console.log("✅ Checking registry patterns...");
-  const dynamicValidation = validateDynamicSelectors(codeSelectors, patterns);
-  if (dynamicValidation.errors.length > 0) {
-    result.hasWarnings = true;
-    result.warnings.push(...dynamicValidation.errors);
-    console.log(`⚠️  Found ${dynamicValidation.errors.length} pattern validation issues (warnings)\n`);
-  } else {
-    console.log(`✓ All ${patterns.size} documented patterns are valid\n`);
   }
 
   // Print results
