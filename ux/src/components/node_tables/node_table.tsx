@@ -384,18 +384,6 @@ function BaseNodeTable<T>({
     setPageIndex(0);
   }, [debouncedSearchTerm]);
 
-  // Debug effect to track modal state changes
-  React.useEffect(() => {
-    console.log("showMoveModal changed to:", showMoveModal);
-  }, [showMoveModal]);
-
-  React.useEffect(() => {
-    console.log("selectedCount changed to:", selectedCount);
-  }, [selectedCount]);
-
-  React.useEffect(() => {
-    console.log("pendingMoveRows changed to:", pendingMoveRows.length);
-  }, [pendingMoveRows]);
 
   if (isLoading) return <Spinner />;
   if (error) {
@@ -404,19 +392,15 @@ function BaseNodeTable<T>({
   }
 
   const handleMoveSelected = () => {
-    console.log("handleMoveSelected called");
     const selectedRows = table.getSelectedRowModel().rows;
-    console.log("Selected rows:", selectedRows.length);
 
     if (selectedRows.length === 0 || !MoveForm) {
-      console.log("No rows selected or no move form");
       return;
     }
 
     setIsProcessing(true);
     setPendingMoveRows(selectedRows);
     setShowMoveModal(true);
-    console.log("Move modal should be shown");
   };
 
   const handleDeleteSelected = () => {
@@ -881,7 +865,6 @@ function BaseNodeTable<T>({
         <Modal
           show={showMoveModal}
           onClose={() => {
-            console.log("Move modal closing");
             setShowMoveModal(false);
             setPendingMoveRows([]);
             setIsProcessing(false);
@@ -896,7 +879,6 @@ function BaseNodeTable<T>({
             <MoveForm
               selectedNodes={pendingMoveRows.map((row) => row.original)}
               onSuccess={() => {
-                console.log("Move success");
                 setShowMoveModal(false);
                 setPendingMoveRows([]);
                 setIsProcessing(false);
@@ -905,7 +887,6 @@ function BaseNodeTable<T>({
                 }
               }}
               onCancel={() => {
-                console.log("Move cancelled");
                 setShowMoveModal(false);
                 setPendingMoveRows([]);
                 setIsProcessing(false);

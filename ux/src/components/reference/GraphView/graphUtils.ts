@@ -118,10 +118,6 @@ export function buildGroupedTreeStructure(
         depth: 1,
       };
 
-      console.log(
-        `Creating predicate node: ${subjectId} -[${predicate}]-> ${groupLinks[0].object}`,
-      );
-
       nodeMap.set(subjectPredicateNodeId, predicateNode);
       predicateNodeMap.set(key, subjectPredicateNodeId);
       predicateNodeMap.set(predicateObjectKey, subjectPredicateNodeId);

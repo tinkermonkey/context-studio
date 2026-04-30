@@ -28,7 +28,6 @@ export interface TaxonomyUpdate {
 export interface TaxonomyListParams {
   offset?: number;
   limit?: number;
-  [key: string]: unknown;
 }
 
 // ============= ConceptScheme =============
@@ -56,7 +55,6 @@ export interface ConceptSchemeListParams {
   offset?: number;
   limit?: number;
   taxonomy_id?: string;
-  [key: string]: unknown;
 }
 
 // ============= OntologyClass =============
@@ -95,7 +93,6 @@ export interface OntologyClassListParams {
   limit?: number;
   concept_scheme_id?: string;
   parent_class_id?: string;
-  [key: string]: unknown;
 }
 
 // ============= ExternalReference =============
@@ -182,7 +179,6 @@ export interface RelationshipListParams {
   source_id?: string;
   target_id?: string;
   relationship_type?: string;
-  [key: string]: unknown;
 }
 
 // ============= PropertyDefinition =============
@@ -212,7 +208,6 @@ export interface PropertyDefinitionUpdate {
 export interface PropertyDefinitionListParams {
   offset?: number;
   limit?: number;
-  [key: string]: unknown;
 }
 
 // ============= Generic List Response =============

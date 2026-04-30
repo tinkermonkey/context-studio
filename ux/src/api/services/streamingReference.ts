@@ -223,16 +223,6 @@ export class StreamingReferenceService extends BaseService {
         timeout: config.timeout || 5000,
       });
 
-      console.log(
-        `Streaming search: ${source} returned ${response.results.length} results`,
-        {
-          source,
-          resultCount: response.results.length,
-          totalResults: response.total_results,
-          executionTime: response.search_time_ms,
-        },
-      );
-
       return response;
     } catch (error) {
       throw new StreamingSearchError(

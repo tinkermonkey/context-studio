@@ -35,34 +35,34 @@ export interface ChangeEvent {
 /**
  * Type guard to check if an event is a taxonomy event
  */
-export function isTaxonomyEvent(event: ChangeEvent): boolean {
+export function isTaxonomyEvent(event: ChangeEvent): event is ChangeEvent {
   return event.entity_type === RecordType.TAXONOMY;
 }
 
 /**
  * Type guard to check if an event is a concept scheme event
  */
-export function isConceptSchemeEvent(event: ChangeEvent): boolean {
+export function isConceptSchemeEvent(event: ChangeEvent): event is ChangeEvent {
   return event.entity_type === RecordType.CONCEPT_SCHEME;
 }
 
 /**
  * Type guard to check if an event is an ontology class event
  */
-export function isOntologyClassEvent(event: ChangeEvent): boolean {
+export function isOntologyClassEvent(event: ChangeEvent): event is ChangeEvent {
   return event.entity_type === RecordType.ONTOLOGY_CLASS;
 }
 
 /**
  * Type guard to check if an event is a relationship event
  */
-export function isRelationshipEvent(event: ChangeEvent): boolean {
+export function isRelationshipEvent(event: ChangeEvent): event is ChangeEvent {
   return event.entity_type === RecordType.RELATIONSHIP;
 }
 
 /**
  * Type guard to check if an event is a property definition event
  */
-export function isPropertyDefinitionEvent(event: ChangeEvent): boolean {
+export function isPropertyDefinitionEvent(event: ChangeEvent): event is ChangeEvent {
   return event.entity_type === RecordType.PROPERTY_DEFINITION;
 }
