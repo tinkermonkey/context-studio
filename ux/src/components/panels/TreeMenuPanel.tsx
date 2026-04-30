@@ -63,8 +63,6 @@ export function TreeMenuPanel({
   // Container ref to measure width
   const containerRef = useRef<HTMLDivElement>(null);
   const [containerWidth, setContainerWidth] = useState<number>(0);
-  const [buildError, setBuildError] = useState<Error | null>(null);
-
   // Measure container width on mount and resize
   useEffect(() => {
     const measureWidth = () => {
@@ -119,31 +117,35 @@ export function TreeMenuPanel({
   // Determine loading state
   const isLoading = layersLoading || domainsLoading || termsLoading;
 
-  // Build chart data
-  const chartData = React.useMemo((): ChartData | null => {
-    if (!layers || !domains || !terms) {
-      return null;
-    }
+  // Build chart data with error handling
+  const { chartData, buildError } = React.useMemo(
+    (): { chartData: ChartData | null; buildError: Error | null } => {
+      if (!layers || !domains || !terms) {
+        return { chartData: null, buildError: null };
+      }
 
-    try {
-      setBuildError(null);
-      // Build the complete tree
-      const completeTree = buildHierarchicalTree({
-        layers,
-        domains,
-        terms,
-      });
+      try {
+        // Build the complete tree
+        const completeTree = buildHierarchicalTree({
+          layers,
+          domains,
+          terms,
+        });
 
-      return {
-        root: completeTree,
-      } as ChartData;
-    } catch (err) {
-      const error = err instanceof Error ? err : new Error(String(err));
-      apiLogger.error("Error building menu data", { error });
-      setBuildError(error);
-      return null;
-    }
-  }, [layers, domains, terms]);
+        return {
+          chartData: {
+            root: completeTree,
+          } as ChartData,
+          buildError: null,
+        };
+      } catch (err) {
+        const error = err instanceof Error ? err : new Error(String(err));
+        apiLogger.error("Error building menu data", { error });
+        return { chartData: null, buildError: error };
+      }
+    },
+    [layers, domains, terms],
+  );
 
   // Find path to highlighted node for auto-expansion
   // eslint-disable-next-line @typescript-eslint/no-unused-vars

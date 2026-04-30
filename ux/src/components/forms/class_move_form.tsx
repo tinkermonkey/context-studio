@@ -54,10 +54,16 @@ export function ClassMoveForm({
       }
 
       onSuccess();
-    } catch (error) {
+    } catch (error: any) {
       console.error("Failed to move classes:", error);
-      const message =
-        error instanceof Error ? error.message : "Failed to move nodes";
+      let message = "Failed to move nodes";
+      if (error?.response?.data?.detail) {
+        if (typeof error.response.data.detail === "string") {
+          message = error.response.data.detail;
+        }
+      } else if (error instanceof Error) {
+        message = error.message;
+      }
       toast.error(message);
     }
   };

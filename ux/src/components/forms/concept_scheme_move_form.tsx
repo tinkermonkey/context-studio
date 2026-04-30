@@ -54,10 +54,16 @@ export function ConceptSchemeMoveForm({
       }
 
       onSuccess();
-    } catch (error) {
+    } catch (error: any) {
       console.error("Failed to move concept schemes:", error);
-      const message =
-        error instanceof Error ? error.message : "Failed to move concept schemes";
+      let message = "Failed to move concept schemes";
+      if (error?.response?.data?.detail) {
+        if (typeof error.response.data.detail === "string") {
+          message = error.response.data.detail;
+        }
+      } else if (error instanceof Error) {
+        message = error.message;
+      }
       toast.error(message);
     }
   };

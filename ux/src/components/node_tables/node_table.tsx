@@ -452,8 +452,8 @@ function BaseNodeTable<T>({
           toast.error(
             `Failed to check for children: ${err instanceof Error ? err.message : "Unknown error"}`,
           );
-          // Fall back to normal delete modal
-          setShowDeleteModal(true);
+          // Do not show the delete modal when the children check fails
+          // User should retry the delete operation after the error is resolved
         }
       })();
     } else {
