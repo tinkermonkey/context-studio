@@ -13,12 +13,12 @@ Each Playwright run produces a structured JSON report at `ux/e2e/reports/{timest
 To analyze a failure:
 1. Locate the JSON report for the test run that failed
 2. Find the test entry in `report.tests[]` matching your test name
-3. Extract the `failure` object which contains:
-   - `message`: The error message
-   - `stack`: Stack trace (if available)
-   - `screenshots[]`: Paths to captured screenshots on failure
-   - `video`: Path to recorded video of the failed test
-   - `selectors_used`: List of `data-testid` values the test used
+3. Extract failure context which includes:
+   - `failure.message`: The error message
+   - `failure.stack`: Stack trace (if available)
+   - `failure.screenshots[]`: Paths to captured screenshots on failure
+   - `failure.video`: Path to recorded video of the failed test
+   - `selectors_used`: List of `data-testid` values the test used (this is a sibling of `failure` at the `TestReport` level, not inside `failure`)
 
 Use this data in your analysis instead of re-parsing console output.
 

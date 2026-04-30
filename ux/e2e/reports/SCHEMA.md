@@ -58,7 +58,7 @@ Each test run produces a JSON report containing comprehensive metadata about tes
 
 | Field | Type | Description |
 |-------|------|-------------|
-| `spec_file` | string | Path to the test file (relative to repo root) |
+| `spec_file` | string | Absolute path to the test file (as provided by Playwright's `test.location.file`) |
 | `test_name` | string | Display name/title of the test |
 | `status` | enum | Test outcome: `passed`, `failed`, `skipped`, or `flaky`. A test is `flaky` if it failed on first attempt but passed on retry. |
 | `duration_ms` | number | Total test duration in milliseconds (sum of all attempts, including retries) |
@@ -112,7 +112,7 @@ Each test run produces a JSON report containing comprehensive metadata about tes
     "selector-id": {
       "id": "string",
       "component": "string",
-      "coverage": "exercised" | "not_exercised" | "undocumented"
+      "coverage": "exercised" | "not_exercised"
     }
   },
   "coverage_percentage": "number",
@@ -136,7 +136,7 @@ Each test run produces a JSON report containing comprehensive metadata about tes
 |-------|------|-------------|
 | `id` | string | The selector ID (data-testid value) |
 | `component` | string | Component or module name that owns this selector (from registry) |
-| `coverage` | enum | `exercised` (used in this run), `not_exercised` (documented but unused), or `undocumented` (not in registry) |
+| `coverage` | enum | `exercised` (used in this run) or `not_exercised` (documented but unused). Note: Selectors that are used but NOT in the registry are tracked separately in the `undocumented` array, not in this coverage field. |
 
 ---
 
@@ -266,7 +266,7 @@ The planner agent can:
 Store the report as a CI artifact:
 - Path: `ux/e2e/reports/{run_id}.json`
 - Artifact name: `test-report-{run_id}.json`
-- Retention: Last N runs (default 20, configurable in reporter)
+- Retention: Last 20 runs (hardcoded in reporter)
 
 ### For Humans
 

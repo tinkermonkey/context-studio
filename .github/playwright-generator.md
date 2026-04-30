@@ -26,10 +26,11 @@ Read `/ux/selector-registry.yaml` completely to see all available `data-testid` 
 ### 3. Understand the Validator
 
 The test suite runs `npm run validate-selectors` (which executes `/ux/scripts/check_test_contract.ts`) before executing any tests. This validator will:
-- ❌ **Fail hard (exit code 1)** if your tests reference selectors not in the registry
-- ✅ **Pass** only if all selectors are documented
+- ❌ **Fail hard (exit code 1)** if your tests reference selectors that are NOT in the registry AND do NOT match any pattern templates
+- ⚠️ **Warn (exit code 2)** if tests use selectors not found in the registry but might match registry patterns
+- ✅ **Pass (exit code 0)** only if all selectors are in the registry or match documented pattern templates
 
-This is a **hard gate**: your tests cannot proceed to execution if validation fails.
+This is a **hard gate**: your tests cannot proceed to execution if validation fails with exit code 1.
 
 ## Implementation Rules
 
@@ -58,7 +59,7 @@ Import test data factories from `ux/e2e/fixtures/factories.ts`. NEVER inline ent
 
 ✅ **Good**:
 ```typescript
-import { createTaxonomy, createConceptScheme } from "../fixtures/factories";
+import { createTaxonomy, createConceptScheme } from "../../fixtures/test-helpers";
 
 test("create concept scheme", async ({ page }) => {
   const taxonomy = await createTaxonomy(page, { title: "Test Taxonomy" });
@@ -71,7 +72,7 @@ test("create concept scheme", async ({ page }) => {
 
 ❌ **Bad**:
 ```typescript
-// Inlining API calls
+// Inlining API calls — use factories instead
 const response = await page.request.post("/api/taxonomies", {
   data: { title: "Test Taxonomy" },
 });
@@ -194,7 +195,7 @@ import {
   createTaxonomy, 
   createConceptScheme,
   // ... factories needed
-} from "../fixtures/factories";
+} from "../../fixtures/test-helpers";
 
 test.describe("Feature Name", () => {
   test("should [expected behavior]", async ({ page }) => {
