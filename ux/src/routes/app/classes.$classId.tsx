@@ -1,7 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useOntologyClass } from "@/api/hooks/ontologyClasses";
 import { OntologyClassDetails } from "@/components/node_details/structure_node_details";
+import { NodeType } from "@/api/types/ontology";
 import { Spinner } from "flowbite-react";
+import type { OntologyClass } from "@/api/types/ontology";
 
 export const Route = createFileRoute("/app/classes/$classId")({
   component: ClassDetailsPage,
@@ -32,5 +34,11 @@ function ClassDetailsPage() {
     );
   }
 
-  return <OntologyClassDetails node={ontologyClass} />;
+  // Cast class to OntologyClass with node_type for display component
+  const ontologyNode: OntologyClass = {
+    ...ontologyClass,
+    node_type: NodeType.CLASS,
+  } as OntologyClass;
+
+  return <OntologyClassDetails node={ontologyNode} />;
 }
