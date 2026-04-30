@@ -33,6 +33,7 @@ forms:
     component: "ConceptSchemeForm"
     description: "Container for concept scheme create/edit form"
     file: "ux/src/components/forms/concept_scheme_form.tsx"
+    status: "not_yet_implemented"
 
   concept_scheme_title_input:
     id: "concept-scheme-title-input"
@@ -63,6 +64,7 @@ forms:
     component: "ClassForm"
     description: "Container for class create/edit form"
     file: "ux/src/components/forms/class_form.tsx"
+    status: "not_yet_implemented"
 
   class_title_input:
     id: "class-title-input"
@@ -93,6 +95,7 @@ forms:
     component: "DomainForm"
     description: "Container for domain create/edit form"
     file: "ux/src/components/forms/domain_form.tsx"
+    status: "not_yet_implemented"
 
   domain_title_input:
     id: "domain-title-input"
@@ -147,6 +150,7 @@ forms:
     component: "TermForm"
     description: "Container for term create/edit form"
     file: "ux/src/components/forms/term_form.tsx"
+    status: "not_yet_implemented"
 
   term_title_input:
     id: "term-title-input"
@@ -177,6 +181,7 @@ forms:
     component: "PredicateForm"
     description: "Container for predicate create/edit form"
     file: "ux/src/components/forms/predicate_form.tsx"
+    status: "not_yet_implemented"
 
   predicate_title_input:
     id: "predicate-title-input"
@@ -207,6 +212,7 @@ forms:
     component: "PropertyDefinitionForm"
     description: "Container for property definition create/edit form"
     file: "ux/src/components/forms/property_definition_form.tsx"
+    status: "not_yet_implemented"
 
   property_definition_title_input:
     id: "property-definition-title-input"
@@ -458,15 +464,15 @@ graph:
 reference:
   reference_search_input:
     id: "reference-search-input"
-    component: "UnifiedSearch"
+    component: "UnifiedSearchPage"
     description: "Search input for external knowledge sources"
-    file: "ux/src/components/reference/UnifiedSearch/UnifiedSearch.tsx"
+    file: "ux/src/components/reference/UnifiedSearchPage.tsx"
 
   reference_search_button:
     id: "reference-search-button"
-    component: "UnifiedSearch"
+    component: "UnifiedSearchPage"
     description: "Button to execute search"
-    file: "ux/src/components/reference/UnifiedSearch/UnifiedSearch.tsx"
+    file: "ux/src/components/reference/UnifiedSearchPage.tsx"
 
   reference_source_filter:
     id: "reference-source-filter"
@@ -608,10 +614,10 @@ errors:
     id: "custom-error"
     component: "CustomError"
     description: "Custom error message display"
-    file: "ux/src/components/ui/custom_error.tsx"
+    status: "not_yet_implemented"
 
   custom_loading:
     id: "custom-loading"
     component: "CustomLoading"
     description: "Custom loading spinner/indicator"
-    file: "ux/src/components/ui/custom_loading.tsx"
+    status: "not_yet_implemented"

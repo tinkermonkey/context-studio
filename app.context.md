@@ -262,7 +262,7 @@ For row identifiers or dynamic content, append the entity ID:
 - `${entity-type}-row-${id}` (e.g., `class-row-123e4567-e89b-12d3-a456-426614174000`)
 - `${entity-type}-${action}-button-${id}` (e.g., `taxonomy-edit-button-abc123`)
 
-These are listed in the registry as templates (e.g., `{taxonomy}-row-{id}`).
+These are listed in the registry as templates (e.g., `{entity-type}-row-{id}`).
 
 ---
 
@@ -271,4 +271,4 @@ These are listed in the registry as templates (e.g., `{taxonomy}-row-{id}`).
 - **API Types**: `ux/src/api/client/types.ts` — Generated from OpenAPI spec; source of truth for entity fields
 - **Architecture Design**: `rearchitecture/architecture_design.md` — Bounded contexts and domain design
 - **E2E Testing**: `ux/e2e/README.md` — How to write and run e2e tests
-- **Selector Registry**: `selector-registry.yaml` — Complete list of `data-testid` values
+- **Selector Registry**: `ux/selector-registry.yaml` — Complete list of `data-testid` values

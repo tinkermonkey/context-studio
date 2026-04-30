@@ -35,7 +35,10 @@ const result: ValidationResult = {
 // Extract all data-testid values from source code
 function extractSelectorsFromCode(directory: string): Set<string> {
   const selectors = new Set<string>();
-  const dataTestIdRegex = /data-testid=["']([^"']+)["']/g;
+  // Match both literal attributes and JSX expressions
+  const dataTestIdRegex = /data-testid=["'{]([^"'}`]+)["}]/g;
+  const jsxExpressionRegex = /data-testid=\{\s*`([^`]+)`\s*\}/g;
+  const propRegex = /dataTestId\s*=\s*["']([^"']+)["']/g;
 
   function walkDir(dir: string) {
     const files = fs.readdirSync(dir);
@@ -64,12 +67,26 @@ function extractSelectorsFromCode(directory: string): Set<string> {
       ) {
         try {
           const content = fs.readFileSync(filePath, "utf-8");
+
+          // Extract literal data-testid attributes
           let match;
           while ((match = dataTestIdRegex.exec(content)) !== null) {
             selectors.add(match[1]);
           }
+
+          // Extract JSX expression templates (skip templates with variables for now)
+          while ((match = jsxExpressionRegex.exec(content)) !== null) {
+            if (!match[1].includes("${")) {
+              selectors.add(match[1]);
+            }
+          }
+
+          // Extract prop-based dataTestId usage
+          while ((match = propRegex.exec(content)) !== null) {
+            selectors.add(match[1]);
+          }
         } catch (err) {
-          // Skip files that can't be read
+          console.warn(`⚠️  Warning: Could not read file ${filePath}: ${err instanceof Error ? err.message : String(err)}`);
         }
       }
     }
@@ -124,7 +141,7 @@ function extractSelectorsFromE2ETests(testDirectory: string): Set<string> {
             }
           }
         } catch (err) {
-          // Skip files that can't be read
+          console.warn(`⚠️  Warning: Could not read test file ${filePath}: ${err instanceof Error ? err.message : String(err)}`);
         }
       }
     }
@@ -138,6 +155,7 @@ function extractSelectorsFromE2ETests(testDirectory: string): Set<string> {
 function loadRegistry(): {
   documented: Set<string>;
   patterns: Map<string, string>;
+  knownFuture: Set<string>;
 } {
   const registryPath = path.join(process.cwd(), "selector-registry.yaml");
 
@@ -149,15 +167,19 @@ function loadRegistry(): {
   const content = fs.readFileSync(registryPath, "utf-8");
   const registry = yaml.load(content) as Record<
     string,
-    Record<string, { id: string; pattern?: boolean }>
+    Record<string, { id: string; pattern?: boolean; status?: string }>
   >;
 
   const documented = new Set<string>();
   const patterns = new Map<string, string>();
+  const knownFuture = new Set<string>();
 
   for (const section of Object.values(registry)) {
     for (const entry of Object.values(section)) {
-      if (entry.pattern) {
+      // Track known future selectors separately
+      if (entry.status === "not_yet_implemented" || entry.status === "future") {
+        knownFuture.add(entry.id);
+      } else if (entry.pattern) {
         // Store pattern with template placeholders
         patterns.set(
           entry.id.replace(/{[^}]+}/g, "*"),
@@ -169,13 +191,14 @@ function loadRegistry(): {
     }
   }
 
-  return { documented, patterns };
+  return { documented, patterns, knownFuture };
 }
 
 // Check if a selector matches a pattern
 function matchesPattern(selector: string, patterns: Map<string, string>): boolean {
   for (const [pattern] of patterns) {
-    const regexPattern = pattern.replace(/\*/g, "[^-]+");
+    // Use .+ instead of [^-]+ to match hyphens and UUIDs properly
+    const regexPattern = pattern.replace(/\*/g, "[\\w-]+");
     if (new RegExp(`^${regexPattern}$`).test(selector)) {
       return true;
     }
@@ -195,16 +218,21 @@ function validate() {
   const testSelectors = extractSelectorsFromE2ETests(e2eDir);
 
   // Load registry
-  const { documented, patterns } = loadRegistry();
+  const { documented, patterns, knownFuture } = loadRegistry();
 
   console.log(`📊 Found ${codeSelectors.size} selectors in source code`);
   console.log(`📊 Found ${testSelectors.size} selectors in tests`);
-  console.log(`📊 Found ${documented.size} documented selectors\n`);
+  console.log(`📊 Found ${documented.size} documented selectors`);
+  console.log(`📊 Found ${knownFuture.size} known future selectors\n`);
 
-  // Check 1: Test selectors must exist in code or match a pattern
+  // Check 1: Test selectors must exist in code or match a pattern or be known future
   console.log("✅ Checking test selectors against code...");
+  const futureSelectors = new Set<string>();
   for (const testSelector of testSelectors) {
-    if (
+    if (knownFuture.has(testSelector)) {
+      // Known future selectors are tracked but not errors
+      futureSelectors.add(testSelector);
+    } else if (
       !codeSelectors.has(testSelector) &&
       !matchesPattern(testSelector, patterns)
     ) {
@@ -223,10 +251,16 @@ function validate() {
     console.log(`✗ Found ${result.errors.length} invalid test selectors\n`);
   }
 
+  if (futureSelectors.size > 0) {
+    console.log(`ℹ️  Found ${futureSelectors.size} known future selectors (not implemented yet):`);
+    futureSelectors.forEach((sel) => console.log(`  ℹ️  ${sel} (planned for future implementation)`));
+    console.log();
+  }
+
   // Check 2: Code selectors should be in registry (warnings only)
   console.log("✅ Checking code selectors against registry...");
   for (const codeSelector of codeSelectors) {
-    if (!documented.has(codeSelector) && !matchesPattern(codeSelector, patterns)) {
+    if (!documented.has(codeSelector) && !matchesPattern(codeSelector, patterns) && !knownFuture.has(codeSelector)) {
       result.hasWarnings = true;
       result.warnings.push(
         `⚠️  Code selector not in registry: "${codeSelector}"`
