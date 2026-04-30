@@ -5,7 +5,7 @@
  */
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { BaseService, type PaginatedResponse } from "../base";
+import { BaseService } from "../base";
 import type { ListResponse } from "../../types/ontology";
 import type { AxiosInstance } from "axios";
 
@@ -16,9 +16,7 @@ class TestService extends BaseService {
   }
 
   // Expose the private extractItems method for testing
-  public testExtractItems<T>(
-    response: ListResponse<T> | PaginatedResponse<T>,
-  ): T[] {
+  public testExtractItems<T>(response: ListResponse<T>): T[] {
     return this.extractItems(response);
   }
 
@@ -77,30 +75,14 @@ describe("BaseService", () => {
       expect(result).toEqual(mockItems);
     });
 
-    it("should extract items from PaginatedResponse format with 'data' property", () => {
-      const mockItems = [
-        { id: "1", title: "Item 1" },
-        { id: "2", title: "Item 2" },
-      ];
-      const response: PaginatedResponse<{ id: string; title: string }> = {
-        data: mockItems,
-        total: 2,
-        skip: 0,
-        limit: 50,
-      };
-
-      const result = service.testExtractItems(response);
-      expect(result).toEqual(mockItems);
-    });
-
-    it("should throw error when response format matches neither ListResponse nor PaginatedResponse", () => {
-      // Response with neither 'items' nor 'data' property
+    it("should throw error when response format does not have 'items' property", () => {
+      // Response with neither 'items' property
       const invalidResponse = {
         results: [{ id: "1", title: "Item 1" }],
       } as unknown as ListResponse<{ id: string; title: string }>;
 
       expect(() => service.testExtractItems(invalidResponse)).toThrow(
-        "Response format did not match ListResponse or PaginatedResponse",
+        "Response format did not match ListResponse",
       );
     });
 
@@ -110,20 +92,7 @@ describe("BaseService", () => {
       } as unknown as ListResponse<{ id: string; title: string }>;
 
       expect(() => service.testExtractItems(invalidResponse)).toThrow(
-        "Response format did not match ListResponse or PaginatedResponse",
-      );
-    });
-
-    it("should throw error when 'data' is not an array", () => {
-      const invalidResponse = {
-        data: "not an array",
-        total: 1,
-        skip: 0,
-        limit: 50,
-      } as unknown as PaginatedResponse<{ id: string; title: string }>;
-
-      expect(() => service.testExtractItems(invalidResponse)).toThrow(
-        "Response format did not match ListResponse or PaginatedResponse",
+        "Response format did not match ListResponse",
       );
     });
 
@@ -138,24 +107,12 @@ describe("BaseService", () => {
       const result = service.testExtractItems(response);
       expect(result).toEqual([]);
     });
-
-    it("should return empty array when PaginatedResponse has empty data", () => {
-      const response: PaginatedResponse<{ id: string; title: string }> = {
-        data: [],
-        total: 0,
-        skip: 0,
-        limit: 50,
-      };
-
-      const result = service.testExtractItems(response);
-      expect(result).toEqual([]);
-    });
   });
 
   describe("getAllPaginated", () => {
     it("should propagate extractItems error when response format is invalid", async () => {
       // Mock client to return invalid response format
-      const invalidResponse = { results: [] }; // Neither 'items' nor 'data'
+      const invalidResponse = { results: [] }; // Missing 'items'
       vi.mocked(mockClient.request).mockResolvedValueOnce({
         data: invalidResponse,
       });
@@ -164,20 +121,18 @@ describe("BaseService", () => {
         service.testGetAllPaginated<{ id: string; title: string }>(
           "/api/items",
         ),
-      ).rejects.toThrow(
-        "Response format did not match ListResponse or PaginatedResponse",
-      );
+      ).rejects.toThrow("Response format did not match ListResponse");
     });
 
-    it("should extract items from valid paginated response", async () => {
+    it("should extract items from valid ListResponse", async () => {
       const mockItems = [
         { id: "1", title: "Item 1" },
         { id: "2", title: "Item 2" },
       ];
-      const response: PaginatedResponse<{ id: string; title: string }> = {
-        data: mockItems,
+      const response: ListResponse<{ id: string; title: string }> = {
+        items: mockItems,
         total: 2,
-        skip: 0,
+        offset: 0,
         limit: 50,
       };
 
@@ -197,10 +152,10 @@ describe("BaseService", () => {
       ];
 
       // First page response - fewer items than limit indicates last page
-      const response1: PaginatedResponse<{ id: string; title: string }> = {
-        data: page1Items,
+      const response1: ListResponse<{ id: string; title: string }> = {
+        items: page1Items,
         total: 2,
-        skip: 0,
+        offset: 0,
         limit: 100, // maxPageSize is 100 by default
       };
 
@@ -228,18 +183,18 @@ describe("BaseService", () => {
         title: `Item ${101 + i}`,
       }));
 
-      const response1: PaginatedResponse<{ id: string; title: string }> = {
-        data: page1Items,
+      const response1: ListResponse<{ id: string; title: string }> = {
+        items: page1Items,
         total: 150,
-        skip: 0,
+        offset: 0,
         limit: 100,
       };
 
       // Second page - fewer items than limit indicates last page
-      const response2: PaginatedResponse<{ id: string; title: string }> = {
-        data: page2Items,
+      const response2: ListResponse<{ id: string; title: string }> = {
+        items: page2Items,
         total: 150,
-        skip: 100,
+        offset: 100,
         limit: 100,
       };
 
@@ -264,10 +219,10 @@ describe("BaseService", () => {
       }));
 
       // Mock server returning same page repeatedly (returns offset=0 every time)
-      const response: PaginatedResponse<{ id: string; title: string }> = {
-        data: mockItems,
+      const response: ListResponse<{ id: string; title: string }> = {
+        items: mockItems,
         total: 999999, // Very large total to prevent early exit
-        skip: 0,
+        offset: 0,
         limit: 100,
       };
 
@@ -287,10 +242,10 @@ describe("BaseService", () => {
         title: `Item ${i + 1}`,
       }));
 
-      const response: PaginatedResponse<{ id: string; title: string }> = {
-        data: page1Items,
+      const response: ListResponse<{ id: string; title: string }> = {
+        items: page1Items,
         total: 100, // Exactly 100 items total
-        skip: 0,
+        offset: 0,
         limit: 100,
       };
 
@@ -320,10 +275,10 @@ describe("BaseService", () => {
           title: `Item ${offset + i}`,
         }));
 
-        const response: PaginatedResponse<{ id: string; title: string }> = {
-          data: pageItems,
+        const response: ListResponse<{ id: string; title: string }> = {
+          items: pageItems,
           total: totalItems,
-          skip: offset,
+          offset,
           limit: itemsPerPage,
         };
 
@@ -346,37 +301,14 @@ describe("BaseService", () => {
   describe("getPage", () => {
     it("should propagate extractItems error when response format is invalid", async () => {
       // Mock client to return invalid response format
-      const invalidResponse = { results: [] }; // Neither 'items' nor 'data'
+      const invalidResponse = { results: [] }; // Missing 'items'
       vi.mocked(mockClient.request).mockResolvedValueOnce({
         data: invalidResponse,
       });
 
       await expect(
         service.testGetPage<{ id: string; title: string }>("/api/items"),
-      ).rejects.toThrow(
-        "Response format did not match ListResponse or PaginatedResponse",
-      );
-    });
-
-    it("should return extracted items from valid paginated response", async () => {
-      const mockItems = [
-        { id: "1", title: "Item 1" },
-        { id: "2", title: "Item 2" },
-      ];
-      const response: PaginatedResponse<{ id: string; title: string }> = {
-        data: mockItems,
-        total: 10,
-        skip: 0,
-        limit: 2,
-      };
-
-      vi.mocked(mockClient.request).mockResolvedValueOnce({ data: response });
-
-      const result = await service.testGetPage<{
-        id: string;
-        title: string;
-      }>("/api/items");
-      expect(result).toEqual(mockItems);
+      ).rejects.toThrow("Response format did not match ListResponse");
     });
 
     it("should return extracted items from valid ListResponse", async () => {

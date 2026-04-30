@@ -374,115 +374,111 @@ export async function clearTestData(
     }
   };
 
+  // STEP 1: Delete all test relationships (first — they reference other entities)
+  // Relationships are identified by their source/target classes being test-created
   try {
-    // STEP 1: Delete all test relationships (first — they reference other entities)
-    // Relationships are identified by their source/target classes being test-created
-    try {
-      const classesResponse = await apiRequest<any>(page, "/api/classes");
-      const classes = extractItems(classesResponse);
-      const testClassIds = new Set(
-        classes
-          .filter((cls) => isTestEntity(cls, ["test-class-", "seed-class-"]))
-          .map((cls) => cls.id),
-      );
+    const classesResponse = await apiRequest<any>(page, "/api/classes");
+    const classes = extractItems(classesResponse);
+    const testClassIds = new Set(
+      classes
+        .filter((cls) => isTestEntity(cls, ["test-class-", "seed-class-"]))
+        .map((cls) => cls.id),
+    );
 
-      const relationshipsResponse = await apiRequest<any>(
-        page,
-        "/api/relationships",
-      );
-      const relationships = extractItems(relationshipsResponse);
-      for (const relationship of relationships) {
-        // Only delete relationships between test-created classes
-        if (
-          testClassIds.has(relationship.source_class_id) &&
-          testClassIds.has(relationship.target_class_id)
-        ) {
-          try {
-            await apiRequest(page, `/api/relationships/${relationship.id}`, {
-              method: "DELETE",
-            });
-          } catch (error) {
-            cleanupErrors.push({ step: "relationships", error });
-          }
-        }
-      }
-    } catch (error) {
-      cleanupErrors.push({ step: "relationships", error });
-    }
-
-    // STEP 2: Delete all test property definitions (after relationships cleared)
-    try {
-      const propertiesResponse = await apiRequest<any>(page, "/api/properties");
-      const properties = extractItems(propertiesResponse);
-      for (const property of properties) {
+    const relationshipsResponse = await apiRequest<any>(
+      page,
+      "/api/relationships",
+    );
+    const relationships = extractItems(relationshipsResponse);
+    for (const relationship of relationships) {
+      // Only delete relationships between test-created classes
+      if (
+        testClassIds.has(relationship.source_class_id) &&
+        testClassIds.has(relationship.target_class_id)
+      ) {
         try {
-          await deleteEntityIfMatches(page, property, "/api/properties", [
-            "test-property-",
-            "seed-property-",
-          ]);
+          await apiRequest(page, `/api/relationships/${relationship.id}`, {
+            method: "DELETE",
+          });
         } catch (error) {
-          cleanupErrors.push({ step: "properties", error });
+          cleanupErrors.push({ step: "relationships", error });
         }
       }
-    } catch (error) {
-      cleanupErrors.push({ step: "properties-fetch", error });
-    }
-
-    // STEP 3: Delete all test ontology classes (after relationships cleared)
-    try {
-      const classesResponse = await apiRequest<any>(page, "/api/classes");
-      const classes = extractItems(classesResponse);
-      for (const ontologyClass of classes) {
-        try {
-          await deleteEntityIfMatches(page, ontologyClass, "/api/classes", [
-            "test-class-",
-            "seed-class-",
-          ]);
-        } catch (error) {
-          cleanupErrors.push({ step: "classes", error });
-        }
-      }
-    } catch (error) {
-      cleanupErrors.push({ step: "classes-fetch", error });
-    }
-
-    // STEP 4: Delete all test concept schemes (after classes deleted)
-    try {
-      const schemesResponse = await apiRequest<any>(page, "/api/schemes");
-      const schemes = extractItems(schemesResponse);
-      for (const scheme of schemes) {
-        try {
-          await deleteEntityIfMatches(page, scheme, "/api/schemes", [
-            "test-scheme-",
-            "seed-scheme-",
-          ]);
-        } catch (error) {
-          cleanupErrors.push({ step: "schemes", error });
-        }
-      }
-    } catch (error) {
-      cleanupErrors.push({ step: "schemes-fetch", error });
-    }
-
-    // STEP 5: Delete all test taxonomies (last — after all dependent entities removed)
-    try {
-      const taxonomiesResponse = await apiRequest<any>(page, "/api/taxonomies");
-      const taxonomies = extractItems(taxonomiesResponse);
-      for (const taxonomy of taxonomies) {
-        try {
-          await deleteEntityIfMatches(page, taxonomy, "/api/taxonomies", [
-            "test-taxonomy-",
-            "seed-taxonomy-",
-          ]);
-        } catch (error) {
-          cleanupErrors.push({ step: "taxonomies", error });
-        }
-      }
-    } catch (error) {
-      cleanupErrors.push({ step: "taxonomies-fetch", error });
     }
   } catch (error) {
-    cleanupErrors.push({ step: "cleanup-wrapper", error });
+    cleanupErrors.push({ step: "relationships", error });
+  }
+
+  // STEP 2: Delete all test property definitions (after relationships cleared)
+  try {
+    const propertiesResponse = await apiRequest<any>(page, "/api/properties");
+    const properties = extractItems(propertiesResponse);
+    for (const property of properties) {
+      try {
+        await deleteEntityIfMatches(page, property, "/api/properties", [
+          "test-property-",
+          "seed-property-",
+        ]);
+      } catch (error) {
+        cleanupErrors.push({ step: "properties", error });
+      }
+    }
+  } catch (error) {
+    cleanupErrors.push({ step: "properties-fetch", error });
+  }
+
+  // STEP 3: Delete all test ontology classes (after relationships cleared)
+  try {
+    const classesResponse = await apiRequest<any>(page, "/api/classes");
+    const classes = extractItems(classesResponse);
+    for (const ontologyClass of classes) {
+      try {
+        await deleteEntityIfMatches(page, ontologyClass, "/api/classes", [
+          "test-class-",
+          "seed-class-",
+        ]);
+      } catch (error) {
+        cleanupErrors.push({ step: "classes", error });
+      }
+    }
+  } catch (error) {
+    cleanupErrors.push({ step: "classes-fetch", error });
+  }
+
+  // STEP 4: Delete all test concept schemes (after classes deleted)
+  try {
+    const schemesResponse = await apiRequest<any>(page, "/api/schemes");
+    const schemes = extractItems(schemesResponse);
+    for (const scheme of schemes) {
+      try {
+        await deleteEntityIfMatches(page, scheme, "/api/schemes", [
+          "test-scheme-",
+          "seed-scheme-",
+        ]);
+      } catch (error) {
+        cleanupErrors.push({ step: "schemes", error });
+      }
+    }
+  } catch (error) {
+    cleanupErrors.push({ step: "schemes-fetch", error });
+  }
+
+  // STEP 5: Delete all test taxonomies (last — after all dependent entities removed)
+  try {
+    const taxonomiesResponse = await apiRequest<any>(page, "/api/taxonomies");
+    const taxonomies = extractItems(taxonomiesResponse);
+    for (const taxonomy of taxonomies) {
+      try {
+        await deleteEntityIfMatches(page, taxonomy, "/api/taxonomies", [
+          "test-taxonomy-",
+          "seed-taxonomy-",
+        ]);
+      } catch (error) {
+        cleanupErrors.push({ step: "taxonomies", error });
+      }
+    }
+  } catch (error) {
+    cleanupErrors.push({ step: "taxonomies-fetch", error });
   }
 
   // Report all cleanup errors

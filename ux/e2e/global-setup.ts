@@ -20,13 +20,7 @@ async function waitForUrl(url: string, timeout: number = 30000): Promise<void> {
 
   while (Date.now() - startTime < timeout) {
     try {
-      // Use dynamic import for node-fetch if native fetch is not available
-      let fetchFn: typeof fetch = globalThis.fetch;
-      if (!fetchFn) {
-        const nodeFetch = await import("node-fetch");
-        fetchFn = (nodeFetch as unknown as { default: typeof fetch }).default;
-      }
-      const response = await fetchFn(url);
+      const response = await globalThis.fetch(url);
       if (response.ok) {
         console.log(`✓ ${url} is ready`);
         return;

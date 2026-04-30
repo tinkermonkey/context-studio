@@ -289,12 +289,6 @@ export interface SearchResultsResponse {
   total_count?: number;
 }
 
-export interface MultiSourceSearchResponse {
-  results: Record<string, unknown>[];
-  total_count: number;
-  sources: string[];
-}
-
 export interface DBpediaSparqlRequest {
   sparql_query?: string;
   query: string;

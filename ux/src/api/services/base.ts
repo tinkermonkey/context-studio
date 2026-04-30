@@ -23,13 +23,6 @@ export interface FindParams {
   [key: string]: unknown;
 }
 
-export interface PaginatedResponse<T> {
-  data: T[];
-  total: number;
-  skip: number;
-  limit: number;
-}
-
 export interface PaginationConfig {
   defaultPageSize: number;
   maxPageSize: number;
@@ -125,10 +118,11 @@ export abstract class BaseService {
         limit,
       };
 
-      // Try to fetch as ListResponse format first (new API)
-      const response = await this.getResource<
-        ListResponse<T> | PaginatedResponse<T>
-      >(url, pageParams);
+      // Fetch as ListResponse format (API response format)
+      const response = await this.getResource<ListResponse<T>>(
+        url,
+        pageParams,
+      );
 
       // Handle both response formats
       const items = this.extractItems(response);
@@ -160,7 +154,6 @@ export abstract class BaseService {
 
   /**
    * Get a single page of data
-   * Handles both ListResponse (items/offset) and PaginatedResponse (data/skip) formats
    * @param url The endpoint URL
    * @param params Parameters including pagination options
    * @returns Single page of items
@@ -169,44 +162,21 @@ export abstract class BaseService {
     url: string,
     params?: Record<string, unknown>,
   ): Promise<T[]> {
-    const response = await this.getResource<
-      ListResponse<T> | PaginatedResponse<T>
-    >(url, params);
+    const response = await this.getResource<ListResponse<T>>(url, params);
     return this.extractItems(response);
   }
 
   /**
-   * Get a paginated response with metadata
-   * @param url The endpoint URL
-   * @param params Parameters including pagination options
-   * @returns Paginated response with data and metadata
+   * Extract items from ListResponse format
    */
-  protected async getPaginatedResponse<T>(
-    url: string,
-    params?: Record<string, unknown>,
-  ): Promise<PaginatedResponse<T>> {
-    return this.getResource<PaginatedResponse<T>>(url, params);
-  }
-
-  /**
-   * Extract items from either ListResponse or PaginatedResponse format
-   */
-  protected extractItems<T>(
-    response: ListResponse<T> | PaginatedResponse<T>,
-  ): T[] {
+  protected extractItems<T>(response: ListResponse<T>): T[] {
     // Check if it's ListResponse format (has 'items' property)
     if ("items" in response && Array.isArray(response.items)) {
       return response.items;
     }
-    // Otherwise treat as PaginatedResponse format (has 'data' property)
-    if ("data" in response && Array.isArray(response.data)) {
-      return response.data;
-    }
-    // Throw error when response format doesn't match either expected format
+    // Throw error when response format doesn't match expected format
     // This prevents silent failures where users see empty tables with no indication of error
-    const error = new Error(
-      "Response format did not match ListResponse or PaginatedResponse",
-    );
+    const error = new Error("Response format did not match ListResponse");
     apiLogger.error("Invalid response format", { response });
     throw error;
   }

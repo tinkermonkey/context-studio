@@ -46,12 +46,6 @@ export const apiClient: AxiosInstance = new Proxy({} as AxiosInstance, {
     (client as any)[prop] = value;
     return true;
   },
-
-  apply(_, __, args: any[]) {
-    const client = ensureClient();
-
-    return (client as any).apply(_, args);
-  },
 }) as unknown as AxiosInstance;
 
 // Export helper functions that operate on the underlying client
