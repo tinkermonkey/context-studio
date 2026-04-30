@@ -75,7 +75,6 @@ export default class StructuredReporter implements Reporter {
   private tests: TestReport[] = [];
   private selectorRegistry: SelectorRegistry = {};
   private usedSelectors: Set<string> = new Set();
-  private processedTests: Set<string> = new Set();
   private testStats = {
     total: 0,
     passed: 0,
@@ -115,22 +114,15 @@ export default class StructuredReporter implements Reporter {
 
   onTestEnd(test: TestCase, result: TestResult): void {
     const specFile = test.location.file;
-    const testKey = `${specFile}::${test.title}`;
+    const testKey = test.id;
 
-    // Only process each test case once, not once per attempt
-    if (this.processedTests.has(testKey)) {
-      return;
-    }
-    this.processedTests.add(testKey);
+    // Find existing test report if it's being retried
+    const existingIndex = this.tests.findIndex((t) => {
+      // Match by spec file and test ID for unique identification
+      return t.spec_file === specFile && t.test_name === test.title;
+    });
 
     const testStatus = this.computeTestStatus(test);
-
-    // Update stats (only once per test)
-    this.testStats.total++;
-    if (testStatus === "passed") this.testStats.passed++;
-    if (testStatus === "failed") this.testStats.failed++;
-    if (testStatus === "skipped") this.testStats.skipped++;
-    if (testStatus === "flaky") this.testStats.flaky++;
 
     // For duration, sum all attempts
     const totalDuration = test.results.reduce((sum, r) => sum + r.duration, 0);
@@ -157,7 +149,36 @@ export default class StructuredReporter implements Reporter {
       failure: failureInfo,
     };
 
-    this.tests.push(testReport);
+    if (existingIndex >= 0) {
+      // Update existing test report with new outcome (handles retries)
+      const oldReport = this.tests[existingIndex];
+      const oldStatus = oldReport.status;
+      const newStatus = testStatus;
+
+      // Update stats: decrement old status, increment new status
+      if (oldStatus === "passed") this.testStats.passed--;
+      if (oldStatus === "failed") this.testStats.failed--;
+      if (oldStatus === "skipped") this.testStats.skipped--;
+      if (oldStatus === "flaky") this.testStats.flaky--;
+
+      if (newStatus === "passed") this.testStats.passed++;
+      if (newStatus === "failed") this.testStats.failed++;
+      if (newStatus === "skipped") this.testStats.skipped++;
+      if (newStatus === "flaky") this.testStats.flaky++;
+
+      // Replace with updated report
+      this.tests[existingIndex] = testReport;
+    } else {
+      // First time seeing this test
+      this.testStats.total++;
+      if (testStatus === "passed") this.testStats.passed++;
+      if (testStatus === "failed") this.testStats.failed++;
+      if (testStatus === "skipped") this.testStats.skipped++;
+      if (testStatus === "flaky") this.testStats.flaky++;
+
+      this.tests.push(testReport);
+    }
+
     allSelectors.forEach((s) => this.usedSelectors.add(s));
   }
 
@@ -322,24 +343,26 @@ export default class StructuredReporter implements Reporter {
   }
 
   private extractPatternTemplates(
-    registry: SelectorRegistry
+    registry: SelectorRegistry,
+    result: string[] = []
   ): string[] {
-    const patterns: string[] = [];
-    const extractFromValue = (value: unknown) => {
-      if (
-        typeof value === "string" &&
-        value.includes("{") &&
-        value.includes("}")
-      ) {
-        patterns.push(value);
-      } else if (value && typeof value === "object" && !Array.isArray(value)) {
-        for (const v of Object.values(value)) {
-          extractFromValue(v);
-        }
+    for (const [_key, value] of Object.entries(registry)) {
+      if (!value || typeof value !== "object" || Array.isArray(value)) {
+        continue;
       }
-    };
-    extractFromValue(registry);
-    return patterns;
+
+      // Check if this is a registry entry (has 'id' property)
+      if ("id" in value) {
+        const entry = value as RegistryEntry;
+        if (typeof entry.id === "string" && entry.id.includes("{") && entry.id.includes("}")) {
+          result.push(entry.id);
+        }
+      } else {
+        // Recursively search nested registries
+        this.extractPatternTemplates(value as SelectorRegistry, result);
+      }
+    }
+    return result;
   }
 
   private matchesPatternTemplate(
@@ -347,9 +370,20 @@ export default class StructuredReporter implements Reporter {
     patterns: string[]
   ): boolean {
     for (const pattern of patterns) {
-      const regex = new RegExp(
-        `^${pattern.replace(/\{[^}]+\}/g, "[a-zA-Z0-9_-]+")}$`
-      );
+      // Split pattern into literal and placeholder parts
+      const parts = pattern.split(/(\{[^}]+\})/);
+      const regexPattern = parts
+        .map((part) => {
+          // Placeholder parts: replace with flexible ID pattern
+          if (part.startsWith("{") && part.endsWith("}")) {
+            return "[a-zA-Z0-9_-]+";
+          }
+          // Literal parts: escape regex special characters
+          return part.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+        })
+        .join("");
+
+      const regex = new RegExp(`^${regexPattern}$`);
       if (regex.test(selector)) {
         return true;
       }
