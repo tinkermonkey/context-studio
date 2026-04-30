@@ -30,7 +30,7 @@ type TestReport =
     };
 
 interface AttemptReport {
-  status: "passed" | "failed" | "skipped";
+  status: "passed" | "failed" | "skipped" | "timedOut" | "interrupted";
   duration_ms: number;
   failure?: FailureReport;
 }
@@ -110,18 +110,33 @@ export default class StructuredReporter implements Reporter {
 
   private loadSelectorRegistry(): void {
     const registryPath = path.join(__dirname, "..", "..", "selector-registry.yaml");
-    if (fs.existsSync(registryPath)) {
-      try {
-        const content = fs.readFileSync(registryPath, "utf-8");
-        const parsed = yaml.load(content) as SelectorRegistry;
-        this.selectorRegistry = parsed || {};
-      } catch (error) {
-        console.error(
-          `Failed to load selector registry from ${registryPath}:`,
-          error instanceof Error ? error.message : String(error)
+    if (!fs.existsSync(registryPath)) {
+      console.warn(
+        `Selector registry not found at ${registryPath} — selector coverage will be empty. ` +
+        `Create selector-registry.yaml to enable coverage tracking.`
+      );
+      this.selectorRegistry = {};
+      return;
+    }
+
+    try {
+      const content = fs.readFileSync(registryPath, "utf-8");
+      const parsed = yaml.load(content) as SelectorRegistry;
+      this.selectorRegistry = parsed || {};
+
+      if (!parsed || Object.keys(parsed).length === 0) {
+        console.warn(
+          `Selector registry at ${registryPath} is empty. ` +
+          `Coverage report will show 0% with all selectors as undocumented.`
         );
-        this.selectorRegistry = {};
       }
+    } catch (error) {
+      console.error(
+        `Failed to parse selector registry YAML at ${registryPath}: ` +
+        `${error instanceof Error ? error.message : String(error)}. ` +
+        `Coverage report will be unavailable.`
+      );
+      this.selectorRegistry = {};
     }
   }
 
@@ -213,8 +228,19 @@ export default class StructuredReporter implements Reporter {
       selector_coverage: selectorCoverage,
     };
 
-    this.writeJsonReport(report, runId);
-    this.writeMarkdownReport(report, runId);
+    const jsonWriteSuccess = this.writeJsonReport(report, runId);
+    const markdownWriteSuccess = this.writeMarkdownReport(report, runId);
+
+    if (!jsonWriteSuccess || !markdownWriteSuccess) {
+      const failedReports = [];
+      if (!jsonWriteSuccess) failedReports.push("JSON");
+      if (!markdownWriteSuccess) failedReports.push("Markdown");
+      console.error(
+        `⚠️ Failed to write ${failedReports.join(" and ")} report(s) for run ${runId}. ` +
+        `Downstream consumers may not receive test results.`
+      );
+    }
+
     this.pruneOldReports();
   }
 
@@ -228,7 +254,7 @@ export default class StructuredReporter implements Reporter {
 
   private extractAttempts(test: TestCase): AttemptReport[] {
     return test.results.map((result) => ({
-      status: result.status as "passed" | "failed" | "skipped",
+      status: result.status,
       duration_ms: result.duration,
       failure: result.status === "failed" ? this.extractFailureInfo(result) : undefined,
     }));
@@ -291,21 +317,32 @@ export default class StructuredReporter implements Reporter {
     const flatRegistry = this.flattenRegistry(this.selectorRegistry);
     const patternRegistry = this.extractPatternTemplates(this.selectorRegistry);
 
-    // Check coverage
+    // Check coverage for each documented selector
     for (const [_key, entry] of Object.entries(flatRegistry)) {
       const id = entry.id;
+      let isCovered = false;
+
+      // Check if literal selector was used
       if (this.usedSelectors.has(id)) {
-        documented[id] = {
-          id,
-          component: entry.component || "Unknown",
-          coverage: "exercised",
-        };
-      } else {
-        documented[id] = {
-          id,
-          component: entry.component || "Unknown",
-          coverage: "not_exercised",
-        };
+        isCovered = true;
+      }
+      // Check if it's a pattern template and any selector matches it
+      else if (patternRegistry.includes(id)) {
+        for (const selector of this.usedSelectors) {
+          if (this.matchesPatternTemplate(selector, [id])) {
+            isCovered = true;
+            break;
+          }
+        }
+      }
+
+      documented[id] = {
+        id,
+        component: entry.component || "Unknown",
+        coverage: isCovered ? "exercised" : "not_exercised",
+      };
+
+      if (!isCovered) {
         gaps.push(id);
       }
     }
@@ -401,20 +438,22 @@ export default class StructuredReporter implements Reporter {
     return false;
   }
 
-  private writeJsonReport(report: RunReport, runId: string): void {
+  private writeJsonReport(report: RunReport, runId: string): boolean {
     const filePath = path.join(this.reportDir, `${runId}.json`);
     try {
       fs.writeFileSync(filePath, JSON.stringify(report, null, 2));
       console.log(`\n📊 Structured report written to ${filePath}`);
+      return true;
     } catch (error) {
       console.error(
         `Failed to write JSON report to ${filePath}:`,
         error instanceof Error ? error.message : String(error)
       );
+      return false;
     }
   }
 
-  private writeMarkdownReport(report: RunReport, runId: string): void {
+  private writeMarkdownReport(report: RunReport, runId: string): boolean {
     const filePath = path.join(this.reportDir, `${runId}.md`);
 
     try {
@@ -495,11 +534,13 @@ export default class StructuredReporter implements Reporter {
 
       fs.writeFileSync(filePath, markdown);
       console.log(`📄 Markdown summary written to ${filePath}`);
+      return true;
     } catch (error) {
       console.error(
         `Failed to write markdown report to ${filePath}:`,
         error instanceof Error ? error.message : String(error)
       );
+      return false;
     }
   }
 
