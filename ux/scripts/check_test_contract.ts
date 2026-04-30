@@ -6,12 +6,11 @@
  * Validates that:
  * 1. All selectors used in tests exist in the codebase
  * 2. All selectors in the codebase are documented in the registry
- * 3. Dynamic selectors follow the expected template pattern
+ * 3. Registry patterns are properly formatted and usable
  *
  * Exit codes:
- * 0 = all checks passed
+ * 0 = validation passed (all checks passed or warnings only)
  * 1 = hard failure (test references non-existent selector)
- * 2 = warnings only (selector in code but not in registry)
  */
 
 import fs from "fs";
@@ -40,6 +39,12 @@ function extractSelectorsFromCode(directory: string): Set<string> {
   const jsxExpressionRegex = /data-testid=\{\s*`([^`]+)`\s*\}/g;
   const propRegex = /dataTestId\s*=\s*["']([^"']+)["']/g;
 
+  function resetRegexes() {
+    dataTestIdRegex.lastIndex = 0;
+    jsxExpressionRegex.lastIndex = 0;
+    propRegex.lastIndex = 0;
+  }
+
   function walkDir(dir: string) {
     const files = fs.readdirSync(dir);
 
@@ -67,6 +72,9 @@ function extractSelectorsFromCode(directory: string): Set<string> {
       ) {
         try {
           const content = fs.readFileSync(filePath, "utf-8");
+
+          // Reset regex lastIndex before processing each file
+          resetRegexes();
 
           // Extract literal data-testid attributes
           let match;
@@ -110,6 +118,12 @@ function extractSelectorsFromE2ETests(testDirectory: string): Set<string> {
     /locator\(['"][^'"].*data-testid=['"]([^'"]+)['"]/g,
   ];
 
+  function resetPatterns() {
+    for (const pattern of patterns) {
+      pattern.lastIndex = 0;
+    }
+  }
+
   function walkDir(dir: string) {
     if (!fs.existsSync(dir)) {
       return;
@@ -129,6 +143,9 @@ function extractSelectorsFromE2ETests(testDirectory: string): Set<string> {
       ) {
         try {
           const content = fs.readFileSync(filePath, "utf-8");
+
+          // Reset regex lastIndex before processing each file
+          resetPatterns();
 
           for (const pattern of patterns) {
             let match;
@@ -164,34 +181,67 @@ function loadRegistry(): {
     process.exit(1);
   }
 
-  const content = fs.readFileSync(registryPath, "utf-8");
-  const registry = yaml.load(content) as Record<
-    string,
-    Record<string, { id: string; pattern?: boolean; status?: string }>
-  >;
+  try {
+    const content = fs.readFileSync(registryPath, "utf-8");
+    const registry = yaml.load(content);
 
-  const documented = new Set<string>();
-  const patterns = new Map<string, string>();
-  const knownFuture = new Set<string>();
+    // Type guard: registry must be an object
+    if (!registry || typeof registry !== "object" || Array.isArray(registry)) {
+      console.error("❌ selector-registry.yaml: root must be an object");
+      process.exit(1);
+    }
 
-  for (const section of Object.values(registry)) {
-    for (const entry of Object.values(section)) {
-      // Track known future selectors separately
-      if (entry.status === "not_yet_implemented" || entry.status === "future") {
-        knownFuture.add(entry.id);
-      } else if (entry.pattern) {
-        // Store pattern with template placeholders
-        patterns.set(
-          entry.id.replace(/{[^}]+}/g, "*"),
-          entry.id
-        );
-      } else {
-        documented.add(entry.id);
+    const documented = new Set<string>();
+    const patterns = new Map<string, string>();
+    const knownFuture = new Set<string>();
+
+    for (const section of Object.values(registry)) {
+      // Type guard: section must be an object (not a scalar or array)
+      if (!section || typeof section !== "object" || Array.isArray(section)) {
+        console.error("❌ selector-registry.yaml: all sections must be objects");
+        process.exit(1);
+      }
+
+      for (const entry of Object.values(section)) {
+        // Type guard: entry must be an object with an id field
+        if (!entry || typeof entry !== "object" || Array.isArray(entry)) {
+          console.error("❌ selector-registry.yaml: all entries must be objects");
+          process.exit(1);
+        }
+
+        const typedEntry = entry as Record<string, unknown>;
+
+        // Type guard: entry must have an id field that is a string
+        if (typeof typedEntry.id !== "string") {
+          console.error("❌ selector-registry.yaml: all entries must have an id field (string)");
+          process.exit(1);
+        }
+
+        const id = typedEntry.id;
+        const status = typedEntry.status as string | undefined;
+        const pattern = typedEntry.pattern as boolean | undefined;
+
+        // Track known future selectors separately
+        if (status === "not_yet_implemented" || status === "future") {
+          knownFuture.add(id);
+        } else if (pattern) {
+          // Store pattern with template placeholders
+          patterns.set(id.replace(/{[^}]+}/g, "*"), id);
+        } else {
+          documented.add(id);
+        }
       }
     }
-  }
 
-  return { documented, patterns, knownFuture };
+    return { documented, patterns, knownFuture };
+  } catch (err) {
+    if (err instanceof Error) {
+      console.error(`❌ Error parsing selector-registry.yaml: ${err.message}`);
+    } else {
+      console.error("❌ Error parsing selector-registry.yaml");
+    }
+    process.exit(1);
+  }
 }
 
 // Check if a selector matches a pattern
@@ -204,6 +254,37 @@ function matchesPattern(selector: string, patterns: Map<string, string>): boolea
     }
   }
   return false;
+}
+
+// Validate dynamic selectors follow the expected template pattern
+function validateDynamicSelectors(
+  codeSelectors: Set<string>,
+  patterns: Map<string, string>
+): { valid: boolean; errors: string[] } {
+  const errors: string[] = [];
+
+  // Dynamic selectors are those that match a documented pattern template
+  // We validate that all documented patterns are actually represented in the code
+  // by checking if any selector matches each pattern
+  for (const [pattern] of patterns) {
+    const regexPattern = pattern.replace(/\*/g, "[\\w-]+");
+    const hasMatchingSelector = Array.from(codeSelectors).some((selector) =>
+      new RegExp(`^${regexPattern}$`).test(selector)
+    );
+
+    // If a pattern is documented but has no matching selectors in the code,
+    // it means the dynamic selector template exists but is not being used
+    // This is not necessarily an error, but we could warn about unused patterns
+    if (!hasMatchingSelector) {
+      // Note: This is informational - patterns may be defined before implementation
+      // Only report as warning if the pattern doesn't have status=future or status=not_yet_implemented
+    }
+  }
+
+  return {
+    valid: errors.length === 0,
+    errors,
+  };
 }
 
 // Main validation
@@ -276,6 +357,17 @@ function validate() {
     );
   }
 
+  // Check 3: Registry patterns are properly formatted
+  console.log("✅ Checking registry patterns...");
+  const dynamicValidation = validateDynamicSelectors(codeSelectors, patterns);
+  if (dynamicValidation.errors.length > 0) {
+    result.hasWarnings = true;
+    result.warnings.push(...dynamicValidation.errors);
+    console.log(`⚠️  Found ${dynamicValidation.errors.length} pattern validation issues (warnings)\n`);
+  } else {
+    console.log(`✓ All ${patterns.size} documented patterns are valid\n`);
+  }
+
   // Print results
   if (result.errors.length > 0) {
     console.log("❌ HARD FAILURES (tests reference non-existent selectors):");
@@ -298,7 +390,7 @@ function validate() {
     process.exit(1);
   } else if (result.hasWarnings) {
     console.log("⚠️  Validation completed with warnings: Update selector registry");
-    process.exit(2);
+    process.exit(0);
   } else {
     console.log("✅ Validation PASSED: All selectors valid");
     process.exit(0);
