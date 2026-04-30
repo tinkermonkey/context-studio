@@ -103,8 +103,8 @@ This plan uses existing factory patterns from `ux/e2e/fixtures/factories.ts`:
 - `createTaxonomy(page, overrides)`
 - `createConceptScheme(page, taxonomyId, overrides)`
 - `createClass(page, schemeId, overrides)`
-- `createPropertyDefinition(page, sourceClassId, targetClassId, overrides)`
-- `createRelationship(page, sourceClassId, targetClassId, relationshipType?, overrides)`
+- `createPropertyDefinition(page, overrides)`
+- `createRelationship(page, sourceClassId, targetClassId, relationshipType?)`
 ```
 
 ### 6. Validate the Plan
