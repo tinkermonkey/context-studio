@@ -284,9 +284,9 @@ test.describe("Ontology Class CRUD Operations", () => {
       `/api/classes/${ontologyClass.id}`,
     );
     expect(apiResponse.title).toBe(testTitle);
-    expect(apiResponse.definition).toBe(testDefinition);
+    expect(apiResponse.description).toBe(testDescription);
     expect(apiResponse.id).toBeDefined();
-    expect(apiResponse.scheme_id).toBe(schemeId);
+    expect(apiResponse.concept_scheme_id).toBe(schemeId);
     expect(apiResponse.created_at).toBeDefined();
   });
 });

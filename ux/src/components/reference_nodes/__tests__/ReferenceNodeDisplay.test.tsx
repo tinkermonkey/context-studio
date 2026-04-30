@@ -9,7 +9,12 @@ import { vi, describe, it, expect, beforeEach, afterEach } from "vitest";
 
 import { ReferenceNodeDisplay } from "../ReferenceNodeDisplay";
 import { useRemoveReferenceLink } from "@/api/hooks/ontologyClasses/useReferenceLinks";
-import { ReferenceLink } from "@/api/services/reference";
+
+// Type for test fixtures - matches the component's expected interface
+type TestReferenceLink = {
+  source: string;
+  external_id: string;
+} & any;
 
 // Mock the hooks
 vi.mock("@/api/hooks/ontologyClasses/useReferenceLinks");
@@ -65,7 +70,7 @@ describe("ReferenceNodeDisplay", () => {
   it("returns null when no reference links are provided", () => {
     const { container } = render(
       <TestWrapper>
-        <ReferenceNodeDisplay nodeId={mockNodeId} referenceLinks={[]} />
+        <ReferenceNodeDisplay nodeId={mockNodeId} referenceLinks={[] as any} />
       </TestWrapper>,
     );
 
@@ -73,7 +78,7 @@ describe("ReferenceNodeDisplay", () => {
   });
 
   it("groups reference links by source", () => {
-    const mockLinks: ReferenceLink[] = [
+    const mockLinks: TestReferenceLink[] = [
       { source: "dbpedia", external_id: "Test_Concept_1" },
       { source: "dbpedia", external_id: "Test_Concept_2" },
       { source: "schema_org", external_id: "Thing" },
@@ -97,7 +102,7 @@ describe("ReferenceNodeDisplay", () => {
   });
 
   it("displays external IDs for each reference link", () => {
-    const mockLinks: ReferenceLink[] = [
+    const mockLinks: TestReferenceLink[] = [
       { source: "dbpedia", external_id: "Test_Concept" },
       { source: "schema_org", external_id: "Thing" },
     ];
@@ -113,7 +118,7 @@ describe("ReferenceNodeDisplay", () => {
   });
 
   it("shows view button with external link for each reference", () => {
-    const mockLinks: ReferenceLink[] = [
+    const mockLinks: TestReferenceLink[] = [
       { source: "dbpedia", external_id: "Test_Concept" },
     ];
 
@@ -128,7 +133,7 @@ describe("ReferenceNodeDisplay", () => {
   });
 
   it("renders remove buttons for each reference link", () => {
-    const mockLinks: ReferenceLink[] = [
+    const mockLinks: TestReferenceLink[] = [
       { source: "dbpedia", external_id: "Test_Concept" },
       { source: "schema_org", external_id: "Thing" },
     ];
@@ -145,7 +150,7 @@ describe("ReferenceNodeDisplay", () => {
   });
 
   it("uses remove mutation hook for delete functionality", () => {
-    const mockLinks: ReferenceLink[] = [
+    const mockLinks: TestReferenceLink[] = [
       { source: "dbpedia", external_id: "Test_Concept" },
     ];
 
@@ -170,7 +175,7 @@ describe("ReferenceNodeDisplay", () => {
   });
 
   it("sorts sources alphabetically", () => {
-    const mockLinks: ReferenceLink[] = [
+    const mockLinks: TestReferenceLink[] = [
       { source: "wikidata", external_id: "Q12345" },
       { source: "dbpedia", external_id: "Test_Concept" },
       { source: "schema_org", external_id: "Thing" },

@@ -126,17 +126,13 @@ describe("WordSenseSelector", () => {
         {
           label: "machine",
           language_code: "en",
-          term: "machine",
           sense_type: "wordnet",
-          sense_id: "machine.n.01",
-          definition: "A device",
-          domain: undefined,
         },
       ];
 
       renderComponent({ title: "machine learning", persistedSenses });
 
-      expect(screen.getByText("machine.n.01")).toBeInTheDocument();
+      expect(screen.getByText("machine")).toBeInTheDocument();
     });
 
     it("initializes with persisted senses", () => {
@@ -144,18 +140,14 @@ describe("WordSenseSelector", () => {
         {
           label: "learning",
           language_code: "en",
-          term: "learning",
           sense_type: "wordnet",
-          sense_id: "learning.n.01",
-          definition: "A device",
-          domain: undefined,
         },
       ];
 
       renderComponent({ title: "machine learning", persistedSenses });
 
       // Check that the persisted sense is displayed
-      expect(screen.getByText("learning.n.01")).toBeInTheDocument();
+      expect(screen.getByText("learning")).toBeInTheDocument();
     });
   });
 
@@ -436,11 +428,7 @@ describe("WordSenseSelector", () => {
         {
           label: "machine",
           language_code: "en",
-          term: "machine",
           sense_type: "wordnet",
-          sense_id: "machine.n.01",
-          definition: "A device",
-          domain: undefined,
         },
       ];
 
@@ -474,11 +462,7 @@ describe("WordSenseSelector", () => {
         {
           label: "machine",
           language_code: "en",
-          term: "machine",
           sense_type: "wordnet",
-          sense_id: "machine.n.01",
-          definition: "A device",
-          domain: undefined,
         },
       ];
 

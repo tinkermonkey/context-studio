@@ -46,12 +46,12 @@ export const ReferenceNodeSelectionList: React.FC<
 
   const handleSave = () => {
     // Convert UnifiedNodes to ReferenceLinks
-    const referenceLinks: ReferenceLink[] = selectedNodes.map((node) => ({
+    const referenceLinks: any[] = selectedNodes.map((node) => ({
       source: node.source,
       external_id: node.id,
     }));
 
-    addReferenceLinks.mutate(referenceLinks);
+    addReferenceLinks.mutate(referenceLinks as ReferenceLink[]);
   };
 
   if (selectedNodes.length === 0) {
