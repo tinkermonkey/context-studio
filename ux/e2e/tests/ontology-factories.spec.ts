@@ -80,37 +80,32 @@ test.describe("Test Data Factories", () => {
       const property = await createPropertyDefinition(page, {
         title: "Test Property",
         description: "A test property",
-        range: "string",
+        identifier: "test_prop",
       });
 
       expect(property).toBeDefined();
       expect(property.id).toBeDefined();
       expect(property.title).toBe("Test Property");
       expect(property.description).toBe("A test property");
-      expect(property.range).toBe("string");
+      expect(property.identifier).toBe("test_prop");
     });
 
     test("should create a relationship between classes", async ({ page }) => {
-      // Create hierarchy (which now includes a property definition)
+      // Create hierarchy with multiple classes
       const hierarchy = await createTestHierarchy(page, 2);
 
-      // Use the property definition from the hierarchy
-      expect(hierarchy.propertyDefinition).toBeDefined();
-      expect(hierarchy.propertyDefinition.id).toBeDefined();
-
-      // Create relationship using the hierarchy's property definition
+      // Create relationship between the classes
       const relationship = await createRelationship(
         page,
         hierarchy.classes[0].id,
         hierarchy.classes[1].id,
-        hierarchy.propertyDefinition.id,
+        "related_to",
       );
 
       expect(relationship).toBeDefined();
       expect(relationship.id).toBeDefined();
       expect(relationship.source_id).toBe(hierarchy.classes[0].id);
       expect(relationship.target_id).toBe(hierarchy.classes[1].id);
-      expect(relationship.property_definition_id).toBe(hierarchy.propertyDefinition.id);
     });
   });
 
@@ -161,7 +156,7 @@ test.describe("Test Data Factories", () => {
       expect(hierarchy.classes[1].title).toContain("Custom Class");
     });
 
-    test("should create a relationship-ready hierarchy with property definition", async ({
+    test("should create a relationship-ready hierarchy with classes", async ({
       page,
     }) => {
       const hierarchy = await createTestHierarchy(page);
@@ -176,15 +171,12 @@ test.describe("Test Data Factories", () => {
       expect(hierarchy.classes).toBeDefined();
       expect(hierarchy.classes.length).toBeGreaterThan(0);
 
-      expect(hierarchy.propertyDefinition).toBeDefined();
-      expect(hierarchy.propertyDefinition.id).toBeDefined();
-
-      // Verify the property definition can be used to create a relationship
+      // Verify relationships can be created between classes
       const relationship = await createRelationship(
         page,
         hierarchy.classes[0].id,
         hierarchy.classes[0].id,
-        hierarchy.propertyDefinition.id,
+        "self_referential",
       );
 
       expect(relationship).toBeDefined();
@@ -316,16 +308,12 @@ test.describe("Test Data Factories", () => {
 
       expect(anotherClass.concept_scheme_id).toBe(anotherScheme.id);
 
-      // Create a property and relationship using the classes
-      const property = await createPropertyDefinition(page, {
-        title: "Test Relation",
-      });
-
+      // Create a relationship between classes
       const relationship = await createRelationship(
         page,
         hierarchy.classes[0].id,
         anotherClass.id,
-        property.id,
+        "related_to",
       );
 
       expect(relationship.source_id).toBe(hierarchy.classes[0].id);

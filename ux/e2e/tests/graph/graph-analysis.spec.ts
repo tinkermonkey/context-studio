@@ -39,14 +39,14 @@ test.describe.skip("Graph Visualization and Analysis", () => {
       page,
       hierarchy.classes[0].id,
       hierarchy.classes[1].id,
-      hierarchy.propertyDefinition.id,
+      "related_to",
     );
 
     await createRelationship(
       page,
       hierarchy.classes[1].id,
       hierarchy.classes[2].id,
-      hierarchy.propertyDefinition.id,
+      "parent_of",
     );
   });
 
@@ -443,7 +443,7 @@ test.describe.skip("Graph Visualization and Analysis", () => {
           page,
           largeHierarchy.classes[i].id,
           largeHierarchy.classes[i + 1].id,
-          largeHierarchy.propertyDefinition.id,
+          "related_to",
         );
       }
 

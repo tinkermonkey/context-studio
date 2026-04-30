@@ -4,7 +4,7 @@ import {
   createRelationship,
   clearTestData,
   apiRequest,
-} from "../../fixtures/test-helpers";
+} from "../../fixtures/factories";
 import type { Relationship, OntologyClass } from "@/api/types/ontology";
 
 /**
@@ -23,14 +23,12 @@ import type { Relationship, OntologyClass } from "@/api/types/ontology";
 test.describe("Relationship CRUD Operations", () => {
   let class1Id: string;
   let class2Id: string;
-  let propertyId: string;
 
   test.beforeEach(async ({ page }) => {
-    // Create test hierarchy with multiple classes and property
+    // Create test hierarchy with multiple classes
     const hierarchy = await createTestHierarchy(page, 2);
     class1Id = hierarchy.classes[0].id;
     class2Id = hierarchy.classes[1].id;
-    propertyId = hierarchy.propertyDefinition.id;
   });
 
   test.afterEach(async ({ page }) => {
@@ -45,14 +43,13 @@ test.describe("Relationship CRUD Operations", () => {
       page,
       class1Id,
       class2Id,
-      propertyId,
+      "related_to",
     );
 
     // Verify relationship was created successfully
     expect(relationship.id).toBeDefined();
     expect(relationship.source_id).toBe(class1Id);
     expect(relationship.target_id).toBe(class2Id);
-    expect(relationship.property_definition_id).toBe(propertyId);
 
     // Verify API can retrieve the relationship
     const apiResponse = await apiRequest<Relationship>(
@@ -61,12 +58,11 @@ test.describe("Relationship CRUD Operations", () => {
     );
     expect(apiResponse.source_id).toBe(class1Id);
     expect(apiResponse.target_id).toBe(class2Id);
-    expect(apiResponse.property_definition_id).toBe(propertyId);
   });
 
   test("should list all relationships", async ({ page }) => {
     // Create multiple relationships
-    const rel1 = await createRelationship(page, class1Id, class2Id, propertyId);
+    const rel1 = await createRelationship(page, class1Id, class2Id, "related_to");
 
     // Create another class for second relationship
     const hierarchy = await createTestHierarchy(page, 1);
@@ -76,7 +72,7 @@ test.describe("Relationship CRUD Operations", () => {
       page,
       class2Id,
       class3Id,
-      hierarchy.propertyDefinition.id,
+      "parent_of",
     );
 
     // Fetch relationships list from API
@@ -105,7 +101,7 @@ test.describe("Relationship CRUD Operations", () => {
       page,
       class1Id,
       class2Id,
-      propertyId,
+      "related_to",
     );
 
     // Verify GET single relationship returns correct structure
@@ -116,7 +112,6 @@ test.describe("Relationship CRUD Operations", () => {
     expect(getResponse).toHaveProperty("id");
     expect(getResponse).toHaveProperty("source_id");
     expect(getResponse).toHaveProperty("target_id");
-    expect(getResponse).toHaveProperty("property_definition_id");
     expect(getResponse).toHaveProperty("created_at");
 
     // Verify GET all relationships returns collection
@@ -134,7 +129,7 @@ test.describe("Relationship CRUD Operations", () => {
       page,
       class1Id,
       class2Id,
-      propertyId,
+      "related_to",
     );
 
     // Verify relationship exists
@@ -171,7 +166,7 @@ test.describe("Relationship CRUD Operations", () => {
       page,
       class1Id,
       class2Id,
-      propertyId,
+      "related_to",
     );
 
     // Fetch relationship details
@@ -183,7 +178,6 @@ test.describe("Relationship CRUD Operations", () => {
     // Verify all properties are correctly linked
     expect(apiResponse.source_id).toBe(class1Id);
     expect(apiResponse.target_id).toBe(class2Id);
-    expect(apiResponse.property_definition_id).toBe(propertyId);
 
     // Verify relationship is bidirectional when querying classes
     const class1Response = await apiRequest<OntologyClass>(
@@ -205,7 +199,7 @@ test.describe("Relationship CRUD Operations", () => {
       page,
       class1Id,
       class1Id,
-      propertyId,
+      "self_referential",
     );
 
     // Verify self-referential relationship
@@ -215,7 +209,6 @@ test.describe("Relationship CRUD Operations", () => {
     );
     expect(apiResponse.source_id).toBe(class1Id);
     expect(apiResponse.target_id).toBe(class1Id);
-    expect(apiResponse.property_definition_id).toBe(propertyId);
   });
 
   test("should verify relationships respect foreign key constraints", async ({
@@ -226,7 +219,7 @@ test.describe("Relationship CRUD Operations", () => {
       page,
       class1Id,
       class2Id,
-      propertyId,
+      "related_to",
     );
     expect(relationship.id).toBeDefined();
 
@@ -240,60 +233,18 @@ test.describe("Relationship CRUD Operations", () => {
     );
     expect(apiResponse.source_id).toBeTruthy();
     expect(apiResponse.target_id).toBeTruthy();
-    expect(apiResponse.property_definition_id).toBeTruthy();
   });
 
-  test("should create multiple relationships between same classes", async ({
+  test("should create multiple relationships between same classes with different types", async ({
     page,
   }) => {
-    // Create another property for second relationship
-    const hierarchy2 = await createTestHierarchy(page, 0);
-    const prop2 = hierarchy2.propertyDefinition;
-
-    // Create two relationships between same classes with different properties
-    const rel1 = await createRelationship(page, class1Id, class2Id, propertyId);
-    const rel2 = await createRelationship(page, class1Id, class2Id, prop2.id);
+    // Create two relationships between same classes with different relationship types
+    const rel1 = await createRelationship(page, class1Id, class2Id, "related_to");
+    const rel2 = await createRelationship(page, class1Id, class2Id, "parent_of");
 
     // Verify both relationships exist
     expect(rel1.id).not.toBe(rel2.id);
     expect(rel1.source_id).toBe(rel2.source_id);
     expect(rel1.target_id).toBe(rel2.target_id);
-    expect(rel1.property_definition_id).not.toBe(rel2.property_definition_id);
-  });
-
-  test("should update a relationship property", async ({ page }) => {
-    // Create a relationship
-    const relationship = await createRelationship(
-      page,
-      class1Id,
-      class2Id,
-      propertyId,
-    );
-
-    // Create another property to update to
-    const hierarchy2 = await createTestHierarchy(page, 0);
-    const newProperty = hierarchy2.propertyDefinition;
-
-    // Update the relationship property via API
-    const updateData = {
-      property_definition_id: newProperty.id,
-    };
-    await apiRequest<Relationship>(
-      page,
-      `/api/relationships/${relationship.id}`,
-      {
-        method: "PUT",
-        body: updateData,
-      },
-    );
-
-    // Verify update via API
-    const updatedResponse = await apiRequest<Relationship>(
-      page,
-      `/api/relationships/${relationship.id}`,
-    );
-    expect(updatedResponse.property_definition_id).toBe(newProperty.id);
-    expect(updatedResponse.source_id).toBe(class1Id);
-    expect(updatedResponse.target_id).toBe(class2Id);
   });
 });

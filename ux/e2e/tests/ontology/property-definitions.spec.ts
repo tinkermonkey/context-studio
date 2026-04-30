@@ -67,14 +67,14 @@ test.describe("Property Definition CRUD Operations", () => {
     const property = await createPropertyDefinition(page, {
       title: "API Created Property",
       description: "Property created via API",
-      range: "string",
+      identifier: "api_created_property",
     });
 
     // Verify property was created successfully
     expect(property.id).toBeDefined();
     expect(property.title).toBe("API Created Property");
     expect(property.description).toBe("Property created via API");
-    expect(property.range).toBe("string");
+    expect(property.identifier).toBe("api_created_property");
 
     // Navigate to properties page to verify it appears in UI
     await page.goto("/app/properties");
@@ -88,11 +88,11 @@ test.describe("Property Definition CRUD Operations", () => {
     // Create test properties
     const prop1 = await createPropertyDefinition(page, {
       title: "List Test Property 1",
-      range: "string",
+      identifier: "list_test_prop_1",
     });
     const prop2 = await createPropertyDefinition(page, {
       title: "List Test Property 2",
-      range: "integer",
+      identifier: "list_test_prop_2",
     });
 
     // Navigate to properties page
@@ -118,7 +118,7 @@ test.describe("Property Definition CRUD Operations", () => {
     const property = await createPropertyDefinition(page, {
       title: "Detail Test Property",
       description: "Test description for property details",
-      range: "string",
+      identifier: "detail_test_property",
     });
 
     // Navigate to properties page
@@ -145,7 +145,7 @@ test.describe("Property Definition CRUD Operations", () => {
     );
     expect(apiResponse.title).toBe(property.title);
     expect(apiResponse.description).toBe(property.description);
-    expect(apiResponse.range).toBe(property.range);
+    expect(apiResponse.identifier).toBe(property.identifier);
   });
 
   test("should update a property definition", async ({ page }) => {
@@ -153,7 +153,7 @@ test.describe("Property Definition CRUD Operations", () => {
     const property = await createPropertyDefinition(page, {
       title: "Update Test Property",
       description: "Original description",
-      range: "string",
+      identifier: "update_test_property",
     });
 
     // Navigate to properties page
@@ -260,12 +260,12 @@ test.describe("Property Definition CRUD Operations", () => {
     // Create property with all fields populated
     const testTitle = `Field Test ${Date.now()}`;
     const testDescription = "Testing all field persistence";
-    const testRange = "string";
+    const testIdentifier = `field_test_${Date.now()}`;
 
     const property = await createPropertyDefinition(page, {
       title: testTitle,
       description: testDescription,
-      range: testRange,
+      identifier: testIdentifier,
     });
 
     // Navigate to properties page
@@ -283,43 +283,45 @@ test.describe("Property Definition CRUD Operations", () => {
     );
     expect(apiResponse.title).toBe(testTitle);
     expect(apiResponse.description).toBe(testDescription);
-    expect(apiResponse.range).toBe(testRange);
+    expect(apiResponse.identifier).toBe(testIdentifier);
     expect(apiResponse.id).toBeDefined();
     expect(apiResponse.created_at).toBeDefined();
   });
 
-  test("should support different property ranges", async ({ page }) => {
-    // Create properties with different ranges
-    const stringProp = await createPropertyDefinition(page, {
+  test("should create multiple property definitions with different identifiers", async ({
+    page,
+  }) => {
+    // Create properties with different identifiers
+    const prop1 = await createPropertyDefinition(page, {
       title: "String Property",
-      range: "string",
+      identifier: "string_property",
     });
-    const intProp = await createPropertyDefinition(page, {
+    const prop2 = await createPropertyDefinition(page, {
       title: "Integer Property",
-      range: "integer",
+      identifier: "integer_property",
     });
-    const boolProp = await createPropertyDefinition(page, {
+    const prop3 = await createPropertyDefinition(page, {
       title: "Boolean Property",
-      range: "boolean",
+      identifier: "boolean_property",
     });
 
-    // Verify each property has correct range via API
-    const stringResponse = await apiRequest<any>(
+    // Verify each property has correct identifier via API
+    const response1 = await apiRequest<any>(
       page,
-      `/api/properties/${stringProp.id}`,
+      `/api/properties/${prop1.id}`,
     );
-    expect(stringResponse.range).toBe("string");
+    expect(response1.identifier).toBe("string_property");
 
-    const intResponse = await apiRequest<any>(
+    const response2 = await apiRequest<any>(
       page,
-      `/api/properties/${intProp.id}`,
+      `/api/properties/${prop2.id}`,
     );
-    expect(intResponse.range).toBe("integer");
+    expect(response2.identifier).toBe("integer_property");
 
-    const boolResponse = await apiRequest<any>(
+    const response3 = await apiRequest<any>(
       page,
-      `/api/properties/${boolProp.id}`,
+      `/api/properties/${prop3.id}`,
     );
-    expect(boolResponse.range).toBe("boolean");
+    expect(response3.identifier).toBe("boolean_property");
   });
 });

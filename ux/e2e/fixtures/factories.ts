@@ -139,14 +139,14 @@ export async function createClass(
  */
 export async function createPropertyDefinition(
   page: Page,
-  overrides?: { title?: string; description?: string; range?: string },
+  overrides?: { title?: string; description?: string; identifier?: string },
 ): Promise<PropertyDefinition> {
   const timestamp = getRunTimestamp();
+  const identifier = overrides?.identifier || `prop-${timestamp}`;
   const title = overrides?.title || `test-property-${timestamp}`;
   const description =
     overrides?.description ||
     `Test property definition created at ${timestamp}`;
-  const range = overrides?.range || "string";
 
   const response = await apiRequest<PropertyDefinition>(
     page,
@@ -154,9 +154,9 @@ export async function createPropertyDefinition(
     {
       method: "POST",
       body: {
+        identifier,
         title,
         description,
-        range,
       },
     },
   );
@@ -169,21 +169,23 @@ export async function createPropertyDefinition(
  * @param page - Playwright page object
  * @param sourceClassId - ID of the source class
  * @param targetClassId - ID of the target class
- * @param propertyId - ID of the property definition
+ * @param relationshipType - Type of relationship (e.g., "related_to", "parent_of")
  * @returns Created Relationship entity
  */
 export async function createRelationship(
   page: Page,
   sourceClassId: string,
   targetClassId: string,
-  propertyId: string,
+  relationshipType?: string,
 ): Promise<Relationship> {
+  const type = relationshipType || "related_to";
+
   const response = await apiRequest<Relationship>(page, "/api/relationships", {
     method: "POST",
     body: {
       source_id: sourceClassId,
       target_id: targetClassId,
-      property_definition_id: propertyId,
+      relationship_type: type,
     },
   });
 

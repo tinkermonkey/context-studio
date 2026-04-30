@@ -384,17 +384,17 @@ test.describe("Ontology API Endpoints", () => {
       const response = await apiRequest<any>(page, "/api/properties", {
         method: "POST",
         body: {
+          identifier: "api_test_property",
           title: "API Test Property",
           description: "Created via API",
-          range: "string",
         },
       });
 
       // Verify response
       expect(response.id).toBeDefined();
+      expect(response.identifier).toBe("api_test_property");
       expect(response.title).toBe("API Test Property");
       expect(response.description).toBe("Created via API");
-      expect(response.range).toBe("string");
       expect(response.created_at).toBeDefined();
     });
 
@@ -431,7 +431,6 @@ test.describe("Ontology API Endpoints", () => {
           body: {
             title: "Updated Property",
             description: "Updated via API",
-            range: "integer",
           },
         },
       );
@@ -440,7 +439,6 @@ test.describe("Ontology API Endpoints", () => {
       expect(response.id).toBe(property.id);
       expect(response.title).toBe("Updated Property");
       expect(response.description).toBe("Updated via API");
-      expect(response.range).toBe("integer");
     });
 
     test("DELETE /api/properties/:id should delete a property", async ({
@@ -476,7 +474,7 @@ test.describe("Ontology API Endpoints", () => {
         page,
         hierarchy.classes[0].id,
         hierarchy.classes[1].id,
-        hierarchy.propertyDefinition.id,
+        "related_to",
       );
 
       // Call endpoint
@@ -501,7 +499,7 @@ test.describe("Ontology API Endpoints", () => {
         body: {
           source_id: hierarchy.classes[0].id,
           target_id: hierarchy.classes[1].id,
-          property_definition_id: hierarchy.propertyDefinition.id,
+          relationship_type: "related_to",
         },
       });
 
@@ -509,7 +507,6 @@ test.describe("Ontology API Endpoints", () => {
       expect(response.id).toBeDefined();
       expect(response.source_id).toBe(hierarchy.classes[0].id);
       expect(response.target_id).toBe(hierarchy.classes[1].id);
-      expect(response.property_definition_id).toBe(hierarchy.propertyDefinition.id);
       expect(response.created_at).toBeDefined();
     });
 
@@ -522,7 +519,7 @@ test.describe("Ontology API Endpoints", () => {
         page,
         hierarchy.classes[0].id,
         hierarchy.classes[1].id,
-        hierarchy.propertyDefinition.id,
+        "related_to",
       );
 
       // Call endpoint
@@ -535,7 +532,6 @@ test.describe("Ontology API Endpoints", () => {
       expect(response.id).toBe(relationship.id);
       expect(response.source_id).toBe(hierarchy.classes[0].id);
       expect(response.target_id).toBe(hierarchy.classes[1].id);
-      expect(response.property_definition_id).toBe(hierarchy.propertyDefinition.id);
     });
 
     test("DELETE /api/relationships/:id should delete a relationship", async ({
@@ -547,7 +543,7 @@ test.describe("Ontology API Endpoints", () => {
         page,
         hierarchy.classes[0].id,
         hierarchy.classes[1].id,
-        hierarchy.propertyDefinition.id,
+        "related_to",
       );
 
       // Delete via API
