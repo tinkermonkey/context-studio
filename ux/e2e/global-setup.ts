@@ -59,9 +59,13 @@ async function waitForUrl(url: string, timeout: number = 30000): Promise<void> {
  *
  * This function:
  * 1. Cleans test databases
- * 2. Starts the Python FastAPI backend server
- * 3. Starts the React Vite frontend dev server
- * 4. Waits for both servers to be ready
+ * 2. Checks Python virtual environment exists
+ * 3. Runs database migrations (local.db and operations.db)
+ * 4. Starts the Python FastAPI backend server
+ * 5. Waits for backend server to be ready
+ * 6. Starts the React Vite frontend dev server
+ * 7. Waits for frontend server to be ready
+ * 8. Stores process PIDs for teardown
  *
  * The servers will run for the entire test suite and be torn down
  * in global-teardown.ts.
@@ -176,7 +180,7 @@ async function globalSetup(): Promise<void> {
   console.log(`🔍 Backend spawned (PID: ${backendProcess.pid}) with CONFIG_PATH: ${e2eConfigPath}`);
 
   // Log backend output
-  // Set SHOW_BACKEND_LOGS=true environment variable to see all backend output
+  // Set SHOW_BACKEND_LOGS=true to also see backend stdout (stderr is always logged)
   const showBackendLogs = process.env.SHOW_BACKEND_LOGS === "true";
 
   backendProcess.stdout?.on("data", (data) => {
