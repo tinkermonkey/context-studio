@@ -60,19 +60,19 @@ Taxonomy (root)
 - Referenced by: Class (via `concept_scheme_id`)
 - Cannot exist without a parent Taxonomy
 
-**ClassResponse** (`id`, `title`, `description`, `concept_scheme_id`, `type`, `version`, `created_at`, `last_modified`)
+**ClassResponse** (`id`, `concept_scheme_id`, `taxonomy_id`, `title`, `description`, `parent_class_id`, `structural_property_id`)
 - Represents a class/concept within a ConceptScheme
 - Referenced by: Relationship (via `source_id` and `target_id`)
-- `type` may indicate domain, layer, or other classifier
+- `parent_class_id` and `structural_property_id` are optional hierarchical and structural properties
 
-**RelationshipResponse** (`id`, `source_id`, `target_id`, `predicate_id`, `version`, `created_at`, `last_modified`)
+**RelationshipResponse** (`id`, `source_id`, `target_id`, `property_definition_id`, `created_at`)
 - Typed, directed edge between two Classes
-- Requires a PropertyDefinition (via `predicate_id`) as the predicate
+- Requires a PropertyDefinition (via `property_definition_id`) as the predicate
 - Both `source_id` and `target_id` must reference existing Classes
 
 **PropertyDefinitionResponse** (`id`, `title`, `identifier`, `description`, `version`, `created_at`, `last_modified`)
 - Predicate registry: defines allowed relationship types
-- Referenced by: Relationship (via `predicate_id`)
+- Referenced by: Relationship (via `property_definition_id`)
 - `identifier` is the RDF-style URI or namespace identifier (e.g., `rdfs:subClassOf`)
 
 ### Example Workflow
@@ -164,7 +164,7 @@ These are rules the application guarantees:
 ### Reference Integrity
 - A ConceptScheme **must** have a parent Taxonomy (non-null `taxonomy_id`).
 - A Class **must** have a parent ConceptScheme (non-null `concept_scheme_id`).
-- A Relationship **must** reference a PropertyDefinition (non-null `predicate_id`).
+- A Relationship **must** reference a PropertyDefinition (non-null `property_definition_id`).
 - A Relationship's `source_id` and `target_id` **must** reference existing, valid (non-soft-deleted) Classes.
 
 ### Field Constraints
