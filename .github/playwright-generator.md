@@ -27,8 +27,8 @@ Read `/ux/selector-registry.yaml` completely to see all available `data-testid` 
 
 The test suite runs `npm run validate-selectors` (which executes `/ux/scripts/check_test_contract.ts`) before executing any tests. This validator will:
 - ❌ **Fail hard (exit code 1)** if your tests reference selectors that are NOT in the registry AND do NOT match any pattern templates
-- ⚠️ **Warn (exit code 2)** if tests use selectors not found in the registry but might match registry patterns
-- ✅ **Pass (exit code 0)** only if all selectors are in the registry or match documented pattern templates
+- ⚠️ **Warn (exit code 0 with warnings printed)** if tests use selectors not found in the registry but might match registry patterns
+- ✅ **Pass (exit code 0)** if all selectors are in the registry or match documented pattern templates
 
 This is a **hard gate**: your tests cannot proceed to execution if validation fails with exit code 1.
 

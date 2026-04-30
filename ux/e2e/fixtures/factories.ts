@@ -169,21 +169,21 @@ export async function createPropertyDefinition(
  * @param page - Playwright page object
  * @param sourceClassId - ID of the source class
  * @param targetClassId - ID of the target class
- * @param predicateId - ID of the PropertyDefinition (predicate) for the relationship
+ * @param relationshipType - Relationship type identifier (e.g., 'related_to', 'parent_of')
  * @returns Created Relationship entity
  */
 export async function createRelationship(
   page: Page,
   sourceClassId: string,
   targetClassId: string,
-  predicateId: string,
+  relationshipType: string,
 ): Promise<Relationship> {
   const response = await apiRequest<Relationship>(page, "/api/relationships", {
     method: "POST",
     body: {
       source_id: sourceClassId,
       target_id: targetClassId,
-      predicate_id: predicateId,
+      relationship_type: relationshipType,
     },
   });
 
