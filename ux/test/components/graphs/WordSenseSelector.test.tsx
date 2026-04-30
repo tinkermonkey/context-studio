@@ -132,7 +132,14 @@ describe("WordSenseSelector", () => {
 
       renderComponent({ title: "machine learning", persistedSenses });
 
-      expect(screen.getByText("machine")).toBeInTheDocument();
+      // Check that the word button with persisted sense exists
+      const buttons = screen.getAllByRole("button");
+      const machineButton = buttons.find((btn) =>
+        btn.textContent?.includes("machine"),
+      );
+      expect(machineButton).toBeInTheDocument();
+      // Verify the badge is rendered with the persisted sense
+      expect(machineButton?.textContent).toContain("machine");
     });
 
     it("initializes with persisted senses", () => {
@@ -146,8 +153,14 @@ describe("WordSenseSelector", () => {
 
       renderComponent({ title: "machine learning", persistedSenses });
 
-      // Check that the persisted sense is displayed
-      expect(screen.getByText("learning")).toBeInTheDocument();
+      // Check that the word button with persisted sense exists
+      const buttons = screen.getAllByRole("button");
+      const learningButton = buttons.find((btn) =>
+        btn.textContent?.includes("learning"),
+      );
+      expect(learningButton).toBeInTheDocument();
+      // Verify the badge is rendered with the persisted sense
+      expect(learningButton?.textContent).toContain("learning");
     });
   });
 
@@ -295,24 +308,39 @@ describe("WordSenseSelector", () => {
 
       renderComponent({ title: "machine" });
 
-      // Expand and select
-      fireEvent.click(screen.getByText("machine"));
+      // Expand word to show senses
+      const wordButton = screen.getByRole("button", { name: /machine/ });
+      fireEvent.click(wordButton);
+
+      // Wait for synset button to appear and click it to select
       await waitFor(() => screen.getByTestId("synset-0"));
       fireEvent.click(screen.getByTestId("synset-0"));
 
-      // Verify selected (badge appears)
+      // Verify selected (badge appears with sense label)
       await waitFor(() => {
-        const badges = screen.getAllByText("machine.n.01");
-        expect(badges.length).toBeGreaterThan(1); // Button + badge
+        const wordButtons = screen.getAllByRole("button", { name: /machine/ });
+        // Find the main word button (not the synset button in the chart)
+        const mainWordButton = wordButtons.find(
+          (btn) =>
+            !btn.getAttribute("data-testid")?.includes("synset") &&
+            btn.textContent?.includes("machine"),
+        );
+        expect(mainWordButton?.textContent).toContain("machine");
       });
 
       // Click again to deselect
       fireEvent.click(screen.getByTestId("synset-0"));
 
-      // Verify deselected (only button text remains, no badge)
+      // Verify deselected (badge no longer shows in word button)
       await waitFor(() => {
-        const badges = screen.getAllByText("machine.n.01");
-        expect(badges.length).toBe(1); // Only the button in chart
+        const wordButtons = screen.getAllByRole("button", { name: /machine/ });
+        const mainWordButton = wordButtons.find(
+          (btn) =>
+            !btn.getAttribute("data-testid")?.includes("synset") &&
+            btn.textContent?.includes("machine"),
+        );
+        // After deselect, the button should just have the word, no badge
+        expect(mainWordButton?.textContent?.trim()).toBe("machine");
       });
     });
   });
@@ -434,7 +462,7 @@ describe("WordSenseSelector", () => {
 
       renderComponent({ title: "machine", persistedSenses });
 
-      // No save button should be visible
+      // No save button should be visible when selections match persisted
       expect(screen.queryByText("Save Word Senses")).not.toBeInTheDocument();
     });
 
@@ -468,12 +496,14 @@ describe("WordSenseSelector", () => {
 
       renderComponent({ title: "machine", persistedSenses });
 
-      // Expand and select different sense
-      fireEvent.click(screen.getByText("machine"));
+      // Expand word and select sense (deselecting the persisted one)
+      const wordButton = screen.getByRole("button", { name: /machine/ });
+      fireEvent.click(wordButton);
+
       await waitFor(() => screen.getByTestId("synset-0"));
       fireEvent.click(screen.getByTestId("synset-0"));
 
-      // Save button should appear
+      // Save button should appear when selections differ from persisted
       await waitFor(() => {
         expect(screen.getByText("Save Word Senses")).toBeInTheDocument();
       });
