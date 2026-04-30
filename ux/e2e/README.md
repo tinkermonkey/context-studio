@@ -165,10 +165,11 @@ test("should create an ontology class", async ({ page }) => {
 
 ### Frontend Environment
 
-**`/ux/.env.e2e`**
+**`/ux/.env.e2e`** (checked in — ready to use)
 
 - Points frontend to test backend (port 8888)
 - Sets environment identifier
+- This file is included in the repository and does not need to be created
 
 ### Playwright Configuration
 

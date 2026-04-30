@@ -1,5 +1,5 @@
 import { test, expect } from "@playwright/test";
-import { apiRequest } from "../fixtures/test-helpers";
+import { apiRequest } from "../../fixtures/test-helpers";
 
 /**
  * Pipeline Configuration E2E Tests
