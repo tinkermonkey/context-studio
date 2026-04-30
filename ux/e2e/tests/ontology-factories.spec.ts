@@ -280,14 +280,14 @@ test.describe("Test Data Factories", () => {
       expect(hierarchy.taxonomy.id).toBeDefined();
 
       // Cleanup should complete without throwing errors
-      await expect(clearTestData(page)).resolves.not.toThrow();
+      await clearTestData(page);
     });
 
     test("should not fail if there is no test data to clean", async ({
       page,
     }) => {
       // This should complete without error even if no test data exists
-      await expect(clearTestData(page)).resolves.not.toThrow();
+      await clearTestData(page);
     });
   });
 

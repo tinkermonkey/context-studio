@@ -114,9 +114,9 @@ test.describe("Relationship CRUD Operations", () => {
       `/api/relationships/${relationship.id}`,
     );
     expect(getResponse).toHaveProperty("id");
-    expect(getResponse).toHaveProperty("source_class_id");
-    expect(getResponse).toHaveProperty("target_class_id");
-    expect(getResponse).toHaveProperty("property_id");
+    expect(getResponse).toHaveProperty("source_id");
+    expect(getResponse).toHaveProperty("target_id");
+    expect(getResponse).toHaveProperty("property_definition_id");
     expect(getResponse).toHaveProperty("created_at");
 
     // Verify GET all relationships returns collection
