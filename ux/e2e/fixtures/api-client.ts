@@ -3,6 +3,22 @@ import { Page } from "@playwright/test";
 /**
  * Make an API request to the backend and return the response.
  */
+
+// Overload: DELETE returns void
+export async function apiRequest(
+  page: Page,
+  endpoint: string,
+  options: { method: "DELETE"; body?: Record<string, unknown>; headers?: Record<string, string> }
+): Promise<void>;
+
+// Overload: all other methods return T
+export async function apiRequest<T = unknown>(
+  page: Page,
+  endpoint: string,
+  options?: { method?: "GET" | "POST" | "PUT" | "PATCH"; body?: Record<string, unknown>; headers?: Record<string, string> }
+): Promise<T>;
+
+// Implementation
 export async function apiRequest<T = unknown>(
   page: Page,
   endpoint: string,
