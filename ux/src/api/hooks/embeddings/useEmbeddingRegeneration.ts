@@ -43,31 +43,37 @@ export function useEmbeddingRegeneration() {
     ws.onopen = () => setStatus("connected");
 
     ws.onmessage = (event) => {
-      const data = JSON.parse(event.data);
+      try {
+        const data = JSON.parse(event.data);
 
-      switch (data.type) {
-        case "connected":
-          setStatus("connected");
-          break;
+        switch (data.type) {
+          case "connected":
+            setStatus("connected");
+            break;
 
-        case "started":
-          setStatus("running");
-          setProgress(null);
-          setError(null);
-          break;
+          case "started":
+            setStatus("running");
+            setProgress(null);
+            setError(null);
+            break;
 
-        case "progress":
-          setProgress(data.progress);
-          break;
+          case "progress":
+            setProgress(data.progress);
+            break;
 
-        case "completed":
-          setStatus("completed");
-          break;
+          case "completed":
+            setStatus("completed");
+            break;
 
-        case "error":
-          setStatus("error");
-          setError(data.message);
-          break;
+          case "error":
+            setStatus("error");
+            setError(data.message);
+            break;
+        }
+      } catch (parseError) {
+        console.error("Failed to parse WebSocket message:", parseError);
+        setStatus("error");
+        setError("Failed to parse server response");
       }
     };
 

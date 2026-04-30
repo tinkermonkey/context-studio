@@ -56,7 +56,9 @@ export function ConceptSchemeMoveForm({
       onSuccess();
     } catch (error) {
       console.error("Failed to move concept schemes:", error);
-      toast.error("Failed to move concept schemes. Please try again.");
+      const message =
+        error instanceof Error ? error.message : "Failed to move concept schemes";
+      toast.error(message);
     }
   };
 

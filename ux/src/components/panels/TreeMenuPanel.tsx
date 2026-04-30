@@ -63,6 +63,7 @@ export function TreeMenuPanel({
   // Container ref to measure width
   const containerRef = useRef<HTMLDivElement>(null);
   const [containerWidth, setContainerWidth] = useState<number>(0);
+  const [buildError, setBuildError] = useState<Error | null>(null);
 
   // Measure container width on mount and resize
   useEffect(() => {
@@ -118,9 +119,6 @@ export function TreeMenuPanel({
   // Determine loading state
   const isLoading = layersLoading || domainsLoading || termsLoading;
 
-  // Determine error state
-  const error = null;
-
   // Build chart data
   const chartData = React.useMemo((): ChartData | null => {
     if (!layers || !domains || !terms) {
@@ -128,6 +126,7 @@ export function TreeMenuPanel({
     }
 
     try {
+      setBuildError(null);
       // Build the complete tree
       const completeTree = buildHierarchicalTree({
         layers,
@@ -139,7 +138,9 @@ export function TreeMenuPanel({
         root: completeTree,
       } as ChartData;
     } catch (err) {
-      apiLogger.error("Error building menu data", { error: err });
+      const error = err instanceof Error ? err : new Error(String(err));
+      apiLogger.error("Error building menu data", { error });
+      setBuildError(error);
       return null;
     }
   }, [layers, domains, terms]);
@@ -191,8 +192,8 @@ export function TreeMenuPanel({
   }
 
   // Handle error state
-  if (error) {
-    apiLogger.error("TreeMenuPanel error", { error });
+  if (buildError) {
+    apiLogger.error("TreeMenuPanel error", { error: buildError });
 
     if (errorComponent) {
       return (
@@ -209,6 +210,7 @@ export function TreeMenuPanel({
       >
         <div className="text-center text-sm">
           <p className="font-semibold">Error loading data</p>
+          <p className="mt-1 text-xs text-gray-600">{buildError.message}</p>
         </div>
       </div>
     );

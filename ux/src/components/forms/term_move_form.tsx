@@ -58,7 +58,9 @@ export function TermMoveForm({
       onSuccess();
     } catch (error) {
       console.error("Failed to move terms:", error);
-      toast.error("Failed to move nodes. Please try again.");
+      const message =
+        error instanceof Error ? error.message : "Failed to move nodes";
+      toast.error(message);
     }
   };
 

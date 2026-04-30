@@ -39,6 +39,7 @@ import {
   type QueryFilter,
   type FieldDefinition,
 } from "@/components/misc/query_filters";
+import { useButterToast } from "@/hooks/useButterToast";
 
 export interface BaseNodeTableProps<T> {
   columns: any[];
@@ -140,6 +141,7 @@ function BaseNodeTable<T>({
   );
   const [selectedCount, setSelectedCount] = React.useState(0);
   const [, setIsProcessing] = React.useState(false);
+  const toast = useButterToast();
 
   const tableRef = React.useRef<any>(null);
   const [columnVisibility, setColumnVisibility] = React.useState<
@@ -447,6 +449,9 @@ function BaseNodeTable<T>({
           }
         } catch (err) {
           console.error("Failed to check for children:", err);
+          toast.error(
+            `Failed to check for children: ${err instanceof Error ? err.message : "Unknown error"}`,
+          );
           // Fall back to normal delete modal
           setShowDeleteModal(true);
         }
@@ -491,6 +496,9 @@ function BaseNodeTable<T>({
       console.error(
         `Failed to delete selected ${typeName.toLowerCase()}s:`,
         err,
+      );
+      toast.error(
+        `Failed to delete ${typeName.toLowerCase()}s: ${err instanceof Error ? err.message : "Unknown error"}`,
       );
     }
   };

@@ -20,6 +20,7 @@ import { SOURCE_METADATA } from "@/api/types/unified";
 import { useNodeDetails } from "@/api/hooks/unifiedReference/useUnifiedReference";
 import { LinkExplorer } from "./LinkExplorer";
 import { getSourceBadgeColor, getSourceLabel } from "@/utils/sourceUtils";
+import { useButterToast } from "@/hooks/useButterToast";
 
 interface NodeDetailsProps {
   node?: UnifiedNode;
@@ -42,6 +43,7 @@ export const NodeDetails: React.FC<NodeDetailsProps> = ({
 }) => {
   const [copiedField, setCopiedField] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<number>(0);
+  const toast = useButterToast();
 
   // Use either the prop node or the node ID
   const targetNode = propNode;
@@ -87,6 +89,7 @@ export const NodeDetails: React.FC<NodeDetailsProps> = ({
       setTimeout(() => setCopiedField(null), 2000);
     } catch (error) {
       console.error("Failed to copy to clipboard:", error);
+      toast.error("Failed to copy to clipboard");
     }
   };
 
