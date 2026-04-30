@@ -112,14 +112,14 @@ const RelationshipsTable = React.forwardRef<any, RelationshipsTableProps>(
             ids.map((id) => deleteRelationship.mutateAsync(id)),
           );
         }}
-        createForm={({ onSuccess }) => (
+        createForm={({ onSuccess: _onSuccess }) => (
           <div className="p-4">
             <p className="text-gray-600">
               Create relationship functionality coming soon
             </p>
           </div>
         )}
-        editForm={({ node, onSuccess }) => (
+        editForm={({ node: _node, onSuccess: _onSuccess }) => (
           <div className="p-4">
             <p className="text-gray-600">
               Edit relationship functionality coming soon
