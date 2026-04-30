@@ -57,6 +57,7 @@ export class PropertyDefinitionService extends BaseService {
    */
   async create(data: PropertyDefinitionCreate): Promise<PropertyDefinition> {
     return this.withErrorContext(async () => {
+      this.validateRequired(data.identifier, "identifier");
       this.validateRequired(data.title, "title");
       this.sanitizeString(data.title, "title", 255);
 
