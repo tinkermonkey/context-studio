@@ -97,7 +97,6 @@ export default class StructuredReporter implements Reporter {
   }
 
   onTestEnd(test: TestCase, result: TestResult): void {
-    // Get the file path from the test location
     const specFile = test.location.file;
     const testStatus = this.computeTestStatus(test);
 
@@ -108,17 +107,26 @@ export default class StructuredReporter implements Reporter {
     if (testStatus === "skipped") this.testStats.skipped++;
     if (testStatus === "flaky") this.testStats.flaky++;
 
+    // For duration, sum all attempts
+    const totalDuration = test.results.reduce((sum, r) => sum + r.duration, 0);
+
+    // For failure info on flaky tests, extract from the first failed attempt
+    let failureInfo: FailureReport | undefined;
+    if (testStatus === "failed" || testStatus === "flaky") {
+      const firstFailedResult = test.results.find((r) => r.status === "failed");
+      failureInfo = firstFailedResult
+        ? this.extractFailureInfo(firstFailedResult)
+        : undefined;
+    }
+
     const testReport: TestReport = {
       spec_file: specFile,
       test_name: test.title,
       status: testStatus,
-      duration_ms: result.duration,
+      duration_ms: totalDuration,
       attempts: this.extractAttempts(test),
       selectors_used: this.extractSelectorsFromTest(test, result),
-      failure:
-        testStatus === "failed" || testStatus === "flaky"
-          ? this.extractFailureInfo(result)
-          : undefined,
+      failure: failureInfo,
     };
 
     this.tests.push(testReport);
@@ -172,8 +180,8 @@ export default class StructuredReporter implements Reporter {
       message: result.error?.message || "Unknown error",
       stack: result.error?.stack,
       screenshots: result.attachments
-        .filter((a) => a.name === "screenshot")
-        .map((a) => a.path || ""),
+        .filter((a) => a.name === "screenshot" && a.path)
+        .map((a) => a.path!),
       video: result.attachments.find((a) => a.name === "video")?.path,
     };
     return failure;

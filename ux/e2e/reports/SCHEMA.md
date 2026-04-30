@@ -32,7 +32,7 @@ Each test run produces a JSON report containing comprehensive metadata about tes
 | `started_at` | ISO 8601 | When the test run started (UTC) |
 | `ended_at` | ISO 8601 | When the test run completed (UTC) |
 | `duration_ms` | number | Total run duration in milliseconds |
-| `total` | number | Total number of tests (passed + failed + skipped) |
+| `total` | number | Total number of tests (passed + failed + skipped + flaky) |
 | `passed` | number | Count of tests that passed |
 | `failed` | number | Count of tests that failed on all attempts |
 | `skipped` | number | Count of tests that were skipped |
@@ -61,9 +61,9 @@ Each test run produces a JSON report containing comprehensive metadata about tes
 | `spec_file` | string | Path to the test file (relative to repo root) |
 | `test_name` | string | Display name/title of the test |
 | `status` | enum | Test outcome: `passed`, `failed`, `skipped`, or `flaky`. A test is `flaky` if it failed on first attempt but passed on retry. |
-| `duration_ms` | number | Total test duration in milliseconds (sum of all attempts) |
+| `duration_ms` | number | Total test duration in milliseconds (sum of all attempts, including retries) |
 | `attempts` | array | Array of `AttemptReport` objects, one per test execution (normally 1, more if retried) |
-| `selectors_used` | array | List of `data-testid` selector strings extracted from this test. Empty array if none. |
+| `selectors_used` | array | List of `data-testid` selector strings extracted from the test file. **Note:** This is extracted from the entire test file, not scoped to the individual test. If a spec file contains multiple tests using different selectors, each `TestReport` will include the union of all selectors in that file. This means `selectors_used` reflects file-level selector coverage, not test-level coverage. |
 | `failure` | object | Only present if test failed; see `FailureReport` below. Omitted for passed tests. |
 
 ## AttemptReport Object
