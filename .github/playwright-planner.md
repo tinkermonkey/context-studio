@@ -101,10 +101,10 @@ Tests verify that the following anti-patterns are NOT present:
 ## Factory Usage
 This plan uses existing factory patterns from `ux/e2e/fixtures/factories.ts`:
 - `createTaxonomy(page, overrides)`
-- `createConceptScheme(page, overrides)`
-- `createClass(page, overrides)`
-- `createPropertyDefinition(page, overrides)`
-- `createRelationship(page, overrides)`
+- `createConceptScheme(page, taxonomyId, overrides)`
+- `createClass(page, schemeId, overrides)`
+- `createPropertyDefinition(page, sourceClassId, targetClassId, overrides)`
+- `createRelationship(page, sourceClassId, targetClassId, relationshipType?, overrides)`
 ```
 
 ### 6. Validate the Plan

@@ -47,17 +47,18 @@ This test validates the core taxonomy lifecycle: creating a new taxonomy and the
 - **Steps**:
   1. Navigate to `/app/taxonomies`
   2. Find the taxonomy row using factory-created `id` (not hardcoded UUID)
-  3. Click delete action on the row (selector `data-testid="taxonomy-delete-button"`)
-  4. Confirmation modal appears (selector should exist, checking...)
-  5. Click "Confirm" in the modal
+  3. Click delete action on the row (semantic locator: `getByRole("button", { name: /delete/i })` within the row)
+  4. Confirmation modal appears (selector `data-testid="taxonomy-delete-modal"` verified ✓)
+  5. Click "Confirm" button in the modal (selector `data-testid="taxonomy-delete-confirm-button"` verified ✓)
   6. Modal closes and taxonomy is removed from list
 - **Expected Result**:
   - Taxonomy is no longer visible in the list
   - Taxonomy status is "soft-deleted" in the backend (can be verified via API)
   - No error messages appear
 - **Selectors Used**:
-  - `taxonomy-delete-button` (verified ✓)
-  - Confirmation modal selector (TBD - check if exists in registry)
+  - `taxonomy-delete-modal` (verified ✓)
+  - `taxonomy-delete-confirm-button` (verified ✓)
+  - Semantic locator for delete button in row
 - **Invariants Verified**:
   - Soft delete behavior (entity marked as deleted, not removed from DB)
   - Cascade rule: deleting taxonomy soft-deletes all ConceptSchemes and Classes
@@ -114,7 +115,7 @@ None - all required selectors are documented in `ux/selector-registry.yaml`.
 
 This plan uses existing factory patterns from `ux/e2e/fixtures/factories.ts`:
 - `createTaxonomy(page, overrides)` — Creates a taxonomy via API
-- `deleteTaxonomy(page, id)` — Deletes a taxonomy via API (for cleanup)
+- `clearTestData(page)` — Cleans up all test data via API (use in `test.afterEach`)
 
 Example:
 ```typescript
@@ -130,4 +131,4 @@ const taxonomy = await createTaxonomy(page, {
 1. **Setup**: Use `createTaxonomy()` factory to create test data via API (faster than UI)
 2. **Test**: Interact with UI elements using semantic locators
 3. **Verification**: Assert UI state changes match expected behavior
-4. **Cleanup**: Factory teardown cleans up automatically; no manual deletion needed
+4. **Cleanup**: Call `clearTestData(page)` in `test.afterEach()` at the describe level

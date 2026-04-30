@@ -1,8 +1,14 @@
 import { test, expect } from "@playwright/test";
-import { createTaxonomy } from "../../fixtures/factories";
-import { waitForAppReady } from "../../fixtures/test-helpers";
+import {
+  createTaxonomy,
+  waitForAppReady,
+  clearTestData,
+} from "../../fixtures/test-helpers";
 
 test.describe("Taxonomy CRUD: Create and Delete", () => {
+  test.afterEach(async ({ page }) => {
+    await clearTestData(page);
+  });
   test("should create a taxonomy via the UI form", async ({ page }) => {
     // Navigate to taxonomies page
     await page.goto("/app/taxonomies");

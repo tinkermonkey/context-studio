@@ -62,9 +62,8 @@ import { createTaxonomy, createConceptScheme } from "../fixtures/factories";
 
 test("create concept scheme", async ({ page }) => {
   const taxonomy = await createTaxonomy(page, { title: "Test Taxonomy" });
-  const scheme = await createConceptScheme(page, {
+  const scheme = await createConceptScheme(page, taxonomy.id, {
     title: "Test Scheme",
-    taxonomy_id: taxonomy.id,
   });
   expect(scheme.id).toBeTruthy();
 });
@@ -144,13 +143,16 @@ test("create taxonomy", async ({ page }) => {
 });
 
 // GOOD
-test("create taxonomy", async ({ page }) => {
-  const taxonomy = await createTaxonomy(page, { title: "Test" });
-  
-  test.afterEach(async () => {
-    if (taxonomy) {
-      await deleteTaxonomy(page, taxonomy.id);
-    }
+import { clearTestData } from "../fixtures/test-helpers";
+
+test.describe("Taxonomy CRUD", () => {
+  test.afterEach(async ({ page }) => {
+    await clearTestData(page);
+  });
+
+  test("create taxonomy", async ({ page }) => {
+    const taxonomy = await createTaxonomy(page, { title: "Test" });
+    expect(taxonomy.id).toBeTruthy();
   });
 });
 ```
