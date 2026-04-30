@@ -261,13 +261,170 @@ Set `CI=true` environment variable to enable:
 - **Fast config**: E2E config disables slow features (LLM, NLP auto-download)
 - **Test focus**: Use `test.only()` during development to run specific tests
 
+## Agentic Test Development Workflow
+
+This project uses Claude agents to generate high-quality test specifications and implementations. The workflow includes human approval gates at each stage.
+
+### Overview
+
+The test development workflow uses a planner agent and a generator agent to create Playwright tests that consume the authoritative product knowledge from `app.context.md` and the selector registry.
+
+```
+Feature Request → Planner Agent → Spec Review → Generator Agent → Test Review → Merge
+     (step 1)       (step 2)       (step 3)      (step 4)        (step 5)    (step 6)
+```
+
+### Step 1: Write a Feature Description
+
+Start with a clear description of what you want to test:
+- Feature name
+- User flow to test
+- Entities involved
+- Expected behavior
+
+Example:
+```
+Test creating a new taxonomy and deleting it.
+
+User flow:
+1. Navigate to /app/taxonomies
+2. Click "Add" button
+3. Fill in title and description
+4. Submit form
+5. Verify taxonomy appears in list
+6. Select taxonomy and delete it
+7. Verify it's removed from list
+```
+
+Or reference a GitHub issue number: `#595 Phase 1.2`
+
+### Step 2: Run the Planner Agent
+
+The planner agent creates a detailed test specification:
+
+```bash
+# Using Claude Code with .github/playwright-planner.md
+npx claude-code --agent-definition .github/playwright-planner.md \
+  --input "Test creating and deleting a taxonomy" \
+  --output specs/create-and-delete-taxonomy.md
+```
+
+The planner will:
+1. Read the authoritative product knowledge (`app.context.md`)
+2. Consult the selector registry (`ux/selector-registry.yaml`)
+3. Review entity field names from the OpenAPI contract
+4. Create a comprehensive test specification with:
+   - Test cases with step-by-step instructions
+   - Required selectors (verified against registry)
+   - Entity field names (verified against contract)
+   - CRUD coverage analysis
+   - Anti-pattern validations
+
+**Output**: A Markdown spec file in `specs/<feature-name>.md`
+
+### Step 3: Review and Approve the Specification
+
+Before code is written, review the test plan:
+
+1. **Read the specification** in `specs/<feature-name>.md`
+2. **Verify coverage**:
+   - Does it test the right user flow?
+   - Are all important scenarios covered?
+   - Do edge cases make sense?
+3. **Check for missing selectors**:
+   - If the planner added "Open Questions" for missing selectors, add them to `ux/selector-registry.yaml` first
+   - The planner will refuse to proceed if selectors don't exist
+4. **Approve** by marking the spec ready for generation
+
+If changes are needed:
+- Modify the spec and get planner feedback, OR
+- Ask the planner to revise the spec
+
+### Step 4: Run the Generator Agent
+
+Once the spec is approved, generate the test code:
+
+```bash
+# Using Claude Code with .github/playwright-generator.md
+npx claude-code --agent-definition .github/playwright-generator.md \
+  --input specs/create-and-delete-taxonomy.md \
+  --output ux/e2e/tests/ontology/create-and-delete-taxonomy.spec.ts
+```
+
+The generator will:
+1. Read the test specification
+2. Consult the product contract (`app.context.md`)
+3. Review the selector registry
+4. Create production-ready Playwright tests with:
+   - Semantic locators only (no CSS selectors or XPath)
+   - Factory pattern usage from `ux/e2e/fixtures/factories.ts`
+   - Proper error handling
+   - Anti-pattern avoidance
+   - Full CRUD coverage
+
+**Output**: A TypeScript test file in `ux/e2e/tests/<feature>/<test-name>.spec.ts`
+
+### Step 5: Validate and Review the Tests
+
+```bash
+# Validate selector contract (runs automatically before tests)
+npm run validate-selectors
+
+# Run the tests in debug mode
+npm run test:e2e:ui
+
+# Run all E2E tests
+npm run test:e2e
+```
+
+The validator (`ux/scripts/check_test_contract.ts`) will:
+- Extract all `data-testid` references from your test file
+- Verify each selector exists in `ux/selector-registry.yaml`
+- **Fail with exit code 1** if any selector is missing
+- Tests cannot run until validation passes
+
+Review the test code:
+1. **Selector validation**: Runs automatically
+2. **Code quality**: Check for clarity and maintainability
+3. **Coverage**: Verify all test cases from spec are implemented
+4. **Anti-patterns**: Ensure no anti-patterns from `app.context.md`
+5. **Factory usage**: Verify factories are used for entity creation
+
+If changes are needed:
+- Ask the generator to revise
+- Or make manual fixes and validate with `npm run validate-selectors`
+
+### Step 6: Merge
+
+Once tests pass and are reviewed:
+1. Commit the test file
+2. Create a pull request
+3. Ensure CI passes (E2E tests run as part of CI)
+4. Merge to `main`
+
+## Manual Test Development
+
+If you prefer to write tests manually instead of using agents:
+
+1. Create a new file in `ux/e2e/tests/` with `.spec.ts` extension
+2. Use semantic locators and factory patterns (see generator rules)
+3. Reference only selectors from `ux/selector-registry.yaml`
+4. Validate with `npm run validate-selectors` before committing
+5. Avoid all anti-patterns from `app.context.md`
+
 ## Adding New Tests
 
-1. Create a new file in `e2e/tests/` with `.spec.ts` extension
-2. Import Playwright test utilities
+Manually create a new test file:
+
+1. Create a new file in `ux/e2e/tests/` with `.spec.ts` extension
+2. Import Playwright test utilities and factories
 3. Write test cases using `test.describe()` and `test()`
-4. Run with `npm run test:e2e:ui` to debug
-5. Commit the test file (Playwright artifacts are gitignored)
+4. **Use only semantic locators** (`getByRole`, `getByLabel`, `getByTestId`)
+5. **Use factories** from `ux/e2e/fixtures/factories.ts` for entity creation
+6. **Reference only documented selectors** from `ux/selector-registry.yaml`
+7. Run `npm run validate-selectors` to verify selectors
+8. Run with `npm run test:e2e:ui` to debug
+9. Commit the test file (Playwright artifacts are gitignored)
 
 ## Test Contract & Selector Registry
 
