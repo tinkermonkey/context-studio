@@ -60,7 +60,7 @@ Taxonomy (root)
 - Referenced by: Class (via `concept_scheme_id`)
 - Cannot exist without a parent Taxonomy
 
-**ClassResponse** (`id`, `concept_scheme_id`, `taxonomy_id`, `title`, `description`, `parent_class_id`, `structural_property_id`)
+**ClassResponse** (`id`, `concept_scheme_id`, `taxonomy_id`, `title`, `description`, `parent_class_id`, `structural_property_id`, `version`, `created_at`, `last_modified`)
 - Represents a class/concept within a ConceptScheme
 - Referenced by: Relationship (via `source_id` and `target_id`)
 - `parent_class_id` and `structural_property_id` are optional hierarchical and structural properties
@@ -170,7 +170,7 @@ These are rules the application guarantees:
 ### Field Constraints
 - Taxonomy `title`, ConceptScheme `title`, Class `title`, PropertyDefinition `title` are required and must be unique within their parent scope.
 - PropertyDefinition `identifier` is required and globally unique (e.g., `rdfs:subClassOf`).
-- All entities have `version` (for optimistic concurrency control) and `created_at` / `last_modified` timestamps.
+- Taxonomies, ConceptSchemes, Classes, and PropertyDefinitions have `version` (for optimistic concurrency control) and `created_at` / `last_modified` timestamps. Relationships have only `created_at`.
 
 ### Concurrency
 - All CRUD operations use optimistic concurrency control via the `version` field.
