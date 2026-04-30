@@ -186,17 +186,17 @@ export class RAGExperimentsService extends BaseService {
    * @param paragraphId Test paragraph ID
    * @param startChar Start character position
    * @param endChar End character position
-   * @param structureNodeId Structure node ID to link
+   * @param ontologyClassId Structure node ID to link
    * @returns Created annotation with extracted text
    */
   async createAnnotation(
     paragraphId: string,
     startChar: number,
     endChar: number,
-    structureNodeId: string,
+    ontologyClassId: string,
   ): Promise<CreateAnnotationResponse> {
     this.validateRequired(paragraphId, "paragraphId");
-    this.validateRequired(structureNodeId, "structureNodeId");
+    this.validateRequired(ontologyClassId, "ontologyClassId");
 
     return this.withErrorContext(async () => {
       const response = await this.postResource<CreateAnnotationResponse>(
@@ -204,7 +204,7 @@ export class RAGExperimentsService extends BaseService {
         {
           start_char: startChar,
           end_char: endChar,
-          structure_node_id: structureNodeId,
+          ontology_class_id: ontologyClassId,
         } as CreateAnnotationRequest,
       );
       return response;

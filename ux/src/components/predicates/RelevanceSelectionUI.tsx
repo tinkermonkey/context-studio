@@ -68,13 +68,13 @@ export const RelevanceSelectionUI: React.FC<RelevanceSelectionUIProps> = ({
   const filteredPredicates = React.useMemo(() => {
     if (!predicates?.data) return [];
 
-    let filtered = predicates.data;
+    let filtered = predicates.data as any[];
 
     // Apply search filter
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase();
       filtered = filtered.filter(
-        (p) =>
+        (p: any) =>
           p.title.toLowerCase().includes(query) ||
           p.identifier?.toLowerCase().includes(query) ||
           p.definition?.toLowerCase().includes(query),
@@ -83,7 +83,7 @@ export const RelevanceSelectionUI: React.FC<RelevanceSelectionUIProps> = ({
 
     // Apply relevance filter
     if (relevanceFilter !== "all") {
-      filtered = filtered.filter((p) => {
+      filtered = filtered.filter((p: any) => {
         const relevance = relevanceMap[p.id];
         if (relevanceFilter === "unrated") return relevance === undefined;
         if (relevanceFilter === "relevant") return relevance === true;
@@ -94,7 +94,7 @@ export const RelevanceSelectionUI: React.FC<RelevanceSelectionUIProps> = ({
 
     // Apply unrated filter
     if (showOnlyUnrated) {
-      filtered = filtered.filter((p) => relevanceMap[p.id] === undefined);
+      filtered = filtered.filter((p: any) => relevanceMap[p.id] === undefined);
     }
 
     return filtered;
@@ -106,21 +106,21 @@ export const RelevanceSelectionUI: React.FC<RelevanceSelectionUIProps> = ({
       return { relevant: 0, irrelevant: 0, unrated: 0, total: 0 };
     }
 
-    const relevant = predicates.data.filter(
-      (p) => relevanceMap[p.id] === true,
+    const relevant = (predicates.data as any[]).filter(
+      (p: any) => relevanceMap[p.id] === true,
     ).length;
-    const irrelevant = predicates.data.filter(
-      (p) => relevanceMap[p.id] === false,
+    const irrelevant = (predicates.data as any[]).filter(
+      (p: any) => relevanceMap[p.id] === false,
     ).length;
-    const unrated = predicates.data.filter(
-      (p) => relevanceMap[p.id] === undefined,
+    const unrated = (predicates.data as any[]).filter(
+      (p: any) => relevanceMap[p.id] === undefined,
     ).length;
 
     return {
       relevant,
       irrelevant,
       unrated,
-      total: predicates.data.length,
+      total: (predicates.data as any[]).length,
     };
   }, [predicates, relevanceMap]);
 
@@ -257,7 +257,7 @@ export const RelevanceSelectionUI: React.FC<RelevanceSelectionUIProps> = ({
               </TableRow>
             </TableHead>
             <TableBody className="divide-y">
-              {filteredPredicates.map((predicate) => (
+              {filteredPredicates.map((predicate: any) => (
                 <TableRow
                   key={predicate.id}
                   className="bg-white dark:border-gray-700 dark:bg-gray-800"

@@ -8,10 +8,10 @@ import { BaseService } from "./base";
 import { ENDPOINTS } from "../config";
 import type {
   ResponseFormat,
-  MultiSourceSearchResponse,
   DBpediaSparqlRequest,
   WikidataSparqlRequest,
 } from "./missingTypes";
+import type { MultiSourceSearchResponse } from "../types/unified";
 
 // Re-export types for use in hooks and components
 export type {

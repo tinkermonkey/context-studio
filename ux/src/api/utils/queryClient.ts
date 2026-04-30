@@ -16,7 +16,6 @@ const queryClientConfig: QueryClientConfig = {
       retry: (failureCount, error) => {
         // Don't retry on 4xx errors (client errors)
         if (error instanceof Error && "status" in error) {
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           const status = (error as any).status;
           if (status >= 400 && status < 500) {
             return false;
@@ -46,7 +45,7 @@ export const queryClient = new QueryClient(queryClientConfig);
 export const createQueryKey = (
   entity: string,
   id?: string | number,
-  params?: Record<string, unknown>,
+  params?: any,
 ): string[] => {
   const key = [entity];
 

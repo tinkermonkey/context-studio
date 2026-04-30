@@ -23,9 +23,10 @@ export interface DatasetResponse {
   is_active?: boolean;
   metrics: {
     layers_count?: number;
+    domains_count?: number;
     terms_count?: number;
     relationships_count?: number;
-    domains_count?: number;
+    property_definitions_count?: number;
   };
 }
 
@@ -289,12 +290,6 @@ export interface SearchResultsResponse {
   total_count?: number;
 }
 
-export interface MultiSourceSearchResponse {
-  results: Record<string, unknown>[];
-  total_count: number;
-  sources: string[];
-}
-
 export interface DBpediaSparqlRequest {
   sparql_query?: string;
   query: string;
@@ -310,7 +305,7 @@ export interface Annotation {
   id?: string;
   start_char: number;
   end_char: number;
-  structure_node_id?: string;
+  ontology_class_id?: string;
   text?: string;
 }
 

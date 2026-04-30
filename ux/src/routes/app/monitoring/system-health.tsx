@@ -77,7 +77,7 @@ function RouteComponent() {
           title: "Database Performance",
           metrics: Object.entries(dbDashboard.performance_metrics)
             .slice(0, 6)
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
             .map(([key, value]: [string, any]) => ({
               label: key
                 .replace(/_/g, " ")
@@ -175,7 +175,6 @@ function RouteComponent() {
                         {
                           label: "Healthy Engines",
                           value: Object.values(dbHealth.engines).filter(
-                            // eslint-disable-next-line @typescript-eslint/no-explicit-any
                             (e: any) => e.status === "healthy",
                           ).length,
                         },

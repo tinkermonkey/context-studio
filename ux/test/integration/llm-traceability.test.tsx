@@ -101,7 +101,7 @@ const mockExecutionHistoryResponse = {
     selections: [
       {
         selection_id: "sel-456",
-        record_type: "structure_node",
+        record_type: "ontologyClass",
         record_id: "node-789",
         suggestion_field: "definition",
         selected_content: "A subset of AI...",
@@ -118,7 +118,6 @@ const mockSelectionResponse = {
 };
 
 describe("LLM Traceability Integration", () => {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let mockService: any;
 
   beforeEach(() => {
@@ -307,7 +306,7 @@ describe("LLM Traceability Integration", () => {
       await waitFor(() => {
         expect(mockService.recordSelection).toHaveBeenCalledWith({
           execution_id: "exec-123",
-          record_type: "structure_node",
+          record_type: "ontologyClass",
           record_id: "node-456",
           suggestion_field: "definition",
           selected_content: "Selected content",

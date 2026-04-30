@@ -170,7 +170,7 @@ export const useSelectionTracking = (
 
       const request: SelectionRecordRequest = {
         execution_id: executionId,
-        record_type: "structure_node",
+        record_type: "ontologyClass",
         record_id: recordId,
         suggestion_field: suggestionField,
         selected_content: selectedContent,

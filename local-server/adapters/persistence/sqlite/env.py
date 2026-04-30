@@ -20,6 +20,11 @@ from adapters.persistence.sqlite.models import Base  # noqa: E402
 # access to the values within the .ini file in use.
 config = context.config
 
+# Configure version locations to only include local.db migrations
+# This prevents "multiple head revisions" errors when upgrading
+sqlite_dir = Path(__file__).parent
+config.set_main_option("version_locations", str(sqlite_dir / "versions"))
+
 # Interpret the config file for Python logging.
 # This line sets up loggers basically.
 if config.config_file_name is not None:

@@ -9,14 +9,14 @@ import React, { useState } from "react";
 import { Button, Alert } from "flowbite-react";
 import { Plus, Info } from "lucide-react";
 
-import { StructureNode } from "@/api/types/structureNodes";
-import { useNodeLinksByNode } from "@/api/hooks/node_links/useNodeLinks";
+import { OntologyClass } from "@/api/types/ontology";
+import { useRelationships } from "@/api/hooks/relationships";
 import { NodeLinkForm } from "./NodeLinkForm";
 import { NodeLinkDisplay } from "./NodeLinkDisplay";
 
 export interface NodeLinkPanelProps {
   nodeId: string;
-  node: StructureNode;
+  node: OntologyClass;
 }
 
 export const NodeLinkPanel: React.FC<NodeLinkPanelProps> = ({
@@ -25,8 +25,14 @@ export const NodeLinkPanel: React.FC<NodeLinkPanelProps> = ({
 }) => {
   const [isFormActive, setIsFormActive] = useState(false);
 
-  // Fetch links for this node
-  const { data: links = [], isLoading, error } = useNodeLinksByNode(nodeId);
+  // Fetch relationships filtered for this node only
+  const {
+    data: links = [],
+    isLoading,
+    error,
+  } = useRelationships({
+    source_id: nodeId,
+  });
 
   const hasLinks = links.length > 0;
   const shouldShowForm = isFormActive;

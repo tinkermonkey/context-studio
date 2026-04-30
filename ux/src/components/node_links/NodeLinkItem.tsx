@@ -16,11 +16,13 @@ import {
 import { AlertCircle, Database, Hash, Layers, Trash2 } from "lucide-react";
 import { useNavigate } from "@tanstack/react-router";
 
-import { StructureNodeLink, NodeType } from "@/api/types/structureNodes";
-import { useStructureNode } from "@/api/hooks/structure_nodes/useStructureNodes";
+import { OntologyClassLink, NodeType } from "@/api/types/ontology";
+import { useOntologyClass } from "@/api/hooks/ontologyClasses";
+import { usePropertyDefinition } from "@/api/hooks/propertyDefinitions";
+import { getNodePath } from "@/utils/nodeNavigation";
 
 interface NodeLinkItemProps {
-  link: StructureNodeLink;
+  link: OntologyClassLink;
   currentNodeId: string;
   onDelete: (linkId: string) => void;
   isDeleting: boolean;
@@ -36,28 +38,39 @@ export const NodeLinkItem: React.FC<NodeLinkItemProps> = ({
   const navigate = useNavigate();
 
   // Determine which node to display (the "other" node, not the current one)
-  const isOutgoing = link.source_node_id === currentNodeId;
-  const displayNodeId = isOutgoing ? link.target_node_id : link.source_node_id;
+  const isOutgoing = link.source_id === currentNodeId;
+  const displayNodeId = isOutgoing ? link.target_id : link.source_id;
 
   // Fetch the node to display
-  const { data: displayNode, isLoading } = useStructureNode(displayNodeId);
+  const { data: displayNode, isLoading } = useOntologyClass(displayNodeId);
+
+  // Fetch the property definition to display its title
+  const { data: propertyDefinition } = usePropertyDefinition(
+    link.property_definition_id,
+  );
 
   const handleDelete = () => {
     onDelete(link.id);
   };
 
   const handleNavigate = () => {
-    navigate({ to: `/app/structure_nodes/${displayNodeId}` });
+    if (displayNode) {
+      navigate({ to: getNodePath(displayNodeId, displayNode.node_type) });
+    }
   };
 
   // Get icon for node type
-  const getNodeIcon = (nodeType: NodeType) => {
+  const getNodeIcon = (nodeType?: string | NodeType) => {
     switch (nodeType) {
-      case NodeType.LAYER:
+      case "taxonomy":
+      case NodeType.TAXONOMY:
         return Layers;
-      case NodeType.DOMAIN:
+      case "concept_scheme":
+      case "scheme":
+      case NodeType.CONCEPT_SCHEME:
         return Database;
-      case NodeType.TERM:
+      case "class":
+      case NodeType.CLASS:
         return Hash;
       default:
         return Hash;
@@ -132,7 +145,10 @@ export const NodeLinkItem: React.FC<NodeLinkItemProps> = ({
                 </span>
               </div>
               <div className="text-sm text-gray-600">
-                via: <code className="font-mono">{link.predicate}</code>
+                via:{" "}
+                <span className="font-medium">
+                  {propertyDefinition?.title || link.property_definition_id}
+                </span>
               </div>
             </div>
 

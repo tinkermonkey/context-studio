@@ -13,7 +13,7 @@ import { apiLogger } from "./logger";
 export interface VersionedResource {
   id: string;
   version: number;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
   [key: string]: any;
 }
 
@@ -43,7 +43,7 @@ export interface ConflictResolutionOptions {
   /**
    * Callback to execute after refetch completes
    */
-  onRefetchComplete?: (data: any) => void; // eslint-disable-line @typescript-eslint/no-explicit-any
+  onRefetchComplete?: (data: any) => void;
 }
 
 /**
@@ -73,7 +73,7 @@ export const isVersionConflict = (error: unknown): boolean => {
  */
 export const handleVersionConflict = async (
   error: unknown,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
   refetch: () => Promise<any>,
   options: ConflictResolutionOptions = {},
 ): Promise<void> => {

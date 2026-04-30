@@ -16,82 +16,24 @@ export async function waitForAppReady(page: Page): Promise<void> {
 }
 
 /**
- * Make an API request to the backend and return the response.
+ * Re-export apiRequest from api-client for convenient access
  */
-export async function apiRequest<T = unknown>(
-  page: Page,
-  endpoint: string,
-  options?: {
-    method?: "GET" | "POST" | "PUT" | "DELETE" | "PATCH";
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    body?: any;
-    headers?: Record<string, string>;
-  },
-): Promise<T> {
-  const { method = "GET", body, headers = {} } = options || {};
-
-  const response = await page.request.fetch(
-    `http://localhost:8888${endpoint}`,
-    {
-      method,
-      headers: {
-        "Content-Type": "application/json",
-        ...headers,
-      },
-      data: body ? JSON.stringify(body) : undefined,
-    },
-  );
-
-  if (!response.ok()) {
-    const responseText = await response.text();
-    console.error(`API request failed: ${method} ${endpoint}`);
-    console.error(`Status: ${response.status()} ${response.statusText()}`);
-    console.error(`Response: ${responseText}`);
-    throw new Error(
-      `API request failed with status ${response.status()}: ${responseText}`,
-    );
-  }
-
-  return await response.json();
-}
+export { apiRequest } from "./api-client";
 
 /**
- * Clear all test data from the backend.
- * Useful for resetting state between tests.
+ * Export factory functions for convenient access
+ * See fixtures/factories.ts for implementation
  */
-export async function clearTestData(): Promise<void> {
-  // Implement based on your API's data clearing endpoint
-  // For example:
-  // await apiRequest(page, '/api/test/clear', { method: 'POST' });
-}
-
-/**
- * Create test data in the backend.
- */
-export async function seedTestData(
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  _data: {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    layers?: any[];
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    domains?: any[];
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    terms?: any[];
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    predicates?: any[];
-  },
-): Promise<void> {
-  // Implement based on your API's structure
-  // For example:
-  // if (data.layers) {
-  //   for (const layer of data.layers) {
-  //     await apiRequest(page, '/api/structure-nodes', {
-  //       method: 'POST',
-  //       body: layer,
-  //     });
-  //   }
-  // }
-}
+export {
+  createTaxonomy,
+  createConceptScheme,
+  createClass,
+  createPropertyDefinition,
+  createRelationship,
+  createTestHierarchy,
+  seedTestData,
+  clearTestData,
+} from "./factories";
 
 /**
  * Wait for an element to be visible with better error messages
@@ -145,6 +87,8 @@ export async function waitForAnyCondition(
 
 /**
  * Check if a backend endpoint exists
+ * @throws {Error} If the backend is unreachable (network error)
+ * @returns true if endpoint exists (status != 404), false if 404
  */
 export async function endpointExists(
   page: Page,
@@ -163,8 +107,14 @@ export async function endpointExists(
 
     // 404 means endpoint doesn't exist, anything else means it exists
     return response.status() !== 404;
-  } catch {
-    return false;
+  } catch (error) {
+    // Network error: backend unreachable
+    throw new Error(
+      `Could not reach backend at http://localhost:8888${endpoint}: ${
+        error instanceof Error ? error.message : String(error)
+      }`,
+      { cause: error },
+    );
   }
 }
 

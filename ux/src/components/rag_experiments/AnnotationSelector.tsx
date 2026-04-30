@@ -13,12 +13,9 @@ import {
   useCreateAnnotation,
   useDeleteAnnotation,
 } from "@/api/hooks/ragExperiments";
-import { useStructureNodeSearch } from "@/api/hooks/structure_nodes/useStructureNodes";
+import { useOntologyClasses } from "@/api/hooks/ontologyClasses";
 import type { TestParagraphResponse } from "@/api/services/ragExperiments";
-import type {
-  StructureNode,
-  FindStructureNodeResult,
-} from "@/api/types/structureNodes";
+import type { OntologyClass } from "@/api/types/ontology";
 
 export interface AnnotationSelectorProps {
   paragraph: TestParagraphResponse;
@@ -53,27 +50,27 @@ export const AnnotationSelector: React.FC<AnnotationSelectorProps> = ({
     return () => clearTimeout(timer);
   }, [searchInput]);
 
-  // Use vector search for structure nodes based on debounced search query
-  const { data: searchResults, isLoading: nodesLoading } =
-    useStructureNodeSearch({
-      query: debouncedSearchQuery,
-      limit: 100,
-      threshold: 0.0,
-    });
+  // Fetch all ontology classes
+  // NOTE: This replaces the previous useClassSearch which performed server-side semantic/vector search.
+  // The current implementation uses client-side filtering with substring matching only.
+  // This is a known functional degradation: it loads the entire class set regardless of search input
+  // and loses semantic matching capability. Consider implementing a server-side search endpoint
+  // to restore proper semantic search if the ontology grows significantly.
+  const { data: allClasses, isLoading: nodesLoading } = useOntologyClasses();
 
-  // Convert search results to StructureNode format for RecordSelector
-  const structureNodes: StructureNode[] =
-    searchResults?.map((result: FindStructureNodeResult) => ({
-      id: result.id,
-      node_type: result.node_type,
-      parent_node_id: result.parent_node_id,
-      title: result.title,
-      definition: result.definition,
-      structural_predicate_id: result.structural_predicate_id,
-      created_at: result.created_at,
-      version: result.version,
-      last_modified: result.last_modified,
-    })) || [];
+  // Filter classes based on search query
+  const ontologyClass: OntologyClass[] = React.useMemo(() => {
+    if (!allClasses) return [];
+
+    if (!debouncedSearchQuery) return allClasses;
+
+    const query = debouncedSearchQuery.toLowerCase();
+    return allClasses.filter(
+      (cls) =>
+        cls.title.toLowerCase().includes(query) ||
+        cls.description?.toLowerCase().includes(query),
+    );
+  }, [allClasses, debouncedSearchQuery]);
 
   // Handle text selection
   const handleTextSelection = () => {
@@ -120,7 +117,7 @@ export const AnnotationSelector: React.FC<AnnotationSelectorProps> = ({
       paragraphId: paragraph.id,
       startChar: selection.start,
       endChar: selection.end,
-      structureNodeId: selectedNodeId,
+      ontologyClassId: selectedNodeId,
     });
 
     // Reset selection
@@ -176,8 +173,8 @@ export const AnnotationSelector: React.FC<AnnotationSelectorProps> = ({
         annotation.start_char,
         annotation.end_char,
       );
-      const nodeInfo = (structureNodes || []).find(
-        (n: StructureNode) => n.id === annotation.structure_node_id,
+      const nodeInfo = (ontologyClass || []).find(
+        (n: OntologyClass) => n.id === annotation.ontology_class_id,
       );
 
       segments.push(
@@ -239,14 +236,14 @@ export const AnnotationSelector: React.FC<AnnotationSelectorProps> = ({
                 Link to Structure Node (search to find nodes)
               </label>
               <RecordSelector
-                records={structureNodes || []}
+                records={ontologyClass || []}
                 fieldMap={{
                   value: "id",
                   title: "title",
                   definition: "definition",
                 }}
                 value={selectedNodeId}
-                onSelect={(node: StructureNode) =>
+                onSelect={(node: OntologyClass) =>
                   setSelectedNodeId(node?.id || "")
                 }
                 search={searchInput}
@@ -303,9 +300,9 @@ export const AnnotationSelector: React.FC<AnnotationSelectorProps> = ({
           </h4>
           <div className="space-y-2">
             {paragraph.annotations.map((annotation) => {
-              const nodeInfo = (structureNodes || []).find(
-                (n: StructureNode) =>
-                  n.id === (annotation.structure_node_id as string),
+              const nodeInfo = (ontologyClass || []).find(
+                (n: OntologyClass) =>
+                  n.id === (annotation.ontology_class_id as string),
               );
               return (
                 <div
@@ -319,7 +316,7 @@ export const AnnotationSelector: React.FC<AnnotationSelectorProps> = ({
                     <p className="text-xs text-gray-600">
                       →{" "}
                       {nodeInfo?.title ||
-                        (annotation.structure_node_id as string)}
+                        (annotation.ontology_class_id as string)}
                     </p>
                     <p className="text-xs text-gray-500">
                       Position: {annotation.start_char} - {annotation.end_char}

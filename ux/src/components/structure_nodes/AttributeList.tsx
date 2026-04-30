@@ -9,14 +9,14 @@ import { Badge, Button, Tooltip } from "flowbite-react";
 import { Edit2, Link, Trash2 } from "lucide-react";
 import type {
   ResolvedAttribute,
-  StructureNodeAttribute,
-} from "@/api/types/structureNodes";
-import { useStructureNode } from "@/api/hooks/structure_nodes/useStructureNodes";
+  OntologyClassAttribute,
+} from "@/api/types/ontology";
+import { useOntologyClass } from "@/api/hooks/ontologyClasses";
 
 interface AttributeListProps {
   attributes: ResolvedAttribute[];
   onRemoveAttribute?: (key: string) => void;
-  onEditAttribute?: (attribute: StructureNodeAttribute) => void;
+  onEditAttribute?: (attribute: OntologyClassAttribute) => void;
   isLoading?: boolean;
 }
 
@@ -61,7 +61,7 @@ const AttributeValueDisplay: React.FC<{
 const InheritedAttributeInfo: React.FC<{
   sourceNodeId: string | null | undefined;
 }> = ({ sourceNodeId }) => {
-  const { data: sourceNode } = useStructureNode(sourceNodeId || "");
+  const { data: sourceNode } = useOntologyClass(sourceNodeId || "");
 
   const sourceTitle = sourceNode?.title || "Unknown node";
 
@@ -125,7 +125,9 @@ export const AttributeList: React.FC<AttributeListProps> = ({
                     <span className="font-medium text-gray-900">
                       {attr.title || attr.key}
                     </span>
-                    <AttributeTypeDisplay type={attr.value_type} />
+                    {attr.value_type && (
+                      <AttributeTypeDisplay type={attr.value_type} />
+                    )}
                   </div>
                   <div>
                     <AttributeValueDisplay value={attr.value} />
@@ -137,18 +139,18 @@ export const AttributeList: React.FC<AttributeListProps> = ({
                       size="sm"
                       color="light"
                       onClick={() =>
-                        onEditAttribute(attr as StructureNodeAttribute)
+                        onEditAttribute(attr as OntologyClassAttribute)
                       }
                       disabled={isLoading}
                     >
                       <Edit2 className="h-4 w-4" />
                     </Button>
                   )}
-                  {onRemoveAttribute && (
+                  {onRemoveAttribute && attr.key && (
                     <Button
                       size="sm"
                       color="light"
-                      onClick={() => onRemoveAttribute(attr.key)}
+                      onClick={() => onRemoveAttribute(attr.key!)}
                       disabled={isLoading}
                     >
                       <Trash2 className="h-4 w-4" />
@@ -177,7 +179,9 @@ export const AttributeList: React.FC<AttributeListProps> = ({
                     <span className="font-medium text-gray-900">
                       {attr.title || attr.key}
                     </span>
-                    <AttributeTypeDisplay type={attr.value_type} />
+                    {attr.value_type && (
+                      <AttributeTypeDisplay type={attr.value_type} />
+                    )}
                     <InheritedAttributeInfo
                       sourceNodeId={attr.source_node_id}
                     />

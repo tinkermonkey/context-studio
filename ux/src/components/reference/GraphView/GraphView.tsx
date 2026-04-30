@@ -105,7 +105,7 @@ export const GraphView: React.FC<GraphViewProps> = ({
   }, [nodes, edges]);
 
   // Handle node selection
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
   const handleNodeClick = (node: any) => {
     if (node.data) {
       // For grouped structure, only handle clicks on data nodes (not predicate nodes)
@@ -294,7 +294,7 @@ export const GraphView: React.FC<GraphViewProps> = ({
   // Show empty state
   if (results.length === 0) {
     return (
-      <Alert color="info" icon={Info}>
+      <Alert color="info" icon={Info} data-testid="graph-empty-state">
         <div className="space-y-2">
           <p className="font-medium">No nodes to display</p>
           <p className="text-sm">
@@ -308,7 +308,10 @@ export const GraphView: React.FC<GraphViewProps> = ({
   return (
     <div className="space-y-4">
       {/* Graph stats */}
-      <div className="flex items-center justify-between text-sm text-gray-600">
+      <div
+        className="flex items-center justify-between text-sm text-gray-600"
+        data-testid="graph-statistics"
+      >
         <span>
           {layoutType === "tree" && searchLinks.length > 0 ? (
             <>
@@ -357,9 +360,13 @@ export const GraphView: React.FC<GraphViewProps> = ({
       )}
 
       {/* Graph visualization */}
-      <div className="rounded-lg border border-gray-200 bg-white">
+      <div
+        className="rounded-lg border border-gray-200 bg-white"
+        data-testid="graph-container"
+      >
         <div
           ref={containerRef}
+          data-testid="graph-canvas"
           className="relative aspect-square w-full"
           onMouseMove={handleMouseMove}
           onMouseLeave={() => {
@@ -381,7 +388,6 @@ export const GraphView: React.FC<GraphViewProps> = ({
               nodes={nodes}
               edges={edges}
               theme={lightTheme}
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
               layoutType={currentLayoutType as any}
               onNodeClick={handleNodeClick}
               onCanvasClick={() => {
@@ -390,7 +396,6 @@ export const GraphView: React.FC<GraphViewProps> = ({
                 setPinnedPosition(null);
                 setHoveredNode(null);
               }}
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
               onNodePointerOver={(node: any) => {
                 if (node && node.data) {
                   // For grouped structure, only show tooltips for data nodes
@@ -440,6 +445,7 @@ export const GraphView: React.FC<GraphViewProps> = ({
           {((hoveredNode && tooltipPosition) ||
             (pinnedNode && pinnedPosition)) && (
             <div
+              data-testid="graph-node-details"
               className={`animate-in fade-in absolute z-50 w-80 rounded-lg border border-gray-300 bg-white p-4 shadow-lg duration-200 ${pinnedNode ? "pointer-events-auto" : "pointer-events-none"}`}
               style={getTooltipStyle(
                 (pinnedNode && pinnedPosition) || tooltipPosition!,
@@ -657,10 +663,7 @@ class ErrorBoundary extends React.Component<
     this.state = { hasError: false };
   }
 
-  static getDerivedStateFromError(
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    _: Error,
-  ): ErrorBoundaryState {
+  static getDerivedStateFromError(_: Error): ErrorBoundaryState {
     return { hasError: true };
   }
 

@@ -25,7 +25,7 @@ import { useSimilarPredicates } from "@/api/hooks/predicates";
 import { useButterToast } from "@/hooks/useButterToast";
 import { getSourceBadgeColor } from "@/utils/sourceUtils";
 import { PredicateSelector } from "@/components/node_selectors/predicate_selector";
-import { PredicateOut } from "@/api/services/predicates";
+import { PropertyDefinition } from "@/api/types/ontology";
 
 export interface SimilaritySearchTabProps {
   onClusterSelect?: (predicateIds: string[]) => void;
@@ -35,7 +35,7 @@ export const SimilaritySearchTab: React.FC<SimilaritySearchTabProps> = ({
   onClusterSelect,
 }) => {
   const [selectedPredicate, setSelectedPredicate] = useState<
-    PredicateOut | undefined
+    PropertyDefinition | undefined
   >();
   const [debouncedPredicateId, setDebouncedPredicateId] = useState<string>("");
   const [sourceFilter, setSourceFilter] = useState<string>("");
@@ -81,15 +81,17 @@ export const SimilaritySearchTab: React.FC<SimilaritySearchTabProps> = ({
   // Get unique sources from results
   const availableSources = React.useMemo(() => {
     if (!data?.results) return [];
-    const sources = new Set(data.results.map((item) => item.source));
-    return Array.from(sources).sort();
+    const sources = new Set(
+      (data.results as any[]).map((item: any) => item.source),
+    );
+    return Array.from(sources).sort() as string[];
   }, [data?.results]);
 
   // Filter results by threshold
   const filteredResults = React.useMemo(() => {
     if (!data?.results) return [];
-    return data.results.filter(
-      (item) => item.similarity_score >= thresholdFilter,
+    return (data.results as any[]).filter(
+      (item: any) => item.similarity_score >= thresholdFilter,
     );
   }, [data?.results, thresholdFilter]);
 
@@ -171,7 +173,7 @@ export const SimilaritySearchTab: React.FC<SimilaritySearchTabProps> = ({
               onChange={(e) => setSourceFilter(e.target.value)}
             >
               <option value="">All Sources</option>
-              {availableSources.map((source) => (
+              {availableSources.map((source: string) => (
                 <option key={source} value={source}>
                   {source}
                 </option>
@@ -226,7 +228,7 @@ export const SimilaritySearchTab: React.FC<SimilaritySearchTabProps> = ({
                 onClick={() =>
                   onClusterSelect(
                     filteredResults
-                      .map((item) => item.predicate_id || "")
+                      .map((item: any) => item.predicate_id || "")
                       .filter(Boolean),
                   )
                 }
@@ -255,7 +257,7 @@ export const SimilaritySearchTab: React.FC<SimilaritySearchTabProps> = ({
                   </TableRow>
                 </TableHead>
                 <TableBody className="divide-y">
-                  {filteredResults.map((item, index) => (
+                  {filteredResults.map((item: any, index: number) => (
                     <TableRow
                       key={`${item.predicate_id}-${index}`}
                       className="bg-white dark:border-gray-700 dark:bg-gray-800"

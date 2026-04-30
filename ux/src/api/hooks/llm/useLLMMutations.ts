@@ -221,9 +221,9 @@ export const useGenerateTermDefinitionWithReferencesMutation = (
     Error,
     {
       term: string;
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
       dbpediaContext?: Record<string, any>;
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
       wikidataContext?: Record<string, any>;
     }
   >,
@@ -348,9 +348,9 @@ export const useGenerateDefinitionWithReferencesMutation = (
     Error,
     {
       term: string;
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
       dbpediaContext?: Record<string, any>;
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
       wikidataContext?: Record<string, any>;
     }
   >,

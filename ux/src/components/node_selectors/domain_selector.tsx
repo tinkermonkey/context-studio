@@ -1,9 +1,9 @@
-import { StructureNode } from "@/api/types/structureNodes";
+import { ConceptScheme } from "@/api/types/ontology";
 import { PortalRecordSelector } from "@/components/node_selectors/portal_record_selector";
-import { useDomainNodes } from "@/api/hooks/structure_nodes/useStructureNodes";
+import { useConceptSchemes } from "@/api/hooks/conceptSchemes";
 
 export interface DomainSelectorProps {
-  onSelect?: (domain: StructureNode | undefined) => void;
+  onSelect?: (domain: ConceptScheme | undefined) => void;
   value?: string;
   className?: string;
   "data-testid"?: string;
@@ -14,14 +14,14 @@ export const DomainSelector: React.FC<DomainSelectorProps> = ({
   value,
   "data-testid": dataTestId,
 }) => {
-  const { data: domains, isLoading, error } = useDomainNodes();
+  const { data: domains, isLoading, error } = useConceptSchemes();
   return (
     <PortalRecordSelector
       records={domains ?? []}
       loading={isLoading}
       error={error ? "Failed to load records" : null}
       fieldMap={{ value: "id", title: "title", definition: "definition" }}
-      onSelect={(r) => onSelect && onSelect(r as StructureNode | undefined)}
+      onSelect={(r) => onSelect && onSelect(r as ConceptScheme | undefined)}
       value={value}
       placeholder={"Select Record"}
       data-testid={dataTestId}

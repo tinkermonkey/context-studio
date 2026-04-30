@@ -5,6 +5,7 @@
  */
 
 import { BaseService } from "./base";
+import { apiLogger } from "../utils/logger";
 
 export type ProviderType =
   | "native_openai"
@@ -248,17 +249,18 @@ export class EnabledModelsService extends BaseService {
   /**
    * Validate provider configuration
    */
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  async validateProviderConfig(_providerType: ProviderType): Promise<{
+  async validateProviderConfig(providerType: ProviderType): Promise<{
     valid: boolean;
     issues: string[];
   }> {
-    // This would need to be implemented on the backend
-    // For now, return a placeholder
-    return {
-      valid: true,
-      issues: [],
-    };
+    this.validateRequired(providerType, "providerType");
+
+    // TODO: Implement backend endpoint for provider validation
+    // Backend endpoint /api/enabled-models/providers/{providerType}/validate does not yet exist
+    apiLogger.warn("Provider validation not yet implemented on backend", {
+      providerType,
+    });
+    return { valid: true, issues: [] };
   }
 }
 

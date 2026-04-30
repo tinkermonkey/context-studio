@@ -26,7 +26,7 @@ import { MappingConfigurationTab } from "./MappingConfigurationTab";
 import { ManualMappingInterface } from "./ManualMappingInterface";
 import { RelevanceSelectionUI } from "./RelevanceSelectionUI";
 import { MappingCreationWorkflow } from "./MappingCreationWorkflow";
-import type { PredicateOut } from "@/api/services/predicates";
+import type { PropertyDefinition } from "@/api/types/ontology";
 
 export interface PredicateMappingManagerProps {
   className?: string;
@@ -46,8 +46,7 @@ export const PredicateMappingManager: React.FC<
     setShowWorkflowModal(true);
   };
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const handleWorkflowComplete = (_$predicate: PredicateOut) => {
+  const handleWorkflowComplete = (_$predicate: PropertyDefinition) => {
     setShowWorkflowModal(false);
     setSelectedPredicateIds([]);
     // Could switch to a different tab or show success message

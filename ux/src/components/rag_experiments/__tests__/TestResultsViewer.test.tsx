@@ -73,7 +73,6 @@ describe("TestResultsViewer", () => {
       data: mockComparisonData,
       isLoading: false,
       error: null,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } as any);
   });
 
@@ -130,7 +129,6 @@ describe("TestResultsViewer", () => {
       data: null,
       isLoading: true,
       error: null,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } as any);
 
     render(<TestResultsViewer paragraphId="test-para" />, {
@@ -145,7 +143,6 @@ describe("TestResultsViewer", () => {
       data: { runs: [], summary: null },
       isLoading: false,
       error: null,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } as any);
 
     render(<TestResultsViewer paragraphId="test-para" />, {
@@ -160,7 +157,6 @@ describe("TestResultsViewer", () => {
       data: null,
       isLoading: false,
       error: new Error("Test error"),
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } as any);
 
     render(<TestResultsViewer paragraphId="test-para" />, {
@@ -176,7 +172,6 @@ describe("TestResultsViewer", () => {
       data: { runs: [], summary: null },
       isLoading: false,
       error: null,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } as any);
 
     render(<TestResultsViewer paragraphId="test-para" />, {
@@ -211,7 +206,6 @@ describe("TestResultsViewer", () => {
       data: largeDataset,
       isLoading: false,
       error: null,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } as any);
 
     render(<TestResultsViewer paragraphId="test-para" />, {
@@ -273,7 +267,6 @@ describe("TestResultsViewer", () => {
       data: dataWithNulls,
       isLoading: false,
       error: null,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } as any);
 
     render(<TestResultsViewer paragraphId="test-para" />, {
@@ -307,7 +300,6 @@ describe("TestResultsViewer", () => {
       data: multipleRuns,
       isLoading: false,
       error: null,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } as any);
 
     render(<TestResultsViewer paragraphId="test-para" />, {
@@ -325,7 +317,6 @@ describe("TestResultsViewer", () => {
       data: mockComparisonData,
       isLoading: false,
       error: null,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } as any);
 
     render(<TestResultsViewer paragraphId="test-para" />, {

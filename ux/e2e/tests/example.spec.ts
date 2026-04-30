@@ -23,34 +23,39 @@ test.describe("Smoke Tests", () => {
 
   test("should communicate with backend API", async ({ request }) => {
     // Make a direct API request to verify backend is running
-    const response = await request.get("http://localhost:8888/health");
+    const response = await request.get(
+      "http://localhost:8888/api/v1/admin/health",
+    );
 
     expect(response.ok()).toBeTruthy();
     expect(response.status()).toBe(200);
   });
 
-  test("should navigate between routes", async ({ page }) => {
+  test("should render navigation elements", async ({ page }) => {
+    // Navigate to the app
     await page.goto("/");
 
     // Wait for initial load
     await page.waitForLoadState("networkidle");
 
-    // This is a placeholder - update with actual navigation tests
-    // based on your application's structure
-    // Example:
-    // await page.click('[data-testid="nav-structure"]');
-    // await expect(page).toHaveURL(/.*structure/);
+    // Verify navbar is visible and contains navigation elements
+    const navbar = page.locator("nav");
+    await expect(navbar).toBeVisible();
+
+    // Verify the app brand/logo is visible
+    const brand = page.locator("nav").getByRole("link").first();
+    await expect(brand).toBeVisible();
   });
 
-  test("should load the layers page", async ({ page }) => {
-    // Navigate to layers page
-    await page.goto("/app/layers");
+  test("should load the classes page", async ({ page }) => {
+    // Navigate to classes page (replaces /app/layers which no longer exists)
+    await page.goto("/app/classes");
 
     // Wait for page to load
     await page.waitForLoadState("networkidle");
 
-    // Verify we're on the layers page
-    expect(page.url()).toContain("/app/layers");
+    // Verify we're on the classes page
+    expect(page.url()).toContain("/app/classes");
 
     // Verify the page loaded without errors
     // Just check that the page rendered something

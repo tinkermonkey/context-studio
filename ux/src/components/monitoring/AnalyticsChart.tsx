@@ -10,7 +10,7 @@ import { Card } from "flowbite-react";
 export interface ChartDataPoint {
   label: string;
   value: number;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
   metadata?: Record<string, any>;
 }
 

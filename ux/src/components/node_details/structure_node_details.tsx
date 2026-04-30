@@ -17,11 +17,11 @@ import {
   Edit3,
   Hash,
   Layers,
-  Move,
   Plus,
   X,
 } from "lucide-react";
-import { NodeType } from "@/api/types/structureNodes";
+import { NodeType } from "@/api/types/ontology";
+import { getNodePath } from "@/utils/nodeNavigation";
 import { useTermHierarchy } from "@/api/hooks/graph/useGraph";
 import { useQueryClient } from "@tanstack/react-query";
 import { QUERY_KEYS } from "@/api/config";
@@ -36,28 +36,27 @@ import {
 import { CsMain, CsMainTitle, CsMainHeader } from "@/components/layout/cs_main";
 import { NlpAnalysisPanel } from "@/components/nlp/NlpAnalysisPanel";
 import { TreeChartPanel } from "@/components/panels/TreeChartPanel";
-import type { StructureNode } from "@/api/types/structureNodes";
+import type { OntologyClass } from "@/api/types/ontology";
 import { TreeMenuPanel } from "@/components/panels/TreeMenuPanel";
 import { useNlpAnalysisStore } from "@/stores/nlpAnalysisStore";
-import { useUpdateStructureNode } from "@/api/hooks/structure_nodes/useStructureNodeMutations";
+import { useUpdateTaxonomy } from "@/api/hooks/taxonomies/useTaxonomies";
+import { useUpdateConceptScheme } from "@/api/hooks/conceptSchemes/useConceptSchemes";
+import { useUpdateOntologyClass } from "@/api/hooks/ontologyClasses/useOntologyClasses";
 import { toast } from "@/utils/toast";
 import { ReferenceNodePanel } from "@/components/reference_nodes";
 import { NodeLinkPanel } from "@/components/node_links";
-import { DomainMoveForm } from "@/components/forms/domain_move_form";
-import { TermMoveForm } from "@/components/forms/term_move_form";
 import { AttributePanel } from "@/components/structure_nodes/AttributePanel";
 import type { NodeOut } from "@/api/services/missingTypes";
 
-interface StructureNodeDetailsProps {
-  node: StructureNode;
+interface OntologyClassDetailsProps {
+  node: OntologyClass;
 }
 
-export const StructureNodeDetails: React.FC<StructureNodeDetailsProps> = ({
+export const OntologyClassDetails: React.FC<OntologyClassDetailsProps> = ({
   node,
 }) => {
   const [isEditOpen, setIsEditOpen] = React.useState(false);
   const [isAddChildOpen, setIsAddChildOpen] = React.useState(false);
-  const [isMoveOpen, setIsMoveOpen] = React.useState(false);
   const { setText, triggerAnalysis } = useNlpAnalysisStore();
 
   // Handle analyze button click
@@ -67,20 +66,22 @@ export const StructureNodeDetails: React.FC<StructureNodeDetailsProps> = ({
   }, [node.title, setText, triggerAnalysis]);
 
   // Helper to get icon for a node type
-  const getIconForType = (nodeType: string) => {
+  const getIconForType = (nodeType?: string) => {
+    if (!nodeType) return Hash;
     switch (nodeType) {
-      case NodeType.LAYER:
+      case NodeType.TAXONOMY:
         return Layers;
-      case NodeType.DOMAIN:
+      case NodeType.CONCEPT_SCHEME:
         return Database;
-      case NodeType.TERM:
+      case NodeType.CLASS:
+      case NodeType.INDIVIDUAL:
         return Hash;
       default:
         return Hash;
     }
   };
 
-  const NodeIcon = getIconForType(node.node_type);
+  const NodeIcon = getIconForType(node.node_type || "");
 
   // Load hierarchy data for all nodes
   const { data: hierarchy, isLoading: hierarchyLoading } = useTermHierarchy(
@@ -126,12 +127,12 @@ export const StructureNodeDetails: React.FC<StructureNodeDetailsProps> = ({
 
   // Extract parent nodes from lineage
   const { parentLayer, parentDomain, parentTerm } = React.useMemo(() => {
-    const layer = lineage.find((n) => n.node_type === NodeType.LAYER);
-    const domain = lineage.find((n) => n.node_type === NodeType.DOMAIN);
+    const layer = lineage.find((n) => n.node_type === NodeType.TAXONOMY);
+    const domain = lineage.find((n) => n.node_type === NodeType.CONCEPT_SCHEME);
     // Parent term is the term that comes immediately before the current node
     const currentIndex = lineage.findIndex((n) => n.id === node.id);
     const parentTerm =
-      currentIndex > 0 && lineage[currentIndex - 1].node_type === NodeType.TERM
+      currentIndex > 0 && lineage[currentIndex - 1].node_type === NodeType.CLASS
         ? lineage[currentIndex - 1]
         : undefined;
 
@@ -180,7 +181,10 @@ export const StructureNodeDetails: React.FC<StructureNodeDetailsProps> = ({
                           href={
                             isLast
                               ? undefined
-                              : `/app/structure_nodes/${ancestorNode.id}`
+                              : getNodePath(
+                                  ancestorNode.id,
+                                  ancestorNode.node_type as string,
+                                )
                           }
                           icon={icon}
                         >
@@ -198,7 +202,7 @@ export const StructureNodeDetails: React.FC<StructureNodeDetailsProps> = ({
                   breadcrumbItems.push(
                     <BreadcrumbItem
                       key={first.id}
-                      href={`/app/structure_nodes/${first.id}`}
+                      href={getNodePath(first.id, first.node_type as string)}
                       icon={getIconForType(first.node_type as string)}
                     >
                       {first.title as string}
@@ -258,16 +262,6 @@ export const StructureNodeDetails: React.FC<StructureNodeDetailsProps> = ({
                 <Plus className="mr-2 h-4 w-4" />
                 Add Child
               </Button>
-              {node.node_type !== NodeType.LAYER && (
-                <Button
-                  color="gray"
-                  size="sm"
-                  onClick={() => setIsMoveOpen(true)}
-                >
-                  <Move className="mr-2 h-4 w-4" />
-                  Move
-                </Button>
-              )}
               <Button
                 color="gray"
                 size="sm"
@@ -284,12 +278,13 @@ export const StructureNodeDetails: React.FC<StructureNodeDetailsProps> = ({
           {/* NLP Analysis */}
           <NlpAnalysisPanel
             text={node.title}
-            textTitle={node.node_type === NodeType.TERM ? "Term" : "Title"}
+            textTitle={node.node_type === NodeType.CLASS ? "Class" : "Title"}
             domainContext={
               parentDomain
                 ? {
                     title: parentDomain.title as string,
-                    definition: (parentDomain.definition || "") as string,
+                    definition: ((parentDomain as OntologyClass)?.description ||
+                      "") as string,
                   }
                 : null
             }
@@ -297,19 +292,27 @@ export const StructureNodeDetails: React.FC<StructureNodeDetailsProps> = ({
               parentTerm
                 ? {
                     title: parentTerm.title as string,
-                    definition: (parentTerm.definition || "") as string,
+                    definition: ((parentTerm as OntologyClass)?.description ||
+                      "") as string,
                     relationshipPredicate: "child_of",
                   }
                 : null
             }
-            currentDefinition={node.definition}
+            currentDefinition={node.description}
             layerId={
-              node.node_type === NodeType.LAYER ? node.id : parentLayer?.id
+              node.node_type === NodeType.TAXONOMY ? node.id : parentLayer?.id
             }
             domainId={
-              node.node_type === NodeType.DOMAIN ? node.id : parentDomain?.id
+              node.node_type === NodeType.CONCEPT_SCHEME
+                ? node.id
+                : parentDomain?.id
             }
-            termId={node.node_type === NodeType.TERM ? node.id : undefined}
+            termId={
+              node.node_type === NodeType.CLASS ||
+              node.node_type === NodeType.INDIVIDUAL
+                ? node.id
+                : undefined
+            }
             nodeId={node.id}
           />
 
@@ -340,11 +343,18 @@ export const StructureNodeDetails: React.FC<StructureNodeDetailsProps> = ({
           <div className="pt-4" data-testid="node-children-section">
             <h2 className="text-xl font-semibold">Hierarchy</h2>
             <TreeChartPanel
-              layerId={node.node_type === NodeType.LAYER ? node.id : undefined}
-              domainId={
-                node.node_type === NodeType.DOMAIN ? node.id : undefined
+              layerId={
+                node.node_type === NodeType.TAXONOMY ? node.id : undefined
               }
-              termId={node.node_type === NodeType.TERM ? node.id : undefined}
+              domainId={
+                node.node_type === NodeType.CONCEPT_SCHEME ? node.id : undefined
+              }
+              termId={
+                node.node_type === NodeType.CLASS ||
+                node.node_type === NodeType.INDIVIDUAL
+                  ? node.id
+                  : undefined
+              }
             />
           </div>
         </div>
@@ -360,21 +370,36 @@ export const StructureNodeDetails: React.FC<StructureNodeDetailsProps> = ({
         isOpen={isAddChildOpen}
         onClose={() => setIsAddChildOpen(false)}
       />
-      <MoveModal
-        node={node}
-        isOpen={isMoveOpen}
-        onClose={() => setIsMoveOpen(false)}
-      />
     </>
   );
 };
 
 // Editable Definition Component
-const EditableDefinition: React.FC<{ node: StructureNode }> = ({ node }) => {
+const EditableDefinition: React.FC<{ node: OntologyClass }> = ({ node }) => {
   const [isEditing, setIsEditing] = React.useState(false);
-  const [value, setValue] = React.useState(node.definition || "");
+  const [value, setValue] = React.useState(node.description || "");
   const textareaRef = React.useRef<HTMLTextAreaElement>(null);
-  const updateMutation = useUpdateStructureNode();
+
+  // Get the appropriate mutation based on node type
+  const taxonomyMutation = useUpdateTaxonomy();
+  const conceptSchemeMutation = useUpdateConceptScheme();
+  const ontologyClassMutation = useUpdateOntologyClass();
+
+  // Select the appropriate mutation based on node type
+  const getUpdateMutation = () => {
+    switch (node.node_type) {
+      case NodeType.TAXONOMY:
+        return taxonomyMutation;
+      case NodeType.CONCEPT_SCHEME:
+        return conceptSchemeMutation;
+      case NodeType.CLASS:
+        return ontologyClassMutation;
+      default:
+        return taxonomyMutation;
+    }
+  };
+
+  const updateMutation = getUpdateMutation();
 
   // Auto-resize textarea to fit content
   const autoResizeTextarea = React.useCallback(() => {
@@ -389,8 +414,8 @@ const EditableDefinition: React.FC<{ node: StructureNode }> = ({ node }) => {
 
   // Update value when node changes
   React.useEffect(() => {
-    setValue(node.definition || "");
-  }, [node.definition]);
+    setValue(node.description || "");
+  }, [node.description]);
 
   // Focus textarea and resize when entering edit mode
   React.useEffect(() => {
@@ -408,7 +433,7 @@ const EditableDefinition: React.FC<{ node: StructureNode }> = ({ node }) => {
     try {
       await updateMutation.mutateAsync({
         id: node.id,
-        data: { definition: value },
+        data: { description: value },
       });
       setIsEditing(false);
       toast.success("Definition updated successfully");
@@ -420,7 +445,7 @@ const EditableDefinition: React.FC<{ node: StructureNode }> = ({ node }) => {
   };
 
   const handleCancel = () => {
-    setValue(node.definition || "");
+    setValue(node.description || "");
     setIsEditing(false);
   };
 
@@ -483,7 +508,7 @@ const EditableDefinition: React.FC<{ node: StructureNode }> = ({ node }) => {
       className="-m-2 min-h-[4rem] cursor-text rounded p-2 text-base leading-relaxed font-normal text-gray-700 transition-colors hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-800"
       title="Double-click to edit"
     >
-      {node.definition || (
+      {node.description || (
         <span className="text-gray-400 italic dark:text-gray-500">
           No definition provided. Double-click to add one.
         </span>
@@ -499,32 +524,36 @@ const EditableDefinition: React.FC<{ node: StructureNode }> = ({ node }) => {
 
 // Edit Modal
 const EditModal: React.FC<{
-  node: StructureNode;
+  node: OntologyClass;
   isOpen: boolean;
   onClose: () => void;
 }> = ({ node, isOpen, onClose }) => {
   const queryClient = useQueryClient();
 
-  const handleSuccess = () => {
+  const handleSuccess = async () => {
     onClose();
 
     try {
-      queryClient.invalidateQueries({
-        queryKey: [QUERY_KEYS.STRUCTURE_NODES, node.id],
+      await queryClient.invalidateQueries({
+        queryKey: [QUERY_KEYS.ONTOLOGY_CLASSES, node.id],
       });
-      queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.STRUCTURE_NODES] });
+      await queryClient.invalidateQueries({
+        queryKey: [QUERY_KEYS.ONTOLOGY_CLASSES],
+      });
     } catch (e) {
-      console.warn("Failed to invalidate node queries", e);
+      const errorMsg =
+        e instanceof Error ? e.message : "Failed to refresh data";
+      toast.error(`Failed to refresh node data: ${errorMsg}`);
     }
   };
 
   const getModalTitle = () => {
     switch (node.node_type) {
-      case NodeType.LAYER:
+      case NodeType.TAXONOMY:
         return "Edit Layer";
-      case NodeType.DOMAIN:
+      case NodeType.CONCEPT_SCHEME:
         return "Edit Domain";
-      case NodeType.TERM:
+      case NodeType.CLASS:
         return "Edit Term";
       default:
         return "Edit Node";
@@ -533,11 +562,11 @@ const EditModal: React.FC<{
 
   const getForm = () => {
     switch (node.node_type) {
-      case NodeType.LAYER:
+      case NodeType.TAXONOMY:
         return <LayerForm layer={node} onSuccess={handleSuccess} />;
-      case NodeType.DOMAIN:
+      case NodeType.CONCEPT_SCHEME:
         return <DomainForm domain={node} onSuccess={handleSuccess} />;
-      case NodeType.TERM:
+      case NodeType.CLASS:
         return <TermForm term={node} onSuccess={handleSuccess} />;
       default:
         return null;
@@ -554,32 +583,36 @@ const EditModal: React.FC<{
 
 // Add Child Modal
 const AddChildModal: React.FC<{
-  node: StructureNode;
+  node: OntologyClass;
   isOpen: boolean;
   onClose: () => void;
 }> = ({ node, isOpen, onClose }) => {
   const queryClient = useQueryClient();
 
-  const handleSuccess = () => {
+  const handleSuccess = async () => {
     onClose();
 
     try {
-      queryClient.invalidateQueries({
-        queryKey: [QUERY_KEYS.STRUCTURE_NODES, node.id],
+      await queryClient.invalidateQueries({
+        queryKey: [QUERY_KEYS.ONTOLOGY_CLASSES, node.id],
       });
-      queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.STRUCTURE_NODES] });
+      await queryClient.invalidateQueries({
+        queryKey: [QUERY_KEYS.ONTOLOGY_CLASSES],
+      });
     } catch (e) {
-      console.warn("Failed to invalidate node queries", e);
+      const errorMsg =
+        e instanceof Error ? e.message : "Failed to refresh data";
+      toast.error(`Failed to refresh node data: ${errorMsg}`);
     }
   };
 
   const getModalTitle = () => {
     switch (node.node_type) {
-      case NodeType.LAYER:
+      case NodeType.TAXONOMY:
         return "Add Domain";
-      case NodeType.DOMAIN:
+      case NodeType.CONCEPT_SCHEME:
         return "Add Term";
-      case NodeType.TERM:
+      case NodeType.CLASS:
         return "Add Child Term";
       default:
         return "Add Child Node";
@@ -588,7 +621,7 @@ const AddChildModal: React.FC<{
 
   const getForm = () => {
     switch (node.node_type) {
-      case NodeType.LAYER:
+      case NodeType.TAXONOMY:
         return (
           <DomainForm
             parentLayerId={node.id}
@@ -597,7 +630,7 @@ const AddChildModal: React.FC<{
             onSuccess={handleSuccess}
           />
         );
-      case NodeType.DOMAIN:
+      case NodeType.CONCEPT_SCHEME:
         return (
           <TermForm
             parentDomainId={node.id}
@@ -606,76 +639,13 @@ const AddChildModal: React.FC<{
             onSuccess={handleSuccess}
           />
         );
-      case NodeType.TERM:
+      case NodeType.CLASS:
         return (
           <TermForm
             parentTermId={node.id}
             parentTerm={node}
             mode="child"
             onSuccess={handleSuccess}
-          />
-        );
-      default:
-        return null;
-    }
-  };
-
-  return (
-    <Modal show={isOpen} onClose={onClose}>
-      <ModalHeader className="border-b-0">{getModalTitle()}</ModalHeader>
-      <ModalBody>{getForm()}</ModalBody>
-    </Modal>
-  );
-};
-
-// Move Modal
-const MoveModal: React.FC<{
-  node: StructureNode;
-  isOpen: boolean;
-  onClose: () => void;
-}> = ({ node, isOpen, onClose }) => {
-  const queryClient = useQueryClient();
-
-  const handleSuccess = () => {
-    onClose();
-
-    try {
-      queryClient.invalidateQueries({
-        queryKey: [QUERY_KEYS.STRUCTURE_NODES, node.id],
-      });
-      queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.STRUCTURE_NODES] });
-    } catch (e) {
-      console.warn("Failed to invalidate node queries", e);
-    }
-  };
-
-  const getModalTitle = () => {
-    switch (node.node_type) {
-      case NodeType.DOMAIN:
-        return "Move Domain";
-      case NodeType.TERM:
-        return "Move Term";
-      default:
-        return "Move Node";
-    }
-  };
-
-  const getForm = () => {
-    switch (node.node_type) {
-      case NodeType.DOMAIN:
-        return (
-          <DomainMoveForm
-            selectedNodes={[node]}
-            onSuccess={handleSuccess}
-            onCancel={onClose}
-          />
-        );
-      case NodeType.TERM:
-        return (
-          <TermMoveForm
-            selectedNodes={[node]}
-            onSuccess={handleSuccess}
-            onCancel={onClose}
           />
         );
       default:

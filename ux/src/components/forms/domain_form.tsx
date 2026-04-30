@@ -2,18 +2,18 @@ import React from "react";
 import { useForm } from "@tanstack/react-form";
 import { TextInput, Textarea, Button, Alert, Label } from "flowbite-react";
 import { Info, Layers } from "lucide-react";
-import type { StructureNode } from "@/api/types/structureNodes";
-import { useCreateDomain } from "@/api/hooks/structure_nodes/useStructureNodeMutations";
-import { useUpdateStructureNode } from "@/api/hooks/structure_nodes/useStructureNodeMutations";
+import type { ConceptScheme } from "@/api/types/ontology";
+import { useCreateConceptScheme } from "@/api/hooks/conceptSchemes/useConceptSchemes";
+import { useUpdateConceptScheme } from "@/api/hooks/conceptSchemes/useConceptSchemes";
 import { LayerSelector } from "@/components/node_selectors/layer_selector";
-import { PredicateSelector } from "@/components/node_selectors/predicate_selector";
+import { useButterToast } from "@/hooks/useButterToast";
 
 interface DomainFormProps {
-  onSuccess?: (domain: StructureNode) => void;
-  domain?: StructureNode; // For edit mode
+  onSuccess?: (domain: ConceptScheme) => void;
+  domain?: ConceptScheme; // For edit mode
   // Child form props
   parentLayerId?: string;
-  parentLayer?: StructureNode; // Full object for better UX
+  parentLayer?: ConceptScheme; // Full object for better UX
   mode?: "create" | "edit" | "child";
 }
 
@@ -24,17 +24,17 @@ const DomainForm: React.FC<DomainFormProps> = ({
   parentLayer,
   mode = "create",
 }) => {
-  const createDomainMutation = useCreateDomain();
-  const updateDomainMutation = useUpdateStructureNode();
+  const createDomainMutation = useCreateConceptScheme();
+  const updateDomainMutation = useUpdateConceptScheme();
+  const toast = useButterToast();
   const isEdit = !!domain;
   const isChildMode = mode === "child" || !!parentLayerId;
   const [submitError, setSubmitError] = React.useState<string | null>(null);
 
   const getDefaultValues = () => ({
     title: domain?.title ?? "",
-    definition: domain?.definition ?? "",
-    parent_node_id: domain?.parent_node_id ?? parentLayerId ?? "",
-    structural_predicate_id: domain?.structural_predicate_id ?? undefined,
+    description: domain?.description ?? "",
+    taxonomy_id: domain?.taxonomy_id ?? parentLayerId ?? "",
   });
 
   const form = useForm({
@@ -46,31 +46,25 @@ const DomainForm: React.FC<DomainFormProps> = ({
         if (isEdit && domain?.id) {
           result = await updateDomainMutation.mutateAsync({
             id: domain.id,
-            data: value,
+            data: {
+              title: value.title,
+              description: value.description,
+            },
           });
         } else {
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          const createData: any = {
+          const createData = {
             title: value.title,
-            definition: value.definition,
+            description: value.description,
           };
 
-          // Only include structural_predicate_id if it has a value
-          if (value.structural_predicate_id) {
-            createData.structural_predicate_id = value.structural_predicate_id;
-          }
-
           result = await createDomainMutation.mutateAsync({
-            layerId: value.parent_node_id,
+            taxonomyId: value.taxonomy_id,
             data: createData,
           });
         }
         if (onSuccess) onSuccess(result);
         form.reset();
-      } catch (
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        error: any
-      ) {
+      } catch (error: any) {
         let message: string;
         // Log the full error for debugging
         console.error("Full error object:", error);
@@ -84,12 +78,7 @@ const DomainForm: React.FC<DomainFormProps> = ({
           error?.detail;
 
         if (Array.isArray(detail)) {
-          message = detail
-            .map(
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              (d: any) => d.msg,
-            )
-            .join("; ");
+          message = detail.map((d: any) => d.msg).join("; ");
         } else if (error?.message) {
           message = error.message;
         } else if (typeof error === "string") {
@@ -98,7 +87,7 @@ const DomainForm: React.FC<DomainFormProps> = ({
           message = JSON.stringify(error);
         }
         setSubmitError(message);
-        // TODO: Use useButterToast for error notification
+        toast.error(message);
         console.error(
           isEdit ? "Failed to update domain:" : "Failed to create domain:",
           error,
@@ -121,7 +110,7 @@ const DomainForm: React.FC<DomainFormProps> = ({
           <div className="rounded-lg bg-blue-50 p-4 dark:bg-blue-900/20">
             <div className="flex items-center gap-2 text-sm text-blue-700 dark:text-blue-300">
               <Info className="h-4 w-4" />
-              <span>Creating domain in layer:</span>
+              <span>Creating concept scheme in taxonomy:</span>
             </div>
             <div className="mt-1 flex items-center gap-2">
               <Layers className="h-5 w-5 text-blue-600 dark:text-blue-400" />
@@ -161,21 +150,21 @@ const DomainForm: React.FC<DomainFormProps> = ({
             </div>
           )}
         </form.Field>
-        <form.Field name="definition">
+        <form.Field name="description">
           {(field) => (
             <div>
               <Label
-                htmlFor="domain-definition"
+                htmlFor="domain-description"
                 className="mb-1 block font-medium"
               >
-                Definition
+                Description
               </Label>
               <Textarea
-                id="domain-definition"
-                placeholder="Definition"
+                id="domain-description"
+                placeholder="Description"
                 value={field.state.value}
                 onChange={(e) => field.handleChange(e.target.value)}
-                data-testid="domain-definition-input"
+                data-testid="domain-description-input"
               />
               {field.state.meta.errors.length > 0 && (
                 <div className="mt-1 text-sm text-red-600">
@@ -189,24 +178,24 @@ const DomainForm: React.FC<DomainFormProps> = ({
         {/* Hide layer selector in child mode */}
         {!isChildMode && (
           <form.Field
-            name="parent_node_id"
+            name="taxonomy_id"
             validators={{
               onChange: ({ value }) =>
-                !value ? "Layer is required" : undefined,
+                !value ? "Taxonomy is required" : undefined,
             }}
           >
             {(field) => (
               <div>
                 <Label
-                  htmlFor="domain-layer"
+                  htmlFor="domain-taxonomy"
                   className="mb-1 block font-medium"
                 >
-                  Layer
+                  Taxonomy
                 </Label>
                 <LayerSelector
                   value={field.state.value}
                   onSelect={(layer) => field.handleChange(layer?.id || "")}
-                  data-testid="domain-layer-selector"
+                  data-testid="domain-taxonomy-selector"
                 />
                 {field.state.meta.errors.length > 0 && (
                   <div className="mt-1 text-sm text-red-600">
@@ -217,38 +206,6 @@ const DomainForm: React.FC<DomainFormProps> = ({
             )}
           </form.Field>
         )}
-
-        {/* Predicate Fields */}
-        <form.Field name="structural_predicate_id">
-          {(field) => (
-            <div>
-              <Label
-                htmlFor="domain-primary-predicate"
-                className="mb-1 block font-medium"
-              >
-                Structural Predicate (optional)
-              </Label>
-              <PredicateSelector
-                value={field.state.value}
-                onSelect={(predicate) => {
-                  const predicateId = predicate?.id || undefined;
-                  field.handleChange(predicateId);
-
-                  // Structural predicate selection
-                }}
-              />
-              <p className="mt-1 text-sm text-gray-500">
-                The predicate that defines this domain's core hierarchical
-                relationships
-              </p>
-              {field.state.meta.errors.length > 0 && (
-                <div className="mt-1 text-sm text-red-600">
-                  {field.state.meta.errors[0]}
-                </div>
-              )}
-            </div>
-          )}
-        </form.Field>
 
         {submitError && (
           <Alert color="failure" className="mb-2" icon={Info}>
@@ -274,8 +231,8 @@ const DomainForm: React.FC<DomainFormProps> = ({
               : isEdit
                 ? "Save Changes"
                 : isChildMode
-                  ? "Create Domain"
-                  : "Create Domain"}
+                  ? "Create Concept Scheme"
+                  : "Create Concept Scheme"}
           </Button>
         </div>
       </form>

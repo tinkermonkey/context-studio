@@ -1,12 +1,10 @@
 import React from "react";
 import { Spinner } from "flowbite-react";
 import { TreeMenu } from "@/components/graphs/tree_menu/tree_menu";
-import {
-  useLayerNodes,
-  useDomainNodes,
-  useTermNodes,
-  useStructureNode,
-} from "@/api/hooks/structure_nodes/useStructureNodes";
+import { useTaxonomies } from "@/api/hooks/taxonomies/useTaxonomies";
+import { useConceptSchemes } from "@/api/hooks/conceptSchemes/useConceptSchemes";
+import { useOntologyClasses } from "@/api/hooks/ontologyClasses/useOntologyClasses";
+import { useOntologyClass } from "@/api/hooks/ontologyClasses/useOntologyClasses";
 import { useTermHierarchy } from "@/api/hooks/graph/useGraph";
 import {
   buildHierarchicalTree,
@@ -16,7 +14,6 @@ import {
 } from "@/utils/treeBuilder";
 import { ChartData } from "@/components/graphs/tree_chart/tree_data";
 import { apiLogger } from "@/api/utils/logger";
-import { NodeType } from "@/api/types/structureNodes";
 
 export interface TreeChartPanelProps {
   /**
@@ -80,27 +77,49 @@ export function TreeChartPanel({
 }: TreeChartPanelProps) {
   // Load all base data
   const {
-    data: layers,
+    data: taxonomies,
     isLoading: layersLoading,
     error: layersError,
-  } = useLayerNodes();
+  } = useTaxonomies();
   const {
-    data: domains,
+    data: conceptSchemes,
     isLoading: domainsLoading,
     error: domainsError,
-  } = useDomainNodes();
+  } = useConceptSchemes();
   const {
-    data: terms,
+    data: ontologyClasses,
     isLoading: termsLoading,
     error: termsError,
-  } = useTermNodes();
+  } = useOntologyClasses();
+
+  // Transform data to compatible format for treeBuilder
+  const layers = taxonomies?.map((t) => ({
+    ...t,
+    node_type: "layer",
+    parent_node_id: null,
+    definition: t.description || "",
+  }));
+
+  const domains = conceptSchemes?.map((cs) => ({
+    ...cs,
+    node_type: "domain",
+    parent_node_id: cs.taxonomy_id,
+    definition: cs.description || "",
+  }));
+
+  const terms = ontologyClasses?.map((oc) => ({
+    ...oc,
+    node_type: "term",
+    parent_node_id: oc.parent_class_id || oc.concept_scheme_id,
+    definition: oc.description || "",
+  }));
 
   // Load specific term if termId is provided
   const {
     data: targetTerm,
     isLoading: termLoading,
     error: termError,
-  } = useStructureNode(termId || "");
+  } = useOntologyClass(termId || "");
 
   // Load term hierarchy to get all ancestors
   const {
@@ -109,19 +128,17 @@ export function TreeChartPanel({
     error: hierarchyError,
   } = useTermHierarchy(termId || "");
 
-  // Load specific domain if domainId is provided
-  const {
-    data: targetDomain,
-    isLoading: domainLoading,
-    error: domainError,
-  } = useStructureNode(domainId || "");
+  // Load specific domain if domainId is provided - need to find from conceptSchemes
+  const targetDomain =
+    domainId && domains ? domains.find((d) => d.id === domainId) : null;
+  const domainLoading = domainsLoading;
+  const domainError = domainsError;
 
-  // Load specific layer if layerId is provided
-  const {
-    data: targetLayer,
-    isLoading: layerLoading,
-    error: layerError,
-  } = useStructureNode(layerId || "");
+  // Load specific layer if layerId is provided - need to find from taxonomies
+  const targetLayer =
+    layerId && layers ? layers.find((l) => l.id === layerId) : null;
+  const layerLoading = layersLoading;
+  const layerError = layersError;
 
   // Determine loading state
   const isLoading =
@@ -132,8 +149,8 @@ export function TreeChartPanel({
     (domainId && domainLoading) ||
     (layerId && layerLoading);
 
-  // Determine error state
-  const error =
+  // Determine error state (will be updated to include buildError)
+  const loadError =
     layersError ||
     domainsError ||
     termsError ||
@@ -142,12 +159,13 @@ export function TreeChartPanel({
     (layerId && layerError);
 
   // Build chart data and collect initial expand state
-  const { chartData, initialExpandState } = React.useMemo((): {
+  const { chartData, initialExpandState, buildError } = React.useMemo((): {
     chartData: ChartData | null;
     initialExpandState?: string[];
+    buildError: Error | null;
   } => {
     if (!layers || !domains || !terms) {
-      return { chartData: null };
+      return { chartData: null, buildError: null };
     }
 
     try {
@@ -167,9 +185,16 @@ export function TreeChartPanel({
       let allLayers = layers;
 
       if (termId && targetTerm) {
-        // Add targetTerm if not present
+        // Add targetTerm if not present - transform to include required properties
         if (!terms.some((t) => t.id === termId)) {
-          allTerms = [...terms, targetTerm];
+          const transformedTerm = {
+            ...targetTerm,
+            node_type: "term",
+            parent_node_id:
+              targetTerm.parent_class_id || targetTerm.concept_scheme_id,
+            definition: targetTerm.description || "",
+          };
+          allTerms = [...terms, transformedTerm];
         }
 
         // Process ancestors from hierarchy to ensure they're in the tree
@@ -191,17 +216,13 @@ export function TreeChartPanel({
               allTerms = [
                 ...allTerms,
                 {
+                  ...targetTerm,
                   id: ancestorTerm.id,
                   title: ancestorTerm.title,
                   definition: ancestorTerm.definition || "",
-                  node_type: NodeType.TERM,
-                  parent_node_id: ancestorTerm.parent_node_id,
-                  structural_predicate_id: undefined,
-                  title_embedding: undefined,
-                  definition_embedding: undefined,
-                  created_at: "",
-                  version: 1,
-                  last_modified: "",
+                  node_type: "class",
+                  parent_node_id:
+                    ancestorTerm.parent_node_id || targetTerm.concept_scheme_id,
                 },
               ];
             }
@@ -214,17 +235,12 @@ export function TreeChartPanel({
               allDomains = [
                 ...allDomains,
                 {
+                  ...domains[0],
                   id: ancestorDomain.id,
                   title: ancestorDomain.title,
                   definition: ancestorDomain.definition || "",
-                  node_type: NodeType.DOMAIN,
-                  parent_node_id: ancestorDomain.parent_node_id,
-                  structural_predicate_id: undefined,
-                  title_embedding: undefined,
-                  definition_embedding: undefined,
-                  created_at: "",
-                  version: 1,
-                  last_modified: "",
+                  node_type: "scheme",
+                  parent_node_id: ancestorDomain.parent_node_id || "",
                 },
               ];
             }
@@ -237,17 +253,12 @@ export function TreeChartPanel({
               allLayers = [
                 ...allLayers,
                 {
+                  ...layers[0],
                   id: ancestorLayer.id,
                   title: ancestorLayer.title,
                   definition: ancestorLayer.definition || "",
-                  node_type: NodeType.LAYER,
-                  parent_node_id: ancestorLayer.parent_node_id,
-                  structural_predicate_id: undefined,
-                  title_embedding: undefined,
-                  definition_embedding: undefined,
-                  created_at: "",
-                  version: 1,
-                  last_modified: "",
+                  node_type: "taxonomy",
+                  parent_node_id: null,
                 },
               ];
             }
@@ -309,6 +320,7 @@ export function TreeChartPanel({
             root: filteredTree,
           } as ChartData,
           initialExpandState: nodeIdsToExpand,
+          buildError: null,
         };
       }
 
@@ -317,15 +329,17 @@ export function TreeChartPanel({
         chartData: {
           root: completeTree,
         } as ChartData,
+        buildError: null,
       };
     } catch (err) {
+      const error = err instanceof Error ? err : new Error(String(err));
       apiLogger.error("Error building chart data", {
-        error: err,
+        error,
         termId,
         domainId,
         layerId,
       });
-      return { chartData: null };
+      return { chartData: null, buildError: error };
     }
   }, [
     layers,
@@ -350,8 +364,9 @@ export function TreeChartPanel({
   }
 
   // Handle error state
-  if (error) {
-    apiLogger.error("TreeChartPanel error", { error, termId });
+  const displayError = buildError || loadError;
+  if (displayError) {
+    apiLogger.error("TreeChartPanel error", { error: displayError, termId });
 
     if (errorComponent) {
       return <div className={className}>{errorComponent}</div>;
@@ -364,8 +379,8 @@ export function TreeChartPanel({
         <div className="text-center">
           <p className="text-lg font-semibold">Error loading data</p>
           <p className="mt-2 text-sm">
-            {error instanceof Error
-              ? error.message
+            {displayError instanceof Error
+              ? displayError.message
               : "An unexpected error occurred"}
           </p>
         </div>

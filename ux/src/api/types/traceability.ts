@@ -8,7 +8,7 @@
 // Core traceability interfaces matching the API specification
 export interface SelectionRecordRequest {
   execution_id: string;
-  record_type: "structure_node";
+  record_type: "ontologyClass";
   record_id: string;
   suggestion_field: string;
   selected_content: string;

@@ -2,17 +2,17 @@ import React from "react";
 import { Button } from "flowbite-react";
 import { Plus } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
-import type { StructureNode } from "@/api/types/structureNodes";
+import type { OntologyClass } from "@/api/types/ontology";
 import { CreateChildModal } from "./create_child_modal";
 import { DomainForm } from "@/components/forms/domain_form";
 import { TermForm } from "@/components/forms/term_form";
 
 interface CreateChildButtonProps {
-  parentType: "layer" | "domain" | "term";
+  parentType: "taxonomy" | "concept_scheme" | "class";
   parentId: string;
-  parentObject: StructureNode;
-  childType: "domain" | "term";
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  parentObject: OntologyClass;
+  childType: "concept_scheme" | "class";
+
   onSuccess?: (child: any) => void;
   className?: string;
   size?: "xs" | "sm" | "md" | "lg" | "xl";
@@ -44,16 +44,16 @@ export const CreateChildButton: React.FC<CreateChildButtonProps> = ({
     });
 
     // Invalidate specific list queries
-    if (childType === "domain") {
+    if (childType === "concept_scheme") {
       queryClient.invalidateQueries({
         queryKey: ["domains", { layer_id: parentId }],
       });
-    } else if (childType === "term") {
-      if (parentType === "domain") {
+    } else if (childType === "class") {
+      if (parentType === "concept_scheme") {
         queryClient.invalidateQueries({
           queryKey: ["terms", { domain_id: parentId }],
         });
-      } else if (parentType === "term") {
+      } else if (parentType === "class") {
         queryClient.invalidateQueries({
           queryKey: ["terms", { parent_term_id: parentId }],
         });
@@ -61,7 +61,6 @@ export const CreateChildButton: React.FC<CreateChildButtonProps> = ({
     }
   };
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleSuccess = (child: any) => {
     setIsModalOpen(false);
 
@@ -74,39 +73,39 @@ export const CreateChildButton: React.FC<CreateChildButtonProps> = ({
   };
 
   const getModalTitle = () => {
-    if (childType === "domain") {
-      return `Create Domain in Layer: ${parentObject.title}`;
+    if (childType === "concept_scheme") {
+      return `Create Concept Scheme in Taxonomy: ${parentObject.title}`;
     } else {
-      return `Create Term in ${parentType === "domain" ? "Domain" : "Parent Term"}: ${parentObject.title}`;
+      return `Create Class in ${parentType === "concept_scheme" ? "Concept Scheme" : "Parent Class"}: ${parentObject.title}`;
     }
   };
 
   const renderForm = () => {
-    if (childType === "domain" && parentType === "layer") {
+    if (childType === "concept_scheme" && parentType === "taxonomy") {
       return (
         <DomainForm
           onSuccess={handleSuccess}
           parentLayerId={parentId}
-          parentLayer={parentObject as StructureNode}
+          parentLayer={parentObject as OntologyClass}
           mode="child"
         />
       );
-    } else if (childType === "term") {
-      if (parentType === "domain") {
+    } else if (childType === "class") {
+      if (parentType === "concept_scheme") {
         return (
           <TermForm
             onSuccess={handleSuccess}
             parentDomainId={parentId}
-            parentDomain={parentObject as StructureNode}
+            parentDomain={parentObject as OntologyClass}
             mode="child"
           />
         );
-      } else if (parentType === "term") {
+      } else if (parentType === "class") {
         return (
           <TermForm
             onSuccess={handleSuccess}
             parentTermId={parentId}
-            parentTerm={parentObject as StructureNode}
+            parentTerm={parentObject as OntologyClass}
             mode="child"
           />
         );

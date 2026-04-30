@@ -6,6 +6,7 @@
 
 import { BaseService } from "./base";
 import { ENDPOINTS } from "../config";
+import { apiLogger } from "../utils/logger";
 import type {
   PipelineExecutionRequest,
   PipelineExecutionResponse,
@@ -39,9 +40,9 @@ export interface LegacyTermDefinitionRequest {
     definition?: string;
     relationship_predicate?: string;
   }>;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
   dbpedia_context?: Record<string, any>;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
   wikidata_context?: Record<string, any>;
   flavor?: string;
 }
@@ -94,10 +95,25 @@ export class PipelineExecutionService extends BaseService {
   ): Promise<PipelineExecutionResponse> {
     // For now, fall back to non-streaming execution
     // TODO: Implement proper streaming with server-sent events
-    console.warn(
-      "Streaming not yet implemented, falling back to regular execution",
+    apiLogger.warn(
+      "Streaming execution not yet implemented, falling back to regular execution",
+      {
+        pipeline_type: request.pipeline_type,
+        note: "Callers expecting progressive output will receive blocking response",
+      },
     );
-    return this.executePipeline(request);
+
+    // Call executePipeline directly (which has its own error context wrapper)
+    this.validateRequired(request.pipeline_type, "pipeline_type");
+    this.validateRequired(request.flavor_id, "flavor_id");
+    this.validateRequired(request.context_data, "context_data");
+
+    return this.withErrorContext(() => {
+      return this.postResource<PipelineExecutionResponse>(
+        `${ENDPOINTS.LLM}/execute_pipeline`,
+        request,
+      );
+    }, "executing pipeline");
   }
 
   /**
@@ -164,17 +180,18 @@ export class PipelineExecutionService extends BaseService {
   /**
    * Convert new generic response to legacy term definition response format
    */
-
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   convertToLegacyTermResponse(response: PipelineExecutionResponse): any {
     // Parse the response_content as JSON if it's a string
-
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let parsedResult: any = response.response_content;
     if (typeof response.response_content === "string") {
       try {
         parsedResult = JSON.parse(response.response_content);
-      } catch {
+      } catch (error) {
+        // Log parsing failure to enable debugging
+        apiLogger.warn(
+          "Failed to parse pipeline response as JSON, treating as plain text",
+          { response_content: response.response_content, error },
+        );
         // If parsing fails, treat as plain text definition
         parsedResult = { definition: response.response_content };
       }
@@ -192,15 +209,17 @@ export class PipelineExecutionService extends BaseService {
   /**
    * Convert new generic response to legacy domain definition response format
    */
-
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   convertToLegacyDomainResponse(response: PipelineExecutionResponse): any {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let parsedResult: any = response.response_content;
     if (typeof response.response_content === "string") {
       try {
         parsedResult = JSON.parse(response.response_content);
-      } catch {
+      } catch (error) {
+        // Log parsing failure to enable debugging
+        apiLogger.warn(
+          "Failed to parse pipeline response as JSON, treating as plain text",
+          { response_content: response.response_content, error },
+        );
         parsedResult = { definition: response.response_content };
       }
     }
@@ -216,15 +235,17 @@ export class PipelineExecutionService extends BaseService {
   /**
    * Convert new generic response to legacy layer definition response format
    */
-
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   convertToLegacyLayerResponse(response: PipelineExecutionResponse): any {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let parsedResult: any = response.response_content;
     if (typeof response.response_content === "string") {
       try {
         parsedResult = JSON.parse(response.response_content);
-      } catch {
+      } catch (error) {
+        // Log parsing failure to enable debugging
+        apiLogger.warn(
+          "Failed to parse pipeline response as JSON, treating as plain text",
+          { response_content: response.response_content, error },
+        );
         parsedResult = { definition: response.response_content };
       }
     }

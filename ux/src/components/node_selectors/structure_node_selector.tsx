@@ -6,15 +6,15 @@
 
 import React, { useMemo } from "react";
 
-import { StructureNode, NodeType } from "@/api/types/structureNodes";
+import { OntologyClass, NodeType } from "@/api/types/ontology";
 import {
   PortalRecordSelector,
   FieldMap,
 } from "@/components/node_selectors/portal_record_selector";
-import { useStructureNodes } from "@/api/hooks/structure_nodes/useStructureNodes";
+import { useOntologyClasses } from "@/api/hooks/ontologyClasses/useOntologyClasses";
 
-export interface StructureNodeSelectorProps {
-  onSelect?: (node: StructureNode | undefined) => void;
+export interface OntologyClassSelectorProps {
+  onSelect?: (node: OntologyClass | undefined) => void;
   value?: string;
   excludeNodeIds?: string[]; // Prevent selection of specific nodes (e.g., current node)
   nodeType?: NodeType; // Optional filter by node type
@@ -23,7 +23,7 @@ export interface StructureNodeSelectorProps {
   "data-testid"?: string;
 }
 
-export const StructureNodeSelector: React.FC<StructureNodeSelectorProps> = ({
+export const OntologyClassSelector: React.FC<OntologyClassSelectorProps> = ({
   onSelect,
   value,
   excludeNodeIds = [],
@@ -32,22 +32,29 @@ export const StructureNodeSelector: React.FC<StructureNodeSelectorProps> = ({
   disabled = false,
   "data-testid": dataTestId,
 }) => {
-  // Fetch all nodes or filter by type
-  const {
-    data: nodes,
-    isLoading,
-    error,
-  } = useStructureNodes(nodeType ? { node_type: nodeType } : undefined);
+  // Fetch all nodes
+  const { data: nodes, isLoading, error } = useOntologyClasses();
 
-  // Filter out excluded nodes
+  // Filter by type and excluded nodes
   const filteredNodes = useMemo(() => {
     if (!nodes) return [];
-    if (excludeNodeIds.length === 0) return nodes;
-    return nodes.filter((node) => !excludeNodeIds.includes(node.id));
-  }, [nodes, excludeNodeIds]);
+    let filtered = nodes;
+
+    // Filter by node type if provided
+    if (nodeType) {
+      filtered = filtered.filter((node) => node.node_type === nodeType);
+    }
+
+    // Filter out excluded nodes
+    if (excludeNodeIds.length > 0) {
+      filtered = filtered.filter((node) => !excludeNodeIds.includes(node.id));
+    }
+
+    return filtered;
+  }, [nodes, nodeType, excludeNodeIds]);
 
   // Field map for PortalRecordSelector
-  const fieldMap: FieldMap<StructureNode> = {
+  const fieldMap: FieldMap<OntologyClass> = {
     value: "id",
     title: "title",
     definition: "definition",
@@ -59,7 +66,7 @@ export const StructureNodeSelector: React.FC<StructureNodeSelectorProps> = ({
       loading={isLoading}
       error={error ? "Failed to load nodes" : null}
       fieldMap={fieldMap}
-      onSelect={(r) => onSelect && onSelect(r as StructureNode | undefined)}
+      onSelect={(r) => onSelect && onSelect(r as OntologyClass | undefined)}
       value={value}
       placeholder={placeholder}
       disabled={disabled}

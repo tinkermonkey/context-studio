@@ -39,9 +39,9 @@ import {
   type QueryFilter,
   type FieldDefinition,
 } from "@/components/misc/query_filters";
+import { useButterToast } from "@/hooks/useButterToast";
 
 export interface BaseNodeTableProps<T> {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   columns: any[];
   data: T[];
   isLoading?: boolean;
@@ -128,9 +128,9 @@ function BaseNodeTable<T>({
   const [showCreateModal, setShowCreateModal] = React.useState(false);
   const [showDeleteModal, setShowDeleteModal] = React.useState(false);
   const [showMoveModal, setShowMoveModal] = React.useState(false);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
   const [pendingDeleteRows, setPendingDeleteRows] = React.useState<any[]>([]);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
   const [pendingMoveRows, setPendingMoveRows] = React.useState<any[]>([]);
   const [childrenToHandle, setChildrenToHandle] = React.useState<T[]>([]);
   const [deleteOption, setDeleteOption] = React.useState<"delete" | "orphan">(
@@ -141,7 +141,8 @@ function BaseNodeTable<T>({
   );
   const [selectedCount, setSelectedCount] = React.useState(0);
   const [, setIsProcessing] = React.useState(false);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const toast = useButterToast();
+
   const tableRef = React.useRef<any>(null);
   const [columnVisibility, setColumnVisibility] = React.useState<
     Record<string, boolean>
@@ -318,21 +319,18 @@ function BaseNodeTable<T>({
 
     const searchLower = debouncedSearchTerm.toLowerCase().trim();
 
-    return (data ?? []).filter(
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (item: any) => {
-        // Search in title and definition fields
-        const title = item.title?.toLowerCase() || "";
-        const definition = item.definition?.toLowerCase() || "";
-        const id = item.id?.toLowerCase() || "";
+    return (data ?? []).filter((item: any) => {
+      // Search in title and definition fields
+      const title = item.title?.toLowerCase() || "";
+      const definition = item.definition?.toLowerCase() || "";
+      const id = item.id?.toLowerCase() || "";
 
-        return (
-          title.includes(searchLower) ||
-          definition.includes(searchLower) ||
-          id.includes(searchLower)
-        );
-      },
-    );
+      return (
+        title.includes(searchLower) ||
+        definition.includes(searchLower) ||
+        id.includes(searchLower)
+      );
+    });
   }, [data, debouncedSearchTerm]);
 
   // Handle filter changes
@@ -386,19 +384,6 @@ function BaseNodeTable<T>({
     setPageIndex(0);
   }, [debouncedSearchTerm]);
 
-  // Debug effect to track modal state changes
-  React.useEffect(() => {
-    console.log("showMoveModal changed to:", showMoveModal);
-  }, [showMoveModal]);
-
-  React.useEffect(() => {
-    console.log("selectedCount changed to:", selectedCount);
-  }, [selectedCount]);
-
-  React.useEffect(() => {
-    console.log("pendingMoveRows changed to:", pendingMoveRows.length);
-  }, [pendingMoveRows]);
-
   if (isLoading) return <Spinner />;
   if (error) {
     console.error(error);
@@ -406,19 +391,15 @@ function BaseNodeTable<T>({
   }
 
   const handleMoveSelected = () => {
-    console.log("handleMoveSelected called");
     const selectedRows = table.getSelectedRowModel().rows;
-    console.log("Selected rows:", selectedRows.length);
 
     if (selectedRows.length === 0 || !MoveForm) {
-      console.log("No rows selected or no move form");
       return;
     }
 
     setIsProcessing(true);
     setPendingMoveRows(selectedRows);
     setShowMoveModal(true);
-    console.log("Move modal should be shown");
   };
 
   const handleDeleteSelected = () => {
@@ -451,8 +432,11 @@ function BaseNodeTable<T>({
           }
         } catch (err) {
           console.error("Failed to check for children:", err);
-          // Fall back to normal delete modal
-          setShowDeleteModal(true);
+          toast.error(
+            `Failed to check for children: ${err instanceof Error ? err.message : "Unknown error"}`,
+          );
+          // Do not show the delete modal when the children check fails
+          // User should retry the delete operation after the error is resolved
         }
       })();
     } else {
@@ -484,12 +468,7 @@ function BaseNodeTable<T>({
       }
 
       // Then delete the selected items
-      await onDelete(
-        pendingDeleteRows.map(
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          (row: any) => getId(row.original),
-        ),
-      );
+      await onDelete(pendingDeleteRows.map((row: any) => getId(row.original)));
       setPendingDeleteRows([]);
       setChildrenToHandle([]);
 
@@ -500,6 +479,9 @@ function BaseNodeTable<T>({
       console.error(
         `Failed to delete selected ${typeName.toLowerCase()}s:`,
         err,
+      );
+      toast.error(
+        `Failed to delete ${typeName.toLowerCase()}s: ${err instanceof Error ? err.message : "Unknown error"}`,
       );
     }
   };
@@ -882,7 +864,6 @@ function BaseNodeTable<T>({
         <Modal
           show={showMoveModal}
           onClose={() => {
-            console.log("Move modal closing");
             setShowMoveModal(false);
             setPendingMoveRows([]);
             setIsProcessing(false);
@@ -897,7 +878,6 @@ function BaseNodeTable<T>({
             <MoveForm
               selectedNodes={pendingMoveRows.map((row) => row.original)}
               onSuccess={() => {
-                console.log("Move success");
                 setShowMoveModal(false);
                 setPendingMoveRows([]);
                 setIsProcessing(false);
@@ -906,7 +886,6 @@ function BaseNodeTable<T>({
                 }
               }}
               onCancel={() => {
-                console.log("Move cancelled");
                 setShowMoveModal(false);
                 setPendingMoveRows([]);
                 setIsProcessing(false);

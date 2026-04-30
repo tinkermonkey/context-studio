@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { API_CONFIG } from "@/api/config";
+import { apiLogger } from "@/api/utils/logger";
 
 export interface EmbeddingProgress {
   total_nodes: number;
@@ -34,46 +35,61 @@ export function useEmbeddingRegeneration() {
       return; // Already connected
     }
 
-    const wsUrl = API_CONFIG.baseURL.replace("http", "ws");
-    const ws = new WebSocket(
-      `${wsUrl}/api/embeddings/regenerate?force=${force}`,
-    );
+    const wsBase = API_CONFIG.baseURL.replace("http", "ws");
+    const wsUrl = `${wsBase}/api/embeddings/regenerate?force=${force}`;
+    const ws = new WebSocket(wsUrl);
     wsRef.current = ws;
 
     ws.onopen = () => setStatus("connected");
 
     ws.onmessage = (event) => {
-      const data = JSON.parse(event.data);
+      try {
+        const data = JSON.parse(event.data);
 
-      switch (data.type) {
-        case "connected":
-          setStatus("connected");
-          break;
+        switch (data.type) {
+          case "connected":
+            setStatus("connected");
+            break;
 
-        case "started":
-          setStatus("running");
-          setProgress(null);
-          setError(null);
-          break;
+          case "started":
+            setStatus("running");
+            setProgress(null);
+            setError(null);
+            break;
 
-        case "progress":
-          setProgress(data.progress);
-          break;
+          case "progress":
+            setProgress(data.progress);
+            break;
 
-        case "completed":
-          setStatus("completed");
-          break;
+          case "completed":
+            setStatus("completed");
+            break;
 
-        case "error":
-          setStatus("error");
-          setError(data.message);
-          break;
+          case "error":
+            setStatus("error");
+            setError(data.message);
+            break;
+        }
+      } catch (parseError) {
+        apiLogger.error("Failed to parse WebSocket message", {
+          error:
+            parseError instanceof Error
+              ? parseError.message
+              : String(parseError),
+        });
+        setStatus("error");
+        setError("Failed to parse server response");
       }
     };
 
-    ws.onerror = () => {
+    ws.onerror = (event) => {
+      apiLogger.error("WebSocket connection error", {
+        url: wsUrl,
+        readyState: ws.readyState,
+        eventType: event instanceof Event ? event.type : "unknown",
+      });
       setStatus("error");
-      setError("WebSocket connection error");
+      setError("WebSocket connection error. Check logs for details.");
     };
 
     ws.onclose = () => setStatus("disconnected");
@@ -88,10 +104,27 @@ export function useEmbeddingRegeneration() {
 
   const stopRegeneration = async () => {
     try {
-      const response = await fetch("/api/embeddings/stop", { method: "POST" });
+      const url = `${API_CONFIG.baseURL}/api/embeddings/stop`;
+      const response = await fetch(url, {
+        method: "POST",
+      });
+
+      if (!response.ok) {
+        apiLogger.error("Stop regeneration request failed", {
+          url,
+          status: response.status,
+          statusText: response.statusText,
+        });
+        setError(`Failed to stop regeneration (HTTP ${response.status})`);
+        return false;
+      }
+
       const result = await response.json();
       return result.stopped;
-    } catch {
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      apiLogger.error("Stop regeneration error", { error: errorMessage });
       setError("Failed to stop regeneration");
       return false;
     }

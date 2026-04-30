@@ -118,10 +118,6 @@ export function buildGroupedTreeStructure(
         depth: 1,
       };
 
-      console.log(
-        `Creating predicate node: ${subjectId} -[${predicate}]-> ${groupLinks[0].object}`,
-      );
-
       nodeMap.set(subjectPredicateNodeId, predicateNode);
       predicateNodeMap.set(key, subjectPredicateNodeId);
       predicateNodeMap.set(predicateObjectKey, subjectPredicateNodeId);
@@ -261,7 +257,7 @@ export function convertToReagraphFormat(
 /**
  * Analyze graph structure for layout suitability
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+
 export function analyzeGraphStructure(nodes: any[], edges: any[]) {
   if (edges.length === 0) {
     return {

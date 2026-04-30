@@ -30,7 +30,10 @@ class ApiLogger {
   }
 
   private log(entry: LogEntry) {
-    if (!this.isDev) return;
+    // Always log errors and warnings for production observability
+    // Only skip debug and info in production
+    const skipInProduction = entry.level === "debug" || entry.level === "info";
+    if (!this.isDev && skipInProduction) return;
 
     const logFn = console[entry.level] || console.log;
     const prefix = `[API ${entry.level.toUpperCase()}]`;

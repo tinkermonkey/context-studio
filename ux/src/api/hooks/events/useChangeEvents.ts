@@ -11,10 +11,12 @@ import {
   ChangeEvent,
   RecordType,
   NodeType,
-  isStructureNodeEvent,
-  isStructureNodeLinkEvent,
-  isPredicateEvent,
-} from "../../types/structureNodes";
+  isOntologyClassEvent,
+  isConceptSchemeEvent,
+  isTaxonomyEvent,
+  isRelationshipEvent,
+  isPropertyDefinitionEvent,
+} from "../../types/changeEvents";
 
 // Change Events Service
 class ChangeEventService extends BaseService {
@@ -24,9 +26,9 @@ class ChangeEventService extends BaseService {
   async list(params?: {
     skip?: number;
     limit?: number;
-    record_type?: RecordType;
-    record_id?: string;
-    event_type?: string;
+    entity_type?: string;
+    entity_id?: string;
+    operation?: string;
     processed?: boolean;
   }): Promise<ChangeEvent[]> {
     return this.withErrorContext(async () => {
@@ -36,9 +38,9 @@ class ChangeEventService extends BaseService {
       const queryParams: Record<string, unknown> = {};
       if (params?.skip !== undefined) queryParams.skip = params.skip;
       if (params?.limit !== undefined) queryParams.limit = params.limit;
-      if (params?.record_type) queryParams.record_type = params.record_type;
-      if (params?.record_id) queryParams.record_id = params.record_id;
-      if (params?.event_type) queryParams.event_type = params.event_type;
+      if (params?.entity_type) queryParams.entity_type = params.entity_type;
+      if (params?.entity_id) queryParams.entity_id = params.entity_id;
+      if (params?.operation) queryParams.operation = params.operation;
       if (params?.processed !== undefined)
         queryParams.processed = params.processed;
 
@@ -76,7 +78,7 @@ class ChangeEventService extends BaseService {
    * Get unprocessed change events
    */
   async getUnprocessed(params?: {
-    record_type?: RecordType;
+    entity_type?: string;
     limit?: number;
   }): Promise<ChangeEvent[]> {
     return this.list({ ...params, processed: false });
@@ -90,13 +92,13 @@ export const changeEventService = new ChangeEventService();
 export const changeEventQueryKeys = {
   all: [QUERY_KEYS.CHANGE_EVENTS] as const,
   lists: () => [...changeEventQueryKeys.all, "list"] as const,
-  list: (params?: any) => [...changeEventQueryKeys.lists(), params] as const, // eslint-disable-line @typescript-eslint/no-explicit-any
+  list: (params?: any) => [...changeEventQueryKeys.lists(), params] as const,
   details: () => [...changeEventQueryKeys.all, "detail"] as const,
   detail: (id: number) => [...changeEventQueryKeys.details(), id] as const,
-  unprocessed: (recordType?: RecordType) =>
-    [...changeEventQueryKeys.all, "unprocessed", recordType] as const,
-  byRecord: (recordType: RecordType, recordId: string) =>
-    [...changeEventQueryKeys.all, "byRecord", recordType, recordId] as const,
+  unprocessed: (entityType?: string) =>
+    [...changeEventQueryKeys.all, "unprocessed", entityType] as const,
+  byEntity: (entityType: string, entityId: string) =>
+    [...changeEventQueryKeys.all, "byEntity", entityType, entityId] as const,
 };
 
 /**
@@ -106,9 +108,9 @@ export const useChangeEvents = (
   params?: {
     skip?: number;
     limit?: number;
-    record_type?: RecordType;
-    record_id?: string;
-    event_type?: string;
+    entity_type?: string;
+    entity_id?: string;
+    operation?: string;
     processed?: boolean;
   },
   options?: UseQueryOptions<ChangeEvent[], Error>,
@@ -145,13 +147,13 @@ export const useChangeEvent = (
  * Hook to fetch unprocessed change events
  */
 export const useUnprocessedChangeEvents = (
-  recordType?: RecordType,
+  entityType?: string,
   options?: UseQueryOptions<ChangeEvent[], Error>,
 ) => {
   return useQuery({
-    queryKey: changeEventQueryKeys.unprocessed(recordType),
+    queryKey: changeEventQueryKeys.unprocessed(entityType),
     queryFn: () =>
-      changeEventService.getUnprocessed({ record_type: recordType }),
+      changeEventService.getUnprocessed({ entity_type: entityType }),
     staleTime: 1000 * 10, // 10 seconds - unprocessed events should be very fresh
     refetchInterval: 1000 * 30, // Refetch every 30 seconds for real-time updates
     retry: 3,
@@ -161,18 +163,18 @@ export const useUnprocessedChangeEvents = (
 };
 
 /**
- * Hook to fetch change events for a specific record
+ * Hook to fetch change events for a specific entity
  */
-export const useChangeEventsByRecord = (
-  recordType: RecordType,
-  recordId: string,
+export const useChangeEventsByEntity = (
+  entityType: string,
+  entityId: string,
   options?: UseQueryOptions<ChangeEvent[], Error>,
 ) => {
   return useQuery({
-    queryKey: changeEventQueryKeys.byRecord(recordType, recordId),
+    queryKey: changeEventQueryKeys.byEntity(entityType, entityId),
     queryFn: () =>
-      changeEventService.list({ record_type: recordType, record_id: recordId }),
-    enabled: !!recordType && !!recordId,
+      changeEventService.list({ entity_type: entityType, entity_id: entityId }),
+    enabled: !!entityType && !!entityId,
     staleTime: 1000 * 60 * 2, // 2 minutes
     retry: 3,
     retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
@@ -187,18 +189,21 @@ export const useChangeEventsByRecord = (
  */
 export const processChangeEvent = (event: ChangeEvent) => {
   const routing = {
-    recordType: event.record_type,
-    eventType: event.event_type,
-    recordId: event.record_id,
-    isStructureNode: isStructureNodeEvent(event),
-    isNodeLink: isStructureNodeLinkEvent(event),
-    isPredicate: isPredicateEvent(event),
+    entityType: event.entity_type,
+    operation: event.operation,
+    entityId: event.entity_id,
+    isTaxonomy: isTaxonomyEvent(event),
+    isConceptScheme: isConceptSchemeEvent(event),
+    isOntologyClass: isOntologyClassEvent(event),
+    isRelationship: isRelationshipEvent(event),
+    isPropertyDefinition: isPropertyDefinitionEvent(event),
     nodeType: null as NodeType | null,
   };
 
-  // For structure node events, determine the specific node type
-  if (isStructureNodeEvent(event)) {
-    const nodeType = event.new_data?.node_type || event.old_data?.node_type;
+  // For ontology class events, determine the specific node type
+  if (isOntologyClassEvent(event)) {
+    const nodeType =
+      event.new_state?.node_type || event.previous_state?.node_type;
     routing.nodeType = nodeType as NodeType;
   }
 
@@ -208,49 +213,67 @@ export const processChangeEvent = (event: ChangeEvent) => {
 // Event filtering utilities
 
 /**
- * Filter events by structure node type
+ * Filter events by node type
  */
 export const filterEventsByNodeType = (
   events: ChangeEvent[],
   nodeType: NodeType,
 ): ChangeEvent[] => {
   return events.filter((event) => {
-    if (!isStructureNodeEvent(event)) return false;
+    if (!isOntologyClassEvent(event)) return false;
     const eventNodeType =
-      event.new_data?.node_type || event.old_data?.node_type;
+      event.new_state?.node_type || event.previous_state?.node_type;
     return eventNodeType === nodeType;
   });
 };
 
 /**
- * Filter events by record type
+ * Filter events by entity type
  */
-export const filterEventsByRecordType = (
+export const filterEventsByEntityType = (
   events: ChangeEvent[],
-  recordType: RecordType,
+  entityType: string,
 ): ChangeEvent[] => {
-  return events.filter((event) => event.record_type === recordType);
+  return events.filter((event) => event.entity_type === entityType);
 };
 
 /**
- * Get structure node events only
+ * Get taxonomy events only
  */
-export const getStructureNodeEvents = (
+export const getTaxonomyEvents = (events: ChangeEvent[]): ChangeEvent[] => {
+  return filterEventsByEntityType(events, RecordType.TAXONOMY);
+};
+
+/**
+ * Get concept scheme events only
+ */
+export const getConceptSchemeEvents = (
   events: ChangeEvent[],
 ): ChangeEvent[] => {
-  return filterEventsByRecordType(events, RecordType.STRUCTURE_NODE);
+  return filterEventsByEntityType(events, RecordType.CONCEPT_SCHEME);
 };
 
 /**
- * Get node link events only
+ * Get ontology class events only
  */
-export const getNodeLinkEvents = (events: ChangeEvent[]): ChangeEvent[] => {
-  return filterEventsByRecordType(events, RecordType.STRUCTURE_NODE_LINK);
+export const getOntologyClassEvents = (
+  events: ChangeEvent[],
+): ChangeEvent[] => {
+  return filterEventsByEntityType(events, RecordType.ONTOLOGY_CLASS);
 };
 
 /**
- * Get predicate events only
+ * Get relationship events only
  */
-export const getPredicateEvents = (events: ChangeEvent[]): ChangeEvent[] => {
-  return filterEventsByRecordType(events, RecordType.PREDICATE);
+export const getRelationshipEvents = (events: ChangeEvent[]): ChangeEvent[] => {
+  return filterEventsByEntityType(events, RecordType.RELATIONSHIP);
+};
+
+/**
+ * Get property definition events only
+ */
+export const getPropertyDefinitionEvents = (
+  events: ChangeEvent[],
+): ChangeEvent[] => {
+  return filterEventsByEntityType(events, RecordType.PROPERTY_DEFINITION);
 };

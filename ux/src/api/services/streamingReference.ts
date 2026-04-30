@@ -223,16 +223,6 @@ export class StreamingReferenceService extends BaseService {
         timeout: config.timeout || 5000,
       });
 
-      console.log(
-        `Streaming search: ${source} returned ${response.results.length} results`,
-        {
-          source,
-          resultCount: response.results.length,
-          totalResults: response.total_results,
-          executionTime: response.search_time_ms,
-        },
-      );
-
       return response;
     } catch (error) {
       throw new StreamingSearchError(
@@ -276,7 +266,7 @@ export class StreamingReferenceService extends BaseService {
    */
   async getSourceStatus(): Promise<Record<SourceType, boolean>> {
     const sources = getEnabledSources();
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
     const status: Record<SourceType, boolean> = {} as any;
 
     // For now, just return enabled status

@@ -9,19 +9,15 @@ import { useForm } from "@tanstack/react-form";
 import { Button, Alert, Label, Radio } from "flowbite-react";
 import { Info, ArrowRight } from "lucide-react";
 
-import {
-  StructureNode,
-  StructureNodeLink,
-  StructureNodeLinkCreate,
-} from "@/api/types/structureNodes";
-import { useCreateNodeLink } from "@/api/hooks/node_links/useNodeLinkMutations";
+import { OntologyClass, OntologyClassLink } from "@/api/types/ontology";
+import { useCreateRelationship } from "@/api/hooks/relationships/useRelationships";
 import { PredicateSelector } from "@/components/node_selectors/predicate_selector";
-import { StructureNodeSelector } from "@/components/node_selectors/structure_node_selector";
+import { OntologyClassSelector } from "@/components/node_selectors/structure_node_selector";
 import { toast } from "@/utils/toast";
 
 interface NodeLinkFormProps {
-  currentNode: StructureNode;
-  existingLinks: StructureNodeLink[];
+  currentNode: OntologyClass;
+  existingLinks: OntologyClassLink[];
   onSuccess: () => void;
   onCancel: () => void;
 }
@@ -37,12 +33,12 @@ export const NodeLinkForm: React.FC<NodeLinkFormProps> = ({
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [direction, setDirection] = useState<Direction>("outgoing");
 
-  const createLinkMutation = useCreateNodeLink({
+  const createLinkMutation = useCreateRelationship({
     onSuccess: () => {
       toast.success("Link created successfully");
       onSuccess();
     },
-    onError: (error) => {
+    onError: (error: Error) => {
       const message =
         error instanceof Error ? error.message : "Failed to create link";
       toast.error(message);
@@ -72,17 +68,15 @@ export const NodeLinkForm: React.FC<NodeLinkFormProps> = ({
       const isDuplicate = existingLinks.some((link) => {
         if (direction === "outgoing") {
           return (
-            link.source_node_id === currentNode.id &&
-            link.target_node_id === value.targetNodeId &&
-            (link.predicate === value.predicate ||
-              link.predicate_id === value.predicateId)
+            link.source_id === currentNode.id &&
+            link.target_id === value.targetNodeId &&
+            link.property_definition_id === value.predicateId
           );
         } else {
           return (
-            link.source_node_id === value.targetNodeId &&
-            link.target_node_id === currentNode.id &&
-            (link.predicate === value.predicate ||
-              link.predicate_id === value.predicateId)
+            link.source_id === value.targetNodeId &&
+            link.target_id === currentNode.id &&
+            link.property_definition_id === value.predicateId
           );
         }
       });
@@ -93,20 +87,17 @@ export const NodeLinkForm: React.FC<NodeLinkFormProps> = ({
       }
 
       try {
-        const linkData: StructureNodeLinkCreate = {
-          source_node_id:
-            direction === "outgoing" ? currentNode.id : value.targetNodeId,
-          target_node_id:
-            direction === "outgoing" ? value.targetNodeId : currentNode.id,
-          predicate: value.predicate,
-          predicate_id: value.predicateId,
-        };
+        const sourceId =
+          direction === "outgoing" ? currentNode.id : value.targetNodeId;
+        const targetId =
+          direction === "outgoing" ? value.targetNodeId : currentNode.id;
 
-        await createLinkMutation.mutateAsync(linkData);
-      } catch (
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        error: any
-      ) {
+        await createLinkMutation.mutateAsync({
+          source_id: sourceId,
+          target_id: targetId,
+          relationship_type: value.predicateId,
+        });
+      } catch (error: any) {
         let message = "An error occurred";
         const detail =
           error?.response?.data?.detail ||
@@ -115,7 +106,6 @@ export const NodeLinkForm: React.FC<NodeLinkFormProps> = ({
           error?.detail;
 
         if (Array.isArray(detail)) {
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           message = detail.map((d: any) => d.msg).join("; ");
         } else if (error?.message) {
           message = error.message;
@@ -223,7 +213,7 @@ export const NodeLinkForm: React.FC<NodeLinkFormProps> = ({
               <Label htmlFor="link-target" className="mb-1 block font-medium">
                 Target Node *
               </Label>
-              <StructureNodeSelector
+              <OntologyClassSelector
                 value={field.state.value}
                 onSelect={(node) => field.handleChange(node?.id || "")}
                 excludeNodeIds={[currentNode.id]}

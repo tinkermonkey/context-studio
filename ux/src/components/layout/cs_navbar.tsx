@@ -20,10 +20,11 @@ function MobileNavMenu() {
   return (
     <div className="lg:hidden">
       {/* Knowledge Graph Items */}
-      <NavbarLink href="/app/layers">KG: Layers</NavbarLink>
-      <NavbarLink href="/app/domains">KG: Domains</NavbarLink>
-      <NavbarLink href="/app/terms">KG: Terms</NavbarLink>
-      <NavbarLink href="/app/predicates">KG: Predicates</NavbarLink>
+      <NavbarLink href="/app/taxonomies">KG: Taxonomies</NavbarLink>
+      <NavbarLink href="/app/concept-schemes">KG: Concept Schemes</NavbarLink>
+      <NavbarLink href="/app/classes">KG: Classes</NavbarLink>
+      <NavbarLink href="/app/properties">KG: Property Definitions</NavbarLink>
+      <NavbarLink href="/app/relationships">KG: Relationships</NavbarLink>
 
       {/* RAG & Testing Items */}
       <NavbarLink href="/app/rag/experiments">RAG: Experiments</NavbarLink>
@@ -34,8 +35,8 @@ function MobileNavMenu() {
 
       {/* External Reference Items */}
       <NavbarLink href="/app/reference/search">Ref: Search</NavbarLink>
-      <NavbarLink href="/app/reference/predicates">
-        Ref: Predicate Mapping
+      <NavbarLink href="/app/reference/properties">
+        Ref: Property Mapping
       </NavbarLink>
 
       {/* Configuration */}
@@ -57,10 +58,11 @@ function DesktopNavMenus() {
         className="hidden lg:block"
         inline={true}
       >
-        <DropdownItem href="/app/layers">Layers</DropdownItem>
-        <DropdownItem href="/app/domains">Domains</DropdownItem>
-        <DropdownItem href="/app/terms">Terms</DropdownItem>
-        <DropdownItem href="/app/predicates">Predicates</DropdownItem>
+        <DropdownItem href="/app/taxonomies">Taxonomies</DropdownItem>
+        <DropdownItem href="/app/concept-schemes">Concept Schemes</DropdownItem>
+        <DropdownItem href="/app/classes">Classes</DropdownItem>
+        <DropdownItem href="/app/properties">Property Definitions</DropdownItem>
+        <DropdownItem href="/app/relationships">Relationships</DropdownItem>
       </Dropdown>
 
       {/* RAG & Testing */}
@@ -79,8 +81,8 @@ function DesktopNavMenus() {
         inline={true}
       >
         <DropdownItem href="/app/reference/search">Search</DropdownItem>
-        <DropdownItem href="/app/reference/predicates">
-          Predicate Mapping
+        <DropdownItem href="/app/reference/properties">
+          Property Mapping
         </DropdownItem>
       </Dropdown>
     </>

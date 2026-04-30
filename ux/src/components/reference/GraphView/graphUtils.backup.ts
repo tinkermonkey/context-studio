@@ -254,7 +254,7 @@ export function convertToReagraphFormat(
 /**
  * Analyze graph structure for layout suitability
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+
 export function analyzeGraphStructure(nodes: any[], edges: any[]) {
   if (edges.length === 0) {
     return {
@@ -286,18 +286,8 @@ export function analyzeGraphStructure(nodes: any[], edges: any[]) {
 
   // Find potential roots (nodes with in-degree 0)
   const roots = Array.from(inDegree.entries())
-    .filter(
-      (
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        [_, degree],
-      ) => degree === 0,
-    )
-    .map(
-      (
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        [nodeId, _],
-      ) => nodeId,
-    );
+    .filter(([_, degree]) => degree === 0)
+    .map(([nodeId, _]) => nodeId);
 
   const hasMultipleRoots = roots.length > 1;
   const hasNoRoot = roots.length === 0;

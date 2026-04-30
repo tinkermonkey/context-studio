@@ -43,8 +43,8 @@ The E2E test infrastructure uses Playwright's global setup/teardown to manage se
 
 1. **Global Setup** (`e2e/global-setup.ts`):
    - Cleans test databases in `/local-server/datafiles/e2e-test/`
-   - Starts Python backend on port 8001
-   - Starts Vite frontend dev server on port 3101
+   - Starts Python backend on port 8888
+   - Starts Vite frontend dev server on port 3888
    - Waits for both servers to be ready
    - Servers run for the entire test suite
 
@@ -61,20 +61,42 @@ The E2E test infrastructure uses Playwright's global setup/teardown to manage se
 
 - **Test databases**: All tests use isolated databases in `/local-server/datafiles/e2e-test/`
 - **Configuration**: Backend uses `/local-server/config.e2e.json` for test-specific settings
-- **Ports**: Different ports (8001/3101) prevent conflicts with development servers (8000/3100)
+- **Ports**: Different ports (8888/3888) prevent conflicts with development servers (8000/3100)
 - **Sequential execution**: Tests run one at a time to avoid race conditions
 
 ## Directory Structure
 
 ```
 /ux/e2e/
-├── fixtures/                  # Test utilities and helpers
-│   └── test-helpers.ts        # Common test functions
-├── tests/                     # Test files
-│   └── example.spec.ts        # Example smoke tests
-├── global-setup.ts            # Server startup logic
-├── global-teardown.ts         # Server shutdown logic
-└── README.md                  # This file
+├── fixtures/                          # Test utilities and helpers
+│   ├── test-helpers.ts                # Common test functions
+│   ├── api-client.ts                  # API client for test requests
+│   └── factories.ts                   # Test data factories
+├── tests/                             # Test files organized by feature
+│   ├── api-contracts/                 # API contract tests
+│   │   └── ontology-endpoints.spec.ts
+│   ├── graph/                         # Graph analysis tests
+│   │   └── graph-analysis.spec.ts
+│   ├── layout/                        # Layout and navigation tests
+│   │   ├── navigation.spec.ts
+│   │   └── pages.spec.ts
+│   ├── ontology/                      # Ontology management tests
+│   │   ├── classes.spec.ts
+│   │   ├── concept-schemes.spec.ts
+│   │   ├── property-definitions.spec.ts
+│   │   ├── relationships.spec.ts
+│   │   └── taxonomies.spec.ts
+│   ├── pipeline/                      # Pipeline configuration tests
+│   │   └── pipeline-config.spec.ts
+│   ├── rag/                           # RAG experiments tests
+│   │   └── rag-experiments.spec.ts
+│   ├── reference/                     # Reference data search tests
+│   │   └── reference-search.spec.ts
+│   ├── example.spec.ts                # Example smoke tests
+│   └── ontology-factories.spec.ts     # Factory pattern tests
+├── global-setup.ts                    # Server startup logic
+├── global-teardown.ts                 # Server shutdown logic
+└── README.md                          # This file
 ```
 
 ## Writing Tests
@@ -106,18 +128,18 @@ test.describe("Feature Name", () => {
 import { test, expect } from "@playwright/test";
 import { waitForAppReady, apiRequest } from "../fixtures/test-helpers";
 
-test("should create a structure node", async ({ page }) => {
+test("should create an ontology class", async ({ page }) => {
   await page.goto("/");
   await waitForAppReady(page);
 
   // Create via UI
-  await page.click('[data-testid="new-node-button"]');
-  await page.fill('[data-testid="node-name"]', "Test Node");
+  await page.click('[data-testid="new-class-button"]');
+  await page.fill('[data-testid="class-name"]', "Test Class");
   await page.click('[data-testid="submit"]');
 
   // Verify via API
-  const nodes = await apiRequest(page, "/api/structure-nodes");
-  expect(nodes.nodes.some((n) => n.name === "Test Node")).toBeTruthy();
+  const classes = await apiRequest(page, "/api/classes");
+  expect(classes.data.some((c) => c.title === "Test Class")).toBeTruthy();
 });
 ```
 
@@ -143,10 +165,11 @@ test("should create a structure node", async ({ page }) => {
 
 ### Frontend Environment
 
-**`/ux/.env.e2e`**
+**`/ux/.env.e2e`** (checked in — ready to use)
 
-- Points frontend to test backend (port 8001)
+- Points frontend to test backend (port 8888)
 - Sets environment identifier
+- This file is included in the repository and does not need to be created
 
 ### Playwright Configuration
 
@@ -161,14 +184,14 @@ test("should create a structure node", async ({ page }) => {
 
 ### Tests fail with "Address already in use"
 
-One of the servers (8001 or 3101) is already running. Stop them:
+One of the servers (8888 or 3888) is already running. Stop them:
 
 ```bash
 # Find processes using the ports
-lsof -ti:8001 -ti:3101
+lsof -ti:8888 -ti:3888
 
 # Kill them
-lsof -ti:8001 -ti:3101 | xargs kill -9
+lsof -ti:8888 -ti:3888 | xargs kill -9
 ```
 
 ### Tests timeout during global setup
@@ -205,7 +228,7 @@ npm install
 The test databases are created fresh on each run. If migrations fail:
 
 1. Delete `/local-server/datafiles/e2e-test/` manually
-2. Check migration files in `/local-server/database/migrations/versions/`
+2. Check migration files in `/local-server/adapters/persistence/sqlite/versions/`
 3. Review backend logs for specific migration errors
 
 ## CI/CD Integration

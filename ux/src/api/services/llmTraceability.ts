@@ -7,6 +7,7 @@
 
 import { BaseService } from "./base";
 import { ENDPOINTS } from "../config";
+import { apiLogger } from "../utils/logger";
 import type {
   SelectionRecordRequest,
   SelectionRecordResponse,
@@ -308,7 +309,7 @@ export class LLMTraceabilityService extends BaseService {
   ): Promise<SelectionRecordResponse> {
     const request: SelectionRecordRequest = {
       execution_id: executionId,
-      record_type: "structure_node",
+      record_type: "ontologyClass",
       record_id: recordId,
       suggestion_field: field,
       selected_content: content,
@@ -336,7 +337,13 @@ export class LLMTraceabilityService extends BaseService {
     try {
       const health = await this.healthCheck();
       return health.status === "healthy" && health.database_connection;
-    } catch {
+    } catch (error) {
+      // Log the actual error for debugging - network failures, auth issues, etc. all have specific causes
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      apiLogger.warn("[LLM Traceability] Health check failed:", {
+        error: errorMessage,
+      });
       // If health check fails, system is not healthy
       return false;
     }

@@ -102,7 +102,7 @@ function RouteComponent() {
 
   const handleUpdateNLPConfig = async (
     path: string,
-    value: any, // eslint-disable-line @typescript-eslint/no-explicit-any
+    value: any,
   ): Promise<void> => {
     const label = getNLPConfigLabel(path);
     await updateConfigMutation.mutateAsync(
@@ -125,7 +125,7 @@ function RouteComponent() {
 
   const handleUpdateLLMConfig = async (
     path: string,
-    value: any, // eslint-disable-line @typescript-eslint/no-explicit-any
+    value: any,
   ): Promise<void> => {
     const label = getLLMConfigLabel(path);
     await updateConfigMutation.mutateAsync(
@@ -198,9 +198,9 @@ function NLPConfigurationSection({
   onUpdate,
   isUpdating,
 }: {
-  config: any; // eslint-disable-line @typescript-eslint/no-explicit-any
+  config: any;
 
-  onUpdate: (path: string, value: any) => void; // eslint-disable-line @typescript-eslint/no-explicit-any
+  onUpdate: (path: string, value: any) => void;
   isUpdating: boolean;
 }) {
   if (!config) {
@@ -422,10 +422,10 @@ function PipelineDefaultsSection({
   onUpdate,
   isUpdating,
 }: {
-  config: any; // eslint-disable-line @typescript-eslint/no-explicit-any
-  enabledModels: any[]; // eslint-disable-line @typescript-eslint/no-explicit-any
+  config: any;
+  enabledModels: any[];
 
-  onUpdate: (path: string, value: any) => void; // eslint-disable-line @typescript-eslint/no-explicit-any
+  onUpdate: (path: string, value: any) => void;
   isUpdating: boolean;
 }) {
   if (!config) {

@@ -88,13 +88,13 @@ export const useActivateDataset = (
 
       // Also invalidate other data that depends on the active dataset
       queryClient.invalidateQueries({
-        queryKey: createQueryKey(QUERY_KEYS.LAYERS),
+        queryKey: createQueryKey(QUERY_KEYS.TAXONOMIES),
       });
       queryClient.invalidateQueries({
-        queryKey: createQueryKey(QUERY_KEYS.DOMAINS),
+        queryKey: createQueryKey(QUERY_KEYS.CONCEPT_SCHEMES),
       });
       queryClient.invalidateQueries({
-        queryKey: createQueryKey(QUERY_KEYS.TERMS),
+        queryKey: createQueryKey(QUERY_KEYS.ONTOLOGY_CLASSES),
       });
       queryClient.invalidateQueries({
         queryKey: createQueryKey(QUERY_KEYS.RELATIONSHIPS),

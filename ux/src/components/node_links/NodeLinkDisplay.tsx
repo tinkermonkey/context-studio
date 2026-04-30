@@ -7,18 +7,18 @@
 
 import React, { useState, useMemo } from "react";
 
-import { StructureNodeLink } from "@/api/types/structureNodes";
-import { useDeleteNodeLink } from "@/api/hooks/node_links/useNodeLinkMutations";
+import { OntologyClassLink } from "@/api/types/ontology";
+import { useDeleteRelationship } from "@/api/hooks/relationships";
 import { toast } from "@/utils/toast";
 import { NodeLinkGroupDisplay } from "./NodeLinkGroupDisplay";
 
 interface NodeLinkDisplayProps {
-  links: StructureNodeLink[];
+  links: OntologyClassLink[];
   currentNodeId: string;
 }
 
 interface GroupedLinks {
-  [predicate: string]: StructureNodeLink[];
+  [predicate: string]: OntologyClassLink[];
 }
 
 export const NodeLinkDisplay: React.FC<NodeLinkDisplayProps> = ({
@@ -27,12 +27,12 @@ export const NodeLinkDisplay: React.FC<NodeLinkDisplayProps> = ({
 }) => {
   const [deletingLinkId, setDeletingLinkId] = useState<string | undefined>();
 
-  const deleteLink = useDeleteNodeLink({
+  const deleteRelationship = useDeleteRelationship({
     onSuccess: () => {
       toast.success("Link deleted successfully");
       setDeletingLinkId(undefined);
     },
-    onError: (error) => {
+    onError: (error: Error) => {
       toast.error(
         error instanceof Error ? error.message : "Failed to delete link",
       );
@@ -42,27 +42,23 @@ export const NodeLinkDisplay: React.FC<NodeLinkDisplayProps> = ({
 
   const handleDelete = (linkId: string) => {
     setDeletingLinkId(linkId);
-    deleteLink.mutate(linkId);
+    deleteRelationship.mutate(linkId);
   };
 
   // Separate links into outgoing and incoming
   const { outgoingLinks, incomingLinks } = useMemo(() => {
-    const outgoing = links.filter(
-      (link) => link.source_node_id === currentNodeId,
-    );
-    const incoming = links.filter(
-      (link) => link.target_node_id === currentNodeId,
-    );
+    const outgoing = links.filter((link) => link.source_id === currentNodeId);
+    const incoming = links.filter((link) => link.target_id === currentNodeId);
     return { outgoingLinks: outgoing, incomingLinks: incoming };
   }, [links, currentNodeId]);
 
   // Group links by predicate
-  const groupByPredicate = (linksList: StructureNodeLink[]): GroupedLinks => {
+  const groupByPredicate = (linksList: OntologyClassLink[]): GroupedLinks => {
     return linksList.reduce((acc, link) => {
-      if (!acc[link.predicate]) {
-        acc[link.predicate] = [];
+      if (!acc[link.property_definition_id]) {
+        acc[link.property_definition_id] = [];
       }
-      acc[link.predicate].push(link);
+      acc[link.property_definition_id].push(link);
       return acc;
     }, {} as GroupedLinks);
   };

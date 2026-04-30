@@ -22,14 +22,12 @@ import {
   useExternalPredicates,
 } from "@/api/hooks/predicates";
 import { useButterToast } from "@/hooks/useButterToast";
-import type {
-  PredicateOut,
-  ExternalPredicateOut,
-} from "@/api/services/predicates";
+import type { PropertyDefinition } from "@/api/types/ontology";
+import type { ExternalPredicateOut } from "@/api/services/missingTypes";
 
 export interface MappingCreationWorkflowProps {
   predicateIds: string[];
-  onComplete?: (predicate: PredicateOut) => void;
+  onComplete?: (predicate: PropertyDefinition) => void;
   onCancel?: () => void;
 }
 
@@ -42,9 +40,8 @@ export const MappingCreationWorkflow: React.FC<
   const [title, setTitle] = useState<string>("");
   const [definition, setDefinition] = useState<string>("");
   const [identifier, setIdentifier] = useState<string>("");
-  const [createdPredicate, setCreatedPredicate] = useState<PredicateOut | null>(
-    null,
-  );
+  const [createdPredicate, setCreatedPredicate] =
+    useState<PropertyDefinition | null>(null);
   const toast = useButterToast();
 
   // Query external predicates for the cluster
@@ -55,7 +52,7 @@ export const MappingCreationWorkflow: React.FC<
 
   // Create predicate mutation
   const createMutation = useCreatePredicate({
-    onSuccess: (predicate) => {
+    onSuccess: (predicate: PropertyDefinition) => {
       setCreatedPredicate(predicate);
       setStep("confirm");
       toast.success("Global predicate created successfully");

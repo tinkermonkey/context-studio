@@ -20,11 +20,9 @@ import {
   usePipelineFlavor,
   useDefaultPipelineFlavor,
 } from "@/api/hooks/pipelineFlavors";
-import {
-  useLayerNodes,
-  useDomainNodes,
-  useTermNodes,
-} from "@/api/hooks/structure_nodes/useStructureNodes";
+import { useTaxonomies } from "@/api/hooks/taxonomies/useTaxonomies";
+import { useConceptSchemes } from "@/api/hooks/conceptSchemes/useConceptSchemes";
+import { useOntologyClasses } from "@/api/hooks/ontologyClasses/useOntologyClasses";
 import type { PipelineType } from "@/api/services/pipelineFlavors";
 import { PipelineTypes } from "@/components/llm_pipelines/pipelineTypes";
 
@@ -76,28 +74,30 @@ function TestFlavorPage() {
   const currentFlavor = isDefault ? defaultFlavor : flavor;
   const currentFlavorLoading = isDefault ? defaultFlavorLoading : flavorLoading;
   const currentFlavorError = isDefault ? defaultFlavorError : flavorError;
-  const { data: layersData, isLoading: layersLoading } = useLayerNodes();
-  const { data: domainsData, isLoading: domainsLoading } = useDomainNodes();
-  const { data: termsData, isLoading: termsLoading } = useTermNodes();
+  const { data: taxonomiesData, isLoading: layersLoading } = useTaxonomies();
+  const { data: conceptSchemesData, isLoading: domainsLoading } =
+    useConceptSchemes();
+  const { data: ontologyClassesData, isLoading: termsLoading } =
+    useOntologyClasses();
 
   const getRecordOptions = (): TestRecord[] => {
     if (!currentFlavor) return [];
 
     switch (currentFlavor.pipeline) {
       case "suggest_layer_definition":
-        return (layersData || []).map((layer) => ({
+        return (taxonomiesData || []).map((layer) => ({
           id: layer.id,
           title: layer.title,
           type: "layer" as const,
         }));
       case "suggest_domain_definition":
-        return (domainsData || []).map((domain) => ({
+        return (conceptSchemesData || []).map((domain) => ({
           id: domain.id,
           title: domain.title,
           type: "domain" as const,
         }));
       case "suggest_term_definition":
-        return (termsData || []).map((term) => ({
+        return (ontologyClassesData || []).map((term) => ({
           id: term.id,
           title: term.title,
           type: "term" as const,
@@ -116,7 +116,13 @@ function TestFlavorPage() {
       const record = recordOptions.find((r) => r.id === recordId);
       setSelectedRecord(record || null);
     }
-  }, [recordId, layersData, domainsData, termsData, currentFlavor]);
+  }, [
+    recordId,
+    taxonomiesData,
+    conceptSchemesData,
+    ontologyClassesData,
+    currentFlavor,
+  ]);
 
   // Function to update selected record and URL
   const handleRecordSelection = (recordId: string) => {

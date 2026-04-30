@@ -23,13 +23,11 @@ import {
 } from "@/api/hooks/pipelineFlavors";
 import { useSuggestTermDefinitionMutation } from "@/api/hooks/llm";
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const mockUsePipelineFlavors = usePipelineFlavors as any;
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+
 const mockUsePipelineFlavor = usePipelineFlavor as any;
 
 const mockUseSuggestTermDefinitionMutation =
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   useSuggestTermDefinitionMutation as any;
 
 const createWrapper = () => {
@@ -223,7 +221,6 @@ describe("LlmPipelineRun", () => {
       mutateAsync: vi.fn(),
     });
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const customTemplate = (result: any) => (
       <div data-testid="custom-template">
         Custom: {result.flavorTitle} - {result.status}

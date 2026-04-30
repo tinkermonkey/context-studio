@@ -196,7 +196,6 @@ export class UnifiedReferenceService extends BaseService {
       const sources: Record<
         SourceType,
         { enabled: boolean; endpoint: string }
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
       > = {} as any;
 
       Object.entries(SOURCE_ENDPOINTS).forEach(([source, config]) => {

@@ -339,18 +339,18 @@ export interface paths {
     put?: never;
     /**
      * Move Class
-     * @description Move a class to a different parent in the hierarchy.
+     * @description Move a class to a different concept scheme.
      *
      *     Args:
      *         class_id: The class ID
-     *         request: ClassMoveRequest with new_parent_id (or None to make root)
+     *         request: ClassMoveRequest with target_scheme_id
      *         service: OntologyService from dependency injection
      *
      *     Returns:
-     *         Updated ClassResponse
+     *         Updated ClassResponse with new concept_scheme_id
      *
      *     Raises:
-     *         HTTPException: 400 if invalid, 404 if not found, 422 if circular reference
+     *         HTTPException: 400 if invalid, 404 if not found
      */
     post: operations["move_class_api_classes__class_id__move_post"];
     delete?: never;
@@ -386,7 +386,7 @@ export interface paths {
      * @description Create a new typed relationship between two entities.
      *
      *     Args:
-     *         request: RelationshipCreateRequest with source, target, and property definition IDs
+     *         request: RelationshipCreateRequest with source, target, and relationship_type
      *         service: OntologyService from dependency injection
      *
      *     Returns:
@@ -617,14 +617,14 @@ export interface paths {
      * @description Get the degree distribution across all nodes in the graph.
      *
      *     The degree of a node is the number of edges connected to it. This endpoint
-     *     provides the raw degree counts for each node, useful for network analysis
+     *     provides the in-degree and out-degree counts for each node, useful for network analysis
      *     and topology studies.
      *
      *     Args:
      *         service: GraphAnalysisService from dependency injection
      *
      *     Returns:
-     *         DegreeDistributionResponse containing node ID to degree mapping and computed timestamp
+     *         DegreeDistributionResponse containing node ID to degree mappings
      *
      *     Raises:
      *         HTTPException: 422 if graph error occurs
@@ -779,7 +779,7 @@ export interface paths {
      *         service: GraphAnalysisService from dependency injection
      *
      *     Returns:
-     *         NeighborsResponse containing list of neighboring node IDs
+     *         NeighborsResponse containing lists of incoming and outgoing neighbors
      *
      *     Raises:
      *         HTTPException: 404 if node is not found, 400 if direction is invalid, 422 if graph error occurs
@@ -812,7 +812,7 @@ export interface paths {
      *         service: GraphAnalysisService from dependency injection
      *
      *     Returns:
-     *         KnowledgeGraphResponse describing the extracted subgraph
+     *         SubgraphDataResponse containing the nodes and edges in the subgraph
      *
      *     Raises:
      *         HTTPException: 404 if any node is not found, 400 if nodes parameter is invalid, 422 if graph error occurs
@@ -846,7 +846,7 @@ export interface paths {
      *         service: GraphAnalysisService from dependency injection
      *
      *     Returns:
-     *         SubgraphResultResponse containing center node ID, node count, edge count, depth, and extraction timestamp
+     *         SubgraphResultResponse containing center node ID, subgraph data, and depth
      *
      *     Raises:
      *         HTTPException: 404 if center node is not found, 400 if depth is invalid, 422 if graph error occurs
@@ -1889,8 +1889,9 @@ export interface paths {
      *     components (NLP pipeline, embedding model, LLM providers).
      *
      *     Health status rules:
-     *     - "healthy": All core systems operational
-     *     - "degraded": Optional components unavailable but system functional
+     *     - "healthy": All systems operational
+     *     - "degraded": One or more issues detected (e.g., missing LLM providers, unavailable
+     *       components, failed background tasks) but core systems functional
      *     - "unhealthy": Critical systems (database) unavailable
      *
      *     Returns:
@@ -1908,7 +1909,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  "/api/v1/admin/metrics/database": {
+  "/api/v1/admin/health/database": {
     parameters: {
       query?: never;
       header?: never;
@@ -1927,7 +1928,7 @@ export interface paths {
      *     Raises:
      *         HTTPException: 500 for internal errors
      */
-    get: operations["get_database_health_api_v1_admin_metrics_database_get"];
+    get: operations["get_database_health_api_v1_admin_health_database_get"];
     put?: never;
     post?: never;
     delete?: never;
@@ -1936,7 +1937,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  "/api/v1/admin/metrics/services": {
+  "/api/v1/admin/health/services": {
     parameters: {
       query?: never;
       header?: never;
@@ -1955,7 +1956,7 @@ export interface paths {
      *     Raises:
      *         HTTPException: 500 for internal errors
      */
-    get: operations["get_service_metrics_api_v1_admin_metrics_services_get"];
+    get: operations["get_service_metrics_api_v1_admin_health_services_get"];
     put?: never;
     post?: never;
     delete?: never;
@@ -1964,7 +1965,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  "/api/v1/admin/metrics/embedding": {
+  "/api/v1/admin/health/embedding": {
     parameters: {
       query?: never;
       header?: never;
@@ -1983,7 +1984,7 @@ export interface paths {
      *     Raises:
      *         HTTPException: 500 for internal errors
      */
-    get: operations["get_embedding_status_api_v1_admin_metrics_embedding_get"];
+    get: operations["get_embedding_status_api_v1_admin_health_embedding_get"];
     put?: never;
     post?: never;
     delete?: never;
@@ -1992,7 +1993,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  "/api/v1/admin/metrics/nlp": {
+  "/api/v1/admin/health/nlp": {
     parameters: {
       query?: never;
       header?: never;
@@ -2011,7 +2012,7 @@ export interface paths {
      *     Raises:
      *         HTTPException: 500 for internal errors
      */
-    get: operations["get_nlp_status_api_v1_admin_metrics_nlp_get"];
+    get: operations["get_nlp_status_api_v1_admin_health_nlp_get"];
     put?: never;
     post?: never;
     delete?: never;
@@ -2020,7 +2021,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  "/api/v1/admin/metrics/tasks": {
+  "/api/v1/admin/health/tasks": {
     parameters: {
       query?: never;
       header?: never;
@@ -2039,7 +2040,7 @@ export interface paths {
      *     Raises:
      *         HTTPException: 500 for internal errors
      */
-    get: operations["get_task_summary_api_v1_admin_metrics_tasks_get"];
+    get: operations["get_task_summary_api_v1_admin_health_tasks_get"];
     put?: never;
     post?: never;
     delete?: never;
@@ -2060,7 +2061,7 @@ export interface paths {
      * @description Retrieve current application configuration.
      *
      *     Returns all configuration sections with sensitive values (API keys)
-     *     masked to prevent exposure in logs.
+     *     masked in the API response to prevent exposure through the HTTP interface.
      *
      *     Returns:
      *         AppConfigurationResponse with configuration sections and masked API keys
@@ -2227,10 +2228,12 @@ export interface components {
     AppConfigurationResponse: {
       /**
        * Sections
-       * @description Configuration sections with sensitive values masked
+       * @description All configuration sections with masked credentials
        */
-      sections: {
-        [key: string]: unknown;
+      sections?: {
+        [key: string]: {
+          [key: string]: unknown;
+        };
       };
     };
     /**
@@ -2262,8 +2265,9 @@ export interface components {
       /**
        * Status
        * @description Task status: "pending", "running", "completed", or "failed"
+       * @enum {string}
        */
-      status: string;
+      status: "pending" | "running" | "completed" | "failed";
       /**
        * Created At
        * Format: date-time
@@ -2280,11 +2284,6 @@ export interface components {
        * @description Timestamp when task finished
        */
       completed_at?: string | null;
-      /**
-       * Progress
-       * @description Task progress as a float between 0.0 and 1.0
-       */
-      progress?: number | null;
       /**
        * Error
        * @description Error message if task failed
@@ -2504,14 +2503,14 @@ export interface components {
     };
     /**
      * ClassMoveRequest
-     * @description Request to move a class to a different parent.
+     * @description Request to move a class to a different concept scheme.
      */
     ClassMoveRequest: {
       /**
-       * New Parent Id
-       * @description ID of new parent class, or null to make root
+       * Target Scheme Id
+       * @description ID of the target concept scheme
        */
-      new_parent_id?: string | null;
+      target_scheme_id: string;
     };
     /**
      * ClassResponse
@@ -2856,18 +2855,19 @@ export interface components {
      */
     DegreeDistributionResponse: {
       /**
-       * Distribution
-       * @description Mapping of node IDs to their degrees
+       * In Degree
+       * @description Mapping of node IDs to their in-degrees
        */
-      distribution: {
+      in_degree: {
         [key: string]: number;
       };
       /**
-       * Computed At
-       * Format: date-time
-       * @description Timestamp when distribution was computed
+       * Out Degree
+       * @description Mapping of node IDs to their out-degrees
        */
-      computed_at: string;
+      out_degree: {
+        [key: string]: number;
+      };
     };
     /**
      * EnrichFromReferencesRequest
@@ -2972,8 +2972,9 @@ export interface components {
       /**
        * Status
        * @description Completion status (success, error, timeout)
+       * @enum {string}
        */
-      status: string;
+      status: "success" | "error" | "timeout";
       /**
        * Error Message
        * @description Error description if applicable
@@ -3227,11 +3228,11 @@ export interface components {
        */
       is_directed: boolean;
       /**
-       * Last Built
+       * Timestamp
        * Format: date-time
        * @description Timestamp when the graph was last built
        */
-      last_built: string;
+      timestamp: string;
     };
     /**
      * LexicalSenseResponse
@@ -3254,16 +3255,105 @@ export interface components {
        */
       sense_type: string;
     };
-    /**
-     * ListResponse
-     * @description Generic paginated list response.
-     */
-    ListResponse: {
+    /** ListResponse[ClassResponse] */
+    ListResponse_ClassResponse_: {
       /**
        * Items
        * @description List of items
        */
-      items: unknown[];
+      items: components["schemas"]["ClassResponse"][];
+      /**
+       * Total
+       * @description Total number of items
+       */
+      total: number;
+      /**
+       * Limit
+       * @description Limit applied
+       */
+      limit: number;
+      /**
+       * Offset
+       * @description Offset applied
+       */
+      offset: number;
+    };
+    /** ListResponse[ConceptSchemeResponse] */
+    ListResponse_ConceptSchemeResponse_: {
+      /**
+       * Items
+       * @description List of items
+       */
+      items: components["schemas"]["ConceptSchemeResponse"][];
+      /**
+       * Total
+       * @description Total number of items
+       */
+      total: number;
+      /**
+       * Limit
+       * @description Limit applied
+       */
+      limit: number;
+      /**
+       * Offset
+       * @description Offset applied
+       */
+      offset: number;
+    };
+    /** ListResponse[PropertyDefinitionResponse] */
+    ListResponse_PropertyDefinitionResponse_: {
+      /**
+       * Items
+       * @description List of items
+       */
+      items: components["schemas"]["PropertyDefinitionResponse"][];
+      /**
+       * Total
+       * @description Total number of items
+       */
+      total: number;
+      /**
+       * Limit
+       * @description Limit applied
+       */
+      limit: number;
+      /**
+       * Offset
+       * @description Offset applied
+       */
+      offset: number;
+    };
+    /** ListResponse[RelationshipResponse] */
+    ListResponse_RelationshipResponse_: {
+      /**
+       * Items
+       * @description List of items
+       */
+      items: components["schemas"]["RelationshipResponse"][];
+      /**
+       * Total
+       * @description Total number of items
+       */
+      total: number;
+      /**
+       * Limit
+       * @description Limit applied
+       */
+      limit: number;
+      /**
+       * Offset
+       * @description Offset applied
+       */
+      offset: number;
+    };
+    /** ListResponse[TaxonomyResponse] */
+    ListResponse_TaxonomyResponse_: {
+      /**
+       * Items
+       * @description List of items
+       */
+      items: components["schemas"]["TaxonomyResponse"][];
       /**
        * Total
        * @description Total number of items
@@ -3331,13 +3421,19 @@ export interface components {
       /**
        * Direction
        * @description Direction of traversal: 'in', 'out', or 'both'
+       * @enum {string}
        */
-      direction: string;
+      direction: "in" | "out" | "both";
       /**
-       * Neighbors
-       * @description List of neighboring node IDs
+       * Incoming
+       * @description List of nodes with edges pointing to this node
        */
-      neighbors: string[];
+      incoming: string[];
+      /**
+       * Outgoing
+       * @description List of nodes this node has edges pointing to
+       */
+      outgoing: string[];
     };
     /**
      * PathResultResponse
@@ -3908,10 +4004,10 @@ export interface components {
        */
       target_id: string;
       /**
-       * Property Definition Id
-       * @description ID of property definition (relationship type)
+       * Relationship Type
+       * @description Relationship type identifier (e.g., 'related_to', 'parent_of')
        */
-      property_definition_id: string;
+      relationship_type: string;
     };
     /**
      * RelationshipResponse
@@ -4005,25 +4101,20 @@ export interface components {
       llm_providers_available?: string[];
     };
     /**
-     * SubgraphResultResponse
-     * @description Response containing depth-based subgraph extraction result.
+     * SubgraphDataResponse
+     * @description Response containing subgraph nodes and edges.
      */
-    SubgraphResultResponse: {
+    SubgraphDataResponse: {
       /**
-       * Center Node Id
-       * @description ID of the center node
-       */
-      center_node_id: string;
-      /**
-       * Node Ids
+       * Nodes
        * @description IDs of all nodes in the subgraph
        */
-      node_ids: string[];
+      nodes: string[];
       /**
-       * Edge Ids
+       * Edges
        * @description Edges connecting nodes in the subgraph as (source, target) tuples
        */
-      edge_ids: [string, string][];
+      edges: [string, string][];
       /**
        * Node Count
        * @description Number of nodes in the subgraph
@@ -4034,17 +4125,24 @@ export interface components {
        * @description Number of edges in the subgraph
        */
       edge_count: number;
+    };
+    /**
+     * SubgraphResultResponse
+     * @description Response containing depth-based subgraph extraction result.
+     */
+    SubgraphResultResponse: {
+      /**
+       * Node Id
+       * @description ID of the center node
+       */
+      node_id: string;
+      /** @description The extracted subgraph containing nodes and edges */
+      subgraph: components["schemas"]["SubgraphDataResponse"];
       /**
        * Depth
        * @description Maximum traversal depth from center node
        */
       depth: number;
-      /**
-       * Extracted At
-       * Format: date-time
-       * @description Timestamp when the subgraph was extracted
-       */
-      extracted_at: string;
     };
     /**
      * SyncResultResponse
@@ -4093,6 +4191,12 @@ export interface components {
        */
       is_configured: boolean;
       /**
+       * Is Degraded
+       * @description Whether sync status is degraded due to errors (unprocessed_count may be unreliable)
+       * @default false
+       */
+      is_degraded: boolean;
+      /**
        * Last Pushed At
        * @description ISO timestamp of last successful push
        */
@@ -4111,8 +4215,9 @@ export interface components {
       /**
        * Status
        * @description Overall health status: "healthy", "degraded", or "unhealthy"
+       * @enum {string}
        */
-      status: string;
+      status: "healthy" | "degraded" | "unhealthy";
       /**
        * Database Connected
        * @description Whether database is accessible
@@ -4304,7 +4409,7 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          "application/json": components["schemas"]["ListResponse"];
+          "application/json": components["schemas"]["ListResponse_TaxonomyResponse_"];
         };
       };
     };
@@ -4490,7 +4595,7 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          "application/json": components["schemas"]["ListResponse"];
+          "application/json": components["schemas"]["ListResponse_ConceptSchemeResponse_"];
         };
       };
       /** @description Validation Error */
@@ -4658,7 +4763,7 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          "application/json": components["schemas"]["ListResponse"];
+          "application/json": components["schemas"]["ListResponse_ClassResponse_"];
         };
       };
       /** @description Validation Error */
@@ -4824,7 +4929,7 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          "application/json": components["schemas"]["ListResponse"];
+          "application/json": components["schemas"]["ListResponse_RelationshipResponse_"];
         };
       };
       /** @description Validation Error */
@@ -4949,7 +5054,7 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          "application/json": components["schemas"]["ListResponse"];
+          "application/json": components["schemas"]["ListResponse_PropertyDefinitionResponse_"];
         };
       };
       /** @description Validation Error */
@@ -5351,7 +5456,7 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          "application/json": components["schemas"]["KnowledgeGraphResponse"];
+          "application/json": components["schemas"]["SubgraphDataResponse"];
         };
       };
       /** @description Validation Error */
@@ -6451,7 +6556,7 @@ export interface operations {
       };
     };
   };
-  get_database_health_api_v1_admin_metrics_database_get: {
+  get_database_health_api_v1_admin_health_database_get: {
     parameters: {
       query?: never;
       header?: never;
@@ -6471,7 +6576,7 @@ export interface operations {
       };
     };
   };
-  get_service_metrics_api_v1_admin_metrics_services_get: {
+  get_service_metrics_api_v1_admin_health_services_get: {
     parameters: {
       query?: never;
       header?: never;
@@ -6491,7 +6596,7 @@ export interface operations {
       };
     };
   };
-  get_embedding_status_api_v1_admin_metrics_embedding_get: {
+  get_embedding_status_api_v1_admin_health_embedding_get: {
     parameters: {
       query?: never;
       header?: never;
@@ -6511,7 +6616,7 @@ export interface operations {
       };
     };
   };
-  get_nlp_status_api_v1_admin_metrics_nlp_get: {
+  get_nlp_status_api_v1_admin_health_nlp_get: {
     parameters: {
       query?: never;
       header?: never;
@@ -6531,7 +6636,7 @@ export interface operations {
       };
     };
   };
-  get_task_summary_api_v1_admin_metrics_tasks_get: {
+  get_task_summary_api_v1_admin_health_tasks_get: {
     parameters: {
       query?: never;
       header?: never;

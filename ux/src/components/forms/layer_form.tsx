@@ -2,24 +2,26 @@ import React from "react";
 import { useForm } from "@tanstack/react-form";
 import { TextInput, Textarea, Button, Alert, Label } from "flowbite-react";
 import { Info } from "lucide-react";
-import type { StructureNode } from "@/api/types/structureNodes";
-import { useCreateLayer } from "@/api/hooks/structure_nodes/useStructureNodeMutations";
-import { useUpdateStructureNode } from "@/api/hooks/structure_nodes/useStructureNodeMutations";
+import type { Taxonomy } from "@/api/types/ontology";
+import { useCreateTaxonomy } from "@/api/hooks/taxonomies/useTaxonomies";
+import { useUpdateTaxonomy } from "@/api/hooks/taxonomies/useTaxonomies";
+import { useButterToast } from "@/hooks/useButterToast";
 
 interface LayerFormProps {
-  onSuccess?: (layer: StructureNode) => void;
-  layer?: StructureNode;
+  onSuccess?: (layer: Taxonomy) => void;
+  layer?: Taxonomy;
 }
 
 const LayerForm: React.FC<LayerFormProps> = ({ onSuccess, layer }) => {
-  const createLayerMutation = useCreateLayer();
-  const updateLayerMutation = useUpdateStructureNode();
+  const createLayerMutation = useCreateTaxonomy();
+  const updateLayerMutation = useUpdateTaxonomy();
+  const toast = useButterToast();
   const isEdit = !!layer;
   const [submitError, setSubmitError] = React.useState<string | null>(null);
   const form = useForm({
     defaultValues: {
       title: layer?.title ?? "",
-      definition: layer?.definition ?? "",
+      description: layer?.description ?? "",
     },
     onSubmit: async ({ value }) => {
       setSubmitError(null);
@@ -28,19 +30,20 @@ const LayerForm: React.FC<LayerFormProps> = ({ onSuccess, layer }) => {
         if (isEdit && layer?.id) {
           result = await updateLayerMutation.mutateAsync({
             id: layer.id,
-            data: value,
+            data: {
+              title: value.title,
+              description: value.description,
+            },
           });
         } else {
           result = await createLayerMutation.mutateAsync({
             title: value.title,
-            definition: value.definition,
+            description: value.description,
           });
         }
         if (onSuccess) onSuccess(result);
         form.reset();
-      } catch (
-        error: any // eslint-disable-line @typescript-eslint/no-explicit-any
-      ) {
+      } catch (error: any) {
         let message: string;
         // Log the full error for debugging
         console.error("Full error object:", error);
@@ -54,12 +57,7 @@ const LayerForm: React.FC<LayerFormProps> = ({ onSuccess, layer }) => {
           error?.detail;
 
         if (Array.isArray(detail)) {
-          message = detail
-            .map(
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              (d: any) => d.msg,
-            )
-            .join("; ");
+          message = detail.map((d: any) => d.msg).join("; ");
         } else if (error?.message) {
           message = error.message;
         } else if (typeof error === "string") {
@@ -68,7 +66,7 @@ const LayerForm: React.FC<LayerFormProps> = ({ onSuccess, layer }) => {
           message = JSON.stringify(error);
         }
         setSubmitError(message);
-        // TODO: Use useButterToast for error notification
+        toast.error(message);
         console.error(
           isEdit ? "Failed to update layer:" : "Failed to create layer:",
           error,
@@ -116,21 +114,21 @@ const LayerForm: React.FC<LayerFormProps> = ({ onSuccess, layer }) => {
             </div>
           )}
         </form.Field>
-        <form.Field name="definition">
+        <form.Field name="description">
           {(field) => (
             <div>
               <Label
-                htmlFor="layer-definition"
+                htmlFor="layer-description"
                 className="mb-1 block font-medium"
               >
-                Definition (optional)
+                Description (optional)
               </Label>
               <Textarea
-                id="layer-definition"
-                placeholder="Definition (optional)"
+                id="layer-description"
+                placeholder="Description (optional)"
                 value={field.state.value}
                 onChange={(e) => field.handleChange(e.target.value)}
-                data-testid="layer-definition-input"
+                data-testid="layer-description-input"
               />
               {field.state.meta.errors.length > 0 && (
                 <div className="mt-1 text-sm text-red-600">
@@ -165,7 +163,7 @@ const LayerForm: React.FC<LayerFormProps> = ({ onSuccess, layer }) => {
                 : "Creating..."
               : isEdit
                 ? "Save Changes"
-                : "Create Layer"}
+                : "Create Taxonomy"}
           </Button>
         </div>
       </form>

@@ -8,15 +8,16 @@ import React from "react";
 import { useForm } from "@tanstack/react-form";
 import { TextInput, Textarea, Button, Alert, Label } from "flowbite-react";
 import { Info } from "lucide-react";
-import type { PredicateCreate, PredicateOut } from "@/api/services/predicates";
-import {
-  useCreatePredicate,
-  useUpdatePredicate,
-} from "@/api/hooks/predicates/usePredicateMutations";
+import type {
+  PropertyDefinitionCreate,
+  PropertyDefinition,
+} from "@/api/types/ontology";
+import { useCreatePredicate, useUpdatePredicate } from "@/api/hooks/predicates";
+import { useButterToast } from "@/hooks/useButterToast";
 
 interface PredicateFormProps {
-  onSuccess?: (predicate: PredicateOut) => void;
-  predicate?: PredicateOut; // For edit mode
+  onSuccess?: (predicate: PropertyDefinition) => void;
+  predicate?: PropertyDefinition; // For edit mode
   // Future child form props
   mode?: "create" | "edit" | "child";
 }
@@ -27,6 +28,7 @@ const PredicateForm: React.FC<PredicateFormProps> = ({
 }) => {
   const createPredicateMutation = useCreatePredicate();
   const updatePredicateMutation = useUpdatePredicate();
+  const toast = useButterToast();
   const isEdit = !!predicate;
   const [submitError, setSubmitError] = React.useState<string | null>(null);
 
@@ -49,7 +51,7 @@ const PredicateForm: React.FC<PredicateFormProps> = ({
   const form = useForm({
     defaultValues: {
       title: predicate?.title ?? "",
-      definition: predicate?.definition ?? "",
+      description: predicate?.description ?? "",
       identifier: predicate?.identifier ?? "",
     },
     onSubmit: async ({ value }) => {
@@ -69,14 +71,12 @@ const PredicateForm: React.FC<PredicateFormProps> = ({
           });
         } else {
           result = await createPredicateMutation.mutateAsync(
-            submissionData as PredicateCreate,
+            submissionData as PropertyDefinitionCreate,
           );
         }
         if (onSuccess) onSuccess(result);
         form.reset();
-      } catch (
-        error: any // eslint-disable-line @typescript-eslint/no-explicit-any
-      ) {
+      } catch (error: any) {
         let message: string;
         // Log the full error for debugging
         console.error("Full error object:", error);
@@ -90,12 +90,7 @@ const PredicateForm: React.FC<PredicateFormProps> = ({
           error?.detail;
 
         if (Array.isArray(detail)) {
-          message = detail
-            .map(
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              (d: any) => d.msg,
-            )
-            .join("; ");
+          message = detail.map((d: any) => d.msg).join("; ");
         } else if (error?.message) {
           message = error.message;
         } else if (typeof error === "string") {
@@ -104,7 +99,7 @@ const PredicateForm: React.FC<PredicateFormProps> = ({
           message = JSON.stringify(error);
         }
         setSubmitError(message);
-        // TODO: Use useButterToast for error notification
+        toast.error(message);
         console.error(
           isEdit
             ? "Failed to update predicate:"
@@ -189,7 +184,7 @@ const PredicateForm: React.FC<PredicateFormProps> = ({
           )}
         </form.Field>
 
-        <form.Field name="definition">
+        <form.Field name="description">
           {(field) => (
             <div>
               <Label
@@ -289,7 +284,7 @@ const PredicateForm: React.FC<PredicateFormProps> = ({
                 : "Creating..."
               : isEdit
                 ? "Save Changes"
-                : "Create Predicate"}
+                : "Create Property Definition"}
           </Button>
         </div>
       </form>

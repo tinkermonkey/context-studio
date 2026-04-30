@@ -12,9 +12,10 @@ export * from "./admin";
 export * from "./analytics";
 export * from "./backgroundTasks";
 export * from "./configuration";
+export * from "./conceptSchemes";
 export * from "./datasets";
 export * from "./enabledModels";
-// Graph hooks are imported selectively to avoid conflicts with structure_nodes
+// Graph hooks are imported selectively to avoid conflicts
 export {
   useGraphStats,
   useRelatedTerms,
@@ -40,9 +41,11 @@ export * from "./llm";
 export * from "./modelCapabilities";
 export * from "./nlp";
 export * from "./nlpReference";
+export * from "./ontologyClasses";
 export * from "./pipelineFlavors";
-export * from "./predicates";
+export * from "./propertyDefinitions";
 export * from "./rag";
 export * from "./reference";
+export * from "./relationships";
 export * from "./schema";
-export * from "./structure_nodes";
+export * from "./taxonomies";

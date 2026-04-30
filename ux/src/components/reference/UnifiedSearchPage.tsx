@@ -63,14 +63,7 @@ export const UnifiedSearchPage: React.FC<UnifiedSearchPageProps> = ({
     totalResults,
     completedSources,
     errorSources,
-  } = useStreamingUnifiedSearch({
-    onComplete: (state) => {
-      console.log("Search completed:", state);
-    },
-    onSourceUpdate: (update) => {
-      console.log(`Source ${update.source} update:`, update);
-    },
-  });
+  } = useStreamingUnifiedSearch({});
 
   const sourceLoadingStates = useSourceLoadingStates(searchState);
 

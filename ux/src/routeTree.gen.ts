@@ -12,18 +12,19 @@ import { Route as rootRouteImport } from "./routes/__root";
 import { Route as AppRouteImport } from "./routes/app";
 import { Route as IndexRouteImport } from "./routes/index";
 import { Route as AppIndexRouteImport } from "./routes/app/index";
-import { Route as AppTermsRouteImport } from "./routes/app/terms";
-import { Route as AppPredicatesRouteImport } from "./routes/app/predicates";
-import { Route as AppLayersRouteImport } from "./routes/app/layers";
-import { Route as AppDomainsRouteImport } from "./routes/app/domains";
+import { Route as AppTaxonomiesRouteImport } from "./routes/app/taxonomies";
+import { Route as AppRelationshipsRouteImport } from "./routes/app/relationships";
+import { Route as AppPropertiesRouteImport } from "./routes/app/properties";
 import { Route as AppDatasetsRouteImport } from "./routes/app/datasets";
 import { Route as AppConfigRouteImport } from "./routes/app/config";
+import { Route as AppConceptSchemesRouteImport } from "./routes/app/concept-schemes";
+import { Route as AppClassesRouteImport } from "./routes/app/classes";
 import { Route as AppReferenceIndexRouteImport } from "./routes/app/reference/index";
 import { Route as AppConfigIndexRouteImport } from "./routes/app/config/index";
-import { Route as AppStructure_nodesNodeIdRouteImport } from "./routes/app/structure_nodes/$nodeId";
+import { Route as AppTaxonomiesTaxonomyIdRouteImport } from "./routes/app/taxonomies.$taxonomyId";
 import { Route as AppReferenceSearchRouteImport } from "./routes/app/reference/search";
 import { Route as AppReferenceRagTestRouteImport } from "./routes/app/reference/rag-test";
-import { Route as AppReferencePredicatesRouteImport } from "./routes/app/reference/predicates";
+import { Route as AppReferencePropertiesRouteImport } from "./routes/app/reference/properties";
 import { Route as AppRagTestRunnerRouteImport } from "./routes/app/rag/test-runner";
 import { Route as AppRagPipelineComparisonRouteImport } from "./routes/app/rag/pipeline-comparison";
 import { Route as AppRagExperimentsRouteImport } from "./routes/app/rag/experiments";
@@ -39,6 +40,8 @@ import { Route as AppConfigNetworkRouteImport } from "./routes/app/config/networ
 import { Route as AppConfigModelsRouteImport } from "./routes/app/config/models";
 import { Route as AppConfigDataSourcesRouteImport } from "./routes/app/config/data-sources";
 import { Route as AppConfigAdvancedRouteImport } from "./routes/app/config/advanced";
+import { Route as AppConceptSchemesSchemeIdRouteImport } from "./routes/app/concept-schemes.$schemeId";
+import { Route as AppClassesClassIdRouteImport } from "./routes/app/classes.$classId";
 import { Route as AppConfigPipelinesIndexRouteImport } from "./routes/app/config/pipelines.index";
 import { Route as AppConfigPipelinesPipelineTypeRouteImport } from "./routes/app/config/pipelines.$pipelineType";
 import { Route as AppConfigPipelinesPipelineTypeIndexRouteImport } from "./routes/app/config/pipelines.$pipelineType.index";
@@ -61,24 +64,19 @@ const AppIndexRoute = AppIndexRouteImport.update({
   path: "/",
   getParentRoute: () => AppRoute,
 } as any);
-const AppTermsRoute = AppTermsRouteImport.update({
-  id: "/terms",
-  path: "/terms",
+const AppTaxonomiesRoute = AppTaxonomiesRouteImport.update({
+  id: "/taxonomies",
+  path: "/taxonomies",
   getParentRoute: () => AppRoute,
 } as any);
-const AppPredicatesRoute = AppPredicatesRouteImport.update({
-  id: "/predicates",
-  path: "/predicates",
+const AppRelationshipsRoute = AppRelationshipsRouteImport.update({
+  id: "/relationships",
+  path: "/relationships",
   getParentRoute: () => AppRoute,
 } as any);
-const AppLayersRoute = AppLayersRouteImport.update({
-  id: "/layers",
-  path: "/layers",
-  getParentRoute: () => AppRoute,
-} as any);
-const AppDomainsRoute = AppDomainsRouteImport.update({
-  id: "/domains",
-  path: "/domains",
+const AppPropertiesRoute = AppPropertiesRouteImport.update({
+  id: "/properties",
+  path: "/properties",
   getParentRoute: () => AppRoute,
 } as any);
 const AppDatasetsRoute = AppDatasetsRouteImport.update({
@@ -91,6 +89,16 @@ const AppConfigRoute = AppConfigRouteImport.update({
   path: "/config",
   getParentRoute: () => AppRoute,
 } as any);
+const AppConceptSchemesRoute = AppConceptSchemesRouteImport.update({
+  id: "/concept-schemes",
+  path: "/concept-schemes",
+  getParentRoute: () => AppRoute,
+} as any);
+const AppClassesRoute = AppClassesRouteImport.update({
+  id: "/classes",
+  path: "/classes",
+  getParentRoute: () => AppRoute,
+} as any);
 const AppReferenceIndexRoute = AppReferenceIndexRouteImport.update({
   id: "/reference/",
   path: "/reference/",
@@ -101,12 +109,11 @@ const AppConfigIndexRoute = AppConfigIndexRouteImport.update({
   path: "/",
   getParentRoute: () => AppConfigRoute,
 } as any);
-const AppStructure_nodesNodeIdRoute =
-  AppStructure_nodesNodeIdRouteImport.update({
-    id: "/structure_nodes/$nodeId",
-    path: "/structure_nodes/$nodeId",
-    getParentRoute: () => AppRoute,
-  } as any);
+const AppTaxonomiesTaxonomyIdRoute = AppTaxonomiesTaxonomyIdRouteImport.update({
+  id: "/$taxonomyId",
+  path: "/$taxonomyId",
+  getParentRoute: () => AppTaxonomiesRoute,
+} as any);
 const AppReferenceSearchRoute = AppReferenceSearchRouteImport.update({
   id: "/reference/search",
   path: "/reference/search",
@@ -117,9 +124,9 @@ const AppReferenceRagTestRoute = AppReferenceRagTestRouteImport.update({
   path: "/reference/rag-test",
   getParentRoute: () => AppRoute,
 } as any);
-const AppReferencePredicatesRoute = AppReferencePredicatesRouteImport.update({
-  id: "/reference/predicates",
-  path: "/reference/predicates",
+const AppReferencePropertiesRoute = AppReferencePropertiesRouteImport.update({
+  id: "/reference/properties",
+  path: "/reference/properties",
   getParentRoute: () => AppRoute,
 } as any);
 const AppRagTestRunnerRoute = AppRagTestRunnerRouteImport.update({
@@ -202,6 +209,17 @@ const AppConfigAdvancedRoute = AppConfigAdvancedRouteImport.update({
   path: "/advanced",
   getParentRoute: () => AppConfigRoute,
 } as any);
+const AppConceptSchemesSchemeIdRoute =
+  AppConceptSchemesSchemeIdRouteImport.update({
+    id: "/$schemeId",
+    path: "/$schemeId",
+    getParentRoute: () => AppConceptSchemesRoute,
+  } as any);
+const AppClassesClassIdRoute = AppClassesClassIdRouteImport.update({
+  id: "/$classId",
+  path: "/$classId",
+  getParentRoute: () => AppClassesRoute,
+} as any);
 const AppConfigPipelinesIndexRoute = AppConfigPipelinesIndexRouteImport.update({
   id: "/",
   path: "/",
@@ -241,13 +259,16 @@ const AppConfigPipelinesPipelineTypeEditFlavorIdRoute =
 export interface FileRoutesByFullPath {
   "/": typeof IndexRoute;
   "/app": typeof AppRouteWithChildren;
+  "/app/classes": typeof AppClassesRouteWithChildren;
+  "/app/concept-schemes": typeof AppConceptSchemesRouteWithChildren;
   "/app/config": typeof AppConfigRouteWithChildren;
   "/app/datasets": typeof AppDatasetsRoute;
-  "/app/domains": typeof AppDomainsRoute;
-  "/app/layers": typeof AppLayersRoute;
-  "/app/predicates": typeof AppPredicatesRoute;
-  "/app/terms": typeof AppTermsRoute;
+  "/app/properties": typeof AppPropertiesRoute;
+  "/app/relationships": typeof AppRelationshipsRoute;
+  "/app/taxonomies": typeof AppTaxonomiesRouteWithChildren;
   "/app/": typeof AppIndexRoute;
+  "/app/classes/$classId": typeof AppClassesClassIdRoute;
+  "/app/concept-schemes/$schemeId": typeof AppConceptSchemesSchemeIdRoute;
   "/app/config/advanced": typeof AppConfigAdvancedRoute;
   "/app/config/data-sources": typeof AppConfigDataSourcesRoute;
   "/app/config/models": typeof AppConfigModelsRoute;
@@ -263,10 +284,10 @@ export interface FileRoutesByFullPath {
   "/app/rag/experiments": typeof AppRagExperimentsRoute;
   "/app/rag/pipeline-comparison": typeof AppRagPipelineComparisonRoute;
   "/app/rag/test-runner": typeof AppRagTestRunnerRoute;
-  "/app/reference/predicates": typeof AppReferencePredicatesRoute;
+  "/app/reference/properties": typeof AppReferencePropertiesRoute;
   "/app/reference/rag-test": typeof AppReferenceRagTestRoute;
   "/app/reference/search": typeof AppReferenceSearchRoute;
-  "/app/structure_nodes/$nodeId": typeof AppStructure_nodesNodeIdRoute;
+  "/app/taxonomies/$taxonomyId": typeof AppTaxonomiesTaxonomyIdRoute;
   "/app/config/": typeof AppConfigIndexRoute;
   "/app/reference": typeof AppReferenceIndexRoute;
   "/app/config/pipelines/$pipelineType": typeof AppConfigPipelinesPipelineTypeRouteWithChildren;
@@ -278,12 +299,15 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   "/": typeof IndexRoute;
+  "/app/classes": typeof AppClassesRouteWithChildren;
+  "/app/concept-schemes": typeof AppConceptSchemesRouteWithChildren;
   "/app/datasets": typeof AppDatasetsRoute;
-  "/app/domains": typeof AppDomainsRoute;
-  "/app/layers": typeof AppLayersRoute;
-  "/app/predicates": typeof AppPredicatesRoute;
-  "/app/terms": typeof AppTermsRoute;
+  "/app/properties": typeof AppPropertiesRoute;
+  "/app/relationships": typeof AppRelationshipsRoute;
+  "/app/taxonomies": typeof AppTaxonomiesRouteWithChildren;
   "/app": typeof AppIndexRoute;
+  "/app/classes/$classId": typeof AppClassesClassIdRoute;
+  "/app/concept-schemes/$schemeId": typeof AppConceptSchemesSchemeIdRoute;
   "/app/config/advanced": typeof AppConfigAdvancedRoute;
   "/app/config/data-sources": typeof AppConfigDataSourcesRoute;
   "/app/config/models": typeof AppConfigModelsRoute;
@@ -298,10 +322,10 @@ export interface FileRoutesByTo {
   "/app/rag/experiments": typeof AppRagExperimentsRoute;
   "/app/rag/pipeline-comparison": typeof AppRagPipelineComparisonRoute;
   "/app/rag/test-runner": typeof AppRagTestRunnerRoute;
-  "/app/reference/predicates": typeof AppReferencePredicatesRoute;
+  "/app/reference/properties": typeof AppReferencePropertiesRoute;
   "/app/reference/rag-test": typeof AppReferenceRagTestRoute;
   "/app/reference/search": typeof AppReferenceSearchRoute;
-  "/app/structure_nodes/$nodeId": typeof AppStructure_nodesNodeIdRoute;
+  "/app/taxonomies/$taxonomyId": typeof AppTaxonomiesTaxonomyIdRoute;
   "/app/config": typeof AppConfigIndexRoute;
   "/app/reference": typeof AppReferenceIndexRoute;
   "/app/config/pipelines": typeof AppConfigPipelinesIndexRoute;
@@ -314,13 +338,16 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport;
   "/": typeof IndexRoute;
   "/app": typeof AppRouteWithChildren;
+  "/app/classes": typeof AppClassesRouteWithChildren;
+  "/app/concept-schemes": typeof AppConceptSchemesRouteWithChildren;
   "/app/config": typeof AppConfigRouteWithChildren;
   "/app/datasets": typeof AppDatasetsRoute;
-  "/app/domains": typeof AppDomainsRoute;
-  "/app/layers": typeof AppLayersRoute;
-  "/app/predicates": typeof AppPredicatesRoute;
-  "/app/terms": typeof AppTermsRoute;
+  "/app/properties": typeof AppPropertiesRoute;
+  "/app/relationships": typeof AppRelationshipsRoute;
+  "/app/taxonomies": typeof AppTaxonomiesRouteWithChildren;
   "/app/": typeof AppIndexRoute;
+  "/app/classes/$classId": typeof AppClassesClassIdRoute;
+  "/app/concept-schemes/$schemeId": typeof AppConceptSchemesSchemeIdRoute;
   "/app/config/advanced": typeof AppConfigAdvancedRoute;
   "/app/config/data-sources": typeof AppConfigDataSourcesRoute;
   "/app/config/models": typeof AppConfigModelsRoute;
@@ -336,10 +363,10 @@ export interface FileRoutesById {
   "/app/rag/experiments": typeof AppRagExperimentsRoute;
   "/app/rag/pipeline-comparison": typeof AppRagPipelineComparisonRoute;
   "/app/rag/test-runner": typeof AppRagTestRunnerRoute;
-  "/app/reference/predicates": typeof AppReferencePredicatesRoute;
+  "/app/reference/properties": typeof AppReferencePropertiesRoute;
   "/app/reference/rag-test": typeof AppReferenceRagTestRoute;
   "/app/reference/search": typeof AppReferenceSearchRoute;
-  "/app/structure_nodes/$nodeId": typeof AppStructure_nodesNodeIdRoute;
+  "/app/taxonomies/$taxonomyId": typeof AppTaxonomiesTaxonomyIdRoute;
   "/app/config/": typeof AppConfigIndexRoute;
   "/app/reference/": typeof AppReferenceIndexRoute;
   "/app/config/pipelines/$pipelineType": typeof AppConfigPipelinesPipelineTypeRouteWithChildren;
@@ -354,13 +381,16 @@ export interface FileRouteTypes {
   fullPaths:
     | "/"
     | "/app"
+    | "/app/classes"
+    | "/app/concept-schemes"
     | "/app/config"
     | "/app/datasets"
-    | "/app/domains"
-    | "/app/layers"
-    | "/app/predicates"
-    | "/app/terms"
+    | "/app/properties"
+    | "/app/relationships"
+    | "/app/taxonomies"
     | "/app/"
+    | "/app/classes/$classId"
+    | "/app/concept-schemes/$schemeId"
     | "/app/config/advanced"
     | "/app/config/data-sources"
     | "/app/config/models"
@@ -376,10 +406,10 @@ export interface FileRouteTypes {
     | "/app/rag/experiments"
     | "/app/rag/pipeline-comparison"
     | "/app/rag/test-runner"
-    | "/app/reference/predicates"
+    | "/app/reference/properties"
     | "/app/reference/rag-test"
     | "/app/reference/search"
-    | "/app/structure_nodes/$nodeId"
+    | "/app/taxonomies/$taxonomyId"
     | "/app/config/"
     | "/app/reference"
     | "/app/config/pipelines/$pipelineType"
@@ -391,12 +421,15 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo;
   to:
     | "/"
+    | "/app/classes"
+    | "/app/concept-schemes"
     | "/app/datasets"
-    | "/app/domains"
-    | "/app/layers"
-    | "/app/predicates"
-    | "/app/terms"
+    | "/app/properties"
+    | "/app/relationships"
+    | "/app/taxonomies"
     | "/app"
+    | "/app/classes/$classId"
+    | "/app/concept-schemes/$schemeId"
     | "/app/config/advanced"
     | "/app/config/data-sources"
     | "/app/config/models"
@@ -411,10 +444,10 @@ export interface FileRouteTypes {
     | "/app/rag/experiments"
     | "/app/rag/pipeline-comparison"
     | "/app/rag/test-runner"
-    | "/app/reference/predicates"
+    | "/app/reference/properties"
     | "/app/reference/rag-test"
     | "/app/reference/search"
-    | "/app/structure_nodes/$nodeId"
+    | "/app/taxonomies/$taxonomyId"
     | "/app/config"
     | "/app/reference"
     | "/app/config/pipelines"
@@ -426,13 +459,16 @@ export interface FileRouteTypes {
     | "__root__"
     | "/"
     | "/app"
+    | "/app/classes"
+    | "/app/concept-schemes"
     | "/app/config"
     | "/app/datasets"
-    | "/app/domains"
-    | "/app/layers"
-    | "/app/predicates"
-    | "/app/terms"
+    | "/app/properties"
+    | "/app/relationships"
+    | "/app/taxonomies"
     | "/app/"
+    | "/app/classes/$classId"
+    | "/app/concept-schemes/$schemeId"
     | "/app/config/advanced"
     | "/app/config/data-sources"
     | "/app/config/models"
@@ -448,10 +484,10 @@ export interface FileRouteTypes {
     | "/app/rag/experiments"
     | "/app/rag/pipeline-comparison"
     | "/app/rag/test-runner"
-    | "/app/reference/predicates"
+    | "/app/reference/properties"
     | "/app/reference/rag-test"
     | "/app/reference/search"
-    | "/app/structure_nodes/$nodeId"
+    | "/app/taxonomies/$taxonomyId"
     | "/app/config/"
     | "/app/reference/"
     | "/app/config/pipelines/$pipelineType"
@@ -490,32 +526,25 @@ declare module "@tanstack/react-router" {
       preLoaderRoute: typeof AppIndexRouteImport;
       parentRoute: typeof AppRoute;
     };
-    "/app/terms": {
-      id: "/app/terms";
-      path: "/terms";
-      fullPath: "/app/terms";
-      preLoaderRoute: typeof AppTermsRouteImport;
+    "/app/taxonomies": {
+      id: "/app/taxonomies";
+      path: "/taxonomies";
+      fullPath: "/app/taxonomies";
+      preLoaderRoute: typeof AppTaxonomiesRouteImport;
       parentRoute: typeof AppRoute;
     };
-    "/app/predicates": {
-      id: "/app/predicates";
-      path: "/predicates";
-      fullPath: "/app/predicates";
-      preLoaderRoute: typeof AppPredicatesRouteImport;
+    "/app/relationships": {
+      id: "/app/relationships";
+      path: "/relationships";
+      fullPath: "/app/relationships";
+      preLoaderRoute: typeof AppRelationshipsRouteImport;
       parentRoute: typeof AppRoute;
     };
-    "/app/layers": {
-      id: "/app/layers";
-      path: "/layers";
-      fullPath: "/app/layers";
-      preLoaderRoute: typeof AppLayersRouteImport;
-      parentRoute: typeof AppRoute;
-    };
-    "/app/domains": {
-      id: "/app/domains";
-      path: "/domains";
-      fullPath: "/app/domains";
-      preLoaderRoute: typeof AppDomainsRouteImport;
+    "/app/properties": {
+      id: "/app/properties";
+      path: "/properties";
+      fullPath: "/app/properties";
+      preLoaderRoute: typeof AppPropertiesRouteImport;
       parentRoute: typeof AppRoute;
     };
     "/app/datasets": {
@@ -532,6 +561,20 @@ declare module "@tanstack/react-router" {
       preLoaderRoute: typeof AppConfigRouteImport;
       parentRoute: typeof AppRoute;
     };
+    "/app/concept-schemes": {
+      id: "/app/concept-schemes";
+      path: "/concept-schemes";
+      fullPath: "/app/concept-schemes";
+      preLoaderRoute: typeof AppConceptSchemesRouteImport;
+      parentRoute: typeof AppRoute;
+    };
+    "/app/classes": {
+      id: "/app/classes";
+      path: "/classes";
+      fullPath: "/app/classes";
+      preLoaderRoute: typeof AppClassesRouteImport;
+      parentRoute: typeof AppRoute;
+    };
     "/app/reference/": {
       id: "/app/reference/";
       path: "/reference";
@@ -546,12 +589,12 @@ declare module "@tanstack/react-router" {
       preLoaderRoute: typeof AppConfigIndexRouteImport;
       parentRoute: typeof AppConfigRoute;
     };
-    "/app/structure_nodes/$nodeId": {
-      id: "/app/structure_nodes/$nodeId";
-      path: "/structure_nodes/$nodeId";
-      fullPath: "/app/structure_nodes/$nodeId";
-      preLoaderRoute: typeof AppStructure_nodesNodeIdRouteImport;
-      parentRoute: typeof AppRoute;
+    "/app/taxonomies/$taxonomyId": {
+      id: "/app/taxonomies/$taxonomyId";
+      path: "/$taxonomyId";
+      fullPath: "/app/taxonomies/$taxonomyId";
+      preLoaderRoute: typeof AppTaxonomiesTaxonomyIdRouteImport;
+      parentRoute: typeof AppTaxonomiesRoute;
     };
     "/app/reference/search": {
       id: "/app/reference/search";
@@ -567,11 +610,11 @@ declare module "@tanstack/react-router" {
       preLoaderRoute: typeof AppReferenceRagTestRouteImport;
       parentRoute: typeof AppRoute;
     };
-    "/app/reference/predicates": {
-      id: "/app/reference/predicates";
-      path: "/reference/predicates";
-      fullPath: "/app/reference/predicates";
-      preLoaderRoute: typeof AppReferencePredicatesRouteImport;
+    "/app/reference/properties": {
+      id: "/app/reference/properties";
+      path: "/reference/properties";
+      fullPath: "/app/reference/properties";
+      preLoaderRoute: typeof AppReferencePropertiesRouteImport;
       parentRoute: typeof AppRoute;
     };
     "/app/rag/test-runner": {
@@ -679,6 +722,20 @@ declare module "@tanstack/react-router" {
       preLoaderRoute: typeof AppConfigAdvancedRouteImport;
       parentRoute: typeof AppConfigRoute;
     };
+    "/app/concept-schemes/$schemeId": {
+      id: "/app/concept-schemes/$schemeId";
+      path: "/$schemeId";
+      fullPath: "/app/concept-schemes/$schemeId";
+      preLoaderRoute: typeof AppConceptSchemesSchemeIdRouteImport;
+      parentRoute: typeof AppConceptSchemesRoute;
+    };
+    "/app/classes/$classId": {
+      id: "/app/classes/$classId";
+      path: "/$classId";
+      fullPath: "/app/classes/$classId";
+      preLoaderRoute: typeof AppClassesClassIdRouteImport;
+      parentRoute: typeof AppClassesRoute;
+    };
     "/app/config/pipelines/": {
       id: "/app/config/pipelines/";
       path: "/";
@@ -723,6 +780,29 @@ declare module "@tanstack/react-router" {
     };
   }
 }
+
+interface AppClassesRouteChildren {
+  AppClassesClassIdRoute: typeof AppClassesClassIdRoute;
+}
+
+const AppClassesRouteChildren: AppClassesRouteChildren = {
+  AppClassesClassIdRoute: AppClassesClassIdRoute,
+};
+
+const AppClassesRouteWithChildren = AppClassesRoute._addFileChildren(
+  AppClassesRouteChildren,
+);
+
+interface AppConceptSchemesRouteChildren {
+  AppConceptSchemesSchemeIdRoute: typeof AppConceptSchemesSchemeIdRoute;
+}
+
+const AppConceptSchemesRouteChildren: AppConceptSchemesRouteChildren = {
+  AppConceptSchemesSchemeIdRoute: AppConceptSchemesSchemeIdRoute,
+};
+
+const AppConceptSchemesRouteWithChildren =
+  AppConceptSchemesRoute._addFileChildren(AppConceptSchemesRouteChildren);
 
 interface AppConfigPipelinesPipelineTypeRouteChildren {
   AppConfigPipelinesPipelineTypeCreateRoute: typeof AppConfigPipelinesPipelineTypeCreateRoute;
@@ -788,13 +868,26 @@ const AppConfigRouteWithChildren = AppConfigRoute._addFileChildren(
   AppConfigRouteChildren,
 );
 
+interface AppTaxonomiesRouteChildren {
+  AppTaxonomiesTaxonomyIdRoute: typeof AppTaxonomiesTaxonomyIdRoute;
+}
+
+const AppTaxonomiesRouteChildren: AppTaxonomiesRouteChildren = {
+  AppTaxonomiesTaxonomyIdRoute: AppTaxonomiesTaxonomyIdRoute,
+};
+
+const AppTaxonomiesRouteWithChildren = AppTaxonomiesRoute._addFileChildren(
+  AppTaxonomiesRouteChildren,
+);
+
 interface AppRouteChildren {
+  AppClassesRoute: typeof AppClassesRouteWithChildren;
+  AppConceptSchemesRoute: typeof AppConceptSchemesRouteWithChildren;
   AppConfigRoute: typeof AppConfigRouteWithChildren;
   AppDatasetsRoute: typeof AppDatasetsRoute;
-  AppDomainsRoute: typeof AppDomainsRoute;
-  AppLayersRoute: typeof AppLayersRoute;
-  AppPredicatesRoute: typeof AppPredicatesRoute;
-  AppTermsRoute: typeof AppTermsRoute;
+  AppPropertiesRoute: typeof AppPropertiesRoute;
+  AppRelationshipsRoute: typeof AppRelationshipsRoute;
+  AppTaxonomiesRoute: typeof AppTaxonomiesRouteWithChildren;
   AppIndexRoute: typeof AppIndexRoute;
   AppMonitoringAnalyticsRoute: typeof AppMonitoringAnalyticsRoute;
   AppMonitoringLlmTraceabilityRoute: typeof AppMonitoringLlmTraceabilityRoute;
@@ -804,20 +897,20 @@ interface AppRouteChildren {
   AppRagExperimentsRoute: typeof AppRagExperimentsRoute;
   AppRagPipelineComparisonRoute: typeof AppRagPipelineComparisonRoute;
   AppRagTestRunnerRoute: typeof AppRagTestRunnerRoute;
-  AppReferencePredicatesRoute: typeof AppReferencePredicatesRoute;
+  AppReferencePropertiesRoute: typeof AppReferencePropertiesRoute;
   AppReferenceRagTestRoute: typeof AppReferenceRagTestRoute;
   AppReferenceSearchRoute: typeof AppReferenceSearchRoute;
-  AppStructure_nodesNodeIdRoute: typeof AppStructure_nodesNodeIdRoute;
   AppReferenceIndexRoute: typeof AppReferenceIndexRoute;
 }
 
 const AppRouteChildren: AppRouteChildren = {
+  AppClassesRoute: AppClassesRouteWithChildren,
+  AppConceptSchemesRoute: AppConceptSchemesRouteWithChildren,
   AppConfigRoute: AppConfigRouteWithChildren,
   AppDatasetsRoute: AppDatasetsRoute,
-  AppDomainsRoute: AppDomainsRoute,
-  AppLayersRoute: AppLayersRoute,
-  AppPredicatesRoute: AppPredicatesRoute,
-  AppTermsRoute: AppTermsRoute,
+  AppPropertiesRoute: AppPropertiesRoute,
+  AppRelationshipsRoute: AppRelationshipsRoute,
+  AppTaxonomiesRoute: AppTaxonomiesRouteWithChildren,
   AppIndexRoute: AppIndexRoute,
   AppMonitoringAnalyticsRoute: AppMonitoringAnalyticsRoute,
   AppMonitoringLlmTraceabilityRoute: AppMonitoringLlmTraceabilityRoute,
@@ -827,10 +920,9 @@ const AppRouteChildren: AppRouteChildren = {
   AppRagExperimentsRoute: AppRagExperimentsRoute,
   AppRagPipelineComparisonRoute: AppRagPipelineComparisonRoute,
   AppRagTestRunnerRoute: AppRagTestRunnerRoute,
-  AppReferencePredicatesRoute: AppReferencePredicatesRoute,
+  AppReferencePropertiesRoute: AppReferencePropertiesRoute,
   AppReferenceRagTestRoute: AppReferenceRagTestRoute,
   AppReferenceSearchRoute: AppReferenceSearchRoute,
-  AppStructure_nodesNodeIdRoute: AppStructure_nodesNodeIdRoute,
   AppReferenceIndexRoute: AppReferenceIndexRoute,
 };
 

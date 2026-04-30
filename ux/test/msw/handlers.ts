@@ -1,433 +1,589 @@
 import { rest } from "msw";
 
-// Centralized MSW handlers for common API endpoints used in integration tests.
-// Extend these as tests require more endpoints and edge cases.
+/**
+ * Centralized MSW handlers for common API endpoints used in integration tests.
+ * These handlers mock the NEW back-end API endpoints (taxonomies, schemes, classes, properties).
+ * All handlers use relative URLs that work with the configured baseURL from API_CONFIG.
+ */
+
 export const handlers = [
-  // Generic PUT matcher for domains; validate minimal required fields and return normalized domain
-  rest.put(new RegExp(".*/api/domains/.+"), async (req, res, ctx) => {
-    const body = await req.json();
-    // extract id from url
-    const pathname = req.url.pathname || "";
-    const parts = pathname.split("/").filter(Boolean);
-    const id = parts.length ? parts[parts.length - 1] : "unknown";
+  // Taxonomies endpoints
+  rest.get("/api/taxonomies", (req, res, ctx) => {
+    return res(
+      ctx.status(200),
+      ctx.json({
+        items: [
+          {
+            id: "taxonomy-1",
+            title: "Taxonomy 1",
+            version: 1,
+            created_at: new Date().toISOString(),
+          },
+        ],
+        total: 1,
+        limit: 50,
+        offset: 0,
+      }),
+    );
+  }),
 
-    // Minimal validation for tests: require a title
+  rest.get("/api/taxonomies/:id", (req, res, ctx) => {
+    const { id } = req.params as { id: string };
+    return res(
+      ctx.status(200),
+      ctx.json({
+        id,
+        title: `Taxonomy ${id}`,
+        version: 1,
+        created_at: new Date().toISOString(),
+      }),
+    );
+  }),
+
+  rest.post("/api/taxonomies", async (req, res, ctx) => {
+    const body = await req.json();
+    return res(
+      ctx.status(201),
+      ctx.json({
+        ...body,
+        id: "new-taxonomy",
+        version: 1,
+      }),
+    );
+  }),
+
+  rest.put("/api/taxonomies/:id", async (req, res, ctx) => {
+    const { id } = req.params as { id: string };
+    const body = await req.json();
     if (!body || typeof body.title !== "string" || body.title.trim() === "") {
       return res(
         ctx.status(400),
         ctx.json({ message: "Validation failed: title is required" }),
       );
     }
-
-    // Normalize layer_id if missing for test flexibility
-    const layer_id = body.layer_id || "00000000-0000-0000-0000-000000000000";
-
-    const response = {
-      data: {
+    return res(
+      ctx.status(200),
+      ctx.json({
+        ...body,
         id,
-        title: String(body.title),
-        definition: body.definition || null,
-        layer_id,
-        created_at: body.created_at || new Date().toISOString(),
-        description: body.description || null,
-      },
-    };
-
-    return res(ctx.status(200), ctx.json(response));
+        version: 1,
+      }),
+    );
   }),
 
-  // Domains list & single
-  rest.get("/api/domains", (req, res, ctx) => {
+  rest.delete("/api/taxonomies/:id", (req, res, ctx) => {
+    return res(ctx.status(204));
+  }),
+
+  // Schemes endpoints
+  rest.get("/api/schemes", (req, res, ctx) => {
     return res(
       ctx.status(200),
-      ctx.json({ data: [{ id: "domain-1", title: "Domain 1" }] }),
+      ctx.json({
+        items: [
+          {
+            id: "scheme-1",
+            title: "Scheme 1",
+            taxonomy_id: "taxonomy-1",
+            version: 1,
+            created_at: new Date().toISOString(),
+          },
+        ],
+        total: 1,
+        limit: 50,
+        offset: 0,
+      }),
     );
   }),
-  rest.get("http://localhost:8000/api/domains", (req, res, ctx) => {
-    return res(
-      ctx.status(200),
-      ctx.json({ data: [{ id: "domain-1", title: "Domain 1" }] }),
-    );
-  }),
-  rest.get("http://localhost:8000/api/domains/", (req, res, ctx) => {
-    return res(
-      ctx.status(200),
-      ctx.json({ data: [{ id: "domain-1", title: "Domain 1" }] }),
-    );
-  }),
-  rest.get("http://localhost:8001/api/domains", (req, res, ctx) => {
-    return res(
-      ctx.status(200),
-      ctx.json({ data: [{ id: "domain-1", title: "Domain 1" }] }),
-    );
-  }),
-  rest.get("http://localhost:8001/api/domains/", (req, res, ctx) => {
-    return res(
-      ctx.status(200),
-      ctx.json({ data: [{ id: "domain-1", title: "Domain 1" }] }),
-    );
-  }),
-  rest.get("http://localhost:8001/api/domains/:id", (req, res, ctx) => {
+
+  rest.get("/api/schemes/:id", (req, res, ctx) => {
     const { id } = req.params as { id: string };
     return res(
       ctx.status(200),
-      ctx.json({ data: { id, title: `Domain ${id}` } }),
+      ctx.json({
+        id,
+        title: `Scheme ${id}`,
+        taxonomy_id: "taxonomy-1",
+        version: 1,
+        created_at: new Date().toISOString(),
+      }),
     );
   }),
-  rest.post("http://localhost:8001/api/domains", async (req, res, ctx) => {
+
+  rest.post("/api/taxonomies/:taxonomy_id/schemes", async (req, res, ctx) => {
+    const { taxonomy_id } = req.params as { taxonomy_id: string };
     const body = await req.json();
     return res(
       ctx.status(201),
-      ctx.json({ data: { ...body, id: "new-domain" } }),
-    );
-  }),
-  rest.put("http://localhost:8001/api/domains/:id", async (req, res, ctx) => {
-    const { id } = req.params as { id: string };
-    const body = await req.json();
-    return res(ctx.status(200), ctx.json({ data: { ...body, id } }));
-  }),
-  rest.put("http://localhost:8001/api/domains/:id/", async (req, res, ctx) => {
-    const { id } = req.params as { id: string };
-    const body = await req.json();
-    return res(ctx.status(200), ctx.json({ data: { ...body, id } }));
-  }),
-  rest.get("/api/domains/:id", (req, res, ctx) => {
-    const { id } = req.params as { id: string };
-    return res(
-      ctx.status(200),
-      ctx.json({ data: { id, title: `Domain ${id}` } }),
-    );
-  }),
-  rest.get("http://localhost:8000/api/domains/:id", (req, res, ctx) => {
-    const { id } = req.params as { id: string };
-    return res(
-      ctx.status(200),
-      ctx.json({ data: { id, title: `Domain ${id}` } }),
-    );
-  }),
-  rest.post("/api/domains", async (req, res, ctx) => {
-    const body = await req.json();
-    return res(
-      ctx.status(201),
-      ctx.json({ data: { ...body, id: "new-domain" } }),
-    );
-  }),
-  rest.post("http://localhost:8000/api/domains", async (req, res, ctx) => {
-    const body = await req.json();
-    return res(
-      ctx.status(201),
-      ctx.json({ data: { ...body, id: "new-domain" } }),
-    );
-  }),
-  rest.put("/api/domains/:id", async (req, res, ctx) => {
-    const { id } = req.params as { id: string };
-    const body = await req.json();
-    // Accept numeric or uuid layer ids for test flexibility
-    const layer_id = body.layer_id || "00000000-0000-0000-0000-000000000000";
-    return res(ctx.status(200), ctx.json({ data: { ...body, id, layer_id } }));
-  }),
-  rest.put("/api/domains/:id/", async (req, res, ctx) => {
-    const { id } = req.params as { id: string };
-    const body = await req.json();
-    const layer_id = body.layer_id || "00000000-0000-0000-0000-000000000000";
-    return res(ctx.status(200), ctx.json({ data: { ...body, id, layer_id } }));
-  }),
-  rest.put("http://localhost:8000/api/domains/:id", async (req, res, ctx) => {
-    const { id } = req.params as { id: string };
-    const body = await req.json();
-    return res(ctx.status(200), ctx.json({ data: { ...body, id } }));
-  }),
-  rest.put("http://localhost:8000/api/domains/:id/", async (req, res, ctx) => {
-    const { id } = req.params as { id: string };
-    const body = await req.json();
-    return res(ctx.status(200), ctx.json({ data: { ...body, id } }));
-  }),
-
-  // Layers list
-  rest.get("/api/layers", (req, res, ctx) => {
-    return res(
-      ctx.status(200),
-      ctx.json({ data: [{ id: "layer-1", title: "Layer 1" }] }),
-    );
-  }),
-  rest.get("http://localhost:8000/api/layers", (req, res, ctx) => {
-    return res(
-      ctx.status(200),
-      ctx.json({ data: [{ id: "layer-1", title: "Layer 1" }] }),
-    );
-  }),
-  rest.get("http://localhost:8000/api/layers/", (req, res, ctx) => {
-    return res(
-      ctx.status(200),
-      ctx.json({ data: [{ id: "layer-1", title: "Layer 1" }] }),
-    );
-  }),
-  rest.get("/api/layers/:id", (req, res, ctx) => {
-    const { id } = req.params as { id: string };
-    return res(
-      ctx.status(200),
-      ctx.json({ data: { id, title: `Layer ${id}` } }),
-    );
-  }),
-  rest.get("http://localhost:8000/api/layers/:id", (req, res, ctx) => {
-    const { id } = req.params as { id: string };
-    return res(
-      ctx.status(200),
-      ctx.json({ data: { id, title: `Layer ${id}` } }),
-    );
-  }),
-  rest.get("http://localhost:8001/api/layers", (req, res, ctx) => {
-    return res(
-      ctx.status(200),
-      ctx.json({ data: [{ id: "layer-1", title: "Layer 1" }] }),
-    );
-  }),
-  rest.get("http://localhost:8001/api/layers/", (req, res, ctx) => {
-    return res(
-      ctx.status(200),
-      ctx.json({ data: [{ id: "layer-1", title: "Layer 1" }] }),
-    );
-  }),
-  rest.get("http://localhost:8001/api/layers/:id", (req, res, ctx) => {
-    const { id } = req.params as { id: string };
-    return res(
-      ctx.status(200),
-      ctx.json({ data: { id, title: `Layer ${id}` } }),
+      ctx.json({
+        ...body,
+        id: "new-scheme",
+        taxonomy_id,
+        version: 1,
+      }),
     );
   }),
 
-  // Terms list & create
-  rest.get("/api/terms", (req, res, ctx) => {
-    return res(
-      ctx.status(200),
-      ctx.json({ data: [{ id: "term-1", title: "Term 1" }] }),
-    );
-  }),
-  rest.get("http://localhost:8000/api/terms", (req, res, ctx) => {
-    return res(
-      ctx.status(200),
-      ctx.json({ data: [{ id: "term-1", title: "Term 1" }] }),
-    );
-  }),
-  rest.get("http://localhost:8000/api/terms/", (req, res, ctx) => {
-    return res(
-      ctx.status(200),
-      ctx.json({ data: [{ id: "term-1", title: "Term 1" }] }),
-    );
-  }),
-  rest.get("http://localhost:8001/api/terms", (req, res, ctx) => {
-    return res(
-      ctx.status(200),
-      ctx.json({ data: [{ id: "term-1", title: "Term 1" }] }),
-    );
-  }),
-  rest.get("http://localhost:8001/api/terms/", (req, res, ctx) => {
-    return res(
-      ctx.status(200),
-      ctx.json({ data: [{ id: "term-1", title: "Term 1" }] }),
-    );
-  }),
-  rest.post("/api/terms", async (req, res, ctx) => {
+  rest.put("/api/schemes/:id", async (req, res, ctx) => {
+    const { id } = req.params as { id: string };
     const body = await req.json();
+    if (!body || typeof body.title !== "string" || body.title.trim() === "") {
+      return res(
+        ctx.status(400),
+        ctx.json({ message: "Validation failed: title is required" }),
+      );
+    }
     return res(
-      ctx.status(201),
-      ctx.json({ data: { ...body, id: "new-term" } }),
-    );
-  }),
-  rest.post("http://localhost:8001/api/terms", async (req, res, ctx) => {
-    const body = await req.json();
-    return res(
-      ctx.status(201),
-      ctx.json({ data: { ...body, id: "new-term" } }),
+      ctx.status(200),
+      ctx.json({
+        ...body,
+        id,
+        version: 1,
+      }),
     );
   }),
 
-  // Predicates
-  rest.get("/api/predicates", (req, res, ctx) => {
-    return res(ctx.status(200), ctx.json({ data: [] }));
-  }),
-  rest.get("http://localhost:8000/api/predicates", (req, res, ctx) => {
-    return res(ctx.status(200), ctx.json({ data: [] }));
-  }),
-  rest.get("http://localhost:8000/api/predicates/", (req, res, ctx) => {
-    return res(ctx.status(200), ctx.json({ data: [] }));
-  }),
-  rest.get("http://localhost:8001/api/predicates", (req, res, ctx) => {
-    return res(ctx.status(200), ctx.json({ data: [] }));
-  }),
-  rest.get("http://localhost:8001/api/predicates/", (req, res, ctx) => {
-    return res(ctx.status(200), ctx.json({ data: [] }));
+  rest.delete("/api/schemes/:id", (req, res, ctx) => {
+    return res(ctx.status(204));
   }),
 
-  // Relationships
+  // Classes endpoints
+  rest.get("/api/classes", (req, res, ctx) => {
+    return res(
+      ctx.status(200),
+      ctx.json({
+        items: [
+          {
+            id: "class-1",
+            title: "Class 1",
+            concept_scheme_id: "scheme-1",
+            taxonomy_id: "taxonomy-1",
+            version: 1,
+            created_at: new Date().toISOString(),
+          },
+        ],
+        total: 1,
+        limit: 50,
+        offset: 0,
+      }),
+    );
+  }),
+
+  rest.get("/api/classes/:id", (req, res, ctx) => {
+    const { id } = req.params as { id: string };
+    return res(
+      ctx.status(200),
+      ctx.json({
+        id,
+        title: `Class ${id}`,
+        concept_scheme_id: "scheme-1",
+        taxonomy_id: "taxonomy-1",
+        version: 1,
+        created_at: new Date().toISOString(),
+      }),
+    );
+  }),
+
+  rest.post("/api/schemes/:scheme_id/classes", async (req, res, ctx) => {
+    const { scheme_id } = req.params as { scheme_id: string };
+    const body = await req.json();
+    return res(
+      ctx.status(201),
+      ctx.json({
+        ...body,
+        id: "new-class",
+        concept_scheme_id: scheme_id,
+        version: 1,
+      }),
+    );
+  }),
+
+  rest.put("/api/classes/:id", async (req, res, ctx) => {
+    const { id } = req.params as { id: string };
+    const body = await req.json();
+    if (!body || typeof body.title !== "string" || body.title.trim() === "") {
+      return res(
+        ctx.status(400),
+        ctx.json({ message: "Validation failed: title is required" }),
+      );
+    }
+    return res(
+      ctx.status(200),
+      ctx.json({
+        ...body,
+        id,
+        version: 1,
+      }),
+    );
+  }),
+
+  rest.delete("/api/classes/:id", (req, res, ctx) => {
+    return res(ctx.status(204));
+  }),
+
+  // Properties endpoints (replaces legacy predicates)
+  rest.get("/api/properties", (req, res, ctx) => {
+    return res(
+      ctx.status(200),
+      ctx.json({
+        items: [
+          {
+            id: "prop-1",
+            title: "Property 1",
+            identifier: "prop-1",
+            version: 1,
+          },
+        ],
+        total: 1,
+        limit: 50,
+        offset: 0,
+      }),
+    );
+  }),
+
+  rest.get("/api/properties/:id", (req, res, ctx) => {
+    const { id } = req.params as { id: string };
+    return res(
+      ctx.status(200),
+      ctx.json({
+        id,
+        title: `Property ${id}`,
+        identifier: id,
+        version: 1,
+      }),
+    );
+  }),
+
+  rest.post("/api/properties", async (req, res, ctx) => {
+    const body = await req.json();
+    return res(
+      ctx.status(201),
+      ctx.json({
+        ...body,
+        id: "new-property",
+        version: 1,
+      }),
+    );
+  }),
+
+  rest.put("/api/properties/:id", async (req, res, ctx) => {
+    const { id } = req.params as { id: string };
+    const body = await req.json();
+    if (!body || typeof body.title !== "string" || body.title.trim() === "") {
+      return res(
+        ctx.status(400),
+        ctx.json({ message: "Validation failed: title is required" }),
+      );
+    }
+    return res(
+      ctx.status(200),
+      ctx.json({
+        ...body,
+        id,
+        version: 1,
+      }),
+    );
+  }),
+
+  rest.delete("/api/properties/:id", (req, res, ctx) => {
+    return res(ctx.status(204));
+  }),
+
+  // Relationships endpoints
   rest.get("/api/relationships", (req, res, ctx) => {
-    return res(ctx.status(200), ctx.json({ data: [] }));
-  }),
-  rest.get("http://localhost:8001/api/relationships", (req, res, ctx) => {
-    return res(ctx.status(200), ctx.json({ data: [] }));
+    return res(
+      ctx.status(200),
+      ctx.json({
+        items: [
+          {
+            id: "rel-1",
+            source_id: "class-1",
+            target_id: "class-2",
+            property_definition_id: "prop-1",
+            version: 1,
+          },
+        ],
+        total: 1,
+        limit: 50,
+        offset: 0,
+      }),
+    );
   }),
 
-  // Structure Nodes - core handlers for unified node management
-  rest.get("/api/structure_nodes", (req, res, ctx) => {
-    return res(
-      ctx.status(200),
-      ctx.json({
-        data: [{ id: "node-1", title: "Node 1", node_type: "domain" }],
-      }),
-    );
-  }),
-  rest.get("http://localhost:8000/api/structure_nodes", (req, res, ctx) => {
-    return res(
-      ctx.status(200),
-      ctx.json({
-        data: [{ id: "node-1", title: "Node 1", node_type: "domain" }],
-      }),
-    );
-  }),
-  rest.get("http://localhost:8001/api/structure_nodes", (req, res, ctx) => {
-    return res(
-      ctx.status(200),
-      ctx.json({
-        data: [{ id: "node-1", title: "Node 1", node_type: "domain" }],
-      }),
-    );
-  }),
-  rest.get("/api/structure_nodes/", (req, res, ctx) => {
-    return res(
-      ctx.status(200),
-      ctx.json({
-        data: [{ id: "node-1", title: "Node 1", node_type: "domain" }],
-      }),
-    );
-  }),
-  rest.get("http://localhost:8000/api/structure_nodes/", (req, res, ctx) => {
-    return res(
-      ctx.status(200),
-      ctx.json({
-        data: [{ id: "node-1", title: "Node 1", node_type: "domain" }],
-      }),
-    );
-  }),
-  rest.get("http://localhost:8001/api/structure_nodes/", (req, res, ctx) => {
-    return res(
-      ctx.status(200),
-      ctx.json({
-        data: [{ id: "node-1", title: "Node 1", node_type: "domain" }],
-      }),
-    );
-  }),
-  rest.get("/api/structure_nodes/:id", (req, res, ctx) => {
+  rest.get("/api/relationships/:id", (req, res, ctx) => {
     const { id } = req.params as { id: string };
     return res(
       ctx.status(200),
-      ctx.json({ data: { id, title: `Node ${id}`, node_type: "domain" } }),
-    );
-  }),
-  rest.get("http://localhost:8000/api/structure_nodes/:id", (req, res, ctx) => {
-    const { id } = req.params as { id: string };
-    return res(
-      ctx.status(200),
-      ctx.json({ data: { id, title: `Node ${id}`, node_type: "domain" } }),
-    );
-  }),
-  rest.get("http://localhost:8001/api/structure_nodes/:id", (req, res, ctx) => {
-    const { id } = req.params as { id: string };
-    return res(
-      ctx.status(200),
-      ctx.json({ data: { id, title: `Node ${id}`, node_type: "domain" } }),
-    );
-  }),
-  rest.put("/api/structure_nodes/:id", async (req, res, ctx) => {
-    const { id } = req.params as { id: string };
-    const body = await req.json();
-
-    // Minimal validation for tests: require a title
-    if (!body || typeof body.title !== "string" || body.title.trim() === "") {
-      return res(
-        ctx.status(400),
-        ctx.json({ message: "Validation failed: title is required" }),
-      );
-    }
-
-    // Return updated node with merged data
-    const response = {
-      data: {
+      ctx.json({
         id,
-        title: String(body.title),
-        definition: body.definition || null,
-        node_type: body.node_type || "domain",
-        parent_node_id:
-          body.parent_node_id || "00000000-0000-0000-0000-000000000000",
-        created_at: body.created_at || new Date().toISOString(),
-        last_modified: new Date().toISOString(),
-        version: (body.version || 1) + 1,
-      },
-    };
+        source_id: "class-1",
+        target_id: "class-2",
+        property_definition_id: "prop-1",
+        version: 1,
+      }),
+    );
+  }),
 
-    return res(ctx.status(200), ctx.json(response));
-  }),
-  rest.put(
-    "http://localhost:8000/api/structure_nodes/:id",
-    async (req, res, ctx) => {
-      const { id } = req.params as { id: string };
-      const body = await req.json();
-      return res(ctx.status(200), ctx.json({ data: { ...body, id } }));
-    },
-  ),
-  rest.put(
-    "http://localhost:8001/api/structure_nodes/:id",
-    async (req, res, ctx) => {
-      const { id } = req.params as { id: string };
-      const body = await req.json();
-      return res(ctx.status(200), ctx.json({ data: { ...body, id } }));
-    },
-  ),
-  rest.put("/api/structure_nodes/:id/", async (req, res, ctx) => {
-    const { id } = req.params as { id: string };
-    const body = await req.json();
-    return res(ctx.status(200), ctx.json({ data: { ...body, id } }));
-  }),
-  rest.put(
-    "http://localhost:8000/api/structure_nodes/:id/",
-    async (req, res, ctx) => {
-      const { id } = req.params as { id: string };
-      const body = await req.json();
-      return res(ctx.status(200), ctx.json({ data: { ...body, id } }));
-    },
-  ),
-  rest.put(
-    "http://localhost:8001/api/structure_nodes/:id/",
-    async (req, res, ctx) => {
-      const { id } = req.params as { id: string };
-      const body = await req.json();
-      return res(ctx.status(200), ctx.json({ data: { ...body, id } }));
-    },
-  ),
-  rest.post("/api/structure_nodes", async (req, res, ctx) => {
+  rest.post("/api/relationships", async (req, res, ctx) => {
     const body = await req.json();
     return res(
       ctx.status(201),
-      ctx.json({ data: { ...body, id: "new-node" } }),
+      ctx.json({
+        ...body,
+        id: "new-relationship",
+        version: 1,
+      }),
     );
   }),
-  rest.post(
-    "http://localhost:8000/api/structure_nodes",
-    async (req, res, ctx) => {
-      const body = await req.json();
-      return res(
-        ctx.status(201),
-        ctx.json({ data: { ...body, id: "new-node" } }),
-      );
-    },
-  ),
-  rest.post(
-    "http://localhost:8001/api/structure_nodes",
-    async (req, res, ctx) => {
-      const body = await req.json();
-      return res(
-        ctx.status(201),
-        ctx.json({ data: { ...body, id: "new-node" } }),
-      );
-    },
-  ),
+
+  rest.put("/api/relationships/:id", async (req, res, ctx) => {
+    const { id } = req.params as { id: string };
+    const body = await req.json();
+    return res(
+      ctx.status(200),
+      ctx.json({
+        ...body,
+        id,
+        version: 1,
+      }),
+    );
+  }),
+
+  rest.delete("/api/relationships/:id", (req, res, ctx) => {
+    return res(ctx.status(204));
+  }),
+
+  // Graph endpoints
+  rest.get("/api/graph", (req, res, ctx) => {
+    return res(
+      ctx.status(200),
+      ctx.json({
+        nodes: [],
+        edges: [],
+      }),
+    );
+  }),
+
+  rest.post("/api/graph", async (req, res, ctx) => {
+    const _body = await req.json();
+    return res(
+      ctx.status(200),
+      ctx.json({
+        nodes: [],
+        edges: [],
+      }),
+    );
+  }),
+
+  // Datasets endpoints
+  rest.get("/api/datasets", (req, res, ctx) => {
+    return res(
+      ctx.status(200),
+      ctx.json({
+        items: [],
+        total: 0,
+        limit: 50,
+        offset: 0,
+      }),
+    );
+  }),
+
+  // Schema endpoints
+  rest.get("/api/schema", (req, res, ctx) => {
+    return res(ctx.status(200), ctx.json(null));
+  }),
+
+  // Change events endpoints
+  rest.get("/api/change_events", (req, res, ctx) => {
+    return res(
+      ctx.status(200),
+      ctx.json({
+        items: [],
+        total: 0,
+        limit: 50,
+        offset: 0,
+      }),
+    );
+  }),
+
+  // RAG endpoints
+  rest.post("/api/rag/extract", async (req, res, ctx) => {
+    const _body = await req.json();
+    return res(
+      ctx.status(200),
+      ctx.json({
+        request_id: "rag-req-1",
+        status: "completed",
+      }),
+    );
+  }),
+
+  rest.get("/api/rag/metrics/:requestId", (req, res, ctx) => {
+    const { requestId } = req.params as { requestId: string };
+    return res(
+      ctx.status(200),
+      ctx.json({
+        request_id: requestId,
+        metrics: {},
+      }),
+    );
+  }),
+
+  rest.get("/api/rag/trace/:requestId", (req, res, ctx) => {
+    const { requestId } = req.params as { requestId: string };
+    return res(
+      ctx.status(200),
+      ctx.json({
+        request_id: requestId,
+        trace: [],
+      }),
+    );
+  }),
+
+  // RAG Experiments endpoints
+  rest.get("/api/rag-experiments/paragraphs", (req, res, ctx) => {
+    return res(
+      ctx.status(200),
+      ctx.json({
+        items: [],
+        total: 0,
+        limit: 50,
+        offset: 0,
+      }),
+    );
+  }),
+
+  rest.post("/api/rag-experiments/run", async (req, res, ctx) => {
+    const _body = await req.json();
+    return res(
+      ctx.status(200),
+      ctx.json({
+        run_id: "exp-run-1",
+        status: "completed",
+      }),
+    );
+  }),
+
+  // Pipeline configuration endpoints
+  rest.get("/api/pipeline-flavors", (req, res, ctx) => {
+    return res(
+      ctx.status(200),
+      ctx.json({
+        items: [],
+        total: 0,
+        limit: 50,
+        offset: 0,
+      }),
+    );
+  }),
+
+  rest.get("/api/llm", (req, res, ctx) => {
+    return res(ctx.status(200), ctx.json(null));
+  }),
+
+  rest.post("/api/llm", async (req, res, ctx) => {
+    const body = await req.json();
+    return res(
+      ctx.status(201),
+      ctx.json({
+        ...body,
+        id: "new-llm-config",
+      }),
+    );
+  }),
+
+  rest.delete("/api/llm/:id", (req, res, ctx) => {
+    return res(ctx.status(204));
+  }),
+
+  // LLM Traceability endpoints
+  rest.get("/api/llm/health", (req, res, ctx) => {
+    return res(
+      ctx.status(200),
+      ctx.json({
+        status: "healthy",
+      }),
+    );
+  }),
+
+  rest.get("/api/llm/record-selection", (req, res, ctx) => {
+    return res(
+      ctx.status(200),
+      ctx.json({
+        items: [],
+        total: 0,
+        limit: 50,
+        offset: 0,
+      }),
+    );
+  }),
+
+  rest.get("/api/llm/execution-analytics", (req, res, ctx) => {
+    return res(ctx.status(200), ctx.json({}));
+  }),
+
+  rest.get("/api/llm/execution-history", (req, res, ctx) => {
+    return res(
+      ctx.status(200),
+      ctx.json({
+        items: [],
+        total: 0,
+        limit: 50,
+        offset: 0,
+      }),
+    );
+  }),
+
+  // NLP endpoints
+  rest.post("/api/nlp_analysis", async (req, res, ctx) => {
+    const _body = await req.json();
+    return res(
+      ctx.status(200),
+      ctx.json({
+        analysis_id: "nlp-1",
+        results: {},
+      }),
+    );
+  }),
+
+  // Reference endpoints
+  rest.get("/api/reference", (req, res, ctx) => {
+    return res(
+      ctx.status(200),
+      ctx.json({
+        items: [],
+        total: 0,
+        limit: 50,
+        offset: 0,
+      }),
+    );
+  }),
+
+  rest.get("/api/reference/ref-db", (req, res, ctx) => {
+    return res(
+      ctx.status(200),
+      ctx.json({
+        items: [],
+        total: 0,
+        limit: 50,
+        offset: 0,
+      }),
+    );
+  }),
+
+  rest.get("/api/reference/ref-db/filter/statistics", (req, res, ctx) => {
+    return res(ctx.status(200), ctx.json({}));
+  }),
+
+  rest.get("/api/reference/ref-db/nodes", (req, res, ctx) => {
+    return res(
+      ctx.status(200),
+      ctx.json({
+        items: [],
+        total: 0,
+        limit: 50,
+        offset: 0,
+      }),
+    );
+  }),
 ];

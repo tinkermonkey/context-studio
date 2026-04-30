@@ -20,11 +20,9 @@ import {
   AlertCircle,
 } from "lucide-react";
 import { TreeChartPanel } from "@/components/panels/TreeChartPanel";
-import {
-  useLayerNodes,
-  useDomainNodes,
-  useTermNodes,
-} from "@/api/hooks/structure_nodes/useStructureNodes";
+import { useTaxonomies } from "@/api/hooks/taxonomies/useTaxonomies";
+import { useConceptSchemes } from "@/api/hooks/conceptSchemes/useConceptSchemes";
+import { useOntologyClasses } from "@/api/hooks/ontologyClasses/useOntologyClasses";
 import { useLLMTraceabilityHealth } from "@/api/hooks/llm/useLLMTraceability";
 import { useChangeEvents } from "@/api/hooks/events/useChangeEvents";
 import { StatCard } from "@/components/ui/StatCard";
@@ -52,22 +50,22 @@ const THEME_COLORS = {
 function HomeComponent() {
   // Fetch knowledge graph statistics
   const {
-    data: layers,
+    data: taxonomies,
     isLoading: layersLoading,
     error: layersError,
-  } = useLayerNodes();
+  } = useTaxonomies();
 
   const {
-    data: domains,
+    data: conceptSchemes,
     isLoading: domainsLoading,
     error: domainsError,
-  } = useDomainNodes();
+  } = useConceptSchemes();
 
   const {
-    data: terms,
+    data: ontologyClasses,
     isLoading: termsLoading,
     error: termsError,
-  } = useTermNodes();
+  } = useOntologyClasses();
 
   // Fetch LLM system health
   const {
@@ -87,9 +85,9 @@ function HomeComponent() {
   const statsError = layersError || domainsError || termsError;
 
   // Calculate statistics
-  const layerCount = layers?.length || 0;
-  const domainCount = domains?.length || 0;
-  const termCount = terms?.length || 0;
+  const layerCount = taxonomies?.length || 0;
+  const domainCount = conceptSchemes?.length || 0;
+  const termCount = ontologyClasses?.length || 0;
   const totalNodes = layerCount + domainCount + termCount;
 
   // Format date for display
@@ -320,17 +318,19 @@ function HomeComponent() {
                     <div className="min-w-0 flex-1">
                       <div className="mb-1 flex items-center gap-2">
                         <Badge color="info" size="sm">
-                          {formatEventType(event.event_type)}
+                          {formatEventType(event.operation)}
                         </Badge>
                         <Badge color="gray" size="sm">
-                          {event.record_type}
+                          {event.entity_type}
                         </Badge>
                       </div>
                       <p className="truncate text-sm text-gray-600 dark:text-gray-400">
-                        Record ID: {event.record_id}
+                        Record ID: {event.entity_id}
                       </p>
                       <p className="mt-1 text-xs text-gray-500 dark:text-gray-500">
-                        {formatDate(event.event_timestamp)}
+                        {event.timestamp
+                          ? formatDate(event.timestamp)
+                          : "Unknown"}
                       </p>
                     </div>
                   </div>
@@ -350,10 +350,10 @@ function HomeComponent() {
           </h2>
           <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
             <QuickActionCard
-              title="Knowledge Graph"
-              description="Browse and manage layers, domains, and terms in your knowledge graph"
+              title="Ontology Structure"
+              description="Browse and manage taxonomies, concept schemes, and classes"
               icon={Network}
-              href="/app/layers"
+              href="/app/taxonomies"
             />
             <QuickActionCard
               title="Analytics"
@@ -368,10 +368,10 @@ function HomeComponent() {
               href="/app/datasets"
             />
             <QuickActionCard
-              title="Predicates"
-              description="Define and manage semantic relationships between nodes"
+              title="Property Definitions"
+              description="Define and manage semantic relationships between classes"
               icon={GitBranch}
-              href="/app/predicates"
+              href="/app/properties"
             />
             <QuickActionCard
               title="Pipeline Configuration"

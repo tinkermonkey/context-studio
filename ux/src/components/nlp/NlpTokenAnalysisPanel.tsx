@@ -22,9 +22,9 @@ export const NlpTokenAnalysisPanel: React.FC<Props> = ({
   const measurementContentRef = React.useRef<HTMLDivElement | null>(null);
 
   // Get the token context
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
   const wordnet = token.wordnet as any;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
   const concepcy = token.concepcy as any;
 
   // Create token prefix for this chart
@@ -74,18 +74,14 @@ export const NlpTokenAnalysisPanel: React.FC<Props> = ({
               pos: token.pos || token.tag || "",
               inputTerm: token.text,
               wordnet: {
-                synsets: (wordnet?.synsets || []).map(
-                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                  (s: any) => ({
-                    name: s.name || s.synset || s.id || s[0] || "unknown",
-                    definition: s.definition || s.gloss || s.def || "",
-                    lemmas: s.lemmas || [],
-                    pos:
-                      s.pos || s.partOfSpeech || token.pos || token.tag || "",
-                    offset: s.offset || 0,
-                    domain: s.domain || "general",
-                  }),
-                ),
+                synsets: (wordnet?.synsets || []).map((s: any) => ({
+                  name: s.name || s.synset || s.id || s[0] || "unknown",
+                  definition: s.definition || s.gloss || s.def || "",
+                  lemmas: s.lemmas || [],
+                  pos: s.pos || s.partOfSpeech || token.pos || token.tag || "",
+                  offset: s.offset || 0,
+                  domain: s.domain || "general",
+                })),
               },
             }}
             width={measuredWidth}

@@ -8,12 +8,12 @@ import { Badge } from "flowbite-react";
 import React from "react";
 // removed import;
 
-import { StructureNodeLink } from "@/api/types/structureNodes";
+import { OntologyClassLink } from "@/api/types/ontology";
 import { NodeLinkItem } from "./NodeLinkItem";
 
 interface NodeLinkGroupDisplayProps {
   predicate: string;
-  links: StructureNodeLink[];
+  links: OntologyClassLink[];
   currentNodeId: string;
   onDelete: (linkId: string) => void;
   deletingLinkId?: string;

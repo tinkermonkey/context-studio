@@ -2,19 +2,20 @@ import React from "react";
 import { useForm } from "@tanstack/react-form";
 import { TextInput, Textarea, Button, Alert, Label } from "flowbite-react";
 import { Info, Database, Hash } from "lucide-react";
-import type { StructureNode } from "@/api/types/structureNodes";
-import { useCreateTerm } from "@/api/hooks/structure_nodes/useStructureNodeMutations";
-import { useUpdateStructureNode } from "@/api/hooks/structure_nodes/useStructureNodeMutations";
+import type { OntologyClass } from "@/api/types/ontology";
+import { useCreateOntologyClass } from "@/api/hooks/ontologyClasses/useOntologyClasses";
+import { useUpdateOntologyClass } from "@/api/hooks/ontologyClasses/useOntologyClasses";
 import { DomainSelector } from "@/components/node_selectors/domain_selector";
+import { useButterToast } from "@/hooks/useButterToast";
 
 interface TermFormProps {
-  onSuccess?: (term: StructureNode) => void;
-  term?: StructureNode; // For edit mode
+  onSuccess?: (term: OntologyClass) => void;
+  term?: OntologyClass; // For edit mode
   // Child form props
   parentDomainId?: string;
-  parentDomain?: StructureNode;
+  parentDomain?: OntologyClass;
   parentTermId?: string;
-  parentTerm?: StructureNode;
+  parentTerm?: OntologyClass;
   mode?: "create" | "edit" | "child";
 }
 
@@ -27,17 +28,18 @@ const TermForm: React.FC<TermFormProps> = ({
   parentTerm,
   mode = "create",
 }) => {
-  const createTermMutation = useCreateTerm();
-  const updateTermMutation = useUpdateStructureNode();
+  const createTermMutation = useCreateOntologyClass();
+  const updateTermMutation = useUpdateOntologyClass();
+  const toast = useButterToast();
   const isEdit = !!term;
   const isChildMode = mode === "child" || !!parentDomainId || !!parentTermId;
   const [submitError, setSubmitError] = React.useState<string | null>(null);
 
   const getDefaultValues = () => ({
     title: term?.title ?? "",
-    definition: term?.definition ?? "",
-    parent_node_id:
-      term?.parent_node_id ?? parentDomainId ?? parentTermId ?? "",
+    description: term?.description ?? "",
+    parent_class_id:
+      term?.parent_class_id ?? parentDomainId ?? parentTermId ?? "",
   });
 
   const form = useForm({
@@ -49,21 +51,25 @@ const TermForm: React.FC<TermFormProps> = ({
         if (isEdit && term?.id) {
           result = await updateTermMutation.mutateAsync({
             id: term.id,
-            data: value,
-          });
-        } else {
-          result = await createTermMutation.mutateAsync({
-            parentId: value.parent_node_id,
             data: {
               title: value.title,
-              definition: value.definition,
+              description: value.description,
+            },
+          });
+        } else {
+          // For creating, we need the schemeId, which should be parentDomainId
+          const schemeId = parentDomainId || value.parent_class_id;
+          result = await createTermMutation.mutateAsync({
+            schemeId: schemeId,
+            data: {
+              title: value.title,
+              description: value.description,
+              parent_class_id: parentTermId || undefined,
             },
           });
         }
         if (onSuccess) onSuccess(result);
         form.reset();
-
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
       } catch (error: any) {
         // Log the full error for debugging
         console.error("Full error object:", error);
@@ -78,7 +84,6 @@ const TermForm: React.FC<TermFormProps> = ({
 
         let message: string;
         if (Array.isArray(detail)) {
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           message = detail.map((d: any) => d.msg).join("; ");
         } else if (error?.message) {
           message = error.message;
@@ -88,7 +93,7 @@ const TermForm: React.FC<TermFormProps> = ({
           message = JSON.stringify(error);
         }
         setSubmitError(message);
-        // TODO: Use useButterToast for error notification
+        toast.error(message);
         console.error(
           isEdit ? "Failed to update term:" : "Failed to create term:",
           error,
@@ -112,7 +117,8 @@ const TermForm: React.FC<TermFormProps> = ({
             <div className="flex items-center gap-2 text-sm text-blue-700 dark:text-blue-300">
               <Info className="h-4 w-4" />
               <span>
-                Creating term in {parentDomain ? "domain" : "parent term"}:
+                Creating class in{" "}
+                {parentDomain ? "concept scheme" : "parent class"}:
               </span>
             </div>
             <div className="mt-1 flex items-center gap-2">
@@ -153,28 +159,28 @@ const TermForm: React.FC<TermFormProps> = ({
           )}
         </form.Field>
         <form.Field
-          name="definition"
+          name="description"
           validators={{
             onChange: ({ value }) =>
-              !value ? "Definition is required" : undefined,
+              !value ? "Description is required" : undefined,
           }}
         >
           {(field) => (
             <div>
               <Label
-                htmlFor="term-definition"
+                htmlFor="term-description"
                 className="mb-1 block font-medium"
               >
-                Definition
+                Description
               </Label>
               <Textarea
-                id="term-definition"
-                placeholder="Definition"
+                id="term-description"
+                placeholder="Description"
                 value={field.state.value}
                 color={field.state.meta.errors.length ? "failure" : undefined}
                 onChange={(e) => field.handleChange(e.target.value)}
                 required
-                data-testid="term-definition-input"
+                data-testid="term-description-input"
               />
             </div>
           )}
@@ -183,7 +189,7 @@ const TermForm: React.FC<TermFormProps> = ({
         {/* Hide domain selector in child mode when parent is provided */}
         {!isChildMode && (
           <form.Field
-            name="parent_node_id"
+            name="parent_class_id"
             validators={{
               onChange: ({ value }) =>
                 !value ? "Parent is required" : undefined,
@@ -241,7 +247,7 @@ const TermForm: React.FC<TermFormProps> = ({
                 : "Creating..."
               : isEdit
                 ? "Save Changes"
-                : "Create Term"}
+                : "Create Class"}
           </Button>
         </div>
       </form>

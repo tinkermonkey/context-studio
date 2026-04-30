@@ -165,7 +165,7 @@ const TreeChart: React.FC<TreeChartProps> = ({
         node.type === "domain" ||
         node.type === "layer"
       ) {
-        navigate({ to: `/app/structure_nodes/${node.id}` });
+        navigate({ to: `/app/classes/${node.id}` });
       } else {
         console.warn("Clicked on unknown node:", node);
       }

@@ -7,11 +7,10 @@ import {
   screen,
 } from "@/test/utils/renderWithProviders";
 import { CreateChildButton } from "../create_child_button";
-import { NodeType } from "@/api/types/structureNodes";
+import { NodeType } from "@/api/types/ontology";
 
 // Mock the form components
 vi.mock("@/components/forms/domain_form", () => ({
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   DomainForm: ({ onSuccess }: { onSuccess: (domain: any) => void }) => (
     <div data-testid="domain-form">
       <button onClick={() => onSuccess({ id: "1", title: "Test Domain" })}>
@@ -22,7 +21,6 @@ vi.mock("@/components/forms/domain_form", () => ({
 }));
 
 vi.mock("@/components/forms/term_form", () => ({
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   TermForm: ({ onSuccess }: { onSuccess: (term: any) => void }) => (
     <div data-testid="term-form">
       <button onClick={() => onSuccess({ id: "1", title: "Test Term" })}>
@@ -38,8 +36,10 @@ describe("CreateChildButton", () => {
   const mockLayer = {
     id: "layer-1",
     title: "Test Layer",
-    definition: "Test definition",
-    node_type: NodeType.LAYER,
+    description: "Test description",
+    node_type: NodeType.TAXONOMY,
+    concept_scheme_id: "layer-1",
+    taxonomy_id: "layer-1",
     created_at: "2023-01-01T00:00:00Z",
     version: 1,
     last_modified: "2023-01-01T00:00:00Z",
@@ -48,21 +48,24 @@ describe("CreateChildButton", () => {
   const mockDomain = {
     id: "domain-1",
     title: "Test Domain",
-    definition: "Test definition",
+    description: "Test description",
     parent_node_id: "layer-1",
-    node_type: NodeType.DOMAIN,
+    parent_class_id: "layer-1",
+    node_type: NodeType.CONCEPT_SCHEME,
+    concept_scheme_id: "domain-1",
+    taxonomy_id: "layer-1",
     created_at: "2023-01-01T00:00:00Z",
     version: 1,
     last_modified: "2023-01-01T00:00:00Z",
   };
 
-  it("renders create domain button for layer parent", () => {
+  it("renders create concept scheme button for taxonomy parent", () => {
     render(
       <CreateChildButton
-        parentType="layer"
+        parentType="taxonomy"
         parentId="layer-1"
         parentObject={mockLayer}
-        childType="domain"
+        childType="concept_scheme"
       />,
     );
 
@@ -72,28 +75,28 @@ describe("CreateChildButton", () => {
   it("opens modal when button is clicked", () => {
     render(
       <CreateChildButton
-        parentType="layer"
+        parentType="taxonomy"
         parentId="layer-1"
         parentObject={mockLayer}
-        childType="domain"
+        childType="concept_scheme"
       />,
     );
 
     fireEvent.click(screen.getByRole("button", { name: /add/i }));
 
     expect(
-      screen.getByText(/Create Domain in Layer: Test Layer/i),
+      screen.getByText(/Create Concept Scheme in Taxonomy: Test Layer/i),
     ).toBeInTheDocument();
     expect(screen.getByTestId("domain-form")).toBeInTheDocument();
   });
 
-  it("renders create term button for domain parent", () => {
+  it("renders create class button for concept scheme parent", () => {
     render(
       <CreateChildButton
-        parentType="domain"
+        parentType="concept_scheme"
         parentId="domain-1"
         parentObject={mockDomain}
-        childType="term"
+        childType="class"
       />,
     );
 
@@ -105,10 +108,10 @@ describe("CreateChildButton", () => {
 
     render(
       <CreateChildButton
-        parentType="layer"
+        parentType="taxonomy"
         parentId="layer-1"
         parentObject={mockLayer}
-        childType="domain"
+        childType="concept_scheme"
         onSuccess={onSuccess}
       />,
     );

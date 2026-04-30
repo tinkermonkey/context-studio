@@ -17,8 +17,14 @@ __pycache__/
 *.pyc
 *.egg-info/
 
+# Playwright MCP tooling artifacts
+.playwright-mcp/
+
 # Database files and SQLite runtime artifacts
 /cache.db*
 /datafiles/
 *.db
 *.db-journal
+
+# Test outputs
+ux/test_output.txt

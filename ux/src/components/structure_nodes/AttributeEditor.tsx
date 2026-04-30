@@ -8,27 +8,20 @@ import React, { useState } from "react";
 import { useForm } from "@tanstack/react-form";
 import { TextInput, Button, Label, Select, Card, Alert } from "flowbite-react";
 import { AlertCircle, Plus, X } from "lucide-react";
-import type {
-  StructureNodeAttribute,
-  AttributeValueType,
-} from "@/api/types/structureNodes";
+import type { OntologyClassAttribute } from "@/api/types/ontology";
 import { AttributeValueInput } from "./AttributeValueInput";
 
 interface AttributeEditorProps {
-  onSave: (attribute: StructureNodeAttribute) => Promise<void>;
+  onSave: (attribute: OntologyClassAttribute) => Promise<void>;
   isLoading?: boolean;
-  initialAttribute?: StructureNodeAttribute;
+  initialAttribute?: OntologyClassAttribute;
   onCancel?: () => void;
   existingKeys?: string[];
 }
 
-const ATTRIBUTE_TYPES: AttributeValueType[] = [
-  "string",
-  "number",
-  "boolean",
-  "date",
-  "url",
-];
+const ATTRIBUTE_TYPES = ["string", "number", "boolean", "date", "url"] as const;
+
+type AttributeValueType = (typeof ATTRIBUTE_TYPES)[number];
 
 const validateKey = (key: string, existingKeys?: string[]): string | null => {
   if (!key.trim()) {
@@ -136,9 +129,7 @@ export const AttributeEditor: React.FC<AttributeEditorProps> = ({
           value: value.value,
         });
         form.reset();
-      } catch (
-        error: any // eslint-disable-line @typescript-eslint/no-explicit-any
-      ) {
+      } catch (error: any) {
         const message =
           error?.message || error?.detail || "Failed to save attribute";
         setSubmitError(message);
@@ -223,7 +214,7 @@ export const AttributeEditor: React.FC<AttributeEditorProps> = ({
             children={(field) => (
               <Select
                 id="value_type"
-                value={field.state.value}
+                value={String(field.state.value)}
                 onChange={(e) =>
                   field.handleChange(e.target.value as AttributeValueType)
                 }
@@ -253,7 +244,6 @@ export const AttributeEditor: React.FC<AttributeEditorProps> = ({
                   <AttributeValueInput
                     value={field.state.value}
                     valueType={typeField.state.value}
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     onChange={(newValue) => field.handleChange(newValue as any)}
                     error={validationErrors.value}
                     disabled={isLoading}

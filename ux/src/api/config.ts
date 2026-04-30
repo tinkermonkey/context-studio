@@ -28,11 +28,11 @@ export const API_CONFIG = {
 } as const;
 
 export const QUERY_KEYS = {
-  LAYERS: "layers",
-  DOMAINS: "domains",
-  TERMS: "terms",
+  TAXONOMIES: "taxonomies",
+  CONCEPT_SCHEMES: "concept_schemes",
+  ONTOLOGY_CLASSES: "ontology_classes",
   RELATIONSHIPS: "relationships",
-  PREDICATES: "predicates",
+  PROPERTY_DEFINITIONS: "property_definitions",
   GRAPH: "graph",
   FIND: "find",
   DATASETS: "datasets",
@@ -44,15 +44,17 @@ export const QUERY_KEYS = {
   PIPELINE_FLAVORS: "pipeline-flavors",
   NLP_REFERENCE: "nlp-reference",
   REFERENCE: "reference",
-  STRUCTURE_NODES: "structure_nodes",
-  NODE_LINKS: "node_links",
   CHANGE_EVENTS: "change_events",
   RAG: "rag",
   RAG_EXPERIMENTS: "rag_experiments",
 } as const;
 
 export const ENDPOINTS = {
-  PREDICATES: "/api/predicates",
+  TAXONOMIES: "/api/taxonomies",
+  CONCEPT_SCHEMES: "/api/schemes",
+  ONTOLOGY_CLASSES: "/api/classes",
+  RELATIONSHIPS: "/api/relationships",
+  PROPERTY_DEFINITIONS: "/api/properties",
   GRAPH: "/api/graph",
   DATASETS: "/api/datasets",
   SCHEMA: "/api/schema",
@@ -62,9 +64,9 @@ export const ENDPOINTS = {
   LLM_TRACEABILITY: {
     RECORD_SELECTION: "/api/llm/record-selection",
     EXECUTION_ANALYTICS: "/api/llm/execution-analytics",
-    EXECUTION_HISTORY: "/api/llm/execution-history", // New: gets history by flavor_id query param
-    EXECUTION_DETAILS: "/api/llm/execution-details", // Renamed from execution-history/{id}
-    FLAVOR_ANALYTICS: "/api/llm/flavor-analytics", // New: flavor-specific analytics
+    EXECUTION_HISTORY: "/api/llm/execution-history",
+    EXECUTION_DETAILS: "/api/llm/execution-details",
+    FLAVOR_ANALYTICS: "/api/llm/flavor-analytics",
     HEALTH: "/api/llm/health",
   },
   PIPELINE_FLAVORS: "/api/pipeline-flavors",
@@ -74,8 +76,6 @@ export const ENDPOINTS = {
     FILTER_STATISTICS: "/api/reference/ref-db/filter/statistics",
     NODES: "/api/reference/ref-db/nodes",
   },
-  STRUCTURE_NODES: "/api/structure_nodes",
-  NODE_LINKS: "/api/structure_nodes/links",
   CHANGE_EVENTS: "/api/change_events",
   RAG: {
     EXTRACT: "/api/rag/extract",
