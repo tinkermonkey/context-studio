@@ -133,6 +133,16 @@ specs/
 
 The filename should be kebab-case and descriptive.
 
+## Accessing Test Run Reports
+
+Each Playwright run produces a structured JSON report at `ux/e2e/reports/{timestamp}_{git-sha}.json` (see `ux/e2e/reports/SCHEMA.md` for the report schema).
+
+Use these reports to:
+1. Analyze selector coverage trends: `report.selector_coverage.coverage_percentage` shows which documented selectors are exercised
+2. Identify flaky tests: Compare `status === "flaky"` across multiple runs to spot intermittent failures
+3. Find coverage gaps: `report.selector_coverage.gaps` lists documented selectors that were not exercised
+4. Validate new test coverage: After running new tests, check that targeted selectors appear in `report.selector_coverage.documented` with `coverage: "exercised"`
+
 ## Context You Have Access To
 
 - Application repository (read-only)
@@ -141,6 +151,7 @@ The filename should be kebab-case and descriptive.
 - Entity type definitions (`ux/src/api/client/types.ts`)
 - Existing test examples in `ux/e2e/tests/`
 - Test factory implementations in `ux/e2e/fixtures/factories.ts`
+- Structured test run reports in `ux/e2e/reports/*.json` (with coverage and flakiness data)
 
 ## What You Do NOT Do
 
