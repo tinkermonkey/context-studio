@@ -6,6 +6,7 @@ import type { ConceptScheme } from "@/api/types/ontology";
 import { useCreateConceptScheme } from "@/api/hooks/conceptSchemes/useConceptSchemes";
 import { useUpdateConceptScheme } from "@/api/hooks/conceptSchemes/useConceptSchemes";
 import { LayerSelector } from "@/components/node_selectors/layer_selector";
+import { useButterToast } from "@/hooks/useButterToast";
 
 interface DomainFormProps {
   onSuccess?: (domain: ConceptScheme) => void;
@@ -25,6 +26,7 @@ const DomainForm: React.FC<DomainFormProps> = ({
 }) => {
   const createDomainMutation = useCreateConceptScheme();
   const updateDomainMutation = useUpdateConceptScheme();
+  const toast = useButterToast();
   const isEdit = !!domain;
   const isChildMode = mode === "child" || !!parentLayerId;
   const [submitError, setSubmitError] = React.useState<string | null>(null);
@@ -85,7 +87,7 @@ const DomainForm: React.FC<DomainFormProps> = ({
           message = JSON.stringify(error);
         }
         setSubmitError(message);
-        // TODO: Use useButterToast for error notification
+        toast.error(message);
         console.error(
           isEdit ? "Failed to update domain:" : "Failed to create domain:",
           error,

@@ -13,6 +13,7 @@ import type {
   PropertyDefinition,
 } from "@/api/types/ontology";
 import { useCreatePredicate, useUpdatePredicate } from "@/api/hooks/predicates";
+import { useButterToast } from "@/hooks/useButterToast";
 
 interface PredicateFormProps {
   onSuccess?: (predicate: PropertyDefinition) => void;
@@ -27,6 +28,7 @@ const PredicateForm: React.FC<PredicateFormProps> = ({
 }) => {
   const createPredicateMutation = useCreatePredicate();
   const updatePredicateMutation = useUpdatePredicate();
+  const toast = useButterToast();
   const isEdit = !!predicate;
   const [submitError, setSubmitError] = React.useState<string | null>(null);
 
@@ -97,7 +99,7 @@ const PredicateForm: React.FC<PredicateFormProps> = ({
           message = JSON.stringify(error);
         }
         setSubmitError(message);
-        // TODO: Use useButterToast for error notification
+        toast.error(message);
         console.error(
           isEdit
             ? "Failed to update predicate:"

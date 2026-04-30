@@ -5,6 +5,7 @@ import { Info } from "lucide-react";
 import type { Taxonomy } from "@/api/types/ontology";
 import { useCreateTaxonomy } from "@/api/hooks/taxonomies/useTaxonomies";
 import { useUpdateTaxonomy } from "@/api/hooks/taxonomies/useTaxonomies";
+import { useButterToast } from "@/hooks/useButterToast";
 
 interface LayerFormProps {
   onSuccess?: (layer: Taxonomy) => void;
@@ -14,6 +15,7 @@ interface LayerFormProps {
 const LayerForm: React.FC<LayerFormProps> = ({ onSuccess, layer }) => {
   const createLayerMutation = useCreateTaxonomy();
   const updateLayerMutation = useUpdateTaxonomy();
+  const toast = useButterToast();
   const isEdit = !!layer;
   const [submitError, setSubmitError] = React.useState<string | null>(null);
   const form = useForm({
@@ -64,7 +66,7 @@ const LayerForm: React.FC<LayerFormProps> = ({ onSuccess, layer }) => {
           message = JSON.stringify(error);
         }
         setSubmitError(message);
-        // TODO: Use useButterToast for error notification
+        toast.error(message);
         console.error(
           isEdit ? "Failed to update layer:" : "Failed to create layer:",
           error,

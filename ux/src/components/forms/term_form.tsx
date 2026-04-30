@@ -6,6 +6,7 @@ import type { OntologyClass } from "@/api/types/ontology";
 import { useCreateOntologyClass } from "@/api/hooks/ontologyClasses/useOntologyClasses";
 import { useUpdateOntologyClass } from "@/api/hooks/ontologyClasses/useOntologyClasses";
 import { DomainSelector } from "@/components/node_selectors/domain_selector";
+import { useButterToast } from "@/hooks/useButterToast";
 
 interface TermFormProps {
   onSuccess?: (term: OntologyClass) => void;
@@ -29,6 +30,7 @@ const TermForm: React.FC<TermFormProps> = ({
 }) => {
   const createTermMutation = useCreateOntologyClass();
   const updateTermMutation = useUpdateOntologyClass();
+  const toast = useButterToast();
   const isEdit = !!term;
   const isChildMode = mode === "child" || !!parentDomainId || !!parentTermId;
   const [submitError, setSubmitError] = React.useState<string | null>(null);
@@ -91,7 +93,7 @@ const TermForm: React.FC<TermFormProps> = ({
           message = JSON.stringify(error);
         }
         setSubmitError(message);
-        // TODO: Use useButterToast for error notification
+        toast.error(message);
         console.error(
           isEdit ? "Failed to update term:" : "Failed to create term:",
           error,
