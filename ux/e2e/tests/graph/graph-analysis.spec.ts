@@ -23,12 +23,12 @@ import {
  */
 
 test.describe("Graph Visualization and Analysis", () => {
-  let hierarchyId: string;
+  let _hierarchyId: string;
 
   test.beforeEach(async ({ page }) => {
     // Create test hierarchy with classes and relationships
     const hierarchy = await createTestHierarchy(page, 3);
-    hierarchyId = hierarchy.scheme.id;
+    _hierarchyId = hierarchy.scheme.id;
 
     // Create relationships to build a graph structure
     await createRelationship(
@@ -117,7 +117,9 @@ test.describe("Graph Visualization and Analysis", () => {
       await firstNode.click();
 
       // Verify node is selected (check for selection class/style)
-      const selected = page.locator('[data-testid="graph-node"][class*="selected"]');
+      const selected = page.locator(
+        '[data-testid="graph-node"][class*="selected"]',
+      );
       expect(await selected.count()).toBeGreaterThan(0);
     });
 
@@ -140,9 +142,7 @@ test.describe("Graph Visualization and Analysis", () => {
       expect(panelText!.length).toBeGreaterThan(0);
     });
 
-    test("should highlight connected nodes on node hover", async ({
-      page,
-    }) => {
+    test("should highlight connected nodes on node hover", async ({ page }) => {
       // Navigate to graph view
       await page.goto("/app/graph");
       await page.waitForLoadState("networkidle");
@@ -192,8 +192,8 @@ test.describe("Graph Visualization and Analysis", () => {
 
       // Get initial zoom level
       const graphContainer = page.locator('[data-testid="graph-container"]');
-      const initialScale = await graphContainer.evaluate((el) =>
-        window.getComputedStyle(el).transform,
+      const initialScale = await graphContainer.evaluate(
+        (el) => window.getComputedStyle(el).transform,
       );
 
       // Click zoom in button
@@ -205,8 +205,8 @@ test.describe("Graph Visualization and Analysis", () => {
       await page.waitForLoadState("networkidle");
 
       // Verify zoom level changed
-      const newScale = await graphContainer.evaluate((el) =>
-        window.getComputedStyle(el).transform,
+      const newScale = await graphContainer.evaluate(
+        (el) => window.getComputedStyle(el).transform,
       );
       expect(newScale).not.toBe(initialScale);
     });
@@ -218,8 +218,8 @@ test.describe("Graph Visualization and Analysis", () => {
 
       // Get initial zoom level
       const graphContainer = page.locator('[data-testid="graph-container"]');
-      const initialScale = await graphContainer.evaluate((el) =>
-        window.getComputedStyle(el).transform,
+      const initialScale = await graphContainer.evaluate(
+        (el) => window.getComputedStyle(el).transform,
       );
 
       // Click zoom out button
@@ -231,8 +231,8 @@ test.describe("Graph Visualization and Analysis", () => {
       await page.waitForLoadState("networkidle");
 
       // Verify zoom level changed
-      const newScale = await graphContainer.evaluate((el) =>
-        window.getComputedStyle(el).transform,
+      const newScale = await graphContainer.evaluate(
+        (el) => window.getComputedStyle(el).transform,
       );
       expect(newScale).not.toBe(initialScale);
     });
@@ -262,7 +262,7 @@ test.describe("Graph Visualization and Analysis", () => {
 
       // Get initial position
       const canvas = page.locator('[data-testid="graph-canvas"]');
-      const initialPosition = await canvas.evaluate((el) =>
+      const _initialPosition = await canvas.evaluate((el) =>
         el.getBoundingClientRect(),
       );
 
@@ -320,7 +320,9 @@ test.describe("Graph Visualization and Analysis", () => {
       await filterButton.click();
 
       // Select a filter option
-      const filterOption = page.locator('[data-testid="graph-filter-option"]').first();
+      const filterOption = page
+        .locator('[data-testid="graph-filter-option"]')
+        .first();
       await expect(filterOption).toBeVisible({ timeout: 5000 });
       await filterOption.click();
 
@@ -372,8 +374,8 @@ test.describe("Graph Visualization and Analysis", () => {
 
   test.describe("Graph Error Handling", () => {
     test("should handle empty graph gracefully", async ({ page }) => {
-      let emptyTaxonomyId: string;
-      let schemeId: string;
+      let emptyTaxonomyId: string | undefined;
+      let schemeId: string | undefined;
 
       try {
         // Create a scheme with no classes
@@ -407,7 +409,9 @@ test.describe("Graph Visualization and Analysis", () => {
 
         // Should either show empty state or render empty graph
         const graphContainer = page.locator('[data-testid="graph-container"]');
-        const isGraphVisible = await graphContainer.isVisible().catch(() => false);
+        const isGraphVisible = await graphContainer
+          .isVisible()
+          .catch(() => false);
 
         expect(isEmptyStateVisible || isGraphVisible).toBe(true);
       } finally {
