@@ -19,36 +19,35 @@ async function waitForUrl(url: string, timeout: number = 30000): Promise<void> {
   console.log(`Waiting for ${url} to be ready...`);
 
   while (Date.now() - startTime < timeout) {
+    let response: Response;
     try {
-      const response = await globalThis.fetch(url);
-      if (response.ok) {
-        console.log(`✓ ${url} is ready`);
-        return;
-      }
-
-      // Server returned an error status code (not a connection error)
-      if (response.status >= 400) {
-        throw new Error(
-          `Server returned ${response.status} ${response.statusText}. ` +
-            `Check the server logs for details.`,
+      response = await globalThis.fetch(url);
+    } catch {
+      // Network error: server not ready yet, continue waiting
+      const elapsed = Date.now() - startTime;
+      if (elapsed % 5000 < interval) {
+        // Log every 5 seconds
+        console.log(
+          `  Still waiting for ${url}... (${Math.round(elapsed / 1000)}s)`,
         );
       }
-    } catch (error) {
-      // Check if this is a network error (server not ready) or an actual error
-      if (error instanceof Error && !error.message.includes("Server returned")) {
-        // Network error: server not ready yet, continue waiting
-        const elapsed = Date.now() - startTime;
-        if (elapsed % 5000 < interval) {
-          // Log every 5 seconds
-          console.log(
-            `  Still waiting for ${url}... (${Math.round(elapsed / 1000)}s)`,
-          );
-        }
-      } else {
-        // Server error or other fatal issue: fail immediately
-        throw error;
-      }
+      await new Promise((resolve) => setTimeout(resolve, interval));
+      continue;
     }
+
+    if (response.ok) {
+      console.log(`✓ ${url} is ready`);
+      return;
+    }
+
+    // Server returned an error status code (not a connection error)
+    if (response.status >= 400) {
+      throw new Error(
+        `Server returned ${response.status} ${response.statusText}. ` +
+          `Check the server logs for details.`,
+      );
+    }
+
     await new Promise((resolve) => setTimeout(resolve, interval));
   }
 
